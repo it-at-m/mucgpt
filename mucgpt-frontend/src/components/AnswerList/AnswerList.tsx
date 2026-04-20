@@ -1,4 +1,4 @@
-import { ReactNode, useEffect, useMemo, useState } from "react";
+import React, { ReactNode, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { ChatTurnComponent } from "../ChatTurnComponent/ChatTurnComponent";
 import { UserChatMessage } from "../UserChatMessage";
@@ -10,11 +10,11 @@ import { QuickPrompt } from "../QuickPrompt/QuickPrompt";
 interface Props {
     answers: ChatMessage[];
     regularAssistantMsg: (answer: ChatMessage, index: number, quickPrompts?: QuickPrompt[]) => ReactNode;
-    onRollbackMessage: (index: number) => void;
+    onRollbackMessage?: (index: number) => void;
     isLoading: boolean;
     error: unknown;
     makeApiRequest: () => void;
-    chatMessageStreamEnd: React.RefObject<HTMLDivElement>;
+    chatMessageStreamEnd: React.MutableRefObject<HTMLDivElement | null>;
     lastQuestionRef: React.MutableRefObject<string>;
     onRollbackError?: () => void;
     lastAnswerRef?: React.Ref<HTMLDivElement>;
@@ -34,7 +34,7 @@ export const AnswerList = ({
 }: Props) => {
     const { t } = useTranslation();
 
-    const [answersComponent, setAnswersComponent] = useState<JSX.Element[]>([]);
+    const [answersComponent, setAnswersComponent] = useState<React.JSX.Element[]>([]);
 
     useEffect(() => {
         let shownAnswers = answers;
@@ -48,7 +48,9 @@ export const AnswerList = ({
                     <ChatTurnComponent
                         key={index}
                         innerRef={isLastAnswer ? lastAnswerRef : undefined}
-                        usermsg={<UserChatMessage message={answer.user} onRollbackMessage={() => onRollbackMessage(index - 1)} />}
+                        usermsg={
+                            <UserChatMessage message={answer.user} onRollbackMessage={onRollbackMessage ? () => onRollbackMessage(index - 1) : undefined} />
+                        }
                         usermsglabel={t("components.usericon.label") + " " + (index + 1).toString()}
                         assistantmsglabel={t("components.answericon.label") + " " + (index + 1).toString()}
                         assistantmsg={regularAssistantMsg(answer, index)}

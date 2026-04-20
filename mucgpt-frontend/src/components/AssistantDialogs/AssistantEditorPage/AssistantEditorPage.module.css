@@ -1,0 +1,151 @@
+.page {
+    --appHeaderHeight: 50px;
+    --appFooterHeight: 60px;
+    display: flex;
+    flex-direction: column;
+    height: calc(100vh - var(--appHeaderHeight) - var(--appFooterHeight));
+    width: 100%;
+    margin-top: var(--appHeaderHeight);
+    background-color: var(--colorNeutralBackground1);
+    overflow-y: auto;
+    box-sizing: border-box;
+}
+
+.header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 24px 32px;
+    background-color: var(--colorNeutralBackground1);
+    border-bottom: none;
+    position: static;
+}
+
+.headerLeft {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.headerActions {
+    display: flex;
+    align-items: center;
+}
+
+.headerIcon {
+    color: var(--colorNeutralForeground1);
+}
+
+.headerTitle {
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--colorNeutralForeground1);
+}
+
+.body {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    padding: 32px;
+    max-width: 1400px;
+    margin: 0 auto;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.footerActionStack {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+}
+
+.primaryActionButton {
+    width: 100%;
+    min-height: 48px;
+    font-size: 16px !important;
+    border-radius: 16px !important;
+}
+
+@media (max-width: 768px) {
+    .page {
+        --appFooterHeight: 60px;
+    }
+}
+
+.settingsGrid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 24px;
+}
+
+.settingsColumn {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.sectionCard {
+    background-color: var(--colorNeutralBackground1);
+    border: 1px solid var(--colorNeutralStroke1);
+    border-radius: 14px;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    box-shadow: var(--shadow2);
+}
+
+.sectionBasic {
+    order: 1;
+}
+
+.sectionBehaviour {
+    order: 2;
+}
+
+.sectionTools {
+    order: 3;
+}
+
+.sectionPrompts {
+    order: 4;
+}
+
+.sectionAccess {
+    order: 5;
+}
+
+.sectionActions {
+    grid-column: 1 / -1;
+    order: 6;
+}
+
+@media (max-width: 1100px) {
+    .settingsGrid {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .settingsColumn {
+        display: contents;
+    }
+}
+
+.sectionTitle {
+    margin: 0;
+    color: var(--colorNeutralForeground1);
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--colorNeutralStroke2);
+}
+
+.sectionContent {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.formField {
+    gap: 4px;
+}

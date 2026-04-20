@@ -8,7 +8,7 @@ import { useContext, useEffect, useState } from "react";
 
 import addButtonStyles from "../../components/AddAssistantButton/AddAssistantButton.module.css";
 import { AssistantStorageService } from "../../service/assistantstorage";
-import { AssistantResponse, Assistant, CommunityAssistant } from "../../api/models";
+import { AssistantResponse, Assistant, CommunityAssistant, CommunityAssistantSnapshot } from "../../api/models";
 import { ASSISTANT_STORE, COMMUNITY_ASSISTANT_STORE } from "../../constants";
 import { migrate_old_assistants } from "../../service/migration";
 import { SearchCommunityAssistantButton } from "../../components/SearchCommunityAssistantButton/SearchCommunityAssistantButton";
@@ -23,13 +23,14 @@ import { AssistantStats } from "../../components/AssistantStats/AssistantStats";
 import { CommunityAssistantStorageService } from "../../service/communityassistantstorage";
 import { AssistantCard } from "../../components/AssistantCard";
 import { useToolsContext } from "../../components/ToolsProvider";
+import { UploadedData } from "../../components/ContextManagerDialog/ContextManagerDialog";
 
 const Menu = () => {
     const { t } = useTranslation();
     const navigate = useNavigate();
     const [assistants, setAssistants] = useState<Assistant[]>([]);
     const [communityAssistants, setCommunityAssistants] = useState<CommunityAssistant[]>([]);
-    const [deletedCommunityAssistants, setDeletedCommunityAssistants] = useState<CommunityAssistant[]>([]);
+    const [deletedCommunityAssistants, setDeletedCommunityAssistants] = useState<CommunityAssistantSnapshot[]>([]);
     const [ownedCommunityAssistants, setOwnedCommunityAssistants] = useState<AssistantResponse[]>([]);
     const [showSearchAssistant, setShowSearchAssistant] = useState<boolean>(false);
     const [getCommunityAssistants, setGetCommunityAssistants] = useState<boolean>(false);
@@ -40,6 +41,7 @@ const Menu = () => {
     const [question, setQuestion] = useState<string>("");
     const [username, setUserName] = useState<string>("");
     const [selectedTools, setSelectedTools] = useState<string[]>([]);
+    const [uploadedData, setUploadedData] = useState<UploadedData[]>([]);
     const { tools } = useToolsContext();
 
     const { setHeader } = useContext(HeaderContext);
@@ -105,10 +107,15 @@ const Menu = () => {
         setGetCommunityAssistants(true);
     };
 
-    const onSendQuestion = (question: string) => {
+    const onSendQuestion = (question: string, data: UploadedData[]) => {
         let url = `#/chat?q=${encodeURIComponent(question)}`;
         if (selectedTools.length > 0) {
             url += `&tools=${encodeURIComponent(selectedTools.join(","))}`;
+        }
+        const fileIds = data.filter(d => d.isActive !== false && d.status === "ready" && d.storedDocumentId).map(d => d.storedDocumentId!);
+        if (fileIds.length > 0) {
+            localStorage.setItem("chatFileIds", JSON.stringify(fileIds));
+            url += `&data=${encodeURIComponent(fileIds.join(","))}`;
         }
         window.location.href = url;
     };
@@ -162,7 +169,6 @@ const Menu = () => {
                     <QuestionInput
                         onSend={onSendQuestion}
                         disabled={false}
-                        placeholder={t("chat.prompt")}
                         setQuestion={question => {
                             setQuestion(question);
                         }}
@@ -170,6 +176,8 @@ const Menu = () => {
                         setSelectedTools={setSelectedTools}
                         tools={tools}
                         question={question}
+                        uploadedData={uploadedData}
+                        setUploadedData={setUploadedData}
                     ></QuestionInput>
                 </div>
                 <div className={styles.divider}>

@@ -51,7 +51,8 @@ i18n
                     },
                     chat: {
                         header: "Stelle eine Frage oder probiere ein Beispiel",
-                        prompt: "Stelle eine Frage",
+                        prompt: "Stelle eine Frage oder lade ein Dokument hoch",
+                        prompt_no_upload: "Stelle eine Frage",
                         answer_loading: "Erstelle Antwort",
                         quickprompts: {
                             shorter_tooltip: "Schreibe eine kürzere Antwort",
@@ -183,11 +184,7 @@ i18n
                             accept: "Zustimmen"
                         },
                         versioninfo: {
-                            tooltip: "Core Version: {{core_version}}, Frontend Version: {{frontend_version}}, Assistenten Version: {{assistant_version}}",
-                            core_version: "Core Version:",
-                            frontend_version: "Frontend Version:",
-                            assistant_version: "Assistenten Version:",
-                            label: "Version:",
+                            label: "Version",
                             whats_new: "Was gibt's neues?"
                         },
                         feedback: {
@@ -260,7 +257,35 @@ i18n
                             tutorial_help: "Tutorial öffnen",
                             tool_header: "Zusätzliche Tools zu wählen:",
                             tutorial_help_aria: "Tutorial für {{tool}} öffnen",
-                            send_question: "Frage senden"
+                            send_question: "Frage senden",
+                            upload_data: "Dokument hochladen",
+                            uploaded_data_label: "Hinzugefügte Dokumente",
+                            remove_data: "Dokument entfernen",
+                            uploading: "Wird hochgeladen..."
+                        },
+                        contextmanagerdialog: {
+                            title: "Meine Dokumente",
+                            subtitle: "Ausgewählte Dokumente werden im Chat als Kontext verwendet.",
+                            uploading: "Wird hochgeladen...",
+                            upload_btn: "Hochladen",
+                            select_label: "Dateien auswählen",
+                            no_saved: "Noch keine gespeicherten Dokumente.",
+                            use: "Verwenden",
+                            remove_saved: "Dokument entfernen",
+                            parsed_at: "Verarbeitet am",
+                            clear_saved: "Alle löschen",
+                            download: "Text herunterladen",
+                            selection_count: "Im Chat verwendet: {{selected}} von {{total}}",
+                            storage_error: "Dokument konnte nicht gespeichert werden (Speicherplatz voll).",
+                            upload_success_title: "Upload erfolgreich",
+                            upload_success_one: "1 Dokument wurde hochgeladen.",
+                            upload_success_other: "{{count}} Dokumente wurden hochgeladen.",
+                            upload_error_title: "Upload fehlgeschlagen",
+                            upload_error_one: "1 Dokument konnte nicht hochgeladen werden.",
+                            upload_error_other: "{{count}} Dokumente konnten nicht hochgeladen werden.",
+                            storage_error_title: "Speichern fehlgeschlagen",
+                            storage_error_one: "1 Dokument konnte nicht lokal gespeichert werden.",
+                            storage_error_other: "{{count}} Dokumente konnten nicht lokal gespeichert werden."
                         },
                         suminput: {
                             tokensused: "Token verbraucht",
@@ -345,10 +370,10 @@ i18n
                             more: "mehr"
                         },
                         add_assistant_button: {
-                            add_assistant: "Neuer Assistent"
+                            add_assistant: "Neu erstellen"
                         },
                         import_assistant: {
-                            import: "Assistenten importieren",
+                            import: "Importieren",
                             import_success: "Import erfolgreich",
                             import_success_message: 'Der Assistent "{{title}}" wurde importiert und kann nun verwendet werden.',
                             import_error: "Import fehlgeschlagen",
@@ -356,37 +381,29 @@ i18n
                             import_invalid_format: "Ungültiges Dateiformat. Die Datei muss einen Titel und System-Prompt enthalten.",
                             import_save_failed: "Fehler beim Speichern des importierten Assistenten"
                         },
-                        create_assistant_dialog: {
-                            title: "Titel",
-                            description: "Funktionsbeschreibung",
-                            prompt: "System-Prompt",
-                            dialog_title: "Neuen Assistent erstellen",
-                            default_assistant_title: "Assistent",
-                            default_assistant_description: "Ein Assistent",
-                            step1_label: "Funktion beschreiben",
-                            step2_label: "Assistent beschreiben",
-                            hint_text:
-                                "Hier beschreibst du kurz, was dein Assistent machen soll. Anschließend entscheidest du, ob du den System-Prompt von MUCGPT generieren lässt oder selbst definieren möchtest.",
-                            hint_text_step2:
-                                "Hier solltest du überprüfen, ob die von MUCGPT erstellten Konfigurationen zu deinem Wunsch passen. Du könntest die Details jederzeit anpassen.",
-                            description_placeholder: "Zum Beispiel: Der Assistent übersetzt den eingegebenen Text ins Englische.",
-                            title_placeholder: "Zum Beispiel: Englisch Übersetzer",
-                            prompt_placeholder:
-                                "# Anforderung\n# Schritte\n# Output Format\n# Beispiele\n\nZum Beispiel:\nStelle sicher, dass die Übersetzung den ursprünglichen Satzbau und die Bedeutung beibehält. Achte auf kontextabhängige Wörter und kulturelle Unterschiede die möglicherweise vorliegen könnten.",
-                            or_choose_template: "Alternativ könntest du auch die unteren vordefinierten Assistenten erstmal probieren:",
-                            continue_with_mucgpt: "Mit MUCGPT fortfahren",
-                            define_myself: "Ich definiere selbst",
+                        assistant_editor: {
+                            // Page titles (differ between create and edit)
+                            create_title: "Assistent erstellen",
+                            edit_title: "Assistent bearbeiten",
+
+                            // Create-only: Mode selector
+                            subtitle_mode_select: "Wähle, wie du starten möchtest",
+                            create_manually: "Manuell erstellen",
+                            create_manually_description: "Starte von Grund auf. Definiere Werkzeuge, Verhalten und Prompts selbst.",
+                            create_manually_hint: "Für volle Kontrolle von Anfang an",
+                            generate_with_mucgpt: "Mit MUCGPT generieren",
+                            generate_with_mucgpt_description: "Beschreibe deine Anforderungen und lass MUCGPT die Konfiguration generieren.",
+                            generate_with_mucgpt_hint: "Für einen schnellen ersten Entwurf",
+                            recommended: "Empfohlen",
+
+                            // Create-only: AI description input
+                            subtitle_ai_input: "Beschreibe deinen Assistenten und erstelle einen ersten Entwurf",
+                            ai_input_label: "Was soll dein Assistent tun?",
+                            ai_input_placeholder: "Zum Beispiel: Der Assistent übersetzt den eingegebenen Text ins Englische.",
+                            try_example: "BEISPIEL AUSPROBIEREN:",
+                            generate_button: "Assistent generieren",
+                            generating: "Generiere...",
                             description_required: "Bitte geben Sie eine Beschreibung ein, damit MUCGPT den Assistenten generieren kann",
-                            generating_prompt: "Generiere Prompt...",
-                            assistant_saved_success: "Assistent erfolgreich gespeichert!",
-                            assistant_saved_message: 'Ihr Assistent "{{title}}" wurde erfolgreich erstellt und gespeichert.',
-                            assistant_creation_failed: "Assistent konnte nicht erstellt werden",
-                            save_config_failed: "Speichern der Assistenten-Konfiguration fehlgeschlagen",
-                            assistant_save_failed: "Speichern des Assistenten fehlgeschlagen",
-                            save_assistant_failed: "Speichern der Assistenten-Konfiguration fehlgeschlagen",
-                            assistant_generated_success: "Assistent erfolgreich generiert!",
-                            assistant_generated_message: "Die Konfiguration Ihres Assistenten wurde generiert. Sie können sie jetzt überprüfen und anpassen.",
-                            assistant_generation_failed: "Generierung der Assistenten-Konfiguration fehlgeschlagen",
                             example_one: "Sprache übersetzen",
                             example_two: "Email schreiben",
                             example_three: "Synonyme finden",
@@ -394,18 +411,27 @@ i18n
                             create_example_two:
                                 "Der Assistent ist ein Mitarbeiter der Stadt München und antwortet höflich sowie individuell auf die eingehenden E-Mails.",
                             create_example_three:
-                                "Der Assistent erstellt für das eingegebene Wort oder den eingegebenen Satz zehn verschiedene Umformulierungen oder Synonyme."
-                        },
-                        edit_assistant_dialog: {
-                            title: "Assistent bearbeiten",
-                            assistant_title: "Titel",
-                            assistant_description: "Beschreibung",
-                            system_prompt: "System-Prompt",
+                                "Der Assistent erstellt für das eingegebene Wort oder den eingegebenen Satz zehn verschiedene Umformulierungen oder Synonyme.",
+
+                            // Shared field labels
+                            title: "Titel",
+                            title_placeholder: "Zum Beispiel: Englisch Übersetzer",
+                            description: "Beschreibung",
+                            description_placeholder: "Zum Beispiel: Der Assistent übersetzt den eingegebenen Text ins Englische.",
                             default_assistant_title: "Assistent",
-                            default_assistant_description: "Ein Assistent",
-                            advanced_settings: "Erweiterte Einstellungen",
-                            hide_advanced_settings: "Erweiterte Einstellungen ausblenden",
-                            collapse: "Einklappen",
+                            default_assistant_description: "Assistent",
+                            system_prompt: "System-Prompt",
+                            prompt_placeholder:
+                                "# Anforderung\n# Schritte\n# Output Format\n# Beispiele\n\nZum Beispiel:\nStelle sicher, dass die Übersetzung den ursprünglichen Satzbau und die Bedeutung beibehält. Achte auf kontextabhängige Wörter und kulturelle Unterschiede die möglicherweise vorliegen könnten.",
+
+                            // Settings section headers
+                            section_basic: "Grundlegende Informationen",
+                            section_behaviour: "Verhalten & Konfiguration",
+                            section_tools: "Werkzeuge",
+                            section_prompts: "Prompts & Beispiele",
+                            section_access: "Zugriff & Sichtbarkeit",
+
+                            // Advanced settings fields
                             creativity: "Kreativität",
                             creativity_placeholder: "Wählen Sie eine Kreativitätsstufe...",
                             creativity_low: "Aus (konservativ)",
@@ -419,45 +445,56 @@ i18n
                             departments: "Abteilungen",
                             departments_info:
                                 "Dies sind die Abteilungen, die Zugriff auf den Assistenten haben. Alle Abteilungen in der Hierarchie unter den ausgewählten Abteilungen haben ebenfalls Zugriff.",
+
+                            // Quick prompts
                             quick_prompts: "Vorgeschlagene Antworten",
                             quick_prompts_placeholder: "Fügen Sie Vorgeschlagene Antworten hinzu, eine pro Zeile (Label|Prompt)",
                             quick_prompt_label_placeholder: "Geben Sie das Label ein...",
                             quick_prompt_text_placeholder: "Geben Sie den Prompt-Text ein...",
                             add_quick_prompt: "Vorgeschlagene Antwort hinzufügen",
-                            dnd_reorder_hint: "Ziehen Sie die Elemente am Griff, um die Reihenfolge zu ändern.",
+                            no_quick_prompts_selected: "Keine vorgeschlagenen Antworten hinzugefügt",
+
+                            // Examples
                             examples: "Beispiele",
                             examples_placeholder: "Fügen Sie Beispiele hinzu, eine pro Zeile (Text|Wert)",
                             example_text_placeholder: "Geben Sie den Beispiel-Text ein...",
                             example_value_placeholder: "Geben Sie den Beispiel-Wert ein...",
                             add_example: "Beispiel hinzufügen",
+                            no_examples_selected: "Keine Beispiele hinzugefügt",
+
+                            // Tools
+                            select_tools: "Werkzeuge auswählen",
+                            no_tools_selected: "Keine Werkzeuge ausgewählt",
+
+                            // DnD / list controls
+                            dnd_reorder_hint: "Ziehen Sie die Elemente am Griff, um die Reihenfolge zu ändern.",
                             drag_to_reorder: "Ziehen zum Neu-Anordnen",
                             dnd_aria_label: "Element {{position}} von {{total}} neu anordnen",
                             move_up: "Nach oben",
                             move_down: "Nach unten",
-                            tools: "Werkzeuge",
-                            select_tools: "Werkzeuge auswählen",
-                            no_tools_selected: "Keine Werkzeuge ausgewählt",
-                            no_quick_prompts_selected: "Keine vorgeschlagenen Antworten hinzugefügt",
-                            no_examples_selected: "Keine Beispiele hinzugefügt",
                             remove: "Entfernen",
+
+                            // Save feedback
                             save: "Speichern",
                             saved_successfully: "Erfolgreich gespeichert!",
                             assistant_saved_description: "Der Assistent {{assistantName}} wurde erfolgreich gespeichert.",
-                            // Stepper step titles
-                            step_title: "Titel",
-                            step_description: "Beschreibung",
-                            step_system_prompt: "System-Prompt",
-                            step_tools: "Werkzeuge",
-                            step_quick_prompts: "Vorgeschlagene Prompts",
-                            step_examples: "Beispiele",
-                            step_visibility: "Sichtbarkeit",
-                            step_advanced_settings: "Erweiterte Einstellungen",
-                            // Navigation buttons
-                            next: "Weiter",
-                            previous: "Zurück",
-                            // Close dialog
-                            close_dialog_title: "Dialog schließen",
-                            close_dialog_message: "Sind Sie sicher, dass Sie den Dialog schließen möchten? Alle nicht gespeicherten Änderungen gehen verloren."
+                            assistant_saved_success: "Assistent erfolgreich gespeichert!",
+                            assistant_saved_message: 'Ihr Assistent "{{title}}" wurde erfolgreich erstellt und gespeichert.',
+
+                            // Error messages
+                            assistant_creation_failed: "Assistent konnte nicht erstellt werden",
+                            save_config_failed: "Speichern der Assistenten-Konfiguration fehlgeschlagen",
+                            assistant_save_failed: "Speichern des Assistenten fehlgeschlagen",
+                            assistant_generated_success: "Assistent erfolgreich generiert!",
+                            assistant_generated_message: "Die Konfiguration Ihres Assistenten wurde generiert. Sie können sie jetzt überprüfen und anpassen.",
+                            assistant_generation_failed: "Generierung der Assistenten-Konfiguration fehlgeschlagen",
+
+                            // Discard confirmation
+                            discard_title: "Änderungen verwerfen?",
+                            discard_message: "Sie haben ungespeicherte Änderungen. Möchten Sie wirklich abbrechen?"
+                        },
+                        expandable_textarea: {
+                            default_title: "Bearbeiten"
                         },
                         publish_assistant_dialog: {
                             title: "Assistent veröffentlichen",
@@ -531,7 +568,50 @@ i18n
                             times_subscribed: "mal abonniert",
                             owned_assistant: "Eigener Assistent",
                             subscribed_assistant: "Abonniert",
-                            more_options: "Weitere Optionen"
+                            more_options: "Weitere Optionen",
+                            duplicate: "Private Kopie erstellen",
+                            duplicate_confirm_title: "Eigene private Kopie erstellen",
+                            duplicate_confirm_message:
+                                'Du kannst "{{title}}" auch ohne eigene Kopie weiter verwenden. Möchtest du trotzdem eine eigene Kopie erstellen? Spätere Änderungen des ursprünglichen Assistenten werden nicht auf deine Kopie übernommen.',
+                            duplicate_confirm_message_deleted:
+                                'Der ursprüngliche Assistent "{{title}}" ist nicht mehr verfügbar. Wenn du weiter damit arbeiten möchtest, kannst du jetzt eine eigene Kopie aus der zuletzt gespeicherten Version erstellen.',
+                            duplicate_confirm_action: "Kopie erstellen",
+                            duplicate_title_suffix: "[Kopie]",
+                            duplicate_success_title: "Assistent dupliziert",
+                            duplicate_success_message: 'Der Assistent "{{title}}" wurde erfolgreich dupliziert.',
+                            duplicate_failed_title: "Assistent konnte nicht dupliziert werden",
+                            duplicate_failed_default: "Beim Duplizieren des Assistenten ist ein Fehler aufgetreten.",
+                            duplicate_failed_rate_limited: "Zu viele Anfragen. Bitte versuchen Sie es später erneut.",
+                            duplicate_failed_forbidden: "Sie haben keine Berechtigung, diesen Assistenten zu duplizieren.",
+                            duplicate_failed_not_found: "Der Assistent wurde nicht gefunden und kann nicht dupliziert werden.",
+                            local_badge: "Veraltet - Lokal",
+                            local_state_title: "Dieser lokale Assistent ist veraltet",
+                            discovery_local_hint:
+                                "Dieser Assistent ist nur lokal in Ihrem Browser gesichert und geht verloren, falls Sie das Gerät wechseln. Sichern Sie ihn jetzt, damit er dauerhaft erhalten bleibt.",
+                            local_chat_warning:
+                                "Dieser Assistent ist nur lokal in Ihrem Browser gesichert und geht verloren, falls Sie das Gerät wechseln. Sichern Sie ihn jetzt, damit er dauerhaft erhalten bleibt.",
+                            local_state_publish_action: "Sichern",
+                            local_migration_confirm_title: "Assistent sichern?",
+                            local_migration_confirm_message:
+                                "Wir sichern diesen Assistenten, damit er dauerhaft erhalten bleibt. Wenn Sie ihn später mit anderen teilen möchten, können Sie das jederzeit in den Einstellungen ändern.",
+                            local_migration_confirm_action: "Sichern",
+                            local_migration_success_title: "Assistent gesichert",
+                            local_migration_success_message: 'Der Assistent "{{title}}" wurde gesichert.',
+                            local_migration_failed_title: "Assistent konnte nicht gesichert werden",
+                            local_migration_failed_default: "Beim Sichern des Assistenten ist ein Fehler aufgetreten.",
+                            deleted_badge: "Gelöscht",
+                            deleted_state_title: "Dieser Community-Assistent ist nicht mehr verfügbar",
+                            deleted_state_body:
+                                "Der ursprüngliche Assistent ist nicht mehr verfügbar und wird nicht mehr unterstützt. Sie können ihn nicht weiter direkt verwenden.",
+                            deleted_state_body_continue:
+                                "Wenn Sie mit dieser Konfiguration weiterarbeiten möchten, speichern Sie sie als eigenen Assistenten. Frühere Chats können Sie weiterhin nur lesend ansehen.",
+                            discovery_deleted_hint:
+                                "Dieser Community-Assistent wurde vom Ersteller gelöscht. Er ist nicht mehr verfügbar. Die letzte Version liegt nur noch lokal im Browser und kann verloren gehen. Sichern Sie sie jetzt als eigenen Assistenten oder sehen Sie nur den alten Chatverlauf an.",
+                            deleted_chat_warning:
+                                "Dieser Community-Assistent wurde vom Ersteller gelöscht und ist nicht mehr verfügbar. Diese Version liegt nur noch lokal im Browser und kann verloren gehen. Der Chatverlauf ist schreibgeschützt. Sichern Sie sie als eigenen Assistenten, wenn Sie weiter damit arbeiten möchten.",
+                            deleted_state_save_action: "Als eigenen Assistenten speichern",
+                            deleted_state_history_action: "Alten Chatverlauf ansehen",
+                            deleted_state_no_history: "Für diesen Assistenten ist kein lokaler Chatverlauf verfügbar."
                         },
                         toolsselector: {
                             title: "Verfügbare Tools",
@@ -621,7 +701,8 @@ i18n
                     },
                     chat: {
                         header: "Ask a question or try an example",
-                        prompt: "Ask a question",
+                        prompt: "Ask a question or upload a document",
+                        prompt_no_upload: "Ask a question",
                         answer_loading: "Generating answer",
                         quickprompts: {
                             shorter_tooltip: "Shorten your answer",
@@ -752,11 +833,7 @@ i18n
                             accept: "Accept"
                         },
                         versioninfo: {
-                            tooltip: "Core Version: {{core_version}}, Frontend Version: {{frontend_version}}, Assistant Version: {{assistant_version}}",
-                            core_version: "Core Version:",
-                            frontend_version: "Frontend Version:",
-                            assistant_version: "Assistant Version:",
-                            label: "Version:",
+                            label: "Version",
                             whats_new: "What's new?"
                         },
                         feedback: {
@@ -829,7 +906,35 @@ i18n
                             tutorial_help: "Open tutorial",
                             tool_header: "Choose additional tools:",
                             tutorial_help_aria: "Open Tutorial for Werkzeug {{tool}} ",
-                            send_question: "Send question"
+                            send_question: "Send question",
+                            upload_data: "Upload document",
+                            uploaded_data_label: "Attached documents",
+                            remove_data: "Remove document",
+                            uploading: "Uploading..."
+                        },
+                        contextmanagerdialog: {
+                            title: "My Documents",
+                            subtitle: "Selected documents will be used as context in the chat.",
+                            uploading: "Uploading...",
+                            upload_btn: "Upload",
+                            select_label: "Choose files",
+                            no_saved: "No saved documents yet.",
+                            use: "Use",
+                            remove_saved: "Remove document",
+                            parsed_at: "Processed on",
+                            clear_saved: "Clear all",
+                            download: "Download text",
+                            selection_count: "Used in chat: {{selected}} of {{total}}",
+                            storage_error: "Document could not be saved (storage full).",
+                            upload_success_title: "Upload successful",
+                            upload_success_one: "1 document was uploaded.",
+                            upload_success_other: "{{count}} documents were uploaded.",
+                            upload_error_title: "Upload failed",
+                            upload_error_one: "1 document could not be uploaded.",
+                            upload_error_other: "{{count}} documents could not be uploaded.",
+                            storage_error_title: "Saving failed",
+                            storage_error_one: "1 document could not be saved locally.",
+                            storage_error_other: "{{count}} documents could not be saved locally."
                         },
                         suminput: {
                             tokensused: "Token used",
@@ -914,10 +1019,10 @@ i18n
                             more: "more"
                         },
                         add_assistant_button: {
-                            add_assistant: "New assistant"
+                            add_assistant: "Create New"
                         },
                         import_assistant: {
-                            import: "Import assistant",
+                            import: "Import",
                             import_success: "Import successful",
                             import_success_message: 'The assistant "{{title}}" has been imported and is ready to use.',
                             import_error: "Import failed",
@@ -925,54 +1030,55 @@ i18n
                             import_invalid_format: "Invalid file format. The file must contain a title and system prompt.",
                             import_save_failed: "Error saving imported assistant"
                         },
-                        create_assistant_dialog: {
-                            title: "Title",
-                            description: "Description",
-                            prompt: "System prompt",
-                            dialog_title: "Create new assistant",
-                            default_assistant_title: "Assistant",
-                            default_assistant_description: "An assistant",
-                            step1_label: "Describe function",
-                            step2_label: "Create assistant",
-                            hint_text:
-                                "Briefly describe what your assistant should do here. Then, decide whether you want MUCGPT to generate the system prompt or if you prefer to define it yourself.",
-                            hint_text_step2:
-                                "Here you should check whether the configurations created by MUCGPT match your requirements. You can adjust the details at any time.",
-                            description_placeholder: "For example: The assistant translates the entered text into English.",
-                            title_placeholder: "For example: English Translator",
-                            prompt_placeholder:
-                                "# Requirement\n# Steps\n# Output Format\n# Examples\n\nFor example:\nEnsure that the translation maintains the original sentence structure and meaning. Pay attention to context-dependent words and cultural differences that may exist.",
-                            or_choose_template: "Alternatively, you could first try the predefined assistants below:",
-                            continue_with_mucgpt: "Continue with MUCGPT",
-                            define_myself: "Define myself",
+                        assistant_editor: {
+                            // Page titles (differ between create and edit)
+                            create_title: "Create Assistant",
+                            edit_title: "Edit Assistant",
+
+                            // Create-only: Mode selector
+                            subtitle_mode_select: "Choose how you want to start",
+                            create_manually: "Create Manually",
+                            create_manually_description: "Start from scratch. Define tools, behavior and prompts yourself.",
+                            create_manually_hint: "For full control from the beginning",
+                            generate_with_mucgpt: "Generate with MUCGPT",
+                            generate_with_mucgpt_description: "Describe your requirements and let MUCGPT generate the configuration.",
+                            generate_with_mucgpt_hint: "For a quick first draft",
+                            recommended: "Recommended",
+
+                            // Create-only: AI description input
+                            subtitle_ai_input: "Describe your assistant and create a first draft",
+                            ai_input_label: "What should your assistant do?",
+                            ai_input_placeholder: "For example: The assistant translates the entered text into English.",
+                            try_example: "TRY AN EXAMPLE:",
+                            generate_button: "Generate Assistant",
+                            generating: "Generating...",
                             description_required: "Please enter a description so MUCGPT can generate the assistant",
-                            generating_prompt: "Generating prompt...",
-                            assistant_saved_success: "Assistant saved successfully!",
-                            assistant_saved_message: 'Your assistant "{{title}}" has been created and saved.',
-                            assistant_creation_failed: "Assistant could not be created",
-                            save_config_failed: "Failed to save assistant configuration",
-                            assistant_save_failed: "Failed to save assistant",
-                            save_assistant_failed: "Failed to save assistant configuration",
-                            assistant_generated_success: "Assistant generated successfully!",
-                            assistant_generated_message: "Your assistant configuration has been generated. You can now review and customize it.",
-                            assistant_generation_failed: "Failed to generate assistant configuration",
                             example_one: "Example 1: Translator",
                             example_two: "Example 2: Email",
                             example_three: "Example 3: Synonyms",
                             create_example_one: "English translator: The assistant translates the text entered into English.",
                             create_example_two: "The assistant is an employee of the City of Munich and responds politely and individually to incoming emails.",
-                            create_example_three: "The assistant creates ten different rephrasings or synonyms for the word or sentence entered."
-                        },
-                        edit_assistant_dialog: {
-                            title: "Edit Assistant",
-                            assistant_title: "Title",
-                            assistant_description: "Description",
-                            system_prompt: "System Prompt",
+                            create_example_three: "The assistant creates ten different rephrasings or synonyms for the word or sentence entered.",
+
+                            // Shared field labels
+                            title: "Title",
+                            title_placeholder: "For example: English Translator",
+                            description: "Description",
+                            description_placeholder: "For example: The assistant translates the entered text into English.",
                             default_assistant_title: "Assistant",
-                            default_assistant_description: "An assistant",
-                            advanced_settings: "Advanced Settings",
-                            hide_advanced_settings: "Hide Advanced Settings",
-                            collapse: "Collapse",
+                            default_assistant_description: "Assistant",
+                            system_prompt: "System Prompt",
+                            prompt_placeholder:
+                                "# Requirement\n# Steps\n# Output Format\n# Examples\n\nFor example:\nEnsure that the translation maintains the original sentence structure and meaning. Pay attention to context-dependent words and cultural differences that may exist.",
+
+                            // Settings section headers
+                            section_basic: "Basic Information",
+                            section_behaviour: "Behaviour & Configuration",
+                            section_tools: "Tools",
+                            section_prompts: "Prompts & Examples",
+                            section_access: "Access & Visibility",
+
+                            // Advanced settings fields
                             creativity: "Creativity",
                             creativity_placeholder: "Select a creativity level...",
                             creativity_low: "Off (conservative)",
@@ -985,42 +1091,56 @@ i18n
                             departments: "Departments",
                             departments_info:
                                 "These are the departments that have access to the assistant. All departments in the hierarchy below the selected departments also have access.",
+
+                            // Quick prompts
                             quick_prompts: "Quick Prompts",
                             quick_prompts_placeholder: "Add quick prompts, one per line (label|prompt)",
                             quick_prompt_label_placeholder: "Enter the label...",
                             quick_prompt_text_placeholder: "Enter the prompt text...",
                             add_quick_prompt: "Add Quick Prompt",
-                            dnd_reorder_hint: "Drag items by the handle to change their order.",
+                            no_quick_prompts_selected: "No quick prompts added",
+
+                            // Examples
                             examples: "Examples",
                             examples_placeholder: "Add examples, one per line (text|value)",
                             example_text_placeholder: "Enter the example text...",
                             example_value_placeholder: "Enter the example value...",
                             add_example: "Add Example",
+                            no_examples_selected: "No examples added",
+
+                            // Tools
+                            select_tools: "Select Tools",
+                            no_tools_selected: "No tools selected",
+
+                            // DnD / list controls
+                            dnd_reorder_hint: "Drag items by the handle to change their order.",
                             drag_to_reorder: "Drag to reorder",
                             dnd_aria_label: "Reorder item {{position}} of {{total}}",
                             move_up: "Move up",
                             move_down: "Move down",
-                            tools: "Tools",
-                            select_tools: "Select Tools",
-                            no_tools_selected: "No tools selected",
-                            no_quick_prompts_selected: "No quick prompts added",
-                            no_examples_selected: "No examples added",
                             remove: "Remove",
+
+                            // Save feedback
                             save: "Save",
-                            saved_successfully: "Succesfully saved!",
+                            saved_successfully: "Successfully saved!",
                             assistant_saved_description: "The assistant {{assistantName}} has been successfully saved.",
-                            step_title: "Title",
-                            step_description: "Description",
-                            step_system_prompt: "System Prompt",
-                            step_tools: "Tools",
-                            step_quick_prompts: "Proposed Prompts",
-                            step_examples: "Examples",
-                            step_visibility: "Visibility",
-                            step_advanced_settings: "Advanced Settings",
-                            next: "Next",
-                            previous: "Previous",
-                            close_dialog_title: "Close Dialog",
-                            close_dialog_message: "Are you sure you want to close the dialog? All unsaved changes will be lost."
+                            assistant_saved_success: "Assistant saved successfully!",
+                            assistant_saved_message: 'Your assistant "{{title}}" has been created and saved.',
+
+                            // Error messages
+                            assistant_creation_failed: "Assistant could not be created",
+                            save_config_failed: "Failed to save assistant configuration",
+                            assistant_save_failed: "Failed to save assistant",
+                            assistant_generated_success: "Assistant generated successfully!",
+                            assistant_generated_message: "Your assistant configuration has been generated. You can now review and customize it.",
+                            assistant_generation_failed: "Failed to generate assistant configuration",
+
+                            // Discard confirmation
+                            discard_title: "Discard changes?",
+                            discard_message: "You have unsaved changes. Are you sure you want to cancel?"
+                        },
+                        expandable_textarea: {
+                            default_title: "Edit"
                         },
                         publish_assistant_dialog: {
                             title: "Publish Assistant",
@@ -1093,7 +1213,49 @@ i18n
                             times_subscribed: "times subscribed",
                             owned_assistant: "Own Assistant",
                             subscribed_assistant: "Subscribed",
-                            more_options: "More options"
+                            more_options: "More options",
+                            duplicate: "Create private copy",
+                            duplicate_confirm_title: "Create your own private copy",
+                            duplicate_confirm_message:
+                                'You can keep using "{{title}}" without creating your own copy. Do you still want to create one? Future changes to the original assistant will not be applied to your copy.',
+                            duplicate_confirm_message_deleted:
+                                'The original assistant "{{title}}" is no longer available. If you want to keep using it, you can create your own copy now from the last cached version.',
+                            duplicate_confirm_action: "Create copy",
+                            duplicate_title_suffix: "[Copy]",
+                            duplicate_success_title: "Assistant duplicated",
+                            duplicate_success_message: 'The assistant "{{title}}" was duplicated successfully.',
+                            duplicate_failed_title: "Assistant could not be duplicated",
+                            duplicate_failed_default: "An error occurred while duplicating the assistant.",
+                            duplicate_failed_rate_limited: "Too many requests. Please try again later.",
+                            duplicate_failed_forbidden: "You do not have permission to duplicate this assistant.",
+                            duplicate_failed_not_found: "The assistant was not found and cannot be duplicated.",
+                            local_badge: "Deprecated - Local",
+                            local_state_title: "This local assistant is deprecated",
+                            discovery_local_hint:
+                                "This assistant is only saved locally in your browser and will be lost if you switch devices. Save it now so it remains available.",
+                            local_chat_warning:
+                                "This assistant is only saved locally in your browser and will be lost if you switch devices. Save it now so it remains available.",
+                            local_state_publish_action: "Save",
+                            local_migration_confirm_title: "Save assistant?",
+                            local_migration_confirm_message:
+                                "We will save this assistant so it remains available. If you want to share it with others later, you can change that at any time in the assistant settings.",
+                            local_migration_confirm_action: "Save",
+                            local_migration_success_title: "Assistant saved",
+                            local_migration_success_message: 'The assistant "{{title}}" was saved.',
+                            local_migration_failed_title: "Assistant could not be saved",
+                            local_migration_failed_default: "An error occurred while saving the assistant.",
+                            deleted_badge: "Deleted",
+                            deleted_state_title: "This community assistant is no longer available",
+                            deleted_state_body: "The original assistant is no longer available or supported. You can no longer continue using it directly.",
+                            deleted_state_body_continue:
+                                "If you want to keep using this setup, save it as your own assistant. You can still inspect previous chats in read-only mode.",
+                            discovery_deleted_hint:
+                                "This community assistant was deleted by its creator and is no longer available. The last version only exists locally in this browser and may be lost. Save it now as your own assistant, or only view the old chat history.",
+                            deleted_chat_warning:
+                                "This community assistant was deleted by its creator and is no longer available. This version only exists locally in this browser and may be lost. The chat history is read-only. Save it as your own assistant if you want to keep using it.",
+                            deleted_state_save_action: "Save as own assistant",
+                            deleted_state_history_action: "View old chat history",
+                            deleted_state_no_history: "No local chat history is available for this assistant."
                         },
                         toolsselector: {
                             title: "Available tools",
@@ -1182,7 +1344,8 @@ i18n
                     },
                     chat: {
                         header: "Stelle a Froog oda probier a Beispui",
-                        prompt: "Stelle a Froog ",
+                        prompt: "Stell a Froog oder lad a Dokument hoch",
+                        prompt_no_upload: "Stell a Froog",
                         answer_loading: "I bearbeit grad de Frog",
                         quickprompts: {
                             shorter_tooltip: "Schreib a kürzere Antwort",
@@ -1312,11 +1475,7 @@ i18n
                             accept: "Zustimm'n"
                         },
                         versioninfo: {
-                            tooltip: "Core Version: {{core_version}}, Frontend Version: {{frontend_version}}, Assistenten Version: {{assistant_version}}",
-                            core_version: "Core Version:",
-                            frontend_version: "Frontend Version:",
-                            assistant_version: "Assistenten Version:",
-                            label: "Version:",
+                            label: "Version",
                             whats_new: "Wos gibt's Nei's?"
                         },
                         feedback: {
@@ -1389,7 +1548,26 @@ i18n
                             tutorial_help: "Tutorial aufmachn",
                             tool_header: "Zusätzliche Werkzeig auswähln:",
                             tutorial_help_aria: "Tutorial zum Werkzeig {{tool}} aufmachn",
-                            send_question: "Froog senden"
+                            send_question: "Froog senden",
+                            upload_data: "Dokument hochladn",
+                            uploaded_data_label: "Dazua gladne Dokumente",
+                            remove_data: "Dokument wegdoa",
+                            uploading: "Wird grod hochglodn..."
+                        },
+                        contextmanagerdialog: {
+                            title: "Meine Dokumente",
+                            subtitle: "Ausgwähte Dokumente wean im Ratsch ois Kontext hergnomma.",
+                            uploading: "Wird obagloodn...",
+                            upload_btn: "Obalodn",
+                            select_label: "Dateien aussuachn",
+                            no_saved: "No koane gspeicherten Dokumente.",
+                            use: "Verwenden",
+                            remove_saved: "Dokument entfernen",
+                            parsed_at: "Vaorbeitet am",
+                            clear_saved: "Ois löschen",
+                            download: "Text obalodn",
+                            selection_count: "Im Ratsch verwendet: {{selected}} vo {{total}}",
+                            storage_error: "Dokument hod ned gspeichert wern kenna (Speicher voi)."
                         },
                         suminput: {
                             tokensused: "Token vabrocht",
@@ -1474,10 +1652,10 @@ i18n
                             more: "mehr"
                         },
                         add_assistant_button: {
-                            add_assistant: "Neia Assistent"
+                            add_assistant: "Nei anlegn"
                         },
                         import_assistant: {
-                            import: "Assistentn importier'n",
+                            import: "Importiern",
                             import_success: "Import erfolgreich",
                             import_success_message: 'Dea Assistent "{{title}}" is importiert wordn und ko jetzt verwendet werdn.',
                             import_error: "Import fehlgschlogn",
@@ -1485,55 +1663,56 @@ i18n
                             import_invalid_format: "Ungültigs Dateiformat. De Datei muass an Titel und System-Prompt enthoidn.",
                             import_save_failed: "Fehler beim Speichern vom importierten Assistentn"
                         },
-                        create_assistant_dialog: {
-                            title: "Titel",
-                            description: "Was er kenna muass",
-                            prompt: "System-Vorgab (Prompt)",
-                            dialog_title: "An neia Assistentn o'legn",
-                            default_assistant_title: "Assistent",
-                            default_assistant_description: "A Assistent",
-                            step1_label: "Sog ma, was er kenna muass",
-                            step2_label: "Assistentn ferti macha",
-                            hint_text:
-                                "Do schreibst kurz her, was dei Assistent doa soi. Danach suachst da aus, ob da MUCGPT an System-Prompt für di schreim soi oder ob'st des liaba selber in d'Hand nimmst.",
-                            hint_text_step2:
-                                "Schau am besten nomoi drüber, ob des, was MUCGPT higschrim hod, aa wirklich passt. Du kannst de Details nachher jaderzeit no amoi ändern.",
-                            description_placeholder: "Zum Beispiel: Der Assistent übersetzt ois, was’d eam gibst, ins Englische.",
-                            title_placeholder: "Zum Beispiel: Englisch-Ibasatza",
-                            prompt_placeholder:
-                                "# Anforderung\n# Schritt für Schritt\n# Format\n# Beispiele\n\nZum Beispiel:\nSchau drauf, dass de Ibasetzung an originalen Satzbau und an Sinn beihoid. Pass auf bei Wörtern, de auf’n Zusammenhang okemma, und auf de feinen kulturelln Untaschiede, de ’s gebn ko.",
-                            or_choose_template: "Alternativ kannst aa erst amoi de vordefinierten Assistenten dauntn ausprobiern:",
-                            continue_with_mucgpt: "Mit MUCGPT weitermacha",
-                            define_myself: "Des mach i selber",
+                        assistant_editor: {
+                            // Page titles (differ between create and edit)
+                            create_title: "An neia Assistentn o'legn",
+                            edit_title: "Assistent bearbeiten",
+
+                            // Create-only: Mode selector
+                            subtitle_mode_select: "Wia möchst da starten?",
+                            create_manually: "Selber mocha",
+                            create_manually_description: "Fang von vorn o. Leg Werkzeig, Verhoitn und Prompts selber fest.",
+                            create_manually_hint: "Für volle Kontrolle von Anfang o",
+                            generate_with_mucgpt: "Mit MUCGPT generieren",
+                            generate_with_mucgpt_description: "Beschreib dei Anforderungen und lass MUCGPT de Konfiguration generieren.",
+                            generate_with_mucgpt_hint: "Für an schnellen ersten Entwurf",
+                            recommended: "Empfohlen",
+
+                            // Create-only: AI description input
+                            subtitle_ai_input: "Beschreib dei'n Assistenten und erstell an ersten Entwurf",
+                            ai_input_label: "Was soi dei'n Assistent doa?",
+                            ai_input_placeholder: "Zum Beispiel: Der Assistent übersetzt ois, was'd eam gibst, ins Englische.",
+                            try_example: "BEISPUI AUSPROBIERN:",
+                            generate_button: "Assistentn generieren",
+                            generating: "Wird generiert...",
                             description_required: "Bittschön gib a Beschreibung ei, damit MUCGPT den Assistentn generieren ko",
-                            generating_prompt: "Prompt wird erstellt...",
-                            assistant_saved_success: "Assistent erfolgreich gspeichert!",
-                            assistant_saved_message: 'Dei Assistent "{{title}}" is erfolgreich erstellt und gspeichert wordn.',
-                            assistant_creation_failed: "Assistent konnt ned erstellt werdn",
-                            save_config_failed: "Speichern vo da Assistenten-Konfiguration is fehlgschlogn",
-                            assistant_save_failed: "Speichern vom Assistenten is fehlgschlogn",
-                            save_assistant_failed: "Speichern vo da Assistenten-Konfiguration is fehlgschlogn",
-                            assistant_generated_success: "Assistent erfolgreich generiert!",
-                            assistant_generated_message: "Dei Assistent-Konfiguration is generiert wordn. Du kannst sie jetzt überprüfn und anpassn.",
-                            assistant_generation_failed: "Generierung vo da Assistenten-Konfiguration is fehlgschlogn",
                             example_one: "Beispui 1: Übersetzer",
                             example_two: "Beispui 2: Email",
                             example_three: "Beispui 3: Synonyme",
                             create_example_one: "Englisch Übersetzer: Dea Assistent übersetzt den eingemen Text ins Englische.",
                             create_example_two: "Der Assistent is a Mitarbatr dea Stod Minga und antwortet höflich sowie individuell af de eingehnden E-Mails.",
                             create_example_three:
-                                "Der Assistent erstäit fia des eingeme Wort oda den eingemen Satz zehn verschiedene Umformulierungen oda Synonyme."
-                        },
-                        edit_assistant_dialog: {
-                            title: "Assistent bearbeiten",
-                            assistant_title: "Titel",
-                            assistant_description: "Beschreibung",
-                            system_prompt: "System-Prompt",
+                                "Der Assistent erstäit fia des eingeme Wort oda den eingemen Satz zehn verschiedene Umformulierungen oda Synonyme.",
+
+                            // Shared field labels
+                            title: "Titel",
+                            title_placeholder: "Zum Beispiel: Englisch-Ibasatza",
+                            description: "Beschreibung",
+                            description_placeholder: "Zum Beispiel: Der Assistent übersetzt ois, was'd eam gibst, ins Englische.",
                             default_assistant_title: "Assistent",
-                            default_assistant_description: "A Assistent",
-                            advanced_settings: "Erweiterte Einstellungen",
-                            hide_advanced_settings: "Erweiterte Einstellungen vaberg",
-                            collapse: "Eiklappn",
+                            default_assistant_description: "Assistent",
+                            system_prompt: "System-Prompt",
+                            prompt_placeholder:
+                                "# Anforderung\n# Schritt für Schritt\n# Format\n# Beispiele\n\nZum Beispiel:\nSchau drauf, dass de Ibasetzung an originalen Satzbau und an Sinn beihoid. Pass auf bei Wörtern, de auf'n Zusammenhang okemma, und auf de feinen kulturelln Untaschiede, de 's gebn ko.",
+
+                            // Settings section headers
+                            section_basic: "Grundlegnde Infos",
+                            section_behaviour: "Verhoitn & Konfiguration",
+                            section_tools: "Werkzeig",
+                            section_prompts: "Prompts & Beispui",
+                            section_access: "Zugriff & Sichtbarkeit",
+
+                            // Advanced settings fields
                             creativity: "Kreativität",
                             creativity_placeholder: "Wähl a Kreativitätsstufn...",
                             creativity_low: "Aus (konservativ)",
@@ -1547,45 +1726,56 @@ i18n
                             departments: "Abteilungen",
                             departments_info:
                                 "Des san de Abteilungen, de Zugriff auf den Assistenten ham. Olle Abteilungen in da Hierarchie unter de ausgsuachten Abteilungen ham a Zugriff.",
+
+                            // Quick prompts
                             quick_prompts: "Vorgeschlagene Antworten",
                             quick_prompts_placeholder: "Füg vorgschlagene Antworn hinzu, oane pro Zeile (Label|Prompt)",
                             quick_prompt_label_placeholder: "Gib des Label ei...",
                             quick_prompt_text_placeholder: "Gib den Prompt-Text ei...",
                             add_quick_prompt: "Vorgeschlagene Antwort hinzufügn",
-                            dnd_reorder_hint: "Ziag de Elementa am Griff, um de Reihenfoig zum ändern.",
+                            no_quick_prompts_selected: "Koane vorgeschlagene Antworn hinzugfügt",
+
+                            // Examples
                             examples: "Beispui",
                             examples_placeholder: "Füg Beispui hinzu, oans pro Zeile (Text|Wert)",
                             example_text_placeholder: "Gib den Beispui-Text ei...",
                             example_value_placeholder: "Gib den Beispui-Wert ei...",
                             add_example: "Beispui hinzufügn",
+                            no_examples_selected: "Koane Beispui hinzugfügt",
+
+                            // Tools
+                            select_tools: "Werkzeig aussuachn",
+                            no_tools_selected: "Koane Werkzeig ausgsuacht",
+
+                            // DnD / list controls
+                            dnd_reorder_hint: "Ziag de Elementa am Griff, um de Reihenfoig zum ändern.",
                             drag_to_reorder: "Ziagn zum Nei-Ordna",
                             dnd_aria_label: "Element {{position}} vo {{total}} nei ordna",
                             move_up: "Nach obm",
                             move_down: "Nach untn",
-                            tools: "Werkzeig",
-                            select_tools: "Werkzeig aussuachn",
-                            no_tools_selected: "Koane Werkzeig ausgsuacht",
-                            no_quick_prompts_selected: "Koane vorgeschlagene Antworn hinzugfügt",
-                            no_examples_selected: "Koane Beispui hinzugfügt",
                             remove: "Entfernen",
+
+                            // Save feedback
                             save: "Speichan",
                             saved_successfully: "Erfolgreich gspeichert!",
                             assistant_saved_description: "Der Assistent {{assistantName}} is jetzt erfolgreich g'speichert.",
-                            // Stepper step titles
-                            step_title: "Titel",
-                            step_description: "Beschreibung",
-                            step_system_prompt: "System-Prompt",
-                            step_tools: "Werkzeig",
-                            step_quick_prompts: "Vogschlagene Prompts",
-                            step_examples: "Beispui",
-                            step_visibility: "Sichtbarkeit",
-                            step_advanced_settings: "Erweiterte Einstellungen",
-                            // Navigation buttons
-                            next: "Weiter",
-                            previous: "Zruck",
-                            // Close dialog
-                            close_dialog_title: "Dialog schließn",
-                            close_dialog_message: "Bist da sicha, dass'd den Dialog schließn willst? Olle ned gspeicherten Änderungen gehen verlorn."
+                            assistant_saved_success: "Assistent erfolgreich gspeichert!",
+                            assistant_saved_message: 'Dei Assistent "{{title}}" is erfolgreich erstellt und gspeichert wordn.',
+
+                            // Error messages
+                            assistant_creation_failed: "Assistent konnt ned erstellt werdn",
+                            save_config_failed: "Speichern vo da Assistenten-Konfiguration is fehlgschlogn",
+                            assistant_save_failed: "Speichern vom Assistenten is fehlgschlogn",
+                            assistant_generated_success: "Assistent erfolgreich generiert!",
+                            assistant_generated_message: "Dei Assistent-Konfiguration is generiert wordn. Du kannst sie jetzt überprüfn und anpassn.",
+                            assistant_generation_failed: "Generierung vo da Assistenten-Konfiguration is fehlgschlogn",
+
+                            // Discard confirmation
+                            discard_title: "Änderungen verwerfn?",
+                            discard_message: "Du hosd ungespeicherte Änderungen. Wuißt du wirklich abbrechen?"
+                        },
+                        expandable_textarea: {
+                            default_title: "Bearbeiten"
                         },
                         publish_assistant_dialog: {
                             title: "Assistent veröffentlcha",
@@ -1659,7 +1849,50 @@ i18n
                             times_subscribed: "moi abonniert",
                             owned_assistant: "Eigener Assistent",
                             subscribed_assistant: "Abonniert",
-                            more_options: "Weitere Optionen"
+                            more_options: "Weitere Optionen",
+                            duplicate: "Private Kopie erstoin",
+                            duplicate_confirm_title: "Eigene private Kopie erstoin",
+                            duplicate_confirm_message:
+                                'Du konnst "{{title}}" aa ohne eigene Kopie weiternutzn. Magst trotzdem a eigene Kopie erstoin? Spätere Änderungen vom ursprünglichen Assistentn wearn ned auf dei Kopie übernomma.',
+                            duplicate_confirm_message_deleted:
+                                'Da ursprüngliche Assistent "{{title}}" is nimmer verfuegbar. Wennst weitermacha mogst, koanst jetz a eigene Kopie aus da zletzt gspeicherten Version erstoin.',
+                            duplicate_confirm_action: "Kopie erstoin",
+                            duplicate_title_suffix: "[Kopie]",
+                            duplicate_success_title: "Assistent dupliziert",
+                            duplicate_success_message: 'Da Assistent "{{title}}" is erfolgreich dupliziert worn.',
+                            duplicate_failed_title: "Assistent hod ned dupliziert wern kina",
+                            duplicate_failed_default: "Beim Dupliziern vom Assistentn is a Fehler aufgtretn.",
+                            duplicate_failed_rate_limited: "Zvui Anfragen. Bitte probier's spada nomoi.",
+                            duplicate_failed_forbidden: "Du host koa Berechtigung, den Assistentn zum Dupliziern.",
+                            duplicate_failed_not_found: "Da Assistent is ned gfundn worn und ko ned dupliziert wern.",
+                            local_badge: "Veraltet - Lokal",
+                            local_state_title: "Der lokale Assistent is veraltet",
+                            discovery_local_hint:
+                                "Der Assistent is bloß lokal in deim Browser gesichert und geht verloren, wennst des Gerät wechselst. Sicher eam jetzt, damit a dauerhaft erhalten bleibt.",
+                            local_chat_warning:
+                                "Der Assistent is bloß lokal in deim Browser gesichert und geht verloren, wennst des Gerät wechselst. Sicher eam jetzt, damit a dauerhaft erhalten bleibt.",
+                            local_state_publish_action: "Sichern",
+                            local_migration_confirm_title: "Assistent sichern?",
+                            local_migration_confirm_message:
+                                "Mir sichern den Assistenten, damit a dauerhaft erhalten bleibt. Wennst eam später für andere freigebn magst, kannst des jederzeit in de Einstellungen ändern.",
+                            local_migration_confirm_action: "Sichern",
+                            local_migration_success_title: "Assistent gesichert",
+                            local_migration_success_message: 'Da Assistent "{{title}}" is gesichert worn.',
+                            local_migration_failed_title: "Assistent hod ned gesichert wern kina",
+                            local_migration_failed_default: "Beim Sichern vom Assistentn is a Fehler aufgtretn.",
+                            deleted_badge: "Glascht",
+                            deleted_state_title: "Der Community-Assistent is nimmer verfuegbar",
+                            deleted_state_body:
+                                "Da urspruengliche Assistent is nimmer verfuegbar und werd aa nimmer unterstuetzt. Direkt weiternutzn geht nimmer.",
+                            deleted_state_body_continue:
+                                "Wennst mit dera Konfiguration weitermacha mogst, speicherst as ois dein eigenen Assistenten. Fruahere Chats koanst weiterhin nur lesend anschaugn.",
+                            discovery_deleted_hint:
+                                "Der Community-Assistent is vom Ersteller glascht worn und nimmer verfuegbar. De letzte Version liegt bloß no lokal im Browser und ko verloren geh. Sicherst as jetz ois eigenen Assistenten oder schaust bloß den oidn Chatverlauf o.",
+                            deleted_chat_warning:
+                                "Der Community-Assistent is vom Ersteller glascht worn und nimmer verfuegbar. De Version liegt bloß no lokal im Browser und ko verloren geh. Der Chatverlauf is nur lesend. Sicherst as ois eigenen Assistenten, wennst weitermacha mogst.",
+                            deleted_state_save_action: "Ois eigenen Assistenten speichern",
+                            deleted_state_history_action: "Oidn Chatverlauf anschaugn",
+                            deleted_state_no_history: "Fuer den Assistenten gibt's koan lokalen Chatverlauf."
                         },
                         toolsselector: {
                             title: "Verfügbare Werkzeig",
@@ -1717,7 +1950,8 @@ i18n
             FR: {
                 translation: {
                     header: {
-                        nutzungsbedingungen: "Conditions d'utilisation"
+                        nutzungsbedingungen: "Conditions d'utilisation",
+                        create_assistant: "Create assistant"
                     },
                     menu: {
                         go_to_tutorials_tooltip: "Découvrez comment MUCGPT et les modèles de langage fonctionnent en général",
@@ -1747,7 +1981,8 @@ i18n
                     },
                     chat: {
                         header: "Posez une question ou essayez un exemple",
-                        prompt: "Posez une question",
+                        prompt: "Posez une question ou téléchargez un document",
+                        prompt_no_upload: "Posez une question",
                         answer_loading: "Créer une réponse",
                         quickprompts: {
                             shorter_tooltip: "Écrire une réponse plus courte",
@@ -1878,12 +2113,7 @@ i18n
                             accept: "Accepter"
                         },
                         versioninfo: {
-                            tooltip:
-                                "Version principale: {{core_version}}, Version de la frontend: {{frontend_version}}, Version de l'assistant: {{assistant_version}}",
-                            core_version: "Version principale:",
-                            frontend_version: "Version de la frontend:",
-                            assistant_version: "Version de l'assistant:",
-                            label: "Version:",
+                            label: "Version",
                             whats_new: "Quoi de neuf ?"
                         },
                         feedback: {
@@ -1956,7 +2186,26 @@ i18n
                             tutorial_help: "Ouvrir le tutoriel",
                             tool_header: "Choisir des outils supplémentaires:",
                             tutorial_help_aria: "Ouvrir le tutoriel pour l'outil {{tool}}",
-                            send_question: "Envoyer la question"
+                            send_question: "Envoyer la question",
+                            upload_data: "Télécharger un document",
+                            uploaded_data_label: "Documents ajoutés",
+                            remove_data: "Supprimer le document",
+                            uploading: "Téléchargement..."
+                        },
+                        contextmanagerdialog: {
+                            title: "Mes documents",
+                            subtitle: "Les documents sélectionnés seront utilisés comme contexte dans le chat.",
+                            uploading: "Téléversement...",
+                            upload_btn: "Téléverser",
+                            select_label: "Choisir des fichiers",
+                            no_saved: "Aucun document enregistré pour l'instant.",
+                            use: "Utiliser",
+                            remove_saved: "Supprimer le document",
+                            parsed_at: "Traité le",
+                            clear_saved: "Tout effacer",
+                            download: "Télécharger le texte",
+                            selection_count: "{{selected}} sur {{total}} sélectionné(s)",
+                            storage_error: "Le document n'a pas pu être enregistré (stockage plein)."
                         },
                         suminput: {
                             tokensused: "Tokens utilisés",
@@ -2041,10 +2290,10 @@ i18n
                             more: "plus"
                         },
                         add_assistant_button: {
-                            add_assistant: "nouvel assistant"
+                            add_assistant: "Créer"
                         },
                         import_assistant: {
-                            import: "Importer un assistant",
+                            import: "Importer",
                             import_success: "Importation réussie",
                             import_success_message: 'L\'assistant "{{title}}" a été importé et est prêt à être utilisé.',
                             import_error: "Échec de l'importation",
@@ -2052,108 +2301,120 @@ i18n
                             import_invalid_format: "Format de fichier invalide. Le fichier doit contenir un titre et un prompt système.",
                             import_save_failed: "Erreur lors de l'enregistrement de l'assistant importé"
                         },
-                        create_assistant_dialog: {
-                            title: "Titre",
-                            description: "Description",
-                            prompt: "System prompt",
-                            dialog_title: "Créer un nouvel assistant",
-                            default_assistant_title: "Assistant",
-                            default_assistant_description: "Un assistant",
-                            step1_label: "Décrire la fonction",
-                            step2_label: "Créer l'assistant",
-                            hint_text:
-                                "Décrivez ici brièvement ce que votre assistant doit faire. Ensuite, décidez si vous souhaitez laisser MUCGPT générer le prompt système ou si vous préférez le définir vous-même.",
-                            hint_text_step2:
-                                "Vous devriez vérifier ici si les configurations créées par MUCGPT correspondent à vos attentes. Vous pouvez ajuster les détails à tout moment.",
-                            description_placeholder: "Par exemple : l'assistant traduit le texte saisi en anglais.",
-                            title_placeholder: "Par exemple : Traducteur anglais",
-                            prompt_placeholder:
-                                "# Exigences\n# Étapes\n# Format de sortie\n# Exemples\n\nPar exemple :\nAssurez-vous que la traduction conserve la structure de la phrase d'origine et sa signification. Faites attention aux mots dépendant du contexte et aux éventuelles différences culturelles.",
-                            or_choose_template: "Alternativement, vous pouvez d'abord essayer les assistants prédéfinis ci-dessous :",
-                            continue_with_mucgpt: "Continuer avec MUCGPT",
-                            define_myself: "Je définis moi-même",
+                        assistant_editor: {
+                            // Page titles (differ between create and edit)
+                            create_title: "Créer un assistant",
+                            edit_title: "Modifier l'assistant",
+
+                            // Create-only: Mode selector
+                            subtitle_mode_select: "Choisissez comment vous souhaitez commencer",
+                            create_manually: "Créer manuellement",
+                            create_manually_description: "Commencez de zéro. Définissez vous-même les outils, le comportement et les prompts.",
+                            create_manually_hint: "Pour un contrôle total dès le début",
+                            generate_with_mucgpt: "Générer avec MUCGPT",
+                            generate_with_mucgpt_description: "Décrivez vos besoins et laissez MUCGPT générer la configuration.",
+                            generate_with_mucgpt_hint: "Pour obtenir rapidement une première version",
+                            recommended: "Recommandé",
+
+                            // Create-only: AI description input
+                            subtitle_ai_input: "Décrivez votre assistant et créez une première version",
+                            ai_input_label: "Que doit faire votre assistant ?",
+                            ai_input_placeholder: "Par exemple : l'assistant traduit le texte saisi en anglais.",
+                            try_example: "ESSAYER UN EXEMPLE :",
+                            generate_button: "Générer l'assistant",
+                            generating: "Génération...",
                             description_required: "Veuillez saisir une description pour que MUCGPT puisse générer l'assistant",
-                            generating_prompt: "Génération du prompt...",
-                            assistant_saved_success: "Assistant enregistré avec succès!",
-                            assistant_saved_message: 'Votre assistant "{{title}}" a été créé et enregistré avec succès.',
-                            assistant_creation_failed: "L'assistant n'a pas pu être créé",
-                            save_config_failed: "Échec de l'enregistrement de la configuration de l'assistant",
-                            assistant_save_failed: "Échec de l'enregistrement de l'assistant",
-                            save_assistant_failed: "Échec de l'enregistrement de la configuration de l'assistant",
-                            assistant_generated_success: "Assistant généré avec succès!",
-                            assistant_generated_message:
-                                "La configuration de votre assistant a été générée. Vous pouvez maintenant la vérifier et la personnaliser.",
-                            assistant_generation_failed: "Échec de la génération de la configuration de l'assistant",
-                            example_one: "Exemple 1 : traducteur",
-                            example_two: "Exemple 2 : e-mail",
-                            example_three: "Exemple 3 : synonymes",
+                            example_one: "Exemple 1 : Traducteur",
+                            example_two: "Exemple 2 : E-mail",
+                            example_three: "Exemple 3 : Synonymes",
                             create_example_one: "Traducteur anglais : l'assistant traduit le texte saisi en anglais.",
                             create_example_two:
-                                "L'assistant est un employé de la ville de Munich et répond de manière polie et personnalisée aux e-mails reçus.",
-                            create_example_three: "L'assistant propose dix reformulations ou synonymes différents pour le mot ou la phrase saisi(e)."
-                        },
-                        edit_assistant_dialog: {
-                            title: "Modifier l'assistant",
-                            assistant_title: "Titre",
-                            assistant_description: "Description",
-                            system_prompt: "Prompt système",
+                                "L'assistant est un agent de la Ville de Munich et répond de manière polie et personnalisée aux e-mails entrants.",
+                            create_example_three: "L'assistant crée dix reformulations ou synonymes pour le mot ou la phrase saisi(e).",
+
+                            // Shared field labels
+                            title: "Titre",
+                            title_placeholder: "Par exemple : Traducteur anglais",
+                            description: "Description",
+                            description_placeholder: "Par exemple : l'assistant traduit le texte saisi en anglais.",
                             default_assistant_title: "Assistant",
-                            default_assistant_description: "Un assistant",
-                            advanced_settings: "Paramètres avancés",
-                            hide_advanced_settings: "Masquer les paramètres avancés",
-                            collapse: "Réduire",
+                            default_assistant_description: "Assistant",
+                            system_prompt: "Prompt système",
+                            prompt_placeholder:
+                                "# Exigence\n# Étapes\n# Format de sortie\n# Exemples\n\nPar exemple :\nAssurez-vous que la traduction conserve la structure et le sens de la phrase d'origine. Tenez compte des nuances contextuelles et des différences culturelles.",
+
+                            // Settings section headers
+                            section_basic: "Informations de base",
+                            section_behaviour: "Comportement et configuration",
+                            section_tools: "Outils",
+                            section_prompts: "Prompts et exemples",
+                            section_access: "Accès et visibilité",
+
+                            // Advanced settings fields
                             creativity: "Créativité",
                             creativity_placeholder: "Sélectionnez un niveau de créativité...",
-                            creativity_low: "Désactivé (conservateur)",
-                            creativity_medium: "Normal (équilibré)",
-                            creativity_high: "Élevé (créatif)",
+                            creativity_low: "Désactivée (conservateur)",
+                            creativity_medium: "Normale (équilibrée)",
+                            creativity_high: "Élevée (créative)",
                             default_model: "Modèle par défaut",
                             default_model_info:
-                                "Le modèle par défaut utilisé pour cet assistant. Si aucun modèle n'est sélectionné, celui choisi par l'utilisateur sera utilisé.",
-                            default_model_placeholder: "Choisissez un modèle par défaut...",
+                                "Le modèle par défaut utilisé pour cet assistant. Si aucun modèle n'est sélectionné, le modèle choisi par l'utilisateur sera utilisé.",
+                            default_model_placeholder: "Sélectionnez un modèle par défaut...",
                             no_default_model: "Aucun modèle par défaut (l'utilisateur choisit)",
                             departments: "Départements",
                             departments_info:
-                                "Ce sont les départements qui ont accès à l'assistant. Tous les départements dans la hiérarchie sous les départements sélectionnés ont également accès.",
+                                "Ce sont les départements qui ont accès à l'assistant. Tous les départements situés en dessous dans la hiérarchie y ont également accès.",
+
+                            // Quick prompts
                             quick_prompts: "Prompts rapides",
-                            quick_prompts_placeholder: "Ajoutez des prompts rapides, un par ligne (label|prompt)",
-                            quick_prompt_label_placeholder: "Entrez le label...",
-                            quick_prompt_text_placeholder: "Entrez le texte du prompt...",
+                            quick_prompts_placeholder: "Ajouter des prompts rapides, un par ligne (label|prompt)",
+                            quick_prompt_label_placeholder: "Saisir le libellé...",
+                            quick_prompt_text_placeholder: "Saisir le texte du prompt...",
                             add_quick_prompt: "Ajouter un prompt rapide",
-                            dnd_reorder_hint: "Faites glisser les éléments par la poignée pour changer leur ordre.",
+                            no_quick_prompts_selected: "Aucun prompt rapide ajouté",
+
+                            // Examples
                             examples: "Exemples",
-                            examples_placeholder: "Ajoutez des exemples, un par ligne (texte|valeur)",
-                            example_text_placeholder: "Entrez le texte de l'exemple...",
-                            example_value_placeholder: "Entrez la valeur de l'exemple...",
+                            examples_placeholder: "Ajouter des exemples, un par ligne (texte|valeur)",
+                            example_text_placeholder: "Saisir le texte de l'exemple...",
+                            example_value_placeholder: "Saisir la valeur de l'exemple...",
                             add_example: "Ajouter un exemple",
-                            drag_to_reorder: "Faire glisser pour réorganiser",
+                            no_examples_selected: "Aucun exemple ajouté",
+
+                            // Tools
+                            select_tools: "Sélectionner des outils",
+                            no_tools_selected: "Aucun outil sélectionné",
+
+                            // DnD / list controls
+                            dnd_reorder_hint: "Faites glisser les éléments avec la poignée pour modifier l'ordre.",
+                            drag_to_reorder: "Glisser pour réordonner",
                             dnd_aria_label: "Réorganiser l'élément {{position}} sur {{total}}",
                             move_up: "Monter",
                             move_down: "Descendre",
-                            tools: "Outils",
-                            select_tools: "Sélectionner des outils",
-                            no_tools_selected: "Aucun outil sélectionné",
-                            no_quick_prompts_selected: "Aucun prompt rapide ajouté",
-                            no_examples_selected: "Aucun exemple ajouté",
                             remove: "Supprimer",
+
+                            // Save feedback
                             save: "Enregistrer",
-                            saved_successfully: "Enregistré avec succès!",
+                            saved_successfully: "Enregistré avec succès !",
                             assistant_saved_description: "L'assistant {{assistantName}} a été enregistré avec succès.",
-                            // Stepper step titles
-                            step_title: "Titre",
-                            step_description: "Description",
-                            step_system_prompt: "Prompt système",
-                            step_tools: "Outils",
-                            step_quick_prompts: "Invitations proposées",
-                            step_examples: "Exemples",
-                            step_visibility: "Visibilité",
-                            step_advanced_settings: "Paramètres avancés",
-                            // Navigation buttons
-                            next: "Suivant",
-                            previous: "Précédent",
-                            // Close dialog
-                            close_dialog_title: "Fermer le dialogue",
-                            close_dialog_message: "Êtes-vous sûr de vouloir fermer le dialogue ? Toutes les modifications non enregistrées seront perdues."
+                            assistant_saved_success: "Assistant enregistré avec succès !",
+                            assistant_saved_message: 'Votre assistant "{{title}}" a été créé et enregistré.',
+
+                            // Error messages
+                            assistant_creation_failed: "Impossible de créer l'assistant",
+                            save_config_failed: "Échec de l'enregistrement de la configuration de l'assistant",
+                            assistant_save_failed: "Échec de l'enregistrement de l'assistant",
+                            assistant_generated_success: "Assistant généré avec succès !",
+                            assistant_generated_message:
+                                "La configuration de votre assistant a été générée. Vous pouvez maintenant la vérifier et la personnaliser.",
+                            assistant_generation_failed: "Échec de la génération de la configuration de l'assistant",
+
+                            // Discard confirmation
+                            discard_title: "Annuler les modifications ?",
+                            discard_message: "Vous avez des modifications non enregistrées. Voulez-vous vraiment annuler ?"
+                        },
+                        expandable_textarea: {
+                            default_title: "Modifier"
                         },
                         publish_assistant_dialog: {
                             title: "Publier l'assistant",
@@ -2227,7 +2488,48 @@ i18n
                             times_subscribed: "fois abonné",
                             owned_assistant: "Assistant Propre",
                             subscribed_assistant: "Abonné",
-                            more_options: "Plus d'options"
+                            more_options: "Plus d'options",
+                            duplicate: "Créer une copie privée",
+                            duplicate_confirm_title: "Créer votre propre copie privée",
+                            duplicate_confirm_message: `Vous pouvez continuer à utiliser "{{title}}" sans créer votre propre copie. Voulez-vous quand même en créer une ? Les modifications futures de l'assistant d'origine ne seront pas appliquées à votre copie.`,
+                            duplicate_confirm_message_deleted: `L'assistant d'origine "{{title}}" n'est plus disponible. Si vous voulez continuer à l'utiliser, vous pouvez créer maintenant votre propre copie à partir de la dernière version en cache.`,
+                            duplicate_confirm_action: "Créer la copie",
+                            duplicate_title_suffix: "[Copie]",
+                            duplicate_success_title: "Assistant dupliqué",
+                            duplicate_success_message: `L'assistant "{{title}}" a été dupliqué avec succès.`,
+                            duplicate_failed_title: "L'assistant n'a pas pu être dupliqué",
+                            duplicate_failed_default: "Une erreur est survenue lors de la duplication de l'assistant.",
+                            duplicate_failed_rate_limited: "Trop de requêtes. Veuillez réessayer plus tard.",
+                            duplicate_failed_forbidden: "Vous n'avez pas la permission de dupliquer cet assistant.",
+                            duplicate_failed_not_found: "L'assistant n'a pas été trouvé et ne peut pas être dupliqué.",
+                            local_badge: "Obsolète - Local",
+                            local_state_title: "Cet assistant local est obsolète",
+                            discovery_local_hint:
+                                "Cet assistant est uniquement enregistré localement dans votre navigateur et sera perdu si vous changez d'appareil. Enregistrez-le maintenant pour le conserver durablement.",
+                            local_chat_warning:
+                                "Cet assistant est uniquement enregistré localement dans votre navigateur et sera perdu si vous changez d'appareil. Enregistrez-le maintenant pour le conserver durablement.",
+                            local_state_publish_action: "Enregistrer",
+                            local_migration_confirm_title: "Enregistrer l'assistant ?",
+                            local_migration_confirm_message:
+                                "Nous allons enregistrer cet assistant pour le conserver durablement. Si vous souhaitez plus tard le partager avec d'autres, vous pourrez le modifier à tout moment dans les paramètres de l'assistant.",
+                            local_migration_confirm_action: "Enregistrer",
+                            local_migration_success_title: "Assistant enregistré",
+                            local_migration_success_message: `L'assistant "{{title}}" a été enregistré.`,
+                            local_migration_failed_title: "L'assistant n'a pas pu être enregistré",
+                            local_migration_failed_default: "Une erreur est survenue lors de l'enregistrement de l'assistant.",
+                            deleted_badge: "Supprimé",
+                            deleted_state_title: "Cet assistant communautaire n'est plus disponible",
+                            deleted_state_body:
+                                "L'assistant d'origine n'est plus disponible ni pris en charge. Vous ne pouvez plus continuer à l'utiliser directement.",
+                            deleted_state_body_continue:
+                                "Si vous voulez continuer avec cette configuration, enregistrez-la comme votre propre assistant. Vous pouvez encore consulter les anciens chats en lecture seule.",
+                            discovery_deleted_hint:
+                                "Cet assistant communautaire a été supprimé par son créateur et n'est plus disponible. La dernière version n'existe plus que localement dans ce navigateur et peut être perdue. Enregistrez-la maintenant comme votre propre assistant, ou consultez seulement l'ancien historique de chat.",
+                            deleted_chat_warning:
+                                "Cet assistant communautaire a été supprimé par son créateur et n'est plus disponible. Cette version n'existe plus que localement dans ce navigateur et peut être perdue. L'historique du chat est en lecture seule. Enregistrez-la comme votre propre assistant si vous voulez continuer à l'utiliser.",
+                            deleted_state_save_action: "Enregistrer comme assistant personnel",
+                            deleted_state_history_action: "Voir l'ancien historique de chat",
+                            deleted_state_no_history: "Aucun historique de chat local n'est disponible pour cet assistant."
                         },
                         toolsselector: {
                             title: "Outils disponibles",
@@ -2316,7 +2618,8 @@ i18n
                     },
                     chat: {
                         header: "Задайте питання або спробуйте приклад",
-                        prompt: "Задайте питання",
+                        prompt: "Задайте питання або завантажте документ",
+                        prompt_no_upload: "Задайте питання",
                         answer_loading: "Створення відповіді",
                         quickprompts: {
                             shorter_tooltip: "Написати коротшу відповідь",
@@ -2447,11 +2750,7 @@ i18n
                             accept: "Прийняти"
                         },
                         versioninfo: {
-                            tooltip: "основна версія: {{core_version}}, версія інтерфейсу: {{frontend_version}}, версія помічника: {{assistant_version}}",
-                            core_version: "основна версія:",
-                            frontend_version: "версія інтерфейсу:",
-                            assistant_version: "версія помічника:",
-                            label: "Версія:",
+                            label: "Версія",
                             whats_new: "Що нового?"
                         },
                         feedback: {
@@ -2524,7 +2823,26 @@ i18n
                             tutorial_help: "Відкрити навчальний посібник",
                             tool_header: "Вибрати додаткові інструменти:",
                             tutorial_help_aria: "Відкрити навчальний посібник для інструменту {{tool}}",
-                            send_question: "Надіслати питання"
+                            send_question: "Надіслати питання",
+                            upload_data: "Завантажити документ",
+                            uploaded_data_label: "Додані документи",
+                            remove_data: "Видалити документ",
+                            uploading: "Завантаження..."
+                        },
+                        contextmanagerdialog: {
+                            title: "Мої документи",
+                            subtitle: "Вибрані документи будуть використані як контекст у чаті.",
+                            uploading: "Завантаження...",
+                            upload_btn: "Завантажити",
+                            select_label: "Вибрати файли",
+                            no_saved: "Ще немає збережених документів.",
+                            use: "Використати",
+                            remove_saved: "Видалити документ",
+                            parsed_at: "Оброблено",
+                            clear_saved: "Очистити все",
+                            download: "Завантажити текст",
+                            selection_count: "{{selected}} з {{total}} вибрано",
+                            storage_error: "Документ не вдалося зберегти (сховище переповнене)."
                         },
                         suminput: {
                             tokensused: "Використано токени",
@@ -2609,10 +2927,10 @@ i18n
                             more: "більше"
                         },
                         add_assistant_button: {
-                            add_assistant: "новий асистент"
+                            add_assistant: "Створити"
                         },
                         import_assistant: {
-                            import: "Імпортувати асистента",
+                            import: "Імпортувати",
                             import_success: "Імпорт успішний",
                             import_success_message: 'Асистент "{{title}}" було імпортовано і готовий до використання.',
                             import_error: "Помилка імпорту",
@@ -2620,105 +2938,117 @@ i18n
                             import_invalid_format: "Недійсний формат файлу. Файл повинен містити назву та системний запит.",
                             import_save_failed: "Помилка збереження імпортованого асистента"
                         },
-                        create_assistant_dialog: {
-                            title: "Заголовок",
-                            description: "Опис",
-                            prompt: "Системний запит",
-                            dialog_title: "Створити нового асистента",
-                            default_assistant_title: "Асистент",
-                            default_assistant_description: "Асистент",
-                            step1_label: "Описати функцію",
-                            step2_label: "Створити асистента",
-                            hint_text:
-                                "Тут ви можете коротко описати, що саме має робити ваш асистент. Після цього ви можете обрати, чи згенерувати системний промт за допомогою MUCGPT, чи визначити його самостійно.",
-                            hint_text_step2:
-                                "Тут варто перевірити, чи відповідають конфігурації, створені MUCGPT, вашим побажанням. Ви можете змінити деталі в будь-який момент.",
-                            description_placeholder: "Наприклад: Асистент перекладає введений текст англійською мовою.",
-                            title_placeholder: "Наприклад: Перекладач на англійську",
-                            prompt_placeholder:
-                                "# Вимога\n# Кроки\n# Формат виводу\n# Приклади\n\nНаприклад:\nПереконайтеся, що переклад зберігає оригінальну структуру речення та зміст. Звертайте увагу на контекстуальні значення слів та можливі культурні особливості.",
-                            or_choose_template: "Крім того, ви можете спочатку спробувати попередньо визначених асистентів нижче:",
-                            continue_with_mucgpt: "Продовжити з MUCGPT",
-                            define_myself: "Я визначу самостійно",
+                        assistant_editor: {
+                            // Page titles (differ between create and edit)
+                            create_title: "Створити асистента",
+                            edit_title: "Редагувати асистента",
+
+                            // Create-only: Mode selector
+                            subtitle_mode_select: "Оберіть, як ви хочете почати",
+                            create_manually: "Створити вручну",
+                            create_manually_description: "Почніть з нуля. Самостійно визначте інструменти, поведінку та промпти.",
+                            create_manually_hint: "Для повного контролю з самого початку",
+                            generate_with_mucgpt: "Згенерувати з MUCGPT",
+                            generate_with_mucgpt_description: "Опишіть ваші вимоги, і MUCGPT згенерує конфігурацію.",
+                            generate_with_mucgpt_hint: "Для швидкого першого чернеткового варіанту",
+                            recommended: "Рекомендовано",
+
+                            // Create-only: AI description input
+                            subtitle_ai_input: "Опишіть вашого асистента та створіть перший чернетковий варіант",
+                            ai_input_label: "Що має робити ваш асистент?",
+                            ai_input_placeholder: "Наприклад: асистент перекладає введений текст англійською.",
+                            try_example: "СПРОБУЙТЕ ПРИКЛАД:",
+                            generate_button: "Згенерувати асистента",
+                            generating: "Генерування...",
                             description_required: "Будь ласка, введіть опис, щоб MUCGPT міг згенерувати асистента",
-                            generating_prompt: "Генерація запиту...",
-                            assistant_saved_success: "Асистента успішно збережено!",
-                            assistant_saved_message: 'Ваш асистент "{{title}}" був успішно створений і збережений.',
-                            assistant_creation_failed: "Асистента не вдалося створити",
-                            save_config_failed: "Не вдалося зберегти конфігурацію асистента",
-                            assistant_save_failed: "Не вдалося зберегти асистента",
-                            save_assistant_failed: "Не вдалося зберегти конфігурацію асистента",
-                            assistant_generated_success: "Асистента успішно згенеровано!",
-                            assistant_generated_message: "Конфігурацію вашого асистента згенеровано. Тепер ви можете її переглянути та налаштувати.",
-                            assistant_generation_failed: "Не вдалося згенерувати конфігурацію асистента",
                             example_one: "Приклад 1: Перекладач",
-                            example_two: "Приклад 2: Електронна пошта",
+                            example_two: "Приклад 2: Електронний лист",
                             example_three: "Приклад 3: Синоніми",
-                            create_example_one: "Перекладач англійської мови: Асистент перекладає введений текст англійською мовою.",
-                            create_example_two: "Асистент є співробітником міста Мюнхен і ввічливо та індивідуально відповідає на вхідні електронні листи.",
-                            create_example_three: "Асистент створює десять різних перефразувань або синонімів для введеного слова або речення."
-                        },
-                        edit_assistant_dialog: {
-                            title: "Редагувати асистента",
-                            assistant_title: "Заголовок",
-                            assistant_description: "Опис",
-                            system_prompt: "Системний запит",
+                            create_example_one: "Англійський перекладач: асистент перекладає введений текст англійською.",
+                            create_example_two: "Асистент є працівником міста Мюнхен і ввічливо та індивідуально відповідає на вхідні електронні листи.",
+                            create_example_three: "Асистент створює десять різних перефразувань або синонімів до введеного слова чи речення.",
+
+                            // Shared field labels
+                            title: "Назва",
+                            title_placeholder: "Наприклад: Англійський перекладач",
+                            description: "Опис",
+                            description_placeholder: "Наприклад: асистент перекладає введений текст англійською.",
                             default_assistant_title: "Асистент",
                             default_assistant_description: "Асистент",
-                            advanced_settings: "Розширені налаштування",
-                            hide_advanced_settings: "Приховати розширені налаштування",
-                            collapse: "Згорнути",
+                            system_prompt: "Системний промпт",
+                            prompt_placeholder:
+                                "# Вимога\n# Кроки\n# Формат відповіді\n# Приклади\n\nНаприклад:\nПереконайтеся, що переклад зберігає структуру та зміст оригінального речення. Звертайте увагу на контекстно-залежні слова та культурні відмінності.",
+
+                            // Settings section headers
+                            section_basic: "Основна інформація",
+                            section_behaviour: "Поведінка та конфігурація",
+                            section_tools: "Інструменти",
+                            section_prompts: "Промпти та приклади",
+                            section_access: "Доступ і видимість",
+
+                            // Advanced settings fields
                             creativity: "Креативність",
-                            creativity_placeholder: "Виберіть рівень креативності...",
+                            creativity_placeholder: "Оберіть рівень креативності...",
                             creativity_low: "Вимкнено (консервативно)",
                             creativity_medium: "Нормально (збалансовано)",
                             creativity_high: "Високо (креативно)",
-                            default_model: "Стандартна модель",
+                            default_model: "Модель за замовчуванням",
                             default_model_info:
-                                "Стандартна модель, яку використовує цей асистент. Якщо модель не вибрана, буде використана модель, яку обрав користувач.",
-                            default_model_placeholder: "Виберіть стандартну модель...",
-                            no_default_model: "Немає стандартної моделі (користувач обирає)",
-                            departments: "Відділи",
-                            departments_info: "Це відділи, які мають доступ до асистента. Всі відділи в ієрархії під вибраними відділами також мають доступ.",
-                            quick_prompts: "Швидкі запити",
-                            quick_prompts_placeholder: "Додайте швидкі запити, по одному на рядок (мітка|запит)",
+                                "Модель за замовчуванням для цього асистента. Якщо модель не вибрано, використовуватиметься модель, яку обрав користувач.",
+                            default_model_placeholder: "Оберіть модель за замовчуванням...",
+                            no_default_model: "Без моделі за замовчуванням (обирає користувач)",
+                            departments: "Підрозділи",
+                            departments_info: "Це підрозділи, які мають доступ до асистента. Усі підрозділи нижче у вибраній ієрархії також матимуть доступ.",
+
+                            // Quick prompts
+                            quick_prompts: "Швидкі промпти",
+                            quick_prompts_placeholder: "Додайте швидкі промпти, по одному в рядку (label|prompt)",
                             quick_prompt_label_placeholder: "Введіть мітку...",
-                            quick_prompt_text_placeholder: "Введіть текст запиту...",
-                            add_quick_prompt: "Додати швидкий запит",
-                            dnd_reorder_hint: "Перетягніть елементи за ручку, щоб змінити їхній порядок.",
+                            quick_prompt_text_placeholder: "Введіть текст промпту...",
+                            add_quick_prompt: "Додати швидкий промпт",
+                            no_quick_prompts_selected: "Швидкі промпти не додано",
+
+                            // Examples
                             examples: "Приклади",
-                            examples_placeholder: "Додайте приклади, по одному на рядок (текст|значення)",
+                            examples_placeholder: "Додайте приклади, по одному в рядку (text|value)",
                             example_text_placeholder: "Введіть текст прикладу...",
                             example_value_placeholder: "Введіть значення прикладу...",
                             add_example: "Додати приклад",
-                            drag_to_reorder: "Перетягніть для зміни порядку",
-                            dnd_aria_label: "Переупорядкувати елемент {{position}} з {{total}}",
+                            no_examples_selected: "Приклади не додано",
+
+                            // Tools
+                            select_tools: "Обрати інструменти",
+                            no_tools_selected: "Інструменти не обрано",
+
+                            // DnD / list controls
+                            dnd_reorder_hint: "Перетягуйте елементи за ручку, щоб змінити порядок.",
+                            drag_to_reorder: "Перетягнути для зміни порядку",
+                            dnd_aria_label: "Змінити порядок елемента {{position}} з {{total}}",
                             move_up: "Вгору",
                             move_down: "Вниз",
-                            tools: "Інструменти",
-                            select_tools: "Вибрати інструменти",
-                            no_tools_selected: "Інструменти не вибрано",
-                            no_quick_prompts_selected: "Швидкі запити не додано",
-                            no_examples_selected: "Приклади не додано",
                             remove: "Видалити",
+
+                            // Save feedback
                             save: "Зберегти",
                             saved_successfully: "Успішно збережено!",
-                            assistant_saved_description: "Асистент {{assistantName}} був успішно збережений.",
-                            // Stepper step titles
-                            step_title: "Заголовок",
-                            step_description: "Опис",
-                            step_system_prompt: "Системний запит",
-                            step_tools: "Інструменти",
-                            step_quick_prompts: "Запропоновані підказки",
-                            step_examples: "Приклади",
-                            step_visibility: "Видимість",
-                            step_advanced_settings: "Розширені налаштування",
-                            // Navigation buttons
-                            next: "Далі",
-                            previous: "Назад",
-                            // Close dialog
-                            close_dialog_title: "Закрити діалог",
-                            close_dialog_message: "Ви впевнені, що хочете закрити діалог? Всі незбережені зміни будуть втрачені."
+                            assistant_saved_description: "Асистента {{assistantName}} успішно збережено.",
+                            assistant_saved_success: "Асистента успішно збережено!",
+                            assistant_saved_message: 'Вашого асистента "{{title}}" створено та збережено.',
+
+                            // Error messages
+                            assistant_creation_failed: "Не вдалося створити асистента",
+                            save_config_failed: "Не вдалося зберегти конфігурацію асистента",
+                            assistant_save_failed: "Не вдалося зберегти асистента",
+                            assistant_generated_success: "Асистента успішно згенеровано!",
+                            assistant_generated_message: "Конфігурацію вашого асистента згенеровано. Тепер ви можете переглянути та налаштувати її.",
+                            assistant_generation_failed: "Не вдалося згенерувати конфігурацію асистента",
+
+                            // Discard confirmation
+                            discard_title: "Скасувати зміни?",
+                            discard_message: "У вас є незбережені зміни. Ви впевнені, що хочете скасувати?"
+                        },
+                        expandable_textarea: {
+                            default_title: "Редагувати"
                         },
                         publish_assistant_dialog: {
                             title: "Опублікувати асистента",
@@ -2791,7 +3121,50 @@ i18n
                             times_subscribed: "разів підписано",
                             owned_assistant: "Власний Асистент",
                             subscribed_assistant: "Підписаний",
-                            more_options: "Додаткові параметри"
+                            more_options: "Додаткові параметри",
+                            duplicate: "Створити приватну копію",
+                            duplicate_confirm_title: "Створити власну приватну копію",
+                            duplicate_confirm_message:
+                                'Ви можете й далі користуватися "{{title}}" без створення власної копії. Усе ж хочете створити її? Майбутні зміни в оригінальному асистенті не будуть застосовані до вашої копії.',
+                            duplicate_confirm_message_deleted:
+                                'Оригінальний асистент "{{title}}" більше недоступний. Якщо ви хочете й далі ним користуватися, зараз можна створити власну копію з останньої кешованої версії.',
+                            duplicate_confirm_action: "Створити копію",
+                            duplicate_title_suffix: "[Копія]",
+                            duplicate_success_title: "Асистента дубльовано",
+                            duplicate_success_message: 'Асистента "{{title}}" успішно дубльовано.',
+                            duplicate_failed_title: "Не вдалося дублювати асистента",
+                            duplicate_failed_default: "Під час дублювання асистента сталася помилка.",
+                            duplicate_failed_rate_limited: "Забагато запитів. Будь ласка, спробуйте пізніше.",
+                            duplicate_failed_forbidden: "У вас немає дозволу на дублювання цього асистента.",
+                            duplicate_failed_not_found: "Асистента не знайдено, дублювання неможливе.",
+                            local_badge: "Застарілий - локальний",
+                            local_state_title: "Цей локальний асистент застарів",
+                            discovery_local_hint:
+                                "Цей асистент збережено лише локально у вашому браузері, і він буде втрачений, якщо ви зміните пристрій. Збережіть його зараз, щоб він залишався доступним.",
+                            local_chat_warning:
+                                "Цей асистент збережено лише локально у вашому браузері, і він буде втрачений, якщо ви зміните пристрій. Збережіть його зараз, щоб він залишався доступним.",
+                            local_state_publish_action: "Зберегти",
+                            local_migration_confirm_title: "Зберегти асистента?",
+                            local_migration_confirm_message:
+                                "Ми збережемо цього асистента, щоб він залишався доступним. Якщо пізніше ви захочете поділитися ним з іншими, це можна буде будь-коли змінити в налаштуваннях асистента.",
+                            local_migration_confirm_action: "Зберегти",
+                            local_migration_success_title: "Асистента збережено",
+                            local_migration_success_message: 'Асистента "{{title}}" збережено.',
+                            local_migration_failed_title: "Не вдалося зберегти асистента",
+                            local_migration_failed_default: "Під час збереження асистента сталася помилка.",
+                            deleted_badge: "Видалено",
+                            deleted_state_title: "Цей асистент спільноти більше недоступний",
+                            deleted_state_body:
+                                "Оригінальний асистент більше недоступний і не підтримується. Ви більше не можете користуватися ним безпосередньо.",
+                            deleted_state_body_continue:
+                                "Якщо ви хочете й надалі користуватися цією конфігурацією, збережіть її як власного асистента. Попередні чати все ще можна переглядати лише для читання.",
+                            discovery_deleted_hint:
+                                "Цей асистент спільноти був видалений автором і більше недоступний. Остання версія зберігається лише локально в цьому браузері й може бути втрачена. Збережіть її зараз як власного асистента або лише перегляньте стару історію чату.",
+                            deleted_chat_warning:
+                                "Цей асистент спільноти був видалений автором і більше недоступний. Ця версія зберігається лише локально в цьому браузері й може бути втрачена. Історія чату доступна лише для читання. Збережіть її як власного асистента, якщо хочете й далі нею користуватися.",
+                            deleted_state_save_action: "Зберегти як власного асистента",
+                            deleted_state_history_action: "Переглянути стару історію чату",
+                            deleted_state_no_history: "Для цього асистента немає локальної історії чату."
                         },
                         toolsselector: {
                             title: "Доступні інструменти",

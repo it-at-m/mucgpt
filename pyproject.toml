@@ -11,6 +11,7 @@ authors = [
     { name = "Simon Hirtreiter", email = "simon.hirtreiter@muenchen.de" },
     { name = "Daniel Nischwitz", email = "daniel.nischwitz@muenchen.de" },
     { name = "Dominik Grenz", email = "dominik.grenz@muenchen.de" },
+    { name = "Benedikt Jursch", email = "benedikt.jursch@muenchen.de" },
 ]
 maintainers = [
     { name = " ITM KICC", email = "itm.kicc@muenchen.de" },
@@ -18,12 +19,15 @@ maintainers = [
     { name = "Paul Ilitz", email = "paul.ilitz@muenchen.de" },
 ]
 
-[tool.uv]
-dev-dependencies = [
-    "ipykernel==6.30.1",
-    "pre-commit==4.3.0",
-    "ruff==0.14.0",
+
+[dependency-groups]
+dev = [
+    "ipykernel==7.2.0",
+    "pre-commit==4.5.1",
+    "ruff==0.15.10",
 ]
+
+[tool.uv]
 
 [[tool.uv.index]]
 name = "pypy"

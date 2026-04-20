@@ -17,8 +17,8 @@
     margin-left: 0;
     margin-top: 1em;
     margin-bottom: 1em;
-    background: var(--primaryContainer);
-    border: 1px solid var(--outline);
+    background: var(--colorNeutralBackground3);
+    border: 1px solid var(--colorNeutralStroke1);
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
     border-radius: 10px;
     padding: 1.5em 2em;
@@ -26,7 +26,7 @@
 }
 
 .panel:hover {
-    border-color: var(--primary);
+    border-color: var(--colorBrandBackground);
 }
 
 .header {
@@ -34,7 +34,7 @@
     font-size: 2.2em;
     margin: 1.5em 0 1em 0;
     text-align: center;
-    color: var(--onSurface);
+    color: var(--colorNeutralForeground1);
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -56,11 +56,6 @@
         box-shadow 0.2s,
         background 0.2s;
     border-radius: 50%;
-}
-
-.commandsContainer button:hover {
-    background: var(--primaryContainer);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .faqRoot {

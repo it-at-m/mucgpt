@@ -4,7 +4,12 @@ import pytest
 from langchain_core.messages import AIMessage, HumanMessage, SystemMessage, ToolCall
 from langchain_core.runnables import RunnableConfig
 
-from agent.agent import AgentState, MUCGPTAgent
+from agent.agent import (
+    _DATA_SOURCES_GUARD,
+    DATA_SOURCES_SENTINEL,
+    AgentState,
+    MUCGPTAgent,
+)
 from agent.tools.tools import ToolCollection
 
 
@@ -331,3 +336,224 @@ class TestAgentLifecycle:
         assert patch_get_stream_writer.write.called or True, (
             "Tool error should trigger a stream notification"
         )
+
+
+class TestContextEngineering:
+    """
+    Tests for the message-preparation pipeline in MUCGPTAgent, covering:
+    - Data-sources are injected as HumanMessage (not SystemMessage)
+    - Injection-guard text is present
+    - Sentinel prevents duplicate injection across graph loops
+    - State messages are never mutated
+    """
+
+    def setup_method(self):
+        self.llm = DummyLLM()
+        self.user_info = MagicMock()
+        self.tool_collection = ToolCollection(self.llm)
+        self.sample_data_sources = [
+            {
+                "title": "Policy.pdf",
+                "content": "Some policy content here.",
+                "metadata": {"mime_type": "application/pdf"},
+            },
+        ]
+
+    @pytest.mark.asyncio
+    async def test_data_sources_injected_as_human_message(self):
+        """Data-sources must appear in a HumanMessage, NOT a SystemMessage."""
+        tools = await self.tool_collection.get_tools(self.user_info)
+        agent = MUCGPTAgent(self.llm, tools=tools, tool_collection=self.tool_collection)
+
+        original = [
+            SystemMessage(content="You are a helpful assistant."),
+            HumanMessage(content="Summarise the document."),
+        ]
+        result = agent._prepare_messages(
+            original,
+            enabled_tools=None,
+            tools_to_use=[],
+            data_sources=self.sample_data_sources,
+        )
+
+        # Find the data-sources message
+        ds_msgs = [
+            m
+            for m in result
+            if isinstance(m, HumanMessage)
+            and isinstance(m.content, str)
+            and DATA_SOURCES_SENTINEL in m.content
+        ]
+        assert len(ds_msgs) == 1, "Expected exactly one data-sources HumanMessage"
+        assert "<data-sources>" in ds_msgs[0].content
+
+        # Must NOT be in any SystemMessage
+        for m in result:
+            if isinstance(m, SystemMessage):
+                assert "<data-sources>" not in m.content, (
+                    "Data-sources must not appear in a SystemMessage"
+                )
+
+    @pytest.mark.asyncio
+    async def test_injection_guard_present(self):
+        """The injection-guard preamble must be included in the data-sources message."""
+        tools = await self.tool_collection.get_tools(self.user_info)
+        agent = MUCGPTAgent(self.llm, tools=tools, tool_collection=self.tool_collection)
+
+        original = [
+            SystemMessage(content="System prompt."),
+            HumanMessage(content="Hi"),
+        ]
+        result = agent._prepare_messages(
+            original,
+            enabled_tools=None,
+            tools_to_use=[],
+            data_sources=self.sample_data_sources,
+        )
+
+        ds_msg = next(
+            m
+            for m in result
+            if isinstance(m, HumanMessage) and DATA_SOURCES_SENTINEL in str(m.content)
+        )
+        assert _DATA_SOURCES_GUARD in ds_msg.content, (
+            "Injection-guard text must be present in data-sources message"
+        )
+
+    @pytest.mark.asyncio
+    async def test_no_duplicate_injection_on_second_call(self):
+        """Calling _prepare_messages twice with the same data_sources must not
+        duplicate the data-sources block."""
+        tools = await self.tool_collection.get_tools(self.user_info)
+        agent = MUCGPTAgent(self.llm, tools=tools, tool_collection=self.tool_collection)
+
+        original = [
+            SystemMessage(content="System prompt."),
+            HumanMessage(content="Hello"),
+        ]
+
+        # First pass
+        first_pass = agent._prepare_messages(
+            original,
+            enabled_tools=None,
+            tools_to_use=[],
+            data_sources=self.sample_data_sources,
+        )
+
+        # Simulate what the graph does: the prepared messages (including the
+        # injected HumanMessage) are now in state for the second loop.
+        second_pass = agent._prepare_messages(
+            first_pass,
+            enabled_tools=None,
+            tools_to_use=[],
+            data_sources=self.sample_data_sources,
+        )
+
+        sentinel_count = sum(
+            1
+            for m in second_pass
+            if isinstance(m, HumanMessage)
+            and isinstance(m.content, str)
+            and DATA_SOURCES_SENTINEL in m.content
+        )
+        assert sentinel_count == 1, (
+            f"Expected exactly 1 data-sources block, found {sentinel_count}"
+        )
+
+    @pytest.mark.asyncio
+    async def test_state_messages_not_mutated(self):
+        """_prepare_messages must not modify the original message list."""
+        tools = await self.tool_collection.get_tools(self.user_info)
+        agent = MUCGPTAgent(self.llm, tools=tools, tool_collection=self.tool_collection)
+
+        original = [
+            SystemMessage(content="System prompt."),
+            HumanMessage(content="Hello"),
+        ]
+        original_len = len(original)
+        original_contents = [m.content for m in original]
+
+        agent._prepare_messages(
+            original,
+            enabled_tools=None,
+            tools_to_use=[],
+            data_sources=self.sample_data_sources,
+        )
+
+        assert len(original) == original_len, "Original message list length was changed"
+        assert [m.content for m in original] == original_contents, (
+            "Original message contents were modified"
+        )
+
+    @pytest.mark.asyncio
+    async def test_data_sources_placed_after_system_message(self):
+        """Data-sources message must be inserted right after the system message,
+        before user conversation messages."""
+        tools = await self.tool_collection.get_tools(self.user_info)
+        agent = MUCGPTAgent(self.llm, tools=tools, tool_collection=self.tool_collection)
+
+        original = [
+            SystemMessage(content="System prompt."),
+            HumanMessage(content="User question."),
+            AIMessage(content="Assistant reply."),
+        ]
+        result = agent._prepare_messages(
+            original,
+            enabled_tools=None,
+            tools_to_use=[],
+            data_sources=self.sample_data_sources,
+        )
+
+        # System message first, then data-sources HumanMessage
+        assert isinstance(result[0], SystemMessage)
+        assert isinstance(result[1], HumanMessage)
+        assert DATA_SOURCES_SENTINEL in result[1].content
+
+    @pytest.mark.asyncio
+    async def test_no_data_sources_when_empty(self):
+        """When data_sources is None or empty, no extra message is injected."""
+        tools = await self.tool_collection.get_tools(self.user_info)
+        agent = MUCGPTAgent(self.llm, tools=tools, tool_collection=self.tool_collection)
+
+        original = [
+            SystemMessage(content="System prompt."),
+            HumanMessage(content="Hello"),
+        ]
+        result_none = agent._prepare_messages(
+            original,
+            enabled_tools=None,
+            tools_to_use=[],
+            data_sources=None,
+        )
+        result_empty = agent._prepare_messages(
+            original,
+            enabled_tools=None,
+            tools_to_use=[],
+            data_sources=[],
+        )
+
+        assert len(result_none) == 2
+        assert len(result_empty) == 2
+
+    @pytest.mark.asyncio
+    async def test_call_model_returns_only_response(self):
+        """call_model should return only the LLM response message,
+        not the full prepared message list (langgraph's add_messages
+        reducer handles the merge)."""
+        tools = await self.tool_collection.get_tools(self.user_info)
+        agent = MUCGPTAgent(
+            DummyLLM(), tools=tools, tool_collection=self.tool_collection
+        )
+        state = AgentState(messages=[HumanMessage(content="hi")])
+        config = RunnableConfig(
+            configurable={
+                "user_info": MagicMock(),
+                "data_sources": self.sample_data_sources,
+            }
+        )
+        result = await agent.call_model(state, config)
+        assert isinstance(result, dict)
+        assert "messages" in result
+        # Should contain only the AI response, not the full prepared list
+        assert len(result["messages"]) == 1
+        assert isinstance(result["messages"][0], AIMessage)

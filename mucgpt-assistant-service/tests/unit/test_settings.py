@@ -1,7 +1,7 @@
 import os
 from unittest.mock import patch
 
-from src.config.settings import get_redis_settings, get_settings
+from config.settings import get_redis_settings, get_settings
 
 
 class TestRedisSettings:

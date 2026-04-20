@@ -1,15 +1,16 @@
 import pytest
 from sqlalchemy import select
-from src.api.api_models import (
+
+from api.api_models import (
     AssistantCreate,
     AssistantResponse,
     StatusResponse,
     SubscriptionResponse,
 )
-from src.config.settings import get_settings
-from src.database.assistant_repo import AssistantRepository
-from src.database.database_models import Subscription
-from src.database.session import create_database_url, get_engine_and_factory
+from config.settings import get_settings
+from database.assistant_repo import AssistantRepository
+from database.database_models import Subscription
+from database.session import create_database_url, get_engine_and_factory
 
 # Headers for authentication
 headers = {
@@ -1355,7 +1356,7 @@ async def test_subscription_count_with_repository_operations(
     test_client, test_db_session
 ):
     """Test subscription count accuracy with direct repository operations."""
-    from src.database.assistant_repo import AssistantRepository
+    from database.assistant_repo import AssistantRepository
 
     # Create assistant using repository directly
     assistant_repo = AssistantRepository(test_db_session)

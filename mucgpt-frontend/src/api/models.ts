@@ -25,6 +25,12 @@ export type ChatTurn = {
     assistant?: string;
 };
 
+export type DataSource = {
+    title: string;
+    content: string;
+    metadata?: Record<string, string | number | boolean | null | undefined>;
+};
+
 export type ChatRequest = {
     history: ChatTurn[];
     creativity?: string;
@@ -35,6 +41,7 @@ export type ChatRequest = {
     model?: string;
     enabled_tools?: string[];
     assistant_id?: string;
+    data_sources?: DataSource[];
 };
 
 export type CreateAssistantRequest = {
@@ -46,9 +53,11 @@ export interface ApplicationConfig {
     models: Model[];
     alternative_logo: boolean;
     env_name: string;
+    app_version: string;
     core_version: string;
     frontend_version: string;
     assistant_version: string;
+    document_processing_enabled: boolean;
 }
 
 export interface Model {
@@ -244,4 +253,21 @@ export type CommunityAssistant = {
     title: string;
     description: string;
     id: string;
+};
+
+export type CommunityAssistantSnapshot = {
+    snapshot_version: number;
+    id: string;
+    title: string;
+    description: string;
+    system_message: string;
+    creativity: string;
+    version: string;
+    default_model?: string;
+    examples?: ExampleModelInput[];
+    quick_prompts?: QuickPrompt[];
+    tags?: string[];
+    hierarchical_access?: string[];
+    tools?: ToolBase[];
+    is_visible: boolean;
 };

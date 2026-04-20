@@ -1,89 +1,124 @@
 import React, { useEffect, useRef } from "react";
-import { useId, Toaster, useToastController, Toast, ToastTitle, ToastBody, ToastTrigger, Button } from "@fluentui/react-components";
+import { useId, Toaster, useToastController, Toast, ToastTitle, ToastBody, ToastTrigger, Button, Spinner } from "@fluentui/react-components";
+import type { ToastIntent } from "@fluentui/react-components";
 import { Dismiss20Regular } from "@fluentui/react-icons";
-import styles from "./GlobalToastHandler.module.css";
 import { useTranslation } from "react-i18next";
+import { useGlobalToastContext } from "./GlobalToastContext";
+import { DEFAULT_TOAST_TIMEOUT, ToastMessage, ToastType } from "./types";
+import styles from "./GlobalToastHandler.module.css";
 
-export interface ToastMessage {
-    id: string;
-    type: "success" | "error" | "warning" | "info";
-    title: string;
-    message?: string;
-    timeout?: number;
-    timestamp: number;
-}
+const getIntent = (type: ToastType): ToastIntent => {
+    switch (type) {
+        case "success":
+            return "success";
+        case "error":
+            return "error";
+        case "warning":
+            return "warning";
+        case "loading":
+        case "info":
+        default:
+            return "info";
+    }
+};
 
-interface GlobalToastHandlerProps {
-    messages: ToastMessage[];
-    onMessageDisplayed: (messageId: string) => void;
-}
+const getTypeClass = (type: ToastType) => {
+    switch (type) {
+        case "success":
+            return styles.successToast;
+        case "error":
+            return styles.errorToast;
+        case "warning":
+            return styles.warningToast;
+        case "loading":
+            return styles.loadingToast;
+        case "info":
+        default:
+            return styles.infoToast;
+    }
+};
 
-const GlobalToastHandler: React.FC<GlobalToastHandlerProps> = ({ messages, onMessageDisplayed }) => {
+const getToastTimeout = (toast: ToastMessage) => {
+    if (toast.persistent) {
+        return -1;
+    }
+
+    if (toast.timeout !== undefined) {
+        return toast.timeout;
+    }
+
+    return DEFAULT_TOAST_TIMEOUT;
+};
+
+const renderToastContent = (toast: ToastMessage, closeLabel: string) => {
+    const showIcon = toast.showIcon ?? true;
+    const media = !showIcon ? null : toast.type === "loading" ? <Spinner size="extra-small" /> : undefined;
+
+    return (
+        <div className={`${styles.toastWrapper} ${getTypeClass(toast.type)}`}>
+            <Toast>
+                <ToastTitle
+                    media={media}
+                    action={
+                        toast.dismissible !== false ? (
+                            <ToastTrigger>
+                                <Button appearance="subtle" size="small" icon={<Dismiss20Regular />} aria-label={closeLabel} />
+                            </ToastTrigger>
+                        ) : undefined
+                    }
+                >
+                    {toast.title}
+                </ToastTitle>
+                {toast.message && <ToastBody>{toast.message}</ToastBody>}
+            </Toast>
+        </div>
+    );
+};
+
+const GlobalToastHandler: React.FC = () => {
     const toasterId = useId("global-toast-handler");
-    const { dispatchToast } = useToastController(toasterId);
-    const displayedMessagesRef = useRef<Set<string>>(new Set());
-    // Translation
+    const { dispatchToast, dismissToast: dismissToastFromController, updateToast } = useToastController(toasterId);
+    const renderedToastIdsRef = useRef<Set<string>>(new Set());
+    const { toasts, dismissToast } = useGlobalToastContext();
     const { t } = useTranslation();
 
     useEffect(() => {
-        const displayedMessages = displayedMessagesRef.current;
+        const renderedToastIds = renderedToastIdsRef.current;
+        const currentToastIds = new Set(toasts.map(toast => toast.id));
+        const closeLabel = t("components.globaltoasthandler.dismiss_aria_label", "Dismiss toast");
 
-        messages.forEach(message => {
-            // Skip if we've already shown this message
-            if (displayedMessages.has(message.id)) {
-                return;
-            }
-
-            const getIntent = () => {
-                switch (message.type) {
-                    case "success":
-                        return "success";
-                    case "error":
-                        return "error";
-                    case "warning":
-                        return "warning";
-                    case "info":
-                    default:
-                        return "info";
+        toasts.forEach(toast => {
+            const content = renderToastContent(toast, closeLabel);
+            const toastOptions = {
+                toastId: toast.id,
+                intent: getIntent(toast.type),
+                timeout: getToastTimeout(toast),
+                pauseOnHover: true,
+                onStatusChange: (_event: unknown, data: { status?: string }) => {
+                    if (data.status === "dismissed") {
+                        dismissToast(toast.id);
+                    }
                 }
             };
 
-            dispatchToast(
-                <Toast>
-                    <ToastTitle
-                        action={
-                            <ToastTrigger>
-                                <Button
-                                    appearance="subtle"
-                                    icon={<Dismiss20Regular />}
-                                    aria-label={t("components.globaltoasthandler.dismiss_aria_label", "Dismiss toast")}
-                                />
-                            </ToastTrigger>
-                        }
-                    >
-                        {message.title}
-                    </ToastTitle>
-                    {message.message && <ToastBody>{message.message}</ToastBody>}
-                </Toast>,
-                {
-                    intent: getIntent(),
-                    timeout: message.timeout ?? (message.type === "error" ? 6000 : 3000),
-                    pauseOnHover: true
-                }
-            );
-
-            displayedMessages.add(message.id);
-            onMessageDisplayed(message.id);
+            if (renderedToastIds.has(toast.id)) {
+                updateToast({
+                    ...toastOptions,
+                    content
+                });
+            } else {
+                dispatchToast(content, toastOptions);
+                renderedToastIds.add(toast.id);
+            }
         });
 
-        // Clean up old messages from tracking
-        const activeMessageIds = new Set(messages.map(msg => msg.id));
-        for (const messageId of displayedMessages) {
-            if (!activeMessageIds.has(messageId)) {
-                displayedMessages.delete(messageId);
+        for (const toastId of renderedToastIds) {
+            if (!currentToastIds.has(toastId)) {
+                dismissToastFromController(toastId);
+                renderedToastIds.delete(toastId);
             }
         }
-    }, [messages, dispatchToast, onMessageDisplayed]);
+    }, [toasts, dispatchToast, dismissToast, dismissToastFromController, t, updateToast]);
 
     return <Toaster toasterId={toasterId} position="bottom-end" className={styles.globalToastHandler} />;
 };

@@ -10,11 +10,18 @@ LOG_CONFIG: "logconf.yaml"
 # Frontend settings
 ENV_NAME: "MUCGPT🦜"
 ALTERNATIVE_LOGO: false
+APP_VERSION: "2.0"
 FRONTEND_VERSION: "0.0.2"
 ASSISTANT_VERSION: "0.0.3"
 
 # Backend settings
 UNAUTHORIZED_USER_REDIRECT_URL: "https://it-services.muenchen.de/sp?id=sc_cat_item&sys_id=ee55a6911b40ce90757797539b4bcb1f&table=sc_cat_item&searchTerm=mucgpt"
+MEMORY_SERVICE_URL: "http://memory-service:8000"
+
+# Parsing settings
+PARSER_BACKEND: "kreuzberg"
+KREUZBERG_URL: "http://kreuzberg-full:8000"
+KREUZBERG_TIMEOUT: 120.0
 
 # Langfuse Settings (Optional - for LLM observability)
 # Used by core service for tracing and monitoring
@@ -32,7 +39,7 @@ MCP:
       url: "http://mcpdoc-server:8088/sse"
       transport: "sse"
       forward_token: false
-      
+
     # Example for custom headers to authenticate with MCP server via litellm proxy
     # authentication with litellm via Bearer
     # authentication with mcp server via basic auth

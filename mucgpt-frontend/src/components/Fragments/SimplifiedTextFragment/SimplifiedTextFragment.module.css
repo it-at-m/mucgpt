@@ -4,7 +4,7 @@
 
 .markdownContent {
     line-height: 1.7;
-    color: var(--onSurface);
+    color: var(--colorNeutralForeground1);
     font-size: var(--fontSizeBase400);
 }
 
@@ -21,7 +21,7 @@
 .markdownContent h2,
 .markdownContent h3 {
     margin: 24px 0 12px 0;
-    color: var(--onSurface);
+    color: var(--colorNeutralForeground1);
 }
 
 .markdownContent h1:first-child,
@@ -49,7 +49,7 @@
 .processingTitle {
     font-size: var(--fontSizeBase300);
     font-weight: var(--fontWeightSemibold);
-    color: var(--onSurfaceVariant);
+    color: var(--colorNeutralForeground2);
     margin-bottom: 12px;
     display: flex;
     align-items: center;
@@ -68,7 +68,7 @@
 .processingMarkdown {
     font-family: var(--fontFamilyMonospace);
     font-size: var(--fontSizeBase200);
-    color: var(--onSurfaceVariant);
+    color: var(--colorNeutralForeground2);
     line-height: 1.5;
 }
 
@@ -87,9 +87,9 @@
 }
 
 .sectionCard {
-    border: 1px solid var(--outline);
+    border: 1px solid var(--colorNeutralStroke1);
     border-radius: 8px;
-    background: var(--surface);
+    background: var(--colorNeutralBackground3);
     padding: 8px 12px;
 }
 
@@ -100,7 +100,7 @@
     gap: 8px;
     cursor: pointer;
     font-weight: var(--fontWeightSemibold);
-    color: var(--onSurface);
+    color: var(--colorNeutralForeground1);
 }
 
 .sectionTitle {
@@ -109,7 +109,7 @@
 
 .sectionRevision {
     font-size: var(--fontSizeBase200);
-    color: var(--onSurfaceVariant);
+    color: var(--colorNeutralForeground2);
 }
 
 .sectionBody {
@@ -126,5 +126,5 @@
 .statusItem {
     font-family: var(--fontFamilyMonospace);
     font-size: var(--fontSizeBase200);
-    color: var(--onSurfaceVariant);
+    color: var(--colorNeutralForeground2);
 }

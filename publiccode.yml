@@ -1,0 +1,244 @@
+publiccodeYmlVersion: "0.4" # Version des publiccode.yml-Formats
+name: MUCGPT # Name des Projekts
+url: "https://gitlab.opencode.de/landeshauptstadt-muenchen/mucgpt" # URL zum Projekt-Repository
+landingURL: "https://it-at-m.github.io/mucgpt/" # URL zur Webseite oder Demo der Software
+logo: "assets/mucgpt_title.svg" # Pfad zum Projektlogo
+roadmap: "https://github.com/it-at-m/mucgpt?tab=readme-ov-file#%EF%B8%8F-roadmap" # Verweis auf die Roadmap
+softwareVersion: "1.2" # Aktuelle veröffentlichte Software-Version
+softwareType: standalone/web # Typ der Software
+releaseDate: "2025-04-24" # Veröffentlichungsdatum der Version
+isBasedOn: "https://github.com/Azure-Samples/azure-search-openai-demo" # Basisprojekt, auf dem MUCGPT aufbaut
+developmentStatus: stable # Entwicklungsstatus der Software
+platforms: # Unterstützte Plattformen
+  - web
+usedBy: # Prominente Nutzung oder Referenzen
+  - 'Landeshauptstadt Stuttgart (BW): Fork unter dem Namen "ChatSTR"'
+categories: # Kategorien, die die Software beschreiben
+  - office
+  - productivity-suite
+dependsOn: # Externe Abhängigkeiten
+  open:
+    - name: Keycloak
+      optional: false
+    - name: "Container Runtime, i.e. Docker, Podman"
+      optional: false
+    - name: Kubernetes Runtime
+      optional: true
+maintenance: # Angaben zur Betreuung der Software
+  type: internal
+  contacts:
+    - name: Michael Jaumann
+      email: michael.jaumann@muenchen.de
+      affiliation: Lead Product Engineer
+    - name: Fabian Reinold
+      email: fabian.reinold@muenchen.de
+      affiliation: AI Team Lead
+  contractors:
+    - name: Landeshauptstadt München - IT-Referat
+      website: https://muenchen.digital/ # Webseite der Organisation
+      until: 2027-12-31 # Darf nicht mehr als 2 Jahre in der Zukunft liegen
+      email: ki@muenchen.de # Kontakt-E-Mail-Adresse
+legal: # Lizenz- und Rechteangaben
+  license: MIT
+  mainCopyrightOwner: Landeshauptstadt München
+localisation: # Angaben zur Lokalisierung
+  localisationReady: true
+  availableLanguages:
+    - "de"
+    - "fr"
+    - "en"
+    - "uk"
+    - "bar"
+intendedAudience: # Zielgruppe der Software
+  countries:
+    - "DE"
+  scope: # Not really relevant, MUCGPT is a general tool that can be used in various contexts
+    - local-authorities
+    - government
+description: # Sprachspezifische Produktbeschreibung
+  de:
+    genericName: "KI-Werkzeug"
+    awards:
+      - >-
+        eGovernment-Wettbewerb 2024: 3. Platz in der Kategorie
+        "Digitalisierungsschub durch KI und moderne Infrastruktur "
+    shortDescription: "MUCGPT ist ein KI-Werkzeug zur Arbeit mit generativen Sprachmodellen und bietet u.a. personalisierbare Assistenten und Tools an."
+    longDescription: >
+      # MUCGPT - Ein vielseitiges KI-Werkzeug für die öffentliche Verwaltung
+
+
+      MUCGPT hat vier Hauptfunktionen:
+
+      - _Chat_ zum Austausch mit dem zugrunde liegenden LLM
+
+      - _Zusammenfassen_ zum Verdichten langer Texte und Dateien
+
+      - _Brainstorming_ zum Erstellen von Mindmaps zu einem Thema 
+
+      - und _Einfache Sprache_, um Texte in leichter verständliche Sprache zu übersetzen.
+
+
+      Zudem bietet MUCGPT die Möglichkeit, eigene Assistenten mit spezifischen Funktionen zu erstellen, um die Interaktion mit dem LLM an individuelle Bedürfnisse anzupassen.
+      Hierüber können Benutzer das Werkzeug auf ihre Bedürfnisse anpassen und eine noch höhere Integration in ihre Arbeitsabläufe erreichen.
+
+
+      ## Chat
+
+
+      Mit der Chat-Funktion können Benutzer mit dem LLM zu fast jedem Thema schreiben.
+
+
+      MUCGPT nutzt ein großes Sprachmodell und liefert verständliche, kontextbezogene Antworten. 
+      Eine Systemanweisung kann jeder Nachricht vorangestellt werden, und die Temperatur lässt sich einstellen, um die Ausgabe sachlicher oder kreativer zu machen.
+
+
+      Der Chatverlauf bleibt lokal im Browser gespeichert (IndexedDB). 
+      Unterhaltungen können später fortgesetzt und wichtige Chats als Favoriten markiert werden.
+
+
+      Zudem werden verschiedene Ausgabeformate wie Markdown, HTML, eingebettete Mermaid-Diagramme und mathematische LaTeX-Formeln (`$$ ... $$`) unterstützt.
+
+      ## Zusammenfassen
+
+
+      Die Funktion zum Zusammenfassen ermöglicht es, lange Texte oder Dokumente zu verdichten und die relevantesten Informationen zu extrahieren, um einen neuen zusammengefassten Text zu erstellen. 
+
+
+      Der Benutzer kann den Detaillierungsgrad der generierten Antwort in drei Stufen anpassen (kurz, mittel, lang).
+
+
+      ## Brainstorming
+
+
+      Die Brainstorming-Funktion ermöglicht es Benutzern, Mindmaps zu erstellen, um Inspiration zu einem bestimmten Thema zu finden.
+
+
+      Die erstellten Mindmaps können heruntergeladen und mit [Freeplane](https://docs.freeplane.org/) weiterverarbeitet werden.
+
+
+      ## Einfache Sprache
+
+
+      Übersetzt komplexe Texte in verständliche Sprache. 
+      Dies fördert die Inklusion und Barrierefreiheit, da es Menschen mit Leseschwierigkeiten oder Nicht-Muttersprachlern hilft. 
+
+
+      Die Logik basiert auf einem Projekt der Kantonsverwaltung Zürich ([Github](https://github.com/machinelearningZH/simply-simplify-language)).
+
+
+      ## Eigene Assistenten
+
+
+      Nutzer können maßgeschneiderte Assistenten für spezifische Aufgaben erstellen. 
+      Dabei lassen sich Systemanweisungen zur Steuerung des Verhaltens sowie Modell-Parameter (wie Temperatur) definieren.
+      Diese Assistenten werden lokal im Browser gespeichert.
+
+
+      Administratoren können zudem globale "Community-Assistenten" über Konfigurationsdateien bereitstellen. 
+      Diese sind schreibgeschützt, sorgen für standardisierte Antworten und können mit Beispiel-Prompts versehen werden.
+    features:
+      - KI-Chat
+      - teilbare Assistenten
+      - Werkzeuge
+      - Brainstorming
+      - Übersetzung
+      - Leichte Sprache
+    screenshots:
+      - docs/chatscreen.png
+      - docs/own-assistant.png
+      - docs/mindmap.png
+      - docs/simply.png
+      - docs/sum.png
+  en:
+    genericName: AI tool
+    awards:
+      - >-
+        eGovernment competition 2024: 3rd place in the category
+        "Digitalization boost through AI and modern infrastructure"
+    shortDescription: "MUCGPT is an AI tool for working with generative language models and offers customizable assistants and tools."
+    longDescription: >-
+      # MUCGPT - A versatile AI tool for public administration
+
+
+      MUCGPT has four main functions:
+
+      - _Chat_ to interact with the underlying LLM
+
+      - _Summarize_ to condense long texts and files
+
+      - _Brainstorming_ to create mind maps on a topic 
+
+      - and _Simple Language_ to translate texts into easily understandable language.
+
+
+      Additionally, MUCGPT offers the possibility to create custom assistants with specific functions to adapt the interaction with the LLM to individual needs.
+      This allows users to customize the tool to their needs and achieve an even higher integration into their workflows.
+
+
+      ## Chat
+
+
+      With the chat function, users can write with the LLM on almost any topic.
+
+
+      MUCGPT uses a large language model and provides understandable, context-related answers. 
+      A system instruction can be prepended to any message, and the temperature can be adjusted to make the output more factual or creative.
+
+
+      The chat history is stored locally in the browser (IndexedDB). 
+      Conversations can be continued later, and important chats can be marked as favorites.
+
+
+      In addition, various output formats such as Markdown, HTML, embedded Mermaid diagrams, and mathematical LaTeX formulas (`$$ ... $$`) are supported.
+
+      ## Summarize
+
+
+      The summarize function allows long texts or documents to be condensed and the most relevant information extracted to create a new summarized text. 
+
+
+      The user can adjust the level of detail of the generated response in three stages (short, medium, long).
+
+
+      ## Brainstorming
+
+
+      The brainstorming function allows users to create mind maps to find inspiration on a specific topic.
+
+
+      The created mind maps can be downloaded and further processed with [Freeplane](https://docs.freeplane.org/).
+
+
+      ## Simple Language
+
+
+      Translates complex texts into understandable language. 
+      This promotes inclusion and accessibility, as it helps people with reading difficulties or non-native speakers. 
+
+
+      The logic is based on a project by the Canton of Zurich administration ([Github](https://github.com/machinelearningZH/simply-simplify-language)).
+
+
+      ## Custom Assistants
+
+
+      Users can create tailor-made assistants for specific tasks. 
+      System instructions to control behavior as well as model parameters (such as temperature) can be defined.
+      These assistants are stored locally in the browser.
+
+
+      Administrators can also provide global "Community Assistants" via configuration files. 
+      These are read-only, ensure standardized responses, and can be provided with example prompts.
+    features:
+      - AI chat
+      - shareable assistants
+      - tools
+      - brainstorming
+      - translation
+      - easy language
+    screenshots:
+      - docs/chatscreen.png
+      - docs/own-assistant.png
+      - docs/mindmap.png
+      - docs/simply.png
+      - docs/sum.png

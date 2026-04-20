@@ -97,7 +97,7 @@
 }
 
 .actionsIcon {
-    color: var(--onSurface);
+    color: var(--colorNeutralForeground1);
     margin-right: 8px;
 }
 

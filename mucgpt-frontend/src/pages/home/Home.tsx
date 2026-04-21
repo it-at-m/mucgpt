@@ -297,24 +297,32 @@ const Home = () => {
             <footer className={styles.inlineFooter} role="contentinfo" aria-label={t("common.footer_info", "Fu\u00dfzeileninformationen")}>
                 <div className={styles.footerContent}>
                     <div className={styles.footerMetaRow}>
-                        <address className={styles.footerCompanyBlock}>{t("common.organization_name", "Landeshauptstadt M\u00fcnchen, RIT/it@M KIES")}</address>
-                        {config && (
-                            <div className={styles.footerVersionBlock}>
-                                <VersionInfo
-                                    core_version={config.core_version}
-                                    frontend_version={config.frontend_version}
-                                    assistant_version={config.assistant_version}
-                                    variant="compact"
-                                />
+                        <div className={styles.footerLeftBlock}>
+                            {config ? (
+                                <div className={styles.footerVersionBlock}>
+                                    <VersionInfo
+                                        core_version={config.core_version}
+                                        frontend_version={config.frontend_version}
+                                        assistant_version={config.assistant_version}
+                                        versionUrl={import.meta.env.BASE_URL + "#/version"}
+                                        variant="compact"
+                                    />
+                                </div>
+                            ) : (
+                                <a href={import.meta.env.BASE_URL + "#/version"} className={styles.footerLink}>
+                                    {t("components.versioninfo.whats_new", "Was gibt's neues?")}
+                                </a>
+                            )}
+                        </div>
+                        <div className={styles.footerCenterBlock}>
+                            <div className={styles.footerCompanyBlock}>
+                                <span>{t("common.footer_credit", "Made with ❤️ & ☕ by")}</span>{" "}
+                                <a href="https://ki.muenchen.de" target="_blank" rel="noreferrer" className={styles.footerCompanyLink}>
+                                    it@M KIES
+                                </a>
                             </div>
-                        )}
-                        <div className={styles.footerLinksBlock}>
-                            <a href={import.meta.env.BASE_URL + "#/version"} className={styles.footerLink}>
-                                {t("components.versioninfo.whats_new", "Was gibt's neues?")}
-                            </a>
-                            <span className={styles.footerLinkSeparator} aria-hidden>
-                                ·
-                            </span>
+                        </div>
+                        <div className={styles.footerRightBlock}>
                             <TermsOfUseDialog defaultOpen={false} onAccept={onAcceptTermsOfUse} triggerClassName={styles.footerTermsTrigger} />
                         </div>
                     </div>

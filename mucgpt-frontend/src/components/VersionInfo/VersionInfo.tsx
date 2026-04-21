@@ -21,9 +21,20 @@ export const VersionInfo = (props: VersionInfoProps) => {
     const { app_version, frontend_version, versionUrl, variant = "default" } = props;
     const { t } = useTranslation();
     const isCompact = variant === "compact";
+    const versionLabel = `v${isCompact ? frontend_version : (app_version ?? frontend_version)}`;
 
     return (
         <div className={styles.container}>
+            {versionUrl && (
+                <a href={versionUrl} className={styles.versionLink}>
+                    {t("components.versioninfo.whats_new", "Was gibt's neues?")}
+                </a>
+            )}
+            {versionUrl && (
+                <span className={styles.separator} aria-hidden>
+                    •
+                </span>
+            )}
             <Tooltip
                 content={
                     <div className={styles.tooltipContent}>
@@ -39,15 +50,10 @@ export const VersionInfo = (props: VersionInfoProps) => {
                 positioning="above"
                 withArrow
             >
-                <Badge appearance="outline" color="subtle" shape="circular" tabIndex={0}>
-                    v{isCompact ? frontend_version : (app_version ?? frontend_version)}
+                <Badge appearance="ghost" color="subtle" shape="circular" tabIndex={0} className={styles.versionBadge}>
+                    {versionLabel}
                 </Badge>
             </Tooltip>
-            {versionUrl && (
-                <a href={versionUrl} className={styles.versionLink}>
-                    {t("components.versioninfo.whats_new", "Was gibt's neues?")}
-                </a>
-            )}
         </div>
     );
 };

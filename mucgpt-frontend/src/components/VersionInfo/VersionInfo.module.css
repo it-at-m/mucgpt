@@ -4,14 +4,25 @@
     gap: 10px;
 }
 
+.separator {
+    color: var(--colorNeutralForeground1) !important;
+    opacity: 0.7;
+    user-select: none;
+}
+
+.versionBadge {
+    color: var(--colorNeutralForeground1) !important;
+    background-color: var(--colorNeutralBackground1) !important;
+}
+
 .versionLink {
     font-size: 12px;
     font-weight: 500;
-    color: var(--app-header-foreground);
+    color: var(--theme-text-default);
     text-decoration: none;
     padding: 4px 8px;
     border-radius: 4px;
-    opacity: 0.85;
+    opacity: 0.78;
     transition:
         opacity 0.15s ease,
         background-color 0.15s ease;
@@ -20,7 +31,6 @@
 
 .versionLink:hover {
     opacity: 1;
-    background-color: var(--app-header-hover);
     text-decoration: none;
 }
 

@@ -105,7 +105,12 @@ const Home = () => {
                 // Build recent assistants from chat history
                 const allRecords = await assistantStorageService.getChatStorageService().getAll();
                 const chatRecords = (allRecords || []).filter(
-                    r => r.id && r.id.startsWith(AssistantStorageService.CHAT_ID) && r._last_edited && r.messages.length > 0
+                    r =>
+                        r.id &&
+                        r.id.startsWith(AssistantStorageService.CHAT_ID) &&
+                        r._last_edited &&
+                        Array.isArray(r.messages) &&
+                        r.messages.length > 0
                 );
 
                 const assistantLastUsed = new Map<string, number>();
@@ -210,19 +215,21 @@ const Home = () => {
         );
 
         if (uploadedFileIds.length > 0) {
-            localStorage.setItem("chatFileIds", JSON.stringify(uploadedFileIds));
+            localStorage.setItem(STORAGE_KEYS.CHAT_FILE_IDS, JSON.stringify(uploadedFileIds));
         } else {
-            localStorage.removeItem("chatFileIds");
+            localStorage.removeItem(STORAGE_KEYS.CHAT_FILE_IDS);
         }
 
-        let url = `#/chat?q=${encodeURIComponent(nextQuestion)}`;
+        const params = new URLSearchParams();
+        params.set("q", nextQuestion);
         if (selectedTools.length > 0) {
-            url += `&tools=${encodeURIComponent(selectedTools.join(","))}`;
+            params.set("tools", selectedTools.join(","));
         }
         if (uploadedFileIds.length > 0) {
-            url += `&data=${encodeURIComponent(uploadedFileIds.join(","))}`;
+            params.set("data", uploadedFileIds.join(","));
         }
-        window.location.href = url;
+
+        navigate(`/chat?${params.toString()}`);
     };
 
     const onAcceptTermsOfUse = () => {
@@ -238,6 +245,7 @@ const Home = () => {
     }, [mode, recentAssistants, recommendedAssistants]);
 
     const hasAnyContent = recommendedAssistants.length > 0 || recentAssistants.length > 0;
+    const hasRecentAssistants = recentAssistants.length > 0;
     const sectionHeading = t("home.assistants");
     const sectionLabel = mode === "recent" ? t("home.last_used") : t("home.recommended");
 
@@ -274,7 +282,7 @@ const Home = () => {
                             </div>
                             <TabList className={styles.modeTabs} selectedValue={mode} onTabSelect={handleModeTabSelect}>
                                 <Tab value="recommended">{t("home.recommended")}</Tab>
-                                <Tab value="recent">{t("home.last_used")}</Tab>
+                                {hasRecentAssistants && <Tab value="recent">{t("home.last_used")}</Tab>}
                             </TabList>
                         </div>
                         <div className={styles.assistantGrid} role="list" aria-label={sectionLabel}>

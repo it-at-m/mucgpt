@@ -1,0 +1,174 @@
+.modeSelectorContainer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    gap: 32px;
+}
+
+.modeSubtitle {
+    font-size: 24px;
+    color: var(--colorNeutralForeground1);
+    margin: 0;
+}
+
+.modeCards {
+    display: flex;
+    gap: 24px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.modeCard {
+    border-radius: 12px !important;
+    padding: 32px !important;
+    width: 320px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    box-shadow: var(--shadow4);
+}
+
+.modeCard:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow16);
+}
+
+.modeCardIcon {
+    width: 72px;
+    height: 72px;
+    border-radius: 14px;
+    background-color: var(--colorBrandBackground);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 24px;
+    transition: transform 0.2s ease;
+}
+
+.modeCardIcon svg {
+    width: 38px;
+    height: 38px;
+    color: var(--colorNeutralForegroundOnBrand);
+}
+
+.modeCard:hover .modeCardIcon {
+    transform: scale(1.08);
+}
+
+.modeCardBody {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    flex: 1;
+}
+
+.modeCardTitle {
+    font-size: 18px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+}
+
+.recommendedBadge {
+    font-size: 12px;
+    color: var(--colorNeutralForegroundOnBrand);
+    background-color: var(--colorBrandBackground);
+    padding: 4px 8px;
+    border-radius: 14px;
+    text-transform: uppercase;
+}
+
+.modeCardDescription {
+    font-size: 14px;
+    line-height: 1.5;
+    flex: 1;
+}
+
+.modeCardHint {
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    margin-top: 16px;
+}
+
+.aiInputContainer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 32px;
+    max-width: 800px;
+    margin: 0 auto;
+    width: 100%;
+    padding: 20px 0;
+}
+
+.aiInputCard {
+    background-color: var(--colorNeutralBackground1);
+    border: 1px solid var(--colorNeutralStroke1);
+    border-radius: 12px;
+    padding: 32px;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.aiInputTitle {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--colorNeutralForeground1);
+}
+
+.aiTextarea {
+    min-height: 160px;
+}
+
+.examplesSection {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.examplesLabel {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--colorNeutralForeground1);
+    text-transform: uppercase;
+}
+
+.exampleChips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.exampleChip {
+    background-color: var(--colorNeutralBackground3);
+    border: 1px solid var(--colorNeutralStroke1);
+    border-radius: 12px;
+    padding: 6px 12px;
+    color: var(--colorNeutralForeground1);
+    cursor: pointer;
+}
+
+.exampleChipSelected {
+    background-color: var(--colorBrandBackground);
+    color: var(--colorNeutralForegroundOnBrand);
+}
+
+.aiInputActions {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 16px;
+    padding-top: 24px;
+    border-top: 1px solid var(--colorNeutralStroke2);
+}
+
+@media (max-width: 768px) {
+    .modeCardBody {
+        gap: 8px;
+    }
+}

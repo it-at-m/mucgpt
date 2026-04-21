@@ -45,52 +45,50 @@ export const AdvancedSettingsStep = ({
     );
 
     const creativityMap: Record<string, string> = {
-        [CREATIVITY_LOW]: t("components.edit_assistant_dialog.creativity_low"),
-        [CREATIVITY_MEDIUM]: t("components.edit_assistant_dialog.creativity_medium"),
-        [CREATIVITY_HIGH]: t("components.edit_assistant_dialog.creativity_high")
+        [CREATIVITY_LOW]: t("components.assistant_editor.creativity_low"),
+        [CREATIVITY_MEDIUM]: t("components.assistant_editor.creativity_medium"),
+        [CREATIVITY_HIGH]: t("components.assistant_editor.creativity_high")
     };
 
     return (
         <DialogContent>
             <Field size="large" className={sharedStyles.fieldSection}>
                 <label className={sharedStyles.formLabel}>
-                    <InfoLabel info={<div>{t("components.chattsettingsdrawer.creativity_info")}</div>}>
-                        {t("components.edit_assistant_dialog.creativity")}
-                    </InfoLabel>
+                    <InfoLabel info={<div>{t("components.chattsettingsdrawer.creativity_info")}</div>}>{t("components.assistant_editor.creativity")}</InfoLabel>
                 </label>
                 <Dropdown
-                    placeholder={t("components.edit_assistant_dialog.creativity_placeholder")}
+                    placeholder={t("components.assistant_editor.creativity_placeholder")}
                     value={creativityMap[creativity] || creativity}
                     selectedOptions={[creativity]}
                     onOptionSelect={onCreativityChangeHandler}
                     disabled={!isOwner}
                 >
                     <Option key={CREATIVITY_LOW} value={CREATIVITY_LOW}>
-                        {t("components.edit_assistant_dialog.creativity_low")}
+                        {t("components.assistant_editor.creativity_low")}
                     </Option>
                     <Option key={CREATIVITY_MEDIUM} value={CREATIVITY_MEDIUM}>
-                        {t("components.edit_assistant_dialog.creativity_medium")}
+                        {t("components.assistant_editor.creativity_medium")}
                     </Option>
                     <Option key={CREATIVITY_HIGH} value={CREATIVITY_HIGH}>
-                        {t("components.edit_assistant_dialog.creativity_high")}
+                        {t("components.assistant_editor.creativity_high")}
                     </Option>
                 </Dropdown>
             </Field>
             <Field size="large" className={sharedStyles.fieldSection}>
                 <label className={sharedStyles.formLabel}>
-                    <InfoLabel info={<div>{t("components.edit_assistant_dialog.default_model_info")}</div>}>
-                        {t("components.edit_assistant_dialog.default_model")}
+                    <InfoLabel info={<div>{t("components.assistant_editor.default_model_info")}</div>}>
+                        {t("components.assistant_editor.default_model")}
                     </InfoLabel>
                 </label>
                 <Dropdown
-                    placeholder={t("components.edit_assistant_dialog.default_model_placeholder")}
+                    placeholder={t("components.assistant_editor.default_model_placeholder")}
                     value={defaultModel ? availableLLMs.find((m: any) => m.llm_name === defaultModel)?.llm_name : ""}
                     selectedOptions={defaultModel ? [defaultModel] : []}
                     onOptionSelect={onDefaultModelChangeHandler}
                     disabled={!isOwner}
                 >
                     <Option key="none" value="none">
-                        {t("components.edit_assistant_dialog.no_default_model")}
+                        {t("components.assistant_editor.no_default_model")}
                     </Option>
                     {availableLLMs.map((model: any) => (
                         <Option key={model.llm_name} value={model.llm_name}>

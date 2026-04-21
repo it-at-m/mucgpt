@@ -3,9 +3,10 @@
 import asyncio
 
 import pytest
-from src.api.api_models import CREATIVITY_HIGH
-from src.database import path_matcher
-from src.database.assistant_repo import AssistantRepository
+
+from api.api_models import CREATIVITY_HIGH
+from database import path_matcher
+from database.assistant_repo import AssistantRepository
 
 
 @pytest.fixture
@@ -1329,7 +1330,8 @@ class TestAssistantRepository:
 
         # Simulate existing subscriptions (like after migration backfill)
         from sqlalchemy import insert
-        from src.database.database_models import Subscription
+
+        from database.database_models import Subscription
 
         await db_session.execute(
             insert(Subscription).values(

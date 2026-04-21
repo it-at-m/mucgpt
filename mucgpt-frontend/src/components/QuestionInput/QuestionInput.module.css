@@ -16,7 +16,6 @@
 .toolBadgesLabel {
     font-size: 0.875rem;
     font-weight: 500;
-    color: var(--onPrimary);
     margin-right: 8px;
     white-space: nowrap;
 }
@@ -30,8 +29,8 @@
 
 .questionInputContainer {
     border-radius: 8px;
-    background: var(--surface);
-    outline: 2px solid var(--onPrimaryContainer);
+    background: var(--colorNeutralBackground3);
+    outline: 1px solid var(--colorNeutralStroke1);
     width: 100%;
     padding: 8px 4px 8px 16px;
     display: flex;
@@ -40,12 +39,19 @@
     gap: 8px;
     margin-bottom: 10px;
     transition: box-shadow 0.2s ease;
+    border: 2px solid transparent;
+}
+
+.dragActive {
+    border: 2px dashed var(--colorBrandStroke1);
+    background: var(--colorNeutralBackground2);
+    box-shadow: none;
 }
 
 .questionInputContainer:focus-within {
     transform: translateY(-1px);
-    outline: 2px solid var(--onPrimaryContainer);
-    outline-offset: 2px;
+    outline: 1px solid var(--colorNeutralStroke1Hover);
+    outline-offset: 1px;
     transition:
         box-shadow 0.15s ease,
         outline 0.15s ease,
@@ -67,6 +73,7 @@
     box-sizing: border-box;
     background: transparent;
     transition: height 0.1s ease;
+    background: var(--colorNeutralBackground3) !important;
 }
 
 .questionInputTextArea:focus {
@@ -81,19 +88,46 @@
 
 .questionInputButtons {
     display: flex;
-    flex-direction: row;
+    flex-direction: column;
     align-items: center;
     gap: 4px;
     flex-shrink: 0;
     padding-bottom: 4px;
 }
 
-.questionInputButtons button {
-    color: var(--onSurface);
+.uploadButtonWrapper {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
 }
 
-.questionInputButtons button svg {
-    color: var(--onSurface);
+.uploadCountBadge {
+    position: absolute;
+    top: -2px;
+    right: -2px;
+    min-width: 16px;
+    height: 16px;
+    padding: 0 4px;
+    border-radius: 999px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--colorBrandBackground);
+    color: var(--colorNeutralForegroundOnBrand);
+    border: 1px solid var(--colorNeutralStroke1);
+    font-size: 0.65rem;
+    font-weight: 700;
+    line-height: 1;
+    pointer-events: none;
+}
+
+.uploadedDataHeader {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+    padding: 0 16px 8px 16px;
 }
 
 .errorhintSection {
@@ -109,7 +143,6 @@
 .errorhint {
     font-style: italic;
     font-size: 0.75rem;
-    color: var(--onPrimary);
     margin: 0;
     letter-spacing: 0.01em;
 }
@@ -136,26 +169,11 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    color: var(--onPrimary);
+    color: var(--colorNeutralForeground1);
     transition: all 0.2s ease;
     border-radius: 50%;
     width: 20px;
     height: 20px;
-}
-
-.toolHelpButton:hover {
-    color: var(--primary);
-    background: var(--primaryContainer);
-}
-
-.toolHelpButton:active {
-    transform: scale(0.95);
-}
-
-.toolHelpButton:focus-visible {
-    outline: 2px solid var(--primary);
-    outline-offset: 2px;
-    color: var(--primary);
 }
 
 @media (max-width: 768px) {

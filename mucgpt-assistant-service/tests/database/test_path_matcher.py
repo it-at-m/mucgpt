@@ -1,7 +1,8 @@
 """Unit tests for the path_matcher module using the LDAP directory tree semantics."""
 
 import pytest
-from src.database.path_matcher import path_matches_department
+
+from database.path_matcher import path_matches_department
 
 TEST_TREE = [
     {

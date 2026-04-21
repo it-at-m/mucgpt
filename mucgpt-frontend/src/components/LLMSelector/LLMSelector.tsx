@@ -11,6 +11,7 @@ interface Props {
     onSelectionChange: (nextLLM: string) => void;
     defaultLLM: string;
     options: Model[];
+    compact?: boolean;
 }
 
 const TOKENS_PER_MILLION = 1_000_000;
@@ -103,7 +104,7 @@ const InfoRow = ({ label, value, tooltip, className, useDefaultSpacing = true, s
     );
 };
 
-export const LLMSelector = ({ onSelectionChange, defaultLLM, options }: Props) => {
+export const LLMSelector = ({ onSelectionChange, defaultLLM, options, compact }: Props) => {
     const [selectedModel, setSelectedModel] = useState(defaultLLM);
 
     const { t } = useTranslation();
@@ -208,7 +209,7 @@ export const LLMSelector = ({ onSelectionChange, defaultLLM, options }: Props) =
     };
 
     return (
-        <div>
+        <div className={compact ? `${styles.container} ${styles.compact}` : styles.container}>
             <Dialog modalType="modal">
                 <DialogTrigger disableButtonEnhancement>
                     <Tooltip content={title} relationship="description" positioning="after">
@@ -393,7 +394,7 @@ export const LLMSelector = ({ onSelectionChange, defaultLLM, options }: Props) =
     );
 };
 
-export const Selectable = (): JSX.Element => {
+export const Selectable = (): React.JSX.Element => {
     const [selected1, setSelected1] = React.useState(false);
 
     return (

@@ -1,4 +1,3 @@
-export { CombinedDetailsStep } from "./steps/CombinedDetailsStep";
 export { ToolsStep } from "./steps/ToolsStep";
 export { QuickPromptsStep } from "./steps/QuickPromptsStep";
 export { ExamplesStep } from "./steps/ExamplesStep";
@@ -7,3 +6,5 @@ export { VisibilityStep } from "./steps/VisibilityStep";
 
 export { useAssistantState } from "./hooks/useAssistantState";
 export { useCreateAssistantState } from "./hooks/useCreateAssistantState";
+
+export { ExpandableTextarea } from "./ExpandableTextarea";

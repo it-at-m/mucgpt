@@ -1,21 +1,20 @@
-import { BrandVariants, createDarkTheme, createLightTheme } from "@fluentui/react-components";
-import { lightThemeColors, darkThemeColors } from "./colors";
-import type { ThemeColors } from "./colors";
+import { BrandVariants, createDarkTheme, createLightTheme, type Theme } from "@fluentui/react-components";
+import { darkThemeTokens, lightThemeTokens } from "./themeTokens";
+import type { AppThemeTokens } from "./themeTokens";
 
-// Apply CSS custom properties to document root
-export const applyCssVariables = (colors: ThemeColors) => {
-    const root = document.documentElement.style;
-    root.setProperty("--surface", colors.surface);
-    root.setProperty("--onSurface", colors.onSurface);
-    root.setProperty("--onSurfaceVariant", colors.onSurfaceVariant);
-    root.setProperty("--primary", colors.primary);
-    root.setProperty("--onPrimary", colors.onPrimary);
-    root.setProperty("--onPrimaryVariant", colors.onPrimaryVariant);
-    root.setProperty("--outline", colors.outline);
-    root.setProperty("--primaryContainer", colors.primaryContainer);
-    root.setProperty("--onPrimaryContainer", colors.onPrimaryContainer);
-    root.setProperty("--disabled", colors.disabled);
-};
+type ThemeMode = "light" | "dark";
+
+type AppCssVariableName =
+    | "--app-header-background"
+    | "--app-header-hover"
+    | "--app-header-pressed"
+    | "--app-header-foreground"
+    | "--app-primary-subtle-foreground"
+    | "--app-status-info-background"
+    | "--app-status-info-border"
+    | "--app-status-info-foreground";
+
+export type AppCssVariables = Record<AppCssVariableName, string>;
 
 export const enum STORAGE_KEYS {
     TERMS_OF_USE_READ = "TERMS_OF_USE_READ",
@@ -24,100 +23,227 @@ export const enum STORAGE_KEYS {
     SETTINGS_FONT_SCALING = "SETTINGS_FONT_SCALING",
     SETTINGS_IS_LIGHT_THEME = "SETTINGS_IS_LIGHT_THEME",
     VERSION_UPDATE_SEEN = "VERSION_UPDATE_SEEN",
-    SHOW_SIDEBAR = "SHOW_SIDEBAR"
+    SHOW_SIDEBAR = "SHOW_SIDEBAR",
+    SELECTED_TOOLS = "SELECTED_TOOLS"
 }
 
-const customBrandRamp: BrandVariants = {
-    10: "#f2f2f2",
-    20: "#e4e4e5",
-    30: "#d6d6d8",
-    40: "#c8c8cb",
-    50: "#bababe",
-    60: "#acacb1",
-    70: "#9e9ea4",
-    80: "#909097", //Buttons
-    90: "#82828a",
-    100: "#74747d",
-    110: "#666670",
-    120: "#585863",
-    130: "#4a4a56",
-    140: "#3c3c49",
-    150: "#2e2e3c",
-    160: "#212529"
-};
-const applyThemeColors = (theme: any, colors: ThemeColors) => {
-    // Surface Colors
-    theme.colorNeutralBackground1 = colors.surface; // Surface - Main background
-    theme.colorNeutralBackground2 = colors.onSurfaceVariant; // Header/Footer dark background
-    theme.colorNeutralBackground3 = colors.primaryContainer; // Cards background
-    theme.colorNeutralBackground4 = colors.surface; // Surface variant
+const fontSizeTokenKeys = [
+    "fontSizeBase100",
+    "fontSizeBase200",
+    "fontSizeBase300",
+    "fontSizeBase400",
+    "fontSizeBase500",
+    "fontSizeBase600",
+    "fontSizeHero700",
+    "fontSizeHero800",
+    "fontSizeHero900",
+    "fontSizeHero1000"
+] as const satisfies readonly (keyof Theme)[];
 
-    // Brand/Primary Colors
-    theme.colorBrandBackground = colors.primary; // Primary
-    theme.colorBrandBackgroundHover = colors.primary; // Primary hover (could be adjusted)
-    theme.colorBrandBackgroundPressed = colors.primary; // Primary pressed (could be adjusted)
-    theme.colorBrandBackground2 = colors.primaryContainer; // Primary Container
+const lineHeightTokenKeys = [
+    "lineHeightBase100",
+    "lineHeightBase200",
+    "lineHeightBase300",
+    "lineHeightBase400",
+    "lineHeightBase500",
+    "lineHeightBase600",
+    "lineHeightHero700",
+    "lineHeightHero800",
+    "lineHeightHero900",
+    "lineHeightHero1000"
+] as const satisfies readonly (keyof Theme)[];
 
-    // Text Colors - On Surface
-    theme.colorNeutralForeground1 = colors.onSurface; // On Surface - main text
-    theme.colorNeutralForeground2 = colors.onPrimaryContainer; // On Primary Container
-    theme.colorNeutralForeground3 = colors.disabled; // Disabled text
-    theme.colorNeutralForeground4 = colors.onSurface; // On Surface variant
+const scalePixelToken = (value: string, scaling: number) => `${parseFloat(value.replace("px", "")) * scaling}px`;
 
-    // Text on Primary
-    theme.colorNeutralForegroundOnBrand = colors.onPrimaryVariant; // On Primary Variant (for selected tools)
-    theme.colorNeutralForegroundInverted = colors.surface; // Inverted (white on dark header)
+const getThemeMode = (isLight: boolean): ThemeMode => (isLight ? "light" : "dark");
 
-    // Brand foreground colors
-    theme.colorBrandForeground1 = colors.primary; // Primary color for links/accents
-    theme.colorBrandForeground2 = colors.onPrimaryContainer; // On Primary Container
-
-    // Surface Variants
-    theme.colorNeutralBackground1Hover = colors.primaryContainer; // Hover state
-    theme.colorNeutralBackground1Pressed = colors.primaryContainer; // Pressed state
-
-    // Borders/Strokes
-    theme.colorNeutralStroke1 = colors.outline; // Outline
-    theme.colorNeutralStroke2 = colors.outline; // Outline variant
-    theme.colorBrandStroke1 = colors.primary; // Primary outline
-    theme.colorBrandStroke2 = colors.outline; // Subtle brand outline
-
-    // Overlay for hero section background
-    theme.colorBackgroundOverlay = colors.primary; // Primary color for hero section
-
-    // Subtle button colors (for buttons in dark header)
-    theme.colorSubtleForeground = colors.surface; // Text for subtle buttons
-    theme.colorSubtleForegroundHover = colors.surface; // Hover text for subtle buttons
-    theme.colorSubtleForegroundPressed = colors.surface; // Pressed text for subtle buttons
+const manualBrandRamp: BrandVariants = {
+    10: "#172554",
+    20: "#1E3A8A",
+    30: "#1E40AF",
+    40: "#1A4DBB",
+    50: "#1D4ED8",
+    60: "#2563EB",
+    70: "#3B82F6",
+    80: "#60A5FA",
+    90: "#93C5FD",
+    100: "#A0B8ED",
+    110: "#BFDBFE",
+    120: "#C7D9F6",
+    130: "#DBEAFE",
+    140: "#E8F1FB",
+    150: "#F0F7FF",
+    160: "#F8FBFF"
 };
 
-export const adjustTheme = (isLight: boolean, scaling: number) => {
-    const theme = isLight ? createLightTheme(customBrandRamp) : createDarkTheme(customBrandRamp);
+const createFluentThemeOverrides = (tokens: AppThemeTokens): Partial<Theme> => ({
+    colorNeutralBackground1: tokens.surfaceBase,
+    colorNeutralBackground1Hover: tokens.surfaceRaised,
+    colorNeutralBackground1Pressed: tokens.surfaceSubtle,
+    colorNeutralBackground1Selected: tokens.surfaceRaised,
+    colorNeutralBackground2: tokens.surfaceRaised,
+    colorNeutralBackground2Hover: tokens.surfaceSubtle,
+    colorNeutralBackground2Pressed: tokens.surfaceBase,
+    colorNeutralBackground2Selected: tokens.surfaceSubtle,
+    colorNeutralBackground3: tokens.surfaceSubtle,
+    colorNeutralBackground3Hover: tokens.surfaceRaised,
+    colorNeutralBackground3Pressed: tokens.surfaceRaised,
+    colorNeutralBackground3Selected: tokens.surfaceRaised,
+    colorNeutralBackgroundDisabled: tokens.disabledBackground,
+    colorNeutralBackgroundDisabled2: tokens.disabledBackground,
+    colorNeutralCardBackground: tokens.surfaceRaised,
+    colorNeutralCardBackgroundHover: tokens.surfaceSubtle,
+    colorNeutralCardBackgroundPressed: tokens.surfaceBase,
+    colorNeutralCardBackgroundSelected: tokens.surfaceSubtle,
+    colorNeutralCardBackgroundDisabled: tokens.disabledBackground,
+    colorNeutralForeground1: tokens.textDefault,
+    colorNeutralForeground1Hover: tokens.textDefault,
+    colorNeutralForeground1Pressed: tokens.textDefault,
+    colorNeutralForeground1Selected: tokens.textDefault,
+    colorNeutralForeground1Static: tokens.textDefault,
+    colorNeutralForeground2: tokens.textSecondary,
+    colorNeutralForeground2Hover: tokens.textDefault,
+    colorNeutralForeground2Pressed: tokens.textDefault,
+    colorNeutralForeground2Selected: tokens.textDefault,
+    colorNeutralForeground2Link: tokens.textSecondary,
+    colorNeutralForeground2LinkHover: tokens.textDefault,
+    colorNeutralForeground2LinkPressed: tokens.textDefault,
+    colorNeutralForeground2LinkSelected: tokens.textDefault,
+    colorNeutralForeground3: tokens.textTertiary,
+    colorNeutralForeground3Hover: tokens.textSecondary,
+    colorNeutralForeground3Pressed: tokens.textSecondary,
+    colorNeutralForeground3Selected: tokens.textSecondary,
+    colorNeutralForeground4: tokens.textTertiary,
+    colorNeutralForeground5: tokens.textTertiary,
+    colorNeutralForegroundDisabled: tokens.disabledForeground,
+    colorNeutralForegroundInvertedDisabled: tokens.disabledForeground,
+    colorNeutralForegroundOnBrand: tokens.textOnPrimary,
+    colorBrandForegroundLink: tokens.primaryStrong,
+    colorBrandForegroundLinkHover: tokens.primaryBase,
+    colorBrandForegroundLinkPressed: tokens.primaryPressed,
+    colorBrandForegroundLinkSelected: tokens.primaryBase,
+    colorCompoundBrandForeground1: tokens.primaryStrong,
+    colorCompoundBrandForeground1Hover: tokens.primaryBase,
+    colorCompoundBrandForeground1Pressed: tokens.primaryPressed,
+    colorBrandForeground1: tokens.primaryStrong,
+    colorBrandForeground2: tokens.primarySubtleOn,
+    colorBrandForeground2Hover: tokens.primarySubtleOn,
+    colorBrandForeground2Pressed: tokens.primarySubtleOn,
+    colorBrandForegroundOnLight: tokens.primaryStrong,
+    colorBrandForegroundOnLightHover: tokens.primaryBase,
+    colorBrandForegroundOnLightPressed: tokens.primaryPressed,
+    colorBrandForegroundOnLightSelected: tokens.primaryBase,
+    colorBrandBackground: tokens.primaryBase,
+    colorBrandBackgroundHover: tokens.primaryHover,
+    colorBrandBackgroundPressed: tokens.primaryPressed,
+    colorBrandBackgroundSelected: tokens.primaryBase,
+    colorBrandBackgroundStatic: tokens.primaryBase,
+    colorBrandBackground2: tokens.primarySubtle,
+    colorBrandBackground2Hover: tokens.primarySubtle,
+    colorBrandBackground2Pressed: tokens.primarySubtle,
+    colorBrandBackground3Static: tokens.primaryStrong,
+    colorBrandBackground4Static: tokens.primaryPressed,
+    colorCompoundBrandBackground: tokens.primaryBase,
+    colorCompoundBrandBackgroundHover: tokens.primaryHover,
+    colorCompoundBrandBackgroundPressed: tokens.primaryPressed,
+    colorNeutralStrokeAccessible: tokens.outlineHover,
+    colorNeutralStrokeAccessibleHover: tokens.outlineHover,
+    colorNeutralStrokeAccessiblePressed: tokens.outlineHover,
+    colorNeutralStrokeAccessibleSelected: tokens.primaryStrong,
+    colorNeutralStroke1: tokens.outlineBase,
+    colorNeutralStroke1Hover: tokens.outlineHover,
+    colorNeutralStroke1Pressed: tokens.outlineHover,
+    colorNeutralStroke1Selected: tokens.outlineHover,
+    colorNeutralStroke2: tokens.outlineSubtle,
+    colorNeutralStroke3: tokens.outlineSubtle,
+    colorNeutralStroke4: tokens.outlineSubtle,
+    colorNeutralStrokeSubtle: tokens.outlineSubtle,
+    colorNeutralStrokeDisabled: tokens.disabledBorder,
+    colorNeutralStrokeDisabled2: tokens.disabledBorder,
+    colorNeutralStrokeOnBrand2: tokens.textOnPrimary,
+    colorNeutralStrokeOnBrand2Hover: tokens.textOnPrimary,
+    colorNeutralStrokeOnBrand2Pressed: tokens.textOnPrimary,
+    colorNeutralStrokeOnBrand2Selected: tokens.textOnPrimary,
+    colorBrandStroke1: tokens.primaryStrong,
+    colorBrandStroke2: tokens.primaryBase,
+    colorBrandStroke2Hover: tokens.primaryHover,
+    colorBrandStroke2Pressed: tokens.primaryPressed,
+    colorBrandStroke2Contrast: tokens.primaryBase,
+    colorCompoundBrandStroke: tokens.primaryBase,
+    colorCompoundBrandStrokeHover: tokens.primaryHover,
+    colorCompoundBrandStrokePressed: tokens.primaryPressed,
+    colorStrokeFocus1: tokens.surfaceBase,
+    colorStrokeFocus2: tokens.focusRing,
+    colorStatusSuccessBackground1: tokens.statusSuccessBackground,
+    colorStatusSuccessBackground2: tokens.statusSuccessBackground,
+    colorStatusSuccessBackground3: tokens.statusSuccessBorder,
+    colorStatusSuccessForeground1: tokens.statusSuccessForeground,
+    colorStatusSuccessForeground2: tokens.statusSuccessForeground,
+    colorStatusSuccessForeground3: tokens.statusSuccessForeground,
+    colorStatusSuccessForegroundInverted: tokens.statusSuccessForeground,
+    colorStatusSuccessBorderActive: tokens.statusSuccessBorder,
+    colorStatusSuccessBorder1: tokens.statusSuccessBorder,
+    colorStatusSuccessBorder2: tokens.statusSuccessBorder,
+    colorStatusWarningBackground1: tokens.statusWarningBackground,
+    colorStatusWarningBackground2: tokens.statusWarningBackground,
+    colorStatusWarningBackground3: tokens.statusWarningBorder,
+    colorStatusWarningForeground1: tokens.statusWarningForeground,
+    colorStatusWarningForeground2: tokens.statusWarningForeground,
+    colorStatusWarningForeground3: tokens.statusWarningForeground,
+    colorStatusWarningForegroundInverted: tokens.statusWarningForeground,
+    colorStatusWarningBorderActive: tokens.statusWarningBorder,
+    colorStatusWarningBorder1: tokens.statusWarningBorder,
+    colorStatusWarningBorder2: tokens.statusWarningBorder,
+    colorStatusDangerBackground1: tokens.statusErrorBackground,
+    colorStatusDangerBackground2: tokens.statusErrorBackground,
+    colorStatusDangerBackground3: tokens.statusErrorBorder,
+    colorStatusDangerBackground3Hover: tokens.statusErrorBorder,
+    colorStatusDangerBackground3Pressed: tokens.statusErrorBorder,
+    colorStatusDangerForeground1: tokens.statusErrorForeground,
+    colorStatusDangerForeground2: tokens.statusErrorForeground,
+    colorStatusDangerForeground3: tokens.statusErrorForeground,
+    colorStatusDangerForegroundInverted: tokens.statusErrorForeground,
+    colorStatusDangerBorderActive: tokens.statusErrorBorder,
+    colorStatusDangerBorder1: tokens.statusErrorBorder,
+    colorStatusDangerBorder2: tokens.statusErrorBorder
+});
 
-    // Apply custom color palette
-    const colors = isLight ? lightThemeColors : darkThemeColors;
-    applyThemeColors(theme, colors);
+export const getAppTokens = (isLight: boolean): AppThemeTokens => (isLight ? lightThemeTokens : darkThemeTokens);
 
-    theme.fontSizeBase100 = (parseFloat(theme.fontSizeBase100.replace("px", "")) * scaling).toString() + "px";
-    theme.fontSizeBase200 = (parseFloat(theme.fontSizeBase200.replace("px", "")) * scaling).toString() + "px";
-    theme.fontSizeBase300 = (parseFloat(theme.fontSizeBase300.replace("px", "")) * scaling).toString() + "px";
-    theme.fontSizeBase400 = (parseFloat(theme.fontSizeBase400.replace("px", "")) * scaling).toString() + "px";
-    theme.fontSizeBase500 = (parseFloat(theme.fontSizeBase500.replace("px", "")) * scaling).toString() + "px";
-    theme.fontSizeBase600 = (parseFloat(theme.fontSizeBase600.replace("px", "")) * scaling).toString() + "px";
-    theme.fontSizeHero700 = (parseFloat(theme.fontSizeHero700.replace("px", "")) * scaling).toString() + "px";
-    theme.fontSizeHero800 = (parseFloat(theme.fontSizeHero800.replace("px", "")) * scaling).toString() + "px";
-    theme.fontSizeHero900 = (parseFloat(theme.fontSizeHero900.replace("px", "")) * scaling).toString() + "px";
-    theme.fontSizeHero1000 = (parseFloat(theme.fontSizeHero1000.replace("px", "")) * scaling).toString() + "px";
+export const createFluentTheme = (tokens: AppThemeTokens, isLight: boolean): Theme => {
+    const baseTheme = getThemeMode(isLight) === "light" ? createLightTheme(manualBrandRamp) : createDarkTheme(manualBrandRamp);
 
-    theme.lineHeightBase100 = (parseFloat(theme.lineHeightBase100.replace("px", "")) * scaling).toString() + "px";
-    theme.lineHeightBase200 = (parseFloat(theme.lineHeightBase200.replace("px", "")) * scaling).toString() + "px";
-    theme.lineHeightBase300 = (parseFloat(theme.lineHeightBase300.replace("px", "")) * scaling).toString() + "px";
-    theme.lineHeightBase400 = (parseFloat(theme.lineHeightBase400.replace("px", "")) * scaling).toString() + "px";
-    theme.lineHeightBase500 = (parseFloat(theme.lineHeightBase500.replace("px", "")) * scaling).toString() + "px";
-    theme.lineHeightBase600 = (parseFloat(theme.lineHeightBase600.replace("px", "")) * scaling).toString() + "px";
-    theme.lineHeightHero700 = (parseFloat(theme.lineHeightHero700.replace("px", "")) * scaling).toString() + "px";
-    theme.lineHeightHero800 = (parseFloat(theme.lineHeightHero800.replace("px", "")) * scaling).toString() + "px";
-    theme.lineHeightHero900 = (parseFloat(theme.lineHeightHero900.replace("px", "")) * scaling).toString() + "px";
-    theme.lineHeightHero1000 = (parseFloat(theme.lineHeightHero1000.replace("px", "")) * scaling).toString() + "px";
-    return theme;
+    return {
+        ...baseTheme,
+        ...createFluentThemeOverrides(tokens)
+    };
 };
+
+export const createScaledTypographyTheme = (theme: Theme, scaling: number): Theme => {
+    if (scaling === 1) {
+        return theme;
+    }
+
+    const scaledTheme = { ...theme };
+
+    for (const key of fontSizeTokenKeys) {
+        scaledTheme[key] = scalePixelToken(theme[key], scaling);
+    }
+
+    for (const key of lineHeightTokenKeys) {
+        scaledTheme[key] = scalePixelToken(theme[key], scaling);
+    }
+
+    return scaledTheme;
+};
+
+export const createAppCssVars = (tokens: AppThemeTokens): AppCssVariables => ({
+    "--app-header-background": tokens.headerBackground,
+    "--app-header-hover": tokens.headerHover,
+    "--app-header-pressed": tokens.headerPressed,
+    "--app-header-foreground": tokens.textOnHeader,
+    "--app-primary-subtle-foreground": tokens.primarySubtleOn,
+    "--app-status-info-background": tokens.statusInfoBackground,
+    "--app-status-info-border": tokens.statusInfoBorder,
+    "--app-status-info-foreground": tokens.statusInfoForeground
+});

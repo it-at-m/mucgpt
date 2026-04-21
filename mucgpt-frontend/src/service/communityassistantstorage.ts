@@ -1,5 +1,5 @@
 import { StorageService } from "./storage";
-import { ChatResponse, CommunityAssistant } from "../api";
+import { ChatResponse, CommunityAssistantSnapshot } from "../api";
 import { IndexedDBStorage } from "./indexedDBStorage";
 
 /**
@@ -7,13 +7,13 @@ import { IndexedDBStorage } from "./indexedDBStorage";
  */
 export class CommunityAssistantStorageService {
     // service to handling with the indexeddb
-    private storageService: StorageService<ChatResponse, CommunityAssistant>;
+    private storageService: StorageService<ChatResponse, CommunityAssistantSnapshot>;
     // contains the name of the assistant indexeddb and the corresponding object store
     private config: IndexedDBStorage;
     static CONFIG_ID = "COMMUNITYASSISTANTCONFIG_";
 
     constructor(config: IndexedDBStorage) {
-        this.storageService = new StorageService<ChatResponse, CommunityAssistant>(config);
+        this.storageService = new StorageService<ChatResponse, CommunityAssistantSnapshot>(config);
         this.config = config;
     }
 
@@ -26,7 +26,7 @@ export class CommunityAssistantStorageService {
      * @returns New StorageService instance for ChatResponse and CommunityAssistant.
      */
     getChatStorageService() {
-        return new StorageService<ChatResponse, CommunityAssistant>(this.config);
+        return new StorageService<ChatResponse, CommunityAssistantSnapshot>(this.config);
     }
 
     /**
@@ -65,11 +65,11 @@ export class CommunityAssistantStorageService {
 
     /**
      * Creates and stores a new community assistant configuration.
-     * @param assistant_config The configuration of the CommunityAssistant
+     * @param assistant_config The configuration snapshot of the community assistant
      * @param id The unique ID
      * @returns The used ID
      */
-    async createAssistantConfig(assistant_config: CommunityAssistant) {
+    async createAssistantConfig(assistant_config: CommunityAssistantSnapshot) {
         const config_with_id = { ...assistant_config, ...{ id: assistant_config.id } };
         await this.storageService.create([], config_with_id, CommunityAssistantStorageService.GENERATE_COMMUNITY_ASSISTANT_CONFIG_ID(assistant_config.id));
         return assistant_config.id;
@@ -92,7 +92,7 @@ export class CommunityAssistantStorageService {
      * @param assistant_id The assistant's ID
      * @param assistant_config The new configuration
      */
-    async setAssistantConfig(assistant_id: string, assistant_config: CommunityAssistant) {
+    async setAssistantConfig(assistant_id: string, assistant_config: CommunityAssistantSnapshot) {
         await this.storageService.update(
             CommunityAssistantStorageService.GENERATE_COMMUNITY_ASSISTANT_CONFIG_ID(assistant_id),
             undefined,

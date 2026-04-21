@@ -10,7 +10,7 @@
 .tipsSection {
     margin-bottom: 32px;
     padding: 24px 0;
-    border-bottom: 1px solid var(--outline);
+    border-bottom: 1px solid var(--colorNeutralStroke1);
 }
 
 .introSection:last-child,
@@ -29,7 +29,7 @@
 }
 
 .sectionIcon {
-    color: var(--onSurface);
+    color: var(--colorNeutralForeground1);
     flex-shrink: 0;
     font-size: 20px;
 }
@@ -37,13 +37,13 @@
 .sectionTitleText {
     font-size: 18px;
     font-weight: 600;
-    color: var(--onSurface);
+    color: var(--colorNeutralForeground1);
 }
 
 .description {
     line-height: 1.6;
     margin-bottom: 16px;
-    color: var(--onPrimaryContainer);
+    color: var(--colorNeutralForeground1);
 }
 
 /* Features Section */
@@ -62,8 +62,8 @@
     border-radius: 8px;
     text-decoration: none;
     opacity: 0.9;
-    background: var(--surface);
-    border: 1px solid var(--outline);
+    background: var(--colorNeutralBackground1);
+    border: 1px solid var(--colorNeutralStroke1);
     display: flex;
     flex-direction: column;
     padding: 16px;
@@ -73,9 +73,9 @@
 
 .featureCard:hover {
     opacity: 1;
-    outline: 2px solid var(--primary);
-    border-color: var(--primary);
-    background: var(--primaryContainer);
+    outline: 2px solid var(--colorBrandBackground);
+    border-color: var(--colorBrandBackground);
+    background: var(--colorNeutralBackground1);
     transform: translateY(-2px);
 }
 
@@ -87,8 +87,8 @@
     align-items: center;
     justify-content: center;
     border-radius: 4px;
-    background: var(--primaryContainer);
-    color: var(--onPrimaryContainer);
+    background: var(--colorNeutralBackground1);
+    color: var(--colorNeutralForeground1);
     margin-bottom: 12px;
 }
 
@@ -99,9 +99,9 @@
     align-items: center;
     margin: 20px 0;
     padding: 16px;
-    border: 1px solid var(--outline);
+    border: 1px solid var(--colorNeutralStroke1);
     border-radius: 6px;
-    background: var(--surface);
+    background: var(--colorNeutralBackground1);
 }
 
 .stepContent {
@@ -110,14 +110,14 @@
 
 .stepCard {
     padding: 16px;
-    background: var(--surface);
+    background: var(--colorNeutralBackground1);
 }
 
 .stepNumber {
     width: 32px;
     height: 32px;
-    color: var(--onPrimary);
-    background: var(--primary);
+    color: var(--colorNeutralForegroundOnBrand);
+    background: var(--colorBrandBackground);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -131,12 +131,12 @@
 }
 
 .examplePrompt {
-    background: var(--primaryContainer);
+    background: var(--colorNeutralBackground1);
     padding: 12px;
     border-radius: 6px;
     font-family: var(--fontFamilyMonospace);
     margin: 16px 0;
-    border-left: 4px solid var(--primary);
+    border-left: 4px solid var(--colorBrandBackground);
     font-weight: 500;
 }
 
@@ -147,7 +147,7 @@
 
 .stepList li {
     margin: 8px 0;
-    color: var(--onPrimaryContainer);
+    color: var(--colorNeutralForeground1);
     line-height: 1.6;
 }
 
@@ -159,9 +159,9 @@
 
 .featureItem {
     padding: 12px;
-    background: var(--primaryContainer);
+    background: var(--colorNeutralBackground1);
     border-radius: 6px;
-    border-left: 4px solid var(--primary);
+    border-left: 4px solid var(--colorBrandBackground);
 }
 
 .exportOptions {
@@ -172,9 +172,9 @@
 
 .exportOption {
     padding: 12px;
-    background: var(--primaryContainer);
+    background: var(--colorNeutralBackground1);
     border-radius: 6px;
-    border: 1px solid var(--outline);
+    border: 1px solid var(--colorNeutralStroke1);
 }
 
 /* Example Section */
@@ -206,7 +206,7 @@
 
 .markdownFeatures li {
     margin: 8px 0;
-    color: var(--onPrimaryContainer);
+    color: var(--colorNeutralForeground1);
     line-height: 1.6;
 }
 
@@ -215,11 +215,11 @@
 }
 
 .markdownDescription pre {
-    background: var(--primaryContainer);
+    background: var(--colorNeutralBackground1);
     border-radius: 6px;
     padding: 12px;
     overflow-x: auto;
-    border: 1px solid var(--outline);
+    border: 1px solid var(--colorNeutralStroke1);
 }
 
 .markdownDescription code {
@@ -242,21 +242,21 @@
 .tipItem {
     margin-bottom: 16px;
     padding: 16px;
-    background: var(--surface);
-    border: 1px solid var(--outline);
+    background: var(--colorNeutralBackground1);
+    border: 1px solid var(--colorNeutralStroke1);
     border-radius: 8px;
 }
 
 .tipItem strong {
     display: block;
     margin-bottom: 8px;
-    color: var(--onSurface);
+    color: var(--colorNeutralForeground1);
 }
 
 .tipItem p {
     margin: 0;
     line-height: 1.5;
-    color: var(--onPrimaryContainer);
+    color: var(--colorNeutralForeground1);
 }
 
 .tutorialIcon {
@@ -268,8 +268,8 @@
     height: 48px;
     font-size: 24px;
     border-radius: 6px;
-    background: var(--primaryContainer);
-    color: var(--onPrimaryContainer);
+    background: var(--colorNeutralBackground1);
+    color: var(--colorNeutralForeground1);
     margin-bottom: 12px;
 }
 
@@ -305,30 +305,30 @@
 }
 
 .hideButton {
-    background: var(--surface);
-    color: var(--onSurface);
-    border: 1px solid var(--outline);
+    background: var(--colorNeutralBackground1);
+    color: var(--colorNeutralForeground1);
+    border: 1px solid var(--colorNeutralStroke1);
 }
 
 .hideButton:hover {
-    background: var(--primaryContainer);
-    border-color: var(--outline);
+    background: var(--colorNeutralBackground1);
+    border-color: var(--colorNeutralStroke1);
 }
 
 .showButton {
-    background: var(--primary);
-    color: var(--onPrimary);
+    background: var(--colorBrandBackground);
+    color: var(--colorNeutralForegroundOnBrand);
     border: none;
 }
 
 .showButton:hover {
-    background: var(--primary);
+    background: var(--colorBrandBackground);
     opacity: 0.9;
 }
 
 .tryButton {
-    background: var(--primary);
-    color: var(--onPrimary);
+    background: var(--colorBrandBackground);
+    color: var(--colorNeutralForegroundOnBrand);
     border: none;
     display: flex;
     align-items: center;
@@ -336,7 +336,7 @@
 }
 
 .tryButton:hover {
-    background: var(--primary);
+    background: var(--colorBrandBackground);
     opacity: 0.9;
 }
 

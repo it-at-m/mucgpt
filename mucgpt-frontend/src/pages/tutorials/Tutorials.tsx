@@ -1,4 +1,4 @@
-import { useCallback, useMemo } from "react";
+import React, { useCallback, useMemo } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Button, Tooltip, Card, CardHeader, Text, Badge, Divider } from "@fluentui/react-components";
@@ -25,9 +25,9 @@ interface TutorialSection {
     id: string;
     title: string;
     description: string;
-    icon: JSX.Element;
+    icon: React.JSX.Element;
     badge?: string;
-    component: JSX.Element;
+    component: React.JSX.Element;
 }
 
 interface TutorialSectionGroup {

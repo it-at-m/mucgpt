@@ -1,5 +1,6 @@
 import { Dismiss24Regular } from "@fluentui/react-icons";
-import { Button, useId, Field, InfoLabel, Tooltip, Textarea, TextareaOnChangeData, Dropdown, Option } from "@fluentui/react-components";
+import { Button, useId, Field, InfoLabel, Tooltip, Dropdown, Option } from "@fluentui/react-components";
+import { ExpandableTextarea } from "../AssistantDialogs/shared";
 
 import styles from "./ChatsettingsDrawer.module.css";
 import { useCallback } from "react";
@@ -30,9 +31,8 @@ export const ChatSettingsContent = ({ creativity, setCreativity, systemPrompt, s
 
     // System prompt change
     const onSytemPromptChange = useCallback(
-        (_ev: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>, newValue?: TextareaOnChangeData) => {
-            if (newValue?.value) setSystemPrompt(newValue.value);
-            else setSystemPrompt("");
+        (newValue: string) => {
+            setSystemPrompt(newValue || "");
         },
         [setSystemPrompt]
     );
@@ -75,14 +75,14 @@ export const ChatSettingsContent = ({ creativity, setCreativity, systemPrompt, s
                 <div>
                     <div>
                         <Field size="large">
-                            <Textarea
-                                textarea={styles.systempromptTextArea}
+                            <ExpandableTextarea
+                                className={styles.systempromptTextArea}
                                 placeholder={t("components.chattsettingsdrawer.system_prompt")}
-                                resize="vertical"
                                 value={systemPrompt}
-                                size="large"
                                 rows={7}
                                 onChange={onSytemPromptChange}
+                                dialogTitle={t("components.chattsettingsdrawer.system_prompt")}
+                                ariaLabelledBy={systemPromptID}
                             />
                         </Field>
                     </div>
@@ -102,7 +102,7 @@ export const ChatSettingsContent = ({ creativity, setCreativity, systemPrompt, s
                 <div>
                     <Field size="large">
                         <Dropdown
-                            placeholder={t("components.edit_assistant_dialog.creativity_placeholder")}
+                            placeholder={t("components.assistant_editor.creativity_placeholder")}
                             value={creativity}
                             selectedOptions={[creativity]}
                             onOptionSelect={onCreativityChangeHandler}
@@ -110,13 +110,13 @@ export const ChatSettingsContent = ({ creativity, setCreativity, systemPrompt, s
                             aria-labelledby={creativity_headerID}
                         >
                             <Option key={CREATIVITY_LOW} value={CREATIVITY_LOW}>
-                                {t("components.edit_assistant_dialog.creativity_low")}
+                                {t("components.assistant_editor.creativity_low")}
                             </Option>
                             <Option key={CREATIVITY_MEDIUM} value={CREATIVITY_MEDIUM}>
-                                {t("components.edit_assistant_dialog.creativity_medium")}
+                                {t("components.assistant_editor.creativity_medium")}
                             </Option>
                             <Option key={CREATIVITY_HIGH} value={CREATIVITY_HIGH}>
-                                {t("components.edit_assistant_dialog.creativity_high")}
+                                {t("components.assistant_editor.creativity_high")}
                             </Option>
                         </Dropdown>
                     </Field>

@@ -9,16 +9,16 @@
     padding: 20px;
     border-radius: 8px;
     border: 1px solid;
-    background: var(--primaryContainer);
-    border-color: var(--outline);
+    background: var(--colorNeutralBackground1);
+    border-color: var(--colorNeutralStroke1);
     display: flex;
     flex-direction: column;
     gap: 16px;
 }
 
 .overviewContent {
-    background: var(--primaryContainer);
-    border-color: var(--outline);
+    background: var(--colorNeutralBackground1);
+    border-color: var(--colorNeutralStroke1);
 }
 
 .toolContentHeader {
@@ -33,11 +33,11 @@
 }
 
 .brainstormingIcon {
-    color: var(--onPrimaryContainer);
+    color: var(--colorNeutralForeground1);
 }
 
 .simplifyIcon {
-    color: var(--onPrimaryContainer);
+    color: var(--colorNeutralForeground1);
 }
 
 .toolDescription {
@@ -57,10 +57,10 @@
 .instructionsContainer {
     margin-top: 16px;
     padding: 16px;
-    background: var(--primaryContainer);
+    background: var(--colorNeutralBackground1);
     border-radius: 8px;
     font-size: 14px;
-    color: var(--onPrimaryContainer);
+    color: var(--colorNeutralForeground1);
 }
 
 .instructionsTitle {
@@ -81,8 +81,8 @@
 
 .exampleToggleButton {
     padding: 12px 24px;
-    background: var(--primary);
-    color: var(--onPrimary);
+    background: var(--colorBrandBackground);
+    color: var(--colorNeutralForegroundOnBrand);
     border: none;
     border-radius: 6px;
     cursor: pointer;
@@ -92,17 +92,17 @@
 }
 
 .exampleToggleButton:hover {
-    background: var(--primary);
+    background: var(--colorBrandBackgroundHover);
     opacity: 0.9;
 }
 
 .exampleToggleButton:active {
-    background: var(--primary);
+    background: var(--colorBrandBackgroundPressed);
     opacity: 0.8;
 }
 
 .exampleToggleButton:focus {
-    outline: 2px solid var(--primary);
+    outline: 2px solid var(--colorBrandBackground);
     outline-offset: 2px;
 }
 
@@ -120,7 +120,7 @@
 .contentSection {
     margin-bottom: 32px;
     padding: 24px 0;
-    border-bottom: 1px solid var(--outline);
+    border-bottom: 1px solid var(--colorNeutralStroke1);
 }
 
 .contentSection:last-child {
@@ -135,7 +135,7 @@
 }
 
 .sectionIcon {
-    color: var(--onSurface);
+    color: var(--colorNeutralForeground1);
     flex-shrink: 0;
 }
 
@@ -143,8 +143,8 @@
 .highlightBox {
     margin: 16px 0;
     padding: 16px;
-    background: var(--primaryContainer);
-    border-left: 4px solid var(--primary);
+    background: var(--colorNeutralBackground1);
+    border-left: 4px solid var(--colorBrandBackground);
     border-radius: 0 8px 8px 0;
 }
 
@@ -158,14 +158,14 @@
 
 .conceptCard {
     padding: 20px;
-    background: var(--surface);
-    border: 1px solid var(--outline);
+    background: var(--colorNeutralBackground1);
+    border: 1px solid var(--colorNeutralStroke1);
     border-radius: 8px;
     text-align: center;
 }
 
 .conceptIcon {
-    color: var(--onSurface);
+    color: var(--colorNeutralForeground1);
     margin-bottom: 12px;
     display: block;
     margin-left: auto;
@@ -176,8 +176,8 @@
 .keyConcept {
     margin: 20px 0;
     padding: 20px;
-    background: var(--primaryContainer);
-    border: 1px solid var(--outline);
+    background: var(--colorNeutralBackground1);
+    border: 1px solid var(--colorNeutralStroke1);
     border-radius: 8px;
 }
 
@@ -196,9 +196,9 @@
 .conclusionBox {
     margin: 20px 0;
     padding: 20px;
-    background: var(--primaryContainer);
+    background: var(--colorNeutralBackground1);
     border-radius: 8px;
-    border: 1px solid var(--outline);
+    border: 1px solid var(--colorNeutralStroke1);
 }
 
 .conclusionIntro {
@@ -219,7 +219,7 @@
 .finalNote {
     margin-top: 16px;
     padding-top: 16px;
-    border-top: 1px solid var(--outline);
+    border-top: 1px solid var(--colorNeutralStroke1);
     font-style: italic;
-    color: var(--onPrimaryContainer);
+    color: var(--colorNeutralForeground1);
 }

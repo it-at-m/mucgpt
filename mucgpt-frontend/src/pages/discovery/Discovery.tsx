@@ -2,34 +2,49 @@ import { useCallback, useContext, useEffect, useMemo, useRef, useState } from "r
 import { useNavigate } from "react-router-dom";
 import { Title1, Body1, Text, SearchBox, Dropdown, Option, Button, Tooltip, TabList, Tab } from "@fluentui/react-components";
 import type { SearchBoxChangeEvent, InputOnChangeData, SelectionEvents, OptionOnSelectData, SelectTabData, SelectTabEvent } from "@fluentui/react-components";
-import { ArrowSort24Regular, ArrowImport24Filled } from "@fluentui/react-icons";
+import { ArrowSort24Regular, DocumentArrowUpRegular } from "@fluentui/react-icons";
 import { useTranslation } from "react-i18next";
 
 import styles from "./Discovery.module.css";
 import {
     getAllCommunityAssistantsApi,
+    getCommunityAssistantApi,
     getOwnedCommunityAssistants,
     getUserSubscriptionsApi,
     deleteCommunityAssistantApi,
-    getCommunityAssistantApi,
     createCommunityAssistantApi
 } from "../../api/assistant-client";
-import { AssistantResponse } from "../../api/models";
+import { Assistant, AssistantResponse, CommunityAssistantSnapshot } from "../../api/models";
 import { HeaderContext, DEFAULTHEADER } from "../layout/HeaderContextProvider";
 import { AddAssistantButton } from "../../components/AddAssistantButton/AddAssistantButton";
-import { CreateAssistantDialog } from "../../components/AssistantDialogs/CreateAssistantDialog/CreateAssistantDialog";
+import { AssistantStorageService } from "../../service/assistantstorage";
 import { CommunityAssistantStorageService } from "../../service/communityassistantstorage";
-import { COMMUNITY_ASSISTANT_STORE, CREATIVITY_LOW } from "../../constants";
+import { ASSISTANT_STORE, COMMUNITY_ASSISTANT_STORE, CREATIVITY_LOW } from "../../constants";
 import { useGlobalToastContext } from "../../components/GlobalToastHandler/GlobalToastContext";
 import { DiscoveryCard } from "../../components/DiscoveryCard/DiscoveryCard";
 import { DiscoveryCardSkeleton } from "../../components/DiscoveryCard/DiscoveryCardSkeleton";
 import { AssistantDetailsSidebar, AssistantCardData } from "../../components/AssistantDetailsSidebar/AssistantDetailsSidebar";
 import { CloseConfirmationDialog } from "../../components/AssistantDialogs/shared/CloseConfirmationDialog";
-import { downloadAssistantExport, mapVersionToExportData } from "../../utils/assistant-export";
+import { useDuplicateAssistant } from "./hooks/useDuplicateAssistant";
+import { useMigrateLocalAssistant } from "../../hooks/useMigrateLocalAssistant";
+import { downloadAssistantExport, mapAssistantToExportData, mapVersionToExportData } from "../../utils/assistant-export";
+import { isCompleteCommunityAssistantSnapshot, mapCommunitySnapshotToAssistant } from "../../utils/community-assistant-snapshots";
+import { ApiError } from "../../api/fetch-utils";
 
 type SortKey = "title" | "updated" | "subscriptions";
 
 const communityAssistantStorageService = new CommunityAssistantStorageService(COMMUNITY_ASSISTANT_STORE);
+const assistantStorageService = new AssistantStorageService(ASSISTANT_STORE);
+const isAssistantResponse = (data: AssistantResponse | CommunityAssistantSnapshot): data is AssistantResponse =>
+    "latest_version" in data && data.latest_version != null && typeof data.latest_version.name === "string";
+const getSnapshotUpdatedAt = (snapshot: CommunityAssistantSnapshot): string | undefined => {
+    const snapshotWithTimestamp = snapshot as CommunityAssistantSnapshot & {
+        snapshotUpdatedAt?: string | null;
+        updated_at?: string | null;
+    };
+
+    return snapshotWithTimestamp.snapshotUpdatedAt ?? snapshotWithTimestamp.updated_at ?? undefined;
+};
 
 const Discovery = () => {
     const { t } = useTranslation();
@@ -43,7 +58,6 @@ const Discovery = () => {
     const [isLoading, setIsLoading] = useState<boolean>(true);
     const [searchText, setSearchText] = useState<string>("");
     const [sortMethod, setSortMethod] = useState<SortKey>("subscriptions");
-    const [showCreateDialog, setShowCreateDialog] = useState<boolean>(false);
 
     const [isDrawerOpen, setIsDrawerOpen] = useState(false);
     const [selectedAssistant, setSelectedAssistant] = useState<AssistantCardData | null>(null);
@@ -51,8 +65,24 @@ const Discovery = () => {
     const [ownedAssistantIds, setOwnedAssistantIds] = useState<Set<string>>(new Set());
     const [userSubscriptionIds, setUserSubscriptionIds] = useState<Set<string>>(new Set());
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+    const {
+        assistantToDuplicate,
+        showDuplicateConfirm,
+        isDuplicating,
+        setShowDuplicateConfirm,
+        requestDuplicateAssistant,
+        confirmDuplicateAssistant,
+        resolveAssistantData
+    } = useDuplicateAssistant();
+
+    const {
+        showMigrateConfirm: showLocalMigrateConfirm,
+        setShowMigrateConfirm: setShowLocalMigrateConfirm,
+        performMigration
+    } = useMigrateLocalAssistant(assistantStorageService);
 
     const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const latestRequestRef = useRef(0);
     useEffect(
         () => () => {
             if (closeTimerRef.current !== null) clearTimeout(closeTimerRef.current);
@@ -65,27 +95,56 @@ const Discovery = () => {
     }, [setHeader]);
 
     const exportAssistant = useCallback(async () => {
-        if (!selectedAssistant) return;
+        if (!selectedAssistant || selectedAssistant.isLocalAssistant) return;
 
         try {
-            let assistantData = selectedAssistant.rawData;
-            if (!assistantData?.latest_version) {
-                assistantData = await getCommunityAssistantApi(selectedAssistant.id);
+            try {
+                const assistantData = await getCommunityAssistantApi(selectedAssistant.id);
+                const lv = assistantData?.latest_version;
+
+                if (!lv) {
+                    throw new Error(t("components.import_assistant.import_invalid_format"));
+                }
+
+                downloadAssistantExport(mapVersionToExportData(lv), lv.name);
+                showSuccess(t("components.assistantsettingsdrawer.export"), `${lv.name}.json`);
+                return;
+            } catch (error) {
+                if (!(error instanceof ApiError) || error.status !== 404) {
+                    throw error;
+                }
             }
 
-            const lv = assistantData?.latest_version;
-            if (!lv) {
-                showError(t("components.assistantsettingsdrawer.export"), t("components.import_assistant.import_invalid_format"));
+            const snapshotData = selectedAssistant.rawData;
+            if (isCompleteCommunityAssistantSnapshot(snapshotData)) {
+                const snapshotAssistant: Assistant = mapCommunitySnapshotToAssistant(snapshotData);
+                downloadAssistantExport(mapAssistantToExportData(snapshotAssistant), snapshotAssistant.title);
+                showSuccess(t("components.assistantsettingsdrawer.export"), `${snapshotAssistant.title}.json`);
                 return;
             }
-            downloadAssistantExport(mapVersionToExportData(lv), lv.name);
-            showSuccess(t("components.assistantsettingsdrawer.export"), `${lv.name}.json`);
+
+            const assistantData = await resolveAssistantData(selectedAssistant.id, selectedAssistant.rawData as AssistantResponse | CommunityAssistantSnapshot);
+            if ("latest_version" in assistantData && assistantData.latest_version) {
+                const lv = assistantData.latest_version;
+                downloadAssistantExport(mapVersionToExportData(lv), lv.name);
+                showSuccess(t("components.assistantsettingsdrawer.export"), `${lv.name}.json`);
+                return;
+            }
+
+            if (isCompleteCommunityAssistantSnapshot(assistantData)) {
+                const snapshotAssistant: Assistant = mapCommunitySnapshotToAssistant(assistantData);
+                downloadAssistantExport(mapAssistantToExportData(snapshotAssistant), snapshotAssistant.title);
+                showSuccess(t("components.assistantsettingsdrawer.export"), `${snapshotAssistant.title}.json`);
+                return;
+            }
+
+            throw new Error(t("components.import_assistant.import_invalid_format"));
         } catch (error) {
             console.error("Failed to export assistant", error);
             const errorMessage = error instanceof Error ? error.message : "Export failed";
             showError(t("components.assistantsettingsdrawer.export"), errorMessage);
         }
-    }, [selectedAssistant, showError, showSuccess, t]);
+    }, [resolveAssistantData, selectedAssistant, showError, showSuccess, t]);
 
     const importAssistant = useCallback(() => {
         const fileInput = document.createElement("input");
@@ -148,8 +207,8 @@ const Discovery = () => {
     };
 
     const compareByUpdated = (a: AssistantCardData, b: AssistantCardData): number => {
-        const updatedA = new Date(a.updated).getTime();
-        const updatedB = new Date(b.updated).getTime();
+        const updatedA = a.updated ? new Date(a.updated).getTime() : Number.NEGATIVE_INFINITY;
+        const updatedB = b.updated ? new Date(b.updated).getTime() : Number.NEGATIVE_INFINITY;
         return updatedB - updatedA;
     };
 
@@ -181,7 +240,8 @@ const Discovery = () => {
         const fetchAssistants = async () => {
             setIsLoading(true);
             try {
-                const [allAssistantsResponse, ownedAssistants, userSubscriptions, localCommunityAssistants] = await Promise.all([
+                const [localAssistantsResponse, allAssistantsResponse, ownedAssistants, userSubscriptions, localCommunityAssistants] = await Promise.all([
+                    assistantStorageService.getAllAssistantConfigs(),
                     getAllCommunityAssistantsApi(),
                     getOwnedCommunityAssistants(),
                     getUserSubscriptionsApi(),
@@ -193,39 +253,78 @@ const Discovery = () => {
                 setOwnedAssistantIds(ownedIds);
                 setUserSubscriptionIds(subscribedIds);
 
-                const toCardData = (a: any, extra?: Partial<AssistantCardData>): AssistantCardData => ({
-                    id: a.id,
-                    title: a.latest_version?.name || a.title || "Unknown Assistant",
-                    description: a.latest_version?.description || a.description || "",
-                    subscriptions: a.subscriptions_count || 0,
-                    updated: a.updated_at || new Date().toISOString(),
-                    tags: a.latest_version?.tags || a.tags || [],
-                    rawData: a,
-                    ...extra
-                });
+                const toCardData = (a: AssistantResponse | CommunityAssistantSnapshot | Assistant, extra?: Partial<AssistantCardData>): AssistantCardData => {
+                    if ("latest_version" in a) {
+                        return {
+                            id: a.id,
+                            title: a.latest_version?.name || "Unknown Assistant",
+                            description: a.latest_version?.description || "",
+                            subscriptions: a.subscriptions_count || 0,
+                            updated: a.updated_at || undefined,
+                            tags: a.latest_version?.tags || [],
+                            rawData: a,
+                            ...extra
+                        };
+                    }
+
+                    return {
+                        id: a.id || "",
+                        title: a.title || "Unknown Assistant",
+                        description: a.description || "",
+                        subscriptions: 0,
+                        updated: "snapshot_version" in a ? getSnapshotUpdatedAt(a as CommunityAssistantSnapshot) : undefined,
+                        tags: a.tags || [],
+                        rawData: a,
+                        ...extra
+                    };
+                };
 
                 // 1. All published assistants
                 setAllAssistants(allAssistantsResponse.map(a => toCardData(a)));
 
-                // 2. Yours no matter if published or private
-                setYoursAssistants(ownedAssistants.map(a => toCardData(a)));
+                // 2. Yours: published/private plus legacy local assistants that were never migrated
+                const unpublishedLocalAssistants = localAssistantsResponse
+                    .filter((assistant): assistant is Assistant & { id: string } => Boolean(assistant.id))
+                    .filter(assistant => !ownedIds.has(assistant.id));
+
+                setYoursAssistants([
+                    ...ownedAssistants.map(a => toCardData(a)),
+                    ...unpublishedLocalAssistants.map(assistant => toCardData(assistant, { isLocalAssistant: true }))
+                ]);
 
                 const fullAssistantById = new Map<string, AssistantResponse>();
                 allAssistantsResponse.forEach(a => fullAssistantById.set(a.id, a));
                 ownedAssistants.forEach(a => fullAssistantById.set(a.id, a));
 
                 // 3. Every assistant subscribed to, merged with deleted ones
-                const deletedCommunityAssistants = localCommunityAssistants
-                    .filter(local => !userSubscriptions.some((sub: any) => sub.id === local.id))
-                    .filter(deleted => !ownedAssistants.some((own: any) => own.id === deleted.id));
+                const validLocalCommunityAssistants = localCommunityAssistants.filter(isCompleteCommunityAssistantSnapshot);
+                const deletedCommunityAssistants = validLocalCommunityAssistants.filter(local => !fullAssistantById.has(local.id));
 
                 const subscribedData = [
-                    ...userSubscriptions.map((sub: any) => {
-                        const fullData = fullAssistantById.get(sub.id);
-                        const localData = localCommunityAssistants.find(local => local.id === sub.id);
-                        return toCardData(fullData || localData || sub, { subscriptions: fullData?.subscriptions_count || 0 });
-                    }),
-                    ...deletedCommunityAssistants.map(deleted => toCardData(deleted, { subscriptions: 0 }))
+                    ...userSubscriptions
+                        .map(sub => {
+                            const fullData = fullAssistantById.get(sub.id);
+                            const localData = validLocalCommunityAssistants.find(local => local.id === sub.id);
+                            const assistantData = fullData || localData;
+
+                            if (!assistantData) {
+                                return null;
+                            }
+
+                            return toCardData(assistantData, {
+                                subscriptions: fullData?.subscriptions_count ?? 0,
+                                updated: fullData ? fullData.updated_at : localData ? getSnapshotUpdatedAt(localData) : undefined,
+                                isDeletedSnapshot: !fullData
+                            });
+                        })
+                        .filter((assistant): assistant is AssistantCardData => assistant !== null),
+                    ...deletedCommunityAssistants.map(deleted =>
+                        toCardData(deleted, {
+                            subscriptions: 0,
+                            updated: getSnapshotUpdatedAt(deleted),
+                            isDeletedSnapshot: !fullAssistantById.has(deleted.id)
+                        })
+                    )
                 ];
                 setSubscribedAssistants(subscribedData);
             } catch (error) {
@@ -275,7 +374,7 @@ const Discovery = () => {
         }
     };
 
-    const handleAssistantClick = (assistant: AssistantCardData) => {
+    const handleAssistantClick = async (assistant: AssistantCardData) => {
         if (closeTimerRef.current !== null) {
             clearTimeout(closeTimerRef.current);
             closeTimerRef.current = null;
@@ -285,20 +384,53 @@ const Discovery = () => {
             setIsDrawerOpen(false);
             closeTimerRef.current = setTimeout(() => setSelectedAssistant(null), 300);
         } else {
-            setSelectedAssistant(assistant);
-            setIsDrawerOpen(true);
+            const requestId = ++latestRequestRef.current;
+            try {
+                if (assistant.isLocalAssistant) {
+                    setSelectedAssistant(assistant);
+                    setIsDrawerOpen(true);
+                    return;
+                }
+
+                const resolvedData = await resolveAssistantData(assistant.id, assistant.rawData as AssistantResponse | CommunityAssistantSnapshot);
+                if (requestId !== latestRequestRef.current) return;
+                const resolvedTitle = isAssistantResponse(resolvedData) ? resolvedData.latest_version.name : resolvedData.title;
+                const resolvedDescription = isAssistantResponse(resolvedData) ? resolvedData.latest_version.description || "" : resolvedData.description || "";
+                const resolvedTags = isAssistantResponse(resolvedData) ? resolvedData.latest_version.tags || [] : resolvedData.tags || [];
+                setSelectedAssistant({
+                    ...assistant,
+                    title: resolvedTitle,
+                    description: resolvedDescription,
+                    tags: resolvedTags,
+                    rawData: resolvedData
+                });
+                setIsDrawerOpen(true);
+            } catch (error) {
+                if (requestId !== latestRequestRef.current) return;
+                console.error("Failed to load assistant details:", error);
+                const errorMessage = error instanceof Error ? error.message : t("components.assistant_chat.load_assistant_failed_message");
+                showError(t("components.assistant_chat.load_assistant_failed"), errorMessage);
+            }
         }
     };
 
     const startConversation = () => {
         if (selectedAssistant) {
-            navigate(`/communityassistant/${selectedAssistant.id}`);
+            if (selectedAssistant.isLocalAssistant) {
+                navigate(`/assistant/${selectedAssistant.id}`);
+                return;
+            }
+            navigate(`/${selectedAssistant.isDeletedSnapshot ? "deleted/communityassistant" : "communityassistant"}/${selectedAssistant.id}`);
         }
     };
 
     const editAssistant = () => {
         if (selectedAssistant) {
-            navigate(`/owned/communityassistant/${selectedAssistant.id}?edit=true`);
+            if (selectedAssistant.isLocalAssistant) {
+                navigate(`/assistant/${selectedAssistant.id}/edit#visibility-settings`);
+                return;
+            }
+            navigate(`/owned/communityassistant/${selectedAssistant.id}/edit`);
         }
     };
 
@@ -308,10 +440,27 @@ const Discovery = () => {
         }
     };
 
+    const performLocalMigration = async () => {
+        if (!selectedAssistant?.isLocalAssistant) return;
+        await performMigration(selectedAssistant.rawData as Assistant, selectedAssistant.id, selectedAssistant.title, () => {
+            setYoursAssistants(prev => prev.filter((a: AssistantCardData) => a.id !== selectedAssistant.id));
+            setIsDrawerOpen(false);
+            if (closeTimerRef.current !== null) clearTimeout(closeTimerRef.current);
+            closeTimerRef.current = setTimeout(() => setSelectedAssistant(null), 300);
+        });
+    };
+
     const performDelete = async () => {
         if (!selectedAssistant) return;
         try {
-            await deleteCommunityAssistantApi(selectedAssistant.id);
+            if (selectedAssistant.isLocalAssistant) {
+                await assistantStorageService.deleteConfigAndChatsForAssistant(selectedAssistant.id);
+            } else if (selectedAssistant.isDeletedSnapshot) {
+                await communityAssistantStorageService.deleteConfigForAssistant(selectedAssistant.id);
+                await assistantStorageService.deleteChatsForAssistant(selectedAssistant.id);
+            } else {
+                await deleteCommunityAssistantApi(selectedAssistant.id);
+            }
             showSuccess(
                 t("components.assistant_chat.delete_assistant_success"),
                 t("components.assistant_chat.delete_assistant_success_message", { title: selectedAssistant.title })
@@ -349,7 +498,7 @@ const Discovery = () => {
                                         <Button
                                             className={styles.importButton}
                                             appearance="outline"
-                                            icon={<ArrowImport24Filled />}
+                                            icon={<DocumentArrowUpRegular />}
                                             onClick={importAssistant}
                                             size="large"
                                             aria-label={t("components.import_assistant.import")}
@@ -357,7 +506,7 @@ const Discovery = () => {
                                             {t("components.import_assistant.import")}
                                         </Button>
                                     </Tooltip>
-                                    <AddAssistantButton onClick={() => setShowCreateDialog(true)} />
+                                    <AddAssistantButton onClick={() => navigate("/assistant/create")} />
                                 </div>
                             </div>
                         </div>
@@ -398,8 +547,8 @@ const Discovery = () => {
                                             sortMethod === "title"
                                                 ? t("components.community_assistants.sort_title", "Title")
                                                 : sortMethod === "updated"
-                                                    ? t("components.community_assistants.sort_updated", "Last updated")
-                                                    : t("components.community_assistants.sort_subscriptions", "Subscriptions")
+                                                  ? t("components.community_assistants.sort_updated", "Last updated")
+                                                  : t("components.community_assistants.sort_subscriptions", "Subscriptions")
                                         }
                                         selectedOptions={[sortMethod]}
                                         appearance="outline"
@@ -420,8 +569,6 @@ const Discovery = () => {
                             </div>
                         </div>
 
-                        <CreateAssistantDialog showDialogInput={showCreateDialog} setShowDialogInput={setShowCreateDialog} />
-
                         {isLoading ? (
                             <div className={styles.assistantsGrid}>
                                 {Array.from({ length: 12 }).map((_, index) => (
@@ -440,6 +587,13 @@ const Discovery = () => {
                                         id={assistant.id}
                                         title={assistant.title}
                                         description={assistant.description}
+                                        badge={
+                                            assistant.isLocalAssistant
+                                                ? t("components.community_assistants.local_badge")
+                                                : assistant.isDeletedSnapshot
+                                                  ? t("components.community_assistants.deleted_badge")
+                                                  : undefined
+                                        }
                                         onClick={() => handleAssistantClick(assistant)}
                                         isSelected={selectedAssistant?.id === assistant.id}
                                     />
@@ -460,11 +614,31 @@ const Discovery = () => {
                     ownedAssistantIds={ownedAssistantIds}
                     onStartChat={startConversation}
                     onEdit={editAssistant}
+                    onDuplicate={() => {
+                        if (!selectedAssistant || selectedAssistant.isLocalAssistant) {
+                            return;
+                        }
+                        requestDuplicateAssistant({
+                            id: selectedAssistant.id,
+                            title: selectedAssistant.title,
+                            rawData: selectedAssistant.rawData as AssistantResponse | CommunityAssistantSnapshot,
+                            isDeletedSnapshot: selectedAssistant.isDeletedSnapshot
+                        });
+                    }}
                     onExport={exportAssistant}
                     onDelete={deleteAssistant}
+                    onMigrateLocal={selectedAssistant?.isLocalAssistant ? () => setShowLocalMigrateConfirm(true) : undefined}
                 />
             </div>
 
+            <CloseConfirmationDialog
+                open={showLocalMigrateConfirm}
+                onOpenChange={setShowLocalMigrateConfirm}
+                onConfirmClose={performLocalMigration}
+                title={t("components.community_assistants.local_migration_confirm_title")}
+                message={t("components.community_assistants.local_migration_confirm_message")}
+                confirmLabel={t("components.community_assistants.local_migration_confirm_action")}
+            />
             <CloseConfirmationDialog
                 open={showDeleteConfirm}
                 onOpenChange={setShowDeleteConfirm}
@@ -472,6 +646,20 @@ const Discovery = () => {
                 title={t("components.assistantsettingsdrawer.deleteDialog.title")}
                 message={t("components.assistantsettingsdrawer.deleteDialog.content")}
                 confirmLabel={t("components.assistantsettingsdrawer.deleteDialog.confirm")}
+            />
+            <CloseConfirmationDialog
+                open={showDuplicateConfirm}
+                onOpenChange={setShowDuplicateConfirm}
+                onConfirmClose={confirmDuplicateAssistant}
+                confirmDisabled={isDuplicating}
+                title={t("components.community_assistants.duplicate_confirm_title")}
+                message={t(
+                    assistantToDuplicate?.isDeletedSnapshot
+                        ? "components.community_assistants.duplicate_confirm_message_deleted"
+                        : "components.community_assistants.duplicate_confirm_message",
+                    { title: assistantToDuplicate?.title ?? "" }
+                )}
+                confirmLabel={t("components.community_assistants.duplicate_confirm_action")}
             />
         </div>
     );

@@ -1,8 +1,8 @@
 {
   "devDependencies": {
-    "eslint": "9.39.3",
+    "eslint": "10.2.0",
     "prettier": "3.8.1",
-    "typescript-eslint": "8.56.1"
+    "typescript-eslint": "8.58.0"
   },
   "scripts": {
     "fix": "prettier ./mucgpt-frontend/src/ --write && eslint ./mucgpt-frontend/src/ --fix"

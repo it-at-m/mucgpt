@@ -4,7 +4,8 @@ import pytest
 import pytest_asyncio
 from sqlalchemy import Column, Integer, String
 from sqlalchemy.orm import declarative_base
-from src.database.repo import Repository
+
+from database.repo import Repository
 
 # Create a test model for testing the base repository
 TestBase = declarative_base()

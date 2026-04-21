@@ -4,7 +4,6 @@ import {
     Edit24Regular,
     ChatSettings24Regular,
     Checkmark24Filled,
-    CloudArrowUp24Filled,
     ChevronDown20Regular,
     ChevronRight20Regular,
     Settings24Regular,
@@ -19,8 +18,7 @@ import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import CodeBlockRenderer from "../CodeBlockRenderer/CodeBlockRenderer";
 import { Assistant } from "../../api";
-import { EditAssistantDialog } from "../AssistantDialogs";
-import PublishAssistantDialog from "../PublishAssistantDialog/PublishAssistantDialog";
+import { useNavigate } from "react-router-dom";
 import { Collapse } from "@fluentui/react-motion-components-preview";
 import { AssistantStrategy, DeletedCommunityAssistantStrategy } from "../../pages/assistant/AssistantStrategy";
 import rehypeKatex from "rehype-katex";
@@ -30,13 +28,12 @@ import { useGlobalToastContext } from "../GlobalToastHandler/GlobalToastContext"
 
 interface Props {
     assistant: Assistant;
-    onAssistantChange: (assistant: Assistant) => void;
     onDeleteAssistant: () => void;
     isOwned?: boolean;
     strategy: AssistantStrategy;
 }
 
-export const AssistantsettingsDrawer = ({ assistant, onAssistantChange, onDeleteAssistant, isOwned, strategy }: Props) => {
+export const AssistantsettingsDrawer = ({ assistant, onDeleteAssistant, isOwned, strategy }: Props) => {
     const { t } = useTranslation();
     const { showSuccess, showError } = useGlobalToastContext();
 
@@ -44,22 +41,19 @@ export const AssistantsettingsDrawer = ({ assistant, onAssistantChange, onDelete
     const [publish, setPublish] = useState<boolean>(assistant.publish);
     const [isOwner, setIsOwner] = useState<boolean>(isOwned || !publish);
     const [showDeleteDialog, setShowDeleteDialog] = useState<boolean>(false);
-    const [showPublishDialog, setShowPublishDialog] = useState<boolean>(false);
-    const [invisibleChecked, setInvisibleChecked] = useState<boolean>(!assistant.is_visible);
-    const [showEditDialog, setShowEditDialog] = useState<boolean>(false);
+    const navigate = useNavigate();
     const [isActionsExpanded, setIsActionsExpanded] = useState<boolean>(false);
 
     useEffect(() => {
         setDescription(assistant.description);
         setPublish(assistant.publish);
         setIsOwner(isOwned || !assistant.publish);
-        setInvisibleChecked(!assistant.is_visible);
     }, [assistant, isOwned]);
 
-    // Toggle read-only mode
+    // Toggle read-only mode (now navigates)
     const toggleEditDialog = useCallback(() => {
-        setShowEditDialog(!showEditDialog);
-    }, [showEditDialog]);
+        navigate(`edit`);
+    }, [navigate]);
 
     // Toggle actions section visibility
     const toggleActionsVisibility = useCallback(() => {
@@ -117,35 +111,6 @@ export const AssistantsettingsDrawer = ({ assistant, onAssistantChange, onDelete
         [showDeleteDialog, onDeleteAssistant, publish, t]
     );
 
-    // Publish dialog
-    const publishDialog = useMemo(
-        () => (
-            <PublishAssistantDialog
-                open={showPublishDialog}
-                setOpen={setShowPublishDialog}
-                assistant={assistant}
-                invisibleChecked={invisibleChecked}
-                setInvisibleChecked={setInvisibleChecked}
-                onDeleteAssistant={onDeleteAssistant}
-            />
-        ),
-        [showPublishDialog, setShowPublishDialog, assistant, invisibleChecked, onDeleteAssistant]
-    );
-
-    // Edit assistant dialog
-    const editDialog = useMemo(
-        () => (
-            <EditAssistantDialog
-                showDialog={showEditDialog}
-                setShowDialog={setShowEditDialog}
-                assistant={assistant}
-                onAssistantChanged={onAssistantChange}
-                isOwner={isOwner}
-                strategy={strategy}
-            />
-        ),
-        [showEditDialog, assistant, onAssistantChange, isOwner, strategy]
-    );
     const rehypeKatexOptions = {
         output: "mathml"
     };
@@ -156,8 +121,6 @@ export const AssistantsettingsDrawer = ({ assistant, onAssistantChange, onDelete
     // sidebar content
     return (
         <>
-            {publishDialog}
-            {editDialog}
             {deleteDialog}
             <div className={styles.titleSection}>
                 <h3 className={styles.assistantTitle}>{assistant.title}</h3>
@@ -222,16 +185,6 @@ export const AssistantsettingsDrawer = ({ assistant, onAssistantChange, onDelete
                             </Button>
                         </Tooltip>
 
-                        {!publish && (
-                            <Button
-                                icon={<CloudArrowUp24Filled />}
-                                onClick={() => setShowPublishDialog(true)}
-                                appearance="outline"
-                                className={`${styles.actionButton} ${styles.publishButton}`}
-                            >
-                                {t("components.assistantsettingsdrawer.publish")}
-                            </Button>
-                        )}
                         <Button icon={<ArrowExportUp24Filled />} onClick={() => exportAssistant()} className={styles.actionButton}>
                             {t("components.assistantsettingsdrawer.export")}
                         </Button>

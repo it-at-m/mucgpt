@@ -339,6 +339,22 @@ const ToolRow = ({ tool, isLocked = false, isSelected = false, allowToolSelectio
     const { t } = useTranslation();
     const hasTutorial = !!TOOL_TUTORIAL_MAP[tool.id];
     const showActiveState = isLocked || isSelected;
+    const toggleButtonRef = useRef<HTMLButtonElement>(null);
+
+    const handleToolRowClick = useCallback(
+        (event: React.MouseEvent<HTMLDivElement>) => {
+            if (isLocked || !allowToolSelection) return;
+
+            const target = event.target as HTMLElement;
+            if (target.closest(`.${styles.toolItemToggle}`) || target.closest(`.${styles.toolItemTutorialButton}`)) {
+                return;
+            }
+
+            toggleButtonRef.current?.click();
+        },
+        [allowToolSelection, isLocked]
+    );
+
     const titleContent = (
         <span className={styles.toolItemContent}>
             <span className={`${styles.statusDot} ${showActiveState ? styles.statusDotActive : ""}`} aria-hidden="true" />
@@ -350,12 +366,16 @@ const ToolRow = ({ tool, isLocked = false, isSelected = false, allowToolSelectio
 
     return (
         <div key={tool.id} className={`${styles.toolItem} ${isLocked ? styles.lockedToolItem : ""} ${isSelected ? styles.toolItemSelected : ""}`}>
-            <div className={styles.toolItemMain}>
+            <div
+                className={`${styles.toolItemMain} ${!isLocked && allowToolSelection ? styles.toolItemMainClickable : ""} ${!isLocked && !allowToolSelection ? styles.toolItemMainDisabled : ""}`}
+                onClick={handleToolRowClick}
+            >
                 <div className={styles.toolItemInfoGroup}>
                     {isLocked ? (
                         <div className={styles.toolItemStatic}>{titleContent}</div>
                     ) : (
                         <Button
+                            ref={toggleButtonRef}
                             appearance="transparent"
                             className={styles.toolItemToggle}
                             aria-pressed={isSelected}

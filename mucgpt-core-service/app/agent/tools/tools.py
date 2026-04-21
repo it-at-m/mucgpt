@@ -194,7 +194,6 @@ class ToolCollection:
             tool_name = tool.name
             meta = tool_metadata.get(lang_key, {}).get(tool_name)
             tool_runtime_metadata = getattr(tool, "metadata", None) or {}
-            mcp_source = tool_runtime_metadata.get("mcp_source")
             mcp_group = tool_runtime_metadata.get("mcp_group")
             if meta:
                 tools_info.append(
@@ -202,7 +201,6 @@ class ToolCollection:
                         id=tool_name,
                         name=meta.get("name", tool_name),
                         description=meta.get("description", tool.description),
-                        mcp_source=mcp_source,
                         mcp_group=mcp_group,
                     )
                 )
@@ -213,7 +211,6 @@ class ToolCollection:
                         id=tool_name,
                         name=tool_name,
                         description=tool.description,
-                        mcp_source=mcp_source,
                         mcp_group=mcp_group,
                     )
                 )

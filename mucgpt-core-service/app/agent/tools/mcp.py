@@ -78,7 +78,6 @@ class McpLoader:
                         existing_metadata = getattr(source_tool, "metadata", None) or {}
                         source_tool.metadata = {
                             **existing_metadata,
-                            "mcp_source": source_id,
                             "mcp_group": McpLoader._resolve_group(
                                 tool_name=source_tool.name,
                                 source_config=source_config,

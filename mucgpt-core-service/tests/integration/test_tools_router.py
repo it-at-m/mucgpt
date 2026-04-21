@@ -17,7 +17,6 @@ def test_tools_list(test_client: TestClient):
     assert all(
         "name" in tool
         and "description" in tool
-        and "mcp_source" in tool
         and "mcp_group" in tool
         for tool in data["tools"]
     )

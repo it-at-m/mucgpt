@@ -249,10 +249,6 @@ class ToolInfo(BaseModel):
     id: str = Field(..., description="Tool ID.")
     name: str = Field(..., description="Tool name.")
     description: str = Field(..., description="Description of the tool.")
-    mcp_source: str | None = Field(
-        default=None,
-        description="MCP source/server identifier if the tool comes from MCP.",
-    )
     mcp_group: str | None = Field(
         default=None,
         description="Optional group for grouping tools from this MCP source in the frontend (e.g. jira, confluence).",
@@ -264,7 +260,6 @@ class ToolInfo(BaseModel):
                 "id": "WEB_SEARCH",
                 "name": "Web Search",
                 "description": "Search the municipal website for information.",
-                "mcp_source": None,
                 "mcp_group": None,
             }
         }

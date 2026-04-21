@@ -264,7 +264,7 @@
 
 .accordionGroup {
     border: 1px solid var(--colorNeutralStroke1);
-    border-radius: 12px;
+    border-radius: 12px;    
     overflow: hidden;
 }
 
@@ -396,6 +396,14 @@
     min-height: 44px;
     padding: 10px 12px;
     min-width: 0;
+}
+
+.toolItemMainClickable {
+    cursor: pointer;
+}
+
+.toolItemMainDisabled {
+    cursor: not-allowed;
 }
 
 .toolItemInfoGroup {

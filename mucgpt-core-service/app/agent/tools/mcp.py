@@ -1,9 +1,8 @@
 import asyncio
 import json
 import os
-import typing
 
-from httpx import Auth, Request, Response
+from httpx import Auth, Request
 from langchain_core.tools import BaseTool
 from langchain_mcp_adapters.client import MultiServerMCPClient
 from langchain_mcp_adapters.sessions import SSEConnection, StreamableHttpConnection
@@ -223,7 +222,7 @@ class McpBearerAuthProvider(Auth):
     def set_token(uid: str, token: str) -> None:
         McpBearerAuthProvider._tokens[uid] = token
 
-    def auth_flow(self, request: Request) -> typing.Generator[Request, Response, None]:
+    def auth_flow(self, request: Request):
         if self._auth_override:
             request.headers["Authorization"] = self._auth_override
             yield request

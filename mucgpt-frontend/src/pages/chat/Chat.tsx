@@ -1,6 +1,6 @@
 import { useRef, useState, useEffect, useContext, useCallback, useMemo, useReducer } from "react";
 
-import { AskResponse, ChatResponse } from "../../api";
+import { AskResponse, ChatResponse, DataSource } from "../../api";
 import { Answer } from "../../components/Answer";
 import { QuestionInput } from "../../components/QuestionInput";
 import { ExampleList, ExampleModel } from "../../components/Example";
@@ -26,6 +26,8 @@ import { useToolsContext } from "../../components/ToolsProvider";
 import { Settings24Regular } from "@fluentui/react-icons";
 import { Button } from "@fluentui/react-components";
 import { ChatSettingsDialog } from "../../components/ChatSettingsDialog/ChatSettingsDialog";
+import { UploadedData, createUploadedDataFromContent } from "../../components/ContextManagerDialog/ContextManagerDialog";
+import { getStoredParsedDocuments } from "../../service/parsedDocumentStorage";
 import { useToolStatusToasts } from "../../hooks/useToolStatusToasts";
 
 /**
@@ -115,6 +117,7 @@ const Chat = () => {
     });
     const [toolStatuses, setToolStatuses] = useState<ToolStatus[]>([]);
     const [isSettingsOpen, setIsSettingsOpen] = useState<boolean>(false);
+    const [uploadedData, setUploadedData] = useState<UploadedData[]>([]);
 
     useToolStatusToasts(toolStatuses);
 
@@ -219,7 +222,7 @@ const Chat = () => {
 
     // API Request mit optimiertem State Management
     const callApi = useCallback(
-        async (question: string, system?: string) => {
+        async (question: string, system?: string, dataSources?: DataSource[]) => {
             lastQuestionRef.current = question;
             setError(undefined);
             isLoadingRef.current = true;
@@ -246,6 +249,7 @@ const Chat = () => {
                     undefined,
                     selectedTools,
                     setToolStatuses,
+                    dataSources,
                     lastAnswerRef
                 );
             } catch (e) {
@@ -320,6 +324,7 @@ const Chat = () => {
             hashParams.delete("q");
             hashParams.delete("question");
             hashParams.delete("tools");
+            hashParams.delete("data");
             const newHashQuery = hashParams.toString();
             currentUrl.hash = newHashQuery ? `${hashPath}?${newHashQuery}` : hashPath;
         }
@@ -330,6 +335,7 @@ const Chat = () => {
             searchParams.delete("q");
             searchParams.delete("question");
             searchParams.delete("tools");
+            searchParams.delete("data");
             const newSearch = searchParams.toString();
             currentUrl.search = newSearch ? `?${newSearch}` : "";
         }
@@ -353,11 +359,38 @@ const Chat = () => {
         [availableLLMs, setLLM]
     );
 
+    // Shared helper: converts UploadedData[] → DataSource[] (same logic as onSend)
+    const uploadedDataToDataSources = useCallback((datas: UploadedData[]): DataSource[] => {
+        return datas
+            .filter(data => data.isActive && data.status === "ready" && !!data.fileContent)
+            .map(data => ({
+                title: data.name,
+                content: data.fileContent!,
+                metadata: {
+                    source: data.source,
+                    mime_type: data.mimeType || data.file?.type || undefined,
+                    size: data.size,
+                    parsed_at: data.parsedAt,
+                    file_signature: data.fileSignature,
+                    stored_document_id: data.storedDocumentId,
+                    status: data.status
+                }
+            }));
+    }, []);
+
     // State to track if initialization is complete
     const [isInitialized, setIsInitialized] = useState(false);
     const [pendingQuestion, setPendingQuestion] = useState<string | null>(null);
     // Effect to handle pending question after tools are loaded
     const scheduledQuestionRef = useRef<string | null>(null);
+
+    // Stable ref for callApi so the pending-question effect doesn't
+    // get cancelled/rescheduled every time callApi's identity changes
+    // (which happens whenever answers, selectedTools, creativity, etc. update).
+    const callApiRef = useRef(callApi);
+    useEffect(() => {
+        callApiRef.current = callApi;
+    }, [callApi]);
 
     const hasRestoredLLMRef = useRef(false);
 
@@ -400,6 +433,7 @@ const Chat = () => {
         // Check URL for question parameter - Handle hash router format
         let questionFromUrl;
         let toolsFromUrl;
+        let dataFromUrl;
         const hashPart = window.location.hash;
 
         // For hash router format like #/chat?q=something&tools=tool1,tool2
@@ -408,11 +442,13 @@ const Chat = () => {
             const hashParams = new URLSearchParams(queryPart);
             questionFromUrl = hashParams.get("q") || hashParams.get("question");
             toolsFromUrl = hashParams.get("tools");
+            dataFromUrl = hashParams.get("data");
         } else {
             // Fallback to regular URL parameters
             const urlParams = new URLSearchParams(window.location.search);
             questionFromUrl = urlParams.get("q") || urlParams.get("question");
             toolsFromUrl = urlParams.get("tools");
+            dataFromUrl = urlParams.get("data");
         }
 
         // Parse tools from URL if present
@@ -427,6 +463,50 @@ const Chat = () => {
                 }
             } catch {
                 // ignore storage errors
+            }
+        }
+
+        // Parse data (file IDs) from URL if present
+        if (dataFromUrl) {
+            const fileIds = dataFromUrl.split(",").filter(id => id.trim() !== "");
+            if (fileIds.length > 0) {
+                const storedRawIds = localStorage.getItem("chatFileIds");
+                let validIds: string[] = [];
+                if (storedRawIds) {
+                    try {
+                        const parsedIds = JSON.parse(storedRawIds);
+                        // Check if the parameter IDs match the ones we stored
+                        validIds = fileIds.filter(id => parsedIds.includes(id));
+                    } catch (e) {
+                        console.error("Failed to parse chatFileIds from localStorage:", e);
+                    }
+                }
+
+                if (validIds.length > 0) {
+                    // Look up documents from localStorage and create ready UploadedData items immediately
+                    const storedDocs = getStoredParsedDocuments();
+                    const restoredData: UploadedData[] = validIds
+                        .map(id => {
+                            const doc = storedDocs.find(d => d.id === id);
+                            if (doc) {
+                                return createUploadedDataFromContent(doc.content, doc.name, doc.id);
+                            }
+                            console.warn(`Stored document with id "${id}" not found in localStorage.`);
+                            return null;
+                        })
+                        .filter((d): d is UploadedData => d !== null);
+
+                    if (restoredData.length > 0) {
+                        setUploadedData(restoredData);
+                    } else {
+                        console.warn("None of the requested documents could be restored from localStorage.");
+                        clearNavigationQueryParams();
+                    }
+                } else {
+                    console.warn("Requested files were not found in localStorage recent history. Please re-upload your files.");
+                    // Clear the stale data URL parameter so it is not reprocessed
+                    clearNavigationQueryParams();
+                }
             }
         }
 
@@ -476,6 +556,8 @@ const Chat = () => {
 
         scheduledQuestionRef.current = pendingQuestion;
         const questionToAsk = pendingQuestion;
+        // Capture the current uploadedData snapshot for use inside the timeout
+        const dataSnapshot = uploadedData;
 
         // Wait a bit more to ensure tools are properly set
         const timeoutId = window.setTimeout(() => {
@@ -483,7 +565,9 @@ const Chat = () => {
             if (scheduledQuestionRef.current !== questionToAsk) {
                 return;
             }
-            callApi(questionToAsk, systemPrompt);
+            const dataSources = uploadedDataToDataSources(dataSnapshot);
+            // Use ref so this effect doesn't depend on callApi's identity
+            callApiRef.current(questionToAsk, systemPrompt, dataSources.length > 0 ? dataSources : undefined);
 
             // Clear state and hash param once the question is sent
             scheduledQuestionRef.current = null;
@@ -497,7 +581,7 @@ const Chat = () => {
                 scheduledQuestionRef.current = null;
             }
         };
-    }, [isInitialized, pendingQuestion, tools, callApi, systemPrompt, clearNavigationQueryParams]);
+    }, [isInitialized, pendingQuestion, tools, uploadedData, uploadedDataToDataSources, systemPrompt, clearNavigationQueryParams]);
 
     // Set up quick prompts
     useEffect(() => {
@@ -591,17 +675,21 @@ const Chat = () => {
         () => (
             <QuestionInput
                 clearOnSend
-                placeholder={t("chat.prompt")}
                 disabled={isLoadingRef.current || error !== undefined}
-                onSend={question => callApi(question, systemPrompt)}
+                onSend={(question, datas) => {
+                    const dataSources = uploadedDataToDataSources(datas);
+                    callApi(question, systemPrompt, dataSources.length > 0 ? dataSources : undefined);
+                }}
                 question={question}
                 setQuestion={question => setQuestion(question)}
                 selectedTools={selectedTools}
                 setSelectedTools={setSelectedTools}
                 tools={tools}
+                uploadedData={uploadedData}
+                setUploadedData={setUploadedData}
             />
         ),
-        [callApi, systemPrompt, question, t, isLoadingRef.current, selectedTools, tools]
+        [callApi, systemPrompt, question, t, isLoadingRef.current, selectedTools, tools, uploadedData, uploadedDataToDataSources]
     );
 
     const sidebar_actions = useMemo(

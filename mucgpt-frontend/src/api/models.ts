@@ -25,6 +25,12 @@ export type ChatTurn = {
     assistant?: string;
 };
 
+export type DataSource = {
+    title: string;
+    content: string;
+    metadata?: Record<string, string | number | boolean | null | undefined>;
+};
+
 export type ChatRequest = {
     history: ChatTurn[];
     creativity?: string;
@@ -35,6 +41,7 @@ export type ChatRequest = {
     model?: string;
     enabled_tools?: string[];
     assistant_id?: string;
+    data_sources?: DataSource[];
 };
 
 export type CreateAssistantRequest = {
@@ -50,6 +57,7 @@ export interface ApplicationConfig {
     core_version: string;
     frontend_version: string;
     assistant_version: string;
+    document_processing_enabled: boolean;
 }
 
 export interface Model {

@@ -7,6 +7,7 @@ from fastapi.responses import JSONResponse
 
 from api.routers import (
     chat_router,
+    parsing_router,
     system_router,
     tools_router,
 )
@@ -55,6 +56,10 @@ api_app = FastAPI(
             "name": "Tools",
             "description": "Operations for managing tools that can be used by assistants",
         },
+        {
+            "name": "Parsing",
+            "description": "Operations for parsing uploaded files into text",
+        },
     ],
 )
 backend.mount("/api/", api_app)
@@ -65,6 +70,7 @@ api_app.add_middleware(CorrelationIdMiddleware)
 api_app.include_router(chat_router.router, prefix="", tags=["Chat"])
 api_app.include_router(system_router.router, prefix="", tags=["System"])
 api_app.include_router(tools_router.router, prefix="", tags=["Tools"])
+api_app.include_router(parsing_router.router, prefix="", tags=["Parsing"])
 
 
 @api_app.exception_handler(AuthError)

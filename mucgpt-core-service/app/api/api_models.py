@@ -1,5 +1,5 @@
 from decimal import Decimal
-from typing import Literal
+from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, PositiveInt
 
@@ -58,6 +58,14 @@ class ChatCompletionMessage(BaseModel):
     )
 
 
+class ChatDataSource(BaseModel):
+    title: str = Field(..., description="Document title")
+    content: str = Field(..., description="Document content to inject")
+    metadata: dict[str, Any] | None = Field(
+        None, description="Additional metadata for this document"
+    )
+
+
 class ChatCompletionRequest(BaseModel):
     model: str = Field("gpt-4o-mini", description="The model to use")
     messages: list[ChatCompletionMessage] = Field(
@@ -80,6 +88,10 @@ class ChatCompletionRequest(BaseModel):
     assistant_id: str | None = Field(
         None, description="ID of the assistant to use for this completion request"
     )
+    data_sources: list[ChatDataSource] | None = Field(
+        None,
+        description="Structured document payload with title, content and metadata",
+    )
     model_config = ConfigDict(
         json_schema_extra={
             "example": {
@@ -93,6 +105,17 @@ class ChatCompletionRequest(BaseModel):
                 "stream": False,
                 "enabled_tools": ["Vereinfachen"],
                 "assistant_id": "assistant-123",
+                "data_sources": [
+                    {
+                        "title": "Policy-Handbook.pdf",
+                        "content": "Document content...",
+                        "metadata": {
+                            "mime_type": "application/pdf",
+                            "size": 123456,
+                            "source": "upload",
+                        },
+                    }
+                ],
             }
         }
     )
@@ -371,3 +394,7 @@ class ConfigResponse(BaseModel):
     core_version: str
     frontend_version: str
     assistant_version: str
+    document_processing_enabled: bool = Field(
+        False,
+        description="Whether document upload and parsing is enabled. True when a parser backend (e.g. Kreuzberg) is configured.",
+    )

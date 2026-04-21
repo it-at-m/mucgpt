@@ -8,13 +8,7 @@ import { uploadFileApi } from "../../api/core-client";
 import { ToolListResponse } from "../../api/models";
 import { useConfigContext } from "../../context/ConfigContext";
 import { upsertParsedDocumentFromUpload } from "../../service/parsedDocumentStorage";
-import {
-    ContextManagerDialog,
-    UploadedData,
-    createUploadedData,
-    getDataSignature,
-    getFileSignature
-} from "../ContextManagerDialog/ContextManagerDialog";
+import { ContextManagerDialog, UploadedData, createUploadedData, getDataSignature, getFileSignature } from "../ContextManagerDialog/ContextManagerDialog";
 import { ChatToolSelector } from "../ChatToolSelector/ChatToolSelector";
 
 interface Props {

@@ -224,7 +224,7 @@ const Home = () => {
         <div className={styles.pageContainer}>
             <section className={styles.chatstartercontainer} aria-labelledby="chat-header">
                 <h1 id="chat-header" className={styles.heading}>
-                    {t("menu.chat_header", { user: username })}{" "}
+                    {t("home.chat_header", { user: username, defaultValue: "Hallo {{user}}, was hast du heute vor?" })}{" "}
                 </h1>
                 <div className={styles.chatstarter}>
                     <QuestionInput
@@ -286,7 +286,7 @@ const Home = () => {
                             icon={<CompassNorthwest24Regular aria-hidden />}
                             onClick={() => navigate("/discovery")}
                         >
-                            {t("menu.discover_assistants", "Assistenten entdecken")}
+                            {t("home.discover_assistants", { defaultValue: "Assistenten entdecken" })}
                         </Button>
                     </div>
                 )}

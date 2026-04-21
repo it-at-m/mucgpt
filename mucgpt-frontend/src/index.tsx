@@ -11,7 +11,6 @@ import Chat from "./pages/chat/Chat";
 import { LanguageContextProvider } from "./components/LanguageSelector/LanguageContextProvider";
 import Faq from "./pages/faq/Faq";
 import Version from "./pages/version/Version";
-import Menu from "./pages/menu/Menu";
 import Tutorials from "./pages/tutorials/Tutorials";
 import { LLMContextProvider } from "./components/LLMSelector/LLMContextProvider";
 import { QuickPromptProvider } from "./components/QuickPrompt/QuickPromptProvider";
@@ -35,17 +34,12 @@ const router = createHashRouter([
         children: [
             {
                 index: true,
-                element: <Menu />,
+                element: <Home />,
                 errorElement: <div>Fehler</div>
             },
             {
                 path: "unauthorized",
                 element: <Unauthorized />,
-                errorElement: <div>Fehler</div>
-            },
-            {
-                path: "home",
-                element: <Home />,
                 errorElement: <div>Fehler</div>
             },
             {

@@ -170,9 +170,12 @@ const Home = () => {
                 setRecommendedAssistants(recommended);
 
                 // Determine initial mode
-                const persisted = localStorage.getItem(STORAGE_KEYS.HOME_ASSISTANT_MODE) as HomeMode | null;
+                const persisted = localStorage.getItem(STORAGE_KEYS.HOME_ASSISTANT_MODE);
                 const validRecent = recent.slice(0, MAX_CARDS);
-                if (validRecent.length >= MIN_RECENT_FOR_DEFAULT && persisted) {
+                if (
+                    validRecent.length >= MIN_RECENT_FOR_DEFAULT &&
+                    (persisted === "recommended" || persisted === "recent")
+                ) {
                     setMode(persisted);
                 } else {
                     setMode("recommended");
@@ -258,7 +261,11 @@ const Home = () => {
                 </div>
             </section>
 
-            <section className={styles.contentSection} aria-labelledby="assistants-heading">
+            <section
+                className={styles.contentSection}
+                aria-labelledby={hasAnyContent ? "assistants-heading" : undefined}
+                aria-label={!hasAnyContent ? sectionLabel : undefined}
+            >
                 {!loading && dataReady && hasAnyContent && (
                     <>
                         <div className={styles.sectionHeaderRow}>

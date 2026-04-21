@@ -1953,7 +1953,7 @@ i18n
                 translation: {
                     header: {
                         nutzungsbedingungen: "Conditions d'utilisation",
-                        create_assistant: "Create assistant",
+                        create_assistant: "Créer un assistant",
                         go_to_tutorials_tooltip: "Tutoriels et guides pour les fragments et les outils",
                         go_to_tutorials_aria: "Aller aux tutoriels et guides",
                         go_to_tutorials: "Tutoriels"
@@ -2594,6 +2594,7 @@ i18n
                         go_to_tutorials_tooltip: "Навчальні матеріали та інструкції для фрагментів та інструментів",
                         go_to_tutorials_aria: "Перейти до навчальних матеріалів та інструкцій",
                         go_to_tutorials: "Навчальні матеріали",
+                        create_assistant: "Створити асистента",
                         nutzungsbedingungen: "Умови використання"
                     },
                     home: {

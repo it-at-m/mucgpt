@@ -234,10 +234,14 @@ class McpBearerAuthProvider(Auth):
             raise ValueError("Token is None but needed")
         
         normalized = token.strip()
-        scheme, _ = normalized.split("")
-        if scheme.lower() in {"bearer", "basic"}:
-            request.headers["Authorization"] = token
+        if token != normalized:
+            McpLoader._logger.warning(
+                f"Given authentication token was not normalized for user '{self._uid}'."
+            )
+        scheme, sep, _ = normalized.partition(" ")
+        if sep and scheme.lower() in {"bearer", "basic"}:
+            request.headers["Authorization"] = normalized
         else:
-            request.headers["Authorization"] = f"Bearer {token}"
+            request.headers["Authorization"] = f"Bearer {normalized}"
 
         yield request

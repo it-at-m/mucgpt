@@ -6,7 +6,8 @@ from langchain_core.language_models import BaseChatModel
 from langchain_core.runnables import RunnableConfig
 from langchain_core.tools.base import BaseTool
 
-from agent.middleware import _ToolErrorMiddleware
+from agent.middleware import ContextMiddleware, ToolErrorMiddleware
+from agent.state_models.default_state import DefaultAgentState
 from agent.tools.mcp import McpBearerAuthProvider
 from agent.tools.tools import ToolCollection
 from core.auth_models import AuthenticationResult
@@ -30,18 +31,31 @@ class _ConfiguredLangChainAgentGraph:
         tool_collection: ToolCollection,
         tools: list[BaseTool],
         logger,
+        debug: bool = True,
     ):
         self.model = llm
         self.tool_collection = tool_collection
         self.tools = tools
         self.logger = logger
+        self.debug = debug
 
+        logger.info(
+            "Initializing MUCGPT ReAct agent graph with tools: %s",
+            [tool.name for tool in tools],
+        )
         self.agent = create_agent(
             model=cast(Any, self.model),
             tools=self.tools,
-            middleware=[_ToolErrorMiddleware()],
+            middleware=[ToolErrorMiddleware()],
             system_prompt=DEFAULT_INSTRUCTIONS,
+            debug=self.debug,
         )
+
+    @staticmethod
+    def get_schema_from_tools(
+        enabled_tools: list[BaseTool] | None,
+    ) -> DefaultAgentState:
+        return DefaultAgentState
 
     def _select_tools(self, enabled_tools: list[str] | None) -> list[BaseTool]:
         if not enabled_tools:
@@ -51,7 +65,7 @@ class _ConfiguredLangChainAgentGraph:
 
     def _prepare_run(
         self, input_data: dict[str, Any], config: RunnableConfig | None
-    ) -> tuple[Any, list[Any], list[BaseTool]]:
+    ) -> tuple[Any, list[Any], list[BaseTool], DefaultAgentState]:
         configurable = config.get("configurable", {}) if config else {}
         user_info = cast(AuthenticationResult | None, configurable.get("user_info"))
         if not user_info:
@@ -60,11 +74,15 @@ class _ConfiguredLangChainAgentGraph:
         llm_user = configurable.get("llm_user")
         extra_body = configurable.get("llm_extra_body")
         enabled_tools = configurable.get("enabled_tools")
+        selected_llm = configurable.get("llm")
 
         # Keep MCP auth token map up-to-date for forwarded auth providers.
         McpBearerAuthProvider.set_token(user_info.user_id, user_info.token)
 
         model = self.model
+        if selected_llm:
+            # Select the configured model alternative before adding request-specific bindings.
+            model = model.with_config(configurable={"llm": selected_llm})
         if extra_body:
             model = model.bind(extra_body=extra_body)
         if llm_user:
@@ -72,11 +90,16 @@ class _ConfiguredLangChainAgentGraph:
 
         messages = input_data.get("messages", [])
         tools_to_use = self._select_tools(enabled_tools)
-        if enabled_tools:
-            messages = self.tool_collection.add_instructions(
-                messages, enabled_tools, tools=tools_to_use
-            )
-        return model, messages, tools_to_use
+        state_schema = _ConfiguredLangChainAgentGraph.get_schema_from_tools(
+            tools_to_use
+        )
+        # TODO: infer scope from tool selection and choose agentstate accordingly
+
+        # if enabled_tools:
+        #     messages = self.tool_collection.add_instructions(
+        #         messages, enabled_tools, tools=tools_to_use
+        #     )
+        return model, messages, tools_to_use, state_schema
 
     async def astream(
         self,
@@ -86,16 +109,20 @@ class _ConfiguredLangChainAgentGraph:
         config: RunnableConfig | None = None,
         **kwargs,
     ):
-        model, messages, tools_to_use = self._prepare_run(input_data, config)
+        model, messages, tools_to_use, state_schema = self._prepare_run(
+            input_data, config
+        )
         active_agent = self.agent
         if tools_to_use != self.tools or model is not self.model:
             active_agent = create_agent(
                 model=cast(Any, model),
                 tools=tools_to_use,
-                middleware=[_ToolErrorMiddleware()],
+                middleware=[ContextMiddleware(), ToolErrorMiddleware()],
                 system_prompt=DEFAULT_INSTRUCTIONS
                 if messages[0].content != DEFAULT_INSTRUCTIONS
                 else None,
+                debug=self.debug,
+                state_schema=state_schema,  # TODO: support multiple state schemas for different policies
             )
         async for item in active_agent.astream(
             {"messages": messages},
@@ -112,16 +139,20 @@ class _ConfiguredLangChainAgentGraph:
         config: RunnableConfig | None = None,
         **kwargs,
     ):
-        model, messages, tools_to_use = self._prepare_run(input_data, config)
+        model, messages, tools_to_use, state_schema = self._prepare_run(
+            input_data, config
+        )
         active_agent = self.agent
         if tools_to_use != self.tools or model is not self.model:
             active_agent = create_agent(
                 model=cast(Any, model),
                 tools=tools_to_use,
-                middleware=[_ToolErrorMiddleware()],
+                middleware=[ContextMiddleware(), ToolErrorMiddleware()],
                 system_prompt=DEFAULT_INSTRUCTIONS
                 if messages[0].content != DEFAULT_INSTRUCTIONS
                 else None,
+                debug=self.debug,
+                state_schema=state_schema,
             )
         return await active_agent.ainvoke(
             {"messages": messages}, config=config, **kwargs
@@ -137,6 +168,7 @@ class MUCGPTReActAgent:
         tool_collection: ToolCollection,
         tools: list[BaseTool],
         logger=None,
+        debug: bool = True,
     ):
         self.logger = logger if logger else getLogger(name="mucgpt-core-react-agent")
         self.model = llm  # required for non-streaming calls, e.g. assisted MUCGPT-Assistant generation.
@@ -145,4 +177,5 @@ class MUCGPTReActAgent:
             tool_collection=tool_collection,
             tools=tools,
             logger=self.logger,
+            debug=debug,
         )

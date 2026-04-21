@@ -141,6 +141,7 @@ class MUCGPTAgentExecutor:
                     "llm": model,
                     "llm_streaming": True,
                     "enabled_tools": enabled_tools,
+                    "agent_state": {"current_scope": "general"},
                     "user_info": user_info,
                     "llm_user": llm_user,
                     "llm_extra_body": llm_extra_body,
@@ -264,6 +265,7 @@ class MUCGPTAgentExecutor:
                 "llm": model,
                 "llm_streaming": False,
                 "enabled_tools": enabled_tools,
+                "agent_state": {"current_scope": "general"},
                 "user_info": user_info,
                 "llm_user": llm_user,
                 "llm_extra_body": llm_extra_body,
@@ -274,7 +276,7 @@ class MUCGPTAgentExecutor:
         config = merge_configs(self.base_config, request_config)
         try:
             logger.debug("Starting non-streaming response")
-            llm = self.agent.model.with_config(configurable=config)
+            llm = self.agent.model.with_config(config)
             ai_message = llm.invoke(msgs)
             logger.info("Non-streaming completed successfully.")
             response = ChatCompletionResponse(

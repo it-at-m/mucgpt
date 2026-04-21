@@ -84,6 +84,14 @@ function useStorageService(activeChatId: string | undefined) {
     return useMemo(() => new StorageService<ChatResponse, ChatOptions>(CHAT_STORE), [activeChatId]);
 }
 
+function parseStoredStringArray(value: unknown): string[] {
+    if (!Array.isArray(value)) {
+        return [];
+    }
+
+    return value.filter((item): item is string => typeof item === "string");
+}
+
 const Chat = () => {
     const chatReducer = getChatReducer<ChatOptions>();
     // Contexts
@@ -110,7 +118,7 @@ const Chat = () => {
     const [selectedTools, setSelectedTools] = useState<string[]>(() => {
         try {
             const stored = localStorage.getItem(STORAGE_KEYS.SELECTED_TOOLS);
-            return stored ? (JSON.parse(stored) as string[]) : [];
+            return stored ? parseStoredStringArray(JSON.parse(stored)) : [];
         } catch {
             return [];
         }
@@ -454,12 +462,12 @@ const Chat = () => {
         // Parse tools from URL if present
         if (toolsFromUrl) {
             const toolsArray = toolsFromUrl.split(",").filter(tool => tool.trim() !== "");
-            setSelectedTools(toolsArray);
+            setSelectedTools(parseStoredStringArray(toolsArray));
         } else {
             try {
                 const storedTools = localStorage.getItem(STORAGE_KEYS.SELECTED_TOOLS);
                 if (storedTools) {
-                    setSelectedTools(JSON.parse(storedTools) as string[]);
+                    setSelectedTools(parseStoredStringArray(JSON.parse(storedTools)));
                 }
             } catch {
                 // ignore storage errors

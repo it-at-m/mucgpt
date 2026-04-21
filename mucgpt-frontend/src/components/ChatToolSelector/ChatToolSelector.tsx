@@ -150,11 +150,10 @@ const useHoverPopover = ({ isCompact, hoverEnabled = true, forceClose = false }:
 
     const handleCompactOpenChange = useCallback(
         (_: unknown, data: { open: boolean }) => {
-            if (isCompact) {
-                setOpen(data.open);
-            }
+            clearCloseTimeout();
+            setOpen(data.open);
         },
-        [isCompact]
+        [clearCloseTimeout]
     );
 
     useEffect(() => {
@@ -259,12 +258,7 @@ const GroupBadgePopoverItem = (props: GroupBadgePopoverItemProps) => {
     );
 
     return (
-        <div
-            ref={badgeRef}
-            className={isLocked ? styles.lockedBadge : `${styles.activeBadge} ${!allowSelection ? styles.activeBadgeDisabled : ""}`}
-            onMouseEnter={openPopover}
-            onMouseLeave={handleMouseLeave}
-        >
+        <div ref={badgeRef} className={isLocked ? styles.lockedBadge : styles.activeBadge} onMouseEnter={openPopover} onMouseLeave={handleMouseLeave}>
             {props.isCompact ? (
                 <Dialog open={open} onOpenChange={handleCompactOpenChange}>
                     <DialogTrigger disableButtonEnhancement>{triggerContent}</DialogTrigger>
@@ -278,7 +272,7 @@ const GroupBadgePopoverItem = (props: GroupBadgePopoverItemProps) => {
                                         <div className={styles.groupDialogTitleActions}>
                                             {headerAction}
                                             <DialogTrigger action="close">
-                                                <Button appearance="subtle" aria-label={t("close")} icon={<Dismiss24Regular />} />
+                                                <Button appearance="subtle" aria-label={t("common.close")} icon={<Dismiss24Regular />} />
                                             </DialogTrigger>
                                         </div>
                                     }
@@ -289,7 +283,7 @@ const GroupBadgePopoverItem = (props: GroupBadgePopoverItemProps) => {
                             <DialogContent className={styles.groupDetailDialogContent}>
                                 {isLocked && (
                                     <div className={styles.groupHoverHeaderRow}>
-                                        <div className={`${styles.popoverEyebrow} ${styles.groupHoverPopoverHeader}`}>{badge.groupName}</div>
+                                        <div className={styles.groupHoverPopoverHeader}>{badge.groupName}</div>
                                         {headerAction}
                                     </div>
                                 )}
@@ -299,11 +293,11 @@ const GroupBadgePopoverItem = (props: GroupBadgePopoverItemProps) => {
                     </DialogSurface>
                 </Dialog>
             ) : (
-                <Popover open={open} positioning={{ position: "above", align: "start", offset: { mainAxis: 6 } }}>
+                <Popover open={open} onOpenChange={handleCompactOpenChange} positioning={{ position: "above", align: "start", offset: { mainAxis: 6 } }}>
                     <PopoverTrigger disableButtonEnhancement>{triggerContent}</PopoverTrigger>
                     <PopoverSurface ref={surfaceRef} className={styles.groupHoverSurface} onMouseEnter={openPopover} onMouseLeave={handleMouseLeave}>
                         <div className={styles.groupHoverHeaderRow}>
-                            <div className={`${styles.popoverEyebrow} ${styles.groupHoverPopoverHeader}`}>{badge.groupName}</div>
+                            <div className={styles.groupHoverPopoverHeader}>{badge.groupName}</div>
                             {headerAction}
                         </div>
                         {toolList}
@@ -621,22 +615,22 @@ export const ChatToolSelector = ({ tools, selectedTools, setSelectedTools, allow
 
     const selectorContent = (
         <>
-            <div className={`${styles.popoverEyebrow} ${styles.popoverHeader}`}>{t("components.questioninput.available_tools")}</div>
+            <div className={styles.popoverHeader}>{t("components.questioninput.available_tools")}</div>
 
             {hasLockedTools && (
                 <>
-                    <div className={`${styles.popoverEyebrow} ${styles.popoverSectionHeader}`}>{t("components.questioninput.assistant_tools_section")}</div>
+                    <div className={styles.popoverSectionHeader}>{t("components.questioninput.assistant_tools_section")}</div>
                     {lockedGroups.map(group => (
                         <div key={`locked-section-${group.name}`} className={styles.lockedToolSection}>
                             <div className={styles.lockedToolSectionHeader}>
                                 <LockClosed16Regular className={styles.lockedBadgeIcon} aria-hidden="true" />
-                                <span className={`${styles.popoverEyebrow} ${styles.lockedToolSectionTitle}`}>{group.name}</span>
+                                <span>{group.name}</span>
                             </div>
                             <div className={styles.groupToolsList}>{group.tools.map(renderLockedToolItem)}</div>
                         </div>
                     ))}
                     {lockedUngrouped.length > 0 && <div className={styles.ungroupedList}>{lockedUngrouped.map(renderLockedToolItem)}</div>}
-                    <div className={`${styles.popoverEyebrow} ${styles.popoverSectionHeader}`}>{t("components.questioninput.optional_tools_section")}</div>
+                    <div className={styles.popoverSectionHeader}>{t("components.questioninput.optional_tools_section")}</div>
                 </>
             )}
 
@@ -763,7 +757,7 @@ export const ChatToolSelector = ({ tools, selectedTools, setSelectedTools, allow
                                 <DialogTitle
                                     action={
                                         <DialogTrigger action="close">
-                                            <Button appearance="subtle" aria-label={t("close")} icon={<Dismiss24Regular />} />
+                                            <Button appearance="subtle" aria-label={t("common.close")} icon={<Dismiss24Regular />} />
                                         </DialogTrigger>
                                     }
                                 >

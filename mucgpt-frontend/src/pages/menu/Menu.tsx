@@ -26,6 +26,14 @@ import { AssistantCard } from "../../components/AssistantCard";
 import { useToolsContext } from "../../components/ToolsProvider";
 import { UploadedData } from "../../components/ContextManagerDialog/ContextManagerDialog";
 
+function parseStoredStringArray(value: unknown): string[] {
+    if (!Array.isArray(value)) {
+        return [];
+    }
+
+    return value.every(item => typeof item === "string") ? value : [];
+}
+
 const Menu = () => {
     const { t } = useTranslation();
     const navigate = useNavigate();
@@ -44,7 +52,7 @@ const Menu = () => {
     const [selectedTools, setSelectedTools] = useState<string[]>(() => {
         try {
             const stored = localStorage.getItem(STORAGE_KEYS.SELECTED_TOOLS);
-            return stored ? (JSON.parse(stored) as string[]) : [];
+            return stored ? parseStoredStringArray(JSON.parse(stored)) : [];
         } catch {
             return [];
         }

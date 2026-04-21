@@ -22,7 +22,7 @@ class McpLoader:
     _mcp_settings = get_mcp_settings()
 
     @staticmethod
-    async def load_mcp_tools(user_info: AuthenticationResult) -> list[BaseTool]:
+    async def load_mcp_tools(user_info: AuthenticationResult) -> list[BaseTool]: # type: ignore
         """
         Load MCP tools for a given user and cache them.
         """
@@ -156,6 +156,10 @@ class McpLoader:
                             metadata = {
                                 **existing_metadata,
                                 "mcp_source": source_id,
+                                "mcp_group": McpLoader._resolve_group(
+                                tool_name=source_tool.name,
+                                source_config=sources[source_id],
+                                ),
                             }
 
                             if description_entry is not None:
@@ -189,73 +193,6 @@ class McpLoader:
             McpLoader._logger.warning(
                 f"Could not acquire MCP lock '{lock_name}' for user {uid}; retrying cache read"
             )
-            await asyncio.sleep(0.3)
-            tools_dump = await RedisCache.get_object(cache_key)
-            if tools_dump is not None:
-                return tools_dump
-            # map to mcp connection
-            mcp_connections = {}
-            for k, v in sources.items():
-                if v.transport is MCPTransport.SSE:
-                    con = SSEConnection(transport=MCPTransport.SSE.value, url=v.url)
-                elif v.transport is MCPTransport.STREAMABLE_HTTP:
-                    con = StreamableHttpConnection(
-                        transport=MCPTransport.STREAMABLE_HTTP.value, url=v.url
-                    )
-                else:
-                    McpLoader._logger.error(
-                        f"Unsupported transport protocol {v.transport} for mcp source {k}"
-                    )
-                    continue
-                if v.headers:
-                    con["headers"] = {
-                        header_name: header_value.get_secret_value()
-                        for header_name, header_value in v.headers.items()
-                    }
-                # add auth if enabled and user_info present
-                if v.forward_token:
-                    auth_override = (
-                        v.forward_auth_override.get_secret_value()
-                        if v.forward_auth_override
-                        else None
-                    )
-                    con["auth"] = McpBearerAuthProvider(
-                        uid=user_info.user_id,
-                        token=user_info.token,
-                        auth_override=auth_override,
-                    )
-                    mcp_connections[k] = con
-                else:
-                    mcp_connections[k] = con
-            # create mcp client and get tools
-            McpLoader._logger.info(f"Loading mcp tools for user {user_info.user_id}")
-            mcp_client = MultiServerMCPClient(connections=mcp_connections)
-            tools = []
-            for source_id in mcp_connections.keys():
-                try:
-                    source_tools = await mcp_client.get_tools(server_name=source_id)
-                    source_config = sources[source_id]
-                    for source_tool in source_tools:
-                        existing_metadata = getattr(source_tool, "metadata", None) or {}
-                        source_tool.metadata = {
-                            **existing_metadata,
-                            "mcp_source": source_id,
-                            "mcp_group": McpLoader._resolve_group(
-                                tool_name=source_tool.name,
-                                source_config=source_config,
-                            ),
-                        }
-                    tools += source_tools
-                except Exception as e:
-                    McpLoader._logger.error(
-                        f"Exception while fetching MCP tools from '{source_id}'",
-                        exc_info=e,
-                    )
-            # store user tools
-            await RedisCache.set_object(
-                key=cache_key, obj=tools, ttl=McpLoader._mcp_settings.CACHE_TTL
-            )
-
         except Exception as e:
             McpLoader._logger.error(
                 f"Failed to acquire/use MCP lock '{lock_name}' for user {uid}",

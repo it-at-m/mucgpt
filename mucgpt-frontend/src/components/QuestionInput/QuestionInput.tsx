@@ -224,15 +224,15 @@ export const QuestionInput = ({
                         const updatedData = current.map(d =>
                             d.id === data.id
                                 ? {
-                                    ...d,
-                                    status: "ready" as const,
-                                    fileContent,
-                                    storedDocumentId: storedDocument?.id,
-                                    parsedAt: storedDocument?.parsedAt,
-                                    fileSignature: storedDocument?.fileSignature,
-                                    mimeType: storedDocument?.mimeType,
-                                    source: "upload" as const
-                                }
+                                      ...d,
+                                      status: "ready" as const,
+                                      fileContent,
+                                      storedDocumentId: storedDocument?.id,
+                                      parsedAt: storedDocument?.parsedAt,
+                                      fileSignature: storedDocument?.fileSignature,
+                                      mimeType: storedDocument?.mimeType,
+                                      source: "upload" as const
+                                  }
                                 : d
                         );
                         setUploadedData(updatedData);

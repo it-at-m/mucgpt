@@ -419,6 +419,9 @@ export const ChatToolSelector = ({ tools, selectedTools, setSelectedTools, allow
     const [isCompact, setIsCompact] = useState(() =>
         typeof window !== "undefined" && typeof window.matchMedia === "function" ? window.matchMedia("(max-width: 640px)").matches : false
     );
+    const [useDialogSelector, setUseDialogSelector] = useState(() =>
+        typeof window !== "undefined" && typeof window.matchMedia === "function" ? window.matchMedia("(max-width: 480px)").matches : false
+    );
     const triggerRef = useRef<HTMLButtonElement>(null);
     const [frozenTarget, setFrozenTarget] = useState<{ getBoundingClientRect: () => DOMRect } | null>(null);
 
@@ -432,25 +435,43 @@ export const ChatToolSelector = ({ tools, selectedTools, setSelectedTools, allow
     }, []);
 
     useEffect(() => {
+        if (typeof window === "undefined" || typeof window.matchMedia !== "function") return;
+        const mq = window.matchMedia("(max-width: 480px)");
+        const handler = (event: MediaQueryListEvent) => setUseDialogSelector(event.matches);
+        setUseDialogSelector(mq.matches);
+        mq.addEventListener("change", handler);
+        return () => mq.removeEventListener("change", handler);
+    }, []);
+
+    useEffect(() => {
         if (!allowToolSelection) {
             setPopoverOpen(false);
             setOpenGroups([]);
         }
     }, [allowToolSelection]);
 
-    const handlePopoverOpenChange = useCallback((_: unknown, data: { open: boolean }) => {
-        if (data.open && triggerRef.current) {
-            const rect = triggerRef.current.getBoundingClientRect();
-            const frozenRect = new DOMRect(rect.left, rect.top, rect.width, rect.height);
-            setFrozenTarget({ getBoundingClientRect: () => frozenRect });
-        }
-
-        if (!data.open) {
+    useEffect(() => {
+        if (useDialogSelector) {
             setFrozenTarget(null);
         }
+    }, [useDialogSelector]);
 
-        setPopoverOpen(data.open);
-    }, []);
+    const handlePopoverOpenChange = useCallback(
+        (_: unknown, data: { open: boolean }) => {
+            if (!useDialogSelector && data.open && triggerRef.current) {
+                const rect = triggerRef.current.getBoundingClientRect();
+                const frozenRect = new DOMRect(rect.left, rect.top, rect.width, rect.height);
+                setFrozenTarget({ getBoundingClientRect: () => frozenRect });
+            }
+
+            if (!data.open || useDialogSelector) {
+                setFrozenTarget(null);
+            }
+
+            setPopoverOpen(data.open);
+        },
+        [useDialogSelector]
+    );
 
     const lockedToolIdSet = useMemo(() => new Set(lockedToolIds), [lockedToolIds]);
     const selectedOptionalTools = useMemo(() => selectedTools.filter(toolId => !lockedToolIdSet.has(toolId)), [lockedToolIdSet, selectedTools]);
@@ -598,6 +619,76 @@ export const ChatToolSelector = ({ tools, selectedTools, setSelectedTools, allow
         [allowToolSelection, openTutorial]
     );
 
+    const selectorContent = (
+        <>
+            <div className={`${styles.popoverEyebrow} ${styles.popoverHeader}`}>{t("components.questioninput.available_tools")}</div>
+
+            {hasLockedTools && (
+                <>
+                    <div className={`${styles.popoverEyebrow} ${styles.popoverSectionHeader}`}>{t("components.questioninput.assistant_tools_section")}</div>
+                    {lockedGroups.map(group => (
+                        <div key={`locked-section-${group.name}`} className={styles.lockedToolSection}>
+                            <div className={styles.lockedToolSectionHeader}>
+                                <LockClosed16Regular className={styles.lockedBadgeIcon} aria-hidden="true" />
+                                <span className={`${styles.popoverEyebrow} ${styles.lockedToolSectionTitle}`}>{group.name}</span>
+                            </div>
+                            <div className={styles.groupToolsList}>{group.tools.map(renderLockedToolItem)}</div>
+                        </div>
+                    ))}
+                    {lockedUngrouped.length > 0 && <div className={styles.ungroupedList}>{lockedUngrouped.map(renderLockedToolItem)}</div>}
+                    <div className={`${styles.popoverEyebrow} ${styles.popoverSectionHeader}`}>{t("components.questioninput.optional_tools_section")}</div>
+                </>
+            )}
+
+            {selectableGroups.length > 0 && (
+                <Accordion className={styles.groupAccordion} collapsible multiple openItems={openGroups} onToggle={handleAccordionToggle}>
+                    {selectableGroups.map(group => {
+                        const groupIds = group.tools.map(tool => tool.id);
+                        const selectedCount = groupIds.filter(id => selectedTools.includes(id)).length;
+                        const allSelected = group.tools.length > 0 && selectedCount === group.tools.length;
+                        const groupActionLabel = allSelected ? t("components.questioninput.disable_all") : t("components.questioninput.enable_all");
+
+                        return (
+                            <AccordionItem key={group.name} value={group.name} className={styles.accordionGroup}>
+                                <div className={styles.accordionGroupHeader} onClick={handleAccordionHeaderClick}>
+                                    <AccordionHeader className={styles.accordionHeader} expandIconPosition="end">
+                                        <span className={styles.groupAccordionHeaderContent}>
+                                            <span className={`${styles.statusDot} ${selectedCount > 0 ? styles.statusDotActive : ""}`} aria-hidden="true" />
+                                            <span className={styles.groupTitleBlock}>
+                                                <span className={styles.groupName}>{group.name}</span>
+                                                <span className={styles.groupCount}>
+                                                    {selectedCount}/{group.tools.length}
+                                                </span>
+                                            </span>
+                                        </span>
+                                    </AccordionHeader>
+                                    <Button
+                                        size="small"
+                                        appearance="subtle"
+                                        shape="circular"
+                                        className={styles.groupHeaderActionButton}
+                                        onClick={event => {
+                                            event.stopPropagation();
+                                            toggleGroup(group.tools);
+                                        }}
+                                        disabled={!allowToolSelection}
+                                    >
+                                        {groupActionLabel}
+                                    </Button>
+                                </div>
+                                <AccordionPanel className={styles.accordionPanel}>
+                                    <div className={styles.groupToolsList}>{group.tools.map(renderToolItem)}</div>
+                                </AccordionPanel>
+                            </AccordionItem>
+                        );
+                    })}
+                </Accordion>
+            )}
+
+            {selectableUngrouped.length > 0 && <div className={styles.ungroupedList}>{selectableUngrouped.map(renderToolItem)}</div>}
+        </>
+    );
+
     return (
         <div className={styles.toolSelectorRow}>
             {activeBadges.length === 0 && <span className={styles.emptyStateBadge}>{t("components.questioninput.no_tools_active")}</span>}
@@ -659,99 +750,49 @@ export const ChatToolSelector = ({ tools, selectedTools, setSelectedTools, allow
 
             {overflowCount > 0 && <span className={styles.overflowBadge}>{t("components.questioninput.more_tools", { count: overflowCount })}</span>}
 
-            {hasSelectableTools && (
-                <Popover
-                    open={popoverOpen}
-                    onOpenChange={handlePopoverOpenChange}
-                    positioning={{
-                        position: "above",
-                        align: "start",
-                        offset: { mainAxis: 10 },
-                        strategy: "fixed",
-                        ...(frozenTarget && { target: frozenTarget })
-                    }}
-                >
-                    <PopoverTrigger disableButtonEnhancement>
-                        <Button ref={triggerRef} shape="circular" appearance="primary" className={styles.addToolBadge} disabled={!allowToolSelection}>
-                            {t("components.questioninput.add_tool")}
-                        </Button>
-                    </PopoverTrigger>
-                    <PopoverSurface className={styles.popoverSurface}>
-                        <div className={`${styles.popoverEyebrow} ${styles.popoverHeader}`}>{t("components.questioninput.available_tools")}</div>
-
-                        {hasLockedTools && (
-                            <>
-                                <div className={`${styles.popoverEyebrow} ${styles.popoverSectionHeader}`}>
-                                    {t("components.questioninput.assistant_tools_section")}
-                                </div>
-                                {lockedGroups.map(group => (
-                                    <div key={`locked-section-${group.name}`} className={styles.lockedToolSection}>
-                                        <div className={styles.lockedToolSectionHeader}>
-                                            <LockClosed16Regular className={styles.lockedBadgeIcon} aria-hidden="true" />
-                                            <span className={`${styles.popoverEyebrow} ${styles.lockedToolSectionTitle}`}>{group.name}</span>
-                                        </div>
-                                        <div className={styles.groupToolsList}>{group.tools.map(renderLockedToolItem)}</div>
-                                    </div>
-                                ))}
-                                {lockedUngrouped.length > 0 && <div className={styles.ungroupedList}>{lockedUngrouped.map(renderLockedToolItem)}</div>}
-                                <div className={`${styles.popoverEyebrow} ${styles.popoverSectionHeader}`}>
-                                    {t("components.questioninput.optional_tools_section")}
-                                </div>
-                            </>
-                        )}
-
-                        {selectableGroups.length > 0 && (
-                            <Accordion className={styles.groupAccordion} collapsible multiple openItems={openGroups} onToggle={handleAccordionToggle}>
-                                {selectableGroups.map(group => {
-                                    const groupIds = group.tools.map(tool => tool.id);
-                                    const selectedCount = groupIds.filter(id => selectedTools.includes(id)).length;
-                                    const allSelected = group.tools.length > 0 && selectedCount === group.tools.length;
-                                    const groupActionLabel = allSelected ? t("components.questioninput.disable_all") : t("components.questioninput.enable_all");
-
-                                    return (
-                                        <AccordionItem key={group.name} value={group.name} className={styles.accordionGroup}>
-                                            <div className={styles.accordionGroupHeader} onClick={handleAccordionHeaderClick}>
-                                                <AccordionHeader className={styles.accordionHeader} expandIconPosition="end">
-                                                    <span className={styles.groupAccordionHeaderContent}>
-                                                        <span
-                                                            className={`${styles.statusDot} ${selectedCount > 0 ? styles.statusDotActive : ""}`}
-                                                            aria-hidden="true"
-                                                        />
-                                                        <span className={styles.groupTitleBlock}>
-                                                            <span className={styles.groupName}>{group.name}</span>
-                                                            <span className={styles.groupCount}>
-                                                                {selectedCount}/{group.tools.length}
-                                                            </span>
-                                                        </span>
-                                                    </span>
-                                                </AccordionHeader>
-                                                <Button
-                                                    size="small"
-                                                    appearance="subtle"
-                                                    shape="circular"
-                                                    className={styles.groupHeaderActionButton}
-                                                    onClick={event => {
-                                                        event.stopPropagation();
-                                                        toggleGroup(group.tools);
-                                                    }}
-                                                    disabled={!allowToolSelection}
-                                                >
-                                                    {groupActionLabel}
-                                                </Button>
-                                            </div>
-                                            <AccordionPanel className={styles.accordionPanel}>
-                                                <div className={styles.groupToolsList}>{group.tools.map(renderToolItem)}</div>
-                                            </AccordionPanel>
-                                        </AccordionItem>
-                                    );
-                                })}
-                            </Accordion>
-                        )}
-
-                        {selectableUngrouped.length > 0 && <div className={styles.ungroupedList}>{selectableUngrouped.map(renderToolItem)}</div>}
-                    </PopoverSurface>
-                </Popover>
-            )}
+            {hasSelectableTools &&
+                (useDialogSelector ? (
+                    <Dialog open={popoverOpen} onOpenChange={handlePopoverOpenChange}>
+                        <DialogTrigger disableButtonEnhancement>
+                            <Button ref={triggerRef} shape="circular" appearance="primary" className={styles.addToolBadge} disabled={!allowToolSelection}>
+                                {t("components.questioninput.add_tool")}
+                            </Button>
+                        </DialogTrigger>
+                        <DialogSurface className={styles.selectorDialogSurface}>
+                            <DialogBody className={styles.selectorDialogBody}>
+                                <DialogTitle
+                                    action={
+                                        <DialogTrigger action="close">
+                                            <Button appearance="subtle" aria-label={t("close")} icon={<Dismiss24Regular />} />
+                                        </DialogTrigger>
+                                    }
+                                >
+                                    {t("components.questioninput.available_tools")}
+                                </DialogTitle>
+                                <DialogContent className={styles.selectorDialogContent}>{selectorContent}</DialogContent>
+                            </DialogBody>
+                        </DialogSurface>
+                    </Dialog>
+                ) : (
+                    <Popover
+                        open={popoverOpen}
+                        onOpenChange={handlePopoverOpenChange}
+                        positioning={{
+                            position: "above",
+                            align: "start",
+                            offset: { mainAxis: 10 },
+                            strategy: "fixed",
+                            ...(frozenTarget && { target: frozenTarget })
+                        }}
+                    >
+                        <PopoverTrigger disableButtonEnhancement>
+                            <Button ref={triggerRef} shape="circular" appearance="primary" className={styles.addToolBadge} disabled={!allowToolSelection}>
+                                {t("components.questioninput.add_tool")}
+                            </Button>
+                        </PopoverTrigger>
+                        <PopoverSurface className={styles.popoverSurface}>{selectorContent}</PopoverSurface>
+                    </Popover>
+                ))}
         </div>
     );
 };

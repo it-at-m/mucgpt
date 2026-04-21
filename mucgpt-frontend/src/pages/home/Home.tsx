@@ -269,8 +269,10 @@ const Home = () => {
                                 description={t("home.discover_all_description")}
                                 linkTo="/discovery"
                                 badge={t("home.explore_badge")}
+                                badgeClassName={styles.exploreBadge}
                                 badgeAppearance="tint"
                                 badgeColor="brand"
+                                badgeSize="large"
                                 role="listitem"
                             />
                         </div>

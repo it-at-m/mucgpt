@@ -15,6 +15,7 @@ export interface DiscoveryCardProps extends CardProps {
     badgeClassName?: string;
     badgeAppearance?: BadgeProps["appearance"];
     badgeColor?: BadgeProps["color"];
+    badgeSize?: BadgeProps["size"];
     titleClassName?: string;
     isSelected?: boolean;
 }
@@ -31,6 +32,7 @@ export const DiscoveryCard = forwardRef<HTMLDivElement, DiscoveryCardProps>((pro
         badgeClassName,
         badgeAppearance = "tint",
         badgeColor = "danger",
+        badgeSize = "small",
         className,
         onClick,
         titleClassName,
@@ -64,7 +66,7 @@ export const DiscoveryCard = forwardRef<HTMLDivElement, DiscoveryCardProps>((pro
                                     className={mergeClasses(styles.headerBadge, badgeClassName)}
                                     appearance={badgeAppearance}
                                     color={badgeColor}
-                                    size="small"
+                                    size={badgeSize}
                                 >
                                     {badge}
                                 </Badge>

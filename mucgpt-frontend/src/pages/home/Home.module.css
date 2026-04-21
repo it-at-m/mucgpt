@@ -116,6 +116,13 @@
     flex-shrink: 0;
 }
 
+.exploreBadge {
+    color: var(--colorBrandBackground) !important;
+    background-color: var(--colorNeutralBackground2) !important;
+    border-color: var(--colorBrandStroke2) !important;
+    font-weight: var(--fontWeightSemibold);
+}
+
 .assistantGrid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);

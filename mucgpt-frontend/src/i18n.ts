@@ -20,7 +20,10 @@ i18n
                 translation: {
                     header: {
                         nutzungsbedingungen: "Nutzungsbedingungen",
-                        create_assistant: "Assistent erstellen"
+                        create_assistant: "Assistent erstellen",
+                        go_to_tutorials_tooltip: "Tutorials und Anleitungen zu Fragments und Tools",
+                        go_to_tutorials_aria: "Zu Tutorials und Anleitungen navigieren",
+                        go_to_tutorials: "Tutorials"
                     },
                     home: {
                         assistants: "Assistenten",
@@ -668,7 +671,10 @@ i18n
                 translation: {
                     header: {
                         nutzungsbedingungen: "Terms of use",
-                        create_assistant: "Create assistant"
+                        create_assistant: "Create assistant",
+                        go_to_tutorials_tooltip: "Tutorials and guides for fragments and tools",
+                        go_to_tutorials_aria: "Go to tutorials and guides",
+                        go_to_tutorials: "Tutorials"
                     },
                     home: {
                         assistants: "Assistants",
@@ -1309,7 +1315,10 @@ i18n
                 translation: {
                     header: {
                         nutzungsbedingungen: "Gebrauchsvorschriftn",
-                        create_assistant: "Assistenten erstoin"
+                        create_assistant: "Assistenten erstoin",
+                        go_to_tutorials_tooltip: "Tutorials und Anleitungen fia Fragments und Tools",
+                        go_to_tutorials_aria: "Zu de Tutorials und Anleitungen navigiern",
+                        go_to_tutorials: "Tutorials"
                     },
                     home: {
                         assistants: "Assistentn",
@@ -1944,7 +1953,10 @@ i18n
                 translation: {
                     header: {
                         nutzungsbedingungen: "Conditions d'utilisation",
-                        create_assistant: "Create assistant"
+                        create_assistant: "Create assistant",
+                        go_to_tutorials_tooltip: "Tutoriels et guides pour les fragments et les outils",
+                        go_to_tutorials_aria: "Aller aux tutoriels et guides",
+                        go_to_tutorials: "Tutoriels"
                     },
                     home: {
                         assistants: "Assistants",
@@ -2579,6 +2591,9 @@ i18n
             UK: {
                 translation: {
                     header: {
+                        go_to_tutorials_tooltip: "Навчальні матеріали та інструкції для фрагментів та інструментів",
+                        go_to_tutorials_aria: "Перейти до навчальних матеріалів та інструкцій",
+                        go_to_tutorials: "Навчальні матеріали",
                         nutzungsbedingungen: "Умови використання"
                     },
                     home: {

@@ -19,6 +19,7 @@ import { useToolsContext } from "../../components/ToolsProvider";
 import { TermsOfUseDialog } from "../../components/TermsOfUseDialog";
 import { VersionInfo } from "../../components/VersionInfo/VersionInfo";
 import { ConfigContext } from "../../context/ConfigContext";
+import { UploadedData } from "../../components/ContextManagerDialog/ContextManagerDialog";
 import { STORAGE_KEYS } from "../layout/LayoutHelper";
 
 interface HomeAssistant {
@@ -196,10 +197,27 @@ const Home = () => {
         }
     };
 
-    const onSendQuestion = (nextQuestion: string) => {
+    const onSendQuestion = (nextQuestion: string, uploadedFiles: UploadedData[]) => {
+        const uploadedFileIds = Array.from(
+            new Set(
+                uploadedFiles
+                    .filter(file => file.isActive !== false && file.status === "ready" && typeof file.storedDocumentId === "string")
+                    .map(file => file.storedDocumentId!)
+            )
+        );
+
+        if (uploadedFileIds.length > 0) {
+            localStorage.setItem("chatFileIds", JSON.stringify(uploadedFileIds));
+        } else {
+            localStorage.removeItem("chatFileIds");
+        }
+
         let url = `#/chat?q=${encodeURIComponent(nextQuestion)}`;
         if (selectedTools.length > 0) {
             url += `&tools=${encodeURIComponent(selectedTools.join(","))}`;
+        }
+        if (uploadedFileIds.length > 0) {
+            url += `&data=${encodeURIComponent(uploadedFileIds.join(","))}`;
         }
         window.location.href = url;
     };

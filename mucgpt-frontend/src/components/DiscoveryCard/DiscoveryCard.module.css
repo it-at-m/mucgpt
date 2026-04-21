@@ -52,11 +52,11 @@
 }
 
 .headerBadgePrimary {
-    background-color: var(--theme-primary-subtle) !important;
-    border-color: var(--theme-outline-hover) !important;
-    color: var(--theme-primary-subtle-on) !important;
+    background-color: var(--colorBrandBackground2) !important;
+    border-color: var(--colorNeutralStroke1Hover) !important;
+    color: var(--app-primary-subtle-foreground) !important;
     box-shadow: none !important;
-    scale: 1.1;
+    transform: scale(1.1);
 }
 
 .description {

@@ -223,6 +223,7 @@ export interface ToolInfo {
     id: string;
     name: string;
     description: string;
+    mcp_group?: string | null;
 }
 
 export interface ToolListResponse {

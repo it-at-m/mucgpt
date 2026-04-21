@@ -300,6 +300,8 @@ class MCPSourceConfig(BaseModel):
     url: str
     transport: MCPTransport
     forward_token: bool = False
+    group: str | None = None
+    tool_groups: dict[str, str] | None = None
 
 
 class MCPConfig(BaseModel):

@@ -6,7 +6,7 @@ from langchain_mcp_adapters.client import MultiServerMCPClient
 from langchain_mcp_adapters.sessions import SSEConnection, StreamableHttpConnection
 from redis.asyncio import Redis
 
-from config.settings import MCPTransport, get_mcp_settings
+from config.settings import MCPSourceConfig, MCPTransport, get_mcp_settings
 from core.auth_models import AuthenticationResult
 from core.cache import RedisCache
 from core.logtools import getLogger
@@ -72,7 +72,18 @@ class McpLoader:
             tools = []
             for source_id in mcp_connections.keys():
                 try:
-                    tools += await mcp_client.get_tools(server_name=source_id)
+                    source_tools = await mcp_client.get_tools(server_name=source_id)
+                    source_config = sources[source_id]
+                    for source_tool in source_tools:
+                        existing_metadata = getattr(source_tool, "metadata", None) or {}
+                        source_tool.metadata = {
+                            **existing_metadata,
+                            "mcp_group": McpLoader._resolve_group(
+                                tool_name=source_tool.name,
+                                source_config=source_config,
+                            ),
+                        }
+                    tools += source_tools
                 except Exception as e:
                     McpLoader._logger.error(
                         f"Exception while fetching MCP tools from '{source_id}'",
@@ -83,6 +94,19 @@ class McpLoader:
                 key=cache_key, obj=tools, ttl=McpLoader._mcp_settings.CACHE_TTL
             )
             return tools
+
+
+    @staticmethod
+    def _resolve_group(
+        tool_name: str, source_config: MCPSourceConfig
+    ) -> str | None:
+        """Resolve the group for a tool: check tool_groups prefixes first, fall back to group."""
+        if source_config.tool_groups:
+            lowered = tool_name.lower()
+            for prefix, group in source_config.tool_groups.items():
+                if lowered.startswith(prefix.lower()):
+                    return group
+        return source_config.group
 
 
 class McpBearerAuthProvider(Auth):

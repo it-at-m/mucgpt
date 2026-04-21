@@ -62,6 +62,10 @@ MCP:
     "ki in muenchen":
       url: "http://localhost:8088/sse"
       transport: "sse"
+      # group: "jira"  # optional: all tools from this server get this group in the frontend
+      # tool_groups:   # optional: fine-grained grouping by tool name prefix (overrides group)
+      #   "jira__": "jira"
+      #   "confluence_": "confluence"
   CACHE_TTL: 43200
 
 # Redis Settings (optional - nested under REDIS key)

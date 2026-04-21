@@ -1,5 +1,5 @@
 import { useRef, useState, useEffect, useContext, useCallback, useReducer, useMemo } from "react";
-import { AskResponse, Assistant, ChatResponse, CommunityAssistantSnapshot } from "../../api";
+import { AskResponse, Assistant, ChatResponse, CommunityAssistantSnapshot, DataSource } from "../../api";
 import { Answer } from "../../components/Answer";
 import { QuestionInput } from "../../components/QuestionInput";
 import { useTranslation } from "react-i18next";
@@ -44,6 +44,7 @@ import {
 import { useDuplicateAssistant } from "../discovery/hooks/useDuplicateAssistant";
 import { useMigrateLocalAssistant } from "../../hooks/useMigrateLocalAssistant";
 import { CloseConfirmationDialog } from "../../components/AssistantDialogs/shared/CloseConfirmationDialog";
+import { UploadedData } from "../../components/ContextManagerDialog/ContextManagerDialog";
 import { useToolStatusToasts } from "../../hooks/useToolStatusToasts";
 import styles from "./UnifiedAssistantChat.module.css";
 
@@ -114,6 +115,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
     const [toolStatuses, setToolStatuses] = useState<ToolStatus[]>([]);
     const [showNotSubscribedDialog, setShowNotSubscribedDialog] = useState<boolean>(false);
     const [noAccess, setNoAccess] = useState<boolean>(false);
+    const [uploadedData, setUploadedData] = useState<UploadedData[]>([]);
     const [isInfoDrawerOpen, setIsInfoDrawerOpen] = useState<boolean>(false);
     const [assistantInfoData, setAssistantInfoData] = useState<AssistantCardData | null>(null);
     const [isAssistantInfoLoading, setIsAssistantInfoLoading] = useState<boolean>(false);
@@ -156,6 +158,19 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
         version: "0",
         is_visible: true
     });
+    const lockedToolIds = useMemo(() => assistantConfig.tools?.map(tool => tool.id) ?? [], [assistantConfig.tools]);
+    const mergeLockedToolIds = useCallback((toolIds: string[]) => Array.from(new Set([...lockedToolIds, ...toolIds])), [lockedToolIds]);
+    const setSelectedToolsGuarded = useCallback(
+        (value: React.SetStateAction<string[]>) => {
+            setSelectedTools(prev => {
+                const next = typeof value === "function" ? value(prev) : value;
+                const merged = mergeLockedToolIds(next);
+
+                return merged.length === prev.length && merged.every((toolId, index) => toolId === prev[index]) ? prev : merged;
+            });
+        },
+        [mergeLockedToolIds]
+    );
 
     // useEffect to load the assistant config and chat history
     useEffect(() => {
@@ -277,6 +292,14 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
         loadData();
     }, [assistant_id, communityAssistantStorageService, error, isDeletedAssistant, showError, strategy, t, availableLLMs, setHeader, setLLM, setQuickPrompts]);
 
+    useEffect(() => {
+        if (lockedToolIds.length === 0) {
+            return;
+        }
+
+        setSelectedToolsGuarded(prev => prev);
+    }, [lockedToolIds, setSelectedToolsGuarded]);
+
     // Load info data for non-owner community assistants
     useEffect(() => {
         setAssistantInfoData(null);
@@ -333,7 +356,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
 
     // callApi-Funktion
     const callApi = useCallback(
-        async (question: string) => {
+        async (question: string, dataSources?: DataSource[]) => {
             lastQuestionRef.current = question;
             if (error) setError(undefined);
             isLoadingRef.current = true;
@@ -360,6 +383,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                     assistant_id,
                     selectedTools,
                     setToolStatuses,
+                    dataSources,
                     lastAnswerRef
                 );
             } catch (e) {
@@ -559,14 +583,6 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
 
     // Text-Input component
     const inputComponent = useMemo(() => {
-        // Filter tools to only show those configured in the assistant
-        const filteredTools =
-            tools && assistantConfig.tools
-                ? {
-                    tools: tools.tools.filter(tool => assistantConfig.tools?.some(assistantTool => assistantTool.id === tool.id))
-                }
-                : tools;
-
         if (isDeletedAssistant) {
             const duplicateCandidateSnapshot = deletedAssistantSnapshot;
 
@@ -622,15 +638,34 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                     </div>
                     <QuestionInput
                         clearOnSend
-                        placeholder={t("chat.prompt")}
                         disabled={isLoadingRef.current || error !== undefined}
-                        onSend={question => callApi(question)}
+                        onSend={(question, datas) => {
+                            const dataSources = datas
+                                .filter(data => data.isActive !== false && data.status === "ready" && data.fileContent)
+                                .map(data => ({
+                                    title: data.name,
+                                    content: data.fileContent!,
+                                    metadata: {
+                                        source: data.source,
+                                        mime_type: data.mimeType || data.file?.type || undefined,
+                                        size: data.size,
+                                        parsed_at: data.parsedAt,
+                                        file_signature: data.fileSignature,
+                                        stored_document_id: data.storedDocumentId,
+                                        status: data.status
+                                    }
+                                }));
+                            callApi(question, dataSources.length > 0 ? dataSources : undefined);
+                        }}
                         question={question}
                         setQuestion={question => setQuestion(question)}
                         selectedTools={selectedTools}
-                        setSelectedTools={setSelectedTools}
-                        tools={filteredTools}
-                        allowToolSelection={false}
+                        setSelectedTools={setSelectedToolsGuarded}
+                        tools={tools}
+                        allowToolSelection={true}
+                        lockedToolIds={lockedToolIds}
+                        uploadedData={uploadedData}
+                        setUploadedData={setUploadedData}
                     />
                 </>
             );
@@ -639,15 +674,34 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
         return (
             <QuestionInput
                 clearOnSend
-                placeholder={t("chat.prompt")}
-                disabled={isLoadingRef.current || error !== undefined}
-                onSend={question => callApi(question)}
+                disabled={isLoadingRef.current || error !== undefined || strategy instanceof DeletedCommunityAssistantStrategy}
+                onSend={(question, datas) => {
+                    const dataSources = datas
+                        .filter(data => data.isActive !== false && data.status === "ready" && data.fileContent)
+                        .map(data => ({
+                            title: data.name,
+                            content: data.fileContent!,
+                            metadata: {
+                                source: data.source,
+                                mime_type: data.mimeType || data.file?.type || undefined,
+                                size: data.size,
+                                parsed_at: data.parsedAt,
+                                file_signature: data.fileSignature,
+                                stored_document_id: data.storedDocumentId,
+                                status: data.status
+                            }
+                        }));
+                    callApi(question, dataSources.length > 0 ? dataSources : undefined);
+                }}
                 question={question}
                 setQuestion={question => setQuestion(question)}
                 selectedTools={selectedTools}
-                setSelectedTools={setSelectedTools}
-                tools={filteredTools}
-                allowToolSelection={false}
+                setSelectedTools={setSelectedToolsGuarded}
+                tools={tools}
+                allowToolSelection={true}
+                lockedToolIds={lockedToolIds}
+                uploadedData={uploadedData}
+                setUploadedData={setUploadedData}
             />
         );
     }, [
@@ -663,8 +717,10 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
         question,
         error,
         selectedTools,
+        setSelectedToolsGuarded,
         tools,
-        navigate
+        lockedToolIds,
+        uploadedData
     ]);
 
     // AnswerList component

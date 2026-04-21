@@ -18,7 +18,7 @@ import { DiscoveryCard } from "../../components/DiscoveryCard";
 import { useToolsContext } from "../../components/ToolsProvider";
 import { TermsOfUseDialog } from "../../components/TermsOfUseDialog";
 import { VersionInfo } from "../../components/VersionInfo/VersionInfo";
-import { ConfigContext } from "../layout/Layout";
+import { ConfigContext } from "../../context/ConfigContext";
 import { STORAGE_KEYS } from "../layout/LayoutHelper";
 
 interface HomeAssistant {
@@ -235,7 +235,6 @@ const Home = () => {
                         selectedTools={selectedTools}
                         setSelectedTools={setSelectedTools}
                         tools={tools}
-                        variant="home"
                         question={question}
                     />
                 </div>

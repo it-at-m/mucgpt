@@ -188,24 +188,31 @@ class ToolCollection:
         simplify_tool = make_simplify_tool(DummyModel(), dummy_logger)
         mcp_tools = await McpLoader.load_mcp_tools(user_info=user_info)
         tools = [brainstorm_tool, simplify_tool] + mcp_tools
-
         # Build the list using actual tool names for lookup
         tools_info = []
         for tool in tools:
             tool_name = tool.name
             meta = tool_metadata.get(lang_key, {}).get(tool_name)
+            tool_runtime_metadata = getattr(tool, "metadata", None) or {}
+            mcp_group = tool_runtime_metadata.get("mcp_group")
             if meta:
                 tools_info.append(
                     ToolInfo(
                         id=tool_name,
                         name=meta.get("name", tool_name),
                         description=meta.get("description", tool.description),
+                        mcp_group=mcp_group,
                     )
                 )
             else:
                 # fallback to tool's own name/description
                 tools_info.append(
-                    ToolInfo(id=tool_name, name=tool_name, description=tool.description)
+                    ToolInfo(
+                        id=tool_name,
+                        name=tool_name,
+                        description=tool.description,
+                        mcp_group=mcp_group,
+                    )
                 )
         return ToolListResponse(tools=tools_info)
 

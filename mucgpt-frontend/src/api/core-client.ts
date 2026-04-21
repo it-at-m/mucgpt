@@ -1,5 +1,7 @@
-import { getConfig, handleApiRequest, postConfig } from "./fetch-utils";
+import { getConfig, handleApiRequest, postConfig, postFormDataConfig } from "./fetch-utils";
 import { ApplicationConfig, ChatRequest, CountTokenRequest, CountTokenResponse, CreateAssistantRequest, ToolListResponse } from "./models";
+
+const PARSE_SERVICE_BASE = "/api/backend/v1/parse";
 export const CHAT_NAME_PROMPT =
     "Gebe dem bisherigen Chatverlauf einen passenden und aussagekräftigen Namen, bestehend aus maximal 5 Wörtern. Über diesen Namen soll klar ersichtlich sein, welches Thema der Chat behandelt. Antworte nur mit dem vollständigen Namen und keinem weiteren Text, damit deine Antwort direkt weiterverwendet werden kann. Benutze keine Sonderzeichen sondern lediglich Zahlen und Buchstaben. Antworte in keinem Fall mit etwas anderem als dem Chat namen. Antworte immer nur mit dem namen des Chats";
 
@@ -35,6 +37,9 @@ export async function chatApi(options: ChatRequest): Promise<Response> {
     }
     if (options.assistant_id) {
         body.assistant_id = options.assistant_id;
+    }
+    if (options.data_sources) {
+        body.data_sources = options.data_sources;
     }
     return await fetch(url, postConfig(body));
 }
@@ -89,4 +94,19 @@ export async function createChatName(query: string, answer: string, language: st
 
     // Extract content from ChatCompletion response
     return parsedResponse.choices?.[0]?.message?.content || "New Chat";
+}
+
+/**
+ * Uploads a file, parses it, and returns the extracted text content directly.
+ * @param file The file to upload and parse
+ * @returns Extracted text content as a string
+ */
+export async function uploadFileApi(file: File): Promise<string> {
+    const formData = new FormData();
+    formData.append("file", file);
+
+    return handleApiRequest(async () => {
+        const response = await fetch(`${PARSE_SERVICE_BASE}`, postFormDataConfig(formData));
+        return response;
+    }, "Failed to upload file");
 }

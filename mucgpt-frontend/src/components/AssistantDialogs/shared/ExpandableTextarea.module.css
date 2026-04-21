@@ -1,0 +1,67 @@
+.wrapper {
+    position: relative;
+    width: 100%;
+}
+
+/* FluentUI Textarea root span doesn't auto-fill its container */
+.inlineTextarea {
+    width: 100%;
+}
+
+.inlineTextarea textarea {
+    scrollbar-width: thin;
+    scrollbar-color: var(--colorNeutralStroke1) transparent;
+}
+
+.inlineTextarea textarea::-webkit-scrollbar {
+    width: 4px;
+}
+
+.inlineTextarea textarea::-webkit-scrollbar-thumb {
+    background-color: var(--colorNeutralStroke1);
+    border-radius: 4px;
+}
+
+.inlineTextarea textarea::-webkit-scrollbar-track {
+    background-color: transparent;
+}
+
+/* Expand button: absolute top-right; visible by default and emphasized on hover/focus */
+.expandButton {
+    position: absolute;
+    top: 4px;
+    z-index: 1;
+    opacity: 0.7;
+    transition: opacity 0.15s ease;
+}
+
+.expandButtonDefault {
+    right: 4px;
+}
+
+.expandButtonWithScrollbar {
+    right: 12px;
+}
+
+.wrapper:hover .expandButton,
+.expandButton:focus-visible {
+    opacity: 1;
+}
+
+.dialogSurface {
+    width: 80vw !important;
+    max-width: 80vw !important;
+    height: 80vh !important;
+    max-height: 80vh !important;
+}
+
+.dialogBody {
+    height: 100%;
+}
+
+.dialogContent {
+    flex: 1;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}

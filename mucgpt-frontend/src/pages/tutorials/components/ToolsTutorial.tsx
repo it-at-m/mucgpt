@@ -11,9 +11,16 @@ import { useToolsContext } from "../../../components/ToolsProvider";
 import { useToolStatusToasts } from "../../../hooks/useToolStatusToasts";
 import styles from "./ToolsTutorial.module.css";
 import { TutorialSection } from "./TutorialTypes";
+import { UploadedData } from "../../../components/ContextManagerDialog/ContextManagerDialog";
 
 // Create a tutorial-specific implementation using the real QuestionInput
-const TutorialQuestionInput = ({ selectedTools, setSelectedTools }: { selectedTools: string[]; setSelectedTools: (tools: string[]) => void }) => {
+const TutorialQuestionInput = ({
+    selectedTools,
+    setSelectedTools
+}: {
+    selectedTools: string[];
+    setSelectedTools: React.Dispatch<React.SetStateAction<string[]>>;
+}) => {
     const [question, setQuestion] = useState("Welche Ideen gibt es für nachhaltige Mobilität?");
     const [toolStatuses, setToolStatuses] = useState<ToolStatus[]>([]);
     const { tools } = useToolsContext();
@@ -82,16 +89,18 @@ const TutorialQuestionInput = ({ selectedTools, setSelectedTools }: { selectedTo
         [tools, t]
     );
 
-    const handleSend = useCallback(() => {
-        // This is just for demo - don't actually send
-        console.log("Demo: Would send question with tools:", selectedTools);
+    const handleSend = useCallback(
+        (_question: string, data: UploadedData[]) => {
+            // This is just for demo - don't actually send
+            console.log("Demo: Would send question with tools:", selectedTools, "and documents:", data);
 
-        // Simulate tool execution if tools are selected
-        if (selectedTools.length > 0) {
-            simulateToolExecution(selectedTools);
-        }
-    }, [selectedTools, simulateToolExecution]);
-
+            // Simulate tool execution if tools are selected
+            if (selectedTools.length > 0) {
+                simulateToolExecution(selectedTools);
+            }
+        },
+        [selectedTools, simulateToolExecution]
+    );
     return (
         <>
             <QuestionInput

@@ -30,7 +30,7 @@ import { QuickPrompt } from "../../QuickPrompt/QuickPrompt";
 import { useToolsContext } from "../../ToolsProvider";
 import { useAssistantState } from "../shared/hooks/useAssistantState";
 import { useCreateAssistantState } from "../shared/hooks/useCreateAssistantState";
-import { ToolsStep, QuickPromptsStep, ExamplesStep, AdvancedSettingsStep, VisibilityStep } from "../shared";
+import { ToolsStep, QuickPromptsStep, ExamplesStep, AdvancedSettingsStep, VisibilityStep, ExpandableTextarea } from "../shared";
 import { AssistantStrategy } from "../../../pages/assistant/AssistantStrategy";
 import { CREATIVITY_LOW } from "../../../constants";
 
@@ -132,13 +132,16 @@ function SettingsForm(props: SettingsFormProps) {
                         />
                     </Field>
                     <Field size="large" className={styles.formField} label={{ children: t("components.assistant_editor.description") }}>
-                        <Textarea
-                            placeholder={t("components.assistant_editor.description_placeholder")}
+                        <ExpandableTextarea
                             value={props.description}
+                            placeholder={t("components.assistant_editor.description_placeholder")}
                             rows={3}
-                            resize="vertical"
-                            onChange={onChange(props.onDescriptionChange)}
+                            onChange={v => {
+                                props.onDescriptionChange(v);
+                                props.onHasChanged?.(true);
+                            }}
                             disabled={!props.isOwner}
+                            dialogTitle={t("components.assistant_editor.description")}
                         />
                     </Field>
                 </SectionCard>
@@ -187,13 +190,16 @@ function SettingsForm(props: SettingsFormProps) {
                         }}
                         required
                     >
-                        <Textarea
-                            placeholder={t("components.assistant_editor.prompt_placeholder")}
+                        <ExpandableTextarea
                             value={props.systemPrompt}
+                            placeholder={t("components.assistant_editor.prompt_placeholder")}
                             rows={7}
-                            resize="vertical"
-                            onChange={onChange(props.onSystemPromptChange)}
+                            onChange={v => {
+                                props.onSystemPromptChange(v);
+                                props.onHasChanged?.(true);
+                            }}
                             disabled={!props.isOwner}
+                            dialogTitle={t("components.assistant_editor.system_prompt")}
                         />
                     </Field>
                     <AdvancedSettingsStep

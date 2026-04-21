@@ -6,7 +6,7 @@
         "@atlaskit/pragmatic-drag-and-drop": "^1.7.7",
         "@atlaskit/pragmatic-drag-and-drop-hitbox": "^1.1.0",
         "@react-spring/web": "10.0.3",
-        "dompurify": "3.3.3",
+        "dompurify": "3.4.0",
         "i18next": "25.10.10",
         "idb": "8.0.3",
         "markmap-common": "0.18.9",
@@ -73,5 +73,5 @@
         "watch": "tsc && vite build --watch"
     },
     "type": "module",
-    "version": "0.20.14"
+    "version": "0.21.0"
 }

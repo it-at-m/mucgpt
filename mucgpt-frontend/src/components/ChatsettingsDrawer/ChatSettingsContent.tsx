@@ -1,5 +1,6 @@
 import { Dismiss24Regular } from "@fluentui/react-icons";
-import { Button, useId, Field, InfoLabel, Tooltip, Textarea, TextareaOnChangeData, Dropdown, Option } from "@fluentui/react-components";
+import { Button, useId, Field, InfoLabel, Tooltip, Dropdown, Option } from "@fluentui/react-components";
+import { ExpandableTextarea } from "../AssistantDialogs/shared";
 
 import styles from "./ChatsettingsDrawer.module.css";
 import { useCallback } from "react";
@@ -30,9 +31,8 @@ export const ChatSettingsContent = ({ creativity, setCreativity, systemPrompt, s
 
     // System prompt change
     const onSytemPromptChange = useCallback(
-        (_ev: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>, newValue?: TextareaOnChangeData) => {
-            if (newValue?.value) setSystemPrompt(newValue.value);
-            else setSystemPrompt("");
+        (newValue: string) => {
+            setSystemPrompt(newValue || "");
         },
         [setSystemPrompt]
     );
@@ -75,14 +75,14 @@ export const ChatSettingsContent = ({ creativity, setCreativity, systemPrompt, s
                 <div>
                     <div>
                         <Field size="large">
-                            <Textarea
-                                textarea={styles.systempromptTextArea}
+                            <ExpandableTextarea
+                                className={styles.systempromptTextArea}
                                 placeholder={t("components.chattsettingsdrawer.system_prompt")}
-                                resize="vertical"
                                 value={systemPrompt}
-                                size="large"
                                 rows={7}
                                 onChange={onSytemPromptChange}
+                                dialogTitle={t("components.chattsettingsdrawer.system_prompt")}
+                                ariaLabelledBy={systemPromptID}
                             />
                         </Field>
                     </div>

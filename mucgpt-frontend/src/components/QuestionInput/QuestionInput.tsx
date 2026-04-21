@@ -1,29 +1,39 @@
-import { Button, Textarea, TextareaOnChangeData, Tooltip } from "@fluentui/react-components";
-import { Send28Filled, Checkmark24Regular, QuestionCircle16Regular } from "@fluentui/react-icons";
+import { Button, Textarea, type TextareaOnChangeData, Tooltip } from "@fluentui/react-components";
+import { Send28Filled, DocumentAdd24Regular } from "@fluentui/react-icons";
+import { useCallback, useEffect, useRef, useState, type Dispatch, type SetStateAction } from "react";
+import { useTranslation } from "react-i18next";
 
 import styles from "./QuestionInput.module.css";
-import { useTranslation } from "react-i18next";
-import { useCallback, useEffect, useRef } from "react";
+import { uploadFileApi } from "../../api/core-client";
 import { ToolListResponse } from "../../api/models";
+import { useConfigContext } from "../../context/ConfigContext";
+import { upsertParsedDocumentFromUpload } from "../../service/parsedDocumentStorage";
+import {
+    ContextManagerDialog,
+    UploadedData,
+    createUploadedData,
+    getDataSignature,
+    getFileSignature
+} from "../ContextManagerDialog/ContextManagerDialog";
+import { ChatToolSelector } from "../ChatToolSelector/ChatToolSelector";
 
 interface Props {
-    onSend: (question: string) => void;
+    onSend: (question: string, data: UploadedData[]) => void;
     disabled: boolean;
     placeholder?: string;
     clearOnSend?: boolean;
     question: string;
     setQuestion: (question: string) => void;
     selectedTools: string[];
-    setSelectedTools?: (tools: string[]) => void;
+    setSelectedTools?: Dispatch<SetStateAction<string[]>>;
     tools?: ToolListResponse;
     allowToolSelection?: boolean;
-    variant?: "default" | "home";
+    lockedToolIds?: string[];
+    allowFileUpload?: boolean;
+    onDataChange?: (data: UploadedData[]) => void;
+    uploadedData?: UploadedData[];
+    setUploadedData?: Dispatch<SetStateAction<UploadedData[]>>;
 }
-
-const TOOL_TUTORIAL_MAP: Record<string, string> = {
-    Brainstorming: "/tutorials/brainstorm",
-    Vereinfachen: "/tutorials/simplify"
-};
 
 export const QuestionInput = ({
     onSend,
@@ -36,17 +46,65 @@ export const QuestionInput = ({
     setSelectedTools,
     tools,
     allowToolSelection = true,
-    variant = "default"
+    lockedToolIds = [],
+    allowFileUpload: allowFileUploadProp,
+    onDataChange,
+    uploadedData: externalUploadedData,
+    setUploadedData: setExternalUploadedData
 }: Props) => {
     const { t } = useTranslation();
+    const config = useConfigContext();
+    const allowFileUpload = allowFileUploadProp ?? config.document_processing_enabled;
+    const resolvedPlaceholder = placeholder ?? (allowFileUpload ? t("chat.prompt") : t("chat.prompt_no_upload"));
     const textareaRef = useRef<HTMLTextAreaElement | null>(null);
     const sendButtonRef = useRef<HTMLButtonElement | null>(null);
-    const isHomeVariant = variant === "home";
+    const uploadButtonRef = useRef<HTMLButtonElement | null>(null);
+    const wasDialogOpenRef = useRef(false);
+    const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
+    const [internalUploadedData, setInternalUploadedData] = useState<UploadedData[]>([]);
+    const uploadedDataRef = useRef<UploadedData[]>([]);
+    const [isDragActive, setIsDragActive] = useState(false);
+    const dragCounterRef = useRef(0);
+
+    const uploadedData = externalUploadedData ?? internalUploadedData;
+    const activeDocumentCount = uploadedData.filter(data => data.isActive !== false).length;
+
+    const setUploadedData = useCallback(
+        (data: UploadedData[] | ((prev: UploadedData[]) => UploadedData[])) => {
+            if (setExternalUploadedData) {
+                setExternalUploadedData(data);
+                return;
+            }
+
+            setInternalUploadedData(data);
+        },
+        [setExternalUploadedData]
+    );
+
+    useEffect(() => {
+        uploadedDataRef.current = uploadedData;
+    }, [uploadedData]);
+
+    const hasFileData = useCallback((dataTransfer?: DataTransfer | null) => {
+        if (!dataTransfer?.types) {
+            return false;
+        }
+
+        for (let i = 0; i < dataTransfer.types.length; i += 1) {
+            if (dataTransfer.types[i] === "Files") {
+                return true;
+            }
+        }
+
+        return false;
+    }, []);
 
     useEffect(() => {
         const resizeTextarea = () => {
             const textarea = textareaRef.current;
-            if (!textarea) return;
+            if (!textarea) {
+                return;
+            }
 
             const hadFocus = document.activeElement === textarea;
             const selectionStart = textarea.selectionStart;
@@ -83,17 +141,25 @@ export const QuestionInput = ({
             return;
         }
 
-        onSend(question);
+        const activeData = uploadedData.filter(data => data.isActive !== false);
+        onSend(question, activeData);
 
-        if (clearOnSend) {
-            setQuestion("");
+        if (!clearOnSend) {
+            return;
         }
-    }, [disabled, question, onSend, clearOnSend, setQuestion]);
+
+        setQuestion("");
+
+        if (!externalUploadedData && uploadedData.length > 0) {
+            setUploadedData([]);
+            onDataChange?.([]);
+        }
+    }, [clearOnSend, disabled, externalUploadedData, onDataChange, onSend, question, setQuestion, setUploadedData, uploadedData]);
 
     const onEnterPress = useCallback(
-        (ev: React.KeyboardEvent<Element>) => {
-            if (ev.key === "Enter" && !ev.shiftKey) {
-                ev.preventDefault();
+        (event: React.KeyboardEvent<Element>) => {
+            if (event.key === "Enter" && !event.shiftKey) {
+                event.preventDefault();
                 sendQuestion();
             }
         },
@@ -101,128 +167,224 @@ export const QuestionInput = ({
     );
 
     const onQuestionChange = useCallback(
-        (_ev: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>, newValue?: TextareaOnChangeData) => {
-            setQuestion(newValue?.value || "");
+        (_event: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>, data: TextareaOnChangeData) => {
+            setQuestion(data.value || "");
         },
         [setQuestion]
     );
 
-    const toggleTool = useCallback(
-        (toolId: string) => {
-            if (!allowToolSelection || !setSelectedTools) return;
-
-            if (selectedTools.includes(toolId)) {
-                setSelectedTools(selectedTools.filter(t => t !== toolId));
-            } else {
-                setSelectedTools([...selectedTools, toolId]);
-            }
-        },
-        [selectedTools, setSelectedTools, allowToolSelection]
-    );
-
-    const openTutorial = useCallback((toolId: string, event: React.MouseEvent) => {
-        event.stopPropagation();
-        const tutorialRoute = TOOL_TUTORIAL_MAP[toolId];
-        if (tutorialRoute) {
-            window.open(`#${tutorialRoute}`, "_blank");
+    const handleUploadButtonClick = useCallback(() => {
+        if (!disabled) {
+            setIsUploadDialogOpen(true);
         }
+    }, [disabled]);
+
+    const handleDialogOpenChange = useCallback((open: boolean) => {
+        setIsUploadDialogOpen(open);
     }, []);
 
-    const showToolSelection = !isHomeVariant && !!tools?.tools?.length;
-    const containerClasses = [
-        styles.questionInputContainer,
-        (!tools || !tools.tools || tools.tools.length === 0) && styles.noTools,
-        isHomeVariant && styles.questionInputContainerHome
-    ]
-        .filter(Boolean)
-        .join(" ");
+    const appendDataFromFiles = useCallback(
+        (files: FileList | File[]) => {
+            const fileArray = Array.from(files ?? []);
+            if (fileArray.length === 0) {
+                return;
+            }
+
+            const previousData = uploadedDataRef.current;
+            const existingSignatures = new Set(previousData.map(getDataSignature));
+            const newData = fileArray.filter(file => !existingSignatures.has(getFileSignature(file))).map(file => createUploadedData(file, "uploading"));
+
+            if (newData.length === 0) {
+                return;
+            }
+
+            const updatedData = [...previousData, ...newData];
+
+            setUploadedData(updatedData);
+            onDataChange?.(updatedData);
+
+            newData.forEach(data => {
+                uploadFileApi(data.file)
+                    .then(fileContent => {
+                        const storedDocument = upsertParsedDocumentFromUpload(data.file, fileContent);
+                        const currentData = uploadedDataRef.current;
+                        const nextData = currentData.map(currentItem =>
+                            currentItem.id === data.id
+                                ? {
+                                      ...currentItem,
+                                      status: "ready" as const,
+                                      fileContent,
+                                      storedDocumentId: storedDocument?.id,
+                                      parsedAt: storedDocument?.parsedAt,
+                                      fileSignature: storedDocument?.fileSignature,
+                                      mimeType: storedDocument?.mimeType,
+                                      source: "upload" as const
+                                  }
+                                : currentItem
+                        );
+
+                        setUploadedData(nextData);
+                        onDataChange?.(nextData);
+                    })
+                    .catch(error => {
+                        console.error("Failed to upload document:", error);
+                        const currentData = uploadedDataRef.current;
+                        const nextData = currentData.map(currentItem =>
+                            currentItem.id === data.id
+                                ? { ...currentItem, status: "error" as const, errorMessage: error.message || "Upload failed" }
+                                : currentItem
+                        );
+
+                        setUploadedData(nextData);
+                        onDataChange?.(nextData);
+                    });
+            });
+        },
+        [onDataChange, setUploadedData]
+    );
+
+    const handleDataChange = useCallback(
+        (data: UploadedData[]) => {
+            setUploadedData(data);
+            onDataChange?.(data);
+        },
+        [onDataChange, setUploadedData]
+    );
+
+    useEffect(() => {
+        if (wasDialogOpenRef.current && !isUploadDialogOpen) {
+            uploadButtonRef.current?.focus();
+        }
+
+        wasDialogOpenRef.current = isUploadDialogOpen;
+    }, [isUploadDialogOpen]);
+
+    const handleDragEnter = useCallback(
+        (event: React.DragEvent<HTMLDivElement>) => {
+            if (disabled || !hasFileData(event.dataTransfer)) {
+                return;
+            }
+
+            event.preventDefault();
+            dragCounterRef.current += 1;
+            setIsDragActive(true);
+        },
+        [disabled, hasFileData]
+    );
+
+    const handleDragOver = useCallback(
+        (event: React.DragEvent<HTMLDivElement>) => {
+            if (disabled || !hasFileData(event.dataTransfer)) {
+                return;
+            }
+
+            event.preventDefault();
+            event.dataTransfer.dropEffect = "copy";
+        },
+        [disabled, hasFileData]
+    );
+
+    const handleDragLeave = useCallback(
+        (event: React.DragEvent<HTMLDivElement>) => {
+            if (disabled || !hasFileData(event.dataTransfer)) {
+                return;
+            }
+
+            event.preventDefault();
+            dragCounterRef.current = Math.max(dragCounterRef.current - 1, 0);
+
+            if (dragCounterRef.current === 0) {
+                setIsDragActive(false);
+            }
+        },
+        [disabled, hasFileData]
+    );
+
+    const handleDrop = useCallback(
+        (event: React.DragEvent<HTMLDivElement>) => {
+            if (disabled || !hasFileData(event.dataTransfer)) {
+                return;
+            }
+
+            event.preventDefault();
+            dragCounterRef.current = 0;
+            setIsDragActive(false);
+            appendDataFromFiles(event.dataTransfer.files);
+        },
+        [appendDataFromFiles, disabled, hasFileData]
+    );
 
     return (
-        <div className={`${styles.questionInputWrapper} ${isHomeVariant ? styles.questionInputWrapperHome : ""}`}>
-            {showToolSelection && (
-                <div className={styles.toolBadgesHeader}>
-                    <span className={styles.toolBadgesLabel}>{t("components.questioninput.tool_header", "Zusätzliche Tools zu wählen:")}</span>
-                    <div className={styles.toolButtonsRow}>
-                        {tools.tools.map(tool => {
-                            const isSelected = selectedTools.includes(tool.id);
-                            const hasTutorial = TOOL_TUTORIAL_MAP[tool.id];
+        <>
+            <div className={styles.questionInputWrapper}>
+                {tools?.tools?.length && setSelectedTools ? (
+                    <ChatToolSelector
+                        tools={tools}
+                        selectedTools={selectedTools}
+                        setSelectedTools={setSelectedTools}
+                        allowToolSelection={allowToolSelection}
+                        lockedToolIds={lockedToolIds}
+                    />
+                ) : null}
 
-                            return (
-                                <div key={tool.id} className={styles.toolButtonWrapper}>
+                <div
+                    className={`${styles.questionInputContainer} ${
+                        !tools?.tools?.length || !setSelectedTools ? styles.noTools : ""
+                    } ${isDragActive ? styles.dragActive : ""}`}
+                    onDragEnter={allowFileUpload ? handleDragEnter : undefined}
+                    onDragOver={allowFileUpload ? handleDragOver : undefined}
+                    onDragLeave={allowFileUpload ? handleDragLeave : undefined}
+                    onDrop={allowFileUpload ? handleDrop : undefined}
+                >
+                    <Textarea
+                        className={styles.questionInputTextArea}
+                        placeholder={resolvedPlaceholder}
+                        resize="none"
+                        value={question}
+                        size="large"
+                        onChange={onQuestionChange}
+                        onKeyDown={onEnterPress}
+                        ref={textareaRef}
+                    />
+                    <div className={styles.questionInputButtons}>
+                        {allowFileUpload ? (
+                            <Tooltip content={t("components.questioninput.upload_data", "Dokument hochladen")} relationship="label">
+                                <div className={styles.uploadButtonWrapper}>
                                     <Button
-                                        appearance={isSelected ? "primary" : "secondary"}
-                                        size="medium"
-                                        className={styles.toolButton}
-                                        onClick={allowToolSelection ? () => toggleTool(tool.id) : undefined}
-                                        disabled={!allowToolSelection}
-                                        icon={isSelected ? <Checkmark24Regular style={{ color: "var(--colorNeutralForegroundOnBrand)" }} /> : undefined}
-                                        style={
-                                            isSelected
-                                                ? {
-                                                      backgroundColor: "var(--colorBrandBackground)",
-                                                      color: "var(--colorNeutralForegroundOnBrand)"
-                                                  }
-                                                : {
-                                                      backgroundColor: "var(--colorNeutralBackground1)",
-                                                      color: "var(--colorNeutralForeground1)"
-                                                  }
-                                        }
-                                    >
-                                        <span
-                                            style={isSelected ? { color: "var(--colorNeutralForegroundOnBrand)" } : { color: "var(--colorNeutralForeground1)" }}
-                                        >
-                                            {tool.id}
-                                        </span>
-                                    </Button>
-                                    {hasTutorial && (
-                                        <Tooltip content={t("components.questioninput.tutorial_help", "Tutorial öffnen")} relationship="label">
-                                            <button
-                                                className={styles.toolHelpButton}
-                                                onClick={e => openTutorial(tool.id, e)}
-                                                aria-label={t("components.questioninput.tutorial_help_aria", { tool: tool.id })}
-                                            >
-                                                <QuestionCircle16Regular />
-                                            </button>
-                                        </Tooltip>
-                                    )}
+                                        ref={uploadButtonRef}
+                                        size="large"
+                                        appearance="subtle"
+                                        icon={<DocumentAdd24Regular />}
+                                        aria-label={t("components.questioninput.upload_data", "Dokument hochladen")}
+                                        onClick={handleUploadButtonClick}
+                                        disabled={disabled}
+                                    />
+                                    {activeDocumentCount > 0 ? <span className={styles.uploadCountBadge}>{activeDocumentCount}</span> : null}
                                 </div>
-                            );
-                        })}
+                            </Tooltip>
+                        ) : null}
+                        <Tooltip content={resolvedPlaceholder} relationship="label">
+                            <Button
+                                ref={sendButtonRef}
+                                size="large"
+                                appearance="transparent"
+                                icon={<Send28Filled />}
+                                aria-label={t("components.questioninput.send_question", "Frage senden")}
+                                disabled={disabled || !question.trim()}
+                                onClick={sendQuestion}
+                            />
+                        </Tooltip>
                     </div>
                 </div>
-            )}
 
-            <div className={containerClasses}>
-                <Textarea
-                    className={styles.questionInputTextArea}
-                    placeholder={placeholder}
-                    resize="none"
-                    value={question}
-                    size="large"
-                    onChange={onQuestionChange}
-                    onKeyDown={onEnterPress}
-                    ref={textareaRef}
-                />
-                <div className={styles.questionInputButtons}>
-                    <Tooltip content={placeholder || ""} relationship="label">
-                        <Button
-                            ref={sendButtonRef}
-                            size="large"
-                            appearance="transparent"
-                            icon={<Send28Filled />}
-                            aria-label={t("components.questioninput.send_question", "Frage senden")}
-                            disabled={disabled || !question.trim()}
-                            onClick={sendQuestion}
-                        />
-                    </Tooltip>
-                </div>
-            </div>
-
-            {!isHomeVariant && (
                 <div className={styles.errorhintSection}>
                     <div className={styles.errorhint}>{t("components.questioninput.errorhint")}</div>
                 </div>
-            )}
-        </div>
+            </div>
+
+            {allowFileUpload ? (
+                <ContextManagerDialog open={isUploadDialogOpen} onOpenChange={handleDialogOpenChange} data={uploadedData} onDataChange={handleDataChange} />
+            ) : null}
+        </>
     );
 };

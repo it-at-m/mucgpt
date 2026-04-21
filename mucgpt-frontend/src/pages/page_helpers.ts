@@ -2,7 +2,7 @@ import { MutableRefObject, Dispatch, SetStateAction } from "react";
 import { DBMessage, StorageService } from "../service/storage";
 import { DBObject } from "../service/storage";
 import { ChatMessage, ChatOptions } from "./chat/Chat";
-import { ChatRequest, ChatResponse, ChatTurn } from "../api";
+import { ChatRequest, ChatResponse, ChatTurn, DataSource } from "../api";
 import { ChatCompletionChunk, ChatCompletionChunkChoice } from "../api/models";
 import { ToolStreamHandler, ToolStatus } from "../utils/ToolStreamHandler";
 
@@ -169,7 +169,7 @@ export async function handleRegenerate(
     activeChat: string,
     storageService: StorageService<any, any>,
     systemPrompt: string,
-    callApi: (question: string, systemPrompt: string) => Promise<void>,
+    callApi: (question: string, ...args: any[]) => Promise<void>,
     isLoadingRef: MutableRefObject<boolean>
 ) {
     // Remove the last message from storage
@@ -230,6 +230,7 @@ export const makeApiRequest = async (
     assistant_id?: string,
     enabled_tools?: string[],
     onToolStatusUpdate?: (statuses: ToolStatus[]) => void,
+    data_sources?: DataSource[],
     answerTopRef?: MutableRefObject<HTMLElement | null>
 ) => {
     // Create conversation history for the API request
@@ -244,7 +245,8 @@ export const makeApiRequest = async (
         system_message: options.system ?? "",
         model: LLM.llm_name,
         enabled_tools: enabled_tools && enabled_tools.length > 0 ? enabled_tools : undefined,
-        assistant_id: assistant_id
+        assistant_id: assistant_id,
+        data_sources: data_sources && data_sources.length > 0 ? data_sources : undefined
     };
 
     // Make the API call

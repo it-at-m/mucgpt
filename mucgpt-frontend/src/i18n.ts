@@ -61,7 +61,8 @@ i18n
                     },
                     chat: {
                         header: "Stelle eine Frage oder probiere ein Beispiel",
-                        prompt: "Stelle eine Frage",
+                        prompt: "Stelle eine Frage oder lade ein Dokument hoch",
+                        prompt_no_upload: "Stelle eine Frage",
                         answer_loading: "Erstelle Antwort",
                         quickprompts: {
                             shorter_tooltip: "Schreibe eine kürzere Antwort",
@@ -265,9 +266,47 @@ i18n
                             errorhint: "MUCGPT kann Fehler machen. Überprüfe wichtige Informationen.",
                             toolsselectorbutton_tooltip: "Werkzeuge auswählen",
                             tutorial_help: "Tutorial öffnen",
-                            tool_header: "Zusätzliche Tools zu wählen:",
+                            tool_header: "Zusätzliche Werkzeuge wählen:",
                             tutorial_help_aria: "Tutorial für {{tool}} öffnen",
-                            send_question: "Frage senden"
+                            send_question: "Frage senden",
+                            add_tool: "Werkzeuge hinzufügen",
+                            no_tools_active: "Keine Werkzeuge aktiv",
+                            more_tools: "+{{count}} weitere",
+                            enable_all: "Alle aktivieren",
+                            disable_all: "Alle deaktivieren",
+                            available_tools: "Verfügbare Werkzeuge",
+                            remove_tool_aria: "{{tool}} entfernen",
+                            assistant_tool_locked: "Für diesen Assistenten fest aktiviert",
+                            assistant_tools_section: "Vom Assistenten vorgegeben",
+                            optional_tools_section: "Weitere Werkzeuge",
+                            upload_data: "Dokument hochladen",
+                            uploaded_data_label: "Hinzugefügte Dokumente",
+                            remove_data: "Dokument entfernen",
+                            uploading: "Wird hochgeladen..."
+                        },
+                        contextmanagerdialog: {
+                            title: "Meine Dokumente",
+                            subtitle: "Ausgewählte Dokumente werden im Chat als Kontext verwendet.",
+                            uploading: "Wird hochgeladen...",
+                            upload_btn: "Hochladen",
+                            select_label: "Dateien auswählen",
+                            no_saved: "Noch keine gespeicherten Dokumente.",
+                            use: "Verwenden",
+                            remove_saved: "Dokument entfernen",
+                            parsed_at: "Verarbeitet am",
+                            clear_saved: "Alle löschen",
+                            download: "Text herunterladen",
+                            selection_count: "Im Chat verwendet: {{selected}} von {{total}}",
+                            storage_error: "Dokument konnte nicht gespeichert werden (Speicherplatz voll).",
+                            upload_success_title: "Upload erfolgreich",
+                            upload_success_one: "1 Dokument wurde hochgeladen.",
+                            upload_success_other: "{{count}} Dokumente wurden hochgeladen.",
+                            upload_error_title: "Upload fehlgeschlagen",
+                            upload_error_one: "1 Dokument konnte nicht hochgeladen werden.",
+                            upload_error_other: "{{count}} Dokumente konnten nicht hochgeladen werden.",
+                            storage_error_title: "Speichern fehlgeschlagen",
+                            storage_error_one: "1 Dokument konnte nicht lokal gespeichert werden.",
+                            storage_error_other: "{{count}} Dokumente konnten nicht lokal gespeichert werden."
                         },
                         suminput: {
                             tokensused: "Token verbraucht",
@@ -475,6 +514,9 @@ i18n
                             discard_title: "Änderungen verwerfen?",
                             discard_message: "Sie haben ungespeicherte Änderungen. Möchten Sie wirklich abbrechen?"
                         },
+                        expandable_textarea: {
+                            default_title: "Bearbeiten"
+                        },
                         publish_assistant_dialog: {
                             title: "Assistent veröffentlichen",
                             version: "Version",
@@ -593,9 +635,9 @@ i18n
                             deleted_state_no_history: "Für diesen Assistenten ist kein lokaler Chatverlauf verfügbar."
                         },
                         toolsselector: {
-                            title: "Verfügbare Tools",
+                            title: "Verfügbare Werkzeuge",
                             select_all: "Alle auswählen",
-                            none: "Keine Tools verfügbar.",
+                            none: "Keine Werkzeuge verfügbar.",
                             apply: "Übernehmen",
                             cancel: "Abbrechen"
                         },
@@ -690,7 +732,8 @@ i18n
                     },
                     chat: {
                         header: "Ask a question or try an example",
-                        prompt: "Ask a question",
+                        prompt: "Ask a question or upload a document",
+                        prompt_no_upload: "Ask a question",
                         answer_loading: "Generating answer",
                         quickprompts: {
                             shorter_tooltip: "Shorten your answer",
@@ -895,7 +938,45 @@ i18n
                             tutorial_help: "Open tutorial",
                             tool_header: "Choose additional tools:",
                             tutorial_help_aria: "Open Tutorial for Werkzeug {{tool}} ",
-                            send_question: "Send question"
+                            send_question: "Send question",
+                            add_tool: "Add tools",
+                            no_tools_active: "No tools active",
+                            more_tools: "+{{count}} more",
+                            enable_all: "Enable all",
+                            disable_all: "Disable all",
+                            available_tools: "Available Tools",
+                            remove_tool_aria: "Remove {{tool}}",
+                            assistant_tool_locked: "Required by this assistant",
+                            assistant_tools_section: "Provided by the assistant",
+                            optional_tools_section: "Additional tools",
+                            upload_data: "Upload document",
+                            uploaded_data_label: "Attached documents",
+                            remove_data: "Remove document",
+                            uploading: "Uploading..."
+                        },
+                        contextmanagerdialog: {
+                            title: "My Documents",
+                            subtitle: "Selected documents will be used as context in the chat.",
+                            uploading: "Uploading...",
+                            upload_btn: "Upload",
+                            select_label: "Choose files",
+                            no_saved: "No saved documents yet.",
+                            use: "Use",
+                            remove_saved: "Remove document",
+                            parsed_at: "Processed on",
+                            clear_saved: "Clear all",
+                            download: "Download text",
+                            selection_count: "Used in chat: {{selected}} of {{total}}",
+                            storage_error: "Document could not be saved (storage full).",
+                            upload_success_title: "Upload successful",
+                            upload_success_one: "1 document was uploaded.",
+                            upload_success_other: "{{count}} documents were uploaded.",
+                            upload_error_title: "Upload failed",
+                            upload_error_one: "1 document could not be uploaded.",
+                            upload_error_other: "{{count}} documents could not be uploaded.",
+                            storage_error_title: "Saving failed",
+                            storage_error_one: "1 document could not be saved locally.",
+                            storage_error_other: "{{count}} documents could not be saved locally."
                         },
                         suminput: {
                             tokensused: "Token used",
@@ -1099,6 +1180,9 @@ i18n
                             // Discard confirmation
                             discard_title: "Discard changes?",
                             discard_message: "You have unsaved changes. Are you sure you want to cancel?"
+                        },
+                        expandable_textarea: {
+                            default_title: "Edit"
                         },
                         publish_assistant_dialog: {
                             title: "Publish Assistant",
@@ -1312,7 +1396,8 @@ i18n
                     },
                     chat: {
                         header: "Stelle a Froog oda probier a Beispui",
-                        prompt: "Stelle a Froog ",
+                        prompt: "Stell a Froog oder lad a Dokument hoch",
+                        prompt_no_upload: "Stell a Froog",
                         answer_loading: "I bearbeit grad de Frog",
                         quickprompts: {
                             shorter_tooltip: "Schreib a kürzere Antwort",
@@ -1516,7 +1601,36 @@ i18n
                             tutorial_help: "Tutorial aufmachn",
                             tool_header: "Zusätzliche Werkzeig auswähln:",
                             tutorial_help_aria: "Tutorial zum Werkzeig {{tool}} aufmachn",
-                            send_question: "Froog senden"
+                            send_question: "Froog senden",
+                            add_tool: "Werkzeig dazua doa",
+                            no_tools_active: "Koane Werkzeig aktiv",
+                            more_tools: "+{{count}} mehr",
+                            enable_all: "Ois aktiviern",
+                            disable_all: "Ois deaktivieren",
+                            available_tools: "Verfügbare Werkzeig",
+                            remove_tool_aria: "{{tool}} wegmachn",
+                            assistant_tool_locked: "Für den Assistentn fest aktiv",
+                            assistant_tools_section: "Vom Assistentn vorgem",
+                            optional_tools_section: "Weiterne Werkzeig",
+                            upload_data: "Dokument hochladn",
+                            uploaded_data_label: "Dazua gladne Dokumente",
+                            remove_data: "Dokument wegdoa",
+                            uploading: "Wird grod hochglodn..."
+                        },
+                        contextmanagerdialog: {
+                            title: "Meine Dokumente",
+                            subtitle: "Ausgwähte Dokumente wean im Ratsch ois Kontext hergnomma.",
+                            uploading: "Wird obagloodn...",
+                            upload_btn: "Obalodn",
+                            select_label: "Dateien aussuachn",
+                            no_saved: "No koane gspeicherten Dokumente.",
+                            use: "Verwenden",
+                            remove_saved: "Dokument entfernen",
+                            parsed_at: "Vaorbeitet am",
+                            clear_saved: "Ois löschen",
+                            download: "Text obalodn",
+                            selection_count: "Im Ratsch verwendet: {{selected}} vo {{total}}",
+                            storage_error: "Dokument hod ned gspeichert wern kenna (Speicher voi)."
                         },
                         suminput: {
                             tokensused: "Token vabrocht",
@@ -1722,6 +1836,9 @@ i18n
                             // Discard confirmation
                             discard_title: "Änderungen verwerfn?",
                             discard_message: "Du hosd ungespeicherte Änderungen. Wuißt du wirklich abbrechen?"
+                        },
+                        expandable_textarea: {
+                            default_title: "Bearbeiten"
                         },
                         publish_assistant_dialog: {
                             title: "Assistent veröffentlcha",
@@ -1937,7 +2054,8 @@ i18n
                     },
                     chat: {
                         header: "Posez une question ou essayez un exemple",
-                        prompt: "Posez une question",
+                        prompt: "Posez une question ou téléchargez un document",
+                        prompt_no_upload: "Posez une question",
                         answer_loading: "Créer une réponse",
                         quickprompts: {
                             shorter_tooltip: "Écrire une réponse plus courte",
@@ -2142,7 +2260,36 @@ i18n
                             tutorial_help: "Ouvrir le tutoriel",
                             tool_header: "Choisir des outils supplémentaires:",
                             tutorial_help_aria: "Ouvrir le tutoriel pour l'outil {{tool}}",
-                            send_question: "Envoyer la question"
+                            send_question: "Envoyer la question",
+                            add_tool: "Ajouter des outils",
+                            no_tools_active: "Aucun outil actif",
+                            more_tools: "+{{count}} de plus",
+                            enable_all: "Tout activer",
+                            disable_all: "Tout désactiver",
+                            available_tools: "Outils disponibles",
+                            remove_tool_aria: "Supprimer {{tool}}",
+                            assistant_tool_locked: "Activé par cet assistant",
+                            assistant_tools_section: "Fourni par l'assistant",
+                            optional_tools_section: "Outils supplémentaires",
+                            upload_data: "Télécharger un document",
+                            uploaded_data_label: "Documents ajoutés",
+                            remove_data: "Supprimer le document",
+                            uploading: "Téléchargement..."
+                        },
+                        contextmanagerdialog: {
+                            title: "Mes documents",
+                            subtitle: "Les documents sélectionnés seront utilisés comme contexte dans le chat.",
+                            uploading: "Téléversement...",
+                            upload_btn: "Téléverser",
+                            select_label: "Choisir des fichiers",
+                            no_saved: "Aucun document enregistré pour l'instant.",
+                            use: "Utiliser",
+                            remove_saved: "Supprimer le document",
+                            parsed_at: "Traité le",
+                            clear_saved: "Tout effacer",
+                            download: "Télécharger le texte",
+                            selection_count: "{{selected}} sur {{total}} sélectionné(s)",
+                            storage_error: "Le document n'a pas pu être enregistré (stockage plein)."
                         },
                         suminput: {
                             tokensused: "Tokens utilisés",
@@ -2349,6 +2496,9 @@ i18n
                             // Discard confirmation
                             discard_title: "Annuler les modifications ?",
                             discard_message: "Vous avez des modifications non enregistrées. Voulez-vous vraiment annuler ?"
+                        },
+                        expandable_textarea: {
+                            default_title: "Modifier"
                         },
                         publish_assistant_dialog: {
                             title: "Publier l'assistant",
@@ -2562,7 +2712,8 @@ i18n
                     },
                     chat: {
                         header: "Задайте питання або спробуйте приклад",
-                        prompt: "Задайте питання",
+                        prompt: "Задайте питання або завантажте документ",
+                        prompt_no_upload: "Задайте питання",
                         answer_loading: "Створення відповіді",
                         quickprompts: {
                             shorter_tooltip: "Написати коротшу відповідь",
@@ -2767,7 +2918,36 @@ i18n
                             tutorial_help: "Відкрити навчальний посібник",
                             tool_header: "Вибрати додаткові інструменти:",
                             tutorial_help_aria: "Відкрити навчальний посібник для інструменту {{tool}}",
-                            send_question: "Надіслати питання"
+                            send_question: "Надіслати питання",
+                            add_tool: "Додати інструменти",
+                            no_tools_active: "Немає активних інструментів",
+                            more_tools: "+{{count}} ще",
+                            enable_all: "Активувати всі",
+                            disable_all: "Деактивувати всі",
+                            available_tools: "Доступні інструменти",
+                            remove_tool_aria: "Видалити {{tool}}",
+                            assistant_tool_locked: "Обов'язково для цього асистента",
+                            assistant_tools_section: "Надані асистентом",
+                            optional_tools_section: "Додаткові інструменти",
+                            upload_data: "Завантажити документ",
+                            uploaded_data_label: "Додані документи",
+                            remove_data: "Видалити документ",
+                            uploading: "Завантаження..."
+                        },
+                        contextmanagerdialog: {
+                            title: "Мої документи",
+                            subtitle: "Вибрані документи будуть використані як контекст у чаті.",
+                            uploading: "Завантаження...",
+                            upload_btn: "Завантажити",
+                            select_label: "Вибрати файли",
+                            no_saved: "Ще немає збережених документів.",
+                            use: "Використати",
+                            remove_saved: "Видалити документ",
+                            parsed_at: "Оброблено",
+                            clear_saved: "Очистити все",
+                            download: "Завантажити текст",
+                            selection_count: "{{selected}} з {{total}} вибрано",
+                            storage_error: "Документ не вдалося зберегти (сховище переповнене)."
                         },
                         suminput: {
                             tokensused: "Використано токени",
@@ -2971,6 +3151,9 @@ i18n
                             // Discard confirmation
                             discard_title: "Скасувати зміни?",
                             discard_message: "У вас є незбережені зміни. Ви впевнені, що хочете скасувати?"
+                        },
+                        expandable_textarea: {
+                            default_title: "Редагувати"
                         },
                         publish_assistant_dialog: {
                             title: "Опублікувати асистента",

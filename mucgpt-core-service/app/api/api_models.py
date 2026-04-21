@@ -303,6 +303,7 @@ class ToolListResponse(BaseModel):
                         "id": "WEB_SEARCH",
                         "name": "Web Search",
                         "description": "Search the municipal website for information.",
+                        "mcp_group": None,
                     }
                 ]
             }

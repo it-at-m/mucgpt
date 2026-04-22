@@ -134,12 +134,7 @@ const Home = () => {
                 // Build recent assistants from chat history
                 const allRecords = await assistantStorageService.getChatStorageService().getAll();
                 const chatRecords = (allRecords || []).filter(
-                    r =>
-                        r.id &&
-                        r.id.startsWith(AssistantStorageService.CHAT_ID) &&
-                        r._last_edited &&
-                        Array.isArray(r.messages) &&
-                        r.messages.length > 0
+                    r => r.id && r.id.startsWith(AssistantStorageService.CHAT_ID) && r._last_edited && Array.isArray(r.messages) && r.messages.length > 0
                 );
 
                 const assistantLastUsed = new Map<string, number>();
@@ -213,10 +208,7 @@ const Home = () => {
                 // Determine initial mode
                 const persisted = localStorage.getItem(STORAGE_KEYS.HOME_ASSISTANT_MODE);
                 const validRecent = recent.slice(0, MAX_CARDS);
-                if (
-                    validRecent.length >= MIN_RECENT_FOR_DEFAULT &&
-                    (persisted === "recommended" || persisted === "recent")
-                ) {
+                if (validRecent.length >= MIN_RECENT_FOR_DEFAULT && (persisted === "recommended" || persisted === "recent")) {
                     setMode(persisted);
                 } else {
                     setMode("recommended");

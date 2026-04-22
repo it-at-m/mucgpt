@@ -1,5 +1,5 @@
 from collections.abc import Awaitable, Callable
-from typing import Any, Protocol
+from typing import Any
 
 from langchain.agents.middleware import (
     AgentMiddleware,
@@ -10,45 +10,15 @@ from langchain.agents.middleware import (
 from langchain.messages import SystemMessage, ToolMessage
 from langgraph.types import Command
 
-from agent.state_models.default_state import DefaultAgentState
+from agent.tools.policies import DEFAULT_SCOPE, get_policy_for_state
 from core.logtools import getLogger
 
 logger = getLogger(name="agent-middleware")
 
-DEFAULT_SCOPE = "general"
 AGENT_STATE_KEY = "agent_state"
 
 # TODO:
-# - refactor to support multiple policies and more flexible state management (e.g. separate state for each policy or shared state with defined schema)
-# - each tool should have explicit metadata for scope and other relevant attributes (at least a source identifier for policy selection)
-# - mcp tools may require additional description metadata (see mcp-tools/mcp-atlassian.json for example) to enable effective policy decisions and agent reasoning about tool selection.
-#
 # - for future: consider more advanced policy implementations, e.g. using a separate LLM for policy decisions, i.e. a router
-
-
-class ToolSelectionPolicy(Protocol):
-    """Policy contract for state-aware scope inference and tool filtering."""
-
-    def infer_scope(
-        self, request: ModelRequest, agent_state: dict[str, Any]
-    ) -> str: ...
-
-    def select_tools(
-        self,
-        request: ModelRequest,
-        scope: str,
-        agent_state: dict[str, Any],
-    ) -> list[Any]: ...
-
-
-def _last_assistant_message_text(request: ModelRequest) -> str | None:
-    for message in reversed(request.messages):
-        message_type = str(getattr(message, "type", "")).lower()
-        if message_type in {"ai", "assistant"}:
-            text = getattr(message, "text", None)
-            if isinstance(text, str) and text:
-                return text
-    return None
 
 
 def _get_or_create_agent_state(request: ModelRequest) -> dict[str, Any]:
@@ -76,77 +46,68 @@ def _get_or_create_agent_state(request: ModelRequest) -> dict[str, Any]:
     return {"current_scope": DEFAULT_SCOPE}
 
 
-def _tool_scope(tool: Any) -> str | None:
-    metadata = getattr(tool, "metadata", None)
-    if isinstance(metadata, dict):
-        scoped = metadata.get("mcp_scope")
-        if scoped:
-            return str(scoped).lower()
-
-    tool_name = str(getattr(tool, "name", "")).lower()
-    if "jira" in tool_name:
-        return "jira"
-    if "confluence" in tool_name:
-        return "confluence"
-    return None
-
-
-
-
 class ContextMiddleware(AgentMiddleware):
-    """Make Context driven adjustments to the model call, e.g. adjust system prompt or toolset based on conversation context or agent state."""
+    """Adjust model calls based on agent state and its associated policy.
 
-    def __init__(self, policy: ToolSelectionPolicy | None = None):
-        self.policy = policy or ScopePolicy()
+    The policy is resolved from the state type via the policy registry:
+    - ``DefaultAgentState``   → ``DefaultScopePolicy`` (no-op, all tools forwarded)
+    - ``AtlassianAgentState`` → ``AtlassianScopePolicy`` (scope-aware tool filtering)
 
-    @staticmethod
-    def _context_system_message(system_text: str, scope: str) -> str:
-        if not system_text:
-            return f"[CONTEXT] Current MCP scope is: {scope}"
-        separator = "" if system_text.endswith("\n") else "\n"
-        return f"{system_text}{separator}[CONTEXT] Current MCP scope is: {scope}"
+    Additional state types can be registered in ``agent.tools.policies``.
+    """
 
     def wrap_model_call(
         self,
         request: ModelRequest,
         handler: Callable[[ModelRequest], ModelResponse],
     ) -> ModelResponse:
-        if type(request.state) is DefaultAgentState:
-            return handler(request)
+        state_type = type(request.state)
+        policy = get_policy_for_state(state_type)
 
         agent_state = _get_or_create_agent_state(request)
-        scope = self.policy.infer_scope(request, agent_state)
+        scope = policy.infer_scope(request, agent_state)
         request = request.override(
-            tools=self.policy.select_tools(request, scope, agent_state)
+            tools=policy.select_tools(request, scope, agent_state)
         )
 
         system_text = request.system_message.text if request.system_message else ""
-        new_system_message = self._context_system_message(system_text, scope)
-        return handler(
-            request.override(system_message=SystemMessage(content=new_system_message))
-        )
+        new_system_text = policy.modify_system_message(system_text, scope)
+        if new_system_text != system_text:
+            request = request.override(
+                system_message=SystemMessage(content=new_system_text)
+            )
+
+        return handler(request)
 
     async def awrap_model_call(
         self,
         request: ModelRequest,
         handler: Callable[[ModelRequest], Awaitable[ModelResponse]],
     ) -> ModelResponse:
+        state_type = type(request.state)
+        policy = get_policy_for_state(state_type)
+
         agent_state = _get_or_create_agent_state(request)
-        scope = self.policy.infer_scope(request, agent_state)
+        scope = policy.infer_scope(request, agent_state)
         request = request.override(
-            tools=self.policy.select_tools(request, scope, agent_state)
+            tools=policy.select_tools(request, scope, agent_state)
         )
         logger.info(
-            "Using MCP scope '%s' with %s selected tools",
+            "State '%s' → policy '%s' → scope '%s' with %s selected tools",
+            state_type.__name__,
+            type(policy).__name__,
             scope,
             len(request.tools or []),
         )
 
         system_text = request.system_message.text if request.system_message else ""
-        new_system_message = self._context_system_message(system_text, scope)
-        return await handler(
-            request.override(system_message=SystemMessage(content=new_system_message))
-        )
+        new_system_text = policy.modify_system_message(system_text, scope)
+        if new_system_text != system_text:
+            request = request.override(
+                system_message=SystemMessage(content=new_system_text)
+            )
+
+        return await handler(request)
 
 
 class ToolErrorMiddleware(AgentMiddleware):

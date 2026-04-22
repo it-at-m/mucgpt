@@ -51,9 +51,9 @@
 [made-with-love-shield]: https://img.shields.io/badge/made%20with%20%E2%9D%A4%20by-it%40M-blue?style=for-the-badge
 [license-shield]: https://img.shields.io/github/license/it-at-m/itm-prettier-codeformat?style=for-the-badge&color=blue
 [github-release-shield]: https://img.shields.io/github/v/release/it-at-m/mucgpt?style=for-the-badge&color=blue
-[python-versions-shield]: https://img.shields.io/badge/python-3.10|%203.11%20|%203.12-blue?style=for-the-badge
+[python-versions-shield]: https://img.shields.io/badge/python-3.13-blue?style=for-the-badge
 [gitmoij-shield]: https://img.shields.io/badge/gitmoij-😜😍-blue?style=for-the-badge
-[npm-versions-shield]: https://img.shields.io/badge/node-20+-blue?style=for-the-badge
+[npm-versions-shield]: https://img.shields.io/badge/node-22+-blue?style=for-the-badge
 [uv-shield]: https://img.shields.io/badge/⚡-uv-blue?style=for-the-badge
 [fastapi-shield]: https://img.shields.io/badge/fastapi-blue?style=for-the-badge&logo=fastapi&logoColor=white
 [react-shield]: https://shields.io/badge/react-blue?logo=react&style=for-the-badge&logoColor=white
@@ -106,7 +106,7 @@ See the [open issues](https://github.com/it-at-m/mucgpt/issues) for a full list 
 
 ### Backend
 
-- [Python 3.10, 3.11 or 3.12](https://www.python.org/downloads/)
+- [Python 3.13](https://www.python.org/downloads/)
 - [FastAPI](https://fastapi.tiangolo.com/)
 - [LangGraph](https://www.langchain.com/langgraph)
 
@@ -118,9 +118,9 @@ See the [open issues](https://github.com/it-at-m/mucgpt/issues) for a full list 
 
 ### Deployment
 
-- [Node.js 20+](https://nodejs.org/en/download/package-manager)
+- [Node.js 22+](https://nodejs.org/en/download/package-manager)
 - [Git](https://git-scm.com/downloads)
-- Python 3.12
+- Python 3.13
 - [uv](https://github.com/astral-sh/uv)
 - Docker
 
@@ -128,7 +128,7 @@ See the [open issues](https://github.com/it-at-m/mucgpt/issues) for a full list 
 
 - Install uv: <https://docs.astral.sh/uv/getting-started/installation/>
   - [Using UV during development](/docs/DEVELOPMENT.md)
-- Install [Node.js 20+](https://nodejs.org/en/download/package-manager)
+- Install [Node.js 22+](https://nodejs.org/en/download/package-manager)
 
 ### ⚙️ Configure the environment
 

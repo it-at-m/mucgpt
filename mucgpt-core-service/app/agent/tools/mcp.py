@@ -22,7 +22,7 @@ class McpLoader:
     _mcp_settings = get_mcp_settings()
 
     @staticmethod
-    async def load_mcp_tools(user_info: AuthenticationResult) -> list[BaseTool]: # type: ignore
+    async def load_mcp_tools(user_info: AuthenticationResult) -> list[BaseTool]:
         """
         Load MCP tools for a given user and cache them.
         """
@@ -193,11 +193,17 @@ class McpLoader:
             McpLoader._logger.warning(
                 f"Could not acquire MCP lock '{lock_name}' for user {uid}; retrying cache read"
             )
+            await asyncio.sleep(0.3)
+            tools_dump = await RedisCache.get_object(cache_key)
+            if tools_dump is not None:
+                return tools_dump
+            return []
         except Exception as e:
             McpLoader._logger.error(
                 f"Failed to acquire/use MCP lock '{lock_name}' for user {uid}",
                 exc_info=e,
             )
+            raise
 
     @staticmethod
     def _resolve_group(tool_name: str, source_config) -> str | None:

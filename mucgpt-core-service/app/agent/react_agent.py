@@ -9,7 +9,7 @@ from langchain_core.tools.base import BaseTool
 from agent.middleware import ContextMiddleware, ToolErrorMiddleware
 from agent.state_models.default_state import DefaultAgentState
 from agent.tools.mcp import McpBearerAuthProvider
-from agent.tools.tools import ToolCollection
+from agent.tools.tools import ToolCollection, select_agent_state_schema
 from core.auth_models import AuthenticationResult
 from core.logtools import getLogger
 
@@ -54,8 +54,10 @@ class _ConfiguredLangChainAgentGraph:
     @staticmethod
     def get_schema_from_tools(
         enabled_tools: list[BaseTool] | None,
-    ) -> DefaultAgentState:
-        return DefaultAgentState
+    ) -> type[DefaultAgentState]:
+        if not enabled_tools:
+            return DefaultAgentState
+        return select_agent_state_schema(enabled_tools)
 
     def _select_tools(self, enabled_tools: list[str] | None) -> list[BaseTool]:
         if not enabled_tools:
@@ -65,7 +67,7 @@ class _ConfiguredLangChainAgentGraph:
 
     def _prepare_run(
         self, input_data: dict[str, Any], config: RunnableConfig | None
-    ) -> tuple[Any, list[Any], list[BaseTool], DefaultAgentState]:
+    ) -> tuple[Any, list[Any], list[BaseTool], type[DefaultAgentState]]:
         configurable = config.get("configurable", {}) if config else {}
         user_info = cast(AuthenticationResult | None, configurable.get("user_info"))
         if not user_info:
@@ -90,16 +92,13 @@ class _ConfiguredLangChainAgentGraph:
 
         messages = input_data.get("messages", [])
         tools_to_use = self._select_tools(enabled_tools)
-        state_schema = _ConfiguredLangChainAgentGraph.get_schema_from_tools(
+
+        # Select agent state schema based on enabled tools (defines agent scope/policy)
+        agent_state_schema = _ConfiguredLangChainAgentGraph.get_schema_from_tools(
             tools_to_use
         )
-        # TODO: infer scope from tool selection and choose agentstate accordingly
-
-        # if enabled_tools:
-        #     messages = self.tool_collection.add_instructions(
-        #         messages, enabled_tools, tools=tools_to_use
-        #     )
-        return model, messages, tools_to_use, state_schema
+        logger.info(f"Using agent state schema: {agent_state_schema}")
+        return model, messages, tools_to_use, agent_state_schema
 
     async def astream(
         self,
@@ -109,7 +108,7 @@ class _ConfiguredLangChainAgentGraph:
         config: RunnableConfig | None = None,
         **kwargs,
     ):
-        model, messages, tools_to_use, state_schema = self._prepare_run(
+        model, messages, tools_to_use, agent_state_schema = self._prepare_run(
             input_data, config
         )
         active_agent = self.agent
@@ -122,7 +121,7 @@ class _ConfiguredLangChainAgentGraph:
                 if messages[0].content != DEFAULT_INSTRUCTIONS
                 else None,
                 debug=self.debug,
-                state_schema=state_schema,  # TODO: support multiple state schemas for different policies
+                state_schema=agent_state_schema,
             )
         async for item in active_agent.astream(
             {"messages": messages},
@@ -139,7 +138,7 @@ class _ConfiguredLangChainAgentGraph:
         config: RunnableConfig | None = None,
         **kwargs,
     ):
-        model, messages, tools_to_use, state_schema = self._prepare_run(
+        model, messages, tools_to_use, agent_state_schema = self._prepare_run(
             input_data, config
         )
         active_agent = self.agent
@@ -152,7 +151,7 @@ class _ConfiguredLangChainAgentGraph:
                 if messages[0].content != DEFAULT_INSTRUCTIONS
                 else None,
                 debug=self.debug,
-                state_schema=state_schema,
+                state_schema=agent_state_schema,
             )
         return await active_agent.ainvoke(
             {"messages": messages}, config=config, **kwargs

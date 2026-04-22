@@ -24,7 +24,7 @@
     border: 1px solid var(--colorNeutralStroke1) !important;
     box-shadow: none !important;
     color: var(--colorBrandBackground) !important;
-    background-color: var(--colorNeutralBackground) !important;
+    background-color: var(--colorNeutralBackground1) !important;
     transition:
         gap 0.15s ease,
         background-color 0.15s ease,

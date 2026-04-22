@@ -158,6 +158,19 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
         version: "0",
         is_visible: true
     });
+    const lockedToolIds = useMemo(() => assistantConfig.tools?.map(tool => tool.id) ?? [], [assistantConfig.tools]);
+    const mergeLockedToolIds = useCallback((toolIds: string[]) => Array.from(new Set([...lockedToolIds, ...toolIds])), [lockedToolIds]);
+    const setSelectedToolsGuarded = useCallback(
+        (value: React.SetStateAction<string[]>) => {
+            setSelectedTools(prev => {
+                const next = typeof value === "function" ? value(prev) : value;
+                const merged = mergeLockedToolIds(next);
+
+                return merged.length === prev.length && merged.every((toolId, index) => toolId === prev[index]) ? prev : merged;
+            });
+        },
+        [mergeLockedToolIds]
+    );
 
     // useEffect to load the assistant config and chat history
     useEffect(() => {
@@ -278,6 +291,14 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
         };
         loadData();
     }, [assistant_id, communityAssistantStorageService, error, isDeletedAssistant, showError, strategy, t, availableLLMs, setHeader, setLLM, setQuickPrompts]);
+
+    useEffect(() => {
+        if (lockedToolIds.length === 0) {
+            return;
+        }
+
+        setSelectedToolsGuarded(prev => prev);
+    }, [lockedToolIds, setSelectedToolsGuarded]);
 
     // Load info data for non-owner community assistants
     useEffect(() => {
@@ -562,8 +583,6 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
 
     // Text-Input component
     const inputComponent = useMemo(() => {
-        const lockedToolIds = assistantConfig.tools?.map(tool => tool.id) ?? [];
-
         if (isDeletedAssistant) {
             const duplicateCandidateSnapshot = deletedAssistantSnapshot;
 
@@ -641,7 +660,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                         question={question}
                         setQuestion={question => setQuestion(question)}
                         selectedTools={selectedTools}
-                        setSelectedTools={setSelectedTools}
+                        setSelectedTools={setSelectedToolsGuarded}
                         tools={tools}
                         allowToolSelection={true}
                         lockedToolIds={lockedToolIds}
@@ -677,7 +696,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                 question={question}
                 setQuestion={question => setQuestion(question)}
                 selectedTools={selectedTools}
-                setSelectedTools={setSelectedTools}
+                setSelectedTools={setSelectedToolsGuarded}
                 tools={tools}
                 allowToolSelection={true}
                 lockedToolIds={lockedToolIds}
@@ -698,8 +717,9 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
         question,
         error,
         selectedTools,
+        setSelectedToolsGuarded,
         tools,
-        navigate,
+        lockedToolIds,
         uploadedData
     ]);
 

@@ -10,7 +10,7 @@ from langchain_mcp_adapters.sessions import SSEConnection, StreamableHttpConnect
 from redis.asyncio import Redis
 from redis.exceptions import LockError
 
-from config.settings import MCPTransport, get_mcp_settings
+from config.settings import MCPSourceConfig, MCPTransport, get_mcp_settings
 from core.auth_models import AuthenticationResult
 from core.cache import RedisCache
 from core.logtools import getLogger
@@ -206,7 +206,9 @@ class McpLoader:
             raise
 
     @staticmethod
-    def _resolve_group(tool_name: str, source_config) -> str | None:
+    def _resolve_group(
+        tool_name: str, source_config: MCPSourceConfig
+    ) -> str | None:
         """Resolve the group for a tool: check tool_groups prefixes first, fall back to group."""
         if source_config.tool_groups:
             lowered = tool_name.lower()

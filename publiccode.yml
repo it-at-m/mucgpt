@@ -6,7 +6,7 @@ publiccodeYmlVersion: "0.2"
 name: MUCGPT
 url: "https://gitlab.opencode.de/landeshauptstadt-muenchen/mucgpt"
 landingURL: "https://it-at-m.github.io/mucgpt/"
-logo: assets/mucgpt_title.svg
+logo: "assets/mucgpt_title.svg"
 roadmap: "https://github.com/it-at-m/mucgpt?tab=readme-ov-file#%EF%B8%8F-roadmap"
 softwareVersion: "1.2"
 softwareType: standalone/web

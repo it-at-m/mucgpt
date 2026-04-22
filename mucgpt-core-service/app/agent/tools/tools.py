@@ -6,18 +6,18 @@ from langchain_core.messages import SystemMessage
 from langchain_core.runnables.base import RunnableSerializable
 from langchain_core.tools.base import BaseTool
 
+from agent.state_models.default_state import DefaultAgentState
+from agent.state_models.registry import registry as AGENT_STATE_SCHEMA_REGISTRY
 from agent.tools import brainstorm, simplify
 from agent.tools.brainstorm import make_brainstorm_tool
 from agent.tools.mcp import McpLoader
 from agent.tools.simplify import make_simplify_tool
-from agent.state_models.default_state import DefaultAgentState
-from agent.state_models.registry import registry as AGENT_STATE_SCHEMA_REGISTRY
 from api.api_models import ToolInfo, ToolListResponse
 from config.settings import get_mcp_settings
 from core.auth import AuthenticationResult
 from core.logtools import getLogger
 
-#AGENT_STATE_SCHEMA_REGISTRY = registry
+# AGENT_STATE_SCHEMA_REGISTRY = registry
 
 TOOL_INSTRUCTIONS_TEMPLATE = """
 # Tools
@@ -31,16 +31,15 @@ TOOL_INSTRUCTIONS_TEMPLATE = """
 
 """
 
+
 def select_agent_state_schema(tools: list[BaseTool]) -> type[DefaultAgentState]:
     tool_groups = set()
     for tool in tools:
         if tool.metadata:
             tool_groups.add(tool.metadata.get("mcp_group"))
     if len(tool_groups) > 1:
-            return DefaultAgentState
+        return DefaultAgentState
     return AGENT_STATE_SCHEMA_REGISTRY.get(f"{list(tool_groups)[0]}", DefaultAgentState)
-    
-    
 
 
 class ToolCollection:

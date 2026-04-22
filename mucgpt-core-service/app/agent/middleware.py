@@ -10,6 +10,7 @@ from langchain.agents.middleware import (
 from langchain.messages import SystemMessage, ToolMessage
 from langgraph.types import Command
 
+from agent.state_models.default_state import DefaultAgentState
 from agent.tools.policies import DEFAULT_SCOPE, get_policy_for_state
 from core.logtools import getLogger
 
@@ -56,13 +57,17 @@ class ContextMiddleware(AgentMiddleware):
     Additional state types can be registered in ``agent.tools.policies``.
     """
 
+    state_schema: type = DefaultAgentState
+
+    def __init__(self, state_schema: type = DefaultAgentState):
+        self.state_schema = state_schema
+
     def wrap_model_call(
         self,
         request: ModelRequest,
         handler: Callable[[ModelRequest], ModelResponse],
     ) -> ModelResponse:
-        state_type = type(request.state)
-        policy = get_policy_for_state(state_type)
+        policy = get_policy_for_state(self.state_schema)
 
         agent_state = _get_or_create_agent_state(request)
         scope = policy.infer_scope(request, agent_state)
@@ -84,8 +89,7 @@ class ContextMiddleware(AgentMiddleware):
         request: ModelRequest,
         handler: Callable[[ModelRequest], Awaitable[ModelResponse]],
     ) -> ModelResponse:
-        state_type = type(request.state)
-        policy = get_policy_for_state(state_type)
+        policy = get_policy_for_state(self.state_schema)
 
         agent_state = _get_or_create_agent_state(request)
         scope = policy.infer_scope(request, agent_state)
@@ -94,7 +98,7 @@ class ContextMiddleware(AgentMiddleware):
         )
         logger.info(
             "State '%s' → policy '%s' → scope '%s' with %s selected tools",
-            state_type.__name__,
+            self.state_schema.__name__,
             type(policy).__name__,
             scope,
             len(request.tools or []),

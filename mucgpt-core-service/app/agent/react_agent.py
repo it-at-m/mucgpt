@@ -43,12 +43,19 @@ class _ConfiguredLangChainAgentGraph:
             "Initializing MUCGPT ReAct agent graph with tools: %s",
             [tool.name for tool in tools],
         )
+        initial_state_schema = _ConfiguredLangChainAgentGraph.get_schema_from_tools(
+            self.tools
+        )
         self.agent = create_agent(
             model=cast(Any, self.model),
             tools=self.tools,
-            middleware=[ToolErrorMiddleware()],
+            middleware=[
+                ContextMiddleware(state_schema=initial_state_schema),
+                ToolErrorMiddleware(),
+            ],
             system_prompt=DEFAULT_INSTRUCTIONS,
             debug=self.debug,
+            state_schema=initial_state_schema,
         )
 
     @staticmethod
@@ -112,11 +119,19 @@ class _ConfiguredLangChainAgentGraph:
             input_data, config
         )
         active_agent = self.agent
-        if tools_to_use != self.tools or model is not self.model:
+        if (
+            tools_to_use != self.tools
+            or model is not self.model
+            or agent_state_schema
+            != _ConfiguredLangChainAgentGraph.get_schema_from_tools(self.tools)
+        ):
             active_agent = create_agent(
                 model=cast(Any, model),
                 tools=tools_to_use,
-                middleware=[ContextMiddleware(), ToolErrorMiddleware()],
+                middleware=[
+                    ContextMiddleware(state_schema=agent_state_schema),
+                    ToolErrorMiddleware(),
+                ],
                 system_prompt=DEFAULT_INSTRUCTIONS
                 if messages[0].content != DEFAULT_INSTRUCTIONS
                 else None,
@@ -142,11 +157,19 @@ class _ConfiguredLangChainAgentGraph:
             input_data, config
         )
         active_agent = self.agent
-        if tools_to_use != self.tools or model is not self.model:
+        if (
+            tools_to_use != self.tools
+            or model is not self.model
+            or agent_state_schema
+            != _ConfiguredLangChainAgentGraph.get_schema_from_tools(self.tools)
+        ):
             active_agent = create_agent(
                 model=cast(Any, model),
                 tools=tools_to_use,
-                middleware=[ContextMiddleware(), ToolErrorMiddleware()],
+                middleware=[
+                    ContextMiddleware(state_schema=agent_state_schema),
+                    ToolErrorMiddleware(),
+                ],
                 system_prompt=DEFAULT_INSTRUCTIONS
                 if messages[0].content != DEFAULT_INSTRUCTIONS
                 else None,

@@ -39,6 +39,14 @@ const formatDate = (date: Date) => {
     return date.getDate() + "-" + (date.getMonth() + 1) + "-" + date.getFullYear();
 };
 
+function parseStoredStringArray(value: unknown): string[] {
+    if (!Array.isArray(value)) {
+        return [];
+    }
+
+    return value.every(item => typeof item === "string") ? value : [];
+}
+
 const Home = () => {
     const { t } = useTranslation();
     const location = useLocation();
@@ -48,7 +56,14 @@ const Home = () => {
     const [loading, setLoading] = useState(true);
     const [question, setQuestion] = useState<string>("");
     const [username, setUserName] = useState<string>("");
-    const [selectedTools, setSelectedTools] = useState<string[]>([]);
+    const [selectedTools, setSelectedTools] = useState<string[]>(() => {
+        try {
+            const stored = localStorage.getItem(STORAGE_KEYS.SELECTED_TOOLS);
+            return stored ? parseStoredStringArray(JSON.parse(stored)) : [];
+        } catch {
+            return [];
+        }
+    });
     const [mode, setMode] = useState<HomeMode>("recommended");
     const [dataReady, setDataReady] = useState(false);
     const [loadError, setLoadError] = useState(false);
@@ -79,6 +94,21 @@ const Home = () => {
         }
         setQuestion(query || "");
     }, [location.search]);
+
+    useEffect(() => {
+        try {
+            localStorage.setItem(STORAGE_KEYS.SELECTED_TOOLS, JSON.stringify(selectedTools));
+        } catch {
+            // ignore storage errors
+        }
+    }, [selectedTools]);
+
+    useEffect(() => {
+        if (!tools?.tools) return;
+
+        const availableToolIds = new Set(tools.tools.map(tool => tool.id));
+        setSelectedTools(prev => prev.filter(toolId => availableToolIds.has(toolId)));
+    }, [tools]);
 
     useEffect(() => {
         let mounted = true;

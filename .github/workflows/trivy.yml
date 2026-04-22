@@ -3,6 +3,7 @@ on:
   pull_request:
 permissions:
   contents: read
+  security-events: write
 jobs:
   build:
     name: Security Check

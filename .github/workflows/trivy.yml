@@ -1,0 +1,12 @@
+name: build
+on:
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  build:
+    name: Security Check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Run Trivy Security check on Repository
+        uses: it-at-m/lhm_actions/action-templates/actions/action-trivy

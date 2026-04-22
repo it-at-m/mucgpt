@@ -1,6 +1,6 @@
 import styles from "./Home.module.css";
 
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Button, Tab, TabList } from "@fluentui/react-components";
 import type { SelectTabData, SelectTabEvent } from "@fluentui/react-components";
@@ -41,6 +41,7 @@ const formatDate = (date: Date) => {
 
 const Home = () => {
     const { t } = useTranslation();
+    const location = useLocation();
     const navigate = useNavigate();
     const [recentAssistants, setRecentAssistants] = useState<HomeAssistant[]>([]);
     const [recommendedAssistants, setRecommendedAssistants] = useState<HomeAssistant[]>([]);
@@ -50,6 +51,7 @@ const Home = () => {
     const [selectedTools, setSelectedTools] = useState<string[]>([]);
     const [mode, setMode] = useState<HomeMode>("recommended");
     const [dataReady, setDataReady] = useState(false);
+    const [loadError, setLoadError] = useState(false);
     const { tools } = useToolsContext();
 
     const { setHeader } = useContext(HeaderContext);
@@ -63,26 +65,23 @@ const Home = () => {
     useEffect(() => {
         if (user) {
             setUserName(user.givenname || user.displayName || user.username || "User");
+        } else {
+            setUserName("");
         }
     }, [user]);
 
     useEffect(() => {
         let query = null;
-        const hashPart = window.location.hash;
-        if (hashPart && hashPart.includes("?")) {
-            const queryString = hashPart.split("?")[1];
-            if (queryString) {
-                const params = new URLSearchParams(queryString);
-                query = params.get("q");
-            }
-        } else {
-            const params = new URLSearchParams(window.location.search);
+        const search = location.search || window.location.search;
+        if (search) {
+            const params = new URLSearchParams(search);
             query = params.get("q");
         }
-        if (query) {
-            setQuestion(query);
-        }
+        setQuestion(query || "");
+    }, [location.search]);
 
+    useEffect(() => {
+        let mounted = true;
         (async () => {
             try {
                 const assistantStorageService = new AssistantStorageService(ASSISTANT_STORE);
@@ -158,6 +157,9 @@ const Home = () => {
                 }
 
                 recent.sort((a, b) => b.lastUsed - a.lastUsed);
+                if (!mounted) {
+                    return;
+                }
                 setRecentAssistants(recent.slice(0, MAX_CARDS));
 
                 // Build recommended: top 5 visible community assistants by subscription count
@@ -172,7 +174,11 @@ const Home = () => {
                         lastUsed: 0,
                         linkTo: `/communityassistant/${a.id}`
                     }));
+                if (!mounted) {
+                    return;
+                }
                 setRecommendedAssistants(recommended);
+                setLoadError(false);
 
                 // Determine initial mode
                 const persisted = localStorage.getItem(STORAGE_KEYS.HOME_ASSISTANT_MODE);
@@ -187,11 +193,20 @@ const Home = () => {
                 }
             } catch (error) {
                 console.error("Failed to load home page data", error);
+                if (mounted) {
+                    setLoadError(true);
+                }
             } finally {
-                setDataReady(true);
-                setLoading(false);
+                if (mounted) {
+                    setDataReady(true);
+                    setLoading(false);
+                }
             }
         })();
+
+        return () => {
+            mounted = false;
+        };
     }, []);
 
     const handleModeChange = (newMode: HomeMode) => {
@@ -312,7 +327,17 @@ const Home = () => {
                     </>
                 )}
 
-                {!loading && dataReady && !hasAnyContent && (
+                {!loading && dataReady && loadError && (
+                    <div className={styles.fallbackContainer}>
+                        <div className={styles.fallbackText}>
+                            {t("home.load_error", {
+                                defaultValue: "Die Startseite konnte nicht geladen werden. Bitte versuchen Sie es erneut."
+                            })}
+                        </div>
+                    </div>
+                )}
+
+                {!loading && dataReady && !loadError && !hasAnyContent && (
                     <div className={styles.fallbackContainer}>
                         <div className={styles.fallbackText}>{t("home.no_assistants_available")}</div>
                         <Button

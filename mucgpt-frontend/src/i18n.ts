@@ -35,7 +35,8 @@ i18n
                         discover_all_description: "Entdecke und verwalte alle verfügbaren Assistenten.",
                         discover_assistants: "Assistenten entdecken",
                         no_assistants_yet: "Du hast noch keine Assistenten verwendet. Entdecke jetzt verfügbare Assistenten!",
-                        no_assistants_available: "Keine Assistenten verfügbar."
+                        no_assistants_available: "Keine Assistenten verfügbar.",
+                        load_error: "Die Startseite konnte nicht geladen werden. Bitte versuchen Sie es erneut."
                     },
                     chat: {
                         header: "Stelle eine Frage oder probiere ein Beispiel",
@@ -686,7 +687,8 @@ i18n
                         discover_all_description: "Discover and manage all available assistants.",
                         discover_assistants: "Discover Assistants",
                         no_assistants_yet: "You haven't used any assistants yet. Discover available assistants now!",
-                        no_assistants_available: "No assistants available."
+                        no_assistants_available: "No assistants available.",
+                        load_error: "The home page could not be loaded. Please try again."
                     },
                     chat: {
                         header: "Ask a question or try an example",
@@ -1330,7 +1332,8 @@ i18n
                         discover_all_description: "Entdeck und verwalt olle verf??gbaren Assistentn.",
                         discover_assistants: "Assistentn entdecka",
                         no_assistants_yet: "Du host no koane Assistentn verwendet. Entdeck jetzt verf??gbare Assistentn!",
-                        no_assistants_available: "Koane Assistentn verf??gbar."
+                        no_assistants_available: "Koane Assistentn verf??gbar.",
+                        load_error: "De Startseit hod ned glodn wern kenna. Bitte probier's no amoi."
                     },
                     chat: {
                         header: "Stelle a Froog oda probier a Beispui",
@@ -1968,7 +1971,8 @@ i18n
                         discover_all_description: "D?couvrez et g?rez tous les assistants disponibles.",
                         discover_assistants: "D?couvrir les assistants",
                         no_assistants_yet: "Vous n'avez encore utilis? aucun assistant. D?couvrez maintenant les assistants disponibles !",
-                        no_assistants_available: "Aucun assistant disponible."
+                        no_assistants_available: "Aucun assistant disponible.",
+                        load_error: "La page d’accueil n’a pas pu être chargée. Veuillez réessayer."
                     },
                     chat: {
                         header: "Posez une question ou essayez un exemple",
@@ -2607,7 +2611,8 @@ i18n
                         discover_all_description: "Переглядайте та керуйте всіма доступними асистентами.",
                         discover_assistants: "Відкрити асистентів",
                         no_assistants_yet: "Ви ще не використовували жодного асистента. Перегляньте доступних асистентів зараз!",
-                        no_assistants_available: "Асистенти недоступні."
+                        no_assistants_available: "Асистенти недоступні.",
+                        load_error: "Не вдалося завантажити головну сторінку. Будь ласка, спробуйте ще раз."
                     },
                     chat: {
                         header: "Задайте питання або спробуйте приклад",

@@ -1,0 +1,5 @@
+# Trivy ignore file
+# Add CVE IDs or file paths to ignore during security scans
+# Example:
+# CVE-2021-12345
+# CVE-2022-67890

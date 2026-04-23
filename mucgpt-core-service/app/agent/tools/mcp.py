@@ -49,9 +49,7 @@ class McpLoader:
 
         try:
             async with lock:
-                McpLoader._logger.info(
-                    f"Acquired MCP tools lock '{lock_name}' for user {uid}"
-                )
+                McpLoader._logger.info("Acquired MCP tools lock")
 
                 tools_dump = await RedisCache.get_object(cache_key)
                 if tools_dump is not None:
@@ -113,7 +111,7 @@ class McpLoader:
 
                     mcp_connections[source_id] = con
 
-                McpLoader._logger.info(f"Loading MCP tools for user {uid}")
+                McpLoader._logger.info("Loading MCP tools")
                 mcp_client = MultiServerMCPClient(connections=mcp_connections)
 
                 tools: list[BaseTool] = []
@@ -190,7 +188,7 @@ class McpLoader:
 
         except LockError:
             McpLoader._logger.warning(
-                f"Could not acquire MCP lock '{lock_name}' for user {uid}; retrying cache read"
+                "Could not acquire MCP tools lock; retrying cache read"
             )
             await asyncio.sleep(0.3)
             tools_dump = await RedisCache.get_object(cache_key)
@@ -199,7 +197,7 @@ class McpLoader:
             return []
         except Exception as e:
             McpLoader._logger.error(
-                f"Failed to acquire/use MCP lock '{lock_name}' for user {uid}",
+                "Failed to acquire/use MCP tools lock",
                 exc_info=e,
             )
             raise
@@ -252,7 +250,7 @@ class McpBearerAuthProvider(Auth):
         normalized = token.strip()
         if token != normalized:
             McpLoader._logger.warning(
-                f"Given authentication token was not normalized for user '{self._uid}'."
+                "Given authentication token was not normalized."
             )
         scheme, sep, _ = normalized.partition(" ")
         if sep and scheme.lower() in {"bearer", "basic"}:

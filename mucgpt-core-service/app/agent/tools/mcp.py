@@ -207,12 +207,13 @@ class McpLoader:
         tool_name: str, source_config: MCPSourceConfig
     ) -> str | None:
         """Resolve the group for a tool: check tool_groups prefixes first, fall back to group."""
-        if source_config.tool_groups:
+        tool_groups = getattr(source_config, "tool_groups", None)
+        if tool_groups:
             lowered = tool_name.lower()
-            for prefix, group in source_config.tool_groups.items():
+            for prefix, group in tool_groups.items():
                 if lowered.startswith(prefix.lower()):
                     return group
-        return source_config.group
+        return getattr(source_config, "group", None)
 
 
 class McpBearerAuthProvider(Auth):

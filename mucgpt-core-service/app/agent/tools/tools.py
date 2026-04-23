@@ -206,7 +206,9 @@ class ToolCollection:
                 tool_name=tool_name,
                 mcp_sources=mcp_source_keys,
             )
-            mcp_scope = ToolCollection._infer_mcp_scope(tool_name=tool_name)
+            mcp_scope = tool_runtime_metadata.get(
+                "mcp_group"
+                ) or ToolCollection._infer_mcp_scope(tool_name=tool_name)
             if meta:
                 tools_info.append(
                     ToolInfo(

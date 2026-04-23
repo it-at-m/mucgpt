@@ -71,7 +71,7 @@ This directory contains the Docker Compose configuration for running the complet
 │                    │         │        │   │ ┌────────┐ │         │
 │                    │  ┌──────▼─────┐  │   │ │pgAdmin │ │         │
 │                    │  │ kreuzberg- │  │   │ │:5050   │ │         │
-│                    │  │ full :8086 │  │   │ └────────┘ │         │
+│                    │  │ full :8000 │  │   │ └────────┘ │         │
 │                    │  └────────────┘  │   │            │         │
 │                    │                  │   │ ┌────────┐ │         │
 │                    │  ┌────────────┐  │   │ │Valkey  │ │         │

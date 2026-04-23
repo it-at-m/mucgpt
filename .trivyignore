@@ -3,4 +3,4 @@
 # Example:
 # CVE-2021-12345
 # CVE-2022-67890
-GHSA-w5hq-g745-h8pq
+GHSA-w5hq-g745-h8pq # the project inherits a uuid version (11.1.0) from the mermaid package with a medium security vulnerability

@@ -1,9 +1,8 @@
 import asyncio
 import json
 import os
-import typing
 
-from httpx import Auth, Request, Response
+from httpx import Auth, Request
 from langchain_core.tools import BaseTool
 from langchain_mcp_adapters.client import MultiServerMCPClient
 from langchain_mcp_adapters.sessions import SSEConnection, StreamableHttpConnection
@@ -50,9 +49,7 @@ class McpLoader:
 
         try:
             async with lock:
-                McpLoader._logger.info(
-                    f"Acquired MCP tools lock '{lock_name}' for user {uid}"
-                )
+                McpLoader._logger.info("Acquired MCP tools lock")
 
                 tools_dump = await RedisCache.get_object(cache_key)
                 if tools_dump is not None:
@@ -114,7 +111,7 @@ class McpLoader:
 
                     mcp_connections[source_id] = con
 
-                McpLoader._logger.info(f"Loading MCP tools for user {uid}")
+                McpLoader._logger.info("Loading MCP tools")
                 mcp_client = MultiServerMCPClient(connections=mcp_connections)
 
                 tools: list[BaseTool] = []
@@ -191,7 +188,7 @@ class McpLoader:
 
         except LockError:
             McpLoader._logger.warning(
-                f"Could not acquire MCP lock '{lock_name}' for user {uid}; retrying cache read"
+                "Could not acquire MCP tools lock; retrying cache read"
             )
             await asyncio.sleep(0.3)
             tools_dump = await RedisCache.get_object(cache_key)
@@ -200,7 +197,7 @@ class McpLoader:
             return []
         except Exception as e:
             McpLoader._logger.error(
-                f"Failed to acquire/use MCP lock '{lock_name}' for user {uid}",
+                "Failed to acquire/use MCP tools lock",
                 exc_info=e,
             )
             raise
@@ -210,12 +207,13 @@ class McpLoader:
         tool_name: str, source_config: MCPSourceConfig
     ) -> str | None:
         """Resolve the group for a tool: check tool_groups prefixes first, fall back to group."""
-        if source_config.tool_groups:
+        tool_groups = getattr(source_config, "tool_groups", None)
+        if tool_groups:
             lowered = tool_name.lower()
-            for prefix, group in source_config.tool_groups.items():
+            for prefix, group in tool_groups.items():
                 if lowered.startswith(prefix.lower()):
                     return group
-        return source_config.group
+        return getattr(source_config, "group", None)
 
 
 class McpBearerAuthProvider(Auth):
@@ -240,7 +238,7 @@ class McpBearerAuthProvider(Auth):
     def set_token(uid: str, token: str) -> None:
         McpBearerAuthProvider._tokens[uid] = token
 
-    def auth_flow(self, request: Request) -> typing.Generator[Request, Response]:
+    def auth_flow(self, request: Request):
         if self._auth_override:
             request.headers["Authorization"] = self._auth_override
             yield request
@@ -250,9 +248,15 @@ class McpBearerAuthProvider(Auth):
         if token is None:
             raise ValueError("Token is None but needed")
 
-        if token.startswith("Bearer ") or token.startswith("Basic "):
-            request.headers["Authorization"] = token
+        normalized = token.strip()
+        if token != normalized:
+            McpLoader._logger.warning(
+                "Given authentication token was not normalized."
+            )
+        scheme, sep, _ = normalized.partition(" ")
+        if sep and scheme.lower() in {"bearer", "basic"}:
+            request.headers["Authorization"] = normalized
         else:
-            request.headers["Authorization"] = f"Bearer {token}"
+            request.headers["Authorization"] = f"Bearer {normalized}"
 
         yield request

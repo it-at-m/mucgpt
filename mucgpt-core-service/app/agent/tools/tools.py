@@ -197,14 +197,16 @@ class ToolCollection:
             tool_name = tool.name
             meta = tool_metadata.get(lang_key, {}).get(tool_name)
             tool_runtime_metadata = getattr(tool, "metadata", None) or {}
+            mcp_group = tool_runtime_metadata.get("mcp_group")
             mcp_source = tool_runtime_metadata.get(
                 "mcp_source"
             ) or ToolCollection._infer_mcp_source(
                 tool_name=tool_name,
                 mcp_sources=mcp_source_keys,
             )
-            mcp_scope = ToolCollection._infer_mcp_scope(tool_name=tool_name)
-            mcp_group = tool_runtime_metadata.get("mcp_group")
+            mcp_scope = tool_runtime_metadata.get(
+                "mcp_group"
+                ) or ToolCollection._infer_mcp_scope(tool_name=tool_name)
             if meta:
                 tools_info.append(
                     ToolInfo(

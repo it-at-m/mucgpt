@@ -302,6 +302,8 @@ class MCPSourceConfig(BaseModel):
     forward_token: bool = False
     forward_auth_override: SecretStr | None = None
     headers: dict[str, SecretStr] | None = None
+    group: str | None = None
+    tool_groups: dict[str, str] | None = None
 
     @field_validator("forward_auth_override", mode="before")
     @staticmethod

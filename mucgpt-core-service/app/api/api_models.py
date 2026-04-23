@@ -280,6 +280,10 @@ class ToolInfo(BaseModel):
         default=None,
         description="Optional MCP scope/group (e.g. jira, confluence).",
     )
+    mcp_group: str | None = Field(
+        default=None,
+        description="Optional group for grouping tools from this MCP source in the frontend (e.g. jira, confluence).",
+    )
     # Optionally, add more fields like parameters if needed
     model_config = ConfigDict(
         json_schema_extra={
@@ -289,6 +293,7 @@ class ToolInfo(BaseModel):
                 "description": "Search the municipal website for information.",
                 "mcp_source": None,
                 "mcp_scope": None,
+                "mcp_group": None,
             }
         }
     )
@@ -308,6 +313,7 @@ class ToolListResponse(BaseModel):
                         "id": "WEB_SEARCH",
                         "name": "Web Search",
                         "description": "Search the municipal website for information.",
+                        "mcp_group": None,
                     }
                 ]
             }

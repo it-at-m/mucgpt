@@ -84,6 +84,14 @@ function useStorageService(activeChatId: string | undefined) {
     return useMemo(() => new StorageService<ChatResponse, ChatOptions>(CHAT_STORE), [activeChatId]);
 }
 
+function parseStoredStringArray(value: unknown): string[] {
+    if (!Array.isArray(value)) {
+        return [];
+    }
+
+    return value.filter((item): item is string => typeof item === "string");
+}
+
 const Chat = () => {
     const chatReducer = getChatReducer<ChatOptions>();
     // Contexts
@@ -107,7 +115,14 @@ const Chat = () => {
         setShowSidebar(value);
         localStorage.setItem(STORAGE_KEYS.SHOW_SIDEBAR, value.toString());
     };
-    const [selectedTools, setSelectedTools] = useState<string[]>([]);
+    const [selectedTools, setSelectedTools] = useState<string[]>(() => {
+        try {
+            const stored = localStorage.getItem(STORAGE_KEYS.SELECTED_TOOLS);
+            return stored ? parseStoredStringArray(JSON.parse(stored)) : [];
+        } catch {
+            return [];
+        }
+    });
     const [toolStatuses, setToolStatuses] = useState<ToolStatus[]>([]);
     const [isSettingsOpen, setIsSettingsOpen] = useState<boolean>(false);
     const [uploadedData, setUploadedData] = useState<UploadedData[]>([]);
@@ -401,6 +416,21 @@ const Chat = () => {
         hasRestoredLLMRef.current = true;
     }, [availableLLMs, setLLM, LLM.llm_name]);
 
+    useEffect(() => {
+        try {
+            localStorage.setItem(STORAGE_KEYS.SELECTED_TOOLS, JSON.stringify(selectedTools));
+        } catch {
+            // ignore storage errors
+        }
+    }, [selectedTools]);
+
+    useEffect(() => {
+        if (!tools?.tools) return;
+
+        const availableToolIds = new Set(tools.tools.map(tool => tool.id));
+        setSelectedTools(prev => prev.filter(toolId => availableToolIds.has(toolId)));
+    }, [tools]);
+
     // Initialisierung beim ersten Laden
     useEffect(() => {
         if (!isFirstRender.current) return;
@@ -432,7 +462,16 @@ const Chat = () => {
         // Parse tools from URL if present
         if (toolsFromUrl) {
             const toolsArray = toolsFromUrl.split(",").filter(tool => tool.trim() !== "");
-            setSelectedTools(toolsArray);
+            setSelectedTools(parseStoredStringArray(toolsArray));
+        } else {
+            try {
+                const storedTools = localStorage.getItem(STORAGE_KEYS.SELECTED_TOOLS);
+                if (storedTools) {
+                    setSelectedTools(parseStoredStringArray(JSON.parse(storedTools)));
+                }
+            } catch {
+                // ignore storage errors
+            }
         }
 
         // Parse data (file IDs) from URL if present

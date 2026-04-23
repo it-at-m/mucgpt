@@ -225,6 +225,7 @@ export interface ToolInfo {
     description: string;
     mcp_source?: string | null;
     mcp_scope?: string | null;
+    mcp_group?: string | null;
 }
 
 export interface ToolListResponse {

@@ -414,93 +414,308 @@ export const handlers = [
         const lang = url.searchParams.get("lang") || "deutsch";
         const toolsByLanguage: Record<string, any[]> = {
             deutsch: [
+                // ── Gruppe: Jira ──────────────────────────────────────────────
+                {
+                    id: "jira_search_issues",
+                    name: "Ticket suchen",
+                    long_description: "Durchsucht den konfigurierten Jira-Server und gibt passende Tickets mit Status, Priorität und Zuweisung zurück.",
+                    lang: "deutsch",
+                    config: { enabled: true },
+                    mcp_group: "Jira"
+                },
+                {
+                    id: "jira_create_issue",
+                    name: "Ticket erstellen",
+                    long_description: "Legt ein neues Issue im angegebenen Projekt an und gibt die Ticket-ID zurück.",
+                    lang: "deutsch",
+                    config: { enabled: true },
+                    mcp_group: "Jira"
+                },
+                // ── Gruppe: Confluence ────────────────────────────────────────
+                {
+                    id: "confluence_search",
+                    name: "Doku durchsuchen",
+                    long_description: "Volltext-Suche über alle zugänglichen Confluence-Bereiche mit Ranking nach Relevanz.",
+                    lang: "deutsch",
+                    config: { enabled: true },
+                    mcp_group: "Confluence"
+                },
+                {
+                    id: "confluence_create_page",
+                    name: "Seite erstellen",
+                    long_description: "Erstellt eine formatierte Wiki-Seite und gibt die URL der neuen Seite zurück.",
+                    lang: "deutsch",
+                    config: { enabled: true },
+                    mcp_group: "Confluence"
+                },
+                // ── Allgemeine Tools (ohne Gruppe) ────────────────────────────
                 {
                     id: "Brainstorming",
                     name: "Brainstorming",
-                    description: "Erstellt eine detaillierte Mindmap zu einem Thema im Markdown-Format.",
                     long_description: "Generiert schrittweise eine strukturierte Mindmap mit Hierarchieebenen (Markdown).",
                     lang: "deutsch",
-                    config: { enabled: true }
+                    config: { enabled: true },
+                    mcp_group: null
                 },
                 {
                     id: "Vereinfachen",
                     name: "Vereinfachen",
-                    description: "Vereinfacht komplexe deutsche Texte auf A2-Niveau nach Prinzipien der Leichten Sprache.",
                     long_description: "Analysiert juristische / komplexe Texte und überführt sie in eine leicht verständliche Version.",
                     lang: "deutsch",
-                    config: { enabled: true }
+                    config: { enabled: true },
+                    mcp_group: null
+                },
+                {
+                    id: "WebSuche",
+                    name: "Web Suche",
+                    long_description: "Führt eine Websuche durch und fasst die wichtigsten Ergebnisse übersichtlich zusammen.",
+                    lang: "deutsch",
+                    config: { enabled: true },
+                    mcp_group: null
                 }
             ],
             english: [
+                // ── Group: Jira ───────────────────────────────────────────────
+                {
+                    id: "jira_search_issues",
+                    name: "Search Issues",
+                    long_description: "Queries the configured Jira server and returns matching issues with status, priority, and assignee.",
+                    lang: "english",
+                    config: { enabled: true },
+                    mcp_group: "Jira"
+                },
+                {
+                    id: "jira_create_issue",
+                    name: "Create Issue",
+                    long_description: "Opens a new issue in the specified project and returns the created ticket ID.",
+                    lang: "english",
+                    config: { enabled: true },
+                    mcp_group: "Jira"
+                },
+                // ── Group: Confluence ─────────────────────────────────────────
+                {
+                    id: "confluence_search",
+                    name: "Search Docs",
+                    long_description: "Full-text search across all accessible Confluence spaces, ranked by relevance.",
+                    lang: "english",
+                    config: { enabled: true },
+                    mcp_group: "Confluence"
+                },
+                {
+                    id: "confluence_create_page",
+                    name: "Create Page",
+                    long_description: "Creates a formatted wiki page and returns the URL of the newly created page.",
+                    lang: "english",
+                    config: { enabled: true },
+                    mcp_group: "Confluence"
+                },
+                // ── General tools (ungrouped) ─────────────────────────────────
                 {
                     id: "Brainstorming",
                     name: "Brainstorming",
-                    description: "Generates a detailed mind map for a given topic in markdown format.",
                     long_description: "Creates a hierarchical mind map representation with sections and subtopics.",
                     lang: "english",
-                    config: { enabled: true }
+                    config: { enabled: true },
+                    mcp_group: null
                 },
                 {
                     id: "Vereinfachen",
                     name: "Simplify",
-                    description: "Simplifies complex German text to A2 level using Easy Language principles.",
                     long_description: "Transforms dense German text into accessible language for wider audiences.",
                     lang: "english",
-                    config: { enabled: true }
+                    config: { enabled: true },
+                    mcp_group: null
+                },
+                {
+                    id: "WebSuche",
+                    name: "Web Search",
+                    long_description: "Performs a live web search and summarises the most relevant results.",
+                    lang: "english",
+                    config: { enabled: true },
+                    mcp_group: null
                 }
             ],
             français: [
+                // ── Groupe : Jira ─────────────────────────────────────────────
+                {
+                    id: "jira_search_issues",
+                    name: "Rechercher un ticket",
+                    long_description: "Interroge le serveur Jira configuré et renvoie les tickets correspondants avec statut, priorité et responsable.",
+                    lang: "français",
+                    config: { enabled: true },
+                    mcp_group: "Jira"
+                },
+                {
+                    id: "jira_create_issue",
+                    name: "Créer un ticket",
+                    long_description: "Ouvre un nouveau ticket dans le projet spécifié et retourne l'identifiant créé.",
+                    lang: "français",
+                    config: { enabled: true },
+                    mcp_group: "Jira"
+                },
+                // ── Groupe : Confluence ───────────────────────────────────────
+                {
+                    id: "confluence_search",
+                    name: "Rechercher la doc",
+                    long_description: "Recherche plein texte dans tous les espaces Confluence accessibles, classée par pertinence.",
+                    lang: "français",
+                    config: { enabled: true },
+                    mcp_group: "Confluence"
+                },
+                {
+                    id: "confluence_create_page",
+                    name: "Créer une page",
+                    long_description: "Génère une page wiki formatée et retourne l'URL de la page créée.",
+                    lang: "français",
+                    config: { enabled: true },
+                    mcp_group: "Confluence"
+                },
+                // ── Outils généraux (sans groupe) ─────────────────────────────
                 {
                     id: "Brainstorming",
                     name: "Remue-méninges",
-                    description: "Génère une carte mentale détaillée pour un sujet donné au format markdown.",
                     long_description: "Construit une carte mentale hiérarchique en plusieurs segments.",
                     lang: "français",
-                    config: { enabled: true }
+                    config: { enabled: true },
+                    mcp_group: null
                 },
                 {
                     id: "Vereinfachen",
                     name: "Simplifier",
-                    description: "Simplifie les textes allemands complexes au niveau A2 selon les principes du langage facile.",
                     long_description: "Réécrit des textes complexes en allemand dans une forme plus accessible.",
                     lang: "français",
-                    config: { enabled: true }
+                    config: { enabled: true },
+                    mcp_group: null
+                },
+                {
+                    id: "WebSuche",
+                    name: "Recherche Web",
+                    long_description: "Lance une recherche en ligne et résume les résultats les plus importants.",
+                    lang: "français",
+                    config: { enabled: true },
+                    mcp_group: null
                 }
             ],
             bairisch: [
+                // ── Grupp: Jira ───────────────────────────────────────────────
+                {
+                    id: "jira_search_issues",
+                    name: "Ticket suachn",
+                    long_description: "Fragt den Jira-Server o und gibt passende Tickets mit Status und Priorität zruck.",
+                    lang: "bairisch",
+                    config: { enabled: true },
+                    mcp_group: "Jira"
+                },
+                {
+                    id: "jira_create_issue",
+                    name: "Ticket anlegn",
+                    long_description: "Macht a neies Issue im Projekt auf und gibt d'Ticket-ID zruck.",
+                    lang: "bairisch",
+                    config: { enabled: true },
+                    mcp_group: "Jira"
+                },
+                // ── Grupp: Confluence ─────────────────────────────────────────
+                {
+                    id: "confluence_search",
+                    name: "Doku durchsuachn",
+                    long_description: "Volltext-Suche über alle Confluence-Bereiche mit Ranking nach Relevanz.",
+                    lang: "bairisch",
+                    config: { enabled: true },
+                    mcp_group: "Confluence"
+                },
+                {
+                    id: "confluence_create_page",
+                    name: "Seitn erstölln",
+                    long_description: "Erstellt a Wiki-Seitn und gibt d'URL zruck.",
+                    lang: "bairisch",
+                    config: { enabled: true },
+                    mcp_group: "Confluence"
+                },
+                // ── Allgmeine Werkzeig (ohne Grupp) ──────────────────────────
                 {
                     id: "Brainstorming",
                     name: "Hirngspinst",
-                    description: "Macht a genaue Mindmap zu am Thema im Markdown-Format.",
                     long_description: "Baut a hierarchische Mindmap Stufe für Stufe auf.",
                     lang: "bairisch",
-                    config: { enabled: true }
+                    config: { enabled: true },
+                    mcp_group: null
                 },
                 {
                     id: "Vereinfachen",
                     name: "Eifacher machen",
-                    description: "Macht schwere deutsche Text eifacher auf A2-Level mit da Leichten Sprach.",
                     long_description: "Wandelt formelle oder schwierige Text grob in eifache Sprache um.",
                     lang: "bairisch",
-                    config: { enabled: true }
+                    config: { enabled: true },
+                    mcp_group: null
+                },
+                {
+                    id: "WebSuche",
+                    name: "Internet-Suach",
+                    long_description: "Macht a Websuche und fasst d'wichtigsten Ergebnisse zamm.",
+                    lang: "bairisch",
+                    config: { enabled: true },
+                    mcp_group: null
                 }
             ],
             українська: [
+                // ── Група: Jira ───────────────────────────────────────────────
+                {
+                    id: "jira_search_issues",
+                    name: "Пошук тікетів",
+                    long_description: "Запитує налаштований Jira-сервер і повертає відповідні тікети зі статусом, пріоритетом та виконавцем.",
+                    lang: "українська",
+                    config: { enabled: true },
+                    mcp_group: "Jira"
+                },
+                {
+                    id: "jira_create_issue",
+                    name: "Створити тікет",
+                    long_description: "Відкриває нове завдання у вказаному проєкті та повертає ID створеного тікета.",
+                    lang: "українська",
+                    config: { enabled: true },
+                    mcp_group: "Jira"
+                },
+                // ── Група: Confluence ─────────────────────────────────────────
+                {
+                    id: "confluence_search",
+                    name: "Пошук документації",
+                    long_description: "Повнотекстовий пошук по всіх доступних просторах Confluence з ранжуванням за релевантністю.",
+                    lang: "українська",
+                    config: { enabled: true },
+                    mcp_group: "Confluence"
+                },
+                {
+                    id: "confluence_create_page",
+                    name: "Створити сторінку",
+                    long_description: "Генерує відформатовану вікі-сторінку та повертає URL новоствореної сторінки.",
+                    lang: "українська",
+                    config: { enabled: true },
+                    mcp_group: "Confluence"
+                },
+                // ── Загальні інструменти (без групи) ─────────────────────────
                 {
                     id: "Brainstorming",
                     name: "Мозковий штурм",
-                    description: "Створює детальну ментальну карту для заданої теми у форматі markdown.",
                     long_description: "Генерує ієрархічну структуру теми по частинах.",
                     lang: "українська",
-                    config: { enabled: true }
+                    config: { enabled: true },
+                    mcp_group: null
                 },
                 {
                     id: "Vereinfachen",
                     name: "Спростити",
-                    description: "Спрощує складні німецькі тексти до рівня A2 за принципами простої мови.",
                     long_description: "Перетворює складні фрагменти тексту на зрозуміліші речення.",
                     lang: "українська",
-                    config: { enabled: true }
+                    config: { enabled: true },
+                    mcp_group: null
+                },
+                {
+                    id: "WebSuche",
+                    name: "Веб-пошук",
+                    long_description: "Виконує пошук в мережі та стисло підсумовує найважливіші результати.",
+                    lang: "українська",
+                    config: { enabled: true },
+                    mcp_group: null
                 }
             ]
         };

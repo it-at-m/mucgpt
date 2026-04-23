@@ -14,7 +14,13 @@ import { TutorialSection } from "./TutorialTypes";
 import { UploadedData } from "../../../components/ContextManagerDialog/ContextManagerDialog";
 
 // Create a tutorial-specific implementation using the real QuestionInput
-const TutorialQuestionInput = ({ selectedTools, setSelectedTools }: { selectedTools: string[]; setSelectedTools: (tools: string[]) => void }) => {
+const TutorialQuestionInput = ({
+    selectedTools,
+    setSelectedTools
+}: {
+    selectedTools: string[];
+    setSelectedTools: React.Dispatch<React.SetStateAction<string[]>>;
+}) => {
     const [question, setQuestion] = useState("Welche Ideen gibt es für nachhaltige Mobilität?");
     const [toolStatuses, setToolStatuses] = useState<ToolStatus[]>([]);
     const { tools } = useToolsContext();

@@ -6,10 +6,10 @@ import { useTranslation } from "react-i18next";
 import { useCallback, useEffect, useRef, useState, Dispatch, SetStateAction } from "react";
 import { ToolListResponse } from "../../api/models";
 import { ContextManagerDialog, UploadedData, createUploadedData, getDataSignature, getFileSignature } from "../ContextManagerDialog/ContextManagerDialog";
-import { ToolBadges } from "./ToolBadges";
 import { uploadFileApi } from "../../api/core-client";
 import { upsertParsedDocumentFromUpload } from "../../service/parsedDocumentStorage";
 import { useConfigContext } from "../../context/ConfigContext";
+import { ChatToolSelector } from "../ChatToolSelector/ChatToolSelector";
 
 interface Props {
     onSend: (question: string, data: UploadedData[]) => void;
@@ -19,9 +19,10 @@ interface Props {
     question: string;
     setQuestion: (question: string) => void;
     selectedTools: string[];
-    setSelectedTools?: (tools: string[]) => void;
+    setSelectedTools?: React.Dispatch<React.SetStateAction<string[]>>;
     tools?: ToolListResponse;
     allowToolSelection?: boolean;
+    lockedToolIds?: string[];
     /** Override whether the file upload / context manager is available. Defaults to the `document_processing_enabled` flag from the application config. */
     allowFileUpload?: boolean;
     onDataChange?: (data: UploadedData[]) => void;
@@ -40,6 +41,7 @@ export const QuestionInput = ({
     setSelectedTools,
     tools,
     allowToolSelection = true,
+    lockedToolIds = [],
     allowFileUpload: allowFileUploadProp,
     onDataChange,
     uploadedData: externalUploadedData,
@@ -318,13 +320,21 @@ export const QuestionInput = ({
     return (
         <>
             <div className={styles.questionInputWrapper}>
-                {/* Tool badges at the top - show all tools */}
-                <ToolBadges tools={tools} selectedTools={selectedTools} allowToolSelection={allowToolSelection} setSelectedTools={setSelectedTools} />
+                {/* Chat tool selector - always shown when tools are available */}
+                {tools && tools.tools && tools.tools.length > 0 && setSelectedTools && (
+                    <ChatToolSelector
+                        tools={tools}
+                        selectedTools={selectedTools}
+                        setSelectedTools={setSelectedTools}
+                        allowToolSelection={allowToolSelection}
+                        lockedToolIds={lockedToolIds}
+                    />
+                )}
 
                 {/* Input container with textarea and buttons */}
                 <div
                     className={`${styles.questionInputContainer} ${
-                        !tools || !tools.tools || tools.tools.length === 0 ? styles.noTools : ""
+                        !tools || !tools.tools || tools.tools.length === 0 || !setSelectedTools ? styles.noTools : ""
                     } ${isDragActive ? styles.dragActive : ""}`}
                     onDragEnter={allowFileUpload ? handleDragEnter : undefined}
                     onDragOver={allowFileUpload ? handleDragOver : undefined}

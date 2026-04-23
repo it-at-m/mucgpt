@@ -9,7 +9,7 @@ from langchain_mcp_adapters.sessions import SSEConnection, StreamableHttpConnect
 from redis.asyncio import Redis
 from redis.exceptions import LockError
 
-from config.settings import MCPTransport, get_mcp_settings
+from config.settings import MCPSourceConfig, MCPTransport, get_mcp_settings
 from core.auth_models import AuthenticationResult
 from core.cache import RedisCache
 from core.logtools import getLogger
@@ -155,10 +155,16 @@ class McpLoader:
                             metadata = {
                                 **existing_metadata,
                                 "mcp_source": source_id,
+                                "mcp_group": McpLoader._resolve_group(
+                                tool_name=source_tool.name,
+                                source_config=sources[source_id],
+                                ),
                             }
 
                             if description_entry is not None:
-                                new_description = description_entry.get("description", "")
+                                new_description = description_entry.get(
+                                    "description", ""
+                                )
                                 metadata["description"] = new_description
                                 source_tool.description = new_description
 
@@ -190,14 +196,25 @@ class McpLoader:
             tools_dump = await RedisCache.get_object(cache_key)
             if tools_dump is not None:
                 return tools_dump
-            raise
-
+            return []
         except Exception as e:
             McpLoader._logger.error(
                 f"Failed to acquire/use MCP lock '{lock_name}' for user {uid}",
                 exc_info=e,
             )
             raise
+
+    @staticmethod
+    def _resolve_group(
+        tool_name: str, source_config: MCPSourceConfig
+    ) -> str | None:
+        """Resolve the group for a tool: check tool_groups prefixes first, fall back to group."""
+        if source_config.tool_groups:
+            lowered = tool_name.lower()
+            for prefix, group in source_config.tool_groups.items():
+                if lowered.startswith(prefix.lower()):
+                    return group
+        return source_config.group
 
 
 class McpBearerAuthProvider(Auth):
@@ -231,7 +248,7 @@ class McpBearerAuthProvider(Auth):
         token = McpBearerAuthProvider._tokens.get(self._uid)
         if token is None:
             raise ValueError("Token is None but needed")
-        
+
         normalized = token.strip()
         if token != normalized:
             McpLoader._logger.warning(

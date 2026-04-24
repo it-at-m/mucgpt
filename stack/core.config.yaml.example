@@ -16,7 +16,6 @@ ASSISTANT_VERSION: "0.0.3"
 
 # Backend settings
 UNAUTHORIZED_USER_REDIRECT_URL: "<your-url>"
-MEMORY_SERVICE_URL: "http://memory-service:8000"
 
 # Parsing settings
 PARSER_BACKEND: "kreuzberg"

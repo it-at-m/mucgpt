@@ -204,7 +204,7 @@ class ToolCollection:
             )
             mcp_scope = tool_runtime_metadata.get(
                 "mcp_group"
-                ) or ToolCollection._infer_mcp_scope(tool_name=tool_name)
+                )
             if meta:
                 tools_info.append(
                     ToolInfo(
@@ -244,16 +244,6 @@ class ToolCollection:
         match = re.search(r"(mcp-[a-z0-9][a-z0-9_-]*)", lowered)
         if match:
             return match.group(1)
-        return None
-
-    @staticmethod
-    def _infer_mcp_scope(tool_name: str) -> str | None:
-        lowered = tool_name.lower()
-        if "jira" in lowered:
-            return "jira"
-        if "confluence" in lowered:
-            return "confluence"
-        # Add more heuristics here as needed by other MCP sources
         return None
 
     @staticmethod

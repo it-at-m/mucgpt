@@ -1,10 +1,10 @@
 from __future__ import annotations
+
 import os
 from typing import Any
 
 from langchain.agents.middleware import ModelRequest
 from langchain_openai import ChatOpenAI
-from pydantic import BaseModel, Field
 
 from agent.state_models.atlassian_state import AtlassianAgentState, ScopeDecision
 from core.logtools import getLogger

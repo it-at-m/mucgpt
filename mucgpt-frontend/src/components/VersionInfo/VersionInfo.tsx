@@ -30,11 +30,6 @@ export const VersionInfo = (props: VersionInfoProps) => {
                     {t("components.versioninfo.whats_new", "Was gibt's neues?")}
                 </a>
             )}
-            {versionUrl && (
-                <span className={styles.separator} aria-hidden>
-                    •
-                </span>
-            )}
             <Tooltip
                 content={
                     <div className={styles.tooltipContent}>

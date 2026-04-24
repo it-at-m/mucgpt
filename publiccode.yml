@@ -1,74 +1,32 @@
-# This repository adheres to the publiccode.yml standard by including this
-# metadata file that makes public software easily discoverable.
-# More info at https://github.com/italia/publiccode.yml
-
-publiccodeYmlVersion: "0.2"
+publiccodeYmlVersion: 0.5.0
 name: MUCGPT
-url: "https://gitlab.opencode.de/landeshauptstadt-muenchen/mucgpt"
-landingURL: "https://it-at-m.github.io/mucgpt/"
-logo: assets/mucgpt_title.svg
-roadmap: "https://github.com/it-at-m/mucgpt?tab=readme-ov-file#%EF%B8%8F-roadmap"
+url: https://github.com/it-at-m/mucgpt
+landingURL: https://it-at-m.github.io/mucgpt/
+isBasedOn: https://github.com/Azure-Samples/azure-search-openai-demo
 softwareVersion: "1.2"
-softwareType: standalone/web
-releaseDate: "2025-04-24"
-isBasedOn: "https://github.com/Azure-Samples/azure-search-openai-demo"
-developmentStatus: stable
+releaseDate: 2025-04-24
+logo: assets/mucgpt_title.svg
 platforms:
   - web
-usedBy:
-  - 'Landeshauptstadt Stuttgart (BW): Fork unter dem Namen "ChatSTR"'
 categories:
   - office
   - productivity-suite
-dependsOn:
-  open:
-    - name: Keycloak
-      optional: false
-    - name: "Container Runtime, i.e. Docker, Podman"
-      optional: false
-    - name: Kubernetes Runtime
-      optional: true
-maintenance:
-  type: internal
-  contacts:
-    - name: Michael Jaumann
-      email: michael.jaumann@muenchen.de
-      affiliation: Lead Product Engineer
-    - name: Fabian Reinold
-      email: fabian.reinold@muenchen.de
-      affiliation: AI Team Lead
-  contractors:
-    - name: Landeshauptstadt München - IT-Referat
-      website: "https://muenchen.digital/"
-      until: 2027-12-31T00:00:00.000Z
-      email: ki@muenchen.de
-legal:
-  license: MIT
-  mainCopyrightOwner: Landeshauptstadt München
+usedBy:
+  - 'Landeshauptstadt Stuttgart (BW): Fork unter dem Namen "ChatSTR"'
+roadmap: https://github.com/it-at-m/mucgpt?tab=readme-ov-file#%EF%B8%8F-roadmap
+developmentStatus: stable
+softwareType: standalone/web
 intendedAudience:
   countries:
     - DE
   scope:
     - local-authorities
     - government
-localisation:
-  localisationReady: true
-  availableLanguages:
-    - de
-    - fr
-    - en
-    - uk
-    - bar
 description:
   de:
-    genericName: KI-Werkzeug
-    awards:
-      - >-
-        eGovernment-Wettbewerb 2024: 3. Platz in der Kategorie
-        "Digitalisierungsschub durch KI und moderne Infrastruktur "
-    shortDescription: >-
-      MUCGPT ist ein KI-Werkzeug zur Arbeit mit generativen Sprachmodellen und
-      bietet u.a. personalisierbare Assistenten und Tools an.
+    localisedName: KI-Werkzeug
+    shortDescription: MUCGPT ist ein KI-Werkzeug zur Arbeit mit generativen
+      Sprachmodellen und bietet u.a. personalisierbare Assistenten und Tools an.
     longDescription: >
       # MUCGPT - Ein vielseitiges KI-Werkzeug für die öffentliche Verwaltung
 
@@ -175,15 +133,13 @@ description:
       - docs/mindmap.png
       - docs/simply.png
       - docs/sum.png
-  en:
-    genericName: AI tool
     awards:
-      - >-
-        eGovernment competition 2024: 3rd place in the category "Digitalization
-        boost through AI and modern infrastructure"
-    shortDescription: >-
-      MUCGPT is an AI tool for working with generative language models and
-      offers customizable assistants and tools.
+      - 'eGovernment-Wettbewerb 2024: 3. Platz in der Kategorie
+        "Digitalisierungsschub durch KI und moderne Infrastruktur "'
+  en:
+    localisedName: AI toolkit
+    shortDescription: MUCGPT is an AI toolkit for working with generative language
+      models and offers customizable assistants and tools.
     longDescription: >-
       # MUCGPT - A versatile AI tool for public administration
 
@@ -286,3 +242,29 @@ description:
       - docs/mindmap.png
       - docs/simply.png
       - docs/sum.png
+    awards:
+      - 'eGovernment competition 2024: 3rd place in the category "Digitalization
+        boost through AI and modern infrastructure"'
+legal:
+  license: MIT
+  mainCopyrightOwner: Landeshauptstadt München
+maintenance:
+  type: internal
+  contacts:
+    - name: Landeshauptstadt München - Data & AI Center of Excellence
+      email: ki@muenchen.de
+localisation:
+  localisationReady: true
+  availableLanguages:
+    - de
+    - fr
+    - en
+    - uk
+dependsOn:
+  open:
+    - name: Keycloak
+      optional: false
+    - name: Container Runtime, i.e. Docker, Podman
+      optional: false
+    - name: Kubernetes Runtime
+      optional: true

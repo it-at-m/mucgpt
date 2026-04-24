@@ -15,8 +15,7 @@ FRONTEND_VERSION: "0.0.2"
 ASSISTANT_VERSION: "0.0.3"
 
 # Backend settings
-UNAUTHORIZED_USER_REDIRECT_URL: "https://it-services.muenchen.de/sp?id=sc_cat_item&sys_id=ee55a6911b40ce90757797539b4bcb1f&table=sc_cat_item&searchTerm=mucgpt"
-MEMORY_SERVICE_URL: "http://memory-service:8000"
+UNAUTHORIZED_USER_REDIRECT_URL: "<your-url>"
 
 # Parsing settings
 PARSER_BACKEND: "kreuzberg"
@@ -27,7 +26,7 @@ KREUZBERG_TIMEOUT: 120.0
 # Used by core service for tracing and monitoring
 # SECRET_KEY: "<your-secret-key>"  # Use MUCGPT_CORE_LANGFUSE__SECRET_KEY env var for production
 LANGFUSE:
-  HOST: "https://ki-observability-test.muenchen.de"
+  HOST: "<your-url>"
   SECRET_KEY: "<your-sk>"
   PUBLIC_KEY: "<your-pk>"
 
@@ -39,6 +38,17 @@ MCP:
       url: "http://mcpdoc-server:8088/sse"
       transport: "sse"
       forward_token: false
+
+    # Example for custom headers to authenticate with MCP server via litellm proxy
+    # authentication with litellm via Bearer
+    # authentication with mcp server via basic auth
+    "mcp-atlassian":
+      url: "<your-mcp-url>"
+      transport: "streamable_http"
+      forward_token: true
+      forward_auth_override: "Basic <base64 encoded email:token>"
+      headers:
+        x-litellm-api-key: "<your-api-key>"
   CACHE_TTL: 123
 
 # Models configuration

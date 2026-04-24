@@ -1,0 +1,349 @@
+.root {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    height: 100%;
+    min-height: 100%;
+    width: 100%;
+    max-width: 100%;
+    background-color: var(--colorNeutralBackground2);
+    overflow: hidden;
+}
+
+.body {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    flex: 1;
+    height: 100%;
+    min-height: 0;
+    padding: 12px;
+    width: 100%;
+    box-sizing: border-box;
+}
+ 
+.edgeHandle {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: 12px;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    z-index: 2;
+}
+
+.edgeHandle::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: 2px;
+    opacity: 0;
+    transition: opacity 120ms ease;
+}
+
+.edgeHandle:hover::after,
+.edgeHandle:focus-visible::after {
+    opacity: 0.55;
+}
+
+.resizeCursor {
+    cursor: ew-resize !important;
+}
+
+.content {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    flex: 1;
+    min-height: 0;
+}
+
+.navGroup {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    width: 100%;
+}
+
+.navButton {
+    position: relative;
+    justify-content: flex-start !important;
+    align-items: center;
+    gap: 6px;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-height: 48px;
+    border-radius: 12px !important;
+    font-weight: 500 !important;
+    font-size: 15px !important;
+    color: var(--colorNeutralForeground1);
+    border: 1px solid transparent;
+    white-space: nowrap;
+    overflow: hidden;
+    text-align: left;
+    transition:
+        background-color 120ms ease,
+        color 120ms ease,
+        transform 180ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.navIcon {
+    width: 22px;
+    height: 22px;
+    font-size: 22px;
+    flex-shrink: 0;
+}
+
+.navButton:hover :global(svg) {
+    color: var(--colorBrandBackground) !important;
+}
+
+.navButton:hover {
+    color: var(--colorBrandBackground) !important;
+    background-color: var(--colorNeutralBackground2Hover) !important;
+    transform: translateX(5px);
+}
+
+.navButtonCollapsed {
+    justify-content: center !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+}
+
+.navButtonCollapsed:hover {
+    transform: translateX(2px);
+}
+
+.navButtonCollapsed.navButtonActive::before {
+    width: 3px;
+    top: 10px;
+    bottom: 10px;
+}
+
+.bodyCollapsed {
+    padding-left: 2px;
+    padding-right: 2px;
+}
+
+.navButtonActive {
+    background-color: var(--colorNeutralStroke2) !important;
+    color: var(--colorNeutralForeground1) !important;
+    border-color: transparent;
+    border-radius: 12px !important;
+}
+
+.navButtonActive::before {
+    content: "";
+    position: absolute;
+    top: 7px;
+    bottom: 7px;
+    left: 0;
+    width: 4px;
+    border-radius: 999px;
+    background-color: var(--colorBrandBackground);
+}
+
+.navButtonActive:hover,
+.navButtonActive:active {
+    color: var(--colorBrandBackground) !important;
+}
+
+.secondaryGroup,
+.footerSection {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    width: 100%;
+}
+
+.secondaryGroup {
+    flex: 1;
+    min-height: 0;
+}
+
+.sectionDivider {
+    flex: 0 0 auto;
+    width: 100%;
+    height: 1px;
+    background-color: var(--colorNeutralStroke1);
+}
+
+.secondarySection {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.secondaryAccordion {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
+}
+
+.secondaryAccordion :global(.fui-AccordionItem) {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
+    width: 100%;
+}
+
+.secondaryAccordion :global(.fui-AccordionHeader) {
+    border-radius: 10px;
+    color: var(--colorNeutralForeground1);
+    background-color: var(--colorNeutralBackground2);
+    width: 100%;
+}
+
+.secondaryAccordion :global(.fui-AccordionHeader__button),
+.utilitiesSection :global(.fui-AccordionHeader__button) {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start !important;
+    width: 100%;
+    text-align: left;
+    color: var(--colorNeutralForeground1) !important;
+}
+
+.secondaryAccordion :global(.fui-AccordionHeader__button) :global(svg),
+.utilitiesSection :global(.fui-AccordionHeader__button) :global(svg) {
+    color: var(--colorNeutralForeground1) !important;
+    fill: currentColor;
+}
+
+.secondaryAccordion :global(.fui-AccordionHeader__button:hover),
+.secondaryAccordion :global(.fui-AccordionHeader__button:hover) :global(svg),
+.utilitiesSection :global(.fui-AccordionHeader__button:hover),
+.utilitiesSection :global(.fui-AccordionHeader__button:hover) :global(svg) {
+    color: var(--colorBrandBackground) !important;
+    fill: currentColor;
+}
+
+.secondaryAccordion :global(.fui-AccordionHeader:hover .fui-AccordionHeader__button),
+.secondaryAccordion :global(.fui-AccordionHeader:hover .fui-AccordionHeader__button) :global(svg),
+.utilitiesSection :global(.fui-AccordionHeader:hover .fui-AccordionHeader__button),
+.utilitiesSection :global(.fui-AccordionHeader:hover .fui-AccordionHeader__button) :global(svg) {
+    color: var(--colorBrandBackground) !important;
+    fill: currentColor;
+}
+
+.secondaryAccordion :global(.fui-AccordionHeader:hover) {
+    background-color: var(--colorNeutralBackground2Hover);
+}
+
+.secondaryAccordion :global(.fui-AccordionPanel),
+.utilitiesSection :global(.fui-AccordionPanel) {
+    width: 100%;
+    padding-inline-start: 0;
+}
+
+.secondaryPanel {
+    padding: 8px 0 0;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
+    width: 100%;
+}
+
+.secondaryPanelContent {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    text-align: left;
+    width: 100%;
+}
+
+.secondaryPanelContent > * {
+    width: 100%;
+    max-width: 100%;
+}
+
+.footer {
+    margin-top: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    flex-shrink: 0;
+    width: 100%;
+}
+
+.collapseButton {
+    align-self: stretch;
+    justify-content: center !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-height: 44px;
+    margin-top: 4px;
+    padding: 0 8px !important;
+    border-radius: 12px !important;
+}
+
+.utilitiesSection {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    gap: 8px;
+}
+
+.utilitiesToggle {
+    align-items: center;
+    justify-content: space-between !important;
+    width: 100% !important;
+    min-height: 44px;
+    padding: 0 12px !important;
+    border-radius: 10px !important;
+    color: var(--colorNeutralForeground1) !important;
+    background-color: var(--colorNeutralBackground2) !important;
+    text-align: left;
+}
+
+.utilitiesToggle:hover {
+    color: var(--colorBrandBackground) !important;
+    background-color: var(--colorNeutralBackground2Hover) !important;
+}
+
+.utilitiesToggleIcon {
+    flex-shrink: 0;
+    transition: transform 160ms ease;
+}
+
+.utilitiesToggleIconOpen {
+    transform: rotate(180deg);
+}
+
+.utilitiesContent {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+    text-align: left;
+    width: 100%;
+    padding: 0 0 8px;
+}
+
+.utilitiesContentHidden {
+    display: none;
+}
+
+.utilitiesContent > * {
+    width: 100%;
+    max-width: 100%;
+}
+
+@media (max-width: 768px) {
+    .body {
+        padding-bottom: 20px;
+    }
+}

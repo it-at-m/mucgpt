@@ -7,11 +7,14 @@ import styles from "./ThemeSelector.module.css";
 interface ThemeSelectorProps {
     isLight: boolean;
     onThemeChange: (isLight: boolean) => void;
+    label?: string;
+    layout?: "default" | "row";
 }
 
-export const ThemeSelector = ({ isLight, onThemeChange }: ThemeSelectorProps) => {
+export const ThemeSelector = ({ isLight, onThemeChange, label, layout = "default" }: ThemeSelectorProps) => {
     const [currentIsLight, setCurrentIsLight] = useState(isLight);
     const { t } = useTranslation();
+    const themeIcon = currentIsLight ? <WeatherSunny24Regular className={styles.icon} /> : <WeatherMoon24Regular className={styles.icon} />;
 
     // Handle button click to toggle theme
     const handleButtonClick = useCallback(() => {
@@ -38,6 +41,7 @@ export const ThemeSelector = ({ isLight, onThemeChange }: ThemeSelectorProps) =>
 
     // Get the theme text to display in tooltip
     const themeText = currentIsLight ? t("components.theme_selector.theme_light") : t("components.theme_selector.theme_dark");
+    const themeShortText = currentIsLight ? t("components.theme_selector.light_short") : t("components.theme_selector.dark_short");
 
     const tooltipContent = `${themeText} - ${t("components.theme_selector.change_theme")}`;
 
@@ -48,10 +52,20 @@ export const ThemeSelector = ({ isLight, onThemeChange }: ThemeSelectorProps) =>
                 onClick={handleButtonClick}
                 aria-label={tooltipContent}
                 onKeyDown={handleKeyDown}
-                icon={currentIsLight ? <WeatherSunny24Regular className={styles.icon} /> : <WeatherMoon24Regular className={styles.icon} />}
-                className={styles.themeButton}
+                icon={layout === "row" ? undefined : themeIcon}
+                className={`${styles.themeButton} ${layout === "row" ? styles.themeButtonRow : ""}`}
             >
-                {currentIsLight ? t("components.theme_selector.light_short") : t("components.theme_selector.dark_short")}
+                {layout === "row" ? (
+                    <span className={styles.rowContent}>
+                        <span className={styles.rowLabel}>{label ?? t("common.theme", "Farbschema")}</span>
+                        <span className={styles.rowValueGroup}>
+                            {themeIcon}
+                            <span className={styles.rowValue}>{themeShortText}</span>
+                        </span>
+                    </span>
+                ) : (
+                    themeShortText
+                )}
             </Button>
         </Tooltip>
     );

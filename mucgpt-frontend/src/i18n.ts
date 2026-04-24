@@ -25,6 +25,16 @@ i18n
                         go_to_tutorials_aria: "Zu Tutorials und Anleitungen navigieren",
                         go_to_tutorials: "Tutorials"
                     },
+                    app_sidebar: {
+                        home: "Startseite",
+                        assistants: "Assistenten",
+                        new_chat: "Neuer Chat",
+                        go_home: "Zur Startseite navigieren",
+                        go_assistants: "Zur Assistenten-Übersicht navigieren",
+                        start_new_chat: "Neuen Chat starten",
+                        preferences_and_help: "Einstellungen und Hilfe",
+                        toggle_navigation: "Navigation umschalten"
+                    },
                     home: {
                         assistants: "Assistenten",
                         last_used: "Zuletzt verwendet",
@@ -34,7 +44,6 @@ i18n
                         explore_badge: "Entdecken",
                         discover_all_description: "Entdecke und verwalte alle verfügbaren Assistenten.",
                         discover_assistants: "Assistenten entdecken",
-                        no_assistants_yet: "Du hast noch keine Assistenten verwendet. Entdecke jetzt verfügbare Assistenten!",
                         no_assistants_available: "Keine Assistenten verfügbar.",
                         load_error: "Die Startseite konnte nicht geladen werden. Bitte versuchen Sie es erneut."
                     },
@@ -75,8 +84,6 @@ i18n
                         main_navigation: "Hauptnavigation",
                         home_link: "Zur Startseite",
                         environment_label: "Umgebung: {{env}}",
-                        page_navigation: "Seitennavigation",
-                        organization_name: "Landeshauptstadt München, RIT/it@M KIES",
                         footer_credit: "Made with ❤️ & ☕ by",
                         user_settings: "Benutzereinstellungen",
                         main_content: "Hauptinhalt",
@@ -677,6 +684,16 @@ i18n
                         go_to_tutorials_aria: "Go to tutorials and guides",
                         go_to_tutorials: "Tutorials"
                     },
+                    app_sidebar: {
+                        home: "Home",
+                        assistants: "Assistants",
+                        new_chat: "New Chat",
+                        go_home: "Go to homepage",
+                        go_assistants: "Go to assistants overview",
+                        start_new_chat: "Start a new chat",
+                        preferences_and_help: "Settings and help",
+                        toggle_navigation: "Toggle navigation"
+                    },
                     home: {
                         assistants: "Assistants",
                         last_used: "Last used",
@@ -686,7 +703,6 @@ i18n
                         explore_badge: "Discover",
                         discover_all_description: "Discover and manage all available assistants.",
                         discover_assistants: "Discover Assistants",
-                        no_assistants_yet: "You haven't used any assistants yet. Discover available assistants now!",
                         no_assistants_available: "No assistants available.",
                         load_error: "The home page could not be loaded. Please try again."
                     },
@@ -726,8 +742,6 @@ i18n
                         main_navigation: "Main navigation",
                         home_link: "Go to homepage",
                         environment_label: "Environment: {{env}}",
-                        page_navigation: "Page navigation",
-                        organization_name: "City of Munich, RIT/it@M KIES",
                         footer_credit: "Made with ❤️ & ☕ by",
                         user_settings: "User settings",
                         main_content: "Main content",
@@ -1322,6 +1336,16 @@ i18n
                         go_to_tutorials_aria: "Zu de Tutorials und Anleitungen navigiern",
                         go_to_tutorials: "Tutorials"
                     },
+                    app_sidebar: {
+                        home: "Home",
+                        assistants: "Assistentn",
+                        new_chat: "Neia Chat",
+                        go_home: "Zruck auf d’Startseit navigiern",
+                        go_assistants: "Zur Assistentn-Übersicht navigiern",
+                        start_new_chat: "Neian Chat startn",
+                        preferences_and_help: "Einstellungen und Hilfe",
+                        toggle_navigation: "Navigation umschoitn"
+                    },
                     home: {
                         assistants: "Assistentn",
                         last_used: "Zuletzt verwendet",
@@ -1331,7 +1355,6 @@ i18n
                         explore_badge: "Entdecka",
                         discover_all_description: "Entdeck und verwalt olle verfügbaren Assistentn.",
                         discover_assistants: "Assistentn entdecka",
-                        no_assistants_yet: "Du host no koane Assistentn verwendet. Entdeck jetzt verfügbare Assistentn!",
                         no_assistants_available: "Koane Assistentn verfügbar.",
                         load_error: "De Startseit hod ned glodn wern kenna. Bitte probier's no amoi."
                     },
@@ -1366,8 +1389,6 @@ i18n
                         main_navigation: "Haupt-Navigation",
                         home_link: "Zruck auf d’Startseit",
                         environment_label: "Umgebung: {{env}}",
-                        page_navigation: "Seitn-Navigation",
-                        organization_name: "Landeshauptstod Minga, RIT/it@M KIES",
                         footer_credit: "Made with ❤️ & ☕ by",
                         user_settings: "Nutzereinstellungen",
                         main_content: "Hauptinhalt",
@@ -1961,6 +1982,16 @@ i18n
                         go_to_tutorials_aria: "Aller aux tutoriels et guides",
                         go_to_tutorials: "Tutoriels"
                     },
+                    app_sidebar: {
+                        home: "Accueil",
+                        assistants: "Assistants",
+                        new_chat: "Nouveau chat",
+                        go_home: "Aller à la page d’accueil",
+                        go_assistants: "Aller à la vue des assistants",
+                        start_new_chat: "Démarrer un nouveau chat",
+                        preferences_and_help: "Paramètres et aide",
+                        toggle_navigation: "Basculer la navigation"
+                    },
                     home: {
                         assistants: "Assistants",
                         last_used: "Derniers utilisés",
@@ -1970,7 +2001,6 @@ i18n
                         explore_badge: "Découvrir",
                         discover_all_description: "Découvrez et gérez tous les assistants disponibles.",
                         discover_assistants: "Découvrir les assistants",
-                        no_assistants_yet: "Vous n'avez encore utilisé aucun assistant. Découvrez maintenant les assistants disponibles !",
                         no_assistants_available: "Aucun assistant disponible.",
                         load_error: "La page d’accueil n’a pas pu être chargée. Veuillez réessayer."
                     },
@@ -2011,8 +2041,6 @@ i18n
                         main_navigation: "Navigation principale",
                         home_link: "Retour à la page d’accueil",
                         environment_label: "Environnement : {{env}}",
-                        page_navigation: "Navigation de la page",
-                        organization_name: "Ville de Munich, RIT/it@M KIES",
                         footer_credit: "Made with ❤️ & ☕ by",
                         user_settings: "Paramètres utilisateur",
                         main_content: "Contenu principal",
@@ -2601,6 +2629,16 @@ i18n
                         create_assistant: "Створити асистента",
                         nutzungsbedingungen: "Умови використання"
                     },
+                    app_sidebar: {
+                        home: "Головна",
+                        assistants: "Асистенти",
+                        new_chat: "Новий чат",
+                        go_home: "Перейти на головну сторінку",
+                        go_assistants: "Перейти до огляду асистентів",
+                        start_new_chat: "Розпочати новий чат",
+                        preferences_and_help: "Налаштування та допомога",
+                        toggle_navigation: "Перемкнути навігацію"
+                    },
                     home: {
                         assistants: "Асистенти",
                         last_used: "Останні використані",
@@ -2610,7 +2648,6 @@ i18n
                         explore_badge: "Відкрити",
                         discover_all_description: "Переглядайте та керуйте всіма доступними асистентами.",
                         discover_assistants: "Відкрити асистентів",
-                        no_assistants_yet: "Ви ще не використовували жодного асистента. Перегляньте доступних асистентів зараз!",
                         no_assistants_available: "Асистенти недоступні.",
                         load_error: "Не вдалося завантажити головну сторінку. Будь ласка, спробуйте ще раз."
                     },
@@ -2651,8 +2688,6 @@ i18n
                         main_navigation: "Головна навігація",
                         home_link: "Повернутися на головну сторінку",
                         environment_label: "Середовище: {{env}}",
-                        page_navigation: "Навігація сторінки",
-                        organization_name: "Місто Мюнхен, RIT/it@M KIES",
                         footer_credit: "Made with ❤️ & ☕ by",
                         user_settings: "Налаштування користувача",
                         main_content: "Основний контент",

@@ -1,7 +1,10 @@
 .historyContainer {
     display: flex;
     flex-direction: column;
+    flex: 1;
+    min-height: 0;
     padding: 0;
+    width: 100%;
 }
 
 .headerContent {
@@ -28,6 +31,7 @@
     align-items: center;
     gap: 6px;
     cursor: pointer;
+    width: 95%;
 }
 
 .savedChatButton {
@@ -83,15 +87,40 @@
 .categoryContent {
     padding-left: 0;
     list-style: none;
+    width: 100%;
+}
+
+.historyContainerEmbedded {
+    flex: 0 0 auto;
+}
+
+.historyActions {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+    width: 100%;
+    margin-bottom: 8px;
+}
+
+.historyActions > * {
+    width: 100%;
+}
+
+.historyActions :global(.fui-Button) {
+    width: 100%;
+    justify-content: flex-start !important;
+    text-align: left;
 }
 
 .singlechatcontainer {
     display: flex;
     flex-direction: row;
-    align-items: center;
+    align-items: stretch;
     justify-content: space-between;
     padding: 2px 8px;
     margin: 4px 0;
+    gap: 8px;
     border-radius: 6px;
     transition: background-color 0.2s ease;
 }
@@ -171,11 +200,25 @@
     padding-bottom: var(--spacingVerticalL);
     display: flex;
     flex-direction: column;
+    flex: 1;
     gap: 0;
-    max-height: calc(100vh - 200px);
+    min-height: 0;
     overflow-y: auto;
     scroll-behavior: smooth;
     padding-top: 4px;
+}
+
+.historyContentEmbedded {
+    flex: 0 0 auto;
+    overflow-y: visible;
+    margin-left: 0;
+    margin-right: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+}
+
+.historyContent > * {
+    width: 100%;
 }
 
 .historyContent::-webkit-scrollbar {
@@ -197,7 +240,7 @@
 
 .loadMoreContainer {
     display: flex;
-    justify-content: center;
+    justify-content: flex-start;
     padding: 6px 0;
     margin-top: 2px;
 }
@@ -208,9 +251,9 @@
     width: 95%;
     display: flex;
     align-items: center;
-    justify-content: center;
+    justify-content: flex-start;
     gap: 8px;
-    margin: 0 8px;
+    margin: 0;
     padding: 6px 8px;
     border-radius: 4px;
     transition: background-color 0.2s ease;

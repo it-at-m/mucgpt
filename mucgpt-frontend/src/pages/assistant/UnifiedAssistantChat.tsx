@@ -6,7 +6,7 @@ import { useTranslation } from "react-i18next";
 import { History } from "../../components/History/History";
 import { LLMContext } from "../../components/LLMSelector/LLMContextProvider";
 import { useParams, useLocation, useNavigate } from "react-router-dom";
-import { ChatLayout, SidebarSizes } from "../../components/ChatLayout/ChatLayout";
+import { ChatLayout } from "../../components/ChatLayout/ChatLayout";
 import { ASSISTANT_STORE, COMMUNITY_ASSISTANT_STORE, CREATIVITY_LOW } from "../../constants";
 import { AssistantStorageService } from "../../service/assistantstorage";
 import { CommunityAssistantStorageService } from "../../service/communityassistantstorage";
@@ -17,16 +17,13 @@ import { QuickPromptContext } from "../../components/QuickPrompt/QuickPromptProv
 import { getChatReducer, handleRegenerate, handleRollback, makeApiRequest } from "../page_helpers";
 import { ChatOptions } from "../chat/Chat";
 import { STORAGE_KEYS } from "../layout/LayoutHelper";
-import { HeaderContext } from "../layout/HeaderContextProvider";
 import { ToolStatus } from "../../utils/ToolStreamHandler";
 import { AssistantStrategy, CommunityAssistantStrategy, DeletedCommunityAssistantStrategy, LocalAssistantStrategy } from "./AssistantStrategy";
 import { chatApi } from "../../api/core-client";
 import { useGlobalToastContext } from "../../components/GlobalToastHandler/GlobalToastContext";
 import { getOwnedCommunityAssistants, getUserSubscriptionsApi, subscribeToAssistantApi } from "../../api/assistant-client";
 import { NotSubscribedDialog } from "../../components/NotSubscribedDialog";
-import { Sidebar } from "../../components/Sidebar/Sidebar";
 import { ClearChatButton } from "../../components/ClearChatButton";
-import { MinimizeSidebarButton } from "../../components/MinimizeSidebarButton/MinimizeSidebarButton";
 import { useToolsContext } from "../../components/ToolsProvider";
 import { Button, MessageBar, MessageBarBody } from "@fluentui/react-components";
 import { Info24Regular, Settings24Regular } from "@fluentui/react-icons";
@@ -47,6 +44,7 @@ import { CloseConfirmationDialog } from "../../components/AssistantDialogs/share
 import { UploadedData } from "../../components/ContextManagerDialog/ContextManagerDialog";
 import { useToolStatusToasts } from "../../hooks/useToolStatusToasts";
 import styles from "./UnifiedAssistantChat.module.css";
+import { AppSidebarSlot } from "../../components/AppSidebar";
 
 interface UnifiedAssistantChatProps {
     strategy: AssistantStrategy;
@@ -98,19 +96,10 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
     const { LLM, setLLM, availableLLMs } = useContext(LLMContext);
     const { t } = useTranslation();
     const { setQuickPrompts } = useContext(QuickPromptContext);
-    const { setHeader } = useContext(HeaderContext);
     const { tools } = useToolsContext();
 
     const [error, setError] = useState<unknown>();
-    const [sidebarSize] = useState<SidebarSizes>("large");
     const [question, setQuestion] = useState<string>("");
-    const [showSidebar, setShowSidebar] = useState<boolean>(
-        localStorage.getItem(STORAGE_KEYS.SHOW_SIDEBAR) === null ? false : localStorage.getItem(STORAGE_KEYS.SHOW_SIDEBAR) == "true"
-    );
-    const setAndStoreShowSidebar = (value: boolean) => {
-        setShowSidebar(value);
-        localStorage.setItem(STORAGE_KEYS.SHOW_SIDEBAR, value.toString());
-    };
     const [selectedTools, setSelectedTools] = useState<string[]>([]);
     const [toolStatuses, setToolStatuses] = useState<ToolStatus[]>([]);
     const [showNotSubscribedDialog, setShowNotSubscribedDialog] = useState<boolean>(false);
@@ -225,7 +214,6 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                             }
 
                             setAssistantConfig(assistant);
-                            setHeader("");
                             dispatch({ type: "SET_SYSTEM_PROMPT", payload: assistant.system_message });
                             dispatch({ type: "SET_CREATIVITY", payload: assistant.creativity });
                             setQuickPrompts(assistant.quick_prompts || []);
@@ -290,7 +278,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
             }
         };
         loadData();
-    }, [assistant_id, communityAssistantStorageService, error, isDeletedAssistant, showError, strategy, t, availableLLMs, setHeader, setLLM, setQuickPrompts]);
+    }, [assistant_id, communityAssistantStorageService, error, isDeletedAssistant, showError, strategy, t, availableLLMs, setLLM, setQuickPrompts]);
 
     useEffect(() => {
         if (lockedToolIds.length === 0) {
@@ -545,28 +533,14 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                     }
                 }}
                 readOnly={isDeletedAssistant}
+                showHeader={false}
+                actions={<ClearChatButton onClick={clearChat} disabled={!lastQuestionRef.current || isLoadingRef.current || isDeletedAssistant} />}
             ></History>
         ),
-        [allChats, active_chat, fetchHistory, assistantChatStorage, t, scrollToBottom, isDeletedAssistant]
+        [allChats, active_chat, clearChat, fetchHistory, assistantChatStorage, t, scrollToBottom, isDeletedAssistant, lastQuestionRef.current, isLoadingRef.current]
     );
 
-    // Sidebar component
-    const toggleSidebar = useCallback(() => {
-        setShowSidebar(!showSidebar);
-        localStorage.setItem(STORAGE_KEYS.SHOW_SIDEBAR, (!showSidebar).toString());
-    }, [showSidebar]);
-
-    const sidebar_actions = useMemo(
-        () => (
-            <>
-                <ClearChatButton onClick={clearChat} disabled={!lastQuestionRef.current || isLoadingRef.current || isDeletedAssistant} showText={showSidebar} />
-                <MinimizeSidebarButton showSidebar={showSidebar} setShowSidebar={setAndStoreShowSidebar} />
-            </>
-        ),
-        [clearChat, lastQuestionRef.current, isLoadingRef.current, showSidebar, isDeletedAssistant]
-    );
-
-    const sidebar = useMemo(() => <Sidebar content={<>{history}</>} actions={sidebar_actions} />, [history, sidebar_actions]);
+    const sidebarContent = history;
 
     // Examples component
     const examplesComponent = useMemo(() => {
@@ -790,8 +764,8 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
 
         return (
             <>
+                <AppSidebarSlot title={t("components.history.history")} content={sidebarContent} />
                 <ChatLayout
-                    sidebar={sidebar}
                     examples={examplesComponent}
                     answers={answerList}
                     input={inputComponent}
@@ -800,11 +774,9 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                     welcomeMessage={isDeletedAssistant ? t("components.community_assistants.deleted_state_title") : t("chat.header")}
                     header_as_markdown={false}
                     messages_description={t("common.messages")}
-                    size={showSidebar ? sidebarSize : "none"}
                     llmOptions={modelsToShow}
                     defaultLLM={LLM.llm_name}
                     onLLMSelectionChange={onLLMSelectionChange}
-                    onToggleMinimized={toggleSidebar}
                     actions={
                         strategy?.canEdit ? (
                             <Button
@@ -828,19 +800,17 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
             </>
         );
     }, [
-        sidebar,
+        sidebarContent,
         examplesComponent,
         answerList,
         inputComponent,
         isDeletedAssistant,
         lastQuestionRef.current,
         t,
-        sidebarSize,
         availableLLMs,
         assistantConfig.default_model,
         LLM.llm_name,
         onLLMSelectionChange,
-        showSidebar,
         clearChat,
         isLoadingRef.current,
         strategy,

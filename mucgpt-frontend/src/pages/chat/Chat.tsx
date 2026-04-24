@@ -16,12 +16,9 @@ import { AnswerList } from "../../components/AnswerList/AnswerList";
 import { QuickPromptContext } from "../../components/QuickPrompt/QuickPromptProvider";
 import { getChatReducer, handleRegenerate, handleRollback, makeApiRequest } from "../page_helpers";
 import { STORAGE_KEYS } from "../layout/LayoutHelper";
-import { MinimizeSidebarButton } from "../../components/MinimizeSidebarButton/MinimizeSidebarButton";
-import { HeaderContext } from "../layout/HeaderContextProvider";
 import { ToolStatus } from "../../utils/ToolStreamHandler";
 import { Model } from "../../api";
 import { chatApi } from "../../api/core-client";
-import { Sidebar } from "../../components/Sidebar/Sidebar";
 import { useToolsContext } from "../../components/ToolsProvider";
 import { Settings24Regular } from "@fluentui/react-icons";
 import { Button } from "@fluentui/react-components";
@@ -29,6 +26,8 @@ import { ChatSettingsDialog } from "../../components/ChatSettingsDialog/ChatSett
 import { UploadedData, createUploadedDataFromContent } from "../../components/ContextManagerDialog/ContextManagerDialog";
 import { getStoredParsedDocuments } from "../../service/parsedDocumentStorage";
 import { useToolStatusToasts } from "../../hooks/useToolStatusToasts";
+import { AppSidebarSlot } from "../../components/AppSidebar";
+import { useLocation } from "react-router-dom";
 
 /**
  * Creates a debounced function that delays invoking the provided function
@@ -98,23 +97,13 @@ const Chat = () => {
     const { language } = useContext(LanguageContext);
     const { LLM, setLLM, availableLLMs } = useContext(LLMContext);
     const { t } = useTranslation();
+    const location = useLocation();
     const { setQuickPrompts } = useContext(QuickPromptContext);
-    const { setHeader } = useContext(HeaderContext);
-    useEffect(() => {
-        setHeader("");
-    }, [setHeader]);
     const { tools } = useToolsContext();
 
     // Independent states
     const [error, setError] = useState<unknown>();
     const [question, setQuestion] = useState<string>("");
-    const [showSidebar, setShowSidebar] = useState<boolean>(
-        localStorage.getItem(STORAGE_KEYS.SHOW_SIDEBAR) === null ? false : localStorage.getItem(STORAGE_KEYS.SHOW_SIDEBAR) == "true"
-    );
-    const setAndStoreShowSidebar = (value: boolean) => {
-        setShowSidebar(value);
-        localStorage.setItem(STORAGE_KEYS.SHOW_SIDEBAR, value.toString());
-    };
     const [selectedTools, setSelectedTools] = useState<string[]>(() => {
         try {
             const stored = localStorage.getItem(STORAGE_KEYS.SELECTED_TOOLS);
@@ -333,6 +322,7 @@ const Chat = () => {
             hashParams.delete("question");
             hashParams.delete("tools");
             hashParams.delete("data");
+            hashParams.delete("new");
             const newHashQuery = hashParams.toString();
             currentUrl.hash = newHashQuery ? `${hashPath}?${newHashQuery}` : hashPath;
         }
@@ -344,6 +334,7 @@ const Chat = () => {
             searchParams.delete("question");
             searchParams.delete("tools");
             searchParams.delete("data");
+            searchParams.delete("new");
             const newSearch = searchParams.toString();
             currentUrl.search = newSearch ? `?${newSearch}` : "";
         }
@@ -391,6 +382,46 @@ const Chat = () => {
     const [pendingQuestion, setPendingQuestion] = useState<string | null>(null);
     // Effect to handle pending question after tools are loaded
     const scheduledQuestionRef = useRef<string | null>(null);
+    const lastHandledNewChatTokenRef = useRef<string | null>(null);
+
+    const getNavigationParams = useCallback(() => {
+        const currentUrl = new URL(window.location.href);
+        let queryParams = currentUrl.searchParams;
+
+        if (currentUrl.hash && currentUrl.hash.includes("?")) {
+            const [, hashQuery] = currentUrl.hash.split("?");
+            queryParams = new URLSearchParams(hashQuery);
+        }
+
+        const questionFromUrl = queryParams.get("q") || queryParams.get("question");
+        const toolsFromUrl = queryParams.get("tools");
+        const dataFromUrl = queryParams.get("data");
+        const newChatToken = queryParams.get("new");
+
+        return {
+            questionFromUrl,
+            toolsFromUrl,
+            dataFromUrl,
+            newChatRequested: newChatToken !== null,
+            newChatToken
+        };
+    }, [location.hash, location.search]);
+
+    const startFreshChat = useCallback(async () => {
+        scheduledQuestionRef.current = null;
+        setQuestion("");
+        setUploadedData([]);
+        clearChat();
+
+        const id = await storageService.create([], { system: systemPrompt, creativity });
+        dispatch({ type: "SET_ACTIVE_CHAT", payload: id });
+        await fetchHistory();
+    }, [clearChat, creativity, fetchHistory, storageService, systemPrompt]);
+
+    const isCurrentChatEmpty = useMemo(
+        () => active_chat !== undefined && answers.length === 0 && question.trim() === "" && uploadedData.length === 0 && pendingQuestion === null,
+        [active_chat, answers.length, pendingQuestion, question, uploadedData.length]
+    );
 
     // Stable ref for callApi so the pending-question effect doesn't
     // get cancelled/rescheduled every time callApi's identity changes
@@ -439,25 +470,7 @@ const Chat = () => {
         isLoadingRef.current = true;
 
         // Check URL for question parameter - Handle hash router format
-        let questionFromUrl;
-        let toolsFromUrl;
-        let dataFromUrl;
-        const hashPart = window.location.hash;
-
-        // For hash router format like #/chat?q=something&tools=tool1,tool2
-        if (hashPart && hashPart.includes("?")) {
-            const queryPart = hashPart.split("?")[1];
-            const hashParams = new URLSearchParams(queryPart);
-            questionFromUrl = hashParams.get("q") || hashParams.get("question");
-            toolsFromUrl = hashParams.get("tools");
-            dataFromUrl = hashParams.get("data");
-        } else {
-            // Fallback to regular URL parameters
-            const urlParams = new URLSearchParams(window.location.search);
-            questionFromUrl = urlParams.get("q") || urlParams.get("question");
-            toolsFromUrl = urlParams.get("tools");
-            dataFromUrl = urlParams.get("data");
-        }
+        const { questionFromUrl, toolsFromUrl, dataFromUrl, newChatRequested, newChatToken } = getNavigationParams();
 
         // Parse tools from URL if present
         if (toolsFromUrl) {
@@ -518,14 +531,22 @@ const Chat = () => {
             }
         }
 
-        if (questionFromUrl) {
+        if (questionFromUrl || newChatRequested) {
+            lastHandledNewChatTokenRef.current = newChatToken;
             setPendingQuestion(questionFromUrl);
-            storageService
-                .getNewestChat()
+            Promise.resolve(
+                newChatRequested
+                    ? startFreshChat()
+                    : storageService.getNewestChat().then(() => {
+                          clearChat();
+                          return fetchHistory();
+                      })
+            )
                 .then(() => {
-                    clearChat(); // Clear any existing chat
+                    if (newChatRequested && !questionFromUrl) {
+                        clearNavigationQueryParams();
+                    }
                     setIsInitialized(true);
-                    return fetchHistory();
                 })
                 .finally(() => {
                     isLoadingRef.current = false;
@@ -550,7 +571,29 @@ const Chat = () => {
                     isLoadingRef.current = false;
                 });
         }
-    }, [fetchHistory, storageService, clearChat]);
+    }, [clearChat, clearNavigationQueryParams, fetchHistory, getNavigationParams, storageService]);
+
+    useEffect(() => {
+        if (!isInitialized) {
+            return;
+        }
+
+        const { newChatRequested, newChatToken } = getNavigationParams();
+
+        if (!newChatRequested || !newChatToken || newChatToken === lastHandledNewChatTokenRef.current) {
+            return;
+        }
+
+        lastHandledNewChatTokenRef.current = newChatToken;
+        if (isCurrentChatEmpty) {
+            clearNavigationQueryParams();
+            return;
+        }
+
+        setPendingQuestion(null);
+        void startFreshChat();
+        clearNavigationQueryParams();
+    }, [clearNavigationQueryParams, getNavigationParams, isCurrentChatEmpty, isInitialized, startFreshChat]);
 
     useEffect(() => {
         if (!isInitialized || !pendingQuestion || tools === undefined) {
@@ -700,16 +743,6 @@ const Chat = () => {
         [callApi, systemPrompt, question, t, isLoadingRef.current, selectedTools, tools, uploadedData, uploadedDataToDataSources]
     );
 
-    const sidebar_actions = useMemo(
-        () => (
-            <>
-                <ClearChatButton onClick={clearChat} disabled={!lastQuestionRef.current || isLoadingRef.current} showText={showSidebar} />
-                <MinimizeSidebarButton showSidebar={showSidebar} setShowSidebar={setAndStoreShowSidebar} />
-            </>
-        ),
-        [clearChat, lastQuestionRef.current, isLoadingRef.current, showSidebar]
-    );
-
     const sidebar_history = useMemo(
         () => (
             <History
@@ -731,15 +764,18 @@ const Chat = () => {
                 onSelect={async (id: string) => {
                     loadChat(id);
                 }}
+                showHeader={false}
+                actions={<ClearChatButton onClick={clearChat} disabled={!lastQuestionRef.current || isLoadingRef.current} />}
             ></History>
         ),
-        [allChats, active_chat, fetchHistory, storageService, loadChat, t]
+        [allChats, active_chat, clearChat, fetchHistory, storageService, loadChat, t, lastQuestionRef.current, isLoadingRef.current]
     );
 
-    const sidebar = useMemo(() => <Sidebar actions={sidebar_actions} content={<>{sidebar_history}</>}></Sidebar>, [sidebar_actions, sidebar_history]);
+    const sidebarContent = sidebar_history;
     const layout = useMemo(
         () => (
             <>
+                <AppSidebarSlot title={t("components.history.history")} content={sidebarContent} />
                 <ChatSettingsDialog
                     open={isSettingsOpen}
                     onOpenChange={setIsSettingsOpen}
@@ -749,7 +785,6 @@ const Chat = () => {
                     setSystemPrompt={onSystemPromptChanged}
                 />
                 <ChatLayout
-                    sidebar={sidebar}
                     examples={examplesComponent}
                     answers={answerList}
                     input={inputComponent}
@@ -758,11 +793,9 @@ const Chat = () => {
                     welcomeMessage={t("chat.header")}
                     header_as_markdown={false}
                     messages_description={t("common.messages")}
-                    size={showSidebar ? "large" : "none"}
                     llmOptions={availableLLMs}
                     defaultLLM={LLM.llm_name}
                     onLLMSelectionChange={onLLMSelectionChange}
-                    onToggleMinimized={() => setAndStoreShowSidebar(!showSidebar)}
                     actions={
                         <Button
                             appearance="transparent"
@@ -775,13 +808,12 @@ const Chat = () => {
             </>
         ),
         [
-            sidebar,
+            sidebarContent,
             examplesComponent,
             answerList,
             inputComponent,
             lastQuestionRef.current,
             t,
-            showSidebar,
             availableLLMs,
             LLM.llm_name,
             onLLMSelectionChange,

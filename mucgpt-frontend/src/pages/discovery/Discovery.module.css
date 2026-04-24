@@ -1,9 +1,9 @@
 .pageWrapper {
-    position: fixed;
-    top: 50px;
-    left: 0;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
     width: 100%;
-    bottom: 0;
     overflow: hidden;
     z-index: 1;
 }

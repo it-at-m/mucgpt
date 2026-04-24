@@ -29,10 +29,7 @@
 
 .pageIcon {
     color: var(--colorBrandBackground);
-    margin-top: 4px;
-    font-size: 32px;
-    padding: 8px;
-    border-radius: 6px;
+    margin-top: 8px;
 }
 
 .subtitle {
@@ -177,7 +174,9 @@
     }
 
     .pageIcon {
-        font-size: 32px;
+        font-size: 48px;
+        width: 48px;
+        height: 48px;
         padding: 10px;
     }
 
@@ -232,7 +231,9 @@
     }
 
     .pageIcon {
-        font-size: 28px;
+        font-size: 40px;
+        width: 40px;
+        height: 40px;
         padding: 8px;
     }
 

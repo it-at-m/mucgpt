@@ -3,6 +3,15 @@
     flex-direction: column;
     gap: 0;
     width: 100%;
+    max-width: 60%;
+    margin-inline: auto;
+    min-width: 0;
+}
+
+@media (max-width: 1200px) {
+    .questionInputWrapper {
+        max-width: 80%;
+    }
 }
 
 .toolBadgesHeader {
@@ -40,6 +49,8 @@
     margin-bottom: 10px;
     transition: box-shadow 0.2s ease;
     border: 2px solid transparent;
+    min-width: 0;
+    box-sizing: border-box;
 }
 
 .dragActive {
@@ -79,6 +90,7 @@
     background: transparent;
     transition: height 0.1s ease;
     background: var(--colorNeutralBackground3) !important;
+    min-width: 0;
 }
 
 .questionInputTextArea:focus {
@@ -182,6 +194,10 @@
 }
 
 @media (max-width: 768px) {
+    .questionInputWrapper {
+        max-width: 90%;
+    }
+
     .questionInputContainer {
         padding: 8px 4px 8px 12px;
         border-radius: 8px;

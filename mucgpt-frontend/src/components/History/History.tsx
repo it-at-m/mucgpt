@@ -11,7 +11,7 @@ import { Collapse } from "@fluentui/react-motion-components-preview";
 import { useTranslation } from "react-i18next";
 import styles from "./History.module.css";
 import { DBObject } from "../../service/storage";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useState, type ReactNode } from "react";
 
 interface Props {
     allChats: DBObject<any, any>[];
@@ -21,13 +21,26 @@ interface Props {
     onFavChange: (id: string, fav: boolean) => void;
     onSelect: (id: string) => void;
     readOnly?: boolean;
+    showHeader?: boolean;
+    actions?: ReactNode;
 }
 
 const INITIAL_ITEMS_PER_CATEGORY = 5;
 const ITEMS_TO_ADD = 10;
 
-export const History = ({ allChats, currentActiveChatId, onDeleteChat, onChatNameChange, onFavChange, onSelect, readOnly = false }: Props) => {
+export const History = ({
+    allChats,
+    currentActiveChatId,
+    onDeleteChat,
+    onChatNameChange,
+    onFavChange,
+    onSelect,
+    readOnly = false,
+    showHeader = true,
+    actions
+}: Props) => {
     const { t } = useTranslation();
+    const isEmbedded = !showHeader;
     const [isExpanded, setIsExpanded] = useState<boolean>(true);
     // Initialize all categories as collapsed by default
     const [expandedCategories, setExpandedCategories] = useState<Record<string, boolean>>({});
@@ -108,27 +121,30 @@ export const History = ({ allChats, currentActiveChatId, onDeleteChat, onChatNam
     };
 
     return (
-        <div className={styles.historyContainer}>
-            <div
-                className={styles.header}
-                role="heading"
-                aria-level={3}
-                onClick={toggleHistoryVisibility}
-                tabIndex={0}
-                onKeyDown={e => e.key === "Enter" && toggleHistoryVisibility()}
-                aria-expanded={isExpanded}
-            >
-                <Tooltip content={t("components.history.saved_in_browser")} relationship="description" positioning="below">
-                    <div className={styles.headerContent}>
-                        <ChatHistory24Regular className={styles.icon} aria-hidden="true" />
-                        <span>{t("components.history.history")}</span>
-                        <div className={styles.expandCollapseIcon}>{isExpanded ? <ChevronDown20Regular /> : <ChevronRight20Regular />}</div>
-                    </div>
-                </Tooltip>
-            </div>
+        <div className={`${styles.historyContainer} ${isEmbedded ? styles.historyContainerEmbedded : ""}`}>
+            {showHeader && (
+                <div
+                    className={styles.header}
+                    role="heading"
+                    aria-level={3}
+                    onClick={toggleHistoryVisibility}
+                    tabIndex={0}
+                    onKeyDown={e => e.key === "Enter" && toggleHistoryVisibility()}
+                    aria-expanded={isExpanded}
+                >
+                    <Tooltip content={t("components.history.saved_in_browser")} relationship="description" positioning="below">
+                        <div className={styles.headerContent}>
+                            <ChatHistory24Regular className={styles.icon} aria-hidden="true" />
+                            <span>{t("components.history.history")}</span>
+                            <div className={styles.expandCollapseIcon}>{isExpanded ? <ChevronDown20Regular /> : <ChevronRight20Regular />}</div>
+                        </div>
+                    </Tooltip>
+                </div>
+            )}
 
             <Collapse visible={isExpanded}>
-                <div className={styles.historyContent}>
+                <div className={`${styles.historyContent} ${isEmbedded ? styles.historyContentEmbedded : ""}`}>
+                    {actions && <div className={styles.historyActions}>{actions}</div>}
                     {sortedChats.map(([category, chats]) => (
                         <ul key={category} className={styles.nopaddingleft}>
                             <li

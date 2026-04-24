@@ -7,6 +7,8 @@ import styles from "./LanguageSelector.module.css";
 interface LanguageSelectorProps {
     onSelectionChange: (newSelection: string) => void;
     defaultlang: string;
+    label?: string;
+    layout?: "default" | "row";
 }
 
 interface Language {
@@ -23,9 +25,10 @@ const AVAILABLE_LANGUAGES: Language[] = [
     { code: "UK", name: "Українська" }
 ];
 
-export const LanguageSelector = ({ onSelectionChange, defaultlang }: LanguageSelectorProps) => {
+export const LanguageSelector = ({ onSelectionChange, defaultlang, label, layout = "default" }: LanguageSelectorProps) => {
     const [selectedLang, setSelectedLang] = useState(defaultlang);
     const { t } = useTranslation();
+    const languageIcon = <LocalLanguage24Regular className={styles.icon} />;
 
     // Handle button click - cycle through languages with useCallback for stability
     const handleButtonClick = useCallback(
@@ -68,10 +71,20 @@ export const LanguageSelector = ({ onSelectionChange, defaultlang }: LanguageSel
                     <MenuButton
                         appearance={"subtle"}
                         aria-label={tooltipText}
-                        icon={<LocalLanguage24Regular className={styles.icon} />}
-                        className={styles.languageButton}
+                        icon={layout === "row" ? undefined : languageIcon}
+                        className={`${styles.languageButton} ${layout === "row" ? styles.languageButtonRow : ""}`}
                     >
-                        {currentLanguage.code}
+                        {layout === "row" ? (
+                            <span className={styles.rowContent}>
+                                <span className={styles.rowLabel}>{label ?? t("common.language", "Sprache")}</span>
+                                <span className={styles.rowValueGroup}>
+                                    {languageIcon}
+                                    <span className={styles.rowValue}>{currentLanguage.code}</span>
+                                </span>
+                            </span>
+                        ) : (
+                            currentLanguage.code
+                        )}
                     </MenuButton>
                 </Tooltip>
             </MenuTrigger>

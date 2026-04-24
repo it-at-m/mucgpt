@@ -18,7 +18,6 @@ import { UserContextProvider } from "./UserContextProvider";
 import { LanguageSelector } from "../../components/LanguageSelector";
 import { ThemeSelector } from "../../components/ThemeSelector";
 import { FeedbackButton } from "../../components/FeedbackButton";
-import { VersionInfo } from "../../components/VersionInfo";
 import { HelpButton } from "../../components/HelpButton";
 import { configApi } from "../../api/core-client";
 import { ApiError } from "../../api/fetch-utils";
@@ -291,7 +290,6 @@ export const Layout = () => {
                                             </div>
                                         )}
                                     </header>
-
                                     <main
                                         id="main-content"
                                         role="main"
@@ -306,30 +304,8 @@ export const Layout = () => {
                                     >
                                         <Outlet />
                                     </main>
-
-                                    <footer className={styles.footer} role="contentinfo" aria-label={t("common.footer_info", "Fußzeileninformationen")}>
-                                        {!isMobile && (
-                                            <div className={`${styles.footerSection} ${styles.footerCompanyInfo}`}>
-                                                <address>
-                                                    Landeshauptstadt München <br />
-                                                    RIT/it@M KICC
-                                                </address>
-                                            </div>
-                                        )}
-                                        {!isMobile && (
-                                            <div className={styles.footerSection}>
-                                                <VersionInfo
-                                                    app_version={config.app_version}
-                                                    core_version={config.core_version}
-                                                    frontend_version={config.frontend_version}
-                                                    assistant_version={config.assistant_version}
-                                                    versionUrl={import.meta.env.BASE_URL + "#/version"}
-                                                />
-                                            </div>
-                                        )}
-                                        <TermsOfUseDialog defaultOpen={!termsofuseread} onAccept={onAcceptTermsOfUse} />
-                                    </footer>
                                 </div>
+                                <TermsOfUseDialog defaultOpen={!termsofuseread} onAccept={onAcceptTermsOfUse} showTrigger={false} />
                             </ToolsProvider>
                         </ConfigContext.Provider>
                     )}

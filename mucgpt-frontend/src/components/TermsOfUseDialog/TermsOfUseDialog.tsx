@@ -8,23 +8,30 @@ import styles from "./TermsOfUseDialog.module.css";
 interface TermsOfUseDialogProps {
     defaultOpen: boolean;
     onAccept: () => void;
+    showTrigger?: boolean;
+    triggerClassName?: string;
 }
 
-export const TermsOfUseDialog = ({ defaultOpen, onAccept }: TermsOfUseDialogProps) => {
+export const TermsOfUseDialog = ({ defaultOpen, onAccept, showTrigger = true, triggerClassName }: TermsOfUseDialogProps) => {
     const { t } = useTranslation();
     const [open, setOpen] = useState<boolean>(defaultOpen);
+    const trigger = showTrigger ? (
+        <DialogTrigger disableButtonEnhancement>
+            <Tooltip content={t("components.terms_of_use.tooltip", "Nutzungsbedingungen anzeigen")} relationship="description" positioning="above">
+                <div className={`${styles.triggerContainer}${triggerClassName ? ` ${triggerClassName}` : ""}`}>
+                    <DocumentBulletListMultiple24Regular className={styles.termsIcon} />
+                    <span className={styles.termsText}>{t("components.terms_of_use.label", "Nutzungsbedingungen")}</span>
+                </div>
+            </Tooltip>
+        </DialogTrigger>
+    ) : (
+        <></>
+    );
 
     return (
         <div className={styles.container}>
             <Dialog modalType="alert" open={open} onOpenChange={(_event, data) => setOpen(data.open)}>
-                <DialogTrigger disableButtonEnhancement>
-                    <Tooltip content={t("components.terms_of_use.tooltip", "Nutzungsbedingungen anzeigen")} relationship="description" positioning="above">
-                        <div className={styles.triggerContainer}>
-                            <DocumentBulletListMultiple24Regular className={styles.termsIcon} />
-                            <span className={styles.termsText}>{t("components.terms_of_use.label", "Nutzungsbedingungen")}</span>
-                        </div>
-                    </Tooltip>
-                </DialogTrigger>
+                {trigger}
                 <DialogSurface className={styles.dialog}>
                     <DialogBody className={styles.dialogContent}>
                         <DialogTitle>Nutzungsbedingungen (Zustimmung erforderlich)</DialogTitle>

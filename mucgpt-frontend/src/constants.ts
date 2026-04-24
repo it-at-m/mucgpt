@@ -63,12 +63,6 @@ export const ASSISTANT_STORE: IndexedDBStorage = {
     objectStore_name: "bots",
     db_version: 1
 };
-//Old storage, used to migrate existing assistants
-export const LEGACY_ASSISTANT_STORE: IndexedDBStorage = {
-    db_name: "MUCGPT-BOTS",
-    objectStore_name: "bots",
-    db_version: 3
-};
 
 export const CHAT_STORE: IndexedDBStorage = {
     db_name: "MUCGPT-CHAT",

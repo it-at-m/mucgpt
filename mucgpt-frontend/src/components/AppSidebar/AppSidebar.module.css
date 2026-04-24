@@ -43,12 +43,6 @@
     bottom: 0;
     width: 2px;
     opacity: 0;
-    transition: opacity 120ms ease;
-}
-
-.edgeHandle:hover::after,
-.edgeHandle:focus-visible::after {
-    opacity: 0.55;
 }
 
 .resizeCursor {

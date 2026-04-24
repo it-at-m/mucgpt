@@ -87,6 +87,7 @@ export const AppSidebar = ({
 
     const desktopToggleEnabled = !isMobile && !!onToggleCollapsed;
     const toggleLabel = t("app_sidebar.toggle_navigation");
+    const resizeLabel = t("app_sidebar.resize_navigation");
     const toggleInteractiveClassName = desktopToggleEnabled ? styles.resizeCursor : "";
     const collapseButtonClassName = `${styles.collapseButton} ${toggleInteractiveClassName}`;
 
@@ -98,8 +99,8 @@ export const AppSidebar = ({
                         type="button"
                         className={`${styles.edgeHandle} ${toggleInteractiveClassName}`}
                         onClick={onToggleCollapsed}
-                        aria-label={toggleLabel}
-                        title={toggleLabel}
+                        aria-label={resizeLabel}
+                        title={resizeLabel}
                     />
                 )}
 

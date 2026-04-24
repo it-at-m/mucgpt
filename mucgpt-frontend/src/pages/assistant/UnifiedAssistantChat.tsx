@@ -278,7 +278,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
             }
         };
         loadData();
-    }, [assistant_id, communityAssistantStorageService, error, isDeletedAssistant, showError, strategy, t, availableLLMs, setLLM, setQuickPrompts]);
+    }, [assistant_id, communityAssistantStorageService, isDeletedAssistant, showError, strategy, t, availableLLMs, setLLM, setQuickPrompts]);
 
     useEffect(() => {
         if (lockedToolIds.length === 0) {
@@ -445,16 +445,18 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
         }
     }, [answers, assistantChatStorage, callApi, systemPrompt, activeChatRef.current, isLoadingRef.current]);
 
-    // ClearChat-Funktion
-    const clearChat = useCallback(() => {
+    const resetActiveChatState = useCallback(() => {
         lastQuestionRef.current = "";
         if (error) setError(undefined);
-        //unset active chat
-        if (activeChatRef.current) {
-            dispatch({ type: "SET_ACTIVE_CHAT", payload: undefined });
-        }
+        activeChatRef.current = undefined;
+        dispatch({ type: "SET_ACTIVE_CHAT", payload: undefined });
         dispatch({ type: "CLEAR_ANSWERS" });
-    }, [lastQuestionRef.current, error, activeChatRef.current]);
+    }, [error]);
+
+    // ClearChat-Funktion
+    const clearChat = useCallback(() => {
+        resetActiveChatState();
+    }, [resetActiveChatState]);
 
     // Rollback-Funktion
     const onRollbackMessage = useCallback(
@@ -507,6 +509,9 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                     allChats={allChats}
                     currentActiveChatId={active_chat}
                     onDeleteChat={async id => {
+                        if (id === activeChatRef.current) {
+                            resetActiveChatState();
+                        }
                         await assistantChatStorage.delete(id);
                         await fetchHistory();
                     }}
@@ -545,6 +550,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
             clearChat,
             fetchHistory,
             assistantChatStorage,
+            resetActiveChatState,
             t,
             scrollToBottom,
             isDeletedAssistant,

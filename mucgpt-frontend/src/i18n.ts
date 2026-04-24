@@ -33,7 +33,8 @@ i18n
                         go_assistants: "Zur Assistenten-Übersicht navigieren",
                         start_new_chat: "Neuen Chat starten",
                         preferences_and_help: "Einstellungen und Hilfe",
-                        toggle_navigation: "Navigation umschalten"
+                        toggle_navigation: "Navigation umschalten",
+                        resize_navigation: "Navigation an der Kante umschalten"
                     },
                     home: {
                         assistants: "Assistenten",
@@ -90,6 +91,8 @@ i18n
                         footer_info: "Fußzeileninformationen",
                         clear_chat: "Neuer Chat",
                         settings: "Einstellungen",
+                        theme: "Farbschema",
+                        language: "Sprache",
                         close: "Schließen",
                         messages: "Nachrichten",
                         examples: "Beispiele",
@@ -692,7 +695,8 @@ i18n
                         go_assistants: "Go to assistants overview",
                         start_new_chat: "Start a new chat",
                         preferences_and_help: "Settings and help",
-                        toggle_navigation: "Toggle navigation"
+                        toggle_navigation: "Toggle navigation",
+                        resize_navigation: "Toggle navigation from the edge handle"
                     },
                     home: {
                         assistants: "Assistants",
@@ -748,6 +752,8 @@ i18n
                         footer_info: "Footer information",
                         clear_chat: "New chat",
                         settings: "Settings",
+                        theme: "Theme",
+                        language: "Language",
                         messages: "Messages",
                         examples: "Examples",
                         sidebar_show: "Show sidebar",
@@ -1344,7 +1350,8 @@ i18n
                         go_assistants: "Zur Assistentn-Übersicht navigiern",
                         start_new_chat: "Neian Chat startn",
                         preferences_and_help: "Einstellungen und Hilfe",
-                        toggle_navigation: "Navigation umschoitn"
+                        toggle_navigation: "Navigation umschoitn",
+                        resize_navigation: "Navigation am Rand umschoitn"
                     },
                     home: {
                         assistants: "Assistentn",
@@ -1395,6 +1402,8 @@ i18n
                         footer_info: "Fußzeilen-Info",
                         clear_chat: "Neia Chat",
                         settings: "Konfiguration",
+                        theme: "Farbschema",
+                        language: "Sproch",
                         messages: "Nochrichten",
                         examples: "Beispui",
                         sidebar_show: "Sidebar zoagn",
@@ -1990,7 +1999,8 @@ i18n
                         go_assistants: "Aller à la vue des assistants",
                         start_new_chat: "Démarrer un nouveau chat",
                         preferences_and_help: "Paramètres et aide",
-                        toggle_navigation: "Basculer la navigation"
+                        toggle_navigation: "Basculer la navigation",
+                        resize_navigation: "Basculer la navigation depuis le bord"
                     },
                     home: {
                         assistants: "Assistants",
@@ -2047,6 +2057,8 @@ i18n
                         footer_info: "Informations du pied de page",
                         clear_chat: "Nouveau chat",
                         settings: "Paramètres",
+                        theme: "Thème",
+                        language: "Langue",
                         messages: "Messages",
                         examples: "Exemples",
                         sidebar_show: "Afficher la barre latérale",
@@ -2637,7 +2649,8 @@ i18n
                         go_assistants: "Перейти до огляду асистентів",
                         start_new_chat: "Розпочати новий чат",
                         preferences_and_help: "Налаштування та допомога",
-                        toggle_navigation: "Перемкнути навігацію"
+                        toggle_navigation: "Перемкнути навігацію",
+                        resize_navigation: "Перемкнути навігацію з краю"
                     },
                     home: {
                         assistants: "Асистенти",
@@ -2694,6 +2707,8 @@ i18n
                         footer_info: "Інформація у футері",
                         clear_chat: "Новий чат",
                         settings: "Налаштування",
+                        theme: "Тема",
+                        language: "Мова",
                         messages: "Повідомлення",
                         examples: "Приклади",
                         sidebar_show: "Показати бічну панель",

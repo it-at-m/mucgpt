@@ -76,7 +76,7 @@ export const LanguageSelector = ({ onSelectionChange, defaultlang, label, layout
                     >
                         {layout === "row" ? (
                             <span className={styles.rowContent}>
-                                <span className={styles.rowLabel}>{label ?? t("common.language", "Sprache")}</span>
+                                <span className={styles.rowLabel}>{label ?? t("common.language")}</span>
                                 <span className={styles.rowValueGroup}>
                                     {languageIcon}
                                     <span className={styles.rowValue}>{currentLanguage.code}</span>

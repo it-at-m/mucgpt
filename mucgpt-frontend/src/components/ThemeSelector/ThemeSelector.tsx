@@ -57,7 +57,7 @@ export const ThemeSelector = ({ isLight, onThemeChange, label, layout = "default
             >
                 {layout === "row" ? (
                     <span className={styles.rowContent}>
-                        <span className={styles.rowLabel}>{label ?? t("common.theme", "Farbschema")}</span>
+                        <span className={styles.rowLabel}>{label ?? t("common.theme")}</span>
                         <span className={styles.rowValueGroup}>
                             {themeIcon}
                             <span className={styles.rowValue}>{themeShortText}</span>

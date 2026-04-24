@@ -92,15 +92,10 @@ const AppShell = ({ config, isLight, languagePreference, onLanguageSelectionChan
     const utilitiesContent = (
         <div className={styles.mobileUtilities}>
             <div className={styles.mobileUtilityRow}>
-                <ThemeSelector isLight={isLight} onThemeChange={onThemeChange} layout="row" label={t("common.theme", "Farbschema")} />
+                <ThemeSelector isLight={isLight} onThemeChange={onThemeChange} layout="row" label={t("common.theme")} />
             </div>
             <div className={styles.mobileUtilityRow}>
-                <LanguageSelector
-                    defaultlang={languagePreference}
-                    onSelectionChange={onLanguageSelectionChanged}
-                    layout="row"
-                    label={t("common.language", "Sprache")}
-                />
+                <LanguageSelector defaultlang={languagePreference} onSelectionChange={onLanguageSelectionChanged} layout="row" label={t("common.language")} />
             </div>
             <div className={styles.mobileUtilityRow}>
                 <TutorialsButton />

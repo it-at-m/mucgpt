@@ -1,9 +1,8 @@
 import { IDBPDatabase, IDBPTransaction } from "idb";
 import { ChatResponse } from "../api";
-import { ASSISTANT_STORE, CHAT_STORE, CREATIVITY_HIGH, CREATIVITY_LOW, CREATIVITY_MEDIUM, LEGACY_ASSISTANT_STORE } from "../constants";
+import { CHAT_STORE, CREATIVITY_HIGH, CREATIVITY_LOW, CREATIVITY_MEDIUM } from "../constants";
 import { ChatOptions } from "../pages/chat/Chat";
-import { AssistantStorageService } from "./assistantstorage";
-import { DBObject, StorageService } from "./storage";
+import { DBObject } from "./storage";
 
 interface LegacyChatObject {
     id: string;
@@ -19,55 +18,16 @@ interface LegacyChatObject {
     };
 }
 
-/**
- * Convert legacy chat options with temperature to creativity
- */
 function convertChatOptionsToCreativity(temperature: number): string {
     if (temperature < 0.4) return CREATIVITY_LOW;
     if (temperature >= 0.8) return CREATIVITY_HIGH;
     return CREATIVITY_MEDIUM;
 }
 
-export interface LegacyAssistant {
-    title: string;
-    description: string;
-    system_message: string;
-    publish: boolean;
-    id: number;
-    temperature: number;
-}
-
-/**
- * Convert old temperature values (0.0-1.0) to creativity levels
- */
 export function convertTemperatureToCreativity(temperature: number): string {
     if (temperature < 0.4) return CREATIVITY_LOW;
     if (temperature >= 0.8) return CREATIVITY_HIGH;
     return CREATIVITY_MEDIUM;
-}
-
-export async function migrate_old_assistants() {
-    const legacy_store = new StorageService<any, any>(LEGACY_ASSISTANT_STORE);
-    const db = await legacy_store.connectToDB();
-    const newStore = new AssistantStorageService(ASSISTANT_STORE);
-    if (db.objectStoreNames.contains(LEGACY_ASSISTANT_STORE.objectStore_name)) {
-        const oldassistants: LegacyAssistant[] = (await db.getAll(LEGACY_ASSISTANT_STORE.objectStore_name)) as LegacyAssistant[];
-        await db.clear(LEGACY_ASSISTANT_STORE.objectStore_name);
-        for (const oldassistant of oldassistants) {
-            if (oldassistant.id == 0 || oldassistant.id == 1) continue; //skip the default assistants
-            const newAssistant = {
-                title: oldassistant.title,
-                description: oldassistant.description,
-                system_message: oldassistant.system_message,
-                publish: oldassistant.publish,
-                creativity: convertTemperatureToCreativity(oldassistant.temperature),
-                version: "0", // Set a default version for new assistants
-                is_visible: true
-            };
-            //save to new assistant storage
-            await newStore.createAssistantConfig(newAssistant);
-        }
-    }
 }
 
 export async function migrateChats(

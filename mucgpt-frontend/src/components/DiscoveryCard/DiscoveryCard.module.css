@@ -1,5 +1,6 @@
 .card {
     border-radius: 8px !important;
+    border-radius: 14px !important;
     min-height: 140px;
     border: 1px solid var(--colorNeutralStroke1) !important;
     transition: all 0.2s ease;
@@ -48,6 +49,14 @@
 .headerBadge {
     flex-shrink: 0;
     align-self: flex-start;
+}
+
+.headerBadgePrimary {
+    background-color: var(--colorBrandBackground2) !important;
+    border-color: var(--colorNeutralStroke1Hover) !important;
+    color: var(--app-primary-subtle-foreground) !important;
+    box-shadow: none !important;
+    transform: scale(1.1);
 }
 
 .description {

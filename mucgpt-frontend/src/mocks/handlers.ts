@@ -786,13 +786,22 @@ export const handlers = [
     }),
 
     http.get("/api/assistant", () => {
-        return HttpResponse.json(DYNAMIC_ASSISTANTS);
+        const asResponses = DYNAMIC_ASSISTANTS.map((a, i) => ({
+            ...a,
+            is_visible: a.latest_version.is_visible ?? true,
+            subscriptions_count: Math.max(1, DYNAMIC_ASSISTANTS.length - i) * 3
+        }));
+        return HttpResponse.json(asResponses);
     }),
 
     http.get("/api/assistant/:id", ({ params }) => {
         const a = DYNAMIC_ASSISTANTS.find(x => x.id === params.id);
         if (!a) return new HttpResponse(null, { status: 404 });
-        return HttpResponse.json(a);
+        return HttpResponse.json({
+            ...a,
+            is_visible: a.latest_version.is_visible ?? true,
+            subscriptions_count: 5
+        });
     }),
 
     http.post("/api/assistant/:id/update", async ({ params, request }) => {

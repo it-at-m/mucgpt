@@ -11,7 +11,6 @@ import Chat from "./pages/chat/Chat";
 import { LanguageContextProvider } from "./components/LanguageSelector/LanguageContextProvider";
 import Faq from "./pages/faq/Faq";
 import Version from "./pages/version/Version";
-import Menu from "./pages/menu/Menu";
 import Tutorials from "./pages/tutorials/Tutorials";
 import { LLMContextProvider } from "./components/LLMSelector/LLMContextProvider";
 import { QuickPromptProvider } from "./components/QuickPrompt/QuickPromptProvider";
@@ -23,6 +22,7 @@ import { GlobalToastProvider } from "./components/GlobalToastHandler/GlobalToast
 import DeletedCommunityAssistant from "./pages/assistant/DeletedCommunityAssistant";
 import Unauthorized from "./pages/Unauthorized";
 import Discovery from "./pages/discovery/Discovery";
+import Home from "./pages/home/Home";
 import { AssistantEditorPage } from "./components/AssistantDialogs/AssistantEditorPage/AssistantEditorPage";
 initializeIcons();
 
@@ -34,7 +34,7 @@ const router = createHashRouter([
         children: [
             {
                 index: true,
-                element: <Menu />,
+                element: <Home />,
                 errorElement: <div>Fehler</div>
             },
             {

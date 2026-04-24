@@ -478,7 +478,7 @@ const Chat = () => {
         if (dataFromUrl) {
             const fileIds = dataFromUrl.split(",").filter(id => id.trim() !== "");
             if (fileIds.length > 0) {
-                const storedRawIds = localStorage.getItem("chatFileIds");
+                const storedRawIds = localStorage.getItem(STORAGE_KEYS.CHAT_FILE_IDS);
                 let validIds: string[] = [];
                 if (storedRawIds) {
                     try {
@@ -486,7 +486,7 @@ const Chat = () => {
                         // Check if the parameter IDs match the ones we stored
                         validIds = fileIds.filter(id => parsedIds.includes(id));
                     } catch (e) {
-                        console.error("Failed to parse chatFileIds from localStorage:", e);
+                        console.error("Failed to parse stored chat file IDs from localStorage:", e);
                     }
                 }
 

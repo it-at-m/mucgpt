@@ -29,6 +29,8 @@ import TutorialsButton from "../../components/TutorialsButton";
 import { ToolsProvider } from "../../components/ToolsProvider";
 import Unauthorized from "../Unauthorized";
 import { ConfigContext } from "../../context/ConfigContext";
+import { AssistantStorageService } from "../../service/assistantstorage";
+import { ASSISTANT_STORE } from "../../constants";
 
 const formatDate = (date: Date) => {
     const formatted_date = date.getDate() + "-" + (date.getMonth() + 1) + "-" + date.getFullYear();
@@ -136,6 +138,28 @@ export const Layout = () => {
         }
     }, [config.frontend_version, navigate]);
 
+    // add legacy assistants
+    const onAddLegacyAssistants = useCallback(async () => {
+        const storageService = new AssistantStorageService(ASSISTANT_STORE);
+        for (let i = 1; i <= 3; i++) {
+            await storageService.createAssistantConfig(
+                {
+                    title: `Legacy Assistant ${i}`,
+                    description: `This is a test legacy assistant with ID ${i}`,
+                    publish: false,
+                    system_message: "You are a legacy assistant.",
+                    creativity: "medium",
+                    quick_prompts: [],
+                    examples: [],
+                    version: "0",
+                    is_visible: true
+                },
+                String(i)
+            );
+        }
+        alert("Added legacy assistants 1, 2, and 3. You can find them in your owned assistants.");
+    }, []);
+
     // language change
     const onLanguageSelectionChanged = useCallback(
         (nextLanguage: string) => {
@@ -232,6 +256,11 @@ export const Layout = () => {
                                                         </div>
                                                         <div className={styles.headerNavList}>
                                                             <FeedbackButton emailAddress="itm.kicc@muenchen.de" subject="MUCGPT" />
+                                                        </div>
+                                                        <div className={styles.headerNavList}>
+                                                            <Button size="small" appearance="outline" onClick={onAddLegacyAssistants}>
+                                                                Test Legacy
+                                                            </Button>
                                                         </div>
                                                     </div>
                                                 </nav>

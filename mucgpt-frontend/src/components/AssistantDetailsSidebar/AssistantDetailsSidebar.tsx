@@ -150,7 +150,7 @@ export const AssistantDetailsSidebar = ({
                             </div>
                         )}
 
-                        {assistant && isLocalAssistant && !hideStartChat && (
+                        {assistant && isLocalAssistant && !isLegacyAssistant && !hideStartChat && (
                             <div className={styles.localCallout}>
                                 <Text className={styles.calloutTitle}>{t("components.community_assistants.local_state_title")}</Text>
                                 <Text>{t("components.community_assistants.discovery_local_hint")}</Text>

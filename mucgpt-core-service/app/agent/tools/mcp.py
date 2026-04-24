@@ -148,7 +148,7 @@ class McpLoader:
                             existing_metadata = dict(
                                 getattr(source_tool, "metadata", {}) or {}
                             )
-                            existing_metadata.pop("description", None)
+                            old_description =existing_metadata.pop("description", None)
 
                             metadata = {
                                 **existing_metadata,
@@ -165,6 +165,9 @@ class McpLoader:
                                 )
                                 metadata["description"] = new_description
                                 source_tool.description = new_description
+                            elif old_description:
+                                metadata["description"] = old_description
+                                source_tool.description = old_description
 
                             source_tool.metadata = metadata
 

@@ -17,8 +17,6 @@ from config.settings import get_mcp_settings
 from core.auth import AuthenticationResult
 from core.logtools import getLogger
 
-# AGENT_STATE_SCHEMA_REGISTRY = registry
-
 TOOL_INSTRUCTIONS_TEMPLATE = """
 # Tools
 ## Available tools:
@@ -36,7 +34,7 @@ def select_agent_state_schema(tools: list[BaseTool]) -> type[DefaultAgentState]:
     tool_groups = set()
     for tool in tools:
         if tool.metadata:
-            tool_groups.add(tool.metadata.get("mcp_group"))
+            tool_groups.add(tool.metadata.get("mcp_group", "default"))
     if len(tool_groups) > 1:
         return DefaultAgentState
     return AGENT_STATE_SCHEMA_REGISTRY.get(f"{list(tool_groups)[0]}", DefaultAgentState)
@@ -288,7 +286,6 @@ class ToolCollection:
 
         tool_instructions = TOOL_INSTRUCTIONS_TEMPLATE.format(
             tool_descriptions="\n".join(tool_descriptions),
-            # tool_detailed_instructions="\n\n".join(tool_detailed_instructions),
         )
 
         if messages and isinstance(messages[0], SystemMessage):

@@ -91,3 +91,18 @@ You can find the available versions under:
 - Migrations: <https://github.com/it-at-m/mucgpt/pkgs/container/mucgpt%2Fmucgpt-assistant-migrations>
 
 > Note: A new frontend tag will also create a new github pages deployment with the actual version
+
+
+## MCP credential handling security note
+
+MCP source credentials and auth overrides are modeled as secret types in configuration to
+reduce accidental plaintext exposure in config representation and normal app logging.
+
+However, for outbound MCP calls the credentials are materialized into HTTP headers at
+runtime. This means the implementation does **not** guarantee secrecy against host/runtime
+inspection (e.g., process memory inspection, crash dumps, verbose HTTP client logging,
+reverse-proxy/request logging, or packet capture at TLS termination boundaries).
+
+Treat this mechanism as **log/config leak reduction**, not full runtime confidentiality.
+For production, keep HTTP client logs non-verbose, avoid logging request objects, and
+restrict access to host-level observability and diagnostics.

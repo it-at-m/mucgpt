@@ -17,7 +17,7 @@ logger = getLogger(name="mucgpt-core-react-agent")
 
 DEFAULT_INSTRUCTIONS = ""
 with open(
-    os.path.join(os.path.dirname(__file__), "prompts", "default_instructions.md")
+    os.path.join(os.path.dirname(__file__), "prompt_pool", "default_instructions.md")
 ) as fp:
     DEFAULT_INSTRUCTIONS = fp.read()
 
@@ -39,7 +39,7 @@ class _ConfiguredLangChainAgentGraph:
         self.logger = logger
         self.debug = debug
 
-        logger.info(
+        logger.debug(
             "Initializing MUCGPT ReAct agent graph with tools: %s",
             [tool.name for tool in tools],
         )

@@ -1,6 +1,6 @@
 import { Accordion, AccordionHeader, AccordionItem, AccordionPanel, Button, Tooltip } from "@fluentui/react-components";
 import { Bot24Regular, ChatAdd24Regular, ChevronDown24Regular, ChevronLeft24Regular, ChevronRight24Regular, Home24Regular } from "@fluentui/react-icons";
-import { useLocation, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useMemo, useState, type ReactElement, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import styles from "./AppSidebar.module.css";
@@ -17,9 +17,10 @@ interface AppSidebarProps {
 
 interface NavigationItem {
     id: string;
+    kind: "link" | "action";
     label: string;
     ariaLabel: string;
-    to: string;
+    to?: string;
     icon: ReactElement;
     isActive: boolean;
 }
@@ -49,6 +50,7 @@ export const AppSidebar = ({
         () => [
             {
                 id: "home",
+                kind: "link",
                 label: t("app_sidebar.home"),
                 ariaLabel: t("app_sidebar.go_home"),
                 to: "/",
@@ -57,6 +59,7 @@ export const AppSidebar = ({
             },
             {
                 id: "assistants",
+                kind: "link",
                 label: t("app_sidebar.assistants"),
                 ariaLabel: t("app_sidebar.go_assistants"),
                 to: "/discovery",
@@ -65,6 +68,7 @@ export const AppSidebar = ({
             },
             {
                 id: "new-chat",
+                kind: "action",
                 label: t("app_sidebar.new_chat"),
                 ariaLabel: t("app_sidebar.start_new_chat"),
                 to: "/chat?new=1",
@@ -102,30 +106,43 @@ export const AppSidebar = ({
                 <div className={styles.content}>
                     <nav className={styles.navGroup}>
                         {navigationItems.map(item => {
-                            const buttonClassName = `${styles.navButton} ${collapsed && !isMobile ? styles.navButtonCollapsed : ""} ${
+                            const navItemClassName = `${styles.navButton} ${collapsed && !isMobile ? styles.navButtonCollapsed : ""} ${
                                 item.isActive ? styles.navButtonActive : ""
                             }`;
 
-                            const button = (
-                                <Button
-                                    key={item.id}
-                                    appearance="subtle"
-                                    icon={item.icon}
-                                    className={buttonClassName}
-                                    aria-label={item.ariaLabel}
-                                    aria-current={item.isActive ? "page" : undefined}
-                                    onClick={() => handleNavigate(item.to)}
-                                >
-                                    {(!collapsed || isMobile) && item.label}
-                                </Button>
-                            );
+                            const navItem =
+                                item.kind === "link" && item.to ? (
+                                    <Link
+                                        key={item.id}
+                                        to={item.to}
+                                        className={navItemClassName}
+                                        aria-label={item.ariaLabel}
+                                        aria-current={item.isActive ? "page" : undefined}
+                                        onClick={() => onNavigate?.()}
+                                    >
+                                        {item.icon}
+                                        {(!collapsed || isMobile) && item.label}
+                                    </Link>
+                                ) : (
+                                    <Button
+                                        key={item.id}
+                                        appearance="subtle"
+                                        icon={item.icon}
+                                        className={navItemClassName}
+                                        aria-label={item.ariaLabel}
+                                        aria-current={item.isActive ? "page" : undefined}
+                                        onClick={() => item.to && handleNavigate(item.to)}
+                                    >
+                                        {(!collapsed || isMobile) && item.label}
+                                    </Button>
+                                );
 
                             return collapsed && !isMobile ? (
                                 <Tooltip key={item.id} content={item.label} relationship="description" positioning="after">
-                                    {button}
+                                    {navItem}
                                 </Tooltip>
                             ) : (
-                                button
+                                navItem
                             );
                         })}
                     </nav>

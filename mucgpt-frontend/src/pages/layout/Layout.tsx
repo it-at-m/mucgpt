@@ -51,7 +51,7 @@ interface AppShellProps {
 const AppShell = ({ config, isLight, languagePreference, onLanguageSelectionChanged, onThemeChange, onAcceptTermsOfUse, termsOfUseRead }: AppShellProps) => {
     const { t } = useTranslation();
     const location = useLocation();
-    const { secondaryContent, secondaryTitle } = useAppSidebarContent();
+    const { secondaryContent: renderSecondaryContent, secondaryTitle } = useAppSidebarContent();
     const [isMobile, setIsMobile] = useState<boolean>(window.innerWidth <= MOBILE_LAYOUT_BREAKPOINT);
     const [mobileSidebarOpen, setMobileSidebarOpen] = useState<boolean>(false);
     const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(() => localStorage.getItem(APP_NAV_COLLAPSED_KEY) === "true");
@@ -80,6 +80,14 @@ const AppShell = ({ config, isLight, languagePreference, onLanguageSelectionChan
             return next;
         });
     }, []);
+
+    const secondaryContent = renderSecondaryContent?.({
+        isMobile: false
+    });
+    const mobileSecondaryContent = renderSecondaryContent?.({
+        isMobile: true,
+        requestClose: () => setMobileSidebarOpen(false)
+    });
 
     const utilitiesContent = (
         <div className={styles.mobileUtilities}>
@@ -193,7 +201,7 @@ const AppShell = ({ config, isLight, languagePreference, onLanguageSelectionChan
                             isMobile={true}
                             onToggleCollapsed={() => setMobileSidebarOpen(false)}
                             onNavigate={() => setMobileSidebarOpen(false)}
-                            secondaryContent={secondaryContent}
+                            secondaryContent={mobileSecondaryContent}
                             secondaryTitle={secondaryTitle}
                             utilitiesContent={utilitiesContent}
                         />

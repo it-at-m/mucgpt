@@ -412,15 +412,11 @@ const Chat = () => {
         setQuestion("");
         setUploadedData([]);
         clearChat();
-
-        const id = await storageService.create([], { system: systemPrompt, creativity });
-        dispatch({ type: "SET_ACTIVE_CHAT", payload: id });
-        await fetchHistory();
-    }, [clearChat, creativity, fetchHistory, storageService, systemPrompt]);
+    }, [clearChat]);
 
     const isCurrentChatEmpty = useMemo(
-        () => active_chat !== undefined && answers.length === 0 && question.trim() === "" && uploadedData.length === 0 && pendingQuestion === null,
-        [active_chat, answers.length, pendingQuestion, question, uploadedData.length]
+        () => answers.length === 0 && question.trim() === "" && uploadedData.length === 0 && pendingQuestion === null,
+        [answers.length, pendingQuestion, question, uploadedData.length]
     );
 
     // Stable ref for callApi so the pending-question effect doesn't
@@ -743,35 +739,36 @@ const Chat = () => {
         [callApi, systemPrompt, question, t, isLoadingRef.current, selectedTools, tools, uploadedData, uploadedDataToDataSources]
     );
 
-    const sidebar_history = useMemo(
-        () => (
-            <History
-                allChats={allChats}
-                currentActiveChatId={active_chat}
-                onDeleteChat={async id => {
-                    await storageService.delete(id);
-                    await fetchHistory();
-                }}
-                onChatNameChange={async (id, name: string) => {
-                    const newName = prompt(t("components.history.newchat"), name);
-                    await storageService.renameChat(id, newName ? newName.trim() : name);
-                    await fetchHistory();
-                }}
-                onFavChange={async (id: string, fav: boolean) => {
-                    await storageService.changeFavouritesInDb(id, fav);
-                    await fetchHistory();
-                }}
-                onSelect={async (id: string) => {
-                    loadChat(id);
-                }}
-                showHeader={false}
-                actions={<ClearChatButton onClick={clearChat} disabled={!lastQuestionRef.current || isLoadingRef.current} />}
-            ></History>
-        ),
+    const sidebarContent = useMemo(
+        () =>
+            ({ requestClose }: { requestClose?: () => void }) => (
+                <History
+                    allChats={allChats}
+                    currentActiveChatId={active_chat}
+                    onDeleteChat={async id => {
+                        await storageService.delete(id);
+                        await fetchHistory();
+                    }}
+                    onChatNameChange={async (id, name: string) => {
+                        const newName = prompt(t("components.history.newchat"), name);
+                        await storageService.renameChat(id, newName ? newName.trim() : name);
+                        await fetchHistory();
+                    }}
+                    onFavChange={async (id: string, fav: boolean) => {
+                        await storageService.changeFavouritesInDb(id, fav);
+                        await fetchHistory();
+                    }}
+                    onSelect={async (id: string) => {
+                        await loadChat(id);
+                        requestClose?.();
+                    }}
+                    showHeader={false}
+                    actions={<ClearChatButton onClick={clearChat} disabled={!lastQuestionRef.current || isLoadingRef.current} />}
+                ></History>
+            ),
         [allChats, active_chat, clearChat, fetchHistory, storageService, loadChat, t, lastQuestionRef.current, isLoadingRef.current]
     );
 
-    const sidebarContent = sidebar_history;
     const layout = useMemo(
         () => (
             <>

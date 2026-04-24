@@ -500,47 +500,58 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
     );
 
     // History component
-    const history = useMemo(
-        () => (
-            <History
-                allChats={allChats}
-                currentActiveChatId={active_chat}
-                onDeleteChat={async id => {
-                    await assistantChatStorage.delete(id);
-                    await fetchHistory();
-                }}
-                onChatNameChange={async (id, name: string) => {
-                    const newName = prompt(t("components.history.newchat"), name);
-                    await assistantChatStorage.renameChat(id, newName ? newName.trim() : name);
-                    await fetchHistory();
-                }}
-                onFavChange={async (id: string, fav: boolean) => {
-                    await assistantChatStorage.changeFavouritesInDb(id, fav);
-                    await fetchHistory();
-                }}
-                onSelect={async (id: string) => {
-                    const chat = await assistantChatStorage.get(id);
-                    if (chat) {
-                        setError(undefined);
-                        dispatch({ type: "SET_ANSWERS", payload: chat.messages });
-                        lastQuestionRef.current = chat.messages.length > 0 ? chat.messages[chat.messages.length - 1].user : "";
-                        dispatch({ type: "SET_ACTIVE_CHAT", payload: id });
+    const sidebarContent = useMemo(
+        () =>
+            ({ requestClose }: { requestClose?: () => void }) => (
+                <History
+                    allChats={allChats}
+                    currentActiveChatId={active_chat}
+                    onDeleteChat={async id => {
+                        await assistantChatStorage.delete(id);
+                        await fetchHistory();
+                    }}
+                    onChatNameChange={async (id, name: string) => {
+                        const newName = prompt(t("components.history.newchat"), name);
+                        await assistantChatStorage.renameChat(id, newName ? newName.trim() : name);
+                        await fetchHistory();
+                    }}
+                    onFavChange={async (id: string, fav: boolean) => {
+                        await assistantChatStorage.changeFavouritesInDb(id, fav);
+                        await fetchHistory();
+                    }}
+                    onSelect={async (id: string) => {
+                        const chat = await assistantChatStorage.get(id);
+                        if (chat) {
+                            setError(undefined);
+                            dispatch({ type: "SET_ANSWERS", payload: chat.messages });
+                            lastQuestionRef.current = chat.messages.length > 0 ? chat.messages[chat.messages.length - 1].user : "";
+                            dispatch({ type: "SET_ACTIVE_CHAT", payload: id });
 
-                        // Scroll to bottom after a short delay to ensure DOM is updated
-                        setTimeout(() => {
-                            scrollToBottom();
-                        }, 100);
-                    }
-                }}
-                readOnly={isDeletedAssistant}
-                showHeader={false}
-                actions={<ClearChatButton onClick={clearChat} disabled={!lastQuestionRef.current || isLoadingRef.current || isDeletedAssistant} />}
-            ></History>
-        ),
-        [allChats, active_chat, clearChat, fetchHistory, assistantChatStorage, t, scrollToBottom, isDeletedAssistant, lastQuestionRef.current, isLoadingRef.current]
+                            // Scroll to bottom after a short delay to ensure DOM is updated
+                            setTimeout(() => {
+                                scrollToBottom();
+                            }, 100);
+                            requestClose?.();
+                        }
+                    }}
+                    readOnly={isDeletedAssistant}
+                    showHeader={false}
+                    actions={<ClearChatButton onClick={clearChat} disabled={!lastQuestionRef.current || isLoadingRef.current || isDeletedAssistant} />}
+                ></History>
+            ),
+        [
+            allChats,
+            active_chat,
+            clearChat,
+            fetchHistory,
+            assistantChatStorage,
+            t,
+            scrollToBottom,
+            isDeletedAssistant,
+            lastQuestionRef.current,
+            isLoadingRef.current
+        ]
     );
-
-    const sidebarContent = history;
 
     // Examples component
     const examplesComponent = useMemo(() => {

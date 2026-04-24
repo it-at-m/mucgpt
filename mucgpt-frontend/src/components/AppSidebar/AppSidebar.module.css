@@ -22,7 +22,7 @@
     width: 100%;
     box-sizing: border-box;
 }
- 
+
 .edgeHandle {
     position: absolute;
     top: 0;
@@ -72,6 +72,7 @@
 
 .navButton {
     position: relative;
+    display: flex;
     justify-content: flex-start !important;
     align-items: center;
     gap: 6px;
@@ -86,6 +87,7 @@
     white-space: nowrap;
     overflow: hidden;
     text-align: left;
+    text-decoration: none;
     transition:
         background-color 120ms ease,
         color 120ms ease,

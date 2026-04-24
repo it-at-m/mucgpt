@@ -4,14 +4,8 @@
     gap: 10px;
 }
 
-.separator {
-    color: var(--colorNeutralForeground1) !important;
-    opacity: 0.7;
-    user-select: none;
-}
-
 .versionBadge {
-    color: var(--colorNeutralForeground1) !important;
+    color: var(--colorNeutralForeground2) !important;
     background-color: var(--colorNeutralBackground1) !important;
 }
 

@@ -79,6 +79,8 @@
     width: 100% !important;
     max-width: 100% !important;
     min-height: 48px;
+    padding-left: 14px !important;
+    padding-right: 12px !important;
     border-radius: 12px !important;
     font-weight: 500 !important;
     font-size: 15px !important;

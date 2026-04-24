@@ -44,7 +44,8 @@ class ContextMiddleware(AgentMiddleware):
         request = request.override(
             tools=policy.select_tools(request)
         )
-        # TODO: consider modification of system prompt based on policy/state
+        logger.info(f"selected Tools: {len(request.tools or [])}")
+        request = policy.modify_system_message(request)
 
         return handler(request)
 
@@ -61,8 +62,7 @@ class ContextMiddleware(AgentMiddleware):
             tools=policy.select_tools(request),
         )
         logger.info(f"selected Tools: {len(request.tools or [])}")
-
-        # TODO: consider async modification of system prompt based on policy/state
+        request = await policy.amodify_system_message(request)
 
         return await handler(request)
 

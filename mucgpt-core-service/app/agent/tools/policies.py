@@ -4,6 +4,7 @@ import os
 from typing import Any
 
 from langchain.agents.middleware import ModelRequest
+from langchain_core.messages import SystemMessage
 from langchain_openai import ChatOpenAI
 
 from agent.state_models.atlassian_state import AtlassianAgentState, ScopeDecision
@@ -11,23 +12,6 @@ from core.logtools import getLogger
 
 logger = getLogger(name="agent-policies")
 
-
-def _tool_scope(tool: Any) -> str | None:
-    """Infer the MCP scope for a tool from metadata or name."""
-    metadata = getattr(tool, "metadata", None)
-    if isinstance(metadata, dict):
-        scoped = metadata.get("mcp_scope")
-        if scoped:
-            normalized = str(scoped).strip().lower()
-            if normalized in {"jira", "confluence"}:
-                return normalized
-
-    tool_name = str(getattr(tool, "name", "")).strip().lower()
-    if "jira" in tool_name:
-        return "jira"
-    if "confluence" in tool_name:
-        return "confluence"
-    return None
 
 def _last_messages(request: ModelRequest, n: int = 4) -> list[Any]:
     return list((request.messages or [])[-n:])
@@ -94,9 +78,19 @@ class DefaultScopePolicy:
         request: ModelRequest,
     ) -> list[Any]:
         return list(request.tools or [])
+    
+    def modify_system_message(
+        self, 
+        request: ModelRequest
+    ) -> ModelRequest:
+        return request
 
-    def modify_system_message(self, system_text: str, scope: str) -> str:
-        return system_text
+    async def amodify_system_message(
+        self, 
+        request: ModelRequest
+    ) -> ModelRequest:
+        return request
+    
 
 
 class AtlassianScopePolicy(DefaultScopePolicy):
@@ -135,12 +129,28 @@ class AtlassianScopePolicy(DefaultScopePolicy):
             # If 'agent' is not found, you can go up manually, e.g., two levels up
             # Adjust this as needed
             agent_dir = os.path.abspath(os.path.join(current_dir, "..", "..", "agent"))
-        target_path = os.path.join(agent_dir, "prompt_pool", "atlassian_scope_router.md")
+        self.prompt_pool_dir = os.path.join(agent_dir, "prompt_pool")
+        target_path = os.path.join(self.prompt_pool_dir, "atlassian_scope_router.md")
         if os.path.exists(target_path):
             with open(target_path) as f:
                 self.router_prompt = f.read()
 
+    def _tool_scope(self, tool: Any) -> str | None:
+        """Infer the MCP scope for a atlassian tool from metadata or name."""
+        metadata = getattr(tool, "metadata", None)
+        if isinstance(metadata, dict):
+            scoped = metadata.get("mcp_scope")
+            if scoped:
+                normalized = str(scoped).strip().lower()
+                if normalized in {"jira", "confluence"}:
+                    return normalized
 
+        tool_name = str(getattr(tool, "name", "")).strip().lower()
+        if "jira" in tool_name:
+            return "jira"
+        if "confluence" in tool_name:
+            return "confluence"
+        return None
 
     def _try_initial_scope(
         self,
@@ -240,7 +250,7 @@ class AtlassianScopePolicy(DefaultScopePolicy):
                     "content": f"Message {i + 1}: {_extract_message_text(m)}",
                 }
                 for i, m in enumerate(_last_messages(request, n))
-                if _extract_message_text(m) and _message_type(m) in {"human", "user", "assistant"}
+                if _extract_message_text(m) and _message_type(m) not in {"tool"}
             ],
         ]
 
@@ -265,7 +275,7 @@ class AtlassianScopePolicy(DefaultScopePolicy):
             logger.debug(f"Model inferred scope '{scope}' with confidence {confidence:.2f}")
 
             # fallback to general if confidence is low
-            scope = self.DEFAULT_SCOPE if confidence < 0.5 else scope
+            scope = self.DEFAULT_SCOPE if confidence < 0.6 else scope
         except Exception:
             logger.exception("Scope routing model failed; falling back to default scope.")
             scope = self.DEFAULT_SCOPE
@@ -280,6 +290,7 @@ class AtlassianScopePolicy(DefaultScopePolicy):
         }
         new_state: AtlassianAgentState = AtlassianAgentState(**{**request.state, **state_update})
         logger.info(f"Updating agent state with inferred scope. {new_state["current_scope"]}")
+
         request = request.override(state=new_state)
         return request
 
@@ -294,35 +305,67 @@ class AtlassianScopePolicy(DefaultScopePolicy):
 
         selected: list[Any] = []
         for tool in tools:
-            tool_scope = _tool_scope(tool)
+            tool_scope = self._tool_scope(tool)
             if tool_scope is None:
                 selected.append(tool)
             elif tool_scope == request.state.get("current_scope", "general"):
                 selected.append(tool)
 
         return selected or tools
+    
 
-    def modify_system_message(self, system_text: str, scope: str) -> str:
-        """Append the active MCP scope once so the model sees the current tool context."""
-        # NOTE: this is currently just a example 
-        # the function can be used to dynamically modify the system prompt based on the active scope
-        # for example, we could add specific instructions or information about the tools available in the current scope to guide the model's behavior
-        # or completely replace the system prompt with a scope-specific one
-        cleaned = system_text.strip()
+# ---------------------------------------------------------------------------
+# Prompt modifications
+# ---------------------------------------------------------------------------
+    def modify_system_message(
+        self, 
+        request: ModelRequest
+    ) -> ModelRequest:
+        registry = {
+            "jira": "atlassian_jira.md",
+            "confluence": "atlassian_confluence.md",
+            "general": "atlassian_general.md",
+        }
 
-        if cleaned:
-            lines = [
-                line for line in cleaned.splitlines()
-                if not line.strip().startswith(self.SCOPE_CONTEXT_PREFIX)
-            ]
-            cleaned = "\n".join(lines).strip()
+        current_scope = request.state.get("current_scope", self.DEFAULT_SCOPE)
+        prompt_file = registry.get(current_scope)
+        prompt_file_path = os.path.join(self.prompt_pool_dir, prompt_file) if prompt_file else None
+        if prompt_file_path and os.path.exists(prompt_file_path):
+            with open(prompt_file_path) as f:
+                scope_prompt = f.read()
+            new_system_message = SystemMessage(content=scope_prompt)
+            if new_system_message.content:
+                # replace system message and remove old system message 
+                request = request.override(
+                    messages = request.messages[1:] if request.messages and _message_type(request.messages[0]) == "system" else request.messages,
+                    system_message=new_system_message
+                )
+        return request
+    
+    async def amodify_system_message(
+        self, 
+        request: ModelRequest
+    ) -> ModelRequest:
+        registry = {
+            "jira": "atlassian_jira.md",
+            "confluence": "atlassian_confluence.md",
+            "general": "atlassian_general.md",
+        }
 
-        if scope == self.DEFAULT_SCOPE:
-            return cleaned
-
-        if cleaned:
-            return f"{cleaned}\n{self.SCOPE_CONTEXT_PREFIX} {scope}"
-        return f"{self.SCOPE_CONTEXT_PREFIX} {scope}"
+        current_scope = request.state.get("current_scope", self.DEFAULT_SCOPE)
+        prompt_file = registry.get(current_scope)
+        prompt_file_path = os.path.join(self.prompt_pool_dir, prompt_file) if prompt_file else None
+        if prompt_file_path and os.path.exists(prompt_file_path):
+            with open(prompt_file_path) as f:
+                scope_prompt = f.read()
+            new_system_message = SystemMessage(content=scope_prompt)
+            if new_system_message.content:
+                # replace system message and remove old system message 
+                request = request.override(
+                    messages = request.messages[1:] if request.messages and _message_type(request.messages[0]) == "system" else request.messages,
+                    system_message=new_system_message
+                )
+        return request
 
 
 # ---------------------------------------------------------------------------
@@ -331,7 +374,6 @@ class AtlassianScopePolicy(DefaultScopePolicy):
 
 
 def _build_policy_registry() -> dict[type, DefaultScopePolicy]:
-    from agent.state_models.atlassian_state import AtlassianAgentState  # noqa: PLC0415
 
     # initialize routing model with streaming disabled to avoid displaying internal routing decisions in the frontend
     router_model = ChatOpenAI(

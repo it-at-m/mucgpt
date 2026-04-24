@@ -15,5 +15,6 @@ class AtlassianAgentState(DefaultAgentState):
 
 
 class ScopeDecision(BaseModel):
-        scope: str
+        scope: str = Field(description="The scope to route the tool call to, e.g. 'jira', 'confluence', or 'general' if scope is uncertain.")
         confidence: float = Field(ge=0.0, le=1.0)
+        reasoning: str = Field(description="A brief explanation of the reasoning behind the scope decision, to help with debugging and future improvements.")

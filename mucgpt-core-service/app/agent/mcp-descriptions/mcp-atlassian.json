@@ -167,7 +167,7 @@
   {
     "source": "mcp-atlassian",
     "name": "searchAtlassian",
-    "description": "Default search across Jira and Confluence using natural language (Rovo Search). Use this for general queries unless CQL/JQL is explicitly required."
+    "description": "Default search across Jira and Confluence using natural language (Rovo Search). Use this for any searches unless CQL/JQL is explicitly required."
   },
   {
     "source": "mcp-atlassian",

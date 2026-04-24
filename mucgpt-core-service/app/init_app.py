@@ -107,7 +107,7 @@ async def init_agent(user_info: AuthenticationResult) -> MUCGPTAgentExecutor:
         tools = await tool_collection.get_tools(
             user_info=user_info
         )  # all tools that are available
-        logger.info(
+        logger.debug(
             f"Initializing MUCGPTAgent with tools: {[tool.name for tool in tools]}"
         )
         agent = MUCGPTReActAgent(

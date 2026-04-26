@@ -25,6 +25,7 @@ import { useGlobalToastContext } from "../../components/GlobalToastHandler/Globa
 import GlobalToastHandler from "../../components/GlobalToastHandler/GlobalToastHandler";
 import { Navigation24Regular, DismissRegular, Settings24Regular, ContactCard24Regular } from "@fluentui/react-icons";
 import TutorialsButton from "../../components/TutorialsButton";
+import { TranscriptionSettingsButton } from "../../components/TranscriptionSettings/TranscriptionSettingsButton";
 import { ToolsProvider } from "../../components/ToolsProvider";
 import Unauthorized from "../Unauthorized";
 import { ConfigContext } from "../../context/ConfigContext";
@@ -224,6 +225,9 @@ export const Layout = () => {
                                                             <LanguageSelector defaultlang={language_pref} onSelectionChange={onLanguageSelectionChanged} />
                                                         </div>
                                                         <div className={styles.headerNavList}>
+                                                            <TranscriptionSettingsButton />
+                                                        </div>
+                                                        <div className={styles.headerNavList}>
                                                             <ThemeSelector isLight={isLight} onThemeChange={onThemeChange} />
                                                         </div>
                                                         <div className={styles.headerNavList}>
@@ -260,6 +264,10 @@ export const Layout = () => {
                                                                             defaultlang={language_pref}
                                                                             onSelectionChange={onLanguageSelectionChanged}
                                                                         />
+                                                                    </div>
+                                                                    <div className={styles.accordionItem}>
+                                                                        <span>{t("components.transcriptionSettings.title")}:</span>
+                                                                        <TranscriptionSettingsButton />
                                                                     </div>
                                                                 </div>
                                                             </AccordionPanel>

@@ -24,6 +24,7 @@ import Unauthorized from "./pages/Unauthorized";
 import Discovery from "./pages/discovery/Discovery";
 import Home from "./pages/home/Home";
 import { AssistantEditorPage } from "./components/AssistantDialogs/AssistantEditorPage/AssistantEditorPage";
+import { TranscriptionSettingsProvider } from "./components/TranscriptionSettings/TranscriptionSettingsContext";
 initializeIcons();
 
 const router = createHashRouter([
@@ -167,7 +168,9 @@ enableMocking().then(() => {
                     <LLMContextProvider>
                         <QuickPromptProvider>
                             <HeaderContextProvider>
-                                <RouterProvider router={router} />
+                                <TranscriptionSettingsProvider>
+                                    <RouterProvider router={router} />
+                                </TranscriptionSettingsProvider>
                             </HeaderContextProvider>
                         </QuickPromptProvider>
                     </LLMContextProvider>

@@ -260,13 +260,14 @@ export const TranscriptionSettingsProvider = (props: React.PropsWithChildren<unk
             return new Promise<void>((resolve, reject) => {
                 pendingDownloadRef.current = { id: modelId, resolve, reject };
                 // Fetch file sizes in parallel
+                const modelDtype = TRANSCRIPTION_MODELS.find(m => m.model_id === modelId)?.dtype;
                 fetchModelFileSizes(modelId)
                     .then(fileSizes => {
-                        sendToWorker({ type: "load", modelId, fileSizes });
+                        sendToWorker({ type: "load", modelId, fileSizes, dtype: modelDtype });
                     })
                     .catch(err => {
                         console.error("Failed to fetch file sizes, continuing without size info:", err);
-                        sendToWorker({ type: "load", modelId });
+                        sendToWorker({ type: "load", modelId, dtype: modelDtype });
                     });
             });
         },

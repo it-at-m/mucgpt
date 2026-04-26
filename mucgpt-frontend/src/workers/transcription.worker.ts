@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 export type WorkerInMessage =
-    | { type: "load"; modelId: string; fileSizes?: Record<string, number> }
+    | { type: "load"; modelId: string; fileSizes?: Record<string, number>; dtype?: Record<string, string> | string }
     | { type: "transcribe"; audio: Float32Array; language?: string; interim?: boolean }
     | { type: "abort" };
 
@@ -31,7 +31,7 @@ function isWhisperModel(modelId: string): boolean {
     return /whisper/i.test(modelId);
 }
 
-async function loadModel(modelId: string, fileSizes?: Record<string, number>) {
+async function loadModel(modelId: string, fileSizes?: Record<string, number>, modelDtype?: Record<string, string> | string) {
     if (!modelId) {
         self.postMessage({ type: "error", message: "Missing modelId" } satisfies WorkerOutMessage);
         return;
@@ -54,13 +54,15 @@ async function loadModel(modelId: string, fileSizes?: Record<string, number>) {
         isWhisper = isWhisperModel(modelId);
 
         const device = hasWebGPU ? "webgpu" : "wasm";
-        const dtype = isWhisper
-            ? hasWebGPU
-                ? { encoder_model: "fp32", decoder_model_merged: "q4" }
-                : { encoder_model: "fp32", decoder_model_merged: "q8" }
-            : hasWebGPU
-              ? "fp32"
-              : "q4";
+        const dtype = modelDtype !== undefined
+            ? modelDtype
+            : isWhisper
+              ? hasWebGPU
+                  ? { encoder_model: "fp32", decoder_model_merged: "q4" }
+                  : { encoder_model: "fp32", decoder_model_merged: "q8" }
+              : hasWebGPU
+                ? "fp32"
+                : "q4";
 
         const totalBytes = fileSizes ? Object.values(fileSizes).reduce((a, b) => a + b, 0) : 0;
         const fileProgress = new Map<string, number>();
@@ -184,7 +186,7 @@ self.addEventListener("message", (event: MessageEvent<WorkerInMessage>) => {
     const msg = event.data;
     switch (msg.type) {
         case "load":
-            loadModel(msg.modelId, msg.fileSizes);
+            loadModel(msg.modelId, msg.fileSizes, msg.dtype);
             break;
         case "transcribe":
             transcribe(msg.audio, msg.language, msg.interim ?? false);

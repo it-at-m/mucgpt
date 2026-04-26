@@ -270,13 +270,14 @@ const Chat = () => {
 
     // Rollback-Funktion
     const onRollbackMessage = useCallback(
-        (index: number) => {
+        async (index: number) => {
             if (!activeChatRef.current || isLoadingRef.current) return;
+            const activeChat = activeChatRef.current;
 
             try {
                 isLoadingRef.current = true;
                 setError(undefined);
-                handleRollback(index, activeChatRef.current, dispatch, storageService, lastQuestionRef, setQuestion, clearChat, fetchHistory);
+                await handleRollback(index, activeChat, dispatch, storageService, lastQuestionRef, setQuestion, clearChat, fetchHistory);
             } catch (e) {
                 setError(e);
             } finally {

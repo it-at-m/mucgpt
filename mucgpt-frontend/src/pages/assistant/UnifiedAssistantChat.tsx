@@ -470,14 +470,15 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
 
     // Rollback-Funktion
     const onRollbackMessage = useCallback(
-        (index: number) => {
+        async (index: number) => {
             if (!activeChatRef.current || isLoading) return;
+            const activeChat = activeChatRef.current;
             setIsLoadingValue(true);
             try {
                 setError(undefined);
-                handleRollback(
+                await handleRollback(
                     index,
-                    activeChatRef.current,
+                    activeChat,
                     dispatch,
                     assistantChatStorage,
                     lastQuestionRef,
@@ -488,8 +489,9 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                 );
             } catch (e) {
                 setError(e);
+            } finally {
+                setIsLoadingValue(false);
             }
-            setIsLoadingValue(false);
         },
         [assistantChatStorage, clearChat, fetchHistory, isLoading, setIsLoadingValue, setLastQuestionValue]
     );

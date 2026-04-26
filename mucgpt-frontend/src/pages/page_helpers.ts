@@ -118,7 +118,7 @@ export function handleDeleteChat(
  * @param clearChat - Function to clear the entire chat UI
  * @param fetchHistory - Optional function to refresh the chat history list
  */
-export function handleRollback(
+export async function handleRollback(
     index: number,
     activeChat: string,
     dispatch: Dispatch<any>,
@@ -126,31 +126,29 @@ export function handleRollback(
     lastQuestionRef: MutableRefObject<string>,
     setQuestion: Dispatch<SetStateAction<string>>,
     clearChat: () => void,
-    fetchHistory?: () => void,
+    fetchHistory?: () => unknown | Promise<unknown>,
     onLastQuestionChange?: (question: string) => void
-) {
+): Promise<void> {
     // Exit early if no active chat is selected
     if (!activeChat) return;
 
     // Rollback messages in storage and update UI state
-    storageService.rollbackMessage(index, activeChat, setQuestion).then(result => {
-        if (!result) return;
+    const result = await storageService.rollbackMessage(index, activeChat, setQuestion);
+    if (!result) return;
 
-        if (result.messages.length > 0) {
-            // Update the chat with remaining messages
-            dispatch({ type: "SET_ANSWERS", payload: result.messages });
-            // Update the last question reference
-            lastQuestionRef.current = result.messages[result.messages.length - 1].user;
-            onLastQuestionChange?.(lastQuestionRef.current);
-        } else {
-            // No messages left - clear the chat and delete it from storage
-            clearChat();
-            storageService.delete(result.id ?? "").then(() => {
-                // Refresh the history list if callback is provided
-                if (fetchHistory) fetchHistory();
-            });
-        }
-    });
+    if (result.messages.length > 0) {
+        // Update the chat with remaining messages
+        dispatch({ type: "SET_ANSWERS", payload: result.messages });
+        // Update the last question reference
+        lastQuestionRef.current = result.messages[result.messages.length - 1].user;
+        onLastQuestionChange?.(lastQuestionRef.current);
+    } else {
+        // No messages left - clear the chat and delete it from storage
+        clearChat();
+        await storageService.delete(result.id ?? "");
+        // Refresh the history list if callback is provided
+        await fetchHistory?.();
+    }
 }
 
 /**

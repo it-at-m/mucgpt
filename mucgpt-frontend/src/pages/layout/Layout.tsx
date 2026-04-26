@@ -12,7 +12,7 @@ import { DEFAULTLANG, LanguageContext } from "../../components/LanguageSelector/
 import { TermsOfUseDialog } from "../../components/TermsOfUseDialog";
 import { ApplicationConfig } from "../../api";
 import { STORAGE_KEYS, createAppCssVars, createFluentTheme, createScaledTypographyTheme, getAppTokens } from "./LayoutHelper";
-import { LLMContext } from "../../components/LLMSelector/LLMContextProvider";
+import { DEFAULTLLM, LLMContext } from "../../components/LLMSelector/LLMContextProvider";
 import { LightContext } from "./LightContext";
 import { DEFAULT_APP_CONFIG } from "../../constants";
 import { UserContextProvider } from "./UserContextProvider";
@@ -231,8 +231,8 @@ export const Layout = () => {
     const [unauthorizedRedirectUrl, setUnauthorizedRedirectUrl] = useState<string | undefined>(undefined);
 
     const termsOfUseRead = localStorage.getItem(STORAGE_KEYS.TERMS_OF_USE_READ) === formatDate(new Date());
-    const languagePreference = localStorage.getItem(STORAGE_KEYS.SETTINGS_LANGUAGE) || DEFAULTLANG;
-    const llmPreference = localStorage.getItem(STORAGE_KEYS.SETTINGS_LLM) || config.models[0].llm_name;
+    const [languagePreference, setLanguagePreference] = useState<string>(() => localStorage.getItem(STORAGE_KEYS.SETTINGS_LANGUAGE) || DEFAULTLANG);
+    const [llmPreference] = useState<string>(() => localStorage.getItem(STORAGE_KEYS.SETTINGS_LLM) || config.models?.[0]?.llm_name || DEFAULTLLM);
 
     const fontScalingPreference = Number(localStorage.getItem(STORAGE_KEYS.SETTINGS_FONT_SCALING)) || 1;
     const [fontscaling] = useState<number>(fontScalingPreference);
@@ -307,6 +307,7 @@ export const Layout = () => {
             const lang = nextLanguage || DEFAULTLANG;
             i18n.changeLanguage(lang);
             setLanguage(lang);
+            setLanguagePreference(lang);
             localStorage.setItem(STORAGE_KEYS.SETTINGS_LANGUAGE, lang);
         },
         [i18n, setLanguage]

@@ -298,7 +298,8 @@ i18n
                             title: "Transkription",
                             beta: "Beta",
                             open_tooltip: "Transkriptionseinstellungen öffnen",
-                            disclaimer: "Beta-Funktion: Die Transkriptionsqualität ist nicht validiert und kann je nach Sprache, Audioqualität und lokaler Hardware variieren. Das Modell läuft vollständig im Browser – keine Audiodaten verlassen dein Gerät.",
+                            disclaimer:
+                                "Beta-Funktion: Die Transkriptionsqualität ist nicht validiert und kann je nach Sprache, Audioqualität und lokaler Hardware variieren. Das Modell läuft vollständig im Browser – keine Audiodaten verlassen dein Gerät.",
                             webgpu_warning:
                                 "Dein Browser unterstützt kein WebGPU. Die Transkription läuft auf CPU (WebAssembly) und kann deutlich langsamer sein. Für beste Leistung verwende Chrome oder Edge (Version 113+).",
                             enable_label: "Transkription aktivieren",
@@ -975,7 +976,8 @@ i18n
                             title: "Transcription",
                             beta: "Beta",
                             open_tooltip: "Open transcription settings",
-                            disclaimer: "Beta feature: transcription quality is not validated and may vary with language, audio quality, and your local hardware. The model runs fully in your browser – no audio leaves your device.",
+                            disclaimer:
+                                "Beta feature: transcription quality is not validated and may vary with language, audio quality, and your local hardware. The model runs fully in your browser – no audio leaves your device.",
                             webgpu_warning:
                                 "Your browser does not support WebGPU. Transcription will run on CPU (WebAssembly) and may be noticeably slower. For best performance, use Chrome or Edge (version 113+).",
                             enable_label: "Enable transcription",
@@ -1636,7 +1638,8 @@ i18n
                             title: "Transkription",
                             beta: "Beta",
                             open_tooltip: "Transkriptions-Einstellunga aufmacha",
-                            disclaimer: "Beta-Funktion: D'Transkriptionsqualität is ned validiert und ko je noch Sproch, Audioqualität und lokala Hardware variiern. S'Modell läuft kompled im Browser – koa Audiodaten varoaßn dei Gerät.",
+                            disclaimer:
+                                "Beta-Funktion: D'Transkriptionsqualität is ned validiert und ko je noch Sproch, Audioqualität und lokala Hardware variiern. S'Modell läuft kompled im Browser – koa Audiodaten varoaßn dei Gerät.",
                             webgpu_warning:
                                 "Dei Browser ko koa WebGPU. D'Transkription lafft afm CPU (WebAssembly) und ko deitli langsamer sei. Für de beste Leistung nimm Chrome oder Edge (Version 113+).",
                             enable_label: "Transkription aktivieren",
@@ -2302,7 +2305,8 @@ i18n
                             title: "Transcription",
                             beta: "Bêta",
                             open_tooltip: "Ouvrir les paramètres de transcription",
-                            disclaimer: "Fonctionnalité bêta : la qualité de la transcription n'est pas validée et peut varier selon la langue, la qualité audio et votre matériel local. Le modèle s'exécute entièrement dans le navigateur – aucun audio ne quitte votre appareil.",
+                            disclaimer:
+                                "Fonctionnalité bêta : la qualité de la transcription n'est pas validée et peut varier selon la langue, la qualité audio et votre matériel local. Le modèle s'exécute entièrement dans le navigateur – aucun audio ne quitte votre appareil.",
                             webgpu_warning:
                                 "Votre navigateur ne prend pas en charge WebGPU. La transcription s'exécutera sur le CPU (WebAssembly) et peut être nettement plus lente. Pour de meilleures performances, utilisez Chrome ou Edge (version 113+).",
                             enable_label: "Activer la transcription",
@@ -2968,7 +2972,8 @@ i18n
                             title: "Транскрипція",
                             beta: "Бета",
                             open_tooltip: "Відкрити налаштування транскрипції",
-                            disclaimer: "Бета-функція: якість транскрипції не перевірена і може залежати від мови, якості звуку та локального обладнання. Модель працює повністю у браузері – аудіо не залишає ваш пристрій.",
+                            disclaimer:
+                                "Бета-функція: якість транскрипції не перевірена і може залежати від мови, якості звуку та локального обладнання. Модель працює повністю у браузері – аудіо не залишає ваш пристрій.",
                             webgpu_warning:
                                 "Ваш браузер не підтримує WebGPU. Транскрипція виконуватиметься на CPU (WebAssembly) і може бути помітно повільнішою. Для найкращої продуктивності використовуйте Chrome або Edge (версія 113+).",
                             enable_label: "Увімкнути транскрипцію",

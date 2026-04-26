@@ -59,7 +59,8 @@ export const MicrophoneButton = ({ onTranscription, onLiveTranscription, onRecor
     const isBusy = isTranscribing || isLoadingModel;
 
     const getTooltipContent = () => {
-        if (isLoadingModel) return `${t("components.microphonebutton.loading_model", "Modell wird geladen...")} ${modelProgress > 0 ? `${modelProgress}%` : ""}`;
+        if (isLoadingModel)
+            return `${t("components.microphonebutton.loading_model", "Modell wird geladen...")} ${modelProgress > 0 ? `${modelProgress}%` : ""}`;
         if (isRecording) return t("components.microphonebutton.stop", "Aufnahme beenden");
         if (isTranscribing) return t("components.microphonebutton.transcribing", "Transkribiere...");
         return t("components.microphonebutton.record", "Sprachaufnahme starten");
@@ -83,9 +84,7 @@ export const MicrophoneButton = ({ onTranscription, onLiveTranscription, onRecor
                     onClick={handleClick}
                 />
             </Tooltip>
-            {isTranscribing && (
-                <span className={styles.transcribingLabel}>{t("components.microphonebutton.transcribing", "Transkribiere...")}</span>
-            )}
+            {isTranscribing && <span className={styles.transcribingLabel}>{t("components.microphonebutton.transcribing", "Transkribiere...")}</span>}
         </div>
     );
 };

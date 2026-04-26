@@ -374,16 +374,16 @@ export const QuestionInput = ({
                             />
                         )}
                         <Tooltip content={resolvedPlaceholder} relationship="label">
-                        <Button
-                            ref={sendButtonRef}
-                            size="large"
-                            appearance="transparent"
-                            icon={<Send28Filled />}
-                            aria-label={t("components.questioninput.send_question", "Frage senden")}
-                            disabled={disabled || !question.trim()}
-                            onClick={sendQuestion}
-                        />
-                    </Tooltip>
+                            <Button
+                                ref={sendButtonRef}
+                                size="large"
+                                appearance="transparent"
+                                icon={<Send28Filled />}
+                                aria-label={t("components.questioninput.send_question", "Frage senden")}
+                                disabled={disabled || !question.trim()}
+                                onClick={sendQuestion}
+                            />
+                        </Tooltip>
                     </div>
                 </div>
 

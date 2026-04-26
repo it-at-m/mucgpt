@@ -41,8 +41,8 @@ const SPEECH_THRESHOLD = 0.3;
 const EXIT_THRESHOLD = 0.1;
 const MIN_SILENCE_DURATION_SAMPLES = 0.4 * SAMPLE_RATE; // 400 ms
 const MIN_SPEECH_DURATION_SAMPLES = 0.25 * SAMPLE_RATE; // 250 ms
-const SPEECH_PAD_SAMPLES = 0.1 * SAMPLE_RATE;           // 100 ms
-const MAX_NUM_PREV_BUFFERS = 4;                          // ~400 ms lookback
+const SPEECH_PAD_SAMPLES = 0.1 * SAMPLE_RATE; // 100 ms
+const MAX_NUM_PREV_BUFFERS = 4; // ~400 ms lookback
 
 const BUFFER = new Float32Array(MAX_BUFFER_DURATION * SAMPLE_RATE);
 let bufferPointer = 0;
@@ -60,9 +60,9 @@ const sr = new Tensor("int64", [SAMPLE_RATE], []);
 3. If recording or new speech → append frame to `BUFFER`.
 4. On speech start: emit `recording_start` status; reset `postSpeechSamples`.
 5. On continuing silence after speech:
-   - If `postSpeechSamples < MIN_SILENCE_DURATION_SAMPLES` → keep buffering (short pause).
-   - If segment shorter than `MIN_SPEECH_DURATION_SAMPLES` → discard (likely noise).
-   - Else → build `paddedBuffer = [...prevBuffers, BUFFER[0..pointer + SPEECH_PAD_SAMPLES]]`, dispatch to Whisper, reset.
+    - If `postSpeechSamples < MIN_SILENCE_DURATION_SAMPLES` → keep buffering (short pause).
+    - If segment shorter than `MIN_SPEECH_DURATION_SAMPLES` → discard (likely noise).
+    - Else → build `paddedBuffer = [...prevBuffers, BUFFER[0..pointer + SPEECH_PAD_SAMPLES]]`, dispatch to Whisper, reset.
 6. Buffer overflow (speech longer than `MAX_BUFFER_DURATION`): flush current segment, keep tail as new segment start.
 
 ## Transcription dispatch
@@ -74,6 +74,7 @@ Emit each completed segment as `{ type: "segment", text, start, end }`. Main thr
 ## UI/context changes
 
 `TranscriptionSettingsContext`:
+
 - Drop `handleInterimBlob` + `resampleAudioTo16kHz`.
 - Worker message handler learns `"segment"` type — append to `transcript` instead of replace.
 - `stopAndTranscribe` becomes "stop audio stream + flush pending segment." No final full-buffer transcription needed — VAD already segmented everything.

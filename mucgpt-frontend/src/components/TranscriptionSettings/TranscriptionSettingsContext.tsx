@@ -260,12 +260,14 @@ export const TranscriptionSettingsProvider = (props: React.PropsWithChildren<unk
             return new Promise<void>((resolve, reject) => {
                 pendingDownloadRef.current = { id: modelId, resolve, reject };
                 // Fetch file sizes in parallel
-                fetchModelFileSizes(modelId).then(fileSizes => {
-                    sendToWorker({ type: "load", modelId, fileSizes });
-                }).catch(err => {
-                    console.error("Failed to fetch file sizes, continuing without size info:", err);
-                    sendToWorker({ type: "load", modelId });
-                });
+                fetchModelFileSizes(modelId)
+                    .then(fileSizes => {
+                        sendToWorker({ type: "load", modelId, fileSizes });
+                    })
+                    .catch(err => {
+                        console.error("Failed to fetch file sizes, continuing without size info:", err);
+                        sendToWorker({ type: "load", modelId });
+                    });
             });
         },
         [sendToWorker]

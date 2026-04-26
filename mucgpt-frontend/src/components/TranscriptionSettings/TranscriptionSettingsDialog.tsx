@@ -111,11 +111,7 @@ export const TranscriptionSettingsDialog = ({ open, onOpenChange }: Props) => {
                         <div className={styles.section}>
                             <Label>{t("components.transcriptionSettings.model_label")}</Label>
                             <div className={styles.modelList}>
-                                <RadioGroup
-                                    value={selectedModelId}
-                                    onChange={(_, data) => setSelectedModelId(data.value)}
-                                    disabled={!enabled}
-                                >
+                                <RadioGroup value={selectedModelId} onChange={(_, data) => setSelectedModelId(data.value)} disabled={!enabled}>
                                     {TRANSCRIPTION_MODELS.map(m => {
                                         const isDownloaded = downloadedModels.includes(m.model_id);
                                         return (
@@ -144,18 +140,12 @@ export const TranscriptionSettingsDialog = ({ open, onOpenChange }: Props) => {
                         <div className={styles.section}>
                             <div className={styles.downloadRow}>
                                 <Button appearance="primary" disabled={!enabled || isLoading} onClick={onDownload}>
-                                    {selectedIsDownloaded
-                                        ? t("components.transcriptionSettings.redownload")
-                                        : t("components.transcriptionSettings.download")}
+                                    {selectedIsDownloaded ? t("components.transcriptionSettings.redownload") : t("components.transcriptionSettings.download")}
                                 </Button>
                                 <span className={styles.statusRow}>{statusLabel}</span>
                             </div>
                             {isLoading && loadingModelId === selectedModelId && (
-                                <ProgressBar
-                                    className={styles.progress}
-                                    value={modelProgress > 0 ? modelProgress / 100 : undefined}
-                                    thickness="medium"
-                                />
+                                <ProgressBar className={styles.progress} value={modelProgress > 0 ? modelProgress / 100 : undefined} thickness="medium" />
                             )}
                             {error && status === "error" && <span className={styles.statusRow}>{error}</span>}
                         </div>

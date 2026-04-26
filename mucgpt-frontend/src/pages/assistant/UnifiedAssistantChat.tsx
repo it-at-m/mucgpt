@@ -110,6 +110,8 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
     const [isAssistantInfoLoading, setIsAssistantInfoLoading] = useState<boolean>(false);
     const [isOwnershipResolved, setIsOwnershipResolved] = useState<boolean>(!(strategy instanceof CommunityAssistantStrategy));
     const [deletedAssistantSnapshot, setDeletedAssistantSnapshot] = useState<CommunityAssistantSnapshot | null>(null);
+    const [lastQuestion, setLastQuestion] = useState<string>("");
+    const [isLoading, setIsLoading] = useState<boolean>(false);
     const isDeletedAssistant = strategy instanceof DeletedCommunityAssistantStrategy;
     const isLocalAssistant = strategy instanceof LocalAssistantStrategy;
     const { assistantToDuplicate, showDuplicateConfirm, isDuplicating, setShowDuplicateConfirm, requestDuplicateAssistant, confirmDuplicateAssistant } =
@@ -149,6 +151,14 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
     });
     const lockedToolIds = useMemo(() => assistantConfig.tools?.map(tool => tool.id) ?? [], [assistantConfig.tools]);
     const mergeLockedToolIds = useCallback((toolIds: string[]) => Array.from(new Set([...lockedToolIds, ...toolIds])), [lockedToolIds]);
+    const setLastQuestionValue = useCallback((value: string) => {
+        lastQuestionRef.current = value;
+        setLastQuestion(value);
+    }, []);
+    const setIsLoadingValue = useCallback((value: boolean) => {
+        isLoadingRef.current = value;
+        setIsLoading(value);
+    }, []);
     const setSelectedToolsGuarded = useCallback(
         (value: React.SetStateAction<string[]>) => {
             setSelectedTools(prev => {
@@ -168,7 +178,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                 setDeletedAssistantSnapshot(null);
                 setIsOwnershipResolved(!(strategy instanceof CommunityAssistantStrategy));
                 if (error) setError(undefined);
-                isLoadingRef.current = true;
+                setIsLoadingValue(true);
                 let notSubscribed = false;
                 if (strategy instanceof CommunityAssistantStrategy) {
                     const owned = await getOwnedCommunityAssistants();
@@ -239,7 +249,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                                     if (existingChat) {
                                         const messages = existingChat.messages;
                                         dispatch({ type: "SET_ANSWERS", payload: [...answers.concat(messages)] });
-                                        lastQuestionRef.current = messages.length > 0 ? messages[messages.length - 1].user : "";
+                                        setLastQuestionValue(messages.length > 0 ? messages[messages.length - 1].user : "");
                                         dispatch({ type: "SET_ACTIVE_CHAT", payload: existingChat.id });
                                     }
                                 })
@@ -273,12 +283,24 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                     })
                     .finally(() => {
                         setShowNotSubscribedDialog(notSubscribed);
-                        isLoadingRef.current = false;
+                        setIsLoadingValue(false);
                     });
             }
         };
         loadData();
-    }, [assistant_id, communityAssistantStorageService, isDeletedAssistant, showError, strategy, t, availableLLMs, setLLM, setQuickPrompts]);
+    }, [
+        assistant_id,
+        communityAssistantStorageService,
+        isDeletedAssistant,
+        showError,
+        strategy,
+        t,
+        availableLLMs,
+        setLLM,
+        setQuickPrompts,
+        setIsLoadingValue,
+        setLastQuestionValue
+    ]);
 
     useEffect(() => {
         if (lockedToolIds.length === 0) {
@@ -345,9 +367,9 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
     // callApi-Funktion
     const callApi = useCallback(
         async (question: string, dataSources?: DataSource[]) => {
-            lastQuestionRef.current = question;
+            setLastQuestionValue(question);
             if (error) setError(undefined);
-            isLoadingRef.current = true;
+            setIsLoadingValue(true);
 
             const askResponse: AskResponse = {} as AskResponse;
             const options: ChatOptions = {
@@ -372,29 +394,15 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                     selectedTools,
                     setToolStatuses,
                     dataSources,
-                    lastAnswerRef
+                    lastAnswerRef,
+                    setIsLoadingValue
                 );
             } catch (e) {
                 setError(e);
             }
-            isLoadingRef.current = false;
+            setIsLoadingValue(false);
         },
-        [
-            lastQuestionRef.current,
-            error,
-            isLoadingRef.current,
-            chatState,
-            answers,
-            dispatch,
-            chatApi,
-            LLM,
-            activeChatRef,
-            assistantChatStorage,
-            chatMessageStreamEnd,
-            fetchHistory,
-            selectedTools,
-            lastAnswerRef
-        ]
+        [error, answers, LLM, assistantChatStorage, fetchHistory, systemPrompt, creativity, selectedTools, setIsLoadingValue, setLastQuestionValue]
     );
 
     useEffect(() => chatMessageStreamEnd.current?.scrollIntoView({ behavior: "smooth" }), [answers.length]);
@@ -436,22 +444,24 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
 
     // Regenerate-Funktion
     const onRegenerateResponseClicked = useCallback(async () => {
-        if (answers.length === 0 || !activeChatRef.current || isLoadingRef.current) return;
+        if (answers.length === 0 || !activeChatRef.current || isLoading) return;
         try {
             setError(undefined);
+            setIsLoadingValue(true);
             await handleRegenerate(answers, dispatch, activeChatRef.current, assistantChatStorage, systemPrompt, callApi, isLoadingRef);
         } catch (e) {
             setError(e);
+            setIsLoadingValue(false);
         }
-    }, [answers, assistantChatStorage, callApi, systemPrompt, activeChatRef.current, isLoadingRef.current]);
+    }, [answers, assistantChatStorage, callApi, systemPrompt, isLoading, setIsLoadingValue]);
 
     const resetActiveChatState = useCallback(() => {
-        lastQuestionRef.current = "";
+        setLastQuestionValue("");
         if (error) setError(undefined);
         activeChatRef.current = undefined;
         dispatch({ type: "SET_ACTIVE_CHAT", payload: undefined });
         dispatch({ type: "CLEAR_ANSWERS" });
-    }, [error]);
+    }, [error, setLastQuestionValue]);
 
     // ClearChat-Funktion
     const clearChat = useCallback(() => {
@@ -461,17 +471,27 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
     // Rollback-Funktion
     const onRollbackMessage = useCallback(
         (index: number) => {
-            if (!activeChatRef.current || isLoadingRef.current) return;
-            isLoadingRef.current = true;
+            if (!activeChatRef.current || isLoading) return;
+            setIsLoadingValue(true);
             try {
                 setError(undefined);
-                handleRollback(index, activeChatRef.current, dispatch, assistantChatStorage, lastQuestionRef, setQuestion, clearChat, fetchHistory);
+                handleRollback(
+                    index,
+                    activeChatRef.current,
+                    dispatch,
+                    assistantChatStorage,
+                    lastQuestionRef,
+                    setQuestion,
+                    clearChat,
+                    fetchHistory,
+                    setLastQuestionValue
+                );
             } catch (e) {
                 setError(e);
             }
-            isLoadingRef.current = false;
+            setIsLoadingValue(false);
         },
-        [assistantChatStorage, clearChat, fetchHistory, setQuestion]
+        [assistantChatStorage, clearChat, fetchHistory, isLoading, setIsLoadingValue, setLastQuestionValue]
     );
 
     // on Example Clicked-Funktion
@@ -529,7 +549,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                         if (chat) {
                             setError(undefined);
                             dispatch({ type: "SET_ANSWERS", payload: chat.messages });
-                            lastQuestionRef.current = chat.messages.length > 0 ? chat.messages[chat.messages.length - 1].user : "";
+                            setLastQuestionValue(chat.messages.length > 0 ? chat.messages[chat.messages.length - 1].user : "");
                             dispatch({ type: "SET_ACTIVE_CHAT", payload: id });
 
                             // Scroll to bottom after a short delay to ensure DOM is updated
@@ -541,7 +561,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                     }}
                     readOnly={isDeletedAssistant}
                     showHeader={false}
-                    actions={<ClearChatButton onClick={clearChat} disabled={!lastQuestionRef.current || isLoadingRef.current || isDeletedAssistant} />}
+                    actions={<ClearChatButton onClick={clearChat} disabled={!lastQuestion || isLoading || isDeletedAssistant} />}
                 ></History>
             ),
         [
@@ -554,8 +574,9 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
             t,
             scrollToBottom,
             isDeletedAssistant,
-            lastQuestionRef.current,
-            isLoadingRef.current
+            isLoading,
+            lastQuestion,
+            setLastQuestionValue
         ]
     );
 
@@ -629,7 +650,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                     </div>
                     <QuestionInput
                         clearOnSend
-                        disabled={isLoadingRef.current || error !== undefined}
+                        disabled={isLoading || error !== undefined}
                         onSend={(question, datas) => {
                             const dataSources = datas
                                 .filter(data => data.isActive !== false && data.status === "ready" && data.fileContent)
@@ -665,7 +686,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
         return (
             <QuestionInput
                 clearOnSend
-                disabled={isLoadingRef.current || error !== undefined || strategy instanceof DeletedCommunityAssistantStrategy}
+                disabled={isLoading || error !== undefined || strategy instanceof DeletedCommunityAssistantStrategy}
                 onSend={(question, datas) => {
                     const dataSources = datas
                         .filter(data => data.isActive !== false && data.status === "ready" && data.fileContent)
@@ -703,7 +724,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
         requestDuplicateAssistant,
         assistant_id,
         assistantConfig,
-        isLoadingRef.current,
+        isLoading,
         callApi,
         question,
         error,
@@ -736,18 +757,18 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                     );
                 }}
                 onRollbackMessage={isDeletedAssistant ? undefined : onRollbackMessage}
-                isLoading={isLoadingRef.current}
+                isLoading={isLoading}
                 error={error}
                 makeApiRequest={() => {
                     dispatch({ type: "SET_ANSWERS", payload: answers.slice(0, -1) });
-                    callApi(lastQuestionRef.current);
+                    callApi(lastQuestion);
                 }}
                 chatMessageStreamEnd={chatMessageStreamEnd}
                 lastQuestionRef={lastQuestionRef}
                 onRollbackError={() => {
-                    setQuestion(lastQuestionRef.current);
+                    setQuestion(lastQuestion);
                     setError(undefined);
-                    lastQuestionRef.current = answers.length > 1 ? answers[answers.length - 1].user : "";
+                    setLastQuestionValue(answers.length > 1 ? answers[answers.length - 1].user : "");
                     dispatch({ type: "SET_ANSWERS", payload: answers.slice(0, -1) });
                 }}
                 lastAnswerRef={lastAnswerRef}
@@ -758,12 +779,13 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
             isDeletedAssistant,
             onRegenerateResponseClicked,
             onRollbackMessage,
-            isLoadingRef.current,
+            isLoading,
             error,
             callApi,
             chatMessageStreamEnd,
-            lastQuestionRef.current,
-            lastAnswerRef
+            lastQuestion,
+            lastAnswerRef,
+            setLastQuestionValue
         ]
     );
 
@@ -786,7 +808,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                     examples={examplesComponent}
                     answers={answerList}
                     input={inputComponent}
-                    showExamples={!lastQuestionRef.current}
+                    showExamples={!lastQuestion}
                     header={assistantConfig.title}
                     welcomeMessage={isDeletedAssistant ? t("components.community_assistants.deleted_state_title") : t("chat.header")}
                     header_as_markdown={false}
@@ -822,14 +844,12 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
         answerList,
         inputComponent,
         isDeletedAssistant,
-        lastQuestionRef.current,
+        lastQuestion,
         t,
         availableLLMs,
         assistantConfig.default_model,
         LLM.llm_name,
         onLLMSelectionChange,
-        clearChat,
-        isLoadingRef.current,
         strategy,
         assistantInfoData,
         isAssistantInfoLoading,

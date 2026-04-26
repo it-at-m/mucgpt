@@ -25,12 +25,18 @@ interface NavigationItem {
     isActive: boolean;
 }
 
-const isAssistantRoute = (pathname: string) =>
-    pathname === "/discovery" ||
-    pathname.startsWith("/assistant/") ||
-    pathname.startsWith("/communityassistant/") ||
-    pathname.startsWith("/owned/communityassistant/") ||
-    pathname.startsWith("/deleted/communityassistant/");
+const isAssistantRoute = (pathname: string) => {
+    const normalizedPathname = pathname.replace(/\/+$/, "");
+
+    return (
+        normalizedPathname === "/discovery" ||
+        normalizedPathname.startsWith("/discovery/") ||
+        normalizedPathname.startsWith("/assistant/") ||
+        normalizedPathname.startsWith("/communityassistant/") ||
+        normalizedPathname.startsWith("/owned/communityassistant/") ||
+        normalizedPathname.startsWith("/deleted/communityassistant/")
+    );
+};
 
 export const AppSidebar = ({
     collapsed,

@@ -126,7 +126,8 @@ export function handleRollback(
     lastQuestionRef: MutableRefObject<string>,
     setQuestion: Dispatch<SetStateAction<string>>,
     clearChat: () => void,
-    fetchHistory?: () => void
+    fetchHistory?: () => void,
+    onLastQuestionChange?: (question: string) => void
 ) {
     // Exit early if no active chat is selected
     if (!activeChat) return;
@@ -140,6 +141,7 @@ export function handleRollback(
             dispatch({ type: "SET_ANSWERS", payload: result.messages });
             // Update the last question reference
             lastQuestionRef.current = result.messages[result.messages.length - 1].user;
+            onLastQuestionChange?.(lastQuestionRef.current);
         } else {
             // No messages left - clear the chat and delete it from storage
             clearChat();
@@ -231,7 +233,8 @@ export const makeApiRequest = async (
     enabled_tools?: string[],
     onToolStatusUpdate?: (statuses: ToolStatus[]) => void,
     data_sources?: DataSource[],
-    answerTopRef?: MutableRefObject<HTMLElement | null>
+    answerTopRef?: MutableRefObject<HTMLElement | null>,
+    onLoadingChange?: (isLoading: boolean) => void
 ) => {
     // Create conversation history for the API request
     const history: ChatTurn[] = answers.map((a: { user: any; response: { answer: any } }) => ({ user: a.user, assistant: a.response.answer }));
@@ -270,6 +273,7 @@ export const makeApiRequest = async (
         response: { ...askResponse }
     };
     isLoadingRef.current = false;
+    onLoadingChange?.(false);
     dispatch({ type: "ADD_ANSWER", payload: initialMessage });
 
     // Buffer management for optimized UI updates

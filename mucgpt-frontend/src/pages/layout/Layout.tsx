@@ -81,13 +81,17 @@ const AppShell = ({ config, isLight, languagePreference, onLanguageSelectionChan
         });
     }, []);
 
-    const secondaryContent = renderSecondaryContent?.({
-        isMobile: false
-    });
-    const mobileSecondaryContent = renderSecondaryContent?.({
-        isMobile: true,
-        requestClose: () => setMobileSidebarOpen(false)
-    });
+    const secondaryContent = !isMobile
+        ? renderSecondaryContent?.({
+              isMobile: false
+          })
+        : null;
+    const mobileSecondaryContent = isMobile
+        ? renderSecondaryContent?.({
+              isMobile: true,
+              requestClose: () => setMobileSidebarOpen(false)
+          })
+        : null;
 
     const utilitiesContent = (
         <div className={styles.mobileUtilities}>
@@ -262,13 +266,17 @@ export const Layout = () => {
 
         configApi()
             .then(result => {
-                setConfig({ ...DEFAULT_APP_CONFIG, ...result });
-                setModels(result.models);
-                if (result.models.length === 0) {
+                const models = result.models ?? [];
+                setConfig({ ...DEFAULT_APP_CONFIG, ...result, models });
+                setModels(models);
+                if (models.length === 0) {
                     console.error("Keine Modelle vorhanden");
                 }
-                setAvailableLLMs(result.models);
-                setLLM(result.models.find(model => model.llm_name === llmPreference) || result.models[0]);
+                setAvailableLLMs(models);
+                const preferredModel = models.find(model => model.llm_name === llmPreference) || models[0];
+                if (preferredModel) {
+                    setLLM(preferredModel);
+                }
                 setIsLoadingConfig(false);
             })
             .catch(error => {

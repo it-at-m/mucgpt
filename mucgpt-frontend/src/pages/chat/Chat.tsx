@@ -534,10 +534,10 @@ const Chat = () => {
             Promise.resolve(
                 newChatRequested
                     ? startFreshChat()
-                    : storageService.getNewestChat().then(() => {
+                    : (() => {
                           clearChat();
                           return fetchHistory();
-                      })
+                      })()
             )
                 .then(() => {
                     if (newChatRequested && !questionFromUrl) {

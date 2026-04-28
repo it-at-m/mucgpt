@@ -30,6 +30,5 @@
 .drawerContent {
     overflow-y: auto;
     overflow-x: auto;
-    scrollbar-width: thin;
     height: 100%;
 }

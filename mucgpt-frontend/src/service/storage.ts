@@ -198,7 +198,13 @@ export class StorageService<M, C> {
 
     async renameChat(id: string, newName: string) {
         try {
-            return await this.update(id, undefined, undefined, undefined, newName);
+            const db = await this.connectToDB();
+            const stored = await this.get(id);
+            if (stored) {
+                stored.name = newName;
+                await db.put(this.config.objectStore_name, stored);
+                return stored;
+            } else throw new Error("No object with id " + id + " found");
         } catch (error) {
             this.onError(error);
         }
@@ -206,7 +212,13 @@ export class StorageService<M, C> {
 
     async changeFavouritesInDb(id: string, fav: boolean) {
         try {
-            return await this.update(id, undefined, undefined, fav, undefined);
+            const db = await this.connectToDB();
+            const stored = await this.get(id);
+            if (stored) {
+                stored.favorite = fav;
+                await db.put(this.config.objectStore_name, stored);
+                return stored;
+            } else throw new Error("No object with id " + id + " found");
         } catch (error) {
             this.onError(error);
         }

@@ -1,6 +1,7 @@
 import { Dialog, DialogSurface, DialogTitle, DialogBody, DialogContent, DialogActions, Button } from "@fluentui/react-components";
 import { useTranslation } from "react-i18next";
 import { useCallback } from "react";
+import styles from "./CloseConfirmationDialog.module.css";
 
 interface CloseConfirmationDialogProps {
     open: boolean;
@@ -14,6 +15,8 @@ interface CloseConfirmationDialogProps {
     confirmLabel?: string;
     /** Disable the confirm button (e.g. while an action is in flight). */
     confirmDisabled?: boolean;
+    /** Render the confirm action with destructive styling. */
+    confirmIntent?: "default" | "danger";
 }
 
 export const CloseConfirmationDialog = ({
@@ -23,7 +26,8 @@ export const CloseConfirmationDialog = ({
     title,
     message,
     confirmLabel,
-    confirmDisabled
+    confirmDisabled,
+    confirmIntent = "default"
 }: CloseConfirmationDialogProps) => {
     const { t } = useTranslation();
 
@@ -50,7 +54,12 @@ export const CloseConfirmationDialog = ({
                         <Button appearance="secondary" onClick={handleCancel}>
                             {t("common.cancel")}
                         </Button>
-                        <Button appearance="primary" onClick={handleConfirm} disabled={confirmDisabled}>
+                        <Button
+                            appearance="primary"
+                            onClick={handleConfirm}
+                            disabled={confirmDisabled}
+                            className={confirmIntent === "danger" ? styles.dangerConfirmButton : undefined}
+                        >
                             {confirmLabel ?? t("common.close")}
                         </Button>
                     </DialogActions>

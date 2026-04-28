@@ -430,6 +430,7 @@ export const makeApiRequest = async (
     if (activeChatRef.current) {
         // Append to existing chat
         await storageService.appendMessage(finalMessage, activeChatRef.current, options);
+        if (fetchHistory) fetchHistory();
     } else {
         // Create a new chat with generated name
         const chatname = await createChatName(question, finalResponse.answer, language, options.creativity, options.system ?? "", LLM.llm_name);

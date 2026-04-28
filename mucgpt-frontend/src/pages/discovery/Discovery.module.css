@@ -23,7 +23,6 @@
     transition: width 0.3s cubic-bezier(0.33, 1, 0.68, 1);
     overflow-y: auto;
     height: 100%;
-    scrollbar-color: var(--colorBrandBackground) var(--colorNeutralBackground1);
 }
 
 .contentWrapper {

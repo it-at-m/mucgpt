@@ -1,6 +1,5 @@
 .drawerBody {
     overflow-y: auto;
-    scrollbar-color: var(--colorBrandBackground) var(--colorNeutralBackground1);
 }
 
 .loadingContainer {

@@ -1,5 +1,13 @@
-import { Accordion, AccordionHeader, AccordionItem, AccordionPanel, Button, Tooltip } from "@fluentui/react-components";
-import { Bot24Regular, ChatAdd24Regular, ChevronDown24Regular, ChevronLeft24Regular, ChevronRight24Regular, Home24Regular } from "@fluentui/react-icons";
+import { Button, Tooltip } from "@fluentui/react-components";
+import {
+    Bot24Regular,
+    ChatAdd24Regular,
+    ChatHistory24Regular,
+    ChevronDown24Regular,
+    ChevronLeft24Regular,
+    ChevronRight24Regular,
+    Home24Regular
+} from "@fluentui/react-icons";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useMemo, useState, type ReactElement, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
@@ -158,15 +166,23 @@ export const AppSidebar = ({
                         <div className={styles.secondaryGroup}>
                             <div className={styles.sectionDivider} aria-hidden="true" />
                             <section className={styles.secondarySection} aria-label={secondaryTitle}>
-                                <Accordion collapsible defaultOpenItems={["secondary"]} className={styles.secondaryAccordion}>
-                                    <AccordionItem value="secondary">
-                                        <AccordionHeader>{secondaryTitle}</AccordionHeader>
-                                        <AccordionPanel className={styles.secondaryPanel}>
-                                            <div className={styles.secondaryPanelContent}>{secondaryContent}</div>
-                                        </AccordionPanel>
-                                    </AccordionItem>
-                                </Accordion>
+                                <div className={styles.secondaryPanelContent}>{secondaryContent}</div>
                             </section>
+                        </div>
+                    )}
+
+                    {secondaryContent && secondaryTitle && collapsed && !isMobile && onToggleCollapsed && (
+                        <div className={styles.collapsedSecondaryGroup}>
+                            <div className={styles.sectionDivider} aria-hidden="true" />
+                            <Tooltip content={t("components.history.show_history")} relationship="description" positioning="after">
+                                <Button
+                                    appearance="subtle"
+                                    icon={<ChatHistory24Regular />}
+                                    className={styles.collapsedSecondaryButton}
+                                    aria-label={t("components.history.show_history")}
+                                    onClick={onToggleCollapsed}
+                                />
+                            </Tooltip>
                         </div>
                     )}
                 </div>

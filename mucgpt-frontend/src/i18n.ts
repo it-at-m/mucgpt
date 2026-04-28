@@ -621,7 +621,10 @@ i18n
                                 "Dieser Community-Assistent wurde vom Ersteller gelöscht und ist nicht mehr verfügbar. Diese Version liegt nur noch lokal im Browser und kann verloren gehen. Der Chatverlauf ist schreibgeschützt. Sichern Sie sie als eigenen Assistenten, wenn Sie weiter damit arbeiten möchten.",
                             deleted_state_save_action: "Als eigenen Assistenten speichern",
                             deleted_state_history_action: "Alten Chatverlauf ansehen",
-                            deleted_state_no_history: "Für diesen Assistenten ist kein lokaler Chatverlauf verfügbar."
+                            deleted_state_no_history: "Für diesen Assistenten ist kein lokaler Chatverlauf verfügbar.",
+                            legacy_state_title: "Veralteter Community-Assistent",
+                            legacy_state_hint:
+                                "Dieser Community-Assistent wird nicht mehr unterstützt. Alte Chatverläufe können weiterhin eingesehen werden. Bitte löschen Sie diesen Assistenten und abonnieren Sie ihn im Bereich 'Community' neu."
                         },
                         toolsselector: {
                             title: "Verfügbare Werkzeuge",
@@ -1275,7 +1278,10 @@ i18n
                                 "This community assistant was deleted by its creator and is no longer available. This version only exists locally in this browser and may be lost. The chat history is read-only. Save it as your own assistant if you want to keep using it.",
                             deleted_state_save_action: "Save as own assistant",
                             deleted_state_history_action: "View old chat history",
-                            deleted_state_no_history: "No local chat history is available for this assistant."
+                            deleted_state_no_history: "No local chat history is available for this assistant.",
+                            legacy_state_title: "Deprecated Community Assistant",
+                            legacy_state_hint:
+                                "This community assistant is no longer supported. Past chat histories can still be viewed. Please delete this assistant and subscribe to it again in the Community section."
                         },
                         toolsselector: {
                             title: "Available tools",
@@ -1922,7 +1928,10 @@ i18n
                                 "Der Community-Assistent is vom Ersteller glascht worn und nimmer verfuegbar. De Version liegt bloß no lokal im Browser und ko verloren geh. Der Chatverlauf is nur lesend. Sicherst as ois eigenen Assistenten, wennst weitermacha mogst.",
                             deleted_state_save_action: "Ois eigenen Assistenten speichern",
                             deleted_state_history_action: "Oidn Chatverlauf anschaugn",
-                            deleted_state_no_history: "Fuer den Assistenten gibt's koan lokalen Chatverlauf."
+                            deleted_state_no_history: "Fuer den Assistenten gibt's koan lokalen Chatverlauf.",
+                            legacy_state_title: "Veralteter Community-Assistent",
+                            legacy_state_hint:
+                                "Der Community-Assistent werd nimmer unterstuetzt. Oide Chatverlauf ko mo weiterhin aschaugn. Bitte loesch den Assistenten und abonnier ean in da 'Community' nei."
                         },
                         toolsselector: {
                             title: "Verfügbare Werkzeig",
@@ -2569,7 +2578,10 @@ i18n
                                 "Cet assistant communautaire a été supprimé par son créateur et n'est plus disponible. Cette version n'existe plus que localement dans ce navigateur et peut être perdue. L'historique du chat est en lecture seule. Enregistrez-la comme votre propre assistant si vous voulez continuer à l'utiliser.",
                             deleted_state_save_action: "Enregistrer comme assistant personnel",
                             deleted_state_history_action: "Voir l'ancien historique de chat",
-                            deleted_state_no_history: "Aucun historique de chat local n'est disponible pour cet assistant."
+                            deleted_state_no_history: "Aucun historique de chat local n'est disponible pour cet assistant.",
+                            legacy_state_title: "Assistant communautaire obsolète",
+                            legacy_state_hint:
+                                "Cet assistant communautaire n'est plus pris en charge. Les anciens historiques de chat peuvent toujours être consultés. Veuillez supprimer cet assistant et vous y réabonner dans la section 'Communauté'."
                         },
                         toolsselector: {
                             title: "Outils disponibles",
@@ -3214,7 +3226,10 @@ i18n
                                 "Цей асистент спільноти був видалений автором і більше недоступний. Ця версія зберігається лише локально в цьому браузері й може бути втрачена. Історія чату доступна лише для читання. Збережіть її як власного асистента, якщо хочете й далі нею користуватися.",
                             deleted_state_save_action: "Зберегти як власного асистента",
                             deleted_state_history_action: "Переглянути стару історію чату",
-                            deleted_state_no_history: "Для цього асистента немає локальної історії чату."
+                            deleted_state_no_history: "Для цього асистента немає локальної історії чату.",
+                            legacy_state_title: "Застарілий Асистент Спільноти",
+                            legacy_state_hint:
+                                "Цей асистент спільноти більше не підтримується. Старі історії чатів все ще можна переглянути. Будь ласка, видаліть цього асистента та підпишіться на нього знову в розділі 'Спільнота'."
                         },
                         toolsselector: {
                             title: "Доступні інструменти",

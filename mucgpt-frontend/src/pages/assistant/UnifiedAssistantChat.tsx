@@ -85,14 +85,15 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
     // Parameter from URL
     const { id } = useParams();
     const assistant_id = id || "0";
+    const isLegacyAssistant = /^\d+$/.test(assistant_id);
     const location = useLocation();
     const navigate = useNavigate();
     const isEditMode = location.pathname.endsWith("/edit");
 
     useEffect(() => {
-        if (!isEditMode || strategy.canEdit) return;
+        if (!isEditMode || (strategy.canEdit && !isLegacyAssistant)) return;
         navigate(location.pathname.replace(/\/edit$/, ""), { replace: true });
-    }, [isEditMode, strategy.canEdit, navigate, location.pathname]);
+    }, [isEditMode, strategy.canEdit, isLegacyAssistant, navigate, location.pathname]);
 
     // Context
     const { LLM, setLLM, availableLLMs } = useContext(LLMContext);
@@ -123,7 +124,6 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
     const [deletedAssistantSnapshot, setDeletedAssistantSnapshot] = useState<CommunityAssistantSnapshot | null>(null);
     const isDeletedAssistant = strategy instanceof DeletedCommunityAssistantStrategy;
     const isLocalAssistant = strategy instanceof LocalAssistantStrategy;
-    const isLegacyAssistant = /^\d+$/.test(assistant_id);
     const { assistantToDuplicate, showDuplicateConfirm, isDuplicating, setShowDuplicateConfirm, requestDuplicateAssistant, confirmDuplicateAssistant } =
         useDuplicateAssistant();
     // Sync info drawer state to body class so Layout.module.css can offset the footer
@@ -594,11 +594,17 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                     <MessageBar intent="warning" layout="multiline" className={styles.chatWarningBar}>
                         <MessageBarBody>
                             <div className={styles.deletedChatWarningContent}>
-                                <div className={styles.deletedChatWarningText}>
-                                    {t(
-                                        "components.community_assistants.legacy_state_hint",
-                                        "This older assistant is obsolete and cannot be migrated. You can still view past conversations."
-                                    )}
+                                <div className={styles.deletedChatWarningText}>{t("components.community_assistants.legacy_state_hint")}</div>
+                                <div className={styles.deletedChatActions}>
+                                    <Button
+                                        appearance="outline"
+                                        onClick={async () => {
+                                            await assistantStorageService.deleteConfigAndChatsForAssistant(assistant_id);
+                                            navigate("/");
+                                        }}
+                                    >
+                                        {t("common.delete", "Löschen")}
+                                    </Button>
                                 </div>
                             </div>
                         </MessageBarBody>
@@ -831,7 +837,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                     onLLMSelectionChange={onLLMSelectionChange}
                     onToggleMinimized={toggleSidebar}
                     actions={
-                        strategy?.canEdit ? (
+                        strategy?.canEdit && !isLegacyAssistant ? (
                             <Button
                                 appearance="subtle"
                                 icon={<Settings24Regular />}
@@ -858,6 +864,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
         answerList,
         inputComponent,
         isDeletedAssistant,
+        isLegacyAssistant,
         lastQuestionRef.current,
         t,
         sidebarSize,
@@ -874,7 +881,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
         isInfoDrawerOpen
     ]);
 
-    if (isEditMode && !strategy.canEdit) {
+    if (isEditMode && (!strategy.canEdit || isLegacyAssistant)) {
         return null;
     }
 

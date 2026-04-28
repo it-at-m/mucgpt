@@ -176,13 +176,8 @@ export const AssistantDetailsSidebar = ({
 
                         {assistant && isLegacyAssistant && !hideStartChat && (
                             <div className={styles.deletedCallout}>
-                                <Text className={styles.calloutTitle}>{t("components.community_assistants.legacy_state_title", "Legacy Assistant")}</Text>
-                                <Text>
-                                    {t(
-                                        "components.community_assistants.legacy_state_hint",
-                                        "This older assistant is obsolete and cannot be migrated. You can still view past conversations."
-                                    )}
-                                </Text>
+                                <Text className={styles.calloutTitle}>{t("components.community_assistants.legacy_state_title")}</Text>
+                                <Text>{t("components.community_assistants.legacy_state_hint")}</Text>
                                 <div className={styles.deletedActionRow}>
                                     {onStartChat && (
                                         <Button appearance="secondary" icon={<Chat24Regular />} onClick={onStartChat}>

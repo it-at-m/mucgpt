@@ -3,11 +3,12 @@ import styles from "./VersionInfo.module.css";
 import { useTranslation } from "react-i18next";
 
 interface VersionInfoProps {
-    app_version: string;
+    app_version?: string;
     core_version: string;
     frontend_version: string;
     assistant_version: string;
     versionUrl?: string;
+    variant?: "default" | "compact";
 }
 
 const SERVICES = [
@@ -17,11 +18,18 @@ const SERVICES = [
 ];
 
 export const VersionInfo = (props: VersionInfoProps) => {
-    const { app_version, versionUrl } = props;
+    const { app_version, frontend_version, versionUrl, variant = "default" } = props;
     const { t } = useTranslation();
+    const isCompact = variant === "compact";
+    const versionLabel = `v${isCompact ? frontend_version : (app_version ?? frontend_version)}`;
 
     return (
         <div className={styles.container}>
+            {versionUrl && (
+                <a href={versionUrl} className={styles.versionLink}>
+                    {t("components.versioninfo.whats_new", "Was gibt's neues?")}
+                </a>
+            )}
             <Tooltip
                 content={
                     <div className={styles.tooltipContent}>
@@ -37,15 +45,10 @@ export const VersionInfo = (props: VersionInfoProps) => {
                 positioning="above"
                 withArrow
             >
-                <Badge appearance="outline" color="subtle" shape="circular" tabIndex={0}>
-                    v{app_version}
+                <Badge appearance="ghost" color="subtle" shape="circular" tabIndex={0} className={styles.versionBadge}>
+                    {versionLabel}
                 </Badge>
             </Tooltip>
-            {versionUrl && (
-                <a href={versionUrl} className={styles.versionLink}>
-                    {t("components.versioninfo.whats_new", "Was gibt's neues?")}
-                </a>
-            )}
         </div>
     );
 };

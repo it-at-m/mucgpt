@@ -196,67 +196,24 @@
 /* Main content area */
 .mainContent {
     flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
 }
 
 .mobileMainContent {
     flex: 1;
     margin: 5px;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
 }
 
 .mobileMainContentWithMenu {
     flex: 1;
-}
-
-.footer {
-    position: fixed;
-    width: 100%;
-    bottom: 0;
     display: flex;
-    flex-direction: row;
-    flex-wrap: wrap;
-    align-items: center;
-    margin-top: auto;
-    justify-content: space-between;
-    background-color: var(--app-header-background);
-    color: var(--app-header-foreground);
-    padding: 8px 16px;
-    font-size: 14px;
-    z-index: 20;
-    transition: right 300ms cubic-bezier(0.2, 0.9, 0.2, 1);
-    right: 0;
-    box-sizing: border-box;
-}
-
-:global(body.info-drawer-open) .footer {
-    right: var(--assistantDetailsDrawerWidth);
-    width: auto;
-    left: 0;
-}
-
-.footerSection {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-}
-
-.footerLink {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    color: var(--app-header-foreground);
-    text-decoration: none;
-    padding: 4px 8px;
-    border-radius: 4px;
-    transition: background-color 0.2s;
-}
-
-.footerLink:hover {
-    background-color: var(--app-header-hover);
-    text-decoration: none;
-}
-
-.footerCompanyInfo {
-    line-height: 1.5;
+    flex-direction: column;
+    min-height: 0;
 }
 
 /* Skip link for accessibility */
@@ -321,25 +278,6 @@
         justify-content: end;
         flex-wrap: wrap;
     }
-
-    .footer {
-        flex-direction: column;
-        text-align: center;
-        padding: 8px;
-        font-size: 12px;
-        gap: 8px;
-    }
-
-    .footerSection {
-        justify-content: center;
-        width: 100%;
-        flex-wrap: wrap;
-        gap: 8px;
-    }
-
-    .footerCompanyInfo {
-        font-size: 12px;
-    }
 }
 
 /* Small mobile devices */
@@ -350,22 +288,5 @@
 
     .headerNavRightContainer {
         gap: 4px;
-    }
-
-    .footerSection {
-        font-size: 11px;
-    }
-}
-
-@media screen and (max-width: 1200px) {
-    :global(body.info-drawer-open) .footer {
-        right: var(--assistantDetailsDrawerCompactWidth);
-    }
-}
-
-@media screen and (max-width: 600px) {
-    :global(body.info-drawer-open) .footer {
-        right: 0;
-        width: 100%;
     }
 }

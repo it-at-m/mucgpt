@@ -9,15 +9,19 @@ export const TutorialsButton = () => {
     const navigate = useNavigate();
 
     return (
-        <Tooltip content={t("menu.go_to_tutorials_tooltip", "Tutorials und Anleitungen zu Fragments und Tools")} relationship="description" positioning="below">
+        <Tooltip
+            content={t("header.go_to_tutorials_tooltip", { defaultValue: "Tutorials und Anleitungen zu Fragments und Tools" })}
+            relationship="description"
+            positioning="below"
+        >
             <Button
                 appearance={"subtle"}
                 icon={<Book24Regular className={styles.icon} />}
-                aria-label={t("menu.go_to_tutorials_aria", "Zu Tutorials und Anleitungen navigieren")}
+                aria-label={t("header.go_to_tutorials_aria", { defaultValue: "Zu Tutorials und Anleitungen navigieren" })}
                 onClick={() => navigate("/tutorials")}
                 className={styles.tutorialsButton}
             >
-                {t("menu.go_to_tutorials", "Tutorials")}
+                {t("header.go_to_tutorials", { defaultValue: "Tutorials" })}
             </Button>
         </Tooltip>
     );

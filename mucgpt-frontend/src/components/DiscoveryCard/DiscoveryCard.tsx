@@ -1,6 +1,6 @@
 import React, { forwardRef, ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
-import { Badge, Card, CardHeader, CardPreview, mergeClasses, CardProps } from "@fluentui/react-components";
+import { Badge, Card, CardHeader, CardPreview, mergeClasses, CardProps, BadgeProps } from "@fluentui/react-components";
 import styles from "./DiscoveryCard.module.css";
 import { MarkdownRenderer } from "../MarkdownRenderer/MarkdownRenderer";
 
@@ -12,6 +12,10 @@ export interface DiscoveryCardProps extends CardProps {
 
     header?: ReactNode;
     badge?: string;
+    badgeClassName?: string;
+    badgeAppearance?: BadgeProps["appearance"];
+    badgeColor?: BadgeProps["color"];
+    badgeSize?: BadgeProps["size"];
     titleClassName?: string;
     isSelected?: boolean;
 }
@@ -25,6 +29,10 @@ export const DiscoveryCard = forwardRef<HTMLDivElement, DiscoveryCardProps>((pro
 
         header,
         badge,
+        badgeClassName,
+        badgeAppearance = "tint",
+        badgeColor = "danger",
+        badgeSize = "small",
         className,
         onClick,
         titleClassName,
@@ -54,7 +62,12 @@ export const DiscoveryCard = forwardRef<HTMLDivElement, DiscoveryCardProps>((pro
                         <div className={styles.headerRow}>
                             <div className={mergeClasses(styles.headerText, titleClassName)}>{title}</div>
                             {badge && (
-                                <Badge className={styles.headerBadge} appearance="tint" color="danger" size="small">
+                                <Badge
+                                    className={mergeClasses(styles.headerBadge, badgeClassName)}
+                                    appearance={badgeAppearance}
+                                    color={badgeColor}
+                                    size={badgeSize}
+                                >
                                     {badge}
                                 </Badge>
                             )}

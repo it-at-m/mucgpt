@@ -112,13 +112,13 @@ export const UnifiedSidebarHistory = ({ requestClose }: UnifiedSidebarHistoryPro
     const deleteEntry = async (entry: UnifiedHistoryEntry) => {
         const deletedTitle = getEntryTitle(entry);
         const isDeletingActiveChat = activeChatId === entry.id;
-        pageContext?.resetActiveChat?.(entry.id);
         await storage.deleteEntry(entry);
         refreshHistory();
         setEntryToDelete(null);
         showSuccess(t("components.history.delete_success_title"), t("components.history.delete_success_message", { name: deletedTitle }));
 
         if (isDeletingActiveChat) {
+            pageContext?.resetActiveChat?.(entry.id);
             navigate("/");
             requestClose?.();
         }

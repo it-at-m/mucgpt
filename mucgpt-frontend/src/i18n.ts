@@ -2968,13 +2968,13 @@ i18n
                             delete_success_message: '"{{name}}" видалено.',
                             pin_chat: "Закріпити чат",
                             unpin_chat: "Відкріпити чат",
-                            loading: "Loading history",
-                            empty: "No chats yet",
-                            empty_assistant: "No chats with this assistant",
-                            all_chats: "All",
-                            current_assistant: "This assistant",
-                            unnamed_chat: "Unnamed chat",
-                            show_history: "Show history"
+                            loading: "Завантаження історії",
+                            empty: "Чатів ще немає",
+                            empty_assistant: "Немає чатів із цим асистентом",
+                            all_chats: "Усі",
+                            current_assistant: "Цей асистент",
+                            unnamed_chat: "Чат без назви",
+                            show_history: "Показати історію"
                         },
                         add_assistant_button: {
                             add_assistant: "Створити"

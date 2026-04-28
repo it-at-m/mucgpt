@@ -130,6 +130,7 @@ export class StorageService<M, C> {
         try {
             const db = await this.connectToDB();
             await db.transaction(this.config.objectStore_name, "readwrite").objectStore(this.config.objectStore_name).delete(id);
+            return true;
         } catch (error) {
             this.onError(error);
         }

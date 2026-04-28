@@ -83,29 +83,47 @@ export class UnifiedHistoryStorage {
 
     async deleteEntry(entry: UnifiedHistoryEntry): Promise<void> {
         if (entry.kind === "assistant") {
-            await this.assistantChatStorage.delete(entry.id);
+            const deleted = await this.assistantChatStorage.delete(entry.id);
+            if (!deleted) {
+                throw new Error(`Failed to delete assistant history entry "${entry.id}"`);
+            }
             return;
         }
 
-        await this.chatStorage.delete(entry.id);
+        const deleted = await this.chatStorage.delete(entry.id);
+        if (!deleted) {
+            throw new Error(`Failed to delete chat history entry "${entry.id}"`);
+        }
     }
 
     async renameEntry(entry: UnifiedHistoryEntry, name: string): Promise<void> {
         if (entry.kind === "assistant") {
-            await this.assistantChatStorage.renameChat(entry.id, name);
+            const renamed = await this.assistantChatStorage.renameChat(entry.id, name);
+            if (!renamed) {
+                throw new Error(`Failed to rename assistant history entry "${entry.id}"`);
+            }
             return;
         }
 
-        await this.chatStorage.renameChat(entry.id, name);
+        const renamed = await this.chatStorage.renameChat(entry.id, name);
+        if (!renamed) {
+            throw new Error(`Failed to rename chat history entry "${entry.id}"`);
+        }
     }
 
     async changeFavourite(entry: UnifiedHistoryEntry, favorite: boolean): Promise<void> {
         if (entry.kind === "assistant") {
-            await this.assistantChatStorage.changeFavouritesInDb(entry.id, favorite);
+            const updated = await this.assistantChatStorage.changeFavouritesInDb(entry.id, favorite);
+            if (!updated) {
+                throw new Error(`Failed to update favourite state for assistant history entry "${entry.id}"`);
+            }
             return;
         }
 
-        await this.chatStorage.changeFavouritesInDb(entry.id, favorite);
+        const updated = await this.chatStorage.changeFavouritesInDb(entry.id, favorite);
+        if (!updated) {
+            throw new Error(`Failed to update favourite state for chat history entry "${entry.id}"`);
+        }
     }
 
     async hasLocalAssistantConfig(assistantId: string): Promise<boolean> {

@@ -597,7 +597,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                                 <div className={styles.deletedChatWarningText}>{t("components.community_assistants.legacy_state_hint")}</div>
                                 <div className={styles.deletedChatActions}>
                                     <Button
-                                        appearance="outline"
+                                        appearance="primary"
                                         onClick={async () => {
                                             await assistantStorageService.deleteConfigAndChatsForAssistant(assistant_id);
                                             navigate("/");

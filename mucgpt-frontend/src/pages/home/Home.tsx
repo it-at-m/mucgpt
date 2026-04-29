@@ -397,8 +397,13 @@ const Home = () => {
                         <div className={styles.footerCenterBlock}>
                             <div className={styles.footerCompanyBlock}>
                                 <span>{t("common.footer_credit", "Made with ❤️ & ☕ by")}</span>{" "}
-                                <a href="https://ki.muenchen.de" target="_blank" rel="noreferrer" className={styles.footerCompanyLink}>
-                                    KIES
+                                <a
+                                    href={config?.footer_link_url || "https://ki.muenchen.de"}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className={styles.footerCompanyLink}
+                                >
+                                    DAICE
                                 </a>
                             </div>
                         </div>

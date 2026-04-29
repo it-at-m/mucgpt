@@ -358,6 +358,11 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
     // callApi-Funktion
     const callApi = useCallback(
         async (question: string, dataSources?: DataSource[]) => {
+            if (isLegacyAssistant) {
+                console.warn("Interaction blocked: Assistant is in legacy state and read-only.");
+                return;
+            }
+
             lastQuestionRef.current = question;
             if (error) setError(undefined);
             isLoadingRef.current = true;
@@ -406,7 +411,8 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
             chatMessageStreamEnd,
             fetchHistory,
             selectedTools,
-            lastAnswerRef
+            lastAnswerRef,
+            isLegacyAssistant
         ]
     );
 

@@ -14,7 +14,6 @@ from langchain_core.messages import (
 from langchain_core.runnables import RunnableConfig
 from langchain_core.runnables.config import merge_configs
 
-from agent.agent import MUCGPTAgent
 from agent.react_agent import MUCGPTReActAgent
 from agent.tools.tool_chunk import ToolStreamChunk
 from api.api_models import (
@@ -78,7 +77,7 @@ class MUCGPTAgentExecutor:
 
     def __init__(
         self,
-        agent: MUCGPTAgent | MUCGPTReActAgent,
+        agent: MUCGPTReActAgent,
     ):
         self.logger = logger
         self.agent = agent

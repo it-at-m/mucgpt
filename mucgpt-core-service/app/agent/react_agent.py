@@ -118,18 +118,24 @@ class _ConfiguredLangChainAgentGraph:
         model, messages, tools_to_use, agent_state_schema = self._prepare_run(
             input_data, config
         )
+        configurable = config.get("configurable", {}) if config else {}
+        data_sources = configurable.get("data_sources", [])
+
         active_agent = self.agent
         if (
             tools_to_use != self.tools
             or model is not self.model
             or agent_state_schema
             != _ConfiguredLangChainAgentGraph.get_schema_from_tools(self.tools)
+            or data_sources
         ):
             active_agent = create_agent(
                 model=cast(Any, model),
                 tools=tools_to_use,
                 middleware=[
-                    ContextMiddleware(state_schema=agent_state_schema),
+                    ContextMiddleware(
+                        state_schema=agent_state_schema, data_sources=data_sources
+                    ),
                     ToolErrorMiddleware(),
                 ],
                 system_prompt=DEFAULT_INSTRUCTIONS
@@ -156,18 +162,24 @@ class _ConfiguredLangChainAgentGraph:
         model, messages, tools_to_use, agent_state_schema = self._prepare_run(
             input_data, config
         )
+        configurable = config.get("configurable", {}) if config else {}
+        data_sources = configurable.get("data_sources", [])
+
         active_agent = self.agent
         if (
             tools_to_use != self.tools
             or model is not self.model
             or agent_state_schema
             != _ConfiguredLangChainAgentGraph.get_schema_from_tools(self.tools)
+            or data_sources
         ):
             active_agent = create_agent(
                 model=cast(Any, model),
                 tools=tools_to_use,
                 middleware=[
-                    ContextMiddleware(state_schema=agent_state_schema),
+                    ContextMiddleware(
+                        state_schema=agent_state_schema, data_sources=data_sources
+                    ),
                     ToolErrorMiddleware(),
                 ],
                 system_prompt=DEFAULT_INSTRUCTIONS

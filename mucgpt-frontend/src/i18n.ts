@@ -360,6 +360,7 @@ i18n
                         },
                         history: {
                             history: "Historie",
+                            recents_label: "Letzte Chats",
                             newchat: "Gib dem Chat einen neuen Namen:",
                             options: "Chat-Optionen",
                             rename: "Chat umbenennen",
@@ -1019,6 +1020,7 @@ i18n
                         },
                         history: {
                             history: "History",
+                            recents_label: "Recent chats",
                             newchat: "Enter new name for the chat:",
                             options: "Chat-Options",
                             rename: "Rename chat",
@@ -1662,6 +1664,7 @@ i18n
                         },
                         history: {
                             history: "Historie",
+                            recents_label: "Letzte Chats",
                             newchat: "Gib dem Chat an nein Nama:",
                             options: "Chat-Optionen",
                             rename: "Chat Umbenenna",
@@ -2310,6 +2313,7 @@ i18n
                         },
                         history: {
                             history: "Historique",
+                            recents_label: "Chats récents",
                             newchat: "Donnez un nouveau nom au chat :",
                             options: "Options de chat",
                             rename: "Renommer le chat",
@@ -2958,6 +2962,7 @@ i18n
                         },
                         history: {
                             history: "Історія",
+                            recents_label: "Недавні чати",
                             newchat: "Дайте нову назву чату:",
                             options: "Опції чату",
                             rename: "Перейменувати чат",

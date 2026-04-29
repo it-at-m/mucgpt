@@ -150,6 +150,7 @@ export const UnifiedSidebarHistory = ({ requestClose }: UnifiedSidebarHistoryPro
 
     return (
         <div className={styles.root}>
+            <div className={styles.historyLabel}>{t("components.history.recents_label")}</div>
             {isAssistantContext && (
                 <TabList selectedValue={tab} onTabSelect={handleTabChange} className={styles.tabs} size="small">
                     <Tab value="all" icon={<Globe20Regular />}>

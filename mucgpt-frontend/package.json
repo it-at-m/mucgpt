@@ -36,7 +36,7 @@
         "@types/react": "19.2.14",
         "@types/react-dom": "19.2.3",
         "@types/react-syntax-highlighter": "15.5.13",
-        "@vitejs/plugin-react": "5.2.0",
+        "@vitejs/plugin-react": "6.0.1",
         "brace-expansion": ">=1.1.13",
         "esbuild": "0.28.0",
         "eslint": "9.39.4",

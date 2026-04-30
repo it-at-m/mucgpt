@@ -1,6 +1,4 @@
 import asyncio
-import json
-import os
 
 from httpx import Auth, Request
 from langchain_core.tools import BaseTool
@@ -120,60 +118,50 @@ class McpLoader:
                     try:
                         source_tools = await mcp_client.get_tools(server_name=source_id)
 
-                        # Attempt to load detailed tool descriptions for this mcp-source from the filesystem
+                        source_config = sources[source_id]
+
+                        # Attempt to load detailed tool descriptions for this mcp-source
                         # this is optional and only used to enrich the tool metadata with a more detailed description, if available
                         # The idea is that by customizing the mcp tool description files, 
                         # we can provide better, e.g. usecase specific, descriptions for the tools
                         # We found that the descriptions provided by the MCP sources themselves are often not sufficient for good performance, 
                         # so this is a way to enrich them
-                        path = os.path.join(
-                            os.path.dirname(__file__),
-                            "mcp-descriptions",
-                            f"{source_id}.json",
-                        )
-
-                        tool_descriptions = []
-                        try:
-                            with open(path, encoding="utf-8") as f:
-                                tool_descriptions = json.load(f)
-                        except FileNotFoundError:
-                            McpLoader._logger.warning(
-                                f"Description file not found for MCP source '{source_id}': {path}"
-                            )
-
+                        config_descriptions = source_config.descriptions or []
                         for source_tool in source_tools:
-                            description_entry = next(
+                            custom_desc_entry = next(
                                 (
-                                    desc
-                                    for desc in tool_descriptions
-                                    if desc["name"] == source_tool.name
+                                    d
+                                    for d in config_descriptions
+                                    if d.name == source_tool.name
                                 ),
                                 None,
+                            )
+                            custom_desc = (
+                                custom_desc_entry.description
+                                if custom_desc_entry
+                                else None
                             )
 
                             existing_metadata = dict(
                                 getattr(source_tool, "metadata", {}) or {}
                             )
-                            tool_description_from_mcp_server =existing_metadata.pop("description", None)
+                            old_description = existing_metadata.pop("description", None)
 
                             metadata = {
                                 **existing_metadata,
                                 "mcp_source": source_id,
                                 "mcp_group": McpLoader._resolve_group(
-                                tool_name=source_tool.name,
-                                source_config=sources[source_id],
+                                    tool_name=source_tool.name,
+                                    source_config=source_config,
                                 ),
                             }
 
-                            if description_entry is not None:
-                                new_description = description_entry.get(
-                                    "description", ""
-                                )
-                                metadata["description"] = new_description
-                                source_tool.description = new_description
-                            elif tool_description_from_mcp_server:
-                                metadata["description"] = tool_description_from_mcp_server
-                                source_tool.description = tool_description_from_mcp_server
+                            if custom_desc:
+                                metadata["description"] = custom_desc
+                                source_tool.description = custom_desc
+                            elif old_description:
+                                metadata["description"] = old_description
+                                source_tool.description = old_description
 
                             source_tool.metadata = metadata
 
@@ -212,9 +200,7 @@ class McpLoader:
             raise
 
     @staticmethod
-    def _resolve_group(
-        tool_name: str, source_config: MCPSourceConfig
-    ) -> str | None:
+    def _resolve_group(tool_name: str, source_config: MCPSourceConfig) -> str | None:
         """Resolve the group for a tool: check tool_groups prefixes first, fall back to group."""
         tool_groups = getattr(source_config, "tool_groups", None)
         if tool_groups:
@@ -259,9 +245,7 @@ class McpBearerAuthProvider(Auth):
 
         normalized = token.strip()
         if token != normalized:
-            McpLoader._logger.warning(
-                "Given authentication token was not normalized."
-            )
+            McpLoader._logger.warning("Given authentication token was not normalized.")
         scheme, sep, _ = normalized.partition(" ")
         if sep and scheme.lower() in {"bearer", "basic"}:
             request.headers["Authorization"] = normalized

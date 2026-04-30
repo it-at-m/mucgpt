@@ -33,7 +33,7 @@ export const UnifiedSidebarHistory = ({ requestClose }: UnifiedSidebarHistoryPro
     const { t } = useTranslation();
     const navigate = useNavigate();
     const { pageContext, refreshVersion, refreshHistory } = useUnifiedHistory();
-    const { showSuccess } = useGlobalToastContext();
+    const { showError, showSuccess } = useGlobalToastContext();
     const [entries, setEntries] = useState<UnifiedHistoryEntry[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [hasLoaded, setHasLoaded] = useState(false);
@@ -112,15 +112,20 @@ export const UnifiedSidebarHistory = ({ requestClose }: UnifiedSidebarHistoryPro
     const deleteEntry = async (entry: UnifiedHistoryEntry) => {
         const deletedTitle = getEntryTitle(entry);
         const isDeletingActiveChat = activeChatId === entry.id;
-        await storage.deleteEntry(entry);
-        refreshHistory();
-        setEntryToDelete(null);
-        showSuccess(t("components.history.delete_success_title"), t("components.history.delete_success_message", { name: deletedTitle }));
+        try {
+            await storage.deleteEntry(entry);
+            refreshHistory();
+            setEntryToDelete(null);
+            showSuccess(t("components.history.delete_success_title"), t("components.history.delete_success_message", { name: deletedTitle }));
 
-        if (isDeletingActiveChat) {
-            pageContext?.resetActiveChat?.(entry.id);
-            navigate("/");
-            requestClose?.();
+            if (isDeletingActiveChat) {
+                pageContext?.resetActiveChat?.(entry.id);
+                navigate("/");
+                requestClose?.();
+            }
+        } catch (error) {
+            console.error("Failed to delete history entry", error);
+            showError(t("components.history.delete_failed_title"), t("components.history.delete_failed_message", { name: deletedTitle }));
         }
     };
 
@@ -131,13 +136,23 @@ export const UnifiedSidebarHistory = ({ requestClose }: UnifiedSidebarHistoryPro
             return;
         }
 
-        await storage.renameEntry(entry, trimmedName);
-        refreshHistory();
+        try {
+            await storage.renameEntry(entry, trimmedName);
+            refreshHistory();
+        } catch (error) {
+            console.error("Failed to rename history entry", error);
+            showError(t("components.history.rename_failed_title"), t("components.history.rename_failed_message"));
+        }
     };
 
     const changeFavourite = async (entry: UnifiedHistoryEntry, favorite: boolean) => {
-        await storage.changeFavourite(entry, favorite);
-        refreshHistory();
+        try {
+            await storage.changeFavourite(entry, favorite);
+            refreshHistory();
+        } catch (error) {
+            console.error("Failed to update history entry favourite state", error);
+            showError(t("components.history.favorite_failed_title"), t("components.history.favorite_failed_message"));
+        }
     };
 
     if (isLoading && !hasLoaded) {

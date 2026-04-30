@@ -159,12 +159,30 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
         setIsLoading(value);
     }, []);
     const getRequestedChatId = useCallback(() => new URLSearchParams(location.search).get("chatId"), [location.search]);
+    const getNewChatToken = useCallback(() => new URLSearchParams(location.search).get("new"), [location.search]);
     const clearRequestedChatId = useCallback(() => {
         const searchParams = new URLSearchParams(location.search);
         if (!searchParams.has("chatId")) {
             return;
         }
 
+        searchParams.delete("chatId");
+        const nextSearch = searchParams.toString();
+        navigate(
+            {
+                pathname: location.pathname,
+                search: nextSearch ? `?${nextSearch}` : ""
+            },
+            { replace: true }
+        );
+    }, [location.pathname, location.search, navigate]);
+    const clearNewChatRequest = useCallback(() => {
+        const searchParams = new URLSearchParams(location.search);
+        if (!searchParams.has("new") && !searchParams.has("chatId")) {
+            return;
+        }
+
+        searchParams.delete("new");
         searchParams.delete("chatId");
         const nextSearch = searchParams.toString();
         navigate(
@@ -186,6 +204,13 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
         },
         [mergeLockedToolIds]
     );
+    const resetActiveChatState = useCallback(() => {
+        setLastQuestionValue("");
+        if (error) setError(undefined);
+        activeChatRef.current = undefined;
+        dispatch({ type: "SET_ACTIVE_CHAT", payload: undefined });
+        dispatch({ type: "CLEAR_ANSWERS" });
+    }, [error, setLastQuestionValue]);
 
     // useEffect to load the assistant config and chat history
     useEffect(() => {
@@ -257,6 +282,13 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                                         t("components.assistant_chat.default_model_unavailable_message", { modelName: assistant.default_model })
                                     );
                                 }
+                            }
+
+                            const newChatToken = getNewChatToken();
+                            if (newChatToken !== null) {
+                                resetActiveChatState();
+                                clearNewChatRequest();
+                                return fetchHistory();
                             }
 
                             const requestedChatId = getRequestedChatId();
@@ -335,7 +367,10 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
         setIsLoadingValue,
         setLastQuestionValue,
         getRequestedChatId,
+        getNewChatToken,
         clearRequestedChatId,
+        clearNewChatRequest,
+        resetActiveChatState,
         assistantChatStorage
     ]);
 
@@ -530,14 +565,6 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
             setIsLoadingValue(false);
         }
     }, [answers, assistantChatStorage, callApi, systemPrompt, isLoading, setIsLoadingValue]);
-
-    const resetActiveChatState = useCallback(() => {
-        setLastQuestionValue("");
-        if (error) setError(undefined);
-        activeChatRef.current = undefined;
-        dispatch({ type: "SET_ACTIVE_CHAT", payload: undefined });
-        dispatch({ type: "CLEAR_ANSWERS" });
-    }, [error, setLastQuestionValue]);
 
     useUnifiedHistoryRegistration(
         useMemo(

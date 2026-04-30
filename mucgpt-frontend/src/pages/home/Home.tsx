@@ -286,6 +286,13 @@ const Home = () => {
     const sectionHeading = t("home.assistants");
     const sectionLabel = mode === "recent" ? t("home.last_used") : t("home.recommended");
 
+    const footerLinkHref = useMemo(() => {
+        const candidate = config?.footer_link_url?.trim();
+        if (!candidate) return "https://ki.muenchen.de";
+        if (/^https?:\/\//i.test(candidate) || candidate.startsWith("/")) return candidate;
+        return "https://ki.muenchen.de";
+    }, [config?.footer_link_url]);
+
     return (
         <div className={styles.pageContainer}>
             <section className={styles.chatstartercontainer} aria-labelledby="chat-header">
@@ -398,9 +405,9 @@ const Home = () => {
                             <div className={styles.footerCompanyBlock}>
                                 <span>{t("common.footer_credit", "Made with ❤️ & ☕ by")}</span>{" "}
                                 <a
-                                    href={config?.footer_link_url || "https://ki.muenchen.de"}
+                                    href={footerLinkHref}
                                     target="_blank"
-                                    rel="noreferrer"
+                                    rel="noreferrer noopener"
                                     className={styles.footerCompanyLink}
                                 >
                                     DAICE

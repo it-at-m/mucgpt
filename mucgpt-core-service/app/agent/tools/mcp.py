@@ -120,6 +120,12 @@ class McpLoader:
                     try:
                         source_tools = await mcp_client.get_tools(server_name=source_id)
 
+                        # Attempt to load detailed tool descriptions for this mcp-source from the filesystem
+                        # this is optional and only used to enrich the tool metadata with a more detailed description, if available
+                        # The idea is that by customizing the mcp tool description files, 
+                        # we can provide better, e.g. usecase specific, descriptions for the tools
+                        # We found that the descriptions provided by the MCP sources themselves are often not sufficient for good performance, 
+                        # so this is a way to enrich them
                         path = os.path.join(
                             os.path.dirname(__file__),
                             "mcp-descriptions",
@@ -148,7 +154,7 @@ class McpLoader:
                             existing_metadata = dict(
                                 getattr(source_tool, "metadata", {}) or {}
                             )
-                            old_description =existing_metadata.pop("description", None)
+                            tool_description_from_mcp_server =existing_metadata.pop("description", None)
 
                             metadata = {
                                 **existing_metadata,
@@ -165,9 +171,9 @@ class McpLoader:
                                 )
                                 metadata["description"] = new_description
                                 source_tool.description = new_description
-                            elif old_description:
-                                metadata["description"] = old_description
-                                source_tool.description = old_description
+                            elif tool_description_from_mcp_server:
+                                metadata["description"] = tool_description_from_mcp_server
+                                source_tool.description = tool_description_from_mcp_server
 
                             source_tool.metadata = metadata
 

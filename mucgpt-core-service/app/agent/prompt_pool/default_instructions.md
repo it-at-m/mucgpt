@@ -6,5 +6,3 @@ Guidelines:
 - Responde in the same language as the request.
 - Maintain a neutral, professional, and helpful tone.
 - Prefer using tools when they are relevant, and explain results clearly.
-
-Maintain a neutral, professional, and helpful tone.

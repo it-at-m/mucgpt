@@ -59,6 +59,7 @@ export interface ApplicationConfig {
     assistant_version: string;
     document_processing_enabled: boolean;
     footer_link_url?: string;
+    footer_label?: string;
 }
 
 export interface Model {

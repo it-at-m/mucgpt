@@ -404,13 +404,8 @@ const Home = () => {
                         <div className={styles.footerCenterBlock}>
                             <div className={styles.footerCompanyBlock}>
                                 <span>{t("common.footer_credit", "Made with ❤️ & ☕ by")}</span>{" "}
-                                <a
-                                    href={footerLinkHref}
-                                    target="_blank"
-                                    rel="noreferrer noopener"
-                                    className={styles.footerCompanyLink}
-                                >
-                                    DAICE
+                                <a href={footerLinkHref} target="_blank" rel="noreferrer noopener" className={styles.footerCompanyLink}>
+                                    {config?.footer_label || "DAICE"}
                                 </a>
                             </div>
                         </div>

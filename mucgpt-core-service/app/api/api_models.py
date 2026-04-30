@@ -413,3 +413,7 @@ class ConfigResponse(BaseModel):
         None,
         description="URL for the footer link.",
     )
+    footer_label: str | None = Field(
+        None,
+        description="Label for the footer link.",
+    )

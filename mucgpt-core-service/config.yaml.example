@@ -20,6 +20,7 @@ ALTERNATIVE_LOGO: false
 FRONTEND_VERSION: "unknown"
 ASSISTANT_VERSION: "unknown"
 FOOTER_LINK_URL: "https://ki.muenchen.de"
+FOOTER_LABEL: "DAICE"
 
 # Backend settings
 UNAUTHORIZED_USER_REDIRECT_URL: ""

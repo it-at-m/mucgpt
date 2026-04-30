@@ -241,7 +241,7 @@ class AtlassianScopePolicy(DefaultScopePolicy):
         
 
         system_prompt = self.router_prompt if self.router_prompt is not None else "classify the scope of this conversation into one of the following categories: jira, confluence, general. focus on the most recent conversation"
-        n = 6 # TODO: set dynamically or via config
+        n = 10 # TODO: set dynamically or via config
         messages = [
             {"role": "system", "content": system_prompt},
             *[

@@ -119,8 +119,14 @@ class McpLoader:
                         source_tools = await mcp_client.get_tools(server_name=source_id)
 
                         source_config = sources[source_id]
-                        config_descriptions = source_config.descriptions or []
 
+                        # Attempt to load detailed tool descriptions for this mcp-source
+                        # this is optional and only used to enrich the tool metadata with a more detailed description, if available
+                        # The idea is that by customizing the mcp tool description files, 
+                        # we can provide better, e.g. usecase specific, descriptions for the tools
+                        # We found that the descriptions provided by the MCP sources themselves are often not sufficient for good performance, 
+                        # so this is a way to enrich them
+                        config_descriptions = source_config.descriptions or []
                         for source_tool in source_tools:
                             custom_desc_entry = next(
                                 (

@@ -162,8 +162,14 @@ class ContextMiddleware(AgentMiddleware):
         logger.info(f"selected Tools: {len(request.tools or [])}")
         request = policy.modify_system_message(request)
 
-        if self.data_sources:
-            new_messages = _inject_data_sources(request.messages, self.data_sources)
+        state_data_sources = (
+            request.state.get("data_sources", [])
+            if isinstance(request.state, dict)
+            else []
+        )
+        all_data_sources = self.data_sources + state_data_sources
+        if all_data_sources:
+            new_messages = _inject_data_sources(request.messages, all_data_sources)
             request = request.override(messages=new_messages)
 
         return handler(request)
@@ -183,8 +189,14 @@ class ContextMiddleware(AgentMiddleware):
         logger.info(f"selected Tools: {len(request.tools or [])}")
         request = await policy.amodify_system_message(request)
 
-        if self.data_sources:
-            new_messages = _inject_data_sources(request.messages, self.data_sources)
+        state_data_sources = (
+            request.state.get("data_sources", [])
+            if isinstance(request.state, dict)
+            else []
+        )
+        all_data_sources = self.data_sources + state_data_sources
+        if all_data_sources:
+            new_messages = _inject_data_sources(request.messages, all_data_sources)
             request = request.override(messages=new_messages)
 
         return await handler(request)

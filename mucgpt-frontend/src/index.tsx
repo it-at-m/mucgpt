@@ -149,9 +149,10 @@ async function enableMocking() {
 
     // `worker.start()` returns a Promise that resolves
     // once the Service Worker is up and ready to intercept requests.
-    if (import.meta.env?.MODE === "development") return worker.start();
+    if (import.meta.env?.MODE === "development") return worker.start({ onUnhandledRequest: () => {} });
     else
         return worker.start({
+            onUnhandledRequest: () => {},
             serviceWorker: {
                 // This is useful if your application follows
                 // a strict directory structure.

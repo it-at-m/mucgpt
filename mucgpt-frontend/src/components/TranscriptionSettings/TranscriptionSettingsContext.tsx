@@ -64,33 +64,6 @@ const readDownloaded = (): string[] => {
     return [];
 };
 
-const TARGET_SAMPLE_RATE = 16000;
-// Keep interim transcriptions from re-decoding a growing buffer every tick:
-// cap audio at the most recent INTERIM_WINDOW_SECONDS so cost stays bounded.
-const INTERIM_WINDOW_SECONDS = 15;
-
-async function resampleAudioTo16kHz(blob: Blob): Promise<Float32Array> {
-    const arrayBuffer = await blob.arrayBuffer();
-    // AudioContext resamples implicitly to its sampleRate when decoding.
-    const audioCtx = new AudioContext({ sampleRate: TARGET_SAMPLE_RATE });
-    try {
-        const decoded = await audioCtx.decodeAudioData(arrayBuffer);
-        if (decoded.numberOfChannels === 1) {
-            return decoded.getChannelData(0);
-        }
-        const n = decoded.length;
-        const mono = new Float32Array(n);
-        const scale = 1 / decoded.numberOfChannels;
-        for (let ch = 0; ch < decoded.numberOfChannels; ch++) {
-            const data = decoded.getChannelData(ch);
-            for (let i = 0; i < n; i++) mono[i] += data[i] * scale;
-        }
-        return mono;
-    } finally {
-        await audioCtx.close();
-    }
-}
-
 const defaultValue: ITranscriptionSettings = {
     enabled: false,
     setEnabled: () => {},
@@ -134,7 +107,6 @@ export const TranscriptionSettingsProvider = (props: React.PropsWithChildren<unk
     const languageRef = useRef<TranscriptionLanguage>(undefined);
     const loadedModelIdRef = useRef<string | null>(null);
     const pendingDownloadRef = useRef<{ id: string; resolve: () => void; reject: (err: Error) => void } | null>(null);
-    const isResamplingRef = useRef(false);
 
     const { recordingState, startRecording: startAudioRecording, stopRecording } = useAudioRecorder();
 
@@ -169,8 +141,12 @@ export const TranscriptionSettingsProvider = (props: React.PropsWithChildren<unk
         setDownloadedModels(prev => (prev.includes(id) ? prev : [...prev, id]));
     }, []);
 
-    const sendToWorker = useCallback((msg: WorkerInMessage) => {
-        workerRef.current?.postMessage(msg);
+    const sendToWorker = useCallback((msg: WorkerInMessage, transfer?: Transferable[]) => {
+        if (transfer && transfer.length > 0) {
+            workerRef.current?.postMessage(msg, transfer);
+        } else {
+            workerRef.current?.postMessage(msg);
+        }
     }, []);
 
     // Create worker lazily; terminate on unmount
@@ -198,11 +174,14 @@ export const TranscriptionSettingsProvider = (props: React.PropsWithChildren<unk
                     setStatus(prev => (prev === "loading-model" ? "idle" : prev));
                     break;
                 }
-                case "chunk":
-                    setTranscript(msg.text);
+                case "recording_start":
+                    // VAD detected onset of speech — status stays "recording"
+                    break;
+                case "segment":
+                    // Append each VAD segment to the live transcript
+                    setTranscript(prev => (prev ? prev + " " + msg.text : msg.text));
                     break;
                 case "complete":
-                    setTranscript(msg.text);
                     setStatus("idle");
                     break;
                 case "error": {
@@ -240,12 +219,19 @@ export const TranscriptionSettingsProvider = (props: React.PropsWithChildren<unk
 
     const setEnabled = useCallback((v: boolean) => setEnabledState(v), []);
     const setSelectedModelId = useCallback((id: string) => setSelectedModelIdState(id), []);
-    const setLanguage = useCallback((lang: TranscriptionLanguage) => setLanguageState(lang), []);
+
+    const setLanguage = useCallback(
+        (lang: TranscriptionLanguage) => {
+            setLanguageState(lang);
+            // Keep the worker in sync so in-flight VAD segments use the updated language.
+            sendToWorker({ type: "set-language", language: lang });
+        },
+        [sendToWorker]
+    );
 
     const downloadModel = useCallback(
         (modelId: string): Promise<void> => {
             if (!workerRef.current) return Promise.reject(new Error("Worker not ready"));
-            // Reject any in-flight download before starting a new one
             const prior = pendingDownloadRef.current;
             if (prior) {
                 prior.reject(new Error("Superseded by new download"));
@@ -259,7 +245,6 @@ export const TranscriptionSettingsProvider = (props: React.PropsWithChildren<unk
             setStatus("loading-model");
             return new Promise<void>((resolve, reject) => {
                 pendingDownloadRef.current = { id: modelId, resolve, reject };
-                // Fetch file sizes in parallel
                 const modelDtype = TRANSCRIPTION_MODELS.find(m => m.model_id === modelId)?.dtype;
                 fetchModelFileSizes(modelId)
                     .then(fileSizes => {
@@ -274,24 +259,6 @@ export const TranscriptionSettingsProvider = (props: React.PropsWithChildren<unk
         [sendToWorker]
     );
 
-    const handleInterimBlob = useCallback(
-        async (blob: Blob) => {
-            if (isResamplingRef.current) return;
-            isResamplingRef.current = true;
-            try {
-                const full = await resampleAudioTo16kHz(blob);
-                const maxSamples = INTERIM_WINDOW_SECONDS * TARGET_SAMPLE_RATE;
-                const audio = full.length > maxSamples ? full.slice(-maxSamples) : full;
-                sendToWorker({ type: "transcribe", audio, language: languageRef.current, interim: true });
-            } catch {
-                // ignore interim errors; final run will retry
-            } finally {
-                isResamplingRef.current = false;
-            }
-        },
-        [sendToWorker]
-    );
-
     const startRecording = useCallback(async () => {
         if (status === "recording" || recordingState === "recording") return;
         if (!enabled || !downloadedModels.includes(selectedModelId)) {
@@ -300,32 +267,33 @@ export const TranscriptionSettingsProvider = (props: React.PropsWithChildren<unk
         }
         setError(null);
         setTranscript("");
-        // Ensure worker has the selected model loaded (cache hit is fast)
+
+        // Ensure worker has the model loaded (cache hit resolves instantly)
         if (loadedModelIdRef.current !== selectedModelId) {
             sendToWorker({ type: "load", modelId: selectedModelId });
             loadedModelIdRef.current = selectedModelId;
         }
+
+        // Sync language before frames start arriving
+        sendToWorker({ type: "set-language", language: languageRef.current });
+
         try {
-            await startAudioRecording(handleInterimBlob);
+            await startAudioRecording((frame: Float32Array) => {
+                // Transfer ownership of the buffer to avoid a copy on every frame.
+                sendToWorker({ type: "audio-frame", buffer: frame }, [frame.buffer]);
+            });
             setStatus("recording");
         } catch (err) {
             setError(err instanceof Error ? err.message : String(err));
             setStatus("error");
         }
-    }, [status, recordingState, enabled, downloadedModels, selectedModelId, startAudioRecording, handleInterimBlob, sendToWorker]);
+    }, [status, recordingState, enabled, downloadedModels, selectedModelId, startAudioRecording, sendToWorker]);
 
     const stopAndTranscribe = useCallback(async () => {
         if (recordingState !== "recording") return;
-        const blob = await stopRecording();
-        if (!blob) return;
+        stopRecording();
         setStatus("transcribing");
-        try {
-            const audio = await resampleAudioTo16kHz(blob);
-            sendToWorker({ type: "transcribe", audio, language: languageRef.current, interim: false });
-        } catch (err) {
-            setError(err instanceof Error ? err.message : String(err));
-            setStatus("error");
-        }
+        sendToWorker({ type: "stop-recording" });
     }, [recordingState, stopRecording, sendToWorker]);
 
     const value = useMemo<ITranscriptionSettings>(

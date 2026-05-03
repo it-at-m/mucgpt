@@ -4,7 +4,6 @@ import {
     DialogBody,
     DialogTitle,
     DialogContent,
-    DialogActions,
     Button,
     Switch,
     Badge,
@@ -13,7 +12,7 @@ import {
     ProgressBar,
     Label
 } from "@fluentui/react-components";
-import { Dismiss24Regular, CheckmarkCircle20Filled, Warning20Filled } from "@fluentui/react-icons";
+import { CheckmarkCircle20Filled, Warning20Filled, Dismiss24Regular } from "@fluentui/react-icons";
 import { useContext, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { TranscriptionSettingsContext } from "./TranscriptionSettingsContext";
@@ -75,20 +74,23 @@ export const TranscriptionSettingsDialog = ({ open, onOpenChange }: Props) => {
         <Dialog open={open} onOpenChange={(_, data) => onOpenChange(data.open)}>
             <DialogSurface>
                 <DialogBody>
-                    <div className={styles.header}>
-                        <div className={styles.titleRow}>
-                            <DialogTitle>{t("components.transcriptionSettings.title")}</DialogTitle>
+                    <DialogTitle
+                        action={
+                            <Button
+                                appearance="subtle"
+                                icon={<Dismiss24Regular />}
+                                onClick={() => onOpenChange(false)}
+                                aria-label={t("components.transcriptionSettings.close")}
+                            />
+                        }
+                    >
+                        <span className={styles.titleWithBadge}>
+                            {t("components.transcriptionSettings.title")}
                             <Badge appearance="tint" color="warning">
                                 {t("components.transcriptionSettings.beta")}
                             </Badge>
-                        </div>
-                        <Button
-                            appearance="subtle"
-                            icon={<Dismiss24Regular />}
-                            onClick={() => onOpenChange(false)}
-                            aria-label={t("components.transcriptionSettings.close")}
-                        />
-                    </div>
+                        </span>
+                    </DialogTitle>
                     <DialogContent className={styles.content}>
                         <div className={styles.disclaimer}>{t("components.transcriptionSettings.disclaimer")}</div>
 
@@ -115,7 +117,7 @@ export const TranscriptionSettingsDialog = ({ open, onOpenChange }: Props) => {
                                     {TRANSCRIPTION_MODELS.map(m => {
                                         const isDownloaded = downloadedModels.includes(m.model_id);
                                         return (
-                                            <div key={m.model_id} className={styles.modelRow}>
+                                            <div key={m.model_id} className={styles.modelRow} onClick={() => setSelectedModelId(m.model_id)}>
                                                 <Radio
                                                     value={m.model_id}
                                                     label={
@@ -139,10 +141,16 @@ export const TranscriptionSettingsDialog = ({ open, onOpenChange }: Props) => {
 
                         <div className={styles.section}>
                             <div className={styles.downloadRow}>
-                                <Button appearance="primary" disabled={!enabled || isLoading} onClick={onDownload}>
+                                <Button appearance="secondary" disabled={!enabled || isLoading} onClick={onDownload}>
                                     {selectedIsDownloaded ? t("components.transcriptionSettings.redownload") : t("components.transcriptionSettings.download")}
                                 </Button>
-                                <span className={styles.statusRow}>{statusLabel}</span>
+                                {(!selectedIsDownloaded || isLoading) && <span className={styles.statusRow}>{statusLabel}</span>}
+                                {!error && selectedIsDownloaded && !isLoading && (
+                                    <span className={styles.statusRow}>
+                                        {statusLabel}
+                                        <CheckmarkCircle20Filled style={{ marginLeft: "6px", fontSize: "16px" }} />
+                                    </span>
+                                )}
                             </div>
                             {isLoading && loadingModelId === selectedModelId && (
                                 <ProgressBar className={styles.progress} value={modelProgress > 0 ? modelProgress / 100 : undefined} thickness="medium" />
@@ -150,11 +158,6 @@ export const TranscriptionSettingsDialog = ({ open, onOpenChange }: Props) => {
                             {error && status === "error" && <span className={styles.statusRow}>{error}</span>}
                         </div>
                     </DialogContent>
-                    <DialogActions>
-                        <Button appearance="primary" onClick={() => onOpenChange(false)}>
-                            {t("components.transcriptionSettings.close")}
-                        </Button>
-                    </DialogActions>
                 </DialogBody>
             </DialogSurface>
         </Dialog>

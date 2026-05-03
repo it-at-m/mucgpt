@@ -1,11 +1,9 @@
-import { Button, Tooltip, ProgressBar } from "@fluentui/react-components";
-import { MicRegular, MicFilled } from "@fluentui/react-icons";
+import { Button, Tooltip } from "@fluentui/react-components";
+import { MicRegular, MicRecordRegular, MicSyncRegular, MicOffRegular } from "@fluentui/react-icons";
 import { useTranslation } from "react-i18next";
-import { useCallback, useContext, useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import styles from "./MicrophoneButton.module.css";
 import { useTranscription } from "../../hooks/useTranscription";
-import { LanguageContext } from "../LanguageSelector/LanguageContextProvider";
-import { mapUILanguageToWhisper } from "../../utils/language-utils";
 
 interface Props {
     onTranscription: (text: string) => void;
@@ -16,13 +14,7 @@ interface Props {
 
 export const MicrophoneButton = ({ onTranscription, onLiveTranscription, onRecordingStart, disabled = false }: Props) => {
     const { t } = useTranslation();
-    const { language: uiLanguage } = useContext(LanguageContext);
-    const { status, modelProgress, transcript, startRecording, stopAndTranscribe, setLanguage } = useTranscription();
-
-    // Keep Whisper language in sync with the UI language picker
-    useEffect(() => {
-        setLanguage(mapUILanguageToWhisper(uiLanguage));
-    }, [uiLanguage, setLanguage]);
+    const { status, modelProgress, transcript, startRecording, stopAndTranscribe } = useTranscription();
 
     // Forward interim transcript to input while recording
     useEffect(() => {
@@ -53,38 +45,39 @@ export const MicrophoneButton = ({ onTranscription, onLiveTranscription, onRecor
         }
     }, [status, startRecording, stopAndTranscribe, onRecordingStart]);
 
-    const isRecording = status === "recording";
-    const isTranscribing = status === "transcribing";
     const isLoadingModel = status === "loading-model";
-    const isBusy = isTranscribing || isLoadingModel;
+    const isWarmingUp = status === "warming-up";
+    const isModelLoading = isLoadingModel || isWarmingUp;
+    const isRecording = status === "recording";
+    const isBusy = status === "transcribing" || isModelLoading;
+
+    const getIcon = () => {
+        if (disabled) return <MicOffRegular />;
+        if (isModelLoading || isBusy) return <MicSyncRegular />;
+        if (isRecording) return <MicRecordRegular />;
+        return <MicRegular />;
+    };
 
     const getTooltipContent = () => {
-        if (isLoadingModel)
+        if (isModelLoading)
             return `${t("components.microphonebutton.loading_model", "Modell wird geladen...")} ${modelProgress > 0 ? `${modelProgress}%` : ""}`;
         if (isRecording) return t("components.microphonebutton.stop", "Aufnahme beenden");
-        if (isTranscribing) return t("components.microphonebutton.transcribing", "Transkribiere...");
         return t("components.microphonebutton.record", "Sprachaufnahme starten");
     };
 
     return (
         <div className={styles.wrapper}>
-            {isLoadingModel && (
-                <div className={styles.progressWrapper}>
-                    <ProgressBar value={modelProgress > 0 ? modelProgress / 100 : undefined} thickness="medium" />
-                </div>
-            )}
             <Tooltip content={getTooltipContent()} relationship="label">
                 <Button
                     size="large"
                     appearance="transparent"
-                    className={`${styles.micButton} ${isRecording ? styles.recording : ""} ${isBusy ? styles.busy : ""}`}
-                    icon={isRecording ? <MicFilled className={styles.recordingIcon} /> : <MicRegular />}
+                    className={`${styles.micButton} ${isBusy ? styles.busy : ""}`}
+                    icon={getIcon()}
                     aria-label={getTooltipContent()}
                     disabled={disabled || isBusy}
                     onClick={handleClick}
                 />
             </Tooltip>
-            {isTranscribing && <span className={styles.transcribingLabel}>{t("components.microphonebutton.transcribing", "Transkribiere...")}</span>}
         </div>
     );
 };

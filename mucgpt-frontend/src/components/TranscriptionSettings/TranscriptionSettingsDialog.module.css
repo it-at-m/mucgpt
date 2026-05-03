@@ -1,18 +1,3 @@
-.header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 8px;
-    margin-bottom: 12px;
-    width: 100%;
-}
-
-.titleRow {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
 .content {
     display: flex;
     flex-direction: column;
@@ -21,13 +6,20 @@
     width: 100%;
 }
 
+.titleWithBadge {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
 .disclaimer {
     font-size: var(--fontSizeBase200);
     line-height: 1.4;
-    background: var(--colorNeutralBackground3);
-    border: 1px solid var(--colorNeutralStroke2);
+    background: var(--colorStatusWarningBackground1);
+    border: 1px solid var(--colorStatusWarningBorder1);
     border-radius: 6px;
     padding: 10px 12px;
+    color: var(--colorStatusWarningForeground1);
 }
 
 .warning {
@@ -75,6 +67,7 @@
     padding: 6px 8px;
     border-radius: 4px;
     width: 100%;
+    cursor: pointer;
 }
 
 .modelRow:hover {

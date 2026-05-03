@@ -64,7 +64,8 @@ export const QuestionInput = ({
     const [isDragActive, setIsDragActive] = useState(false);
     const dragCounterRef = useRef(0);
     const recordingBaseRef = useRef("");
-    const { isModelReady: transcriptionReady } = useContext(TranscriptionSettingsContext);
+    const { isModelReady: transcriptionReady, status: transcriptionStatus } = useContext(TranscriptionSettingsContext);
+    const isTranscriptionActive = transcriptionStatus === "recording" || transcriptionStatus === "transcribing";
 
     const uploadedData = externalUploadedData ?? internalUploadedData;
     const activeDocumentCount = uploadedData.filter(data => data.isActive !== false).length;
@@ -345,6 +346,7 @@ export const QuestionInput = ({
                         onChange={onQuestionChange}
                         onKeyDown={onEnterPress}
                         ref={textareaRef}
+                        disabled={disabled || isTranscriptionActive}
                     />
                     <div className={styles.questionInputButtons}>
                         {allowFileUpload ? (
@@ -380,7 +382,7 @@ export const QuestionInput = ({
                                 appearance="transparent"
                                 icon={<Send28Filled />}
                                 aria-label={t("components.questioninput.send_question", "Frage senden")}
-                                disabled={disabled || !question.trim()}
+                                disabled={disabled || isTranscriptionActive || !question.trim()}
                                 onClick={sendQuestion}
                             />
                         </Tooltip>

@@ -1,11 +1,26 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { STORAGE_KEYS } from "../../pages/layout/LayoutHelper";
 import { DEFAULT_TRANSCRIPTION_MODEL, TRANSCRIPTION_MODELS } from "../../config/transcriptionModels";
 import type { WorkerInMessage, WorkerOutMessage } from "../../workers/transcription.worker";
 import { useAudioRecorder } from "../../hooks/useAudioRecorder";
 import { fetchModelFileSizes } from "../../utils/modelSizeUtils";
 
-export type TranscriptionStatus = "idle" | "loading-model" | "recording" | "transcribing" | "error";
+// Maps the app's i18n locale code to a Whisper language tag.
+// Bavarian (BAY) is a German dialect not supported by Whisper → fall back to "de".
+const LOCALE_TO_WHISPER: Record<string, string> = {
+    DE: "de",
+    EN: "en",
+    FR: "fr",
+    UK: "uk",
+    BAY: "de"
+};
+
+function localeToWhisperLang(locale: string): string | undefined {
+    return LOCALE_TO_WHISPER[locale.toUpperCase().split("-")[0]];
+}
+
+export type TranscriptionStatus = "idle" | "warming-up" | "loading-model" | "recording" | "transcribing" | "error";
 export type TranscriptionLanguage = string | undefined;
 
 export interface ITranscriptionSettings {
@@ -88,6 +103,8 @@ const defaultValue: ITranscriptionSettings = {
 export const TranscriptionSettingsContext = React.createContext<ITranscriptionSettings>(defaultValue);
 
 export const TranscriptionSettingsProvider = (props: React.PropsWithChildren<unknown>) => {
+    const { t, i18n } = useTranslation();
+
     // Persisted settings
     const [enabled, setEnabledState] = useState<boolean>(() => readEnabled());
     const [selectedModelId, setSelectedModelIdState] = useState<string>(() => readSelected());
@@ -101,11 +118,13 @@ export const TranscriptionSettingsProvider = (props: React.PropsWithChildren<unk
     const [transcript, setTranscript] = useState<string>("");
     const [error, setError] = useState<string | null>(null);
     const [loadingModelId, setLoadingModelId] = useState<string | null>(null);
-    const [language, setLanguageState] = useState<TranscriptionLanguage>(undefined);
+    const [workerReady, setWorkerReady] = useState(false);
+    const [language, setLanguageState] = useState<TranscriptionLanguage>(() => localeToWhisperLang(i18n.language));
 
     const workerRef = useRef<Worker | null>(null);
-    const languageRef = useRef<TranscriptionLanguage>(undefined);
+    const languageRef = useRef<TranscriptionLanguage>(localeToWhisperLang(i18n.language));
     const loadedModelIdRef = useRef<string | null>(null);
+    const selectedModelIdRef = useRef<string>(selectedModelId);
     const pendingDownloadRef = useRef<{ id: string; resolve: () => void; reject: (err: Error) => void } | null>(null);
 
     const { recordingState, startRecording: startAudioRecording, stopRecording } = useAudioRecorder();
@@ -137,6 +156,19 @@ export const TranscriptionSettingsProvider = (props: React.PropsWithChildren<unk
         languageRef.current = language;
     }, [language]);
 
+    // Keep transcription language in sync with i18n (covers persisted preference
+    // restored by Layout on mount via i18n.changeLanguage, not just user-initiated changes).
+    // Guard: only update when the locale maps to a known Whisper language — if i18n.language
+    // is null/empty/unsupported, keep the current value rather than overwriting with undefined.
+    useEffect(() => {
+        const mapped = localeToWhisperLang(i18n.language);
+        if (mapped !== undefined) setLanguage(mapped);
+    }, [i18n.language]);
+
+    useEffect(() => {
+        selectedModelIdRef.current = selectedModelId;
+    }, [selectedModelId]);
+
     const markDownloaded = useCallback((id: string) => {
         setDownloadedModels(prev => (prev.includes(id) ? prev : [...prev, id]));
     }, []);
@@ -148,6 +180,21 @@ export const TranscriptionSettingsProvider = (props: React.PropsWithChildren<unk
             workerRef.current?.postMessage(msg);
         }
     }, []);
+
+    // Pre-warm: when transcription is enabled and the selected model is already
+    // cached, load it immediately so the ONNX sessions are hot before the user
+    // clicks the mic. Shows "warming-up" (progress bar, button still enabled)
+    // rather than "loading-model" so the user can still click and have frames
+    // buffered by the worker. The worker's own guards prevent duplicate loads.
+    useEffect(() => {
+        if (!workerReady) return;
+        if (!enabled) return;
+        if (!downloadedModels.includes(selectedModelId)) return;
+        if (loadedModelIdRef.current === selectedModelId) return;
+        const modelCfg = TRANSCRIPTION_MODELS.find(m => m.model_id === selectedModelId);
+        setStatus("warming-up");
+        sendToWorker({ type: "load", modelId: selectedModelId, dtype: modelCfg?.dtype, webgpu_only: modelCfg?.webgpu_only, language: languageRef.current });
+    }, [workerReady, enabled, selectedModelId, downloadedModels, sendToWorker]);
 
     // Create worker lazily; terminate on unmount
     useEffect(() => {
@@ -168,10 +215,14 @@ export const TranscriptionSettingsProvider = (props: React.PropsWithChildren<unk
                         markDownloaded(pending.id);
                         pending.resolve();
                         pendingDownloadRef.current = null;
+                    } else {
+                        // Pre-warm or startRecording load completed — record which
+                        // model is live so startRecording skips the redundant load.
+                        loadedModelIdRef.current = loadingModelId ?? selectedModelIdRef.current;
                     }
                     setModelProgress(100);
                     setLoadingModelId(null);
-                    setStatus(prev => (prev === "loading-model" ? "idle" : prev));
+                    setStatus(prev => (prev === "loading-model" || prev === "warming-up" ? "idle" : prev));
                     break;
                 }
                 case "recording_start":
@@ -180,6 +231,13 @@ export const TranscriptionSettingsProvider = (props: React.PropsWithChildren<unk
                 case "segment":
                     // Append each VAD segment to the live transcript
                     setTranscript(prev => (prev ? prev + " " + msg.text : msg.text));
+                    break;
+                case "auto_stop":
+                    // VAD detected 2 s of silence after speech — stop audio capture
+                    // and let the worker flush remaining inference as normal.
+                    stopRecording();
+                    setStatus("transcribing");
+                    sendToWorker({ type: "stop-recording" });
                     break;
                 case "complete":
                     setStatus("idle");
@@ -190,7 +248,7 @@ export const TranscriptionSettingsProvider = (props: React.PropsWithChildren<unk
                         pending.reject(new Error(msg.message));
                         pendingDownloadRef.current = null;
                     }
-                    setError(msg.message);
+                    setError(msg.messageKey ? t(msg.messageKey) : msg.message);
                     setStatus("error");
                     setLoadingModelId(null);
                     break;
@@ -211,9 +269,11 @@ export const TranscriptionSettingsProvider = (props: React.PropsWithChildren<unk
         };
 
         workerRef.current = worker;
+        setWorkerReady(true);
         return () => {
             worker.terminate();
             workerRef.current = null;
+            setWorkerReady(false);
         };
     }, [markDownloaded]);
 
@@ -245,14 +305,16 @@ export const TranscriptionSettingsProvider = (props: React.PropsWithChildren<unk
             setStatus("loading-model");
             return new Promise<void>((resolve, reject) => {
                 pendingDownloadRef.current = { id: modelId, resolve, reject };
-                const modelDtype = TRANSCRIPTION_MODELS.find(m => m.model_id === modelId)?.dtype;
+                const modelCfg = TRANSCRIPTION_MODELS.find(m => m.model_id === modelId);
+                const modelDtype = modelCfg?.dtype;
+                const webgpu_only = modelCfg?.webgpu_only;
                 fetchModelFileSizes(modelId)
                     .then(fileSizes => {
-                        sendToWorker({ type: "load", modelId, fileSizes, dtype: modelDtype });
+                        sendToWorker({ type: "load", modelId, fileSizes, dtype: modelDtype, webgpu_only, language: languageRef.current });
                     })
                     .catch(err => {
                         console.error("Failed to fetch file sizes, continuing without size info:", err);
-                        sendToWorker({ type: "load", modelId, dtype: modelDtype });
+                        sendToWorker({ type: "load", modelId, dtype: modelDtype, webgpu_only, language: languageRef.current });
                     });
             });
         },
@@ -268,9 +330,10 @@ export const TranscriptionSettingsProvider = (props: React.PropsWithChildren<unk
         setError(null);
         setTranscript("");
 
-        // Ensure worker has the model loaded (cache hit resolves instantly)
+        // Ensure worker has the model loaded (cache hit resolves instantly).
+        // Pass language here too so the worker is in sync even without a prior set-language message.
         if (loadedModelIdRef.current !== selectedModelId) {
-            sendToWorker({ type: "load", modelId: selectedModelId });
+            sendToWorker({ type: "load", modelId: selectedModelId, language: languageRef.current });
             loadedModelIdRef.current = selectedModelId;
         }
 

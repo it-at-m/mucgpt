@@ -9,13 +9,17 @@ export interface UseAudioRecorderReturn {
 }
 
 // Inlined AudioWorklet processor — runs in the audio rendering thread.
-// Accumulates 128-sample blocks from the Web Audio pipeline into 1536-sample
-// frames (~96 ms at 16 kHz) and forwards them via port.postMessage.
+// Accumulates 128-sample blocks from the Web Audio pipeline into 512-sample
+// frames (32 ms at 16 kHz) and forwards them via port.postMessage.
+// 512 is the canonical chunk size required by onnx-community/silero-vad; using
+// larger multiples (e.g. 1536) causes the model's internal feature extractor to
+// produce a 5-D tensor [1,1,1,128,N] for the LSTM instead of the required 3-D
+// [N,1,128], crashing with "Input X must have 3 dimensions only".
 const PCM_PROCESSOR_CODE = `
 class PCMProcessor extends AudioWorkletProcessor {
     constructor() {
         super();
-        this._frameSize = 1536;
+        this._frameSize = 512;
         this._buffer = new Float32Array(this._frameSize);
         this._pointer = 0;
     }

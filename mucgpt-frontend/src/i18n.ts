@@ -302,6 +302,8 @@ i18n
                                 "Beta-Funktion: Die Transkriptionsqualität ist nicht validiert und kann je nach Sprache, Audioqualität und lokaler Hardware variieren. Das Modell läuft vollständig im Browser – keine Audiodaten verlassen dein Gerät.",
                             webgpu_warning:
                                 "Dein Browser unterstützt kein WebGPU. Die Transkription läuft auf CPU (WebAssembly) und kann deutlich langsamer sein. Für beste Leistung verwende Chrome oder Edge (Version 113+).",
+                            webgpu_only_error:
+                                "Dieses Modell erfordert WebGPU, das in deinem Browser nicht verfügbar ist. Verwende Chrome oder Edge (Version 113+) oder wähle Whisper Small.",
                             enable_label: "Transkription aktivieren",
                             enable_hint: "Ist diese Option aktiv und ein Modell heruntergeladen, erscheint im Chat ein Mikrofon-Button.",
                             model_label: "Modell",
@@ -980,6 +982,8 @@ i18n
                                 "Beta feature: transcription quality is not validated and may vary with language, audio quality, and your local hardware. The model runs fully in your browser – no audio leaves your device.",
                             webgpu_warning:
                                 "Your browser does not support WebGPU. Transcription will run on CPU (WebAssembly) and may be noticeably slower. For best performance, use Chrome or Edge (version 113+).",
+                            webgpu_only_error:
+                                "This model requires WebGPU, which is not available in your browser. Try Chrome or Edge (version 113+) or select Whisper Small.",
                             enable_label: "Enable transcription",
                             enable_hint: "When enabled and a model is downloaded, a microphone button appears in the chat.",
                             model_label: "Model",
@@ -1642,6 +1646,8 @@ i18n
                                 "Beta-Funktion: D'Transkriptionsqualität is ned validiert und ko je noch Sproch, Audioqualität und lokala Hardware variiern. S'Modell läuft kompled im Browser – koa Audiodaten varoaßn dei Gerät.",
                             webgpu_warning:
                                 "Dei Browser ko koa WebGPU. D'Transkription lafft afm CPU (WebAssembly) und ko deitli langsamer sei. Für de beste Leistung nimm Chrome oder Edge (Version 113+).",
+                            webgpu_only_error:
+                                "Des Modell braucht WebGPU, des in deim Browser ned verfügbar is. Nimm Chrome oder Edge (Version 113+) oder wähl Whisper Small.",
                             enable_label: "Transkription aktivieren",
                             enable_hint: "Is des aktiv und a Modell obagladn, erscheint im Ratsch a Mikrofon-Knopf.",
                             model_label: "Modell",
@@ -2309,6 +2315,8 @@ i18n
                                 "Fonctionnalité bêta : la qualité de la transcription n'est pas validée et peut varier selon la langue, la qualité audio et votre matériel local. Le modèle s'exécute entièrement dans le navigateur – aucun audio ne quitte votre appareil.",
                             webgpu_warning:
                                 "Votre navigateur ne prend pas en charge WebGPU. La transcription s'exécutera sur le CPU (WebAssembly) et peut être nettement plus lente. Pour de meilleures performances, utilisez Chrome ou Edge (version 113+).",
+                            webgpu_only_error:
+                                "Ce modèle nécessite WebGPU, qui n'est pas disponible dans votre navigateur. Utilisez Chrome ou Edge (version 113+) ou sélectionnez Whisper Small.",
                             enable_label: "Activer la transcription",
                             enable_hint: "Lorsque l'option est activée et qu'un modèle est téléchargé, un bouton microphone apparaît dans le chat.",
                             model_label: "Modèle",
@@ -2976,6 +2984,8 @@ i18n
                                 "Бета-функція: якість транскрипції не перевірена і може залежати від мови, якості звуку та локального обладнання. Модель працює повністю у браузері – аудіо не залишає ваш пристрій.",
                             webgpu_warning:
                                 "Ваш браузер не підтримує WebGPU. Транскрипція виконуватиметься на CPU (WebAssembly) і може бути помітно повільнішою. Для найкращої продуктивності використовуйте Chrome або Edge (версія 113+).",
+                            webgpu_only_error:
+                                "Ця модель потребує WebGPU, яке недоступне у вашому браузері. Спробуйте Chrome або Edge (версія 113+) або виберіть Whisper Small.",
                             enable_label: "Увімкнути транскрипцію",
                             enable_hint: "Якщо увімкнено й модель завантажено, у чаті з'явиться кнопка мікрофона.",
                             model_label: "Модель",

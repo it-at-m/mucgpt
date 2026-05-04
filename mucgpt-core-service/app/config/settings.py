@@ -294,6 +294,13 @@ class LangfuseConfig(BaseModel):
     HOST: str | None = None
 
 
+class MCPToolDescription(BaseModel):
+    """Configuration for overriding an MCP tool's description."""
+
+    name: str
+    description: str
+
+
 class MCPSourceConfig(BaseModel):
     """Single MCP source configuration."""
 
@@ -304,6 +311,7 @@ class MCPSourceConfig(BaseModel):
     headers: dict[str, SecretStr] | None = None
     group: str | None = None
     tool_groups: dict[str, str] | None = None
+    descriptions: list[MCPToolDescription] | None = None
 
     @field_validator("forward_auth_override", mode="before")
     @staticmethod

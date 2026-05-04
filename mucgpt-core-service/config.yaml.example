@@ -68,6 +68,9 @@ MCP:
       # tool_groups:   # optional: fine-grained grouping by tool name prefix (overrides group)
       #   "jira__": "jira"
       #   "confluence_": "confluence"
+      # descriptions:  # optional: overrides for tool descriptions
+      #   - name: "searchConfluenceUsingCql"
+      #     description: "Search Confluence content using CQL queries. Use for structured or advanced filtering."
   CACHE_TTL: 43200
 
 # Redis Settings (optional - nested under REDIS key)

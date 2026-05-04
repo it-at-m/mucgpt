@@ -1,8 +1,15 @@
 {
     "recommendations": [
-        "ms-azuretools.azure-dev",
-        "ms-azuretools.vscode-bicep",
         "ms-python.python",
-        "esbenp.prettier-vscode"
+        "esbenp.prettier-vscode",
+        "njpwerner.autodocstring",
+        "ms-azuretools.vscode-containers",
+        "fill-labs.dependi",
+        "dbaeumer.vscode-eslint",
+        "github.vscode-github-actions",
+        "github.vscode-pull-request-github",
+        "rodolphebarbanneau.python-docstring-highlighter",
+        "charliermarsh.ruff",
+        "astral-sh.ty"
     ]
 }

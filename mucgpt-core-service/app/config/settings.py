@@ -394,6 +394,8 @@ class Settings(BaseSettings):
     APP_VERSION: str = "unknown"
     FRONTEND_VERSION: str = "unknown"
     ASSISTANT_VERSION: str = "unknown"
+    FOOTER_LINK_URL: str | None = None
+    FOOTER_LABEL: str | None = None
 
     # Backend settings
     UNAUTHORIZED_USER_REDIRECT_URL: str = ""

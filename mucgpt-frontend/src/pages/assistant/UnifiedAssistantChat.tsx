@@ -3,10 +3,9 @@ import { AskResponse, Assistant, ChatResponse, CommunityAssistantSnapshot, DataS
 import { Answer } from "../../components/Answer";
 import { QuestionInput } from "../../components/QuestionInput";
 import { useTranslation } from "react-i18next";
-import { History } from "../../components/History/History";
 import { LLMContext } from "../../components/LLMSelector/LLMContextProvider";
 import { useParams, useLocation, useNavigate } from "react-router-dom";
-import { ChatLayout, SidebarSizes } from "../../components/ChatLayout/ChatLayout";
+import { ChatLayout } from "../../components/ChatLayout/ChatLayout";
 import { ASSISTANT_STORE, COMMUNITY_ASSISTANT_STORE, CREATIVITY_LOW } from "../../constants";
 import { AssistantStorageService } from "../../service/assistantstorage";
 import { CommunityAssistantStorageService } from "../../service/communityassistantstorage";
@@ -17,18 +16,14 @@ import { QuickPromptContext } from "../../components/QuickPrompt/QuickPromptProv
 import { getChatReducer, handleRegenerate, handleRollback, makeApiRequest } from "../page_helpers";
 import { ChatOptions } from "../chat/Chat";
 import { STORAGE_KEYS } from "../layout/LayoutHelper";
-import { HeaderContext } from "../layout/HeaderContextProvider";
 import { ToolStatus } from "../../utils/ToolStreamHandler";
 import { AssistantStrategy, CommunityAssistantStrategy, DeletedCommunityAssistantStrategy, LocalAssistantStrategy } from "./AssistantStrategy";
 import { chatApi } from "../../api/core-client";
 import { useGlobalToastContext } from "../../components/GlobalToastHandler/GlobalToastContext";
 import { getOwnedCommunityAssistants, getUserSubscriptionsApi, subscribeToAssistantApi } from "../../api/assistant-client";
 import { NotSubscribedDialog } from "../../components/NotSubscribedDialog";
-import { Sidebar } from "../../components/Sidebar/Sidebar";
-import { ClearChatButton } from "../../components/ClearChatButton";
-import { MinimizeSidebarButton } from "../../components/MinimizeSidebarButton/MinimizeSidebarButton";
 import { useToolsContext } from "../../components/ToolsProvider";
-import { Button, MessageBar, MessageBarBody } from "@fluentui/react-components";
+import { Button, MessageBar, MessageBarBody, Skeleton, SkeletonItem } from "@fluentui/react-components";
 import { Info24Regular, Settings24Regular } from "@fluentui/react-icons";
 import { AssistantEditorPage } from "../../components/AssistantDialogs/AssistantEditorPage/AssistantEditorPage";
 import { AssistantDetailsSidebar, AssistantCardData } from "../../components/AssistantDetailsSidebar/AssistantDetailsSidebar";
@@ -47,6 +42,7 @@ import { CloseConfirmationDialog } from "../../components/AssistantDialogs/share
 import { UploadedData } from "../../components/ContextManagerDialog/ContextManagerDialog";
 import { useToolStatusToasts } from "../../hooks/useToolStatusToasts";
 import styles from "./UnifiedAssistantChat.module.css";
+import { useUnifiedHistory, useUnifiedHistoryRegistration } from "../../components/UnifiedHistory";
 
 interface UnifiedAssistantChatProps {
     strategy: AssistantStrategy;
@@ -67,7 +63,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
     const { showError, showSuccess } = useGlobalToastContext();
 
     // Destructuring for easier access
-    const { answers, creativity, systemPrompt, active_chat, allChats } = chatState;
+    const { answers, creativity, systemPrompt, active_chat } = chatState;
 
     // References
     const activeChatRef = useRef(active_chat);
@@ -98,20 +94,12 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
     // Context
     const { LLM, setLLM, availableLLMs } = useContext(LLMContext);
     const { t } = useTranslation();
+    const { refreshHistory: refreshUnifiedHistory } = useUnifiedHistory();
     const { setQuickPrompts } = useContext(QuickPromptContext);
-    const { setHeader } = useContext(HeaderContext);
     const { tools } = useToolsContext();
 
     const [error, setError] = useState<unknown>();
-    const [sidebarSize] = useState<SidebarSizes>("large");
     const [question, setQuestion] = useState<string>("");
-    const [showSidebar, setShowSidebar] = useState<boolean>(
-        localStorage.getItem(STORAGE_KEYS.SHOW_SIDEBAR) === null ? false : localStorage.getItem(STORAGE_KEYS.SHOW_SIDEBAR) == "true"
-    );
-    const setAndStoreShowSidebar = (value: boolean) => {
-        setShowSidebar(value);
-        localStorage.setItem(STORAGE_KEYS.SHOW_SIDEBAR, value.toString());
-    };
     const [selectedTools, setSelectedTools] = useState<string[]>([]);
     const [toolStatuses, setToolStatuses] = useState<ToolStatus[]>([]);
     const [showNotSubscribedDialog, setShowNotSubscribedDialog] = useState<boolean>(false);
@@ -122,6 +110,9 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
     const [isAssistantInfoLoading, setIsAssistantInfoLoading] = useState<boolean>(false);
     const [isOwnershipResolved, setIsOwnershipResolved] = useState<boolean>(!(strategy instanceof CommunityAssistantStrategy));
     const [deletedAssistantSnapshot, setDeletedAssistantSnapshot] = useState<CommunityAssistantSnapshot | null>(null);
+    const [lastQuestion, setLastQuestion] = useState<string>("");
+    const [isLoading, setIsLoading] = useState<boolean>(false);
+    const [isAssistantContentLoading, setIsAssistantContentLoading] = useState<boolean>(true);
     const isDeletedAssistant = strategy instanceof DeletedCommunityAssistantStrategy;
     const isLocalAssistant = strategy instanceof LocalAssistantStrategy;
     const { assistantToDuplicate, showDuplicateConfirm, isDuplicating, setShowDuplicateConfirm, requestDuplicateAssistant, confirmDuplicateAssistant } =
@@ -161,6 +152,53 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
     });
     const lockedToolIds = useMemo(() => assistantConfig.tools?.map(tool => tool.id) ?? [], [assistantConfig.tools]);
     const mergeLockedToolIds = useCallback((toolIds: string[]) => Array.from(new Set([...lockedToolIds, ...toolIds])), [lockedToolIds]);
+    const setLastQuestionValue = useCallback((value: string) => {
+        lastQuestionRef.current = value;
+        setLastQuestion(value);
+    }, []);
+    const setIsLoadingValue = useCallback((value: boolean) => {
+        isLoadingRef.current = value;
+        setIsLoading(value);
+    }, []);
+    const locationRef = useRef(location);
+    locationRef.current = location;
+
+    const getRequestedChatId = useCallback(() => new URLSearchParams(locationRef.current.search).get("chatId"), []);
+    const requestedChatId = useMemo(() => new URLSearchParams(location.search).get("chatId"), [location.search]);
+    const getNewChatToken = useCallback(() => new URLSearchParams(locationRef.current.search).get("new"), []);
+    const clearRequestedChatId = useCallback(() => {
+        const searchParams = new URLSearchParams(locationRef.current.search);
+        if (!searchParams.has("chatId")) {
+            return;
+        }
+
+        searchParams.delete("chatId");
+        const nextSearch = searchParams.toString();
+        navigate(
+            {
+                pathname: locationRef.current.pathname,
+                search: nextSearch ? `?${nextSearch}` : ""
+            },
+            { replace: true }
+        );
+    }, [navigate]);
+    const clearNewChatRequest = useCallback(() => {
+        const searchParams = new URLSearchParams(locationRef.current.search);
+        if (!searchParams.has("new") && !searchParams.has("chatId")) {
+            return;
+        }
+
+        searchParams.delete("new");
+        searchParams.delete("chatId");
+        const nextSearch = searchParams.toString();
+        navigate(
+            {
+                pathname: locationRef.current.pathname,
+                search: nextSearch ? `?${nextSearch}` : ""
+            },
+            { replace: true }
+        );
+    }, [navigate]);
     const setSelectedToolsGuarded = useCallback(
         (value: React.SetStateAction<string[]>) => {
             setSelectedTools(prev => {
@@ -172,6 +210,13 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
         },
         [mergeLockedToolIds]
     );
+    const resetActiveChatState = useCallback(() => {
+        setLastQuestionValue("");
+        setError(undefined);
+        activeChatRef.current = undefined;
+        dispatch({ type: "SET_ACTIVE_CHAT", payload: undefined });
+        dispatch({ type: "CLEAR_ANSWERS" });
+    }, [setLastQuestionValue]);
 
     // useEffect to load the assistant config and chat history
     useEffect(() => {
@@ -180,14 +225,15 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                 setDeletedAssistantSnapshot(null);
                 setIsOwnershipResolved(!(strategy instanceof CommunityAssistantStrategy));
                 if (error) setError(undefined);
-                isLoadingRef.current = true;
+                setIsLoadingValue(true);
+                setIsAssistantContentLoading(true);
                 let notSubscribed = false;
                 if (strategy instanceof CommunityAssistantStrategy) {
                     const owned = await getOwnedCommunityAssistants();
                     const userIsOwner = owned.some(assistant => assistant.id === assistant_id);
 
                     if (userIsOwner) {
-                        window.location.href = `/#/owned/communityassistant/${assistant_id}`;
+                        window.location.href = `/#/owned/communityassistant/${assistant_id}${location.search}`;
                         return;
                     } else {
                         const subscriptions = await getUserSubscriptionsApi();
@@ -226,7 +272,6 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                             }
 
                             setAssistantConfig(assistant);
-                            setHeader("");
                             dispatch({ type: "SET_SYSTEM_PROMPT", payload: assistant.system_message });
                             dispatch({ type: "SET_CREATIVITY", payload: assistant.creativity });
                             setQuickPrompts(assistant.quick_prompts || []);
@@ -246,21 +291,17 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                                 }
                             }
 
-                            return assistantStorageService
-                                .getNewestChatForAssistant(assistant_id)
-                                .then(existingChat => {
-                                    if (existingChat) {
-                                        const messages = existingChat.messages;
-                                        dispatch({ type: "SET_ANSWERS", payload: [...answers.concat(messages)] });
-                                        lastQuestionRef.current = messages.length > 0 ? messages[messages.length - 1].user : "";
-                                        dispatch({ type: "SET_ACTIVE_CHAT", payload: existingChat.id });
-                                    }
-                                })
-                                .then(() => fetchHistory())
-                                .catch(err => {
-                                    console.error("Error loading chat history:", err);
-                                    showError(t("components.assistant_chat.load_chat_failed"), t("components.assistant_chat.load_chat_failed_message"));
-                                });
+                            const newChatToken = getNewChatToken();
+                            if (newChatToken !== null) {
+                                resetActiveChatState();
+                                clearNewChatRequest();
+                                return fetchHistory();
+                            }
+
+                            return fetchHistory().catch(err => {
+                                console.error("Error loading chat history:", err);
+                                showError(t("components.assistant_chat.load_chat_failed"), t("components.assistant_chat.load_chat_failed_message"));
+                            });
                         } else {
                             showError(t("components.assistant_chat.load_assistant_failed"), t("components.assistant_chat.assistant_not_found"));
                             // wait a moment before redirecting to home
@@ -286,12 +327,29 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                     })
                     .finally(() => {
                         setShowNotSubscribedDialog(notSubscribed);
-                        isLoadingRef.current = false;
+                        setIsLoadingValue(false);
+                        setIsAssistantContentLoading(false);
                     });
             }
         };
         loadData();
-    }, [assistant_id, communityAssistantStorageService, error, isDeletedAssistant, showError, strategy, t, availableLLMs, setHeader, setLLM, setQuickPrompts]);
+    }, [
+        assistant_id,
+        communityAssistantStorageService,
+        isDeletedAssistant,
+        showError,
+        strategy,
+        t,
+        availableLLMs,
+        setLLM,
+        setQuickPrompts,
+        setIsLoadingValue,
+        setLastQuestionValue,
+        getNewChatToken,
+        clearNewChatRequest,
+        resetActiveChatState,
+        assistantChatStorage
+    ]);
 
     useEffect(() => {
         if (lockedToolIds.length === 0) {
@@ -352,8 +410,9 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
     const fetchHistory = useCallback(() => {
         return assistantStorageService.getAllChatForAssistant(assistant_id).then(chats => {
             if (chats) dispatch({ type: "SET_ALL_CHATS", payload: chats });
+            refreshUnifiedHistory();
         });
-    }, [assistantStorageService, assistant_id]);
+    }, [assistantStorageService, assistant_id, refreshUnifiedHistory]);
 
     // callApi-Funktion
     const callApi = useCallback(
@@ -363,9 +422,9 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                 return;
             }
 
-            lastQuestionRef.current = question;
+            setLastQuestionValue(question);
             if (error) setError(undefined);
-            isLoadingRef.current = true;
+            setIsLoadingValue(true);
 
             const askResponse: AskResponse = {} as AskResponse;
             const options: ChatOptions = {
@@ -390,28 +449,25 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                     selectedTools,
                     setToolStatuses,
                     dataSources,
-                    lastAnswerRef
+                    lastAnswerRef,
+                    setIsLoadingValue
                 );
             } catch (e) {
                 setError(e);
             }
-            isLoadingRef.current = false;
+            setIsLoadingValue(false);
         },
         [
-            lastQuestionRef.current,
             error,
-            isLoadingRef.current,
-            chatState,
             answers,
-            dispatch,
-            chatApi,
             LLM,
-            activeChatRef,
             assistantChatStorage,
-            chatMessageStreamEnd,
             fetchHistory,
+            systemPrompt,
+            creativity,
             selectedTools,
-            lastAnswerRef,
+            setIsLoadingValue,
+            setLastQuestionValue,
             isLegacyAssistant
         ]
     );
@@ -424,6 +480,44 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
             chatMessageStreamEnd.current.scrollIntoView({ behavior: "smooth" });
         }
     }, []);
+
+    const loadAssistantChat = useCallback(
+        async (id: string) => {
+            if (!id.startsWith(AssistantStorageService.GENERATE_BOT_CHAT_PREFIX(assistant_id))) {
+                return false;
+            }
+
+            const chat = await assistantChatStorage.get(id);
+            if (!chat) {
+                return false;
+            }
+
+            setError(undefined);
+            dispatch({ type: "SET_ANSWERS", payload: chat.messages });
+            setLastQuestionValue(chat.messages.length > 0 ? chat.messages[chat.messages.length - 1].user : "");
+            dispatch({ type: "SET_ACTIVE_CHAT", payload: id });
+
+            setTimeout(() => {
+                scrollToBottom();
+            }, 100);
+
+            return true;
+        },
+        [assistantChatStorage, assistant_id, scrollToBottom, setLastQuestionValue]
+    );
+
+    useEffect(() => {
+        const requestedChatId = getRequestedChatId();
+        if (!requestedChatId || requestedChatId === activeChatRef.current) {
+            return;
+        }
+
+        void loadAssistantChat(requestedChatId).then(loaded => {
+            if (!loaded) {
+                clearRequestedChatId();
+            }
+        });
+    }, [clearRequestedChatId, getRequestedChatId, loadAssistantChat, location.search]);
 
     // onAssistantChanged-Funktion
     const onAssistantChanged = useCallback(
@@ -455,40 +549,65 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
 
     // Regenerate-Funktion
     const onRegenerateResponseClicked = useCallback(async () => {
-        if (answers.length === 0 || !activeChatRef.current || isLoadingRef.current) return;
+        if (answers.length === 0 || !activeChatRef.current || isLoading) return;
         try {
             setError(undefined);
+            setIsLoadingValue(true);
             await handleRegenerate(answers, dispatch, activeChatRef.current, assistantChatStorage, systemPrompt, callApi, isLoadingRef);
         } catch (e) {
             setError(e);
+            setIsLoadingValue(false);
         }
-    }, [answers, assistantChatStorage, callApi, systemPrompt, activeChatRef.current, isLoadingRef.current]);
+    }, [answers, assistantChatStorage, callApi, systemPrompt, isLoading, setIsLoadingValue]);
+
+    useUnifiedHistoryRegistration(
+        useMemo(
+            () => ({
+                kind: "assistant",
+                assistantId: assistant_id,
+                assistantTitle: assistantConfig.title,
+                activeChatId: active_chat,
+                resetActiveChat: (chatId: string) => {
+                    if (chatId === activeChatRef.current) {
+                        resetActiveChatState();
+                    }
+                }
+            }),
+            [active_chat, assistant_id, assistantConfig.title, resetActiveChatState]
+        )
+    );
 
     // ClearChat-Funktion
     const clearChat = useCallback(() => {
-        lastQuestionRef.current = "";
-        if (error) setError(undefined);
-        //unset active chat
-        if (activeChatRef.current) {
-            dispatch({ type: "SET_ACTIVE_CHAT", payload: undefined });
-        }
-        dispatch({ type: "CLEAR_ANSWERS" });
-    }, [lastQuestionRef.current, error, activeChatRef.current]);
+        resetActiveChatState();
+    }, [resetActiveChatState]);
 
     // Rollback-Funktion
     const onRollbackMessage = useCallback(
-        (index: number) => {
-            if (!activeChatRef.current || isLoadingRef.current) return;
-            isLoadingRef.current = true;
+        async (index: number) => {
+            if (!activeChatRef.current || isLoading) return;
+            const activeChat = activeChatRef.current;
+            setIsLoadingValue(true);
             try {
                 setError(undefined);
-                handleRollback(index, activeChatRef.current, dispatch, assistantChatStorage, lastQuestionRef, setQuestion, clearChat, fetchHistory);
+                await handleRollback(
+                    index,
+                    activeChat,
+                    dispatch,
+                    assistantChatStorage,
+                    lastQuestionRef,
+                    setQuestion,
+                    clearChat,
+                    fetchHistory,
+                    setLastQuestionValue
+                );
             } catch (e) {
                 setError(e);
+            } finally {
+                setIsLoadingValue(false);
             }
-            isLoadingRef.current = false;
         },
-        [assistantChatStorage, clearChat, fetchHistory, setQuestion]
+        [assistantChatStorage, clearChat, fetchHistory, isLoading, setIsLoadingValue, setLastQuestionValue]
     );
 
     // on Example Clicked-Funktion
@@ -517,67 +636,6 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
         },
         [availableLLMs, setLLM, assistantConfig.default_model]
     );
-
-    // History component
-    const history = useMemo(
-        () => (
-            <History
-                allChats={allChats}
-                currentActiveChatId={active_chat}
-                onDeleteChat={async id => {
-                    await assistantChatStorage.delete(id);
-                    await fetchHistory();
-                }}
-                onChatNameChange={async (id, name: string) => {
-                    const newName = prompt(t("components.history.newchat"), name);
-                    await assistantChatStorage.renameChat(id, newName ? newName.trim() : name);
-                    await fetchHistory();
-                }}
-                onFavChange={async (id: string, fav: boolean) => {
-                    await assistantChatStorage.changeFavouritesInDb(id, fav);
-                    await fetchHistory();
-                }}
-                onSelect={async (id: string) => {
-                    const chat = await assistantChatStorage.get(id);
-                    if (chat) {
-                        setError(undefined);
-                        dispatch({ type: "SET_ANSWERS", payload: chat.messages });
-                        lastQuestionRef.current = chat.messages.length > 0 ? chat.messages[chat.messages.length - 1].user : "";
-                        dispatch({ type: "SET_ACTIVE_CHAT", payload: id });
-
-                        // Scroll to bottom after a short delay to ensure DOM is updated
-                        setTimeout(() => {
-                            scrollToBottom();
-                        }, 100);
-                    }
-                }}
-                readOnly={isDeletedAssistant || isLegacyAssistant}
-            ></History>
-        ),
-        [allChats, active_chat, fetchHistory, assistantChatStorage, t, scrollToBottom, isDeletedAssistant, isLegacyAssistant]
-    );
-
-    // Sidebar component
-    const toggleSidebar = useCallback(() => {
-        setShowSidebar(!showSidebar);
-        localStorage.setItem(STORAGE_KEYS.SHOW_SIDEBAR, (!showSidebar).toString());
-    }, [showSidebar]);
-
-    const sidebar_actions = useMemo(
-        () => (
-            <>
-                <ClearChatButton
-                    onClick={clearChat}
-                    disabled={!lastQuestionRef.current || isLoadingRef.current || isDeletedAssistant || isLegacyAssistant}
-                    showText={showSidebar}
-                />
-                <MinimizeSidebarButton showSidebar={showSidebar} setShowSidebar={setAndStoreShowSidebar} />
-            </>
-        ),
-        [clearChat, lastQuestionRef.current, isLoadingRef.current, showSidebar, isDeletedAssistant, isLegacyAssistant]
-    );
-
-    const sidebar = useMemo(() => <Sidebar content={<>{history}</>} actions={sidebar_actions} />, [history, sidebar_actions]);
 
     // Examples component
     const examplesComponent = useMemo(() => {
@@ -674,7 +732,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                     </div>
                     <QuestionInput
                         clearOnSend
-                        disabled={isLoadingRef.current || error !== undefined}
+                        disabled={isLoading || error !== undefined}
                         onSend={(question, datas) => {
                             const dataSources = datas
                                 .filter(data => data.isActive !== false && data.status === "ready" && data.fileContent)
@@ -710,7 +768,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
         return (
             <QuestionInput
                 clearOnSend
-                disabled={isLoadingRef.current || error !== undefined || strategy instanceof DeletedCommunityAssistantStrategy}
+                disabled={isLoading || error !== undefined || strategy instanceof DeletedCommunityAssistantStrategy}
                 onSend={(question, datas) => {
                     const dataSources = datas
                         .filter(data => data.isActive !== false && data.status === "ready" && data.fileContent)
@@ -749,7 +807,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
         requestDuplicateAssistant,
         assistant_id,
         assistantConfig,
-        isLoadingRef.current,
+        isLoading,
         callApi,
         question,
         error,
@@ -782,18 +840,18 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                     );
                 }}
                 onRollbackMessage={isDeletedAssistant ? undefined : onRollbackMessage}
-                isLoading={isLoadingRef.current}
+                isLoading={isLoading}
                 error={error}
                 makeApiRequest={() => {
                     dispatch({ type: "SET_ANSWERS", payload: answers.slice(0, -1) });
-                    callApi(lastQuestionRef.current);
+                    callApi(lastQuestion);
                 }}
                 chatMessageStreamEnd={chatMessageStreamEnd}
                 lastQuestionRef={lastQuestionRef}
                 onRollbackError={() => {
-                    setQuestion(lastQuestionRef.current);
+                    setQuestion(lastQuestion);
                     setError(undefined);
-                    lastQuestionRef.current = answers.length > 1 ? answers[answers.length - 1].user : "";
+                    setLastQuestionValue(answers.length > 1 ? answers[answers.length - 1].user : "");
                     dispatch({ type: "SET_ANSWERS", payload: answers.slice(0, -1) });
                 }}
                 lastAnswerRef={lastAnswerRef}
@@ -804,12 +862,13 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
             isDeletedAssistant,
             onRegenerateResponseClicked,
             onRollbackMessage,
-            isLoadingRef.current,
+            isLoading,
             error,
             callApi,
             chatMessageStreamEnd,
-            lastQuestionRef.current,
-            lastAnswerRef
+            lastQuestion,
+            lastAnswerRef,
+            setLastQuestionValue
         ]
     );
 
@@ -828,20 +887,17 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
         return (
             <>
                 <ChatLayout
-                    sidebar={sidebar}
                     examples={examplesComponent}
                     answers={answerList}
                     input={inputComponent}
-                    showExamples={!lastQuestionRef.current}
+                    showExamples={!lastQuestion}
                     header={assistantConfig.title}
                     welcomeMessage={isDeletedAssistant ? t("components.community_assistants.deleted_state_title") : t("chat.header")}
                     header_as_markdown={false}
                     messages_description={t("common.messages")}
-                    size={showSidebar ? sidebarSize : "none"}
                     llmOptions={modelsToShow}
                     defaultLLM={LLM.llm_name}
                     onLLMSelectionChange={onLLMSelectionChange}
-                    onToggleMinimized={toggleSidebar}
                     actions={
                         strategy?.canEdit && !isLegacyAssistant ? (
                             <Button
@@ -865,30 +921,45 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
             </>
         );
     }, [
-        sidebar,
         examplesComponent,
         answerList,
         inputComponent,
         isDeletedAssistant,
+        lastQuestion,
         isLegacyAssistant,
-        lastQuestionRef.current,
         t,
-        sidebarSize,
         availableLLMs,
         assistantConfig.default_model,
         LLM.llm_name,
         onLLMSelectionChange,
-        showSidebar,
-        clearChat,
-        isLoadingRef.current,
         strategy,
         assistantInfoData,
         isAssistantInfoLoading,
         isInfoDrawerOpen
     ]);
 
+    const isRequestedChatLoading = Boolean(requestedChatId && requestedChatId !== active_chat);
+    const showAssistantLoadingState = !isEditMode && (isAssistantContentLoading || isRequestedChatLoading);
+
     if (isEditMode && (!strategy.canEdit || isLegacyAssistant)) {
         return null;
+    }
+
+    if (showAssistantLoadingState) {
+        return (
+            <Skeleton aria-label={t("components.history.loading")} className={styles.loadingShell}>
+                <div className={styles.loadingHeader}>
+                    <SkeletonItem style={{ width: "min(280px, 48vw)", height: 24 }} />
+                    <SkeletonItem style={{ width: 160, height: 36 }} />
+                </div>
+                <div className={styles.loadingContent}>
+                    <SkeletonItem style={{ width: "100%", height: 18 }} />
+                    <SkeletonItem style={{ width: "82%", height: 18 }} />
+                    <SkeletonItem style={{ width: "58%", height: 18 }} />
+                </div>
+                <SkeletonItem style={{ height: 72, margin: "0 24px 20px" }} />
+            </Skeleton>
+        );
     }
 
     return isEditMode ? (

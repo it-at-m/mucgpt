@@ -118,7 +118,7 @@ export function handleDeleteChat(
  * @param clearChat - Function to clear the entire chat UI
  * @param fetchHistory - Optional function to refresh the chat history list
  */
-export function handleRollback(
+export async function handleRollback(
     index: number,
     activeChat: string,
     dispatch: Dispatch<any>,
@@ -126,29 +126,29 @@ export function handleRollback(
     lastQuestionRef: MutableRefObject<string>,
     setQuestion: Dispatch<SetStateAction<string>>,
     clearChat: () => void,
-    fetchHistory?: () => void
-) {
+    fetchHistory?: () => unknown | Promise<unknown>,
+    onLastQuestionChange?: (question: string) => void
+): Promise<void> {
     // Exit early if no active chat is selected
     if (!activeChat) return;
 
     // Rollback messages in storage and update UI state
-    storageService.rollbackMessage(index, activeChat, setQuestion).then(result => {
-        if (!result) return;
+    const result = await storageService.rollbackMessage(index, activeChat, setQuestion);
+    if (!result) return;
 
-        if (result.messages.length > 0) {
-            // Update the chat with remaining messages
-            dispatch({ type: "SET_ANSWERS", payload: result.messages });
-            // Update the last question reference
-            lastQuestionRef.current = result.messages[result.messages.length - 1].user;
-        } else {
-            // No messages left - clear the chat and delete it from storage
-            clearChat();
-            storageService.delete(result.id ?? "").then(() => {
-                // Refresh the history list if callback is provided
-                if (fetchHistory) fetchHistory();
-            });
-        }
-    });
+    if (result.messages.length > 0) {
+        // Update the chat with remaining messages
+        dispatch({ type: "SET_ANSWERS", payload: result.messages });
+        // Update the last question reference
+        lastQuestionRef.current = result.messages[result.messages.length - 1].user;
+        onLastQuestionChange?.(lastQuestionRef.current);
+    } else {
+        // No messages left - clear the chat and delete it from storage
+        clearChat();
+        await storageService.delete(result.id ?? "");
+        // Refresh the history list if callback is provided
+        await fetchHistory?.();
+    }
 }
 
 /**
@@ -231,7 +231,8 @@ export const makeApiRequest = async (
     enabled_tools?: string[],
     onToolStatusUpdate?: (statuses: ToolStatus[]) => void,
     data_sources?: DataSource[],
-    answerTopRef?: MutableRefObject<HTMLElement | null>
+    answerTopRef?: MutableRefObject<HTMLElement | null>,
+    onLoadingChange?: (isLoading: boolean) => void
 ) => {
     // Create conversation history for the API request
     const history: ChatTurn[] = answers.map((a: { user: any; response: { answer: any } }) => ({ user: a.user, assistant: a.response.answer }));
@@ -270,6 +271,7 @@ export const makeApiRequest = async (
         response: { ...askResponse }
     };
     isLoadingRef.current = false;
+    onLoadingChange?.(false);
     dispatch({ type: "ADD_ANSWER", payload: initialMessage });
 
     // Buffer management for optimized UI updates
@@ -428,6 +430,7 @@ export const makeApiRequest = async (
     if (activeChatRef.current) {
         // Append to existing chat
         await storageService.appendMessage(finalMessage, activeChatRef.current, options);
+        if (fetchHistory) fetchHistory();
     } else {
         // Create a new chat with generated name
         const chatname = await createChatName(question, finalResponse.answer, language, options.creativity, options.system ?? "", LLM.llm_name);

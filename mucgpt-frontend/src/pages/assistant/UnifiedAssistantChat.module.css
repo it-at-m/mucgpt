@@ -37,6 +37,34 @@
     align-items: center;
 }
 
+.loadingShell {
+    display: flex;
+    flex: 1;
+    min-height: calc(100vh - 50px);
+    flex-direction: column;
+    background: var(--colorNeutralBackground1);
+}
+
+.loadingHeader {
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 0 16px;
+    box-sizing: border-box;
+}
+
+.loadingContent {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 14px;
+    width: min(760px, calc(100% - 48px));
+    margin: 0 auto;
+}
+
 .deletedChatWarningContent {
     display: flex;
     align-items: center;

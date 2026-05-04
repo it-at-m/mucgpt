@@ -47,7 +47,7 @@ i18n
                         new_chat_discovery_card_title: "Assistent auswählen",
                         new_chat_discovery_card_description: "Wähle einen spezialisierten Assistenten für deinen neuen Chat.",
                         new_chat_discovery_card_cta: "Auswählen",
-                        new_chat_recent_assistant_title: "Mit letztem Assistenten starten",
+                        new_chat_recent_assistant_title: "Mit {{assistantName}} starten",
                         new_chat_recent_assistant_label: "Zuletzt genutzt: {{assistantName}}",
                         new_chat_recent_assistant_description: "Starte einen neuen Chat mit dieser Assistenten-Konfiguration.",
                         new_chat_recent_assistant_fallback: "Assistent"
@@ -733,7 +733,7 @@ i18n
                         new_chat_discovery_card_title: "Choose assistant",
                         new_chat_discovery_card_description: "Choose a specialized assistant for your new chat.",
                         new_chat_discovery_card_cta: "Choose",
-                        new_chat_recent_assistant_title: "Start with last assistant",
+                        new_chat_recent_assistant_title: "Start with {{assistantName}}",
                         new_chat_recent_assistant_label: "Last used: {{assistantName}}",
                         new_chat_recent_assistant_description: "Start a new chat with this assistant configuration.",
                         new_chat_recent_assistant_fallback: "Assistant"
@@ -1412,7 +1412,7 @@ i18n
                         new_chat_discovery_card_title: "Assistentn auswaehln",
                         new_chat_discovery_card_description: "Waehl an spezialisierten Assistentn fuer dein neian Chat.",
                         new_chat_discovery_card_cta: "Auswaehln",
-                        new_chat_recent_assistant_title: "Mitm letztn Assistentn startn",
+                        new_chat_recent_assistant_title: "Mitm {{assistantName}} startn",
                         new_chat_recent_assistant_label: "Zuletzt gnutzt: {{assistantName}}",
                         new_chat_recent_assistant_description: "Start an neian Chat mit dera Assistentn-Konfiguration.",
                         new_chat_recent_assistant_fallback: "Assistent"
@@ -2085,7 +2085,7 @@ i18n
                         new_chat_discovery_card_title: "Choisir un assistant",
                         new_chat_discovery_card_description: "Choisir un assistant spécialisé pour votre nouveau chat.",
                         new_chat_discovery_card_cta: "Choisir",
-                        new_chat_recent_assistant_title: "Démarrer avec le dernier assistant",
+                        new_chat_recent_assistant_title: "Démarrer avec {{assistantName}}",
                         new_chat_recent_assistant_label: "Dernier utilisé : {{assistantName}}",
                         new_chat_recent_assistant_description: "Démarrer un nouveau chat avec cette configuration d'assistant.",
                         new_chat_recent_assistant_fallback: "Assistant"
@@ -2759,7 +2759,7 @@ i18n
                         new_chat_discovery_card_title: "Обрати асистента",
                         new_chat_discovery_card_description: "Оберіть спеціалізованого асистента для нового чату.",
                         new_chat_discovery_card_cta: "Обрати",
-                        new_chat_recent_assistant_title: "Почати з останнім асистентом",
+                        new_chat_recent_assistant_title: "Почати з {{assistantName}}",
                         new_chat_recent_assistant_label: "Останній використаний: {{assistantName}}",
                         new_chat_recent_assistant_description: "Розпочніть новий чат із цією конфігурацією асистента.",
                         new_chat_recent_assistant_fallback: "Асистент"

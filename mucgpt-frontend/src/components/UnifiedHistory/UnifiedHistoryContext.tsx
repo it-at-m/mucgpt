@@ -9,6 +9,7 @@ export type UnifiedHistoryPageContext =
     | {
           kind: "assistant";
           assistantId: string;
+          assistantTitle?: string;
           activeChatId?: string;
           resetActiveChat?: (chatId: string) => void;
       }

@@ -560,6 +560,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
             () => ({
                 kind: "assistant",
                 assistantId: assistant_id,
+                assistantTitle: assistantConfig.title,
                 activeChatId: active_chat,
                 resetActiveChat: (chatId: string) => {
                     if (chatId === activeChatRef.current) {
@@ -567,7 +568,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                     }
                 }
             }),
-            [active_chat, assistant_id, resetActiveChatState]
+            [active_chat, assistant_id, assistantConfig.title, resetActiveChatState]
         )
     );
 

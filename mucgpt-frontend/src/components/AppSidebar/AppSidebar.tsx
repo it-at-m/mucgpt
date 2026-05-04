@@ -176,7 +176,11 @@ export const AppSidebar = ({
     }, [assistantStorageService, communityAssistantStorageService, historyStorage, t]);
 
     useEffect(() => {
-        if (!isNewChatDialogOpen || isCurrentAssistantChatRoute) {
+        if (!isNewChatDialogOpen) {
+            return;
+        }
+
+        if (isCurrentAssistantChatRoute) {
             return;
         }
 
@@ -362,9 +366,7 @@ export const AppSidebar = ({
                                             <Sparkle24Regular />
                                         </span>
                                         <span className={styles.newChatCardBody}>
-                                            <span className={styles.newChatCardTitle}>{t("app_sidebar.new_chat_assistant_title")}</span>
-                                            <span className={styles.newChatCardDescription}>{t("app_sidebar.new_chat_assistant_description")}</span>
-                                            <span className={styles.newChatCardHint}>{t("app_sidebar.new_chat_assistant_cta")}</span>
+                                            <span className={styles.newChatCardTitle}>{t("app_sidebar.new_chat_recent_assistant_title", { assistantName: pageContext?.kind === "assistant" ? (pageContext.assistantTitle ?? t("app_sidebar.new_chat_recent_assistant_fallback")) : t("app_sidebar.new_chat_recent_assistant_fallback") })}</span>
                                         </span>
                                     </Card>
                                 ) : (
@@ -381,8 +383,6 @@ export const AppSidebar = ({
                                         </span>
                                         <span className={styles.newChatCardBody}>
                                             <span className={styles.newChatCardTitle}>{t("app_sidebar.new_chat_default_primary")}</span>
-                                            <span className={styles.newChatCardDescription}>{t("app_sidebar.new_chat_plain_description")}</span>
-                                            <span className={styles.newChatCardHint}>{t("app_sidebar.new_chat_plain_cta")}</span>
                                         </span>
                                     </Card>
                                 )}
@@ -400,8 +400,6 @@ export const AppSidebar = ({
                                         </span>
                                         <span className={styles.newChatCardBody}>
                                             <span className={styles.newChatCardTitle}>{t("app_sidebar.new_chat_plain_title")}</span>
-                                            <span className={styles.newChatCardDescription}>{t("app_sidebar.new_chat_plain_description")}</span>
-                                            <span className={styles.newChatCardHint}>{t("app_sidebar.new_chat_plain_cta")}</span>
                                         </span>
                                     </Card>
                                 ) : recentAssistant ? (
@@ -416,12 +414,7 @@ export const AppSidebar = ({
                                             <Sparkle24Regular />
                                         </span>
                                         <span className={styles.newChatCardBody}>
-                                            <span className={styles.newChatCardTitle}>{t("app_sidebar.new_chat_recent_assistant_title")}</span>
-                                            <span className={styles.newChatCardMeta}>
-                                                {t("app_sidebar.new_chat_recent_assistant_label", { assistantName: recentAssistant.title })}
-                                            </span>
-                                            <span className={styles.newChatCardDescription}>{t("app_sidebar.new_chat_recent_assistant_description")}</span>
-                                            <span className={styles.newChatCardHint}>{t("app_sidebar.new_chat_assistant_cta")}</span>
+                                            <span className={styles.newChatCardTitle}>{t("app_sidebar.new_chat_recent_assistant_title", { assistantName: recentAssistant.title })}</span>
                                         </span>
                                     </Card>
                                 ) : (
@@ -438,8 +431,6 @@ export const AppSidebar = ({
                                         </span>
                                         <span className={styles.newChatCardBody}>
                                             <span className={styles.newChatCardTitle}>{t("app_sidebar.new_chat_discovery_card_title")}</span>
-                                            <span className={styles.newChatCardDescription}>{t("app_sidebar.new_chat_discovery_card_description")}</span>
-                                            <span className={styles.newChatCardHint}>{t("app_sidebar.new_chat_discovery_card_cta")}</span>
                                         </span>
                                     </Card>
                                 )}

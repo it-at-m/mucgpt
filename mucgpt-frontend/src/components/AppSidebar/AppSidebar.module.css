@@ -336,7 +336,6 @@
     align-items: center;
     justify-content: flex-start;
     width: 300px;
-    min-height: 240px;
     text-align: center;
     box-shadow: var(--shadow4) !important;
     transition:
@@ -436,7 +435,6 @@
 
     .newChatCard {
         width: 100%;
-        min-height: 150px;
         padding: 16px;
     }
 

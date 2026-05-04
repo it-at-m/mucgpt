@@ -159,10 +159,13 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
         isLoadingRef.current = value;
         setIsLoading(value);
     }, []);
-    const getRequestedChatId = useCallback(() => new URLSearchParams(location.search).get("chatId"), [location.search]);
-    const getNewChatToken = useCallback(() => new URLSearchParams(location.search).get("new"), [location.search]);
+    const locationRef = useRef(location);
+    locationRef.current = location;
+
+    const getRequestedChatId = useCallback(() => new URLSearchParams(locationRef.current.search).get("chatId"), []);
+    const getNewChatToken = useCallback(() => new URLSearchParams(locationRef.current.search).get("new"), []);
     const clearRequestedChatId = useCallback(() => {
-        const searchParams = new URLSearchParams(location.search);
+        const searchParams = new URLSearchParams(locationRef.current.search);
         if (!searchParams.has("chatId")) {
             return;
         }
@@ -171,14 +174,14 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
         const nextSearch = searchParams.toString();
         navigate(
             {
-                pathname: location.pathname,
+                pathname: locationRef.current.pathname,
                 search: nextSearch ? `?${nextSearch}` : ""
             },
             { replace: true }
         );
-    }, [location.pathname, location.search, navigate]);
+    }, [navigate]);
     const clearNewChatRequest = useCallback(() => {
-        const searchParams = new URLSearchParams(location.search);
+        const searchParams = new URLSearchParams(locationRef.current.search);
         if (!searchParams.has("new") && !searchParams.has("chatId")) {
             return;
         }
@@ -188,12 +191,12 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
         const nextSearch = searchParams.toString();
         navigate(
             {
-                pathname: location.pathname,
+                pathname: locationRef.current.pathname,
                 search: nextSearch ? `?${nextSearch}` : ""
             },
             { replace: true }
         );
-    }, [location.pathname, location.search, navigate]);
+    }, [navigate]);
     const setSelectedToolsGuarded = useCallback(
         (value: React.SetStateAction<string[]>) => {
             setSelectedTools(prev => {

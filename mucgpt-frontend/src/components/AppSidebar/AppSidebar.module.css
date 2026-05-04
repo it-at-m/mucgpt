@@ -78,7 +78,7 @@
     border-radius: 12px !important;
     font-weight: 500 !important;
     font-size: 15px !important;
-    color: var(--colorNeutralForeground1);
+    color: var(--colorNeutralForeground1) !important;
     border: 1px solid transparent;
     white-space: nowrap;
     overflow: hidden;
@@ -95,6 +95,10 @@
     height: 22px;
     font-size: 22px;
     flex-shrink: 0;
+}
+
+.navButton :global(svg) {
+    color: var(--colorNeutralForeground1) !important;
 }
 
 .navButton:hover :global(svg) {
@@ -152,6 +156,7 @@
 }
 
 .secondaryGroup,
+.collapsedSecondaryGroup,
 .footerSection {
     display: flex;
     flex-direction: column;
@@ -160,6 +165,12 @@
 }
 
 .secondaryGroup {
+    flex: 1;
+    min-height: 0;
+}
+
+.collapsedSecondaryGroup {
+    align-items: center;
     flex: 1;
     min-height: 0;
 }
@@ -178,79 +189,6 @@
     flex-direction: column;
 }
 
-.secondaryAccordion {
-    display: flex;
-    flex-direction: column;
-    flex: 1;
-    min-height: 0;
-}
-
-.secondaryAccordion :global(.fui-AccordionItem) {
-    display: flex;
-    flex-direction: column;
-    flex: 1;
-    min-height: 0;
-    width: 100%;
-}
-
-.secondaryAccordion :global(.fui-AccordionHeader) {
-    border-radius: 10px;
-    color: var(--colorNeutralForeground1);
-    background-color: var(--colorNeutralBackground2);
-    width: 100%;
-}
-
-.secondaryAccordion :global(.fui-AccordionHeader__button),
-.utilitiesSection :global(.fui-AccordionHeader__button) {
-    display: flex;
-    align-items: center;
-    justify-content: flex-start !important;
-    width: 100%;
-    text-align: left;
-    color: var(--colorNeutralForeground1) !important;
-}
-
-.secondaryAccordion :global(.fui-AccordionHeader__button) :global(svg),
-.utilitiesSection :global(.fui-AccordionHeader__button) :global(svg) {
-    color: var(--colorNeutralForeground1) !important;
-    fill: currentColor;
-}
-
-.secondaryAccordion :global(.fui-AccordionHeader__button:hover),
-.secondaryAccordion :global(.fui-AccordionHeader__button:hover) :global(svg),
-.utilitiesSection :global(.fui-AccordionHeader__button:hover),
-.utilitiesSection :global(.fui-AccordionHeader__button:hover) :global(svg) {
-    color: var(--colorBrandBackground) !important;
-    fill: currentColor;
-}
-
-.secondaryAccordion :global(.fui-AccordionHeader:hover .fui-AccordionHeader__button),
-.secondaryAccordion :global(.fui-AccordionHeader:hover .fui-AccordionHeader__button) :global(svg),
-.utilitiesSection :global(.fui-AccordionHeader:hover .fui-AccordionHeader__button),
-.utilitiesSection :global(.fui-AccordionHeader:hover .fui-AccordionHeader__button) :global(svg) {
-    color: var(--colorBrandBackground) !important;
-    fill: currentColor;
-}
-
-.secondaryAccordion :global(.fui-AccordionHeader:hover) {
-    background-color: var(--colorNeutralBackground2Hover);
-}
-
-.secondaryAccordion :global(.fui-AccordionPanel),
-.utilitiesSection :global(.fui-AccordionPanel) {
-    width: 100%;
-    padding-inline-start: 0;
-}
-
-.secondaryPanel {
-    padding: 8px 0 0;
-    display: flex;
-    flex-direction: column;
-    flex: 1;
-    min-height: 0;
-    width: 100%;
-}
-
 .secondaryPanelContent {
     display: flex;
     flex-direction: column;
@@ -258,7 +196,7 @@
     gap: 12px;
     flex: 1;
     min-height: 0;
-    overflow-y: auto;
+    overflow: hidden;
     text-align: left;
     width: 100%;
 }
@@ -286,6 +224,32 @@
     margin-top: 4px;
     padding: 0 8px !important;
     border-radius: 12px !important;
+}
+
+.collapsedSecondaryButton {
+    justify-content: center !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-height: 48px;
+    padding: 0 !important;
+    border-radius: 12px !important;
+    transition:
+        background-color 120ms ease,
+        color 120ms ease,
+        transform 180ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.collapsedSecondaryButton :global(svg) {
+    color: var(--colorNeutralForeground1) !important;
+}
+
+.collapsedSecondaryButton:hover {
+    background-color: var(--colorNeutralBackground2Hover) !important;
+    transform: translateX(2px);
+}
+
+.collapsedSecondaryButton:hover :global(svg) {
+    color: var(--colorBrandBackground) !important;
 }
 
 .utilitiesSection {
@@ -340,8 +304,167 @@
     max-width: 100%;
 }
 
+.newChatDialogSurface {
+    max-width: 720px !important;
+}
+
+.newChatDialogContent {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 18px;
+}
+
+.newChatDialogActions {
+    padding-top: 0 !important;
+}
+
+.newChatDialogSubtitle {
+    margin: 0;
+    padding-bottom: 10px;
+    font-size: 20px;
+}
+
+.newChatCards {
+    display: flex;
+    flex-wrap: nowrap;
+    justify-content: center;
+    gap: 24px;
+}
+
+.newChatCard {
+    align-items: center;
+    justify-content: flex-start;
+    width: 300px;
+    min-height: 240px;
+    text-align: center;
+    box-shadow: var(--shadow4) !important;
+    transition:
+        box-shadow 160ms ease,
+        transform 180ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.newChatSecondaryAction {
+    color: var(--colorBrandBackground) !important;
+    background-color: transparent !important;
+}
+
+.newChatSecondaryAction:hover {
+    color: var(--colorBrandBackgroundHover) !important;
+    background-color: var(--colorNeutralBackground2Hover) !important;
+}
+
+.newChatSecondaryAction:hover :global(svg) {
+    color: var(--colorBrandBackgroundHover) !important;
+}
+
+.newChatCard:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow8) !important;
+}
+
+.newChatCardIcon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 56px;
+    height: 56px;
+    border-radius: var(--borderRadiusLarge);
+    background-color: var(--colorBrandBackground);
+    color: var(--colorNeutralForegroundOnBrand);
+    transition: transform 160ms ease;
+}
+
+.newChatCard:hover .newChatCardIcon {
+    transform: scale(1.08);
+}
+
+.newChatCardIcon svg {
+    width: 32px;
+    height: 32px;
+}
+
+.newChatCardBody {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.newChatCardTitle {
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.newChatCardMeta {
+    color: var(--colorBrandBackground);
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.newChatCardDescription {
+    color: var(--colorNeutralForeground2);
+}
+
+.newChatCardHint {
+    margin-top: 16px;
+    color: var(--colorNeutralForeground1);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
 @media (max-width: 768px) {
     .body {
         padding-bottom: 20px;
+    }
+
+    .newChatDialogSurface {
+        width: calc(100vw - 24px) !important;
+        max-width: 520px !important;
+    }
+
+    .newChatDialogContent {
+        gap: 14px;
+    }
+
+    .newChatCards {
+        flex-direction: column;
+        flex-wrap: nowrap;
+        gap: 12px;
+    }
+
+    .newChatCard {
+        width: 100%;
+        min-height: 150px;
+        padding: 16px;
+    }
+
+    .newChatCardIcon {
+        width: 44px;
+        height: 44px;
+        margin-bottom: 12px;
+    }
+
+    .newChatCardIcon svg {
+        width: 26px;
+        height: 26px;
+    }
+
+    .newChatCardBody {
+        gap: 6px;
+    }
+
+    .newChatCardTitle {
+        font-size: 15px;
+    }
+
+    .newChatCardDescription {
+        font-size: 12px;
+    }
+
+    .newChatCardHint {
+        margin-top: 8px;
+        font-size: 10px;
     }
 }

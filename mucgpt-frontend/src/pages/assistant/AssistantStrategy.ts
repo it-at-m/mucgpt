@@ -77,7 +77,8 @@ export class CommunityAssistantStrategy implements AssistantStrategy {
         } catch (error) {
             const snapshot = await resolveDeletedCommunityAssistantSnapshot(error, assistantId, this.communityStorageService);
             if (snapshot) {
-                window.location.href = `/#/deleted/communityassistant/${assistantId}`;
+                const query = window.location.hash.includes("?") ? `?${window.location.hash.split("?")[1]}` : "";
+                window.location.href = `/#/deleted/communityassistant/${assistantId}${query}`;
                 return mapCommunitySnapshotToAssistant(snapshot);
             }
             throw error;

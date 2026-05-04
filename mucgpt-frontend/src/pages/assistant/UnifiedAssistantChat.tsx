@@ -3,7 +3,6 @@ import { AskResponse, Assistant, ChatResponse, CommunityAssistantSnapshot, DataS
 import { Answer } from "../../components/Answer";
 import { QuestionInput } from "../../components/QuestionInput";
 import { useTranslation } from "react-i18next";
-import { History } from "../../components/History/History";
 import { LLMContext } from "../../components/LLMSelector/LLMContextProvider";
 import { useParams, useLocation, useNavigate } from "react-router-dom";
 import { ChatLayout } from "../../components/ChatLayout/ChatLayout";
@@ -23,7 +22,6 @@ import { chatApi } from "../../api/core-client";
 import { useGlobalToastContext } from "../../components/GlobalToastHandler/GlobalToastContext";
 import { getOwnedCommunityAssistants, getUserSubscriptionsApi, subscribeToAssistantApi } from "../../api/assistant-client";
 import { NotSubscribedDialog } from "../../components/NotSubscribedDialog";
-import { ClearChatButton } from "../../components/ClearChatButton";
 import { useToolsContext } from "../../components/ToolsProvider";
 import { Button, MessageBar, MessageBarBody } from "@fluentui/react-components";
 import { Info24Regular, Settings24Regular } from "@fluentui/react-icons";
@@ -44,7 +42,7 @@ import { CloseConfirmationDialog } from "../../components/AssistantDialogs/share
 import { UploadedData } from "../../components/ContextManagerDialog/ContextManagerDialog";
 import { useToolStatusToasts } from "../../hooks/useToolStatusToasts";
 import styles from "./UnifiedAssistantChat.module.css";
-import { AppSidebarSlot } from "../../components/AppSidebar";
+import { useUnifiedHistory, useUnifiedHistoryRegistration } from "../../components/UnifiedHistory";
 
 interface UnifiedAssistantChatProps {
     strategy: AssistantStrategy;
@@ -65,7 +63,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
     const { showError, showSuccess } = useGlobalToastContext();
 
     // Destructuring for easier access
-    const { answers, creativity, systemPrompt, active_chat, allChats } = chatState;
+    const { answers, creativity, systemPrompt, active_chat } = chatState;
 
     // References
     const activeChatRef = useRef(active_chat);
@@ -95,6 +93,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
     // Context
     const { LLM, setLLM, availableLLMs } = useContext(LLMContext);
     const { t } = useTranslation();
+    const { refreshHistory: refreshUnifiedHistory } = useUnifiedHistory();
     const { setQuickPrompts } = useContext(QuickPromptContext);
     const { tools } = useToolsContext();
 
@@ -159,6 +158,41 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
         isLoadingRef.current = value;
         setIsLoading(value);
     }, []);
+    const getRequestedChatId = useCallback(() => new URLSearchParams(location.search).get("chatId"), [location.search]);
+    const getNewChatToken = useCallback(() => new URLSearchParams(location.search).get("new"), [location.search]);
+    const clearRequestedChatId = useCallback(() => {
+        const searchParams = new URLSearchParams(location.search);
+        if (!searchParams.has("chatId")) {
+            return;
+        }
+
+        searchParams.delete("chatId");
+        const nextSearch = searchParams.toString();
+        navigate(
+            {
+                pathname: location.pathname,
+                search: nextSearch ? `?${nextSearch}` : ""
+            },
+            { replace: true }
+        );
+    }, [location.pathname, location.search, navigate]);
+    const clearNewChatRequest = useCallback(() => {
+        const searchParams = new URLSearchParams(location.search);
+        if (!searchParams.has("new") && !searchParams.has("chatId")) {
+            return;
+        }
+
+        searchParams.delete("new");
+        searchParams.delete("chatId");
+        const nextSearch = searchParams.toString();
+        navigate(
+            {
+                pathname: location.pathname,
+                search: nextSearch ? `?${nextSearch}` : ""
+            },
+            { replace: true }
+        );
+    }, [location.pathname, location.search, navigate]);
     const setSelectedToolsGuarded = useCallback(
         (value: React.SetStateAction<string[]>) => {
             setSelectedTools(prev => {
@@ -170,6 +204,13 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
         },
         [mergeLockedToolIds]
     );
+    const resetActiveChatState = useCallback(() => {
+        setLastQuestionValue("");
+        if (error) setError(undefined);
+        activeChatRef.current = undefined;
+        dispatch({ type: "SET_ACTIVE_CHAT", payload: undefined });
+        dispatch({ type: "CLEAR_ANSWERS" });
+    }, [error, setLastQuestionValue]);
 
     // useEffect to load the assistant config and chat history
     useEffect(() => {
@@ -185,7 +226,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                     const userIsOwner = owned.some(assistant => assistant.id === assistant_id);
 
                     if (userIsOwner) {
-                        window.location.href = `/#/owned/communityassistant/${assistant_id}`;
+                        window.location.href = `/#/owned/communityassistant/${assistant_id}${location.search}`;
                         return;
                     } else {
                         const subscriptions = await getUserSubscriptionsApi();
@@ -243,8 +284,33 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                                 }
                             }
 
-                            return assistantStorageService
-                                .getNewestChatForAssistant(assistant_id)
+                            const newChatToken = getNewChatToken();
+                            if (newChatToken !== null) {
+                                resetActiveChatState();
+                                clearNewChatRequest();
+                                return fetchHistory();
+                            }
+
+                            const requestedChatId = getRequestedChatId();
+                            const chatPrefix = AssistantStorageService.GENERATE_BOT_CHAT_PREFIX(assistant_id);
+                            const loadInitialChat =
+                                requestedChatId && requestedChatId.startsWith(chatPrefix)
+                                    ? assistantChatStorage.get(requestedChatId).then(chat => {
+                                          if (!chat) {
+                                              clearRequestedChatId();
+                                          }
+
+                                          return chat ?? null;
+                                      })
+                                    : (() => {
+                                          if (requestedChatId) {
+                                              clearRequestedChatId();
+                                          }
+
+                                          return Promise.resolve(null);
+                                      })();
+
+                            return loadInitialChat
                                 .then(existingChat => {
                                     if (existingChat) {
                                         const messages = existingChat.messages;
@@ -299,7 +365,13 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
         setLLM,
         setQuickPrompts,
         setIsLoadingValue,
-        setLastQuestionValue
+        setLastQuestionValue,
+        getRequestedChatId,
+        getNewChatToken,
+        clearRequestedChatId,
+        clearNewChatRequest,
+        resetActiveChatState,
+        assistantChatStorage
     ]);
 
     useEffect(() => {
@@ -361,8 +433,9 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
     const fetchHistory = useCallback(() => {
         return assistantStorageService.getAllChatForAssistant(assistant_id).then(chats => {
             if (chats) dispatch({ type: "SET_ALL_CHATS", payload: chats });
+            refreshUnifiedHistory();
         });
-    }, [assistantStorageService, assistant_id]);
+    }, [assistantStorageService, assistant_id, refreshUnifiedHistory]);
 
     // callApi-Funktion
     const callApi = useCallback(
@@ -414,6 +487,44 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
         }
     }, []);
 
+    const loadAssistantChat = useCallback(
+        async (id: string) => {
+            if (!id.startsWith(AssistantStorageService.GENERATE_BOT_CHAT_PREFIX(assistant_id))) {
+                return false;
+            }
+
+            const chat = await assistantChatStorage.get(id);
+            if (!chat) {
+                return false;
+            }
+
+            setError(undefined);
+            dispatch({ type: "SET_ANSWERS", payload: chat.messages });
+            setLastQuestionValue(chat.messages.length > 0 ? chat.messages[chat.messages.length - 1].user : "");
+            dispatch({ type: "SET_ACTIVE_CHAT", payload: id });
+
+            setTimeout(() => {
+                scrollToBottom();
+            }, 100);
+
+            return true;
+        },
+        [assistantChatStorage, assistant_id, scrollToBottom, setLastQuestionValue]
+    );
+
+    useEffect(() => {
+        const requestedChatId = getRequestedChatId();
+        if (!requestedChatId || requestedChatId === activeChatRef.current) {
+            return;
+        }
+
+        void loadAssistantChat(requestedChatId).then(loaded => {
+            if (!loaded) {
+                clearRequestedChatId();
+            }
+        });
+    }, [clearRequestedChatId, getRequestedChatId, loadAssistantChat, location.search]);
+
     // onAssistantChanged-Funktion
     const onAssistantChanged = useCallback(
         async (newAssistant: Assistant) => {
@@ -455,13 +566,21 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
         }
     }, [answers, assistantChatStorage, callApi, systemPrompt, isLoading, setIsLoadingValue]);
 
-    const resetActiveChatState = useCallback(() => {
-        setLastQuestionValue("");
-        if (error) setError(undefined);
-        activeChatRef.current = undefined;
-        dispatch({ type: "SET_ACTIVE_CHAT", payload: undefined });
-        dispatch({ type: "CLEAR_ANSWERS" });
-    }, [error, setLastQuestionValue]);
+    useUnifiedHistoryRegistration(
+        useMemo(
+            () => ({
+                kind: "assistant",
+                assistantId: assistant_id,
+                activeChatId: active_chat,
+                resetActiveChat: (chatId: string) => {
+                    if (chatId === activeChatRef.current) {
+                        resetActiveChatState();
+                    }
+                }
+            }),
+            [active_chat, assistant_id, resetActiveChatState]
+        )
+    );
 
     // ClearChat-Funktion
     const clearChat = useCallback(() => {
@@ -521,65 +640,6 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
             }
         },
         [availableLLMs, setLLM, assistantConfig.default_model]
-    );
-
-    // History component
-    const sidebarContent = useMemo(
-        () =>
-            ({ requestClose }: { requestClose?: () => void }) => (
-                <History
-                    allChats={allChats}
-                    currentActiveChatId={active_chat}
-                    onDeleteChat={async id => {
-                        if (id === activeChatRef.current) {
-                            resetActiveChatState();
-                        }
-                        await assistantChatStorage.delete(id);
-                        await fetchHistory();
-                    }}
-                    onChatNameChange={async (id, name: string) => {
-                        const newName = prompt(t("components.history.newchat"), name);
-                        await assistantChatStorage.renameChat(id, newName ? newName.trim() : name);
-                        await fetchHistory();
-                    }}
-                    onFavChange={async (id: string, fav: boolean) => {
-                        await assistantChatStorage.changeFavouritesInDb(id, fav);
-                        await fetchHistory();
-                    }}
-                    onSelect={async (id: string) => {
-                        const chat = await assistantChatStorage.get(id);
-                        if (chat) {
-                            setError(undefined);
-                            dispatch({ type: "SET_ANSWERS", payload: chat.messages });
-                            setLastQuestionValue(chat.messages.length > 0 ? chat.messages[chat.messages.length - 1].user : "");
-                            dispatch({ type: "SET_ACTIVE_CHAT", payload: id });
-
-                            // Scroll to bottom after a short delay to ensure DOM is updated
-                            setTimeout(() => {
-                                scrollToBottom();
-                            }, 100);
-                            requestClose?.();
-                        }
-                    }}
-                    readOnly={isDeletedAssistant}
-                    showHeader={false}
-                    actions={<ClearChatButton onClick={clearChat} disabled={!lastQuestion || isLoading || isDeletedAssistant} />}
-                ></History>
-            ),
-        [
-            allChats,
-            active_chat,
-            clearChat,
-            fetchHistory,
-            assistantChatStorage,
-            resetActiveChatState,
-            t,
-            scrollToBottom,
-            isDeletedAssistant,
-            isLoading,
-            lastQuestion,
-            setLastQuestionValue
-        ]
     );
 
     // Examples component
@@ -805,7 +865,6 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
 
         return (
             <>
-                <AppSidebarSlot title={t("components.history.history")} content={sidebarContent} />
                 <ChatLayout
                     examples={examplesComponent}
                     answers={answerList}
@@ -841,7 +900,6 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
             </>
         );
     }, [
-        sidebarContent,
         examplesComponent,
         answerList,
         inputComponent,

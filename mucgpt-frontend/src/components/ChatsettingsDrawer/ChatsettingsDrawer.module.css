@@ -48,25 +48,6 @@
     background-color: var(--colorNeutralBackground1);
 }
 
-.settingsContent::-webkit-scrollbar {
-    width: 8px;
-}
-
-.settingsContent::-webkit-scrollbar-track {
-    background: var(--colorNeutralBackground3);
-    border-radius: var(--borderRadiusMedium, 6px);
-}
-
-.settingsContent::-webkit-scrollbar-thumb {
-    background-color: var(--colorNeutralStroke1);
-    border-radius: var(--borderRadiusMedium, 6px);
-    border: 2px solid var(--colorNeutralBackground3);
-}
-
-.settingsContent::-webkit-scrollbar-thumb:hover {
-    background-color: var(--colorNeutralStroke1Hover);
-}
-
 .temperatureLabel {
     margin-right: var(--spacingHorizontalM, 12px);
     white-space: nowrap;

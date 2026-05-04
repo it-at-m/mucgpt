@@ -28,7 +28,8 @@ import TutorialsButton from "../../components/TutorialsButton";
 import { ToolsProvider } from "../../components/ToolsProvider";
 import Unauthorized from "../Unauthorized";
 import { ConfigContext } from "../../context/ConfigContext";
-import { AppSidebar, AppSidebarContentProvider, useAppSidebarContent } from "../../components/AppSidebar";
+import { AppSidebar } from "../../components/AppSidebar";
+import { UnifiedHistoryProvider, UnifiedSidebarHistory } from "../../components/UnifiedHistory";
 
 const APP_NAV_COLLAPSED_KEY = "APP_NAV_COLLAPSED";
 const MOBILE_LAYOUT_BREAKPOINT = 640;
@@ -51,7 +52,6 @@ interface AppShellProps {
 const AppShell = ({ config, isLight, languagePreference, onLanguageSelectionChanged, onThemeChange, onAcceptTermsOfUse, termsOfUseRead }: AppShellProps) => {
     const { t } = useTranslation();
     const location = useLocation();
-    const { secondaryContent: renderSecondaryContent, secondaryTitle } = useAppSidebarContent();
     const [isMobile, setIsMobile] = useState<boolean>(window.innerWidth <= MOBILE_LAYOUT_BREAKPOINT);
     const [mobileSidebarOpen, setMobileSidebarOpen] = useState<boolean>(false);
     const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(() => localStorage.getItem(APP_NAV_COLLAPSED_KEY) === "true");
@@ -81,17 +81,9 @@ const AppShell = ({ config, isLight, languagePreference, onLanguageSelectionChan
         });
     }, []);
 
-    const secondaryContent = !isMobile
-        ? renderSecondaryContent?.({
-              isMobile: false
-          })
-        : null;
-    const mobileSecondaryContent = isMobile
-        ? renderSecondaryContent?.({
-              isMobile: true,
-              requestClose: () => setMobileSidebarOpen(false)
-          })
-        : null;
+    const secondaryTitle = t("components.history.history");
+    const secondaryContent = !isMobile ? <UnifiedSidebarHistory /> : null;
+    const mobileSecondaryContent = isMobile ? <UnifiedSidebarHistory requestClose={() => setMobileSidebarOpen(false)} /> : null;
 
     const utilitiesContent = (
         <div className={styles.mobileUtilities}>
@@ -326,7 +318,7 @@ export const Layout = () => {
                     ) : (
                         <ConfigContext.Provider value={config}>
                             <ToolsProvider>
-                                <AppSidebarContentProvider>
+                                <UnifiedHistoryProvider>
                                     <AppShell
                                         config={config}
                                         isLight={isLight}
@@ -336,7 +328,7 @@ export const Layout = () => {
                                         onAcceptTermsOfUse={onAcceptTermsOfUse}
                                         termsOfUseRead={termsOfUseRead}
                                     />
-                                </AppSidebarContentProvider>
+                                </UnifiedHistoryProvider>
                             </ToolsProvider>
                         </ConfigContext.Provider>
                     )}

@@ -4,10 +4,8 @@ import { AskResponse, ChatResponse, DataSource } from "../../api";
 import { Answer } from "../../components/Answer";
 import { QuestionInput } from "../../components/QuestionInput";
 import { ExampleList, ExampleModel } from "../../components/Example";
-import { ClearChatButton } from "../../components/ClearChatButton";
 import { LanguageContext } from "../../components/LanguageSelector/LanguageContextProvider";
 import { useTranslation } from "react-i18next";
-import { History } from "../../components/History/History";
 import { LLMContext } from "../../components/LLMSelector/LLMContextProvider";
 import { ChatLayout } from "../../components/ChatLayout/ChatLayout";
 import { CHAT_STORE, CREATIVITY_LOW } from "../../constants";
@@ -26,7 +24,7 @@ import { ChatSettingsDialog } from "../../components/ChatSettingsDialog/ChatSett
 import { UploadedData, createUploadedDataFromContent } from "../../components/ContextManagerDialog/ContextManagerDialog";
 import { getStoredParsedDocuments } from "../../service/parsedDocumentStorage";
 import { useToolStatusToasts } from "../../hooks/useToolStatusToasts";
-import { AppSidebarSlot } from "../../components/AppSidebar";
+import { useUnifiedHistory, useUnifiedHistoryRegistration } from "../../components/UnifiedHistory";
 import { useLocation } from "react-router-dom";
 
 /**
@@ -98,6 +96,7 @@ const Chat = () => {
     const { LLM, setLLM, availableLLMs } = useContext(LLMContext);
     const { t } = useTranslation();
     const location = useLocation();
+    const { refreshHistory: refreshUnifiedHistory } = useUnifiedHistory();
     const { setQuickPrompts } = useContext(QuickPromptContext);
     const { tools } = useToolsContext();
 
@@ -128,7 +127,7 @@ const Chat = () => {
     });
 
     // Destructuring for easier access
-    const { answers, creativity, systemPrompt, active_chat, allChats } = chatState;
+    const { answers, creativity, systemPrompt, active_chat } = chatState;
 
     // Refs
     const lastQuestionRef = useRef<string>("");
@@ -171,13 +170,14 @@ const Chat = () => {
             if (chats) {
                 dispatch({ type: "SET_ALL_CHATS", payload: chats });
             }
+            refreshUnifiedHistory();
             return chats;
         } catch (e) {
             console.error("Error fetching history:", e);
             setError(e);
             return [];
         }
-    }, [storageService]);
+    }, [refreshUnifiedHistory, storageService]);
 
     // Load chat by ID
     const loadChat = useCallback(
@@ -209,6 +209,22 @@ const Chat = () => {
         [storageService, scrollToBottom]
     );
 
+    const loadNewestChat = useCallback(async () => {
+        const existingData = await storageService.getNewestChat();
+        if (!existingData) {
+            lastQuestionRef.current = "";
+            dispatch({ type: "SET_ACTIVE_CHAT", payload: undefined });
+            dispatch({ type: "CLEAR_ANSWERS" });
+            return;
+        }
+
+        dispatch({ type: "SET_ANSWERS", payload: existingData.messages });
+        dispatch({ type: "SET_CREATIVITY", payload: existingData.config.creativity });
+        dispatch({ type: "SET_SYSTEM_PROMPT", payload: existingData.config.system });
+        dispatch({ type: "SET_ACTIVE_CHAT", payload: existingData.id });
+        lastQuestionRef.current = existingData.messages.length > 0 ? existingData.messages[existingData.messages.length - 1].user : "";
+    }, [storageService]);
+
     // Clear chat state
     const clearChat = useCallback(() => {
         lastQuestionRef.current = "";
@@ -216,6 +232,21 @@ const Chat = () => {
         dispatch({ type: "SET_ACTIVE_CHAT", payload: undefined });
         dispatch({ type: "CLEAR_ANSWERS" });
     }, [lastQuestionRef.current]);
+
+    useUnifiedHistoryRegistration(
+        useMemo(
+            () => ({
+                kind: "chat",
+                activeChatId: active_chat,
+                resetActiveChat: (chatId: string) => {
+                    if (chatId === activeChatRef.current) {
+                        clearChat();
+                    }
+                }
+            }),
+            [active_chat, clearChat]
+        )
+    );
 
     // API Request mit optimiertem State Management
     const callApi = useCallback(
@@ -324,6 +355,7 @@ const Chat = () => {
             hashParams.delete("tools");
             hashParams.delete("data");
             hashParams.delete("new");
+            hashParams.delete("chatId");
             const newHashQuery = hashParams.toString();
             currentUrl.hash = newHashQuery ? `${hashPath}?${newHashQuery}` : hashPath;
         }
@@ -336,6 +368,7 @@ const Chat = () => {
             searchParams.delete("tools");
             searchParams.delete("data");
             searchParams.delete("new");
+            searchParams.delete("chatId");
             const newSearch = searchParams.toString();
             currentUrl.search = newSearch ? `?${newSearch}` : "";
         }
@@ -398,13 +431,15 @@ const Chat = () => {
         const toolsFromUrl = queryParams.get("tools");
         const dataFromUrl = queryParams.get("data");
         const newChatToken = queryParams.get("new");
+        const chatIdFromUrl = queryParams.get("chatId");
 
         return {
             questionFromUrl,
             toolsFromUrl,
             dataFromUrl,
             newChatRequested: newChatToken !== null,
-            newChatToken
+            newChatToken,
+            chatIdFromUrl
         };
     }, [location.hash, location.search]);
 
@@ -467,7 +502,7 @@ const Chat = () => {
         isLoadingRef.current = true;
 
         // Check URL for question parameter - Handle hash router format
-        const { questionFromUrl, toolsFromUrl, dataFromUrl, newChatRequested, newChatToken } = getNavigationParams();
+        const { questionFromUrl, toolsFromUrl, dataFromUrl, newChatRequested, newChatToken, chatIdFromUrl } = getNavigationParams();
 
         // Parse tools from URL if present
         if (toolsFromUrl) {
@@ -528,7 +563,20 @@ const Chat = () => {
             }
         }
 
-        if (questionFromUrl || newChatRequested) {
+        if (chatIdFromUrl) {
+            loadChat(chatIdFromUrl)
+                .then(async loaded => {
+                    if (!loaded) {
+                        clearNavigationQueryParams();
+                        await loadNewestChat();
+                    }
+                    return fetchHistory();
+                })
+                .finally(() => {
+                    setIsInitialized(true);
+                    isLoadingRef.current = false;
+                });
+        } else if (questionFromUrl || newChatRequested) {
             lastHandledNewChatTokenRef.current = newChatToken;
             setPendingQuestion(questionFromUrl);
             Promise.resolve(
@@ -550,17 +598,8 @@ const Chat = () => {
                 });
         } else {
             // Normal initialization ohne URL-Parameter
-            storageService
-                .getNewestChat()
-                .then(existingData => {
-                    if (existingData) {
-                        dispatch({ type: "SET_ANSWERS", payload: existingData.messages });
-                        dispatch({ type: "SET_CREATIVITY", payload: existingData.config.creativity });
-                        dispatch({ type: "SET_SYSTEM_PROMPT", payload: existingData.config.system });
-                        dispatch({ type: "SET_ACTIVE_CHAT", payload: existingData.id });
-
-                        lastQuestionRef.current = existingData.messages.length > 0 ? existingData.messages[existingData.messages.length - 1].user : "";
-                    }
+            loadNewestChat()
+                .then(() => {
                     setIsInitialized(true);
                     return fetchHistory();
                 })
@@ -568,14 +607,25 @@ const Chat = () => {
                     isLoadingRef.current = false;
                 });
         }
-    }, [clearChat, clearNavigationQueryParams, fetchHistory, getNavigationParams, storageService]);
+    }, [clearChat, clearNavigationQueryParams, fetchHistory, getNavigationParams, loadChat, loadNewestChat]);
 
     useEffect(() => {
         if (!isInitialized) {
             return;
         }
 
-        const { newChatRequested, newChatToken } = getNavigationParams();
+        const { chatIdFromUrl, newChatRequested, newChatToken } = getNavigationParams();
+
+        if (chatIdFromUrl && chatIdFromUrl !== activeChatRef.current) {
+            void loadChat(chatIdFromUrl).then(async loaded => {
+                if (!loaded) {
+                    clearNavigationQueryParams();
+                    await loadNewestChat();
+                    await fetchHistory();
+                }
+            });
+            return;
+        }
 
         if (!newChatRequested || !newChatToken || newChatToken === lastHandledNewChatTokenRef.current) {
             return;
@@ -590,7 +640,7 @@ const Chat = () => {
         setPendingQuestion(null);
         void startFreshChat();
         clearNavigationQueryParams();
-    }, [clearNavigationQueryParams, getNavigationParams, isCurrentChatEmpty, isInitialized, startFreshChat]);
+    }, [clearNavigationQueryParams, fetchHistory, getNavigationParams, isCurrentChatEmpty, isInitialized, loadChat, loadNewestChat, startFreshChat]);
 
     useEffect(() => {
         if (!isInitialized || !pendingQuestion || tools === undefined) {
@@ -740,40 +790,9 @@ const Chat = () => {
         [callApi, systemPrompt, question, t, isLoadingRef.current, selectedTools, tools, uploadedData, uploadedDataToDataSources]
     );
 
-    const sidebarContent = useMemo(
-        () =>
-            ({ requestClose }: { requestClose?: () => void }) => (
-                <History
-                    allChats={allChats}
-                    currentActiveChatId={active_chat}
-                    onDeleteChat={async id => {
-                        await storageService.delete(id);
-                        await fetchHistory();
-                    }}
-                    onChatNameChange={async (id, name: string) => {
-                        const newName = prompt(t("components.history.newchat"), name);
-                        await storageService.renameChat(id, newName ? newName.trim() : name);
-                        await fetchHistory();
-                    }}
-                    onFavChange={async (id: string, fav: boolean) => {
-                        await storageService.changeFavouritesInDb(id, fav);
-                        await fetchHistory();
-                    }}
-                    onSelect={async (id: string) => {
-                        await loadChat(id);
-                        requestClose?.();
-                    }}
-                    showHeader={false}
-                    actions={<ClearChatButton onClick={clearChat} disabled={!lastQuestionRef.current || isLoadingRef.current} />}
-                ></History>
-            ),
-        [allChats, active_chat, clearChat, fetchHistory, storageService, loadChat, t, lastQuestionRef.current, isLoadingRef.current]
-    );
-
     const layout = useMemo(
         () => (
             <>
-                <AppSidebarSlot title={t("components.history.history")} content={sidebarContent} />
                 <ChatSettingsDialog
                     open={isSettingsOpen}
                     onOpenChange={setIsSettingsOpen}
@@ -806,7 +825,6 @@ const Chat = () => {
             </>
         ),
         [
-            sidebarContent,
             examplesComponent,
             answerList,
             inputComponent,

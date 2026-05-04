@@ -1,0 +1,19 @@
+.dangerConfirmButton {
+    background-color: var(--colorPaletteRedBackground3, #d13438) !important;
+    color: var(--colorNeutralForegroundOnBrand) !important;
+}
+
+.dangerConfirmButton:hover {
+    background-color: var(--colorPaletteRedBackground3Hover, var(--colorPaletteRedBackground3, #d13438)) !important;
+    color: var(--colorNeutralForegroundOnBrand) !important;
+}
+
+.dangerConfirmButton:active {
+    background-color: var(--colorPaletteRedBackground3Pressed, var(--colorPaletteRedBackground3, #d13438)) !important;
+    color: var(--colorNeutralForegroundOnBrand) !important;
+}
+
+.dangerConfirmButton:disabled {
+    background-color: var(--colorNeutralBackgroundDisabled) !important;
+    color: var(--colorNeutralForegroundDisabled) !important;
+}

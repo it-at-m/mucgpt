@@ -23,7 +23,7 @@ import { useGlobalToastContext } from "../../components/GlobalToastHandler/Globa
 import { getOwnedCommunityAssistants, getUserSubscriptionsApi, subscribeToAssistantApi } from "../../api/assistant-client";
 import { NotSubscribedDialog } from "../../components/NotSubscribedDialog";
 import { useToolsContext } from "../../components/ToolsProvider";
-import { Button, MessageBar, MessageBarBody } from "@fluentui/react-components";
+import { Button, MessageBar, MessageBarBody, Skeleton, SkeletonItem } from "@fluentui/react-components";
 import { Info24Regular, Settings24Regular } from "@fluentui/react-icons";
 import { AssistantEditorPage } from "../../components/AssistantDialogs/AssistantEditorPage/AssistantEditorPage";
 import { AssistantDetailsSidebar, AssistantCardData } from "../../components/AssistantDetailsSidebar/AssistantDetailsSidebar";
@@ -112,6 +112,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
     const [deletedAssistantSnapshot, setDeletedAssistantSnapshot] = useState<CommunityAssistantSnapshot | null>(null);
     const [lastQuestion, setLastQuestion] = useState<string>("");
     const [isLoading, setIsLoading] = useState<boolean>(false);
+    const [isAssistantContentLoading, setIsAssistantContentLoading] = useState<boolean>(true);
     const isDeletedAssistant = strategy instanceof DeletedCommunityAssistantStrategy;
     const isLocalAssistant = strategy instanceof LocalAssistantStrategy;
     const { assistantToDuplicate, showDuplicateConfirm, isDuplicating, setShowDuplicateConfirm, requestDuplicateAssistant, confirmDuplicateAssistant } =
@@ -163,6 +164,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
     locationRef.current = location;
 
     const getRequestedChatId = useCallback(() => new URLSearchParams(locationRef.current.search).get("chatId"), []);
+    const requestedChatId = useMemo(() => new URLSearchParams(location.search).get("chatId"), [location.search]);
     const getNewChatToken = useCallback(() => new URLSearchParams(locationRef.current.search).get("new"), []);
     const clearRequestedChatId = useCallback(() => {
         const searchParams = new URLSearchParams(locationRef.current.search);
@@ -224,6 +226,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                 setIsOwnershipResolved(!(strategy instanceof CommunityAssistantStrategy));
                 if (error) setError(undefined);
                 setIsLoadingValue(true);
+                setIsAssistantContentLoading(true);
                 let notSubscribed = false;
                 if (strategy instanceof CommunityAssistantStrategy) {
                     const owned = await getOwnedCommunityAssistants();
@@ -325,6 +328,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                     .finally(() => {
                         setShowNotSubscribedDialog(notSubscribed);
                         setIsLoadingValue(false);
+                        setIsAssistantContentLoading(false);
                     });
             }
         };
@@ -934,8 +938,28 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
         isInfoDrawerOpen
     ]);
 
+    const isRequestedChatLoading = Boolean(requestedChatId && requestedChatId !== active_chat);
+    const showAssistantLoadingState = !isEditMode && (isAssistantContentLoading || isRequestedChatLoading);
+
     if (isEditMode && (!strategy.canEdit || isLegacyAssistant)) {
         return null;
+    }
+
+    if (showAssistantLoadingState) {
+        return (
+            <Skeleton aria-label={t("components.history.loading")} className={styles.loadingShell}>
+                <div className={styles.loadingHeader}>
+                    <SkeletonItem style={{ width: "min(280px, 48vw)", height: 24 }} />
+                    <SkeletonItem style={{ width: 160, height: 36 }} />
+                </div>
+                <div className={styles.loadingContent}>
+                    <SkeletonItem style={{ width: "100%", height: 18 }} />
+                    <SkeletonItem style={{ width: "82%", height: 18 }} />
+                    <SkeletonItem style={{ width: "58%", height: 18 }} />
+                </div>
+                <SkeletonItem style={{ height: 72, margin: "0 24px 20px" }} />
+            </Skeleton>
+        );
     }
 
     return isEditMode ? (

@@ -288,6 +288,35 @@ i18n
                             storage_error_one: "1 Dokument konnte nicht lokal gespeichert werden.",
                             storage_error_other: "{{count}} Dokumente konnten nicht lokal gespeichert werden."
                         },
+                        microphonebutton: {
+                            record: "Sprachaufnahme starten",
+                            stop: "Aufnahme beenden",
+                            transcribing: "Transkribiere...",
+                            loading_model: "Modell wird geladen..."
+                        },
+                        transcriptionSettings: {
+                            title: "Transkription",
+                            beta: "Beta",
+                            open_tooltip: "Transkriptionseinstellungen öffnen",
+                            disclaimer:
+                                "Beta-Funktion: Die Transkriptionsqualität ist nicht validiert und kann je nach Sprache, Audioqualität und lokaler Hardware variieren. Das Modell läuft vollständig im Browser – keine Audiodaten verlassen dein Gerät.",
+                            webgpu_warning:
+                                "Dein Browser unterstützt kein WebGPU. Die Transkription läuft auf CPU (WebAssembly) und kann deutlich langsamer sein. Für beste Leistung verwende Chrome oder Edge (Version 113+).",
+                            webgpu_only_error:
+                                "Dieses Modell erfordert WebGPU, das in deinem Browser nicht verfügbar ist. Verwende Chrome oder Edge (Version 113+) oder wähle Whisper Small.",
+                            enable_label: "Transkription aktivieren",
+                            enable_hint: "Ist diese Option aktiv und ein Modell heruntergeladen, erscheint im Chat ein Mikrofon-Button.",
+                            model_label: "Modell",
+                            model_ready: "bereit",
+                            download: "Modell herunterladen",
+                            redownload: "Erneut herunterladen",
+                            status_idle: "Nicht geladen",
+                            status_loading: "Lädt … {{progress}} %",
+                            status_loading_mb: "Lädt … {{downloaded_mb}} MB / {{total_mb}} MB ({{progress}} %)",
+                            status_loading_indeterminate: "Lädt …",
+                            status_ready: "Bereit",
+                            close: "Schließen"
+                        },
                         suminput: {
                             tokensused: "Token verbraucht",
                             limit: ". Ältere Eingaben werden bei der Generierung nicht berücksichtigt!",
@@ -942,6 +971,35 @@ i18n
                             storage_error_one: "1 document could not be saved locally.",
                             storage_error_other: "{{count}} documents could not be saved locally."
                         },
+                        microphonebutton: {
+                            record: "Start voice recording",
+                            stop: "Stop recording",
+                            transcribing: "Transcribing...",
+                            loading_model: "Loading model..."
+                        },
+                        transcriptionSettings: {
+                            title: "Transcription",
+                            beta: "Beta",
+                            open_tooltip: "Open transcription settings",
+                            disclaimer:
+                                "Beta feature: transcription quality is not validated and may vary with language, audio quality, and your local hardware. The model runs fully in your browser – no audio leaves your device.",
+                            webgpu_warning:
+                                "Your browser does not support WebGPU. Transcription will run on CPU (WebAssembly) and may be noticeably slower. For best performance, use Chrome or Edge (version 113+).",
+                            webgpu_only_error:
+                                "This model requires WebGPU, which is not available in your browser. Try Chrome or Edge (version 113+) or select Whisper Small.",
+                            enable_label: "Enable transcription",
+                            enable_hint: "When enabled and a model is downloaded, a microphone button appears in the chat.",
+                            model_label: "Model",
+                            model_ready: "ready",
+                            download: "Download model",
+                            redownload: "Re-download",
+                            status_idle: "Not loaded",
+                            status_loading: "Loading … {{progress}} %",
+                            status_loading_mb: "Loading … {{downloaded_mb}} MB / {{total_mb}} MB ({{progress}} %)",
+                            status_loading_indeterminate: "Loading …",
+                            status_ready: "Ready",
+                            close: "Close"
+                        },
                         suminput: {
                             tokensused: "Token used",
                             limit: ". Previous inputs are not considered during generation!",
@@ -1579,6 +1637,35 @@ i18n
                             download: "Text obalodn",
                             selection_count: "Im Ratsch verwendet: {{selected}} vo {{total}}",
                             storage_error: "Dokument hod ned gspeichert wern kenna (Speicher voi)."
+                        },
+                        microphonebutton: {
+                            record: "Sprachaufnahm starten",
+                            stop: "Aufnahm beenden",
+                            transcribing: "Transkribier...",
+                            loading_model: "Modell wead gladn..."
+                        },
+                        transcriptionSettings: {
+                            title: "Transkription",
+                            beta: "Beta",
+                            open_tooltip: "Transkriptions-Einstellunga aufmacha",
+                            disclaimer:
+                                "Beta-Funktion: D'Transkriptionsqualität is ned validiert und ko je noch Sproch, Audioqualität und lokala Hardware variiern. S'Modell läuft kompled im Browser – koa Audiodaten varoaßn dei Gerät.",
+                            webgpu_warning:
+                                "Dei Browser ko koa WebGPU. D'Transkription lafft afm CPU (WebAssembly) und ko deitli langsamer sei. Für de beste Leistung nimm Chrome oder Edge (Version 113+).",
+                            webgpu_only_error:
+                                "Des Modell braucht WebGPU, des in deim Browser ned verfügbar is. Nimm Chrome oder Edge (Version 113+) oder wähl Whisper Small.",
+                            enable_label: "Transkription aktivieren",
+                            enable_hint: "Is des aktiv und a Modell obagladn, erscheint im Ratsch a Mikrofon-Knopf.",
+                            model_label: "Modell",
+                            model_ready: "bereit",
+                            download: "Modell obaladn",
+                            redownload: "Nei obaladn",
+                            status_idle: "Ned gladn",
+                            status_loading: "Lodt … {{progress}} %",
+                            status_loading_mb: "Lodt … {{downloaded_mb}} MB / {{total_mb}} MB ({{progress}} %)",
+                            status_loading_indeterminate: "Lodt …",
+                            status_ready: "Bereit",
+                            close: "Zuamacha"
                         },
                         suminput: {
                             tokensused: "Token vabrocht",
@@ -2223,6 +2310,35 @@ i18n
                             selection_count: "{{selected}} sur {{total}} sélectionné(s)",
                             storage_error: "Le document n'a pas pu être enregistré (stockage plein)."
                         },
+                        microphonebutton: {
+                            record: "Démarrer l'enregistrement vocal",
+                            stop: "Arrêter l'enregistrement",
+                            transcribing: "Transcription en cours...",
+                            loading_model: "Chargement du modèle..."
+                        },
+                        transcriptionSettings: {
+                            title: "Transcription",
+                            beta: "Bêta",
+                            open_tooltip: "Ouvrir les paramètres de transcription",
+                            disclaimer:
+                                "Fonctionnalité bêta : la qualité de la transcription n'est pas validée et peut varier selon la langue, la qualité audio et votre matériel local. Le modèle s'exécute entièrement dans le navigateur – aucun audio ne quitte votre appareil.",
+                            webgpu_warning:
+                                "Votre navigateur ne prend pas en charge WebGPU. La transcription s'exécutera sur le CPU (WebAssembly) et peut être nettement plus lente. Pour de meilleures performances, utilisez Chrome ou Edge (version 113+).",
+                            webgpu_only_error:
+                                "Ce modèle nécessite WebGPU, qui n'est pas disponible dans votre navigateur. Utilisez Chrome ou Edge (version 113+) ou sélectionnez Whisper Small.",
+                            enable_label: "Activer la transcription",
+                            enable_hint: "Lorsque l'option est activée et qu'un modèle est téléchargé, un bouton microphone apparaît dans le chat.",
+                            model_label: "Modèle",
+                            model_ready: "prêt",
+                            download: "Télécharger le modèle",
+                            redownload: "Re-télécharger",
+                            status_idle: "Non chargé",
+                            status_loading: "Chargement … {{progress}} %",
+                            status_loading_mb: "Chargement … {{downloaded_mb}} MB / {{total_mb}} MB ({{progress}} %)",
+                            status_loading_indeterminate: "Chargement …",
+                            status_ready: "Prêt",
+                            close: "Fermer"
+                        },
                         suminput: {
                             tokensused: "Tokens utilisés",
                             limit: ". Les entrées plus anciennes ne seront pas prises en compte lors de la génération !",
@@ -2865,6 +2981,35 @@ i18n
                             download: "Завантажити текст",
                             selection_count: "{{selected}} з {{total}} вибрано",
                             storage_error: "Документ не вдалося зберегти (сховище переповнене)."
+                        },
+                        microphonebutton: {
+                            record: "Почати голосовий запис",
+                            stop: "Зупинити запис",
+                            transcribing: "Транскрибування...",
+                            loading_model: "Завантаження моделі..."
+                        },
+                        transcriptionSettings: {
+                            title: "Транскрипція",
+                            beta: "Бета",
+                            open_tooltip: "Відкрити налаштування транскрипції",
+                            disclaimer:
+                                "Бета-функція: якість транскрипції не перевірена і може залежати від мови, якості звуку та локального обладнання. Модель працює повністю у браузері – аудіо не залишає ваш пристрій.",
+                            webgpu_warning:
+                                "Ваш браузер не підтримує WebGPU. Транскрипція виконуватиметься на CPU (WebAssembly) і може бути помітно повільнішою. Для найкращої продуктивності використовуйте Chrome або Edge (версія 113+).",
+                            webgpu_only_error:
+                                "Ця модель потребує WebGPU, яке недоступне у вашому браузері. Спробуйте Chrome або Edge (версія 113+) або виберіть Whisper Small.",
+                            enable_label: "Увімкнути транскрипцію",
+                            enable_hint: "Якщо увімкнено й модель завантажено, у чаті з'явиться кнопка мікрофона.",
+                            model_label: "Модель",
+                            model_ready: "готова",
+                            download: "Завантажити модель",
+                            redownload: "Завантажити знову",
+                            status_idle: "Не завантажено",
+                            status_loading: "Завантаження … {{progress}} %",
+                            status_loading_mb: "Завантаження … {{downloaded_mb}} MB / {{total_mb}} MB ({{progress}} %)",
+                            status_loading_indeterminate: "Завантаження …",
+                            status_ready: "Готова",
+                            close: "Закрити"
                         },
                         suminput: {
                             tokensused: "Використано токени",

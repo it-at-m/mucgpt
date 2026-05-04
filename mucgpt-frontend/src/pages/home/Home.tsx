@@ -309,6 +309,7 @@ const Home = () => {
                         setSelectedTools={setSelectedTools}
                         tools={tools}
                         question={question}
+                        onTranscription={text => setQuestion(prev => (prev ? `${prev} ${text}` : text))}
                     />
                 </div>
             </section>

@@ -24,6 +24,7 @@ import Unauthorized from "./pages/Unauthorized";
 import Discovery from "./pages/discovery/Discovery";
 import Home from "./pages/home/Home";
 import { AssistantEditorPage } from "./components/AssistantDialogs/AssistantEditorPage/AssistantEditorPage";
+import { TranscriptionSettingsProvider } from "./components/TranscriptionSettings/TranscriptionSettingsContext";
 initializeIcons();
 
 const router = createHashRouter([
@@ -148,9 +149,10 @@ async function enableMocking() {
 
     // `worker.start()` returns a Promise that resolves
     // once the Service Worker is up and ready to intercept requests.
-    if (import.meta.env?.MODE === "development") return worker.start();
+    if (import.meta.env?.MODE === "development") return worker.start({ onUnhandledRequest: () => {} });
     else
         return worker.start({
+            onUnhandledRequest: () => {},
             serviceWorker: {
                 // This is useful if your application follows
                 // a strict directory structure.
@@ -167,7 +169,9 @@ enableMocking().then(() => {
                     <LLMContextProvider>
                         <QuickPromptProvider>
                             <HeaderContextProvider>
-                                <RouterProvider router={router} />
+                                <TranscriptionSettingsProvider>
+                                    <RouterProvider router={router} />
+                                </TranscriptionSettingsProvider>
                             </HeaderContextProvider>
                         </QuickPromptProvider>
                     </LLMContextProvider>

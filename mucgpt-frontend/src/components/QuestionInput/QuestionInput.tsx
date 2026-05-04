@@ -1,6 +1,6 @@
 import { Button, Textarea, type TextareaOnChangeData, Tooltip } from "@fluentui/react-components";
 import { Send28Filled, DocumentAdd24Regular } from "@fluentui/react-icons";
-import { useCallback, useEffect, useRef, useState, type Dispatch, type SetStateAction } from "react";
+import { useCallback, useContext, useEffect, useRef, useState, type Dispatch, type SetStateAction } from "react";
 import { useTranslation } from "react-i18next";
 
 import styles from "./QuestionInput.module.css";
@@ -10,6 +10,8 @@ import { useConfigContext } from "../../context/ConfigContext";
 import { upsertParsedDocumentFromUpload } from "../../service/parsedDocumentStorage";
 import { ContextManagerDialog, UploadedData, createUploadedData, getDataSignature, getFileSignature } from "../ContextManagerDialog/ContextManagerDialog";
 import { ChatToolSelector } from "../ChatToolSelector/ChatToolSelector";
+import { MicrophoneButton } from "../MicrophoneButton/MicrophoneButton";
+import { TranscriptionSettingsContext } from "../TranscriptionSettings/TranscriptionSettingsContext";
 
 interface Props {
     onSend: (question: string, data: UploadedData[]) => void;
@@ -27,6 +29,7 @@ interface Props {
     onDataChange?: (data: UploadedData[]) => void;
     uploadedData?: UploadedData[];
     setUploadedData?: Dispatch<SetStateAction<UploadedData[]>>;
+    onTranscription?: (text: string) => void;
 }
 
 export const QuestionInput = ({
@@ -44,7 +47,8 @@ export const QuestionInput = ({
     allowFileUpload: allowFileUploadProp,
     onDataChange,
     uploadedData: externalUploadedData,
-    setUploadedData: setExternalUploadedData
+    setUploadedData: setExternalUploadedData,
+    onTranscription
 }: Props) => {
     const { t } = useTranslation();
     const config = useConfigContext();
@@ -59,6 +63,9 @@ export const QuestionInput = ({
     const uploadedDataRef = useRef<UploadedData[]>([]);
     const [isDragActive, setIsDragActive] = useState(false);
     const dragCounterRef = useRef(0);
+    const recordingBaseRef = useRef("");
+    const { isModelReady: transcriptionReady, status: transcriptionStatus } = useContext(TranscriptionSettingsContext);
+    const isTranscriptionActive = transcriptionStatus === "recording" || transcriptionStatus === "transcribing";
 
     const uploadedData = externalUploadedData ?? internalUploadedData;
     const activeDocumentCount = uploadedData.filter(data => data.isActive !== false).length;
@@ -339,6 +346,7 @@ export const QuestionInput = ({
                         onChange={onQuestionChange}
                         onKeyDown={onEnterPress}
                         ref={textareaRef}
+                        disabled={disabled || isTranscriptionActive}
                     />
                     <div className={styles.questionInputButtons}>
                         {allowFileUpload ? (
@@ -357,6 +365,16 @@ export const QuestionInput = ({
                                 </div>
                             </Tooltip>
                         ) : null}
+                        {onTranscription && transcriptionReady && (
+                            <MicrophoneButton
+                                onRecordingStart={() => {
+                                    recordingBaseRef.current = question;
+                                }}
+                                onLiveTranscription={text => setQuestion(recordingBaseRef.current ? `${recordingBaseRef.current} ${text}` : text)}
+                                onTranscription={text => setQuestion(recordingBaseRef.current ? `${recordingBaseRef.current} ${text}` : text)}
+                                disabled={disabled}
+                            />
+                        )}
                         <Tooltip content={resolvedPlaceholder} relationship="label">
                             <Button
                                 ref={sendButtonRef}
@@ -364,7 +382,7 @@ export const QuestionInput = ({
                                 appearance="transparent"
                                 icon={<Send28Filled />}
                                 aria-label={t("components.questioninput.send_question", "Frage senden")}
-                                disabled={disabled || !question.trim()}
+                                disabled={disabled || isTranscriptionActive || !question.trim()}
                                 onClick={sendQuestion}
                             />
                         </Tooltip>

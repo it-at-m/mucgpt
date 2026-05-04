@@ -1,0 +1,109 @@
+.content {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding-top: 8px;
+    width: 100%;
+}
+
+.titleWithBadge {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.disclaimer {
+    font-size: var(--fontSizeBase200);
+    line-height: 1.4;
+    background: var(--colorStatusWarningBackground1);
+    border: 1px solid var(--colorStatusWarningBorder1);
+    border-radius: 6px;
+    padding: 10px 12px;
+    color: var(--colorStatusWarningForeground1);
+}
+
+.warning {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    font-size: var(--fontSizeBase200);
+    line-height: 1.4;
+    background: var(--colorStatusWarningBackground1);
+    border: 1px solid var(--colorStatusWarningBorder1);
+    border-radius: 6px;
+    padding: 10px 12px;
+    color: var(--colorStatusWarningForeground1);
+}
+
+.warningIcon {
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+.section {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    width: 100%;
+}
+
+.modelList {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    max-height: 240px;
+    overflow-y: auto;
+    border: 1px solid var(--colorNeutralStroke2);
+    border-radius: 6px;
+    padding: 4px;
+    width: 100%;
+}
+
+.modelRow {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 8px;
+    border-radius: 4px;
+    width: 100%;
+    cursor: pointer;
+}
+
+.modelRow:hover {
+    background: var(--colorNeutralBackground1Hover);
+}
+
+.modelMeta {
+    display: flex;
+    flex-direction: column;
+}
+
+.modelLabel {
+    font-weight: 500;
+}
+
+.modelHint {
+    font-size: var(--fontSizeBase200);
+    color: var(--colorNeutralForeground3);
+}
+
+.statusRow {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: var(--fontSizeBase200);
+    color: var(--colorNeutralForeground2);
+}
+
+.downloadRow {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    width: 100%;
+}
+
+.progress {
+    flex: 1;
+}

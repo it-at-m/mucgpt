@@ -1,0 +1,11 @@
+.button {
+    color: var(--app-header-foreground) !important;
+}
+
+.button:hover {
+    background-color: var(--app-header-hover) !important;
+}
+
+.icon {
+    color: var(--app-header-foreground);
+}

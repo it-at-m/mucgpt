@@ -338,9 +338,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
         setQuickPrompts,
         setIsLoadingValue,
         setLastQuestionValue,
-        getRequestedChatId,
         getNewChatToken,
-        clearRequestedChatId,
         clearNewChatRequest,
         resetActiveChatState,
         assistantChatStorage

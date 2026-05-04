@@ -85,14 +85,15 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
     // Parameter from URL
     const { id } = useParams();
     const assistant_id = id || "0";
+    const isLegacyAssistant = /^\d+$/.test(assistant_id);
     const location = useLocation();
     const navigate = useNavigate();
     const isEditMode = location.pathname.endsWith("/edit");
 
     useEffect(() => {
-        if (!isEditMode || strategy.canEdit) return;
+        if (!isEditMode || (strategy.canEdit && !isLegacyAssistant)) return;
         navigate(location.pathname.replace(/\/edit$/, ""), { replace: true });
-    }, [isEditMode, strategy.canEdit, navigate, location.pathname]);
+    }, [isEditMode, strategy.canEdit, isLegacyAssistant, navigate, location.pathname]);
 
     // Context
     const { LLM, setLLM, availableLLMs } = useContext(LLMContext);
@@ -357,6 +358,11 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
     // callApi-Funktion
     const callApi = useCallback(
         async (question: string, dataSources?: DataSource[]) => {
+            if (isLegacyAssistant) {
+                console.warn("Interaction blocked: Assistant is in legacy state and read-only.");
+                return;
+            }
+
             lastQuestionRef.current = question;
             if (error) setError(undefined);
             isLoadingRef.current = true;
@@ -405,7 +411,8 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
             chatMessageStreamEnd,
             fetchHistory,
             selectedTools,
-            lastAnswerRef
+            lastAnswerRef,
+            isLegacyAssistant
         ]
     );
 
@@ -544,10 +551,10 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                         }, 100);
                     }
                 }}
-                readOnly={isDeletedAssistant}
+                readOnly={isDeletedAssistant || isLegacyAssistant}
             ></History>
         ),
-        [allChats, active_chat, fetchHistory, assistantChatStorage, t, scrollToBottom, isDeletedAssistant]
+        [allChats, active_chat, fetchHistory, assistantChatStorage, t, scrollToBottom, isDeletedAssistant, isLegacyAssistant]
     );
 
     // Sidebar component
@@ -559,18 +566,22 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
     const sidebar_actions = useMemo(
         () => (
             <>
-                <ClearChatButton onClick={clearChat} disabled={!lastQuestionRef.current || isLoadingRef.current || isDeletedAssistant} showText={showSidebar} />
+                <ClearChatButton
+                    onClick={clearChat}
+                    disabled={!lastQuestionRef.current || isLoadingRef.current || isDeletedAssistant || isLegacyAssistant}
+                    showText={showSidebar}
+                />
                 <MinimizeSidebarButton showSidebar={showSidebar} setShowSidebar={setAndStoreShowSidebar} />
             </>
         ),
-        [clearChat, lastQuestionRef.current, isLoadingRef.current, showSidebar, isDeletedAssistant]
+        [clearChat, lastQuestionRef.current, isLoadingRef.current, showSidebar, isDeletedAssistant, isLegacyAssistant]
     );
 
     const sidebar = useMemo(() => <Sidebar content={<>{history}</>} actions={sidebar_actions} />, [history, sidebar_actions]);
 
     // Examples component
     const examplesComponent = useMemo(() => {
-        if (isDeletedAssistant) {
+        if (isDeletedAssistant || isLegacyAssistant) {
             return null;
         }
 
@@ -583,6 +594,31 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
 
     // Text-Input component
     const inputComponent = useMemo(() => {
+        if (isLegacyAssistant) {
+            return (
+                <div className={styles.deletedChatWarningWrapper}>
+                    <MessageBar intent="warning" layout="multiline" className={styles.chatWarningBar}>
+                        <MessageBarBody>
+                            <div className={styles.deletedChatWarningContent}>
+                                <div className={styles.deletedChatWarningText}>{t("components.community_assistants.legacy_state_hint")}</div>
+                                <div className={styles.deletedChatActions}>
+                                    <Button
+                                        appearance="primary"
+                                        onClick={async () => {
+                                            await assistantStorageService.deleteConfigAndChatsForAssistant(assistant_id);
+                                            navigate("/");
+                                        }}
+                                    >
+                                        {t("common.delete", "Löschen")}
+                                    </Button>
+                                </div>
+                            </div>
+                        </MessageBarBody>
+                    </MessageBar>
+                </div>
+            );
+        }
+
         if (isDeletedAssistant) {
             const duplicateCandidateSnapshot = deletedAssistantSnapshot;
 
@@ -705,6 +741,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
             />
         );
     }, [
+        isLegacyAssistant,
         isDeletedAssistant,
         isLocalAssistant,
         deletedAssistantSnapshot,
@@ -806,7 +843,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                     onLLMSelectionChange={onLLMSelectionChange}
                     onToggleMinimized={toggleSidebar}
                     actions={
-                        strategy?.canEdit ? (
+                        strategy?.canEdit && !isLegacyAssistant ? (
                             <Button
                                 appearance="subtle"
                                 icon={<Settings24Regular />}
@@ -833,6 +870,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
         answerList,
         inputComponent,
         isDeletedAssistant,
+        isLegacyAssistant,
         lastQuestionRef.current,
         t,
         sidebarSize,
@@ -849,7 +887,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
         isInfoDrawerOpen
     ]);
 
-    if (isEditMode && !strategy.canEdit) {
+    if (isEditMode && (!strategy.canEdit || isLegacyAssistant)) {
         return null;
     }
 

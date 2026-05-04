@@ -292,39 +292,10 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                                 return fetchHistory();
                             }
 
-                            const requestedChatId = getRequestedChatId();
-                            const chatPrefix = AssistantStorageService.GENERATE_BOT_CHAT_PREFIX(assistant_id);
-                            const loadInitialChat =
-                                requestedChatId && requestedChatId.startsWith(chatPrefix)
-                                    ? assistantChatStorage.get(requestedChatId).then(chat => {
-                                          if (!chat) {
-                                              clearRequestedChatId();
-                                          }
-
-                                          return chat ?? null;
-                                      })
-                                    : (() => {
-                                          if (requestedChatId) {
-                                              clearRequestedChatId();
-                                          }
-
-                                          return Promise.resolve(null);
-                                      })();
-
-                            return loadInitialChat
-                                .then(existingChat => {
-                                    if (existingChat) {
-                                        const messages = existingChat.messages;
-                                        dispatch({ type: "SET_ANSWERS", payload: [...answers.concat(messages)] });
-                                        setLastQuestionValue(messages.length > 0 ? messages[messages.length - 1].user : "");
-                                        dispatch({ type: "SET_ACTIVE_CHAT", payload: existingChat.id });
-                                    }
-                                })
-                                .then(() => fetchHistory())
-                                .catch(err => {
-                                    console.error("Error loading chat history:", err);
-                                    showError(t("components.assistant_chat.load_chat_failed"), t("components.assistant_chat.load_chat_failed_message"));
-                                });
+                            return fetchHistory().catch(err => {
+                                console.error("Error loading chat history:", err);
+                                showError(t("components.assistant_chat.load_chat_failed"), t("components.assistant_chat.load_chat_failed_message"));
+                            });
                         } else {
                             showError(t("components.assistant_chat.load_assistant_failed"), t("components.assistant_chat.assistant_not_found"));
                             // wait a moment before redirecting to home
@@ -481,7 +452,19 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
             }
             setIsLoadingValue(false);
         },
-        [error, answers, LLM, assistantChatStorage, fetchHistory, systemPrompt, creativity, selectedTools, setIsLoadingValue, setLastQuestionValue, isLegacyAssistant]
+        [
+            error,
+            answers,
+            LLM,
+            assistantChatStorage,
+            fetchHistory,
+            systemPrompt,
+            creativity,
+            selectedTools,
+            setIsLoadingValue,
+            setLastQuestionValue,
+            isLegacyAssistant
+        ]
     );
 
     useEffect(() => chatMessageStreamEnd.current?.scrollIntoView({ behavior: "smooth" }), [answers.length]);
@@ -647,8 +630,6 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
         },
         [availableLLMs, setLLM, assistantConfig.default_model]
     );
-
-
 
     // Examples component
     const examplesComponent = useMemo(() => {

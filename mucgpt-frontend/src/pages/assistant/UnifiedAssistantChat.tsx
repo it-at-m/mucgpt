@@ -212,11 +212,11 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
     );
     const resetActiveChatState = useCallback(() => {
         setLastQuestionValue("");
-        if (error) setError(undefined);
+        setError(undefined);
         activeChatRef.current = undefined;
         dispatch({ type: "SET_ACTIVE_CHAT", payload: undefined });
         dispatch({ type: "CLEAR_ANSWERS" });
-    }, [error, setLastQuestionValue]);
+    }, [setLastQuestionValue]);
 
     // useEffect to load the assistant config and chat history
     useEffect(() => {

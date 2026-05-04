@@ -1,5 +1,24 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Button, Menu, MenuItem, MenuList, MenuPopover, MenuTrigger, Spinner, Tab, TabList, Tooltip } from "@fluentui/react-components";
+import {
+    Button,
+    Dialog,
+    DialogActions,
+    DialogBody,
+    DialogContent,
+    DialogSurface,
+    DialogTitle,
+    Field,
+    Input,
+    Menu,
+    MenuItem,
+    MenuList,
+    MenuPopover,
+    MenuTrigger,
+    Spinner,
+    Tab,
+    TabList,
+    Tooltip
+} from "@fluentui/react-components";
 import {
     Delete20Regular,
     Edit20Regular,
@@ -39,6 +58,9 @@ export const UnifiedSidebarHistory = ({ requestClose }: UnifiedSidebarHistoryPro
     const [hasLoaded, setHasLoaded] = useState(false);
     const hasLoadedRef = useRef(false);
     const [entryToDelete, setEntryToDelete] = useState<UnifiedHistoryEntry | null>(null);
+    const [renameDialogOpen, setRenameDialogOpen] = useState(false);
+    const [renameCandidate, setRenameCandidate] = useState("");
+    const [renameTargetId, setRenameTargetId] = useState<string | null>(null);
     const [tab, setTab] = useState<HistoryTab>(() => {
         const stored = localStorage.getItem(HISTORY_TAB_STORAGE_KEY);
         return stored === "assistant" ? "assistant" : "all";
@@ -128,16 +150,34 @@ export const UnifiedSidebarHistory = ({ requestClose }: UnifiedSidebarHistoryPro
         }
     };
 
-    const renameEntry = async (entry: UnifiedHistoryEntry) => {
-        const newName = prompt(t("components.history.newchat"), entry.name ?? "");
-        const trimmedName = newName?.trim();
+    const closeRenameDialog = useCallback(() => {
+        setRenameDialogOpen(false);
+        setRenameCandidate("");
+        setRenameTargetId(null);
+    }, []);
+
+    const renameEntry = (entry: UnifiedHistoryEntry) => {
+        setRenameTargetId(entry.id);
+        setRenameCandidate(entry.name ?? "");
+        setRenameDialogOpen(true);
+    };
+
+    const confirmRenameEntry = async () => {
+        const trimmedName = renameCandidate.trim();
         if (!trimmedName) {
+            return;
+        }
+
+        const entry = entries.find(historyEntry => historyEntry.id === renameTargetId);
+        if (!entry) {
+            closeRenameDialog();
             return;
         }
 
         try {
             await storage.renameEntry(entry, trimmedName);
             refreshHistory();
+            closeRenameDialog();
         } catch (error) {
             console.error("Failed to rename history entry", error);
             showError(t("components.history.rename_failed_title"), t("components.history.rename_failed_message"));
@@ -216,7 +256,7 @@ export const UnifiedSidebarHistory = ({ requestClose }: UnifiedSidebarHistoryPro
                                                 <MenuItem icon={<Delete20Regular />} onClick={() => setEntryToDelete(entry)} className={styles.deleteMenuItem}>
                                                     {t("components.history.delete")}
                                                 </MenuItem>
-                                                <MenuItem icon={<Edit20Regular />} onClick={() => void renameEntry(entry)}>
+                                                <MenuItem icon={<Edit20Regular />} onClick={() => renameEntry(entry)}>
                                                     {t("components.history.rename")}
                                                 </MenuItem>
                                                 <MenuItem
@@ -253,6 +293,39 @@ export const UnifiedSidebarHistory = ({ requestClose }: UnifiedSidebarHistoryPro
                 confirmLabel={t("components.history.delete")}
                 confirmIntent="danger"
             />
+            <Dialog open={renameDialogOpen} onOpenChange={(_event, data) => (data.open ? setRenameDialogOpen(true) : closeRenameDialog())} inertTrapFocus>
+                <DialogSurface aria-label={t("components.history.rename")}>
+                    <DialogBody>
+                        <DialogTitle>{t("components.history.rename")}</DialogTitle>
+                        <DialogContent>
+                            <form
+                                id="rename-history-entry-form"
+                                onSubmit={event => {
+                                    event.preventDefault();
+                                    void confirmRenameEntry();
+                                }}
+                            >
+                                <Field label={t("components.history.newchat")}>
+                                    <Input
+                                        autoFocus
+                                        value={renameCandidate}
+                                        onChange={(_event, data) => setRenameCandidate(data.value)}
+                                        aria-label={t("components.history.newchat")}
+                                    />
+                                </Field>
+                            </form>
+                        </DialogContent>
+                        <DialogActions>
+                            <Button appearance="secondary" onClick={closeRenameDialog}>
+                                {t("common.cancel")}
+                            </Button>
+                            <Button appearance="primary" type="submit" form="rename-history-entry-form" disabled={!renameCandidate.trim()}>
+                                {t("components.history.rename")}
+                            </Button>
+                        </DialogActions>
+                    </DialogBody>
+                </DialogSurface>
+            </Dialog>
         </div>
     );
 };

@@ -366,7 +366,14 @@ export const AppSidebar = ({
                                             <Sparkle24Regular />
                                         </span>
                                         <span className={styles.newChatCardBody}>
-                                            <span className={styles.newChatCardTitle}>{t("app_sidebar.new_chat_recent_assistant_title", { assistantName: pageContext?.kind === "assistant" ? (pageContext.assistantTitle ?? t("app_sidebar.new_chat_recent_assistant_fallback")) : t("app_sidebar.new_chat_recent_assistant_fallback") })}</span>
+                                            <span className={styles.newChatCardTitle}>
+                                                {t("app_sidebar.new_chat_recent_assistant_title", {
+                                                    assistantName:
+                                                        pageContext?.kind === "assistant"
+                                                            ? (pageContext.assistantTitle ?? t("app_sidebar.new_chat_recent_assistant_fallback"))
+                                                            : t("app_sidebar.new_chat_recent_assistant_fallback")
+                                                })}
+                                            </span>
                                         </span>
                                     </Card>
                                 ) : (
@@ -394,6 +401,7 @@ export const AppSidebar = ({
                                         className={styles.newChatCard}
                                         onClick={handlePlainChat}
                                         onKeyDown={event => handleCardKeyDown(event, handlePlainChat)}
+                                        role="button"
                                     >
                                         <span className={styles.newChatCardIcon}>
                                             <Chat24Regular />
@@ -409,12 +417,15 @@ export const AppSidebar = ({
                                         className={styles.newChatCard}
                                         onClick={handleRecentAssistantChat}
                                         onKeyDown={event => handleCardKeyDown(event, handleRecentAssistantChat)}
+                                        role="button"
                                     >
                                         <span className={styles.newChatCardIcon}>
                                             <Sparkle24Regular />
                                         </span>
                                         <span className={styles.newChatCardBody}>
-                                            <span className={styles.newChatCardTitle}>{t("app_sidebar.new_chat_recent_assistant_title", { assistantName: recentAssistant.title })}</span>
+                                            <span className={styles.newChatCardTitle}>
+                                                {t("app_sidebar.new_chat_recent_assistant_title", { assistantName: recentAssistant.title })}
+                                            </span>
                                         </span>
                                     </Card>
                                 ) : (

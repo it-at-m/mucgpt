@@ -95,6 +95,7 @@ export const AssistantDetailsSidebar = ({
     const isOwned = assistant ? ownedAssistantIds.has(assistant.id) : false;
     const isDeletedSnapshot = Boolean(assistant?.isDeletedSnapshot);
     const isLocalAssistant = Boolean(assistant?.isLocalAssistant);
+    const isLegacyAssistant = assistant ? /^\d+$/.test(assistant.id) : false;
 
     return (
         <InlineDrawer open={isOpen} position="end" className={styles.inlineDrawer} aria-labelledby="sidebar-title">
@@ -149,7 +150,7 @@ export const AssistantDetailsSidebar = ({
                             </div>
                         )}
 
-                        {assistant && isLocalAssistant && !hideStartChat && (
+                        {assistant && isLocalAssistant && !isLegacyAssistant && !hideStartChat && (
                             <div className={styles.localCallout}>
                                 <Text className={styles.calloutTitle}>{t("components.community_assistants.local_state_title")}</Text>
                                 <Text>{t("components.community_assistants.discovery_local_hint")}</Text>
@@ -173,7 +174,26 @@ export const AssistantDetailsSidebar = ({
                             </div>
                         )}
 
-                        {assistant && !hideStartChat && !isDeletedSnapshot && !isLocalAssistant && (
+                        {assistant && isLegacyAssistant && !hideStartChat && (
+                            <div className={styles.deletedCallout}>
+                                <Text className={styles.calloutTitle}>{t("components.community_assistants.legacy_state_title")}</Text>
+                                <Text>{t("components.community_assistants.legacy_state_hint")}</Text>
+                                <div className={styles.deletedActionRow}>
+                                    {onStartChat && (
+                                        <Button appearance="secondary" icon={<Chat24Regular />} onClick={onStartChat}>
+                                            {t("components.community_assistants.deleted_state_history_action")}
+                                        </Button>
+                                    )}
+                                    {onDelete && (
+                                        <Button appearance="outline" icon={<Delete20Regular />} onClick={onDelete} className={styles.deleteButton}>
+                                            {t("common.delete")}
+                                        </Button>
+                                    )}
+                                </div>
+                            </div>
+                        )}
+
+                        {assistant && !hideStartChat && !isDeletedSnapshot && !isLocalAssistant && !isLegacyAssistant && (
                             <div className={styles.startButtonRow}>
                                 <Button
                                     appearance="primary"

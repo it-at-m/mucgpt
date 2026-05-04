@@ -126,7 +126,9 @@ const CONFIG_RESPONSE: ApplicationConfig = {
     core_version: "0.0.1",
     frontend_version: "0.0.1",
     assistant_version: "0.0.1",
-    document_processing_enabled: true
+    document_processing_enabled: true,
+    footer_link_url: "https://ki.muenchen.de",
+    footer_label: "DAICE"
 };
 
 const DYNAMIC_ASSISTANTS: AssistantCreateResponse[] = buildAssistantList(6);

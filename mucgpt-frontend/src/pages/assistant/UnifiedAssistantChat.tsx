@@ -81,14 +81,15 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
     // Parameter from URL
     const { id } = useParams();
     const assistant_id = id || "0";
+    const isLegacyAssistant = /^\d+$/.test(assistant_id);
     const location = useLocation();
     const navigate = useNavigate();
     const isEditMode = location.pathname.endsWith("/edit");
 
     useEffect(() => {
-        if (!isEditMode || strategy.canEdit) return;
+        if (!isEditMode || (strategy.canEdit && !isLegacyAssistant)) return;
         navigate(location.pathname.replace(/\/edit$/, ""), { replace: true });
-    }, [isEditMode, strategy.canEdit, navigate, location.pathname]);
+    }, [isEditMode, strategy.canEdit, isLegacyAssistant, navigate, location.pathname]);
 
     // Context
     const { LLM, setLLM, availableLLMs } = useContext(LLMContext);
@@ -440,6 +441,11 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
     // callApi-Funktion
     const callApi = useCallback(
         async (question: string, dataSources?: DataSource[]) => {
+            if (isLegacyAssistant) {
+                console.warn("Interaction blocked: Assistant is in legacy state and read-only.");
+                return;
+            }
+
             setLastQuestionValue(question);
             if (error) setError(undefined);
             setIsLoadingValue(true);
@@ -475,7 +481,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
             }
             setIsLoadingValue(false);
         },
-        [error, answers, LLM, assistantChatStorage, fetchHistory, systemPrompt, creativity, selectedTools, setIsLoadingValue, setLastQuestionValue]
+        [error, answers, LLM, assistantChatStorage, fetchHistory, systemPrompt, creativity, selectedTools, setIsLoadingValue, setLastQuestionValue, isLegacyAssistant]
     );
 
     useEffect(() => chatMessageStreamEnd.current?.scrollIntoView({ behavior: "smooth" }), [answers.length]);
@@ -642,9 +648,11 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
         [availableLLMs, setLLM, assistantConfig.default_model]
     );
 
+
+
     // Examples component
     const examplesComponent = useMemo(() => {
-        if (isDeletedAssistant) {
+        if (isDeletedAssistant || isLegacyAssistant) {
             return null;
         }
 
@@ -657,6 +665,31 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
 
     // Text-Input component
     const inputComponent = useMemo(() => {
+        if (isLegacyAssistant) {
+            return (
+                <div className={styles.deletedChatWarningWrapper}>
+                    <MessageBar intent="warning" layout="multiline" className={styles.chatWarningBar}>
+                        <MessageBarBody>
+                            <div className={styles.deletedChatWarningContent}>
+                                <div className={styles.deletedChatWarningText}>{t("components.community_assistants.legacy_state_hint")}</div>
+                                <div className={styles.deletedChatActions}>
+                                    <Button
+                                        appearance="primary"
+                                        onClick={async () => {
+                                            await assistantStorageService.deleteConfigAndChatsForAssistant(assistant_id);
+                                            navigate("/");
+                                        }}
+                                    >
+                                        {t("common.delete", "Löschen")}
+                                    </Button>
+                                </div>
+                            </div>
+                        </MessageBarBody>
+                    </MessageBar>
+                </div>
+            );
+        }
+
         if (isDeletedAssistant) {
             const duplicateCandidateSnapshot = deletedAssistantSnapshot;
 
@@ -779,6 +812,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
             />
         );
     }, [
+        isLegacyAssistant,
         isDeletedAssistant,
         isLocalAssistant,
         deletedAssistantSnapshot,
@@ -878,7 +912,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                     defaultLLM={LLM.llm_name}
                     onLLMSelectionChange={onLLMSelectionChange}
                     actions={
-                        strategy?.canEdit ? (
+                        strategy?.canEdit && !isLegacyAssistant ? (
                             <Button
                                 appearance="subtle"
                                 icon={<Settings24Regular />}
@@ -905,6 +939,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
         inputComponent,
         isDeletedAssistant,
         lastQuestion,
+        isLegacyAssistant,
         t,
         availableLLMs,
         assistantConfig.default_model,
@@ -916,7 +951,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
         isInfoDrawerOpen
     ]);
 
-    if (isEditMode && !strategy.canEdit) {
+    if (isEditMode && (!strategy.canEdit || isLegacyAssistant)) {
         return null;
     }
 

@@ -103,8 +103,7 @@ export const UnifiedSidebarHistory = ({ requestClose }: UnifiedSidebarHistoryPro
             return;
         }
 
-        const hasLocalConfig = await storage.hasLocalAssistantConfig(entry.assistantId);
-        const assistantPath = hasLocalConfig ? `/assistant/${entry.assistantId}` : `/communityassistant/${entry.assistantId}`;
+        const assistantPath = await storage.getAssistantPath(entry.assistantId);
         navigate(`${assistantPath}?chatId=${encodeURIComponent(entry.id)}`);
         requestClose?.();
     };

@@ -2,6 +2,7 @@ import { AssistantStorageService } from "../../service/assistantstorage";
 import { StorageService, type DBObject } from "../../service/storage";
 import { ASSISTANT_STORE, CHAT_STORE } from "../../constants";
 import type { Assistant, ChatResponse } from "../../api";
+import { getOwnedCommunityAssistants } from "../../api/assistant-client";
 
 interface StoredChatOptions {
     system: string;
@@ -128,5 +129,20 @@ export class UnifiedHistoryStorage {
 
     async hasLocalAssistantConfig(assistantId: string): Promise<boolean> {
         return (await this.assistantStorage.getAssistantConfig(assistantId)) !== undefined;
+    }
+
+    async getAssistantPath(assistantId: string): Promise<string> {
+        if (await this.hasLocalAssistantConfig(assistantId)) {
+            return `/assistant/${assistantId}`;
+        }
+
+        const ownedAssistants = await getOwnedCommunityAssistants().catch(error => {
+            console.error("Failed to resolve owned assistant route", error);
+            return [];
+        });
+
+        return ownedAssistants.some(assistant => assistant.id === assistantId)
+            ? `/owned/communityassistant/${assistantId}`
+            : `/communityassistant/${assistantId}`;
     }
 }

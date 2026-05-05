@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { STORAGE_KEYS } from "../../pages/layout/LayoutHelper";
 import { DEFAULT_TRANSCRIPTION_MODEL, TRANSCRIPTION_MODELS } from "../../config/transcriptionModels";
@@ -102,6 +102,8 @@ const defaultValue: ITranscriptionSettings = {
 
 export const TranscriptionSettingsContext = React.createContext<ITranscriptionSettings>(defaultValue);
 
+export const useTranscription = () => useContext(TranscriptionSettingsContext);
+
 export const TranscriptionSettingsProvider = (props: React.PropsWithChildren<unknown>) => {
     const { t, i18n } = useTranslation();
 
@@ -124,6 +126,7 @@ export const TranscriptionSettingsProvider = (props: React.PropsWithChildren<unk
     const workerRef = useRef<Worker | null>(null);
     const languageRef = useRef<TranscriptionLanguage>(localeToWhisperLang(i18n.language));
     const loadedModelIdRef = useRef<string | null>(null);
+    const loadingModelIdRef = useRef<string | null>(null);
     const selectedModelIdRef = useRef<string>(selectedModelId);
     const pendingDownloadRef = useRef<{ id: string; resolve: () => void; reject: (err: Error) => void } | null>(null);
 
@@ -193,6 +196,7 @@ export const TranscriptionSettingsProvider = (props: React.PropsWithChildren<unk
         if (loadedModelIdRef.current === selectedModelId) return;
         const modelCfg = TRANSCRIPTION_MODELS.find(m => m.model_id === selectedModelId);
         setStatus("warming-up");
+        loadingModelIdRef.current = selectedModelId;
         sendToWorker({ type: "load", modelId: selectedModelId, dtype: modelCfg?.dtype, webgpu_only: modelCfg?.webgpu_only, language: languageRef.current });
     }, [workerReady, enabled, selectedModelId, downloadedModels, sendToWorker]);
 
@@ -215,10 +219,12 @@ export const TranscriptionSettingsProvider = (props: React.PropsWithChildren<unk
                         markDownloaded(pending.id);
                         pending.resolve();
                         pendingDownloadRef.current = null;
+                        loadingModelIdRef.current = null;
                     } else {
                         // Pre-warm or startRecording load completed — record which
                         // model is live so startRecording skips the redundant load.
-                        loadedModelIdRef.current = loadingModelId ?? selectedModelIdRef.current;
+                        loadedModelIdRef.current = loadingModelIdRef.current ?? selectedModelIdRef.current;
+                        loadingModelIdRef.current = null;
                     }
                     setModelProgress(100);
                     setLoadingModelId(null);
@@ -248,6 +254,7 @@ export const TranscriptionSettingsProvider = (props: React.PropsWithChildren<unk
                         pending.reject(new Error(msg.message));
                         pendingDownloadRef.current = null;
                     }
+                    loadingModelIdRef.current = null;
                     setError(msg.messageKey ? t(msg.messageKey) : msg.message);
                     setStatus("error");
                     setLoadingModelId(null);
@@ -302,6 +309,7 @@ export const TranscriptionSettingsProvider = (props: React.PropsWithChildren<unk
             setDownloadedBytes(0);
             setTotalBytes(0);
             setLoadingModelId(modelId);
+            loadingModelIdRef.current = modelId;
             setStatus("loading-model");
             return new Promise<void>((resolve, reject) => {
                 pendingDownloadRef.current = { id: modelId, resolve, reject };
@@ -333,8 +341,9 @@ export const TranscriptionSettingsProvider = (props: React.PropsWithChildren<unk
         // Ensure worker has the model loaded (cache hit resolves instantly).
         // Pass language here too so the worker is in sync even without a prior set-language message.
         if (loadedModelIdRef.current !== selectedModelId) {
-            sendToWorker({ type: "load", modelId: selectedModelId, language: languageRef.current });
-            loadedModelIdRef.current = selectedModelId;
+            const modelCfg = TRANSCRIPTION_MODELS.find(m => m.model_id === selectedModelId);
+            sendToWorker({ type: "load", modelId: selectedModelId, dtype: modelCfg?.dtype, webgpu_only: modelCfg?.webgpu_only, language: languageRef.current });
+            loadingModelIdRef.current = selectedModelId;
         }
 
         // Sync language before frames start arriving

@@ -47,6 +47,7 @@ let srTensor: any = null;
 let TensorCtor: any = null;
 
 let loadedModelId: string | null = null;
+let loadingModelId: string | null = null;
 let isLoading = false;
 let hasWebGPU = false;
 let currentLanguage: string | undefined = undefined;
@@ -109,6 +110,9 @@ async function loadModel(
     }
     if (isLoading) {
         warn("[transcription-worker] loadModel called while already loading — ignoring");
+        if (modelId !== loadingModelId) {
+            self.postMessage({ type: "error", message: "Another model is already loading, please wait" } satisfies WorkerOutMessage);
+        }
         return;
     }
 
@@ -116,6 +120,7 @@ async function loadModel(
     transcriber = null;
     vadModel = null;
     loadedModelId = null;
+    loadingModelId = modelId;
     isLoading = true;
 
     try {
@@ -239,6 +244,7 @@ async function loadModel(
         self.postMessage({ type: "error", message: err instanceof Error ? err.message : String(err) } satisfies WorkerOutMessage);
     } finally {
         isLoading = false;
+        loadingModelId = null;
     }
 }
 

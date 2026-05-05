@@ -1,5 +1,6 @@
 {
     "dependencies": {
+        "@huggingface/transformers": "^4.2.0",
         "@fluentui/react": "8.125.5",
         "@fluentui/react-components": "9.73.7",
         "@fluentui/react-icons": "2.0.323",
@@ -53,7 +54,8 @@
     "homepage": "https://it-at-m.github.io/mucgpt/",
     "msw": {
         "workerDirectory": [
-            "dist"
+            "dist",
+            "public"
         ]
     },
     "name": "mucgpt",

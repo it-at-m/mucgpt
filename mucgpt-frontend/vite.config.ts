@@ -9,6 +9,9 @@ export default defineConfig(({ mode }) => {
     return {
         plugins: [react()],
         base: isGHPages ? "/mucgpt/" : "/",
+        worker: {
+            format: "es"
+        },
         build: {
             outDir: "dist",
             sourcemap: !isGHPages,
@@ -18,7 +21,8 @@ export default defineConfig(({ mode }) => {
                         react: ["react", "react-dom", "react-router-dom"],
                         fluentui: ["@fluentui/react", "@fluentui/react-components", "@fluentui/react-icons"],
                         markdown: ["react-markdown", "remark-gfm"],
-                        visualizations: ["markmap-view", "markmap-lib", "mermaid"]
+                        visualizations: ["markmap-view", "markmap-lib", "mermaid"],
+                        transformers: ["@huggingface/transformers"]
                     }
                 }
             }
@@ -43,7 +47,9 @@ export default defineConfig(({ mode }) => {
             },
             allowedHosts: ["host.docker.internal"], // required to use frontend behind proxy (e.g. API Gateway)
             headers: {
-                "x-frame-options": "SAMEORIGIN" // required to use devtools behind proxy (e.g. API Gateway)
+                "x-frame-options": "SAMEORIGIN", // required to use devtools behind proxy (e.g. API Gateway)
+                "Cross-Origin-Opener-Policy": "same-origin", // required for SharedArrayBuffer (ONNX runtime)
+                "Cross-Origin-Embedder-Policy": "credentialless" // allows anonymous cross-origin fetches (e.g. HuggingFace model downloads)
             }
         }
     };

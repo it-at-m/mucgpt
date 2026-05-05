@@ -25,6 +25,7 @@ import { ApiError } from "../../api/fetch-utils";
 import { useGlobalToastContext } from "../../components/GlobalToastHandler/GlobalToastContext";
 import GlobalToastHandler from "../../components/GlobalToastHandler/GlobalToastHandler";
 import TutorialsButton from "../../components/TutorialsButton";
+import { TranscriptionSettingsButton } from "../../components/TranscriptionSettings/TranscriptionSettingsButton";
 import { ToolsProvider } from "../../components/ToolsProvider";
 import Unauthorized from "../Unauthorized";
 import { ConfigContext } from "../../context/ConfigContext";
@@ -94,6 +95,9 @@ const AppShell = ({ config, isLight, languagePreference, onLanguageSelectionChan
                 <LanguageSelector defaultlang={languagePreference} onSelectionChange={onLanguageSelectionChanged} layout="row" label={t("common.language")} />
             </div>
             <div className={styles.mobileUtilityRow}>
+                <TranscriptionSettingsButton />
+            </div>
+            <div className={styles.mobileUtilityRow}>
                 <TutorialsButton />
             </div>
             <div className={styles.mobileUtilityRow}>
@@ -138,6 +142,9 @@ const AppShell = ({ config, isLight, languagePreference, onLanguageSelectionChan
                                     </div>
                                     <div className={styles.headerNavList}>
                                         <LanguageSelector defaultlang={languagePreference} onSelectionChange={onLanguageSelectionChanged} />
+                                    </div>
+                                    <div className={styles.headerNavList}>
+                                        <TranscriptionSettingsButton />
                                     </div>
                                     <div className={styles.headerNavList}>
                                         <ThemeSelector isLight={isLight} onThemeChange={onThemeChange} />

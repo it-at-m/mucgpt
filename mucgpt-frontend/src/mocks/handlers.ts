@@ -1,5 +1,5 @@
 // mocks/handlers.js
-import { http, HttpResponse, delay } from "msw";
+import { http, HttpResponse, delay, passthrough } from "msw";
 import { ApplicationConfig, AssistantCreateResponse, AssistantUpdateInput } from "../api";
 import {
     buildAssistantCreateResponse,
@@ -381,6 +381,8 @@ async function parseUploadHandler({ request }: { request: Request }) {
 }
 
 export const handlers = [
+    http.all("https://huggingface.co/*", () => passthrough()),
+    http.all("https://cdn-lfs.huggingface.co/*", () => passthrough()),
     http.get("/api/backend/config", () => {
         return HttpResponse.json(CONFIG_RESPONSE);
     }),

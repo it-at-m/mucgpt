@@ -8,24 +8,6 @@
     width: 100%;
 }
 
-.inlineTextarea textarea {
-    scrollbar-width: thin;
-    scrollbar-color: var(--colorNeutralStroke1) transparent;
-}
-
-.inlineTextarea textarea::-webkit-scrollbar {
-    width: 4px;
-}
-
-.inlineTextarea textarea::-webkit-scrollbar-thumb {
-    background-color: var(--colorNeutralStroke1);
-    border-radius: 4px;
-}
-
-.inlineTextarea textarea::-webkit-scrollbar-track {
-    background-color: transparent;
-}
-
 /* Expand button: absolute top-right; visible by default and emphasized on hover/focus */
 .expandButton {
     position: absolute;

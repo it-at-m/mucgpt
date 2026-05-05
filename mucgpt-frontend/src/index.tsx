@@ -14,7 +14,6 @@ import Version from "./pages/version/Version";
 import Tutorials from "./pages/tutorials/Tutorials";
 import { LLMContextProvider } from "./components/LLMSelector/LLMContextProvider";
 import { QuickPromptProvider } from "./components/QuickPrompt/QuickPromptProvider";
-import { HeaderContextProvider } from "./pages/layout/HeaderContextProvider";
 import LocalAssistant from "./pages/assistant/LocalAssistant";
 import OwnedCommunityAssistant from "./pages/assistant/OwnedCommunityAssistant";
 import CommunityAssistant from "./pages/assistant/CommunityAssistant";
@@ -166,9 +165,7 @@ enableMocking().then(() => {
                 <LanguageContextProvider>
                     <LLMContextProvider>
                         <QuickPromptProvider>
-                            <HeaderContextProvider>
-                                <RouterProvider router={router} />
-                            </HeaderContextProvider>
+                            <RouterProvider router={router} />
                         </QuickPromptProvider>
                     </LLMContextProvider>
                 </LanguageContextProvider>

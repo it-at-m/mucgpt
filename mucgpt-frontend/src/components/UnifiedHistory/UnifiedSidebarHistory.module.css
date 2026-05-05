@@ -1,0 +1,193 @@
+.root {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
+    width: 100%;
+    gap: 8px;
+}
+
+.historyLabel {
+    flex: 0 0 auto;
+    padding: 2px 4px 0;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--colorNeutralForeground2);
+}
+
+.tabs {
+    flex: 0 0 auto;
+    display: flex;
+    justify-content: center;
+}
+
+.list {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    gap: 2px;
+    min-height: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding-right: 2px;
+}
+
+.row {
+    position: relative;
+    display: flex;
+    align-items: center;
+    width: 100%;
+    min-height: 36px;
+    border-radius: 10px;
+    transition:
+        background-color 120ms ease,
+        transform 180ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.row:hover {
+    background-color: var(--colorNeutralBackground2Hover);
+    transform: translateX(5px);
+}
+
+.row:hover .chatName,
+.row:hover .pinnedIcon {
+    color: var(--colorBrandBackground);
+}
+
+.rowActive {
+    background-color: var(--colorNeutralStroke2);
+}
+
+.rowActive::before {
+    content: "";
+    position: absolute;
+    top: 7px;
+    bottom: 7px;
+    left: 0;
+    width: 3px;
+    border-radius: 999px;
+    background-color: var(--colorBrandBackground);
+}
+
+.chatButton {
+    flex: 1;
+    min-width: 0;
+    width: 100% !important;
+    min-height: 34px;
+    padding-top: 5px !important;
+    padding-bottom: 5px !important;
+    justify-content: flex-start !important;
+    text-align: left;
+}
+
+.chatButton,
+.chatButton:hover,
+.chatButton:active,
+.optionsButton,
+.optionsButton:hover,
+.optionsButton:active {
+    background-color: transparent !important;
+}
+
+.chatButtonContent {
+    display: flex;
+    align-items: center;
+    min-width: 0;
+    width: 100%;
+}
+
+.chatName {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: var(--colorNeutralForeground1);
+}
+
+.pinnedIcon {
+    flex: 0 0 auto;
+    margin-right: 6px;
+    color: var(--colorBrandBackground);
+    font-size: 18px;
+}
+
+.optionsSlot {
+    flex: 0 0 0;
+    width: 0;
+    margin-left: 0;
+    overflow: hidden;
+    opacity: 0;
+    pointer-events: none;
+    transition:
+        flex-basis 120ms ease,
+        width 120ms ease,
+        margin-left 120ms ease,
+        opacity 120ms ease;
+}
+
+.row:hover .optionsSlot,
+.row:focus-within .optionsSlot {
+    flex-basis: 36px;
+    width: 36px;
+    margin-left: 4px;
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.optionsButton {
+    min-width: 32px !important;
+    min-height: 30px;
+}
+
+.menuPopover {
+    overflow: hidden;
+}
+
+.menuList {
+    padding: 4px;
+}
+
+.menuList :global(.fui-MenuItem) {
+    transition:
+        background-color 120ms ease,
+        color 120ms ease,
+        transform 180ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.menuList :global(.fui-MenuItem:hover) {
+    color: var(--colorBrandBackground) !important;
+    background-color: var(--colorNeutralBackground2Hover) !important;
+    transform: translateX(3px);
+}
+
+.menuList :global(.fui-MenuItem:hover svg) {
+    color: var(--colorBrandBackground) !important;
+}
+
+.deleteMenuItem {
+    color: var(--colorPaletteRedForeground1) !important;
+}
+
+.deleteMenuItem :global(svg) {
+    color: var(--colorPaletteRedForeground1) !important;
+}
+
+.menuList :global(.fui-MenuItem).deleteMenuItem:hover {
+    color: var(--colorPaletteRedForeground2) !important;
+    background-color: var(--colorPaletteRedBackground2) !important;
+}
+
+.menuList :global(.fui-MenuItem).deleteMenuItem:hover :global(svg) {
+    color: var(--colorPaletteRedForeground2) !important;
+}
+
+.centerState,
+.emptyState {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 96px;
+    color: var(--colorNeutralForeground3);
+    text-align: center;
+}

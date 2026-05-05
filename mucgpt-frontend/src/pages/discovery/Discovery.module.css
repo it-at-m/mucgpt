@@ -1,9 +1,9 @@
 .pageWrapper {
-    position: fixed;
-    top: 50px;
-    left: 0;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
     width: 100%;
-    bottom: 0;
     overflow: hidden;
     z-index: 1;
 }
@@ -23,7 +23,6 @@
     transition: width 0.3s cubic-bezier(0.33, 1, 0.68, 1);
     overflow-y: auto;
     height: 100%;
-    scrollbar-color: var(--colorBrandBackground) var(--colorNeutralBackground1);
 }
 
 .contentWrapper {

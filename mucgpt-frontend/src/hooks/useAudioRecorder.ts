@@ -72,20 +72,24 @@ export function useAudioRecorder(): UseAudioRecorderReturn {
             if (recordingState === "recording") return;
 
             const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
-            streamRef.current = stream;
 
             // Request 16 kHz directly — the browser resamples from the device
             // rate, so no manual resampling step is needed downstream.
             const audioCtx = new AudioContext({ sampleRate: 16000 });
-            audioContextRef.current = audioCtx;
-
             const blob = new Blob([PCM_PROCESSOR_CODE], { type: "application/javascript" });
             const url = URL.createObjectURL(blob);
             try {
                 await audioCtx.audioWorklet.addModule(url);
-            } finally {
+            } catch (err) {
                 URL.revokeObjectURL(url);
+                stream.getTracks().forEach(t => t.stop());
+                await audioCtx.close();
+                throw err;
             }
+            URL.revokeObjectURL(url);
+
+            streamRef.current = stream;
+            audioContextRef.current = audioCtx;
 
             const source = audioCtx.createMediaStreamSource(stream);
             sourceRef.current = source;

@@ -1,5 +1,7 @@
 * {
     box-sizing: border-box;
+    scrollbar-color: var(--colorNeutralStroke1) var(--colorNeutralBackground1);
+    scrollbar-width: thin;
 }
 
 :root {

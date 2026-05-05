@@ -10,7 +10,6 @@ import { useContext, useEffect, useMemo, useState } from "react";
 import { AssistantStorageService } from "../../service/assistantstorage";
 import { AssistantResponse, CommunityAssistant } from "../../api/models";
 import { ASSISTANT_STORE } from "../../constants";
-import { DEFAULTHEADER, HeaderContext } from "../layout/HeaderContextProvider";
 import { UserContext } from "../layout/UserContextProvider";
 import { QuestionInput } from "../../components/QuestionInput/QuestionInput";
 import { getAllCommunityAssistantsApi, getUserSubscriptionsApi, getOwnedCommunityAssistants } from "../../api/assistant-client";
@@ -69,13 +68,8 @@ const Home = () => {
     const [loadError, setLoadError] = useState(false);
     const { tools } = useToolsContext();
 
-    const { setHeader } = useContext(HeaderContext);
     const { user } = useContext(UserContext);
     const config = useContext(ConfigContext);
-
-    useEffect(() => {
-        setHeader(DEFAULTHEADER);
-    }, [setHeader]);
 
     useEffect(() => {
         if (user) {
@@ -286,6 +280,13 @@ const Home = () => {
     const sectionHeading = t("home.assistants");
     const sectionLabel = mode === "recent" ? t("home.last_used") : t("home.recommended");
 
+    const footerLinkHref = useMemo(() => {
+        const candidate = config?.footer_link_url?.trim();
+        if (!candidate) return "https://ki.muenchen.de";
+        if (/^https?:\/\//i.test(candidate) || candidate.startsWith("/")) return candidate;
+        return "https://ki.muenchen.de";
+    }, [config?.footer_link_url]);
+
     return (
         <div className={styles.pageContainer}>
             <section className={styles.chatstartercontainer} aria-labelledby="chat-header">
@@ -398,8 +399,8 @@ const Home = () => {
                         <div className={styles.footerCenterBlock}>
                             <div className={styles.footerCompanyBlock}>
                                 <span>{t("common.footer_credit", "Made with ❤️ & ☕ by")}</span>{" "}
-                                <a href="https://ki.muenchen.de" target="_blank" rel="noreferrer" className={styles.footerCompanyLink}>
-                                    KIES
+                                <a href={footerLinkHref} target="_blank" rel="noreferrer noopener" className={styles.footerCompanyLink}>
+                                    {config?.footer_label || "DAICE"}
                                 </a>
                             </div>
                         </div>

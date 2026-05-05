@@ -1,6 +1,6 @@
 import { Button, Textarea, type TextareaOnChangeData, Tooltip } from "@fluentui/react-components";
 import { Send28Filled, DocumentAdd24Regular } from "@fluentui/react-icons";
-import { useCallback, useContext, useEffect, useRef, useState, type Dispatch, type SetStateAction } from "react";
+import { useCallback, useEffect, useRef, useState, type Dispatch, type SetStateAction } from "react";
 import { useTranslation } from "react-i18next";
 
 import styles from "./QuestionInput.module.css";
@@ -11,7 +11,7 @@ import { upsertParsedDocumentFromUpload } from "../../service/parsedDocumentStor
 import { ContextManagerDialog, UploadedData, createUploadedData, getDataSignature, getFileSignature } from "../ContextManagerDialog/ContextManagerDialog";
 import { ChatToolSelector } from "../ChatToolSelector/ChatToolSelector";
 import { MicrophoneButton } from "../MicrophoneButton/MicrophoneButton";
-import { TranscriptionSettingsContext } from "../TranscriptionSettings/TranscriptionSettingsContext";
+import { useTranscription } from "../TranscriptionSettings/TranscriptionSettingsContext";
 
 interface Props {
     onSend: (question: string, data: UploadedData[]) => void;
@@ -64,7 +64,7 @@ export const QuestionInput = ({
     const [isDragActive, setIsDragActive] = useState(false);
     const dragCounterRef = useRef(0);
     const recordingBaseRef = useRef("");
-    const { isModelReady: transcriptionReady, status: transcriptionStatus } = useContext(TranscriptionSettingsContext);
+    const { isModelReady: transcriptionReady, status: transcriptionStatus } = useTranscription();
     const isTranscriptionActive = transcriptionStatus === "recording" || transcriptionStatus === "transcribing";
 
     const uploadedData = externalUploadedData ?? internalUploadedData;
@@ -371,7 +371,11 @@ export const QuestionInput = ({
                                     recordingBaseRef.current = question;
                                 }}
                                 onLiveTranscription={text => setQuestion(recordingBaseRef.current ? `${recordingBaseRef.current} ${text}` : text)}
-                                onTranscription={text => setQuestion(recordingBaseRef.current ? `${recordingBaseRef.current} ${text}` : text)}
+                                onTranscription={text => {
+                                    const full = recordingBaseRef.current ? `${recordingBaseRef.current} ${text}` : text;
+                                    setQuestion(full);
+                                    onTranscription?.(full);
+                                }}
                                 disabled={disabled}
                             />
                         )}

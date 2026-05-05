@@ -4,7 +4,7 @@ import { handlers } from "./handlers";
 export const worker = setupWorker(...(handlers as any));
 
 export const startMockServiceWorker = () => {
-    worker.start({ onUnhandledRequest: () => {} });
+    return worker.start({ onUnhandledRequest: () => {} });
 };
 
 export const stopMockServiceWorker = () => {

@@ -117,7 +117,7 @@ export const TranscriptionSettingsDialog = ({ open, onOpenChange }: Props) => {
                                     {TRANSCRIPTION_MODELS.map(m => {
                                         const isDownloaded = downloadedModels.includes(m.model_id);
                                         return (
-                                            <div key={m.model_id} className={styles.modelRow} onClick={() => setSelectedModelId(m.model_id)}>
+                                            <div key={m.model_id} className={styles.modelRow} onClick={() => enabled && setSelectedModelId(m.model_id)}>
                                                 <Radio
                                                     value={m.model_id}
                                                     label={

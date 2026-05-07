@@ -17,6 +17,8 @@ from config.settings import get_mcp_settings
 from core.auth import AuthenticationResult
 from core.logtools import getLogger
 
+logger = getLogger(name="mucgpt-core-tools-schema")
+
 TOOL_INSTRUCTIONS_TEMPLATE = """
 # Tools
 ## Available tools:
@@ -31,13 +33,49 @@ TOOL_INSTRUCTIONS_TEMPLATE = """
 
 
 def select_agent_state_schema(tools: list[BaseTool]) -> type[DefaultAgentState]:
-    tool_groups = set()
+    tool_groups: set[str] = set()
+    tool_group_details: list[str] = []
+
     for tool in tools:
-        if tool.metadata:
-            tool_groups.add(tool.metadata.get("mcp_group", "default"))
-    if len(tool_groups) > 1:
+        metadata = getattr(tool, "metadata", None)
+        if metadata:
+            group = metadata.get("mcp_group", "default")
+            source = metadata.get("mcp_source", "unknown-source")
+            tool_groups.add(group)
+            tool_group_details.append(f"{tool.name}:{group} (source={source})")
+
+    if not tool_groups:
+        logger.info(
+            "Schema decision: DefaultAgentState because no tool groups were found on %d selected tools.",
+            len(tools),
+        )
         return DefaultAgentState
-    return AGENT_STATE_SCHEMA_REGISTRY.get(f"{list(tool_groups)[0]}", DefaultAgentState)
+
+    if len(tool_groups) > 1:
+        logger.warning(
+            "Schema decision: DefaultAgentState because multiple mcp_group values were detected: %s. Tool/group mapping: %s",
+            sorted(tool_groups),
+            ", ".join(tool_group_details),
+        )
+        return DefaultAgentState
+
+    group = list(tool_groups)[0]
+    selected_schema = AGENT_STATE_SCHEMA_REGISTRY.get(group)
+    if selected_schema is None:
+        logger.info(
+            "Schema decision: DefaultAgentState because group '%s' has no registered state schema. Registry keys: %s",
+            group,
+            sorted(AGENT_STATE_SCHEMA_REGISTRY.keys()),
+        )
+        return DefaultAgentState
+
+    logger.info(
+        "Schema decision: %s because all selected tools resolve to single group '%s'. Tool/group mapping: %s",
+        selected_schema.__name__,
+        group,
+        ", ".join(tool_group_details),
+    )
+    return selected_schema
 
 
 class ToolCollection:
@@ -202,9 +240,7 @@ class ToolCollection:
                 tool_name=tool_name,
                 mcp_sources=mcp_source_keys,
             )
-            mcp_scope = tool_runtime_metadata.get(
-                "mcp_group"
-                )
+            mcp_scope = tool_runtime_metadata.get("mcp_group")
             if meta:
                 tools_info.append(
                     ToolInfo(

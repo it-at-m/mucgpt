@@ -436,4 +436,19 @@ def get_policy_for_state(state_type: type) -> DefaultScopePolicy:
     global _POLICY_REGISTRY
     if _POLICY_REGISTRY is None:
         _POLICY_REGISTRY = _build_policy_registry()
-    return _POLICY_REGISTRY.get(state_type, _DEFAULT_POLICY)
+
+    policy = _POLICY_REGISTRY.get(state_type)
+    if policy is None:
+        logger.warning(
+            "Policy decision: using %s because no policy is registered for state type '%s'.",
+            _DEFAULT_POLICY.__class__.__name__,
+            getattr(state_type, "__name__", str(state_type)),
+        )
+        return _DEFAULT_POLICY
+
+    logger.info(
+        "Policy decision: using %s for state type '%s'.",
+        policy.__class__.__name__,
+        getattr(state_type, "__name__", str(state_type)),
+    )
+    return policy

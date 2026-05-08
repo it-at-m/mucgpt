@@ -207,7 +207,13 @@ const createFluentThemeOverrides = (tokens: AppThemeTokens): Partial<Theme> => (
     colorStatusDangerForegroundInverted: tokens.statusErrorForeground,
     colorStatusDangerBorderActive: tokens.statusErrorBorder,
     colorStatusDangerBorder1: tokens.statusErrorBorder,
-    colorStatusDangerBorder2: tokens.statusErrorBorder
+    colorStatusDangerBorder2: tokens.statusErrorBorder,
+
+    // Make everything rounder / less square
+    borderRadiusSmall: "6px",
+    borderRadiusMedium: "10px",
+    borderRadiusLarge: "12px",
+    borderRadiusXLarge: "16px"
 });
 
 export const getAppTokens = (isLight: boolean): AppThemeTokens => (isLight ? lightThemeTokens : darkThemeTokens);

@@ -1,4 +1,4 @@
-import { useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Title1, Body1, Text, SearchBox, Dropdown, Option, Button, Tooltip, TabList, Tab } from "@fluentui/react-components";
 import type { SearchBoxChangeEvent, InputOnChangeData, SelectionEvents, OptionOnSelectData, SelectTabData, SelectTabEvent } from "@fluentui/react-components";
@@ -15,7 +15,6 @@ import {
     createCommunityAssistantApi
 } from "../../api/assistant-client";
 import { Assistant, AssistantResponse, CommunityAssistantSnapshot } from "../../api/models";
-import { HeaderContext, DEFAULTHEADER } from "../layout/HeaderContextProvider";
 import { AddAssistantButton } from "../../components/AddAssistantButton/AddAssistantButton";
 import { AssistantStorageService } from "../../service/assistantstorage";
 import { CommunityAssistantStorageService } from "../../service/communityassistantstorage";
@@ -49,7 +48,6 @@ const getSnapshotUpdatedAt = (snapshot: CommunityAssistantSnapshot): string | un
 const Discovery = () => {
     const { t } = useTranslation();
     const navigate = useNavigate();
-    const { setHeader } = useContext(HeaderContext);
     const { showError, showSuccess } = useGlobalToastContext();
 
     const [allAssistants, setAllAssistants] = useState<AssistantCardData[]>([]);
@@ -89,10 +87,6 @@ const Discovery = () => {
         },
         []
     );
-
-    useEffect(() => {
-        setHeader(DEFAULTHEADER);
-    }, [setHeader]);
 
     const exportAssistant = useCallback(async () => {
         if (!selectedAssistant || selectedAssistant.isLocalAssistant) return;

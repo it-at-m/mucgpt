@@ -44,7 +44,7 @@ repos:
   - repo: local
     hooks:
       - id: prettier
-        name: Run npm run fix
-        entry: npm run fix
+        name: Run frontend fix
+        entry: npm --prefix mucgpt-frontend run fix
         language: system
         files: ^mucgpt-frontend/src/

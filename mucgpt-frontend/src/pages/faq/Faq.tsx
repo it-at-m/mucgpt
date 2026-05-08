@@ -1,34 +1,12 @@
-import { Dismiss24Regular } from "@fluentui/react-icons";
 import styles from "./Faq.module.css";
-import { Accordion, AccordionHeader, AccordionItem, AccordionPanel, Button, Link, Tooltip } from "@fluentui/react-components";
+import { Accordion, AccordionHeader, AccordionItem, AccordionPanel, Link } from "@fluentui/react-components";
 import { useTranslation } from "react-i18next";
-import { useNavigate } from "react-router-dom";
-import { useContext } from "react";
-import { HeaderContext } from "../layout/HeaderContextProvider";
 
 const Faq = () => {
     const { t } = useTranslation();
-    const { setHeader } = useContext(HeaderContext);
-    setHeader("FAQs");
-    const navigate = useNavigate();
-    const onClose = () => {
-        navigate("/");
-    };
 
     return (
         <div className={styles.container}>
-            <div className={styles.commandsContainer}>
-                <Tooltip content={t("common.close")} relationship="description" positioning="below">
-                    <Button
-                        aria-label={t("common.close")}
-                        icon={<Dismiss24Regular className={styles.system_prompt_warining_icon} />}
-                        appearance="transparent"
-                        onClick={onClose}
-                        size="large"
-                    ></Button>
-                </Tooltip>
-            </div>
-
             <div className={styles.faqRoot}>
                 <h1 className={styles.header}>FAQs</h1>
                 <Accordion multiple collapsible navigation="linear">

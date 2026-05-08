@@ -1,3 +1,5 @@
+from typing import Any
+
 from langchain.agents.middleware import AgentState
 
 
@@ -7,3 +9,5 @@ class DefaultAgentState(AgentState):
     Uses ``DefaultScopePolicy`` (no-op) — all available tools are forwarded
     to the model unchanged.  This is the classic ReAct agent behaviour.
     """
+
+    data_sources: list[Any] | None

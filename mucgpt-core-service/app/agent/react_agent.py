@@ -105,7 +105,11 @@ class _ConfiguredLangChainAgentGraph:
             tools_to_use
         )
         logger.info(f"Using agent state schema: {agent_state_schema}")
-        return model, messages, tools_to_use, agent_state_schema
+
+        configurable = config.get("configurable", {}) if config else {}
+        data_sources = configurable.get("data_sources", [])
+
+        return model, messages, tools_to_use, agent_state_schema, data_sources
 
     async def astream(
         self,
@@ -115,21 +119,25 @@ class _ConfiguredLangChainAgentGraph:
         config: RunnableConfig | None = None,
         **kwargs,
     ):
-        model, messages, tools_to_use, agent_state_schema = self._prepare_run(
-            input_data, config
+        model, messages, tools_to_use, agent_state_schema, data_sources = (
+            self._prepare_run(input_data, config)
         )
+
         active_agent = self.agent
         if (
             tools_to_use != self.tools
             or model is not self.model
             or agent_state_schema
             != _ConfiguredLangChainAgentGraph.get_schema_from_tools(self.tools)
+            or data_sources
         ):
             active_agent = create_agent(
                 model=cast(Any, model),
                 tools=tools_to_use,
                 middleware=[
-                    ContextMiddleware(state_schema=agent_state_schema),
+                    ContextMiddleware(
+                        state_schema=agent_state_schema, data_sources=data_sources
+                    ),
                     ToolErrorMiddleware(),
                 ],
                 system_prompt=DEFAULT_INSTRUCTIONS
@@ -138,8 +146,13 @@ class _ConfiguredLangChainAgentGraph:
                 debug=self.debug,
                 state_schema=agent_state_schema,
             )
+
+        input_payload = {"messages": messages}
+        if data_sources:
+            input_payload["data_sources"] = data_sources  # type: ignore
+
         async for item in active_agent.astream(
-            {"messages": messages},
+            input_payload,
             stream_mode=stream_mode,
             config=config,
             **kwargs,
@@ -153,21 +166,25 @@ class _ConfiguredLangChainAgentGraph:
         config: RunnableConfig | None = None,
         **kwargs,
     ):
-        model, messages, tools_to_use, agent_state_schema = self._prepare_run(
-            input_data, config
+        model, messages, tools_to_use, agent_state_schema, data_sources = (
+            self._prepare_run(input_data, config)
         )
+
         active_agent = self.agent
         if (
             tools_to_use != self.tools
             or model is not self.model
             or agent_state_schema
             != _ConfiguredLangChainAgentGraph.get_schema_from_tools(self.tools)
+            or data_sources
         ):
             active_agent = create_agent(
                 model=cast(Any, model),
                 tools=tools_to_use,
                 middleware=[
-                    ContextMiddleware(state_schema=agent_state_schema),
+                    ContextMiddleware(
+                        state_schema=agent_state_schema, data_sources=data_sources
+                    ),
                     ToolErrorMiddleware(),
                 ],
                 system_prompt=DEFAULT_INSTRUCTIONS
@@ -176,9 +193,12 @@ class _ConfiguredLangChainAgentGraph:
                 debug=self.debug,
                 state_schema=agent_state_schema,
             )
-        return await active_agent.ainvoke(
-            {"messages": messages}, config=config, **kwargs
-        )
+
+        input_payload = {"messages": messages}
+        if data_sources:
+            input_payload["data_sources"] = data_sources  # type: ignore
+
+        return await active_agent.ainvoke(input_payload, config=config, **kwargs)
 
 
 class MUCGPTReActAgent:

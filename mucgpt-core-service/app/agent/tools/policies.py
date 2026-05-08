@@ -5,6 +5,8 @@ from typing import Any
 
 from langchain.agents.middleware import ModelRequest
 from langchain_core.messages import SystemMessage
+from langchain_core.runnables.config import merge_configs
+from langgraph.config import get_config as get_runtime_config
 
 from agent.state_models.atlassian_state import AtlassianAgentState, ScopeDecision
 from core.logtools import getLogger
@@ -62,12 +64,14 @@ class DefaultScopePolicy:
     def infer_scope(
         self,
         request: ModelRequest,
+        callbacks: list | None = None,
     ) -> ModelRequest:
         return request
 
     async def ainfer_scope(
         self,
         request: ModelRequest,
+        callbacks: list | None = None,
     ) -> ModelRequest:
         return request
 
@@ -240,6 +244,7 @@ class AtlassianScopePolicy(DefaultScopePolicy):
     async def ainfer_scope(
         self,
         request: ModelRequest,
+        callbacks: list | None = None,
     ) -> ModelRequest:
         # NOTE: currently the frontend is stateless!
         #       this means that there is no agent state persisted across messages, so we have to infer the scope from the message history on every turn.
@@ -278,11 +283,38 @@ class AtlassianScopePolicy(DefaultScopePolicy):
             ],
         ]
 
+        # Prefer the current request model to preserve callback lineage and
+        # keep routing traces nested under the active agent run.
+        routing_model = self.model
+        request_model = getattr(request, "model", None)
+        if request_model is not None:
+            try:
+                routing_model = request_model.with_config(
+                    {
+                        "configurable": {
+                            "llm_streaming": False,
+                            "llm_temperature": 0,
+                        }
+                    }
+                ).with_structured_output(ScopeDecision)
+            except Exception:
+                # Fall back to the dedicated router model when request model
+                # cannot be adapted to structured output.
+                routing_model = self.model
+
         try:
-            result: ScopeDecision = await self.model.ainvoke(
-                messages,
-                config={
-                    "callbacks": [],
+            parent_config: dict[str, Any] = {}
+            try:
+                parent_config = get_runtime_config() or {}
+            except Exception:
+                # If no runtime config is available, fall back to local config only.
+                parent_config = {}
+
+            effective_callbacks = parent_config.get("callbacks") or callbacks or []
+            router_config = merge_configs(
+                parent_config,
+                {
+                    "callbacks": effective_callbacks,
                     "run_name": "internal_scope_router",
                     "tags": ["internal", "scope-router"],
                     "metadata": {
@@ -293,6 +325,11 @@ class AtlassianScopePolicy(DefaultScopePolicy):
                         "llm_streaming": False,
                     },
                 },
+            )
+
+            result: ScopeDecision = await routing_model.ainvoke(
+                messages,
+                config=router_config,
             )  # type: ignore
             scope = result.scope.lower()
             confidence = result.confidence

@@ -1,3 +1,4 @@
+import hashlib
 import re
 import time
 import uuid
@@ -13,6 +14,7 @@ from langchain_core.messages import (
 )
 from langchain_core.runnables import RunnableConfig
 from langchain_core.runnables.config import merge_configs
+from langfuse import observe, propagate_attributes
 
 from agent.react_agent import MUCGPTReActAgent
 from agent.tools.tool_chunk import ToolStreamChunk
@@ -45,6 +47,31 @@ def _convert_to_langchain_messages(messages: list[InputMessage]) -> list[BaseMes
         else:
             msgs.append(AIMessage(m.content))
     return msgs
+
+
+def _hash_user_id(user_id: str | None) -> str | None:
+    """Return a deterministic SHA-256 hash for user IDs used in tracing."""
+    if not user_id:
+        return None
+    return hashlib.sha256(user_id.encode("utf-8")).hexdigest()
+
+
+def _is_internal_chunk(metadata: dict[str, Any]) -> bool:
+    """Return True when a streamed chunk belongs to internal helper calls."""
+    if metadata.get("stream_to_user") is False or metadata.get("internal") is True:
+        return True
+
+    run_name = str(metadata.get("run_name") or "").strip().lower()
+    if run_name == "internal_scope_router":
+        return True
+
+    tags = metadata.get("tags") or []
+    if isinstance(tags, list):
+        normalized_tags = {str(tag).strip().lower() for tag in tags}
+        if "internal" in normalized_tags or "scope-router" in normalized_tags:
+            return True
+
+    return False
 
 
 def toolchunk_to_chatcompletionchunk(
@@ -87,9 +114,6 @@ class MUCGPTAgentExecutor:
         self.base_config: RunnableConfig = RunnableConfig(
             callbacks=callbacks,
             run_name="MUCGPTAgent",
-            metadata={
-                "langfuse_tags": ["default-assistant"],
-            },
         )
 
     @staticmethod
@@ -108,6 +132,7 @@ class MUCGPTAgentExecutor:
             return None
         return {"metadata": {"tags": tags}}
 
+    @observe(name="Agent", capture_input=False, capture_output=False)
     async def run_with_streaming(
         self,
         messages: list[InputMessage],
@@ -132,111 +157,129 @@ class MUCGPTAgentExecutor:
         )
         llm_user = dept_prefix
         llm_extra_body = self._build_llm_extra_body(assistant_id)
-        config = merge_configs(
-            self.base_config,
-            RunnableConfig(
-                configurable={
-                    "llm_temperature": temperature,
-                    "llm": model,
-                    "llm_streaming": True,
-                    "enabled_tools": enabled_tools,
-                    "agent_state": {"current_scope": "general"},
-                    "user_info": user_info,
-                    "llm_user": llm_user,
-                    "llm_extra_body": llm_extra_body,
-                    "assistant_id": assistant_id,
-                    "data_sources": data_sources,
-                },
-            ),
+        tags = (
+            [f"assistant-{assistant_id}"]
+            if assistant_id is not None
+            else ["default-assistant"]
         )
-        if assistant_id is not None:
-            config["metadata"]["langfuse_tags"] = [f"assistant-{assistant_id}"]
+        with propagate_attributes(
+            user_id=_hash_user_id(user_info.user_id if user_info else None),
+            tags=tags,
+        ):
+            config = merge_configs(
+                self.base_config,
+                RunnableConfig(
+                    configurable={
+                        "llm_temperature": temperature,
+                        "llm": model,
+                        "llm_streaming": True,
+                        "enabled_tools": enabled_tools,
+                        "agent_state": {"current_scope": "general"},
+                        "user_info": user_info,
+                        "llm_user": llm_user,
+                        "llm_extra_body": llm_extra_body,
+                        "assistant_id": assistant_id,
+                        "data_sources": data_sources,
+                    },
+                ),
+            )
 
-        if enabled_tools:
-            logger.debug("Enabled tools for this request: %s", ", ".join(enabled_tools))
-        try:
-            async for item in self.agent.graph.astream(
-                {"messages": msgs}, stream_mode=["messages", "custom"], config=config
-            ):
-                # item is a tuple of (messages, (message_chunk, meta_data)) or a tool call chunk
-                if not isinstance(item, tuple) or len(item) != 2:
-                    logger.error(
-                        "Unexpected item format in streaming response: %s", item
-                    )
-                    continue
-                if isinstance(item, tuple) and item[0] == "messages":
-                    _, (message_chunk, metadata) = item
-                    # only stream assistant model output and no tool chunks
-                    if metadata.get("langgraph_node") in {
-                        "call_model",
-                        "assistant",
-                        "model",
-                    } and isinstance(message_chunk, AIMessageChunk):
-                        chunk_content = message_chunk.content
-                        if chunk_content is None:
+            if enabled_tools:
+                logger.debug(
+                    "Enabled tools for this request: %s", ", ".join(enabled_tools)
+                )
+            try:
+                async for item in self.agent.graph.astream(
+                    {"messages": msgs},
+                    stream_mode=["messages", "custom"],
+                    config=config,
+                ):
+                    # item is a tuple of (messages, (message_chunk, meta_data)) or a tool call chunk
+                    if not isinstance(item, tuple) or len(item) != 2:
+                        logger.error(
+                            "Unexpected item format in streaming response: %s", item
+                        )
+                        continue
+                    if isinstance(item, tuple) and item[0] == "messages":
+                        _, (message_chunk, metadata) = item
+                        if isinstance(metadata, dict) and _is_internal_chunk(metadata):
                             continue
-                        if isinstance(chunk_content, str):
-                            # Skip only when the chunk is truly empty; spaces need to stream for proper formatting.
-                            if chunk_content == "":
+                        # only stream assistant model output and no tool chunks
+                        if metadata.get("langgraph_node") in {
+                            "call_model",
+                            "assistant",
+                            "model",
+                        } and isinstance(message_chunk, AIMessageChunk):
+                            chunk_content = message_chunk.content
+                            if chunk_content is None:
                                 continue
-                        else:
-                            # If content is not a string (e.g., list for multimodal), keep existing behavior and pass through.
-                            pass
-                        yield ChatCompletionChunk(
-                            id=id_,
-                            object="chat.completion.chunk",
-                            created=created,
-                            choices=[
-                                ChatCompletionChunkChoice(
-                                    delta=ChatCompletionDelta(content=chunk_content),
-                                    index=0,
-                                    finish_reason=None,
-                                )
-                            ],
-                        ).model_dump()
-                elif isinstance(item, tuple) and item[0] == "custom":
-                    try:
-                        chunk_obj = ToolStreamChunk.model_validate_json(item[1])
-                        yield toolchunk_to_chatcompletionchunk(
-                            chunk_obj, id_, created
-                        ).model_dump()
-                    except Exception:
-                        logger.debug("Non-ToolStreamChunk custom chunk: %s", item[1])
-                else:
-                    logger.error(
-                        "Unexpected item type in streaming response: %s", type(item)
-                    )
-                    continue
-            logger.debug("Streaming completed successfully.")
-        except Exception as ex:
-            logger.error("Streaming error: %s", str(ex), exc_info=True)
-            error_msg = llm_exception_handler(ex=ex, logger=logger)
+                            if isinstance(chunk_content, str):
+                                # Skip only when the chunk is truly empty; spaces need to stream for proper formatting.
+                                if chunk_content == "":
+                                    continue
+                            else:
+                                # If content is not a string (e.g., list for multimodal), keep existing behavior and pass through.
+                                pass
+                            yield ChatCompletionChunk(
+                                id=id_,
+                                object="chat.completion.chunk",
+                                created=created,
+                                choices=[
+                                    ChatCompletionChunkChoice(
+                                        delta=ChatCompletionDelta(
+                                            content=chunk_content
+                                        ),
+                                        index=0,
+                                        finish_reason=None,
+                                    )
+                                ],
+                            ).model_dump()
+                    elif isinstance(item, tuple) and item[0] == "custom":
+                        try:
+                            chunk_obj = ToolStreamChunk.model_validate_json(item[1])
+                            yield toolchunk_to_chatcompletionchunk(
+                                chunk_obj, id_, created
+                            ).model_dump()
+                        except Exception:
+                            logger.debug(
+                                "Non-ToolStreamChunk custom chunk: %s", item[1]
+                            )
+                    else:
+                        logger.error(
+                            "Unexpected item type in streaming response: %s", type(item)
+                        )
+                        continue
+                logger.debug("Streaming completed successfully.")
+            except Exception as ex:
+                logger.error("Streaming error: %s", str(ex), exc_info=True)
+                error_msg = llm_exception_handler(ex=ex, logger=logger)
+                yield ChatCompletionChunk(
+                    id=id_,
+                    object="chat.completion.chunk",
+                    created=created,
+                    choices=[
+                        ChatCompletionChunkChoice(
+                            delta=ChatCompletionDelta(content=error_msg),
+                            index=0,
+                            finish_reason="error",
+                        )
+                    ],
+                ).model_dump()
+                return
+
+            logger.debug("Sending end-of-stream signal")
             yield ChatCompletionChunk(
                 id=id_,
                 object="chat.completion.chunk",
                 created=created,
                 choices=[
                     ChatCompletionChunkChoice(
-                        delta=ChatCompletionDelta(content=error_msg),
-                        index=0,
-                        finish_reason="error",
+                        delta=ChatCompletionDelta(), index=0, finish_reason="stop"
                     )
                 ],
             ).model_dump()
-            return
 
-        logger.debug("Sending end-of-stream signal")
-        yield ChatCompletionChunk(
-            id=id_,
-            object="chat.completion.chunk",
-            created=created,
-            choices=[
-                ChatCompletionChunkChoice(
-                    delta=ChatCompletionDelta(), index=0, finish_reason="stop"
-                )
-            ],
-        ).model_dump()
-
+    @observe(name="Completion", capture_input=False, capture_output=False)
     def run_without_streaming(
         self,
         messages: list[InputMessage],
@@ -258,67 +301,76 @@ class MUCGPTAgentExecutor:
         )
         llm_user = dept_prefix
         llm_extra_body = self._build_llm_extra_body(assistant_id)
-        request_config = RunnableConfig(
-            configurable={
-                "llm_temperature": temperature,
-                "llm": model,
-                "llm_streaming": False,
-                "enabled_tools": enabled_tools,
-                "agent_state": {"current_scope": "general"},
-                "user_info": user_info,
-                "llm_user": llm_user,
-                "llm_extra_body": llm_extra_body,
-                "assistant_id": assistant_id,
-                "data_sources": data_sources,
-            }
+        tags = (
+            [f"assistant-{assistant_id}"]
+            if assistant_id is not None
+            else ["default-assistant"]
         )
-        config = merge_configs(self.base_config, request_config)
-        try:
-            logger.debug("Starting non-streaming response")
-            llm = self.agent.model.with_config(config)
-            ai_message = llm.invoke(msgs)
-            logger.info("Non-streaming completed successfully.")
-            response = ChatCompletionResponse(
-                id=str(uuid.uuid4()),
-                object="chat.completion",
-                created=int(time.time()),
-                choices=[
-                    ChatCompletionChoice(
-                        message=ChatCompletionMessage(
-                            role="assistant",
-                            content=ai_message.content,
-                        ),
-                        index=0,
-                        finish_reason="stop",
-                    )
-                ],
-                usage=Usage(
-                    prompt_tokens=0,
-                    completion_tokens=0,
-                    total_tokens=0,
-                ),
+        with propagate_attributes(
+            user_id=_hash_user_id(user_info.user_id if user_info else None),
+            tags=tags,
+        ):
+            request_config = RunnableConfig(
+                configurable={
+                    "llm_temperature": temperature,
+                    "llm": model,
+                    "llm_streaming": False,
+                    "enabled_tools": enabled_tools,
+                    "agent_state": {"current_scope": "general"},
+                    "user_info": user_info,
+                    "llm_user": llm_user,
+                    "llm_extra_body": llm_extra_body,
+                    "assistant_id": assistant_id,
+                    "data_sources": data_sources,
+                },
             )
-            return response
-        except Exception as ex:
-            logger.error("Non-streaming error: %s", str(ex), exc_info=True)
-            error_msg = llm_exception_handler(ex=ex, logger=logger)
-            return ChatCompletionResponse(
-                id=str(uuid.uuid4()),
-                object="chat.completion",
-                created=int(time.time()),
-                choices=[
-                    ChatCompletionChoice(
-                        message=ChatCompletionMessage(
-                            role="assistant",
-                            content=error_msg,
-                        ),
-                        index=0,
-                        finish_reason="error",
-                    )
-                ],
-                usage=Usage(
-                    prompt_tokens=0,
-                    completion_tokens=0,
-                    total_tokens=0,
-                ),
-            )
+            config = merge_configs(self.base_config, request_config)
+            try:
+                logger.debug("Starting non-streaming response")
+                llm = self.agent.model.with_config(config)
+                ai_message = llm.invoke(msgs)
+                logger.info("Non-streaming completed successfully.")
+                response = ChatCompletionResponse(
+                    id=str(uuid.uuid4()),
+                    object="chat.completion",
+                    created=int(time.time()),
+                    choices=[
+                        ChatCompletionChoice(
+                            message=ChatCompletionMessage(
+                                role="assistant",
+                                content=ai_message.content,
+                            ),
+                            index=0,
+                            finish_reason="stop",
+                        )
+                    ],
+                    usage=Usage(
+                        prompt_tokens=0,
+                        completion_tokens=0,
+                        total_tokens=0,
+                    ),
+                )
+                return response
+            except Exception as ex:
+                logger.error("Non-streaming error: %s", str(ex), exc_info=True)
+                error_msg = llm_exception_handler(ex=ex, logger=logger)
+                return ChatCompletionResponse(
+                    id=str(uuid.uuid4()),
+                    object="chat.completion",
+                    created=int(time.time()),
+                    choices=[
+                        ChatCompletionChoice(
+                            message=ChatCompletionMessage(
+                                role="assistant",
+                                content=error_msg,
+                            ),
+                            index=0,
+                            finish_reason="error",
+                        )
+                    ],
+                    usage=Usage(
+                        prompt_tokens=0,
+                        completion_tokens=0,
+                        total_tokens=0,
+                    ),
+                )

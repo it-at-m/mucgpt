@@ -4,6 +4,7 @@ from typing import Any, cast
 from langchain.agents import create_agent
 from langchain_core.language_models import BaseChatModel
 from langchain_core.runnables import RunnableConfig
+from langchain_core.runnables.config import merge_configs
 from langchain_core.tools.base import BaseTool
 
 from agent.middleware import ContextMiddleware, ToolErrorMiddleware
@@ -123,6 +124,16 @@ class _ConfiguredLangChainAgentGraph:
             self._prepare_run(input_data, config)
         )
 
+        # Merge agent_state_schema into trace metadata so Langfuse shows which
+        # policy was selected for this run. Using merge_configs avoids mutating
+        # the caller's config dict.
+        config = merge_configs(
+            config or {},
+            RunnableConfig(
+                metadata={"agent_state_schema": agent_state_schema.__name__}
+            ),
+        )
+
         active_agent = self.agent
         if (
             tools_to_use != self.tools
@@ -168,6 +179,14 @@ class _ConfiguredLangChainAgentGraph:
     ):
         model, messages, tools_to_use, agent_state_schema, data_sources = (
             self._prepare_run(input_data, config)
+        )
+
+        # Merge agent_state_schema into trace metadata.
+        config = merge_configs(
+            config or {},
+            RunnableConfig(
+                metadata={"agent_state_schema": agent_state_schema.__name__}
+            ),
         )
 
         active_agent = self.agent

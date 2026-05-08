@@ -353,6 +353,9 @@ class MCPConfig(BaseModel):
 
     SOURCES: dict[str, MCPSourceConfig] | None = None
     CACHE_TTL: int = 12 * 60 * 60  # 12h in s
+    FORCE_RELOAD: bool = (
+        False  # If true, bypass cache reads and refresh tools by default
+    )
 
 
 class RedisConfig(BaseModel):

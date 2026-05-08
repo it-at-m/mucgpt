@@ -91,7 +91,9 @@ class ToolCollection:
 
     @staticmethod
     async def list_tool_metadata(
-        user_info: AuthenticationResult, lang: str = "Deutsch"
+        user_info: AuthenticationResult,
+        lang: str = "Deutsch",
+        force_reload: bool = False,
     ) -> ToolListResponse:
         """
         Dynamically returns metadata for all available tools, including their name and description, without requiring a model.
@@ -184,7 +186,10 @@ class ToolCollection:
         # Create tool instances
         brainstorm_tool = make_brainstorm_tool(DummyModel(), dummy_logger)
         simplify_tool = make_simplify_tool(DummyModel(), dummy_logger)
-        mcp_tools = await McpLoader.load_mcp_tools(user_info=user_info)
+        mcp_tools = await McpLoader.load_mcp_tools(
+            user_info=user_info, force_reload=force_reload
+        )
+
         tools = [brainstorm_tool, simplify_tool] + mcp_tools
 
         mcp_source_keys = set((get_mcp_settings().SOURCES or {}).keys())
@@ -202,9 +207,7 @@ class ToolCollection:
                 tool_name=tool_name,
                 mcp_sources=mcp_source_keys,
             )
-            mcp_scope = tool_runtime_metadata.get(
-                "mcp_group"
-                )
+            mcp_scope = tool_runtime_metadata.get("mcp_group")
             if meta:
                 tools_info.append(
                     ToolInfo(

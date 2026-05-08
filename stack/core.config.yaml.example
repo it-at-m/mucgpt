@@ -16,6 +16,7 @@ ASSISTANT_VERSION: "0.0.3"
 
 # Backend settings
 UNAUTHORIZED_USER_REDIRECT_URL: "<your-url>"
+AD2IMAGE_URL: "<your-ad2image-url>"  # Base URL of the ad2image service for avatar images
 
 # Parsing settings
 PARSER_BACKEND: "kreuzberg"

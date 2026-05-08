@@ -1,11 +1,11 @@
 .feedbackButton {
-    color: var(--app-header-foreground) !important;
+    color: var(--colorNeutralForeground1) !important;
 }
 
 .feedbackButton:hover {
-    background-color: var(--app-header-hover) !important;
+    background-color: var(--colorNeutralBackground2Hover) !important;
 }
 
 .icon {
-    color: var(--app-header-foreground);
+    color: var(--colorNeutralForeground1) !important;
 }

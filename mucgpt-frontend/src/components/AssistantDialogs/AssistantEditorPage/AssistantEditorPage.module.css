@@ -1,11 +1,9 @@
 .page {
-    --appHeaderHeight: 50px;
     --appFooterHeight: 60px;
     display: flex;
     flex-direction: column;
-    height: calc(100vh - var(--appHeaderHeight) - var(--appFooterHeight));
+    height: calc(100vh);
     width: 100%;
-    margin-top: var(--appHeaderHeight);
     background-color: var(--colorNeutralBackground1);
     overflow-y: auto;
     box-sizing: border-box;

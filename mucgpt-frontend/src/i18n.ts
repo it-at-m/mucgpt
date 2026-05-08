@@ -21,7 +21,6 @@ i18n
                     header: {
                         nutzungsbedingungen: "Nutzungsbedingungen",
                         create_assistant: "Assistent erstellen",
-                        go_to_tutorials_tooltip: "Tutorials und Anleitungen zu Fragments und Tools",
                         go_to_tutorials_aria: "Zu Tutorials und Anleitungen navigieren",
                         go_to_tutorials: "Tutorials"
                     },
@@ -111,6 +110,13 @@ i18n
                         next: "Weiter",
                         loading: "Lade Konfiguration...",
                         hint: "Hinweis:",
+                        language_names: {
+                            DE: "Deutsch",
+                            EN: "Englisch",
+                            BA: "Bairisch",
+                            FR: "Französisch",
+                            UK: "Ukrainisch"
+                        },
                         edit: "Bearbeiten",
                         delete: "Löschen",
                         errors: {
@@ -195,23 +201,17 @@ i18n
                             whats_new: "Was gibt's neues?"
                         },
                         feedback: {
-                            tooltip: "Feedback geben",
                             aria_label: "Feedback per E-Mail senden",
                             label: "Feedback"
                         },
                         helpbutton: {
                             help: "Hilfe",
                             label: "Hilfe & FAQ",
-                            tooltip: "Hilfe und häufig gestelle Fragen anzeigen",
                             aria_label: "Hilfe und FAQ öffnen"
-                        },
-                        language_selector: {
-                            change_language: "Sprache ändern"
                         },
                         theme_selector: {
                             theme_light: "Helles Thema",
                             theme_dark: "Dunkles Thema",
-                            change_theme: "Thema wechseln",
                             light_short: "Hell",
                             dark_short: "Dunkel"
                         },
@@ -698,7 +698,6 @@ i18n
                     header: {
                         nutzungsbedingungen: "Terms of use",
                         create_assistant: "Create assistant",
-                        go_to_tutorials_tooltip: "Tutorials and guides for fragments and tools",
                         go_to_tutorials_aria: "Go to tutorials and guides",
                         go_to_tutorials: "Tutorials"
                     },
@@ -787,6 +786,13 @@ i18n
                         next: "Next",
                         loading: "Loading...",
                         hint: "Hint:",
+                        language_names: {
+                            DE: "German",
+                            EN: "English",
+                            BA: "Bavarian",
+                            FR: "French",
+                            UK: "Ukrainian"
+                        },
                         edit: "Edit",
                         delete: "Delete",
                         errors: {
@@ -871,23 +877,17 @@ i18n
                             whats_new: "What's new?"
                         },
                         feedback: {
-                            tooltip: "Give feedback",
                             aria_label: "Send feedback via email",
                             label: "Feedback"
                         },
                         helpbutton: {
                             help: "Help",
                             label: "Help & FAQ",
-                            tooltip: "Show help and frequently asked questions",
                             aria_label: "Open help and FAQ"
-                        },
-                        language_selector: {
-                            change_language: "Change language"
                         },
                         theme_selector: {
                             theme_light: "Light theme",
                             theme_dark: "Dark theme",
-                            change_theme: "Change theme",
                             light_short: "Light",
                             dark_short: "Dark"
                         },
@@ -1368,7 +1368,6 @@ i18n
                     header: {
                         nutzungsbedingungen: "Gebrauchsvorschriftn",
                         create_assistant: "Assistenten erstoin",
-                        go_to_tutorials_tooltip: "Tutorials und Anleitungen fia Fragments und Tools",
                         go_to_tutorials_aria: "Zu de Tutorials und Anleitungen navigiern",
                         go_to_tutorials: "Tutorials"
                     },
@@ -1452,6 +1451,13 @@ i18n
                         next: "Weida",
                         loading: "Lade Konfiguration...",
                         hint: "Hinweis:",
+                        language_names: {
+                            DE: "Deitsch",
+                            EN: "Englisch",
+                            BA: "Boarisch",
+                            FR: "Französisch",
+                            UK: "Ukrainisch"
+                        },
                         edit: "Beorbeitn",
                         delete: "Löschn",
                         errors: {
@@ -1540,23 +1546,17 @@ i18n
                             whats_new: "Wos gibt's Nei's?"
                         },
                         feedback: {
-                            tooltip: "Feedback geb'n",
                             aria_label: "Feedback per E-Mail schick'n",
                             label: "Feedback"
                         },
                         helpbutton: {
                             help: "Hilfe",
                             label: "Hilfe & FAQ",
-                            tooltip: "Hilfe und häufige Frog'n zeig'n",
                             aria_label: "Hilfe und FAQ aufmach'n"
-                        },
-                        language_selector: {
-                            change_language: "Sprach wechs'l"
                         },
                         theme_selector: {
                             theme_light: "Helles Thema",
                             theme_dark: "Dunkles Thema",
-                            change_theme: "Thema wechs'l",
                             light_short: "Hell",
                             dark_short: "Dunkl"
                         },
@@ -2032,7 +2032,6 @@ i18n
                     header: {
                         nutzungsbedingungen: "Conditions d'utilisation",
                         create_assistant: "Créer un assistant",
-                        go_to_tutorials_tooltip: "Tutoriels et guides pour les fragments et les outils",
                         go_to_tutorials_aria: "Aller aux tutoriels et guides",
                         go_to_tutorials: "Tutoriels"
                     },
@@ -2122,6 +2121,13 @@ i18n
                         next: "Suivant",
                         loading: "Chargement de la configuration...",
                         hint: "Conseil :",
+                        language_names: {
+                            DE: "Allemand",
+                            EN: "Anglais",
+                            BA: "Bavarois",
+                            FR: "Français",
+                            UK: "Ukrainien"
+                        },
                         edit: "Modifier",
                         delete: "Supprimer",
                         errors: {
@@ -2205,23 +2211,17 @@ i18n
                             whats_new: "Quoi de neuf ?"
                         },
                         feedback: {
-                            tooltip: "Donner un avis",
                             aria_label: "Envoyer des retours par e-mail",
                             label: "Feedback"
                         },
                         helpbutton: {
                             help: "Aide",
                             label: "Aide & FAQ",
-                            tooltip: "Afficher l'aide et les questions fréquentes",
                             aria_label: "Ouvrir l'aide et la FAQ"
-                        },
-                        language_selector: {
-                            change_language: "Changer la langue"
                         },
                         theme_selector: {
                             theme_light: "Thème clair",
                             theme_dark: "Thème sombre",
-                            change_theme: "Changer de thème",
                             light_short: "Clair",
                             dark_short: "Sombre"
                         },
@@ -2695,7 +2695,6 @@ i18n
             UK: {
                 translation: {
                     header: {
-                        go_to_tutorials_tooltip: "Навчальні матеріали та інструкції для фрагментів та інструментів",
                         go_to_tutorials_aria: "Перейти до навчальних матеріалів та інструкцій",
                         go_to_tutorials: "Навчальні матеріали",
                         create_assistant: "Створити асистента",
@@ -2787,6 +2786,13 @@ i18n
                         next: "Далі",
                         loading: "Завантаження конфігурації...",
                         hint: "Підказка:",
+                        language_names: {
+                            DE: "Німецька",
+                            EN: "Англійська",
+                            BA: "Баварська",
+                            FR: "Французька",
+                            UK: "Українська"
+                        },
                         edit: "Редагувати",
                         delete: "Видалити",
                         errors: {
@@ -2870,23 +2876,17 @@ i18n
                             whats_new: "Що нового?"
                         },
                         feedback: {
-                            tooltip: "Залишити відгук",
                             aria_label: "Надіслати відгук електронною поштою",
                             label: "Відгук"
                         },
                         helpbutton: {
                             help: "Допомога",
                             label: "Допомога та FAQ",
-                            tooltip: "Показати допомогу та часто задавані питання",
                             aria_label: "Відкрити допомогу та FAQ"
-                        },
-                        language_selector: {
-                            change_language: "Змінити мову"
                         },
                         theme_selector: {
                             theme_light: "Світла тема",
                             theme_dark: "Темна тема",
-                            change_theme: "Змінити тему",
                             light_short: "Світло",
                             dark_short: "Темно"
                         },

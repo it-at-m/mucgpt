@@ -388,6 +388,7 @@ class Settings(BaseSettings):
     ASSISTANT_VERSION: str = "unknown"
     FOOTER_LINK_URL: str | None = None
     FOOTER_LABEL: str | None = None
+    AD2IMAGE_URL: str | None = None
 
     # Backend settings
     UNAUTHORIZED_USER_REDIRECT_URL: str = ""

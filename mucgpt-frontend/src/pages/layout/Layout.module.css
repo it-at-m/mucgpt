@@ -12,77 +12,19 @@
     width: 100%;
 }
 
-.headerTitleContainer {
-    display: flex;
-    align-items: center;
-    margin-right: 20px;
-    color: var(--app-header-foreground);
-    text-decoration: none;
-    width: auto;
-    left: 1em;
-}
-
-.headerTitle {
-    margin-left: 12px;
-    font-weight: 00;
-}
-
-.headerNavList {
-    display: flex;
-    list-style: none;
-    padding-left: 0;
-    align-items: center;
-    flex-wrap: wrap;
-    justify-items: center;
-    justify-content: center;
-    align-self: center;
-    justify-self: center;
-}
-
-.headerNavPageLink {
-    color: var(--app-header-foreground);
-    font-size: var(--fontSizeHero700);
-    white-space: nowrap;
-    text-overflow: ellipsis;
-}
-
-.headerNavRightContainer {
-    display: flex;
-    justify-content: flex-end;
-    align-items: center;
-    width: 100%;
-    gap: 8px;
-}
-
-.logo {
-    height: 40px;
-    padding: 2px;
-    margin-left: 1em;
-}
-
-.header {
-    display: flex;
-    position: fixed;
-    top: 0;
-    width: 100%;
-    background-color: var(--app-header-background);
-    height: 50px;
-    z-index: 10;
-    justify-content: space-between;
-    align-items: center;
-}
-
 .mobileMenuButton {
-    border-radius: 4px;
+    position: fixed;
+    top: 12px;
+    left: 12px;
+    z-index: 1000001;
+    border-radius: 10px;
     background-color: var(--colorBrandBackground2);
     border: 1px solid var(--colorNeutralStroke1);
     transition: all 0.2s ease;
-    position: relative;
-    z-index: 15;
     display: flex;
     align-items: center;
     justify-content: center;
-    margin-right: 16px !important;
+    box-shadow: var(--shadow4);
 }
 
 .iconSize24 {
@@ -102,7 +44,6 @@
     display: grid;
     grid-template-columns: 256px minmax(0, 1fr);
     min-height: 100vh;
-    padding-top: 50px;
     transition: grid-template-columns 0.3s cubic-bezier(0.33, 1, 0.68, 1);
 }
 
@@ -117,9 +58,9 @@
 .sidebarColumn {
     display: flex;
     position: sticky;
-    top: 50px;
+    top: 0;
     align-self: start;
-    height: calc(100vh - 50px);
+    height: 100vh;
     border-right: 1px solid var(--colorNeutralStroke1);
     background-color: var(--colorNeutralBackground2);
     overflow: hidden;
@@ -140,7 +81,7 @@
     min-width: 0;
     display: flex;
     flex-direction: column;
-    min-height: calc(100vh - 50px);
+    min-height: 100vh;
     background-color: var(--colorNeutralBackground1);
 }
 
@@ -179,7 +120,6 @@
 .mobileUtilities {
     display: flex;
     flex-direction: column;
-    gap: 4px;
     width: 100%;
 }
 
@@ -198,6 +138,13 @@
     fill: currentColor;
 }
 
+.mobileUtilityGroup {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    padding: 2px 8px;
+}
+
 .mobileUtilityRow {
     width: 100%;
 }
@@ -208,9 +155,13 @@
     justify-content: flex-start !important;
     text-align: left;
     border-radius: 10px !important;
-    min-height: 40px;
+    min-height: 36px;
     padding-left: 4px !important;
     padding-right: 4px !important;
+}
+
+.settingsDivider {
+    margin: 0;
 }
 
 .skipLink {
@@ -231,62 +182,8 @@
     left: 8px;
 }
 
-/* Mobile Responsive Styles */
 @media screen and (max-width: 640px) {
-    .header {
-        flex-direction: row;
-        justify-content: space-between;
-        align-items: center;
-        min-height: 50px;
-    }
-
-    .headerTitleContainer {
-        width: auto;
-        margin-right: 0;
-        justify-content: flex-start;
-        padding: 8px 0;
-        flex: 1;
-    }
-
-    .headerTitle {
-        font-size: 0.9em;
-        margin-left: 8px;
-    }
-
-    .logo {
-        height: 32px;
-    }
-
-    .headerNavList {
-        width: 100%;
-        justify-content: center;
-        margin: 4px 0;
-    }
-
-    .headerNavPageLink {
-        font-size: var(--fontSizeBase300);
-        text-align: center;
-        width: 100%;
-    }
-
-    .headerNavRightContainer {
-        width: 100%;
-        justify-content: end;
-        flex-wrap: wrap;
-    }
-
     .shellBody {
         grid-template-columns: minmax(0, 1fr);
-    }
-}
-
-/* Small mobile devices */
-@media screen and (max-width: 480px) {
-    .headerTitle {
-        display: none;
-    }
-
-    .headerNavRightContainer {
-        gap: 4px;
     }
 }

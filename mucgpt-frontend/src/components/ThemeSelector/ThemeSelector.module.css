@@ -1,5 +1,5 @@
 .themeButton {
-    color: var(--app-header-foreground) !important;
+    color: var(--colorNeutralForeground1) !important;
 }
 
 .themeButtonRow {
@@ -11,33 +11,45 @@
 }
 
 .themeButton:hover {
-    background-color: var(--app-header-hover) !important;
+    background-color: var(--colorNeutralBackground2Hover) !important;
+}
+
+.themeSwitchRow {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    min-height: 40px;
+    padding: 0 4px;
+    border-radius: 10px;
+    box-sizing: border-box;
+    color: var(--colorNeutralForeground1);
+    font-weight: 500;
+    cursor: pointer;
+}
+
+.themeSwitchRow:hover {
+    background-color: var(--colorNeutralBackground2Hover);
 }
 
 .rowContent {
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-    width: 100%;
+    justify-content: flex-start;
+    gap: 10px;
+    flex: 1;
+    min-width: 0;
     box-sizing: border-box;
 }
 
-.rowLabel,
-.rowValue {
+.rowLabel {
     color: inherit;
-}
-
-.rowValueGroup {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.rowValue {
-    font-weight: 600;
+    font-weight: 500;
 }
 
 .icon {
-    color: var(--app-header-foreground);
+    color: var(--colorNeutralForeground1) !important;
+    vertical-align: middle;
+    width: 20px;
+    height: 20px;
+    flex: 0 0 auto;
 }

@@ -18,7 +18,7 @@
     flex: 1;
     height: 100%;
     min-height: 0;
-    padding: 12px;
+    padding: 6px 12px 12px;
     width: 100%;
     box-sizing: border-box;
 }
@@ -55,6 +55,181 @@
     gap: 8px;
     flex: 1;
     min-height: 0;
+}
+
+.brandHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+}
+
+.brandHeaderCollapsed {
+    flex-direction: column;
+    justify-content: center;
+}
+
+.brandLink {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 48px;
+    width: 100%;
+    padding: 4px 8px 4px 14px;
+    border-radius: 12px;
+    box-sizing: border-box;
+    color: var(--colorNeutralForeground1);
+    text-decoration: none;
+    overflow: hidden;
+    flex: 1;
+}
+
+.brandLink:hover {
+    background-color: var(--colorNeutralBackground2Hover);
+}
+
+.brandLinkCollapsed {
+    justify-content: center;
+    padding-left: 0;
+    padding-right: 0;
+    flex: none;
+    width: 100%;
+}
+
+.brandToggleButton {
+    position: relative;
+    border: 0;
+    background: transparent;
+    cursor: pointer;
+    transition:
+        background-color 120ms ease,
+        color 120ms ease,
+        transform 180ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.brandToggleButton:focus-visible {
+    outline: 2px solid var(--colorBrandStroke1);
+    outline-offset: 2px;
+}
+
+.brandToggleButton :global(svg) {
+    color: var(--colorNeutralForeground1);
+}
+
+.brandToggleButton:hover,
+.brandToggleButton:focus-visible {
+    color: var(--colorBrandBackground);
+    background-color: var(--colorNeutralBackground2Hover);
+    transform: translateX(2px);
+}
+
+.brandToggleButton:hover :global(svg),
+.brandToggleButton:focus-visible :global(svg) {
+    color: var(--colorBrandBackground);
+}
+
+.topCollapseButton {
+    flex-shrink: 0;
+    width: 36px;
+    height: 36px;
+    min-width: 36px;
+    padding: 0 !important;
+    margin-left: 4px;
+    border-radius: 8px !important;
+    color: var(--colorNeutralForeground1) !important;
+    transition:
+        background-color 120ms ease,
+        color 120ms ease,
+        transform 180ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.topCollapseButton :global(svg) {
+    color: var(--colorNeutralForeground1) !important;
+}
+
+.topCollapseButton:hover,
+.topCollapseButton:focus-visible {
+    color: var(--colorBrandBackground) !important;
+    background-color: var(--colorNeutralBackground2Hover) !important;
+}
+
+.topCollapseButton:hover {
+    transform: translateX(2px);
+}
+
+.topCollapseButton:hover :global(svg),
+.topCollapseButton:focus-visible :global(svg) {
+    color: var(--colorBrandBackground) !important;
+}
+
+.topCollapseButtonCollapsed {
+    flex-shrink: 0;
+    width: 100% !important;
+    height: 36px;
+    padding: 0 !important;
+    border-radius: 8px !important;
+    margin-top: 4px;
+    margin-left: 0;
+}
+
+.topCollapseButtonCollapsed:hover {
+    transform: translateX(2px);
+}
+
+.brandLogo {
+    width: 24px;
+    height: 24px;
+    object-fit: contain;
+    flex-shrink: 0;
+    transition:
+        transform 180ms cubic-bezier(0.22, 1, 0.36, 1),
+        opacity 140ms ease;
+}
+
+.brandTitle {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-family: "Montserrat", "Segoe UI", sans-serif;
+    font-size: 21px;
+    line-height: 1.1;
+    font-weight: 800;
+    letter-spacing: 0.01em;
+    margin-left: 2px;
+}
+
+.brandToggleOverlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 12px;
+    background: transparent;
+    opacity: 0;
+    pointer-events: none;
+    transition:
+        opacity 140ms ease,
+        transform 180ms cubic-bezier(0.22, 1, 0.36, 1);
+    transform: scale(0.88);
+}
+
+.brandToggleOverlay :global(svg) {
+    width: 22px;
+    height: 22px;
+}
+
+.brandToggleButton:hover .brandLogo,
+.brandToggleButton:focus-visible .brandLogo {
+    transform: scale(0.82);
+    opacity: 0;
+}
+
+.brandToggleButton:hover .brandToggleOverlay,
+.brandToggleButton:focus-visible .brandToggleOverlay {
+    opacity: 1;
+    transform: scale(1);
 }
 
 .navGroup {
@@ -252,39 +427,6 @@
     color: var(--colorBrandBackground) !important;
 }
 
-.utilitiesSection {
-    display: flex;
-    flex-direction: column;
-    width: 100%;
-    gap: 8px;
-}
-
-.utilitiesToggle {
-    align-items: center;
-    justify-content: space-between !important;
-    width: 100% !important;
-    min-height: 44px;
-    padding: 0 12px !important;
-    border-radius: 10px !important;
-    color: var(--colorNeutralForeground1) !important;
-    background-color: var(--colorNeutralBackground2) !important;
-    text-align: left;
-}
-
-.utilitiesToggle:hover {
-    color: var(--colorBrandBackground) !important;
-    background-color: var(--colorNeutralBackground2Hover) !important;
-}
-
-.utilitiesToggleIcon {
-    flex-shrink: 0;
-    transition: transform 160ms ease;
-}
-
-.utilitiesToggleIconOpen {
-    transform: rotate(180deg);
-}
-
 .utilitiesContent {
     display: flex;
     flex-direction: column;
@@ -292,11 +434,12 @@
     gap: 12px;
     text-align: left;
     width: 100%;
-    padding: 0 0 8px;
 }
 
-.utilitiesContentHidden {
-    display: none;
+.settingsPopover {
+    width: 248px;
+    max-width: calc(100vw - 24px);
+    padding: 4px 4px !important;
 }
 
 .utilitiesContent > * {

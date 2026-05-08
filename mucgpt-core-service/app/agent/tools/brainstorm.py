@@ -212,9 +212,9 @@ def make_brainstorm_tool(
     )
     def brainstorm_tool(
         topic: str,
-        context: str = None,
-        existing_mindmap: str = None,
-        feedback: str = None,
+        context: str | None = None,
+        existing_mindmap: str | None = None,
+        feedback: str | None = None,
     ):
         writer = get_stream_writer()
         if existing_mindmap:

@@ -26,7 +26,7 @@ import { AssistantEditorPage } from "./components/AssistantDialogs/AssistantEdit
 initializeIcons();
 
 async function cleanupServiceWorkerForGatewayBuild() {
-    const pwaEnabled = import.meta.env.MODE === "ghpages" || import.meta.env.VITE_ENABLE_PWA === "true";
+    const pwaEnabled = import.meta.env.VITE_DISABLE_PWA !== "true";
     if (import.meta.env.MODE === "development" || pwaEnabled || !("serviceWorker" in navigator)) {
         return;
     }

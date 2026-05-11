@@ -6,7 +6,7 @@ import { resolve } from "path";
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
     const isGHPages = mode === "ghpages";
-    const isPWAEnabled = process.env.VITE_ENABLE_PWA === "true" || (isGHPages && process.env.VITE_DISABLE_PWA !== "true");
+    const isPWAEnabled = process.env.VITE_DISABLE_PWA !== "true";
     const shouldSelfDestroyPWA = !isPWAEnabled && mode !== "development";
 
     return {
@@ -35,14 +35,14 @@ export default defineConfig(({ mode }) => {
                           },
                           workbox: {
                               maximumFileSizeToCacheInBytes: 3000000,
-                              navigateFallbackDenylist: [/^\/api\//, /^\/auth\//, /^\/sso\//, /^\/realms\//],
+                              navigateFallbackDenylist: [/^\/api\//, /^\/auth\//, /^\/sso\//, /^\/realms\//, /^\/oauth2\//, /^\/login\//, /^\/logout\//],
                               runtimeCaching: [
                                   {
                                       urlPattern: /^\/api\/.*$/,
                                       handler: "NetworkOnly"
                                   },
                                   {
-                                      urlPattern: /^\/(auth|sso|realms)\/.*$/,
+                                      urlPattern: /^\/(auth|sso|realms|oauth2|login|logout)\/.*$/,
                                       handler: "NetworkOnly"
                                   }
                               ]
@@ -55,7 +55,7 @@ export default defineConfig(({ mode }) => {
                             selfDestroying: true
                         })
                     ]
-                : [])
+                  : [])
         ],
         base: isGHPages ? "/mucgpt/" : "/",
         build: {

@@ -6,33 +6,49 @@ import { resolve } from "path";
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
     const isGHPages = mode === "ghpages";
+    const isPWAEnabled = process.env.VITE_DISABLE_PWA !== "true";
 
     return {
         plugins: [
             react(),
-            VitePWA({
-                registerType: "prompt",
-                strategies: "generateSW",
-                manifest: {
-                    name: "MUCGPT",
-                    short_name: "MUCGPT",
-                    description: "KI-Assistent der Landeshauptstadt München",
-                    theme_color: "#2563eb",
-                    background_color: "#f8fafc",
-                    display: "standalone",
-                    start_url: isGHPages ? "/mucgpt/" : "/",
-                    scope: isGHPages ? "/mucgpt/" : "/",
-                    icons: [
-                        { src: "pwa-64x64.png", sizes: "64x64", type: "image/png" },
-                        { src: "pwa-192x192.png", sizes: "192x192", type: "image/png" },
-                        { src: "pwa-512x512.png", sizes: "512x512", type: "image/png", purpose: "any" },
-                        { src: "maskable-icon-512x512.png", sizes: "512x512", type: "image/png", purpose: "maskable" }
-                    ]
-                },
-                workbox: {
-                    maximumFileSizeToCacheInBytes: 3000000
-                }
-            })
+            ...(isPWAEnabled
+                ? [
+                      VitePWA({
+                          registerType: "prompt",
+                          strategies: "generateSW",
+                          manifest: {
+                              name: "MUCGPT",
+                              short_name: "MUCGPT",
+                              description: "KI-Assistent der Landeshauptstadt München",
+                              theme_color: "#2563eb",
+                              background_color: "#f8fafc",
+                              display: "standalone",
+                              start_url: isGHPages ? "/mucgpt/" : "/",
+                              scope: isGHPages ? "/mucgpt/" : "/",
+                              icons: [
+                                  { src: "pwa-64x64.png", sizes: "64x64", type: "image/png" },
+                                  { src: "pwa-192x192.png", sizes: "192x192", type: "image/png" },
+                                  { src: "pwa-512x512.png", sizes: "512x512", type: "image/png", purpose: "any" },
+                                  { src: "maskable-icon-512x512.png", sizes: "512x512", type: "image/png", purpose: "maskable" }
+                              ]
+                          },
+                          workbox: {
+                              maximumFileSizeToCacheInBytes: 3000000,
+                              navigateFallbackDenylist: [/^\/api\//, /^\/auth\//, /^\/sso\//, /^\/realms\//],
+                              runtimeCaching: [
+                                  {
+                                      urlPattern: /^\/api\/.*$/,
+                                      handler: "NetworkOnly"
+                                  },
+                                  {
+                                      urlPattern: /^\/(auth|sso|realms)\/.*$/,
+                                      handler: "NetworkOnly"
+                                  }
+                              ]
+                          }
+                      })
+                  ]
+                : [])
         ],
         base: isGHPages ? "/mucgpt/" : "/",
         build: {

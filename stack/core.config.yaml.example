@@ -38,6 +38,13 @@ MCP:
       url: "http://mcpdoc-server:8088/sse"
       transport: "sse"
       forward_token: false
+      group: "ki-münchen"
+      descriptions:
+        - name: "fetch_docs"
+          description: "Loads information from a specific URL about ai in munich. Always provide the whole url. Not only the relative path."
+        - name: "list_doc_sources"
+          description: "Lists information sources about ai in munich. Provides a list of relevant URLs. Use fetch-docs then to retrieve relevant data from the relevant urls. "
+      # ...
 
     # Example for custom headers to authenticate with MCP server via litellm proxy
     # authentication with litellm via Bearer
@@ -49,6 +56,14 @@ MCP:
       forward_auth_override: "Basic <base64 encoded email:token>"
       headers:
         x-litellm-api-key: "<your-api-key>"
+      group: "atlassian"
+      # Example tool description overrides.
+      descriptions:
+        - name: "atlassianUserInfo"
+          description: "Retrieve details about the currently authenticated Atlassian user (e.g. accountId). Use for user context or attribution."
+        - name: "getAccessibleAtlassianResources"
+          description: "Resolve available Atlassian sites and their cloudIds (i.e. the url). Use when cloudId is unknown or a hostname-based guess fails."
+      # ...
   CACHE_TTL: 123
 
 # Models configuration

@@ -15,17 +15,18 @@ maintainers = [
 ]
 
 dependencies = [
-    "fastapi[standard]>=0.135.1",
+    "fastapi[standard]>=0.135.3",
     "langchain>=1.2.15",
     "langchain-core>=1.2.31",
     "langchain_community>=0.4.1",
     "langchain-openai>=1.1.12",
     "langsmith>=0.7.31",
+    "openai==2.31.0",
     "joserfc",
-    "uvicorn>=0.42.0",
+    "uvicorn>=0.44.0",
     "asgi-correlation-id>=4.3.4",
     "pydantic-settings>=2.8.1",
-    "langgraph>=1.1.3",
+    "langgraph>=1.1.6",
     "truststore>=0.10.4",
     "langfuse>=4.0.1",
     "httpx>=0.28.1",
@@ -61,7 +62,7 @@ src = ["app"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP"]
-ignore = ["E501", "E701"] # line too long, multiple statements on one line
+ignore = ["E501", "E701"]      # line too long, multiple statements on one line
 
 [tool.pytest.ini_options]
 addopts = "--strict-markers --strict-config --verbose --tb=short -ra --cov=app"
@@ -70,14 +71,14 @@ testpaths = [
     "tests"]
 markers = [
     "integration: mark a test as a integration test",
-    "unit: mark test as a unit test"
+    "unit: mark test as a unit test",
 ]
 env = [
     "MUCGPT_CORE_LOG_CONFIG=app/logconf.yaml",
     "MUCGPT_CORE_VERSION=0.0",
     "MUCGPT_CORE_COMMIT=12012lf",
     '''MUCGPT_CORE_MODELS=[{{"type": "AZURE", "llm_name": "mucgpt-test-model", "deployment": "mucgpt-test-model", "endpoint": "https://testprovider.api", "api_key": "blub", "max_output_tokens": 16384, "max_input_tokens": 128000, "description": "Model developed by kicc. "}}]''',
-    "GIT_PYTHON_REFRESH=quiet"
+    "GIT_PYTHON_REFRESH=quiet",
 ]
 
 [tool.coverage.paths]

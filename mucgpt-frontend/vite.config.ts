@@ -6,7 +6,8 @@ import { resolve } from "path";
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
     const isGHPages = mode === "ghpages";
-    const isPWAEnabled = process.env.VITE_DISABLE_PWA !== "true";
+    const isPWAEnabled = process.env.VITE_ENABLE_PWA === "true" || (isGHPages && process.env.VITE_DISABLE_PWA !== "true");
+    const shouldSelfDestroyPWA = !isPWAEnabled && mode !== "development";
 
     return {
         plugins: [
@@ -48,6 +49,12 @@ export default defineConfig(({ mode }) => {
                           }
                       })
                   ]
+                : shouldSelfDestroyPWA
+                  ? [
+                        VitePWA({
+                            selfDestroying: true
+                        })
+                    ]
                 : [])
         ],
         base: isGHPages ? "/mucgpt/" : "/",

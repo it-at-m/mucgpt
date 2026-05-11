@@ -25,6 +25,30 @@ import Home from "./pages/home/Home";
 import { AssistantEditorPage } from "./components/AssistantDialogs/AssistantEditorPage/AssistantEditorPage";
 initializeIcons();
 
+async function cleanupServiceWorkerForGatewayBuild() {
+    const pwaEnabled = import.meta.env.MODE === "ghpages" || import.meta.env.VITE_ENABLE_PWA === "true";
+    if (import.meta.env.MODE === "development" || pwaEnabled || !("serviceWorker" in navigator)) {
+        return;
+    }
+
+    const hadController = Boolean(navigator.serviceWorker.controller);
+    const registrations = await navigator.serviceWorker.getRegistrations();
+    if (registrations.length === 0) {
+        return;
+    }
+
+    await Promise.all(registrations.map(registration => registration.unregister()));
+
+    if ("caches" in window) {
+        const cacheNames = await caches.keys();
+        await Promise.all(cacheNames.map(cacheName => caches.delete(cacheName)));
+    }
+
+    if (hadController) {
+        window.location.reload();
+    }
+}
+
 const router = createHashRouter([
     {
         path: "/",
@@ -158,7 +182,7 @@ async function enableMocking() {
         });
 }
 
-enableMocking().then(() => {
+Promise.all([cleanupServiceWorkerForGatewayBuild(), enableMocking()]).then(() => {
     ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
         <React.StrictMode>
             <GlobalToastProvider>

@@ -32,6 +32,12 @@ TOOL_INSTRUCTIONS_TEMPLATE = """
 """
 
 
+def _metadata_value(metadata, key: str, default=None):
+    if isinstance(metadata, dict):
+        return metadata.get(key, default)
+    return getattr(metadata, key, default)
+
+
 def select_agent_state_schema(tools: list[BaseTool]) -> type[DefaultAgentState]:
     tool_groups: set[str] = set()
     tool_group_details: list[str] = []
@@ -39,8 +45,9 @@ def select_agent_state_schema(tools: list[BaseTool]) -> type[DefaultAgentState]:
     for tool in tools:
         metadata = getattr(tool, "metadata", None)
         if metadata:
-            group = metadata.get("mcp_group", "default")
-            source = metadata.get("mcp_source", "unknown-source")
+            group = _metadata_value(metadata, "mcp_group", "default") or "default" # if mcp_group has been set to none or empty string, treat it as "default" group
+            source = _metadata_value(metadata, "mcp_source", "unknown-source")
+
             tool_groups.add(group)
             tool_group_details.append(f"{tool.name}:{group} (source={source})")
 

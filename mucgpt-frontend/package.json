@@ -13,7 +13,7 @@
         "markmap-lib": "0.18.12",
         "markmap-toolbar": "0.18.12",
         "markmap-view": "0.18.12",
-        "mermaid": "11.14.0",
+        "mermaid": "11.15.0",
         "ndjson-readablestream": "1.4.0",
         "prismjs": ">=1.30.0",
         "react": "19.2.4",

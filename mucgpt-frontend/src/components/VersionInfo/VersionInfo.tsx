@@ -8,7 +8,6 @@ interface VersionInfoProps {
     frontend_version: string;
     assistant_version: string;
     versionUrl?: string;
-    variant?: "default" | "compact";
 }
 
 const SERVICES = [
@@ -18,10 +17,9 @@ const SERVICES = [
 ];
 
 export const VersionInfo = (props: VersionInfoProps) => {
-    const { app_version, frontend_version, versionUrl, variant = "default" } = props;
+    const { app_version, frontend_version, versionUrl } = props;
     const { t } = useTranslation();
-    const isCompact = variant === "compact";
-    const versionLabel = `v${isCompact ? frontend_version : (app_version ?? frontend_version)}`;
+    const versionLabel = `v${app_version ?? frontend_version}`;
 
     return (
         <div className={styles.container}>

@@ -3,7 +3,7 @@
 }
 
 .helpButton:hover {
-    background-color: var(--colorNeutralBackground2Hover) !important;
+    background-color: var(--colorNeutralStroke2) !important;
 }
 
 .icon {

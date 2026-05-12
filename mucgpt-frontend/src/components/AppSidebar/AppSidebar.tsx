@@ -3,10 +3,10 @@ import {
     Bot24Regular,
     ChatAdd24Regular,
     Chat24Regular,
-    ChatHistory24Regular,
     ChevronLeft24Regular,
     ChevronRight24Regular,
     CompassNorthwest24Regular,
+    Dismiss24Regular,
     Sparkle24Regular
 } from "@fluentui/react-icons";
 import { Link, useLocation, useNavigate } from "react-router-dom";
@@ -253,7 +253,7 @@ export const AppSidebar = ({
                                 <Button
                                     appearance="subtle"
                                     className={`${styles.topCollapseButton} ${collapsed && !isMobile ? styles.topCollapseButtonCollapsed : ""}`}
-                                    icon={collapsed ? <ChevronRight24Regular /> : <ChevronLeft24Regular />}
+                                    icon={isMobile ? <Dismiss24Regular /> : collapsed ? <ChevronRight24Regular /> : <ChevronLeft24Regular />}
                                     aria-label={toggleLabel}
                                     onClick={onToggleCollapsed}
                                 />
@@ -316,15 +316,13 @@ export const AppSidebar = ({
                     {secondaryContent && secondaryTitle && collapsed && !isMobile && onToggleCollapsed && (
                         <div className={styles.collapsedSecondaryGroup}>
                             <div className={styles.sectionDivider} aria-hidden="true" />
-                            <Tooltip content={t("components.history.show_history")} relationship="description" positioning="after">
-                                <Button
-                                    appearance="subtle"
-                                    icon={<ChatHistory24Regular />}
-                                    className={styles.collapsedSecondaryButton}
-                                    aria-label={t("components.history.show_history")}
-                                    onClick={onToggleCollapsed}
-                                />
-                            </Tooltip>
+                            <button
+                                type="button"
+                                className={`${styles.collapsedSecondaryArea} ${styles.resizeCursor}`}
+                                aria-label={toggleLabel}
+                                title={toggleLabel}
+                                onClick={onToggleCollapsed}
+                            />
                         </div>
                     )}
                 </div>

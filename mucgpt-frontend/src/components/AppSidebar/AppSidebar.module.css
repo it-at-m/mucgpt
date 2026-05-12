@@ -18,7 +18,7 @@
     flex: 1;
     height: 100%;
     min-height: 0;
-    padding: 6px 12px 12px;
+    padding: 6px 12px 4px;
     width: 100%;
     box-sizing: border-box;
 }
@@ -85,7 +85,7 @@
 }
 
 .brandLink:hover {
-    background-color: var(--colorNeutralBackground2Hover);
+    background-color: var(--colorNeutralStroke2);
 }
 
 .brandLinkCollapsed {
@@ -118,14 +118,14 @@
 
 .brandToggleButton:hover,
 .brandToggleButton:focus-visible {
-    color: var(--colorBrandBackground);
-    background-color: var(--colorNeutralBackground2Hover);
+    color: var(--colorNeutralForeground1);
+    background-color: var(--colorNeutralStroke2);
     transform: translateX(2px);
 }
 
 .brandToggleButton:hover :global(svg),
 .brandToggleButton:focus-visible :global(svg) {
-    color: var(--colorBrandBackground);
+    color: var(--colorNeutralForeground1);
 }
 
 .topCollapseButton {
@@ -149,8 +149,8 @@
 
 .topCollapseButton:hover,
 .topCollapseButton:focus-visible {
-    color: var(--colorBrandBackground) !important;
-    background-color: var(--colorNeutralBackground2Hover) !important;
+    color: var(--colorNeutralForeground1) !important;
+    background-color: var(--colorNeutralStroke2) !important;
 }
 
 .topCollapseButton:hover {
@@ -159,7 +159,7 @@
 
 .topCollapseButton:hover :global(svg),
 .topCollapseButton:focus-visible :global(svg) {
-    color: var(--colorBrandBackground) !important;
+    color: var(--colorNeutralForeground1) !important;
 }
 
 .topCollapseButtonCollapsed {
@@ -276,14 +276,14 @@
     color: var(--colorNeutralForeground1) !important;
 }
 
-.navButton:hover :global(svg) {
-    color: var(--colorBrandBackground) !important;
+.navButton:hover {
+    color: var(--colorNeutralForeground1) !important;
+    background-color: var(--colorNeutralStroke2) !important;
+    transform: translateX(5px);
 }
 
-.navButton:hover {
-    color: var(--colorBrandBackground) !important;
-    background-color: var(--colorNeutralBackground2Hover) !important;
-    transform: translateX(5px);
+.navButton:hover :global(svg) {
+    color: var(--colorNeutralForeground1) !important;
 }
 
 .navButtonCollapsed {
@@ -327,7 +327,7 @@
 
 .navButtonActive:hover,
 .navButtonActive:active {
-    color: var(--colorBrandBackground) !important;
+    color: var(--colorNeutralForeground1) !important;
 }
 
 .secondaryGroup,
@@ -335,19 +335,24 @@
 .footerSection {
     display: flex;
     flex-direction: column;
-    gap: 6px;
     width: 100%;
 }
 
 .secondaryGroup {
     flex: 1;
     min-height: 0;
+    gap: 6px;
 }
 
 .collapsedSecondaryGroup {
     align-items: center;
     flex: 1;
     min-height: 0;
+    gap: 6px;
+}
+
+.footerSection {
+    gap: 4px;
 }
 
 .sectionDivider {
@@ -401,30 +406,30 @@
     border-radius: 12px !important;
 }
 
-.collapsedSecondaryButton {
-    justify-content: center !important;
-    width: 100% !important;
-    max-width: 100% !important;
-    min-height: 48px;
-    padding: 0 !important;
-    border-radius: 12px !important;
+.collapsedSecondaryArea {
+    width: 100%;
+    flex: 1;
+    min-height: 96px;
+    padding: 0;
+    border: 0;
+    border-radius: 12px;
+    background: transparent;
+    cursor: pointer;
     transition:
         background-color 120ms ease,
         color 120ms ease,
         transform 180ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-.collapsedSecondaryButton :global(svg) {
-    color: var(--colorNeutralForeground1) !important;
+.collapsedSecondaryArea:hover {
+    background-color: transparent;
+    transform: none;
 }
 
-.collapsedSecondaryButton:hover {
-    background-color: var(--colorNeutralBackground2Hover) !important;
-    transform: translateX(2px);
-}
-
-.collapsedSecondaryButton:hover :global(svg) {
-    color: var(--colorBrandBackground) !important;
+.collapsedSecondaryArea:focus-visible {
+    outline: 2px solid var(--colorBrandStroke1);
+    outline-offset: 2px;
+    background-color: transparent;
 }
 
 .utilitiesContent {
@@ -558,7 +563,7 @@
 
 @media (max-width: 768px) {
     .body {
-        padding-bottom: 20px;
+        padding-bottom: 6px;
     }
 
     .newChatDialogSurface {

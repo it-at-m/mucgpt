@@ -19,17 +19,13 @@
 
 .triggerButton:hover,
 .triggerButton:focus-visible {
-    background-color: var(--colorNeutralBackground2Hover);
-    color: var(--colorBrandBackground);
+    background-color: var(--colorNeutralStroke2);
+    color: var(--colorNeutralForeground1);
 }
 
 .triggerButton:focus-visible {
     outline: 2px solid var(--colorBrandStroke1);
     outline-offset: 2px;
-}
-
-.triggerButton:hover {
-    transform: translateX(3px);
 }
 
 .triggerButtonCollapsed {
@@ -90,5 +86,5 @@
 
 .triggerButton:hover .moreIcon,
 .triggerButton:focus-visible .moreIcon {
-    color: var(--colorBrandBackground);
+    color: var(--colorNeutralForeground3);
 }

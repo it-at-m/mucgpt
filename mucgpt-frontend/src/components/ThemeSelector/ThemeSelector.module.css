@@ -11,15 +11,15 @@
 }
 
 .themeButton:hover {
-    background-color: var(--colorNeutralBackground2Hover) !important;
+    background-color: var(--colorNeutralStroke2) !important;
 }
 
 .themeSwitchRow {
     display: flex;
     align-items: center;
     width: 100%;
-    min-height: 40px;
-    padding: 0 4px;
+    min-height: 36px;
+    padding: 0 8px;
     border-radius: 10px;
     box-sizing: border-box;
     color: var(--colorNeutralForeground1);
@@ -28,7 +28,7 @@
 }
 
 .themeSwitchRow:hover {
-    background-color: var(--colorNeutralBackground2Hover);
+    background-color: var(--colorNeutralStroke2);
 }
 
 .rowContent {

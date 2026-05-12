@@ -32,6 +32,28 @@
     overflow-y: auto;
     overflow-x: hidden;
     padding-right: 2px;
+    scrollbar-width: none;
+}
+
+.list:hover {
+    scrollbar-width: thin;
+}
+
+.list::-webkit-scrollbar {
+    width: 0;
+}
+
+.list:hover::-webkit-scrollbar {
+    width: 8px;
+}
+
+.list::-webkit-scrollbar-thumb {
+    background-color: var(--colorNeutralStroke1);
+    border-radius: 999px;
+}
+
+.list::-webkit-scrollbar-track {
+    background-color: var(--colorNeutralBackground1);
 }
 
 .row {
@@ -47,13 +69,7 @@
 }
 
 .row:hover {
-    background-color: var(--colorNeutralBackground2Hover);
-    transform: translateX(5px);
-}
-
-.row:hover .chatName,
-.row:hover .pinnedIcon {
-    color: var(--colorBrandBackground);
+    background-color: var(--colorNeutralStroke2);
 }
 
 .rowActive {
@@ -156,13 +172,12 @@
 }
 
 .menuList :global(.fui-MenuItem:hover) {
-    color: var(--colorBrandBackground) !important;
-    background-color: var(--colorNeutralBackground2Hover) !important;
-    transform: translateX(3px);
+    color: var(--colorNeutralForeground1) !important;
+    background-color: var(--colorNeutralStroke2) !important;
 }
 
 .menuList :global(.fui-MenuItem:hover svg) {
-    color: var(--colorBrandBackground) !important;
+    color: var(--colorNeutralForeground1) !important;
 }
 
 .deleteMenuItem {

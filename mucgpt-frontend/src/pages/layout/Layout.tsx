@@ -1,7 +1,7 @@
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { Button, Divider, DrawerBody, OverlayDrawer, FluentProvider, InlineDrawer, Spinner } from "@fluentui/react-components";
-import { DismissRegular, Navigation24Regular } from "@fluentui/react-icons";
+import { Navigation24Regular } from "@fluentui/react-icons";
 import { useTranslation } from "react-i18next";
 
 import styles from "./Layout.module.css";
@@ -156,13 +156,13 @@ const AppShell = ({ config, isLight, languagePreference, onLanguageSelectionChan
                 </div>
             </div>
 
-            {isMobile && (
+            {isMobile && !mobileSidebarOpen && (
                 <Button
                     className={styles.mobileMenuButton}
-                    icon={mobileSidebarOpen ? <DismissRegular className={styles.iconSize24} /> : <Navigation24Regular className={styles.iconSize24} />}
-                    onClick={() => setMobileSidebarOpen(previous => !previous)}
+                    icon={<Navigation24Regular className={styles.iconSize24} />}
+                    onClick={() => setMobileSidebarOpen(true)}
                     aria-label={t("app_sidebar.toggle_navigation")}
-                    aria-expanded={mobileSidebarOpen}
+                    aria-expanded={false}
                     size="medium"
                 />
             )}

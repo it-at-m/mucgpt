@@ -1,4 +1,4 @@
-import { Popover, PopoverSurface, PopoverTrigger, Tooltip } from "@fluentui/react-components";
+import { Menu, MenuList, MenuPopover, MenuTrigger, Tooltip } from "@fluentui/react-components";
 import { MoreHorizontal20Regular } from "@fluentui/react-icons";
 import { ReactNode, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -124,8 +124,24 @@ export const UserSidebarProfile = ({
             setGravatarUrl(null);
             return;
         }
+
+        let isCurrent = true;
         setImgError(false);
-        sha256Hex(email).then(hash => setGravatarUrl(`${baseUrl}/gravatar/${hash}?d=initials&s=40`));
+        sha256Hex(email)
+            .then(hash => {
+                if (isCurrent) {
+                    setGravatarUrl(`${baseUrl}/gravatar/${hash}?d=initials&s=40`);
+                }
+            })
+            .catch(() => {
+                if (isCurrent) {
+                    setGravatarUrl(null);
+                }
+            });
+
+        return () => {
+            isCurrent = false;
+        };
     }, [user?.email, config.ad2image_url]);
 
     const showImg = gravatarUrl && !imgError;
@@ -155,8 +171,8 @@ export const UserSidebarProfile = ({
     );
 
     return (
-        <Popover positioning={{ position: "above", align: "start", offset: { mainAxis: 4, crossAxis: -9 } }}>
-            <PopoverTrigger disableButtonEnhancement>
+        <Menu positioning={{ position: "above", align: "start", offset: { mainAxis: 4, crossAxis: -9 } }}>
+            <MenuTrigger disableButtonEnhancement>
                 {isCollapsed ? (
                     <Tooltip content={tooltipLabel} relationship="description" positioning="after">
                         {trigger}
@@ -164,13 +180,13 @@ export const UserSidebarProfile = ({
                 ) : (
                     trigger
                 )}
-            </PopoverTrigger>
-            <PopoverSurface className={popoverClassName}>
-                <section aria-label={utilitiesLabel}>
+            </MenuTrigger>
+            <MenuPopover className={popoverClassName}>
+                <MenuList aria-label={utilitiesLabel}>
                     <div className={utilitiesContentClassName}>{utilitiesContent}</div>
-                </section>
-            </PopoverSurface>
-        </Popover>
+                </MenuList>
+            </MenuPopover>
+        </Menu>
     );
 };
 

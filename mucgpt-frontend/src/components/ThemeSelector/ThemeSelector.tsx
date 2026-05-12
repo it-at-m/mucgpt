@@ -56,12 +56,12 @@ export const ThemeSelector = ({ isLight, onThemeChange, layout = "default" }: Th
 
     if (layout === "row") {
         return (
-            <div className={styles.themeSwitchRow} onClick={handleButtonClick} role="button" tabIndex={0} onKeyDown={handleKeyDown}>
+            <div className={styles.themeSwitchRow}>
                 <span className={styles.rowContent}>
                     {themeIcon}
                     <span className={styles.rowLabel}>{themeText}</span>
                 </span>
-                <Switch checked={!currentIsLight} onChange={handleSwitchChange} aria-label={themeText} onClick={e => e.stopPropagation()} />
+                <Switch checked={!currentIsLight} onChange={handleSwitchChange} aria-label={themeText} />
             </div>
         );
     }

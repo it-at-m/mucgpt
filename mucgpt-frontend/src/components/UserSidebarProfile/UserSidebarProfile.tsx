@@ -1,4 +1,4 @@
-import { Menu, MenuList, MenuPopover, MenuTrigger, Tooltip } from "@fluentui/react-components";
+import { Menu, MenuPopover, MenuTrigger, Tooltip } from "@fluentui/react-components";
 import { MoreHorizontal20Regular } from "@fluentui/react-icons";
 import { ReactNode, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -182,9 +182,7 @@ export const UserSidebarProfile = ({
                 )}
             </MenuTrigger>
             <MenuPopover className={popoverClassName}>
-                <MenuList aria-label={utilitiesLabel}>
-                    <div className={utilitiesContentClassName}>{utilitiesContent}</div>
-                </MenuList>
+                <div className={utilitiesContentClassName}>{utilitiesContent}</div>
             </MenuPopover>
         </Menu>
     );

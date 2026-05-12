@@ -12,7 +12,6 @@ export const TutorialsButton = () => {
         <Button
             appearance={"subtle"}
             icon={<Book24Regular className={styles.icon} />}
-            aria-label={t("header.go_to_tutorials_aria", { defaultValue: "Zu Tutorials und Anleitungen navigieren" })}
             onClick={() => navigate("/tutorials")}
             className={styles.tutorialsButton}
         >

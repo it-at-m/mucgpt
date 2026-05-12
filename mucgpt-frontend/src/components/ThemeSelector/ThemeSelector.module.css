@@ -24,7 +24,6 @@
     box-sizing: border-box;
     color: var(--colorNeutralForeground1);
     font-weight: 500;
-    cursor: pointer;
 }
 
 .themeSwitchRow:hover {

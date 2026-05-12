@@ -75,7 +75,7 @@ class _ConfiguredLangChainAgentGraph:
 
     def _prepare_run(
         self, input_data: dict[str, Any], config: RunnableConfig | None
-    ) -> tuple[Any, list[Any], list[BaseTool], type[DefaultAgentState]]:
+    ) -> tuple[Any, list[Any], list[BaseTool], type[DefaultAgentState], list[dict[str, Any]] | None]:
         configurable = config.get("configurable", {}) if config else {}
         user_info = cast(AuthenticationResult | None, configurable.get("user_info"))
         if not user_info:

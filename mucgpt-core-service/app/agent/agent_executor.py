@@ -15,6 +15,7 @@ from langchain_core.messages import (
 from langchain_core.runnables import RunnableConfig
 from langchain_core.runnables.config import merge_configs
 from langfuse import observe, propagate_attributes
+from langfuse.langchain import CallbackHandler
 
 from agent.react_agent import MUCGPTReActAgent
 from agent.tools.tool_chunk import ToolStreamChunk
@@ -110,9 +111,9 @@ class MUCGPTAgentExecutor:
         self.agent = agent
 
         langfuse_handler = LangfuseProvider.get_callback_handler()
-        callbacks = [langfuse_handler] if langfuse_handler else []
+        callbacks: list[CallbackHandler] | None = [langfuse_handler] if langfuse_handler else None
         self.base_config: RunnableConfig = RunnableConfig(
-            callbacks=callbacks,
+            callbacks=callbacks, # type: ignore
             run_name="MUCGPTAgent",
         )
 
@@ -228,7 +229,7 @@ class MUCGPTAgentExecutor:
                                     ChatCompletionChunkChoice(
                                         delta=ChatCompletionDelta(
                                             content=chunk_content
-                                        ),
+                                        ), # type: ignore
                                         index=0,
                                         finish_reason=None,
                                     )
@@ -259,7 +260,7 @@ class MUCGPTAgentExecutor:
                     created=created,
                     choices=[
                         ChatCompletionChunkChoice(
-                            delta=ChatCompletionDelta(content=error_msg),
+                            delta=ChatCompletionDelta(content=error_msg), # type: ignore
                             index=0,
                             finish_reason="error",
                         )
@@ -274,7 +275,7 @@ class MUCGPTAgentExecutor:
                 created=created,
                 choices=[
                     ChatCompletionChunkChoice(
-                        delta=ChatCompletionDelta(), index=0, finish_reason="stop"
+                        delta=ChatCompletionDelta(), index=0, finish_reason="stop" # type: ignore
                     )
                 ],
             ).model_dump()
@@ -338,7 +339,7 @@ class MUCGPTAgentExecutor:
                         ChatCompletionChoice(
                             message=ChatCompletionMessage(
                                 role="assistant",
-                                content=ai_message.content,
+                                content=ai_message.content, # type: ignore
                             ),
                             index=0,
                             finish_reason="stop",

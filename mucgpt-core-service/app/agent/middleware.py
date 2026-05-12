@@ -9,7 +9,7 @@ from langchain.agents.middleware import (
     ToolCallRequest,
 )
 from langchain_core.messages import (
-    BaseMessage,
+    AnyMessage,
     HumanMessage,
     SystemMessage,
     ToolMessage,
@@ -154,9 +154,9 @@ def _build_data_sources_xml(data_sources: list[Any]) -> str:
 
 
 def _inject_data_sources(
-    messages: list[BaseMessage],
+    messages: list[AnyMessage],
     data_sources: list[Any],
-) -> list[BaseMessage]:
+) -> list[AnyMessage]:
     """Inject uploaded documents as a guarded HumanMessage."""
     for msg in messages:
         if isinstance(msg, HumanMessage) and isinstance(msg.content, str):

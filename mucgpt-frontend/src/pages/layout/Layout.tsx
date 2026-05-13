@@ -6,6 +6,7 @@ import { useTranslation } from "react-i18next";
 
 import styles from "./Layout.module.css";
 import logo from "../../assets/edelweiss_logo_white.png";
+import alternative_logo from "../../assets/mugg_tschibidi.png";
 import logo_black from "../../assets/edelweiss_logo_black.png";
 import { DEFAULTLANG, LanguageContext } from "../../components/LanguageSelector/LanguageContextProvider";
 import { TermsOfUseDialog } from "../../components/TermsOfUseDialog";

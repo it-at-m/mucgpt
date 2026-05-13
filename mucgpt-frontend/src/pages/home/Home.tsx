@@ -385,8 +385,8 @@ const Home = () => {
                                         core_version={config.core_version}
                                         frontend_version={config.frontend_version}
                                         assistant_version={config.assistant_version}
+                                        app_version={config.app_version}
                                         versionUrl={import.meta.env.BASE_URL + "#/version"}
-                                        variant="compact"
                                     />
                                 </div>
                             ) : (

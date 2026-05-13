@@ -2,8 +2,8 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from agent.agent import MUCGPTAgent
 from agent.agent_executor import MUCGPTAgentExecutor
+from agent.react_agent import MUCGPTReActAgent
 from agent.tools.tools import ToolCollection
 from core.auth_models import AuthenticationResult
 from init_app import ModelOptions, init_agent
@@ -16,7 +16,7 @@ class TestInitApp:
         """Set up test fixtures before each test method."""
         # mock model
         self.mock_model = MagicMock()
-        self.mock_agent = MagicMock(spec=MUCGPTAgent)
+        self.mock_agent = MagicMock(spec=MUCGPTReActAgent)
 
         # mock user
         self.mock_user = MagicMock(spec=AuthenticationResult)
@@ -28,9 +28,9 @@ class TestInitApp:
     @patch("config.model_provider.ModelProvider.get_model")
     @patch("agent.tools.tools.ToolCollection.get_tools", new_callable=AsyncMock)
     async def test_init_agent_calls_correct_components(
-            self,
-            mock_get_tools,
-            mock_get_model,
+        self,
+        mock_get_tools,
+        mock_get_model,
     ):
         # Arrange
         mock_get_model.return_value = self.mock_model

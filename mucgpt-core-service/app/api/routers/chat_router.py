@@ -83,6 +83,10 @@ async def chat_completions(
     """
     OpenAI-compatible chat completion endpoint (streaming or non-streaming)
     """
+    # TODO: init_agent currently rebuilds the tool collection and LangChain agent
+    # for every message, even within the same chat. Consider introducing a
+    # user-scoped tool/runtime cache while keeping assistant/chat-specific
+    # enabled tools, prompts, data sources, and policy state request-scoped.
     ae = await init_agent(user_info=user_info)
     try:
         # Convert creativity to temperature

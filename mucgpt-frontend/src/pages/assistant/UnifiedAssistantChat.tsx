@@ -72,6 +72,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
     const lastAnswerRef = useRef<HTMLDivElement | null>(null);
     const isLoadingRef = useRef(false);
     const assistantInfoRequestIdRef = useRef(0);
+    const handledNewChatTokenRef = useRef<string | null>(null);
 
     // useEffect für den Chat-Status
     useEffect(() => {
@@ -220,6 +221,11 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
 
     // useEffect to load the assistant config and chat history
     useEffect(() => {
+        // Claim synchronously so the dedicated new-chat effect below skips this token
+        // when the assistant also changes at the same time.
+        const tokenToClaim = getNewChatToken();
+        if (tokenToClaim !== null) handledNewChatTokenRef.current = tokenToClaim;
+
         const loadData = async () => {
             if (assistant_id) {
                 setDeletedAssistantSnapshot(null);
@@ -519,6 +525,15 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
         });
     }, [clearRequestedChatId, getRequestedChatId, loadAssistantChat, location.search]);
 
+    useEffect(() => {
+        const newChatToken = getNewChatToken();
+        if (!newChatToken || newChatToken === handledNewChatTokenRef.current) return;
+        handledNewChatTokenRef.current = newChatToken;
+        resetActiveChatState();
+        clearNewChatRequest();
+        void fetchHistory();
+    }, [location.search, getNewChatToken, resetActiveChatState, clearNewChatRequest, fetchHistory]);
+
     // onAssistantChanged-Funktion
     const onAssistantChanged = useCallback(
         async (newAssistant: Assistant) => {
@@ -601,13 +616,15 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                     fetchHistory,
                     setLastQuestionValue
                 );
+                // Chat was fully deleted — clear stale ?chatId= to prevent infinite skeleton.
+                if (activeChatRef.current === undefined) clearRequestedChatId();
             } catch (e) {
                 setError(e);
             } finally {
                 setIsLoadingValue(false);
             }
         },
-        [assistantChatStorage, clearChat, fetchHistory, isLoading, setIsLoadingValue, setLastQuestionValue]
+        [assistantChatStorage, clearChat, clearRequestedChatId, fetchHistory, isLoading, setIsLoadingValue, setLastQuestionValue]
     );
 
     // on Example Clicked-Funktion

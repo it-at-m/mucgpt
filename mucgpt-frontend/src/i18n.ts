@@ -451,7 +451,7 @@ i18n
                             section_basic: "Grundlegende Informationen",
                             section_behaviour: "Verhalten & Konfiguration",
                             section_tools: "Werkzeuge",
-                            section_prompts: "Prompts & Beispiele",
+                            section_prompts: "Folgeaktionen & Startvorschläge",
                             section_access: "Zugriff & Sichtbarkeit",
 
                             // Advanced settings fields
@@ -1786,7 +1786,7 @@ i18n
                             section_basic: "Grundlegnde Infos",
                             section_behaviour: "Verhoitn & Konfiguration",
                             section_tools: "Werkzeig",
-                            section_prompts: "Prompts & Beispui",
+                            section_prompts: "Folgeaktionen & Startvorschläge",
                             section_access: "Zugriff & Sichtbarkeit",
 
                             // Advanced settings fields

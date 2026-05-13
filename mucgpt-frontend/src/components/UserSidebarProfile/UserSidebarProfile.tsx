@@ -1,6 +1,6 @@
 import { Popover, PopoverSurface, PopoverTrigger, Tooltip } from "@fluentui/react-components";
 import { MoreHorizontal20Regular } from "@fluentui/react-icons";
-import { ReactNode, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import { ReactNode, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { User } from "../../api/models";
 import { useConfigContext } from "../../context/ConfigContext";
@@ -11,7 +11,6 @@ interface UserSidebarProfileProps {
     collapsed: boolean;
     isMobile: boolean;
     utilitiesContent: ReactNode;
-    utilitiesLabel: string;
     popoverClassName: string;
     utilitiesContentClassName: string;
 }
@@ -95,14 +94,7 @@ const deriveUserProfile = (user: User | null, fallbackName: string): DerivedUser
     };
 };
 
-export const UserSidebarProfile = ({
-    collapsed,
-    isMobile,
-    utilitiesContent,
-    utilitiesLabel,
-    popoverClassName,
-    utilitiesContentClassName
-}: UserSidebarProfileProps) => {
+export const UserSidebarProfile = ({ collapsed, isMobile, utilitiesContent, popoverClassName, utilitiesContentClassName }: UserSidebarProfileProps) => {
     const { t } = useTranslation();
     const { user } = useContext(UserContext);
     const config = useConfigContext();
@@ -115,6 +107,10 @@ export const UserSidebarProfile = ({
 
     const [gravatarUrl, setGravatarUrl] = useState<string | null>(null);
     const [imgError, setImgError] = useState(false);
+    const [isPopoverOpen, setIsPopoverOpen] = useState(false);
+    const triggerButtonRef = useRef<HTMLButtonElement | null>(null);
+    const popoverSurfaceRef = useRef<HTMLDivElement | null>(null);
+    const wasPopoverOpenRef = useRef(false);
     const handleImgError = useCallback(() => setImgError(true), []);
 
     useEffect(() => {
@@ -144,6 +140,16 @@ export const UserSidebarProfile = ({
         };
     }, [user?.email, config.ad2image_url]);
 
+    useEffect(() => {
+        if (isPopoverOpen) {
+            popoverSurfaceRef.current?.focus();
+        } else if (wasPopoverOpenRef.current) {
+            triggerButtonRef.current?.focus();
+        }
+
+        wasPopoverOpenRef.current = isPopoverOpen;
+    }, [isPopoverOpen]);
+
     const showImg = gravatarUrl && !imgError;
 
     const avatar = showImg ? (
@@ -155,7 +161,7 @@ export const UserSidebarProfile = ({
     );
 
     const trigger = (
-        <button type="button" className={triggerClassName} aria-label={t("common.settings")} title={isCollapsed ? tooltipLabel : undefined}>
+        <button ref={triggerButtonRef} type="button" className={triggerClassName} aria-label={t("common.settings")}>
             {avatar}
             {!isCollapsed && (
                 <>
@@ -172,9 +178,10 @@ export const UserSidebarProfile = ({
 
     return (
         <Popover
+            open={isPopoverOpen}
+            onOpenChange={(_, data) => setIsPopoverOpen(data.open)}
             positioning={{ position: "above", align: "start", offset: { mainAxis: 4, crossAxis: -9 } }}
             trapFocus={false}
-            unstable_disableAutoFocus
         >
             <PopoverTrigger disableButtonEnhancement>
                 {isCollapsed ? (
@@ -185,7 +192,7 @@ export const UserSidebarProfile = ({
                     trigger
                 )}
             </PopoverTrigger>
-            <PopoverSurface className={popoverClassName}>
+            <PopoverSurface ref={popoverSurfaceRef} className={popoverClassName} tabIndex={-1}>
                 <div className={utilitiesContentClassName}>{utilitiesContent}</div>
             </PopoverSurface>
         </Popover>

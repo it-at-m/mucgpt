@@ -335,7 +335,6 @@ export const AppSidebar = ({
                                 collapsed={collapsed}
                                 isMobile={isMobile}
                                 utilitiesContent={utilitiesContent}
-                                utilitiesLabel={t("app_sidebar.preferences_and_help")}
                                 popoverClassName={styles.settingsPopover}
                                 utilitiesContentClassName={styles.utilitiesContent}
                             />

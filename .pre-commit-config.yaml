@@ -47,4 +47,5 @@ repos:
         name: Run frontend fix
         entry: npm --prefix mucgpt-frontend run fix
         language: system
+        pass_filenames: false
         files: ^mucgpt-frontend/src/

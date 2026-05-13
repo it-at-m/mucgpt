@@ -470,20 +470,20 @@ i18n
                                 "Dies sind die Abteilungen, die Zugriff auf den Assistenten haben. Alle Abteilungen in der Hierarchie unter den ausgewählten Abteilungen haben ebenfalls Zugriff.",
 
                             // Quick prompts
-                            quick_prompts: "Vorgeschlagene Antworten",
-                            quick_prompts_placeholder: "Fügen Sie Vorgeschlagene Antworten hinzu, eine pro Zeile (Label|Prompt)",
-                            quick_prompt_label_placeholder: "Geben Sie das Label ein...",
+                            quick_prompts: "Folgeaktionen",
+                            quick_prompts_placeholder: "Fügen Sie Folgeaktionen hinzu, eine pro Zeile (Bezeichnung|Prompt)",
+                            quick_prompt_label_placeholder: "Geben Sie die Bezeichnung ein...",
                             quick_prompt_text_placeholder: "Geben Sie den Prompt-Text ein...",
-                            add_quick_prompt: "Vorgeschlagene Antwort hinzufügen",
-                            no_quick_prompts_selected: "Keine vorgeschlagenen Antworten hinzugefügt",
+                            add_quick_prompt: "Folgeaktion hinzufügen",
+                            no_quick_prompts_selected: "Keine Folgeaktionen hinzugefügt",
 
                             // Examples
-                            examples: "Beispiele",
-                            examples_placeholder: "Fügen Sie Beispiele hinzu, eine pro Zeile (Text|Wert)",
-                            example_text_placeholder: "Geben Sie den Beispiel-Text ein...",
-                            example_value_placeholder: "Geben Sie den Beispiel-Wert ein...",
-                            add_example: "Beispiel hinzufügen",
-                            no_examples_selected: "Keine Beispiele hinzugefügt",
+                            examples: "Startvorschläge",
+                            examples_placeholder: "Fügen Sie Startvorschläge hinzu, eine pro Zeile (Text|Wert)",
+                            example_text_placeholder: "Geben Sie einen Startvorschlag ein...",
+                            example_value_placeholder: "Geben Sie den Prompt-Text ein...",
+                            add_example: "Startvorschlag hinzufügen",
+                            no_examples_selected: "Keine Startvorschläge hinzugefügt",
 
                             // Tools
                             select_tools: "Werkzeuge auswählen",
@@ -1143,20 +1143,20 @@ i18n
                                 "These are the departments that have access to the assistant. All departments in the hierarchy below the selected departments also have access.",
 
                             // Quick prompts
-                            quick_prompts: "Quick Prompts",
-                            quick_prompts_placeholder: "Add quick prompts, one per line (label|prompt)",
+                            quick_prompts: "Follow-up Actions",
+                            quick_prompts_placeholder: "Add follow-up actions, one per line (label|prompt)",
                             quick_prompt_label_placeholder: "Enter the label...",
                             quick_prompt_text_placeholder: "Enter the prompt text...",
-                            add_quick_prompt: "Add Quick Prompt",
-                            no_quick_prompts_selected: "No quick prompts added",
+                            add_quick_prompt: "Add a Follow-up Action",
+                            no_quick_prompts_selected: "No follow-up actions added",
 
                             // Examples
-                            examples: "Examples",
-                            examples_placeholder: "Add examples, one per line (text|value)",
-                            example_text_placeholder: "Enter the example text...",
-                            example_value_placeholder: "Enter the example value...",
-                            add_example: "Add Example",
-                            no_examples_selected: "No examples added",
+                            examples: "Starter Prompts",
+                            examples_placeholder: "Add starter prompts, one per line (text|value)",
+                            example_text_placeholder: "Enter the starter prompt...",
+                            example_value_placeholder: "Enter the prompt text...",
+                            add_example: "Add a starter prompt",
+                            no_examples_selected: "No starter prompts added",
 
                             // Tools
                             select_tools: "Select Tools",
@@ -1805,20 +1805,20 @@ i18n
                                 "Des san de Abteilungen, de Zugriff auf den Assistenten ham. Olle Abteilungen in da Hierarchie unter de ausgsuachten Abteilungen ham a Zugriff.",
 
                             // Quick prompts
-                            quick_prompts: "Vorgeschlagene Antworten",
-                            quick_prompts_placeholder: "Füg vorgschlagene Antworn hinzu, oane pro Zeile (Label|Prompt)",
-                            quick_prompt_label_placeholder: "Gib des Label ei...",
+                            quick_prompts: "Folgeaktionen",
+                            quick_prompts_placeholder: "Füg Folgeaktionen hinzu, oane pro Zeile (Label|Prompt)",
+                            quick_prompt_label_placeholder: "Gib die Bezeichnung ei...",
                             quick_prompt_text_placeholder: "Gib den Prompt-Text ei...",
-                            add_quick_prompt: "Vorgeschlagene Antwort hinzufügn",
-                            no_quick_prompts_selected: "Koane vorgeschlagene Antworn hinzugfügt",
+                            add_quick_prompt: "Folgeaktion hinzufügn",
+                            no_quick_prompts_selected: "Koane Folgeaktionen hinzugfügt",
 
                             // Examples
-                            examples: "Beispui",
-                            examples_placeholder: "Füg Beispui hinzu, oans pro Zeile (Text|Wert)",
-                            example_text_placeholder: "Gib den Beispui-Text ei...",
-                            example_value_placeholder: "Gib den Beispui-Wert ei...",
-                            add_example: "Beispui hinzufügn",
-                            no_examples_selected: "Koane Beispui hinzugfügt",
+                            examples: "Startvorschläge",
+                            examples_placeholder: "Füg Startvorschläge hinzu, oans pro Zeile (Text|Wert)",
+                            example_text_placeholder: "Gib den Startvorschlag-Text ei...",
+                            example_value_placeholder: "Gib den Prompt-Text ei...",
+                            add_example: "Startvorschlag hinzufügn",
+                            no_examples_selected: "Koane Startvorschläge hinzugfügt",
 
                             // Tools
                             select_tools: "Werkzeig aussuachn",
@@ -2470,20 +2470,20 @@ i18n
                                 "Ce sont les départements qui ont accès à l'assistant. Tous les départements situés en dessous dans la hiérarchie y ont également accès.",
 
                             // Quick prompts
-                            quick_prompts: "Prompts rapides",
-                            quick_prompts_placeholder: "Ajouter des prompts rapides, un par ligne (label|prompt)",
+                            quick_prompts: "Mesures de suivi",
+                            quick_prompts_placeholder: "Ajouter des actions de suivi, un par ligne (label|prompt)",
                             quick_prompt_label_placeholder: "Saisir le libellé...",
                             quick_prompt_text_placeholder: "Saisir le texte du prompt...",
-                            add_quick_prompt: "Ajouter un prompt rapide",
-                            no_quick_prompts_selected: "Aucun prompt rapide ajouté",
+                            add_quick_prompt: "Ajouter une action de suivi",
+                            no_quick_prompts_selected: "Aucune action de suivi n'a été ajoutée",
 
                             // Examples
-                            examples: "Exemples",
-                            examples_placeholder: "Ajouter des exemples, un par ligne (texte|valeur)",
-                            example_text_placeholder: "Saisir le texte de l'exemple...",
-                            example_value_placeholder: "Saisir la valeur de l'exemple...",
-                            add_example: "Ajouter un exemple",
-                            no_examples_selected: "Aucun exemple ajouté",
+                            examples: "Suggestions pour débuter",
+                            examples_placeholder: "Ajouter des suggestions de démarrage, un par ligne (texte|valeur)",
+                            example_text_placeholder: "Saisissez le suggestions de démarrage...",
+                            example_value_placeholder: "Saisir le texte du prompt...",
+                            add_example: "Ajouter une suggestion de démarrage",
+                            no_examples_selected: "Aucune suggestion de démarrage n'a été ajoutée",
 
                             // Tools
                             select_tools: "Sélectionner des outils",
@@ -3133,20 +3133,20 @@ i18n
                             departments_info: "Це підрозділи, які мають доступ до асистента. Усі підрозділи нижче у вибраній ієрархії також матимуть доступ.",
 
                             // Quick prompts
-                            quick_prompts: "Швидкі промпти",
-                            quick_prompts_placeholder: "Додайте швидкі промпти, по одному в рядку (label|prompt)",
+                            quick_prompts: "Наступні кроки",
+                            quick_prompts_placeholder: "Додати подальші дії, по одному в рядку (label|prompt)",
                             quick_prompt_label_placeholder: "Введіть мітку...",
                             quick_prompt_text_placeholder: "Введіть текст промпту...",
-                            add_quick_prompt: "Додати швидкий промпт",
-                            no_quick_prompts_selected: "Швидкі промпти не додано",
+                            add_quick_prompt: "Додати наступну дію",
+                            no_quick_prompts_selected: "Подальших дій не додано",
 
                             // Examples
-                            examples: "Приклади",
-                            examples_placeholder: "Додайте приклади, по одному в рядку (text|value)",
-                            example_text_placeholder: "Введіть текст прикладу...",
-                            example_value_placeholder: "Введіть значення прикладу...",
-                            add_example: "Додати приклад",
-                            no_examples_selected: "Приклади не додано",
+                            examples: "Початкові підказки",
+                            examples_placeholder: "Додати підказки для початку, по одному в рядку (text|value)",
+                            example_text_placeholder: "Введіть командний рядок запуску...",
+                            example_value_placeholder: "Введіть текст промпту...",
+                            add_example: "Додати початковий запит",
+                            no_examples_selected: "Підказки для початківців не додано",
 
                             // Tools
                             select_tools: "Обрати інструменти",

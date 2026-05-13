@@ -1,4 +1,4 @@
-import { Menu, MenuPopover, MenuTrigger, Tooltip } from "@fluentui/react-components";
+import { Popover, PopoverSurface, PopoverTrigger, Tooltip } from "@fluentui/react-components";
 import { MoreHorizontal20Regular } from "@fluentui/react-icons";
 import { ReactNode, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -171,8 +171,12 @@ export const UserSidebarProfile = ({
     );
 
     return (
-        <Menu positioning={{ position: "above", align: "start", offset: { mainAxis: 4, crossAxis: -9 } }}>
-            <MenuTrigger disableButtonEnhancement>
+        <Popover
+            positioning={{ position: "above", align: "start", offset: { mainAxis: 4, crossAxis: -9 } }}
+            trapFocus={false}
+            unstable_disableAutoFocus
+        >
+            <PopoverTrigger disableButtonEnhancement>
                 {isCollapsed ? (
                     <Tooltip content={tooltipLabel} relationship="description" positioning="after">
                         {trigger}
@@ -180,11 +184,11 @@ export const UserSidebarProfile = ({
                 ) : (
                     trigger
                 )}
-            </MenuTrigger>
-            <MenuPopover className={popoverClassName}>
+            </PopoverTrigger>
+            <PopoverSurface className={popoverClassName}>
                 <div className={utilitiesContentClassName}>{utilitiesContent}</div>
-            </MenuPopover>
-        </Menu>
+            </PopoverSurface>
+        </Popover>
     );
 };
 

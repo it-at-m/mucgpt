@@ -5,8 +5,8 @@ from typing import Any
 
 from langchain.agents.middleware import ModelRequest
 from langchain_core.messages import SystemMessage
-from langchain_core.runnables.config import merge_configs
 from langchain_core.runnables import RunnableConfig
+from langchain_core.runnables.config import merge_configs
 from langgraph.config import get_config as get_runtime_config
 
 from agent.state_models.atlassian_state import AtlassianAgentState, ScopeDecision

@@ -2480,7 +2480,7 @@ i18n
                             // Examples
                             examples: "Suggestions pour débuter",
                             examples_placeholder: "Ajouter des suggestions de démarrage, un par ligne (texte|valeur)",
-                            example_text_placeholder: "Saisissez le suggestions de démarrage...",
+                            example_text_placeholder: "Saisissez les suggestions de démarrage...",
                             example_value_placeholder: "Saisir le texte du prompt...",
                             add_example: "Ajouter une suggestion de démarrage",
                             no_examples_selected: "Aucune suggestion de démarrage n'a été ajoutée",
@@ -3141,12 +3141,12 @@ i18n
                             no_quick_prompts_selected: "Подальших дій не додано",
 
                             // Examples
-                            examples: "Початкові підказки",
-                            examples_placeholder: "Додати підказки для початку, по одному в рядку (text|value)",
-                            example_text_placeholder: "Введіть командний рядок запуску...",
-                            example_value_placeholder: "Введіть текст промпту...",
+                            examples: "Початкові запити",
+                            examples_placeholder: "Додати початкові запити, по одному в рядку (text|value)",
+                            example_text_placeholder: "Введіть текст початкового запиту...",
+                            example_value_placeholder: "Введіть значення початкового запиту...",
                             add_example: "Додати початковий запит",
-                            no_examples_selected: "Підказки для початківців не додано",
+                            no_examples_selected: "Початкові запити не додано",
 
                             // Tools
                             select_tools: "Обрати інструменти",

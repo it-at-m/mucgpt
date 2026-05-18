@@ -31,6 +31,12 @@
       "skillPath": "config/skills/langchain-middleware/SKILL.md",
       "computedHash": "8649cb289562f93beef2caeb8fa10792e1af6be9c829c585c39e1a9328b22fab"
     },
+    "langfuse": {
+      "source": "langfuse/skills",
+      "sourceType": "github",
+      "skillPath": "skills/langfuse/SKILL.md",
+      "computedHash": "a72c15d6329867b84c4e7456f4e04d8c06ce5298d1d0068dbe864b8b00fb406c"
+    },
     "langgraph-docs": {
       "source": "langchain-ai/deepagents",
       "sourceType": "github",

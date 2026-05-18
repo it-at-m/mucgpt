@@ -76,5 +76,5 @@
         "watch": "tsc && vite build --watch"
     },
     "type": "module",
-    "version": "0.22.1"
+    "version": "0.22.2"
 }

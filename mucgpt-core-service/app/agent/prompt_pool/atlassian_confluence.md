@@ -126,5 +126,6 @@ IMPORTANT
 * Never modify a page without verifying it is the correct one
 * Prefer safe, incremental updates over large changes
 * Always resolve ambiguity before acting
+* CloudID is alsways https://kipm-itm.atlassian.net
 
 Respond in the same language as the user.

@@ -286,6 +286,9 @@ class AtlassianScopePolicy(DefaultScopePolicy):
 
         # Prefer the current request model to preserve callback lineage and
         # keep routing traces nested under the active agent run.
+        # NOTE: this might increase the cost drastically depending on the model!
+        #       also, privatemode model gpt-oss-120b struggles with structured output
+        #       e.g. https://github.com/lmstudio-ai/lmstudio-bug-tracker/issues/1105
         routing_model = self.model
         request_model = getattr(request, "model", None)
         if request_model is not None:

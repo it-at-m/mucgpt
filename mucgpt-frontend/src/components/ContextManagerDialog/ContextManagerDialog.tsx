@@ -8,7 +8,6 @@ import {
     DialogSurface,
     DialogTitle,
     DialogTrigger,
-    Spinner,
     Text,
     Tooltip
 } from "@fluentui/react-components";
@@ -24,6 +23,7 @@ import {
 } from "../../service/parsedDocumentStorage";
 import { useGlobalToastContext } from "../GlobalToastHandler/GlobalToastContext";
 import styles from "./ContextManagerDialog.module.css";
+import { EdelweissSpinner } from "../EdelweissSpinner";
 
 export type UploadedDataStatus = "pending" | "uploading" | "ready" | "error" | "pending-restore";
 
@@ -487,7 +487,11 @@ export const ContextManagerDialog = ({ open, onOpenChange, data, onDataChange }:
                             </Text>
                             <div className={styles.toolbarActions}>
                                 {isUploading ? (
-                                    <Spinner size="tiny" label={t("components.contextmanagerdialog.uploading", "Wird hochgeladen...")} labelPosition="after" />
+                                    <EdelweissSpinner
+                                        size="tiny"
+                                        label={t("components.contextmanagerdialog.uploading", "Wird hochgeladen...")}
+                                        labelPosition="after"
+                                    />
                                 ) : (
                                     <Button
                                         appearance="primary"

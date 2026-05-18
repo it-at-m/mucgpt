@@ -2,7 +2,7 @@ import { useContext } from "react";
 import { useTranslation } from "react-i18next";
 import styles from "./Unauthorized.module.css";
 import { UserContext } from "./layout/UserContextProvider";
-import { Spinner } from "@fluentui/react-components";
+import { EdelweissSpinner } from "../components/EdelweissSpinner";
 
 interface UnauthorizedProps {
     redirectUrl?: string;
@@ -17,7 +17,7 @@ const Unauthorized = ({ redirectUrl }: UnauthorizedProps) => {
     if (isLoading) {
         return (
             <div className={styles.container}>
-                <Spinner size="large" />
+                <EdelweissSpinner size="large" />
             </div>
         );
     }

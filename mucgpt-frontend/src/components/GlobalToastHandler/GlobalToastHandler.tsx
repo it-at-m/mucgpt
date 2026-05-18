@@ -1,11 +1,12 @@
 import React, { useEffect, useRef } from "react";
-import { useId, Toaster, useToastController, Toast, ToastTitle, ToastBody, ToastTrigger, Button, Spinner } from "@fluentui/react-components";
+import { useId, Toaster, useToastController, Toast, ToastTitle, ToastBody, ToastTrigger, Button } from "@fluentui/react-components";
 import type { ToastIntent } from "@fluentui/react-components";
 import { Dismiss20Regular } from "@fluentui/react-icons";
 import { useTranslation } from "react-i18next";
 import { useGlobalToastContext } from "./GlobalToastContext";
 import { DEFAULT_TOAST_TIMEOUT, ToastMessage, ToastType } from "./types";
 import styles from "./GlobalToastHandler.module.css";
+import { EdelweissSpinner } from "../EdelweissSpinner";
 
 const getIntent = (type: ToastType): ToastIntent => {
     switch (type) {
@@ -52,7 +53,7 @@ const getToastTimeout = (toast: ToastMessage) => {
 
 const renderToastContent = (toast: ToastMessage, closeLabel: string) => {
     const showIcon = toast.showIcon ?? true;
-    const media = !showIcon ? null : toast.type === "loading" ? <Spinner size="extra-small" /> : undefined;
+    const media = !showIcon ? null : toast.type === "loading" ? <EdelweissSpinner size="tiny" className={styles.toastSpinner} /> : undefined;
 
     return (
         <div className={`${styles.toastWrapper} ${getTypeClass(toast.type)}`}>

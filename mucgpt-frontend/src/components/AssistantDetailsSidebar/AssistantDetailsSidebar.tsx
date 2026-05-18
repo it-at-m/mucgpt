@@ -1,4 +1,4 @@
-import { InlineDrawer, DrawerHeader, Button, DrawerBody, Text, Menu, MenuTrigger, MenuPopover, MenuList, MenuItem, Spinner } from "@fluentui/react-components";
+import { InlineDrawer, DrawerHeader, Button, DrawerBody, Text, Menu, MenuTrigger, MenuPopover, MenuList, MenuItem } from "@fluentui/react-components";
 import {
     Dismiss24Regular,
     Chat24Regular,
@@ -18,6 +18,7 @@ import { useTranslation } from "react-i18next";
 import styles from "./AssistantDetailsSidebar.module.css";
 import { Assistant, AssistantResponse, CommunityAssistantSnapshot, ToolBase } from "../../api/models";
 import { MarkdownRenderer } from "../MarkdownRenderer/MarkdownRenderer";
+import { EdelweissSpinner } from "../EdelweissSpinner";
 
 export interface AssistantCardData {
     id: string;
@@ -113,7 +114,7 @@ export const AssistantDetailsSidebar = ({
             <DrawerBody className={styles.drawerBody}>
                 {isLoading ? (
                     <div className={styles.loadingContainer}>
-                        <Spinner size="extra-large" />
+                        <EdelweissSpinner size="extra-large" />
                         <Text>{t("common.loading")}</Text>
                     </div>
                 ) : (

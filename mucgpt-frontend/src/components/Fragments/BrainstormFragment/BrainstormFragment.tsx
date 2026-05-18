@@ -3,12 +3,13 @@ import { Markmap } from "markmap-view";
 import { useCallback, useContext, useLayoutEffect, useMemo, useRef, useState, useEffect } from "react";
 import styles from "./BrainstormFragment.module.css";
 import { useTranslation } from "react-i18next";
-import { Button, Tooltip, Spinner, MessageBar } from "@fluentui/react-components";
+import { Button, Tooltip, MessageBar } from "@fluentui/react-components";
 import { ArrowDownload24Regular, ContentView24Regular, ScaleFill24Regular, ArrowExpand24Regular } from "@fluentui/react-icons";
 import { IPureNode } from "markmap-common";
 import { LightContext } from "../../../pages/layout/LightContext";
 import { BaseFragment } from "../BaseFragment/BaseFragment";
 import { BaseFragmentProps } from "../types";
+import { EdelweissSpinner } from "../../EdelweissSpinner";
 
 // Constants
 const DEBOUNCE_DELAY = 500; // Increased for better performance
@@ -273,7 +274,7 @@ export const BrainstormFragment = ({ content, markdown, showLineNumbers = true }
 
             {isLoading && (
                 <div className={styles.loadingContainer}>
-                    <Spinner label={t("components.mindmap.loading")} />
+                    <EdelweissSpinner label={t("components.mindmap.loading")} />
                 </div>
             )}
 

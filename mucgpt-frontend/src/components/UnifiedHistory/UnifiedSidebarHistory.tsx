@@ -226,7 +226,7 @@ export const UnifiedSidebarHistory = ({ requestClose }: UnifiedSidebarHistoryPro
 
                         return (
                             <div key={`${entry.kind}-${entry.id}`} className={`${styles.row} ${isActive ? styles.rowActive : ""}`} role="listitem">
-                                <Tooltip content={title} relationship="description" positioning={{ position: "after", offset: 40 }}>
+                                <Tooltip content={title} relationship="description" positioning={{ position: "after", offset: 40 }} showDelay={400}>
                                     <Button
                                         appearance="subtle"
                                         className={styles.chatButton}
@@ -253,17 +253,17 @@ export const UnifiedSidebarHistory = ({ requestClose }: UnifiedSidebarHistoryPro
                                         </MenuTrigger>
                                         <MenuPopover className={styles.menuPopover}>
                                             <MenuList className={styles.menuList}>
-                                                <MenuItem icon={<Delete20Regular />} onClick={() => setEntryToDelete(entry)} className={styles.deleteMenuItem}>
-                                                    {t("components.history.delete")}
-                                                </MenuItem>
-                                                <MenuItem icon={<Edit20Regular />} onClick={() => renameEntry(entry)}>
-                                                    {t("components.history.rename")}
-                                                </MenuItem>
                                                 <MenuItem
                                                     icon={entry.favorite ? <PinOff20Regular /> : <Pin20Regular />}
                                                     onClick={() => void changeFavourite(entry, !entry.favorite)}
                                                 >
                                                     {entry.favorite ? t("components.history.unpin_chat") : t("components.history.pin_chat")}
+                                                </MenuItem>
+                                                <MenuItem icon={<Edit20Regular />} onClick={() => renameEntry(entry)}>
+                                                    {t("components.history.rename")}
+                                                </MenuItem>
+                                                <MenuItem icon={<Delete20Regular />} onClick={() => setEntryToDelete(entry)} className={styles.deleteMenuItem}>
+                                                    {t("components.history.delete")}
                                                 </MenuItem>
                                             </MenuList>
                                         </MenuPopover>

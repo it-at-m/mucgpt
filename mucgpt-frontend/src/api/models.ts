@@ -60,6 +60,7 @@ export interface ApplicationConfig {
     document_processing_enabled: boolean;
     footer_link_url?: string;
     footer_label?: string;
+    ad2image_url?: string;
 }
 
 export interface Model {

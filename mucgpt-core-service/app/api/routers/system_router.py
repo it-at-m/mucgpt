@@ -29,6 +29,7 @@ async def get_config(user_info=Depends(authenticate_user)) -> ConfigResponse:
         document_processing_enabled=settings.PARSER_BACKEND != ParserBackendType.NONE,
         footer_link_url=settings.FOOTER_LINK_URL,
         footer_label=settings.FOOTER_LABEL,
+        ad2image_url=settings.AD2IMAGE_URL,
     )
 
     models = settings.MODELS

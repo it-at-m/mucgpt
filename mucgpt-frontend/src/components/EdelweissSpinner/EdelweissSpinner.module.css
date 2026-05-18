@@ -27,7 +27,7 @@
 }
 
 .label {
-    color: currentColor;
+    color: currentcolor;
     font-size: var(--fontSizeBase300);
     line-height: var(--lineHeightBase300);
 }

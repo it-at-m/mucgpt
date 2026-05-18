@@ -90,6 +90,6 @@ IMPORTANT
 * Search is the default, not the exception
 * Never answer based on assumptions
 * Use tools proactively
-* CloudID is alsways https://kipm-itm.atlassian.net
+* CloudID is always https://kipm-itm.atlassian.net
 
 Respond in the same language as the user.

@@ -29,20 +29,14 @@ const SIZE_MAP: Record<Exclude<EdelweissSpinnerSize, number>, number> = {
 
 const getSizeValue = (size: EdelweissSpinnerSize) => (typeof size === "number" ? size : SIZE_MAP[size]);
 
-export const EdelweissSpinner = ({
-    size = "medium",
-    variant = "auto",
-    label,
-    labelPosition = "below",
-    className
-}: EdelweissSpinnerProps) => {
+export const EdelweissSpinner = ({ size = "medium", variant = "auto", label, labelPosition = "below", className }: EdelweissSpinnerProps) => {
     const isLight = useContext(LightContext);
     const resolvedVariant = variant === "auto" ? (isLight ? "black" : "white") : variant;
     const mark = resolvedVariant === "white" ? edelweissWhite : edelweissBlack;
     const spinnerSize = getSizeValue(size);
     const classes = [styles.root, labelPosition === "after" ? styles.inline : styles.stacked, className].filter(Boolean).join(" ");
     const style = {
-        "--edelweiss-spinner-size": "${spinnerSize}px"
+        "--edelweiss-spinner-size": `${spinnerSize}px`
     } as CSSProperties;
 
     return (

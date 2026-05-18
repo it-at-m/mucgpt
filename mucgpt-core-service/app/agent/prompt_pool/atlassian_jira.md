@@ -121,5 +121,6 @@ IMPORTANT
 
 * Actions without prior validation are not allowed
 * Always prefer correct multi-step execution over guessing
+* CloudID is always https://kipm-itm.atlassian.net
 
 Respond in the same language as the user.

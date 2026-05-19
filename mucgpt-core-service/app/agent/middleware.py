@@ -1,4 +1,5 @@
 from collections.abc import Awaitable, Callable
+from dataclasses import dataclass
 from typing import Any
 from xml.sax.saxutils import escape, quoteattr
 
@@ -15,6 +16,7 @@ from langchain_core.messages import (
     ToolMessage,
 )
 from langfuse.langchain import CallbackHandler as LFCallbackHandler
+from langgraph.config import get_config as get_runtime_config
 from langgraph.types import Command
 
 from agent.state_models.default_state import DefaultAgentState
@@ -23,6 +25,11 @@ from config.langfuse_provider import LangfuseProvider
 from core.logtools import getLogger
 
 logger = getLogger(name="agent-middleware")
+
+
+@dataclass
+class RequestContext:
+    assistant_id: str | None = None
 
 
 def _make_scoped_callbacks() -> list:
@@ -188,6 +195,26 @@ def _inject_data_sources(
     return messages_copy
 
 
+def _get_assistant_id_from_request(request: ModelRequest) -> str | None:
+    """Return the assistant id from runtime context or active config."""
+    runtime_context = getattr(getattr(request, "runtime", None), "context", None)
+    if isinstance(runtime_context, RequestContext):
+        return runtime_context.assistant_id
+    if isinstance(runtime_context, dict):
+        assistant_id = runtime_context.get("assistant_id")
+        if assistant_id:
+            return str(assistant_id)
+
+    try:
+        config = get_runtime_config() or {}
+    except Exception:
+        return None
+
+    configurable = config.get("configurable", {})
+    assistant_id = configurable.get("assistant_id")
+    return str(assistant_id) if assistant_id else None
+
+
 # TODO:
 # - Ensure the frontend is stateful and can send the current scope in the request
 class ContextMiddleware(AgentMiddleware):
@@ -225,7 +252,10 @@ class ContextMiddleware(AgentMiddleware):
         request = request.override(tools=policy.select_tools(request))
         logger.info(f"selected Tools: {len(request.tools or [])}")
         _annotate_span_with_policy_state(policy, request.state, self.state_schema)
-        request = policy.modify_system_message(request)
+
+        assistant_id = _get_assistant_id_from_request(request)
+        if not assistant_id:
+            request = policy.modify_system_message(request)
 
         state_data_sources = (
             request.state.get("data_sources", [])
@@ -256,7 +286,10 @@ class ContextMiddleware(AgentMiddleware):
         )
         logger.info(f"selected Tools: {len(request.tools or [])}")
         _annotate_span_with_policy_state(policy, request.state, self.state_schema)
-        request = await policy.amodify_system_message(request)
+
+        assistant_id = _get_assistant_id_from_request(request)
+        if not assistant_id:
+            request = await policy.amodify_system_message(request)
 
         state_data_sources = (
             request.state.get("data_sources", [])

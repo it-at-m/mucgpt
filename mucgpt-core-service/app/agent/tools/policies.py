@@ -397,7 +397,7 @@ class AtlassianScopePolicy(DefaultScopePolicy):
             "confluence": "atlassian_confluence.md",
             "general": "atlassian_general.md",
         }
-
+        # TODO: keep assistant prompt if user uses an assistant and only append scope-specific instructions
         current_scope = request.state.get("current_scope", self.DEFAULT_SCOPE)
         prompt_file = registry.get(current_scope)
         prompt_file_path = (

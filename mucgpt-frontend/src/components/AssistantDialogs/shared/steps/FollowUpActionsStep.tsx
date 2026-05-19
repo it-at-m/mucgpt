@@ -106,7 +106,7 @@ const DraggableFollowUpActionItem = memo(
                     <div className={sharedStyles.dynamicFieldInputRow}>
                         <span className={sharedStyles.dynamicFieldInputLabel}>Label:</span>
                         <Input
-                            placeholder={t("components.assistant_editor.quick_prompt_label_placeholder")}
+                            placeholder={t("components.assistant_editor.follow_up_action_label_placeholder")}
                             value={qp.label}
                             onChange={onChangeLabel(index)}
                             onBlur={onBlurLabel(index)}
@@ -117,7 +117,7 @@ const DraggableFollowUpActionItem = memo(
                     <div className={sharedStyles.dynamicFieldInputRow}>
                         <span className={sharedStyles.dynamicFieldInputLabel}>Prompt:</span>
                         <Textarea
-                            placeholder={t("components.assistant_editor.quick_prompt_text_placeholder")}
+                            placeholder={t("components.assistant_editor.follow_up_action_text_placeholder")}
                             value={qp.prompt}
                             onChange={onChangePrompt(index)}
                             disabled={!isOwner}
@@ -275,7 +275,7 @@ export const FollowUpActionsStep = ({ followUpActions, isOwner, onFollowUpAction
                 </p>
             )}
             <Field size="large" className={sharedStyles.formField}>
-                <label className={sharedStyles.formLabel}>{t("components.assistant_editor.quick_prompts")}</label>
+                <label className={sharedStyles.formLabel}>{t("components.assistant_editor.follow_up_actions")}</label>
                 <div className={sharedStyles.dndFieldContainer}>
                     <div className={sharedStyles.dndListContainer}>
                         {followUpActions.length > 0 ? (
@@ -295,13 +295,13 @@ export const FollowUpActionsStep = ({ followUpActions, isOwner, onFollowUpAction
                                 />
                             ))
                         ) : (
-                            <div className={sharedStyles.noToolsText}>{t("components.assistant_editor.no_quick_prompts_selected")}</div>
+                            <div className={sharedStyles.noToolsText}>{t("components.assistant_editor.no_follow_up_actions_selected")}</div>
                         )}
                     </div>
                     {isOwner && (
                         <div ref={buttonRef}>
                             <Button appearance="subtle" onClick={addFollowUpAction} className={sharedStyles.addFieldButton}>
-                                <Add24Regular /> {t("components.assistant_editor.add_quick_prompt")}
+                                <Add24Regular /> {t("components.assistant_editor.add_follow_up_action")}
                             </Button>
                         </div>
                     )}

@@ -105,7 +105,7 @@ const DraggableStarterPromptItem = memo(
                     <div className={sharedStyles.dynamicFieldInputRow}>
                         <span className={sharedStyles.dynamicFieldInputLabel}>Text:</span>
                         <Input
-                            placeholder={t("components.assistant_editor.example_text_placeholder")}
+                            placeholder={t("components.assistant_editor.starter_prompt_text_placeholder")}
                             value={example.text}
                             onChange={onChangeText(index)}
                             disabled={!isOwner}
@@ -115,7 +115,7 @@ const DraggableStarterPromptItem = memo(
                     <div className={sharedStyles.dynamicFieldInputRow}>
                         <span className={sharedStyles.dynamicFieldInputLabel}>Value:</span>
                         <Textarea
-                            placeholder={t("components.assistant_editor.example_value_placeholder")}
+                            placeholder={t("components.assistant_editor.starter_prompt_value_placeholder")}
                             value={example.value}
                             onChange={onChangeValue(index)}
                             disabled={!isOwner}
@@ -260,7 +260,7 @@ export const StarterPromptsStep = ({ starterPrompts, isOwner, onStarterPromptsCh
                 </p>
             )}
             <Field size="large" className={sharedStyles.formField}>
-                <label className={sharedStyles.formLabel}>{t("components.assistant_editor.starterPrompts")}</label>
+                <label className={sharedStyles.formLabel}>{t("components.assistant_editor.starter_prompts")}</label>
                 <div className={sharedStyles.dndFieldContainer}>
                     <div className={sharedStyles.dndListContainer}>
                         {starterPrompts.length > 0 ? (
@@ -279,13 +279,13 @@ export const StarterPromptsStep = ({ starterPrompts, isOwner, onStarterPromptsCh
                                 />
                             ))
                         ) : (
-                            <div className={sharedStyles.noToolsText}>{t("components.assistant_editor.no_starterPrompts_selected")}</div>
+                            <div className={sharedStyles.noToolsText}>{t("components.assistant_editor.no_starter_prompts_selected")}</div>
                         )}
                     </div>
                     {isOwner && (
                         <div ref={buttonRef}>
                             <Button appearance="subtle" onClick={addStarterPrompt} className={sharedStyles.addFieldButton}>
-                                <Add24Regular /> {t("components.assistant_editor.add_example")}
+                                <Add24Regular /> {t("components.assistant_editor.add_starter_prompt")}
                             </Button>
                         </div>
                     )}

@@ -100,7 +100,7 @@ i18n
                         language: "Sprache",
                         close: "Schließen",
                         messages: "Nachrichten",
-                        examples: "Beispiele",
+                        starter_prompts: "Startvorschläge",
                         sidebar_show: "Sidebar anzeigen",
                         sidebar_hide: "Sidebar ausblenden",
                         cancel: "Abbrechen",
@@ -469,21 +469,21 @@ i18n
                             departments_info:
                                 "Dies sind die Abteilungen, die Zugriff auf den Assistenten haben. Alle Abteilungen in der Hierarchie unter den ausgewählten Abteilungen haben ebenfalls Zugriff.",
 
-                            // Quick prompts
-                            quick_prompts: "Folgeaktionen",
-                            quick_prompts_placeholder: "Fügen Sie Folgeaktionen hinzu, eine pro Zeile (Bezeichnung|Prompt)",
-                            quick_prompt_label_placeholder: "Geben Sie die Bezeichnung ein...",
-                            quick_prompt_text_placeholder: "Geben Sie den Prompt-Text ein...",
-                            add_quick_prompt: "Folgeaktion hinzufügen",
-                            no_quick_prompts_selected: "Keine Folgeaktionen hinzugefügt",
+                            // Follow-up actions
+                            follow_up_actions: "Folgeaktionen",
+                            follow_up_actions_placeholder: "Fügen Sie Folgeaktionen hinzu, eine pro Zeile (Bezeichnung|Prompt)",
+                            follow_up_action_label_placeholder: "Geben Sie die Bezeichnung ein...",
+                            follow_up_action_text_placeholder: "Geben Sie den Prompt-Text ein...",
+                            add_follow_up_action: "Folgeaktion hinzufügen",
+                            no_follow_up_actions_selected: "Keine Folgeaktionen hinzugefügt",
 
-                            // Examples
-                            examples: "Startvorschläge",
-                            examples_placeholder: "Fügen Sie Startvorschläge hinzu, eine pro Zeile (Text|Wert)",
-                            example_text_placeholder: "Geben Sie einen Startvorschlag ein...",
-                            example_value_placeholder: "Geben Sie den Prompt-Text ein...",
-                            add_example: "Startvorschlag hinzufügen",
-                            no_examples_selected: "Keine Startvorschläge hinzugefügt",
+                            // Starter prompts
+                            starter_prompts: "Startvorschläge",
+                            starter_prompts_placeholder: "Fügen Sie Startvorschläge hinzu, eine pro Zeile (Text|Wert)",
+                            starter_prompt_text_placeholder: "Geben Sie einen Startvorschlag ein...",
+                            starter_prompt_value_placeholder: "Geben Sie den Prompt-Text ein...",
+                            add_starter_prompt: "Startvorschlag hinzufügen",
+                            no_starter_prompts_selected: "Keine Startvorschläge hinzugefügt",
 
                             // Tools
                             select_tools: "Werkzeuge auswählen",
@@ -775,7 +775,7 @@ i18n
                         theme: "Theme",
                         language: "Language",
                         messages: "Messages",
-                        examples: "Examples",
+                        starter_prompts: "Starter prompts",
                         sidebar_show: "Show sidebar",
                         sidebar_hide: "Hide sidebar",
                         cancel: "Cancel",
@@ -1142,21 +1142,21 @@ i18n
                             departments_info:
                                 "These are the departments that have access to the assistant. All departments in the hierarchy below the selected departments also have access.",
 
-                            // Quick prompts
-                            quick_prompts: "Follow-up Actions",
-                            quick_prompts_placeholder: "Add follow-up actions, one per line (label|prompt)",
-                            quick_prompt_label_placeholder: "Enter the label...",
-                            quick_prompt_text_placeholder: "Enter the prompt text...",
-                            add_quick_prompt: "Add a Follow-up Action",
-                            no_quick_prompts_selected: "No follow-up actions added",
+                            // Follow-up actions
+                            follow_up_actions: "Follow-up Actions",
+                            follow_up_actions_placeholder: "Add follow-up actions, one per line (label|prompt)",
+                            follow_up_action_label_placeholder: "Enter the label...",
+                            follow_up_action_text_placeholder: "Enter the prompt text...",
+                            add_follow_up_action: "Add a Follow-up Action",
+                            no_follow_up_actions_selected: "No follow-up actions added",
 
-                            // Examples
-                            examples: "Starter Prompts",
-                            examples_placeholder: "Add starter prompts, one per line (text|value)",
-                            example_text_placeholder: "Enter the starter prompt...",
-                            example_value_placeholder: "Enter the prompt text...",
-                            add_example: "Add a starter prompt",
-                            no_examples_selected: "No starter prompts added",
+                            // Starter prompts
+                            starter_prompts: "Starter Prompts",
+                            starter_prompts_placeholder: "Add starter prompts, one per line (text|value)",
+                            starter_prompt_text_placeholder: "Enter the starter prompt...",
+                            starter_prompt_value_placeholder: "Enter the prompt text...",
+                            add_starter_prompt: "Add a starter prompt",
+                            no_starter_prompts_selected: "No starter prompts added",
 
                             // Tools
                             select_tools: "Select Tools",
@@ -1440,7 +1440,7 @@ i18n
                         theme: "Farbschema",
                         language: "Sproch",
                         messages: "Nochrichten",
-                        examples: "Beispui",
+                        starter_prompts: "Startvorschläge",
                         sidebar_show: "Sidebar zoagn",
                         sidebar_hide: "Sidebar ausblenden",
                         cancel: "Obbrecha",
@@ -1804,21 +1804,21 @@ i18n
                             departments_info:
                                 "Des san de Abteilungen, de Zugriff auf den Assistenten ham. Olle Abteilungen in da Hierarchie unter de ausgsuachten Abteilungen ham a Zugriff.",
 
-                            // Quick prompts
-                            quick_prompts: "Folgeaktionen",
-                            quick_prompts_placeholder: "Füg Folgeaktionen hinzu, oane pro Zeile (Label|Prompt)",
-                            quick_prompt_label_placeholder: "Gib die Bezeichnung ei...",
-                            quick_prompt_text_placeholder: "Gib den Prompt-Text ei...",
-                            add_quick_prompt: "Folgeaktion hinzufügn",
-                            no_quick_prompts_selected: "Koane Folgeaktionen hinzugfügt",
+                            // Follow-up actions
+                            follow_up_actions: "Folgeaktionen",
+                            follow_up_actions_placeholder: "Füg Folgeaktionen hinzu, oane pro Zeile (Label|Prompt)",
+                            follow_up_action_label_placeholder: "Gib die Bezeichnung ei...",
+                            follow_up_action_text_placeholder: "Gib den Prompt-Text ei...",
+                            add_follow_up_action: "Folgeaktion hinzufügn",
+                            no_follow_up_actions_selected: "Koane Folgeaktionen hinzugfügt",
 
-                            // Examples
-                            examples: "Startvorschläge",
-                            examples_placeholder: "Füg Startvorschläge hinzu, oans pro Zeile (Text|Wert)",
-                            example_text_placeholder: "Gib den Startvorschlag-Text ei...",
-                            example_value_placeholder: "Gib den Prompt-Text ei...",
-                            add_example: "Startvorschlag hinzufügn",
-                            no_examples_selected: "Koane Startvorschläge hinzugfügt",
+                            // Starter prompts
+                            starter_prompts: "Startvorschläge",
+                            starter_prompts_placeholder: "Füg Startvorschläge hinzu, oans pro Zeile (Text|Wert)",
+                            starter_prompt_text_placeholder: "Gib den Startvorschlag-Text ei...",
+                            starter_prompt_value_placeholder: "Gib den Prompt-Text ei...",
+                            add_starter_prompt: "Startvorschlag hinzufügn",
+                            no_starter_prompts_selected: "Koane Startvorschläge hinzugfügt",
 
                             // Tools
                             select_tools: "Werkzeig aussuachn",
@@ -2110,7 +2110,7 @@ i18n
                         theme: "Thème",
                         language: "Langue",
                         messages: "Messages",
-                        examples: "Exemples",
+                        starter_prompts: "Starter prompts",
                         sidebar_show: "Afficher la barre latérale",
                         sidebar_hide: "Masquer la barre latérale",
                         cancel: "Annuler",
@@ -2451,7 +2451,7 @@ i18n
                             section_basic: "Informations de base",
                             section_behaviour: "Comportement et configuration",
                             section_tools: "Outils",
-                            section_actions_and_starters: "Prompts et exemples",
+                            section_actions_and_starters: "Actions de suivi & suggestions de démarrage",
                             section_access: "Accès et visibilité",
 
                             // Advanced settings fields
@@ -2469,21 +2469,21 @@ i18n
                             departments_info:
                                 "Ce sont les départements qui ont accès à l'assistant. Tous les départements situés en dessous dans la hiérarchie y ont également accès.",
 
-                            // Quick prompts
-                            quick_prompts: "Mesures de suivi",
-                            quick_prompts_placeholder: "Ajouter des actions de suivi, un par ligne (label|prompt)",
-                            quick_prompt_label_placeholder: "Saisir le libellé...",
-                            quick_prompt_text_placeholder: "Saisir le texte du prompt...",
-                            add_quick_prompt: "Ajouter une action de suivi",
-                            no_quick_prompts_selected: "Aucune action de suivi n'a été ajoutée",
+                            // Follow-up actions
+                            follow_up_actions: "Mesures de suivi",
+                            follow_up_actions_placeholder: "Ajouter des actions de suivi, un par ligne (label|prompt)",
+                            follow_up_action_label_placeholder: "Saisir le libellé...",
+                            follow_up_action_text_placeholder: "Saisir le texte du prompt...",
+                            add_follow_up_action: "Ajouter une action de suivi",
+                            no_follow_up_actions_selected: "Aucune action de suivi n'a été ajoutée",
 
-                            // Examples
-                            examples: "Suggestions pour débuter",
-                            examples_placeholder: "Ajouter des suggestions de démarrage, un par ligne (texte|valeur)",
-                            example_text_placeholder: "Saisissez les suggestions de démarrage...",
-                            example_value_placeholder: "Saisir le texte du prompt...",
-                            add_example: "Ajouter une suggestion de démarrage",
-                            no_examples_selected: "Aucune suggestion de démarrage n'a été ajoutée",
+                            // Starter prompts
+                            starter_prompts: "Suggestions pour débuter",
+                            starter_prompts_placeholder: "Ajouter des suggestions de démarrage, un par ligne (texte|valeur)",
+                            starter_prompt_text_placeholder: "Saisissez les suggestions de démarrage...",
+                            starter_prompt_value_placeholder: "Saisir le texte du prompt...",
+                            add_starter_prompt: "Ajouter une suggestion de démarrage",
+                            no_starter_prompts_selected: "Aucune suggestion de démarrage n'a été ajoutée",
 
                             // Tools
                             select_tools: "Sélectionner des outils",
@@ -2775,7 +2775,7 @@ i18n
                         theme: "Тема",
                         language: "Мова",
                         messages: "Повідомлення",
-                        examples: "Приклади",
+                        starter_prompts: "Стартові підказки",
                         sidebar_show: "Показати бічну панель",
                         sidebar_hide: "Сховати бічну панель",
                         cancel: "Скасувати",
@@ -3115,7 +3115,7 @@ i18n
                             section_basic: "Основна інформація",
                             section_behaviour: "Поведінка та конфігурація",
                             section_tools: "Інструменти",
-                            section_actions_and_starters: "Промпти та приклади",
+                            section_actions_and_starters: "Наступні дії та початкові запити",
                             section_access: "Доступ і видимість",
 
                             // Advanced settings fields
@@ -3132,21 +3132,21 @@ i18n
                             departments: "Підрозділи",
                             departments_info: "Це підрозділи, які мають доступ до асистента. Усі підрозділи нижче у вибраній ієрархії також матимуть доступ.",
 
-                            // Quick prompts
-                            quick_prompts: "Наступні кроки",
-                            quick_prompts_placeholder: "Додати подальші дії, по одному в рядку (label|prompt)",
-                            quick_prompt_label_placeholder: "Введіть мітку...",
-                            quick_prompt_text_placeholder: "Введіть текст промпту...",
-                            add_quick_prompt: "Додати наступну дію",
-                            no_quick_prompts_selected: "Подальших дій не додано",
+                            // Follow-up actions
+                            follow_up_actions: "Наступні кроки",
+                            follow_up_actions_placeholder: "Додати подальші дії, по одному в рядку (label|prompt)",
+                            follow_up_action_label_placeholder: "Введіть мітку...",
+                            follow_up_action_text_placeholder: "Введіть текст промпту...",
+                            add_follow_up_action: "Додати наступну дію",
+                            no_follow_up_actions_selected: "Подальших дій не додано",
 
-                            // Examples
-                            examples: "Початкові запити",
-                            examples_placeholder: "Додати початкові запити, по одному в рядку (text|value)",
-                            example_text_placeholder: "Введіть текст початкового запиту...",
-                            example_value_placeholder: "Введіть значення початкового запиту...",
-                            add_example: "Додати початковий запит",
-                            no_examples_selected: "Початкові запити не додано",
+                            // Starter prompts
+                            starter_prompts: "Початкові запити",
+                            starter_prompts_placeholder: "Додати початкові запити, по одному в рядку (text|value)",
+                            starter_prompt_text_placeholder: "Введіть текст початкового запиту...",
+                            starter_prompt_value_placeholder: "Введіть значення початкового запиту...",
+                            add_starter_prompt: "Додати початковий запит",
+                            no_starter_prompts_selected: "Початкові запити не додано",
 
                             // Tools
                             select_tools: "Обрати інструменти",

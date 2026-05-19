@@ -1,9 +1,10 @@
 import { useTranslation } from "react-i18next";
-import { Button, Spinner } from "@fluentui/react-components";
+import { Button } from "@fluentui/react-components";
 import { ArrowLeft24Regular, Edit24Regular, Wand24Regular } from "@fluentui/react-icons";
 
 import styles from "./AssistantCreateFlow.module.css";
 import { ExpandableTextarea } from "../shared";
+import { EdelweissSpinner } from "../../EdelweissSpinner";
 
 export type AssistantCreateFlowView = "mode_select" | "ai_input";
 
@@ -118,7 +119,7 @@ export function AssistantCreateFlow({
                         appearance="primary"
                         onClick={onGenerate}
                         disabled={loading || !input.trim()}
-                        icon={loading ? <Spinner size="tiny" /> : <Wand24Regular />}
+                        icon={loading ? <EdelweissSpinner size="tiny" variant="white" /> : <Wand24Regular />}
                     >
                         {loading ? t("components.assistant_editor.generating") : t("components.assistant_editor.generate_button")}
                     </Button>

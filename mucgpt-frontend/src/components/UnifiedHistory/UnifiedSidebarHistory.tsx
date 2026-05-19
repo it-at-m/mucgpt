@@ -14,7 +14,6 @@ import {
     MenuList,
     MenuPopover,
     MenuTrigger,
-    Spinner,
     Tab,
     TabList,
     Tooltip
@@ -36,6 +35,7 @@ import { UnifiedHistoryEntry, UnifiedHistoryStorage } from "./unifiedHistoryStor
 import { CloseConfirmationDialog } from "../AssistantDialogs/shared/CloseConfirmationDialog";
 import { useGlobalToastContext } from "../GlobalToastHandler/GlobalToastContext";
 import styles from "./UnifiedSidebarHistory.module.css";
+import { EdelweissSpinner } from "../EdelweissSpinner";
 
 const HISTORY_TAB_STORAGE_KEY = "UNIFIED_HISTORY_ASSISTANT_TAB";
 const DELETE_DIALOG_TITLE_MAX_LENGTH = 80;
@@ -197,7 +197,7 @@ export const UnifiedSidebarHistory = ({ requestClose }: UnifiedSidebarHistoryPro
     if (isLoading && !hasLoaded) {
         return (
             <div className={styles.centerState}>
-                <Spinner size="tiny" label={t("components.history.loading")} />
+                <EdelweissSpinner size="tiny" label={t("components.history.loading")} />
             </div>
         );
     }

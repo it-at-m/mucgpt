@@ -8,6 +8,7 @@ from redis.asyncio import Redis
 from redis.exceptions import LockError
 
 from config.settings import MCPSourceConfig, MCPTransport, get_mcp_settings
+from core.atlassian_oauth import AtlassianOAuthHttpAuth, AtlassianOAuthTokenStore
 from core.auth_models import AuthenticationResult
 from core.cache import RedisCache
 from core.logtools import getLogger
@@ -89,7 +90,18 @@ class McpLoader:
                             }
                         )
 
-                    if source_cfg.forward_token:
+                    if source_cfg.atlassian_oauth:
+                        if not await AtlassianOAuthTokenStore.has_token(
+                            user_info.user_id, source_id
+                        ):
+                            McpLoader._logger.info(
+                                f"Skipping MCP source '{source_id}' because the user "
+                                "has not connected Atlassian OAuth"
+                            )
+                            continue
+
+                        con["auth"] = AtlassianOAuthHttpAuth(user_info.user_id, source_id)
+                    elif source_cfg.forward_token:
                         auth_override = (
                             source_cfg.forward_auth_override.get_secret_value()
                             if source_cfg.forward_auth_override
@@ -224,9 +236,11 @@ class McpBearerAuthProvider(Auth):
         uid: str,
         token: str,
         auth_override: str | None = None,
+        default_scheme: str = "Basic",
     ) -> None:
         self._uid = uid
         self._auth_override = auth_override
+        self._default_scheme = default_scheme
         McpBearerAuthProvider._tokens[uid] = token
 
     @staticmethod
@@ -250,6 +264,6 @@ class McpBearerAuthProvider(Auth):
         if sep and scheme.lower() in {"bearer", "basic"}:
             request.headers["Authorization"] = normalized
         else:
-            request.headers["Authorization"] = f"Bearer {normalized}"
+            request.headers["Authorization"] = f"{self._default_scheme} {normalized}"
 
         yield request

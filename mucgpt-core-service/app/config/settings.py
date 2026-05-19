@@ -306,6 +306,7 @@ class MCPSourceConfig(BaseModel):
 
     url: str
     transport: MCPTransport
+    atlassian_oauth: bool = False
     forward_token: bool = False
     forward_auth_override: SecretStr | None = None
     headers: dict[str, SecretStr] | None = None
@@ -355,6 +356,15 @@ class MCPConfig(BaseModel):
     CACHE_TTL: int = 12 * 60 * 60  # 12h in s
 
 
+class AtlassianOAuthConfig(BaseModel):
+    """Atlassian MCP OAuth client settings."""
+
+    REDIRECT_BASE_URL: str | None = None
+    SUCCESS_REDIRECT_URL: str | None = None
+    CLIENT_NAME: str = "MUCGPT"
+    REQUEST_TIMEOUT: float = 30.0
+
+
 class RedisConfig(BaseModel):
     """Redis configuration (nested under REDIS key in YAML)."""
 
@@ -369,6 +379,7 @@ SSOSettings = SSOConfig
 LangfuseSettings = LangfuseConfig
 MCPSettings = MCPConfig
 RedisSettings = RedisConfig
+AtlassianOAuthSettings = AtlassianOAuthConfig
 
 
 class Settings(BaseSettings):
@@ -411,6 +422,9 @@ class Settings(BaseSettings):
     SSO: SSOConfig = Field(default_factory=SSOConfig)
     LANGFUSE: LangfuseConfig = Field(default_factory=LangfuseConfig)
     MCP: MCPConfig = Field(default_factory=MCPConfig)
+    ATLASSIAN_OAUTH: AtlassianOAuthConfig = Field(
+        default_factory=AtlassianOAuthConfig
+    )
     REDIS: RedisConfig = Field(default_factory=RedisConfig)
 
     # Customize settings sources to prioritize YAML config

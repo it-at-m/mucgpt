@@ -1,7 +1,7 @@
 from decimal import Decimal
 from typing import Any, Literal
 
-from pydantic import BaseModel, ConfigDict, Field, PositiveInt
+from pydantic import BaseModel, ConfigDict, Field, PositiveInt, SecretStr
 
 
 class SummarizeResult(BaseModel):
@@ -318,6 +318,30 @@ class ToolListResponse(BaseModel):
                 ]
             }
         }
+    )
+
+
+class AtlassianConnectionStatus(BaseModel):
+    connected: bool = Field(..., description="Whether the current user has an Atlassian MCP token stored.")
+
+
+class AtlassianConnectResponse(BaseModel):
+    authorization_url: str = Field(
+        ...,
+        description="Atlassian consent URL for the current user's OAuth connection.",
+    )
+    state: str = Field(..., description="OAuth state generated for this connection attempt.")
+
+
+class AtlassianTokenRequest(BaseModel):
+    access_token: SecretStr = Field(
+        ...,
+        description="PoC-only Atlassian OAuth access token. Do not send long-lived tokens here in production.",
+    )
+    token_type: str = Field("Bearer", description="Token type used for MCP Authorization.")
+    expires_in: int | None = Field(
+        None,
+        description="Optional TTL in seconds. If omitted, the PoC token remains until disconnected or Redis evicts it.",
     )
 
 

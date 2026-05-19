@@ -451,7 +451,7 @@ i18n
                             section_basic: "Grundlegende Informationen",
                             section_behaviour: "Verhalten & Konfiguration",
                             section_tools: "Werkzeuge",
-                            section_prompts: "Folgeaktionen & Startvorschläge",
+                            section_actions_and_starters: "Folgeaktionen & Startvorschläge",
                             section_access: "Zugriff & Sichtbarkeit",
 
                             // Advanced settings fields
@@ -1125,7 +1125,7 @@ i18n
                             section_basic: "Basic Information",
                             section_behaviour: "Behaviour & Configuration",
                             section_tools: "Tools",
-                            section_prompts: "Prompts & Examples",
+                            section_actions_and_starters: "Follow-up Actions & Starters",
                             section_access: "Access & Visibility",
 
                             // Advanced settings fields
@@ -1786,7 +1786,7 @@ i18n
                             section_basic: "Grundlegnde Infos",
                             section_behaviour: "Verhoitn & Konfiguration",
                             section_tools: "Werkzeig",
-                            section_prompts: "Folgeaktionen & Startvorschläge",
+                            section_actions_and_starters: "Folgeaktionen & Startvorschläge",
                             section_access: "Zugriff & Sichtbarkeit",
 
                             // Advanced settings fields
@@ -2451,7 +2451,7 @@ i18n
                             section_basic: "Informations de base",
                             section_behaviour: "Comportement et configuration",
                             section_tools: "Outils",
-                            section_prompts: "Prompts et exemples",
+                            section_actions_and_starters: "Prompts et exemples",
                             section_access: "Accès et visibilité",
 
                             // Advanced settings fields
@@ -3115,7 +3115,7 @@ i18n
                             section_basic: "Основна інформація",
                             section_behaviour: "Поведінка та конфігурація",
                             section_tools: "Інструменти",
-                            section_prompts: "Промпти та приклади",
+                            section_actions_and_starters: "Промпти та приклади",
                             section_access: "Доступ і видимість",
 
                             // Advanced settings fields

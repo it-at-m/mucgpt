@@ -16,8 +16,8 @@ export const useCreateAssistantState = () => {
     const [systemPrompt, setSystemPrompt] = useState<string>("");
     const [selectedTemplate, setSelectedTemplate] = useState<string>("");
     const [tools, setTools] = useState<ToolBase[]>([]);
-    const [quickPrompts, setQuickPrompts] = useState<QuickPrompt[]>([]);
-    const [examples, setExamples] = useState<ExampleModel[]>([]);
+    const [followUpActions, setFollowUpActions] = useState<QuickPrompt[]>([]);
+    const [starterPrompts, setStarterPrompts] = useState<ExampleModel[]>([]);
     const [hierarchicalAccess, setHierarchicalAccess] = useState<string[]>([]);
     const [isVisible, setIsVisible] = useState<boolean>(false);
     const [creativity, setCreativity] = useState<string>(CREATIVITY_LOW);
@@ -31,14 +31,14 @@ export const useCreateAssistantState = () => {
             description !== "" ||
             systemPrompt !== "" ||
             tools.length > 0 ||
-            quickPrompts.length > 0 ||
-            examples.length > 0 ||
+            followUpActions.length > 0 ||
+            starterPrompts.length > 0 ||
             hierarchicalAccess.length > 0 ||
             isVisible !== false ||
             creativity !== CREATIVITY_LOW ||
             (defaultModel !== undefined && defaultModel !== LLM.llm_name)
         );
-    }, [input, title, description, systemPrompt, tools, quickPrompts, examples, hierarchicalAccess, isVisible, creativity, defaultModel, LLM.llm_name]);
+    }, [input, title, description, systemPrompt, tools, followUpActions, starterPrompts, hierarchicalAccess, isVisible, creativity, defaultModel, LLM.llm_name]);
 
     useEffect(() => {
         setDefaultModel(LLM.llm_name);
@@ -113,8 +113,8 @@ export const useCreateAssistantState = () => {
         setSystemPrompt("");
         setSelectedTemplate("");
         setTools([]);
-        setQuickPrompts([]);
-        setExamples([]);
+        setFollowUpActions([]);
+        setStarterPrompts([]);
         setHierarchicalAccess([]);
         setIsVisible(false);
         setCreativity(CREATIVITY_LOW);
@@ -129,8 +129,8 @@ export const useCreateAssistantState = () => {
         systemPrompt,
         selectedTemplate,
         tools,
-        quickPrompts,
-        examples,
+        followUpActions,
+        starterPrompts,
         hierarchicalAccess,
         isVisible,
         creativity,
@@ -138,8 +138,8 @@ export const useCreateAssistantState = () => {
         hasChanges,
 
         // Setters (direct)
-        setQuickPrompts,
-        setExamples,
+        setFollowUpActions,
+        setStarterPrompts,
 
         // Update functions
         updateInput,

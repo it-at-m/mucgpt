@@ -10,14 +10,14 @@ import { combine } from "@atlaskit/pragmatic-drag-and-drop/combine";
 import sharedStyles from "../AssistantDialog.module.css";
 import { ExampleModel } from "../../../Example";
 
-interface ExamplesStepProps {
-    examples: ExampleModel[];
+interface StarterPromptsStepProps {
+    starterPrompts: ExampleModel[];
     isOwner: boolean;
-    onExamplesChange: (examples: ExampleModel[]) => void;
+    onStarterPromptsChange: (starterPrompts: ExampleModel[]) => void;
     onHasChanged?: (hasChanged: boolean) => void;
 }
 
-interface DraggableExampleItemProps {
+interface DraggableStarterPromptItemProps {
     example: ExampleModel;
     index: number;
     totalCount: number;
@@ -29,8 +29,8 @@ interface DraggableExampleItemProps {
     onMoveDown: (index: number) => void;
 }
 
-const DraggableExampleItem = memo(
-    ({ example, index, totalCount, isOwner, onChangeText, onChangeValue, onRemove, onMoveUp, onMoveDown }: DraggableExampleItemProps) => {
+const DraggableStarterPromptItem = memo(
+    ({ example, index, totalCount, isOwner, onChangeText, onChangeValue, onRemove, onMoveUp, onMoveDown }: DraggableStarterPromptItemProps) => {
         const { t } = useTranslation();
         const itemRef = useRef<HTMLDivElement>(null);
         const handleRef = useRef<HTMLButtonElement>(null);
@@ -140,9 +140,9 @@ const DraggableExampleItem = memo(
     }
 );
 
-DraggableExampleItem.displayName = "DraggableExampleItem";
+DraggableStarterPromptItem.displayName = "DraggableStarterPromptItem";
 
-export const ExamplesStep = ({ examples, isOwner, onExamplesChange, onHasChanged }: ExamplesStepProps) => {
+export const StarterPromptsStep = ({ starterPrompts, isOwner, onStarterPromptsChange, onHasChanged }: StarterPromptsStepProps) => {
     const { t } = useTranslation();
     const buttonRef = useRef<HTMLDivElement>(null);
 
@@ -161,49 +161,49 @@ export const ExamplesStep = ({ examples, isOwner, onExamplesChange, onHasChanged
                 if (sourceIndex === targetIndex) return;
 
                 const reordered = reorderWithEdge({
-                    list: examples,
+                    list: starterPrompts,
                     startIndex: sourceIndex,
                     indexOfTarget: targetIndex,
                     closestEdgeOfTarget: edge,
                     axis: "vertical"
                 });
 
-                onExamplesChange(reordered);
+                onStarterPromptsChange(reordered);
                 onHasChanged?.(true);
             }
         });
-    }, [examples, onExamplesChange, onHasChanged]);
+    }, [starterPrompts, onStarterPromptsChange, onHasChanged]);
 
     // Menu reorder handlers
     const handleMoveUp = useCallback(
         (index: number) => {
             if (index <= 0) return;
-            const reordered = [...examples];
+            const reordered = [...starterPrompts];
             const [moved] = reordered.splice(index, 1);
             reordered.splice(index - 1, 0, moved);
-            onExamplesChange(reordered);
+            onStarterPromptsChange(reordered);
             onHasChanged?.(true);
         },
-        [examples, onExamplesChange, onHasChanged]
+        [starterPrompts, onStarterPromptsChange, onHasChanged]
     );
 
     const handleMoveDown = useCallback(
         (index: number) => {
-            if (index >= examples.length - 1) return;
-            const reordered = [...examples];
+            if (index >= starterPrompts.length - 1) return;
+            const reordered = [...starterPrompts];
             const [moved] = reordered.splice(index, 1);
             reordered.splice(index + 1, 0, moved);
-            onExamplesChange(reordered);
+            onStarterPromptsChange(reordered);
             onHasChanged?.(true);
         },
-        [examples, onExamplesChange, onHasChanged]
+        [starterPrompts, onStarterPromptsChange, onHasChanged]
     );
 
-    const addExample = useCallback(() => {
+    const addStarterPrompt = useCallback(() => {
         // Only add if there is no empty example
-        const hasEmpty = examples.some(ex => !ex.text.trim() || !ex.value.trim());
+        const hasEmpty = starterPrompts.some(ex => !ex.text.trim() || !ex.value.trim());
         if (!hasEmpty) {
-            onExamplesChange([...examples, { id: crypto.randomUUID(), text: "", value: "" }]);
+            onStarterPromptsChange([...starterPrompts, { id: crypto.randomUUID(), text: "", value: "" }]);
             onHasChanged?.(true);
             // Scroll to bottom after adding
             setTimeout(() => {
@@ -214,42 +214,42 @@ export const ExamplesStep = ({ examples, isOwner, onExamplesChange, onHasChanged
                 });
             }, 50);
         }
-    }, [examples, onExamplesChange, onHasChanged]);
+    }, [starterPrompts, onStarterPromptsChange, onHasChanged]);
 
-    const onChangeExampleText = useCallback(
+    const onChangeStarterPromptText = useCallback(
         (index: number) => (e: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>) => {
             const newValue = e.currentTarget.value;
-            const updated = [...examples];
+            const updated = [...starterPrompts];
             updated[index] = {
                 ...updated[index],
                 text: newValue
             };
-            onExamplesChange(updated);
+            onStarterPromptsChange(updated);
             onHasChanged?.(true);
         },
-        [examples, onExamplesChange, onHasChanged]
+        [starterPrompts, onStarterPromptsChange, onHasChanged]
     );
 
-    const onChangeExampleValue = useCallback(
+    const onChangeStarterPromptValue = useCallback(
         (index: number) => (e: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>) => {
             const newValue = e.currentTarget.value;
-            const updated = [...examples];
+            const updated = [...starterPrompts];
             updated[index] = {
                 ...updated[index],
                 value: newValue
             };
-            onExamplesChange(updated);
+            onStarterPromptsChange(updated);
             onHasChanged?.(true);
         },
-        [examples, onExamplesChange, onHasChanged]
+        [starterPrompts, onStarterPromptsChange, onHasChanged]
     );
 
-    const removeExample = useCallback(
+    const removeStarterPrompt = useCallback(
         (index: number) => {
-            onExamplesChange(examples.filter((_, i) => i !== index));
+            onStarterPromptsChange(starterPrompts.filter((_, i) => i !== index));
             onHasChanged?.(true);
         },
-        [examples, onExamplesChange, onHasChanged]
+        [starterPrompts, onStarterPromptsChange, onHasChanged]
     );
 
     return (
@@ -260,31 +260,31 @@ export const ExamplesStep = ({ examples, isOwner, onExamplesChange, onHasChanged
                 </p>
             )}
             <Field size="large" className={sharedStyles.formField}>
-                <label className={sharedStyles.formLabel}>{t("components.assistant_editor.examples")}</label>
+                <label className={sharedStyles.formLabel}>{t("components.assistant_editor.starterPrompts")}</label>
                 <div className={sharedStyles.dndFieldContainer}>
                     <div className={sharedStyles.dndListContainer}>
-                        {examples.length > 0 ? (
-                            examples.map((ex, index) => (
-                                <DraggableExampleItem
+                        {starterPrompts.length > 0 ? (
+                            starterPrompts.map((ex, index) => (
+                                <DraggableStarterPromptItem
                                     key={ex.id}
                                     example={ex}
                                     index={index}
-                                    totalCount={examples.length}
+                                    totalCount={starterPrompts.length}
                                     isOwner={isOwner}
-                                    onChangeText={onChangeExampleText}
-                                    onChangeValue={onChangeExampleValue}
-                                    onRemove={removeExample}
+                                    onChangeText={onChangeStarterPromptText}
+                                    onChangeValue={onChangeStarterPromptValue}
+                                    onRemove={removeStarterPrompt}
                                     onMoveUp={handleMoveUp}
                                     onMoveDown={handleMoveDown}
                                 />
                             ))
                         ) : (
-                            <div className={sharedStyles.noToolsText}>{t("components.assistant_editor.no_examples_selected")}</div>
+                            <div className={sharedStyles.noToolsText}>{t("components.assistant_editor.no_starterPrompts_selected")}</div>
                         )}
                     </div>
                     {isOwner && (
                         <div ref={buttonRef}>
-                            <Button appearance="subtle" onClick={addExample} className={sharedStyles.addFieldButton}>
+                            <Button appearance="subtle" onClick={addStarterPrompt} className={sharedStyles.addFieldButton}>
                                 <Add24Regular /> {t("components.assistant_editor.add_example")}
                             </Button>
                         </div>

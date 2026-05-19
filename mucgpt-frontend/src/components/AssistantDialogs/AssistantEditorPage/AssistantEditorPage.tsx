@@ -29,7 +29,7 @@ import { QuickPrompt } from "../../QuickPrompt/QuickPrompt";
 import { useToolsContext } from "../../ToolsProvider";
 import { useAssistantState } from "../shared/hooks/useAssistantState";
 import { useCreateAssistantState } from "../shared/hooks/useCreateAssistantState";
-import { ToolsStep, QuickPromptsStep, ExamplesStep, AdvancedSettingsStep, VisibilityStep, ExpandableTextarea } from "../shared";
+import { ToolsStep, FollowUpActionsStep, StarterPromptsStep, AdvancedSettingsStep, VisibilityStep, ExpandableTextarea } from "../shared";
 import { AssistantStrategy } from "../../../pages/assistant/AssistantStrategy";
 import { CREATIVITY_LOW } from "../../../constants";
 import { EdelweissSpinner } from "../../EdelweissSpinner";
@@ -94,10 +94,10 @@ interface SettingsFormProps {
     onDefaultModelChange: (value: string | undefined) => void;
     selectedTools: ToolInfo[];
     onToolsChange: (tools: ToolBase[]) => void;
-    quickPrompts: QuickPrompt[];
-    onQuickPromptsChange: (value: QuickPrompt[]) => void;
-    examples: ExampleModel[];
-    onExamplesChange: (value: ExampleModel[]) => void;
+    followUpActions: QuickPrompt[];
+    onFollowUpActionsChange: (value: QuickPrompt[]) => void;
+    starterPrompts: ExampleModel[];
+    onStarterPromptsChange: (value: ExampleModel[]) => void;
     isOwner: boolean;
     publishDepartments: string[];
     isVisible: boolean;
@@ -212,17 +212,17 @@ function SettingsForm(props: SettingsFormProps) {
                     />
                 </SectionCard>
 
-                <SectionCard title={t("components.assistant_editor.section_prompts")} className={styles.sectionPrompts}>
-                    <QuickPromptsStep
-                        quickPrompts={props.quickPrompts}
+                <SectionCard title={t("components.assistant_editor.section_actions_and_starters")} className={styles.sectionActionsAndStarters}>
+                    <FollowUpActionsStep
+                        followUpActions={props.followUpActions}
                         isOwner={props.isOwner}
-                        onQuickPromptsChange={props.onQuickPromptsChange}
+                        onFollowUpActionsChange={props.onFollowUpActionsChange}
                         onHasChanged={props.onHasChanged}
                     />
-                    <ExamplesStep
-                        examples={props.examples}
+                    <StarterPromptsStep
+                        starterPrompts={props.starterPrompts}
                         isOwner={props.isOwner}
-                        onExamplesChange={props.onExamplesChange}
+                        onStarterPromptsChange={props.onStarterPromptsChange}
                         onHasChanged={props.onHasChanged}
                     />
                 </SectionCard>
@@ -265,7 +265,7 @@ export const AssistantEditorPage = (props: AssistantEditorPageProps) => {
             description: "",
             system_message: "",
             quick_prompts: [],
-            examples: [],
+            starterPrompts: [],
             creativity: CREATIVITY_LOW,
             default_model: LLM.llm_name,
             tools: [],
@@ -349,8 +349,8 @@ export const AssistantEditorPage = (props: AssistantEditorPageProps) => {
 
         setLoading(true);
 
-        const validQuickPrompts = (s.quickPrompts ?? []).filter((quickPrompt: QuickPrompt) => quickPrompt.label?.trim() && quickPrompt.prompt?.trim());
-        const validExamples = (s.examples ?? []).filter((example: ExampleModel) => example.text?.trim() && example.value?.trim());
+        const validFollowUpActions = (s.followUpActions ?? []).filter((quickPrompt: QuickPrompt) => quickPrompt.label?.trim() && quickPrompt.prompt?.trim());
+        const validStarterPrompts = (s.starterPrompts ?? []).filter((example: ExampleModel) => example.text?.trim() && example.value?.trim());
         const assistantDescription = s.description || "";
 
         try {
@@ -363,8 +363,8 @@ export const AssistantEditorPage = (props: AssistantEditorPageProps) => {
                     default_model: createState.defaultModel,
                     tools: createState.tools ?? [],
                     owner_ids: [],
-                    examples: validExamples.map(example => ({ text: example.text, value: example.value })),
-                    quick_prompts: validQuickPrompts.map(quickPrompt => ({
+                    examples: validStarterPrompts.map(example => ({ text: example.text, value: example.value })),
+                    quick_prompts: validFollowUpActions.map(quickPrompt => ({
                         label: quickPrompt.label,
                         prompt: quickPrompt.prompt,
                         tooltip: quickPrompt.tooltip
@@ -491,10 +491,10 @@ export const AssistantEditorPage = (props: AssistantEditorPageProps) => {
                         onDefaultModelChange={settingsState.updateDefaultModel}
                         selectedTools={selectedTools}
                         onToolsChange={settingsState.updateTools}
-                        quickPrompts={settingsState.quickPrompts ?? []}
-                        onQuickPromptsChange={settingsState.setQuickPrompts}
-                        examples={settingsState.examples ?? []}
-                        onExamplesChange={settingsState.setExamples}
+                        followUpActions={settingsState.followUpActions ?? []}
+                        onFollowUpActionsChange={settingsState.setFollowUpActions}
+                        starterPrompts={settingsState.starterPrompts ?? []}
+                        onStarterPromptsChange={settingsState.setStarterPrompts}
                         isOwner={isOwner}
                         publishDepartments={settingsState.hierarchicalAccess ?? []}
                         isVisible={settingsState.isVisible ?? false}

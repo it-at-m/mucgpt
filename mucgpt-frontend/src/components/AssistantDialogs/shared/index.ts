@@ -1,6 +1,6 @@
 export { ToolsStep } from "./steps/ToolsStep";
-export { QuickPromptsStep } from "./steps/QuickPromptsStep";
-export { ExamplesStep } from "./steps/ExamplesStep";
+export { FollowUpActionsStep } from "./steps/FollowUpActionsStep";
+export { StarterPromptsStep } from "./steps/StarterPromptsStep";
 export { AdvancedSettingsStep } from "./steps/AdvancedSettingsStep";
 export { VisibilityStep } from "./steps/VisibilityStep";
 

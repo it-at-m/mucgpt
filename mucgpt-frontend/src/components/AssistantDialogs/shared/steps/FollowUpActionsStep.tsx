@@ -10,14 +10,14 @@ import { combine } from "@atlaskit/pragmatic-drag-and-drop/combine";
 import sharedStyles from "../AssistantDialog.module.css";
 import { QuickPrompt } from "../../../QuickPrompt/QuickPrompt";
 
-interface QuickPromptsStepProps {
-    quickPrompts: QuickPrompt[];
+interface FollowUpActionsStepProps {
+    followUpActions: QuickPrompt[];
     isOwner: boolean;
-    onQuickPromptsChange: (quickPrompts: QuickPrompt[]) => void;
+    onFollowUpActionsChange: (followUpActions: QuickPrompt[]) => void;
     onHasChanged?: (hasChanged: boolean) => void;
 }
 
-interface DraggableQuickPromptItemProps {
+interface DraggableFollowUpActionItemProps {
     qp: QuickPrompt;
     index: number;
     totalCount: number;
@@ -30,8 +30,8 @@ interface DraggableQuickPromptItemProps {
     onMoveDown: (index: number) => void;
 }
 
-const DraggableQuickPromptItem = memo(
-    ({ qp, index, totalCount, isOwner, onChangeLabel, onBlurLabel, onChangePrompt, onRemove, onMoveUp, onMoveDown }: DraggableQuickPromptItemProps) => {
+const DraggableFollowUpActionItem = memo(
+    ({ qp, index, totalCount, isOwner, onChangeLabel, onBlurLabel, onChangePrompt, onRemove, onMoveUp, onMoveDown }: DraggableFollowUpActionItemProps) => {
         const { t } = useTranslation();
         const itemRef = useRef<HTMLDivElement>(null);
         const handleRef = useRef<HTMLButtonElement>(null);
@@ -142,9 +142,9 @@ const DraggableQuickPromptItem = memo(
     }
 );
 
-DraggableQuickPromptItem.displayName = "DraggableQuickPromptItem";
+DraggableFollowUpActionItem.displayName = "DraggableFollowUpActionItem";
 
-export const QuickPromptsStep = ({ quickPrompts, isOwner, onQuickPromptsChange, onHasChanged }: QuickPromptsStepProps) => {
+export const FollowUpActionsStep = ({ followUpActions, isOwner, onFollowUpActionsChange, onHasChanged }: FollowUpActionsStepProps) => {
     const { t } = useTranslation();
     const buttonRef = useRef<HTMLDivElement>(null);
 
@@ -163,49 +163,49 @@ export const QuickPromptsStep = ({ quickPrompts, isOwner, onQuickPromptsChange, 
                 if (sourceIndex === targetIndex) return;
 
                 const reordered = reorderWithEdge({
-                    list: quickPrompts,
+                    list: followUpActions,
                     startIndex: sourceIndex,
                     indexOfTarget: targetIndex,
                     closestEdgeOfTarget: edge,
                     axis: "vertical"
                 });
 
-                onQuickPromptsChange(reordered);
+                onFollowUpActionsChange(reordered);
                 onHasChanged?.(true);
             }
         });
-    }, [quickPrompts, onQuickPromptsChange, onHasChanged]);
+    }, [followUpActions, onFollowUpActionsChange, onHasChanged]);
 
     // Menu reorder handlers
     const handleMoveUp = useCallback(
         (index: number) => {
             if (index <= 0) return;
-            const reordered = [...quickPrompts];
+            const reordered = [...followUpActions];
             const [moved] = reordered.splice(index, 1);
             reordered.splice(index - 1, 0, moved);
-            onQuickPromptsChange(reordered);
+            onFollowUpActionsChange(reordered);
             onHasChanged?.(true);
         },
-        [quickPrompts, onQuickPromptsChange, onHasChanged]
+        [followUpActions, onFollowUpActionsChange, onHasChanged]
     );
 
     const handleMoveDown = useCallback(
         (index: number) => {
-            if (index >= quickPrompts.length - 1) return;
-            const reordered = [...quickPrompts];
+            if (index >= followUpActions.length - 1) return;
+            const reordered = [...followUpActions];
             const [moved] = reordered.splice(index, 1);
             reordered.splice(index + 1, 0, moved);
-            onQuickPromptsChange(reordered);
+            onFollowUpActionsChange(reordered);
             onHasChanged?.(true);
         },
-        [quickPrompts, onQuickPromptsChange, onHasChanged]
+        [followUpActions, onFollowUpActionsChange, onHasChanged]
     );
 
-    const addQuickPrompt = useCallback(() => {
+    const addFollowUpAction = useCallback(() => {
         // Only add if there is no empty quick prompt
-        const hasEmpty = quickPrompts.some(ex => !ex.label.trim() || !ex.prompt.trim());
+        const hasEmpty = followUpActions.some(ex => !ex.label.trim() || !ex.prompt.trim());
         if (!hasEmpty) {
-            onQuickPromptsChange([...quickPrompts, { id: crypto.randomUUID(), label: "", prompt: "", tooltip: "" }]);
+            onFollowUpActionsChange([...followUpActions, { id: crypto.randomUUID(), label: "", prompt: "", tooltip: "" }]);
             onHasChanged?.(true);
             // Scroll to bottom after adding
             setTimeout(() => {
@@ -216,55 +216,55 @@ export const QuickPromptsStep = ({ quickPrompts, isOwner, onQuickPromptsChange, 
                 });
             }, 50);
         }
-    }, [quickPrompts, onQuickPromptsChange, onHasChanged]);
+    }, [followUpActions, onFollowUpActionsChange, onHasChanged]);
 
-    const onChangeQuickPromptLabel = useCallback(
+    const onChangeFollowUpActionLabel = useCallback(
         (index: number) => (e: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>) => {
             const newValue = e.currentTarget.value;
-            const updated = [...quickPrompts];
+            const updated = [...followUpActions];
             updated[index] = {
                 ...updated[index],
                 label: newValue
             };
-            onQuickPromptsChange(updated);
+            onFollowUpActionsChange(updated);
             onHasChanged?.(true);
         },
-        [quickPrompts, onQuickPromptsChange, onHasChanged]
+        [followUpActions, onFollowUpActionsChange, onHasChanged]
     );
 
-    const onBlurQuickPromptLabel = useCallback(
+    const onBlurFollowUpActionLabel = useCallback(
         (index: number) => (e: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>) => {
             const newValue = e.currentTarget.value;
-            const updated = [...quickPrompts];
+            const updated = [...followUpActions];
             updated[index] = {
                 ...updated[index],
                 tooltip: newValue
             };
-            onQuickPromptsChange(updated);
+            onFollowUpActionsChange(updated);
         },
-        [quickPrompts, onQuickPromptsChange]
+        [followUpActions, onFollowUpActionsChange]
     );
 
-    const onChangeQuickPromptPrompt = useCallback(
+    const onChangeFollowUpActionPrompt = useCallback(
         (index: number) => (e: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>) => {
             const newValue = e.currentTarget.value;
-            const updated = [...quickPrompts];
+            const updated = [...followUpActions];
             updated[index] = {
                 ...updated[index],
                 prompt: newValue
             };
-            onQuickPromptsChange(updated);
+            onFollowUpActionsChange(updated);
             onHasChanged?.(true);
         },
-        [quickPrompts, onQuickPromptsChange, onHasChanged]
+        [followUpActions, onFollowUpActionsChange, onHasChanged]
     );
 
-    const removeQuickPrompt = useCallback(
+    const removeFollowUpAction = useCallback(
         (index: number) => {
-            onQuickPromptsChange(quickPrompts.filter((_, i) => i !== index));
+            onFollowUpActionsChange(followUpActions.filter((_, i) => i !== index));
             onHasChanged?.(true);
         },
-        [quickPrompts, onQuickPromptsChange, onHasChanged]
+        [followUpActions, onFollowUpActionsChange, onHasChanged]
     );
 
     return (
@@ -278,18 +278,18 @@ export const QuickPromptsStep = ({ quickPrompts, isOwner, onQuickPromptsChange, 
                 <label className={sharedStyles.formLabel}>{t("components.assistant_editor.quick_prompts")}</label>
                 <div className={sharedStyles.dndFieldContainer}>
                     <div className={sharedStyles.dndListContainer}>
-                        {quickPrompts.length > 0 ? (
-                            quickPrompts.map((qp, index) => (
-                                <DraggableQuickPromptItem
+                        {followUpActions.length > 0 ? (
+                            followUpActions.map((qp, index) => (
+                                <DraggableFollowUpActionItem
                                     key={qp.id}
                                     qp={qp}
                                     index={index}
-                                    totalCount={quickPrompts.length}
+                                    totalCount={followUpActions.length}
                                     isOwner={isOwner}
-                                    onChangeLabel={onChangeQuickPromptLabel}
-                                    onBlurLabel={onBlurQuickPromptLabel}
-                                    onChangePrompt={onChangeQuickPromptPrompt}
-                                    onRemove={removeQuickPrompt}
+                                    onChangeLabel={onChangeFollowUpActionLabel}
+                                    onBlurLabel={onBlurFollowUpActionLabel}
+                                    onChangePrompt={onChangeFollowUpActionPrompt}
+                                    onRemove={removeFollowUpAction}
                                     onMoveUp={handleMoveUp}
                                     onMoveDown={handleMoveDown}
                                 />
@@ -300,7 +300,7 @@ export const QuickPromptsStep = ({ quickPrompts, isOwner, onQuickPromptsChange, 
                     </div>
                     {isOwner && (
                         <div ref={buttonRef}>
-                            <Button appearance="subtle" onClick={addQuickPrompt} className={sharedStyles.addFieldButton}>
+                            <Button appearance="subtle" onClick={addFollowUpAction} className={sharedStyles.addFieldButton}>
                                 <Add24Regular /> {t("components.assistant_editor.add_quick_prompt")}
                             </Button>
                         </div>

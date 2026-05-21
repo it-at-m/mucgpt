@@ -14,7 +14,6 @@ import Version from "./pages/version/Version";
 import Tutorials from "./pages/tutorials/Tutorials";
 import { LLMContextProvider } from "./components/LLMSelector/LLMContextProvider";
 import { QuickPromptProvider } from "./components/QuickPrompt/QuickPromptProvider";
-import { HeaderContextProvider } from "./pages/layout/HeaderContextProvider";
 import LocalAssistant from "./pages/assistant/LocalAssistant";
 import OwnedCommunityAssistant from "./pages/assistant/OwnedCommunityAssistant";
 import CommunityAssistant from "./pages/assistant/CommunityAssistant";
@@ -25,6 +24,30 @@ import Discovery from "./pages/discovery/Discovery";
 import Home from "./pages/home/Home";
 import { AssistantEditorPage } from "./components/AssistantDialogs/AssistantEditorPage/AssistantEditorPage";
 initializeIcons();
+
+async function cleanupServiceWorkerForGatewayBuild() {
+    const pwaEnabled = import.meta.env.VITE_DISABLE_PWA !== "true";
+    if (import.meta.env.MODE === "development" || pwaEnabled || !("serviceWorker" in navigator)) {
+        return;
+    }
+
+    const hadController = Boolean(navigator.serviceWorker.controller);
+    const registrations = await navigator.serviceWorker.getRegistrations();
+    if (registrations.length === 0) {
+        return;
+    }
+
+    await Promise.all(registrations.map(registration => registration.unregister()));
+
+    if ("caches" in window) {
+        const cacheNames = await caches.keys();
+        await Promise.all(cacheNames.map(cacheName => caches.delete(cacheName)));
+    }
+
+    if (hadController) {
+        window.location.reload();
+    }
+}
 
 const router = createHashRouter([
     {
@@ -159,16 +182,14 @@ async function enableMocking() {
         });
 }
 
-enableMocking().then(() => {
+Promise.all([cleanupServiceWorkerForGatewayBuild(), enableMocking()]).then(() => {
     ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
         <React.StrictMode>
             <GlobalToastProvider>
                 <LanguageContextProvider>
                     <LLMContextProvider>
                         <QuickPromptProvider>
-                            <HeaderContextProvider>
-                                <RouterProvider router={router} />
-                            </HeaderContextProvider>
+                            <RouterProvider router={router} />
                         </QuickPromptProvider>
                     </LLMContextProvider>
                 </LanguageContextProvider>

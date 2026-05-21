@@ -4,9 +4,10 @@ from typing import Any, cast
 from langchain.agents import create_agent
 from langchain_core.language_models import BaseChatModel
 from langchain_core.runnables import RunnableConfig
+from langchain_core.runnables.config import merge_configs
 from langchain_core.tools.base import BaseTool
 
-from agent.middleware import ContextMiddleware, ToolErrorMiddleware
+from agent.middleware import ContextMiddleware, RequestContext, ToolErrorMiddleware
 from agent.state_models.default_state import DefaultAgentState
 from agent.tools.mcp import McpBearerAuthProvider
 from agent.tools.tools import ToolCollection, select_agent_state_schema
@@ -56,6 +57,7 @@ class _ConfiguredLangChainAgentGraph:
             system_prompt=DEFAULT_INSTRUCTIONS,
             debug=self.debug,
             state_schema=initial_state_schema,
+            context_schema=RequestContext,
         )
 
     @staticmethod
@@ -74,7 +76,7 @@ class _ConfiguredLangChainAgentGraph:
 
     def _prepare_run(
         self, input_data: dict[str, Any], config: RunnableConfig | None
-    ) -> tuple[Any, list[Any], list[BaseTool], type[DefaultAgentState]]:
+    ) -> tuple[Any, list[Any], list[BaseTool], type[DefaultAgentState], list[dict[str, Any]] | None, RequestContext]:
         configurable = config.get("configurable", {}) if config else {}
         user_info = cast(AuthenticationResult | None, configurable.get("user_info"))
         if not user_info:
@@ -84,6 +86,7 @@ class _ConfiguredLangChainAgentGraph:
         extra_body = configurable.get("llm_extra_body")
         enabled_tools = configurable.get("enabled_tools")
         selected_llm = configurable.get("llm")
+        assistant_id = configurable.get("assistant_id")
 
         # Keep MCP auth token map up-to-date for forwarded auth providers.
         McpBearerAuthProvider.set_token(user_info.user_id, user_info.token)
@@ -109,7 +112,11 @@ class _ConfiguredLangChainAgentGraph:
         configurable = config.get("configurable", {}) if config else {}
         data_sources = configurable.get("data_sources", [])
 
-        return model, messages, tools_to_use, agent_state_schema, data_sources
+        request_context = RequestContext(
+            assistant_id=str(assistant_id) if assistant_id else None
+        )
+
+        return model, messages, tools_to_use, agent_state_schema, data_sources, request_context
 
     async def astream(
         self,
@@ -119,8 +126,18 @@ class _ConfiguredLangChainAgentGraph:
         config: RunnableConfig | None = None,
         **kwargs,
     ):
-        model, messages, tools_to_use, agent_state_schema, data_sources = (
+        model, messages, tools_to_use, agent_state_schema, data_sources, request_context = (
             self._prepare_run(input_data, config)
+        )
+
+        # Merge agent_state_schema into trace metadata so Langfuse shows which
+        # policy was selected for this run. Using merge_configs avoids mutating
+        # the caller's config dict.
+        config = merge_configs(
+            config or {},
+            RunnableConfig(
+                metadata={"agent_state_schema": agent_state_schema.__name__}
+            ),
         )
 
         active_agent = self.agent
@@ -145,6 +162,7 @@ class _ConfiguredLangChainAgentGraph:
                 else None,
                 debug=self.debug,
                 state_schema=agent_state_schema,
+                context_schema=RequestContext,
             )
 
         input_payload = {"messages": messages}
@@ -155,6 +173,7 @@ class _ConfiguredLangChainAgentGraph:
             input_payload,
             stream_mode=stream_mode,
             config=config,
+            context=request_context,
             **kwargs,
         ):
             yield item
@@ -166,8 +185,16 @@ class _ConfiguredLangChainAgentGraph:
         config: RunnableConfig | None = None,
         **kwargs,
     ):
-        model, messages, tools_to_use, agent_state_schema, data_sources = (
+        model, messages, tools_to_use, agent_state_schema, data_sources, request_context = (
             self._prepare_run(input_data, config)
+        )
+
+        # Merge agent_state_schema into trace metadata.
+        config = merge_configs(
+            config or {},
+            RunnableConfig(
+                metadata={"agent_state_schema": agent_state_schema.__name__}
+            ),
         )
 
         active_agent = self.agent
@@ -192,13 +219,16 @@ class _ConfiguredLangChainAgentGraph:
                 else None,
                 debug=self.debug,
                 state_schema=agent_state_schema,
+                context_schema=RequestContext,
             )
 
         input_payload = {"messages": messages}
         if data_sources:
             input_payload["data_sources"] = data_sources  # type: ignore
 
-        return await active_agent.ainvoke(input_payload, config=config, **kwargs)
+        return await active_agent.ainvoke(
+            input_payload, config=config, context=request_context, **kwargs
+        )
 
 
 class MUCGPTReActAgent:

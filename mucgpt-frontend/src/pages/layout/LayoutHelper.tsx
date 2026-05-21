@@ -5,10 +5,10 @@ import type { AppThemeTokens } from "./themeTokens";
 type ThemeMode = "light" | "dark";
 
 type AppCssVariableName =
-    | "--app-header-background"
-    | "--app-header-hover"
-    | "--app-header-pressed"
-    | "--app-header-foreground"
+    | "--app-primary-action-background"
+    | "--app-primary-action-hover"
+    | "--app-primary-action-pressed"
+    | "--app-primary-action-foreground"
     | "--app-primary-subtle-foreground"
     | "--app-status-info-background"
     | "--app-status-info-border"
@@ -23,7 +23,6 @@ export const enum STORAGE_KEYS {
     SETTINGS_FONT_SCALING = "SETTINGS_FONT_SCALING",
     SETTINGS_IS_LIGHT_THEME = "SETTINGS_IS_LIGHT_THEME",
     VERSION_UPDATE_SEEN = "VERSION_UPDATE_SEEN",
-    SHOW_SIDEBAR = "SHOW_SIDEBAR",
     HOME_ASSISTANT_MODE = "HOME_ASSISTANT_MODE",
     CHAT_FILE_IDS = "chatFileIds",
     SELECTED_TOOLS = "SELECTED_TOOLS"
@@ -207,7 +206,13 @@ const createFluentThemeOverrides = (tokens: AppThemeTokens): Partial<Theme> => (
     colorStatusDangerForegroundInverted: tokens.statusErrorForeground,
     colorStatusDangerBorderActive: tokens.statusErrorBorder,
     colorStatusDangerBorder1: tokens.statusErrorBorder,
-    colorStatusDangerBorder2: tokens.statusErrorBorder
+    colorStatusDangerBorder2: tokens.statusErrorBorder,
+
+    // Make everything rounder / less square
+    borderRadiusSmall: "6px",
+    borderRadiusMedium: "10px",
+    borderRadiusLarge: "12px",
+    borderRadiusXLarge: "16px"
 });
 
 export const getAppTokens = (isLight: boolean): AppThemeTokens => (isLight ? lightThemeTokens : darkThemeTokens);
@@ -240,10 +245,10 @@ export const createScaledTypographyTheme = (theme: Theme, scaling: number): Them
 };
 
 export const createAppCssVars = (tokens: AppThemeTokens): AppCssVariables => ({
-    "--app-header-background": tokens.headerBackground,
-    "--app-header-hover": tokens.headerHover,
-    "--app-header-pressed": tokens.headerPressed,
-    "--app-header-foreground": tokens.textOnHeader,
+    "--app-primary-action-background": tokens.primaryActionBackground,
+    "--app-primary-action-hover": tokens.primaryActionHover,
+    "--app-primary-action-pressed": tokens.primaryActionPressed,
+    "--app-primary-action-foreground": tokens.textOnPrimaryAction,
     "--app-primary-subtle-foreground": tokens.primarySubtleOn,
     "--app-status-info-background": tokens.statusInfoBackground,
     "--app-status-info-border": tokens.statusInfoBorder,

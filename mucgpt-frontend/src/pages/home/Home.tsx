@@ -10,7 +10,6 @@ import { useContext, useEffect, useMemo, useState } from "react";
 import { AssistantStorageService } from "../../service/assistantstorage";
 import { AssistantResponse, CommunityAssistant } from "../../api/models";
 import { ASSISTANT_STORE } from "../../constants";
-import { DEFAULTHEADER, HeaderContext } from "../layout/HeaderContextProvider";
 import { UserContext } from "../layout/UserContextProvider";
 import { QuestionInput } from "../../components/QuestionInput/QuestionInput";
 import { getAllCommunityAssistantsApi, getUserSubscriptionsApi, getOwnedCommunityAssistants } from "../../api/assistant-client";
@@ -69,13 +68,8 @@ const Home = () => {
     const [loadError, setLoadError] = useState(false);
     const { tools } = useToolsContext();
 
-    const { setHeader } = useContext(HeaderContext);
     const { user } = useContext(UserContext);
     const config = useContext(ConfigContext);
-
-    useEffect(() => {
-        setHeader(DEFAULTHEADER);
-    }, [setHeader]);
 
     useEffect(() => {
         if (user) {
@@ -391,8 +385,8 @@ const Home = () => {
                                         core_version={config.core_version}
                                         frontend_version={config.frontend_version}
                                         assistant_version={config.assistant_version}
+                                        app_version={config.app_version}
                                         versionUrl={import.meta.env.BASE_URL + "#/version"}
-                                        variant="compact"
                                     />
                                 </div>
                             ) : (

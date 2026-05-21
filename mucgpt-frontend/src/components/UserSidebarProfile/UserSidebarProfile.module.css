@@ -1,0 +1,90 @@
+.triggerButton {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    min-height: 52px;
+    padding: 8px 10px;
+    border: 0;
+    border-radius: 12px;
+    background: transparent;
+    color: var(--colorNeutralForeground1);
+    cursor: pointer;
+    text-align: left;
+    transition:
+        background-color 120ms ease,
+        color 120ms ease,
+        transform 180ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.triggerButton:hover,
+.triggerButton:focus-visible {
+    background-color: var(--colorNeutralStroke2);
+    color: var(--colorNeutralForeground1);
+}
+
+.triggerButton:focus-visible {
+    outline: 2px solid var(--colorBrandStroke1);
+    outline-offset: 2px;
+}
+
+.triggerButtonCollapsed {
+    justify-content: center;
+    padding-left: 0;
+    padding-right: 0;
+}
+
+.triggerButtonCollapsed:hover {
+    transform: translateX(2px);
+}
+
+.avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    object-fit: cover;
+    flex-shrink: 0;
+}
+
+.avatarFallback {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: var(--colorBrandBackground);
+    color: var(--colorNeutralBackground1);
+    font-size: 12px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    user-select: none;
+}
+
+.textBlock {
+    display: flex;
+    flex: 1;
+    min-width: 0;
+    align-items: center;
+}
+
+.name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.moreIcon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--colorNeutralForeground3);
+    flex-shrink: 0;
+}
+
+.triggerButton:hover .moreIcon,
+.triggerButton:focus-visible .moreIcon {
+    color: var(--colorNeutralForeground3);
+}

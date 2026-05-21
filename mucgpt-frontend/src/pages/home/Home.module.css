@@ -58,8 +58,8 @@
 }
 
 .chatNavigationButton {
-    background: var(--app-header-background);
-    color: var(--app-header-foreground);
+    background: var(--app-primary-action-background);
+    color: var(--app-primary-action-foreground);
     padding: 12px 24px;
     border-radius: 6px;
     text-decoration: none;
@@ -77,7 +77,7 @@
 }
 
 .chatNavigationButton:hover {
-    background: var(--app-header-hover);
+    background: var(--app-primary-action-hover);
     text-decoration: none;
     transform: translateY(-1px);
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);

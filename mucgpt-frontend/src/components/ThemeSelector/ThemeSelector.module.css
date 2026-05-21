@@ -1,11 +1,54 @@
 .themeButton {
-    color: var(--app-header-foreground) !important;
+    color: var(--colorNeutralForeground1) !important;
+}
+
+.themeButtonRow {
+    width: 100%;
+    justify-content: flex-start !important;
+    text-align: left;
+    border-radius: 10px !important;
+    padding-right: 12px !important;
 }
 
 .themeButton:hover {
-    background-color: var(--app-header-hover) !important;
+    background-color: var(--colorNeutralStroke2) !important;
+}
+
+.themeSwitchRow {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    min-height: 36px;
+    padding: 0 8px;
+    border-radius: 10px;
+    box-sizing: border-box;
+    color: var(--colorNeutralForeground1);
+    font-weight: 500;
+}
+
+.themeSwitchRow:hover {
+    background-color: var(--colorNeutralStroke2);
+}
+
+.rowContent {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 10px;
+    flex: 1;
+    min-width: 0;
+    box-sizing: border-box;
+}
+
+.rowLabel {
+    color: inherit;
+    font-weight: 500;
 }
 
 .icon {
-    color: var(--app-header-foreground);
+    color: var(--colorNeutralForeground1) !important;
+    vertical-align: middle;
+    width: 20px;
+    height: 20px;
+    flex: 0 0 auto;
 }

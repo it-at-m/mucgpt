@@ -1,39 +1,40 @@
-import { Menu, MenuButton, MenuItem, MenuPopover, MenuTrigger, Tooltip } from "@fluentui/react-components";
+import { Button, Menu, MenuItem, MenuPopover, MenuTrigger } from "@fluentui/react-components";
 import { useState, useEffect, useCallback, useMemo } from "react";
-import { LocalLanguage24Regular } from "@fluentui/react-icons";
+import { ChevronRight16Regular } from "@fluentui/react-icons";
 import { useTranslation } from "react-i18next";
 import styles from "./LanguageSelector.module.css";
 
 interface LanguageSelectorProps {
     onSelectionChange: (newSelection: string) => void;
     defaultlang: string;
+    label?: string;
+    layout?: "default" | "row";
 }
 
 interface Language {
     code: string;
-    name: string;
+    flagClassName: string;
 }
 
 // Defining languages outside component to avoid re-creation on each render
 const AVAILABLE_LANGUAGES: Language[] = [
-    { code: "DE", name: "Deutsch" },
-    { code: "EN", name: "English" },
-    { code: "FR", name: "Français" },
-    { code: "BA", name: "Boarisch" },
-    { code: "UK", name: "Українська" }
+    { code: "DE", flagClassName: styles.languageFlagDE },
+    { code: "EN", flagClassName: styles.languageFlagEN },
+    { code: "BA", flagClassName: styles.languageFlagBA },
+    { code: "FR", flagClassName: styles.languageFlagFR },
+    { code: "UK", flagClassName: styles.languageFlagUK }
 ];
 
-export const LanguageSelector = ({ onSelectionChange, defaultlang }: LanguageSelectorProps) => {
+export const LanguageSelector = ({ onSelectionChange, defaultlang, layout = "default" }: LanguageSelectorProps) => {
     const [selectedLang, setSelectedLang] = useState(defaultlang);
     const { t } = useTranslation();
-
     // Handle button click - cycle through languages with useCallback for stability
     const handleButtonClick = useCallback(
         (language: Language) => {
             setSelectedLang(language.code);
             onSelectionChange(language.code);
         },
-        [selectedLang, onSelectionChange]
+        [onSelectionChange]
     );
 
     // Update selected language when defaultlang prop changes
@@ -46,6 +47,15 @@ export const LanguageSelector = ({ onSelectionChange, defaultlang }: LanguageSel
         const current = AVAILABLE_LANGUAGES.find((lang: Language) => lang.code === selectedLang);
         return current || AVAILABLE_LANGUAGES[0];
     }, [selectedLang]);
+    const languageOptions = useMemo(
+        () =>
+            AVAILABLE_LANGUAGES.map(language => ({
+                ...language,
+                name: t(`common.language_names.${language.code}`, language.code)
+            })),
+        [t]
+    );
+    const currentLanguageName = t(`common.language_names.${currentLanguage.code}`, currentLanguage.code);
 
     // Memoize the keyboard handler
     const handleKeyDown = useCallback(
@@ -58,27 +68,43 @@ export const LanguageSelector = ({ onSelectionChange, defaultlang }: LanguageSel
         [handleButtonClick]
     );
 
-    // Tooltip text
-    const tooltipText = `${currentLanguage.name} - ${t("components.language_selector.change_language")}`;
+    const currentFlagClassName = `${styles.languageFlag} ${currentLanguage.flagClassName}`;
 
     return (
-        <Menu>
+        <Menu positioning={{ position: "after", align: "start", offset: { mainAxis: 8 } }}>
             <MenuTrigger disableButtonEnhancement>
-                <Tooltip content={tooltipText} relationship="description" positioning="below">
-                    <MenuButton
-                        appearance={"subtle"}
-                        aria-label={tooltipText}
-                        icon={<LocalLanguage24Regular className={styles.icon} />}
-                        className={styles.languageButton}
-                    >
-                        {currentLanguage.code}
-                    </MenuButton>
-                </Tooltip>
+                <Button
+                    appearance={"subtle"}
+                    aria-label={currentLanguageName}
+                    className={`${styles.languageButton} ${layout === "row" ? styles.languageButtonRow : ""}`}
+                >
+                    {layout === "row" ? (
+                        <span className={styles.rowContent}>
+                            <span className={currentFlagClassName} title={currentLanguage.code} aria-hidden="true" />
+                            <span className={styles.rowLabel}>{currentLanguageName}</span>
+                            <span className={styles.fallbackCode}>{currentLanguage.code}</span>
+                            <ChevronRight16Regular className={styles.chevronIcon} aria-hidden="true" />
+                        </span>
+                    ) : (
+                        <span className={styles.compactContent} aria-label={`${currentLanguageName} ${currentLanguage.code}`}>
+                            <span className={currentFlagClassName} title={currentLanguage.code} aria-hidden="true" />
+                            <span className={styles.fallbackCode}>{currentLanguage.code}</span>
+                        </span>
+                    )}
+                </Button>
             </MenuTrigger>
-            <MenuPopover>
-                {AVAILABLE_LANGUAGES.map(language => (
-                    <MenuItem key={language.code} onClick={() => handleButtonClick(language)} onKeyDown={event => handleKeyDown(event, language)}>
-                        {language.code} - {language.name}
+            <MenuPopover className={styles.languagePopover}>
+                {languageOptions.map(language => (
+                    <MenuItem
+                        key={language.code}
+                        icon={<span className={`${styles.languageFlag} ${language.flagClassName}`} title={language.code} aria-hidden="true" />}
+                        onClick={() => handleButtonClick(language)}
+                        onKeyDown={event => handleKeyDown(event, language)}
+                    >
+                        <span className={styles.menuItemContent}>
+                            <span>{language.name}</span>
+                            <span className={styles.fallbackCode}>{language.code}</span>
+                        </span>
                     </MenuItem>
                 ))}
             </MenuPopover>

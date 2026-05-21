@@ -1,4 +1,5 @@
 from collections.abc import Awaitable, Callable
+from dataclasses import dataclass
 from typing import Any
 from xml.sax.saxutils import escape, quoteattr
 
@@ -9,18 +10,85 @@ from langchain.agents.middleware import (
     ToolCallRequest,
 )
 from langchain_core.messages import (
-    BaseMessage,
+    AnyMessage,
     HumanMessage,
     SystemMessage,
     ToolMessage,
 )
+from langfuse.langchain import CallbackHandler as LFCallbackHandler
+from langgraph.config import get_config as get_runtime_config
 from langgraph.types import Command
 
 from agent.state_models.default_state import DefaultAgentState
 from agent.tools.policies import get_policy_for_state
+from config.langfuse_provider import LangfuseProvider
 from core.logtools import getLogger
 
 logger = getLogger(name="agent-middleware")
+
+
+@dataclass
+class RequestContext:
+    assistant_id: str | None = None
+
+
+def _make_scoped_callbacks() -> list:
+    """Return callbacks for internal scope routing.
+
+    Prefer the shared callback handler from ``LangfuseProvider`` so LangChain
+    can preserve parent/child run lineage under the active ``MUCGPTAgent`` run.
+    Fall back to creating a fresh handler when the provider is unavailable.
+
+    Silently returns ``[]`` when Langfuse is not installed / configured.
+    """
+    try:
+        provider_handler = LangfuseProvider.get_callback_handler()
+        if provider_handler is not None:
+            return [provider_handler]
+
+        return [LFCallbackHandler()]
+    except Exception:
+        return []
+
+
+def _annotate_span_with_policy_state(
+    policy: Any,
+    state: Any,
+    state_schema: type,
+) -> None:
+    """Write policy name and current scope fields as metadata on the active
+    Langfuse span.
+
+    Called from ``ContextMiddleware`` *before* the model invocation, so the
+    active OTel span is the LangGraph node span that wraps the upcoming LLM
+    call.  ``update_current_span`` enriches that span with policy/state context
+    that would otherwise be invisible to Langfuse.
+
+    Silently no-ops when Langfuse is not configured or no span is active.
+    """
+    try:
+        from langfuse import get_client as _lf_get_client
+
+        metadata: dict[str, Any] = {
+            "policy": policy.__class__.__name__,
+            "agent_state_schema": state_schema.__name__,
+        }
+        if state is not None:
+            state_dict: dict[str, Any] = (
+                state
+                if isinstance(state, dict)
+                else (state.model_dump() if hasattr(state, "model_dump") else {})
+            )
+            metadata["agent_state"] = {
+                k: str(v)
+                for k, v in state_dict.items()
+                if v is not None and k != "messages"
+            }
+
+        _lf_get_client().update_current_span(metadata=metadata)
+    except Exception:
+        pass  # Langfuse not configured or no active span — do not break execution
+
 
 # ── Sentinel used to detect whether data-sources have already been injected ──
 DATA_SOURCES_SENTINEL = "<!-- data-sources-injected -->"
@@ -93,9 +161,9 @@ def _build_data_sources_xml(data_sources: list[Any]) -> str:
 
 
 def _inject_data_sources(
-    messages: list[BaseMessage],
+    messages: list[AnyMessage],
     data_sources: list[Any],
-) -> list[BaseMessage]:
+) -> list[AnyMessage]:
     """Inject uploaded documents as a guarded HumanMessage."""
     for msg in messages:
         if isinstance(msg, HumanMessage) and isinstance(msg.content, str):
@@ -125,6 +193,26 @@ def _inject_data_sources(
     messages_copy = list(messages)
     messages_copy.insert(insert_idx, context_message)
     return messages_copy
+
+
+def _get_assistant_id_from_request(request: ModelRequest) -> str | None:
+    """Return the assistant id from runtime context or active config."""
+    runtime_context = getattr(getattr(request, "runtime", None), "context", None)
+    if isinstance(runtime_context, RequestContext):
+        return runtime_context.assistant_id
+    if isinstance(runtime_context, dict):
+        assistant_id = runtime_context.get("assistant_id")
+        if assistant_id:
+            return str(assistant_id)
+
+    try:
+        config = get_runtime_config() or {}
+    except Exception:
+        return None
+
+    configurable = config.get("configurable", {})
+    assistant_id = configurable.get("assistant_id")
+    return str(assistant_id) if assistant_id else None
 
 
 # TODO:
@@ -157,10 +245,17 @@ class ContextMiddleware(AgentMiddleware):
         # infer policy from state type and apply to request
         policy = get_policy_for_state(self.state_schema)
 
-        request = policy.infer_scope(request)
+        # Fresh CallbackHandler inherits the current OTel context (active agent trace),
+        # so any LLM calls inside infer_scope are nested under the parent trace.
+        #inference_callbacks = _make_scoped_callbacks()
+        #request = policy.infer_scope(request, callbacks=inference_callbacks)
         request = request.override(tools=policy.select_tools(request))
         logger.info(f"selected Tools: {len(request.tools or [])}")
-        request = policy.modify_system_message(request)
+        _annotate_span_with_policy_state(policy, request.state, self.state_schema)
+
+        assistant_id = _get_assistant_id_from_request(request)
+        if not assistant_id:
+            request = policy.modify_system_message(request)
 
         state_data_sources = (
             request.state.get("data_sources", [])
@@ -182,12 +277,19 @@ class ContextMiddleware(AgentMiddleware):
         # infer policy from state type and apply to request
         policy = get_policy_for_state(self.state_schema)
 
-        request = await policy.ainfer_scope(request)
+        # Fresh CallbackHandler inherits the current OTel context (active agent trace),
+        # so any LLM calls inside ainfer_scope are nested under the parent trace.
+        #inference_callbacks = _make_scoped_callbacks()
+        #request = await policy.ainfer_scope(request, callbacks=inference_callbacks)
         request = request.override(
             tools=policy.select_tools(request),
         )
         logger.info(f"selected Tools: {len(request.tools or [])}")
-        request = await policy.amodify_system_message(request)
+        _annotate_span_with_policy_state(policy, request.state, self.state_schema)
+
+        assistant_id = _get_assistant_id_from_request(request)
+        if not assistant_id:
+            request = await policy.amodify_system_message(request)
 
         state_data_sources = (
             request.state.get("data_sources", [])

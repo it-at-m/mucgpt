@@ -21,9 +21,26 @@ i18n
                     header: {
                         nutzungsbedingungen: "Nutzungsbedingungen",
                         create_assistant: "Assistent erstellen",
-                        go_to_tutorials_tooltip: "Tutorials und Anleitungen zu Fragments und Tools",
                         go_to_tutorials_aria: "Zu Tutorials und Anleitungen navigieren",
                         go_to_tutorials: "Tutorials"
+                    },
+                    app_sidebar: {
+                        home: "Startseite",
+                        assistants: "Assistenten",
+                        new_chat: "Neuer Chat",
+                        go_home: "Zur Startseite navigieren",
+                        go_assistants: "Zur Assistenten-Übersicht navigieren",
+                        start_new_chat: "Neuen Chat starten",
+                        preferences_and_help: "Einstellungen und Hilfe",
+                        toggle_navigation: "Navigation umschalten",
+                        resize_navigation: "Navigation an der Kante umschalten",
+                        new_chat_dialog_subtitle: "Wie möchtest du deinen neuen Chat starten?",
+                        new_chat_default_primary: "Freien Chat starten",
+                        new_chat_plain_title: "Ohne Assistenten starten",
+                        new_chat_discovery_title: "Anderen Assistenten auswählen",
+                        new_chat_discovery_card_title: "Assistent auswählen",
+                        new_chat_recent_assistant_title: "Mit {{assistantName}} starten",
+                        new_chat_recent_assistant_fallback: "Assistent"
                     },
                     home: {
                         assistants: "Assistenten",
@@ -34,7 +51,6 @@ i18n
                         explore_badge: "Entdecken",
                         discover_all_description: "Entdecke und verwalte alle verfügbaren Assistenten.",
                         discover_assistants: "Assistenten entdecken",
-                        no_assistants_yet: "Du hast noch keine Assistenten verwendet. Entdecke jetzt verfügbare Assistenten!",
                         no_assistants_available: "Keine Assistenten verfügbar.",
                         load_error: "Die Startseite konnte nicht geladen werden. Bitte versuchen Sie es erneut."
                     },
@@ -75,14 +91,13 @@ i18n
                         main_navigation: "Hauptnavigation",
                         home_link: "Zur Startseite",
                         environment_label: "Umgebung: {{env}}",
-                        page_navigation: "Seitennavigation",
-                        organization_name: "Landeshauptstadt München, RIT/it@M KIES",
                         footer_credit: "Made with ❤️ & ☕ by",
                         user_settings: "Benutzereinstellungen",
                         main_content: "Hauptinhalt",
                         footer_info: "Fußzeileninformationen",
-                        clear_chat: "Neuer Chat",
                         settings: "Einstellungen",
+                        theme: "Farbschema",
+                        language: "Sprache",
                         close: "Schließen",
                         messages: "Nachrichten",
                         examples: "Beispiele",
@@ -95,6 +110,13 @@ i18n
                         next: "Weiter",
                         loading: "Lade Konfiguration...",
                         hint: "Hinweis:",
+                        language_names: {
+                            DE: "Deutsch",
+                            EN: "Englisch",
+                            BA: "Bairisch",
+                            FR: "Französisch",
+                            UK: "Ukrainisch"
+                        },
                         edit: "Bearbeiten",
                         delete: "Löschen",
                         errors: {
@@ -179,23 +201,17 @@ i18n
                             whats_new: "Was gibt's neues?"
                         },
                         feedback: {
-                            tooltip: "Feedback geben",
                             aria_label: "Feedback per E-Mail senden",
                             label: "Feedback"
                         },
                         helpbutton: {
                             help: "Hilfe",
                             label: "Hilfe & FAQ",
-                            tooltip: "Hilfe und häufig gestelle Fragen anzeigen",
                             aria_label: "Hilfe und FAQ öffnen"
-                        },
-                        language_selector: {
-                            change_language: "Sprache ändern"
                         },
                         theme_selector: {
                             theme_light: "Helles Thema",
                             theme_dark: "Dunkles Thema",
-                            change_theme: "Thema wechseln",
                             light_short: "Hell",
                             dark_short: "Dunkel"
                         },
@@ -350,25 +366,31 @@ i18n
                             name: "Vorgeschlagene Antworten"
                         },
                         history: {
-                            button: "Gespeicherte Chats",
-                            today: "Heute",
-                            yesterday: "Gestern",
-                            sevendays: "Letzte 7 Tage",
-                            older: "Älter",
                             history: "Historie",
+                            recents_label: "Letzte Chats",
                             newchat: "Gib dem Chat einen neuen Namen:",
                             options: "Chat-Optionen",
-                            close: "Schließen",
-                            lastEdited: "Zuletzt geändert:",
                             rename: "Chat umbenennen",
                             delete: "Chat löschen",
-                            favourites: "Favoriten",
-                            save: "Zu Favoriten hinzufügen",
-                            unsave: "Aus Favoriten entfernen",
-                            error: "Wechsle nicht den Tab, bevor die Antwort fertig generiert wurde!",
-                            saved_in_browser: "Im Browser gespeicherte Chats",
-                            loadMore: "Mehr laden",
-                            more: "mehr"
+                            delete_confirm_title: "Chat löschen?",
+                            delete_confirm_message: 'Möchten Sie "{{name}}" wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden.',
+                            delete_success_title: "Chat gelöscht",
+                            delete_success_message: '"{{name}}" wurde gelöscht.',
+                            delete_failed_title: "Chat konnte nicht gelöscht werden",
+                            delete_failed_message: '"{{name}}" konnte nicht gelöscht werden. Bitte versuchen Sie es erneut.',
+                            rename_failed_title: "Chat konnte nicht umbenannt werden",
+                            rename_failed_message: "Der Chat konnte nicht umbenannt werden. Bitte versuchen Sie es erneut.",
+                            favorite_failed_title: "Chat konnte nicht aktualisiert werden",
+                            favorite_failed_message: "Die Pin-Einstellung konnte nicht gespeichert werden. Bitte versuchen Sie es erneut.",
+                            pin_chat: "Chat anpinnen",
+                            unpin_chat: "Chat nicht mehr anpinnen",
+                            loading: "Historie wird geladen",
+                            empty: "Keine Chats vorhanden",
+                            empty_assistant: "Keine Chats mit diesem Assistenten",
+                            all_chats: "Alle",
+                            current_assistant: "Dieser Assistent",
+                            unnamed_chat: "Unbenannter Chat",
+                            show_history: "Historie anzeigen"
                         },
                         add_assistant_button: {
                             add_assistant: "Neu erstellen"
@@ -429,7 +451,7 @@ i18n
                             section_basic: "Grundlegende Informationen",
                             section_behaviour: "Verhalten & Konfiguration",
                             section_tools: "Werkzeuge",
-                            section_prompts: "Prompts & Beispiele",
+                            section_prompts: "Folgeaktionen & Startvorschläge",
                             section_access: "Zugriff & Sichtbarkeit",
 
                             // Advanced settings fields
@@ -448,20 +470,20 @@ i18n
                                 "Dies sind die Abteilungen, die Zugriff auf den Assistenten haben. Alle Abteilungen in der Hierarchie unter den ausgewählten Abteilungen haben ebenfalls Zugriff.",
 
                             // Quick prompts
-                            quick_prompts: "Vorgeschlagene Antworten",
-                            quick_prompts_placeholder: "Fügen Sie Vorgeschlagene Antworten hinzu, eine pro Zeile (Label|Prompt)",
-                            quick_prompt_label_placeholder: "Geben Sie das Label ein...",
+                            quick_prompts: "Folgeaktionen",
+                            quick_prompts_placeholder: "Fügen Sie Folgeaktionen hinzu, eine pro Zeile (Bezeichnung|Prompt)",
+                            quick_prompt_label_placeholder: "Geben Sie die Bezeichnung ein...",
                             quick_prompt_text_placeholder: "Geben Sie den Prompt-Text ein...",
-                            add_quick_prompt: "Vorgeschlagene Antwort hinzufügen",
-                            no_quick_prompts_selected: "Keine vorgeschlagenen Antworten hinzugefügt",
+                            add_quick_prompt: "Folgeaktion hinzufügen",
+                            no_quick_prompts_selected: "Keine Folgeaktionen hinzugefügt",
 
                             // Examples
-                            examples: "Beispiele",
-                            examples_placeholder: "Fügen Sie Beispiele hinzu, eine pro Zeile (Text|Wert)",
-                            example_text_placeholder: "Geben Sie den Beispiel-Text ein...",
-                            example_value_placeholder: "Geben Sie den Beispiel-Wert ein...",
-                            add_example: "Beispiel hinzufügen",
-                            no_examples_selected: "Keine Beispiele hinzugefügt",
+                            examples: "Startvorschläge",
+                            examples_placeholder: "Fügen Sie Startvorschläge hinzu, eine pro Zeile (Text|Wert)",
+                            example_text_placeholder: "Geben Sie einen Startvorschlag ein...",
+                            example_value_placeholder: "Geben Sie den Prompt-Text ein...",
+                            add_example: "Startvorschlag hinzufügen",
+                            no_examples_selected: "Keine Startvorschläge hinzugefügt",
 
                             // Tools
                             select_tools: "Werkzeuge auswählen",
@@ -676,9 +698,26 @@ i18n
                     header: {
                         nutzungsbedingungen: "Terms of use",
                         create_assistant: "Create assistant",
-                        go_to_tutorials_tooltip: "Tutorials and guides for fragments and tools",
                         go_to_tutorials_aria: "Go to tutorials and guides",
                         go_to_tutorials: "Tutorials"
+                    },
+                    app_sidebar: {
+                        home: "Home",
+                        assistants: "Assistants",
+                        new_chat: "New Chat",
+                        go_home: "Go to homepage",
+                        go_assistants: "Go to assistants overview",
+                        start_new_chat: "Start a new chat",
+                        preferences_and_help: "Settings and help",
+                        toggle_navigation: "Toggle navigation",
+                        resize_navigation: "Toggle navigation from the edge handle",
+                        new_chat_dialog_subtitle: "How would you like to start your new chat?",
+                        new_chat_default_primary: "Start open chat",
+                        new_chat_plain_title: "Start without assistant",
+                        new_chat_discovery_title: "Choose another assistant",
+                        new_chat_discovery_card_title: "Choose assistant",
+                        new_chat_recent_assistant_title: "Start with {{assistantName}}",
+                        new_chat_recent_assistant_fallback: "Assistant"
                     },
                     home: {
                         assistants: "Assistants",
@@ -689,7 +728,6 @@ i18n
                         explore_badge: "Discover",
                         discover_all_description: "Discover and manage all available assistants.",
                         discover_assistants: "Discover Assistants",
-                        no_assistants_yet: "You haven't used any assistants yet. Discover available assistants now!",
                         no_assistants_available: "No assistants available.",
                         load_error: "The home page could not be loaded. Please try again."
                     },
@@ -729,14 +767,13 @@ i18n
                         main_navigation: "Main navigation",
                         home_link: "Go to homepage",
                         environment_label: "Environment: {{env}}",
-                        page_navigation: "Page navigation",
-                        organization_name: "City of Munich, RIT/it@M KIES",
                         footer_credit: "Made with ❤️ & ☕ by",
                         user_settings: "User settings",
                         main_content: "Main content",
                         footer_info: "Footer information",
-                        clear_chat: "New chat",
                         settings: "Settings",
+                        theme: "Theme",
+                        language: "Language",
                         messages: "Messages",
                         examples: "Examples",
                         sidebar_show: "Show sidebar",
@@ -749,6 +786,13 @@ i18n
                         next: "Next",
                         loading: "Loading...",
                         hint: "Hint:",
+                        language_names: {
+                            DE: "German",
+                            EN: "English",
+                            BA: "Bavarian",
+                            FR: "French",
+                            UK: "Ukrainian"
+                        },
                         edit: "Edit",
                         delete: "Delete",
                         errors: {
@@ -833,23 +877,17 @@ i18n
                             whats_new: "What's new?"
                         },
                         feedback: {
-                            tooltip: "Give feedback",
                             aria_label: "Send feedback via email",
                             label: "Feedback"
                         },
                         helpbutton: {
                             help: "Help",
                             label: "Help & FAQ",
-                            tooltip: "Show help and frequently asked questions",
                             aria_label: "Open help and FAQ"
-                        },
-                        language_selector: {
-                            change_language: "Change language"
                         },
                         theme_selector: {
                             theme_light: "Light theme",
                             theme_dark: "Dark theme",
-                            change_theme: "Change theme",
                             light_short: "Light",
                             dark_short: "Dark"
                         },
@@ -1004,25 +1042,31 @@ i18n
                             name: "Recommended answers"
                         },
                         history: {
-                            button: "Saved Chats",
-                            today: "Today",
-                            yesterday: "Yesterday",
-                            sevendays: "Last 7 Days",
-                            older: "Older",
                             history: "History",
+                            recents_label: "Recent chats",
                             newchat: "Enter new name for the chat:",
                             options: "Chat-Options",
-                            close: "Close",
-                            lastEdited: "Last edited: ",
                             rename: "Rename chat",
                             delete: "Delete chat",
-                            favourites: "Favourites",
-                            save: "Add to Favourites",
-                            unsave: "Remove from Favourites",
-                            error: "Do not change the Tab before the Answer is fully generated!",
-                            saved_in_browser: "Chats saved in Browser",
-                            loadMore: "Load more",
-                            more: "more"
+                            delete_confirm_title: "Delete chat?",
+                            delete_confirm_message: 'Do you really want to delete "{{name}}"? This action cannot be undone.',
+                            delete_success_title: "Chat deleted",
+                            delete_success_message: '"{{name}}" was deleted.',
+                            delete_failed_title: "Chat could not be deleted",
+                            delete_failed_message: '"{{name}}" could not be deleted. Please try again.',
+                            rename_failed_title: "Chat could not be renamed",
+                            rename_failed_message: "The chat could not be renamed. Please try again.",
+                            favorite_failed_title: "Chat could not be updated",
+                            favorite_failed_message: "The pin setting could not be saved. Please try again.",
+                            pin_chat: "Pin Chat",
+                            unpin_chat: "Unpin Chat",
+                            loading: "Loading history",
+                            empty: "No chats yet",
+                            empty_assistant: "No chats with this assistant",
+                            all_chats: "All",
+                            current_assistant: "This assistant",
+                            unnamed_chat: "Unnamed chat",
+                            show_history: "Show history"
                         },
                         add_assistant_button: {
                             add_assistant: "Create New"
@@ -1099,20 +1143,20 @@ i18n
                                 "These are the departments that have access to the assistant. All departments in the hierarchy below the selected departments also have access.",
 
                             // Quick prompts
-                            quick_prompts: "Quick Prompts",
-                            quick_prompts_placeholder: "Add quick prompts, one per line (label|prompt)",
+                            quick_prompts: "Follow-up Actions",
+                            quick_prompts_placeholder: "Add follow-up actions, one per line (label|prompt)",
                             quick_prompt_label_placeholder: "Enter the label...",
                             quick_prompt_text_placeholder: "Enter the prompt text...",
-                            add_quick_prompt: "Add Quick Prompt",
-                            no_quick_prompts_selected: "No quick prompts added",
+                            add_quick_prompt: "Add a Follow-up Action",
+                            no_quick_prompts_selected: "No follow-up actions added",
 
                             // Examples
-                            examples: "Examples",
-                            examples_placeholder: "Add examples, one per line (text|value)",
-                            example_text_placeholder: "Enter the example text...",
-                            example_value_placeholder: "Enter the example value...",
-                            add_example: "Add Example",
-                            no_examples_selected: "No examples added",
+                            examples: "Starter Prompts",
+                            examples_placeholder: "Add starter prompts, one per line (text|value)",
+                            example_text_placeholder: "Enter the starter prompt...",
+                            example_value_placeholder: "Enter the prompt text...",
+                            add_example: "Add a starter prompt",
+                            no_examples_selected: "No starter prompts added",
 
                             // Tools
                             select_tools: "Select Tools",
@@ -1324,9 +1368,26 @@ i18n
                     header: {
                         nutzungsbedingungen: "Gebrauchsvorschriftn",
                         create_assistant: "Assistenten erstoin",
-                        go_to_tutorials_tooltip: "Tutorials und Anleitungen fia Fragments und Tools",
                         go_to_tutorials_aria: "Zu de Tutorials und Anleitungen navigiern",
                         go_to_tutorials: "Tutorials"
+                    },
+                    app_sidebar: {
+                        home: "Home",
+                        assistants: "Assistentn",
+                        new_chat: "Neia Chat",
+                        go_home: "Zruck auf d’Startseit navigiern",
+                        go_assistants: "Zur Assistentn-Übersicht navigiern",
+                        start_new_chat: "Neian Chat startn",
+                        preferences_and_help: "Einstellungen und Hilfe",
+                        toggle_navigation: "Navigation umschoitn",
+                        resize_navigation: "Navigation am Rand umschoitn",
+                        new_chat_dialog_subtitle: "Wia mechst du dein neian Chat startn?",
+                        new_chat_default_primary: "Freien Chat startn",
+                        new_chat_plain_title: "Ohne Assistentn startn",
+                        new_chat_discovery_title: "Andern Assistentn auswaehln",
+                        new_chat_discovery_card_title: "Assistentn auswaehln",
+                        new_chat_recent_assistant_title: "Mitm {{assistantName}} startn",
+                        new_chat_recent_assistant_fallback: "Assistent"
                     },
                     home: {
                         assistants: "Assistentn",
@@ -1337,7 +1398,6 @@ i18n
                         explore_badge: "Entdecka",
                         discover_all_description: "Entdeck und verwalt olle verfügbaren Assistentn.",
                         discover_assistants: "Assistentn entdecka",
-                        no_assistants_yet: "Du host no koane Assistentn verwendet. Entdeck jetzt verfügbare Assistentn!",
                         no_assistants_available: "Koane Assistentn verfügbar.",
                         load_error: "De Startseit hod ned glodn wern kenna. Bitte probier's no amoi."
                     },
@@ -1372,14 +1432,13 @@ i18n
                         main_navigation: "Haupt-Navigation",
                         home_link: "Zruck auf d’Startseit",
                         environment_label: "Umgebung: {{env}}",
-                        page_navigation: "Seitn-Navigation",
-                        organization_name: "Landeshauptstod Minga, RIT/it@M KIES",
                         footer_credit: "Made with ❤️ & ☕ by",
                         user_settings: "Nutzereinstellungen",
                         main_content: "Hauptinhalt",
                         footer_info: "Fußzeilen-Info",
-                        clear_chat: "Neia Chat",
                         settings: "Konfiguration",
+                        theme: "Farbschema",
+                        language: "Sproch",
                         messages: "Nochrichten",
                         examples: "Beispui",
                         sidebar_show: "Sidebar zoagn",
@@ -1392,6 +1451,13 @@ i18n
                         next: "Weida",
                         loading: "Lade Konfiguration...",
                         hint: "Hinweis:",
+                        language_names: {
+                            DE: "Deitsch",
+                            EN: "Englisch",
+                            BA: "Boarisch",
+                            FR: "Französisch",
+                            UK: "Ukrainisch"
+                        },
                         edit: "Beorbeitn",
                         delete: "Löschn",
                         errors: {
@@ -1480,23 +1546,17 @@ i18n
                             whats_new: "Wos gibt's Nei's?"
                         },
                         feedback: {
-                            tooltip: "Feedback geb'n",
                             aria_label: "Feedback per E-Mail schick'n",
                             label: "Feedback"
                         },
                         helpbutton: {
                             help: "Hilfe",
                             label: "Hilfe & FAQ",
-                            tooltip: "Hilfe und häufige Frog'n zeig'n",
                             aria_label: "Hilfe und FAQ aufmach'n"
-                        },
-                        language_selector: {
-                            change_language: "Sprach wechs'l"
                         },
                         theme_selector: {
                             theme_light: "Helles Thema",
                             theme_dark: "Dunkles Thema",
-                            change_theme: "Thema wechs'l",
                             light_short: "Hell",
                             dark_short: "Dunkl"
                         },
@@ -1642,25 +1702,31 @@ i18n
                             name: "Vogschlagene Antworten"
                         },
                         history: {
-                            button: "Gespeichade Chats",
-                            today: "Heid",
-                            yesterday: "Gesdan",
-                            sevendays: "Letzte 7 Dog",
-                            older: "Oida",
                             history: "Historie",
+                            recents_label: "Letzte Chats",
                             newchat: "Gib dem Chat an nein Nama:",
                             options: "Chat-Optionen",
-                            close: "Schließen",
-                            lastEdited: "Zuletzt geändert: ",
                             rename: "Chat Umbenenna",
                             delete: "Chat Löschn",
-                            favourites: "Favoriten",
-                            save: "Zu Favoritn hinzufügn",
-                            unsave: "Vo Favoritn entfernen",
-                            error: "Wechsle de Seiten ned bevor ned de Nachricht komplett generiert wordn is!",
-                            saved_in_browser: "Im Browser gespeichade Chats",
-                            loadMore: "Mehr loden",
-                            more: "mehr"
+                            delete_confirm_title: "Chat löschen?",
+                            delete_confirm_message: 'Mogst "{{name}}" wirklich löschen? Des ko ned rückgängig gmacht werdn.',
+                            delete_success_title: "Chat glöscht",
+                            delete_success_message: '"{{name}}" is glöscht wordn.',
+                            delete_failed_title: "Chat konnt ned glöscht werdn",
+                            delete_failed_message: '"{{name}}" konnt ned glöscht werdn. Probier es bitte no amoi.',
+                            rename_failed_title: "Chat konnt ned umbenannt werdn",
+                            rename_failed_message: "Der Chat konnt ned umbenannt werdn. Probier es bitte no amoi.",
+                            favorite_failed_title: "Chat konnt ned aktualisiert werdn",
+                            favorite_failed_message: "Die Pin-Einstellung konnt ned gspeichert werdn. Probier es bitte no amoi.",
+                            pin_chat: "Chat anpinnen",
+                            unpin_chat: "Chat nimmer anpinnen",
+                            loading: "Historie werd glodn",
+                            empty: "Koane Chats vorhanden",
+                            empty_assistant: "Koane Chats mit dem Assistentn",
+                            all_chats: "Alle",
+                            current_assistant: "Der Assistent",
+                            unnamed_chat: "Unbenannter Chat",
+                            show_history: "Historie ozoang"
                         },
                         add_assistant_button: {
                             add_assistant: "Nei anlegn"
@@ -1720,7 +1786,7 @@ i18n
                             section_basic: "Grundlegnde Infos",
                             section_behaviour: "Verhoitn & Konfiguration",
                             section_tools: "Werkzeig",
-                            section_prompts: "Prompts & Beispui",
+                            section_prompts: "Folgeaktionen & Startvorschläge",
                             section_access: "Zugriff & Sichtbarkeit",
 
                             // Advanced settings fields
@@ -1739,20 +1805,20 @@ i18n
                                 "Des san de Abteilungen, de Zugriff auf den Assistenten ham. Olle Abteilungen in da Hierarchie unter de ausgsuachten Abteilungen ham a Zugriff.",
 
                             // Quick prompts
-                            quick_prompts: "Vorgeschlagene Antworten",
-                            quick_prompts_placeholder: "Füg vorgschlagene Antworn hinzu, oane pro Zeile (Label|Prompt)",
-                            quick_prompt_label_placeholder: "Gib des Label ei...",
+                            quick_prompts: "Folgeaktionen",
+                            quick_prompts_placeholder: "Füg Folgeaktionen hinzu, oane pro Zeile (Label|Prompt)",
+                            quick_prompt_label_placeholder: "Gib die Bezeichnung ei...",
                             quick_prompt_text_placeholder: "Gib den Prompt-Text ei...",
-                            add_quick_prompt: "Vorgeschlagene Antwort hinzufügn",
-                            no_quick_prompts_selected: "Koane vorgeschlagene Antworn hinzugfügt",
+                            add_quick_prompt: "Folgeaktion hinzufügn",
+                            no_quick_prompts_selected: "Koane Folgeaktionen hinzugfügt",
 
                             // Examples
-                            examples: "Beispui",
-                            examples_placeholder: "Füg Beispui hinzu, oans pro Zeile (Text|Wert)",
-                            example_text_placeholder: "Gib den Beispui-Text ei...",
-                            example_value_placeholder: "Gib den Beispui-Wert ei...",
-                            add_example: "Beispui hinzufügn",
-                            no_examples_selected: "Koane Beispui hinzugfügt",
+                            examples: "Startvorschläge",
+                            examples_placeholder: "Füg Startvorschläge hinzu, oans pro Zeile (Text|Wert)",
+                            example_text_placeholder: "Gib den Startvorschlag-Text ei...",
+                            example_value_placeholder: "Gib den Prompt-Text ei...",
+                            add_example: "Startvorschlag hinzufügn",
+                            no_examples_selected: "Koane Startvorschläge hinzugfügt",
 
                             // Tools
                             select_tools: "Werkzeig aussuachn",
@@ -1966,9 +2032,26 @@ i18n
                     header: {
                         nutzungsbedingungen: "Conditions d'utilisation",
                         create_assistant: "Créer un assistant",
-                        go_to_tutorials_tooltip: "Tutoriels et guides pour les fragments et les outils",
                         go_to_tutorials_aria: "Aller aux tutoriels et guides",
                         go_to_tutorials: "Tutoriels"
+                    },
+                    app_sidebar: {
+                        home: "Accueil",
+                        assistants: "Assistants",
+                        new_chat: "Nouveau chat",
+                        go_home: "Aller à la page d’accueil",
+                        go_assistants: "Aller à la vue des assistants",
+                        start_new_chat: "Démarrer un nouveau chat",
+                        preferences_and_help: "Paramètres et aide",
+                        toggle_navigation: "Basculer la navigation",
+                        resize_navigation: "Basculer la navigation depuis le bord",
+                        new_chat_dialog_subtitle: "Comment souhaitez-vous démarrer votre nouveau chat ?",
+                        new_chat_default_primary: "Démarrer un chat libre",
+                        new_chat_plain_title: "Démarrer sans assistant",
+                        new_chat_discovery_title: "Choisir un autre assistant",
+                        new_chat_discovery_card_title: "Choisir un assistant",
+                        new_chat_recent_assistant_title: "Démarrer avec {{assistantName}}",
+                        new_chat_recent_assistant_fallback: "Assistant"
                     },
                     home: {
                         assistants: "Assistants",
@@ -1979,7 +2062,6 @@ i18n
                         explore_badge: "Découvrir",
                         discover_all_description: "Découvrez et gérez tous les assistants disponibles.",
                         discover_assistants: "Découvrir les assistants",
-                        no_assistants_yet: "Vous n'avez encore utilisé aucun assistant. Découvrez maintenant les assistants disponibles !",
                         no_assistants_available: "Aucun assistant disponible.",
                         load_error: "La page d’accueil n’a pas pu être chargée. Veuillez réessayer."
                     },
@@ -2020,14 +2102,13 @@ i18n
                         main_navigation: "Navigation principale",
                         home_link: "Retour à la page d’accueil",
                         environment_label: "Environnement : {{env}}",
-                        page_navigation: "Navigation de la page",
-                        organization_name: "Ville de Munich, RIT/it@M KIES",
                         footer_credit: "Made with ❤️ & ☕ by",
                         user_settings: "Paramètres utilisateur",
                         main_content: "Contenu principal",
                         footer_info: "Informations du pied de page",
-                        clear_chat: "Nouveau chat",
                         settings: "Paramètres",
+                        theme: "Thème",
+                        language: "Langue",
                         messages: "Messages",
                         examples: "Exemples",
                         sidebar_show: "Afficher la barre latérale",
@@ -2040,6 +2121,13 @@ i18n
                         next: "Suivant",
                         loading: "Chargement de la configuration...",
                         hint: "Conseil :",
+                        language_names: {
+                            DE: "Allemand",
+                            EN: "Anglais",
+                            BA: "Bavarois",
+                            FR: "Français",
+                            UK: "Ukrainien"
+                        },
                         edit: "Modifier",
                         delete: "Supprimer",
                         errors: {
@@ -2123,23 +2211,17 @@ i18n
                             whats_new: "Quoi de neuf ?"
                         },
                         feedback: {
-                            tooltip: "Donner un avis",
                             aria_label: "Envoyer des retours par e-mail",
                             label: "Feedback"
                         },
                         helpbutton: {
                             help: "Aide",
                             label: "Aide & FAQ",
-                            tooltip: "Afficher l'aide et les questions fréquentes",
                             aria_label: "Ouvrir l'aide et la FAQ"
-                        },
-                        language_selector: {
-                            change_language: "Changer la langue"
                         },
                         theme_selector: {
                             theme_light: "Thème clair",
                             theme_dark: "Thème sombre",
-                            change_theme: "Changer de thème",
                             light_short: "Clair",
                             dark_short: "Sombre"
                         },
@@ -2285,25 +2367,31 @@ i18n
                             name: "Réponses suggérées"
                         },
                         history: {
-                            button: "Chats sauvegardés",
-                            today: "Aujourd'hui",
-                            yesterday: "Hier",
-                            sevendays: "7 derniers jours",
-                            older: "Plus ancien",
                             history: "Historique",
+                            recents_label: "Chats récents",
                             newchat: "Donnez un nouveau nom au chat :",
                             options: "Options de chat",
-                            close: "Fermer",
-                            lastEdited: "Dernière modification : ",
                             rename: "Renommer le chat",
                             delete: "Supprimer le chat",
-                            favourites: "Favoris",
-                            save: "Ajouter aux favoris",
-                            unsave: "Retirer des favoris",
-                            error: "Ne changez pas d'onglet avant que la réponse soit générée !",
-                            saved_in_browser: "Chats sauvegardés dans le navigateur",
-                            loadMore: "Charger plus",
-                            more: "plus"
+                            delete_confirm_title: "Supprimer le chat ?",
+                            delete_confirm_message: 'Voulez-vous vraiment supprimer "{{name}}" ? Cette action est irréversible.',
+                            delete_success_title: "Chat supprimé",
+                            delete_success_message: '"{{name}}" a été supprimé.',
+                            delete_failed_title: "Le chat n'a pas pu être supprimé",
+                            delete_failed_message: '"{{name}}" n\'a pas pu être supprimé. Veuillez réessayer.',
+                            rename_failed_title: "Le chat n'a pas pu être renommé",
+                            rename_failed_message: "Le chat n'a pas pu être renommé. Veuillez réessayer.",
+                            favorite_failed_title: "Le chat n'a pas pu être mis à jour",
+                            favorite_failed_message: "Le paramètre d'épinglage n'a pas pu être enregistré. Veuillez réessayer.",
+                            pin_chat: "Épingler le chat",
+                            unpin_chat: "Désépingler le chat",
+                            loading: "Chargement de l'historique",
+                            empty: "Aucun chat",
+                            empty_assistant: "Aucun chat avec cet assistant",
+                            all_chats: "Tous",
+                            current_assistant: "Cet assistant",
+                            unnamed_chat: "Chat sans nom",
+                            show_history: "Afficher l'historique"
                         },
                         add_assistant_button: {
                             add_assistant: "Créer"
@@ -2382,20 +2470,20 @@ i18n
                                 "Ce sont les départements qui ont accès à l'assistant. Tous les départements situés en dessous dans la hiérarchie y ont également accès.",
 
                             // Quick prompts
-                            quick_prompts: "Prompts rapides",
-                            quick_prompts_placeholder: "Ajouter des prompts rapides, un par ligne (label|prompt)",
+                            quick_prompts: "Mesures de suivi",
+                            quick_prompts_placeholder: "Ajouter des actions de suivi, un par ligne (label|prompt)",
                             quick_prompt_label_placeholder: "Saisir le libellé...",
                             quick_prompt_text_placeholder: "Saisir le texte du prompt...",
-                            add_quick_prompt: "Ajouter un prompt rapide",
-                            no_quick_prompts_selected: "Aucun prompt rapide ajouté",
+                            add_quick_prompt: "Ajouter une action de suivi",
+                            no_quick_prompts_selected: "Aucune action de suivi n'a été ajoutée",
 
                             // Examples
-                            examples: "Exemples",
-                            examples_placeholder: "Ajouter des exemples, un par ligne (texte|valeur)",
-                            example_text_placeholder: "Saisir le texte de l'exemple...",
-                            example_value_placeholder: "Saisir la valeur de l'exemple...",
-                            add_example: "Ajouter un exemple",
-                            no_examples_selected: "Aucun exemple ajouté",
+                            examples: "Suggestions pour débuter",
+                            examples_placeholder: "Ajouter des suggestions de démarrage, un par ligne (texte|valeur)",
+                            example_text_placeholder: "Saisissez les suggestions de démarrage...",
+                            example_value_placeholder: "Saisir le texte du prompt...",
+                            add_example: "Ajouter une suggestion de démarrage",
+                            no_examples_selected: "Aucune suggestion de démarrage n'a été ajoutée",
 
                             // Tools
                             select_tools: "Sélectionner des outils",
@@ -2607,11 +2695,28 @@ i18n
             UK: {
                 translation: {
                     header: {
-                        go_to_tutorials_tooltip: "Навчальні матеріали та інструкції для фрагментів та інструментів",
                         go_to_tutorials_aria: "Перейти до навчальних матеріалів та інструкцій",
                         go_to_tutorials: "Навчальні матеріали",
                         create_assistant: "Створити асистента",
                         nutzungsbedingungen: "Умови використання"
+                    },
+                    app_sidebar: {
+                        home: "Головна",
+                        assistants: "Асистенти",
+                        new_chat: "Новий чат",
+                        go_home: "Перейти на головну сторінку",
+                        go_assistants: "Перейти до огляду асистентів",
+                        start_new_chat: "Розпочати новий чат",
+                        preferences_and_help: "Налаштування та допомога",
+                        toggle_navigation: "Перемкнути навігацію",
+                        resize_navigation: "Перемкнути навігацію з краю",
+                        new_chat_dialog_subtitle: "Як ви хочете розпочати новий чат?",
+                        new_chat_default_primary: "Розпочати вільний чат",
+                        new_chat_plain_title: "Почати без асистента",
+                        new_chat_discovery_title: "Обрати іншого асистента",
+                        new_chat_discovery_card_title: "Обрати асистента",
+                        new_chat_recent_assistant_title: "Почати з {{assistantName}}",
+                        new_chat_recent_assistant_fallback: "Асистент"
                     },
                     home: {
                         assistants: "Асистенти",
@@ -2622,7 +2727,6 @@ i18n
                         explore_badge: "Відкрити",
                         discover_all_description: "Переглядайте та керуйте всіма доступними асистентами.",
                         discover_assistants: "Відкрити асистентів",
-                        no_assistants_yet: "Ви ще не використовували жодного асистента. Перегляньте доступних асистентів зараз!",
                         no_assistants_available: "Асистенти недоступні.",
                         load_error: "Не вдалося завантажити головну сторінку. Будь ласка, спробуйте ще раз."
                     },
@@ -2663,14 +2767,13 @@ i18n
                         main_navigation: "Головна навігація",
                         home_link: "Повернутися на головну сторінку",
                         environment_label: "Середовище: {{env}}",
-                        page_navigation: "Навігація сторінки",
-                        organization_name: "Місто Мюнхен, RIT/it@M KIES",
                         footer_credit: "Made with ❤️ & ☕ by",
                         user_settings: "Налаштування користувача",
                         main_content: "Основний контент",
                         footer_info: "Інформація у футері",
-                        clear_chat: "Новий чат",
                         settings: "Налаштування",
+                        theme: "Тема",
+                        language: "Мова",
                         messages: "Повідомлення",
                         examples: "Приклади",
                         sidebar_show: "Показати бічну панель",
@@ -2683,6 +2786,13 @@ i18n
                         next: "Далі",
                         loading: "Завантаження конфігурації...",
                         hint: "Підказка:",
+                        language_names: {
+                            DE: "Німецька",
+                            EN: "Англійська",
+                            BA: "Баварська",
+                            FR: "Французька",
+                            UK: "Українська"
+                        },
                         edit: "Редагувати",
                         delete: "Видалити",
                         errors: {
@@ -2766,23 +2876,17 @@ i18n
                             whats_new: "Що нового?"
                         },
                         feedback: {
-                            tooltip: "Залишити відгук",
                             aria_label: "Надіслати відгук електронною поштою",
                             label: "Відгук"
                         },
                         helpbutton: {
                             help: "Допомога",
                             label: "Допомога та FAQ",
-                            tooltip: "Показати допомогу та часто задавані питання",
                             aria_label: "Відкрити допомогу та FAQ"
-                        },
-                        language_selector: {
-                            change_language: "Змінити мову"
                         },
                         theme_selector: {
                             theme_light: "Світла тема",
                             theme_dark: "Темна тема",
-                            change_theme: "Змінити тему",
                             light_short: "Світло",
                             dark_short: "Темно"
                         },
@@ -2928,25 +3032,31 @@ i18n
                             name: "Рекомендовані відповіді"
                         },
                         history: {
-                            button: "Збережені чати",
-                            today: "Сьогодні",
-                            yesterday: "Вчора",
-                            sevendays: "Останні 7 днів",
-                            older: "Старіше",
                             history: "Історія",
+                            recents_label: "Недавні чати",
                             newchat: "Дайте нову назву чату:",
                             options: "Опції чату",
-                            close: "Закрити",
-                            lastEdited: "Останній раз редагувалося: ",
                             rename: "Перейменувати чат",
                             delete: "Видалити чат",
-                            favourites: "Обране",
-                            save: "Додати до обраного",
-                            unsave: "Видалити з обраного",
-                            error: "Не переходьте на іншу вкладку, доки відповідь не буде згенерована!",
-                            saved_in_browser: "Чати, збережені в браузері",
-                            loadMore: "Завантажити більше",
-                            more: "більше"
+                            delete_confirm_title: "Видалити чат?",
+                            delete_confirm_message: 'Ви дійсно хочете видалити "{{name}}"? Цю дію не можна скасувати.',
+                            delete_success_title: "Чат видалено",
+                            delete_success_message: '"{{name}}" видалено.',
+                            delete_failed_title: "Не вдалося видалити чат",
+                            delete_failed_message: '"{{name}}" не вдалося видалити. Спробуйте ще раз.',
+                            rename_failed_title: "Не вдалося перейменувати чат",
+                            rename_failed_message: "Не вдалося перейменувати чат. Спробуйте ще раз.",
+                            favorite_failed_title: "Не вдалося оновити чат",
+                            favorite_failed_message: "Не вдалося зберегти налаштування закріплення. Спробуйте ще раз.",
+                            pin_chat: "Закріпити чат",
+                            unpin_chat: "Відкріпити чат",
+                            loading: "Завантаження історії",
+                            empty: "Чатів ще немає",
+                            empty_assistant: "Немає чатів із цим асистентом",
+                            all_chats: "Усі",
+                            current_assistant: "Цей асистент",
+                            unnamed_chat: "Чат без назви",
+                            show_history: "Показати історію"
                         },
                         add_assistant_button: {
                             add_assistant: "Створити"
@@ -3023,20 +3133,20 @@ i18n
                             departments_info: "Це підрозділи, які мають доступ до асистента. Усі підрозділи нижче у вибраній ієрархії також матимуть доступ.",
 
                             // Quick prompts
-                            quick_prompts: "Швидкі промпти",
-                            quick_prompts_placeholder: "Додайте швидкі промпти, по одному в рядку (label|prompt)",
+                            quick_prompts: "Наступні кроки",
+                            quick_prompts_placeholder: "Додати подальші дії, по одному в рядку (label|prompt)",
                             quick_prompt_label_placeholder: "Введіть мітку...",
                             quick_prompt_text_placeholder: "Введіть текст промпту...",
-                            add_quick_prompt: "Додати швидкий промпт",
-                            no_quick_prompts_selected: "Швидкі промпти не додано",
+                            add_quick_prompt: "Додати наступну дію",
+                            no_quick_prompts_selected: "Подальших дій не додано",
 
                             // Examples
-                            examples: "Приклади",
-                            examples_placeholder: "Додайте приклади, по одному в рядку (text|value)",
-                            example_text_placeholder: "Введіть текст прикладу...",
-                            example_value_placeholder: "Введіть значення прикладу...",
-                            add_example: "Додати приклад",
-                            no_examples_selected: "Приклади не додано",
+                            examples: "Початкові запити",
+                            examples_placeholder: "Додати початкові запити, по одному в рядку (text|value)",
+                            example_text_placeholder: "Введіть текст початкового запиту...",
+                            example_value_placeholder: "Введіть значення початкового запиту...",
+                            add_example: "Додати початковий запит",
+                            no_examples_selected: "Початкові запити не додано",
 
                             // Tools
                             select_tools: "Обрати інструменти",

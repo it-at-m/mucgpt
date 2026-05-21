@@ -4,6 +4,7 @@ import { createHashRouter, RouterProvider } from "react-router-dom";
 import { initializeIcons } from "@fluentui/react";
 import "./i18n";
 
+import "@fontsource/montserrat/latin-700.css";
 import "./index.css";
 
 import Layout from "./pages/layout/Layout";

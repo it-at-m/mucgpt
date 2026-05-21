@@ -1,9 +1,10 @@
 import { useTranslation } from "react-i18next";
-import { Button, Tooltip, Spinner } from "@fluentui/react-components";
+import { Button, Tooltip } from "@fluentui/react-components";
 import { Checkmark24Regular, Dismiss16Regular, ErrorCircle24Regular } from "@fluentui/react-icons";
 
 import styles from "./QuestionInput.module.css";
 import { UploadedData } from "../ContextManagerDialog/ContextManagerDialog";
+import { EdelweissSpinner } from "../EdelweissSpinner";
 
 interface DataUploadProps {
     data: UploadedData[];
@@ -29,7 +30,7 @@ export const DataUpload = ({ data, onToggle, onRemove }: DataUploadProps) => {
 
                 let icon = isActive && isReady ? <Checkmark24Regular /> : undefined;
                 if (isUploading) {
-                    icon = <Spinner size="tiny" />;
+                    icon = <EdelweissSpinner size="tiny" />;
                 }
                 if (hasError) {
                     icon = <ErrorCircle24Regular />;

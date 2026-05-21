@@ -5,6 +5,7 @@
         "@fluentui/react": "8.125.5",
         "@fluentui/react-components": "9.73.8",
         "@fluentui/react-icons": "2.0.326",
+        "@fontsource/montserrat": "^5.2.8",
         "@react-spring/web": "10.0.3",
         "dompurify": "3.4.2",
         "i18next": "25.10.10",

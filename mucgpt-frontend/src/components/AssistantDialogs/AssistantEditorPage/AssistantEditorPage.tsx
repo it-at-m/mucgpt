@@ -12,7 +12,6 @@ import {
     DialogTitle,
     Field,
     InfoLabel,
-    Spinner,
     Textarea,
     TextareaOnChangeData
 } from "@fluentui/react-components";
@@ -33,6 +32,7 @@ import { useCreateAssistantState } from "../shared/hooks/useCreateAssistantState
 import { ToolsStep, QuickPromptsStep, ExamplesStep, AdvancedSettingsStep, VisibilityStep, ExpandableTextarea } from "../shared";
 import { AssistantStrategy } from "../../../pages/assistant/AssistantStrategy";
 import { CREATIVITY_LOW } from "../../../constants";
+import { EdelweissSpinner } from "../../EdelweissSpinner";
 
 type CreateView = "mode_select" | "ai_input" | "settings";
 type DiscardTarget = "back" | "discovery";
@@ -507,7 +507,7 @@ export const AssistantEditorPage = (props: AssistantEditorPageProps) => {
                                     appearance="primary"
                                     onClick={handleSave}
                                     disabled={loading || !isOwner || !isSettingsValid}
-                                    icon={loading ? <Spinner size="tiny" /> : <Save24Regular />}
+                                    icon={loading ? <EdelweissSpinner size="tiny" variant="white" /> : <Save24Regular />}
                                     className={styles.primaryActionButton}
                                 >
                                     {isCreate ? t("common.create") : t("components.assistant_editor.save")}

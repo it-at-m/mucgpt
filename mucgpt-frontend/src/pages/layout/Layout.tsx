@@ -1,13 +1,13 @@
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
-import { Button, Divider, DrawerBody, OverlayDrawer, FluentProvider, InlineDrawer, Spinner } from "@fluentui/react-components";
+import { Button, Divider, DrawerBody, OverlayDrawer, FluentProvider, InlineDrawer } from "@fluentui/react-components";
 import { Navigation24Regular } from "@fluentui/react-icons";
 import { useTranslation } from "react-i18next";
 
 import styles from "./Layout.module.css";
-import logo from "../../assets/mucgpt_frost.png";
+import logo from "../../assets/edelweiss_logo_white.png";
 import alternative_logo from "../../assets/mugg_tschibidi.png";
-import logo_black from "../../assets/mucgpt_frost.png";
+import logo_black from "../../assets/edelweiss_logo_black.png";
 import { DEFAULTLANG, LanguageContext } from "../../components/LanguageSelector/LanguageContextProvider";
 import { TermsOfUseDialog } from "../../components/TermsOfUseDialog";
 import { ApplicationConfig } from "../../api";
@@ -30,6 +30,7 @@ import Unauthorized from "../Unauthorized";
 import { ConfigContext } from "../../context/ConfigContext";
 import { AppSidebar } from "../../components/AppSidebar";
 import { UnifiedHistoryProvider, UnifiedSidebarHistory } from "../../components/UnifiedHistory";
+import { EdelweissSpinner } from "../../components/EdelweissSpinner";
 
 const APP_NAV_COLLAPSED_KEY = "APP_NAV_COLLAPSED";
 const MOBILE_LAYOUT_BREAKPOINT = 640;
@@ -302,7 +303,7 @@ export const Layout = () => {
                 <UserContextProvider>
                     {isLoadingConfig ? (
                         <div className={styles.loadingContainer}>
-                            <Spinner size="large" label={t("common.loading", "Lade Konfiguration...")} />
+                            <EdelweissSpinner size="large" label={t("common.loading", "Lade Konfiguration...")} />
                         </div>
                     ) : isUnauthorized ? (
                         <Unauthorized redirectUrl={unauthorizedRedirectUrl} />

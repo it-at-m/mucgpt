@@ -210,8 +210,8 @@ i18n
                             aria_label: "Hilfe und FAQ öffnen"
                         },
                         theme_selector: {
-                            theme_light: "Helles Thema",
-                            theme_dark: "Dunkles Thema",
+                            theme_light: "Helles Design",
+                            theme_dark: "Dunkles Design",
                             light_short: "Hell",
                             dark_short: "Dunkel"
                         },
@@ -1555,8 +1555,8 @@ i18n
                             aria_label: "Hilfe und FAQ aufmach'n"
                         },
                         theme_selector: {
-                            theme_light: "Helles Thema",
-                            theme_dark: "Dunkles Thema",
+                            theme_light: "Helles Design",
+                            theme_dark: "Dunkles Design",
                             light_short: "Hell",
                             dark_short: "Dunkl"
                         },

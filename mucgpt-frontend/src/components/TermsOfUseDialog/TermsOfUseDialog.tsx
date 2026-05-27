@@ -67,7 +67,13 @@ export const TermsOfUseDialog = ({ defaultOpen, onAccept, showTrigger = true, tr
                                     <strong>Weiterverwendung der Ergebnisse:</strong> Die Verantwortung für die Weiterverwendung der Ergebnisse trägt die/der
                                     MUCGPT Nutzer*in. Die Ergebnisse müssen als solche sowohl für intern, als auch für extern gekennzeichnet (z.B.: „Quelle:
                                     MUCGPT“) werden. Siehe Details und weitere Zitierstile hierzu in den{" "}
-                                    <Link inline className={styles.link} href={import.meta.env.BASE_URL + "#/faq"}>
+                                    <Link
+                                        inline
+                                        className={styles.link}
+                                        href="https://it-services.muenchen.de/sp?id=kb_category&kb_category=52f6aba64774c3948a8064e5536d4362"
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                    >
                                         FAQs
                                     </Link>
                                     .
@@ -103,7 +109,13 @@ export const TermsOfUseDialog = ({ defaultOpen, onAccept, showTrigger = true, tr
                                 <li>
                                     <strong>FAQs:</strong> Weitere Fragen und Antworten (u.a. zu Ziel und Einsatzzwecke von MUCGPT sowie zur Weiterverwendung
                                     der Eingaben und Ergebnisse) geben die{" "}
-                                    <Link inline className={styles.link} href={import.meta.env.BASE_URL + "#/faq"}>
+                                    <Link
+                                        inline
+                                        className={styles.link}
+                                        href="https://it-services.muenchen.de/sp?id=kb_category&kb_category=52f6aba64774c3948a8064e5536d4362"
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                    >
                                         FAQs
                                     </Link>
                                     .

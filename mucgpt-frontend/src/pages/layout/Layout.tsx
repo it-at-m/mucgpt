@@ -107,7 +107,7 @@ const AppShell = ({ config, isLight, languagePreference, onLanguageSelectionChan
                     <TutorialsButton />
                 </div>
                 <div className={styles.mobileUtilityRow}>
-                    <HelpButton url={import.meta.env.BASE_URL + "#/faq"} label={t("components.helpbutton.help")} />
+                    <HelpButton url="https://it-services.muenchen.de/sp?id=kb_category&kb_category=52f6aba64774c3948a8064e5536d4362" label={t("components.helpbutton.help")} />
                 </div>
             </div>
             <Divider className={styles.settingsDivider} />
@@ -129,9 +129,8 @@ const AppShell = ({ config, isLight, languagePreference, onLanguageSelectionChan
                 </a>
 
                 <div
-                    className={`${styles.shellBody} ${!isMobile && isSidebarCollapsed ? styles.shellBodyCollapsed : ""} ${
-                        isMobile ? styles.shellBodyMobile : ""
-                    }`}
+                    className={`${styles.shellBody} ${!isMobile && isSidebarCollapsed ? styles.shellBodyCollapsed : ""} ${isMobile ? styles.shellBodyMobile : ""
+                        }`}
                 >
                     {!isMobile && (
                         <aside className={styles.sidebarColumn}>

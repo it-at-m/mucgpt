@@ -10,7 +10,6 @@ import "./index.css";
 import Layout from "./pages/layout/Layout";
 import Chat from "./pages/chat/Chat";
 import { LanguageContextProvider } from "./components/LanguageSelector/LanguageContextProvider";
-import Faq from "./pages/faq/Faq";
 import Version from "./pages/version/Version";
 import Tutorials from "./pages/tutorials/Tutorials";
 import { LLMContextProvider } from "./components/LLMSelector/LLMContextProvider";
@@ -74,11 +73,6 @@ const router = createHashRouter([
             {
                 path: "discovery",
                 element: <Discovery />,
-                errorElement: <div>Fehler</div>
-            },
-            {
-                path: "faq",
-                element: <Faq />,
                 errorElement: <div>Fehler</div>
             },
             {

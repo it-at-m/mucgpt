@@ -173,5 +173,5 @@ def make_internet_search_tool(logger: logging.Logger) -> BaseTool:
             )
         return result
 
-    internet_search_tool.metadata = {"mcp_group": "default"}
+    internet_search_tool.metadata = {"mcp_group": "internet"}
     return internet_search_tool

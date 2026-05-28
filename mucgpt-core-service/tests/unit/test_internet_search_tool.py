@@ -79,4 +79,4 @@ def test_make_internet_search_tool_has_default_metadata() -> None:
     tool = internet_search.make_internet_search_tool(MagicMock())
 
     assert tool.name == "InternetSearch"
-    assert tool.metadata == {"mcp_group": "default"}
+    assert tool.metadata == {"mcp_group": "internet"}

@@ -70,7 +70,7 @@ MCP:
 # Internet Search Settings (SearXNG)
 # Replace the placeholder URL with your SearXNG instance to enable the InternetSearch tool.
 INTERNET_SEARCH:
-  SEARXNG_URL: "https://searxng-test.muenchen.de/"
+  SEARXNG_URL: "<your-searxng-url>"
   TIMEOUT: 10.0
   MAX_RESULTS: 5
   LANGUAGE: "de"

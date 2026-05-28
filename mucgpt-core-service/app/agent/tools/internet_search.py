@@ -12,9 +12,7 @@ from langgraph.types import StreamWriter
 from agent.tools.tool_chunk import ToolStreamChunk, ToolStreamState
 from config.settings import InternetSearchConfig, get_internet_search_settings
 
-INTERNET_SEARCH_SUMMARY = (
-    "Searches the internet via the configured SearXNG engine and returns sourced results."
-)
+INTERNET_SEARCH_SUMMARY = "Searches the internet via the configured SearXNG engine and returns sourced results."
 
 INTERNET_SEARCH_DETAILED = textwrap.dedent(
     """
@@ -57,7 +55,10 @@ def _format_result(result: dict[str, Any], index: int) -> str:
     title = str(result.get("title") or "Untitled result").strip()
     url = str(result.get("url") or "").strip()
     snippet = str(
-        result.get("content") or result.get("snippet") or result.get("description") or ""
+        result.get("content")
+        or result.get("snippet")
+        or result.get("description")
+        or ""
     ).strip()
 
     lines = [f"{index}. {title}"]
@@ -124,10 +125,14 @@ def internet_search(
         )
         return f"Internet search failed with status {exc.response.status_code}."
     except httpx.RequestError as exc:
-        logger.warning("Internet search request failed for query=%s: %s", clean_query, exc)
+        logger.warning(
+            "Internet search request failed for query=%s: %s", clean_query, exc
+        )
         return f"Internet search request failed: {exc}"
     except ValueError:
-        logger.warning("Internet search returned invalid JSON for query=%s", clean_query)
+        logger.warning(
+            "Internet search returned invalid JSON for query=%s", clean_query
+        )
         return "Internet search returned invalid JSON."
 
     raw_results = payload.get("results", []) if isinstance(payload, dict) else []
@@ -168,5 +173,5 @@ def make_internet_search_tool(logger: logging.Logger) -> BaseTool:
             )
         return result
 
-    internet_search_tool.metadata = {"mcp_group": "atlassian"}
+    internet_search_tool.metadata = {"mcp_group": "default"}
     return internet_search_tool

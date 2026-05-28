@@ -1,17 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import {
-    Button,
-    Checkbox,
-    Dialog,
-    DialogBody,
-    DialogContent,
-    DialogSurface,
-    DialogTitle,
-    DialogTrigger,
-    Spinner,
-    Text,
-    Tooltip
-} from "@fluentui/react-components";
+import { Button, Checkbox, Dialog, DialogBody, DialogContent, DialogSurface, DialogTitle, DialogTrigger, Text, Tooltip } from "@fluentui/react-components";
 import { Dismiss24Regular, Delete16Regular, ArrowDownload16Regular, ArrowUpload16Regular } from "@fluentui/react-icons";
 import { useTranslation } from "react-i18next";
 import { uploadFileApi } from "../../api/core-client";
@@ -24,6 +12,7 @@ import {
 } from "../../service/parsedDocumentStorage";
 import { useGlobalToastContext } from "../GlobalToastHandler/GlobalToastContext";
 import styles from "./ContextManagerDialog.module.css";
+import { EdelweissSpinner } from "../EdelweissSpinner";
 
 export type UploadedDataStatus = "pending" | "uploading" | "ready" | "error" | "pending-restore";
 
@@ -487,7 +476,11 @@ export const ContextManagerDialog = ({ open, onOpenChange, data, onDataChange }:
                             </Text>
                             <div className={styles.toolbarActions}>
                                 {isUploading ? (
-                                    <Spinner size="tiny" label={t("components.contextmanagerdialog.uploading", "Wird hochgeladen...")} labelPosition="after" />
+                                    <EdelweissSpinner
+                                        size="tiny"
+                                        label={t("components.contextmanagerdialog.uploading", "Wird hochgeladen...")}
+                                        labelPosition="after"
+                                    />
                                 ) : (
                                     <Button
                                         appearance="primary"

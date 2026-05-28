@@ -53,6 +53,7 @@ interface AppShellProps {
 const AppShell = ({ config, isLight, languagePreference, onLanguageSelectionChanged, onThemeChange, onAcceptTermsOfUse, termsOfUseRead }: AppShellProps) => {
     const { t } = useTranslation();
     const location = useLocation();
+    const faqUrl = config.faq_url;
     const [isMobile, setIsMobile] = useState<boolean>(window.innerWidth <= MOBILE_LAYOUT_BREAKPOINT);
     const [mobileSidebarOpen, setMobileSidebarOpen] = useState<boolean>(false);
     const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(() => localStorage.getItem(APP_NAV_COLLAPSED_KEY) === "true");
@@ -106,9 +107,11 @@ const AppShell = ({ config, isLight, languagePreference, onLanguageSelectionChan
                 <div className={styles.mobileUtilityRow}>
                     <TutorialsButton />
                 </div>
-                <div className={styles.mobileUtilityRow}>
-                    <HelpButton url="https://it-services.muenchen.de/sp?id=kb_category&kb_category=52f6aba64774c3948a8064e5536d4362" label={t("components.helpbutton.help")} />
-                </div>
+                {faqUrl && (
+                    <div className={styles.mobileUtilityRow}>
+                        <HelpButton url={faqUrl} label={t("components.helpbutton.help")} />
+                    </div>
+                )}
             </div>
             <Divider className={styles.settingsDivider} />
             <div className={styles.mobileUtilityGroup}>

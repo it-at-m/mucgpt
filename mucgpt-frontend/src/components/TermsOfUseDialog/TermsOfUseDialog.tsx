@@ -5,6 +5,8 @@ import { useState } from "react";
 
 import styles from "./TermsOfUseDialog.module.css";
 
+import { useConfigContext } from "../../context/ConfigContext";
+
 interface TermsOfUseDialogProps {
     defaultOpen: boolean;
     onAccept: () => void;
@@ -14,6 +16,8 @@ interface TermsOfUseDialogProps {
 
 export const TermsOfUseDialog = ({ defaultOpen, onAccept, showTrigger = true, triggerClassName }: TermsOfUseDialogProps) => {
     const { t } = useTranslation();
+    const config = useConfigContext();
+    const faqUrl = config.faq_url;
     const [open, setOpen] = useState<boolean>(defaultOpen);
     const trigger = showTrigger ? (
         <DialogTrigger disableButtonEnhancement>
@@ -70,7 +74,7 @@ export const TermsOfUseDialog = ({ defaultOpen, onAccept, showTrigger = true, tr
                                     <Link
                                         inline
                                         className={styles.link}
-                                        href="https://it-services.muenchen.de/sp?id=kb_category&kb_category=52f6aba64774c3948a8064e5536d4362"
+                                        href={faqUrl}
                                         target="_blank"
                                         rel="noopener noreferrer"
                                     >
@@ -112,7 +116,7 @@ export const TermsOfUseDialog = ({ defaultOpen, onAccept, showTrigger = true, tr
                                     <Link
                                         inline
                                         className={styles.link}
-                                        href="https://it-services.muenchen.de/sp?id=kb_category&kb_category=52f6aba64774c3948a8064e5536d4362"
+                                        href={faqUrl}
                                         target="_blank"
                                         rel="noopener noreferrer"
                                     >

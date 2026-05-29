@@ -774,6 +774,7 @@ const Chat = () => {
             <QuestionInput
                 clearOnSend
                 disabled={isLoadingRef.current || error !== undefined}
+                draftCacheKey="chat-main"
                 onSend={(question, datas) => {
                     const dataSources = uploadedDataToDataSources(datas);
                     callApi(question, systemPrompt, dataSources.length > 0 ? dataSources : undefined);

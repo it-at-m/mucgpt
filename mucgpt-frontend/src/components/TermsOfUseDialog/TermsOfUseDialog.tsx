@@ -70,17 +70,22 @@ export const TermsOfUseDialog = ({ defaultOpen, onAccept, showTrigger = true, tr
                                 <li>
                                     <strong>Weiterverwendung der Ergebnisse:</strong> Die Verantwortung für die Weiterverwendung der Ergebnisse trägt die/der
                                     MUCGPT Nutzer*in. Die Ergebnisse müssen als solche sowohl für intern, als auch für extern gekennzeichnet (z.B.: „Quelle:
-                                    MUCGPT“) werden. Siehe Details und weitere Zitierstile hierzu in den{" "}
-                                    <Link
-                                        inline
-                                        className={styles.link}
-                                        href={faqUrl}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                    >
-                                        FAQs
-                                    </Link>
-                                    .
+                                    MUCGPT“) werden.
+                                    {faqUrl && (
+                                        <>
+                                            {" "}Siehe Details und weitere Zitierstile hierzu in den{" "}
+                                            <Link
+                                                inline
+                                                className={styles.link}
+                                                href={faqUrl}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                            >
+                                                FAQs
+                                            </Link>
+                                            .
+                                        </>
+                                    )}
                                 </li>
                                 <li>
                                     <strong>Entscheidungsfindung:</strong> MUCGPT darf nicht für abschließende Entscheidungen verwendet werden, die gegenüber
@@ -110,20 +115,22 @@ export const TermsOfUseDialog = ({ defaultOpen, onAccept, showTrigger = true, tr
                                     </Link>{" "}
                                     melden
                                 </li>
-                                <li>
-                                    <strong>FAQs:</strong> Weitere Fragen und Antworten (u.a. zu Ziel und Einsatzzwecke von MUCGPT sowie zur Weiterverwendung
-                                    der Eingaben und Ergebnisse) geben die{" "}
-                                    <Link
-                                        inline
-                                        className={styles.link}
-                                        href={faqUrl}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                    >
-                                        FAQs
-                                    </Link>
-                                    .
-                                </li>
+                                {faqUrl && (
+                                    <li>
+                                        <strong>FAQs:</strong> Weitere Fragen und Antworten (u.a. zu Ziel und Einsatzzwecke von MUCGPT sowie zur Weiterverwendung
+                                        der Eingaben und Ergebnisse) geben die{" "}
+                                        <Link
+                                            inline
+                                            className={styles.link}
+                                            href={faqUrl}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                        >
+                                            FAQs
+                                        </Link>
+                                        .
+                                    </li>
+                                )}
                                 <li>
                                     <strong>Best-Practice Dokumentation/Wissensmanagement:</strong> Erfolgreiche Anwendungsfälle von MUCGPT sollen dokumentiert
                                     werden, um wertvolles Wissen für zukünftige Projekte zu generieren. Tragen Sie diese Beispiele gerne{" "}

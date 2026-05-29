@@ -18,6 +18,8 @@ export const HelpButton = ({ url, label }: HelpButtonProps) => {
         <Button
             as={"a"}
             href={url}
+            target="_blank"
+            rel="noopener noreferrer"
             appearance={"subtle"}
             icon={<QuestionCircle24Regular className={styles.icon} />}
             aria-label={t("components.helpbutton.aria_label", "Hilfe und FAQ öffnen")}

@@ -12,7 +12,12 @@ type AppCssVariableName =
     | "--app-primary-subtle-foreground"
     | "--app-status-info-background"
     | "--app-status-info-border"
-    | "--app-status-info-foreground";
+    | "--app-status-info-foreground"
+    | "--app-assistant-config-surface"
+    | "--app-assistant-config-surface-hover"
+    | "--app-assistant-config-surface-editing"
+    | "--app-assistant-config-border"
+    | "--app-assistant-config-border-hover";
 
 export type AppCssVariables = Record<AppCssVariableName, string>;
 
@@ -252,5 +257,10 @@ export const createAppCssVars = (tokens: AppThemeTokens): AppCssVariables => ({
     "--app-primary-subtle-foreground": tokens.primarySubtleOn,
     "--app-status-info-background": tokens.statusInfoBackground,
     "--app-status-info-border": tokens.statusInfoBorder,
-    "--app-status-info-foreground": tokens.statusInfoForeground
+    "--app-status-info-foreground": tokens.statusInfoForeground,
+    "--app-assistant-config-surface": tokens.assistantConfigSurface,
+    "--app-assistant-config-surface-hover": tokens.assistantConfigSurfaceHover,
+    "--app-assistant-config-surface-editing": tokens.assistantConfigSurfaceEditing,
+    "--app-assistant-config-border": tokens.assistantConfigBorder,
+    "--app-assistant-config-border-hover": tokens.assistantConfigBorderHover
 });

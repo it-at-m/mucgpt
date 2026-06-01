@@ -11,18 +11,29 @@
 /* Expand button: absolute top-right; visible by default and emphasized on hover/focus */
 .expandButton {
     position: absolute;
-    top: 4px;
+    top: 6px;
     z-index: 1;
     opacity: 0.7;
     transition: opacity 0.15s ease;
+    background-color: var(--colorNeutralForegroundOnBrand) !important;
+    color: var(--colorBrandBackground) !important;
+    border-color: var(--colorNeutralForegroundOnBrand) !important;
+}
+
+.expandButton:hover,
+.expandButton:active,
+.expandButton:focus-visible {
+    background-color: var(--colorNeutralForegroundOnBrand) !important;
+    color: var(--colorBrandBackgroundHover) !important;
+    border-color: var(--colorNeutralForegroundOnBrand) !important;
 }
 
 .expandButtonDefault {
-    right: 4px;
+    right: 6px;
 }
 
 .expandButtonWithScrollbar {
-    right: 12px;
+    right: 16px;
 }
 
 .wrapper:hover .expandButton,

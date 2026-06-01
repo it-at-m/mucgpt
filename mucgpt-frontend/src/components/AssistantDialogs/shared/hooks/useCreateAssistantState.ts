@@ -1,7 +1,7 @@
 import { useState, useCallback, useMemo, useContext, useEffect } from "react";
 import { ToolBase } from "../../../../api";
-import { QuickPrompt } from "../../../QuickPrompt/QuickPrompt";
-import { ExampleModel } from "../../../Example";
+import { FollowUpActionModel } from "../../../FollowUpAction";
+import { StarterPromptModel } from "../../../StarterPrompt";
 import { LLMContext } from "../../../LLMSelector/LLMContextProvider";
 import { CREATIVITY_LOW } from "../../../../constants";
 
@@ -16,8 +16,8 @@ export const useCreateAssistantState = () => {
     const [systemPrompt, setSystemPrompt] = useState<string>("");
     const [selectedTemplate, setSelectedTemplate] = useState<string>("");
     const [tools, setTools] = useState<ToolBase[]>([]);
-    const [followUpActions, setFollowUpActions] = useState<QuickPrompt[]>([]);
-    const [starterPrompts, setStarterPrompts] = useState<ExampleModel[]>([]);
+    const [followUpActions, setFollowUpActions] = useState<FollowUpActionModel[]>([]);
+    const [starterPrompts, setStarterPrompts] = useState<StarterPromptModel[]>([]);
     const [hierarchicalAccess, setHierarchicalAccess] = useState<string[]>([]);
     const [isVisible, setIsVisible] = useState<boolean>(false);
     const [creativity, setCreativity] = useState<string>(CREATIVITY_LOW);

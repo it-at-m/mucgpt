@@ -5,7 +5,7 @@ import { Eye24Regular, EyeOff24Regular, People24Regular } from "@fluentui/react-
 import sharedStyles from "../AssistantDialog.module.css";
 import DepartmentTreeDropdown from "../../../DepartmentTreeDropdown/DepartmentTreeDropdown";
 
-interface VisibilityStepProps {
+interface VisibilitySectionProps {
     isOwner: boolean;
     publishDepartments: string[];
     invisibleChecked: boolean;
@@ -14,14 +14,14 @@ interface VisibilityStepProps {
     setInvisibleChecked: (invisible: boolean) => void;
 }
 
-export const VisibilityStep = ({
+export const VisibilitySection = ({
     isOwner,
     publishDepartments,
     invisibleChecked,
     setPublishDepartments,
     onHasChanged,
     setInvisibleChecked
-}: VisibilityStepProps) => {
+}: VisibilitySectionProps) => {
     const { t } = useTranslation();
 
     // Track whether the user has explicitly selected "departments" mode
@@ -134,4 +134,4 @@ export const VisibilityStep = ({
     );
 };
 
-export default VisibilityStep;
+export default VisibilitySection;

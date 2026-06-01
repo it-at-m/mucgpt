@@ -1,38 +1,50 @@
 /* Common Field Styles */
 .fieldSection {
-    margin-bottom: 24px;
+    margin-bottom: 14px;
 }
 
 .formLabel {
     font-weight: 600;
-    font-size: var(--fontSizeBase400);
-    margin-bottom: 8px;
+    font-size: 14px;
+    line-height: 1.3;
+    margin-bottom: 6px;
     display: block;
     color: var(--colorNeutralForeground1);
 }
 
-/* Hint Text */
-.hintText {
-    padding: 12px 16px;
-    background: var(--colorNeutralBackground3);
-    border-left: 3px solid var(--colorBrandBackground);
-    font-size: var(--fontSizeBase300);
-    color: var(--colorNeutralForeground1);
+.formLabel :global(.fui-InfoLabel),
+.formLabel :global(.fui-Label),
+.formLabel :global(.fui-InfoLabel__label) {
+    font-size: inherit;
+    font-weight: inherit;
+    line-height: inherit;
+}
+
+.fieldSection :global(.fui-Label) {
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 1.3;
+}
+
+.formDescription {
+    color: var(--colorNeutralForeground2);
+    font-size: var(--fontSizeBase200);
+    line-height: 1.4;
+    margin: 0 0 4px 0;
 }
 
 /* Textarea and Input Placeholder Styles */
 .fieldSection textarea::placeholder,
-.fieldSection input::placeholder,
-.dynamicFieldInput::placeholder {
+.fieldSection input::placeholder {
     color: var(--colorNeutralForeground4) !important;
     opacity: 0.6 !important;
     font-style: italic;
 }
 
-/* Dynamic Field Styles (shared by QuickPromptsStep and ExamplesStep) */
+/* Dynamic Field Styles */
 .dynamicFieldContainer {
-    margin-bottom: 20px;
-    min-height: 200px;
+    margin-bottom: 0;
+    min-height: 180px;
     width: 100%;
     flex: 1;
     display: flex;
@@ -40,179 +52,16 @@
     overflow-y: auto;
 }
 
-.dynamicFieldItem {
-    display: flex;
-    gap: 12px;
-    align-items: center;
-    padding: 12px;
-    border: 1px solid var(--colorNeutralStroke2);
-    border-radius: 6px;
-    background-color: var(--colorNeutralBackground1);
-    box-sizing: border-box;
-}
-
-.dynamicFieldInputs {
-    display: flex;
-    flex: 1;
-    gap: 8px;
-    flex-direction: column;
-}
-
-.dynamicFieldInputRow {
-    display: flex;
-    gap: 8px;
-    align-items: center;
-}
-
-.dynamicFieldInput {
-    flex: 1;
-    min-width: 0;
-}
-
-.dynamicFieldInputLabel {
-    flex: 0 0 80px;
-    font-size: 12px;
-    color: var(--colorNeutralForeground2);
-    font-weight: 500;
-}
-
-.addFieldButton {
-    width: 100%;
-    border: 1px dashed var(--colorNeutralStroke2);
-    background-color: transparent;
-    color: var(--colorNeutralForeground2);
-    padding: 12px;
-    border-radius: 6px;
-    font-size: var(--fontSizeBase300);
-    transition: all 0.2s ease;
-    min-height: 40px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    margin: 0 12px 12px 12px;
-    flex-shrink: 0;
-}
-
-.addFieldButton:hover {
-    border-color: var(--colorBrandStroke1);
-    color: var(--colorBrandForeground1);
-    background-color: var(--colorNeutralBackground1Hover);
-}
-
-/* Pragmatic DnD Styles */
-.dragHandleButton {
-    flex-shrink: 0;
-    width: 32px;
-    height: 32px;
-    border-radius: 4px;
-    background-color: transparent;
-    border: none;
-    color: var(--colorNeutralForeground3);
-    cursor: grab;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.2s ease;
-    padding: 0;
-}
-
-.dragHandleButton:hover {
-    background-color: var(--colorNeutralBackground1Hover);
-    color: var(--colorNeutralForeground1);
-}
-
-.dragHandleButton:active {
-    cursor: grabbing;
-}
-
-.dragHandleButton:focus-visible {
-    outline: 2px solid var(--colorBrandStroke1);
-    outline-offset: 2px;
-    background-color: var(--colorNeutralBackground1Hover);
-}
-
-.draggableItem {
-    position: relative;
-}
-
-.draggableItem.isDragging {
-    opacity: 0.5;
-}
-
-.dropIndicator {
-    position: absolute;
-    left: 0;
-    right: 0;
-    height: 2px;
-    background-color: var(--colorBrandBackground);
-    border-radius: 1px;
-    pointer-events: none;
-    z-index: 10;
-}
-
-.dropIndicator::before {
-    content: "";
-    position: absolute;
-    left: -4px;
-    top: -3px;
-    width: 8px;
-    height: 8px;
-    background-color: var(--colorBrandBackground);
-    border-radius: 50%;
-}
-
-.dropIndicator.top {
-    top: -7px;
-}
-
-.dropIndicator.bottom {
-    bottom: -7px;
-}
-
-.dndFieldContainer {
-    display: flex;
-    flex-direction: column;
-    width: 100%;
-}
-
-.dndListContainer {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    padding: 12px;
-}
-
-.removeFieldButton {
-    flex-shrink: 0;
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    background-color: var(--colorPaletteRedBackground2);
-    border: none;
-    color: var(--colorPaletteRedForeground2);
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.2s ease;
-}
-
-.removeFieldButton:hover {
-    background-color: var(--colorPaletteRedBackground3);
-    color: var(--colorPaletteRedForeground1);
-}
-
-/* Range Input Styles (for AdvancedSettingsStep) */
+/* Range Input Styles (for AdvancedSettingsSection) */
 .rangeField {
-    margin-bottom: 20px;
-    padding: 16px;
+    margin-bottom: 0;
+    padding: 14px;
     border: 1px solid var(--colorNeutralStroke2);
-    border-radius: 6px;
-    background-color: var(--colorNeutralBackground1);
+    border-radius: var(--borderRadiusMedium);
+    background-color: var(--colorNeutralBackground2);
 }
 
-/* Visibility Step Styles */
+/* Visibility Section Styles */
 .visibilityTitle {
     margin-bottom: 12px;
 }
@@ -249,13 +98,15 @@
     flex-direction: column;
     margin-left: 40px;
     gap: 12px;
-    background: var(--colorNeutralBackground1);
+    background: var(--colorNeutralBackground2);
     margin-top: 8px;
-    box-shadow: 0 6px 12px rgba(2, 6, 23, 0.03);
+    border: 1px solid var(--colorNeutralStroke2);
+    border-radius: var(--borderRadiusMedium);
+    padding: 12px;
 }
 
 .noDepartmentsWarning {
-    color: var(--colorPaletteRedForeground3, #b42318);
+    color: var(--colorPaletteRedForeground3);
     margin-top: 8px;
     font-size: 12px;
     line-height: 1.3;
@@ -265,22 +116,6 @@
 .toolSelectorContainer {
     width: 100%;
     margin-top: 8px;
-}
-
-.noToolsText {
-    color: var(--colorNeutralForeground1);
-    font-style: italic;
-    font-size: var(--fontSizeBase300);
-    padding: 32px 16px;
-    text-align: center;
-    border: 1px dashed var(--colorNeutralStroke1);
-    border-radius: 6px;
-    background-color: var(--colorNeutralBackground3);
-    margin: 0;
-    flex: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
 }
 
 /* Responsive */
@@ -297,41 +132,5 @@
     .departmentDropdown {
         width: 100%;
         min-width: auto;
-    }
-}
-
-@media (max-width: 550px) {
-    .dynamicFieldInputRow {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 4px;
-    }
-
-    .dynamicFieldInputLabel {
-        flex: 0 0 auto;
-        width: auto;
-    }
-
-    .dynamicFieldInput {
-        width: 100%;
-    }
-}
-
-@media (max-width: 400px) {
-    .dynamicFieldItem {
-        flex-direction: column;
-        gap: 8px;
-        position: relative;
-        padding-top: 40px;
-    }
-
-    .removeFieldButton {
-        position: absolute;
-        top: 8px;
-        right: 8px;
-    }
-
-    .dynamicFieldInputs {
-        width: 100%;
     }
 }

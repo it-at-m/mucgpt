@@ -1,8 +1,13 @@
 import { useState, useEffect, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { Assistant, ToolBase } from "../../../../api";
-import { QuickPrompt } from "../../../QuickPrompt/QuickPrompt";
-import { ExampleModel } from "../../../Example";
+import { FollowUpActionModel } from "../../../FollowUpAction";
+import { StarterPromptModel } from "../../../StarterPrompt";
+
+const generatePromptId = () =>
+    typeof crypto !== "undefined" && typeof crypto.randomUUID === "function"
+        ? crypto.randomUUID()
+        : `prompt-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
 
 export const useAssistantState = (initialAssistant: Assistant) => {
     const { t } = useTranslation();
@@ -12,8 +17,8 @@ export const useAssistantState = (initialAssistant: Assistant) => {
     const [title, setTitle] = useState<string>(initialAssistant.title);
     const [description, setDescription] = useState<string>(initialAssistant.description);
     const [systemPrompt, setSystemPrompt] = useState<string>(initialAssistant.system_message);
-    const [followUpActions, setFollowUpActions] = useState<QuickPrompt[]>(initialAssistant.quick_prompts || []);
-    const [starterPrompts, setStarterPrompts] = useState<ExampleModel[]>(initialAssistant.examples || []);
+    const [followUpActions, setFollowUpActions] = useState<FollowUpActionModel[]>(initialAssistant.quick_prompts || []);
+    const [starterPrompts, setStarterPrompts] = useState<StarterPromptModel[]>(initialAssistant.examples || []);
     const [creativity, setCreativity] = useState<string>(initialAssistant.creativity);
     const [defaultModel, setDefaultModel] = useState<string | undefined>(initialAssistant.default_model);
     const [defaultModelCleared, setDefaultModelCleared] = useState<boolean>(false);
@@ -27,7 +32,7 @@ export const useAssistantState = (initialAssistant: Assistant) => {
     const [isVisible, setIsVisible] = useState<boolean>(initialAssistant.is_visible !== undefined ? initialAssistant.is_visible : true);
 
     const ensureIds = useCallback(
-        <T extends { id?: string }>(items: T[] | undefined) => (items || []).map(it => ({ ...it, id: it.id || crypto.randomUUID() })),
+        <T extends { id?: string }>(items: T[] | undefined) => (items || []).map(it => ({ ...it, id: it.id || generatePromptId() })),
         []
     );
 

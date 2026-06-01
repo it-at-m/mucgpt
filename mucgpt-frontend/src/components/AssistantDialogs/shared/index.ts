@@ -1,8 +1,7 @@
-export { ToolsStep } from "./steps/ToolsStep";
-export { FollowUpActionsStep } from "./steps/FollowUpActionsStep";
-export { StarterPromptsStep } from "./steps/StarterPromptsStep";
-export { AdvancedSettingsStep } from "./steps/AdvancedSettingsStep";
-export { VisibilityStep } from "./steps/VisibilityStep";
+export { ToolsSection } from "./sections/ToolsSection";
+export { ConversationOptionsSection } from "./sections/ConversationOptionsSection";
+export { AdvancedSettingsSection } from "./sections/AdvancedSettingsSection";
+export { VisibilitySection } from "./sections/VisibilitySection";
 
 export { useAssistantState } from "./hooks/useAssistantState";
 export { useCreateAssistantState } from "./hooks/useCreateAssistantState";

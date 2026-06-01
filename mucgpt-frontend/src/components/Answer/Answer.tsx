@@ -9,16 +9,16 @@ import { AnswerIcon } from "./AnswerIcon";
 import { useTranslation } from "react-i18next";
 import { ArrowSync24Regular, CheckmarkSquare24Regular, ContentView24Regular, Copy24Regular } from "@fluentui/react-icons";
 import { Button, Tooltip } from "@fluentui/react-components";
-import { QuickPromptList } from "../QuickPrompt/QuickPromptList";
+import { FollowUpActionList } from "../FollowUpAction";
 import { MarkdownRenderer } from "../MarkdownRenderer/MarkdownRenderer";
 
 interface Props {
     answer: AskResponse;
     onRegenerateResponseClicked?: () => void;
-    onQuickPromptSend?: (prompt: string) => void;
+    onFollowUpActionSend?: (prompt: string) => void;
 }
 
-export const Answer = ({ answer, onRegenerateResponseClicked, onQuickPromptSend }: Props) => {
+export const Answer = ({ answer, onRegenerateResponseClicked, onFollowUpActionSend }: Props) => {
     const { t } = useTranslation();
 
     const [copied, setCopied] = useState<boolean>(false);
@@ -110,9 +110,9 @@ export const Answer = ({ answer, onRegenerateResponseClicked, onQuickPromptSend 
                     </div>
                 )}
             </Stack.Item>
-            {onRegenerateResponseClicked && onQuickPromptSend && (
+            {onRegenerateResponseClicked && onFollowUpActionSend && (
                 <Stack.Item>
-                    <QuickPromptList onSend={prompt => onQuickPromptSend(prompt)} />
+                    <FollowUpActionList onSend={prompt => onFollowUpActionSend(prompt)} />
                 </Stack.Item>
             )}
         </Stack>

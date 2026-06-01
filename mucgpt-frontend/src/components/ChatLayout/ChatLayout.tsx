@@ -8,10 +8,10 @@ import { LLMSelector } from "../LLMSelector/LLMSelector";
 import { Model } from "../../api";
 
 interface Props {
-    examples: ReactNode;
+    starterPrompts: ReactNode;
     answers: ReactNode;
     input: ReactNode;
-    showExamples: boolean;
+    showStarterPrompts: boolean;
     header: string;
     welcomeMessage: string;
     header_as_markdown: boolean;
@@ -25,10 +25,10 @@ interface Props {
 }
 
 export const ChatLayout = ({
-    examples,
+    starterPrompts,
     answers,
     input,
-    showExamples,
+    showStarterPrompts,
     header,
     welcomeMessage,
     header_as_markdown,
@@ -79,7 +79,7 @@ export const ChatLayout = ({
 
             <div className={styles.chatRoot}>
                 <div className={styles.chatContainer}>
-                    {showExamples ? (
+                    {showStarterPrompts ? (
                         <div className={styles.chatEmptyState} tabIndex={0}>
                             <div className={styles.welcomeMessageContainer}>
                                 {header_as_markdown ? (
@@ -92,7 +92,7 @@ export const ChatLayout = ({
                                     <h2 className={styles.chatEmptyStateSubtitle}>{welcomeMessage}</h2>
                                 )}
                             </div>
-                            {examples}
+                            {starterPrompts}
                         </div>
                     ) : (
                         <ul className={styles.allChatMessages} aria-description={messages_description}>

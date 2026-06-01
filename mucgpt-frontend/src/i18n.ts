@@ -59,7 +59,7 @@ i18n
                         prompt: "Stelle eine Frage oder lade ein Dokument hoch",
                         prompt_no_upload: "Stelle eine Frage",
                         answer_loading: "Erstelle Antwort",
-                        quickprompts: {
+                        follow_up_actions: {
                             shorter_tooltip: "Schreibe eine kürzere Antwort",
                             longer_tooltip: "Schreibe eine längere Antwort",
                             formal_tooltip: "Schreibe eine förmlichere Antwort",
@@ -109,7 +109,6 @@ i18n
                         ok: "OK",
                         next: "Weiter",
                         loading: "Lade Konfiguration...",
-                        hint: "Hinweis:",
                         language_names: {
                             DE: "Deutsch",
                             EN: "Englisch",
@@ -359,10 +358,13 @@ i18n
                         example: {
                             label: "Beispiel"
                         },
+                        starter_prompt: {
+                            label: "Startvorschlag"
+                        },
                         deleteMessage: {
                             label: "Nachricht zurückziehen"
                         },
-                        quickprompt: {
+                        follow_up_action: {
                             name: "Vorgeschlagene Antworten"
                         },
                         history: {
@@ -408,6 +410,15 @@ i18n
                             // Page titles (differ between create and edit)
                             create_title: "Assistent erstellen",
                             edit_title: "Assistent bearbeiten",
+                            page_helper_create:
+                                "Erstellen Sie einen Assistenten für einen klaren Anwendungsfall. Legen Sie fest, was er tun soll, wie er sich verhält und welche Werkzeuge er nutzen darf.",
+                            page_helper_edit:
+                                "Bearbeiten Sie Aufgabe, Verhalten und Werkzeuge dieses Assistenten. Änderungen gelten für künftige Unterhaltungen.",
+                            builder_main_label: "Assistent konfigurieren",
+                            action_status_required_open: "Pflichtfelder offen",
+                            action_status_ready_create: "Bereit zum Erstellen",
+                            action_status_ready_save: "Bereit zum Speichern",
+                            action_status_read_only: "Nur lesbar",
 
                             // Create-only: Mode selector
                             subtitle_mode_select: "Wähle, wie du starten möchtest",
@@ -451,7 +462,7 @@ i18n
                             section_basic: "Grundlegende Informationen",
                             section_behaviour: "Verhalten & Konfiguration",
                             section_tools: "Werkzeuge",
-                            section_actions_and_starters: "Folgeaktionen & Startvorschläge",
+                            section_conversation_options: "Unterhaltungsoptionen",
                             section_access: "Zugriff & Sichtbarkeit",
 
                             // Advanced settings fields
@@ -471,26 +482,33 @@ i18n
 
                             // Follow-up actions
                             follow_up_actions: "Folgeaktionen",
-                            follow_up_actions_placeholder: "Fügen Sie Folgeaktionen hinzu, eine pro Zeile (Bezeichnung|Prompt)",
-                            follow_up_action_label_placeholder: "Geben Sie die Bezeichnung ein...",
-                            follow_up_action_text_placeholder: "Geben Sie den Prompt-Text ein...",
-                            add_follow_up_action: "Folgeaktion hinzufügen",
-                            no_follow_up_actions_selected: "Keine Folgeaktionen hinzugefügt",
+                            follow_up_actions_description: "Aktionen, die nach einer Antwort als nächster Schritt angeboten werden.",
+                            follow_up_action_label_placeholder: "z. B. Kürzer formulieren",
+                            follow_up_action_display_text: "Anzeigetext",
+                            follow_up_action_prompt: "Prompt",
+                            follow_up_action_untitled: "Neue Folgeaktion",
+                            finish_follow_up_action_edit: "Fertig",
+                            follow_up_action_text_placeholder: "z. B. Formuliere die letzte Antwort kürzer und behalte die wichtigsten Punkte bei.",
+                            add_follow_up_action: "Hinzufügen",
+                            follow_up_actions_empty_title: "Keine Folgeaktionen",
+                            follow_up_actions_empty_description:
+                                "Fügen Sie Aktionen hinzu, die nach einer Antwort angeboten werden, zum Beispiel kürzen oder vereinfachen.",
 
                             // Starter prompts
                             starter_prompts: "Startvorschläge",
-                            starter_prompts_placeholder: "Fügen Sie Startvorschläge hinzu, eine pro Zeile (Text|Wert)",
-                            starter_prompt_text_placeholder: "Geben Sie einen Startvorschlag ein...",
-                            starter_prompt_value_placeholder: "Geben Sie den Prompt-Text ein...",
-                            add_starter_prompt: "Startvorschlag hinzufügen",
-                            no_starter_prompts_selected: "Keine Startvorschläge hinzugefügt",
-
-                            // Tools
-                            select_tools: "Werkzeuge auswählen",
-                            no_tools_selected: "Keine Werkzeuge ausgewählt",
+                            starter_prompts_description: "Typische Aufgaben, die beim Öffnen des Assistenten angezeigt werden.",
+                            starter_prompt_display_text: "Anzeigetext",
+                            starter_prompt_prompt: "Prompt",
+                            starter_prompt_untitled: "Neuer Startvorschlag",
+                            finish_starter_prompt_edit: "Fertig",
+                            starter_prompt_text_placeholder: "z. B. E-Mail an Bürgerin formulieren",
+                            starter_prompt_value_placeholder:
+                                "z. B. Formuliere eine freundliche und verständliche E-Mail an eine Bürgerin, die nach dem Bearbeitungsstand ihres Antrags fragt. Erkläre, dass die Prüfung noch läuft, nenne keine konkreten Fristen und biete an, fehlende Unterlagen nachzureichen.",
+                            add_starter_prompt: "Hinzufügen",
+                            starter_prompts_empty_title: "Keine Startvorschläge",
+                            starter_prompts_empty_description: "Fügen Sie typische Aufgaben hinzu, damit Nutzer schneller ins Gespräch kommen.",
 
                             // DnD / list controls
-                            dnd_reorder_hint: "Ziehen Sie die Elemente am Griff, um die Reihenfolge zu ändern.",
                             drag_to_reorder: "Ziehen zum Neu-Anordnen",
                             dnd_aria_label: "Element {{position}} von {{total}} neu anordnen",
                             move_up: "Nach oben",
@@ -736,7 +754,7 @@ i18n
                         prompt: "Ask a question or upload a document",
                         prompt_no_upload: "Ask a question",
                         answer_loading: "Generating answer",
-                        quickprompts: {
+                        follow_up_actions: {
                             shorter_tooltip: "Shorten your answer",
                             longer_tooltip: "Write a longer response",
                             formal_tooltip: "Write your answer more formal",
@@ -785,7 +803,6 @@ i18n
                         ok: "OK",
                         next: "Next",
                         loading: "Loading...",
-                        hint: "Hint:",
                         language_names: {
                             DE: "German",
                             EN: "English",
@@ -1035,10 +1052,13 @@ i18n
                         example: {
                             label: "Example"
                         },
+                        starter_prompt: {
+                            label: "Starter prompt"
+                        },
                         deleteMessage: {
                             label: "Retract message"
                         },
-                        quickprompt: {
+                        follow_up_action: {
                             name: "Recommended answers"
                         },
                         history: {
@@ -1084,6 +1104,14 @@ i18n
                             // Page titles (differ between create and edit)
                             create_title: "Create Assistant",
                             edit_title: "Edit Assistant",
+                            page_helper_create:
+                                "Create an assistant for a clear use case. Define what it should do, how it should behave, and which tools it may use.",
+                            page_helper_edit: "Edit this assistant's task, behavior, and tools. Changes apply to future conversations.",
+                            builder_main_label: "Configure assistant",
+                            action_status_required_open: "Required fields open",
+                            action_status_ready_create: "Ready to create",
+                            action_status_ready_save: "Ready to save",
+                            action_status_read_only: "Read only",
 
                             // Create-only: Mode selector
                             subtitle_mode_select: "Choose how you want to start",
@@ -1125,7 +1153,7 @@ i18n
                             section_basic: "Basic Information",
                             section_behaviour: "Behaviour & Configuration",
                             section_tools: "Tools",
-                            section_actions_and_starters: "Follow-up Actions & Starters",
+                            section_conversation_options: "Conversation Options",
                             section_access: "Access & Visibility",
 
                             // Advanced settings fields
@@ -1144,26 +1172,32 @@ i18n
 
                             // Follow-up actions
                             follow_up_actions: "Follow-up Actions",
-                            follow_up_actions_placeholder: "Add follow-up actions, one per line (label|prompt)",
-                            follow_up_action_label_placeholder: "Enter the label...",
-                            follow_up_action_text_placeholder: "Enter the prompt text...",
-                            add_follow_up_action: "Add a Follow-up Action",
-                            no_follow_up_actions_selected: "No follow-up actions added",
+                            follow_up_actions_description: "Actions offered after an answer as the next step.",
+                            follow_up_action_label_placeholder: "e.g. Make it shorter",
+                            follow_up_action_display_text: "Display text",
+                            follow_up_action_prompt: "Prompt",
+                            follow_up_action_untitled: "New follow-up action",
+                            finish_follow_up_action_edit: "Done",
+                            follow_up_action_text_placeholder: "e.g. Rewrite the last answer more concisely and keep the key points.",
+                            add_follow_up_action: "Add",
+                            follow_up_actions_empty_title: "No follow-up actions",
+                            follow_up_actions_empty_description: "Add actions that are offered after an answer, such as shorten or simplify.",
 
                             // Starter prompts
                             starter_prompts: "Starter Prompts",
-                            starter_prompts_placeholder: "Add starter prompts, one per line (text|value)",
-                            starter_prompt_text_placeholder: "Enter the starter prompt...",
-                            starter_prompt_value_placeholder: "Enter the prompt text...",
-                            add_starter_prompt: "Add a starter prompt",
-                            no_starter_prompts_selected: "No starter prompts added",
-
-                            // Tools
-                            select_tools: "Select Tools",
-                            no_tools_selected: "No tools selected",
+                            starter_prompts_description: "Typical tasks shown when users open the assistant.",
+                            starter_prompt_display_text: "Display text",
+                            starter_prompt_prompt: "Prompt",
+                            starter_prompt_untitled: "New starter prompt",
+                            finish_starter_prompt_edit: "Done",
+                            starter_prompt_text_placeholder: "e.g. Draft an email to a citizen",
+                            starter_prompt_value_placeholder:
+                                "e.g. Draft a friendly and easy-to-understand email to a female citizen asking about the status of her application. Explain that the review is still ongoing, do not mention specific deadlines, and offer the option to submit missing documents.",
+                            add_starter_prompt: "Add",
+                            starter_prompts_empty_title: "No starter prompts",
+                            starter_prompts_empty_description: "Add typical tasks so users can start the conversation faster.",
 
                             // DnD / list controls
-                            dnd_reorder_hint: "Drag items by the handle to change their order.",
                             drag_to_reorder: "Drag to reorder",
                             dnd_aria_label: "Reorder item {{position}} of {{total}}",
                             move_up: "Move up",
@@ -1406,7 +1440,7 @@ i18n
                         prompt: "Stell a Froog oder lad a Dokument hoch",
                         prompt_no_upload: "Stell a Froog",
                         answer_loading: "I bearbeit grad de Frog",
-                        quickprompts: {
+                        follow_up_actions: {
                             shorter_tooltip: "Schreib a kürzere Antwort",
                             longer_tooltip: "Schreib a längere Antwort",
                             formal_tooltip: "Schreib a förmlichere Antwort",
@@ -1450,7 +1484,6 @@ i18n
                         ok: "OK",
                         next: "Weida",
                         loading: "Lade Konfiguration...",
-                        hint: "Hinweis:",
                         language_names: {
                             DE: "Deitsch",
                             EN: "Englisch",
@@ -1695,10 +1728,13 @@ i18n
                         example: {
                             label: "Beispui"
                         },
+                        starter_prompt: {
+                            label: "Startvorschlag"
+                        },
                         deleteMessage: {
                             label: "Nachricht zruckziang"
                         },
-                        quickprompt: {
+                        follow_up_action: {
                             name: "Vogschlagene Antworten"
                         },
                         history: {
@@ -1744,6 +1780,14 @@ i18n
                             // Page titles (differ between create and edit)
                             create_title: "An neia Assistentn o'legn",
                             edit_title: "Assistent bearbeiten",
+                            page_helper_create:
+                                "Erstell an Assistentn für an klaren Anwendungsfall. Leg fest, wos er doa soi, wia er se verhoit und welche Werkzeig er nutzen derf.",
+                            page_helper_edit: "Bearbeit Aufgabe, Verhoitn und Werkzeig von dem Assistentn. Änderungen gelten für künftige Unterhaltungen.",
+                            builder_main_label: "Assistent konfigurieren",
+                            action_status_required_open: "Pflichtfelder offen",
+                            action_status_ready_create: "Bereit zum Erstellen",
+                            action_status_ready_save: "Bereit zum Speichern",
+                            action_status_read_only: "Nur lesbar",
 
                             // Create-only: Mode selector
                             subtitle_mode_select: "Wia möchst da starten?",
@@ -1786,7 +1830,7 @@ i18n
                             section_basic: "Grundlegnde Infos",
                             section_behaviour: "Verhoitn & Konfiguration",
                             section_tools: "Werkzeig",
-                            section_actions_and_starters: "Folgeaktionen & Startvorschläge",
+                            section_conversation_options: "Unterhaltungsoptionen",
                             section_access: "Zugriff & Sichtbarkeit",
 
                             // Advanced settings fields
@@ -1806,26 +1850,33 @@ i18n
 
                             // Follow-up actions
                             follow_up_actions: "Folgeaktionen",
-                            follow_up_actions_placeholder: "Füg Folgeaktionen hinzu, oane pro Zeile (Label|Prompt)",
-                            follow_up_action_label_placeholder: "Gib die Bezeichnung ei...",
-                            follow_up_action_text_placeholder: "Gib den Prompt-Text ei...",
-                            add_follow_up_action: "Folgeaktion hinzufügn",
-                            no_follow_up_actions_selected: "Koane Folgeaktionen hinzugfügt",
+                            follow_up_actions_description: "Aktionen, de nach ana Antwort ois nächster Schritt ogbotn werdn.",
+                            follow_up_action_label_placeholder: "z. B. Kürzer macha",
+                            follow_up_action_display_text: "Anzeigetext",
+                            follow_up_action_prompt: "Prompt",
+                            follow_up_action_untitled: "Neue Folgeaktion",
+                            finish_follow_up_action_edit: "Fertig",
+                            follow_up_action_text_placeholder: "z. B. Formulier de letzte Antwort kürzer und behalt de wichtigsten Punkte bei.",
+                            add_follow_up_action: "Hinzufügn",
+                            follow_up_actions_empty_title: "Koane Folgeaktionen",
+                            follow_up_actions_empty_description:
+                                "Füg Aktionen hinzu, de nach ana Antwort ogbotn werdn, zum Beispiel kürzen oder einfacher macha.",
 
                             // Starter prompts
                             starter_prompts: "Startvorschläge",
-                            starter_prompts_placeholder: "Füg Startvorschläge hinzu, oans pro Zeile (Text|Wert)",
-                            starter_prompt_text_placeholder: "Gib den Startvorschlag-Text ei...",
-                            starter_prompt_value_placeholder: "Gib den Prompt-Text ei...",
-                            add_starter_prompt: "Startvorschlag hinzufügn",
-                            no_starter_prompts_selected: "Koane Startvorschläge hinzugfügt",
-
-                            // Tools
-                            select_tools: "Werkzeig aussuachn",
-                            no_tools_selected: "Koane Werkzeig ausgsuacht",
+                            starter_prompts_description: "Typische Aufgaben, de beim Öffnen vom Assistenten ozoagt werdn.",
+                            starter_prompt_display_text: "Anzeigetext",
+                            starter_prompt_prompt: "Prompt",
+                            starter_prompt_untitled: "Neuer Startvorschlag",
+                            finish_starter_prompt_edit: "Fertig",
+                            starter_prompt_text_placeholder: "z. B. E-Mail an Bürgerin formuliern",
+                            starter_prompt_value_placeholder:
+                                "z. B. Formulier a freundliche und verständliche E-Mail an a Bürgerin, de nachm Bearbeitungsstand von ihrm Antrag fragt. Erklär, dass de Prüfung no lafft, nenn koane konkretn Fristn und biet o, fehlende Unterlagen nachzureichn.",
+                            add_starter_prompt: "Hinzufügn",
+                            starter_prompts_empty_title: "Koane Startvorschläge",
+                            starter_prompts_empty_description: "Füg typische Aufgaben hinzu, damit Nutzende schneller ins Gespräch kemma.",
 
                             // DnD / list controls
-                            dnd_reorder_hint: "Ziag de Elementa am Griff, um de Reihenfoig zum ändern.",
                             drag_to_reorder: "Ziagn zum Nei-Ordna",
                             dnd_aria_label: "Element {{position}} vo {{total}} nei ordna",
                             move_up: "Nach obm",
@@ -2070,7 +2121,7 @@ i18n
                         prompt: "Posez une question ou téléchargez un document",
                         prompt_no_upload: "Posez une question",
                         answer_loading: "Créer une réponse",
-                        quickprompts: {
+                        follow_up_actions: {
                             shorter_tooltip: "Écrire une réponse plus courte",
                             longer_tooltip: "Écrire une réponse plus longue",
                             formal_tooltip: "Écrire une réponse plus formelle",
@@ -2120,7 +2171,6 @@ i18n
                         ok: "OK",
                         next: "Suivant",
                         loading: "Chargement de la configuration...",
-                        hint: "Conseil :",
                         language_names: {
                             DE: "Allemand",
                             EN: "Anglais",
@@ -2360,10 +2410,13 @@ i18n
                         example: {
                             label: "Exemple"
                         },
+                        starter_prompt: {
+                            label: "Suggestion pour débuter"
+                        },
                         deleteMessage: {
                             label: "Retirer le message"
                         },
-                        quickprompt: {
+                        follow_up_action: {
                             name: "Réponses suggérées"
                         },
                         history: {
@@ -2409,6 +2462,15 @@ i18n
                             // Page titles (differ between create and edit)
                             create_title: "Créer un assistant",
                             edit_title: "Modifier l'assistant",
+                            page_helper_create:
+                                "Créez un assistant pour un cas d'utilisation clair. Définissez ce qu'il doit faire, son comportement et les outils qu'il peut utiliser.",
+                            page_helper_edit:
+                                "Modifiez la tâche, le comportement et les outils de cet assistant. Les changements s'appliquent aux futures conversations.",
+                            builder_main_label: "Configurer l'assistant",
+                            action_status_required_open: "Champs obligatoires ouverts",
+                            action_status_ready_create: "Prêt à créer",
+                            action_status_ready_save: "Prêt à enregistrer",
+                            action_status_read_only: "Lecture seule",
 
                             // Create-only: Mode selector
                             subtitle_mode_select: "Choisissez comment vous souhaitez commencer",
@@ -2451,7 +2513,7 @@ i18n
                             section_basic: "Informations de base",
                             section_behaviour: "Comportement et configuration",
                             section_tools: "Outils",
-                            section_actions_and_starters: "Actions de suivi & suggestions de démarrage",
+                            section_conversation_options: "Options de conversation",
                             section_access: "Accès et visibilité",
 
                             // Advanced settings fields
@@ -2471,26 +2533,32 @@ i18n
 
                             // Follow-up actions
                             follow_up_actions: "Mesures de suivi",
-                            follow_up_actions_placeholder: "Ajouter des actions de suivi, un par ligne (label|prompt)",
-                            follow_up_action_label_placeholder: "Saisir le libellé...",
-                            follow_up_action_text_placeholder: "Saisir le texte du prompt...",
-                            add_follow_up_action: "Ajouter une action de suivi",
-                            no_follow_up_actions_selected: "Aucune action de suivi n'a été ajoutée",
+                            follow_up_actions_description: "Actions proposées après une réponse comme prochaine étape.",
+                            follow_up_action_label_placeholder: "p. ex. Raccourcir",
+                            follow_up_action_display_text: "Texte affiché",
+                            follow_up_action_prompt: "Prompt",
+                            follow_up_action_untitled: "Nouvelle action de suivi",
+                            finish_follow_up_action_edit: "Terminé",
+                            follow_up_action_text_placeholder: "p. ex. Reformule la dernière réponse plus brièvement en gardant les points clés.",
+                            add_follow_up_action: "Ajouter",
+                            follow_up_actions_empty_title: "Aucune action de suivi",
+                            follow_up_actions_empty_description: "Ajoutez des actions proposées après une réponse, par exemple raccourcir ou simplifier.",
 
                             // Starter prompts
                             starter_prompts: "Suggestions pour débuter",
-                            starter_prompts_placeholder: "Ajouter des suggestions de démarrage, un par ligne (texte|valeur)",
-                            starter_prompt_text_placeholder: "Saisissez les suggestions de démarrage...",
-                            starter_prompt_value_placeholder: "Saisir le texte du prompt...",
-                            add_starter_prompt: "Ajouter une suggestion de démarrage",
-                            no_starter_prompts_selected: "Aucune suggestion de démarrage n'a été ajoutée",
-
-                            // Tools
-                            select_tools: "Sélectionner des outils",
-                            no_tools_selected: "Aucun outil sélectionné",
+                            starter_prompts_description: "Tâches typiques affichées à l'ouverture de l'assistant.",
+                            starter_prompt_display_text: "Texte affiché",
+                            starter_prompt_prompt: "Prompt",
+                            starter_prompt_untitled: "Nouvelle suggestion pour débuter",
+                            finish_starter_prompt_edit: "Terminé",
+                            starter_prompt_text_placeholder: "p. ex. Rédiger un e-mail à une citoyenne",
+                            starter_prompt_value_placeholder:
+                                "p. ex. Rédige un e-mail aimable et facile à comprendre à une citoyenne qui demande l'état d'avancement de sa demande. Explique que l'examen est toujours en cours, ne mentionne aucun délai précis et propose de transmettre les documents manquants.",
+                            add_starter_prompt: "Ajouter",
+                            starter_prompts_empty_title: "Aucune suggestion pour débuter",
+                            starter_prompts_empty_description: "Ajoutez des tâches typiques pour aider les utilisateurs à démarrer plus vite.",
 
                             // DnD / list controls
-                            dnd_reorder_hint: "Faites glisser les éléments avec la poignée pour modifier l'ordre.",
                             drag_to_reorder: "Glisser pour réordonner",
                             dnd_aria_label: "Réorganiser l'élément {{position}} sur {{total}}",
                             move_up: "Monter",
@@ -2735,7 +2803,7 @@ i18n
                         prompt: "Задайте питання або завантажте документ",
                         prompt_no_upload: "Задайте питання",
                         answer_loading: "Створення відповіді",
-                        quickprompts: {
+                        follow_up_actions: {
                             shorter_tooltip: "Написати коротшу відповідь",
                             longer_tooltip: "Написати довшу відповідь",
                             formal_tooltip: "Написати офіційнішу відповідь",
@@ -2785,7 +2853,6 @@ i18n
                         ok: "OK",
                         next: "Далі",
                         loading: "Завантаження конфігурації...",
-                        hint: "Підказка:",
                         language_names: {
                             DE: "Німецька",
                             EN: "Англійська",
@@ -3025,10 +3092,13 @@ i18n
                         example: {
                             label: "Приклад"
                         },
+                        starter_prompt: {
+                            label: "Початковий запит"
+                        },
                         deleteMessage: {
                             label: "Видалити повідомлення"
                         },
-                        quickprompt: {
+                        follow_up_action: {
                             name: "Рекомендовані відповіді"
                         },
                         history: {
@@ -3074,6 +3144,14 @@ i18n
                             // Page titles (differ between create and edit)
                             create_title: "Створити асистента",
                             edit_title: "Редагувати асистента",
+                            page_helper_create:
+                                "Створіть асистента для чіткого сценарію використання. Визначте, що він має робити, як поводитися та які інструменти може використовувати.",
+                            page_helper_edit: "Редагуйте завдання, поведінку та інструменти цього асистента. Зміни застосовуються до майбутніх розмов.",
+                            builder_main_label: "Налаштувати асистента",
+                            action_status_required_open: "Обов'язкові поля відкриті",
+                            action_status_ready_create: "Готово до створення",
+                            action_status_ready_save: "Готово до збереження",
+                            action_status_read_only: "Лише читання",
 
                             // Create-only: Mode selector
                             subtitle_mode_select: "Оберіть, як ви хочете почати",
@@ -3115,7 +3193,7 @@ i18n
                             section_basic: "Основна інформація",
                             section_behaviour: "Поведінка та конфігурація",
                             section_tools: "Інструменти",
-                            section_actions_and_starters: "Наступні дії та початкові запити",
+                            section_conversation_options: "Опції розмови",
                             section_access: "Доступ і видимість",
 
                             // Advanced settings fields
@@ -3134,26 +3212,32 @@ i18n
 
                             // Follow-up actions
                             follow_up_actions: "Наступні кроки",
-                            follow_up_actions_placeholder: "Додати подальші дії, по одному в рядку (label|prompt)",
-                            follow_up_action_label_placeholder: "Введіть мітку...",
-                            follow_up_action_text_placeholder: "Введіть текст промпту...",
-                            add_follow_up_action: "Додати наступну дію",
-                            no_follow_up_actions_selected: "Подальших дій не додано",
+                            follow_up_actions_description: "Дії, які пропонуються після відповіді як наступний крок.",
+                            follow_up_action_label_placeholder: "напр. Скоротити",
+                            follow_up_action_display_text: "Текст кнопки",
+                            follow_up_action_prompt: "Промпт",
+                            follow_up_action_untitled: "Нова наступна дія",
+                            finish_follow_up_action_edit: "Готово",
+                            follow_up_action_text_placeholder: "напр. Перепиши останню відповідь коротше, зберігши ключові пункти.",
+                            add_follow_up_action: "Додати",
+                            follow_up_actions_empty_title: "Немає наступних дій",
+                            follow_up_actions_empty_description: "Додайте дії, які пропонуються після відповіді, наприклад скоротити або спростити.",
 
                             // Starter prompts
                             starter_prompts: "Початкові запити",
-                            starter_prompts_placeholder: "Додати початкові запити, по одному в рядку (text|value)",
-                            starter_prompt_text_placeholder: "Введіть текст початкового запиту...",
-                            starter_prompt_value_placeholder: "Введіть значення початкового запиту...",
-                            add_starter_prompt: "Додати початковий запит",
-                            no_starter_prompts_selected: "Початкові запити не додано",
-
-                            // Tools
-                            select_tools: "Обрати інструменти",
-                            no_tools_selected: "Інструменти не обрано",
+                            starter_prompts_description: "Типові завдання, які показуються під час відкриття асистента.",
+                            starter_prompt_display_text: "Текст кнопки",
+                            starter_prompt_prompt: "Промпт",
+                            starter_prompt_untitled: "Новий початковий запит",
+                            finish_starter_prompt_edit: "Готово",
+                            starter_prompt_text_placeholder: "напр. Написати лист громадянці",
+                            starter_prompt_value_placeholder:
+                                "напр. Склади дружній і зрозумілий електронний лист громадянці, яка запитує про стан розгляду своєї заяви. Поясни, що перевірка ще триває, не називай конкретних строків і запропонуй подати відсутні документи.",
+                            add_starter_prompt: "Додати",
+                            starter_prompts_empty_title: "Немає початкових запитів",
+                            starter_prompts_empty_description: "Додайте типові завдання, щоб користувачі швидше починали розмову.",
 
                             // DnD / list controls
-                            dnd_reorder_hint: "Перетягуйте елементи за ручку, щоб змінити порядок.",
                             drag_to_reorder: "Перетягнути для зміни порядку",
                             dnd_aria_label: "Змінити порядок елемента {{position}} з {{total}}",
                             move_up: "Вгору",

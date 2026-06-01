@@ -53,6 +53,7 @@ interface AppShellProps {
 const AppShell = ({ config, isLight, languagePreference, onLanguageSelectionChanged, onThemeChange, onAcceptTermsOfUse, termsOfUseRead }: AppShellProps) => {
     const { t } = useTranslation();
     const location = useLocation();
+    const faqUrl = config.faq_url;
     const [isMobile, setIsMobile] = useState<boolean>(window.innerWidth <= MOBILE_LAYOUT_BREAKPOINT);
     const [mobileSidebarOpen, setMobileSidebarOpen] = useState<boolean>(false);
     const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(() => localStorage.getItem(APP_NAV_COLLAPSED_KEY) === "true");
@@ -106,9 +107,11 @@ const AppShell = ({ config, isLight, languagePreference, onLanguageSelectionChan
                 <div className={styles.mobileUtilityRow}>
                     <TutorialsButton />
                 </div>
-                <div className={styles.mobileUtilityRow}>
-                    <HelpButton url={import.meta.env.BASE_URL + "#/faq"} label={t("components.helpbutton.help")} />
-                </div>
+                {faqUrl && (
+                    <div className={styles.mobileUtilityRow}>
+                        <HelpButton url={faqUrl} label={t("components.helpbutton.help")} />
+                    </div>
+                )}
             </div>
             <Divider className={styles.settingsDivider} />
             <div className={styles.mobileUtilityGroup}>
@@ -129,9 +132,8 @@ const AppShell = ({ config, isLight, languagePreference, onLanguageSelectionChan
                 </a>
 
                 <div
-                    className={`${styles.shellBody} ${!isMobile && isSidebarCollapsed ? styles.shellBodyCollapsed : ""} ${
-                        isMobile ? styles.shellBodyMobile : ""
-                    }`}
+                    className={`${styles.shellBody} ${!isMobile && isSidebarCollapsed ? styles.shellBodyCollapsed : ""} ${isMobile ? styles.shellBodyMobile : ""
+                        }`}
                 >
                     {!isMobile && (
                         <aside className={styles.sidebarColumn}>

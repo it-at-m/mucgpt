@@ -2,7 +2,6 @@ import i18n from "i18next";
 import { initReactI18next } from "react-i18next";
 import { tutorialsTranslations } from "./i18n.tutorials";
 import { versionTranslations } from "./i18n.version";
-import { faqTranslation } from "./i18n.faq";
 
 i18n
     // pass the i18n instance to react-i18next.
@@ -209,8 +208,8 @@ i18n
                             aria_label: "Hilfe und FAQ öffnen"
                         },
                         theme_selector: {
-                            theme_light: "Helles Thema",
-                            theme_dark: "Dunkles Thema",
+                            theme_light: "Helles Design",
+                            theme_dark: "Dunkles Design",
                             light_short: "Hell",
                             dark_short: "Dunkel"
                         },
@@ -707,8 +706,7 @@ i18n
                         subtitle: "Optimiere deinen Workflow mit spezialisierten KI-Agenten."
                     },
                     ...tutorialsTranslations.DE,
-                    ...versionTranslations.DE,
-                    ...faqTranslation.DE
+                    ...versionTranslations.DE
                 }
             },
             EN: {
@@ -1393,8 +1391,7 @@ i18n
                         subtitle: "Supercharge your workflow with specialized AI agents."
                     },
                     ...tutorialsTranslations.EN,
-                    ...versionTranslations.EN,
-                    ...faqTranslation.EN
+                    ...versionTranslations.EN
                 }
             },
             BA: {
@@ -1588,8 +1585,8 @@ i18n
                             aria_label: "Hilfe und FAQ aufmach'n"
                         },
                         theme_selector: {
-                            theme_light: "Helles Thema",
-                            theme_dark: "Dunkles Thema",
+                            theme_light: "Helles Design",
+                            theme_dark: "Dunkles Design",
                             light_short: "Hell",
                             dark_short: "Dunkl"
                         },
@@ -2074,8 +2071,7 @@ i18n
                         subtitle: "Optimier dein Workflow mit spezialisierten KI-Agenten."
                     },
                     ...tutorialsTranslations.BA,
-                    ...versionTranslations.BA,
-                    ...faqTranslation.BA
+                    ...versionTranslations.BA
                 }
             },
             FR: {
@@ -2756,8 +2752,7 @@ i18n
                         subtitle: "Boostez votre flux de travail avec des agents IA spécialisés."
                     },
                     ...tutorialsTranslations.FR,
-                    ...versionTranslations.FR,
-                    ...faqTranslation.FR
+                    ...versionTranslations.FR
                 }
             },
             UK: {
@@ -3434,8 +3429,7 @@ i18n
                         subtitle: "Прискорте свою роботу за допомогою спеціалізованих ШІ-агентів."
                     },
                     ...tutorialsTranslations.UK,
-                    ...versionTranslations.UK,
-                    ...faqTranslation.UK
+                    ...versionTranslations.UK
                 }
             }
         }

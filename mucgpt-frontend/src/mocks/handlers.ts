@@ -129,6 +129,7 @@ const CONFIG_RESPONSE: ApplicationConfig = {
     document_processing_enabled: true,
     footer_link_url: "https://ki.muenchen.de",
     footer_label: "DAICE",
+    faq_url: "https://ki.muenchen.de/",
     ad2image_url: ""
 };
 

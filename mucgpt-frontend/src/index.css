@@ -1,5 +1,3 @@
-@import "https://fonts.googleapis.com/css2?family=Montserrat:wght@700&display=swap";
-
 * {
     box-sizing: border-box;
     scrollbar-color: var(--colorNeutralStroke1) var(--colorNeutralBackground1);

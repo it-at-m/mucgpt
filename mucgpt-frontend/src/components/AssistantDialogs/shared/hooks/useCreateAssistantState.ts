@@ -1,9 +1,10 @@
-import { useState, useCallback, useMemo, useContext, useEffect } from "react";
+import { Dispatch, SetStateAction, useState, useCallback, useMemo, useContext, useEffect } from "react";
 import { ToolBase } from "../../../../api";
 import { FollowUpActionModel } from "../../../FollowUpAction";
 import { StarterPromptModel } from "../../../StarterPrompt";
 import { LLMContext } from "../../../LLMSelector/LLMContextProvider";
 import { CREATIVITY_LOW } from "../../../../constants";
+import { ensurePromptIds } from "../promptIds";
 
 export const useCreateAssistantState = () => {
     // Context
@@ -16,8 +17,8 @@ export const useCreateAssistantState = () => {
     const [systemPrompt, setSystemPrompt] = useState<string>("");
     const [selectedTemplate, setSelectedTemplate] = useState<string>("");
     const [tools, setTools] = useState<ToolBase[]>([]);
-    const [followUpActions, setFollowUpActions] = useState<FollowUpActionModel[]>([]);
-    const [starterPrompts, setStarterPrompts] = useState<StarterPromptModel[]>([]);
+    const [followUpActions, setFollowUpActionsState] = useState<FollowUpActionModel[]>([]);
+    const [starterPrompts, setStarterPromptsState] = useState<StarterPromptModel[]>([]);
     const [hierarchicalAccess, setHierarchicalAccess] = useState<string[]>([]);
     const [isVisible, setIsVisible] = useState<boolean>(false);
     const [creativity, setCreativity] = useState<string>(CREATIVITY_LOW);
@@ -38,7 +39,20 @@ export const useCreateAssistantState = () => {
             creativity !== CREATIVITY_LOW ||
             (defaultModel !== undefined && defaultModel !== LLM.llm_name)
         );
-    }, [input, title, description, systemPrompt, tools, followUpActions, starterPrompts, hierarchicalAccess, isVisible, creativity, defaultModel, LLM.llm_name]);
+    }, [
+        input,
+        title,
+        description,
+        systemPrompt,
+        tools,
+        followUpActions,
+        starterPrompts,
+        hierarchicalAccess,
+        isVisible,
+        creativity,
+        defaultModel,
+        LLM.llm_name
+    ]);
 
     useEffect(() => {
         setDefaultModel(LLM.llm_name);
@@ -85,6 +99,14 @@ export const useCreateAssistantState = () => {
         setIsVisible(newIsVisible);
     }, []);
 
+    const setFollowUpActions = useCallback<Dispatch<SetStateAction<FollowUpActionModel[]>>>(value => {
+        setFollowUpActionsState(current => ensurePromptIds(typeof value === "function" ? value(current) : value));
+    }, []);
+
+    const setStarterPrompts = useCallback<Dispatch<SetStateAction<StarterPromptModel[]>>>(value => {
+        setStarterPromptsState(current => ensurePromptIds(typeof value === "function" ? value(current) : value));
+    }, []);
+
     const updateTemplate = useCallback(
         (template: string, templateId: string) => {
             // Toggle functionality: if already selected, deselect it
@@ -113,8 +135,8 @@ export const useCreateAssistantState = () => {
         setSystemPrompt("");
         setSelectedTemplate("");
         setTools([]);
-        setFollowUpActions([]);
-        setStarterPrompts([]);
+        setFollowUpActionsState([]);
+        setStarterPromptsState([]);
         setHierarchicalAccess([]);
         setIsVisible(false);
         setCreativity(CREATIVITY_LOW);

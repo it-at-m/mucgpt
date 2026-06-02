@@ -136,7 +136,7 @@
     display: flex;
     flex-direction: column;
     gap: 12px;
-    animation: promptItemEditorIn 0.18s ease-out;
+    animation: prompt-item-editor-in 0.18s ease-out;
     transform-origin: top center;
 }
 
@@ -154,7 +154,7 @@
     line-height: 1.3;
 }
 
-@keyframes promptItemEditorIn {
+@keyframes prompt-item-editor-in {
     from {
         opacity: 0;
         transform: translateY(-4px) scale(0.992);
@@ -166,7 +166,7 @@
     }
 }
 
-@keyframes promptItemContentIn {
+@keyframes prompt-item-content-in {
     from {
         opacity: 0;
         transform: translateY(2px);

@@ -50,6 +50,10 @@ export const AdvancedSettingsSection = ({
         [CREATIVITY_MEDIUM]: t("components.assistant_editor.creativity_medium"),
         [CREATIVITY_HIGH]: t("components.assistant_editor.creativity_high")
     };
+    const noDefaultModelOptionValue = "none";
+    const noDefaultModelLabel = t("components.assistant_editor.no_default_model");
+    const defaultModelValue = defaultModel ? availableLLMs.find(model => model.llm_name === defaultModel)?.llm_name : noDefaultModelLabel;
+    const selectedDefaultModelOptions = defaultModel ? [defaultModel] : [noDefaultModelOptionValue];
 
     return (
         <DialogContent>
@@ -83,13 +87,13 @@ export const AdvancedSettingsSection = ({
                 </label>
                 <Dropdown
                     placeholder={t("components.assistant_editor.default_model_placeholder")}
-                    value={defaultModel ? availableLLMs.find(model => model.llm_name === defaultModel)?.llm_name : ""}
-                    selectedOptions={defaultModel ? [defaultModel] : []}
+                    value={defaultModelValue}
+                    selectedOptions={selectedDefaultModelOptions}
                     onOptionSelect={onDefaultModelChangeHandler}
                     disabled={!isOwner}
                 >
-                    <Option key="none" value="none">
-                        {t("components.assistant_editor.no_default_model")}
+                    <Option key={noDefaultModelOptionValue} value={noDefaultModelOptionValue}>
+                        {noDefaultModelLabel}
                     </Option>
                     {availableLLMs.map(model => (
                         <Option key={model.llm_name} value={model.llm_name}>

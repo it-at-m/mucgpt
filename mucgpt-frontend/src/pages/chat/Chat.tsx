@@ -705,6 +705,8 @@ const Chat = () => {
                 tooltip: t("chat.follow_up_actions.longer_tooltip", { lng: language })
             }
         ]);
+
+        return () => setFollowUpActions([]);
     }, [language, t, setFollowUpActions]);
 
     // Click handlers

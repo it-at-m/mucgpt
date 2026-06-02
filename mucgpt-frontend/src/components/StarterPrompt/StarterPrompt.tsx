@@ -1,3 +1,4 @@
+import { Button } from "@fluentui/react-components";
 import styles from "./StarterPrompt.module.css";
 
 interface Props {
@@ -10,8 +11,8 @@ interface Props {
 
 export const StarterPrompt = ({ text, value, system, onClick, ariaLabel }: Props) => {
     return (
-        <div className={styles.starterPrompt} aria-description={ariaLabel} onClick={() => onClick(value, system)}>
-            <p className={styles.starterPromptText}>{text}</p>
-        </div>
+        <Button type="button" appearance="secondary" className={styles.starterPrompt} aria-label={ariaLabel} onClick={() => onClick(value, system)}>
+            <span className={styles.starterPromptText}>{text}</span>
+        </Button>
     );
 };

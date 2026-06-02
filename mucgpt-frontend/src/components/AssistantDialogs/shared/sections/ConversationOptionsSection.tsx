@@ -34,6 +34,7 @@ import styles from "./ConversationOptionsSection.module.css";
 import { ExpandableTextarea } from "../ExpandableTextarea";
 import { StarterPromptModel } from "../../../StarterPrompt";
 import { FollowUpActionModel } from "../../../FollowUpAction";
+import { generatePromptId } from "../promptIds";
 
 interface ConversationOptionsSectionProps {
     followUpActions: FollowUpActionModel[];
@@ -80,11 +81,6 @@ interface EditablePromptItemProps<T extends { id?: string }> {
     totalCount: number;
 }
 
-const generatePromptId = () =>
-    typeof crypto !== "undefined" && typeof crypto.randomUUID === "function"
-        ? crypto.randomUUID()
-        : `prompt-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
-
 const getPromptPreview = (prompt: string) => {
     const lines = prompt.trim().split(/\r?\n/);
     const previewLines = lines.slice(0, 2);
@@ -110,7 +106,7 @@ function EditablePromptItem<T extends { id?: string }>({
     const itemRef = useRef<HTMLDivElement>(null);
     const handleRef = useRef<HTMLButtonElement>(null);
     const wasDraggingRef = useRef(false);
-    const itemId = item.id ?? `${config.itemType}-${index}`;
+    const itemId = item.id;
     const titleInputId = useId();
     const promptTextareaId = useId();
     const titleLabelId = `${titleInputId}-label`;
@@ -470,7 +466,7 @@ function EditablePromptList<T extends { id?: string }>({ config, isOwner, items,
                 {items.length > 0 ? (
                     items.map((item, index) => (
                         <EditablePromptItem
-                            key={item.id ?? `${config.itemType}-${index}`}
+                            key={item.id}
                             config={config}
                             item={item}
                             index={index}

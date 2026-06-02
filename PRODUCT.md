@@ -1,9 +1,5 @@
 # Product
 
-## Register
-
-product
-
 ## Product Summary
 
 MUCGPT is an AI assistant platform for municipal work. It gives employees a reliable place to use language models for writing, reviewing, summarizing, structuring, and reusing text-based work.
@@ -25,7 +21,7 @@ Primary users include:
 
 Secondary users include:
 
-- Assistant creators who configure prompts, tools, examples, quick starters, models, and behavior.
+- Assistant creators who configure prompts, tools, starter prompts, follow-up actions, models, and behavior.
 - Organizational power users who publish assistants for selected departments or wider internal use.
 - Future administrative users who need visibility into shared assistants and can correct, adjust, or remove inappropriate assistant configurations.
 
@@ -47,7 +43,7 @@ The most important product moment is not simply receiving an answer from a chat.
 
 An assistant is a workflow-specific chat configuration, not just a saved prompt.
 
-Each assistant is centered on a system prompt that defines its role, behavior, constraints, and task focus. Assistants may also include tools, examples, quick starters, model settings, and metadata that help users understand how and when to use them.
+Each assistant is centered on a system prompt that defines its role, behavior, constraints, and task focus. Assistants may also include tools, starter prompts, follow-up actions, model settings, and metadata that help users understand how and when to use them.
 
 Users should be able to create assistants for their own work. Assistants can be shared with selected departments or audiences when they are useful beyond the creator’s private workflow.
 
@@ -106,7 +102,7 @@ Human review, user intent, and transparent assistant behavior should remain cent
 
 1. Assistants are the product: chat is the execution surface, but assistant discovery, creation, configuration, sharing, and reuse should lead the experience.
 2. Useful for everyone: the same product must work for first-time AI users and experienced power users without forcing either group into the other’s workflow.
-3. Workflow before model mechanics: expose prompts, tools, creativity, examples, and models in the language of the user’s job whenever possible.
+3. Workflow before model mechanics: expose prompts, tools, creativity, starter prompts, and models in the language of the user’s job whenever possible.
 4. Confidence through transparency: show what an assistant can do, who owns it, where it applies, and what capabilities it uses before asking users to rely on it.
 5. Human in the loop: MUCGPT helps users think, write, inspect, and decide. It should not hide autonomous execution behind friendly chat UI.
 6. Municipal clarity, modern quality: make the product feel current without sacrificing accessibility, reliability, or operational seriousness.

@@ -1,13 +1,9 @@
-import { useState, useEffect, useCallback } from "react";
+import { Dispatch, SetStateAction, useState, useEffect, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { Assistant, ToolBase } from "../../../../api";
 import { FollowUpActionModel } from "../../../FollowUpAction";
 import { StarterPromptModel } from "../../../StarterPrompt";
-
-const generatePromptId = () =>
-    typeof crypto !== "undefined" && typeof crypto.randomUUID === "function"
-        ? crypto.randomUUID()
-        : `prompt-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+import { ensurePromptIds } from "../promptIds";
 
 export const useAssistantState = (initialAssistant: Assistant) => {
     const { t } = useTranslation();
@@ -17,8 +13,8 @@ export const useAssistantState = (initialAssistant: Assistant) => {
     const [title, setTitle] = useState<string>(initialAssistant.title);
     const [description, setDescription] = useState<string>(initialAssistant.description);
     const [systemPrompt, setSystemPrompt] = useState<string>(initialAssistant.system_message);
-    const [followUpActions, setFollowUpActions] = useState<FollowUpActionModel[]>(initialAssistant.quick_prompts || []);
-    const [starterPrompts, setStarterPrompts] = useState<StarterPromptModel[]>(initialAssistant.examples || []);
+    const [followUpActions, setFollowUpActionsState] = useState<FollowUpActionModel[]>(() => ensurePromptIds(initialAssistant.quick_prompts));
+    const [starterPrompts, setStarterPromptsState] = useState<StarterPromptModel[]>(() => ensurePromptIds(initialAssistant.examples));
     const [creativity, setCreativity] = useState<string>(initialAssistant.creativity);
     const [defaultModel, setDefaultModel] = useState<string | undefined>(initialAssistant.default_model);
     const [defaultModelCleared, setDefaultModelCleared] = useState<boolean>(false);
@@ -31,22 +27,17 @@ export const useAssistantState = (initialAssistant: Assistant) => {
     const [hasChanged, setHasChanged] = useState<boolean>(false);
     const [isVisible, setIsVisible] = useState<boolean>(initialAssistant.is_visible !== undefined ? initialAssistant.is_visible : true);
 
-    const ensureIds = useCallback(
-        <T extends { id?: string }>(items: T[] | undefined) => (items || []).map(it => ({ ...it, id: it.id || generatePromptId() })),
-        []
-    );
-
     // Update state when assistant prop changes
     useEffect(() => {
-        const followUpActionsWithIds = ensureIds(initialAssistant.quick_prompts);
-        const starterPromptsWithIds = ensureIds(initialAssistant.examples);
+        const followUpActionsWithIds = ensurePromptIds(initialAssistant.quick_prompts);
+        const starterPromptsWithIds = ensurePromptIds(initialAssistant.examples);
 
         setAssistantId(initialAssistant.id);
         setTitle(initialAssistant.title);
         setDescription(initialAssistant.description);
         setSystemPrompt(initialAssistant.system_message);
-        setFollowUpActions(followUpActionsWithIds);
-        setStarterPrompts(starterPromptsWithIds);
+        setFollowUpActionsState(followUpActionsWithIds);
+        setStarterPromptsState(starterPromptsWithIds);
         setCreativity(initialAssistant.creativity);
         setDefaultModel(initialAssistant.default_model);
         setVersion(initialAssistant.version || "0");
@@ -58,7 +49,7 @@ export const useAssistantState = (initialAssistant: Assistant) => {
         setHasChanged(false);
         setIsVisible(initialAssistant.is_visible !== undefined ? initialAssistant.is_visible : true);
         setDefaultModelCleared(false);
-    }, [initialAssistant, ensureIds]);
+    }, [initialAssistant]);
 
     // Change handlers
     const updateTitle = useCallback((newTitle: string) => {
@@ -101,17 +92,25 @@ export const useAssistantState = (initialAssistant: Assistant) => {
         setHasChanged(true);
     }, []);
 
+    const setFollowUpActions = useCallback<Dispatch<SetStateAction<FollowUpActionModel[]>>>(value => {
+        setFollowUpActionsState(current => ensurePromptIds(typeof value === "function" ? value(current) : value));
+    }, []);
+
+    const setStarterPrompts = useCallback<Dispatch<SetStateAction<StarterPromptModel[]>>>(value => {
+        setStarterPromptsState(current => ensurePromptIds(typeof value === "function" ? value(current) : value));
+    }, []);
+
     // Reset to original values
     const resetToOriginal = useCallback(() => {
-        const followUpActionsWithIds = ensureIds(initialAssistant.quick_prompts);
-        const starterPromptsWithIds = ensureIds(initialAssistant.examples);
+        const followUpActionsWithIds = ensurePromptIds(initialAssistant.quick_prompts);
+        const starterPromptsWithIds = ensurePromptIds(initialAssistant.examples);
 
         setAssistantId(initialAssistant.id);
         setTitle(initialAssistant.title);
         setDescription(initialAssistant.description);
         setSystemPrompt(initialAssistant.system_message);
-        setFollowUpActions(followUpActionsWithIds);
-        setStarterPrompts(starterPromptsWithIds);
+        setFollowUpActionsState(followUpActionsWithIds);
+        setStarterPromptsState(starterPromptsWithIds);
         setCreativity(initialAssistant.creativity);
         setDefaultModel(initialAssistant.default_model);
         setVersion(initialAssistant.version);
@@ -123,7 +122,7 @@ export const useAssistantState = (initialAssistant: Assistant) => {
         setHasChanged(false);
         setIsVisible(initialAssistant.is_visible !== undefined ? initialAssistant.is_visible : true);
         setDefaultModelCleared(false);
-    }, [initialAssistant, ensureIds]);
+    }, [initialAssistant]);
 
     // Create assistant object for saving
     const createAssistantForSaving = useCallback((): Assistant => {

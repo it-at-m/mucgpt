@@ -422,7 +422,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
 
     // callApi-Funktion
     const callApi = useCallback(
-        async (question: string, dataSources?: DataSource[]) => {
+        async (question: string, systemOverride?: string, dataSources?: DataSource[]) => {
             if (isLegacyAssistant) {
                 console.warn("Interaction blocked: Assistant is in legacy state and read-only.");
                 return;
@@ -434,7 +434,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
 
             const askResponse: AskResponse = {} as AskResponse;
             const options: ChatOptions = {
-                system: systemPrompt ?? "",
+                system: systemOverride ?? systemPrompt ?? "",
                 creativity: creativity
             };
             try {
@@ -628,8 +628,8 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
     );
 
     const onStarterPromptClicked = useCallback(
-        (starterPrompt: string) => {
-            callApi(starterPrompt);
+        (starterPrompt: string, system?: string) => {
+            callApi(starterPrompt, system);
         },
         [callApi]
     );
@@ -663,7 +663,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
         } else {
             return null;
         }
-    }, [isDeletedAssistant, assistantConfig.examples, onStarterPromptClicked]);
+    }, [isDeletedAssistant, isLegacyAssistant, assistantConfig.examples, onStarterPromptClicked]);
 
     // Text-Input component
     const inputComponent = useMemo(() => {
@@ -764,7 +764,11 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                                         status: data.status
                                     }
                                 }));
-                            callApi(question, dataSources.length > 0 ? dataSources : undefined);
+                            callApi(
+                                question,
+                                undefined,
+                                dataSources.length > 0 ? dataSources : undefined
+                            );
                         }}
                         question={question}
                         setQuestion={question => setQuestion(question)}
@@ -800,7 +804,11 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                                 status: data.status
                             }
                         }));
-                    callApi(question, dataSources.length > 0 ? dataSources : undefined);
+                    callApi(
+                        question,
+                        undefined,
+                        dataSources.length > 0 ? dataSources : undefined
+                    );
                 }}
                 question={question}
                 setQuestion={question => setQuestion(question)}

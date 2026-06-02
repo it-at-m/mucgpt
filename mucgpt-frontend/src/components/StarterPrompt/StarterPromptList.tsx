@@ -20,7 +20,7 @@ export const StarterPromptList = ({ starterPrompts, onStarterPromptClicked }: Pr
     return (
         <ul className={styles.starterPromptNavList} aria-description={t("common.starter_prompts")}>
             {starterPrompts.map((starterPrompt, index) => (
-                <li key={starterPrompt.id || index} tabIndex={0}>
+                <li key={starterPrompt.id ?? starterPrompt.value} tabIndex={0}>
                     <StarterPrompt
                         text={starterPrompt.text}
                         system={starterPrompt.system}

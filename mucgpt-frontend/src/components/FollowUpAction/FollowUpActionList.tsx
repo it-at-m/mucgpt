@@ -19,11 +19,10 @@ export const FollowUpActionList = ({ onSend }: Props) => {
             </Divider>
             <div className={styles.buttons}>
                 {followUpActions.map(followUpAction => (
-                    <Tooltip content={followUpAction.tooltip} relationship="description" positioning="above" key={followUpAction.label}>
+                    <Tooltip content={followUpAction.tooltip} relationship="description" positioning="above" key={followUpAction.id}>
                         <Button
                             onClick={() => onSend(followUpAction.prompt)}
                             appearance="secondary"
-                            aria-label={followUpAction.prompt}
                             className={styles.item}
                         >
                             {followUpAction.label}

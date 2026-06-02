@@ -20,11 +20,7 @@ export const FollowUpActionList = ({ onSend }: Props) => {
             <div className={styles.buttons}>
                 {followUpActions.map(followUpAction => (
                     <Tooltip content={followUpAction.tooltip} relationship="description" positioning="above" key={followUpAction.id}>
-                        <Button
-                            onClick={() => onSend(followUpAction.prompt)}
-                            appearance="secondary"
-                            className={styles.item}
-                        >
+                        <Button onClick={() => onSend(followUpAction.prompt)} appearance="secondary" className={styles.item}>
                             {followUpAction.label}
                         </Button>
                     </Tooltip>

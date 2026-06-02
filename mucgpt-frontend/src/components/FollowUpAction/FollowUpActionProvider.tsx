@@ -13,8 +13,7 @@ const generateFollowUpActionId = () =>
         ? crypto.randomUUID()
         : `follow-up-action-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
 
-const ensureFollowUpActionIds = (actions: FollowUpActionModel[]) =>
-    actions.map(action => ({ ...action, id: action.id || generateFollowUpActionId() }));
+const ensureFollowUpActionIds = (actions: FollowUpActionModel[]) => actions.map(action => ({ ...action, id: action.id || generateFollowUpActionId() }));
 
 export const FollowUpActionProvider = (props: React.PropsWithChildren<unknown>) => {
     const [followUpActions, setFollowUpActionsState] = useState<FollowUpActionModel[]>([]);
@@ -23,9 +22,5 @@ export const FollowUpActionProvider = (props: React.PropsWithChildren<unknown>) 
         setFollowUpActionsState(current => ensureFollowUpActionIds(typeof value === "function" ? value(current) : value));
     }, []);
 
-    return (
-        <FollowUpActionContext.Provider value={{ followUpActions, setFollowUpActions }}>
-            {props.children}
-        </FollowUpActionContext.Provider>
-    );
+    return <FollowUpActionContext.Provider value={{ followUpActions, setFollowUpActions }}>{props.children}</FollowUpActionContext.Provider>;
 };

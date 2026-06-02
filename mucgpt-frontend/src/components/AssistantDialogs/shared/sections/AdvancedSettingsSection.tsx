@@ -52,8 +52,8 @@ export const AdvancedSettingsSection = ({
     };
     const noDefaultModelOptionValue = "none";
     const noDefaultModelLabel = t("components.assistant_editor.no_default_model");
-    const defaultModelValue = defaultModel ? availableLLMs.find(model => model.llm_name === defaultModel)?.llm_name : noDefaultModelLabel;
-    const selectedDefaultModelOptions = defaultModel ? [defaultModel] : [noDefaultModelOptionValue];
+    const defaultModelValue = defaultModel ? availableLLMs.find(model => model.llm_name === defaultModel)?.llm_name || defaultModel : noDefaultModelLabel;
+    const selectedDefaultModelOptions = defaultModel ? [defaultModelValue] : [noDefaultModelOptionValue];
 
     return (
         <DialogContent>

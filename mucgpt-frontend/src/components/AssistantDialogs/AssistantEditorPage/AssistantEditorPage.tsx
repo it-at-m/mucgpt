@@ -384,7 +384,9 @@ export const AssistantEditorPage = (props: AssistantEditorPageProps) => {
         const validFollowUpActions = (s.followUpActions ?? []).filter(
             (followUpAction: FollowUpActionModel) => followUpAction.label?.trim() && followUpAction.prompt?.trim()
         );
-        const validStarterPrompts = (s.starterPrompts ?? []).filter((starterPrompt: StarterPromptModel) => starterPrompt.text?.trim() && starterPrompt.value?.trim());
+        const validStarterPrompts = (s.starterPrompts ?? []).filter(
+            (starterPrompt: StarterPromptModel) => starterPrompt.text?.trim() && starterPrompt.value?.trim()
+        );
         const assistantDescription = s.description || "";
 
         try {

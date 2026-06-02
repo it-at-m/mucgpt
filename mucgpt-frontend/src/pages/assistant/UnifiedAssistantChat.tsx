@@ -764,11 +764,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                                         status: data.status
                                     }
                                 }));
-                            callApi(
-                                question,
-                                undefined,
-                                dataSources.length > 0 ? dataSources : undefined
-                            );
+                            callApi(question, undefined, dataSources.length > 0 ? dataSources : undefined);
                         }}
                         question={question}
                         setQuestion={question => setQuestion(question)}
@@ -804,11 +800,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                                 status: data.status
                             }
                         }));
-                    callApi(
-                        question,
-                        undefined,
-                        dataSources.length > 0 ? dataSources : undefined
-                    );
+                    callApi(question, undefined, dataSources.length > 0 ? dataSources : undefined);
                 }}
                 question={question}
                 setQuestion={question => setQuestion(question)}

@@ -37,7 +37,7 @@
 }
 
 .questionInputContainer {
-    border-radius: 8px;
+    border-radius: var(--borderRadiusXLarge);
     background: var(--colorNeutralBackground3);
     outline: 1px solid var(--colorNeutralStroke1);
     width: 100%;
@@ -61,17 +61,12 @@
 
 .questionInputContainer:focus-within {
     transform: translateY(-1px);
-    outline: 1px solid var(--colorNeutralStroke1Hover);
+    outline: 2px solid var(--colorBrandBackground);
     outline-offset: 1px;
     transition:
         box-shadow 0.15s ease,
         outline 0.15s ease,
         transform 0.15s ease;
-}
-
-.questionInputContainer:focus-within {
-    transform: translateY(-1px);
-    outline: 2px solid var(--colorBrandBackground);
 }
 
 .noTools {
@@ -199,11 +194,13 @@
     }
 
     .questionInputContainer {
+        background: transparent;
         padding: 8px 4px 8px 12px;
-        border-radius: 8px;
+        border-radius: var(--borderRadiusLarge);
     }
 
     .questionInputTextArea {
+        background: transparent !important;
         font-size: var(--fontSizeBase200, 1rem);
         padding: 6px 0;
         line-height: 22px;

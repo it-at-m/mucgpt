@@ -73,14 +73,9 @@ export const TermsOfUseDialog = ({ defaultOpen, onAccept, showTrigger = true, tr
                                     MUCGPT“) werden.
                                     {faqUrl && (
                                         <>
-                                            {" "}Siehe Details und weitere Zitierstile hierzu in den{" "}
-                                            <Link
-                                                inline
-                                                className={styles.link}
-                                                href={faqUrl}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                            >
+                                            {" "}
+                                            Siehe Details und weitere Zitierstile hierzu in den{" "}
+                                            <Link inline className={styles.link} href={faqUrl} target="_blank" rel="noopener noreferrer">
                                                 FAQs
                                             </Link>
                                             .
@@ -117,15 +112,9 @@ export const TermsOfUseDialog = ({ defaultOpen, onAccept, showTrigger = true, tr
                                 </li>
                                 {faqUrl && (
                                     <li>
-                                        <strong>FAQs:</strong> Weitere Fragen und Antworten (u.a. zu Ziel und Einsatzzwecke von MUCGPT sowie zur Weiterverwendung
-                                        der Eingaben und Ergebnisse) geben die{" "}
-                                        <Link
-                                            inline
-                                            className={styles.link}
-                                            href={faqUrl}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                        >
+                                        <strong>FAQs:</strong> Weitere Fragen und Antworten (u.a. zu Ziel und Einsatzzwecke von MUCGPT sowie zur
+                                        Weiterverwendung der Eingaben und Ergebnisse) geben die{" "}
+                                        <Link inline className={styles.link} href={faqUrl} target="_blank" rel="noopener noreferrer">
                                             FAQs
                                         </Link>
                                         .

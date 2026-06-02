@@ -1,4 +1,4 @@
-import { ReactNode, useEffect, useState } from "react";
+import { ReactNode, useEffect, useRef, useState, type CSSProperties } from "react";
 import { Button } from "@fluentui/react-components";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -40,6 +40,8 @@ export const ChatLayout = ({
     infoDrawerOpen,
     actions
 }: Props) => {
+    const chatInputRef = useRef<HTMLDivElement | null>(null);
+    const [chatInputHeight, setChatInputHeight] = useState(0);
     const [isCompact, setIsCompact] = useState(() =>
         typeof window !== "undefined" && typeof window.matchMedia === "function" ? window.matchMedia("(max-width: 640px)").matches : false
     );
@@ -52,8 +54,35 @@ export const ChatLayout = ({
         return () => mq.removeEventListener("change", handler);
     }, []);
 
+    useEffect(() => {
+        const element = chatInputRef.current;
+        if (!element || typeof window === "undefined") return;
+
+        const updateInputHeight = () => {
+            const nextHeight = Math.ceil(element.getBoundingClientRect().height);
+            setChatInputHeight(previousHeight => (previousHeight === nextHeight ? previousHeight : nextHeight));
+        };
+
+        updateInputHeight();
+        window.addEventListener("resize", updateInputHeight);
+
+        if (typeof ResizeObserver === "undefined") {
+            return () => window.removeEventListener("resize", updateInputHeight);
+        }
+
+        const observer = new ResizeObserver(updateInputHeight);
+        observer.observe(element);
+
+        return () => {
+            window.removeEventListener("resize", updateInputHeight);
+            observer.disconnect();
+        };
+    }, []);
+
+    const containerStyle = { "--chatInputHeight": `${chatInputHeight}px` } as CSSProperties;
+
     return (
-        <div className={styles.container} data-info-open={infoDrawerOpen ?? false}>
+        <div className={styles.container} data-info-open={infoDrawerOpen ?? false} style={containerStyle}>
             <header className={styles.headerBar}>
                 <div className={styles.leftGroup}>
                     <h1 className={styles.headerTitle}>
@@ -99,7 +128,9 @@ export const ChatLayout = ({
                             {answers}
                         </ul>
                     )}
-                    <div className={styles.chatInput}>{input}</div>
+                    <div className={styles.chatInput} ref={chatInputRef}>
+                        {input}
+                    </div>
                 </div>
             </div>
         </div>

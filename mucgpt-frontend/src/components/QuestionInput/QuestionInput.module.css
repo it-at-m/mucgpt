@@ -194,13 +194,13 @@
     }
 
     .questionInputContainer {
-        background: transparent;
+        background: var(--colorNeutralBackground3);
         padding: 8px 4px 8px 12px;
         border-radius: var(--borderRadiusLarge);
     }
 
     .questionInputTextArea {
-        background: transparent !important;
+        background: var(--colorNeutralBackground3) !important;
         font-size: var(--fontSizeBase200, 1rem);
         padding: 6px 0;
         line-height: 22px;

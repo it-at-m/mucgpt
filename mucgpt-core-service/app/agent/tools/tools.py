@@ -8,8 +8,12 @@ from langchain_core.tools.base import BaseTool
 
 from agent.state_models.default_state import DefaultAgentState
 from agent.state_models.registry import registry as AGENT_STATE_SCHEMA_REGISTRY
-from agent.tools import brainstorm, simplify
+from agent.tools import brainstorm, internet_search, simplify
 from agent.tools.brainstorm import make_brainstorm_tool
+from agent.tools.internet_search import (
+    is_internet_search_configured,
+    make_internet_search_tool,
+)
 from agent.tools.mcp import McpLoader
 from agent.tools.simplify import make_simplify_tool
 from api.api_models import ToolInfo, ToolListResponse
@@ -116,7 +120,13 @@ class ToolCollection:
         return [
             make_brainstorm_tool(brainstorm_model, self.logger),
             make_simplify_tool(simplify_model, self.logger),
-        ]
+        ] + self._build_configured_tools()
+
+    def _build_configured_tools(self) -> list[BaseTool]:
+        tools: list[BaseTool] = []
+        if is_internet_search_configured():
+            tools.append(make_internet_search_tool(self.logger))
+        return tools
 
     async def get_tools(
         self,
@@ -136,7 +146,9 @@ class ToolCollection:
 
     @staticmethod
     async def list_tool_metadata(
-        user_info: AuthenticationResult, lang: str = "Deutsch"
+        user_info: AuthenticationResult,
+        lang: str = "Deutsch",
+        force_reload: bool = False,
     ) -> ToolListResponse:
         """
         Dynamically returns metadata for all available tools, including their name and description, without requiring a model.
@@ -172,6 +184,10 @@ class ToolCollection:
                     "name": "Vereinfachen",
                     "description": "Vereinfacht komplexe deutsche Texte auf A2-Niveau nach Prinzipien der Leichten Sprache.",
                 },
+                "InternetSearch": {
+                    "name": "Internetsuche",
+                    "description": "Sucht im Internet ueber die konfigurierte SearXNG-Instanz und liefert Quellen mit Titeln, URLs und Textauszuegen.",
+                },
             },
             "english": {
                 "Brainstorming": {
@@ -181,6 +197,10 @@ class ToolCollection:
                 "Vereinfachen": {
                     "name": "Simplify",
                     "description": "Simplifies complex German text to A2 level using Easy Language principles.",
+                },
+                "InternetSearch": {
+                    "name": "Internet Search",
+                    "description": "Searches the internet via the configured SearXNG engine and returns sourced titles, URLs and snippets.",
                 },
             },
             "français": {
@@ -229,8 +249,14 @@ class ToolCollection:
         # Create tool instances
         brainstorm_tool = make_brainstorm_tool(DummyModel(), dummy_logger)
         simplify_tool = make_simplify_tool(DummyModel(), dummy_logger)
-        mcp_tools = await McpLoader.load_mcp_tools(user_info=user_info)
-        tools = [brainstorm_tool, simplify_tool] + mcp_tools
+        configured_tools = []
+        if is_internet_search_configured():
+            configured_tools.append(make_internet_search_tool(dummy_logger))
+        mcp_tools = await McpLoader.load_mcp_tools(
+            user_info=user_info, force_reload=force_reload
+        )
+
+        tools = [brainstorm_tool, simplify_tool] + configured_tools + mcp_tools
 
         mcp_source_keys = set((get_mcp_settings().SOURCES or {}).keys())
 
@@ -299,6 +325,7 @@ class ToolCollection:
         detailed_map = {
             "Brainstorming": brainstorm.BRAINSTORMING_DETAILED,
             "Vereinfachen": simplify.SIMPLIFY_DETAILED,
+            "InternetSearch": internet_search.INTERNET_SEARCH_DETAILED,
         }
 
         tool_descriptions = []  # single-line summaries

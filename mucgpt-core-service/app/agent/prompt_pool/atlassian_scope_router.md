@@ -12,4 +12,4 @@ Rules:
 - If uncertain, choose general.
 
 Important:
-fokus on the latest scope of the conversation. There may be multiple scopes mentioned in the conversation, but the most recent one is the most relevant!
+Focus on the latest scope of the conversation. There may be multiple scopes mentioned in the conversation, but the most recent one is the most relevant!

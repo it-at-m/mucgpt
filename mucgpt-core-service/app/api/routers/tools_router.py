@@ -18,13 +18,18 @@ settings = get_settings()
     responses={200: {"description": "Successful Response"}},
 )
 async def list_tools(
-    user_info=Depends(authenticate_user), lang: str = "deutsch"
+    user_info=Depends(authenticate_user),
+    lang: str = "deutsch",
+    force_reload: bool = False,
 ) -> ToolListResponse:
     """
     Returns a list of all available tools with details, without requiring model initialization.
 
-    Args:
+        Args:
         :param user_info: Authenticated user
         :param lang: Language for tool metadata. Supported: deutsch, english, français, bairisch, українська
+        :param force_reload: If true, bypass cache and force-refresh MCP tools for this request
     """
-    return await ToolCollection.list_tool_metadata(lang=lang, user_info=user_info)
+    return await ToolCollection.list_tool_metadata(
+        lang=lang, user_info=user_info, force_reload=force_reload
+    )

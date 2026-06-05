@@ -1,11 +1,11 @@
-import { DialogContent, Field, InfoLabel, Dropdown, Option } from "@fluentui/react-components";
+import { DialogContent, Field, InfoLabel, Dropdown, Option, type OptionOnSelectData, type SelectionEvents } from "@fluentui/react-components";
 import { useTranslation } from "react-i18next";
 import { useCallback, useContext } from "react";
 import { LLMContext } from "../../../LLMSelector/LLMContextProvider";
 import sharedStyles from "../AssistantDialog.module.css";
 import { CREATIVITY_HIGH, CREATIVITY_LOW, CREATIVITY_MEDIUM } from "../../../../constants";
 
-interface AdvancedSettingsStepProps {
+interface AdvancedSettingsSectionProps {
     creativity: string;
     defaultModel?: string;
     isOwner: boolean;
@@ -14,20 +14,21 @@ interface AdvancedSettingsStepProps {
     onHasChanged?: (hasChanged: boolean) => void;
 }
 
-export const AdvancedSettingsStep = ({
+export const AdvancedSettingsSection = ({
     creativity,
     defaultModel,
     isOwner,
     onCreativityChange,
     onDefaultModelChange,
     onHasChanged
-}: AdvancedSettingsStepProps) => {
+}: AdvancedSettingsSectionProps) => {
     const { t } = useTranslation();
     const { availableLLMs } = useContext(LLMContext);
 
     // Creativity change
     const onCreativityChangeHandler = useCallback(
-        (_ev: any, data: any) => {
+        (_ev: SelectionEvents, data: OptionOnSelectData) => {
+            if (!data.optionValue) return;
             onCreativityChange(data.optionValue);
             onHasChanged?.(true);
         },
@@ -36,7 +37,7 @@ export const AdvancedSettingsStep = ({
 
     // Model change
     const onDefaultModelChangeHandler = useCallback(
-        (_ev: any, data: any) => {
+        (_ev: SelectionEvents, data: OptionOnSelectData) => {
             const value = data.optionValue === "none" ? undefined : data.optionValue;
             onDefaultModelChange?.(value);
             onHasChanged?.(true);
@@ -49,6 +50,10 @@ export const AdvancedSettingsStep = ({
         [CREATIVITY_MEDIUM]: t("components.assistant_editor.creativity_medium"),
         [CREATIVITY_HIGH]: t("components.assistant_editor.creativity_high")
     };
+    const noDefaultModelOptionValue = "none";
+    const noDefaultModelLabel = t("components.assistant_editor.no_default_model");
+    const defaultModelValue = defaultModel ? availableLLMs.find(model => model.llm_name === defaultModel)?.llm_name || defaultModel : noDefaultModelLabel;
+    const selectedDefaultModelOptions = defaultModel ? [defaultModelValue] : [noDefaultModelOptionValue];
 
     return (
         <DialogContent>
@@ -82,15 +87,15 @@ export const AdvancedSettingsStep = ({
                 </label>
                 <Dropdown
                     placeholder={t("components.assistant_editor.default_model_placeholder")}
-                    value={defaultModel ? availableLLMs.find((m: any) => m.llm_name === defaultModel)?.llm_name : ""}
-                    selectedOptions={defaultModel ? [defaultModel] : []}
+                    value={defaultModelValue}
+                    selectedOptions={selectedDefaultModelOptions}
                     onOptionSelect={onDefaultModelChangeHandler}
                     disabled={!isOwner}
                 >
-                    <Option key="none" value="none">
-                        {t("components.assistant_editor.no_default_model")}
+                    <Option key={noDefaultModelOptionValue} value={noDefaultModelOptionValue}>
+                        {noDefaultModelLabel}
                     </Option>
-                    {availableLLMs.map((model: any) => (
+                    {availableLLMs.map(model => (
                         <Option key={model.llm_name} value={model.llm_name}>
                             {model.llm_name}
                         </Option>

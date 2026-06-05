@@ -1,4 +1,4 @@
-.examplesNavList {
+.starterPromptNavList {
     list-style: none;
     padding-left: 0;
     width: 100%;
@@ -11,7 +11,7 @@
     padding: 0 20px;
 }
 
-.example {
+.starterPrompt {
     text-align: left;
     overflow: hidden;
     height: auto;
@@ -29,7 +29,7 @@
     cursor: pointer;
 }
 
-.example:hover {
+.starterPrompt:hover {
     opacity: 1;
     box-shadow:
         0px 8px 16px rgba(0, 0, 0, 0.14),
@@ -38,7 +38,7 @@
     transform: translateY(-2px);
 }
 
-.exampleText {
+.starterPromptText {
     margin: 0;
     flex: 1;
     font-size: var(--fontSizeBase400);
@@ -53,7 +53,7 @@
 }
 
 @media only screen and (max-height: 780px) {
-    .exampleText {
+    .starterPromptText {
         font-size: var(--fontSizeBase300);
         -webkit-line-clamp: 3;
         line-clamp: 3;

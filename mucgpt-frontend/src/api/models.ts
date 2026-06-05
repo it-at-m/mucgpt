@@ -1,5 +1,5 @@
-import { ExampleModel } from "../components/Example";
-import { QuickPrompt } from "../components/QuickPrompt/QuickPrompt";
+import { StarterPromptModel } from "../components/StarterPrompt";
+import { FollowUpActionModel } from "../components/FollowUpAction";
 
 export type AskResponse = {
     answer: string;
@@ -133,8 +133,8 @@ export type Assistant = {
     id?: string;
     creativity: string;
     default_model?: string;
-    examples?: ExampleModel[];
-    quick_prompts?: QuickPrompt[];
+    examples?: StarterPromptModel[];
+    quick_prompts?: FollowUpActionModel[];
     version: string;
     owner_ids?: string[];
     tags?: string[];
@@ -148,7 +148,7 @@ export interface ToolBase {
     config?: Record<string, any>;
 }
 
-export interface ExampleModelInput {
+export interface StarterPromptInput {
     text: string;
     value: string;
 }
@@ -162,8 +162,8 @@ export interface AssistantCreateInput {
     default_model?: string;
     tools?: ToolBase[];
     owner_ids?: string[];
-    examples?: ExampleModelInput[];
-    quick_prompts?: QuickPrompt[];
+    examples?: StarterPromptInput[];
+    quick_prompts?: FollowUpActionModel[];
     tags?: string[];
     is_visible: boolean;
 }
@@ -180,8 +180,8 @@ export interface AssistantVersionResponse {
     default_model?: string;
     tools?: ToolBase[];
     owner_ids?: string[];
-    examples?: ExampleModelInput[];
-    quick_prompts?: QuickPrompt[];
+    examples?: StarterPromptInput[];
+    quick_prompts?: FollowUpActionModel[];
     tags?: string[];
     is_visible: boolean;
 }
@@ -204,8 +204,8 @@ export interface AssistantUpdateInput {
     default_model?: string;
     tools?: ToolBase[];
     owner_ids?: string[];
-    examples?: ExampleModelInput[];
-    quick_prompts?: QuickPrompt[];
+    examples?: StarterPromptInput[];
+    quick_prompts?: FollowUpActionModel[];
     tags?: string[];
     is_visible: boolean;
     version: number;
@@ -269,8 +269,8 @@ export type CommunityAssistantSnapshot = {
     creativity: string;
     version: string;
     default_model?: string;
-    examples?: ExampleModelInput[];
-    quick_prompts?: QuickPrompt[];
+    examples?: StarterPromptInput[];
+    quick_prompts?: FollowUpActionModel[];
     tags?: string[];
     hierarchical_access?: string[];
     tools?: ToolBase[];

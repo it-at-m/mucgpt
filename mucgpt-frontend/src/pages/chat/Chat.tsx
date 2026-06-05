@@ -3,7 +3,7 @@ import { useRef, useState, useEffect, useContext, useCallback, useMemo, useReduc
 import { AskResponse, ChatResponse, DataSource } from "../../api";
 import { Answer } from "../../components/Answer";
 import { QuestionInput } from "../../components/QuestionInput";
-import { ExampleList, ExampleModel } from "../../components/Example";
+import { StarterPromptList, StarterPromptModel } from "../../components/StarterPrompt";
 import { LanguageContext } from "../../components/LanguageSelector/LanguageContextProvider";
 import { useTranslation } from "react-i18next";
 import { LLMContext } from "../../components/LLMSelector/LLMContextProvider";
@@ -11,7 +11,7 @@ import { ChatLayout } from "../../components/ChatLayout/ChatLayout";
 import { CHAT_STORE, CREATIVITY_LOW } from "../../constants";
 import { DBMessage, StorageService } from "../../service/storage";
 import { AnswerList } from "../../components/AnswerList/AnswerList";
-import { QuickPromptContext } from "../../components/QuickPrompt/QuickPromptProvider";
+import { FollowUpActionContext } from "../../components/FollowUpAction";
 import { getChatReducer, handleRegenerate, handleRollback, makeApiRequest } from "../page_helpers";
 import { STORAGE_KEYS } from "../layout/LayoutHelper";
 import { ToolStatus } from "../../utils/ToolStreamHandler";
@@ -60,7 +60,7 @@ export interface ChatOptions {
 }
 
 // Define constants outside the component
-const CHAT_EXAMPLES: ExampleModel[] = [
+const CHAT_STARTER_PROMPTS: StarterPromptModel[] = [
     {
         text: "Du bist König Ludwig II. von Bayern. Schreibe einen Brief an alle Mitarbeiter*innen der Stadtverwaltung München.",
         value: "Du bist König Ludwig II. von Bayern. Schreibe einen Brief an alle Mitarbeiter*innen der Stadtverwaltung München, indem Du Dich für die tolle Leistung bedankst und den Bau eines neuen Schlosses (noch beeindruckender als Neuschwanstein) in der Stadt München wünschst."
@@ -97,7 +97,7 @@ const Chat = () => {
     const { t } = useTranslation();
     const location = useLocation();
     const { refreshHistory: refreshUnifiedHistory } = useUnifiedHistory();
-    const { setQuickPrompts } = useContext(QuickPromptContext);
+    const { setFollowUpActions } = useContext(FollowUpActionContext);
     const { tools } = useToolsContext();
 
     // Independent states
@@ -681,37 +681,39 @@ const Chat = () => {
         };
     }, [isInitialized, pendingQuestion, tools, uploadedData, uploadedDataToDataSources, systemPrompt, clearNavigationQueryParams]);
 
-    // Set up quick prompts
+    // Set up follow-up actions
     useEffect(() => {
-        setQuickPrompts([
+        setFollowUpActions([
             {
-                label: t("chat.quickprompts.shorter", { lng: language }),
-                prompt: t("chat.quickprompts.shorter_prompt", { lng: language }),
-                tooltip: t("chat.quickprompts.shorter_tooltip", { lng: language })
+                label: t("chat.follow_up_actions.shorter", { lng: language }),
+                prompt: t("chat.follow_up_actions.shorter_prompt", { lng: language }),
+                tooltip: t("chat.follow_up_actions.shorter_tooltip", { lng: language })
             },
             {
-                label: t("chat.quickprompts.formal", { lng: language }),
-                prompt: t("chat.quickprompts.formal_prompt", { lng: language }),
-                tooltip: t("chat.quickprompts.formal_tooltip", { lng: language })
+                label: t("chat.follow_up_actions.formal", { lng: language }),
+                prompt: t("chat.follow_up_actions.formal_prompt", { lng: language }),
+                tooltip: t("chat.follow_up_actions.formal_tooltip", { lng: language })
             },
             {
-                label: t("chat.quickprompts.informal", { lng: language }),
-                prompt: t("chat.quickprompts.informal_prompt", { lng: language }),
-                tooltip: t("chat.quickprompts.informal_tooltip", { lng: language })
+                label: t("chat.follow_up_actions.informal", { lng: language }),
+                prompt: t("chat.follow_up_actions.informal_prompt", { lng: language }),
+                tooltip: t("chat.follow_up_actions.informal_tooltip", { lng: language })
             },
             {
-                label: t("chat.quickprompts.longer", { lng: language }),
-                prompt: t("chat.quickprompts.longer_prompt", { lng: language }),
-                tooltip: t("chat.quickprompts.longer_tooltip", { lng: language })
+                label: t("chat.follow_up_actions.longer", { lng: language }),
+                prompt: t("chat.follow_up_actions.longer_prompt", { lng: language }),
+                tooltip: t("chat.follow_up_actions.longer_tooltip", { lng: language })
             }
         ]);
-    }, [language, t, setQuickPrompts]);
+
+        return () => setFollowUpActions([]);
+    }, [language, t, setFollowUpActions]);
 
     // Click handlers
-    const onExampleClicked = useCallback(
-        (example: string, system?: string) => {
+    const onStarterPromptClicked = useCallback(
+        (starterPrompt: string, system?: string) => {
             if (system) onSystemPromptChanged(system);
-            callApi(example, system);
+            callApi(starterPrompt, system);
         },
         [callApi, onSystemPromptChanged]
     );
@@ -728,7 +730,7 @@ const Chat = () => {
                                     key={`answer-${index}`}
                                     answer={answer.response}
                                     onRegenerateResponseClicked={onRegenerateResponseClicked}
-                                    onQuickPromptSend={prompt => callApi(prompt, systemPrompt)}
+                                    onFollowUpActionSend={prompt => callApi(prompt, systemPrompt)}
                                 />
                             )}
                             {index !== answers.length - 1 && <Answer key={`answer-${index}`} answer={answer.response} />}
@@ -767,7 +769,10 @@ const Chat = () => {
         ]
     );
 
-    const examplesComponent = useMemo(() => <ExampleList examples={CHAT_EXAMPLES} onExampleClicked={onExampleClicked} />, [onExampleClicked]);
+    const starterPromptsComponent = useMemo(
+        () => <StarterPromptList starterPrompts={CHAT_STARTER_PROMPTS} onStarterPromptClicked={onStarterPromptClicked} />,
+        [onStarterPromptClicked]
+    );
 
     const inputComponent = useMemo(
         () => (
@@ -802,10 +807,10 @@ const Chat = () => {
                     setSystemPrompt={onSystemPromptChanged}
                 />
                 <ChatLayout
-                    examples={examplesComponent}
+                    starterPrompts={starterPromptsComponent}
                     answers={answerList}
                     input={inputComponent}
-                    showExamples={!lastQuestionRef.current}
+                    showStarterPrompts={!lastQuestionRef.current}
                     header={t("chat.header")}
                     welcomeMessage={t("chat.header")}
                     header_as_markdown={false}
@@ -825,7 +830,7 @@ const Chat = () => {
             </>
         ),
         [
-            examplesComponent,
+            starterPromptsComponent,
             answerList,
             inputComponent,
             lastQuestionRef.current,

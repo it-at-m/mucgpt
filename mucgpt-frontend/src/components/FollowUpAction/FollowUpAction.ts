@@ -1,4 +1,4 @@
-export interface QuickPrompt {
+export interface FollowUpActionModel {
     id?: string;
     label: string;
     prompt: string;

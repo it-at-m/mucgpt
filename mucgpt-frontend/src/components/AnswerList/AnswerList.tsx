@@ -5,11 +5,11 @@ import { UserChatMessage } from "../UserChatMessage";
 import { AnswerLoading } from "../Answer/AnswerLoading";
 import { AnswerError } from "../Answer/AnswerError";
 import { ChatMessage } from "../../pages/chat/Chat";
-import { QuickPrompt } from "../QuickPrompt/QuickPrompt";
+import { FollowUpActionModel } from "../FollowUpAction";
 
 interface Props {
     answers: ChatMessage[];
-    regularAssistantMsg: (answer: ChatMessage, index: number, quickPrompts?: QuickPrompt[]) => ReactNode;
+    regularAssistantMsg: (answer: ChatMessage, index: number, followUpActions?: FollowUpActionModel[]) => ReactNode;
     onRollbackMessage?: (index: number) => void;
     isLoading: boolean;
     error: unknown;

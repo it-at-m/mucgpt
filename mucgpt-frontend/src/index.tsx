@@ -13,7 +13,7 @@ import { LanguageContextProvider } from "./components/LanguageSelector/LanguageC
 import Version from "./pages/version/Version";
 import Tutorials from "./pages/tutorials/Tutorials";
 import { LLMContextProvider } from "./components/LLMSelector/LLMContextProvider";
-import { QuickPromptProvider } from "./components/QuickPrompt/QuickPromptProvider";
+import { FollowUpActionProvider } from "./components/FollowUpAction";
 import LocalAssistant from "./pages/assistant/LocalAssistant";
 import OwnedCommunityAssistant from "./pages/assistant/OwnedCommunityAssistant";
 import CommunityAssistant from "./pages/assistant/CommunityAssistant";
@@ -183,9 +183,9 @@ Promise.all([cleanupServiceWorkerForGatewayBuild(), enableMocking()]).then(() =>
             <GlobalToastProvider>
                 <LanguageContextProvider>
                     <LLMContextProvider>
-                        <QuickPromptProvider>
+                        <FollowUpActionProvider>
                             <RouterProvider router={router} />
-                        </QuickPromptProvider>
+                        </FollowUpActionProvider>
                     </LLMContextProvider>
                 </LanguageContextProvider>
             </GlobalToastProvider>

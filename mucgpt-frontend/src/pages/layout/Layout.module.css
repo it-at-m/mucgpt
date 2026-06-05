@@ -41,6 +41,8 @@
 }
 
 .shellBody {
+    --appSidebarWidth: 256px;
+
     display: grid;
     grid-template-columns: 256px minmax(0, 1fr);
     min-height: 100vh;
@@ -48,10 +50,14 @@
 }
 
 .shellBodyCollapsed {
+    --appSidebarWidth: 64px;
+
     grid-template-columns: 64px minmax(0, 1fr);
 }
 
 .shellBodyMobile {
+    --appSidebarWidth: 0px;
+
     grid-template-columns: minmax(0, 1fr);
 }
 

@@ -3,6 +3,10 @@ import { useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import {
+    Accordion,
+    AccordionHeader,
+    AccordionItem,
+    AccordionPanel,
     Button,
     Dialog,
     DialogActions,
@@ -15,7 +19,16 @@ import {
     Textarea,
     TextareaOnChangeData
 } from "@fluentui/react-components";
-import { Bot24Regular, Dismiss24Regular, Save24Regular } from "@fluentui/react-icons";
+import {
+    Bot24Regular,
+    Chat24Regular,
+    Dismiss24Regular,
+    Info24Regular,
+    Save24Regular,
+    Settings24Regular,
+    Shield24Regular,
+    Wrench24Regular
+} from "@fluentui/react-icons";
 
 import styles from "./AssistantEditorPage.module.css";
 import { AssistantCreateFlow } from "./AssistantCreateFlow";
@@ -23,13 +36,13 @@ import { Assistant, ToolBase, ToolInfo } from "../../../api";
 import { createCommunityAssistantApi } from "../../../api/assistant-client";
 import { createAssistantApi } from "../../../api/core-client";
 import { useGlobalToastContext } from "../../GlobalToastHandler/GlobalToastContext";
-import { ExampleModel } from "../../Example";
+import { StarterPromptModel } from "../../StarterPrompt";
 import { LLMContext } from "../../LLMSelector/LLMContextProvider";
-import { QuickPrompt } from "../../QuickPrompt/QuickPrompt";
+import { FollowUpActionModel } from "../../FollowUpAction";
 import { useToolsContext } from "../../ToolsProvider";
 import { useAssistantState } from "../shared/hooks/useAssistantState";
 import { useCreateAssistantState } from "../shared/hooks/useCreateAssistantState";
-import { ToolsStep, QuickPromptsStep, ExamplesStep, AdvancedSettingsStep, VisibilityStep, ExpandableTextarea } from "../shared";
+import { ToolsSection, ConversationOptionsSection, AdvancedSettingsSection, VisibilitySection, ExpandableTextarea } from "../shared";
 import { AssistantStrategy } from "../../../pages/assistant/AssistantStrategy";
 import { CREATIVITY_LOW } from "../../../constants";
 import { EdelweissSpinner } from "../../EdelweissSpinner";
@@ -64,20 +77,43 @@ function SectionCard({
     children,
     className,
     hideTitle,
+    icon,
     id
 }: {
     title: string;
     children: ReactNode;
     className?: string;
     hideTitle?: boolean;
+    icon?: ReactNode;
     id?: string;
 }) {
+    const contentId = id ? `${id}-content` : `section-${title.replace(/\s+/g, "-").toLowerCase()}-content`;
     const sectionClassName = [styles.sectionCard, className].filter(Boolean).join(" ");
+
+    if (hideTitle) {
+        return (
+            <section className={sectionClassName} id={id}>
+                <div className={styles.sectionContent}>{children}</div>
+            </section>
+        );
+    }
+
     return (
-        <div className={sectionClassName} id={id}>
-            {!hideTitle && <h3 className={styles.sectionTitle}>{title}</h3>}
-            <div className={styles.sectionContent}>{children}</div>
-        </div>
+        <section className={sectionClassName} id={id}>
+            <Accordion collapsible defaultOpenItems={[contentId]} className={styles.sectionAccordion}>
+                <AccordionItem value={contentId} className={styles.sectionAccordionItem}>
+                    <AccordionHeader expandIconPosition="end" className={styles.sectionHeader}>
+                        <span className={styles.sectionTitleGroup}>
+                            {icon && <span className={styles.sectionIcon}>{icon}</span>}
+                            <span className={styles.sectionTitle}>{title}</span>
+                        </span>
+                    </AccordionHeader>
+                    <AccordionPanel className={styles.sectionPanel}>
+                        <div className={styles.sectionContent}>{children}</div>
+                    </AccordionPanel>
+                </AccordionItem>
+            </Accordion>
+        </section>
     );
 }
 
@@ -94,17 +130,16 @@ interface SettingsFormProps {
     onDefaultModelChange: (value: string | undefined) => void;
     selectedTools: ToolInfo[];
     onToolsChange: (tools: ToolBase[]) => void;
-    quickPrompts: QuickPrompt[];
-    onQuickPromptsChange: (value: QuickPrompt[]) => void;
-    examples: ExampleModel[];
-    onExamplesChange: (value: ExampleModel[]) => void;
+    followUpActions: FollowUpActionModel[];
+    onFollowUpActionsChange: (value: FollowUpActionModel[]) => void;
+    starterPrompts: StarterPromptModel[];
+    onStarterPromptsChange: (value: StarterPromptModel[]) => void;
     isOwner: boolean;
     publishDepartments: string[];
     isVisible: boolean;
     setPublishDepartments: (departments: string[]) => void;
     setInvisibleChecked: (invisible: boolean) => void;
     onHasChanged?: (changed: boolean) => void;
-    actions?: ReactNode;
 }
 
 function SettingsForm(props: SettingsFormProps) {
@@ -117,9 +152,9 @@ function SettingsForm(props: SettingsFormProps) {
     };
 
     return (
-        <div className={styles.settingsGrid}>
-            <div className={styles.settingsColumn}>
-                <SectionCard title={t("components.assistant_editor.section_basic")} className={styles.sectionBasic}>
+        <div className={styles.builderLayout}>
+            <main className={styles.builderMain} aria-label={t("components.assistant_editor.builder_main_label")}>
+                <SectionCard title={t("components.assistant_editor.section_basic")} icon={<Info24Regular />} className={styles.sectionBasic}>
                     <Field size="large" className={styles.formField} label={{ children: t("components.assistant_editor.title") }} required>
                         <Textarea
                             placeholder={t("components.assistant_editor.title_placeholder")}
@@ -146,29 +181,7 @@ function SettingsForm(props: SettingsFormProps) {
                     </Field>
                 </SectionCard>
 
-                <SectionCard title={t("components.assistant_editor.section_tools")} className={styles.sectionTools}>
-                    <ToolsStep
-                        selectedTools={props.selectedTools}
-                        availableTools={availableTools}
-                        onToolsChange={props.onToolsChange}
-                        onHasChanged={props.onHasChanged}
-                    />
-                </SectionCard>
-
-                <SectionCard title={t("components.assistant_editor.section_access")} className={styles.sectionAccess} id="visibility-settings">
-                    <VisibilityStep
-                        isOwner={props.isOwner}
-                        publishDepartments={props.publishDepartments}
-                        invisibleChecked={!props.isVisible}
-                        setPublishDepartments={props.setPublishDepartments}
-                        onHasChanged={props.onHasChanged ?? (() => {})}
-                        setInvisibleChecked={invisible => props.setInvisibleChecked(invisible)}
-                    />
-                </SectionCard>
-            </div>
-
-            <div className={styles.settingsColumn}>
-                <SectionCard title={t("components.assistant_editor.section_behaviour")} className={styles.sectionBehaviour}>
+                <SectionCard title={t("components.assistant_editor.section_behaviour")} icon={<Settings24Regular />} className={styles.sectionBehaviour}>
                     <Field
                         size="large"
                         className={styles.formField}
@@ -202,7 +215,7 @@ function SettingsForm(props: SettingsFormProps) {
                             dialogTitle={t("components.assistant_editor.system_prompt")}
                         />
                     </Field>
-                    <AdvancedSettingsStep
+                    <AdvancedSettingsSection
                         creativity={props.creativity}
                         defaultModel={props.defaultModel}
                         onCreativityChange={props.onCreativityChange}
@@ -212,27 +225,46 @@ function SettingsForm(props: SettingsFormProps) {
                     />
                 </SectionCard>
 
-                <SectionCard title={t("components.assistant_editor.section_prompts")} className={styles.sectionPrompts}>
-                    <QuickPromptsStep
-                        quickPrompts={props.quickPrompts}
+                <SectionCard
+                    title={t("components.assistant_editor.section_conversation_options")}
+                    icon={<Chat24Regular />}
+                    className={styles.sectionConversationOptions}
+                >
+                    <ConversationOptionsSection
+                        followUpActions={props.followUpActions}
+                        starterPrompts={props.starterPrompts}
                         isOwner={props.isOwner}
-                        onQuickPromptsChange={props.onQuickPromptsChange}
-                        onHasChanged={props.onHasChanged}
-                    />
-                    <ExamplesStep
-                        examples={props.examples}
-                        isOwner={props.isOwner}
-                        onExamplesChange={props.onExamplesChange}
+                        onFollowUpActionsChange={props.onFollowUpActionsChange}
+                        onStarterPromptsChange={props.onStarterPromptsChange}
                         onHasChanged={props.onHasChanged}
                     />
                 </SectionCard>
-            </div>
 
-            {props.actions && (
-                <SectionCard title="" hideTitle className={styles.sectionActions}>
-                    {props.actions}
+                <SectionCard title={t("components.assistant_editor.section_tools")} icon={<Wrench24Regular />} className={styles.sectionTools}>
+                    <ToolsSection
+                        selectedTools={props.selectedTools}
+                        availableTools={availableTools}
+                        onToolsChange={props.onToolsChange}
+                        onHasChanged={props.onHasChanged}
+                    />
                 </SectionCard>
-            )}
+
+                <SectionCard
+                    title={t("components.assistant_editor.section_access")}
+                    icon={<Shield24Regular />}
+                    className={styles.sectionAccess}
+                    id="visibility-settings"
+                >
+                    <VisibilitySection
+                        isOwner={props.isOwner}
+                        publishDepartments={props.publishDepartments}
+                        invisibleChecked={!props.isVisible}
+                        setPublishDepartments={props.setPublishDepartments}
+                        onHasChanged={props.onHasChanged ?? (() => {})}
+                        setInvisibleChecked={invisible => props.setInvisibleChecked(invisible)}
+                    />
+                </SectionCard>
+            </main>
         </div>
     );
 }
@@ -265,7 +297,7 @@ export const AssistantEditorPage = (props: AssistantEditorPageProps) => {
             description: "",
             system_message: "",
             quick_prompts: [],
-            examples: [],
+            starterPrompts: [],
             creativity: CREATIVITY_LOW,
             default_model: LLM.llm_name,
             tools: [],
@@ -349,8 +381,12 @@ export const AssistantEditorPage = (props: AssistantEditorPageProps) => {
 
         setLoading(true);
 
-        const validQuickPrompts = (s.quickPrompts ?? []).filter((quickPrompt: QuickPrompt) => quickPrompt.label?.trim() && quickPrompt.prompt?.trim());
-        const validExamples = (s.examples ?? []).filter((example: ExampleModel) => example.text?.trim() && example.value?.trim());
+        const validFollowUpActions = (s.followUpActions ?? []).filter(
+            (followUpAction: FollowUpActionModel) => followUpAction.label?.trim() && followUpAction.prompt?.trim()
+        );
+        const validStarterPrompts = (s.starterPrompts ?? []).filter(
+            (starterPrompt: StarterPromptModel) => starterPrompt.text?.trim() && starterPrompt.value?.trim()
+        );
         const assistantDescription = s.description || "";
 
         try {
@@ -363,11 +399,11 @@ export const AssistantEditorPage = (props: AssistantEditorPageProps) => {
                     default_model: createState.defaultModel,
                     tools: createState.tools ?? [],
                     owner_ids: [],
-                    examples: validExamples.map(example => ({ text: example.text, value: example.value })),
-                    quick_prompts: validQuickPrompts.map(quickPrompt => ({
-                        label: quickPrompt.label,
-                        prompt: quickPrompt.prompt,
-                        tooltip: quickPrompt.tooltip
+                    examples: validStarterPrompts.map(starterPrompt => ({ text: starterPrompt.text, value: starterPrompt.value })),
+                    quick_prompts: validFollowUpActions.map(followUpAction => ({
+                        label: followUpAction.label,
+                        prompt: followUpAction.prompt,
+                        tooltip: followUpAction.tooltip
                     })),
                     tags: [],
                     hierarchical_access: createState.hierarchicalAccess ?? [],
@@ -434,8 +470,17 @@ export const AssistantEditorPage = (props: AssistantEditorPageProps) => {
     }, [createState, LLM.llm_name, loading, showError, showSuccess, t]);
 
     const pageTitle = isCreate ? t("components.assistant_editor.create_title") : t("components.assistant_editor.edit_title");
+    const pageHelper = isCreate ? t("components.assistant_editor.page_helper_create") : t("components.assistant_editor.page_helper_edit");
     const settingsState = isCreate ? createState : editState;
     const isSettingsValid = settingsState.title.trim() !== "" && settingsState.systemPrompt.trim() !== "";
+    const showSettingsForm = !isCreate || createView === "settings";
+    const showCreateModeSelector = isCreate && createView === "mode_select";
+    const actionStatusLabel = !isOwner
+        ? t("components.assistant_editor.action_status_read_only")
+        : isSettingsValid
+          ? t(isCreate ? "components.assistant_editor.action_status_ready_create" : "components.assistant_editor.action_status_ready_save")
+          : t("components.assistant_editor.action_status_required_open");
+    const actionStatusTone = !isOwner ? "subtle" : isSettingsValid ? "success" : "warning";
 
     useEffect(() => {
         // Support both hash router (/#/route#fragment) and regular routing (#fragment)
@@ -452,17 +497,33 @@ export const AssistantEditorPage = (props: AssistantEditorPageProps) => {
 
     return (
         <div className={styles.page}>
-            <div className={styles.header}>
-                <div className={styles.headerLeft}>
-                    <Bot24Regular className={styles.headerIcon} />
-                    <h1 className={styles.headerTitle}>{pageTitle}</h1>
-                </div>
-                <div className={styles.headerActions}>
-                    <Button appearance="subtle" icon={<Dismiss24Regular />} aria-label={t("common.close")} onClick={handleHeaderClose} />
+            <div className={[styles.header, showCreateModeSelector ? styles.headerNoDivider : ""].filter(Boolean).join(" ")}>
+                <div className={styles.headerContent}>
+                    {!showCreateModeSelector && (
+                        <div className={styles.headerLeft}>
+                            <div className={styles.headerText}>
+                                <div className={styles.headerTitleRow}>
+                                    <Bot24Regular className={styles.headerIcon} aria-hidden="true" />
+                                    <h1 className={styles.headerTitle}>{pageTitle}</h1>
+                                </div>
+                                <p className={styles.headerDescription}>{pageHelper}</p>
+                            </div>
+                        </div>
+                    )}
+                    {isCreate && (
+                        <Button
+                            appearance="subtle"
+                            aria-label={t("common.close")}
+                            icon={<Dismiss24Regular />}
+                            onClick={handleHeaderClose}
+                            disabled={loading}
+                            className={styles.headerCloseButton}
+                        />
+                    )}
                 </div>
             </div>
 
-            <div className={styles.body}>
+            <div className={[styles.body, showSettingsForm ? styles.bodyWithActions : ""].filter(Boolean).join(" ")}>
                 {isCreate && createView !== "settings" && (
                     <AssistantCreateFlow
                         view={createView}
@@ -477,7 +538,7 @@ export const AssistantEditorPage = (props: AssistantEditorPageProps) => {
                     />
                 )}
 
-                {(!isCreate || createView === "settings") && (
+                {showSettingsForm && (
                     <SettingsForm
                         title={settingsState.title}
                         description={settingsState.description}
@@ -491,35 +552,43 @@ export const AssistantEditorPage = (props: AssistantEditorPageProps) => {
                         onDefaultModelChange={settingsState.updateDefaultModel}
                         selectedTools={selectedTools}
                         onToolsChange={settingsState.updateTools}
-                        quickPrompts={settingsState.quickPrompts ?? []}
-                        onQuickPromptsChange={settingsState.setQuickPrompts}
-                        examples={settingsState.examples ?? []}
-                        onExamplesChange={settingsState.setExamples}
+                        followUpActions={settingsState.followUpActions ?? []}
+                        onFollowUpActionsChange={settingsState.setFollowUpActions}
+                        starterPrompts={settingsState.starterPrompts ?? []}
+                        onStarterPromptsChange={settingsState.setStarterPrompts}
                         isOwner={isOwner}
                         publishDepartments={settingsState.hierarchicalAccess ?? []}
                         isVisible={settingsState.isVisible ?? false}
                         setPublishDepartments={settingsState.updateHierarchicalAccess}
                         setInvisibleChecked={invisible => settingsState.updateIsVisible(!invisible)}
                         onHasChanged={isCreate ? undefined : value => value && editState.setHasChanged?.(true)}
-                        actions={
-                            <div className={styles.footerActionStack}>
-                                <Button
-                                    appearance="primary"
-                                    onClick={handleSave}
-                                    disabled={loading || !isOwner || !isSettingsValid}
-                                    icon={loading ? <EdelweissSpinner size="tiny" variant="white" /> : <Save24Regular />}
-                                    className={styles.primaryActionButton}
-                                >
-                                    {isCreate ? t("common.create") : t("components.assistant_editor.save")}
-                                </Button>
-                                <Button appearance="transparent" onClick={handleCancel} disabled={loading}>
-                                    {t("common.cancel")}
-                                </Button>
-                            </div>
-                        }
                     />
                 )}
             </div>
+
+            {showSettingsForm && (
+                <div className={styles.stickyActionBar}>
+                    <div className={styles.actionBarContent}>
+                        <div className={styles.actionStatus} data-tone={actionStatusTone} role="status" aria-live="polite">
+                            {actionStatusLabel}
+                        </div>
+                        <div className={styles.actionButtonGroup}>
+                            <Button appearance="subtle" onClick={handleCancel} disabled={loading}>
+                                {t("common.cancel")}
+                            </Button>
+                            <Button
+                                appearance="primary"
+                                onClick={handleSave}
+                                disabled={loading || !isOwner || !isSettingsValid}
+                                icon={loading ? <EdelweissSpinner size="tiny" variant="white" /> : <Save24Regular />}
+                                className={styles.primaryActionButton}
+                            >
+                                {isCreate ? t("common.create") : t("components.assistant_editor.save")}
+                            </Button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             <Dialog open={discardOpen} onOpenChange={(_event, data) => setDiscardOpen(data.open)}>
                 <DialogSurface>

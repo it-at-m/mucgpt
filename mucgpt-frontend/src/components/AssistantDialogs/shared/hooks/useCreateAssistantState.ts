@@ -1,9 +1,10 @@
-import { useState, useCallback, useMemo, useContext, useEffect } from "react";
+import { Dispatch, SetStateAction, useState, useCallback, useMemo, useContext, useEffect } from "react";
 import { ToolBase } from "../../../../api";
-import { QuickPrompt } from "../../../QuickPrompt/QuickPrompt";
-import { ExampleModel } from "../../../Example";
+import { FollowUpActionModel } from "../../../FollowUpAction";
+import { StarterPromptModel } from "../../../StarterPrompt";
 import { LLMContext } from "../../../LLMSelector/LLMContextProvider";
 import { CREATIVITY_LOW } from "../../../../constants";
+import { ensurePromptIds } from "../promptIds";
 
 export const useCreateAssistantState = () => {
     // Context
@@ -16,8 +17,8 @@ export const useCreateAssistantState = () => {
     const [systemPrompt, setSystemPrompt] = useState<string>("");
     const [selectedTemplate, setSelectedTemplate] = useState<string>("");
     const [tools, setTools] = useState<ToolBase[]>([]);
-    const [quickPrompts, setQuickPrompts] = useState<QuickPrompt[]>([]);
-    const [examples, setExamples] = useState<ExampleModel[]>([]);
+    const [followUpActions, setFollowUpActionsState] = useState<FollowUpActionModel[]>([]);
+    const [starterPrompts, setStarterPromptsState] = useState<StarterPromptModel[]>([]);
     const [hierarchicalAccess, setHierarchicalAccess] = useState<string[]>([]);
     const [isVisible, setIsVisible] = useState<boolean>(false);
     const [creativity, setCreativity] = useState<string>(CREATIVITY_LOW);
@@ -31,14 +32,27 @@ export const useCreateAssistantState = () => {
             description !== "" ||
             systemPrompt !== "" ||
             tools.length > 0 ||
-            quickPrompts.length > 0 ||
-            examples.length > 0 ||
+            followUpActions.length > 0 ||
+            starterPrompts.length > 0 ||
             hierarchicalAccess.length > 0 ||
             isVisible !== false ||
             creativity !== CREATIVITY_LOW ||
             (defaultModel !== undefined && defaultModel !== LLM.llm_name)
         );
-    }, [input, title, description, systemPrompt, tools, quickPrompts, examples, hierarchicalAccess, isVisible, creativity, defaultModel, LLM.llm_name]);
+    }, [
+        input,
+        title,
+        description,
+        systemPrompt,
+        tools,
+        followUpActions,
+        starterPrompts,
+        hierarchicalAccess,
+        isVisible,
+        creativity,
+        defaultModel,
+        LLM.llm_name
+    ]);
 
     useEffect(() => {
         setDefaultModel(LLM.llm_name);
@@ -85,6 +99,14 @@ export const useCreateAssistantState = () => {
         setIsVisible(newIsVisible);
     }, []);
 
+    const setFollowUpActions = useCallback<Dispatch<SetStateAction<FollowUpActionModel[]>>>(value => {
+        setFollowUpActionsState(current => ensurePromptIds(typeof value === "function" ? value(current) : value));
+    }, []);
+
+    const setStarterPrompts = useCallback<Dispatch<SetStateAction<StarterPromptModel[]>>>(value => {
+        setStarterPromptsState(current => ensurePromptIds(typeof value === "function" ? value(current) : value));
+    }, []);
+
     const updateTemplate = useCallback(
         (template: string, templateId: string) => {
             // Toggle functionality: if already selected, deselect it
@@ -113,8 +135,8 @@ export const useCreateAssistantState = () => {
         setSystemPrompt("");
         setSelectedTemplate("");
         setTools([]);
-        setQuickPrompts([]);
-        setExamples([]);
+        setFollowUpActionsState([]);
+        setStarterPromptsState([]);
         setHierarchicalAccess([]);
         setIsVisible(false);
         setCreativity(CREATIVITY_LOW);
@@ -129,8 +151,8 @@ export const useCreateAssistantState = () => {
         systemPrompt,
         selectedTemplate,
         tools,
-        quickPrompts,
-        examples,
+        followUpActions,
+        starterPrompts,
         hierarchicalAccess,
         isVisible,
         creativity,
@@ -138,8 +160,8 @@ export const useCreateAssistantState = () => {
         hasChanges,
 
         // Setters (direct)
-        setQuickPrompts,
-        setExamples,
+        setFollowUpActions,
+        setStarterPrompts,
 
         // Update functions
         updateInput,

@@ -1,20 +1,17 @@
 import { DialogContent, Field } from "@fluentui/react-components";
-import { useTranslation } from "react-i18next";
 import { ToolBase, ToolInfo, ToolListResponse } from "../../../../api";
 import { ToolsSelectorContent } from "../../../ToolsSelector/ToolsSelector";
 
 import sharedStyles from "../AssistantDialog.module.css";
 
-interface ToolsStepProps {
+interface ToolsSectionProps {
     selectedTools: ToolInfo[];
     availableTools?: ToolListResponse;
     onToolsChange: (tools: ToolBase[]) => void;
     onHasChanged?: (hasChanged: boolean) => void;
 }
 
-export const ToolsStep = ({ selectedTools, availableTools, onToolsChange, onHasChanged }: ToolsStepProps) => {
-    const { t } = useTranslation();
-
+export const ToolsSection = ({ selectedTools, availableTools, onToolsChange, onHasChanged }: ToolsSectionProps) => {
     const handleSelectionChange = (newSelectedTools: ToolInfo[]) => {
         const newTools: ToolBase[] = newSelectedTools.map(tool => ({
             id: tool.id,
@@ -27,7 +24,6 @@ export const ToolsStep = ({ selectedTools, availableTools, onToolsChange, onHasC
     return (
         <DialogContent>
             <Field size="large" className={sharedStyles.formField}>
-                <label className={sharedStyles.formLabel}>{t("components.assistant_editor.section_tools")}</label>
                 <div className={sharedStyles.dynamicFieldContainer}>
                     <div className={sharedStyles.toolSelectorContainer}>
                         <ToolsSelectorContent

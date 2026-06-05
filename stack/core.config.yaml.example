@@ -67,6 +67,15 @@ MCP:
       # ...
   CACHE_TTL: 123
 
+# Internet Search Settings (SearXNG)
+# Replace the placeholder URL with your SearXNG instance to enable the InternetSearch tool.
+INTERNET_SEARCH:
+  SEARXNG_URL: "<your-searxng-url>"
+  TIMEOUT: 10.0
+  MAX_RESULTS: 5
+  LANGUAGE: "de"
+  SAFESEARCH: 1
+
 # Models configuration
 # Configure your LLM models here instead of using base64-encoded JSON in environment variables
 # IMPORTANT: Replace placeholder values with your actual configuration

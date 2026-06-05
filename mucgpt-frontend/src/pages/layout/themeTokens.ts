@@ -35,6 +35,11 @@ export interface AppThemeTokens {
     statusInfoBackground: string;
     statusInfoBorder: string;
     statusInfoForeground: string;
+    assistantConfigSurface: string;
+    assistantConfigSurfaceHover: string;
+    assistantConfigSurfaceEditing: string;
+    assistantConfigBorder: string;
+    assistantConfigBorderHover: string;
 }
 
 export const lightThemeTokens: AppThemeTokens = {
@@ -73,7 +78,12 @@ export const lightThemeTokens: AppThemeTokens = {
     statusErrorForeground: "#8A1C1C",
     statusInfoBackground: "#E8F1FB",
     statusInfoBorder: "#7BA7D9",
-    statusInfoForeground: "#1E4E8C"
+    statusInfoForeground: "#1E4E8C",
+    assistantConfigSurface: "#F8FAFC",
+    assistantConfigSurfaceHover: "#F1F6FD",
+    assistantConfigSurfaceEditing: "#EFF6FF",
+    assistantConfigBorder: "#C7D7F2",
+    assistantConfigBorderHover: "#9DB5E8"
 };
 
 export const darkThemeTokens: AppThemeTokens = {
@@ -112,5 +122,10 @@ export const darkThemeTokens: AppThemeTokens = {
     statusErrorForeground: "#F2C0C7",
     statusInfoBackground: "#182D42",
     statusInfoBorder: "#5D88B8",
-    statusInfoForeground: "#BDD8F5"
+    statusInfoForeground: "#BDD8F5",
+    assistantConfigSurface: "#0B1224",
+    assistantConfigSurfaceHover: "#111C34",
+    assistantConfigSurfaceEditing: "#101A31",
+    assistantConfigBorder: "#263653",
+    assistantConfigBorderHover: "#3A4D73"
 };

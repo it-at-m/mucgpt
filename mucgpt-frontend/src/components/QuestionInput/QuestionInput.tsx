@@ -189,10 +189,6 @@ export const QuestionInput = ({
                 return;
             }
 
-            const hadFocus = document.activeElement === textarea;
-            const selectionStart = textarea.selectionStart;
-            const selectionEnd = textarea.selectionEnd;
-
             textarea.style.height = "auto";
 
             const maxHeight = 200;
@@ -201,11 +197,6 @@ export const QuestionInput = ({
 
             textarea.style.height = `${newHeight}px`;
             textarea.style.overflowY = scrollHeight > maxHeight ? "auto" : "hidden";
-
-            if (hadFocus) {
-                textarea.focus();
-                textarea.setSelectionRange(selectionStart, selectionEnd);
-            }
         };
 
         resizeTextarea();

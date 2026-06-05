@@ -83,6 +83,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
     const { id } = useParams();
     const assistant_id = id || "0";
     const isLegacyAssistant = /^\d+$/.test(assistant_id);
+    const draftCacheKey = useMemo(() => `assistant-chat:${assistant_id}`, [assistant_id]);
     const location = useLocation();
     const navigate = useNavigate();
     const isEditMode = location.pathname.endsWith("/edit");
@@ -748,6 +749,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                     <QuestionInput
                         clearOnSend
                         disabled={isLoading || error !== undefined}
+                        draftCacheKey={draftCacheKey}
                         onSend={(question, datas) => {
                             const dataSources = datas
                                 .filter(data => data.isActive !== false && data.status === "ready" && data.fileContent)
@@ -784,6 +786,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
             <QuestionInput
                 clearOnSend
                 disabled={isLoading || error !== undefined || strategy instanceof DeletedCommunityAssistantStrategy}
+                draftCacheKey={draftCacheKey}
                 onSend={(question, datas) => {
                     const dataSources = datas
                         .filter(data => data.isActive !== false && data.status === "ready" && data.fileContent)
@@ -830,6 +833,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
         setSelectedToolsGuarded,
         tools,
         lockedToolIds,
+        draftCacheKey,
         uploadedData
     ]);
 

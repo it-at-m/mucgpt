@@ -151,7 +151,21 @@
     padding: 2px 6px;
 }
 
+.mobileUtilityGroupLabel {
+    padding: 8px 8px 4px;
+    color: var(--colorNeutralForeground3);
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 1.3;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
 .mobileUtilityRow {
+    width: 100%;
+}
+
+.mobileUtilityRow > div:not([class*="container"]) {
     width: 100%;
 }
 
@@ -164,6 +178,49 @@
     min-height: 36px;
     padding-left: 8px !important;
     padding-right: 8px !important;
+    transition:
+        background-color 120ms ease,
+        color 120ms ease,
+        transform 180ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.mobileUtilityRow :global(.fui-Button:hover),
+.mobileUtilityRow :global(.fui-MenuButton:hover) {
+    color: var(--colorNeutralForeground1) !important;
+    transform: translateX(4px);
+}
+
+.mobileUtilityTrigger {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    min-height: 36px;
+    box-sizing: border-box;
+    padding: 0 8px;
+    border-radius: 10px;
+    color: var(--colorNeutralForeground1);
+    font-weight: 600;
+    transition:
+        background-color 120ms ease,
+        color 120ms ease,
+        transform 180ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.mobileUtilityTrigger[class] {
+    padding-left: 8px;
+    padding-right: 8px;
+}
+
+.mobileUtilityTrigger[class]:hover {
+    color: var(--colorNeutralForeground1);
+    background-color: var(--colorNeutralStroke2);
+    box-shadow: none;
+    transform: translateX(4px);
+}
+
+.mobileUtilityTrigger :global(svg) {
+    color: var(--colorNeutralForeground1);
 }
 
 .settingsDivider {

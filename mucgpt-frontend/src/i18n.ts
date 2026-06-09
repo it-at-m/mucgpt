@@ -190,7 +190,6 @@ i18n
                             remove_department: "Abteilung {{name}} entfernen"
                         },
                         terms_of_use: {
-                            tooltip: "Nutzungsbedingungen anzeigen",
                             label: "Nutzungsbedingungen",
                             accept: "Zustimmen"
                         },
@@ -886,7 +885,6 @@ i18n
                             remove_department: "Remove department {{name}}"
                         },
                         terms_of_use: {
-                            tooltip: "Show terms of use",
                             label: "Terms of use",
                             accept: "Accept"
                         },
@@ -1573,7 +1571,6 @@ i18n
                             remove_department: "Abteilung {{name}} wecka"
                         },
                         terms_of_use: {
-                            tooltip: "Nutzungsbedingunga zeig'n",
                             label: "Nutzungsbedingunga",
                             accept: "Zustimm'n"
                         },
@@ -2257,7 +2254,6 @@ i18n
                             remove_department: "Supprimer le département {{name}}"
                         },
                         terms_of_use: {
-                            tooltip: "Afficher les conditions d'utilisation",
                             label: "Conditions d'utilisation",
                             accept: "Accepter"
                         },
@@ -2941,7 +2937,6 @@ i18n
                             remove_department: "Видалити відділ {{name}}"
                         },
                         terms_of_use: {
-                            tooltip: "Показати умови використання",
                             label: "Умови використання",
                             accept: "Прийняти"
                         },

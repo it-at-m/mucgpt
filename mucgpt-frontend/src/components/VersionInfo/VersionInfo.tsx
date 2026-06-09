@@ -1,4 +1,4 @@
-import { Badge, Tooltip } from "@fluentui/react-components";
+import { Badge, Popover, PopoverSurface, PopoverTrigger, Tooltip } from "@fluentui/react-components";
 import { Info24Regular } from "@fluentui/react-icons";
 import styles from "./VersionInfo.module.css";
 import { useTranslation } from "react-i18next";
@@ -25,17 +25,50 @@ export const VersionInfo = (props: VersionInfoProps) => {
     const versionLabel = app_version ?? frontend_version;
     const isMenuLayout = layout === "menu";
     const containerClassName = [styles.container, isMenuLayout ? styles.containerMenu : "", className ?? ""].filter(Boolean).join(" ");
-    const badgeText = isMenuLayout ? `${t("components.versioninfo.label", "Version")} ${versionLabel}` : versionLabel;
+    const versionText = t("components.versioninfo.label", "Version");
 
-    const tooltipContent = (
-        <div className={styles.tooltipContent}>
-            {SERVICES.map(service => (
-                <div key={service.name} className={styles.tooltipRow}>
-                    <span>{service.name}</span>
-                    <span>{service.getVersion(props)}</span>
-                </div>
-            ))}
+    const versionDetails = (
+        <div className={styles.versionDetails}>
+            <div className={styles.versionDetailsHeader}>
+                <span className={styles.versionDetailsTitle}>{t("components.versioninfo.details", "Versionsdetails")}</span>
+            </div>
+            <div className={styles.versionTable}>
+                {SERVICES.map(service => (
+                    <div key={service.name} className={styles.versionRow}>
+                        <span className={styles.versionServiceName}>{service.name}</span>
+                        <span className={styles.versionServiceVersion}>{service.getVersion(props)}</span>
+                    </div>
+                ))}
+            </div>
         </div>
+    );
+
+    const versionTrigger = isMenuLayout ? (
+        <button type="button" className={styles.versionMenuButton} aria-label={`${versionText} ${versionLabel}`}>
+            <span className={styles.versionMenuIcon} aria-hidden="true">
+                <Info24Regular />
+            </span>
+            <span className={styles.versionMenuText}>
+                {versionText} {versionLabel}
+            </span>
+        </button>
+    ) : (
+        <Badge appearance="ghost" color="subtle" shape="circular" tabIndex={0} className={styles.versionBadge}>
+            {versionLabel}
+        </Badge>
+    );
+
+    const versionInfoControl = isMenuLayout ? (
+        <Popover positioning={{ position: "after", align: "bottom", offset: { mainAxis: 8, crossAxis: -2 } }} size="small" withArrow>
+            <PopoverTrigger disableButtonEnhancement>{versionTrigger}</PopoverTrigger>
+            <PopoverSurface className={styles.versionPopoverSurface} tabIndex={-1}>
+                {versionDetails}
+            </PopoverSurface>
+        </Popover>
+    ) : (
+        <Tooltip content={{ children: versionDetails, className: styles.versionTooltipSurface }} relationship="description" positioning="above" withArrow>
+            {versionTrigger}
+        </Tooltip>
     );
 
     return (
@@ -45,18 +78,7 @@ export const VersionInfo = (props: VersionInfoProps) => {
                     {t("components.versioninfo.whats_new", "Was gibt's neues?")}
                 </a>
             )}
-            <Tooltip content={tooltipContent} relationship="description" positioning="above" withArrow>
-                {isMenuLayout ? (
-                    <span tabIndex={0} className={styles.versionMenuButton}>
-                        <Info24Regular />
-                        <span>{badgeText}</span>
-                    </span>
-                ) : (
-                    <Badge appearance="ghost" color="subtle" shape="circular" tabIndex={0} className={styles.versionBadge}>
-                        {badgeText}
-                    </Badge>
-                )}
-            </Tooltip>
+            {versionInfoControl}
         </div>
     );
 };

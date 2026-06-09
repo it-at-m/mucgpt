@@ -165,30 +165,15 @@
 }
 
 .footerMetaRow {
-    display: grid;
-    align-items: center;
-    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
-    gap: 16px 24px;
-}
-
-.footerLeftBlock {
     display: flex;
     align-items: center;
-    justify-content: flex-start;
-    min-width: 0;
+    justify-content: center;
 }
 
 .footerCenterBlock {
     display: flex;
     align-items: center;
     justify-content: center;
-    min-width: 0;
-}
-
-.footerRightBlock {
-    display: flex;
-    align-items: center;
-    justify-content: flex-end;
     min-width: 0;
 }
 
@@ -216,64 +201,6 @@
     opacity: 1;
     text-decoration: underline;
     text-underline-offset: 0.14em;
-}
-
-.footerVersionBlock {
-    display: flex;
-    align-items: center;
-    min-width: 0;
-    max-width: 100%;
-    opacity: 0.92;
-}
-
-.footerLink {
-    color: var(--colorNeutralForeground1);
-    text-decoration: none;
-    font-size: var(--fontSizeBase200);
-    opacity: 0.78;
-    white-space: nowrap;
-    transition:
-        opacity 0.15s ease,
-        color 0.15s ease;
-}
-
-.footerLink:hover {
-    opacity: 1;
-    text-decoration: none;
-}
-
-.footerTermsTrigger {
-    padding: 0;
-    border-radius: 0;
-    background: transparent;
-    border: none;
-    color: var(--colorNeutralForeground1);
-    box-shadow: none;
-    font-size: 12px;
-    font-weight: 500;
-    opacity: 0.78;
-    gap: 0;
-}
-
-.footerTermsTrigger:hover {
-    background: transparent;
-    box-shadow: none;
-    opacity: 1;
-    text-decoration: none;
-}
-
-.footerTermsTrigger > svg {
-    display: none;
-}
-
-.footerTermsTrigger > span {
-    font-size: 12px;
-    font-weight: 500;
-}
-
-.footerTermsTrigger span {
-    font-size: 12px;
-    font-weight: 500;
 }
 
 @media screen and (max-width: 1060px) {
@@ -315,16 +242,7 @@
     }
 
     .footerMetaRow {
-        grid-template-columns: 1fr;
-        align-items: center;
-        gap: 10px;
-    }
-
-    .footerLeftBlock,
-    .footerCenterBlock,
-    .footerRightBlock {
         justify-content: center;
-        width: 100%;
     }
 
     .footerCompanyBlock {

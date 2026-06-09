@@ -195,6 +195,7 @@ i18n
                         },
                         versioninfo: {
                             label: "Version",
+                            details: "Versionsdetails",
                             whats_new: "Was gibt's neues?"
                         },
                         feedback: {
@@ -890,6 +891,7 @@ i18n
                         },
                         versioninfo: {
                             label: "Version",
+                            details: "Version details",
                             whats_new: "What's new?"
                         },
                         feedback: {
@@ -1576,6 +1578,7 @@ i18n
                         },
                         versioninfo: {
                             label: "Version",
+                            details: "Versionsdetails",
                             whats_new: "Wos gibt's Nei's?"
                         },
                         feedback: {
@@ -2259,6 +2262,7 @@ i18n
                         },
                         versioninfo: {
                             label: "Version",
+                            details: "Détails de version",
                             whats_new: "Quoi de neuf ?"
                         },
                         feedback: {
@@ -2942,6 +2946,7 @@ i18n
                         },
                         versioninfo: {
                             label: "Версія",
+                            details: "Деталі версії",
                             whats_new: "Що нового?"
                         },
                         feedback: {

@@ -207,6 +207,10 @@ i18n
                             label: "Hilfe & FAQ",
                             aria_label: "Hilfe und FAQ öffnen"
                         },
+                        incident_report_button: {
+                            label: "Störung melden",
+                            aria_label: "Störung melden"
+                        },
                         theme_selector: {
                             theme_light: "Helles Design",
                             theme_dark: "Dunkles Design",
@@ -900,6 +904,10 @@ i18n
                             label: "Help & FAQ",
                             aria_label: "Open help and FAQ"
                         },
+                        incident_report_button: {
+                            label: "Report incident",
+                            aria_label: "Report an incident"
+                        },
                         theme_selector: {
                             theme_light: "Light theme",
                             theme_dark: "Dark theme",
@@ -1584,6 +1592,10 @@ i18n
                             label: "Hilfe & FAQ",
                             aria_label: "Hilfe und FAQ aufmach'n"
                         },
+                        incident_report_button: {
+                            label: "Störung melden",
+                            aria_label: "Störung melden"
+                        },
                         theme_selector: {
                             theme_light: "Helles Design",
                             theme_dark: "Dunkles Design",
@@ -2265,6 +2277,10 @@ i18n
                             label: "Aide & FAQ",
                             aria_label: "Ouvrir l'aide et la FAQ"
                         },
+                        incident_report_button: {
+                            label: "Signaler un incident",
+                            aria_label: "Signaler un incident"
+                        },
                         theme_selector: {
                             theme_light: "Thème clair",
                             theme_dark: "Thème sombre",
@@ -2945,6 +2961,10 @@ i18n
                             help: "Допомога",
                             label: "Допомога та FAQ",
                             aria_label: "Відкрити допомогу та FAQ"
+                        },
+                        incident_report_button: {
+                            label: "Повідомити про збій",
+                            aria_label: "Повідомити про збій"
                         },
                         theme_selector: {
                             theme_light: "Світла тема",

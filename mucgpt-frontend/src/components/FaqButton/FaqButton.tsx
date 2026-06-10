@@ -2,17 +2,17 @@ import { Button } from "@fluentui/react-components";
 import { QuestionCircle24Regular } from "@fluentui/react-icons";
 import { useTranslation } from "react-i18next";
 
-import styles from "./HelpButton.module.css";
+import styles from "./FaqButton.module.css";
 
-interface HelpButtonProps {
+interface FaqButtonProps {
     url: string;
     label?: string;
 }
 
-export const HelpButton = ({ url, label }: HelpButtonProps) => {
+export const FaqButton = ({ url, label }: FaqButtonProps) => {
     const { t } = useTranslation();
 
-    const helpLabel = label || t("components.helpbutton.label", "Hilfe & FAQ");
+    const faqLabel = label || t("components.faqbutton.label", "Fragen & Antworten");
 
     return (
         <Button
@@ -22,12 +22,12 @@ export const HelpButton = ({ url, label }: HelpButtonProps) => {
             rel="noopener noreferrer"
             appearance={"subtle"}
             icon={<QuestionCircle24Regular className={styles.icon} />}
-            aria-label={t("components.helpbutton.aria_label", "Hilfe und FAQ öffnen")}
-            className={styles.helpButton}
+            aria-label={t("components.faqbutton.aria_label", "Fragen und Antworten öffnen")}
+            className={styles.faqButton}
         >
-            {helpLabel}
+            {faqLabel}
         </Button>
     );
 };
 
-export default HelpButton;
+export default FaqButton;

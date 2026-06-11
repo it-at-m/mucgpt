@@ -1,7 +1,7 @@
 from typing import Any
 
-from agent.agent import MUCGPTAgent
 from agent.agent_executor import MUCGPTAgentExecutor
+from agent.react_agent import MUCGPTReActAgent
 from agent.tools.tools import ToolCollection
 from config.langfuse_provider import LangfuseProvider
 from config.model_provider import ModelProvider
@@ -104,8 +104,15 @@ async def init_agent(user_info: AuthenticationResult) -> MUCGPTAgentExecutor:
     try:
         model = ModelProvider.get_model()
         tool_collection = ToolCollection(model=model)
-        tools = await tool_collection.get_tools(user_info=user_info)
-        agent = MUCGPTAgent(llm=model, tools=tools, tool_collection=tool_collection)
+        tools = await tool_collection.get_tools(
+            user_info=user_info
+        )  # all tools that are available
+        logger.debug(
+            f"Initializing MUCGPTAgent with tools: {[tool.name for tool in tools]}"
+        )
+        agent = MUCGPTReActAgent(
+            llm=model, tools=tools, tool_collection=tool_collection, debug=False
+        )
     except Exception as e:
         logger.error("Failed to initialize MUCGPTAgent: %s", e)
         raise

@@ -1,0 +1,50 @@
+.root {
+    --edelweiss-spinner-size: 32px;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    color: var(--colorNeutralForeground1);
+}
+
+.stacked {
+    flex-direction: column;
+}
+
+.inline {
+    flex-direction: row;
+}
+
+.mark {
+    width: var(--edelweiss-spinner-size);
+    height: var(--edelweiss-spinner-size);
+    display: block;
+    flex: 0 0 auto;
+    transform-origin: center;
+    will-change: transform;
+    animation: edelweiss-spinner-spin 1500ms linear infinite;
+}
+
+.label {
+    color: currentcolor;
+    font-size: var(--fontSizeBase300);
+    line-height: var(--lineHeightBase300);
+}
+
+@keyframes edelweiss-spinner-spin {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .mark {
+        animation: none;
+        will-change: auto;
+    }
+}

@@ -29,6 +29,7 @@ interface Props {
     onDataChange?: (data: UploadedData[]) => void;
     uploadedData?: UploadedData[];
     setUploadedData?: Dispatch<SetStateAction<UploadedData[]>>;
+    draftCacheKey?: string;
     onTranscription?: (text: string) => void;
 }
 
@@ -48,6 +49,7 @@ export const QuestionInput = ({
     onDataChange,
     uploadedData: externalUploadedData,
     setUploadedData: setExternalUploadedData,
+    draftCacheKey,
     onTranscription
 }: Props) => {
     const { t } = useTranslation();
@@ -63,9 +65,17 @@ export const QuestionInput = ({
     const uploadedDataRef = useRef<UploadedData[]>([]);
     const [isDragActive, setIsDragActive] = useState(false);
     const dragCounterRef = useRef(0);
+    const isDraftHydratedRef = useRef(false);
+    const skipNextEmptyPersistRef = useRef(false);
+    const pendingSendRef = useRef(false);
+    const wasDisabledRef = useRef(disabled);
+    const setQuestionRef = useRef(setQuestion);
     const recordingBaseRef = useRef("");
     const { isModelReady: transcriptionReady, status: transcriptionStatus } = useTranscription();
     const isTranscriptionActive = transcriptionStatus === "recording" || transcriptionStatus === "transcribing";
+
+    const draftStorageKey = draftCacheKey ? `question-input-draft:${draftCacheKey}` : undefined;
+    const pendingStorageKey = draftCacheKey ? `question-input-pending:${draftCacheKey}` : undefined;
 
     const uploadedData = externalUploadedData ?? internalUploadedData;
     const activeDocumentCount = uploadedData.filter(data => data.isActive !== false).length;
@@ -85,6 +95,85 @@ export const QuestionInput = ({
     useEffect(() => {
         uploadedDataRef.current = uploadedData;
     }, [uploadedData]);
+
+    useEffect(() => {
+        setQuestionRef.current = setQuestion;
+    }, [setQuestion]);
+
+    useEffect(() => {
+        isDraftHydratedRef.current = false;
+        skipNextEmptyPersistRef.current = false;
+        pendingSendRef.current = false;
+
+        if (!draftStorageKey || !pendingStorageKey || question.trim().length > 0) {
+            isDraftHydratedRef.current = true;
+            return;
+        }
+
+        try {
+            const draftQuestion = localStorage.getItem(draftStorageKey);
+            const pendingQuestion = localStorage.getItem(pendingStorageKey);
+            const restoredQuestion = draftQuestion || pendingQuestion;
+
+            if (restoredQuestion) {
+                setQuestionRef.current(restoredQuestion);
+            }
+        } catch {
+            // Ignore localStorage errors and continue without draft restore.
+        } finally {
+            isDraftHydratedRef.current = true;
+        }
+    }, [draftStorageKey, pendingStorageKey]);
+
+    useEffect(() => {
+        if (!draftStorageKey || !pendingStorageKey || !isDraftHydratedRef.current) {
+            return;
+        }
+
+        const trimmedQuestion = question.trim();
+        if (skipNextEmptyPersistRef.current && trimmedQuestion.length === 0) {
+            skipNextEmptyPersistRef.current = false;
+            return;
+        }
+
+        try {
+            if (trimmedQuestion.length > 0) {
+                localStorage.setItem(draftStorageKey, question);
+                const pendingQuestion = localStorage.getItem(pendingStorageKey);
+                if (pendingQuestion && pendingQuestion !== question) {
+                    localStorage.removeItem(pendingStorageKey);
+                    pendingSendRef.current = false;
+                }
+            } else {
+                localStorage.removeItem(draftStorageKey);
+            }
+        } catch {
+            // Ignore localStorage errors and continue without draft persistence.
+        }
+    }, [draftStorageKey, pendingStorageKey, question]);
+
+    useEffect(() => {
+        if (!draftStorageKey || !pendingStorageKey) {
+            wasDisabledRef.current = disabled;
+            return;
+        }
+
+        const completedPendingRequest = pendingSendRef.current && wasDisabledRef.current && !disabled;
+        if (completedPendingRequest) {
+            try {
+                localStorage.removeItem(pendingStorageKey);
+                if (question.trim().length === 0) {
+                    localStorage.removeItem(draftStorageKey);
+                }
+            } catch {
+                // Ignore localStorage errors and keep app behavior unchanged.
+            } finally {
+                pendingSendRef.current = false;
+            }
+        }
+
+        wasDisabledRef.current = disabled;
+    }, [disabled, draftStorageKey, pendingStorageKey, question]);
 
     const hasFileData = useCallback((dataTransfer?: DataTransfer | null) => {
         if (!dataTransfer?.types) {
@@ -107,10 +196,6 @@ export const QuestionInput = ({
                 return;
             }
 
-            const hadFocus = document.activeElement === textarea;
-            const selectionStart = textarea.selectionStart;
-            const selectionEnd = textarea.selectionEnd;
-
             textarea.style.height = "auto";
 
             const maxHeight = 200;
@@ -119,11 +204,6 @@ export const QuestionInput = ({
 
             textarea.style.height = `${newHeight}px`;
             textarea.style.overflowY = scrollHeight > maxHeight ? "auto" : "hidden";
-
-            if (hadFocus) {
-                textarea.focus();
-                textarea.setSelectionRange(selectionStart, selectionEnd);
-            }
         };
 
         resizeTextarea();
@@ -142,11 +222,24 @@ export const QuestionInput = ({
             return;
         }
 
+        if (pendingStorageKey) {
+            try {
+                localStorage.setItem(pendingStorageKey, question);
+                pendingSendRef.current = true;
+            } catch {
+                // Ignore localStorage errors and continue sending.
+            }
+        }
+
         const activeData = uploadedData.filter(data => data.isActive !== false);
         onSend(question, activeData);
 
         if (!clearOnSend) {
             return;
+        }
+
+        if (draftStorageKey) {
+            skipNextEmptyPersistRef.current = true;
         }
 
         setQuestion("");
@@ -155,7 +248,19 @@ export const QuestionInput = ({
             setUploadedData([]);
             onDataChange?.([]);
         }
-    }, [clearOnSend, disabled, externalUploadedData, onDataChange, onSend, question, setQuestion, setUploadedData, uploadedData]);
+    }, [
+        clearOnSend,
+        disabled,
+        draftStorageKey,
+        externalUploadedData,
+        onDataChange,
+        onSend,
+        pendingStorageKey,
+        question,
+        setQuestion,
+        setUploadedData,
+        uploadedData
+    ]);
 
     const onEnterPress = useCallback(
         (event: React.KeyboardEvent<Element>) => {

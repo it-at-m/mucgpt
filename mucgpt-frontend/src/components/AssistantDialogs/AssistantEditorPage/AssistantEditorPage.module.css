@@ -1,100 +1,198 @@
 .page {
-    --appHeaderHeight: 50px;
-    --appFooterHeight: 60px;
     display: flex;
     flex-direction: column;
-    height: calc(100vh - var(--appHeaderHeight) - var(--appFooterHeight));
+    height: 100dvh;
     width: 100%;
-    margin-top: var(--appHeaderHeight);
     background-color: var(--colorNeutralBackground1);
     overflow-y: auto;
     box-sizing: border-box;
 }
 
 .header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 24px 32px;
     background-color: var(--colorNeutralBackground1);
-    border-bottom: none;
+    border-bottom: 1px solid var(--colorNeutralStroke2);
     position: static;
+}
+
+.headerNoDivider {
+    border-bottom: 0;
+}
+
+.headerNoDivider .headerContent {
+    justify-content: flex-end;
+}
+
+.headerContent {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 24px;
+    max-width: 1060px;
+    width: 100%;
+    margin: 0 auto;
+    padding: 24px 32px;
+    box-sizing: border-box;
 }
 
 .headerLeft {
     display: flex;
-    align-items: center;
-    gap: 12px;
+    align-items: flex-start;
+    min-width: 0;
 }
 
-.headerActions {
+.headerText {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-width: 0;
+}
+
+.headerTitleRow {
     display: flex;
     align-items: center;
+    gap: 10px;
+    min-width: 0;
 }
 
 .headerIcon {
-    color: var(--colorNeutralForeground1);
+    width: 22px;
+    height: 22px;
+    color: var(--colorNeutralForeground2);
+    flex-shrink: 0;
 }
 
 .headerTitle {
-    font-size: 20px;
-    font-weight: 600;
+    margin: 0;
+    font-size: 28px;
+    font-weight: 700;
     color: var(--colorNeutralForeground1);
+    line-height: 1.2;
+    letter-spacing: 0;
+}
+
+.headerDescription {
+    margin: 0;
+    max-width: 72ch;
+    color: var(--colorNeutralForeground2);
+    font-size: var(--fontSizeBase300);
+    line-height: 1.45;
+}
+
+.headerCloseButton {
+    flex-shrink: 0;
 }
 
 .body {
     flex: 1;
     display: flex;
     flex-direction: column;
-    padding: 32px;
-    max-width: 1400px;
+    padding: 30px 32px;
+    max-width: 1060px;
     margin: 0 auto;
     width: 100%;
     box-sizing: border-box;
 }
 
-.footerActionStack {
+.bodyWithActions {
+    padding-bottom: 32px;
+}
+
+.builderLayout {
     width: 100%;
+}
+
+.builderMain {
     display: flex;
     flex-direction: column;
+    gap: 22px;
+    width: 100%;
+    min-width: 0;
+}
+
+.stickyActionBar {
+    position: sticky;
+    bottom: 0;
+    flex-shrink: 0;
+    z-index: 2;
+    background-color: var(--colorNeutralBackground1);
+    border-top: 1px solid var(--colorNeutralStroke2);
+}
+
+.actionBarContent {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
     align-items: center;
+    gap: 18px;
+    max-width: 1060px;
+    width: 100%;
+    margin: 0 auto;
+    padding: 12px 32px;
+    box-sizing: border-box;
+}
+
+.actionStatus {
+    justify-self: start;
+    min-width: 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 24px;
+    max-width: 100%;
+    padding: 2px 9px;
+    box-sizing: border-box;
+    border: 1px solid var(--colorNeutralStroke1);
+    border-radius: var(--borderRadiusCircular);
+    background-color: var(--colorNeutralBackground3);
+    color: var(--colorNeutralForeground2);
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1.3;
+    white-space: nowrap;
+}
+
+.actionStatus::before {
+    content: "";
+    width: 6px;
+    height: 6px;
+    border-radius: var(--borderRadiusCircular);
+    background-color: currentColor;
+    flex-shrink: 0;
+}
+
+.actionStatus[data-tone="warning"] {
+    border-color: var(--colorStatusWarningBorder1);
+    background-color: var(--colorStatusWarningBackground1);
+    color: var(--colorStatusWarningForeground1);
+}
+
+.actionStatus[data-tone="success"] {
+    border-color: var(--colorStatusSuccessBorder1);
+    background-color: var(--colorStatusSuccessBackground1);
+    color: var(--colorStatusSuccessForeground1);
+}
+
+.actionButtonGroup {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
     gap: 10px;
+    flex-shrink: 0;
 }
 
 .primaryActionButton {
-    width: 100%;
-    min-height: 48px;
-    font-size: 16px !important;
-    border-radius: 16px !important;
-}
-
-@media (max-width: 768px) {
-    .page {
-        --appFooterHeight: 60px;
-    }
-}
-
-.settingsGrid {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 24px;
-}
-
-.settingsColumn {
-    display: flex;
-    flex-direction: column;
-    gap: 24px;
+    min-height: 40px;
+    border-radius: var(--borderRadiusMedium) !important;
 }
 
 .sectionCard {
     background-color: var(--colorNeutralBackground1);
-    border: 1px solid var(--colorNeutralStroke1);
-    border-radius: 14px;
-    padding: 24px;
+    border: 1px solid var(--colorNeutralStroke2);
+    border-radius: var(--borderRadiusLarge);
+    padding: 22px 24px;
     display: flex;
     flex-direction: column;
-    gap: 20px;
-    box-shadow: var(--shadow2);
+    gap: 16px;
+    box-shadow: none;
 }
 
 .sectionBasic {
@@ -106,46 +204,180 @@
 }
 
 .sectionTools {
-    order: 3;
+    order: 4;
 }
 
-.sectionPrompts {
-    order: 4;
+.sectionConversationOptions {
+    order: 3;
 }
 
 .sectionAccess {
     order: 5;
 }
 
-.sectionActions {
-    grid-column: 1 / -1;
-    order: 6;
+.sectionAccordion,
+.sectionAccordionItem {
+    width: 100%;
 }
 
-@media (max-width: 1100px) {
-    .settingsGrid {
-        display: flex;
-        flex-direction: column;
-    }
+.sectionHeader {
+    width: 100%;
+    border-radius: var(--borderRadiusMedium);
+    color: var(--colorNeutralForeground1);
+}
 
-    .settingsColumn {
-        display: contents;
-    }
+.sectionHeader :global(.fui-AccordionHeader__button) {
+    padding: 0;
+    min-height: 24px;
+    color: inherit;
+    background-color: var(--colorNeutralBackground1) !important;
+}
+
+.sectionHeader :global(.fui-AccordionHeader__button):hover,
+.sectionHeader :global(.fui-AccordionHeader__button):active,
+.sectionHeader :global(.fui-AccordionHeader__button):focus {
+    background-color: var(--colorNeutralBackground1) !important;
+}
+
+.sectionHeader :global(.fui-AccordionHeader__expandIcon) {
+    width: 22px;
+    height: 22px;
+    border-radius: var(--borderRadiusSmall);
+    color: var(--colorNeutralForeground3);
+    background-color: var(--colorNeutralBackground1);
+    margin-left: auto;
+}
+
+.sectionHeader :global(.fui-AccordionHeader__button):hover :global(.fui-AccordionHeader__expandIcon),
+.sectionHeader :global(.fui-AccordionHeader__button):active :global(.fui-AccordionHeader__expandIcon),
+.sectionHeader :global(.fui-AccordionHeader__button):focus :global(.fui-AccordionHeader__expandIcon) {
+    color: var(--colorNeutralForeground1);
+    background-color: var(--colorNeutralBackground1);
+}
+
+.sectionTitleGroup {
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    min-width: 0;
+    padding-right: 12px;
+}
+
+.sectionIcon {
+    width: 22px;
+    height: 22px;
+    border-radius: var(--borderRadiusMedium);
+    color: var(--colorNeutralForeground2);
+    background-color: transparent;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.sectionIcon svg {
+    width: 20px;
+    height: 20px;
 }
 
 .sectionTitle {
-    margin: 0;
     color: var(--colorNeutralForeground1);
-    padding-bottom: 12px;
-    border-bottom: 1px solid var(--colorNeutralStroke2);
+    font-size: 18px;
+    font-weight: 600;
+    line-height: 1.3;
+}
+
+.sectionPanel {
+    box-sizing: border-box;
+    margin-top: 16px !important;
+    padding-inline-start: 20px;
 }
 
 .sectionContent {
     display: flex;
     flex-direction: column;
-    gap: 20px;
+    gap: 16px;
+}
+
+.sectionContent :global(.fui-Textarea),
+.sectionContent :global(.fui-Input),
+.sectionContent :global(.fui-Dropdown) {
+    background-color: var(--colorNeutralBackground3);
+    border-color: var(--colorNeutralStroke1);
 }
 
 .formField {
     gap: 4px;
+}
+
+.formField :global(.fui-Label) {
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 1.3;
+}
+
+.formField :global(textarea) {
+    line-height: 1.45;
+}
+
+@media (max-width: 760px) {
+    .headerContent {
+        padding: 20px;
+    }
+
+    .body {
+        padding: 20px;
+    }
+
+    .bodyWithActions {
+        padding-bottom: 32px;
+    }
+
+    .builderMain {
+        gap: 18px;
+    }
+
+    .sectionCard {
+        padding: 18px;
+    }
+
+    .sectionPanel {
+        margin-top: 24px;
+    }
+
+    .actionBarContent {
+        padding: 12px 20px;
+    }
+}
+
+@media (max-width: 520px) {
+    .headerLeft {
+        width: 100%;
+    }
+
+    .headerTitle {
+        font-size: 24px;
+    }
+
+    .actionBarContent {
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+
+    .actionStatus {
+        justify-content: center;
+        justify-self: center;
+    }
+
+    .actionButtonGroup {
+        width: 100%;
+    }
+
+    .actionButtonGroup :global(.fui-Button) {
+        flex: 1 1 0;
+    }
+
+    .sectionPanel {
+        padding-inline-start: 0;
+    }
 }

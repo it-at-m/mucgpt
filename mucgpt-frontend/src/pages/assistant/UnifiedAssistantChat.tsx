@@ -11,8 +11,8 @@ import { AssistantStorageService } from "../../service/assistantstorage";
 import { CommunityAssistantStorageService } from "../../service/communityassistantstorage";
 import { StorageService } from "../../service/storage";
 import { AnswerList } from "../../components/AnswerList/AnswerList";
-import { ExampleList } from "../../components/Example";
-import { QuickPromptContext } from "../../components/QuickPrompt/QuickPromptProvider";
+import { StarterPromptList } from "../../components/StarterPrompt";
+import { FollowUpActionContext } from "../../components/FollowUpAction";
 import { getChatReducer, handleRegenerate, handleRollback, makeApiRequest } from "../page_helpers";
 import { ChatOptions } from "../chat/Chat";
 import { STORAGE_KEYS } from "../layout/LayoutHelper";
@@ -83,6 +83,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
     const { id } = useParams();
     const assistant_id = id || "0";
     const isLegacyAssistant = /^\d+$/.test(assistant_id);
+    const draftCacheKey = useMemo(() => `assistant-chat:${assistant_id}`, [assistant_id]);
     const location = useLocation();
     const navigate = useNavigate();
     const isEditMode = location.pathname.endsWith("/edit");
@@ -96,7 +97,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
     const { LLM, setLLM, availableLLMs } = useContext(LLMContext);
     const { t } = useTranslation();
     const { refreshHistory: refreshUnifiedHistory } = useUnifiedHistory();
-    const { setQuickPrompts } = useContext(QuickPromptContext);
+    const { setFollowUpActions } = useContext(FollowUpActionContext);
     const { tools } = useToolsContext();
 
     const [error, setError] = useState<unknown>();
@@ -280,7 +281,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                             setAssistantConfig(assistant);
                             dispatch({ type: "SET_SYSTEM_PROMPT", payload: assistant.system_message });
                             dispatch({ type: "SET_CREATIVITY", payload: assistant.creativity });
-                            setQuickPrompts(assistant.quick_prompts || []);
+                            setFollowUpActions(assistant.quick_prompts || []);
                             setSelectedTools(assistant.tools ? assistant.tools.map(tool => tool.id) : []);
 
                             // If assistant has a default model, check if it's available
@@ -348,7 +349,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
         t,
         availableLLMs,
         setLLM,
-        setQuickPrompts,
+        setFollowUpActions,
         setIsLoadingValue,
         setLastQuestionValue,
         getNewChatToken,
@@ -422,7 +423,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
 
     // callApi-Funktion
     const callApi = useCallback(
-        async (question: string, dataSources?: DataSource[]) => {
+        async (question: string, systemOverride?: string, dataSources?: DataSource[]) => {
             if (isLegacyAssistant) {
                 console.warn("Interaction blocked: Assistant is in legacy state and read-only.");
                 return;
@@ -434,7 +435,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
 
             const askResponse: AskResponse = {} as AskResponse;
             const options: ChatOptions = {
-                system: systemPrompt ?? "",
+                system: systemOverride ?? systemPrompt ?? "",
                 creativity: creativity
             };
             try {
@@ -545,7 +546,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
 
                 if (result?.updatedAssistant) {
                     setAssistantConfig(result.updatedAssistant);
-                    setQuickPrompts(result.updatedAssistant.quick_prompts || []);
+                    setFollowUpActions(result.updatedAssistant.quick_prompts || []);
                     showSuccess(
                         t("components.assistant_chat.update_assistant_success"),
                         t("components.assistant_chat.update_assistant_success_message", { title: result.updatedAssistant.title })
@@ -559,7 +560,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                 );
             }
         },
-        [strategy, assistant_id, assistantConfig, LLM, setQuickPrompts, showError, showSuccess, t]
+        [strategy, assistant_id, assistantConfig, LLM, setFollowUpActions, showError, showSuccess, t]
     );
 
     // Regenerate-Funktion
@@ -627,10 +628,9 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
         [assistantChatStorage, clearChat, clearRequestedChatId, fetchHistory, isLoading, setIsLoadingValue, setLastQuestionValue]
     );
 
-    // on Example Clicked-Funktion
-    const onExampleClicked = useCallback(
-        (example: string) => {
-            callApi(example);
+    const onStarterPromptClicked = useCallback(
+        (starterPrompt: string, system?: string) => {
+            callApi(starterPrompt, system);
         },
         [callApi]
     );
@@ -654,18 +654,17 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
         [availableLLMs, setLLM, assistantConfig.default_model]
     );
 
-    // Examples component
-    const examplesComponent = useMemo(() => {
+    const starterPromptsComponent = useMemo(() => {
         if (isDeletedAssistant || isLegacyAssistant) {
             return null;
         }
 
         if (assistantConfig.examples && assistantConfig.examples.length > 0) {
-            return <ExampleList examples={assistantConfig.examples} onExampleClicked={onExampleClicked} />;
+            return <StarterPromptList starterPrompts={assistantConfig.examples} onStarterPromptClicked={onStarterPromptClicked} />;
         } else {
             return null;
         }
-    }, [isDeletedAssistant, assistantConfig.examples, onExampleClicked]);
+    }, [isDeletedAssistant, isLegacyAssistant, assistantConfig.examples, onStarterPromptClicked]);
 
     // Text-Input component
     const inputComponent = useMemo(() => {
@@ -750,6 +749,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                     <QuestionInput
                         clearOnSend
                         disabled={isLoading || error !== undefined}
+                        draftCacheKey={draftCacheKey}
                         onSend={(question, datas) => {
                             const dataSources = datas
                                 .filter(data => data.isActive !== false && data.status === "ready" && data.fileContent)
@@ -766,7 +766,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                                         status: data.status
                                     }
                                 }));
-                            callApi(question, dataSources.length > 0 ? dataSources : undefined);
+                            callApi(question, undefined, dataSources.length > 0 ? dataSources : undefined);
                         }}
                         question={question}
                         setQuestion={question => setQuestion(question)}
@@ -786,6 +786,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
             <QuestionInput
                 clearOnSend
                 disabled={isLoading || error !== undefined || strategy instanceof DeletedCommunityAssistantStrategy}
+                draftCacheKey={draftCacheKey}
                 onSend={(question, datas) => {
                     const dataSources = datas
                         .filter(data => data.isActive !== false && data.status === "ready" && data.fileContent)
@@ -802,7 +803,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                                 status: data.status
                             }
                         }));
-                    callApi(question, dataSources.length > 0 ? dataSources : undefined);
+                    callApi(question, undefined, dataSources.length > 0 ? dataSources : undefined);
                 }}
                 question={question}
                 setQuestion={question => setQuestion(question)}
@@ -832,6 +833,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
         setSelectedToolsGuarded,
         tools,
         lockedToolIds,
+        draftCacheKey,
         uploadedData
     ]);
 
@@ -849,7 +851,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                                     key={index}
                                     answer={answer.response}
                                     onRegenerateResponseClicked={isDeletedAssistant ? undefined : onRegenerateResponseClicked}
-                                    onQuickPromptSend={isDeletedAssistant ? undefined : prompt => callApi(prompt)}
+                                    onFollowUpActionSend={isDeletedAssistant ? undefined : prompt => callApi(prompt)}
                                 />
                             )}
                             {index !== answers.length - 1 && <Answer key={index} answer={answer.response} />}
@@ -904,10 +906,10 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
         return (
             <>
                 <ChatLayout
-                    examples={examplesComponent}
+                    starterPrompts={starterPromptsComponent}
                     answers={answerList}
                     input={inputComponent}
-                    showExamples={!lastQuestion}
+                    showStarterPrompts={!lastQuestion}
                     header={assistantConfig.title}
                     welcomeMessage={isDeletedAssistant ? t("components.community_assistants.deleted_state_title") : t("chat.header")}
                     header_as_markdown={false}
@@ -938,7 +940,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
             </>
         );
     }, [
-        examplesComponent,
+        starterPromptsComponent,
         answerList,
         inputComponent,
         isDeletedAssistant,

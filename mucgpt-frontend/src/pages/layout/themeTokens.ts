@@ -1,7 +1,7 @@
 export interface AppThemeTokens {
-    headerBackground: string;
-    headerHover: string;
-    headerPressed: string;
+    primaryActionBackground: string;
+    primaryActionHover: string;
+    primaryActionPressed: string;
     surfaceBase: string;
     surfaceRaised: string;
     surfaceSubtle: string;
@@ -14,7 +14,7 @@ export interface AppThemeTokens {
     textDefault: string;
     textSecondary: string;
     textTertiary: string;
-    textOnHeader: string;
+    textOnPrimaryAction: string;
     textOnPrimary: string;
     outlineSubtle: string;
     outlineBase: string;
@@ -35,12 +35,17 @@ export interface AppThemeTokens {
     statusInfoBackground: string;
     statusInfoBorder: string;
     statusInfoForeground: string;
+    assistantConfigSurface: string;
+    assistantConfigSurfaceHover: string;
+    assistantConfigSurfaceEditing: string;
+    assistantConfigBorder: string;
+    assistantConfigBorderHover: string;
 }
 
 export const lightThemeTokens: AppThemeTokens = {
-    headerBackground: "#2563eb",
-    headerHover: "#1d4ed8",
-    headerPressed: "#1e40af",
+    primaryActionBackground: "#2563eb",
+    primaryActionHover: "#1d4ed8",
+    primaryActionPressed: "#1e40af",
     surfaceBase: "#f8fafc",
     surfaceRaised: "#f1f5f9",
     surfaceSubtle: "#FFFFFF",
@@ -53,7 +58,7 @@ export const lightThemeTokens: AppThemeTokens = {
     textDefault: "#1E293B",
     textSecondary: "#334155",
     textTertiary: "#526077",
-    textOnHeader: "#FFFFFF",
+    textOnPrimaryAction: "#FFFFFF",
     textOnPrimary: "#FFFFFF",
     outlineSubtle: "#D7E0F2",
     outlineBase: "#B8C7E6",
@@ -73,13 +78,18 @@ export const lightThemeTokens: AppThemeTokens = {
     statusErrorForeground: "#8A1C1C",
     statusInfoBackground: "#E8F1FB",
     statusInfoBorder: "#7BA7D9",
-    statusInfoForeground: "#1E4E8C"
+    statusInfoForeground: "#1E4E8C",
+    assistantConfigSurface: "#F8FAFC",
+    assistantConfigSurfaceHover: "#F1F6FD",
+    assistantConfigSurfaceEditing: "#EFF6FF",
+    assistantConfigBorder: "#C7D7F2",
+    assistantConfigBorderHover: "#9DB5E8"
 };
 
 export const darkThemeTokens: AppThemeTokens = {
-    headerBackground: "#2563eb",
-    headerHover: "#1d4ed8",
-    headerPressed: "#1e40af",
+    primaryActionBackground: "#2563eb",
+    primaryActionHover: "#1d4ed8",
+    primaryActionPressed: "#1e40af",
     surfaceBase: "#0F172D",
     surfaceRaised: "#020617",
     surfaceSubtle: "#13203C",
@@ -92,7 +102,7 @@ export const darkThemeTokens: AppThemeTokens = {
     textDefault: "#F1F5F9",
     textSecondary: "#94A3B8",
     textTertiary: "#64748B",
-    textOnHeader: "#FFFFFF",
+    textOnPrimaryAction: "#FFFFFF",
     textOnPrimary: "#080E1E",
     outlineSubtle: "#1E293B",
     outlineBase: "#334155",
@@ -112,5 +122,10 @@ export const darkThemeTokens: AppThemeTokens = {
     statusErrorForeground: "#F2C0C7",
     statusInfoBackground: "#182D42",
     statusInfoBorder: "#5D88B8",
-    statusInfoForeground: "#BDD8F5"
+    statusInfoForeground: "#BDD8F5",
+    assistantConfigSurface: "#0B1224",
+    assistantConfigSurfaceHover: "#111C34",
+    assistantConfigSurfaceEditing: "#101A31",
+    assistantConfigBorder: "#263653",
+    assistantConfigBorderHover: "#3A4D73"
 };

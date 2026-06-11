@@ -16,6 +16,7 @@ ASSISTANT_VERSION: "0.0.3"
 
 # Backend settings
 UNAUTHORIZED_USER_REDIRECT_URL: "<your-url>"
+AD2IMAGE_URL: "<your-ad2image-url>"  # Base URL of the ad2image service for avatar images
 
 # Parsing settings
 PARSER_BACKEND: "kreuzberg"
@@ -38,6 +39,13 @@ MCP:
       url: "http://mcpdoc-server:8088/sse"
       transport: "sse"
       forward_token: false
+      group: "ki-münchen"
+      descriptions:
+        - name: "fetch_docs"
+          description: "Loads information from a specific URL about ai in munich. Always provide the whole url. Not only the relative path."
+        - name: "list_doc_sources"
+          description: "Lists information sources about ai in munich. Provides a list of relevant URLs. Use fetch-docs then to retrieve relevant data from the relevant urls. "
+      # ...
 
     # Example for custom headers to authenticate with MCP server via litellm proxy
     # authentication with litellm via Bearer
@@ -49,7 +57,24 @@ MCP:
       forward_auth_override: "Basic <base64 encoded email:token>"
       headers:
         x-litellm-api-key: "<your-api-key>"
+      group: "atlassian"
+      # Example tool description overrides.
+      descriptions:
+        - name: "atlassianUserInfo"
+          description: "Retrieve details about the currently authenticated Atlassian user (e.g. accountId). Use for user context or attribution."
+        - name: "getAccessibleAtlassianResources"
+          description: "Resolve available Atlassian sites and their cloudIds (i.e. the url). Use when cloudId is unknown or a hostname-based guess fails."
+      # ...
   CACHE_TTL: 123
+
+# Internet Search Settings (SearXNG)
+# Replace the placeholder URL with your SearXNG instance to enable the InternetSearch tool.
+INTERNET_SEARCH:
+  SEARXNG_URL: "<your-searxng-url>"
+  TIMEOUT: 10.0
+  MAX_RESULTS: 5
+  LANGUAGE: "de"
+  SAFESEARCH: 1
 
 # Models configuration
 # Configure your LLM models here instead of using base64-encoded JSON in environment variables

@@ -5,14 +5,19 @@ import type { AppThemeTokens } from "./themeTokens";
 type ThemeMode = "light" | "dark";
 
 type AppCssVariableName =
-    | "--app-header-background"
-    | "--app-header-hover"
-    | "--app-header-pressed"
-    | "--app-header-foreground"
+    | "--app-primary-action-background"
+    | "--app-primary-action-hover"
+    | "--app-primary-action-pressed"
+    | "--app-primary-action-foreground"
     | "--app-primary-subtle-foreground"
     | "--app-status-info-background"
     | "--app-status-info-border"
-    | "--app-status-info-foreground";
+    | "--app-status-info-foreground"
+    | "--app-assistant-config-surface"
+    | "--app-assistant-config-surface-hover"
+    | "--app-assistant-config-surface-editing"
+    | "--app-assistant-config-border"
+    | "--app-assistant-config-border-hover";
 
 export type AppCssVariables = Record<AppCssVariableName, string>;
 
@@ -23,7 +28,6 @@ export const enum STORAGE_KEYS {
     SETTINGS_FONT_SCALING = "SETTINGS_FONT_SCALING",
     SETTINGS_IS_LIGHT_THEME = "SETTINGS_IS_LIGHT_THEME",
     VERSION_UPDATE_SEEN = "VERSION_UPDATE_SEEN",
-    SHOW_SIDEBAR = "SHOW_SIDEBAR",
     HOME_ASSISTANT_MODE = "HOME_ASSISTANT_MODE",
     CHAT_FILE_IDS = "chatFileIds",
     SELECTED_TOOLS = "SELECTED_TOOLS",
@@ -249,12 +253,17 @@ export const createScaledTypographyTheme = (theme: Theme, scaling: number): Them
 };
 
 export const createAppCssVars = (tokens: AppThemeTokens): AppCssVariables => ({
-    "--app-header-background": tokens.headerBackground,
-    "--app-header-hover": tokens.headerHover,
-    "--app-header-pressed": tokens.headerPressed,
-    "--app-header-foreground": tokens.textOnHeader,
+    "--app-primary-action-background": tokens.primaryActionBackground,
+    "--app-primary-action-hover": tokens.primaryActionHover,
+    "--app-primary-action-pressed": tokens.primaryActionPressed,
+    "--app-primary-action-foreground": tokens.textOnPrimaryAction,
     "--app-primary-subtle-foreground": tokens.primarySubtleOn,
     "--app-status-info-background": tokens.statusInfoBackground,
     "--app-status-info-border": tokens.statusInfoBorder,
-    "--app-status-info-foreground": tokens.statusInfoForeground
+    "--app-status-info-foreground": tokens.statusInfoForeground,
+    "--app-assistant-config-surface": tokens.assistantConfigSurface,
+    "--app-assistant-config-surface-hover": tokens.assistantConfigSurfaceHover,
+    "--app-assistant-config-surface-editing": tokens.assistantConfigSurfaceEditing,
+    "--app-assistant-config-border": tokens.assistantConfigBorder,
+    "--app-assistant-config-border-hover": tokens.assistantConfigBorderHover
 });

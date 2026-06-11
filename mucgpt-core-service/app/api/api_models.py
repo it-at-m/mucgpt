@@ -417,3 +417,15 @@ class ConfigResponse(BaseModel):
         None,
         description="Label for the footer link.",
     )
+    faq_url: str | None = Field(
+        None,
+        description="URL for the FAQ link.",
+    )
+    incident_report_url: str | None = Field(
+        None,
+        description="URL for the incident report link.",
+    )
+    ad2image_url: str | None = Field(
+        None,
+        description="Base URL of the ad2image service for Gravatar-compatible avatar images.",
+    )

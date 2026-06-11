@@ -50,7 +50,9 @@ export const DEFAULT_APP_CONFIG: ApplicationConfig = {
     core_version: "DEV 1.0.0",
     frontend_version: "DEV 1.0.0",
     assistant_version: "DEV 1.0.0",
-    document_processing_enabled: false
+    document_processing_enabled: false,
+    faq_url: "https://ki.muenchen.de",
+    incident_report_url: "https://ki.muenchen.de"
 };
 
 export const CREATIVITY_LOW = "low";

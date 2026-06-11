@@ -2,7 +2,10 @@
     display: flex;
     flex-direction: column;
     flex: 1;
-    min-height: calc(100vh - 50px);
+    min-height: 100vh;
+    height: 100vh;
+    height: 100dvh;
+    overflow: hidden;
     background: var(--colorNeutralBackground1);
 }
 
@@ -77,6 +80,7 @@
     flex-direction: column;
     flex: 1;
     min-height: 0;
+    overflow: hidden;
     z-index: 1;
     box-sizing: border-box;
     background: var(--colorNeutralBackground1);
@@ -93,15 +97,20 @@
     align-items: center;
     width: 100%;
     min-height: 0;
+    padding-bottom: var(--chatInputHeight, 0);
+    overflow: hidden;
     box-sizing: border-box;
 }
 
 .chatEmptyState {
-    flex-grow: 1;
+    flex: 1 1 auto;
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
+    width: 100%;
+    min-height: 0;
+    overflow-y: auto;
 }
 
 .chatEmptyStateTitle {
@@ -157,16 +166,25 @@
 }
 
 .chatInput {
-    width: 100%;
+    position: fixed;
+    left: var(--appSidebarWidth, 0);
+    right: 0;
+    bottom: 0;
+    z-index: 4;
     padding: 0 0 10px;
-    max-width: 100%;
     min-width: 0;
     box-sizing: border-box;
+    background: transparent;
+}
+
+.container[data-info-open="true"] .chatInput {
+    right: var(--assistantDetailsDrawerWidth);
 }
 
 @media (max-width: 1200px) {
     .container[data-info-open="true"] .headerBar,
-    .container[data-info-open="true"] .chatRoot {
+    .container[data-info-open="true"] .chatRoot,
+    .container[data-info-open="true"] .chatInput {
         right: var(--assistantDetailsDrawerCompactWidth);
     }
 }
@@ -179,7 +197,8 @@
 
 @media (max-width: 600px) {
     .container[data-info-open="true"] .headerBar,
-    .container[data-info-open="true"] .chatRoot {
+    .container[data-info-open="true"] .chatRoot,
+    .container[data-info-open="true"] .chatInput {
         right: 0;
     }
 }

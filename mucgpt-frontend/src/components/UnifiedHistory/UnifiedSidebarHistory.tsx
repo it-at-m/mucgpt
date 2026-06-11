@@ -14,7 +14,6 @@ import {
     MenuList,
     MenuPopover,
     MenuTrigger,
-    Spinner,
     Tab,
     TabList,
     Tooltip
@@ -36,6 +35,7 @@ import { UnifiedHistoryEntry, UnifiedHistoryStorage } from "./unifiedHistoryStor
 import { CloseConfirmationDialog } from "../AssistantDialogs/shared/CloseConfirmationDialog";
 import { useGlobalToastContext } from "../GlobalToastHandler/GlobalToastContext";
 import styles from "./UnifiedSidebarHistory.module.css";
+import { EdelweissSpinner } from "../EdelweissSpinner";
 
 const HISTORY_TAB_STORAGE_KEY = "UNIFIED_HISTORY_ASSISTANT_TAB";
 const DELETE_DIALOG_TITLE_MAX_LENGTH = 80;
@@ -197,7 +197,7 @@ export const UnifiedSidebarHistory = ({ requestClose }: UnifiedSidebarHistoryPro
     if (isLoading && !hasLoaded) {
         return (
             <div className={styles.centerState}>
-                <Spinner size="tiny" label={t("components.history.loading")} />
+                <EdelweissSpinner size="tiny" label={t("components.history.loading")} />
             </div>
         );
     }
@@ -226,7 +226,7 @@ export const UnifiedSidebarHistory = ({ requestClose }: UnifiedSidebarHistoryPro
 
                         return (
                             <div key={`${entry.kind}-${entry.id}`} className={`${styles.row} ${isActive ? styles.rowActive : ""}`} role="listitem">
-                                <Tooltip content={title} relationship="description" positioning={{ position: "after", offset: 40 }}>
+                                <Tooltip content={title} relationship="description" positioning={{ position: "after", offset: 40 }} showDelay={400}>
                                     <Button
                                         appearance="subtle"
                                         className={styles.chatButton}
@@ -253,17 +253,17 @@ export const UnifiedSidebarHistory = ({ requestClose }: UnifiedSidebarHistoryPro
                                         </MenuTrigger>
                                         <MenuPopover className={styles.menuPopover}>
                                             <MenuList className={styles.menuList}>
-                                                <MenuItem icon={<Delete20Regular />} onClick={() => setEntryToDelete(entry)} className={styles.deleteMenuItem}>
-                                                    {t("components.history.delete")}
-                                                </MenuItem>
-                                                <MenuItem icon={<Edit20Regular />} onClick={() => renameEntry(entry)}>
-                                                    {t("components.history.rename")}
-                                                </MenuItem>
                                                 <MenuItem
                                                     icon={entry.favorite ? <PinOff20Regular /> : <Pin20Regular />}
                                                     onClick={() => void changeFavourite(entry, !entry.favorite)}
                                                 >
                                                     {entry.favorite ? t("components.history.unpin_chat") : t("components.history.pin_chat")}
+                                                </MenuItem>
+                                                <MenuItem icon={<Edit20Regular />} onClick={() => renameEntry(entry)}>
+                                                    {t("components.history.rename")}
+                                                </MenuItem>
+                                                <MenuItem icon={<Delete20Regular />} onClick={() => setEntryToDelete(entry)} className={styles.deleteMenuItem}>
+                                                    {t("components.history.delete")}
                                                 </MenuItem>
                                             </MenuList>
                                         </MenuPopover>

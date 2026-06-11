@@ -80,13 +80,18 @@ const Home = () => {
     }, [user]);
 
     useEffect(() => {
-        let query = null;
         const search = location.search || window.location.search;
-        if (search) {
-            const params = new URLSearchParams(search);
-            query = params.get("q");
+        if (!search) {
+            return;
         }
-        setQuestion(query || "");
+
+        const params = new URLSearchParams(search);
+        const query = params.get("q");
+
+        // Only overwrite the local draft when q is explicitly provided in the URL.
+        if (query !== null) {
+            setQuestion(query);
+        }
     }, [location.search]);
 
     useEffect(() => {
@@ -298,6 +303,7 @@ const Home = () => {
                         onSend={onSendQuestion}
                         disabled={false}
                         placeholder={t("chat.prompt")}
+                        draftCacheKey="home-chat-starter"
                         setQuestion={q => setQuestion(q)}
                         selectedTools={selectedTools}
                         setSelectedTools={setSelectedTools}
@@ -386,8 +392,8 @@ const Home = () => {
                                         core_version={config.core_version}
                                         frontend_version={config.frontend_version}
                                         assistant_version={config.assistant_version}
+                                        app_version={config.app_version}
                                         versionUrl={import.meta.env.BASE_URL + "#/version"}
-                                        variant="compact"
                                     />
                                 </div>
                             ) : (

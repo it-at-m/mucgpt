@@ -56,7 +56,7 @@ export const lightThemeTokens: AppThemeTokens = {
     primarySubtleOn: "#1E3A8A",
     primaryStrong: "#1A4DBB",
     textDefault: "#1E293B",
-    textSecondary: "#334155",
+    textSecondary: "#4a5665",
     textTertiary: "#526077",
     textOnPrimaryAction: "#FFFFFF",
     textOnPrimary: "#FFFFFF",

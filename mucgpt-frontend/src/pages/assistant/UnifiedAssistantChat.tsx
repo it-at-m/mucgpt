@@ -1049,7 +1049,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
             {!strategy?.canEdit && (assistantInfoData || isAssistantInfoLoading || isInfoDrawerOpen) && (
                 <div className={styles.infoDrawerContainer} data-open={isInfoDrawerOpen}>
                     <AssistantDetailsSidebar
-                        isOpen={isInfoDrawerOpen}
+                        isOpen={Boolean(assistantInfoData || isAssistantInfoLoading || isInfoDrawerOpen)}
                         onClose={() => setIsInfoDrawerOpen(false)}
                         assistant={assistantInfoData}
                         isLoading={isAssistantInfoLoading}

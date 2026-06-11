@@ -2,7 +2,7 @@
     display: flex;
     flex-direction: column;
     flex: 1;
-    min-height: calc(100vh + 64px);
+    min-height: 100%;
     min-width: 0;
     overflow-x: hidden;
     background: var(--colorNeutralBackground1);
@@ -295,10 +295,6 @@
 }
 
 @media screen and (max-width: 768px) {
-    .pageContainer {
-        min-height: calc(100vh + 44px);
-    }
-
     .contentSection {
         max-width: 95%;
         padding: 14px 0 12px;
@@ -340,10 +336,6 @@
 }
 
 @media screen and (max-width: 490px) {
-    .pageContainer {
-        min-height: calc(100vh + 32px);
-    }
-
     .chatstartercontainer {
         padding-top: 60px;
     }

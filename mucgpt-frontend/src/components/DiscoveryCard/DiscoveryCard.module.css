@@ -1,8 +1,8 @@
 .card {
     border-radius: var(--borderRadiusLarge) !important;
     min-height: 136px;
-    border: 1px solid var(--colorNeutralStroke1) !important;
-    padding: 12px !important;
+    border: 1px solid var(--colorNeutralStroke3) !important;
+    padding: 12px 12px 10px 12px !important;
     row-gap: 0px !important;
     transition:
         transform 0.18s cubic-bezier(0.33, 1, 0.68, 1),
@@ -10,18 +10,16 @@
         box-shadow 0.16s ease;
     background-color: var(--colorNeutralBackground3) !important;
     color: var(--colorNeutralForeground1);
-    box-shadow: none !important;
+    box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05) !important;
 }
 
 .cardSelected {
-    border: 1px solid var(--colorBrandBackground) !important;
-    background-color: var(--colorBrandBackground2) !important;
+    border: 2px solid var(--colorBrandBackground) !important;
 }
 
 .card:hover {
     transform: translateY(-2px);
     box-shadow: var(--shadow4) !important;
-    border-color: var(--colorNeutralStroke1Hover) !important;
 }
 
 .card:hover .headerText {
@@ -108,7 +106,7 @@
 
 .description {
     font-size: var(--fontSizeBase200);
-    color: var(--colorNeutralForeground1);
+    color: var(--colorNeutralForeground2);
     overflow: hidden;
     display: -webkit-box;
     -webkit-box-orient: vertical;
@@ -134,8 +132,8 @@
     align-items: center;
     justify-content: space-between;
     gap: 12px;
-    min-height: 24px;
-    padding-top: 6px;
+    min-height: 0;
+    padding-top: 10px;
     color: var(--colorNeutralForeground2);
     font-size: 11px;
     font-weight: var(--fontWeightRegular);

@@ -223,8 +223,8 @@ const Discovery = () => {
         communitySortMethod === "subscriptions"
             ? t("components.community_assistants.sort_popular", "Beliebteste")
             : communitySortMethod === "updated"
-              ? t("components.community_assistants.sort_updated", "Zuletzt aktualisiert")
-              : t("components.community_assistants.sort_title", "Name");
+                ? t("components.community_assistants.sort_updated", "Zuletzt aktualisiert")
+                : t("components.community_assistants.sort_title", "Name");
 
     const handleMyAssistantsSortChange = (_event: SelectionEvents, data: OptionOnSelectData) => {
         if (data.optionValue === "subscriptions" || data.optionValue === "updated" || data.optionValue === "title" || data.optionValue === "lastUsed") {
@@ -236,10 +236,10 @@ const Discovery = () => {
         myAssistantsSortMethod === "lastUsed"
             ? t("components.community_assistants.sort_last_used", "Zuletzt benutzt")
             : myAssistantsSortMethod === "subscriptions"
-              ? t("components.community_assistants.sort_popular", "Beliebteste")
-              : myAssistantsSortMethod === "updated"
-                ? t("components.community_assistants.sort_updated", "Zuletzt aktualisiert")
-                : t("components.community_assistants.sort_title", "Name");
+                ? t("components.community_assistants.sort_popular", "Beliebteste")
+                : myAssistantsSortMethod === "updated"
+                    ? t("components.community_assistants.sort_updated", "Zuletzt aktualisiert")
+                    : t("components.community_assistants.sort_title", "Name");
 
     const getAssistantBadges = (assistant: AssistantCardData): DiscoveryCardBadge[] => {
         const badges: DiscoveryCardBadge[] = [];
@@ -493,22 +493,22 @@ const Discovery = () => {
                         <div className={styles.headerSection}>
                             <div className={styles.titleBlock}>
                                 <Title1 className={styles.header}>{t("discovery.title", "Assistenten")}</Title1>
-                                <Body1 className={styles.subtitle}>
-                                    {t("discovery.subtitle", "Nutze deine Assistenten oder entdecke neue für wiederkehrende Aufgaben.")}
-                                </Body1>
-                            </div>
-                            <div className={styles.headerActions}>
-                                <Tooltip content={t("components.import_assistant.import")} relationship="description" positioning="below">
-                                    <Button
-                                        appearance="outline"
-                                        icon={<DocumentArrowUpRegular />}
-                                        onClick={importAssistant}
-                                        aria-label={t("components.import_assistant.import")}
-                                    >
-                                        {t("components.import_assistant.import")}
-                                    </Button>
-                                </Tooltip>
-                                <AddAssistantButton onClick={() => navigate("/assistant/create")} />
+                                <div className={styles.subtitleRow}>
+                                    <Body1 className={styles.subtitle}>
+                                        {t("discovery.subtitle", "Nutze deine Assistenten oder entdecke neue für wiederkehrende Aufgaben.")}
+                                    </Body1>
+                                    <div className={styles.headerActions}>
+                                        <Button
+                                            appearance="transparent"
+                                            icon={<DocumentArrowUpRegular />}
+                                            onClick={importAssistant}
+                                            aria-label={t("components.import_assistant.import")}
+                                        >
+                                            {t("components.import_assistant.import")}
+                                        </Button>
+                                        <AddAssistantButton onClick={() => navigate("/assistant/create")} />
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
@@ -572,6 +572,7 @@ const Discovery = () => {
                                                 selectedOptions={[myAssistantsSortMethod]}
                                                 appearance="outline"
                                                 className={styles.sortDropdown}
+                                                listbox={{ className: styles.sortDropdownListbox }}
                                                 onOptionSelect={handleMyAssistantsSortChange}
                                                 aria-label={t("components.community_assistants.sort_by", "Sortieren nach")}
                                             >
@@ -627,6 +628,7 @@ const Discovery = () => {
                                             selectedOptions={[communitySortMethod]}
                                             appearance="outline"
                                             className={styles.sortDropdown}
+                                            listbox={{ className: styles.sortDropdownListbox }}
                                             onOptionSelect={handleCommunitySortChange}
                                             aria-label={t("components.community_assistants.sort_by", "Sortieren nach")}
                                         >
@@ -653,28 +655,30 @@ const Discovery = () => {
                     </div>
                 </div>
 
-                <AssistantDetailsSidebar
-                    isOpen={isDrawerOpen}
-                    onClose={closeDrawerAndClearSelection}
-                    assistant={selectedAssistant}
-                    ownedAssistantIds={ownedAssistantIds}
-                    onStartChat={startConversation}
-                    onEdit={editAssistant}
-                    onDuplicate={() => {
-                        if (!selectedAssistant || selectedAssistant.isLocalAssistant) {
-                            return;
-                        }
-                        requestDuplicateAssistant({
-                            id: selectedAssistant.id,
-                            title: selectedAssistant.title,
-                            rawData: selectedAssistant.rawData as AssistantResponse | CommunityAssistantSnapshot,
-                            isDeletedSnapshot: selectedAssistant.isDeletedSnapshot
-                        });
-                    }}
-                    onExport={exportAssistant}
-                    onDelete={deleteAssistant}
-                    onMigrateLocal={selectedAssistant?.isLocalAssistant ? () => setShowLocalMigrateConfirm(true) : undefined}
-                />
+                <div className={styles.detailsSidebarSlot} data-open={isDrawerOpen}>
+                    <AssistantDetailsSidebar
+                        isOpen={Boolean(selectedAssistant)}
+                        onClose={closeDrawerAndClearSelection}
+                        assistant={selectedAssistant}
+                        ownedAssistantIds={ownedAssistantIds}
+                        onStartChat={startConversation}
+                        onEdit={editAssistant}
+                        onDuplicate={() => {
+                            if (!selectedAssistant || selectedAssistant.isLocalAssistant) {
+                                return;
+                            }
+                            requestDuplicateAssistant({
+                                id: selectedAssistant.id,
+                                title: selectedAssistant.title,
+                                rawData: selectedAssistant.rawData as AssistantResponse | CommunityAssistantSnapshot,
+                                isDeletedSnapshot: selectedAssistant.isDeletedSnapshot
+                            });
+                        }}
+                        onExport={exportAssistant}
+                        onDelete={deleteAssistant}
+                        onMigrateLocal={selectedAssistant?.isLocalAssistant ? () => setShowLocalMigrateConfirm(true) : undefined}
+                    />
+                </div>
             </div>
 
             <CloseConfirmationDialog

@@ -202,10 +202,9 @@ i18n
                             aria_label: "Feedback per E-Mail senden",
                             label: "Feedback"
                         },
-                        helpbutton: {
-                            help: "Hilfe",
-                            label: "Hilfe & FAQ",
-                            aria_label: "Hilfe und FAQ öffnen"
+                        faqbutton: {
+                            label: "Fragen & Antworten",
+                            aria_label: "Fragen und Antworten öffnen"
                         },
                         theme_selector: {
                             theme_light: "Helles Design",
@@ -912,10 +911,9 @@ i18n
                             aria_label: "Send feedback via email",
                             label: "Feedback"
                         },
-                        helpbutton: {
-                            help: "Help",
-                            label: "Help & FAQ",
-                            aria_label: "Open help and FAQ"
+                        faqbutton: {
+                            label: "FAQ",
+                            aria_label: "Open FAQ"
                         },
                         theme_selector: {
                             theme_light: "Light theme",
@@ -1613,10 +1611,9 @@ i18n
                             aria_label: "Feedback per E-Mail schick'n",
                             label: "Feedback"
                         },
-                        helpbutton: {
-                            help: "Hilfe",
-                            label: "Hilfe & FAQ",
-                            aria_label: "Hilfe und FAQ aufmach'n"
+                        faqbutton: {
+                            label: "Frogn & Antwortn",
+                            aria_label: "Frogn und Antwortn aufmach'n"
                         },
                         theme_selector: {
                             theme_light: "Helles Design",
@@ -2303,10 +2300,9 @@ i18n
                             aria_label: "Envoyer des retours par e-mail",
                             label: "Feedback"
                         },
-                        helpbutton: {
-                            help: "Aide",
-                            label: "Aide & FAQ",
-                            aria_label: "Ouvrir l'aide et la FAQ"
+                        faqbutton: {
+                            label: "Questions et réponses",
+                            aria_label: "Ouvrir les questions et réponses"
                         },
                         theme_selector: {
                             theme_light: "Thème clair",
@@ -2993,10 +2989,9 @@ i18n
                             aria_label: "Надіслати відгук електронною поштою",
                             label: "Відгук"
                         },
-                        helpbutton: {
-                            help: "Допомога",
-                            label: "Допомога та FAQ",
-                            aria_label: "Відкрити допомогу та FAQ"
+                        faqbutton: {
+                            label: "Запитання та відповіді",
+                            aria_label: "Відкрити запитання та відповіді"
                         },
                         theme_selector: {
                             theme_light: "Світла тема",

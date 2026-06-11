@@ -1,8 +1,8 @@
-.helpButton {
+.faqButton {
     color: var(--colorNeutralForeground1) !important;
 }
 
-.helpButton:hover {
+.faqButton:hover {
     background-color: var(--colorNeutralStroke2) !important;
 }
 

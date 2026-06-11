@@ -26,10 +26,13 @@ export interface AssistantCardData {
     description: string;
     subscriptions: number;
     updated?: string | null;
+    lastUsed?: number;
     tags: string[];
     rawData: AssistantResponse | CommunityAssistantSnapshot | Assistant;
     isDeletedSnapshot?: boolean;
     isLocalAssistant?: boolean;
+    isOwnedAssistant?: boolean;
+    isSubscribedAssistant?: boolean;
 }
 
 interface AssistantDetailsSidebarProps {

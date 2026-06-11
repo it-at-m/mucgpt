@@ -20,6 +20,7 @@ import { LanguageSelector } from "../../components/LanguageSelector";
 import { ThemeSelector } from "../../components/ThemeSelector";
 import { FeedbackButton } from "../../components/FeedbackButton";
 import { FaqButton } from "../../components/FaqButton";
+import { IncidentReportButton } from "../../components/IncidentReportButton";
 import { configApi } from "../../api/core-client";
 import { ApiError } from "../../api/fetch-utils";
 import { useGlobalToastContext } from "../../components/GlobalToastHandler/GlobalToastContext";
@@ -54,6 +55,7 @@ const AppShell = ({ config, isLight, languagePreference, onLanguageSelectionChan
     const { t } = useTranslation();
     const location = useLocation();
     const faqUrl = config.faq_url;
+    const incidentReportUrl = config.incident_report_url;
     const [isMobile, setIsMobile] = useState<boolean>(window.innerWidth <= MOBILE_LAYOUT_BREAKPOINT);
     const [mobileSidebarOpen, setMobileSidebarOpen] = useState<boolean>(false);
     const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(() => localStorage.getItem(APP_NAV_COLLAPSED_KEY) === "true");
@@ -110,6 +112,11 @@ const AppShell = ({ config, isLight, languagePreference, onLanguageSelectionChan
                 {faqUrl && (
                     <div className={styles.mobileUtilityRow}>
                         <FaqButton url={faqUrl} label={t("components.faqbutton.label")} />
+                    </div>
+                )}
+                {incidentReportUrl && (
+                    <div className={styles.mobileUtilityRow}>
+                        <IncidentReportButton url={incidentReportUrl} />
                     </div>
                 )}
             </div>

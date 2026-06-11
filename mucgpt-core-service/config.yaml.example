@@ -22,6 +22,7 @@ ASSISTANT_VERSION: "unknown"
 FOOTER_LINK_URL: "https://ki.muenchen.de"
 FOOTER_LABEL: "DAICE"
 FAQ_URL: "https://ki.muenchen.de/"
+INCIDENT_REPORT_URL: "https://ki.muenchen.de/"
 AD2IMAGE_URL: "http://localhost:8084"  # Base URL of the ad2image service
 
 # Backend settings

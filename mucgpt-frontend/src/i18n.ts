@@ -206,6 +206,10 @@ i18n
                             label: "Fragen & Antworten",
                             aria_label: "Fragen und Antworten öffnen"
                         },
+                        incident_report_button: {
+                            label: "Störung melden",
+                            aria_label: "Störung melden"
+                        },
                         theme_selector: {
                             theme_light: "Helles Design",
                             theme_dark: "Dunkles Design",
@@ -898,6 +902,10 @@ i18n
                             label: "FAQ",
                             aria_label: "Open FAQ"
                         },
+                        incident_report_button: {
+                            label: "Report incident",
+                            aria_label: "Report an incident"
+                        },
                         theme_selector: {
                             theme_light: "Light theme",
                             theme_dark: "Dark theme",
@@ -1581,6 +1589,10 @@ i18n
                             label: "Frogn & Antwortn",
                             aria_label: "Frogn und Antwortn aufmach'n"
                         },
+                        incident_report_button: {
+                            label: "Störung melden",
+                            aria_label: "Störung melden"
+                        },
                         theme_selector: {
                             theme_light: "Helles Design",
                             theme_dark: "Dunkles Design",
@@ -2261,6 +2273,10 @@ i18n
                             label: "Questions et réponses",
                             aria_label: "Ouvrir les questions et réponses"
                         },
+                        incident_report_button: {
+                            label: "Signaler un incident",
+                            aria_label: "Signaler un incident"
+                        },
                         theme_selector: {
                             theme_light: "Thème clair",
                             theme_dark: "Thème sombre",
@@ -2940,6 +2956,10 @@ i18n
                         faqbutton: {
                             label: "Запитання та відповіді",
                             aria_label: "Відкрити запитання та відповіді"
+                        },
+                        incident_report_button: {
+                            label: "Повідомити про збій",
+                            aria_label: "Повідомити про збій"
                         },
                         theme_selector: {
                             theme_light: "Світла тема",

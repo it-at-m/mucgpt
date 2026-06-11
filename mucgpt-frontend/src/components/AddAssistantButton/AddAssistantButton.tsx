@@ -1,5 +1,5 @@
 import { Add24Regular } from "@fluentui/react-icons";
-import { Button, Tooltip } from "@fluentui/react-components";
+import { Button } from "@fluentui/react-components";
 
 import { useTranslation } from "react-i18next";
 interface Props {

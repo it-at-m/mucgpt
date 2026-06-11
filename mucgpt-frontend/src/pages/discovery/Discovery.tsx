@@ -1,6 +1,6 @@
 import { type ReactElement, useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Title1, Body1, Text, SearchBox, Dropdown, Option, Button, Tooltip } from "@fluentui/react-components";
+import { Title1, Body1, Text, SearchBox, Dropdown, Option, Button } from "@fluentui/react-components";
 import type { SearchBoxChangeEvent, InputOnChangeData, SelectionEvents, OptionOnSelectData } from "@fluentui/react-components";
 import { Add24Regular, DocumentArrowUpRegular, LibraryRegular, PeopleCommunityRegular, SearchRegular } from "@fluentui/react-icons";
 import { useTranslation } from "react-i18next";

@@ -300,7 +300,7 @@ services:
     security_opt: *security_settings
 
   kreuzberg-full:
-    image: ghcr.io/kreuzberg-dev/kreuzberg:latest
+    image: ghcr.io/kreuzberg-dev/kreuzberg:latest@sha256:095c3d1315edf9c859ef8d026b0ca358377e3d8963d16a486e189a668d09b75e
     ports:
       - "8086:8000"
     environment:

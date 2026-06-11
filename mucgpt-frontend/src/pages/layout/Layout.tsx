@@ -19,7 +19,7 @@ import { UserContextProvider } from "./UserContextProvider";
 import { LanguageSelector } from "../../components/LanguageSelector";
 import { ThemeSelector } from "../../components/ThemeSelector";
 import { FeedbackButton } from "../../components/FeedbackButton";
-import { HelpButton } from "../../components/HelpButton";
+import { FaqButton } from "../../components/FaqButton";
 import { IncidentReportButton } from "../../components/IncidentReportButton";
 import { configApi } from "../../api/core-client";
 import { ApiError } from "../../api/fetch-utils";
@@ -111,7 +111,7 @@ const AppShell = ({ config, isLight, languagePreference, onLanguageSelectionChan
                 </div>
                 {faqUrl && (
                     <div className={styles.mobileUtilityRow}>
-                        <HelpButton url={faqUrl} label={t("components.helpbutton.help")} />
+                        <FaqButton url={faqUrl} label={t("components.faqbutton.label")} />
                     </div>
                 )}
                 {incidentReportUrl && (

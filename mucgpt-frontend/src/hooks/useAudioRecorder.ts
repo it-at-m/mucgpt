@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 export type RecordingState = "idle" | "recording";
 
@@ -167,6 +167,12 @@ export function useAudioRecorder(): UseAudioRecorderReturn {
         audioContextRef.current = null;
         setRecordingState("idle");
     }, []);
+
+    useEffect(() => {
+        return () => {
+            if (recordingState === "recording") stopRecording();
+        };
+    }, [recordingState, stopRecording]);
 
     return { recordingState, startRecording, stopRecording };
 }

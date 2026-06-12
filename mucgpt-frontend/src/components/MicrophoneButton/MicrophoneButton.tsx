@@ -25,11 +25,13 @@ export const MicrophoneButton = ({ onTranscription, onLiveTranscription, onRecor
 
     // Forward final transcript when recording is done
     const lastForwardedRef = useRef("");
+    const prevStatusRef = useRef(status);
     useEffect(() => {
-        if (status === "idle" && transcript && transcript !== lastForwardedRef.current) {
+        if (prevStatusRef.current !== "idle" && status === "idle" && transcript && transcript !== lastForwardedRef.current) {
             lastForwardedRef.current = transcript;
             onTranscription(transcript);
         }
+        prevStatusRef.current = status;
     }, [status, transcript, onTranscription]);
 
     useEffect(() => {

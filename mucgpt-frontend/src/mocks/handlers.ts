@@ -1,5 +1,5 @@
 // mocks/handlers.js
-import { http, HttpResponse, delay } from "msw";
+import { http, HttpResponse, delay, passthrough } from "msw";
 import { ApplicationConfig, AssistantCreateResponse, AssistantUpdateInput } from "../api";
 import {
     buildAssistantCreateResponse,
@@ -127,6 +127,7 @@ const CONFIG_RESPONSE: ApplicationConfig = {
     frontend_version: "0.0.1",
     assistant_version: "0.0.1",
     document_processing_enabled: true,
+    transcription_enabled: true,
     footer_link_url: "https://ki.muenchen.de",
     footer_label: "DAICE",
     faq_url: "https://ki.muenchen.de/",
@@ -384,6 +385,8 @@ async function parseUploadHandler({ request }: { request: Request }) {
 }
 
 export const handlers = [
+    http.all("https://huggingface.co/*", () => passthrough()),
+    http.all("https://cdn-lfs.huggingface.co/*", () => passthrough()),
     http.get("/api/backend/config", () => {
         return HttpResponse.json(CONFIG_RESPONSE);
     }),

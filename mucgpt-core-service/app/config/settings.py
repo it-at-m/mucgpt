@@ -424,6 +424,9 @@ class Settings(BaseSettings):
     KREUZBERG_URL: str = ""
     KREUZBERG_TIMEOUT: float = 120.0
 
+    # Frontend feature flags
+    TRANSCRIPTION_ENABLED: bool = False
+
     # Nested sub-configurations
     SSO: SSOConfig = Field(default_factory=SSOConfig)
     LANGFUSE: LangfuseConfig = Field(default_factory=LangfuseConfig)

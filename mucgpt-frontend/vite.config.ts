@@ -35,8 +35,19 @@ export default defineConfig(({ mode }) => {
                           },
                           workbox: {
                               maximumFileSizeToCacheInBytes: 3000000,
+                              globIgnores: ["**/*.wasm"],
                               navigateFallbackDenylist: [/^\/api\//, /^\/auth\//, /^\/sso\//, /^\/realms\//, /^\/oauth2\//, /^\/login\//, /^\/logout\//],
                               runtimeCaching: [
+                                  {
+                                      urlPattern: /\/assets\/.*\.wasm$/,
+                                      handler: "CacheFirst",
+                                      options: {
+                                          cacheName: "wasm-assets",
+                                          expiration: {
+                                              maxEntries: 10
+                                          }
+                                      }
+                                  },
                                   {
                                       urlPattern: /^\/api\/.*$/,
                                       handler: "NetworkOnly"

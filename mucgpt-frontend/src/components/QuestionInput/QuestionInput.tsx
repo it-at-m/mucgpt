@@ -509,7 +509,6 @@ export const QuestionInput = ({
                                 onTranscription={text => {
                                     const full = recordingBaseRef.current ? `${recordingBaseRef.current} ${text}` : text;
                                     setQuestion(full);
-                                    onTranscription?.(full);
                                 }}
                                 disabled={disabled}
                             />

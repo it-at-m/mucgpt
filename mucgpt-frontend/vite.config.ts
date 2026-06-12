@@ -93,7 +93,12 @@ export default defineConfig(({ mode }) => {
             }
         },
         preview: {
-            port: 4173
+            port: 4173,
+            headers: {
+                "x-frame-options": "SAMEORIGIN", // required to use devtools behind proxy (e.g. API Gateway)
+                "Cross-Origin-Opener-Policy": "same-origin", // required for SharedArrayBuffer (ONNX runtime)
+                "Cross-Origin-Embedder-Policy": "credentialless" // allows anonymous cross-origin fetches (e.g. HuggingFace model downloads)
+            }
         },
         // Add environment variable handling
         define: {

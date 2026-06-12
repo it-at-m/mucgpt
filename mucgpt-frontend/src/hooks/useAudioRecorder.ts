@@ -20,8 +20,55 @@ class PCMProcessor extends AudioWorkletProcessor {
     constructor() {
         super();
         this._frameSize = 512;
+        this._targetSampleRate = 16000;
+        this._sourceSampleRate = sampleRate;
+        this._sourceStep = this._sourceSampleRate / this._targetSampleRate;
+        this._sourceOffset = 0;
+        this._lastSample = 0;
         this._buffer = new Float32Array(this._frameSize);
         this._pointer = 0;
+    }
+
+    _emitSample(sample) {
+        this._buffer[this._pointer] = sample;
+        this._pointer += 1;
+
+        if (this._pointer >= this._frameSize) {
+            const frame = this._buffer.slice();
+            this.port.postMessage(frame, [frame.buffer]);
+            this._pointer = 0;
+        }
+    }
+
+    _emitNativeRate(mono) {
+        let offset = 0;
+        while (offset < mono.length) {
+            const remaining = this._frameSize - this._pointer;
+            const toCopy = Math.min(remaining, mono.length - offset);
+            this._buffer.set(mono.subarray(offset, offset + toCopy), this._pointer);
+            this._pointer += toCopy;
+            offset += toCopy;
+
+            if (this._pointer >= this._frameSize) {
+                const frame = this._buffer.slice();
+                this.port.postMessage(frame, [frame.buffer]);
+                this._pointer = 0;
+            }
+        }
+    }
+
+    _emitResampled(mono) {
+        while (this._sourceOffset < mono.length) {
+            const index = Math.floor(this._sourceOffset);
+            const fraction = this._sourceOffset - index;
+            const current = mono[index] ?? this._lastSample;
+            const next = index + 1 < mono.length ? mono[index + 1] : current;
+            this._emitSample(current + (next - current) * fraction);
+            this._sourceOffset += this._sourceStep;
+        }
+
+        this._sourceOffset -= mono.length;
+        if (mono.length > 0) this._lastSample = mono[mono.length - 1];
     }
 
     process(inputs) {
@@ -40,20 +87,8 @@ class PCMProcessor extends AudioWorkletProcessor {
             }
         }
 
-        let offset = 0;
-        while (offset < mono.length) {
-            const remaining = this._frameSize - this._pointer;
-            const toCopy = Math.min(remaining, mono.length - offset);
-            this._buffer.set(mono.subarray(offset, offset + toCopy), this._pointer);
-            this._pointer += toCopy;
-            offset += toCopy;
-
-            if (this._pointer >= this._frameSize) {
-                const frame = this._buffer.slice();
-                this.port.postMessage(frame, [frame.buffer]);
-                this._pointer = 0;
-            }
-        }
+        if (this._sourceSampleRate === this._targetSampleRate) this._emitNativeRate(mono);
+        else this._emitResampled(mono);
         return true;
     }
 }
@@ -71,11 +106,20 @@ export function useAudioRecorder(): UseAudioRecorderReturn {
         async (onFrame: (frame: Float32Array) => void) => {
             if (recordingState === "recording") return;
 
-            const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+            const stream = await navigator.mediaDevices.getUserMedia({
+                audio: {
+                    sampleRate: 16000,
+                    channelCount: 1,
+                    echoCancellation: true,
+                    noiseSuppression: true,
+                    autoGainControl: true
+                },
+                video: false
+            });
 
-            // Request 16 kHz directly — the browser resamples from the device
-            // rate, so no manual resampling step is needed downstream.
-            const audioCtx = new AudioContext({ sampleRate: 16000 });
+            // Use the browser's native context rate and resample explicitly in the
+            // worklet so VAD and Whisper always receive 16 kHz audio.
+            const audioCtx = new AudioContext();
             const blob = new Blob([PCM_PROCESSOR_CODE], { type: "application/javascript" });
             const url = URL.createObjectURL(blob);
             try {

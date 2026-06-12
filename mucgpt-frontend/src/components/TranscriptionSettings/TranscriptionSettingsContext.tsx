@@ -129,6 +129,7 @@ export const TranscriptionSettingsProvider = (props: React.PropsWithChildren<unk
     const loadingModelIdRef = useRef<string | null>(null);
     const selectedModelIdRef = useRef<string>(selectedModelId);
     const pendingDownloadRef = useRef<{ id: string; resolve: () => void; reject: (err: Error) => void } | null>(null);
+    const pendingReadyRef = useRef<{ id: string; promise: Promise<void>; resolve: () => void; reject: (err: Error) => void } | null>(null);
 
     const { recordingState, startRecording: startAudioRecording, stopRecording } = useAudioRecorder();
 
@@ -214,6 +215,7 @@ export const TranscriptionSettingsProvider = (props: React.PropsWithChildren<unk
                     break;
                 case "ready": {
                     const pending = pendingDownloadRef.current;
+                    const pendingReady = pendingReadyRef.current;
                     if (pending) {
                         loadedModelIdRef.current = pending.id;
                         markDownloaded(pending.id);
@@ -223,8 +225,12 @@ export const TranscriptionSettingsProvider = (props: React.PropsWithChildren<unk
                     } else {
                         // Pre-warm or startRecording load completed — record which
                         // model is live so startRecording skips the redundant load.
-                        loadedModelIdRef.current = loadingModelIdRef.current ?? selectedModelIdRef.current;
+                        loadedModelIdRef.current = pendingReady?.id ?? loadingModelIdRef.current ?? selectedModelIdRef.current;
                         loadingModelIdRef.current = null;
+                    }
+                    if (pendingReady && pendingReady.id === loadedModelIdRef.current) {
+                        pendingReady.resolve();
+                        pendingReadyRef.current = null;
                     }
                     setModelProgress(100);
                     setLoadingModelId(null);
@@ -254,6 +260,10 @@ export const TranscriptionSettingsProvider = (props: React.PropsWithChildren<unk
                         pending.reject(new Error(msg.message));
                         pendingDownloadRef.current = null;
                     }
+                    if (pendingReadyRef.current) {
+                        pendingReadyRef.current.reject(new Error(msg.message));
+                        pendingReadyRef.current = null;
+                    }
                     loadingModelIdRef.current = null;
                     setError(msg.messageKey ? t(msg.messageKey) : msg.message);
                     setStatus("error");
@@ -269,6 +279,10 @@ export const TranscriptionSettingsProvider = (props: React.PropsWithChildren<unk
             if (pending) {
                 pending.reject(new Error(event.message));
                 pendingDownloadRef.current = null;
+            }
+            if (pendingReadyRef.current) {
+                pendingReadyRef.current.reject(new Error(event.message));
+                pendingReadyRef.current = null;
             }
             setError(`Worker error: ${event.message}`);
             setStatus("error");
@@ -295,6 +309,31 @@ export const TranscriptionSettingsProvider = (props: React.PropsWithChildren<unk
         },
         [sendToWorker]
     );
+
+    const ensureSelectedModelLoaded = useCallback(async () => {
+        if (loadedModelIdRef.current === selectedModelId) return;
+
+        const pendingReady = pendingReadyRef.current;
+        if (pendingReady?.id === selectedModelId) {
+            await pendingReady.promise;
+            return;
+        }
+
+        const modelCfg = TRANSCRIPTION_MODELS.find(m => m.model_id === selectedModelId);
+        loadingModelIdRef.current = selectedModelId;
+        setStatus("warming-up");
+
+        let resolveReady!: () => void;
+        let rejectReady!: (err: Error) => void;
+        const promise = new Promise<void>((resolve, reject) => {
+            resolveReady = resolve;
+            rejectReady = reject;
+        });
+        pendingReadyRef.current = { id: selectedModelId, promise, resolve: resolveReady, reject: rejectReady };
+
+        sendToWorker({ type: "load", modelId: selectedModelId, dtype: modelCfg?.dtype, webgpu_only: modelCfg?.webgpu_only, language: languageRef.current });
+        await promise;
+    }, [selectedModelId, sendToWorker]);
 
     const downloadModel = useCallback(
         (modelId: string): Promise<void> => {
@@ -338,18 +377,14 @@ export const TranscriptionSettingsProvider = (props: React.PropsWithChildren<unk
         setError(null);
         setTranscript("");
 
-        // Ensure worker has the model loaded (cache hit resolves instantly).
-        // Pass language here too so the worker is in sync even without a prior set-language message.
-        if (loadedModelIdRef.current !== selectedModelId) {
-            const modelCfg = TRANSCRIPTION_MODELS.find(m => m.model_id === selectedModelId);
-            sendToWorker({ type: "load", modelId: selectedModelId, dtype: modelCfg?.dtype, webgpu_only: modelCfg?.webgpu_only, language: languageRef.current });
-            loadingModelIdRef.current = selectedModelId;
-        }
-
-        // Sync language before frames start arriving
-        sendToWorker({ type: "set-language", language: languageRef.current });
-
         try {
+            // Ensure worker has the model loaded (cache hit resolves instantly).
+            // Pass language here too so the worker is in sync even without a prior set-language message.
+            await ensureSelectedModelLoaded();
+
+            // Sync language before frames start arriving
+            sendToWorker({ type: "set-language", language: languageRef.current });
+
             await startAudioRecording((frame: Float32Array) => {
                 // Transfer ownership of the buffer to avoid a copy on every frame.
                 sendToWorker({ type: "audio-frame", buffer: frame }, [frame.buffer]);
@@ -359,7 +394,7 @@ export const TranscriptionSettingsProvider = (props: React.PropsWithChildren<unk
             setError(err instanceof Error ? err.message : String(err));
             setStatus("error");
         }
-    }, [status, recordingState, enabled, downloadedModels, selectedModelId, startAudioRecording, sendToWorker]);
+    }, [status, recordingState, enabled, downloadedModels, selectedModelId, ensureSelectedModelLoaded, startAudioRecording, sendToWorker]);
 
     const stopAndTranscribe = useCallback(async () => {
         if (recordingState !== "recording") return;

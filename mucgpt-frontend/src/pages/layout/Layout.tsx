@@ -102,9 +102,7 @@ const AppShell = ({ config, isLight, languagePreference, onLanguageSelectionChan
                         label={t("common.language")}
                     />
                 </div>
-                <div className={styles.mobileUtilityRow}>
-                    {config.transcription_enabled ? <TranscriptionSettingsButton /> : null}
-                </div>
+                <div className={styles.mobileUtilityRow}>{config.transcription_enabled ? <TranscriptionSettingsButton /> : null}</div>
                 <div className={styles.mobileUtilityRow}>
                     <ThemeSelector isLight={isLight} onThemeChange={onThemeChange} layout="row" label={t("common.theme")} />
                 </div>

@@ -39,9 +39,17 @@ export const MicrophoneButton = ({ onTranscription, onLiveTranscription, onRecor
     const handleClick = useCallback(async () => {
         if (status === "idle" || status === "error") {
             onRecordingStart?.();
-            await startRecording();
+            try {
+                await startRecording();
+            } catch (error) {
+                console.error("Failed to start recording:", error);
+            }
         } else if (status === "recording") {
-            await stopAndTranscribe();
+            try {
+                await stopAndTranscribe();
+            } catch (error) {
+                console.error("Failed to stop and transcribe recording:", error);
+            }
         }
     }, [status, startRecording, stopAndTranscribe, onRecordingStart]);
 

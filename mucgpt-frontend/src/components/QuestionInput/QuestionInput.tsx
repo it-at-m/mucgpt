@@ -465,9 +465,7 @@ export const QuestionInput = ({
                 <div
                     className={`${styles.questionInputContainer} ${
                         !tools?.tools?.length || !setSelectedTools ? styles.noTools : ""
-                    } ${isDragActive ? styles.dragActive : ""} ${isExpandedInput ? styles.expandedInput : ""} ${
-                        !allowFileUpload ? styles.noUpload : ""
-                    }`}
+                    } ${isDragActive ? styles.dragActive : ""} ${isExpandedInput ? styles.expandedInput : ""} ${!allowFileUpload ? styles.noUpload : ""}`}
                     onDragEnter={allowFileUpload ? handleDragEnter : undefined}
                     onDragOver={allowFileUpload ? handleDragOver : undefined}
                     onDragLeave={allowFileUpload ? handleDragLeave : undefined}
@@ -506,10 +504,15 @@ export const QuestionInput = ({
                                 onRecordingStart={() => {
                                     recordingBaseRef.current = question;
                                 }}
-                                onLiveTranscription={text => setQuestion(recordingBaseRef.current ? `${recordingBaseRef.current} ${text}` : text)}
+                                onLiveTranscription={text => {
+                                    const full = recordingBaseRef.current ? `${recordingBaseRef.current} ${text}` : text;
+                                    setQuestion(full);
+                                    onTranscription(full);
+                                }}
                                 onTranscription={text => {
                                     const full = recordingBaseRef.current ? `${recordingBaseRef.current} ${text}` : text;
                                     setQuestion(full);
+                                    onTranscription(full);
                                 }}
                                 disabled={disabled}
                             />

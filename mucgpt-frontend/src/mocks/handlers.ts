@@ -127,6 +127,7 @@ const CONFIG_RESPONSE: ApplicationConfig = {
     frontend_version: "0.0.1",
     assistant_version: "0.0.1",
     document_processing_enabled: true,
+    transcription_enabled: true,
     footer_link_url: "https://ki.muenchen.de",
     footer_label: "DAICE",
     faq_url: "https://ki.muenchen.de/",

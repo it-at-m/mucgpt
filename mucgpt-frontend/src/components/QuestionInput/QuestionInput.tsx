@@ -55,6 +55,7 @@ export const QuestionInput = ({
     const { t } = useTranslation();
     const config = useConfigContext();
     const allowFileUpload = allowFileUploadProp ?? config.document_processing_enabled;
+    const allowTranscription = config.transcription_enabled;
     const resolvedPlaceholder = placeholder ?? (allowFileUpload ? t("chat.prompt") : t("chat.prompt_no_upload"));
     const textareaRef = useRef<HTMLTextAreaElement | null>(null);
     const sendButtonRef = useRef<HTMLButtonElement | null>(null);
@@ -500,7 +501,7 @@ export const QuestionInput = ({
                         disabled={disabled || isTranscriptionActive}
                     />
                     <div className={styles.questionInputButtons}>
-                        {onTranscription && transcriptionReady && (
+                        {allowTranscription && onTranscription && transcriptionReady && (
                             <MicrophoneButton
                                 onRecordingStart={() => {
                                     recordingBaseRef.current = question;

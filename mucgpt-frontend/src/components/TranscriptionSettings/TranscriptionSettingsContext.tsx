@@ -104,11 +104,16 @@ export const TranscriptionSettingsContext = React.createContext<ITranscriptionSe
 
 export const useTranscription = () => useContext(TranscriptionSettingsContext);
 
-export const TranscriptionSettingsProvider = (props: React.PropsWithChildren<unknown>) => {
+interface TranscriptionSettingsProviderProps {
+    deploymentEnabled?: boolean;
+}
+
+export const TranscriptionSettingsProvider = ({ children, deploymentEnabled = true }: React.PropsWithChildren<TranscriptionSettingsProviderProps>) => {
     const { t, i18n } = useTranslation();
 
     // Persisted settings
     const [enabled, setEnabledState] = useState<boolean>(() => readEnabled());
+    const effectiveEnabled = deploymentEnabled && enabled;
     const [selectedModelId, setSelectedModelIdState] = useState<string>(() => readSelected());
     const [downloadedModels, setDownloadedModels] = useState<string[]>(() => readDownloaded());
 
@@ -192,17 +197,26 @@ export const TranscriptionSettingsProvider = (props: React.PropsWithChildren<unk
     // buffered by the worker. The worker's own guards prevent duplicate loads.
     useEffect(() => {
         if (!workerReady) return;
-        if (!enabled) return;
+        if (!effectiveEnabled) return;
         if (!downloadedModels.includes(selectedModelId)) return;
         if (loadedModelIdRef.current === selectedModelId) return;
         const modelCfg = TRANSCRIPTION_MODELS.find(m => m.model_id === selectedModelId);
         setStatus("warming-up");
         loadingModelIdRef.current = selectedModelId;
         sendToWorker({ type: "load", modelId: selectedModelId, dtype: modelCfg?.dtype, webgpu_only: modelCfg?.webgpu_only, language: languageRef.current });
-    }, [workerReady, enabled, selectedModelId, downloadedModels, sendToWorker]);
+    }, [workerReady, effectiveEnabled, selectedModelId, downloadedModels, sendToWorker]);
 
     // Create worker lazily; terminate on unmount
     useEffect(() => {
+        if (!deploymentEnabled) {
+            workerRef.current?.terminate();
+            workerRef.current = null;
+            setWorkerReady(false);
+            setLoadingModelId(null);
+            setStatus("idle");
+            return;
+        }
+
         const worker = new Worker(new URL("../../workers/transcription.worker.ts", import.meta.url), { type: "module" });
 
         worker.onmessage = (event: MessageEvent<WorkerOutMessage>) => {
@@ -296,7 +310,7 @@ export const TranscriptionSettingsProvider = (props: React.PropsWithChildren<unk
             workerRef.current = null;
             setWorkerReady(false);
         };
-    }, [markDownloaded]);
+    }, [markDownloaded, deploymentEnabled]);
 
     const setEnabled = useCallback((v: boolean) => setEnabledState(v), []);
     const setSelectedModelId = useCallback((id: string) => setSelectedModelIdState(id), []);
@@ -337,6 +351,7 @@ export const TranscriptionSettingsProvider = (props: React.PropsWithChildren<unk
 
     const downloadModel = useCallback(
         (modelId: string): Promise<void> => {
+            if (!deploymentEnabled) return Promise.reject(new Error("Transcription is disabled"));
             if (!workerRef.current) return Promise.reject(new Error("Worker not ready"));
             const prior = pendingDownloadRef.current;
             if (prior) {
@@ -365,12 +380,12 @@ export const TranscriptionSettingsProvider = (props: React.PropsWithChildren<unk
                     });
             });
         },
-        [sendToWorker]
+        [deploymentEnabled, sendToWorker]
     );
 
     const startRecording = useCallback(async () => {
         if (status === "recording" || recordingState === "recording") return;
-        if (!enabled || !downloadedModels.includes(selectedModelId)) {
+        if (!effectiveEnabled || !downloadedModels.includes(selectedModelId)) {
             setError("Transcription model not ready");
             return;
         }
@@ -394,7 +409,7 @@ export const TranscriptionSettingsProvider = (props: React.PropsWithChildren<unk
             setError(err instanceof Error ? err.message : String(err));
             setStatus("error");
         }
-    }, [status, recordingState, enabled, downloadedModels, selectedModelId, ensureSelectedModelLoaded, startAudioRecording, sendToWorker]);
+    }, [status, recordingState, effectiveEnabled, downloadedModels, selectedModelId, ensureSelectedModelLoaded, startAudioRecording, sendToWorker]);
 
     const stopAndTranscribe = useCallback(async () => {
         if (recordingState !== "recording") return;
@@ -410,7 +425,7 @@ export const TranscriptionSettingsProvider = (props: React.PropsWithChildren<unk
             selectedModelId,
             setSelectedModelId,
             downloadedModels,
-            isModelReady: enabled && downloadedModels.includes(selectedModelId),
+            isModelReady: effectiveEnabled && downloadedModels.includes(selectedModelId),
             status,
             modelProgress,
             downloadedBytes,
@@ -426,6 +441,7 @@ export const TranscriptionSettingsProvider = (props: React.PropsWithChildren<unk
         }),
         [
             enabled,
+            effectiveEnabled,
             setEnabled,
             selectedModelId,
             setSelectedModelId,
@@ -445,5 +461,5 @@ export const TranscriptionSettingsProvider = (props: React.PropsWithChildren<unk
         ]
     );
 
-    return <TranscriptionSettingsContext.Provider value={value}>{props.children}</TranscriptionSettingsContext.Provider>;
+    return <TranscriptionSettingsContext.Provider value={value}>{children}</TranscriptionSettingsContext.Provider>;
 };

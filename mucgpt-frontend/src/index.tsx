@@ -23,7 +23,6 @@ import Unauthorized from "./pages/Unauthorized";
 import Discovery from "./pages/discovery/Discovery";
 import Home from "./pages/home/Home";
 import { AssistantEditorPage } from "./components/AssistantDialogs/AssistantEditorPage/AssistantEditorPage";
-import { TranscriptionSettingsProvider } from "./components/TranscriptionSettings/TranscriptionSettingsContext";
 initializeIcons();
 
 async function cleanupServiceWorkerForGatewayBuild() {
@@ -185,9 +184,7 @@ Promise.all([cleanupServiceWorkerForGatewayBuild(), enableMocking()]).then(() =>
                 <LanguageContextProvider>
                     <LLMContextProvider>
                         <FollowUpActionProvider>
-                            <TranscriptionSettingsProvider>
-                                <RouterProvider router={router} />
-                            </TranscriptionSettingsProvider>
+                            <RouterProvider router={router} />
                         </FollowUpActionProvider>
                     </LLMContextProvider>
                 </LanguageContextProvider>

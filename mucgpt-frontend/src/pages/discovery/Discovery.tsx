@@ -25,6 +25,7 @@ import { DiscoveryCard } from "../../components/DiscoveryCard/DiscoveryCard";
 import { DiscoveryCardSkeleton } from "../../components/DiscoveryCard/DiscoveryCardSkeleton";
 import { AssistantDetailsSidebar, AssistantCardData } from "../../components/AssistantDetailsSidebar/AssistantDetailsSidebar";
 import { CloseConfirmationDialog } from "../../components/AssistantDialogs/shared/CloseConfirmationDialog";
+import { useUnifiedHistory } from "../../components/UnifiedHistory";
 import { useDuplicateAssistant } from "./hooks/useDuplicateAssistant";
 import { useMigrateLocalAssistant } from "../../hooks/useMigrateLocalAssistant";
 import { downloadAssistantExport, mapAssistantToExportData, mapVersionToExportData } from "../../utils/assistant-export";
@@ -50,6 +51,7 @@ const Discovery = () => {
     const { t } = useTranslation();
     const navigate = useNavigate();
     const { showError, showSuccess } = useGlobalToastContext();
+    const { refreshHistory: refreshUnifiedHistory } = useUnifiedHistory();
 
     const [allAssistants, setAllAssistants] = useState<AssistantCardData[]>([]);
     const [yoursAssistants, setYoursAssistants] = useState<AssistantCardData[]>([]);
@@ -471,6 +473,7 @@ const Discovery = () => {
             setAllAssistants(prev => prev.filter((a: AssistantCardData) => a.id !== selectedAssistant.id));
             setYoursAssistants(prev => prev.filter((a: AssistantCardData) => a.id !== selectedAssistant.id));
             setSubscribedAssistants(prev => prev.filter((a: AssistantCardData) => a.id !== selectedAssistant.id));
+            refreshUnifiedHistory();
 
             if (closeTimerRef.current !== null) {
                 clearTimeout(closeTimerRef.current);
@@ -499,6 +502,7 @@ const Discovery = () => {
             );
             setUserSubscriptionIds(prev => new Set([...prev].filter(id => id !== selectedAssistant.id)));
             setSubscribedAssistants(prev => prev.filter((a: AssistantCardData) => a.id !== selectedAssistant.id));
+            refreshUnifiedHistory();
 
             if (closeTimerRef.current !== null) {
                 clearTimeout(closeTimerRef.current);

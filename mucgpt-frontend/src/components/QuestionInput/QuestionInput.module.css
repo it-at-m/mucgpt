@@ -41,6 +41,7 @@
     background: var(--colorNeutralBackground3);
     outline: 1px solid var(--colorNeutralStroke1);
     width: 100%;
+    min-height: 52px;
     padding: 4px 4px 4px 8px;
     display: grid;
     grid-template-columns: auto minmax(0, 1fr) auto;
@@ -241,6 +242,7 @@
 
     .questionInputContainer {
         background: var(--colorNeutralBackground3);
+        min-height: 52px;
         padding: 4px 4px 4px 8px;
         border-radius: var(--borderRadiusLarge);
     }

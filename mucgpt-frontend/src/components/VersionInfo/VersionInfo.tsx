@@ -1,4 +1,4 @@
-import { Badge, Popover, PopoverSurface, PopoverTrigger, Tooltip } from "@fluentui/react-components";
+import { Badge, Button, Popover, PopoverSurface, PopoverTrigger, Tooltip } from "@fluentui/react-components";
 import { Info24Regular } from "@fluentui/react-icons";
 import styles from "./VersionInfo.module.css";
 import { useTranslation } from "react-i18next";
@@ -44,14 +44,14 @@ export const VersionInfo = (props: VersionInfoProps) => {
     );
 
     const versionTrigger = isMenuLayout ? (
-        <button type="button" className={styles.versionMenuButton} aria-label={`${versionText} ${versionLabel}`}>
+        <Button appearance="subtle" className={styles.versionMenuButton} aria-label={`${versionText} ${versionLabel}`}>
             <span className={styles.versionMenuIcon} aria-hidden="true">
                 <Info24Regular />
             </span>
             <span className={styles.versionMenuText}>
                 {versionText} {versionLabel}
             </span>
-        </button>
+        </Button>
     ) : (
         <Badge appearance="ghost" color="subtle" shape="circular" tabIndex={0} className={styles.versionBadge}>
             {versionLabel}

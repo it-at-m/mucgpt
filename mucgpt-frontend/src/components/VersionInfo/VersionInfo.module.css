@@ -17,7 +17,7 @@
     display: flex;
     align-items: center;
     justify-content: flex-start;
-    gap: 8px;
+    gap: 10px;
     width: 100%;
     min-height: 34px;
     box-sizing: border-box;
@@ -27,7 +27,7 @@
     background-color: transparent;
     color: var(--colorNeutralForeground1);
     font: inherit;
-    font-weight: 600;
+    font-weight: 500;
     text-align: left;
     cursor: pointer;
     transition:
@@ -43,6 +43,14 @@
 .versionMenuButton:focus-visible {
     outline: 2px solid var(--colorBrandStroke1);
     outline-offset: 2px;
+}
+
+.versionMenuButton :global(.fui-Button__label) {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    min-width: 0;
 }
 
 .versionMenuIcon {

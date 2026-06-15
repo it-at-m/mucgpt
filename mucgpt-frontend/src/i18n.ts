@@ -191,6 +191,7 @@ i18n
                         },
                         terms_of_use: {
                             label: "Nutzungsbedingungen",
+                            acceptance_required: "Nutzungsbedingungen (Zustimmung erforderlich)",
                             accept: "Zustimmen"
                         },
                         versioninfo: {
@@ -887,6 +888,7 @@ i18n
                         },
                         terms_of_use: {
                             label: "Terms of use",
+                            acceptance_required: "Terms of use (acceptance required)",
                             accept: "Accept"
                         },
                         versioninfo: {
@@ -1574,6 +1576,7 @@ i18n
                         },
                         terms_of_use: {
                             label: "Nutzungsbedingunga",
+                            acceptance_required: "Nutzungsbedingunga (Zustimmung erforderlich)",
                             accept: "Zustimm'n"
                         },
                         versioninfo: {
@@ -2258,6 +2261,7 @@ i18n
                         },
                         terms_of_use: {
                             label: "Conditions d'utilisation",
+                            acceptance_required: "Conditions d'utilisation (acceptation requise)",
                             accept: "Accepter"
                         },
                         versioninfo: {
@@ -2942,6 +2946,7 @@ i18n
                         },
                         terms_of_use: {
                             label: "Умови використання",
+                            acceptance_required: "Умови використання (потрібне прийняття)",
                             accept: "Прийняти"
                         },
                         versioninfo: {

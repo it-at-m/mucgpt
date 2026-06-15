@@ -22,10 +22,14 @@ export const TermsOfUseDialog = ({ defaultOpen, onAccept, showTrigger = true, tr
     const [open, setOpen] = useState<boolean>(defaultOpen);
     const trigger = showTrigger ? (
         <DialogTrigger disableButtonEnhancement>
-            <div className={`${styles.triggerContainer}${triggerClassName ? ` ${triggerClassName}` : ""}`}>
+            <Button
+                appearance="transparent"
+                className={`${styles.triggerContainer}${triggerClassName ? ` ${triggerClassName}` : ""}`}
+                onClick={() => setOpen(true)}
+            >
                 <DocumentBulletListMultiple24Regular className={styles.termsIcon} />
                 <span className={styles.termsText}>{t("components.terms_of_use.label", "Nutzungsbedingungen")}</span>
-            </div>
+            </Button>
         </DialogTrigger>
     ) : (
         <></>
@@ -38,7 +42,9 @@ export const TermsOfUseDialog = ({ defaultOpen, onAccept, showTrigger = true, tr
                 <DialogSurface className={styles.dialog}>
                     <DialogBody className={styles.dialogContent}>
                         <DialogTitle>
-                            {requireAcceptance ? "Nutzungsbedingungen (Zustimmung erforderlich)" : t("components.terms_of_use.label", "Nutzungsbedingungen")}
+                            {requireAcceptance
+                                ? t("components.terms_of_use.acceptance_required", "Nutzungsbedingungen (Zustimmung erforderlich)")
+                                : t("components.terms_of_use.label", "Nutzungsbedingungen")}
                         </DialogTitle>
                         <DialogContent>
                             <ul>

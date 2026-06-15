@@ -19,11 +19,11 @@
     justify-content: flex-start;
     gap: 8px;
     width: 100%;
-    min-height: 36px;
+    min-height: 34px;
     box-sizing: border-box;
-    padding: 0 8px;
+    padding: 0 14px;
     border: 0;
-    border-radius: 10px;
+    border-radius: 0;
     background-color: transparent;
     color: var(--colorNeutralForeground1);
     font: inherit;
@@ -32,14 +32,12 @@
     cursor: pointer;
     transition:
         background-color 120ms ease,
-        color 120ms ease,
-        transform 180ms cubic-bezier(0.22, 1, 0.36, 1);
+        color 120ms ease;
 }
 
 .versionMenuButton:hover {
     color: var(--colorNeutralForeground1);
     background-color: var(--colorNeutralStroke2);
-    transform: translateX(4px);
 }
 
 .versionMenuButton:focus-visible {
@@ -71,8 +69,8 @@
 }
 
 .containerMenu .versionBadge {
-    padding-left: 8px;
-    padding-right: 8px;
+    padding-left: 14px;
+    padding-right: 14px;
     background-color: transparent !important;
     color: var(--colorNeutralForeground2) !important;
 }

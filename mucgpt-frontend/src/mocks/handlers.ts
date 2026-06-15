@@ -139,9 +139,11 @@ const DYNAMIC_ASSISTANTS: AssistantCreateResponse[] = buildAssistantList(6);
 const MOCK_SUBSCRIPTION_COUNTS = [10350, 2500, 1400, 980, 620, 410, 275, 190, 135, 88, 42, 17];
 
 function getMockSubscriptionCount(assistantId: string): number {
-    const index = DYNAMIC_ASSISTANTS.findIndex(assistant => assistant.id === assistantId);
-    if (index === -1) return 0;
-    return MOCK_SUBSCRIPTION_COUNTS[index] ?? Math.max(1, DYNAMIC_ASSISTANTS.length - index) * 3;
+    const exists = DYNAMIC_ASSISTANTS.some(assistant => assistant.id === assistantId);
+    if (!exists) return 0;
+
+    const stableIndex = Array.from(assistantId).reduce((sum, char) => sum + char.charCodeAt(0), 0) % MOCK_SUBSCRIPTION_COUNTS.length;
+    return MOCK_SUBSCRIPTION_COUNTS[stableIndex];
 }
 
 function withMockSubscriptionCount(assistant: AssistantCreateResponse) {

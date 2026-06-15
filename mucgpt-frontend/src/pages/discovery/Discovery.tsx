@@ -493,8 +493,6 @@ const Discovery = () => {
 
         try {
             await unsubscribeFromAssistantApi(selectedAssistant.id);
-            await assistantStorageService.deleteChatsForAssistant(selectedAssistant.id);
-            await communityAssistantStorageService.deleteConfigForAssistant(selectedAssistant.id);
 
             showSuccess(
                 t("components.community_assistants.unsubscribe_success_title"),
@@ -509,6 +507,13 @@ const Discovery = () => {
             }
             setIsDrawerOpen(false);
             closeTimerRef.current = setTimeout(() => setSelectedAssistant(null), 300);
+
+            try {
+                await assistantStorageService.deleteChatsForAssistant(selectedAssistant.id);
+                await communityAssistantStorageService.deleteConfigForAssistant(selectedAssistant.id);
+            } catch (cleanupError) {
+                console.error("Failed to clean up local assistant data after unsubscribe:", cleanupError);
+            }
         } catch (err) {
             console.error("Failed to unsubscribe from assistant:", err);
             showError(t("components.community_assistants.unsubscribe_failed_title"), t("components.community_assistants.unsubscribe_failed_message"));

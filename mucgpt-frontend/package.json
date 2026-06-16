@@ -60,6 +60,9 @@
         ]
     },
     "name": "mucgpt",
+    "overrides": {
+        "esbuild": "0.28.1"
+    },
     "private": true,
     "scripts": {
         "build": "tsc && vite build --outDir dist ",

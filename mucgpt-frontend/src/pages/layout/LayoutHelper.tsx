@@ -33,6 +33,23 @@ export const enum STORAGE_KEYS {
     SELECTED_TOOLS = "SELECTED_TOOLS"
 }
 
+const TERMS_OF_USE_REMINDER_INTERVAL_DAYS = 14;
+const TERMS_OF_USE_REMINDER_INTERVAL_MS = TERMS_OF_USE_REMINDER_INTERVAL_DAYS * 24 * 60 * 60 * 1000;
+
+export const hasAcceptedTermsOfUseRecently = (now = Date.now()): boolean => {
+    const acceptedAt = Number(localStorage.getItem(STORAGE_KEYS.TERMS_OF_USE_READ));
+    if (!Number.isFinite(acceptedAt)) {
+        return false;
+    }
+
+    const age = now - acceptedAt;
+    return age >= 0 && age < TERMS_OF_USE_REMINDER_INTERVAL_MS;
+};
+
+export const recordTermsOfUseAccepted = (date = new Date()) => {
+    localStorage.setItem(STORAGE_KEYS.TERMS_OF_USE_READ, String(date.getTime()));
+};
+
 const fontSizeTokenKeys = [
     "fontSizeBase100",
     "fontSizeBase200",

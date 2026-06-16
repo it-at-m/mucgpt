@@ -19,7 +19,7 @@ import { TermsOfUseDialog } from "../../components/TermsOfUseDialog";
 import { VersionInfo } from "../../components/VersionInfo/VersionInfo";
 import { ConfigContext } from "../../context/ConfigContext";
 import { UploadedData } from "../../components/ContextManagerDialog/ContextManagerDialog";
-import { STORAGE_KEYS } from "../layout/LayoutHelper";
+import { STORAGE_KEYS, recordTermsOfUseAccepted } from "../layout/LayoutHelper";
 
 interface HomeAssistant {
     id: string;
@@ -33,10 +33,6 @@ type HomeMode = "recommended" | "recent";
 
 const MAX_CARDS = 5;
 const MIN_RECENT_FOR_DEFAULT = 1;
-
-const formatDate = (date: Date) => {
-    return date.getDate() + "-" + (date.getMonth() + 1) + "-" + date.getFullYear();
-};
 
 function parseStoredStringArray(value: unknown): string[] {
     if (!Array.isArray(value)) {
@@ -269,7 +265,7 @@ const Home = () => {
     };
 
     const onAcceptTermsOfUse = () => {
-        localStorage.setItem(STORAGE_KEYS.TERMS_OF_USE_READ, formatDate(new Date()));
+        recordTermsOfUseAccepted();
         if (config && localStorage.getItem(STORAGE_KEYS.VERSION_UPDATE_SEEN) !== config.frontend_version) {
             localStorage.setItem(STORAGE_KEYS.VERSION_UPDATE_SEEN, config.frontend_version);
             navigate("/version");

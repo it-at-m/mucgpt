@@ -11,7 +11,15 @@ import logo_black from "../../assets/edelweiss_pride.svg";
 import { DEFAULTLANG, LanguageContext } from "../../components/LanguageSelector/LanguageContextProvider";
 import { TermsOfUseDialog } from "../../components/TermsOfUseDialog";
 import { ApplicationConfig } from "../../api";
-import { STORAGE_KEYS, createAppCssVars, createFluentTheme, createScaledTypographyTheme, getAppTokens } from "./LayoutHelper";
+import {
+    STORAGE_KEYS,
+    createAppCssVars,
+    createFluentTheme,
+    createScaledTypographyTheme,
+    getAppTokens,
+    hasAcceptedTermsOfUseRecently,
+    recordTermsOfUseAccepted
+} from "./LayoutHelper";
 import { DEFAULTLLM, LLMContext } from "../../components/LLMSelector/LLMContextProvider";
 import { LightContext } from "./LightContext";
 import { DEFAULT_APP_CONFIG } from "../../constants";
@@ -35,11 +43,6 @@ import { EdelweissSpinner } from "../../components/EdelweissSpinner";
 
 const APP_NAV_COLLAPSED_KEY = "APP_NAV_COLLAPSED";
 const MOBILE_LAYOUT_BREAKPOINT = 640;
-
-const formatDate = (date: Date) => {
-    const formatted_date = date.getDate() + "-" + (date.getMonth() + 1) + "-" + date.getFullYear();
-    return formatted_date;
-};
 
 interface AppShellProps {
     config: ApplicationConfig;
@@ -224,7 +227,7 @@ export const Layout = () => {
     const [isUnauthorized, setIsUnauthorized] = useState<boolean>(false);
     const [unauthorizedRedirectUrl, setUnauthorizedRedirectUrl] = useState<string | undefined>(undefined);
 
-    const termsOfUseRead = localStorage.getItem(STORAGE_KEYS.TERMS_OF_USE_READ) === formatDate(new Date());
+    const termsOfUseRead = hasAcceptedTermsOfUseRecently();
     const [languagePreference, setLanguagePreference] = useState<string>(() => localStorage.getItem(STORAGE_KEYS.SETTINGS_LANGUAGE) || DEFAULTLANG);
     const [llmPreference] = useState<string>(() => localStorage.getItem(STORAGE_KEYS.SETTINGS_LLM) || config.models?.[0]?.llm_name || DEFAULTLLM);
 
@@ -289,7 +292,7 @@ export const Layout = () => {
     }, [i18n, languagePreference, llmPreference, setAvailableLLMs, setLLM, showError, t]);
 
     const onAcceptTermsOfUse = useCallback(() => {
-        localStorage.setItem(STORAGE_KEYS.TERMS_OF_USE_READ, formatDate(new Date()));
+        recordTermsOfUseAccepted();
         if (localStorage.getItem(STORAGE_KEYS.VERSION_UPDATE_SEEN) !== config.frontend_version) {
             localStorage.setItem(STORAGE_KEYS.VERSION_UPDATE_SEEN, config.frontend_version);
             navigate("version");

@@ -1,61 +1,95 @@
 .starterPromptNavList {
     list-style: none;
-    padding-left: 0;
-    width: 100%;
-    display: grid;
+    margin: 0 auto 4px;
+    width: min(100%, 980px);
     display: flex;
     flex-wrap: wrap;
-    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-    gap: 10px;
+    align-items: flex-start;
     justify-content: center;
+    gap: 10px;
     padding: 0 20px;
 }
 
+.starterPromptNavList > li {
+    display: flex;
+    flex: 1 1 260px;
+    max-width: 320px;
+    min-width: 0;
+}
+
 .starterPrompt {
+    width: 100%;
+    min-width: 0;
     text-align: left;
     overflow: hidden;
     height: auto;
-    min-height: 120px;
+    min-height: 52px;
     border-radius: 8px;
     text-decoration: none;
-    opacity: 0.9;
-    background: var(--primaryContainer);
-    border: 1px solid var(--outline);
+    background: var(--colorNeutralBackground2);
+    border: 1px solid var(--colorNeutralStroke1);
     display: flex;
     flex-direction: column;
-    padding: 16px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    transition: all 0.2s ease;
+    align-items: flex-start;
+    justify-content: flex-start;
+    padding: 10px 14px;
+    box-shadow: none;
+    transition:
+        background-color 160ms ease,
+        border-color 160ms ease,
+        box-shadow 160ms ease,
+        transform 160ms ease;
     cursor: pointer;
 }
 
+.starterPrompt :global(.fui-Button__content) {
+    display: block;
+    width: 100%;
+    min-width: 0;
+    text-align: left;
+}
+
 .starterPrompt:hover {
-    opacity: 1;
-    box-shadow:
-        0px 8px 16px rgba(0, 0, 0, 0.14),
-        0px 0px 2px rgba(0, 0, 0, 0.12);
-    outline: 2px solid var(--colorNeutralForeground3Selected);
-    transform: translateY(-2px);
+    background: var(--colorNeutralBackground2Hover);
+    border-color: var(--colorNeutralStroke1Hover);
+    box-shadow: var(--shadow4);
+    transform: translateY(-1px);
 }
 
 .starterPromptText {
     margin: 0;
-    flex: 1;
     font-size: var(--fontSizeBase400);
     color: var(--colorNeutralForeground2);
     line-height: 1.4;
+    white-space: normal;
     overflow: hidden;
     display: -webkit-box;
     -webkit-line-clamp: 4;
     line-clamp: 4;
     -webkit-box-orient: vertical;
-    word-break: break-word;
+    overflow-wrap: anywhere;
+    hyphens: auto;
 }
 
 @media only screen and (max-height: 780px) {
+    .starterPrompt {
+        min-height: 48px;
+        padding-block: 10px;
+    }
+
     .starterPromptText {
         font-size: var(--fontSizeBase300);
         -webkit-line-clamp: 3;
         line-clamp: 3;
+    }
+}
+
+@media only screen and (max-width: 520px) {
+    .starterPromptNavList {
+        padding-inline: 12px;
+    }
+
+    .starterPromptNavList > li {
+        max-width: none;
     }
 }

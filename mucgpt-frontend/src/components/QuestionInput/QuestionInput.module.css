@@ -3,14 +3,14 @@
     flex-direction: column;
     gap: 0;
     width: 100%;
-    max-width: 60%;
+    max-width: var(--chatContentWidth, min(60%, 1000px));
     margin-inline: auto;
     min-width: 0;
 }
 
 @media (max-width: 1200px) {
     .questionInputWrapper {
-        max-width: 80%;
+        max-width: var(--chatContentWidth, min(80%, 1000px));
     }
 }
 
@@ -190,7 +190,7 @@
 
 @media (max-width: 768px) {
     .questionInputWrapper {
-        max-width: 90%;
+        max-width: var(--chatContentWidth, min(90%, 1000px));
     }
 
     .questionInputContainer {

@@ -49,72 +49,68 @@ export const Answer = ({ answer, onRegenerateResponseClicked, onFollowUpActionSe
     }, [answer.answer]); // Run this effect only when the message changes
 
     return (
-        <Stack className={styles.answerContainer} verticalAlign="space-between">
-            <Stack.Item>
-                <Stack horizontal horizontalAlign="space-between">
-                    <AnswerIcon aria-hidden />
-                    <div>
-                        <Tooltip content={t("components.answer.copy")} relationship="description" positioning={{ target: ref }}>
-                            <Button
-                                ref={setRef}
-                                appearance="subtle"
-                                aria-label={t("components.answer.copy")}
-                                icon={
-                                    !copied ? (
-                                        <Copy24Regular className={styles.iconRightMargin} />
-                                    ) : (
-                                        <CheckmarkSquare24Regular className={styles.iconRightMargin} />
-                                    )
-                                }
-                                size="large"
-                                onClick={() => {
-                                    oncopy();
-                                }}
-                            ></Button>
-                        </Tooltip>
-
-                        <Tooltip content={t("components.answer.unformat")} relationship="description" positioning="above">
-                            <Button
-                                appearance="subtle"
-                                aria-label={t("components.answer.unformat")}
-                                icon={<ContentView24Regular className={styles.iconRightMargin} />}
-                                onClick={() => setFormatted(!formatted)}
-                                size="large"
-                            ></Button>
-                        </Tooltip>
-
-                        {onRegenerateResponseClicked && (
-                            <Tooltip content={t("components.answer.regenerate")} relationship="description" positioning="above">
-                                <Button
-                                    appearance="subtle"
-                                    aria-label={t("components.answer.regenerate")}
-                                    icon={<ArrowSync24Regular className={styles.iconRightMargin} />}
-                                    onClick={() => onRegenerateResponseClicked()}
-                                    size="large"
-                                ></Button>
-                            </Tooltip>
-                        )}
-                    </div>
-                </Stack>
-            </Stack.Item>
-
-            <Stack.Item className={styles.growItem} grow>
-                {formatted && (
-                    <div className={styles.answerText}>
-                        <MarkdownRenderer>{processedText}</MarkdownRenderer>
-                    </div>
-                )}
-                {!formatted && (
-                    <div className={styles.unformattedAnswer} tabIndex={0}>
-                        {processedText}
-                    </div>
-                )}
-            </Stack.Item>
-            {onRegenerateResponseClicked && onFollowUpActionSend && (
+        <div className={styles.answerWithActions}>
+            <Stack className={styles.answerContainer} verticalAlign="space-between">
                 <Stack.Item>
-                    <FollowUpActionList onSend={prompt => onFollowUpActionSend(prompt)} />
+                    <Stack horizontal>
+                        <AnswerIcon aria-hidden />
+                    </Stack>
                 </Stack.Item>
+
+                <Stack.Item className={styles.growItem} grow>
+                    {formatted && (
+                        <div className={styles.answerText}>
+                            <MarkdownRenderer>{processedText}</MarkdownRenderer>
+                        </div>
+                    )}
+                    {!formatted && (
+                        <div className={styles.unformattedAnswer} tabIndex={0}>
+                            {processedText}
+                        </div>
+                    )}
+                </Stack.Item>
+            </Stack>
+            <div className={styles.answerActionsBelow}>
+                <Tooltip content={t("components.answer.copy")} relationship="description" positioning={{ target: ref }}>
+                    <Button
+                        ref={setRef}
+                        appearance="subtle"
+                        aria-label={t("components.answer.copy")}
+                        icon={!copied ? <Copy24Regular className={styles.iconRightMargin} /> : <CheckmarkSquare24Regular className={styles.iconRightMargin} />}
+                        size="small"
+                        onClick={() => {
+                            oncopy();
+                        }}
+                    ></Button>
+                </Tooltip>
+
+                <Tooltip content={t("components.answer.unformat")} relationship="description" positioning="above">
+                    <Button
+                        appearance="subtle"
+                        aria-label={t("components.answer.unformat")}
+                        icon={<ContentView24Regular className={styles.iconRightMargin} />}
+                        onClick={() => setFormatted(!formatted)}
+                        size="small"
+                    ></Button>
+                </Tooltip>
+
+                {onRegenerateResponseClicked && (
+                    <Tooltip content={t("components.answer.regenerate")} relationship="description" positioning="above">
+                        <Button
+                            appearance="subtle"
+                            aria-label={t("components.answer.regenerate")}
+                            icon={<ArrowSync24Regular className={styles.iconRightMargin} />}
+                            onClick={() => onRegenerateResponseClicked()}
+                            size="small"
+                        ></Button>
+                    </Tooltip>
+                )}
+            </div>
+            {onRegenerateResponseClicked && onFollowUpActionSend && (
+                <div className={styles.followUpActionsBelow}>
+                    <FollowUpActionList onSend={prompt => onFollowUpActionSend(prompt)} />
+                </div>
             )}
-        </Stack>
+        </div>
     );
 };

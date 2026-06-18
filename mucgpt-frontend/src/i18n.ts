@@ -190,12 +190,13 @@ i18n
                             remove_department: "Abteilung {{name}} entfernen"
                         },
                         terms_of_use: {
-                            tooltip: "Nutzungsbedingungen anzeigen",
                             label: "Nutzungsbedingungen",
+                            acceptance_required: "Nutzungsbedingungen (Zustimmung erforderlich)",
                             accept: "Zustimmen"
                         },
                         versioninfo: {
                             label: "Version",
+                            details: "Versionsdetails",
                             whats_new: "Was gibt's neues?"
                         },
                         feedback: {
@@ -911,12 +912,13 @@ i18n
                             remove_department: "Remove department {{name}}"
                         },
                         terms_of_use: {
-                            tooltip: "Show terms of use",
                             label: "Terms of use",
+                            acceptance_required: "Terms of use (acceptance required)",
                             accept: "Accept"
                         },
                         versioninfo: {
                             label: "Version",
+                            details: "Version details",
                             whats_new: "What's new?"
                         },
                         feedback: {
@@ -1623,12 +1625,13 @@ i18n
                             remove_department: "Abteilung {{name}} wecka"
                         },
                         terms_of_use: {
-                            tooltip: "Nutzungsbedingunga zeig'n",
                             label: "Nutzungsbedingunga",
+                            acceptance_required: "Nutzungsbedingunga (Zustimmung erforderlich)",
                             accept: "Zustimm'n"
                         },
                         versioninfo: {
                             label: "Version",
+                            details: "Versionsdetails",
                             whats_new: "Wos gibt's Nei's?"
                         },
                         feedback: {
@@ -2331,12 +2334,13 @@ i18n
                             remove_department: "Supprimer le département {{name}}"
                         },
                         terms_of_use: {
-                            tooltip: "Afficher les conditions d'utilisation",
                             label: "Conditions d'utilisation",
+                            acceptance_required: "Conditions d'utilisation (acceptation requise)",
                             accept: "Accepter"
                         },
                         versioninfo: {
                             label: "Version",
+                            details: "Détails de version",
                             whats_new: "Quoi de neuf ?"
                         },
                         feedback: {
@@ -3032,12 +3036,13 @@ i18n
                             remove_department: "Видалити відділ {{name}}"
                         },
                         terms_of_use: {
-                            tooltip: "Показати умови використання",
                             label: "Умови використання",
+                            acceptance_required: "Умови використання (потрібне прийняття)",
                             accept: "Прийняти"
                         },
                         versioninfo: {
                             label: "Версія",
+                            details: "Деталі версії",
                             whats_new: "Що нового?"
                         },
                         feedback: {

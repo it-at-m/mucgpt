@@ -34,6 +34,7 @@ interface UseDiscoveryAssistantListsResult {
     hasHiddenMyAssistants: boolean;
     communityAssistants: AssistantCardData[];
     removeYoursAssistant: (assistantId: string) => void;
+    removeSubscribedAssistant: (assistantId: string) => void;
     removeAssistantFromLists: (assistantId: string) => void;
 }
 
@@ -313,6 +314,10 @@ export const useDiscoveryAssistantLists = ({
         setYoursAssistants(prev => prev.filter((a: AssistantCardData) => a.id !== assistantId));
     }, []);
 
+    const removeSubscribedAssistant = useCallback((assistantId: string) => {
+        setSubscribedAssistants(prev => prev.filter((a: AssistantCardData) => a.id !== assistantId));
+    }, []);
+
     const removeAssistantFromLists = useCallback((assistantId: string) => {
         setAllAssistants(prev => prev.filter((a: AssistantCardData) => a.id !== assistantId));
         setYoursAssistants(prev => prev.filter((a: AssistantCardData) => a.id !== assistantId));
@@ -337,6 +342,7 @@ export const useDiscoveryAssistantLists = ({
         hasHiddenMyAssistants,
         communityAssistants,
         removeYoursAssistant,
+        removeSubscribedAssistant,
         removeAssistantFromLists
     };
 };

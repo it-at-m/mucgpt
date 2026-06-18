@@ -6,7 +6,7 @@ import { Add24Regular, DocumentArrowUpRegular, LibraryRegular, PeopleCommunityRe
 import { useTranslation } from "react-i18next";
 
 import styles from "./Discovery.module.css";
-import { getCommunityAssistantApi, deleteCommunityAssistantApi, createCommunityAssistantApi } from "../../api/assistant-client";
+import { getCommunityAssistantApi, deleteCommunityAssistantApi, createCommunityAssistantApi, unsubscribeFromAssistantApi } from "../../api/assistant-client";
 import { Assistant, AssistantResponse, CommunityAssistantSnapshot } from "../../api/models";
 import { AddAssistantButton } from "../../components/AddAssistantButton/AddAssistantButton";
 import { AssistantStorageService } from "../../service/assistantstorage";
@@ -18,6 +18,7 @@ import type { DiscoveryCardBadge } from "../../components/DiscoveryCard/Discover
 import { DiscoveryCardSkeleton } from "../../components/DiscoveryCard/DiscoveryCardSkeleton";
 import { AssistantDetailsSidebar, AssistantCardData } from "../../components/AssistantDetailsSidebar/AssistantDetailsSidebar";
 import { CloseConfirmationDialog } from "../../components/AssistantDialogs/shared/CloseConfirmationDialog";
+import { useUnifiedHistory } from "../../components/UnifiedHistory";
 import { useDuplicateAssistant } from "./hooks/useDuplicateAssistant";
 import { useDiscoveryAssistantLists } from "./hooks/useDiscoveryAssistantLists";
 import { useMigrateLocalAssistant } from "../../hooks/useMigrateLocalAssistant";
@@ -48,10 +49,12 @@ const Discovery = () => {
     const { t } = useTranslation();
     const navigate = useNavigate();
     const { showError, showSuccess } = useGlobalToastContext();
+    const { refreshHistory: refreshUnifiedHistory } = useUnifiedHistory();
 
     const [isDrawerOpen, setIsDrawerOpen] = useState(false);
     const [selectedAssistant, setSelectedAssistant] = useState<AssistantCardData | null>(null);
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+    const [showUnsubscribeConfirm, setShowUnsubscribeConfirm] = useState(false);
     const {
         isLoading,
         searchText,
@@ -70,6 +73,7 @@ const Discovery = () => {
         hasHiddenMyAssistants,
         communityAssistants,
         removeYoursAssistant,
+        removeSubscribedAssistant,
         removeAssistantFromLists
     } = useDiscoveryAssistantLists({ assistantStorageService, communityAssistantStorageService });
     const {
@@ -346,6 +350,12 @@ const Discovery = () => {
         }
     };
 
+    const unsubscribeAssistant = () => {
+        if (selectedAssistant) {
+            setShowUnsubscribeConfirm(true);
+        }
+    };
+
     const performLocalMigration = async () => {
         if (!selectedAssistant?.isLocalAssistant) return;
         await performMigration(selectedAssistant.rawData as Assistant, selectedAssistant.id, selectedAssistant.title, () => {
@@ -370,12 +380,39 @@ const Discovery = () => {
                 t("components.assistant_chat.delete_assistant_success_message", { title: selectedAssistant.title })
             );
             removeAssistantFromLists(selectedAssistant.id);
+            refreshUnifiedHistory();
             closeDrawerAndClearSelection();
         } catch (err) {
             showError(
                 t("components.assistant_chat.delete_assistant_failed"),
                 err instanceof Error ? err.message : t("components.assistant_chat.delete_assistant_failed_message")
             );
+        }
+    };
+
+    const performUnsubscribe = async () => {
+        if (!selectedAssistant) return;
+
+        try {
+            await unsubscribeFromAssistantApi(selectedAssistant.id);
+
+            showSuccess(
+                t("components.community_assistants.unsubscribe_success_title"),
+                t("components.community_assistants.unsubscribe_success_message", { title: selectedAssistant.title })
+            );
+            removeSubscribedAssistant(selectedAssistant.id);
+            refreshUnifiedHistory();
+            closeDrawerAndClearSelection();
+
+            try {
+                await assistantStorageService.deleteChatsForAssistant(selectedAssistant.id);
+                await communityAssistantStorageService.deleteConfigForAssistant(selectedAssistant.id);
+            } catch (cleanupError) {
+                console.error("Failed to clean up local assistant data after unsubscribe:", cleanupError);
+            }
+        } catch (err) {
+            console.error("Failed to unsubscribe from assistant:", err);
+            showError(t("components.community_assistants.unsubscribe_failed_title"), t("components.community_assistants.unsubscribe_failed_message"));
         }
     };
 
@@ -657,7 +694,7 @@ const Discovery = () => {
 
                 <div className={styles.detailsSidebarSlot} data-open={isDrawerOpen}>
                     <AssistantDetailsSidebar
-                        isOpen={Boolean(selectedAssistant)}
+                        isOpen={isDrawerOpen}
                         onClose={closeDrawerAndClearSelection}
                         assistant={selectedAssistant}
                         ownedAssistantIds={ownedAssistantIds}
@@ -676,6 +713,7 @@ const Discovery = () => {
                         }}
                         onExport={exportAssistant}
                         onDelete={deleteAssistant}
+                        onUnsubscribe={unsubscribeAssistant}
                         onMigrateLocal={selectedAssistant?.isLocalAssistant ? () => setShowLocalMigrateConfirm(true) : undefined}
                     />
                 </div>
@@ -696,6 +734,15 @@ const Discovery = () => {
                 title={t("components.assistantsettingsdrawer.deleteDialog.title")}
                 message={t("components.assistantsettingsdrawer.deleteDialog.content")}
                 confirmLabel={t("components.assistantsettingsdrawer.deleteDialog.confirm")}
+            />
+            <CloseConfirmationDialog
+                open={showUnsubscribeConfirm}
+                onOpenChange={setShowUnsubscribeConfirm}
+                onConfirmClose={performUnsubscribe}
+                title={t("components.community_assistants.unsubscribe_confirm_title")}
+                message={t("components.community_assistants.unsubscribe_confirm_message", { title: selectedAssistant?.title ?? "" })}
+                confirmLabel={t("components.community_assistants.unsubscribe")}
+                confirmIntent="danger"
             />
             <CloseConfirmationDialog
                 open={showDuplicateConfirm}

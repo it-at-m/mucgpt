@@ -136,6 +136,24 @@ const CONFIG_RESPONSE: ApplicationConfig = {
 
 const DYNAMIC_ASSISTANTS: AssistantCreateResponse[] = buildAssistantList(6);
 
+const MOCK_SUBSCRIPTION_COUNTS = [10350, 2500, 1400, 980, 620, 410, 275, 190, 135, 88, 42, 17];
+
+function getMockSubscriptionCount(assistantId: string): number {
+    const exists = DYNAMIC_ASSISTANTS.some(assistant => assistant.id === assistantId);
+    if (!exists) return 0;
+
+    const stableIndex = Array.from(assistantId).reduce((sum, char) => sum + char.charCodeAt(0), 0) % MOCK_SUBSCRIPTION_COUNTS.length;
+    return MOCK_SUBSCRIPTION_COUNTS[stableIndex];
+}
+
+function withMockSubscriptionCount(assistant: AssistantCreateResponse) {
+    return {
+        ...assistant,
+        is_visible: assistant.latest_version.is_visible ?? true,
+        subscriptions_count: getMockSubscriptionCount(assistant.id)
+    };
+}
+
 // Add a specific assistant with a default model
 DYNAMIC_ASSISTANTS.push(
     buildAssistantCreateResponse({
@@ -791,22 +809,13 @@ export const handlers = [
     }),
 
     http.get("/api/assistant", () => {
-        const asResponses = DYNAMIC_ASSISTANTS.map((a, i) => ({
-            ...a,
-            is_visible: a.latest_version.is_visible ?? true,
-            subscriptions_count: Math.max(1, DYNAMIC_ASSISTANTS.length - i) * 3
-        }));
-        return HttpResponse.json(asResponses);
+        return HttpResponse.json(DYNAMIC_ASSISTANTS.map(withMockSubscriptionCount));
     }),
 
     http.get("/api/assistant/:id", ({ params }) => {
         const a = DYNAMIC_ASSISTANTS.find(x => x.id === params.id);
         if (!a) return new HttpResponse(null, { status: 404 });
-        return HttpResponse.json({
-            ...a,
-            is_visible: a.latest_version.is_visible ?? true,
-            subscriptions_count: 5
-        });
+        return HttpResponse.json(withMockSubscriptionCount(a));
     }),
 
     http.post("/api/assistant/:id/update", async ({ params, request }) => {
@@ -855,7 +864,7 @@ export const handlers = [
     }),
 
     http.get("/api/user/assistants", () => {
-        return HttpResponse.json(DYNAMIC_ASSISTANTS.slice(0, 3));
+        return HttpResponse.json(DYNAMIC_ASSISTANTS.slice(0, 3).map(withMockSubscriptionCount));
     }),
 
     http.get("/api/sso/userinfo", () => {
@@ -883,7 +892,8 @@ export const handlers = [
         const subscriptions = DYNAMIC_ASSISTANTS.slice(0, 2).map(assistant => ({
             id: assistant.id,
             title: assistant.latest_version.name,
-            description: assistant.latest_version.description
+            description: assistant.latest_version.description,
+            subscriptions_count: getMockSubscriptionCount(assistant.id)
         }));
         return HttpResponse.json(subscriptions);
     }),
@@ -899,7 +909,8 @@ export const handlers = [
         return HttpResponse.json({
             id: assistant.id,
             title: assistant.latest_version.name,
-            description: assistant.latest_version.description
+            description: assistant.latest_version.description,
+            subscriptions_count: getMockSubscriptionCount(assistant.id)
         });
     }),
 

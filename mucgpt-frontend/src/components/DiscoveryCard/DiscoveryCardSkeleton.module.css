@@ -2,11 +2,11 @@
     height: 100%;
     display: flex;
     flex-direction: column;
-    box-shadow: var(--shadow4);
-    border-radius: 8px;
-    background-color: var(--colorNeutralBackground1);
+    box-shadow: none;
+    border-radius: var(--borderRadiusLarge) !important;
+    background-color: var(--colorNeutralCardBackground);
     border: 1px solid var(--colorNeutralStroke1);
-    min-height: 140px;
+    min-height: 136px;
 }
 
 .skeleton {
@@ -34,4 +34,15 @@
 
 .spacer {
     height: 4px;
+}
+
+.metadataSpacer {
+    flex: 1;
+    min-height: 12px;
+    border-bottom: 1px solid var(--colorNeutralStroke1);
+}
+
+.metadata {
+    height: 16px;
+    width: 36%;
 }

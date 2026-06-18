@@ -190,12 +190,13 @@ i18n
                             remove_department: "Abteilung {{name}} entfernen"
                         },
                         terms_of_use: {
-                            tooltip: "Nutzungsbedingungen anzeigen",
                             label: "Nutzungsbedingungen",
+                            acceptance_required: "Nutzungsbedingungen (Zustimmung erforderlich)",
                             accept: "Zustimmen"
                         },
                         versioninfo: {
                             label: "Version",
+                            details: "Versionsdetails",
                             whats_new: "Was gibt's neues?"
                         },
                         feedback: {
@@ -579,18 +580,35 @@ i18n
                         community_assistants: {
                             title: "Community Assistenten",
                             about: "Über", // Deutsch
-                            search: "Assistenten suchen",
+                            search: "Assistenten nach Titel oder Beschreibung suchen.",
                             filter_by_tag: "Nach Tag filtern",
                             filter_all: "Community",
                             filter_yours: "Eigene",
                             filter_subscribed: "Abonniert",
+                            my_assistants: "Meine Assistenten",
+                            discover_community: "Community entdecken",
+                            filter_my_all: "Alle",
+                            filter_created_short: "Erstellt",
+                            metadata_you: "Du",
+                            private_label: "Privat",
+                            show_more_personal_assistants: "Mehr persönliche Assistenten anzeigen",
+                            empty_search_title: "Keine passenden Assistenten gefunden",
+                            empty_search_description: "Prüfen Sie den Suchbegriff oder setzen Sie die Suche zurück.",
+                            empty_search_reset: "Suche zurücksetzen",
+                            empty_my_title: "Ihre Bibliothek ist noch leer",
+                            empty_my_description: "Erstellen oder importieren Sie einen Assistenten für Aufgaben, die regelmäßig wiederkommen.",
+                            empty_community_title: "Noch keine Community-Assistenten verfügbar",
+                            empty_community_description: "Veröffentlichte Assistenten erscheinen hier, sobald sie mit der Organisation geteilt wurden.",
+                            empty_create_own: "Eigenen Assistenten erstellen",
                             system_prompt: "System-Prompt",
                             enabled_tools: "Aktivierte Werkzeuge",
                             start_chat: "Chat starten",
                             sort_by: "Sortieren nach",
-                            sort_title: "Titel",
+                            sort_title: "Name",
+                            sort_last_used: "Zuletzt benutzt",
                             sort_updated: "Zuletzt aktualisiert",
                             sort_subscriptions: "Abonnements",
+                            sort_popular: "Beliebteste",
                             sort_by_tooltip: "Sortierung der Assistenten ändern",
                             save: "Assistent speichern",
 
@@ -615,6 +633,14 @@ i18n
                             times_subscribed: "mal abonniert",
                             owned_assistant: "Eigener Assistent",
                             subscribed_assistant: "Abonniert",
+                            unsubscribe: "Abonnement entfernen",
+                            unsubscribe_confirm_title: "Abonnement entfernen?",
+                            unsubscribe_confirm_message:
+                                "Möchten Sie das Abonnement für „{{title}}“ entfernen? Lokale Chats mit diesem Assistenten werden ebenfalls gelöscht.",
+                            unsubscribe_success_title: "Abonnement entfernt",
+                            unsubscribe_success_message: "Das Abonnement für „{{title}}“ wurde entfernt.",
+                            unsubscribe_failed_title: "Abonnement konnte nicht entfernt werden",
+                            unsubscribe_failed_message: "Beim Entfernen des Abonnements ist ein Fehler aufgetreten.",
                             more_options: "Weitere Optionen",
                             duplicate: "Private Kopie erstellen",
                             duplicate_confirm_title: "Eigene private Kopie erstellen",
@@ -631,7 +657,7 @@ i18n
                             duplicate_failed_rate_limited: "Zu viele Anfragen. Bitte versuchen Sie es später erneut.",
                             duplicate_failed_forbidden: "Sie haben keine Berechtigung, diesen Assistenten zu duplizieren.",
                             duplicate_failed_not_found: "Der Assistent wurde nicht gefunden und kann nicht dupliziert werden.",
-                            local_badge: "Veraltet - Lokal",
+                            local_badge: "Lokal",
                             local_state_title: "Dieser lokale Assistent ist veraltet",
                             discovery_local_hint:
                                 "Dieser Assistent ist nur lokal in Ihrem Browser gesichert und geht verloren, falls Sie das Gerät wechseln. Sichern Sie ihn jetzt, damit er dauerhaft erhalten bleibt.",
@@ -709,8 +735,8 @@ i18n
                         }
                     },
                     discovery: {
-                        title: "Assistenten entdecken",
-                        subtitle: "Optimiere deinen Workflow mit spezialisierten KI-Agenten."
+                        title: "Assistenten",
+                        subtitle: "Nutze deine Assistenten oder entdecke neue für wiederkehrende Aufgaben."
                     },
                     ...tutorialsTranslations.DE,
                     ...versionTranslations.DE
@@ -890,12 +916,13 @@ i18n
                             remove_department: "Remove department {{name}}"
                         },
                         terms_of_use: {
-                            tooltip: "Show terms of use",
                             label: "Terms of use",
+                            acceptance_required: "Terms of use (acceptance required)",
                             accept: "Accept"
                         },
                         versioninfo: {
                             label: "Version",
+                            details: "Version details",
                             whats_new: "What's new?"
                         },
                         feedback: {
@@ -1273,18 +1300,35 @@ i18n
                         community_assistants: {
                             title: "Community Assistants",
                             about: "About", // Englisch
-                            search: "Search assistants",
+                            search: "Search assistants by title or description.",
                             filter_by_tag: "Filter by tag",
                             filter_all: "Community",
                             filter_yours: "Yours",
                             filter_subscribed: "Subscribed",
+                            my_assistants: "My assistants",
+                            discover_community: "Discover community",
+                            filter_my_all: "All",
+                            filter_created_short: "Created",
+                            metadata_you: "You",
+                            private_label: "Private",
+                            show_more_personal_assistants: "Show more personal assistants",
+                            empty_search_title: "No matching assistants found",
+                            empty_search_description: "Check your search term or reset the search.",
+                            empty_search_reset: "Reset search",
+                            empty_my_title: "Your library is empty",
+                            empty_my_description: "Create or import an assistant for tasks that come up regularly.",
+                            empty_community_title: "No community assistants available yet",
+                            empty_community_description: "Published assistants appear here as soon as they are shared with the organization.",
+                            empty_create_own: "Create your own assistant",
                             system_prompt: "System prompt",
                             enabled_tools: "Enabled tools",
                             start_chat: "Start conversation",
                             sort_by: "Sort by",
-                            sort_title: "Title",
+                            sort_title: "Name",
+                            sort_last_used: "Last used",
                             sort_updated: "Last updated",
                             sort_subscriptions: "Subscriptions",
+                            sort_popular: "Most popular",
                             sort_by_tooltip: "Change sorting of assistants",
                             save: "Save assistant",
 
@@ -1309,6 +1353,14 @@ i18n
                             times_subscribed: "times subscribed",
                             owned_assistant: "Own Assistant",
                             subscribed_assistant: "Subscribed",
+                            unsubscribe: "Remove subscription",
+                            unsubscribe_confirm_title: "Remove subscription?",
+                            unsubscribe_confirm_message:
+                                'Do you want to remove the subscription for "{{title}}"? Local chats with this assistant will also be deleted.',
+                            unsubscribe_success_title: "Subscription removed",
+                            unsubscribe_success_message: 'The subscription for "{{title}}" was removed.',
+                            unsubscribe_failed_title: "Subscription could not be removed",
+                            unsubscribe_failed_message: "An error occurred while removing the subscription.",
                             more_options: "More options",
                             duplicate: "Create private copy",
                             duplicate_confirm_title: "Create your own private copy",
@@ -1325,7 +1377,7 @@ i18n
                             duplicate_failed_rate_limited: "Too many requests. Please try again later.",
                             duplicate_failed_forbidden: "You do not have permission to duplicate this assistant.",
                             duplicate_failed_not_found: "The assistant was not found and cannot be duplicated.",
-                            local_badge: "Deprecated - Local",
+                            local_badge: "Local",
                             local_state_title: "This local assistant is deprecated",
                             discovery_local_hint:
                                 "This assistant is only saved locally in your browser and will be lost if you switch devices. Save it now so it remains available.",
@@ -1401,8 +1453,8 @@ i18n
                         }
                     },
                     discovery: {
-                        title: "Discover Assistants",
-                        subtitle: "Supercharge your workflow with specialized AI agents."
+                        title: "Assistants",
+                        subtitle: "Use your assistants or discover new ones for recurring tasks."
                     },
                     ...tutorialsTranslations.EN,
                     ...versionTranslations.EN
@@ -1581,12 +1633,13 @@ i18n
                             remove_department: "Abteilung {{name}} wecka"
                         },
                         terms_of_use: {
-                            tooltip: "Nutzungsbedingunga zeig'n",
                             label: "Nutzungsbedingunga",
+                            acceptance_required: "Nutzungsbedingunga (Zustimmung erforderlich)",
                             accept: "Zustimm'n"
                         },
                         versioninfo: {
                             label: "Version",
+                            details: "Versionsdetails",
                             whats_new: "Wos gibt's Nei's?"
                         },
                         feedback: {
@@ -1959,18 +2012,35 @@ i18n
                         community_assistants: {
                             title: "Community Assistentn", // Bairisch
                             about: "Über",
-                            search: "Assistentn durchschaun",
+                            search: "Assistentn noch Titel oder Beschreibung durchschaun.",
                             filter_by_tag: "Noch Tag filtern",
                             filter_all: "Community",
                             filter_yours: "Eigne",
                             filter_subscribed: "Abonniert",
+                            my_assistants: "Meine Assistenten",
+                            discover_community: "Community entdecken",
+                            filter_my_all: "Alle",
+                            filter_created_short: "Erstellt",
+                            metadata_you: "Du",
+                            private_label: "Privat",
+                            show_more_personal_assistants: "Mehr persönliche Assistentn anzeigen",
+                            empty_search_title: "Koane passenden Assistentn gfundn",
+                            empty_search_description: "Prüf dein Suchbegriff oder setz de Such zruck.",
+                            empty_search_reset: "Such zrucksetzn",
+                            empty_my_title: "Dei Bibliothek is no leer",
+                            empty_my_description: "Erstell oder importier an Assistentn für Aufgaben, de regelmäßig wiederkemma.",
+                            empty_community_title: "No koane Community-Assistentn verfügbar",
+                            empty_community_description: "Veröffentlichte Assistentn erscheina do, sobald's mit da Organisation teilt worn san.",
+                            empty_create_own: "Eignen Assistentn erstellen",
                             system_prompt: "System-Prompt",
                             enabled_tools: "Aktivierte Werkzeig",
                             start_chat: "Ratsch o'fanga",
                             sort_by: "Sortieren noch",
-                            sort_title: "Titel",
+                            sort_title: "Name",
+                            sort_last_used: "Zuletzt benutzt",
                             sort_updated: "Zletzt aktualisiert",
                             sort_subscriptions: "Abonnements",
+                            sort_popular: "Beliebteste",
                             sort_by_tooltip: "Sortierung vo de Assistentn ändern",
                             save: "Assistent speichan",
 
@@ -1995,6 +2065,13 @@ i18n
                             times_subscribed: "moi abonniert",
                             owned_assistant: "Eigener Assistent",
                             subscribed_assistant: "Abonniert",
+                            unsubscribe: "Abo entfernen",
+                            unsubscribe_confirm_title: "Abo entfernen?",
+                            unsubscribe_confirm_message: "Wuißt du des Abo für „{{title}}“ entfernen? Lokale Chats mit dem Assistenten werdn aa glöscht.",
+                            unsubscribe_success_title: "Abo entfernt",
+                            unsubscribe_success_message: "Des Abo für „{{title}}“ is entfernt worn.",
+                            unsubscribe_failed_title: "Abo konnt ned entfernt werdn",
+                            unsubscribe_failed_message: "Beim Entfernen vom Abo is a Fehler aufgetreten.",
                             more_options: "Weitere Optionen",
                             duplicate: "Private Kopie erstoin",
                             duplicate_confirm_title: "Eigene private Kopie erstoin",
@@ -2011,7 +2088,7 @@ i18n
                             duplicate_failed_rate_limited: "Zvui Anfragen. Bitte probier's spada nomoi.",
                             duplicate_failed_forbidden: "Du host koa Berechtigung, den Assistentn zum Dupliziern.",
                             duplicate_failed_not_found: "Da Assistent is ned gfundn worn und ko ned dupliziert wern.",
-                            local_badge: "Veraltet - Lokal",
+                            local_badge: "Lokal",
                             local_state_title: "Der lokale Assistent is veraltet",
                             discovery_local_hint:
                                 "Der Assistent is bloß lokal in deim Browser gesichert und geht verloren, wennst des Gerät wechselst. Sicher eam jetzt, damit a dauerhaft erhalten bleibt.",
@@ -2088,8 +2165,8 @@ i18n
                         }
                     },
                     discovery: {
-                        title: "Assistentn entdeckn",
-                        subtitle: "Optimier dein Workflow mit spezialisierten KI-Agenten."
+                        title: "Assistentn",
+                        subtitle: "Nutze deine Assistenten oder entdecke neue für wiederkehrende Aufgaben."
                     },
                     ...tutorialsTranslations.BA,
                     ...versionTranslations.BA
@@ -2269,12 +2346,13 @@ i18n
                             remove_department: "Supprimer le département {{name}}"
                         },
                         terms_of_use: {
-                            tooltip: "Afficher les conditions d'utilisation",
                             label: "Conditions d'utilisation",
+                            acceptance_required: "Conditions d'utilisation (acceptation requise)",
                             accept: "Accepter"
                         },
                         versioninfo: {
                             label: "Version",
+                            details: "Détails de version",
                             whats_new: "Quoi de neuf ?"
                         },
                         feedback: {
@@ -2648,18 +2726,27 @@ i18n
                         community_assistants: {
                             title: "Assistants Communautaires",
                             about: "À propos",
-                            search: "Rechercher des assistants",
+                            search: "Rechercher des assistants par titre ou description.",
                             filter_by_tag: "Filtrer par tag",
                             filter_all: "Communauté",
                             filter_yours: "Vos",
                             filter_subscribed: "Abonnés",
+                            my_assistants: "Mes assistants",
+                            discover_community: "Découvrir la communauté",
+                            filter_my_all: "Tous",
+                            filter_created_short: "Créés",
+                            metadata_you: "Vous",
+                            private_label: "Privé",
+                            show_more_personal_assistants: "Afficher plus d'assistants personnels",
                             system_prompt: "Prompt système",
                             enabled_tools: "Outils activés",
                             start_chat: "Démarrer la conversation",
                             sort_by: "Trier par",
-                            sort_title: "Titre",
+                            sort_title: "Nom",
+                            sort_last_used: "Dernière utilisation",
                             sort_updated: "Dernière mise à jour",
                             sort_subscriptions: "Abonnements",
+                            sort_popular: "Les plus populaires",
                             sort_by_tooltip: "Modifier le tri des assistants",
                             save: "Enregistrer l'assistant",
 
@@ -2684,6 +2771,14 @@ i18n
                             times_subscribed: "fois abonné",
                             owned_assistant: "Assistant Propre",
                             subscribed_assistant: "Abonné",
+                            unsubscribe: "Supprimer l'abonnement",
+                            unsubscribe_confirm_title: "Supprimer l'abonnement ?",
+                            unsubscribe_confirm_message:
+                                'Voulez-vous supprimer l’abonnement à "{{title}}" ? Les conversations locales avec cet assistant seront également supprimées.',
+                            unsubscribe_success_title: "Abonnement supprimé",
+                            unsubscribe_success_message: 'L’abonnement à "{{title}}" a été supprimé.',
+                            unsubscribe_failed_title: "L'abonnement n'a pas pu être supprimé",
+                            unsubscribe_failed_message: "Une erreur est survenue lors de la suppression de l'abonnement.",
                             more_options: "Plus d'options",
                             duplicate: "Créer une copie privée",
                             duplicate_confirm_title: "Créer votre propre copie privée",
@@ -2698,7 +2793,7 @@ i18n
                             duplicate_failed_rate_limited: "Trop de requêtes. Veuillez réessayer plus tard.",
                             duplicate_failed_forbidden: "Vous n'avez pas la permission de dupliquer cet assistant.",
                             duplicate_failed_not_found: "L'assistant n'a pas été trouvé et ne peut pas être dupliqué.",
-                            local_badge: "Obsolète - Local",
+                            local_badge: "Local",
                             local_state_title: "Cet assistant local est obsolète",
                             discovery_local_hint:
                                 "Cet assistant est uniquement enregistré localement dans votre navigateur et sera perdu si vous changez d'appareil. Enregistrez-le maintenant pour le conserver durablement.",
@@ -2776,8 +2871,8 @@ i18n
                         }
                     },
                     discovery: {
-                        title: "Découvrir les Assistants",
-                        subtitle: "Boostez votre flux de travail avec des agents IA spécialisés."
+                        title: "Assistants",
+                        subtitle: "Utilisez vos assistants ou découvrez-en de nouveaux pour les tâches récurrentes."
                     },
                     ...tutorialsTranslations.FR,
                     ...versionTranslations.FR
@@ -2957,12 +3052,13 @@ i18n
                             remove_department: "Видалити відділ {{name}}"
                         },
                         terms_of_use: {
-                            tooltip: "Показати умови використання",
                             label: "Умови використання",
+                            acceptance_required: "Умови використання (потрібне прийняття)",
                             accept: "Прийняти"
                         },
                         versioninfo: {
                             label: "Версія",
+                            details: "Деталі версії",
                             whats_new: "Що нового?"
                         },
                         feedback: {
@@ -3331,18 +3427,35 @@ i18n
                         community_assistants: {
                             title: "Громадські Асистенти", // Ukrainisch
                             about: "Про",
-                            search: "Пошук асистентів",
+                            search: "Шукати асистентів за назвою або описом.",
                             filter_by_tag: "Фільтрувати за тегом",
                             filter_all: "Спільнота",
                             filter_yours: "Ваші",
                             filter_subscribed: "Підписані",
+                            my_assistants: "Мої асистенти",
+                            discover_community: "Відкрити спільноту",
+                            filter_my_all: "Усі",
+                            filter_created_short: "Створені",
+                            metadata_you: "Ви",
+                            private_label: "Приватний",
+                            show_more_personal_assistants: "Показати більше особистих асистентів",
+                            empty_search_title: "Відповідних асистентів не знайдено",
+                            empty_search_description: "Перевірте пошуковий запит або скиньте пошук.",
+                            empty_search_reset: "Скинути пошук",
+                            empty_my_title: "Ваша бібліотека порожня",
+                            empty_my_description: "Створіть або імпортуйте асистента для завдань, які регулярно повторюються.",
+                            empty_community_title: "Громадські асистенти ще недоступні",
+                            empty_community_description: "Опубліковані асистенти з'являться тут, щойно їх буде поширено в організації.",
+                            empty_create_own: "Створити власного асистента",
                             system_prompt: "Системний запит",
                             enabled_tools: "Увімкнені інструменти",
                             start_chat: "Розпочати розмову",
                             sort_by: "Сортувати за",
-                            sort_title: "Заголовок",
+                            sort_title: "Назва",
+                            sort_last_used: "Останнє використання",
                             sort_updated: "Останнє оновлення",
                             sort_subscriptions: "Підписки",
+                            sort_popular: "Найпопулярніші",
                             sort_by_tooltip: "Змінити сортування асистентів",
                             save: "Зберегти асистента",
 
@@ -3367,6 +3480,13 @@ i18n
                             times_subscribed: "разів підписано",
                             owned_assistant: "Власний Асистент",
                             subscribed_assistant: "Підписаний",
+                            unsubscribe: "Скасувати підписку",
+                            unsubscribe_confirm_title: "Скасувати підписку?",
+                            unsubscribe_confirm_message: 'Ви хочете скасувати підписку на "{{title}}"? Локальні чати з цим асистентом також буде видалено.',
+                            unsubscribe_success_title: "Підписку скасовано",
+                            unsubscribe_success_message: 'Підписку на "{{title}}" було скасовано.',
+                            unsubscribe_failed_title: "Не вдалося скасувати підписку",
+                            unsubscribe_failed_message: "Під час скасування підписки сталася помилка.",
                             more_options: "Додаткові параметри",
                             duplicate: "Створити приватну копію",
                             duplicate_confirm_title: "Створити власну приватну копію",
@@ -3383,7 +3503,7 @@ i18n
                             duplicate_failed_rate_limited: "Забагато запитів. Будь ласка, спробуйте пізніше.",
                             duplicate_failed_forbidden: "У вас немає дозволу на дублювання цього асистента.",
                             duplicate_failed_not_found: "Асистента не знайдено, дублювання неможливе.",
-                            local_badge: "Застарілий - локальний",
+                            local_badge: "Локальний",
                             local_state_title: "Цей локальний асистент застарів",
                             discovery_local_hint:
                                 "Цей асистент збережено лише локально у вашому браузері, і він буде втрачений, якщо ви зміните пристрій. Збережіть його зараз, щоб він залишався доступним.",
@@ -3460,8 +3580,8 @@ i18n
                         }
                     },
                     discovery: {
-                        title: "Відкрийте асистентів",
-                        subtitle: "Прискорте свою роботу за допомогою спеціалізованих ШІ-агентів."
+                        title: "Асистенти",
+                        subtitle: "Використовуйте своїх асистентів або відкривайте нових для повторюваних завдань."
                     },
                     ...tutorialsTranslations.UK,
                     ...versionTranslations.UK

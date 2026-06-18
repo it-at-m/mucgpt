@@ -9,6 +9,8 @@ export const DiscoveryCardSkeleton = () => {
                 <div className={styles.spacer} />
                 <SkeletonItem shape="rectangle" className={styles.line1} />
                 <SkeletonItem shape="rectangle" className={styles.line2} />
+                <div className={styles.metadataSpacer} />
+                <SkeletonItem shape="rectangle" className={styles.metadata} />
             </Skeleton>
         </Card>
     );

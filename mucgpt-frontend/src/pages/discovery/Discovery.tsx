@@ -1,20 +1,12 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { type ReactElement, useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Title1, Body1, Text, SearchBox, Dropdown, Option, Button, Tooltip, TabList, Tab } from "@fluentui/react-components";
-import type { SearchBoxChangeEvent, InputOnChangeData, SelectionEvents, OptionOnSelectData, SelectTabData, SelectTabEvent } from "@fluentui/react-components";
-import { ArrowSort24Regular, DocumentArrowUpRegular } from "@fluentui/react-icons";
+import { Title1, Body1, Text, SearchBox, Dropdown, Option, Button } from "@fluentui/react-components";
+import type { SearchBoxChangeEvent, InputOnChangeData, SelectionEvents, OptionOnSelectData } from "@fluentui/react-components";
+import { Add24Regular, DocumentArrowUpRegular, LibraryRegular, PeopleCommunityRegular, SearchRegular } from "@fluentui/react-icons";
 import { useTranslation } from "react-i18next";
 
 import styles from "./Discovery.module.css";
-import {
-    getAllCommunityAssistantsApi,
-    getCommunityAssistantApi,
-    getOwnedCommunityAssistants,
-    getUserSubscriptionsApi,
-    deleteCommunityAssistantApi,
-    createCommunityAssistantApi,
-    unsubscribeFromAssistantApi
-} from "../../api/assistant-client";
+import { getCommunityAssistantApi, deleteCommunityAssistantApi, createCommunityAssistantApi, unsubscribeFromAssistantApi } from "../../api/assistant-client";
 import { Assistant, AssistantResponse, CommunityAssistantSnapshot } from "../../api/models";
 import { AddAssistantButton } from "../../components/AddAssistantButton/AddAssistantButton";
 import { AssistantStorageService } from "../../service/assistantstorage";
@@ -22,29 +14,35 @@ import { CommunityAssistantStorageService } from "../../service/communityassista
 import { ASSISTANT_STORE, COMMUNITY_ASSISTANT_STORE, CREATIVITY_LOW } from "../../constants";
 import { useGlobalToastContext } from "../../components/GlobalToastHandler/GlobalToastContext";
 import { DiscoveryCard } from "../../components/DiscoveryCard/DiscoveryCard";
+import type { DiscoveryCardBadge } from "../../components/DiscoveryCard/DiscoveryCard";
 import { DiscoveryCardSkeleton } from "../../components/DiscoveryCard/DiscoveryCardSkeleton";
 import { AssistantDetailsSidebar, AssistantCardData } from "../../components/AssistantDetailsSidebar/AssistantDetailsSidebar";
 import { CloseConfirmationDialog } from "../../components/AssistantDialogs/shared/CloseConfirmationDialog";
 import { useUnifiedHistory } from "../../components/UnifiedHistory";
 import { useDuplicateAssistant } from "./hooks/useDuplicateAssistant";
+import { useDiscoveryAssistantLists } from "./hooks/useDiscoveryAssistantLists";
 import { useMigrateLocalAssistant } from "../../hooks/useMigrateLocalAssistant";
 import { downloadAssistantExport, mapAssistantToExportData, mapVersionToExportData } from "../../utils/assistant-export";
 import { isCompleteCommunityAssistantSnapshot, mapCommunitySnapshotToAssistant } from "../../utils/community-assistant-snapshots";
 import { ApiError } from "../../api/fetch-utils";
 
-type SortKey = "title" | "updated" | "subscriptions";
-
 const communityAssistantStorageService = new CommunityAssistantStorageService(COMMUNITY_ASSISTANT_STORE);
 const assistantStorageService = new AssistantStorageService(ASSISTANT_STORE);
 const isAssistantResponse = (data: AssistantResponse | CommunityAssistantSnapshot): data is AssistantResponse =>
     "latest_version" in data && data.latest_version != null && typeof data.latest_version.name === "string";
-const getSnapshotUpdatedAt = (snapshot: CommunityAssistantSnapshot): string | undefined => {
-    const snapshotWithTimestamp = snapshot as CommunityAssistantSnapshot & {
-        snapshotUpdatedAt?: string | null;
-        updated_at?: string | null;
-    };
 
-    return snapshotWithTimestamp.snapshotUpdatedAt ?? snapshotWithTimestamp.updated_at ?? undefined;
+type EmptyStateAction = {
+    label: string;
+    onClick: () => void;
+    appearance?: "primary" | "secondary" | "outline" | "subtle" | "transparent";
+    icon?: ReactElement;
+};
+
+type SectionEmptyStateProps = {
+    icon: ReactElement;
+    title: string;
+    description: string;
+    actions?: EmptyStateAction[];
 };
 
 const Discovery = () => {
@@ -53,20 +51,31 @@ const Discovery = () => {
     const { showError, showSuccess } = useGlobalToastContext();
     const { refreshHistory: refreshUnifiedHistory } = useUnifiedHistory();
 
-    const [allAssistants, setAllAssistants] = useState<AssistantCardData[]>([]);
-    const [yoursAssistants, setYoursAssistants] = useState<AssistantCardData[]>([]);
-    const [subscribedAssistants, setSubscribedAssistants] = useState<AssistantCardData[]>([]);
-    const [isLoading, setIsLoading] = useState<boolean>(true);
-    const [searchText, setSearchText] = useState<string>("");
-    const [sortMethod, setSortMethod] = useState<SortKey>("subscriptions");
-
     const [isDrawerOpen, setIsDrawerOpen] = useState(false);
     const [selectedAssistant, setSelectedAssistant] = useState<AssistantCardData | null>(null);
-    const [filterScope, setFilterScope] = useState<"community" | "yours" | "subscribed">("community");
-    const [ownedAssistantIds, setOwnedAssistantIds] = useState<Set<string>>(new Set());
-    const [userSubscriptionIds, setUserSubscriptionIds] = useState<Set<string>>(new Set());
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
     const [showUnsubscribeConfirm, setShowUnsubscribeConfirm] = useState(false);
+    const {
+        isLoading,
+        searchText,
+        setSearchText,
+        communitySortMethod,
+        setCommunitySortMethod,
+        myAssistantsSortMethod,
+        setMyAssistantsSortMethod,
+        myAssistantFilter,
+        setMyAssistantFilter,
+        setShowAllMyAssistants,
+        ownedAssistantIds,
+        isSearching,
+        filteredMyAssistants,
+        displayedMyAssistants,
+        hasHiddenMyAssistants,
+        communityAssistants,
+        removeYoursAssistant,
+        removeSubscribedAssistant,
+        removeAssistantFromLists
+    } = useDiscoveryAssistantLists({ assistantStorageService, communityAssistantStorageService });
     const {
         assistantToDuplicate,
         showDuplicateConfirm,
@@ -91,6 +100,14 @@ const Discovery = () => {
         },
         []
     );
+
+    const closeDrawerAndClearSelection = useCallback(() => {
+        if (closeTimerRef.current !== null) {
+            clearTimeout(closeTimerRef.current);
+        }
+        setIsDrawerOpen(false);
+        closeTimerRef.current = setTimeout(() => setSelectedAssistant(null), 300);
+    }, []);
 
     const exportAssistant = useCallback(async () => {
         if (!selectedAssistant || selectedAssistant.isLocalAssistant) return;
@@ -196,181 +213,76 @@ const Discovery = () => {
         fileInput.click();
     }, [t, showSuccess, showError, navigate]);
 
-    const compareByTitle = (a: AssistantCardData, b: AssistantCardData): number => {
-        const titleA = a.title.toLowerCase();
-        const titleB = b.title.toLowerCase();
-        if (titleA < titleB) return -1;
-        if (titleA > titleB) return 1;
-        return 0;
-    };
-
-    const compareByUpdated = (a: AssistantCardData, b: AssistantCardData): number => {
-        const updatedA = a.updated ? new Date(a.updated).getTime() : Number.NEGATIVE_INFINITY;
-        const updatedB = b.updated ? new Date(b.updated).getTime() : Number.NEGATIVE_INFINITY;
-        return updatedB - updatedA;
-    };
-
-    const compareBySubscriptions = (a: AssistantCardData, b: AssistantCardData): number => {
-        return b.subscriptions - a.subscriptions;
-    };
-
-    const getSortFunction = useCallback((method: SortKey) => {
-        switch (method) {
-            case "title":
-                return compareByTitle;
-            case "updated":
-                return compareByUpdated;
-            case "subscriptions":
-                return compareBySubscriptions;
-            default:
-                return compareByTitle;
-        }
-    }, []);
-
-    const sortAssistants = useCallback(
-        (assistantsList: AssistantCardData[], method: SortKey): AssistantCardData[] => {
-            return [...assistantsList].sort(getSortFunction(method));
-        },
-        [getSortFunction]
-    );
-
-    useEffect(() => {
-        const fetchAssistants = async () => {
-            setIsLoading(true);
-            try {
-                const [localAssistantsResponse, allAssistantsResponse, ownedAssistants, userSubscriptions, localCommunityAssistants] = await Promise.all([
-                    assistantStorageService.getAllAssistantConfigs(),
-                    getAllCommunityAssistantsApi(),
-                    getOwnedCommunityAssistants(),
-                    getUserSubscriptionsApi(),
-                    communityAssistantStorageService.getAllAssistantConfigs()
-                ]);
-
-                const ownedIds = new Set(ownedAssistants.map((a: AssistantResponse) => a.id));
-                const subscribedIds = new Set(userSubscriptions.map((s: { id: string }) => s.id));
-                setOwnedAssistantIds(ownedIds);
-                setUserSubscriptionIds(subscribedIds);
-
-                const toCardData = (a: AssistantResponse | CommunityAssistantSnapshot | Assistant, extra?: Partial<AssistantCardData>): AssistantCardData => {
-                    if ("latest_version" in a) {
-                        return {
-                            id: a.id,
-                            title: a.latest_version?.name || "Unknown Assistant",
-                            description: a.latest_version?.description || "",
-                            subscriptions: a.subscriptions_count || 0,
-                            updated: a.updated_at || undefined,
-                            tags: a.latest_version?.tags || [],
-                            rawData: a,
-                            ...extra
-                        };
-                    }
-
-                    return {
-                        id: a.id || "",
-                        title: a.title || "Unknown Assistant",
-                        description: a.description || "",
-                        subscriptions: 0,
-                        updated: "snapshot_version" in a ? getSnapshotUpdatedAt(a as CommunityAssistantSnapshot) : undefined,
-                        tags: a.tags || [],
-                        rawData: a,
-                        ...extra
-                    };
-                };
-
-                // 1. All published assistants
-                setAllAssistants(allAssistantsResponse.map(a => toCardData(a)));
-
-                // 2. Yours: published/private plus legacy local assistants that were never migrated
-                const unpublishedLocalAssistants = localAssistantsResponse
-                    .filter((assistant): assistant is Assistant & { id: string } => Boolean(assistant.id))
-                    .filter(assistant => !ownedIds.has(assistant.id));
-
-                setYoursAssistants([
-                    ...ownedAssistants.map(a => toCardData(a)),
-                    ...unpublishedLocalAssistants.map(assistant => toCardData(assistant, { isLocalAssistant: true }))
-                ]);
-
-                const fullAssistantById = new Map<string, AssistantResponse>();
-                allAssistantsResponse.forEach(a => fullAssistantById.set(a.id, a));
-                ownedAssistants.forEach(a => fullAssistantById.set(a.id, a));
-
-                // 3. Every assistant subscribed to, merged with deleted ones
-                const validLocalCommunityAssistants = localCommunityAssistants.filter(isCompleteCommunityAssistantSnapshot);
-                const deletedCommunityAssistants = validLocalCommunityAssistants.filter(local => !fullAssistantById.has(local.id));
-
-                const subscribedData = [
-                    ...userSubscriptions
-                        .map(sub => {
-                            const fullData = fullAssistantById.get(sub.id);
-                            const localData = validLocalCommunityAssistants.find(local => local.id === sub.id);
-                            const assistantData = fullData || localData;
-
-                            if (!assistantData) {
-                                return null;
-                            }
-
-                            return toCardData(assistantData, {
-                                subscriptions: fullData?.subscriptions_count ?? 0,
-                                updated: fullData ? fullData.updated_at : localData ? getSnapshotUpdatedAt(localData) : undefined,
-                                isDeletedSnapshot: !fullData,
-                                isSubscribedAssistant: true
-                            });
-                        })
-                        .filter((assistant): assistant is AssistantCardData => assistant !== null),
-                    ...deletedCommunityAssistants.map(deleted =>
-                        toCardData(deleted, {
-                            subscriptions: 0,
-                            updated: getSnapshotUpdatedAt(deleted),
-                            isDeletedSnapshot: !fullAssistantById.has(deleted.id)
-                        })
-                    )
-                ];
-                setSubscribedAssistants(subscribedData);
-            } catch (error) {
-                console.error("Failed to fetch assistants:", error);
-            } finally {
-                setIsLoading(false);
-            }
-        };
-
-        fetchAssistants();
-    }, []);
-
-    const filteredAssistants = useMemo(() => {
-        const lc = searchText.toLowerCase();
-
-        let sourceList = allAssistants.filter(assistant => !ownedAssistantIds.has(assistant.id) && !userSubscriptionIds.has(assistant.id));
-        if (filterScope === "yours") {
-            sourceList = yoursAssistants;
-        } else if (filterScope === "subscribed") {
-            sourceList = subscribedAssistants;
-        }
-
-        const filtered = sourceList.filter(assistant => {
-            const matchesSearch =
-                !searchText.trim() ||
-                assistant.title.toLowerCase().includes(lc) ||
-                assistant.description.toLowerCase().includes(lc) ||
-                (assistant.tags && assistant.tags.some(tag => tag.toLowerCase().includes(lc)));
-
-            return matchesSearch;
-        });
-        return sortAssistants(filtered, sortMethod);
-    }, [allAssistants, yoursAssistants, subscribedAssistants, searchText, filterScope, sortMethod, sortAssistants, ownedAssistantIds, userSubscriptionIds]);
-
     const handleSearch = (_event: SearchBoxChangeEvent | null, data: InputOnChangeData) => {
         setSearchText(data.value || "");
     };
 
-    const handleFilterChange = (scope: "community" | "yours" | "subscribed") => {
-        setFilterScope(scope);
+    const handleCommunitySortChange = (_event: SelectionEvents, data: OptionOnSelectData) => {
+        if (data.optionValue === "subscriptions" || data.optionValue === "updated" || data.optionValue === "title") {
+            setCommunitySortMethod(data.optionValue);
+        }
     };
 
-    const handleSortChange = (_event: SelectionEvents, data: OptionOnSelectData) => {
-        const newSortMethod = data.optionValue as SortKey;
-        if (newSortMethod !== undefined) {
-            setSortMethod(newSortMethod);
+    const selectedCommunitySortLabel =
+        communitySortMethod === "subscriptions"
+            ? t("components.community_assistants.sort_popular", "Beliebteste")
+            : communitySortMethod === "updated"
+              ? t("components.community_assistants.sort_updated", "Zuletzt aktualisiert")
+              : t("components.community_assistants.sort_title", "Name");
+
+    const handleMyAssistantsSortChange = (_event: SelectionEvents, data: OptionOnSelectData) => {
+        if (data.optionValue === "subscriptions" || data.optionValue === "updated" || data.optionValue === "title" || data.optionValue === "lastUsed") {
+            setMyAssistantsSortMethod(data.optionValue as "subscriptions" | "updated" | "title" | "lastUsed");
         }
+    };
+
+    const selectedMyAssistantsSortLabel =
+        myAssistantsSortMethod === "lastUsed"
+            ? t("components.community_assistants.sort_last_used", "Zuletzt benutzt")
+            : myAssistantsSortMethod === "subscriptions"
+              ? t("components.community_assistants.sort_popular", "Beliebteste")
+              : myAssistantsSortMethod === "updated"
+                ? t("components.community_assistants.sort_updated", "Zuletzt aktualisiert")
+                : t("components.community_assistants.sort_title", "Name");
+
+    const getAssistantBadges = (assistant: AssistantCardData): DiscoveryCardBadge[] => {
+        const badges: DiscoveryCardBadge[] = [];
+
+        if (assistant.isLocalAssistant) {
+            badges.push({
+                label: t("components.community_assistants.local_badge", "Lokal"),
+                color: "warning",
+                tone: "warning"
+            });
+        }
+
+        if (assistant.isDeletedSnapshot) {
+            badges.push({
+                label: t("components.community_assistants.deleted_badge", "Gelöscht"),
+                color: "danger",
+                tone: "danger"
+            });
+        }
+
+        return badges;
+    };
+
+    const isAssistantPrivate = (assistant: AssistantCardData): boolean => {
+        if (assistant.isLocalAssistant) {
+            return true;
+        }
+
+        if ("is_visible" in assistant.rawData) {
+            return assistant.rawData.is_visible === false;
+        }
+
+        return false;
+    };
+
+    const getMetadataStartLabel = (assistant: AssistantCardData): string | undefined => {
+        return assistant.isOwnedAssistant
+            ? t("components.community_assistants.metadata_you", "Du")
+            : t("components.community_assistants.filter_all", "Community");
     };
 
     const handleAssistantClick = async (assistant: AssistantCardData) => {
@@ -380,8 +292,7 @@ const Discovery = () => {
         }
 
         if (selectedAssistant?.id === assistant.id) {
-            setIsDrawerOpen(false);
-            closeTimerRef.current = setTimeout(() => setSelectedAssistant(null), 300);
+            closeDrawerAndClearSelection();
         } else {
             const requestId = ++latestRequestRef.current;
             try {
@@ -448,10 +359,8 @@ const Discovery = () => {
     const performLocalMigration = async () => {
         if (!selectedAssistant?.isLocalAssistant) return;
         await performMigration(selectedAssistant.rawData as Assistant, selectedAssistant.id, selectedAssistant.title, () => {
-            setYoursAssistants(prev => prev.filter((a: AssistantCardData) => a.id !== selectedAssistant.id));
-            setIsDrawerOpen(false);
-            if (closeTimerRef.current !== null) clearTimeout(closeTimerRef.current);
-            closeTimerRef.current = setTimeout(() => setSelectedAssistant(null), 300);
+            removeYoursAssistant(selectedAssistant.id);
+            closeDrawerAndClearSelection();
         });
     };
 
@@ -470,16 +379,9 @@ const Discovery = () => {
                 t("components.assistant_chat.delete_assistant_success"),
                 t("components.assistant_chat.delete_assistant_success_message", { title: selectedAssistant.title })
             );
-            setAllAssistants(prev => prev.filter((a: AssistantCardData) => a.id !== selectedAssistant.id));
-            setYoursAssistants(prev => prev.filter((a: AssistantCardData) => a.id !== selectedAssistant.id));
-            setSubscribedAssistants(prev => prev.filter((a: AssistantCardData) => a.id !== selectedAssistant.id));
+            removeAssistantFromLists(selectedAssistant.id);
             refreshUnifiedHistory();
-
-            if (closeTimerRef.current !== null) {
-                clearTimeout(closeTimerRef.current);
-            }
-            setIsDrawerOpen(false);
-            closeTimerRef.current = setTimeout(() => setSelectedAssistant(null), 300);
+            closeDrawerAndClearSelection();
         } catch (err) {
             showError(
                 t("components.assistant_chat.delete_assistant_failed"),
@@ -498,15 +400,9 @@ const Discovery = () => {
                 t("components.community_assistants.unsubscribe_success_title"),
                 t("components.community_assistants.unsubscribe_success_message", { title: selectedAssistant.title })
             );
-            setUserSubscriptionIds(prev => new Set([...prev].filter(id => id !== selectedAssistant.id)));
-            setSubscribedAssistants(prev => prev.filter((a: AssistantCardData) => a.id !== selectedAssistant.id));
+            removeSubscribedAssistant(selectedAssistant.id);
             refreshUnifiedHistory();
-
-            if (closeTimerRef.current !== null) {
-                clearTimeout(closeTimerRef.current);
-            }
-            setIsDrawerOpen(false);
-            closeTimerRef.current = setTimeout(() => setSelectedAssistant(null), 300);
+            closeDrawerAndClearSelection();
 
             try {
                 await assistantStorageService.deleteChatsForAssistant(selectedAssistant.id);
@@ -520,6 +416,112 @@ const Discovery = () => {
         }
     };
 
+    const renderAssistantCard = (assistant: AssistantCardData) => (
+        <DiscoveryCard
+            key={assistant.id}
+            id={assistant.id}
+            title={assistant.title}
+            description={assistant.description}
+            badges={getAssistantBadges(assistant)}
+            metadataStartLabel={getMetadataStartLabel(assistant)}
+            subscriberCount={assistant.subscriptions}
+            isPrivate={isAssistantPrivate(assistant)}
+            privateLabel={t("components.community_assistants.private_label", "Privat")}
+            onClick={() => handleAssistantClick(assistant)}
+            isSelected={selectedAssistant?.id === assistant.id}
+            role="listitem"
+            aria-label={assistant.title}
+        />
+    );
+
+    const renderAssistantGrid = (assistants: AssistantCardData[], ariaLabel: string) => (
+        <div className={styles.assistantsGrid} role="list" aria-label={ariaLabel}>
+            {assistants.map(renderAssistantCard)}
+        </div>
+    );
+
+    const renderSectionEmptyState = ({ icon, title, description, actions }: SectionEmptyStateProps) => (
+        <div className={styles.sectionEmptyState} aria-live="polite">
+            <div className={styles.emptyIcon} aria-hidden="true">
+                {icon}
+            </div>
+            <div className={styles.emptyCopy}>
+                <Text as="p" weight="semibold" className={styles.emptyTitle}>
+                    {title}
+                </Text>
+                <Text as="p" size={300} className={styles.emptyDescription}>
+                    {description}
+                </Text>
+            </div>
+            {actions && actions.length > 0 && (
+                <div className={styles.emptyActions}>
+                    {actions.map(action => (
+                        <Button key={action.label} appearance={action.appearance ?? "secondary"} icon={action.icon} onClick={action.onClick}>
+                            {action.label}
+                        </Button>
+                    ))}
+                </div>
+            )}
+        </div>
+    );
+
+    const renderSearchEmptyState = () =>
+        renderSectionEmptyState({
+            icon: <SearchRegular />,
+            title: t("components.community_assistants.empty_search_title"),
+            description: t("components.community_assistants.empty_search_description"),
+            actions: [
+                {
+                    label: t("components.community_assistants.empty_search_reset"),
+                    appearance: "subtle",
+                    icon: <SearchRegular />,
+                    onClick: () => setSearchText("")
+                }
+            ]
+        });
+
+    const renderMyAssistantsEmptyState = () =>
+        renderSectionEmptyState({
+            icon: <LibraryRegular />,
+            title: t("components.community_assistants.empty_my_title"),
+            description: t("components.community_assistants.empty_my_description"),
+            actions: [
+                {
+                    label: t("components.add_assistant_button.add_assistant"),
+                    appearance: "primary",
+                    icon: <Add24Regular />,
+                    onClick: () => navigate("/assistant/create")
+                },
+                {
+                    label: t("components.import_assistant.import"),
+                    icon: <DocumentArrowUpRegular />,
+                    onClick: importAssistant
+                }
+            ]
+        });
+
+    const renderCommunityEmptyState = () =>
+        renderSectionEmptyState({
+            icon: <PeopleCommunityRegular />,
+            title: t("components.community_assistants.empty_community_title"),
+            description: t("components.community_assistants.empty_community_description"),
+            actions: [
+                {
+                    label: t("components.community_assistants.empty_create_own"),
+                    icon: <Add24Regular />,
+                    onClick: () => navigate("/assistant/create")
+                }
+            ]
+        });
+
+    const renderSkeletonGrid = (keyPrefix: string) => (
+        <div className={styles.assistantsGrid} role="list">
+            {Array.from({ length: 4 }).map((_, index) => (
+                <DiscoveryCardSkeleton key={`${keyPrefix}-skeleton-${index}`} />
+            ))}
+        </div>
+    );
+
     return (
         <div className={styles.pageWrapper}>
             <div className={styles.flexContainer} data-drawer-open={isDrawerOpen}>
@@ -527,147 +529,194 @@ const Discovery = () => {
                     <div className={styles.contentWrapper}>
                         <div className={styles.headerSection}>
                             <div className={styles.titleBlock}>
-                                <Title1 className={styles.header}>{t("discovery.title", "Discover Assistants")}</Title1>
-                                <Body1 className={styles.subtitle}>{t("discovery.subtitle", "Supercharge your workflow with specialized AI agents.")}</Body1>
-                            </div>
-                            <div className={styles.actionBlock}>
-                                <div className={styles.actionButtonsContainer}>
-                                    <Tooltip content={t("components.import_assistant.import")} relationship="description" positioning="below">
+                                <Title1 className={styles.header}>{t("discovery.title", "Assistenten")}</Title1>
+                                <div className={styles.subtitleRow}>
+                                    <Body1 className={styles.subtitle}>
+                                        {t("discovery.subtitle", "Nutze deine Assistenten oder entdecke neue für wiederkehrende Aufgaben.")}
+                                    </Body1>
+                                    <div className={styles.headerActions}>
                                         <Button
-                                            className={styles.importButton}
-                                            appearance="outline"
+                                            appearance="transparent"
                                             icon={<DocumentArrowUpRegular />}
                                             onClick={importAssistant}
-                                            size="large"
                                             aria-label={t("components.import_assistant.import")}
                                         >
                                             {t("components.import_assistant.import")}
                                         </Button>
-                                    </Tooltip>
-                                    <AddAssistantButton onClick={() => navigate("/assistant/create")} />
+                                        <AddAssistantButton onClick={() => navigate("/assistant/create")} />
+                                    </div>
                                 </div>
                             </div>
                         </div>
 
-                        <div className={styles.toolbarSection}>
-                            <SearchBox
-                                placeholder={t("components.community_assistants.search", "Search assistants")}
-                                value={searchText}
-                                onChange={handleSearch}
-                                className={styles.searchBox}
-                                size="large"
-                            />
-
-                            <div className={styles.controlsSection}>
-                                <TabList
-                                    selectedValue={filterScope}
-                                    onTabSelect={(_event: SelectTabEvent, data: SelectTabData) => {
-                                        if (data.value === "community" || data.value === "yours" || data.value === "subscribed") {
-                                            handleFilterChange(data.value as "community" | "yours" | "subscribed");
-                                        }
-                                    }}
-                                >
-                                    <Tab value="community">{t("components.community_assistants.filter_all", "Community")}</Tab>
-                                    <Tab value="yours">{t("components.community_assistants.filter_yours", "Yours")}</Tab>
-                                    <Tab value="subscribed">{t("components.community_assistants.filter_subscribed", "Abonniert")}</Tab>
-                                </TabList>
-
-                                <div className={styles.sortSection}>
-                                    <Tooltip content={t("components.community_assistants.sort_by_tooltip", "Change sorting")} relationship="label">
-                                        <ArrowSort24Regular />
-                                    </Tooltip>
-                                    <span className={styles.sortLabel}>
-                                        <Text>{t("components.community_assistants.sort_by", "Sort by")}</Text>
-                                    </span>
-                                    <Dropdown
-                                        id="sort"
-                                        value={
-                                            sortMethod === "title"
-                                                ? t("components.community_assistants.sort_title", "Title")
-                                                : sortMethod === "updated"
-                                                  ? t("components.community_assistants.sort_updated", "Last updated")
-                                                  : t("components.community_assistants.sort_subscriptions", "Subscriptions")
-                                        }
-                                        selectedOptions={[sortMethod]}
-                                        appearance="outline"
-                                        className={styles.sortDropdown}
-                                        onOptionSelect={handleSortChange}
-                                    >
-                                        <Option value="title" text={t("components.community_assistants.sort_title", "Title")}>
-                                            {t("components.community_assistants.sort_title", "Title")}
-                                        </Option>
-                                        <Option value="updated" text={t("components.community_assistants.sort_updated", "Last updated")}>
-                                            {t("components.community_assistants.sort_updated", "Last updated")}
-                                        </Option>
-                                        <Option value="subscriptions" text={t("components.community_assistants.sort_subscriptions", "Subscriptions")}>
-                                            {t("components.community_assistants.sort_subscriptions", "Subscriptions")}
-                                        </Option>
-                                    </Dropdown>
-                                </div>
-                            </div>
-                        </div>
+                        <SearchBox
+                            placeholder={t("components.community_assistants.search", "Search assistants by title or description.")}
+                            value={searchText}
+                            onChange={handleSearch}
+                            className={styles.searchBox}
+                            size="medium"
+                            aria-label={t("components.community_assistants.search", "Search assistants by title or description.")}
+                        />
 
                         {isLoading ? (
-                            <div className={styles.assistantsGrid}>
-                                {Array.from({ length: 12 }).map((_, index) => (
-                                    <DiscoveryCardSkeleton key={index} />
-                                ))}
-                            </div>
-                        ) : filteredAssistants.length === 0 ? (
-                            <div className={styles.noResults}>
-                                <Text size={400}>{t("components.community_assistants.no_assistants_found", "No assistants found")}</Text>
+                            <div className={styles.librarySections} aria-label={t("components.community_assistants.loading_assistants")}>
+                                <section className={styles.assistantSection}>
+                                    <h2 className={styles.sectionTitle}>{t("components.community_assistants.my_assistants", "Meine Assistenten")}</h2>
+                                    {renderSkeletonGrid("my")}
+                                </section>
+                                <section className={styles.assistantSection}>
+                                    <h2 className={styles.sectionTitle}>{t("components.community_assistants.discover_community", "Community entdecken")}</h2>
+                                    {renderSkeletonGrid("community")}
+                                </section>
                             </div>
                         ) : (
-                            <div className={styles.assistantsGrid}>
-                                {filteredAssistants.map(assistant => (
-                                    <DiscoveryCard
-                                        key={assistant.id}
-                                        id={assistant.id}
-                                        title={assistant.title}
-                                        description={assistant.description}
-                                        badge={
-                                            assistant.isLocalAssistant
-                                                ? t("components.community_assistants.local_badge")
-                                                : assistant.isDeletedSnapshot
-                                                  ? t("components.community_assistants.deleted_badge")
-                                                  : undefined
-                                        }
-                                        onClick={() => handleAssistantClick(assistant)}
-                                        isSelected={selectedAssistant?.id === assistant.id}
-                                    />
-                                ))}
+                            <div className={styles.librarySections}>
+                                <section className={styles.assistantSection} aria-labelledby="my-assistants-heading">
+                                    <div className={styles.sectionHeadingBlock}>
+                                        <h2 id="my-assistants-heading" className={styles.sectionTitle}>
+                                            {t("components.community_assistants.my_assistants", "Meine Assistenten")}
+                                        </h2>
+                                        <div className={styles.sectionHeaderRow}>
+                                            <div className={styles.myFilterGroup} role="group" aria-labelledby="my-assistants-heading">
+                                                <Button
+                                                    size="small"
+                                                    appearance="subtle"
+                                                    aria-pressed={myAssistantFilter === "all"}
+                                                    onClick={() => setMyAssistantFilter("all")}
+                                                >
+                                                    {t("components.community_assistants.filter_my_all", "Alle")}
+                                                </Button>
+                                                <Button
+                                                    size="small"
+                                                    appearance="subtle"
+                                                    aria-pressed={myAssistantFilter === "owned"}
+                                                    onClick={() => setMyAssistantFilter("owned")}
+                                                >
+                                                    {t("components.community_assistants.filter_created_short", "Erstellt")}
+                                                </Button>
+                                                <Button
+                                                    size="small"
+                                                    appearance="subtle"
+                                                    aria-pressed={myAssistantFilter === "subscribed"}
+                                                    onClick={() => setMyAssistantFilter("subscribed")}
+                                                >
+                                                    {t("components.community_assistants.filter_subscribed", "Abonniert")}
+                                                </Button>
+                                            </div>
+                                            <Dropdown
+                                                id="my-assistant-sort"
+                                                value={selectedMyAssistantsSortLabel}
+                                                selectedOptions={[myAssistantsSortMethod]}
+                                                appearance="outline"
+                                                className={styles.sortDropdown}
+                                                listbox={{ className: styles.sortDropdownListbox }}
+                                                onOptionSelect={handleMyAssistantsSortChange}
+                                                aria-label={t("components.community_assistants.sort_by", "Sortieren nach")}
+                                            >
+                                                <Option value="lastUsed" text={t("components.community_assistants.sort_last_used", "Zuletzt benutzt")}>
+                                                    {t("components.community_assistants.sort_last_used", "Zuletzt benutzt")}
+                                                </Option>
+                                                <Option value="subscriptions" text={t("components.community_assistants.sort_popular", "Beliebteste")}>
+                                                    {t("components.community_assistants.sort_popular", "Beliebteste")}
+                                                </Option>
+                                                <Option value="updated" text={t("components.community_assistants.sort_updated", "Zuletzt aktualisiert")}>
+                                                    {t("components.community_assistants.sort_updated", "Zuletzt aktualisiert")}
+                                                </Option>
+                                                <Option value="title" text={t("components.community_assistants.sort_title", "Name")}>
+                                                    {t("components.community_assistants.sort_title", "Name")}
+                                                </Option>
+                                            </Dropdown>
+                                        </div>
+                                    </div>
+
+                                    {filteredMyAssistants.length === 0 ? (
+                                        isSearching ? (
+                                            renderSearchEmptyState()
+                                        ) : (
+                                            renderMyAssistantsEmptyState()
+                                        )
+                                    ) : (
+                                        <>
+                                            {renderAssistantGrid(displayedMyAssistants, t("components.community_assistants.my_assistants"))}
+                                            {hasHiddenMyAssistants && (
+                                                <div className={styles.showMoreRow}>
+                                                    <Button appearance="secondary" onClick={() => setShowAllMyAssistants(true)}>
+                                                        {t(
+                                                            "components.community_assistants.show_more_personal_assistants",
+                                                            "Mehr persönliche Assistenten anzeigen"
+                                                        )}
+                                                    </Button>
+                                                </div>
+                                            )}
+                                        </>
+                                    )}
+                                </section>
+
+                                <div className={styles.sectionDivider} aria-hidden="true" />
+
+                                <section className={styles.assistantSection} aria-labelledby="community-assistants-heading">
+                                    <div className={styles.sectionHeaderRow}>
+                                        <h2 id="community-assistants-heading" className={styles.sectionTitle}>
+                                            {t("components.community_assistants.discover_community", "Community entdecken")}
+                                        </h2>
+                                        <Dropdown
+                                            id="community-assistant-sort"
+                                            value={selectedCommunitySortLabel}
+                                            selectedOptions={[communitySortMethod]}
+                                            appearance="outline"
+                                            className={styles.sortDropdown}
+                                            listbox={{ className: styles.sortDropdownListbox }}
+                                            onOptionSelect={handleCommunitySortChange}
+                                            aria-label={t("components.community_assistants.sort_by", "Sortieren nach")}
+                                        >
+                                            <Option value="subscriptions" text={t("components.community_assistants.sort_popular", "Beliebteste")}>
+                                                {t("components.community_assistants.sort_popular", "Beliebteste")}
+                                            </Option>
+                                            <Option value="updated" text={t("components.community_assistants.sort_updated", "Zuletzt aktualisiert")}>
+                                                {t("components.community_assistants.sort_updated", "Zuletzt aktualisiert")}
+                                            </Option>
+                                            <Option value="title" text={t("components.community_assistants.sort_title", "Name")}>
+                                                {t("components.community_assistants.sort_title", "Name")}
+                                            </Option>
+                                        </Dropdown>
+                                    </div>
+
+                                    {communityAssistants.length === 0
+                                        ? isSearching
+                                            ? renderSearchEmptyState()
+                                            : renderCommunityEmptyState()
+                                        : renderAssistantGrid(communityAssistants, t("components.community_assistants.discover_community"))}
+                                </section>
                             </div>
                         )}
                     </div>
                 </div>
 
-                <AssistantDetailsSidebar
-                    isOpen={isDrawerOpen}
-                    onClose={() => {
-                        setIsDrawerOpen(false);
-                        if (closeTimerRef.current !== null) clearTimeout(closeTimerRef.current);
-                        closeTimerRef.current = setTimeout(() => setSelectedAssistant(null), 300);
-                    }}
-                    assistant={selectedAssistant}
-                    ownedAssistantIds={ownedAssistantIds}
-                    onStartChat={startConversation}
-                    onEdit={editAssistant}
-                    onDuplicate={() => {
-                        if (!selectedAssistant || selectedAssistant.isLocalAssistant) {
-                            return;
-                        }
-                        requestDuplicateAssistant({
-                            id: selectedAssistant.id,
-                            title: selectedAssistant.title,
-                            rawData: selectedAssistant.rawData as AssistantResponse | CommunityAssistantSnapshot,
-                            isDeletedSnapshot: selectedAssistant.isDeletedSnapshot
-                        });
-                    }}
-                    onExport={exportAssistant}
-                    onDelete={deleteAssistant}
-                    onUnsubscribe={unsubscribeAssistant}
-                    onMigrateLocal={selectedAssistant?.isLocalAssistant ? () => setShowLocalMigrateConfirm(true) : undefined}
-                />
+                <div className={styles.detailsSidebarSlot} data-open={isDrawerOpen}>
+                    <AssistantDetailsSidebar
+                        isOpen={isDrawerOpen}
+                        onClose={closeDrawerAndClearSelection}
+                        assistant={selectedAssistant}
+                        ownedAssistantIds={ownedAssistantIds}
+                        onStartChat={startConversation}
+                        onEdit={editAssistant}
+                        onDuplicate={() => {
+                            if (!selectedAssistant || selectedAssistant.isLocalAssistant) {
+                                return;
+                            }
+                            requestDuplicateAssistant({
+                                id: selectedAssistant.id,
+                                title: selectedAssistant.title,
+                                rawData: selectedAssistant.rawData as AssistantResponse | CommunityAssistantSnapshot,
+                                isDeletedSnapshot: selectedAssistant.isDeletedSnapshot
+                            });
+                        }}
+                        onExport={exportAssistant}
+                        onDelete={deleteAssistant}
+                        onUnsubscribe={unsubscribeAssistant}
+                        onMigrateLocal={selectedAssistant?.isLocalAssistant ? () => setShowLocalMigrateConfirm(true) : undefined}
+                    />
+                </div>
             </div>
 
             <CloseConfirmationDialog

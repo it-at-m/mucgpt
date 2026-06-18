@@ -63,6 +63,7 @@ export interface ApplicationConfig {
     footer_label?: string;
     faq_url?: string;
     incident_report_url?: string;
+    feature_request_url?: string;
     ad2image_url?: string;
 }
 

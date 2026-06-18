@@ -1,0 +1,11 @@
+.featureRequestButton {
+    color: var(--colorNeutralForeground1) !important;
+}
+
+.featureRequestButton:hover {
+    background-color: var(--colorNeutralStroke2) !important;
+}
+
+.icon {
+    color: var(--colorNeutralForeground1) !important;
+}

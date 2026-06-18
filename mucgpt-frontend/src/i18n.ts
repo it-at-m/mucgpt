@@ -211,6 +211,10 @@ i18n
                             label: "Störung melden",
                             aria_label: "Störung melden"
                         },
+                        feature_request_button: {
+                            label: "Verbesserungswünsche",
+                            aria_label: "Verbesserungswünsche"
+                        },
                         theme_selector: {
                             theme_light: "Helles Design",
                             theme_dark: "Dunkles Design",
@@ -962,6 +966,10 @@ i18n
                             label: "Report incident",
                             aria_label: "Report an incident"
                         },
+                        feature_request_button: {
+                            label: "Request feature",
+                            aria_label: "Request feature"
+                        },
                         theme_selector: {
                             theme_light: "Light theme",
                             theme_dark: "Dark theme",
@@ -1704,6 +1712,10 @@ i18n
                             label: "Störung melden",
                             aria_label: "Störung melden"
                         },
+                        feature_request_button: {
+                            label: "Vobessarungswünsch",
+                            aria_label: "Vobessarungswünsch"
+                        },
                         theme_selector: {
                             theme_light: "Helles Design",
                             theme_dark: "Dunkles Design",
@@ -2442,6 +2454,10 @@ i18n
                             label: "Signaler un incident",
                             aria_label: "Signaler un incident"
                         },
+                        feature_request_button: {
+                            label: "Suggestion d'amélioration",
+                            aria_label: "Suggestion d'amélioration"
+                        },
                         theme_selector: {
                             theme_light: "Thème clair",
                             theme_dark: "Thème sombre",
@@ -3172,6 +3188,10 @@ i18n
                         incident_report_button: {
                             label: "Повідомити про збій",
                             aria_label: "Повідомити про збій"
+                        },
+                        feature_request_button: {
+                            label: "Удосконалення",
+                            aria_label: "Удосконалення"
                         },
                         theme_selector: {
                             theme_light: "Світла тема",

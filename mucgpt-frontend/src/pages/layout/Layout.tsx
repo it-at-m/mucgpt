@@ -21,6 +21,7 @@ import { ThemeSelector } from "../../components/ThemeSelector";
 import { FeedbackButton } from "../../components/FeedbackButton";
 import { FaqButton } from "../../components/FaqButton";
 import { IncidentReportButton } from "../../components/IncidentReportButton";
+import { FeatureRequestButton } from "../../components/FeatureRequestButton";
 import { configApi } from "../../api/core-client";
 import { ApiError } from "../../api/fetch-utils";
 import { useGlobalToastContext } from "../../components/GlobalToastHandler/GlobalToastContext";
@@ -60,6 +61,7 @@ const AppShell = ({ config, isLight, languagePreference, onLanguageSelectionChan
     const navigate = useNavigate();
     const faqUrl = config.faq_url;
     const incidentReportUrl = config.incident_report_url;
+    const featureRequestUrl = config.feature_request_url;
     const [isMobile, setIsMobile] = useState<boolean>(window.innerWidth <= MOBILE_LAYOUT_BREAKPOINT);
     const [mobileSidebarOpen, setMobileSidebarOpen] = useState<boolean>(false);
     const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(() => localStorage.getItem(APP_NAV_COLLAPSED_KEY) === "true");
@@ -128,6 +130,11 @@ const AppShell = ({ config, isLight, languagePreference, onLanguageSelectionChan
                         <IncidentReportButton url={incidentReportUrl} />
                     </div>
                 )}
+                {featureRequestUrl && (
+                    <div className={styles.mobileUtilityRow}>
+                        <FeatureRequestButton url={featureRequestUrl} />
+                    </div>
+                )}
                 <div className={styles.mobileUtilityRow}>
                     <FeedbackButton emailAddress="itm.kicc@muenchen.de" subject="MUCGPT" />
                 </div>
@@ -171,9 +178,8 @@ const AppShell = ({ config, isLight, languagePreference, onLanguageSelectionChan
                 </a>
 
                 <div
-                    className={`${styles.shellBody} ${!isMobile && isSidebarCollapsed ? styles.shellBodyCollapsed : ""} ${
-                        isMobile ? styles.shellBodyMobile : ""
-                    }`}
+                    className={`${styles.shellBody} ${!isMobile && isSidebarCollapsed ? styles.shellBodyCollapsed : ""} ${isMobile ? styles.shellBodyMobile : ""
+                        }`}
                 >
                     {!isMobile && (
                         <aside className={styles.sidebarColumn}>

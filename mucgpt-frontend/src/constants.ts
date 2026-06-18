@@ -53,7 +53,8 @@ export const DEFAULT_APP_CONFIG: ApplicationConfig = {
     document_processing_enabled: false,
     transcription_enabled: false,
     faq_url: "https://ki.muenchen.de",
-    incident_report_url: "https://ki.muenchen.de"
+    incident_report_url: "https://ki.muenchen.de",
+    feature_request_url: "https://ki.muenchen.de"
 };
 
 export const CREATIVITY_LOW = "low";

@@ -12,7 +12,8 @@ import {
     getOwnedCommunityAssistants,
     getUserSubscriptionsApi,
     deleteCommunityAssistantApi,
-    createCommunityAssistantApi
+    createCommunityAssistantApi,
+    unsubscribeFromAssistantApi
 } from "../../api/assistant-client";
 import { Assistant, AssistantResponse, CommunityAssistantSnapshot } from "../../api/models";
 import { AddAssistantButton } from "../../components/AddAssistantButton/AddAssistantButton";
@@ -24,6 +25,7 @@ import { DiscoveryCard } from "../../components/DiscoveryCard/DiscoveryCard";
 import { DiscoveryCardSkeleton } from "../../components/DiscoveryCard/DiscoveryCardSkeleton";
 import { AssistantDetailsSidebar, AssistantCardData } from "../../components/AssistantDetailsSidebar/AssistantDetailsSidebar";
 import { CloseConfirmationDialog } from "../../components/AssistantDialogs/shared/CloseConfirmationDialog";
+import { useUnifiedHistory } from "../../components/UnifiedHistory";
 import { useDuplicateAssistant } from "./hooks/useDuplicateAssistant";
 import { useMigrateLocalAssistant } from "../../hooks/useMigrateLocalAssistant";
 import { downloadAssistantExport, mapAssistantToExportData, mapVersionToExportData } from "../../utils/assistant-export";
@@ -49,6 +51,7 @@ const Discovery = () => {
     const { t } = useTranslation();
     const navigate = useNavigate();
     const { showError, showSuccess } = useGlobalToastContext();
+    const { refreshHistory: refreshUnifiedHistory } = useUnifiedHistory();
 
     const [allAssistants, setAllAssistants] = useState<AssistantCardData[]>([]);
     const [yoursAssistants, setYoursAssistants] = useState<AssistantCardData[]>([]);
@@ -63,6 +66,7 @@ const Discovery = () => {
     const [ownedAssistantIds, setOwnedAssistantIds] = useState<Set<string>>(new Set());
     const [userSubscriptionIds, setUserSubscriptionIds] = useState<Set<string>>(new Set());
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+    const [showUnsubscribeConfirm, setShowUnsubscribeConfirm] = useState(false);
     const {
         assistantToDuplicate,
         showDuplicateConfirm,
@@ -308,7 +312,8 @@ const Discovery = () => {
                             return toCardData(assistantData, {
                                 subscriptions: fullData?.subscriptions_count ?? 0,
                                 updated: fullData ? fullData.updated_at : localData ? getSnapshotUpdatedAt(localData) : undefined,
-                                isDeletedSnapshot: !fullData
+                                isDeletedSnapshot: !fullData,
+                                isSubscribedAssistant: true
                             });
                         })
                         .filter((assistant): assistant is AssistantCardData => assistant !== null),
@@ -434,6 +439,12 @@ const Discovery = () => {
         }
     };
 
+    const unsubscribeAssistant = () => {
+        if (selectedAssistant) {
+            setShowUnsubscribeConfirm(true);
+        }
+    };
+
     const performLocalMigration = async () => {
         if (!selectedAssistant?.isLocalAssistant) return;
         await performMigration(selectedAssistant.rawData as Assistant, selectedAssistant.id, selectedAssistant.title, () => {
@@ -462,6 +473,7 @@ const Discovery = () => {
             setAllAssistants(prev => prev.filter((a: AssistantCardData) => a.id !== selectedAssistant.id));
             setYoursAssistants(prev => prev.filter((a: AssistantCardData) => a.id !== selectedAssistant.id));
             setSubscribedAssistants(prev => prev.filter((a: AssistantCardData) => a.id !== selectedAssistant.id));
+            refreshUnifiedHistory();
 
             if (closeTimerRef.current !== null) {
                 clearTimeout(closeTimerRef.current);
@@ -473,6 +485,38 @@ const Discovery = () => {
                 t("components.assistant_chat.delete_assistant_failed"),
                 err instanceof Error ? err.message : t("components.assistant_chat.delete_assistant_failed_message")
             );
+        }
+    };
+
+    const performUnsubscribe = async () => {
+        if (!selectedAssistant) return;
+
+        try {
+            await unsubscribeFromAssistantApi(selectedAssistant.id);
+
+            showSuccess(
+                t("components.community_assistants.unsubscribe_success_title"),
+                t("components.community_assistants.unsubscribe_success_message", { title: selectedAssistant.title })
+            );
+            setUserSubscriptionIds(prev => new Set([...prev].filter(id => id !== selectedAssistant.id)));
+            setSubscribedAssistants(prev => prev.filter((a: AssistantCardData) => a.id !== selectedAssistant.id));
+            refreshUnifiedHistory();
+
+            if (closeTimerRef.current !== null) {
+                clearTimeout(closeTimerRef.current);
+            }
+            setIsDrawerOpen(false);
+            closeTimerRef.current = setTimeout(() => setSelectedAssistant(null), 300);
+
+            try {
+                await assistantStorageService.deleteChatsForAssistant(selectedAssistant.id);
+                await communityAssistantStorageService.deleteConfigForAssistant(selectedAssistant.id);
+            } catch (cleanupError) {
+                console.error("Failed to clean up local assistant data after unsubscribe:", cleanupError);
+            }
+        } catch (err) {
+            console.error("Failed to unsubscribe from assistant:", err);
+            showError(t("components.community_assistants.unsubscribe_failed_title"), t("components.community_assistants.unsubscribe_failed_message"));
         }
     };
 
@@ -621,6 +665,7 @@ const Discovery = () => {
                     }}
                     onExport={exportAssistant}
                     onDelete={deleteAssistant}
+                    onUnsubscribe={unsubscribeAssistant}
                     onMigrateLocal={selectedAssistant?.isLocalAssistant ? () => setShowLocalMigrateConfirm(true) : undefined}
                 />
             </div>
@@ -640,6 +685,15 @@ const Discovery = () => {
                 title={t("components.assistantsettingsdrawer.deleteDialog.title")}
                 message={t("components.assistantsettingsdrawer.deleteDialog.content")}
                 confirmLabel={t("components.assistantsettingsdrawer.deleteDialog.confirm")}
+            />
+            <CloseConfirmationDialog
+                open={showUnsubscribeConfirm}
+                onOpenChange={setShowUnsubscribeConfirm}
+                onConfirmClose={performUnsubscribe}
+                title={t("components.community_assistants.unsubscribe_confirm_title")}
+                message={t("components.community_assistants.unsubscribe_confirm_message", { title: selectedAssistant?.title ?? "" })}
+                confirmLabel={t("components.community_assistants.unsubscribe")}
+                confirmIntent="danger"
             />
             <CloseConfirmationDialog
                 open={showDuplicateConfirm}

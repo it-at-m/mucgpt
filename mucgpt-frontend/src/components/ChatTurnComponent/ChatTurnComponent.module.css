@@ -2,28 +2,25 @@
     display: flex;
     flex-direction: column;
     list-style: none;
-    width: 100%;
+    width: var(--chatContentWidth, min(60%, 1000px));
+    margin: 0 auto 20px;
 }
 
 .chatMessageUser {
-    min-width: 50%;
-    max-width: 90%;
+    min-width: 15%;
+    max-width: 65%;
     align-self: flex-end;
 }
 
 .chatMessageGpt {
-    width: 98%;
+    width: 100%;
     align-self: flex-start;
-    background-color: var(--colorNeutralBackground3);
-    border: 1px solid var(--colorNeutralStroke1);
-    border-radius: 8px;
-    border-top-left-radius: 20px;
-    border-bottom-right-radius: 20px;
 }
 
 @media (max-width: 650px) {
     .chatMessageUser {
-        width: 100%;
+        width: auto;
+        max-width: 92%;
         align-self: flex-end;
     }
 

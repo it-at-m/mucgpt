@@ -1,11 +1,29 @@
+.answerWithActions {
+    width: 100%;
+}
+
 .answerContainer {
     padding: 1.25em;
-    margin: 1em 0.5em; /* Reduced horizontal margin */
+    margin: 4px 0 0;
     background: var(--colorNeutralBackground3);
-    border-radius: 8px;
-    width: 98%; /* Increased from 95% to use more space */
+    border: 1px solid var(--colorNeutralStroke1);
+    border-radius: var(--borderRadiusLarge);
+    width: 100%;
     max-width: 100%;
+    box-sizing: border-box;
     transition: box-shadow 0.2s ease-in-out; /* Smooth transition for hover effect */
+}
+
+.followUpActionsBelow {
+    margin: 4px 0 0;
+}
+
+.answerActionsBelow {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    gap: 2px;
+    margin: 4px 0 0;
 }
 
 .iconRightMargin {
@@ -17,10 +35,23 @@
 }
 
 .answerText {
-    padding-top: 16px;
-    padding-bottom: 16px;
+    padding-top: 4px;
+    padding-bottom: 4px;
     font-size: var(--fontSizeBase400);
+    line-height: 1.35;
     overflow-x: auto;
+}
+
+.answerText :where(p, ul, ol, blockquote) {
+    margin-block: 0.45em;
+}
+
+.answerText :where(p:first-child, ul:first-child, ol:first-child, blockquote:first-child) {
+    margin-top: 0;
+}
+
+.answerText :where(p:last-child, ul:last-child, ol:last-child, blockquote:last-child) {
+    margin-bottom: 0;
 }
 
 .answerText table {
@@ -68,6 +99,7 @@
 
 .unformattedAnswer {
     white-space: pre-wrap;
+    line-height: 1.35;
 }
 
 .growItem {

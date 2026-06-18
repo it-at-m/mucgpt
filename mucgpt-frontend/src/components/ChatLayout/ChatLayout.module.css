@@ -1,4 +1,6 @@
 .container {
+    --chatReadableWidth: 1000px;
+    --chatContentWidth: min(60%, var(--chatReadableWidth));
     display: flex;
     flex-direction: column;
     flex: 1;
@@ -10,8 +12,9 @@
 }
 
 .headerBar {
-    position: sticky;
+    position: fixed;
     top: 0;
+    left: var(--appSidebarWidth, 0);
     right: 0;
     height: 60px;
     display: flex;
@@ -19,7 +22,7 @@
     justify-content: space-between;
     padding: 0 16px;
     background: var(--colorNeutralBackground1);
-    z-index: 5;
+    z-index: 6;
     box-sizing: border-box;
 }
 
@@ -80,6 +83,7 @@
     flex-direction: column;
     flex: 1;
     min-height: 0;
+    margin-top: 60px;
     overflow: hidden;
     z-index: 1;
     box-sizing: border-box;
@@ -157,12 +161,7 @@
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
     box-sizing: border-box;
-    padding: 8px 12px;
-}
-
-.chatMessageStream {
-    display: block;
-    width: 100%;
+    padding: 8px 24px;
 }
 
 .chatInput {
@@ -171,7 +170,7 @@
     right: 0;
     bottom: 0;
     z-index: 4;
-    padding: 0 0 10px;
+    padding: 0 24px 10px;
     min-width: 0;
     box-sizing: border-box;
     background: transparent;
@@ -182,6 +181,11 @@
 }
 
 @media (max-width: 1200px) {
+    .container {
+        --chatReadableWidth: 80%;
+        --chatContentWidth: min(80%, var(--chatReadableWidth));
+    }
+
     .container[data-info-open="true"] .headerBar,
     .container[data-info-open="true"] .chatRoot,
     .container[data-info-open="true"] .chatInput {
@@ -189,9 +193,27 @@
     }
 }
 
+@media (max-width: 768px) {
+    .container {
+        --chatContentWidth: min(90%, var(--chatReadableWidth));
+    }
+}
+
 @media (max-width: 650px) {
+    .container {
+        --chatReadableWidth: 100%;
+    }
+
     .chatRoot {
         min-height: 0;
+    }
+
+    .allChatMessages {
+        padding-inline: 12px;
+    }
+
+    .chatInput {
+        padding-inline: 12px;
     }
 }
 

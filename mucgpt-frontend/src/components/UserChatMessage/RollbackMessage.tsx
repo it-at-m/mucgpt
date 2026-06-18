@@ -17,7 +17,7 @@ export const RollBackMessage = ({ onRollback }: Props) => {
                 appearance="subtle"
                 aria-label={t("components.deleteMessage.label")}
                 icon={<DeleteArrowBackRegular className={styles.iconRightMargin} />}
-                size="large"
+                className={styles.rollbackButton}
             />
         </Tooltip>
     );

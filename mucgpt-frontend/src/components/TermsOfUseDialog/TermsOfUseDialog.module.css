@@ -9,6 +9,8 @@
     gap: 6px;
     cursor: pointer;
     padding: 4px 12px;
+    min-width: auto;
+    height: auto;
     border-radius: 6px;
     transition:
         background-color 0.2s,

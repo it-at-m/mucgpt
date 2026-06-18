@@ -1,26 +1,38 @@
 .card {
-    border-radius: 8px !important;
-    border-radius: 14px !important;
-    min-height: 140px;
-    border: 1px solid var(--colorNeutralStroke1) !important;
-    transition: all 0.2s ease;
+    border-radius: var(--borderRadiusLarge) !important;
+    min-height: 136px;
+    border: 1px solid var(--colorNeutralStroke3) !important;
+    padding: 12px 12px 10px 12px !important;
+    row-gap: 0px !important;
+    transition:
+        transform 0.18s cubic-bezier(0.33, 1, 0.68, 1),
+        border-color 0.16s ease,
+        box-shadow 0.16s ease;
     background-color: var(--colorNeutralBackground3) !important;
-    box-shadow: none !important;
+    color: var(--colorNeutralForeground1);
+    box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05) !important;
 }
 
 .cardSelected {
-    border: 1px solid var(--colorBrandBackground) !important;
-    color: var(--colorBrandBackground) !important;
+    border: 2px solid var(--colorBrandBackground) !important;
 }
 
 .card:hover {
     transform: translateY(-2px);
     box-shadow: var(--shadow4) !important;
-    border-color: var(--colorBrandBackground) !important;
 }
 
 .card:hover .headerText {
     color: var(--colorBrandBackground);
+}
+
+.card:focus-visible {
+    outline: 2px solid var(--colorBrandBackground);
+    outline-offset: 2px;
+}
+
+.card [class*="fui-CardPreview"] {
+    margin: 0 !important;
 }
 
 .headerText {
@@ -28,7 +40,6 @@
     font-size: var(--fontSizeBase400);
     transition-property: color;
     transition-duration: 0.2s;
-    padding-top: 12px;
     flex: 1 1 auto;
     min-width: 0;
     overflow: hidden;
@@ -44,11 +55,45 @@
     justify-content: space-between;
     gap: 8px;
     width: 100%;
+    box-sizing: border-box;
 }
 
 .headerBadge {
-    flex-shrink: 0;
+    max-width: 100%;
+    min-width: 0;
+    min-height: 20px;
     align-self: flex-start;
+    padding: 3px 7px 4px !important;
+    border-radius: var(--borderRadiusMedium);
+    font-size: var(--fontSizeBase100) !important;
+    font-weight: var(--fontWeightRegular) !important;
+    line-height: 1.2;
+    color: var(--colorNeutralForeground2) !important;
+    background-color: var(--colorNeutralBackground2) !important;
+    border-color: var(--colorNeutralStroke1) !important;
+}
+
+.headerBadgeWarning {
+    color: var(--colorStatusWarningForeground1) !important;
+    background-color: var(--colorStatusWarningBackground1) !important;
+    border-color: var(--colorStatusWarningBorder1) !important;
+    font-weight: var(--fontWeightSemibold) !important;
+}
+
+.headerBadgeDanger {
+    color: var(--colorStatusDangerForeground1) !important;
+    background-color: var(--colorStatusDangerBackground1) !important;
+    border-color: var(--colorStatusDangerBorder1) !important;
+    font-weight: var(--fontWeightSemibold) !important;
+}
+
+.badgeGroup {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 6px;
+    max-width: 45%;
+    flex-shrink: 0;
 }
 
 .headerBadgePrimary {
@@ -67,5 +112,50 @@
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 2;
     overflow-wrap: break-word;
-    padding: 0 12px 0;
+    padding: 0;
+}
+
+.metadataBlock {
+    margin: auto 0 0;
+    padding-top: 8px;
+}
+
+.metadataDivider {
+    width: 100%;
+    height: 1px;
+    background-color: var(--colorNeutralStroke1);
+    opacity: 0.85;
+}
+
+.metadataRow {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    min-height: 0;
+    padding-top: 10px;
+    color: var(--colorNeutralForeground2);
+    font-size: 11px;
+    font-weight: var(--fontWeightRegular);
+    line-height: 16px;
+}
+
+.metadataStart {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.metadataEnd {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    flex: 0 0 auto;
+    white-space: nowrap;
+}
+
+.metadataEnd svg {
+    width: 16px;
+    height: 16px;
 }

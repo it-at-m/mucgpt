@@ -1,4 +1,4 @@
-import { Dialog, DialogTrigger, DialogSurface, DialogTitle, DialogBody, DialogActions, DialogContent, Button, Link, Tooltip } from "@fluentui/react-components";
+import { Dialog, DialogTrigger, DialogSurface, DialogTitle, DialogBody, DialogActions, DialogContent, Button, Link } from "@fluentui/react-components";
 import { Checkmark24Filled, DocumentBulletListMultiple24Regular } from "@fluentui/react-icons";
 import { useTranslation } from "react-i18next";
 import { useState } from "react";
@@ -12,21 +12,24 @@ interface TermsOfUseDialogProps {
     onAccept: () => void;
     showTrigger?: boolean;
     triggerClassName?: string;
+    requireAcceptance?: boolean;
 }
 
-export const TermsOfUseDialog = ({ defaultOpen, onAccept, showTrigger = true, triggerClassName }: TermsOfUseDialogProps) => {
+export const TermsOfUseDialog = ({ defaultOpen, onAccept, showTrigger = true, triggerClassName, requireAcceptance = true }: TermsOfUseDialogProps) => {
     const { t } = useTranslation();
     const config = useConfigContext();
     const faqUrl = config.faq_url;
     const [open, setOpen] = useState<boolean>(defaultOpen);
     const trigger = showTrigger ? (
         <DialogTrigger disableButtonEnhancement>
-            <Tooltip content={t("components.terms_of_use.tooltip", "Nutzungsbedingungen anzeigen")} relationship="description" positioning="above">
-                <div className={`${styles.triggerContainer}${triggerClassName ? ` ${triggerClassName}` : ""}`}>
-                    <DocumentBulletListMultiple24Regular className={styles.termsIcon} />
-                    <span className={styles.termsText}>{t("components.terms_of_use.label", "Nutzungsbedingungen")}</span>
-                </div>
-            </Tooltip>
+            <Button
+                appearance="transparent"
+                className={`${styles.triggerContainer}${triggerClassName ? ` ${triggerClassName}` : ""}`}
+                onClick={() => setOpen(true)}
+            >
+                <DocumentBulletListMultiple24Regular className={styles.termsIcon} />
+                <span className={styles.termsText}>{t("components.terms_of_use.label", "Nutzungsbedingungen")}</span>
+            </Button>
         </DialogTrigger>
     ) : (
         <></>
@@ -34,11 +37,15 @@ export const TermsOfUseDialog = ({ defaultOpen, onAccept, showTrigger = true, tr
 
     return (
         <div className={styles.container}>
-            <Dialog modalType="alert" open={open} onOpenChange={(_event, data) => setOpen(data.open)}>
+            <Dialog modalType={requireAcceptance ? "alert" : "modal"} open={open} onOpenChange={(_event, data) => setOpen(data.open)}>
                 {trigger}
                 <DialogSurface className={styles.dialog}>
                     <DialogBody className={styles.dialogContent}>
-                        <DialogTitle>Nutzungsbedingungen (Zustimmung erforderlich)</DialogTitle>
+                        <DialogTitle>
+                            {requireAcceptance
+                                ? t("components.terms_of_use.acceptance_required", "Nutzungsbedingungen (Zustimmung erforderlich)")
+                                : t("components.terms_of_use.label", "Nutzungsbedingungen")}
+                        </DialogTitle>
                         <DialogContent>
                             <ul>
                                 <li>
@@ -141,16 +148,18 @@ export const TermsOfUseDialog = ({ defaultOpen, onAccept, showTrigger = true, tr
                         <DialogActions className={styles.dialogActions}>
                             <DialogTrigger disableButtonEnhancement>
                                 <Button
-                                    appearance="primary"
+                                    appearance={requireAcceptance ? "primary" : "secondary"}
                                     size="medium"
                                     onClick={() => {
-                                        onAccept();
+                                        if (requireAcceptance) {
+                                            onAccept();
+                                        }
                                         setOpen(false);
                                     }}
                                     className={styles.acceptButton}
                                 >
-                                    <Checkmark24Filled className={styles.checkIcon} />
-                                    {t("components.terms_of_use.accept", "Zustimmen")}
+                                    {requireAcceptance && <Checkmark24Filled className={styles.checkIcon} />}
+                                    {requireAcceptance ? t("components.terms_of_use.accept", "Zustimmen") : t("common.close", "Schließen")}
                                 </Button>
                             </DialogTrigger>
                         </DialogActions>

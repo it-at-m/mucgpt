@@ -26,10 +26,13 @@ export interface AssistantCardData {
     description: string;
     subscriptions: number;
     updated?: string | null;
+    lastUsed?: number;
     tags: string[];
     rawData: AssistantResponse | CommunityAssistantSnapshot | Assistant;
     isDeletedSnapshot?: boolean;
     isLocalAssistant?: boolean;
+    isOwnedAssistant?: boolean;
+    isSubscribedAssistant?: boolean;
 }
 
 interface AssistantDetailsSidebarProps {
@@ -43,6 +46,7 @@ interface AssistantDetailsSidebarProps {
     onDuplicate?: () => void;
     onExport?: () => void;
     onDelete?: () => void;
+    onUnsubscribe?: () => void;
     onMigrateLocal?: () => void;
     hideStartChat?: boolean;
 }
@@ -58,6 +62,7 @@ export const AssistantDetailsSidebar = ({
     onDuplicate,
     onExport,
     onDelete,
+    onUnsubscribe,
     onMigrateLocal,
     hideStartChat
 }: AssistantDetailsSidebarProps) => {
@@ -97,6 +102,7 @@ export const AssistantDetailsSidebar = ({
     const isDeletedSnapshot = Boolean(assistant?.isDeletedSnapshot);
     const isLocalAssistant = Boolean(assistant?.isLocalAssistant);
     const isLegacyAssistant = assistant ? /^\d+$/.test(assistant.id) : false;
+    const canUnsubscribe = Boolean(assistant?.isSubscribedAssistant && !isOwned && !isDeletedSnapshot && !isLocalAssistant && !isLegacyAssistant);
 
     return (
         <InlineDrawer open={isOpen} position="end" className={styles.inlineDrawer} aria-labelledby="sidebar-title">
@@ -235,6 +241,11 @@ export const AssistantDetailsSidebar = ({
                                             {isOwned && (
                                                 <MenuItem icon={<Delete20Regular />} onClick={onDelete} className={styles.menuDeleteItem}>
                                                     {t("common.delete")}
+                                                </MenuItem>
+                                            )}
+                                            {canUnsubscribe && onUnsubscribe && (
+                                                <MenuItem icon={<Delete20Regular />} onClick={onUnsubscribe} className={styles.menuDeleteItem}>
+                                                    {t("components.community_assistants.unsubscribe")}
                                                 </MenuItem>
                                             )}
                                         </MenuList>

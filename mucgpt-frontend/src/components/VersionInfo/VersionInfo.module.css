@@ -4,9 +4,83 @@
     gap: 10px;
 }
 
+.containerMenu {
+    width: 100%;
+}
+
 .versionBadge {
     color: var(--colorNeutralForeground2) !important;
     background-color: var(--colorNeutralBackground1) !important;
+}
+
+.versionMenuButton {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 10px;
+    width: 100%;
+    min-height: 34px;
+    box-sizing: border-box;
+    padding: 0 14px;
+    border: 0;
+    border-radius: 0;
+    background-color: transparent;
+    color: var(--colorNeutralForeground1);
+    font: inherit;
+    font-weight: 500;
+    text-align: left;
+    cursor: pointer;
+    transition:
+        background-color 120ms ease,
+        color 120ms ease;
+}
+
+.versionMenuButton:hover {
+    color: var(--colorNeutralForeground1);
+    background-color: var(--colorNeutralStroke2);
+}
+
+.versionMenuButton:focus-visible {
+    outline: 2px solid var(--colorBrandStroke1);
+    outline-offset: 2px;
+}
+
+.versionMenuButton :global(.fui-Button__label) {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    min-width: 0;
+}
+
+.versionMenuIcon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    flex: 0 0 20px;
+    color: var(--colorNeutralForeground2);
+}
+
+.versionMenuIcon svg {
+    width: 20px;
+    height: 20px;
+}
+
+.versionMenuText {
+    min-width: 0;
+    overflow: hidden;
+    color: var(--colorNeutralForeground1);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.containerMenu .versionBadge {
+    padding-left: 14px;
+    padding-right: 14px;
+    background-color: transparent !important;
+    color: var(--colorNeutralForeground2) !important;
 }
 
 .versionLink {
@@ -28,18 +102,75 @@
     text-decoration: none;
 }
 
-.tooltipContent {
-    display: flex;
-    flex-direction: column;
-    gap: 5px;
-    padding: 4px 2px;
-    min-width: 220px;
+.versionPopoverSurface,
+.versionTooltipSurface {
+    max-width: none !important;
+    padding: 0 !important;
+    border: 1px solid color-mix(in srgb, var(--colorNeutralStroke1), transparent 15%) !important;
+    border-radius: 12px !important;
+    background-color: var(--colorNeutralBackground1) !important;
+    color: var(--colorNeutralForeground1) !important;
+    box-shadow:
+        0 10px 28px color-mix(in srgb, var(--colorNeutralShadowKey), transparent 55%),
+        0 2px 8px color-mix(in srgb, var(--colorNeutralShadowAmbient), transparent 35%) !important;
+    filter: none !important;
 }
 
-.tooltipRow {
+.versionPopoverSurface {
+    min-width: 256px;
+}
+
+.versionDetails {
+    display: flex;
+    flex-direction: column;
+    min-width: 232px;
+    overflow: hidden;
+    border-radius: 12px;
+}
+
+.versionDetailsHeader {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    padding: 10px 12px 8px;
+    border-bottom: 1px solid color-mix(in srgb, var(--colorNeutralStroke1), transparent 50%);
+}
+
+.versionDetailsTitle {
+    color: var(--colorNeutralForeground1);
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.versionTable {
+    display: flex;
+    flex-direction: column;
+    padding: 0;
+}
+
+.versionRow {
     display: flex;
     justify-content: space-between;
-    align-items: baseline;
-    gap: 16px;
+    align-items: center;
+    gap: 22px;
+    min-height: 32px;
+    padding: 4px 12px;
     white-space: nowrap;
+}
+
+.versionRow + .versionRow {
+    border-top: 1px solid color-mix(in srgb, var(--colorNeutralStroke1), transparent 55%);
+}
+
+.versionServiceName {
+    color: var(--colorNeutralForeground2);
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.versionServiceVersion {
+    color: var(--colorNeutralForeground1);
+    font-size: 12px;
+    font-variant-numeric: tabular-nums;
+    font-weight: 600;
 }

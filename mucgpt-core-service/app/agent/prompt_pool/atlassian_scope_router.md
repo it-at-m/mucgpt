@@ -8,7 +8,7 @@ Rules:
 - jira -> tickets, issues, backlog, sprint, bug, workflow, project tracking
 - confluence -> pages, documentation, wiki, knowledge base, spaces
 - general -> unclear, mixed, or not tied to one Atlassian product
-- Only choose a scope that is available. 
+- Only choose a scope that is available.
 - If uncertain, choose general.
 
 Important:

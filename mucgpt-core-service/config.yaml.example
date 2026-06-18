@@ -17,6 +17,7 @@ LOG_CONFIG: "logconf.yaml"
 # Frontend settings
 ENV_NAME: "MUCGPT"
 ALTERNATIVE_LOGO: false
+TRANSCRIPTION_ENABLED: false
 FRONTEND_VERSION: "unknown"
 ASSISTANT_VERSION: "unknown"
 FOOTER_LINK_URL: "https://ki.muenchen.de"

@@ -644,6 +644,30 @@ KREUZBERG_TIMEOUT: 30.0
         get_settings.cache_clear()
 
 
+class TestTranscriptionSettings:
+    """Test cases for browser transcription feature flag configuration."""
+
+    def test_transcription_enabled_default(self):
+        """TRANSCRIPTION_ENABLED defaults to False."""
+        with patch.dict(os.environ, {}, clear=True):
+            settings = Settings()
+            assert settings.TRANSCRIPTION_ENABLED is False
+
+    def test_transcription_enabled_via_env(self):
+        """TRANSCRIPTION_ENABLED can be enabled via environment variable."""
+        with patch.dict(
+            os.environ,
+            {
+                "MUCGPT_CORE_TRANSCRIPTION_ENABLED": "true",
+            },
+        ):
+            settings = Settings()
+            assert settings.TRANSCRIPTION_ENABLED is True
+
+    def teardown_method(self):
+        get_settings.cache_clear()
+
+
 class TestRedisSettings:
     """Test cases for Redis configuration (nested under Settings)."""
 

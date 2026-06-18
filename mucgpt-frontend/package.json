@@ -6,8 +6,9 @@
         "@fluentui/react-components": "9.73.8",
         "@fluentui/react-icons": "2.0.328",
         "@fontsource/montserrat": "^5.2.8",
+        "@huggingface/transformers": "^4.2.0",
         "@react-spring/web": "10.0.4",
-        "dompurify": "3.4.9",
+        "dompurify": "3.4.11",
         "i18next": "25.10.10",
         "idb": "8.0.3",
         "markmap-common": "0.18.9",
@@ -77,5 +78,5 @@
         "watch": "tsc && vite build --watch"
     },
     "type": "module",
-    "version": "0.25.2"
+    "version": "0.26.1"
 }

@@ -10,6 +10,8 @@ import { useConfigContext } from "../../context/ConfigContext";
 import { upsertParsedDocumentFromUpload } from "../../service/parsedDocumentStorage";
 import { ContextManagerDialog, UploadedData, createUploadedData, getDataSignature, getFileSignature } from "../ContextManagerDialog/ContextManagerDialog";
 import { ChatToolSelector } from "../ChatToolSelector/ChatToolSelector";
+import { MicrophoneButton } from "../MicrophoneButton/MicrophoneButton";
+import { useTranscription } from "../TranscriptionSettings/TranscriptionSettingsContext";
 
 interface Props {
     onSend: (question: string, data: UploadedData[]) => void;
@@ -28,6 +30,7 @@ interface Props {
     uploadedData?: UploadedData[];
     setUploadedData?: Dispatch<SetStateAction<UploadedData[]>>;
     draftCacheKey?: string;
+    onTranscription?: (text: string) => void;
 }
 
 export const QuestionInput = ({
@@ -46,11 +49,13 @@ export const QuestionInput = ({
     onDataChange,
     uploadedData: externalUploadedData,
     setUploadedData: setExternalUploadedData,
-    draftCacheKey
+    draftCacheKey,
+    onTranscription
 }: Props) => {
     const { t } = useTranslation();
     const config = useConfigContext();
     const allowFileUpload = allowFileUploadProp ?? config.document_processing_enabled;
+    const allowTranscription = config.transcription_enabled;
     const resolvedPlaceholder = placeholder ?? (allowFileUpload ? t("chat.prompt") : t("chat.prompt_no_upload"));
     const textareaRef = useRef<HTMLTextAreaElement | null>(null);
     const sendButtonRef = useRef<HTMLButtonElement | null>(null);
@@ -60,18 +65,23 @@ export const QuestionInput = ({
     const [internalUploadedData, setInternalUploadedData] = useState<UploadedData[]>([]);
     const uploadedDataRef = useRef<UploadedData[]>([]);
     const [isDragActive, setIsDragActive] = useState(false);
+    const [isExpandedInput, setIsExpandedInput] = useState(false);
     const dragCounterRef = useRef(0);
     const isDraftHydratedRef = useRef(false);
     const skipNextEmptyPersistRef = useRef(false);
     const pendingSendRef = useRef(false);
     const wasDisabledRef = useRef(disabled);
     const setQuestionRef = useRef(setQuestion);
+    const recordingBaseRef = useRef("");
+    const { isModelReady: transcriptionReady, status: transcriptionStatus } = useTranscription();
+    const isTranscriptionActive = transcriptionStatus === "recording" || transcriptionStatus === "transcribing";
 
     const draftStorageKey = draftCacheKey ? `question-input-draft:${draftCacheKey}` : undefined;
     const pendingStorageKey = draftCacheKey ? `question-input-pending:${draftCacheKey}` : undefined;
 
     const uploadedData = externalUploadedData ?? internalUploadedData;
     const activeDocumentCount = uploadedData.filter(data => data.isActive !== false).length;
+    const hasSendableQuestion = question.trim().length > 0;
 
     const setUploadedData = useCallback(
         (data: UploadedData[] | ((prev: UploadedData[]) => UploadedData[])) => {
@@ -189,9 +199,35 @@ export const QuestionInput = ({
                 return;
             }
 
+            const maxHeight = 200;
+            const computedStyle = window.getComputedStyle(textarea);
+            const lineHeight = Number.parseFloat(computedStyle.lineHeight) || 24;
+            const paddingTop = Number.parseFloat(computedStyle.paddingTop) || 0;
+            const paddingBottom = Number.parseFloat(computedStyle.paddingBottom) || 0;
+            const verticalPadding = paddingTop + paddingBottom;
+            const singleLineHeight = lineHeight + verticalPadding;
+            const canvas = document.createElement("canvas");
+            const context = canvas.getContext("2d");
+            const horizontalPadding = (Number.parseFloat(computedStyle.paddingLeft) || 0) + (Number.parseFloat(computedStyle.paddingRight) || 0);
+            const availableLineWidth = textarea.clientWidth - horizontalPadding;
+            const needsWrappedLine =
+                context && availableLineWidth > 0
+                    ? question.split("\n").some(line => {
+                          context.font = computedStyle.font;
+                          return context.measureText(line || " ").width > availableLineWidth;
+                      })
+                    : false;
+            const nextExpandedInput = question.trim().length > 0 && (question.includes("\n") || needsWrappedLine);
+
+            setIsExpandedInput(nextExpandedInput);
             textarea.style.height = "auto";
 
-            const maxHeight = 200;
+            if (!nextExpandedInput) {
+                textarea.style.height = `${singleLineHeight}px`;
+                textarea.style.overflowY = "hidden";
+                return;
+            }
+
             const scrollHeight = textarea.scrollHeight;
             const newHeight = Math.min(scrollHeight, maxHeight);
 
@@ -429,12 +465,28 @@ export const QuestionInput = ({
                 <div
                     className={`${styles.questionInputContainer} ${
                         !tools?.tools?.length || !setSelectedTools ? styles.noTools : ""
-                    } ${isDragActive ? styles.dragActive : ""}`}
+                    } ${isDragActive ? styles.dragActive : ""} ${isExpandedInput ? styles.expandedInput : ""} ${!allowFileUpload ? styles.noUpload : ""}`}
                     onDragEnter={allowFileUpload ? handleDragEnter : undefined}
                     onDragOver={allowFileUpload ? handleDragOver : undefined}
                     onDragLeave={allowFileUpload ? handleDragLeave : undefined}
                     onDrop={allowFileUpload ? handleDrop : undefined}
                 >
+                    {allowFileUpload ? (
+                        <Tooltip content={t("components.questioninput.upload_data", "Dokument hochladen")} relationship="label">
+                            <div className={styles.uploadButtonWrapper}>
+                                <Button
+                                    ref={uploadButtonRef}
+                                    size="large"
+                                    appearance="subtle"
+                                    icon={<DocumentAdd24Regular />}
+                                    aria-label={t("components.questioninput.upload_data", "Dokument hochladen")}
+                                    onClick={handleUploadButtonClick}
+                                    disabled={disabled}
+                                />
+                                {activeDocumentCount > 0 ? <span className={styles.uploadCountBadge}>{activeDocumentCount}</span> : null}
+                            </div>
+                        </Tooltip>
+                    ) : null}
                     <Textarea
                         className={styles.questionInputTextArea}
                         placeholder={resolvedPlaceholder}
@@ -444,35 +496,40 @@ export const QuestionInput = ({
                         onChange={onQuestionChange}
                         onKeyDown={onEnterPress}
                         ref={textareaRef}
+                        disabled={disabled || isTranscriptionActive}
                     />
                     <div className={styles.questionInputButtons}>
-                        {allowFileUpload ? (
-                            <Tooltip content={t("components.questioninput.upload_data", "Dokument hochladen")} relationship="label">
-                                <div className={styles.uploadButtonWrapper}>
-                                    <Button
-                                        ref={uploadButtonRef}
-                                        size="large"
-                                        appearance="subtle"
-                                        icon={<DocumentAdd24Regular />}
-                                        aria-label={t("components.questioninput.upload_data", "Dokument hochladen")}
-                                        onClick={handleUploadButtonClick}
-                                        disabled={disabled}
-                                    />
-                                    {activeDocumentCount > 0 ? <span className={styles.uploadCountBadge}>{activeDocumentCount}</span> : null}
-                                </div>
+                        {allowTranscription && onTranscription && transcriptionReady && (
+                            <MicrophoneButton
+                                onRecordingStart={() => {
+                                    recordingBaseRef.current = question;
+                                }}
+                                onLiveTranscription={text => {
+                                    const full = recordingBaseRef.current ? `${recordingBaseRef.current} ${text}` : text;
+                                    setQuestion(full);
+                                    onTranscription(full);
+                                }}
+                                onTranscription={text => {
+                                    const full = recordingBaseRef.current ? `${recordingBaseRef.current} ${text}` : text;
+                                    setQuestion(full);
+                                    onTranscription(full);
+                                }}
+                                disabled={disabled}
+                            />
+                        )}
+                        {hasSendableQuestion ? (
+                            <Tooltip content={resolvedPlaceholder} relationship="label">
+                                <Button
+                                    ref={sendButtonRef}
+                                    size="large"
+                                    appearance="transparent"
+                                    icon={<Send28Filled />}
+                                    aria-label={t("components.questioninput.send_question", "Frage senden")}
+                                    disabled={disabled || isTranscriptionActive}
+                                    onClick={sendQuestion}
+                                />
                             </Tooltip>
                         ) : null}
-                        <Tooltip content={resolvedPlaceholder} relationship="label">
-                            <Button
-                                ref={sendButtonRef}
-                                size="large"
-                                appearance="transparent"
-                                icon={<Send28Filled />}
-                                aria-label={t("components.questioninput.send_question", "Frage senden")}
-                                disabled={disabled || !question.trim()}
-                                onClick={sendQuestion}
-                            />
-                        </Tooltip>
                     </div>
                 </div>
 

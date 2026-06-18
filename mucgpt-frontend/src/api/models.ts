@@ -58,6 +58,7 @@ export interface ApplicationConfig {
     frontend_version: string;
     assistant_version: string;
     document_processing_enabled: boolean;
+    transcription_enabled: boolean;
     footer_link_url?: string;
     footer_label?: string;
     faq_url?: string;

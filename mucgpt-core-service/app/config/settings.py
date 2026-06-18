@@ -412,6 +412,7 @@ class Settings(BaseSettings):
     FOOTER_LABEL: str | None = None
     FAQ_URL: str | None = None
     INCIDENT_REPORT_URL: str | None = None
+    FEATURE_REQUEST_URL: str | None = None
     AD2IMAGE_URL: str | None = None
 
     # Backend settings

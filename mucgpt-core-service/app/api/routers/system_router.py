@@ -31,6 +31,7 @@ async def get_config(user_info=Depends(authenticate_user)) -> ConfigResponse:
         footer_label=settings.FOOTER_LABEL,
         faq_url=settings.FAQ_URL,
         incident_report_url=settings.INCIDENT_REPORT_URL,
+        feature_request_url=settings.FEATURE_REQUEST_URL,
         ad2image_url=settings.AD2IMAGE_URL,
     )
 

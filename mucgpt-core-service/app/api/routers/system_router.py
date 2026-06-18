@@ -27,6 +27,7 @@ async def get_config(user_info=Depends(authenticate_user)) -> ConfigResponse:
         frontend_version=settings.FRONTEND_VERSION,
         assistant_version=settings.ASSISTANT_VERSION,
         document_processing_enabled=settings.PARSER_BACKEND != ParserBackendType.NONE,
+        transcription_enabled=settings.TRANSCRIPTION_ENABLED,
         footer_link_url=settings.FOOTER_LINK_URL,
         footer_label=settings.FOOTER_LABEL,
         faq_url=settings.FAQ_URL,

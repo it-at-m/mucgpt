@@ -409,6 +409,10 @@ class ConfigResponse(BaseModel):
         False,
         description="Whether document upload and parsing is enabled. True when a parser backend (e.g. Kreuzberg) is configured.",
     )
+    transcription_enabled: bool = Field(
+        False,
+        description="Whether browser-based audio transcription is enabled in the frontend.",
+    )
     footer_link_url: str | None = Field(
         None,
         description="URL for the footer link.",

@@ -1,7 +1,7 @@
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { Button, Divider, DrawerBody, OverlayDrawer, FluentProvider, InlineDrawer } from "@fluentui/react-components";
-import { Navigation24Regular } from "@fluentui/react-icons";
+import { CalendarNote24Regular, Navigation24Regular } from "@fluentui/react-icons";
 import { useTranslation } from "react-i18next";
 
 import styles from "./Layout.module.css";
@@ -26,12 +26,15 @@ import { ApiError } from "../../api/fetch-utils";
 import { useGlobalToastContext } from "../../components/GlobalToastHandler/GlobalToastContext";
 import GlobalToastHandler from "../../components/GlobalToastHandler/GlobalToastHandler";
 import TutorialsButton from "../../components/TutorialsButton";
+import { TranscriptionSettingsButton } from "../../components/TranscriptionSettings/TranscriptionSettingsButton";
+import { TranscriptionSettingsProvider } from "../../components/TranscriptionSettings/TranscriptionSettingsContext";
 import { ToolsProvider } from "../../components/ToolsProvider";
 import Unauthorized from "../Unauthorized";
 import { ConfigContext } from "../../context/ConfigContext";
 import { AppSidebar } from "../../components/AppSidebar";
 import { UnifiedHistoryProvider, UnifiedSidebarHistory } from "../../components/UnifiedHistory";
 import { EdelweissSpinner } from "../../components/EdelweissSpinner";
+import { VersionInfo } from "../../components/VersionInfo";
 
 const APP_NAV_COLLAPSED_KEY = "APP_NAV_COLLAPSED";
 const MOBILE_LAYOUT_BREAKPOINT = 640;
@@ -54,6 +57,7 @@ interface AppShellProps {
 const AppShell = ({ config, isLight, languagePreference, onLanguageSelectionChanged, onThemeChange, onAcceptTermsOfUse, termsOfUseRead }: AppShellProps) => {
     const { t } = useTranslation();
     const location = useLocation();
+    const navigate = useNavigate();
     const faqUrl = config.faq_url;
     const incidentReportUrl = config.incident_report_url;
     const [isMobile, setIsMobile] = useState<boolean>(window.innerWidth <= MOBILE_LAYOUT_BREAKPOINT);
@@ -88,13 +92,14 @@ const AppShell = ({ config, isLight, languagePreference, onLanguageSelectionChan
     const secondaryTitle = t("components.history.history");
     const secondaryContent = !isMobile ? <UnifiedSidebarHistory /> : null;
     const mobileSecondaryContent = isMobile ? <UnifiedSidebarHistory requestClose={() => setMobileSidebarOpen(false)} /> : null;
+    const handleOpenVersionNotes = useCallback(() => {
+        navigate("/version");
+        setMobileSidebarOpen(false);
+    }, [navigate]);
 
     const utilitiesContent = (
         <div className={styles.mobileUtilities}>
             <div className={styles.mobileUtilityGroup}>
-                <div className={styles.mobileUtilityRow}>
-                    <ThemeSelector isLight={isLight} onThemeChange={onThemeChange} layout="row" label={t("common.theme")} />
-                </div>
                 <div className={styles.mobileUtilityRow}>
                     <LanguageSelector
                         defaultlang={languagePreference}
@@ -102,6 +107,10 @@ const AppShell = ({ config, isLight, languagePreference, onLanguageSelectionChan
                         layout="row"
                         label={t("common.language")}
                     />
+                </div>
+                <div className={styles.mobileUtilityRow}>{config.transcription_enabled ? <TranscriptionSettingsButton /> : null}</div>
+                <div className={styles.mobileUtilityRow}>
+                    <ThemeSelector isLight={isLight} onThemeChange={onThemeChange} layout="row" label={t("common.theme")} />
                 </div>
             </div>
             <Divider className={styles.settingsDivider} />
@@ -119,11 +128,34 @@ const AppShell = ({ config, isLight, languagePreference, onLanguageSelectionChan
                         <IncidentReportButton url={incidentReportUrl} />
                     </div>
                 )}
+                <div className={styles.mobileUtilityRow}>
+                    <FeedbackButton emailAddress="itm.kicc@muenchen.de" subject="MUCGPT" />
+                </div>
             </div>
             <Divider className={styles.settingsDivider} />
             <div className={styles.mobileUtilityGroup}>
                 <div className={styles.mobileUtilityRow}>
-                    <FeedbackButton emailAddress="itm.kicc@muenchen.de" subject="MUCGPT" />
+                    <TermsOfUseDialog
+                        defaultOpen={false}
+                        onAccept={onAcceptTermsOfUse}
+                        showTrigger
+                        requireAcceptance={false}
+                        triggerClassName={styles.mobileUtilityTrigger}
+                    />
+                </div>
+                <div className={styles.mobileUtilityRow}>
+                    <Button appearance="subtle" icon={<CalendarNote24Regular />} onClick={handleOpenVersionNotes}>
+                        {t("components.versioninfo.whats_new", "Was gibt's neues?")}
+                    </Button>
+                </div>
+                <div className={styles.mobileUtilityRow}>
+                    <VersionInfo
+                        app_version={config.app_version}
+                        core_version={config.core_version}
+                        frontend_version={config.frontend_version}
+                        assistant_version={config.assistant_version}
+                        layout="menu"
+                    />
                 </div>
             </div>
         </div>
@@ -319,19 +351,21 @@ export const Layout = () => {
                         <Unauthorized redirectUrl={unauthorizedRedirectUrl} />
                     ) : (
                         <ConfigContext.Provider value={config}>
-                            <ToolsProvider>
-                                <UnifiedHistoryProvider>
-                                    <AppShell
-                                        config={config}
-                                        isLight={isLight}
-                                        languagePreference={languagePreference}
-                                        onLanguageSelectionChanged={onLanguageSelectionChanged}
-                                        onThemeChange={onThemeChange}
-                                        onAcceptTermsOfUse={onAcceptTermsOfUse}
-                                        termsOfUseRead={termsOfUseRead}
-                                    />
-                                </UnifiedHistoryProvider>
-                            </ToolsProvider>
+                            <TranscriptionSettingsProvider deploymentEnabled={config.transcription_enabled}>
+                                <ToolsProvider>
+                                    <UnifiedHistoryProvider>
+                                        <AppShell
+                                            config={config}
+                                            isLight={isLight}
+                                            languagePreference={languagePreference}
+                                            onLanguageSelectionChanged={onLanguageSelectionChanged}
+                                            onThemeChange={onThemeChange}
+                                            onAcceptTermsOfUse={onAcceptTermsOfUse}
+                                            termsOfUseRead={termsOfUseRead}
+                                        />
+                                    </UnifiedHistoryProvider>
+                                </ToolsProvider>
+                            </TranscriptionSettingsProvider>
                         </ConfigContext.Provider>
                     )}
                     <GlobalToastHandler />

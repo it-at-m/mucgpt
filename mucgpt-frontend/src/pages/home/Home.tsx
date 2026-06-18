@@ -295,6 +295,7 @@ const Home = () => {
                         setSelectedTools={setSelectedTools}
                         tools={tools}
                         question={question}
+                        onTranscription={text => setQuestion(text)}
                     />
                 </div>
             </section>

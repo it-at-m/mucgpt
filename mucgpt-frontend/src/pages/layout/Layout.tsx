@@ -26,6 +26,8 @@ import { ApiError } from "../../api/fetch-utils";
 import { useGlobalToastContext } from "../../components/GlobalToastHandler/GlobalToastContext";
 import GlobalToastHandler from "../../components/GlobalToastHandler/GlobalToastHandler";
 import TutorialsButton from "../../components/TutorialsButton";
+import { TranscriptionSettingsButton } from "../../components/TranscriptionSettings/TranscriptionSettingsButton";
+import { TranscriptionSettingsProvider } from "../../components/TranscriptionSettings/TranscriptionSettingsContext";
 import { ToolsProvider } from "../../components/ToolsProvider";
 import Unauthorized from "../Unauthorized";
 import { ConfigContext } from "../../context/ConfigContext";
@@ -99,15 +101,16 @@ const AppShell = ({ config, isLight, languagePreference, onLanguageSelectionChan
         <div className={styles.mobileUtilities}>
             <div className={styles.mobileUtilityGroup}>
                 <div className={styles.mobileUtilityRow}>
-                    <ThemeSelector isLight={isLight} onThemeChange={onThemeChange} layout="row" label={t("common.theme")} />
-                </div>
-                <div className={styles.mobileUtilityRow}>
                     <LanguageSelector
                         defaultlang={languagePreference}
                         onSelectionChange={onLanguageSelectionChanged}
                         layout="row"
                         label={t("common.language")}
                     />
+                </div>
+                <div className={styles.mobileUtilityRow}>{config.transcription_enabled ? <TranscriptionSettingsButton /> : null}</div>
+                <div className={styles.mobileUtilityRow}>
+                    <ThemeSelector isLight={isLight} onThemeChange={onThemeChange} layout="row" label={t("common.theme")} />
                 </div>
             </div>
             <Divider className={styles.settingsDivider} />
@@ -348,19 +351,21 @@ export const Layout = () => {
                         <Unauthorized redirectUrl={unauthorizedRedirectUrl} />
                     ) : (
                         <ConfigContext.Provider value={config}>
-                            <ToolsProvider>
-                                <UnifiedHistoryProvider>
-                                    <AppShell
-                                        config={config}
-                                        isLight={isLight}
-                                        languagePreference={languagePreference}
-                                        onLanguageSelectionChanged={onLanguageSelectionChanged}
-                                        onThemeChange={onThemeChange}
-                                        onAcceptTermsOfUse={onAcceptTermsOfUse}
-                                        termsOfUseRead={termsOfUseRead}
-                                    />
-                                </UnifiedHistoryProvider>
-                            </ToolsProvider>
+                            <TranscriptionSettingsProvider deploymentEnabled={config.transcription_enabled}>
+                                <ToolsProvider>
+                                    <UnifiedHistoryProvider>
+                                        <AppShell
+                                            config={config}
+                                            isLight={isLight}
+                                            languagePreference={languagePreference}
+                                            onLanguageSelectionChanged={onLanguageSelectionChanged}
+                                            onThemeChange={onThemeChange}
+                                            onAcceptTermsOfUse={onAcceptTermsOfUse}
+                                            termsOfUseRead={termsOfUseRead}
+                                        />
+                                    </UnifiedHistoryProvider>
+                                </ToolsProvider>
+                            </TranscriptionSettingsProvider>
                         </ConfigContext.Provider>
                     )}
                     <GlobalToastHandler />

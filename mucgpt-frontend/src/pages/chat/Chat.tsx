@@ -791,6 +791,7 @@ const Chat = () => {
                 tools={tools}
                 uploadedData={uploadedData}
                 setUploadedData={setUploadedData}
+                onTranscription={text => setQuestion(text)}
             />
         ),
         [callApi, systemPrompt, question, t, isLoadingRef.current, selectedTools, tools, uploadedData, uploadedDataToDataSources]

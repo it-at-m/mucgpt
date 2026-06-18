@@ -22,7 +22,7 @@ export const FeatureRequestButton = ({ url }: FeatureRequestButtonProps) => {
             aria-label={t("components.feature_request_button.aria_label", "Verbesserungswunsch vorschlagen")}
             className={styles.incidentReportButton}
         >
-            {t("components.feature_request_button.aria_label", "Verbesserungswunsch vorschlagen")}
+            {t("components.feature_request_button.label", "Verbesserungswunsch vorschlagen")}
         </Button>
     );
 };

@@ -64,6 +64,7 @@ export interface ApplicationConfig {
     faq_url?: string;
     incident_report_url?: string;
     feature_request_url?: string;
+    contact_mail_url?: string;
     ad2image_url?: string;
 }
 

@@ -25,6 +25,7 @@ FOOTER_LABEL: "DAICE"
 FAQ_URL: "https://ki.muenchen.de/"
 INCIDENT_REPORT_URL: "https://ki.muenchen.de/"
 FEATURE_REQUEST_URL: "https://ki.muenchen.de/"
+CONTACT_MAIL_URL: "mailto:ki@muenchen.de"
 AD2IMAGE_URL: "http://localhost:8084"  # Base URL of the ad2image service
 
 # Backend settings

@@ -18,7 +18,8 @@ interface TermsOfUseDialogProps {
 export const TermsOfUseDialog = ({ defaultOpen, onAccept, showTrigger = true, triggerClassName, requireAcceptance = true }: TermsOfUseDialogProps) => {
     const { t } = useTranslation();
     const config = useConfigContext();
-    const faqUrl = config.faq_url;
+    const faqUrl = config.faq_url; const contactMailUrl = config.contact_mail_url;
+    const contactMailLabel = contactMailUrl?.replace(/^mailto:/, "").split("?")[0];
     const [open, setOpen] = useState<boolean>(defaultOpen);
     const trigger = showTrigger ? (
         <DialogTrigger disableButtonEnhancement>
@@ -102,9 +103,9 @@ export const TermsOfUseDialog = ({ defaultOpen, onAccept, showTrigger = true, tr
                                 <li>
                                     <strong>Ansprechpartner*innen:</strong> Bei Fragen und Feedback, sowie zum Melden von unangemessenen Ergebnissen von MUCGPT
                                     bitte an{" "}
-                                    <Link inline className={styles.link} href="mailto:itm.kicc@muenchen.de?subject=MUCGPT">
+                                    <Link inline className={styles.link} href={contactMailUrl}>
                                         {" "}
-                                        itm.kicc@muenchen.de
+                                        {contactMailLabel}
                                     </Link>{" "}
                                     wenden. Technische Fehler bitte an den{" "}
                                     <Link

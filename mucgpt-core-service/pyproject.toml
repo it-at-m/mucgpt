@@ -9,7 +9,7 @@ authors = [
     { name = "Paul Ilitz", email = "paul.ilitz@muenchen.de" },
 ]
 maintainers = [
-    { name = " ITM KICC", email = "itm.kicc@muenchen.de" },
+    { name = " ITM KIES", email = "ki@muenchen.de" },
     { name = "Michael Jaumann", email = "michael.jaumann@muenchen.de" },
     { name = "Paul Ilitz", email = "paul.ilitz@muenchen.de" },
 ]
@@ -77,7 +77,7 @@ env = [
     "MUCGPT_CORE_LOG_CONFIG=app/logconf.yaml",
     "MUCGPT_CORE_VERSION=0.0",
     "MUCGPT_CORE_COMMIT=12012lf",
-    '''MUCGPT_CORE_MODELS=[{{"type": "AZURE", "llm_name": "mucgpt-test-model", "deployment": "mucgpt-test-model", "endpoint": "https://testprovider.api", "api_key": "blub", "max_output_tokens": 16384, "max_input_tokens": 128000, "description": "Model developed by kicc. "}}]''',
+    '''MUCGPT_CORE_MODELS=[{{"type": "AZURE", "llm_name": "mucgpt-test-model", "deployment": "mucgpt-test-model", "endpoint": "https://testprovider.api", "api_key": "blub", "max_output_tokens": 16384, "max_input_tokens": 128000, "description": "Model developed by kies. "}}]''',
     "GIT_PYTHON_REFRESH=quiet",
 ]
 

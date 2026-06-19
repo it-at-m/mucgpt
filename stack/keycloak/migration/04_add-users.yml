@@ -22,12 +22,12 @@ changes:
       name: mucgpt-user
       password: "mucgpt"
   - addUser:
-      name: mucgpt-kicc-user
-      lastName: KICC
+      name: mucgpt-kies-user
+      lastName: KIES
       firstName: MUCCI
       enabled: true
       emailVerified: true
-      email: mucci@kicc.com
+      email: mucci@kies.com
       attributes:
         user_name:
           - mucci
@@ -38,7 +38,7 @@ changes:
         department:
           - "ITM-KM-DI"
   - updateUserPassword:
-      name: mucgpt-kicc-user
+      name: mucgpt-kies-user
       password: "mucgpt"
   - addUser:
       name: mucgpt-hr-user

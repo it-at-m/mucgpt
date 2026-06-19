@@ -165,7 +165,7 @@ function wordChunksFromMessage(message: string) {
         id: `chatcmpl-mock-${Math.random().toString(36).slice(2, 8)}`,
         object: "chat.completion.chunk",
         created: Math.floor(Date.now() / 1000),
-        model: "KICCGPT",
+        model: "KIESGPT",
         choices: [{ index: 0, delta: { content: w }, finish_reason: null }]
     }));
 }
@@ -176,14 +176,14 @@ export function generateChatStreamChunks(finalMessage: string) {
         id: `chatcmpl-mock-${Math.random().toString(36).slice(2, 8)}`,
         object: "chat.completion.chunk",
         created: Math.floor(Date.now() / 1000),
-        model: "KICCGPT",
+        model: "KIESGPT",
         choices: [{ index: 0, delta: { content: "" }, finish_reason: null }]
     });
     base.push({
         id: `chatcmpl-mock-${Math.random().toString(36).slice(2, 8)}`,
         object: "chat.completion.chunk",
         created: Math.floor(Date.now() / 1000),
-        model: "KICCGPT",
+        model: "KIESGPT",
         choices: [{ index: 0, delta: { content: "" }, finish_reason: "stop" as any }]
     });
     return base;
@@ -233,7 +233,7 @@ export function generateMindmapStreamChunks(topic: string) {
             id: `chatcmpl-mindmap-${Math.random().toString(36).slice(2, 8)}`,
             object: "chat.completion.chunk",
             created: Math.floor(Date.now() / 1000),
-            model: "KICCGPT",
+            model: "KIESGPT",
             choices: [{ index: 0, delta: { tool_calls: [{ name: "Brainstorming", state, content, metadata }] }, finish_reason: null }]
         });
     };
@@ -275,14 +275,14 @@ export function generateMindmapStreamChunks(topic: string) {
         id: `chatcmpl-mindmap-${Math.random().toString(36).slice(2, 8)}`,
         object: "chat.completion.chunk",
         created: Math.floor(Date.now() / 1000),
-        model: "KICCGPT",
+        model: "KIESGPT",
         choices: [{ index: 0, delta: { content: "Your mindmap is ready! (Adaptive ASCII edition)" }, finish_reason: null }]
     });
     chunks.push({
         id: `chatcmpl-mindmap-${Math.random().toString(36).slice(2, 8)}`,
         object: "chat.completion.chunk",
         created: Math.floor(Date.now() / 1000),
-        model: "KICCGPT",
+        model: "KIESGPT",
         choices: [{ index: 0, delta: { content: "" }, finish_reason: "stop" as any }]
     });
     return chunks;
@@ -295,7 +295,7 @@ export function generateSimplifyStreamChunks() {
             id: `chatcmpl-simplify-${Math.random().toString(36).slice(2, 8)}`,
             object: "chat.completion.chunk",
             created: Math.floor(Date.now() / 1000),
-            model: "KICCGPT",
+            model: "KIESGPT",
             choices: [{ index: 0, delta: { tool_calls: [{ name: "Simplify", state, content, metadata }] }, finish_reason: null }]
         });
     };
@@ -350,14 +350,14 @@ export function generateSimplifyStreamChunks() {
         id: `chatcmpl-simplify-${Math.random().toString(36).slice(2, 8)}`,
         object: "chat.completion.chunk",
         created: Math.floor(Date.now() / 1000),
-        model: "KICCGPT",
+        model: "KIESGPT",
         choices: [{ index: 0, delta: { content: "Simplification finished." }, finish_reason: null }]
     });
     chunks.push({
         id: `chatcmpl-simplify-${Math.random().toString(36).slice(2, 8)}`,
         object: "chat.completion.chunk",
         created: Math.floor(Date.now() / 1000),
-        model: "KICCGPT",
+        model: "KIESGPT",
         choices: [
             {
                 index: 0,
@@ -373,7 +373,7 @@ export function generateSimplifyStreamChunks() {
         id: `chatcmpl-simplify-${Math.random().toString(36).slice(2, 8)}`,
         object: "chat.completion.chunk",
         created: Math.floor(Date.now() / 1000),
-        model: "KICCGPT",
+        model: "KIESGPT",
         choices: [{ index: 0, delta: { content: "" }, finish_reason: "stop" as any }]
     });
     return chunks;

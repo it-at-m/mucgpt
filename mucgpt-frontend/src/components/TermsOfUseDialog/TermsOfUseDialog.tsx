@@ -18,7 +18,8 @@ interface TermsOfUseDialogProps {
 export const TermsOfUseDialog = ({ defaultOpen, onAccept, showTrigger = true, triggerClassName, requireAcceptance = true }: TermsOfUseDialogProps) => {
     const { t } = useTranslation();
     const config = useConfigContext();
-    const faqUrl = config.faq_url; const contactMailUrl = config.contact_mail_url;
+    const faqUrl = config.faq_url;
+    const contactMailUrl = config.contact_mail_url;
     const contactMailLabel = contactMailUrl?.replace(/^mailto:/, "").split("?")[0];
     const [open, setOpen] = useState<boolean>(defaultOpen);
     const trigger = showTrigger ? (
@@ -101,19 +102,22 @@ export const TermsOfUseDialog = ({ defaultOpen, onAccept, showTrigger = true, tr
                                     verwenden.
                                 </li>
                                 <li>
-                                    <strong>Ansprechpartner*innen:</strong> Bei Fragen und Feedback, sowie zum Melden von unangemessenen Ergebnissen von MUCGPT
-                                    bitte an{" "}
-                                    <Link inline className={styles.link} href={contactMailUrl}>
-                                        {" "}
-                                        {contactMailLabel}
-                                    </Link>{" "}
-                                    wenden. Technische Fehler bitte an den{" "}
+                                    <strong>Ansprechpartner*innen:</strong>{" "}
+                                    {contactMailUrl && (
+                                        <>
+                                            Bei Fragen und Feedback, sowie zum Melden von unangemessenen Ergebnissen von MUCGPT bitte an{" "}
+                                            <Link inline className={styles.link} href={contactMailUrl}>
+                                                {contactMailLabel}
+                                            </Link>{" "}
+                                            wenden.{" "}
+                                        </>
+                                    )}
+                                    Technische Fehler bitte an den{" "}
                                     <Link
                                         inline
                                         className={styles.link}
                                         href="https://wilma.muenchen.de/pages/it-nutzung-support/apps/content/it-servicedesk-neu"
                                     >
-                                        {" "}
                                         zuständigen Servicedesk
                                     </Link>{" "}
                                     melden

@@ -114,6 +114,7 @@ const Chat = () => {
     const [toolStatuses, setToolStatuses] = useState<ToolStatus[]>([]);
     const [isSettingsOpen, setIsSettingsOpen] = useState<boolean>(false);
     const [uploadedData, setUploadedData] = useState<UploadedData[]>([]);
+    const [isLoading, setIsLoading] = useState<boolean>(false);
 
     useToolStatusToasts(toolStatuses);
 
@@ -136,6 +137,11 @@ const Chat = () => {
     const isFirstRender = useRef(true);
     const activeChatRef = useRef(active_chat);
     const isLoadingRef = useRef(false);
+
+    const setLoadingState = useCallback((nextLoading: boolean) => {
+        isLoadingRef.current = nextLoading;
+        setIsLoading(nextLoading);
+    }, []);
 
     // Update activeChatRef whenever active_chat changes
     useEffect(() => {
@@ -253,7 +259,7 @@ const Chat = () => {
         async (question: string, system?: string, dataSources?: DataSource[]) => {
             lastQuestionRef.current = question;
             setError(undefined);
-            isLoadingRef.current = true;
+            setLoadingState(true);
 
             const askResponse: ChatResponse = { answer: "", tokens: 0, user_tokens: 0 } as AskResponse;
             const options: ChatOptions = {
@@ -278,14 +284,16 @@ const Chat = () => {
                     selectedTools,
                     setToolStatuses,
                     dataSources,
-                    lastAnswerRef
+                    lastAnswerRef,
+                    setLoadingState
                 );
             } catch (e) {
                 setError(e);
+            } finally {
+                setLoadingState(false);
             }
-            isLoadingRef.current = false;
         },
-        [answers, creativity, LLM, storageService, fetchHistory, selectedTools, setToolStatuses]
+        [answers, creativity, LLM, storageService, fetchHistory, selectedTools, setToolStatuses, setLoadingState]
     );
 
     // Regenerate-Funktion
@@ -306,16 +314,16 @@ const Chat = () => {
             const activeChat = activeChatRef.current;
 
             try {
-                isLoadingRef.current = true;
+                setLoadingState(true);
                 setError(undefined);
                 await handleRollback(index, activeChat, dispatch, storageService, lastQuestionRef, setQuestion, clearChat, fetchHistory);
             } catch (e) {
                 setError(e);
             } finally {
-                isLoadingRef.current = false;
+                setLoadingState(false);
             }
         },
-        [storageService, clearChat, fetchHistory, setQuestion, isLoadingRef.current, activeChatRef.current]
+        [storageService, clearChat, fetchHistory, setQuestion, isLoadingRef.current, activeChatRef.current, setLoadingState]
     );
 
     // Konfigurationsänderungen mit memoisierten Callbacks
@@ -738,7 +746,7 @@ const Chat = () => {
                     );
                 }}
                 onRollbackMessage={onRollbackMessage}
-                isLoading={isLoadingRef.current}
+                isLoading={isLoading}
                 error={error}
                 makeApiRequest={() => {
                     dispatch({ type: "SET_ANSWERS", payload: answers.slice(0, -1) });
@@ -755,18 +763,7 @@ const Chat = () => {
                 lastAnswerRef={lastAnswerRef}
             />
         ),
-        [
-            answers,
-            onRegenerateResponseClicked,
-            onRollbackMessage,
-            error,
-            callApi,
-            systemPrompt,
-            isLoadingRef.current,
-            lastQuestionRef,
-            chatMessageStreamEnd,
-            lastAnswerRef
-        ]
+        [answers, onRegenerateResponseClicked, onRollbackMessage, error, callApi, systemPrompt, isLoading, lastQuestionRef, chatMessageStreamEnd, lastAnswerRef]
     );
 
     const starterPromptsComponent = useMemo(
@@ -778,7 +775,7 @@ const Chat = () => {
         () => (
             <QuestionInput
                 clearOnSend
-                disabled={isLoadingRef.current || error !== undefined}
+                disabled={isLoading || error !== undefined}
                 draftCacheKey="chat-main"
                 onSend={(question, datas) => {
                     const dataSources = uploadedDataToDataSources(datas);
@@ -794,7 +791,7 @@ const Chat = () => {
                 onTranscription={text => setQuestion(text)}
             />
         ),
-        [callApi, systemPrompt, question, t, isLoadingRef.current, selectedTools, tools, uploadedData, uploadedDataToDataSources]
+        [callApi, systemPrompt, question, t, isLoading, selectedTools, tools, uploadedData, uploadedDataToDataSources]
     );
 
     const layout = useMemo(
@@ -841,7 +838,7 @@ const Chat = () => {
             LLM.llm_name,
             onLLMSelectionChange,
             clearChat,
-            isLoadingRef.current,
+            isLoading,
             isSettingsOpen,
             creativity,
             onCreativityChanged,

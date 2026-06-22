@@ -851,7 +851,15 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                                     key={index}
                                     answer={answer.response}
                                     onRegenerateResponseClicked={isDeletedAssistant ? undefined : onRegenerateResponseClicked}
-                                    onFollowUpActionSend={isDeletedAssistant ? undefined : prompt => callApi(prompt)}
+                                    onFollowUpActionSend={
+                                        isDeletedAssistant
+                                            ? undefined
+                                            : prompt => {
+                                                  setLastQuestionValue(prompt);
+                                                  setIsLoadingValue(true);
+                                                  void callApi(prompt);
+                                              }
+                                    }
                                 />
                             )}
                             {index !== answers.length - 1 && <Answer key={index} answer={answer.response} />}

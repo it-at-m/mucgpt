@@ -1,0 +1,30 @@
+id: recreate_mucgpt_client_clean_scopes
+author: Default
+realm: local_realm
+changes:
+  - deleteClient:
+      clientId: mucgpt
+
+  - addSimpleClient:
+      clientId: mucgpt
+      secret: client_secret
+      publicClient: false
+      redirectUris:
+        - http://*
+        - https://*
+
+  - assignDefaultClientScope:
+      clientId: mucgpt
+      clientScopeName: openid
+
+  - assignDefaultClientScope:
+      clientId: mucgpt
+      clientScopeName: profile
+
+  - assignDefaultClientScope:
+      clientId: mucgpt
+      clientScopeName: local_audience
+
+  - assignDefaultClientScope:
+      clientId: mucgpt
+      clientScopeName: lhm-core

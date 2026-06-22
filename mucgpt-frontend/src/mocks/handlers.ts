@@ -875,18 +875,14 @@ export const handlers = [
     http.get("/api/sso/userinfo", () => {
         return HttpResponse.json({
             sub: "mock-user-123",
-            displayName: "Mucci",
-            surname: "Maskottchen",
-            telephoneNumber: "+49 89 1234567",
-            email: "mucci.maskottchen@muc.de",
-            username: "mucci.maskottchen",
-            givenname: "Max",
+            name: "Max Maskottchen",
+            family_name: "Maskottchen",
+            given_name: "Max",
+            middle_name: "Theo",
+            email: "mucgpt@user.com",
+            preferred_username: "mucgpt-user",
             department: "IT-KI",
-            lhmObjectID: "2232324224",
-            preferred_username: "mucci.maskottchen@muc.de",
-            memberof: ["IT", "IT-KI"],
-            user_roles: ["lhm-ab-mucgpt-user"],
-            authorities: []
+            lhmObjectID: "2232324224"
         });
     }),
 

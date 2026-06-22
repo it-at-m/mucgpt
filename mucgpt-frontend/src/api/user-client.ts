@@ -1,26 +1,32 @@
 import { getConfig, handleApiRequest } from "./fetch-utils";
 import { User } from "./models";
 
+interface RawUserInfo {
+    sub?: string;
+    name?: string;
+    family_name?: string;
+    given_name?: string;
+    middle_name?: string;
+    email?: string;
+    preferred_username?: string;
+    department?: string;
+    lhmObjectID?: string;
+}
+
+const toStringValue = (value: unknown): string => (typeof value === "string" ? value : "");
+
 export async function getUser(): Promise<User> {
-    const json: Partial<User> = await handleApiRequest(() => fetch("/api/sso/userinfo", getConfig()), "Failed to get user information");
+    const json: RawUserInfo = await handleApiRequest(() => fetch("/api/sso/userinfo", getConfig()), "Failed to get user information");
 
-    const u: Partial<User> = {};
-    u.sub = json.sub || "";
-
-    // LHM
-    u.displayName = json.displayName || "";
-    u.surname = json.surname || "";
-    u.telephoneNumber = json.telephoneNumber || "";
-    u.email = json.email || "";
-    u.username = json.username || "";
-    u.givenname = json.givenname || "";
-    u.department = json.department || "";
-    u.lhmObjectID = json.lhmObjectID || "";
-
-    // LHM_Extended
-    u.preferred_username = json.preferred_username || "";
-    u.memberof = json.memberof || [];
-    u.user_roles = json.user_roles || [];
-    u.authorities = json.authorities || [];
-    return u;
+    return {
+        sub: toStringValue(json.sub),
+        name: toStringValue(json.name),
+        family_name: toStringValue(json.family_name),
+        given_name: toStringValue(json.given_name),
+        middle_name: toStringValue(json.middle_name),
+        email: toStringValue(json.email),
+        preferred_username: toStringValue(json.preferred_username),
+        department: toStringValue(json.department),
+        lhmObjectID: toStringValue(json.lhmObjectID)
+    };
 }

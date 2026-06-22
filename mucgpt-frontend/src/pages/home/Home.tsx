@@ -67,7 +67,7 @@ const Home = () => {
 
     useEffect(() => {
         if (user) {
-            setUserName(user.givenname || user.displayName || user.username || "User");
+            setUserName(user.given_name || user.name || "User");
         } else {
             setUserName("");
         }

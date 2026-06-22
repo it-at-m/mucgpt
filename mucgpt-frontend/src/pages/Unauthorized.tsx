@@ -12,7 +12,7 @@ const Unauthorized = ({ redirectUrl }: UnauthorizedProps) => {
     const { t } = useTranslation();
     const { user, isLoading } = useContext(UserContext);
 
-    const userName = user?.givenname || user?.displayName || user?.username || "";
+    const userName = user?.given_name || user?.name || "";
 
     if (isLoading) {
         return (

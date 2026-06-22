@@ -6,3 +6,8 @@ includes:
   - path: 05_assign-roles.yml
   - path: 06_local-audience.yml
   - path: 07_lhm-scopes.yml
+  - path: 08_add-lhm-core-scope.yml
+  - path: 09_recreate-mucgpt-client-clean-scopes.yml
+  - path: 10_add-mucgpt-role-claims.yml
+  - path: 11_recreate-mucgpt-client-roles.yml
+  - path: 12_add-email-default-scope.yml

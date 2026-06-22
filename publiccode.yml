@@ -70,7 +70,6 @@ description:
     awards:
       - 'eGovernment-Wettbewerb 2024: 3. Platz in der Kategorie
         "Digitalisierungsschub durch KI und moderne Infrastruktur"'
-    genericName: "KI Assistenz"
   en:
     localisedName: AI toolkit
     shortDescription: MUCGPT is an AI toolkit centered on reusable, shareable assistants with extensible tools.
@@ -115,7 +114,6 @@ description:
     awards:
       - 'eGovernment competition 2024: 3rd place in the category "Digitalization
         boost through AI and modern infrastructure"'
-    genericName: "AI assistance"
 legal:
   license: MIT
   mainCopyrightOwner: Landeshauptstadt München

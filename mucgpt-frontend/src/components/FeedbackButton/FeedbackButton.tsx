@@ -5,14 +5,16 @@ import { useTranslation } from "react-i18next";
 import styles from "./FeedbackButton.module.css";
 
 interface FeedbackButtonProps {
-    emailAddress: string;
+    contactMailUrl: string;
     subject?: string;
 }
 
-export const FeedbackButton = ({ emailAddress, subject = "Feedback" }: FeedbackButtonProps) => {
+export const FeedbackButton = ({ contactMailUrl, subject = "Feedback" }: FeedbackButtonProps) => {
     const { t } = useTranslation();
 
-    const mailtoLink = `mailto:${emailAddress}?subject=${encodeURIComponent(subject)}`;
+    const mailtoLink = contactMailUrl.includes("subject=")
+        ? contactMailUrl
+        : `${contactMailUrl}${contactMailUrl.includes("?") ? "&" : "?"}subject=${encodeURIComponent(subject)}`;
 
     return (
         <Button

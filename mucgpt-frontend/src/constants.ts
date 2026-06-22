@@ -5,7 +5,7 @@ import { IndexedDBStorage } from "./service/indexedDBStorage";
 export const DEFAULT_APP_CONFIG: ApplicationConfig = {
     models: [
         {
-            llm_name: "KICC GPT",
+            llm_name: "KIESGPT",
             max_input_tokens: 128000,
             description: "",
             knowledge_cut_off: "",
@@ -18,7 +18,7 @@ export const DEFAULT_APP_CONFIG: ApplicationConfig = {
             inference_location: null
         },
         {
-            llm_name: "Unknown GPT",
+            llm_name: "UnknownGPT",
             max_input_tokens: 128000,
             description: "",
             knowledge_cut_off: "",

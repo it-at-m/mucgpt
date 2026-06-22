@@ -433,6 +433,10 @@ class ConfigResponse(BaseModel):
         None,
         description="URL for the feature request link.",
     )
+    contact_mail_url: str | None = Field(
+        None,
+        description="URL for the contact mail link.",
+    )
     ad2image_url: str | None = Field(
         None,
         description="Base URL of the ad2image service for Gravatar-compatible avatar images.",

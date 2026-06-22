@@ -243,4 +243,4 @@ Please note that MUCGPT uses **Kreuzberg** as an optional dependency for documen
 
 ## 📬 Contact
 
-it@M - <itm.kicc@muenchen.de>
+it@M - <ki@muenchen.de>

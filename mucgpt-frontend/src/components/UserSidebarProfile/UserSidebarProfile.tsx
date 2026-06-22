@@ -1,4 +1,4 @@
-import { Popover, PopoverSurface, PopoverTrigger, Tooltip } from "@fluentui/react-components";
+import { Avatar, Popover, PopoverSurface, PopoverTrigger, Tooltip } from "@fluentui/react-components";
 import { MoreHorizontal20Regular } from "@fluentui/react-icons";
 import { ReactNode, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -99,11 +99,7 @@ export const UserSidebarProfile = ({ collapsed, isMobile, utilitiesContent, popo
         wasPopoverOpenRef.current = isPopoverOpen;
     }, [isPopoverOpen]);
 
-    const avatar = (
-        <div className={styles.avatarFallback} aria-hidden="true">
-            {userProfile.initials}
-        </div>
-    );
+    const avatar = <Avatar className={styles.avatarFallback} name={userProfile.initials} aria-hidden="true" />;
 
     const trigger = (
         <button ref={triggerButtonRef} type="button" className={triggerClassName} aria-label={t("common.settings")}>

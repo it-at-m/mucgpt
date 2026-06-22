@@ -10,3 +10,4 @@ includes:
   - path: 09_recreate-mucgpt-client-clean-scopes.yml
   - path: 10_add-mucgpt-role-claims.yml
   - path: 11_recreate-mucgpt-client-roles.yml
+  - path: 12_add-email-default-scope.yml

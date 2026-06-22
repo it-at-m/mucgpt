@@ -64,6 +64,7 @@ export interface ApplicationConfig {
     faq_url?: string;
     incident_report_url?: string;
     feature_request_url?: string;
+    contact_mail_url?: string;
     ad2image_url?: string;
 }
 
@@ -241,20 +242,14 @@ export interface ToolListResponse {
 
 export interface User {
     sub?: string;
-    // LHM
-    displayName?: string;
-    surname?: string;
-    telephoneNumber?: string;
+    name?: string;
+    family_name?: string;
+    given_name?: string;
+    middle_name?: string;
     email?: string;
-    username?: string;
-    givenname?: string;
+    preferred_username?: string;
     department?: string;
     lhmObjectID?: string;
-    // LHM_Extended
-    preferred_username?: string;
-    memberof?: string[];
-    user_roles?: string[];
-    authorities?: string[];
 }
 
 export type CommunityAssistant = {

@@ -62,6 +62,7 @@ const AppShell = ({ config, isLight, languagePreference, onLanguageSelectionChan
     const faqUrl = config.faq_url;
     const incidentReportUrl = config.incident_report_url;
     const featureRequestUrl = config.feature_request_url;
+    const contactMailUrl = config.contact_mail_url;
     const [isMobile, setIsMobile] = useState<boolean>(window.innerWidth <= MOBILE_LAYOUT_BREAKPOINT);
     const [mobileSidebarOpen, setMobileSidebarOpen] = useState<boolean>(false);
     const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(() => localStorage.getItem(APP_NAV_COLLAPSED_KEY) === "true");
@@ -135,9 +136,11 @@ const AppShell = ({ config, isLight, languagePreference, onLanguageSelectionChan
                         <FeatureRequestButton url={featureRequestUrl} />
                     </div>
                 )}
-                <div className={styles.mobileUtilityRow}>
-                    <FeedbackButton emailAddress="itm.kicc@muenchen.de" subject="MUCGPT" />
-                </div>
+                {contactMailUrl && (
+                    <div className={styles.mobileUtilityRow}>
+                        <FeedbackButton contactMailUrl={contactMailUrl} />
+                    </div>
+                )}
             </div>
             <Divider className={styles.settingsDivider} />
             <div className={styles.mobileUtilityGroup}>

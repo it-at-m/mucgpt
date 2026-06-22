@@ -69,7 +69,7 @@ description:
       - docs/darkmode_i18n.png
     awards:
       - 'eGovernment-Wettbewerb 2024: 3. Platz in der Kategorie
-        "Digitalisierungsschub durch KI und moderne Infrastruktur "'
+        "Digitalisierungsschub durch KI und moderne Infrastruktur"'
   en:
     localisedName: AI toolkit
     shortDescription: MUCGPT is an AI toolkit centered on reusable, shareable assistants with extensible tools.

@@ -1,0 +1,21 @@
+id: add_mucgpt_role_claims
+author: Default
+realm: local_realm
+changes:
+  - addClientMapper:
+      clientId: mucgpt
+      name: userClientRolesAuthorities
+      protocolMapper: oidc-usermodel-client-role-mapper
+      config:
+        access.token.claim: true
+        id.token.claim: true
+        userinfo.token.claim: true
+        jsonType.label: String
+        multivalued: true
+        claim.name: "authorities"
+        usermodel.clientRoleMapping.clientId: mucgpt
+        usermodel.clientRoleMapping.rolePrefix: "ROLE_"
+
+  - assignDefaultClientScope:
+      clientId: mucgpt
+      clientScopeName: roles

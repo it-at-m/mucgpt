@@ -3,6 +3,7 @@ import { MoreHorizontal20Regular } from "@fluentui/react-icons";
 import { ReactNode, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { User } from "../../api/models";
+import { useConfigContext } from "../../context/ConfigContext";
 import { UserContext } from "../../pages/layout/UserContextProvider";
 import styles from "./UserSidebarProfile.module.css";
 
@@ -21,6 +22,8 @@ interface DerivedUserProfile {
 }
 
 const normalizeValue = (value?: string) => value?.trim().replace(/\s+/g, " ") ?? "";
+
+const normalizeUidPart = (value?: string) => normalizeValue(value).toLowerCase().replace(/\s+/g, "");
 
 const getInitialsFromName = (name: string) => {
     const parts = name.split(" ").filter(Boolean);
@@ -44,6 +47,51 @@ const getPreferredNameSource = (user: User | null) => {
     }
 
     return "";
+};
+
+const getPreferredAvatarUid = (user: User | null) => {
+    const preferredUsername = normalizeUidPart(user?.preferred_username);
+    if (preferredUsername) {
+        return preferredUsername.includes("@") ? preferredUsername.split("@")[0] : preferredUsername;
+    }
+
+    const givenName = normalizeUidPart(user?.given_name);
+    const familyName = normalizeUidPart(user?.family_name);
+    if (givenName && familyName) {
+        return `${givenName}.${familyName}`;
+    }
+
+    const emailPrefix = normalizeUidPart(user?.email).split("@")[0] ?? "";
+    if (emailPrefix) {
+        return emailPrefix;
+    }
+
+    return "";
+};
+
+const buildAvatarUrl = (baseUrl: string, uid: string) => {
+    const normalizedBaseUrl = normalizeValue(baseUrl);
+    if (!normalizedBaseUrl || !uid) {
+        return "";
+    }
+
+    try {
+        const url = new URL(normalizedBaseUrl);
+        if (!url.pathname.toLowerCase().includes("/avatar")) {
+            const pathname = url.pathname.endsWith("/") ? url.pathname.slice(0, -1) : url.pathname;
+            url.pathname = `${pathname}/avatar`;
+        }
+        url.searchParams.set("uid", uid);
+        return url.toString();
+    } catch {
+        const [rawPath, rawQuery = ""] = normalizedBaseUrl.split("?", 2);
+        const hasAvatarPath = /\/avatar\/?$/i.test(rawPath);
+        const pathWithAvatar = hasAvatarPath ? rawPath : `${rawPath.replace(/\/$/, "")}/avatar`;
+        const queryParams = new URLSearchParams(rawQuery);
+        queryParams.set("uid", uid);
+        const queryString = queryParams.toString();
+        return queryString ? `${pathWithAvatar}?${queryString}` : pathWithAvatar;
+    }
 };
 
 const deriveUserProfile = (user: User | null, fallbackName: string): DerivedUserProfile => {
@@ -77,10 +125,13 @@ const deriveUserProfile = (user: User | null, fallbackName: string): DerivedUser
 export const UserSidebarProfile = ({ collapsed, isMobile, utilitiesContent, popoverClassName, utilitiesContentClassName }: UserSidebarProfileProps) => {
     const { t } = useTranslation();
     const { user } = useContext(UserContext);
+    const config = useConfigContext();
     const fallbackName = t("common.user", "User");
 
     const userProfile = useMemo(() => deriveUserProfile(user, fallbackName), [user, fallbackName]);
     const tooltipLabel = useMemo(() => getPreferredNameSource(user) || userProfile.displayName, [user, userProfile.displayName]);
+    const avatarUid = useMemo(() => getPreferredAvatarUid(user), [user]);
+    const avatarImageUrl = useMemo(() => buildAvatarUrl(config.ad2image_url ?? "", avatarUid), [config.ad2image_url, avatarUid]);
     const isCollapsed = collapsed && !isMobile;
     const triggerClassName = `${styles.triggerButton} ${isCollapsed ? styles.triggerButtonCollapsed : ""}`;
 
@@ -99,7 +150,14 @@ export const UserSidebarProfile = ({ collapsed, isMobile, utilitiesContent, popo
         wasPopoverOpenRef.current = isPopoverOpen;
     }, [isPopoverOpen]);
 
-    const avatar = <Avatar className={styles.avatarFallback} name={userProfile.initials} aria-hidden="true" />;
+    const avatar = (
+        <Avatar
+            className={styles.avatarFallback}
+            name={userProfile.displayName}
+            image={avatarImageUrl ? { src: avatarImageUrl, alt: userProfile.displayName } : undefined}
+            aria-hidden="true"
+        />
+    );
 
     const trigger = (
         <button ref={triggerButtonRef} type="button" className={triggerClassName} aria-label={t("common.settings")}>

@@ -178,8 +178,9 @@ const AppShell = ({ config, isLight, languagePreference, onLanguageSelectionChan
                 </a>
 
                 <div
-                    className={`${styles.shellBody} ${!isMobile && isSidebarCollapsed ? styles.shellBodyCollapsed : ""} ${isMobile ? styles.shellBodyMobile : ""
-                        }`}
+                    className={`${styles.shellBody} ${!isMobile && isSidebarCollapsed ? styles.shellBodyCollapsed : ""} ${
+                        isMobile ? styles.shellBodyMobile : ""
+                    }`}
                 >
                     {!isMobile && (
                         <aside className={styles.sidebarColumn}>

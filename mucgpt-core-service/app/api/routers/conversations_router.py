@@ -78,6 +78,7 @@ async def create_conversation(
     repo = ConversationRepository(session)
     conversation = await repo.create(
         user_id=user_info.user_id,
+        conversation_id=request.id,
         title=request.title,
         assistant_id=request.assistant_id,
         model=request.model,

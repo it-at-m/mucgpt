@@ -24,14 +24,15 @@ logger = getLogger()
 router = APIRouter(prefix="/v1")
 
 
-def _last_user_message(
+def _storable_messages(
     messages: list[ChatCompletionMessage],
-) -> ChatCompletionMessage | None:
-    """Return the final user-role message in the request, if any."""
-    for message in reversed(messages):
-        if message.role == "user":
-            return message
-    return None
+) -> list[tuple[str, str]]:
+    """Return (role, content) pairs to persist: user/assistant turns only.
+
+    System messages are chat configuration rather than conversation content,
+    so they are not stored.
+    """
+    return [(m.role, m.content) for m in messages if m.role in ("user", "assistant")]
 
 
 def get_temperature_from_request(request: ChatCompletionRequest) -> float:
@@ -107,25 +108,33 @@ async def chat_completions(
     # enabled tools, prompts, data sources, and policy state request-scoped.
     ae = await init_agent(user_info=user_info)
 
-    # Resolve persistence target. Ownership is enforced up-front so an invalid
-    # conversation_id fails fast with 404 rather than after an LLM call.
+    # Resolve persistence target. A client-supplied conversation_id is created
+    # on first use (the id is the client-generated UUID), so chats become
+    # persistent without a separate create call. The client remains the source
+    # of truth for the conversation, so each turn we sync the durable copy to
+    # the request history (this also mirrors client-side rollback/regenerate
+    # edits for free), then append the assistant turn once it is produced.
     conversation_id = request.conversation_id
     repo: ConversationRepository | None = None
     if conversation_id:
         repo = ConversationRepository(session)
         conversation = await repo.get_for_user(conversation_id, user_info.user_id)
         if conversation is None:
-            raise HTTPException(status_code=404, detail="Conversation not found")
-        # Persist the incoming user turn before invoking the agent.
-        user_message = _last_user_message(request.messages)
-        if user_message is not None:
-            await repo.append_message(
-                conversation_id,
-                user_info.user_id,
-                role="user",
-                content=user_message.content,
+            # First turn: auto-create under the client-supplied id.
+            await repo.create(
+                user_id=user_info.user_id,
+                conversation_id=conversation_id,
+                model=request.model,
+                assistant_id=request.assistant_id,
             )
-            await session.commit()
+        # Sync the stored history to the (authoritative) request history,
+        # including the incoming user turn, before invoking the agent.
+        await repo.replace_messages(
+            conversation_id,
+            user_info.user_id,
+            _storable_messages(request.messages),
+        )
+        await session.commit()
 
     try:
         # Convert creativity to temperature
@@ -149,7 +158,6 @@ async def chat_completions(
                 enabled_tools=enabled_tools,
                 assistant_id=request.assistant_id,
                 data_sources=data_sources,
-                conversation_id=conversation_id,
             )
 
             async def sse_generator():
@@ -187,7 +195,6 @@ async def chat_completions(
                 enabled_tools=enabled_tools,
                 assistant_id=request.assistant_id,
                 data_sources=data_sources,
-                conversation_id=conversation_id,
             )
             if repo is not None and response.choices:
                 await repo.append_message(

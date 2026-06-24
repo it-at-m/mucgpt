@@ -102,6 +102,58 @@ async def test_append_message_cross_user_returns_none(db_session):
 
 
 @pytest.mark.asyncio
+async def test_create_with_client_supplied_id(db_session):
+    repo = ConversationRepository(db_session)
+    conv = await repo.create(user_id=USER_A, conversation_id="fixed-id-42")
+    await db_session.commit()
+
+    assert conv.id == "fixed-id-42"
+    assert await repo.get_for_user("fixed-id-42", USER_A) is not None
+
+
+@pytest.mark.asyncio
+async def test_replace_messages_overwrites_and_resequences(db_session):
+    repo = ConversationRepository(db_session)
+    conv = await repo.create(
+        user_id=USER_A,
+        messages=[("user", "u1"), ("assistant", "a1"), ("user", "u2")],
+    )
+    await db_session.commit()
+
+    # Replace with a shorter history (mirrors a client-side rollback).
+    replaced = await repo.replace_messages(
+        conv.id, USER_A, [("user", "u1"), ("assistant", "a1-regenerated")]
+    )
+    await db_session.commit()
+    assert replaced is not None
+
+    fetched = await repo.get_for_user(conv.id, USER_A)
+    assert [(m.sequence, m.role, m.content) for m in fetched.messages] == [
+        (0, "user", "u1"),
+        (1, "assistant", "a1-regenerated"),
+    ]
+
+    # A subsequent append continues from the new max sequence (no collision).
+    appended = await repo.append_message(
+        conv.id, USER_A, role="user", content="u2-again"
+    )
+    await db_session.commit()
+    assert appended is not None and appended.sequence == 2
+
+
+@pytest.mark.asyncio
+async def test_replace_messages_cross_user_returns_none(db_session):
+    repo = ConversationRepository(db_session)
+    conv = await repo.create(user_id=USER_A, messages=[("user", "hi")])
+    await db_session.commit()
+
+    assert await repo.replace_messages(conv.id, USER_B, [("user", "x")]) is None
+    # The original message is untouched.
+    fetched = await repo.get_for_user(conv.id, USER_A)
+    assert [m.content for m in fetched.messages] == ["hi"]
+
+
+@pytest.mark.asyncio
 async def test_update_meta(db_session):
     repo = ConversationRepository(db_session)
     conv = await repo.create(user_id=USER_A, title="old")

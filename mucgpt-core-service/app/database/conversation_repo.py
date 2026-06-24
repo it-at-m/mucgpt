@@ -22,19 +22,26 @@ class ConversationRepository:
         self,
         *,
         user_id: str,
+        conversation_id: str | None = None,
         title: str | None = None,
         assistant_id: str | None = None,
         model: str | None = None,
         config: dict | None = None,
         messages: Iterable[tuple[str, str]] | None = None,
     ) -> Conversation:
-        """Create a conversation, optionally seeding (role, content) messages."""
+        """Create a conversation, optionally seeding (role, content) messages.
+
+        ``conversation_id`` lets the caller supply the primary key (e.g. a
+        client-generated UUID so the same id is used end-to-end). When omitted
+        the model's default UUID is generated.
+        """
         conversation = Conversation(
             user_id=user_id,
             title=title,
             assistant_id=assistant_id,
             model=model,
             config=config,
+            **({"id": conversation_id} if conversation_id else {}),
         )
         self.session.add(conversation)
         await self.session.flush()  # assign id
@@ -96,6 +103,37 @@ class ConversationRepository:
         await self.session.delete(conversation)
         await self.session.flush()
         return True
+
+    async def replace_messages(
+        self,
+        conversation_id: str,
+        user_id: str,
+        messages: Iterable[tuple[str, str]],
+    ) -> Conversation | None:
+        """Replace all stored messages with the given (role, content) sequence.
+
+        Ownership-scoped. Keeps the durable copy in sync with the client's
+        authoritative conversation history each turn (so client-side
+        rollback/regenerate edits are mirrored without extra endpoints).
+        Returns None if the conversation is not owned by the user.
+        """
+        conversation = await self.get_for_user(conversation_id, user_id)
+        if conversation is None:
+            return None
+
+        # Clear then flush the deletes first so re-inserting from sequence 0
+        # cannot collide with the (conversation_id, sequence) unique constraint.
+        conversation.messages[:] = []
+        await self.session.flush()
+
+        for sequence, (role, content) in enumerate(messages):
+            conversation.messages.append(
+                Message(sequence=sequence, role=role, content=content)
+            )
+        conversation.updated_at = func.now()
+        await self.session.flush()
+        await self.session.refresh(conversation)
+        return conversation
 
     async def append_message(
         self,

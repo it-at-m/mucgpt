@@ -42,7 +42,43 @@ export type ChatRequest = {
     enabled_tools?: string[];
     assistant_id?: string;
     data_sources?: DataSource[];
+    // Server-side conversation id. When set, the backend persists this chat's
+    // history under it (created on first use), keyed by the authenticated user.
+    conversation_id?: string;
 };
+
+// Server-side chat persistence (mirrors the backend conversations API).
+export interface ConversationMessage {
+    role: "system" | "user" | "assistant";
+    content: string;
+}
+
+export interface ConversationSummary {
+    id: string;
+    title?: string | null;
+    favorite: boolean;
+    assistant_id?: string | null;
+    model?: string | null;
+    created_at: string;
+    updated_at: string;
+}
+
+export interface ConversationDetail extends ConversationSummary {
+    messages: ConversationMessage[];
+}
+
+export interface CreateConversationRequest {
+    id?: string;
+    title?: string;
+    assistant_id?: string;
+    model?: string;
+    messages?: ConversationMessage[];
+}
+
+export interface UpdateConversationRequest {
+    title?: string;
+    favorite?: boolean;
+}
 
 export type CreateAssistantRequest = {
     input: string;

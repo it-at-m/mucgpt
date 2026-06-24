@@ -1,13 +1,17 @@
-"""End-to-end proof that chat persistence + agent-state checkpointing work
-with the model endpoint DOWN.
+"""End-to-end proof that chat persistence works with the model endpoint DOWN.
 
 The only LLM is an in-process FakeChatModel and the only datastore is in-memory
-SQLite + an in-process MemorySaver. A passing run demonstrates the whole flow
-operates with no network:
+SQLite. A passing run demonstrates the whole flow operates with no network:
 
-  A) app-level store: user + assistant turns persisted and reloadable
-  B) checkpointer:    graph state persisted per conversation thread and resumable
-  + backward-compat:  no conversation_id -> stateless, no rows written
+  A) request-authoritative store: the client owns the conversation; each turn
+     the durable copy is synced to the request history and the assistant turn
+     is appended, so the stored conversation reloads and grows/shrinks with the
+     client (client-side rollback/regenerate are mirrored for free).
+  B) auto-create:     an unknown conversation_id is created on first use.
+  + backward-compat:  no conversation_id -> stateless, no rows written.
+
+The LangGraph checkpointer is intentionally NOT engaged by the chat flow (it is
+reserved for a future resume feature), so normal turns write no checkpoint.
 """
 
 import json
@@ -98,23 +102,36 @@ def test_without_conversation_id_is_stateless(test_client_with_fake_model):
     assert client.get(BASE).json() == []
 
 
-def test_invalid_conversation_id_returns_404(test_client_with_fake_model):
+def test_unknown_conversation_id_is_auto_created(test_client_with_fake_model):
+    """A client-supplied conversation_id that does not exist yet is created on
+    first use (the id is the client-generated UUID), so chats persist without a
+    separate create call."""
     client = test_client_with_fake_model
+    new_id = "client-generated-id-123"
+
     resp = client.post(
         CHAT,
         json={
             "model": "fake",
             "messages": [{"role": "user", "content": "hi"}],
             "stream": False,
-            "conversation_id": "does-not-exist",
+            "conversation_id": new_id,
         },
     )
-    assert resp.status_code == 404
+    assert resp.status_code == 200, resp.text
+
+    detail = client.get(f"{BASE}/{new_id}")
+    assert detail.status_code == 200, detail.text
+    roles = [(m["role"], m["content"]) for m in detail.json()["messages"]]
+    assert roles[0] == ("user", "hi")
+    assert roles[1][0] == "assistant"
+    assert len(roles) == 2
 
 
-def test_checkpointed_state_persists_and_accumulates(test_client_with_fake_model):
-    """Layer B: agent graph state is checkpointed under the conversation thread
-    and grows across turns (proving resume-from-checkpoint works offline)."""
+def test_history_syncs_and_accumulates_in_db(test_client_with_fake_model):
+    """Request-authoritative store: the client resends its full history each
+    turn; the durable copy is synced to it and the assistant turn appended, so
+    the stored conversation grows across turns."""
     client = test_client_with_fake_model
     conv_id = _create_conversation(client)
 
@@ -129,23 +146,96 @@ def test_checkpointed_state_persists_and_accumulates(test_client_with_fake_model
         },
     )
     assert r1.status_code == 200, r1.text
+    detail1 = client.get(f"{BASE}/{conv_id}").json()
+    assert len(detail1["messages"]) == 2  # user + assistant
+    assistant1 = detail1["messages"][1]["content"]
 
-    state1 = client.get(f"{BASE}/{conv_id}/state").json()
-    assert state1["has_checkpoint"] is True
-    count_after_turn1 = len(state1["messages"])
-    assert count_after_turn1 >= 2  # user + assistant in graph state
-
-    # Turn 2 (same conversation/thread) should build on prior checkpointed state.
+    # Turn 2: client resends full history + the new turn.
     r2 = client.post(
         CHAT,
         json={
             "model": "fake",
-            "messages": [{"role": "user", "content": "second turn"}],
+            "messages": [
+                {"role": "user", "content": "first turn"},
+                {"role": "assistant", "content": assistant1},
+                {"role": "user", "content": "second turn"},
+            ],
             "stream": False,
             "conversation_id": conv_id,
         },
     )
     assert r2.status_code == 200, r2.text
 
-    state2 = client.get(f"{BASE}/{conv_id}/state").json()
-    assert len(state2["messages"]) > count_after_turn1
+    roles = [(m["role"], m["content"]) for m in client.get(f"{BASE}/{conv_id}").json()["messages"]]
+    assert [r for r, _ in roles] == ["user", "assistant", "user", "assistant"]
+    assert roles[0] == ("user", "first turn")
+    assert roles[2] == ("user", "second turn")
+
+
+def test_history_sync_mirrors_client_truncation(test_client_with_fake_model):
+    """Client-side rollback/regenerate shrink the history the client resends;
+    the durable store mirrors that truncation with no stale trailing turns
+    (this is what request-authoritative buys us for free)."""
+    client = test_client_with_fake_model
+    conv_id = _create_conversation(client)
+
+    # Build two turns.
+    client.post(
+        CHAT,
+        json={
+            "model": "fake",
+            "messages": [{"role": "user", "content": "u1"}],
+            "stream": False,
+            "conversation_id": conv_id,
+        },
+    )
+    a1 = client.get(f"{BASE}/{conv_id}").json()["messages"][1]["content"]
+    client.post(
+        CHAT,
+        json={
+            "model": "fake",
+            "messages": [
+                {"role": "user", "content": "u1"},
+                {"role": "assistant", "content": a1},
+                {"role": "user", "content": "u2"},
+            ],
+            "stream": False,
+            "conversation_id": conv_id,
+        },
+    )
+    assert len(client.get(f"{BASE}/{conv_id}").json()["messages"]) == 4
+
+    # Client rolls back to u1 and regenerates: it resends only u1.
+    client.post(
+        CHAT,
+        json={
+            "model": "fake",
+            "messages": [{"role": "user", "content": "u1"}],
+            "stream": False,
+            "conversation_id": conv_id,
+        },
+    )
+    roles = [(m["role"], m["content"]) for m in client.get(f"{BASE}/{conv_id}").json()["messages"]]
+    assert [r for r, _ in roles] == ["user", "assistant"]
+    assert roles[0] == ("user", "u1")
+
+
+def test_chat_flow_does_not_engage_checkpointer(test_client_with_fake_model):
+    """The chat flow is request-authoritative; the checkpointer is intentionally
+    left disengaged (reserved for a future resume feature), so a normal turn
+    writes no checkpoint for the conversation thread."""
+    client = test_client_with_fake_model
+    conv_id = _create_conversation(client)
+
+    client.post(
+        CHAT,
+        json={
+            "model": "fake",
+            "messages": [{"role": "user", "content": "hi"}],
+            "stream": False,
+            "conversation_id": conv_id,
+        },
+    )
+
+    state = client.get(f"{BASE}/{conv_id}/state").json()
+    assert state["has_checkpoint"] is False

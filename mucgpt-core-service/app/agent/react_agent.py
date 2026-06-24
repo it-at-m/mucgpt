@@ -40,6 +40,12 @@ class _ConfiguredLangChainAgentGraph:
         self.tools = tools
         self.logger = logger
         self.debug = debug
+        # Held for a potential future resume feature, but intentionally NOT
+        # attached to the chat-serving graphs below: the chat flow is
+        # request-authoritative (the client resends full history each turn), so
+        # engaging the checkpointer would require a thread_id on every call and
+        # would double messages via the add_messages reducer. Keeping it off the
+        # graph makes a missing-thread_id error impossible by construction.
         self.checkpointer = checkpointer
 
         logger.debug(
@@ -60,7 +66,8 @@ class _ConfiguredLangChainAgentGraph:
             debug=self.debug,
             state_schema=initial_state_schema,
             context_schema=RequestContext,
-            checkpointer=self.checkpointer,
+            # Request-authoritative chat: no checkpointer on the chat graph.
+            checkpointer=None,
         )
 
     @staticmethod

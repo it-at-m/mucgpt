@@ -2,7 +2,7 @@ import logging
 from decimal import Decimal
 from enum import StrEnum
 from functools import lru_cache
-from typing import Any
+from typing import Any, Literal
 from urllib.parse import urljoin
 
 import httpx
@@ -286,6 +286,55 @@ class SSOConfig(BaseModel):
     ROLE: str = "lhm-ab-mucgpt-user"
 
 
+class DBConfig(BaseModel):
+    """Chat-persistence database configuration (nested under DB key in YAML).
+
+    Defaults to a local SQLite file so the service works with zero external
+    infrastructure. Set ``backend: postgres`` plus the connection fields to use
+    PostgreSQL (matching the mucgpt-assistant-service stack).
+    """
+
+    backend: Literal["sqlite", "postgres"] = "sqlite"
+    # SQLite
+    sqlite_path: str = "./data/mucgpt_chat.db"
+    # PostgreSQL (only required when backend == "postgres")
+    HOST: str | None = None
+    PORT: int = 5432
+    NAME: str | None = None
+    USER: str | None = None
+    PASSWORD: SecretStr | None = None
+    SCHEMA: str | None = None
+
+    @model_validator(mode="after")
+    @staticmethod
+    def validate_postgres(config: "DBConfig") -> "DBConfig":
+        if config.backend == "postgres":
+            missing = [
+                field
+                for field in ("HOST", "NAME", "USER", "PASSWORD")
+                if getattr(config, field) in (None, "")
+            ]
+            if missing:
+                raise ValueError(
+                    "DB.backend=postgres requires: " + ", ".join(missing)
+                )
+        return config
+
+
+class CheckpointerConfig(BaseModel):
+    """LangGraph checkpointer configuration (nested under CHECKPOINTER key).
+
+    ``backend`` selects how agent graph state is persisted across requests:
+      - ``memory``: in-process MemorySaver (default; no extra infra, ideal for
+        tests and single-process deployments).
+      - ``sqlite``: persistent AsyncSqliteSaver at ``sqlite_path``.
+      - ``postgres``: AsyncPostgresSaver using the DB connection settings.
+    """
+
+    backend: Literal["memory", "sqlite", "postgres"] = "memory"
+    sqlite_path: str = "./data/mucgpt_checkpoints.db"
+
+
 class LangfuseConfig(BaseModel):
     """Langfuse configuration (nested under LANGFUSE key in YAML)."""
 
@@ -383,6 +432,8 @@ LangfuseSettings = LangfuseConfig
 MCPSettings = MCPConfig
 RedisSettings = RedisConfig
 InternetSearchSettings = InternetSearchConfig
+DBSettings = DBConfig
+CheckpointerSettings = CheckpointerConfig
 
 
 class Settings(BaseSettings):
@@ -437,6 +488,8 @@ class Settings(BaseSettings):
     INTERNET_SEARCH: InternetSearchConfig = Field(
         default_factory=InternetSearchConfig
     )
+    DB: DBConfig = Field(default_factory=DBConfig)
+    CHECKPOINTER: CheckpointerConfig = Field(default_factory=CheckpointerConfig)
 
     # Customize settings sources to prioritize YAML config
     @classmethod
@@ -781,3 +834,15 @@ def get_redis_settings() -> RedisConfig:
 def get_internet_search_settings() -> InternetSearchConfig:
     """Return cached InternetSearchSettings instance."""
     return get_settings().INTERNET_SEARCH
+
+
+@lru_cache(maxsize=1)
+def get_db_settings() -> DBConfig:
+    """Return cached chat-persistence DB settings instance."""
+    return get_settings().DB
+
+
+@lru_cache(maxsize=1)
+def get_checkpointer_settings() -> CheckpointerConfig:
+    """Return cached LangGraph checkpointer settings instance."""
+    return get_settings().CHECKPOINTER

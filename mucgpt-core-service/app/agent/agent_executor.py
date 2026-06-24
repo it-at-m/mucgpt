@@ -143,6 +143,7 @@ class MUCGPTAgentExecutor:
         enabled_tools: list[str] | None = None,
         assistant_id: str | None = None,
         data_sources: list[dict[str, Any]] | None = None,
+        conversation_id: str | None = None,
     ) -> AsyncGenerator[dict]:
         logger.info(
             "Chat streaming started with temperature %s, model %s",
@@ -167,22 +168,24 @@ class MUCGPTAgentExecutor:
             user_id=_hash_user_id(user_info.user_id if user_info else None),
             tags=tags,
         ):
+            configurable: dict[str, Any] = {
+                "llm_temperature": temperature,
+                "llm": model,
+                "llm_streaming": True,
+                "enabled_tools": enabled_tools,
+                "agent_state": {"current_scope": "general"},
+                "user_info": user_info,
+                "llm_user": llm_user,
+                "llm_extra_body": llm_extra_body,
+                "assistant_id": assistant_id,
+                "data_sources": data_sources,
+            }
+            # thread_id keys the LangGraph checkpointer; only set when persisting.
+            if conversation_id:
+                configurable["thread_id"] = conversation_id
             config = merge_configs(
                 self.base_config,
-                RunnableConfig(
-                    configurable={
-                        "llm_temperature": temperature,
-                        "llm": model,
-                        "llm_streaming": True,
-                        "enabled_tools": enabled_tools,
-                        "agent_state": {"current_scope": "general"},
-                        "user_info": user_info,
-                        "llm_user": llm_user,
-                        "llm_extra_body": llm_extra_body,
-                        "assistant_id": assistant_id,
-                        "data_sources": data_sources,
-                    },
-                ),
+                RunnableConfig(configurable=configurable),
             )
 
             if enabled_tools:
@@ -281,7 +284,7 @@ class MUCGPTAgentExecutor:
             ).model_dump()
 
     @observe(name="Completion", capture_input=False, capture_output=False)
-    def run_without_streaming(
+    async def run_without_streaming(
         self,
         messages: list[InputMessage],
         temperature: float,
@@ -290,6 +293,7 @@ class MUCGPTAgentExecutor:
         enabled_tools: list[str] | None = None,
         assistant_id: str | None = None,
         data_sources: list[dict[str, Any]] | None = None,
+        conversation_id: str | None = None,
     ) -> ChatCompletionResponse:
         logger.info(
             "Chat non-streaming started with temperature %s, model %s",
@@ -311,25 +315,39 @@ class MUCGPTAgentExecutor:
             user_id=_hash_user_id(user_info.user_id if user_info else None),
             tags=tags,
         ):
-            request_config = RunnableConfig(
-                configurable={
-                    "llm_temperature": temperature,
-                    "llm": model,
-                    "llm_streaming": False,
-                    "enabled_tools": enabled_tools,
-                    "agent_state": {"current_scope": "general"},
-                    "user_info": user_info,
-                    "llm_user": llm_user,
-                    "llm_extra_body": llm_extra_body,
-                    "assistant_id": assistant_id,
-                    "data_sources": data_sources,
-                },
-            )
+            configurable: dict[str, Any] = {
+                "llm_temperature": temperature,
+                "llm": model,
+                "llm_streaming": False,
+                "enabled_tools": enabled_tools,
+                "agent_state": {"current_scope": "general"},
+                "user_info": user_info,
+                "llm_user": llm_user,
+                "llm_extra_body": llm_extra_body,
+                "assistant_id": assistant_id,
+                "data_sources": data_sources,
+            }
+            if conversation_id:
+                configurable["thread_id"] = conversation_id
+            request_config = RunnableConfig(configurable=configurable)
             config = merge_configs(self.base_config, request_config)
             try:
                 logger.debug("Starting non-streaming response")
-                llm = self.agent.model.with_config(config)
-                ai_message = llm.invoke(msgs)
+                if conversation_id:
+                    # Route through the agent graph so state is checkpointed
+                    # under this thread_id (enables resume).
+                    result = await self.agent.graph.ainvoke(
+                        {"messages": msgs}, config=config
+                    )
+                    out_messages = (
+                        result.get("messages", []) if isinstance(result, dict) else []
+                    )
+                    content = out_messages[-1].content if out_messages else ""
+                else:
+                    # Fast path: call the model directly (legacy behavior).
+                    llm = self.agent.model.with_config(config)
+                    ai_message = await llm.ainvoke(msgs)
+                    content = ai_message.content
                 logger.info("Non-streaming completed successfully.")
                 response = ChatCompletionResponse(
                     id=str(uuid.uuid4()),
@@ -339,7 +357,7 @@ class MUCGPTAgentExecutor:
                         ChatCompletionChoice(
                             message=ChatCompletionMessage(
                                 role="assistant",
-                                content=ai_message.content, # type: ignore
+                                content=content, # type: ignore
                             ),
                             index=0,
                             finish_reason="stop",

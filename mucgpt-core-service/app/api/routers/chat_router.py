@@ -2,6 +2,7 @@ import json
 
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import StreamingResponse
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.api_models import (
     ChatCompletionMessage,
@@ -15,10 +16,22 @@ from config.settings import get_settings
 from core.auth import authenticate_user
 from core.auth_models import AuthenticationResult
 from core.logtools import getLogger
+from database.conversation_repo import ConversationRepository
+from database.session import get_db_session
 from init_app import init_agent
 
 logger = getLogger()
 router = APIRouter(prefix="/v1")
+
+
+def _last_user_message(
+    messages: list[ChatCompletionMessage],
+) -> ChatCompletionMessage | None:
+    """Return the final user-role message in the request, if any."""
+    for message in reversed(messages):
+        if message.role == "user":
+            return message
+    return None
 
 
 def get_temperature_from_request(request: ChatCompletionRequest) -> float:
@@ -79,15 +92,41 @@ def get_temperature_from_request(request: ChatCompletionRequest) -> float:
 async def chat_completions(
     request: ChatCompletionRequest,
     user_info: AuthenticationResult = Depends(authenticate_user),
+    session: AsyncSession = Depends(get_db_session),
 ) -> StreamingResponse | ChatCompletionResponse:
     """
-    OpenAI-compatible chat completion endpoint (streaming or non-streaming)
+    OpenAI-compatible chat completion endpoint (streaming or non-streaming).
+
+    When ``conversation_id`` is supplied, the incoming user message and the
+    produced assistant message are persisted to that conversation. Without it,
+    the request is fully stateless (unchanged legacy behavior).
     """
     # TODO: init_agent currently rebuilds the tool collection and LangChain agent
     # for every message, even within the same chat. Consider introducing a
     # user-scoped tool/runtime cache while keeping assistant/chat-specific
     # enabled tools, prompts, data sources, and policy state request-scoped.
     ae = await init_agent(user_info=user_info)
+
+    # Resolve persistence target. Ownership is enforced up-front so an invalid
+    # conversation_id fails fast with 404 rather than after an LLM call.
+    conversation_id = request.conversation_id
+    repo: ConversationRepository | None = None
+    if conversation_id:
+        repo = ConversationRepository(session)
+        conversation = await repo.get_for_user(conversation_id, user_info.user_id)
+        if conversation is None:
+            raise HTTPException(status_code=404, detail="Conversation not found")
+        # Persist the incoming user turn before invoking the agent.
+        user_message = _last_user_message(request.messages)
+        if user_message is not None:
+            await repo.append_message(
+                conversation_id,
+                user_info.user_id,
+                role="user",
+                content=user_message.content,
+            )
+            await session.commit()
+
     try:
         # Convert creativity to temperature
         temperature = get_temperature_from_request(request)
@@ -110,15 +149,37 @@ async def chat_completions(
                 enabled_tools=enabled_tools,
                 assistant_id=request.assistant_id,
                 data_sources=data_sources,
+                conversation_id=conversation_id,
             )
 
             async def sse_generator():
-                async for chunk in gen:
-                    yield f"data: {json.dumps(chunk)}\n\n"
+                assistant_content: list[str] = []
+                try:
+                    async for chunk in gen:
+                        # Accumulate assistant text deltas for persistence.
+                        if repo is not None:
+                            for choice in chunk.get("choices", []):
+                                delta = choice.get("delta") or {}
+                                content = delta.get("content")
+                                if isinstance(content, str):
+                                    assistant_content.append(content)
+                        yield f"data: {json.dumps(chunk)}\n\n"
+                finally:
+                    # Persist the assembled assistant message once the stream
+                    # ends (also runs if the client disconnects mid-stream, so
+                    # whatever arrived is saved).
+                    if repo is not None and assistant_content:
+                        await repo.append_message(
+                            conversation_id,
+                            user_info.user_id,
+                            role="assistant",
+                            content="".join(assistant_content),
+                        )
+                        await session.commit()
 
             return StreamingResponse(sse_generator(), media_type="text/event-stream")
         else:
-            return ae.run_without_streaming(
+            response = await ae.run_without_streaming(
                 messages=request.messages,
                 temperature=temperature,
                 model=request.model,
@@ -126,7 +187,19 @@ async def chat_completions(
                 enabled_tools=enabled_tools,
                 assistant_id=request.assistant_id,
                 data_sources=data_sources,
+                conversation_id=conversation_id,
             )
+            if repo is not None and response.choices:
+                await repo.append_message(
+                    conversation_id,
+                    user_info.user_id,
+                    role="assistant",
+                    content=response.choices[0].message.content,
+                )
+                await session.commit()
+            return response
+    except HTTPException:
+        raise
     except Exception as e:
         logger.exception("Exception in /chat/completions")
         msg = llm_exception_handler(ex=e, logger=logger)
@@ -149,7 +222,7 @@ async def create_assistant(
             ChatCompletionMessage(role="user", content="Funktion: " + request.input),
         ]
         logger.info("createAssistant: creating system prompt")
-        system_prompt = ae.run_without_streaming(
+        system_prompt = await ae.run_without_streaming(
             messages=messages,
             temperature=1.0,
             model=request.model,
@@ -167,7 +240,7 @@ async def create_assistant(
             ),
         ]
         logger.info("createAssistant: creating description")
-        description = ae.run_without_streaming(
+        description = await ae.run_without_streaming(
             messages=messages,
             temperature=1.0,
             model=request.model,
@@ -189,7 +262,7 @@ async def create_assistant(
                 + "```",
             ),
         ]
-        title = ae.run_without_streaming(
+        title = await ae.run_without_streaming(
             messages=messages,
             temperature=1.0,
             model=request.model,

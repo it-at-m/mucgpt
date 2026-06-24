@@ -81,6 +81,11 @@ class DummyRunnerLLM(DummyLLM):
             raise RuntimeError("Simulated failure")
         return AIMessage(content="Simplified text.")
 
+    async def ainvoke(self, msgs):
+        if self.fail:
+            raise RuntimeError("Simulated failure")
+        return AIMessage(content="Simplified text.")
+
 
 class DummyAgent:
     def __init__(self, llm):
@@ -151,12 +156,13 @@ class TestMUCGPTAgentExecutor:
         # The last chunk should have finish_reason "stop"
         assert chunks[-1]["choices"][0]["finish_reason"] == "stop"
 
-    def test_run_without_streaming_returns_error_message_on_exception(self):
+    @pytest.mark.asyncio
+    async def test_run_without_streaming_returns_error_message_on_exception(self):
         llm = DummyRunnerLLM(fail=True)
         agent = DummyAgent(llm)
         runner = MUCGPTAgentExecutor(agent)
         messages = [InputMessage(role="user", content="fail")]
-        response = runner.run_without_streaming(
+        response = await runner.run_without_streaming(
             messages=messages,
             temperature=0.7,
             model="test",
@@ -197,12 +203,13 @@ class TestMUCGPTAgentExecutor:
         assert llm.config["llm"] == "test-model"
         assert llm.config["llm_streaming"] is False
 
-    def test_run_without_streaming_returns_error_on_exception(self):
+    @pytest.mark.asyncio
+    async def test_run_without_streaming_returns_error_on_exception(self):
         llm = DummyRunnerLLM(fail=True)
         agent = DummyAgent(llm)
         runner = MUCGPTAgentExecutor(agent)
         messages = [InputMessage(role="user", content="fail")]
-        response = runner.run_without_streaming(
+        response = await runner.run_without_streaming(
             messages=messages,
             temperature=0.7,
             model="test",

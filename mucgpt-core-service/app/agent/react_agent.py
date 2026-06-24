@@ -33,12 +33,14 @@ class _ConfiguredLangChainAgentGraph:
         tools: list[BaseTool],
         logger,
         debug: bool = True,
+        checkpointer: Any | None = None,
     ):
         self.model = llm
         self.tool_collection = tool_collection
         self.tools = tools
         self.logger = logger
         self.debug = debug
+        self.checkpointer = checkpointer
 
         logger.debug(
             "Initializing MUCGPT ReAct agent graph with tools: %s",
@@ -58,6 +60,7 @@ class _ConfiguredLangChainAgentGraph:
             debug=self.debug,
             state_schema=initial_state_schema,
             context_schema=RequestContext,
+            checkpointer=self.checkpointer,
         )
 
     @staticmethod
@@ -163,6 +166,7 @@ class _ConfiguredLangChainAgentGraph:
                 debug=self.debug,
                 state_schema=agent_state_schema,
                 context_schema=RequestContext,
+                checkpointer=self.checkpointer,
             )
 
         input_payload = {"messages": messages}
@@ -177,6 +181,14 @@ class _ConfiguredLangChainAgentGraph:
             **kwargs,
         ):
             yield item
+
+    async def aget_state(self, config: RunnableConfig):
+        """Return the checkpointed state for the thread_id in ``config``.
+
+        Uses the base agent graph, which shares the process-wide checkpointer,
+        so state is readable regardless of which per-request graph produced it.
+        """
+        return await self.agent.aget_state(config)
 
     async def ainvoke(
         self,
@@ -220,6 +232,7 @@ class _ConfiguredLangChainAgentGraph:
                 debug=self.debug,
                 state_schema=agent_state_schema,
                 context_schema=RequestContext,
+                checkpointer=self.checkpointer,
             )
 
         input_payload = {"messages": messages}
@@ -241,13 +254,16 @@ class MUCGPTReActAgent:
         tools: list[BaseTool],
         logger=None,
         debug: bool = True,
+        checkpointer: Any | None = None,
     ):
         self.logger = logger if logger else getLogger(name="mucgpt-core-react-agent")
         self.model = llm  # required for non-streaming calls, e.g. assisted MUCGPT-Assistant generation.
+        self.checkpointer = checkpointer
         self.graph = _ConfiguredLangChainAgentGraph(
             llm=llm,
             tool_collection=tool_collection,
             tools=tools,
             logger=self.logger,
             debug=debug,
+            checkpointer=checkpointer,
         )

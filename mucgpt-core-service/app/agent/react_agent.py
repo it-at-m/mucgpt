@@ -173,7 +173,11 @@ class _ConfiguredLangChainAgentGraph:
                 debug=self.debug,
                 state_schema=agent_state_schema,
                 context_schema=RequestContext,
-                checkpointer=self.checkpointer,
+                # Request-authoritative chat: the per-request rebuild must NOT
+                # carry the checkpointer either, or the graph would demand a
+                # thread_id on invoke (the LangGraph checkpoint error). The
+                # checkpointer stays dormant on self for a future resume path.
+                checkpointer=None,
             )
 
         input_payload = {"messages": messages}
@@ -239,7 +243,8 @@ class _ConfiguredLangChainAgentGraph:
                 debug=self.debug,
                 state_schema=agent_state_schema,
                 context_schema=RequestContext,
-                checkpointer=self.checkpointer,
+                # See astream: chat graphs never carry the checkpointer.
+                checkpointer=None,
             )
 
         input_payload = {"messages": messages}

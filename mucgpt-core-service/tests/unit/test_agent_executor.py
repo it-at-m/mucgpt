@@ -216,3 +216,72 @@ class TestMUCGPTAgentExecutor:
             user_info=None,
         )
         assert response.choices[0].finish_reason == "error"
+
+
+class TestChatGraphNeverCarriesCheckpointer:
+    """Regression guard for the thread_id error.
+
+    The chat flow is request-authoritative, so NO chat-serving graph may be
+    compiled with a checkpointer — otherwise LangGraph demands a thread_id on
+    invoke and raises from langgraph.checkpoint.memory. This must hold for the
+    base graph AND the per-request rebuild (which fires on virtually every real
+    request because the model is reconfigured / data_sources are present).
+    """
+
+    @pytest.mark.asyncio
+    async def test_rebuild_path_compiles_without_checkpointer(self, monkeypatch):
+        from langgraph.checkpoint.memory import MemorySaver
+
+        import agent.react_agent as react_agent
+        from agent.react_agent import _ConfiguredLangChainAgentGraph
+        from core.auth_models import AuthenticationResult
+
+        captured_checkpointers = []
+
+        class _FakeCompiledGraph:
+            async def astream(self, *args, **kwargs):
+                # The bug surfaced at invoke time; just yield nothing so the
+                # rebuilt graph is exercised end-to-end.
+                if False:
+                    yield None
+
+        def _fake_create_agent(*args, **kwargs):
+            captured_checkpointers.append(kwargs.get("checkpointer"))
+            return _FakeCompiledGraph()
+
+        monkeypatch.setattr(react_agent, "create_agent", _fake_create_agent)
+
+        # A live MemorySaver is supplied — exactly the dormant-for-resume setup.
+        graph = _ConfiguredLangChainAgentGraph(
+            llm=DummyLLM(),
+            tool_collection=MagicMock(),
+            tools=[],
+            logger=MagicMock(),
+            checkpointer=MemorySaver(),
+        )
+
+        # data_sources forces the per-request rebuild branch (the one that
+        # previously passed self.checkpointer through).
+        config = {
+            "configurable": {
+                "user_info": AuthenticationResult(
+                    user_id="u1", token="t", department="dept"
+                ),
+                "data_sources": [{"id": "doc-1"}],
+            }
+        }
+        from langchain_core.messages import HumanMessage
+
+        async for _ in graph.astream(
+            {"messages": [HumanMessage(content="hi")]}, config=config
+        ):
+            pass
+
+        # Both the base graph (built in __init__) and the rebuilt graph must
+        # have been compiled with no checkpointer.
+        assert captured_checkpointers, "create_agent was never called"
+        assert all(cp is None for cp in captured_checkpointers), (
+            f"a chat graph was compiled with a checkpointer: {captured_checkpointers}"
+        )
+        # The saver is still held on the instance for a future resume feature.
+        assert graph.checkpointer is not None

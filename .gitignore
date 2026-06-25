@@ -164,3 +164,6 @@ stack/assistant.config.yaml
 stack/core.config.yaml
 mucgpt-assistant-service/debug_ldap.py
 mucgpt-core-service/issues/*
+
+# Personal Claude Code permissions (not shared)
+.claude/settings.local.json

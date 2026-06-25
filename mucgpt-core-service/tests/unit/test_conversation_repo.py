@@ -5,6 +5,7 @@ No model endpoint or network involved — pure persistence-layer validation.
 
 import pytest
 from sqlalchemy import func, select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from database.conversation_repo import ConversationRepository
 from database.models import Message
@@ -14,7 +15,7 @@ USER_B = "user-b"
 
 
 @pytest.mark.asyncio
-async def test_create_without_messages(db_session):
+async def test_create_without_messages(db_session: AsyncSession) -> None:
     repo = ConversationRepository(db_session)
     conv = await repo.create(user_id=USER_A, title="First")
     await db_session.commit()
@@ -27,7 +28,7 @@ async def test_create_without_messages(db_session):
 
 
 @pytest.mark.asyncio
-async def test_create_with_initial_messages(db_session):
+async def test_create_with_initial_messages(db_session: AsyncSession) -> None:
     repo = ConversationRepository(db_session)
     conv = await repo.create(
         user_id=USER_A,
@@ -45,7 +46,7 @@ async def test_create_with_initial_messages(db_session):
 
 
 @pytest.mark.asyncio
-async def test_list_for_user_orders_by_updated_desc_and_isolates(db_session):
+async def test_list_for_user_orders_by_updated_desc_and_isolates(db_session: AsyncSession) -> None:
     repo = ConversationRepository(db_session)
     c1 = await repo.create(user_id=USER_A, title="A1")
     c2 = await repo.create(user_id=USER_A, title="A2")
@@ -64,7 +65,7 @@ async def test_list_for_user_orders_by_updated_desc_and_isolates(db_session):
 
 
 @pytest.mark.asyncio
-async def test_get_for_user_cross_user_returns_none(db_session):
+async def test_get_for_user_cross_user_returns_none(db_session: AsyncSession) -> None:
     repo = ConversationRepository(db_session)
     conv = await repo.create(user_id=USER_A, title="secret")
     await db_session.commit()
@@ -74,7 +75,7 @@ async def test_get_for_user_cross_user_returns_none(db_session):
 
 
 @pytest.mark.asyncio
-async def test_append_message_sequences_are_monotonic(db_session):
+async def test_append_message_sequences_are_monotonic(db_session: AsyncSession) -> None:
     repo = ConversationRepository(db_session)
     conv = await repo.create(user_id=USER_A)
     await db_session.commit()
@@ -91,7 +92,50 @@ async def test_append_message_sequences_are_monotonic(db_session):
 
 
 @pytest.mark.asyncio
-async def test_append_message_cross_user_returns_none(db_session):
+async def test_append_message_retries_on_sequence_collision(
+    db_session: AsyncSession, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A concurrent writer that grabs the computed sequence first must not lose
+    the turn: the insert collides on uq_message_sequence, then append_message
+    recomputes and retries. Exercises the real SAVEPOINT rollback + in-memory
+    collection cleanup path.
+    """
+    repo = ConversationRepository(db_session)
+    conv = await repo.create(
+        user_id=USER_A, messages=[("user", "u0"), ("assistant", "a1")]
+    )
+    await db_session.commit()  # real next sequence is now 2
+
+    real_scalar = db_session.scalar
+    calls = {"n": 0}
+
+    async def flaky_scalar(*args: object, **kwargs: object) -> object:
+        calls["n"] += 1
+        if calls["n"] == 1:
+            # Simulate a racing writer: hand back an already-used sequence so
+            # the first INSERT collides on uq_message_sequence.
+            return 1
+        return await real_scalar(*args, **kwargs)
+
+    monkeypatch.setattr(db_session, "scalar", flaky_scalar)
+
+    msg = await repo.append_message(conv.id, USER_A, role="user", content="u2")
+    await db_session.commit()
+
+    assert msg is not None
+    assert msg.sequence == 2  # recomputed after the collision
+    assert calls["n"] >= 2  # collided once, then retried
+
+    fetched = await repo.get_for_user(conv.id, USER_A)
+    assert [(m.sequence, m.content) for m in fetched.messages] == [
+        (0, "u0"),
+        (1, "a1"),
+        (2, "u2"),
+    ]
+
+
+@pytest.mark.asyncio
+async def test_append_message_cross_user_returns_none(db_session: AsyncSession) -> None:
     repo = ConversationRepository(db_session)
     conv = await repo.create(user_id=USER_A)
     await db_session.commit()
@@ -102,7 +146,7 @@ async def test_append_message_cross_user_returns_none(db_session):
 
 
 @pytest.mark.asyncio
-async def test_create_with_client_supplied_id(db_session):
+async def test_create_with_client_supplied_id(db_session: AsyncSession) -> None:
     repo = ConversationRepository(db_session)
     conv = await repo.create(user_id=USER_A, conversation_id="fixed-id-42")
     await db_session.commit()
@@ -112,7 +156,7 @@ async def test_create_with_client_supplied_id(db_session):
 
 
 @pytest.mark.asyncio
-async def test_replace_messages_overwrites_and_resequences(db_session):
+async def test_replace_messages_overwrites_and_resequences(db_session: AsyncSession) -> None:
     repo = ConversationRepository(db_session)
     conv = await repo.create(
         user_id=USER_A,
@@ -142,7 +186,7 @@ async def test_replace_messages_overwrites_and_resequences(db_session):
 
 
 @pytest.mark.asyncio
-async def test_replace_messages_cross_user_returns_none(db_session):
+async def test_replace_messages_cross_user_returns_none(db_session: AsyncSession) -> None:
     repo = ConversationRepository(db_session)
     conv = await repo.create(user_id=USER_A, messages=[("user", "hi")])
     await db_session.commit()
@@ -154,7 +198,7 @@ async def test_replace_messages_cross_user_returns_none(db_session):
 
 
 @pytest.mark.asyncio
-async def test_update_meta(db_session):
+async def test_update_meta(db_session: AsyncSession) -> None:
     repo = ConversationRepository(db_session)
     conv = await repo.create(user_id=USER_A, title="old")
     await db_session.commit()
@@ -173,7 +217,7 @@ async def test_update_meta(db_session):
 
 
 @pytest.mark.asyncio
-async def test_delete_cascades_messages_and_enforces_ownership(db_session):
+async def test_delete_cascades_messages_and_enforces_ownership(db_session: AsyncSession) -> None:
     repo = ConversationRepository(db_session)
     conv = await repo.create(
         user_id=USER_A, messages=[("user", "a"), ("assistant", "b")]

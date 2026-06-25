@@ -9,9 +9,14 @@ from __future__ import annotations
 from collections.abc import Iterable
 
 from sqlalchemy import func, select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from database.models import Conversation, Message
+
+# How many times append_message recomputes the next sequence and retries when a
+# concurrent writer wins the race for the same (conversation_id, sequence).
+_APPEND_MAX_ATTEMPTS = 5
 
 
 class ConversationRepository:
@@ -152,22 +157,50 @@ class ConversationRepository:
         if conversation is None:
             return None
 
-        next_sequence = await self.session.scalar(
-            select(func.coalesce(func.max(Message.sequence), -1) + 1).where(
-                Message.conversation_id == conversation_id
+        # ``max(sequence) + 1`` is computed outside the insert, so two requests
+        # appending to the same conversation (now shared across devices/tabs)
+        # can pick the same sequence and collide on ``uq_message_sequence``.
+        # Insert inside a SAVEPOINT and, on that unique-violation, recompute the
+        # next sequence and retry so a normal concurrent append is not lost or
+        # turned into a 500. The SAVEPOINT keeps a failed attempt from poisoning
+        # the surrounding transaction.
+        message: Message | None = None
+        for attempt in range(_APPEND_MAX_ATTEMPTS):
+            next_sequence = await self.session.scalar(
+                select(func.coalesce(func.max(Message.sequence), -1) + 1).where(
+                    Message.conversation_id == conversation_id
+                )
             )
-        )
-        message = Message(
-            sequence=next_sequence,
-            role=role,
-            content=content,
-            tool_calls=tool_calls,
-        )
-        # Append via the relationship so the in-memory collection stays
-        # consistent with the database within this session (sets FK too).
-        conversation.messages.append(message)
+            message = Message(
+                conversation_id=conversation_id,
+                sequence=next_sequence,
+                role=role,
+                content=content,
+                tool_calls=tool_calls,
+            )
+            try:
+                # Insert inside a SAVEPOINT; the flush happens when the nested
+                # block commits. On a unique-violation only the SAVEPOINT is
+                # rolled back, leaving the surrounding transaction usable so we
+                # can recompute the sequence and retry. (Adding via the
+                # relationship instead would require touching the collection in
+                # the failure path, which triggers a reload on a transaction
+                # that still needs the SAVEPOINT rollback to settle.)
+                async with self.session.begin_nested():
+                    self.session.add(message)
+                break
+            except IntegrityError:
+                # Another writer took this sequence; recompute and retry.
+                if attempt == _APPEND_MAX_ATTEMPTS - 1:
+                    raise
+                continue
+
         # Touch the conversation so updated_at advances (onupdate needs a change).
         conversation.updated_at = func.now()
         await self.session.flush()
+        # The message was inserted directly (explicit FK), bypassing the loaded
+        # ``messages`` collection; reload it so the in-memory conversation stays
+        # consistent with the database for any later read in this session.
+        await self.session.refresh(conversation, ["messages"])
         await self.session.refresh(message)
         return message

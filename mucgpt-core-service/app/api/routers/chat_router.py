@@ -162,11 +162,17 @@ async def chat_completions(
 
             async def sse_generator():
                 assistant_content: list[str] = []
+                stream_failed = False
                 try:
                     async for chunk in gen:
                         # Accumulate assistant text deltas for persistence.
                         if repo is not None:
                             for choice in chunk.get("choices", []):
+                                # A failed generation surfaces as an error chunk
+                                # carrying the user-facing error text; never store
+                                # that as a real assistant turn.
+                                if choice.get("finish_reason") == "error":
+                                    stream_failed = True
                                 delta = choice.get("delta") or {}
                                 content = delta.get("content")
                                 if isinstance(content, str):
@@ -175,8 +181,10 @@ async def chat_completions(
                 finally:
                     # Persist the assembled assistant message once the stream
                     # ends (also runs if the client disconnects mid-stream, so
-                    # whatever arrived is saved).
-                    if repo is not None and assistant_content:
+                    # whatever arrived is saved). Skip persistence when the run
+                    # surfaced an error so failed generations are not written to
+                    # the durable log and echoed back on the next sync.
+                    if repo is not None and assistant_content and not stream_failed:
                         await repo.append_message(
                             conversation_id,
                             user_info.user_id,
@@ -196,7 +204,14 @@ async def chat_completions(
                 assistant_id=request.assistant_id,
                 data_sources=data_sources,
             )
-            if repo is not None and response.choices:
+            # Only persist genuine assistant turns: run_without_streaming can
+            # return a normal-looking response whose finish_reason is "error"
+            # (the fallback error payload), which must not enter the chat log.
+            if (
+                repo is not None
+                and response.choices
+                and response.choices[0].finish_reason != "error"
+            ):
                 await repo.append_message(
                     conversation_id,
                     user_info.user_id,

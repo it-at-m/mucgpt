@@ -534,6 +534,25 @@ class AppendMessageRequest(BaseModel):
     )
 
 
+class DeletedConversation(BaseModel):
+    """Tombstone-feed item: a conversation id the user deleted, and when.
+
+    Clients only need the ``id`` to drop the local chat; ``deleted_at`` doubles
+    as the cursor for incremental sync (``GET /conversations/deleted?since=``).
+    """
+
+    id: str
+    deleted_at: datetime
+    model_config = ConfigDict(from_attributes=True)
+
+
+class ConversationConflict(BaseModel):
+    """409 body when re-creating a tombstoned (deleted) conversation id."""
+
+    detail: str
+    conversation_id: str
+
+
 class ConversationStateResponse(BaseModel):
     """Checkpointed LangGraph agent state for a conversation thread."""
 

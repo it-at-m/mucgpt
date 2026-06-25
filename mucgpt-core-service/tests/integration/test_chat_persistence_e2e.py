@@ -128,6 +128,33 @@ def test_unknown_conversation_id_is_auto_created(test_client_with_fake_model: Te
     assert len(roles) == 2
 
 
+def test_chat_to_deleted_conversation_id_is_rejected_not_resurrected(
+    test_client_with_fake_model: TestClient,
+) -> None:
+    """The chat auto-create path is the *second* resurrection vector: a send to
+    a tombstoned conversation_id must not bring the chat back. The guard fires
+    before the model is invoked, so it returns 409 (not a 500) and writes
+    nothing."""
+    client = test_client_with_fake_model
+    conv_id = _create_conversation(client, title="to-delete")
+    assert client.delete(f"{BASE}/{conv_id}").status_code == 204
+
+    resp = client.post(
+        CHAT,
+        json={
+            "model": "fake",
+            "messages": [{"role": "user", "content": "are you back?"}],
+            "stream": False,
+            "conversation_id": conv_id,
+        },
+    )
+    assert resp.status_code == 409, resp.text
+
+    # Nothing resurrected: the chat is still gone and still tombstoned.
+    assert client.get(f"{BASE}/{conv_id}").status_code == 404
+    assert any(item["id"] == conv_id for item in client.get(f"{BASE}/deleted").json())
+
+
 def test_history_syncs_and_accumulates_in_db(test_client_with_fake_model: TestClient) -> None:
     """Request-authoritative store: the client resends its full history each
     turn; the durable copy is synced to it and the assistant turn appended, so

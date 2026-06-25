@@ -56,6 +56,14 @@ class Conversation(Base):
         onupdate=_utcnow,
         nullable=False,
     )
+    # Soft-delete tombstone: NULL = live, a non-null timestamp = deleted (the
+    # value records *when*, used by the tombstone feed cursor and retention
+    # sweep). Existing/Postgres DBs need the explicit ALTER from the step-12
+    # migration; ``Base.metadata.create_all`` only creates missing tables, it
+    # will not add this column to an existing ``conversations`` table.
+    deleted_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True, default=None
+    )
 
     messages: Mapped[list[Message]] = relationship(
         "Message",

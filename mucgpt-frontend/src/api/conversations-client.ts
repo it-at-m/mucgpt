@@ -1,5 +1,5 @@
 import { deleteConfig, getConfig, handleApiRequest, patchConfig, postConfig } from "./fetch-utils";
-import { ConversationDetail, ConversationSummary, CreateConversationRequest, UpdateConversationRequest } from "./models";
+import { ConversationDetail, ConversationSummary, CreateConversationRequest, DeletedConversation, UpdateConversationRequest } from "./models";
 
 const CONVERSATIONS_BASE = "/api/backend/v1/conversations";
 
@@ -9,6 +9,17 @@ const CONVERSATIONS_BASE = "/api/backend/v1/conversations";
  */
 export async function listConversations(): Promise<ConversationSummary[]> {
     return handleApiRequest(() => fetch(CONVERSATIONS_BASE, getConfig()), "Failed to list conversations");
+}
+
+/**
+ * Fetch the tombstone feed: ids the user deleted (on any device), oldest-deleted
+ * first. The sync layer applies these by removing the chats locally instead of
+ * re-pushing them. Pass the max `deleted_at` already applied as `since` for
+ * incremental sync; omit it to fetch the full current tombstone set.
+ */
+export async function listDeletedConversations(since?: string): Promise<DeletedConversation[]> {
+    const url = since ? `${CONVERSATIONS_BASE}/deleted?since=${encodeURIComponent(since)}` : `${CONVERSATIONS_BASE}/deleted`;
+    return handleApiRequest(() => fetch(url, getConfig()), "Failed to list deleted conversations");
 }
 
 /** Fetch a single conversation including its ordered messages. */

@@ -16,7 +16,10 @@ from config.settings import get_settings
 from core.auth import authenticate_user
 from core.auth_models import AuthenticationResult
 from core.logtools import getLogger
-from database.conversation_repo import ConversationRepository
+from database.conversation_repo import (
+    ConversationDeletedError,
+    ConversationRepository,
+)
 from database.session import get_db_session
 from init_app import init_agent
 
@@ -120,13 +123,22 @@ async def chat_completions(
         repo = ConversationRepository(session)
         conversation = await repo.get_for_user(conversation_id, user_info.user_id)
         if conversation is None:
-            # First turn: auto-create under the client-supplied id.
-            await repo.create(
-                user_id=user_info.user_id,
-                conversation_id=conversation_id,
-                model=request.model,
-                assistant_id=request.assistant_id,
-            )
+            # First turn: auto-create under the client-supplied id. If that id
+            # is tombstoned (deleted on another device), the create guard
+            # refuses to resurrect it — surface 409 instead of a 500 so the
+            # client treats the chat as gone rather than retrying forever.
+            try:
+                await repo.create(
+                    user_id=user_info.user_id,
+                    conversation_id=conversation_id,
+                    model=request.model,
+                    assistant_id=request.assistant_id,
+                )
+            except ConversationDeletedError as exc:
+                raise HTTPException(
+                    status_code=409,
+                    detail="Conversation was deleted and cannot be recreated",
+                ) from exc
         # Sync the stored history to the (authoritative) request history,
         # including the incoming user turn, before invoking the agent.
         await repo.replace_messages(

@@ -68,6 +68,68 @@ def test_delete_then_404(test_client: TestClient) -> None:
     assert test_client.get(f"{BASE}/{conv_id}").status_code == 404
 
 
+def test_delete_is_soft_and_recreate_returns_409(test_client: TestClient) -> None:
+    """Deleting 404s the chat thereafter; re-creating its id is rejected with
+    409 (anti-resurrection) and writes nothing."""
+    conv_id = test_client.post(BASE, json={"title": "ghost"}).json()["id"]
+
+    assert test_client.delete(f"{BASE}/{conv_id}").status_code == 204
+    assert test_client.get(f"{BASE}/{conv_id}").status_code == 404
+
+    recreate = test_client.post(BASE, json={"id": conv_id, "title": "resurrected"})
+    assert recreate.status_code == 409, recreate.text
+    detail = recreate.json()["detail"]
+    assert detail["conversation_id"] == conv_id
+
+    # The 409 wrote nothing: the chat stays gone (still 404, not "resurrected").
+    assert test_client.get(f"{BASE}/{conv_id}").status_code == 404
+    assert all(c["id"] != conv_id for c in test_client.get(BASE).json())
+
+
+def test_tombstone_feed_lists_deleted_with_since_cursor(test_client: TestClient) -> None:
+    first = test_client.post(BASE, json={"title": "one"}).json()["id"]
+    second = test_client.post(BASE, json={"title": "two"}).json()["id"]
+    assert test_client.delete(f"{BASE}/{first}").status_code == 204
+    assert test_client.delete(f"{BASE}/{second}").status_code == 204
+
+    feed = test_client.get(f"{BASE}/deleted")
+    assert feed.status_code == 200, feed.text
+    ids = {item["id"] for item in feed.json()}
+    assert {first, second} <= ids
+
+    # since=<first tombstone's deleted_at> returns only strictly-newer ones.
+    items = sorted(feed.json(), key=lambda i: i["deleted_at"])
+    cursor = items[0]["deleted_at"]
+    newer = test_client.get(f"{BASE}/deleted", params={"since": cursor})
+    assert newer.status_code == 200
+    newer_ids = {item["id"] for item in newer.json()}
+    assert items[0]["id"] not in newer_ids
+
+
+def test_tombstone_feed_is_owner_scoped(test_client: TestClient) -> None:
+    """One user's tombstones never leak into another user's feed."""
+    conv_id = test_client.post(BASE, json={"title": "mine"}).json()["id"]
+    assert test_client.delete(f"{BASE}/{conv_id}").status_code == 204
+
+    async def _other_user() -> AuthenticationResult:
+        return AuthenticationResult(
+            token="t",
+            user_id="other_user_777",
+            name="Other",
+            email="other@example.com",
+            department="X",
+            is_authenticated=True,
+        )
+
+    api_app.dependency_overrides[authenticate_user] = _other_user
+    try:
+        feed = test_client.get(f"{BASE}/deleted")
+        assert feed.status_code == 200
+        assert all(item["id"] != conv_id for item in feed.json())
+    finally:
+        pass
+
+
 def test_cross_user_isolation(test_client: TestClient) -> None:
     """A conversation created by user A is invisible to user B."""
     conv_id = test_client.post(BASE, json={"title": "private"}).json()["id"]

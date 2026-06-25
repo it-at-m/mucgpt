@@ -3,7 +3,14 @@ import { StorageService, type DBObject, type DBMessage } from "../../service/sto
 import { ASSISTANT_STORE, CHAT_STORE, CREATIVITY_MEDIUM } from "../../constants";
 import type { Assistant, ChatResponse, ConversationMessage } from "../../api";
 import { getOwnedCommunityAssistants } from "../../api/assistant-client";
-import { createConversation, deleteConversation, getConversation, listConversations, patchConversation } from "../../api/conversations-client";
+import {
+    createConversation,
+    deleteConversation,
+    getConversation,
+    listConversations,
+    listDeletedConversations,
+    patchConversation
+} from "../../api/conversations-client";
 
 /** Pair backend (role, content) messages back into the local user→response shape. */
 const backendMessagesToDbMessages = (messages: ConversationMessage[]): DBMessage<ChatResponse>[] => {
@@ -136,10 +143,24 @@ export class UnifiedHistoryStorage {
     }
 
     private async runSync(): Promise<void> {
-        const [backendList, localChats] = await Promise.all([listConversations(), this.chatStorage.getAll()]);
+        const [backendList, localChats, tombstones] = await Promise.all([
+            listConversations(),
+            this.chatStorage.getAll(),
+            // Best-effort: a missing/failing tombstone feed (e.g. an older
+            // backend without the endpoint) degrades to "no remote deletions to
+            // apply" rather than breaking the whole pull/push sync.
+            listDeletedConversations().catch(error => {
+                console.error("Failed to fetch deletion tombstones", error);
+                return [];
+            })
+        ]);
         const local = localChats ?? [];
         const localIds = new Set(local.filter(chat => chat.id).map(chat => chat.id as string));
         const backendIds = new Set(backendList.map(conversation => conversation.id));
+        // Ids deleted on the backend (this or another device). They must be
+        // dropped locally and never re-pushed — this is what stops the
+        // cross-device resurrection loop.
+        const deletedIds = new Set(tombstones.map(tombstone => tombstone.id));
 
         // Count per-conversation failures so a transient pull/push error makes
         // the whole sync fail (below). Otherwise runSync would resolve despite
@@ -147,8 +168,24 @@ export class UnifiedHistoryStorage {
         // until reload, leaving a chat unpulled or unmigrated.
         let failures = 0;
 
+        // Apply remote deletions first: drop every local chat that is now
+        // tombstoned on the backend. This is how a delete on device A reaches
+        // device B. Failures retry on the next refresh (same `failures` tally).
+        const deletions = local
+            .filter(chat => chat.id && deletedIds.has(chat.id))
+            .map(async chat => {
+                try {
+                    await this.chatStorage.delete(chat.id as string);
+                } catch (error) {
+                    failures++;
+                    console.error(`Failed to apply remote deletion for chat "${chat.id}"`, error);
+                }
+            });
+
         const pulls = backendList
-            .filter(conversation => !localIds.has(conversation.id))
+            // A tombstoned id is never in the backend list, but guard anyway so
+            // a deletion landing mid-sync can't be pulled back in.
+            .filter(conversation => !localIds.has(conversation.id) && !deletedIds.has(conversation.id))
             .map(async conversation => {
                 try {
                     const detail = await getConversation(conversation.id);
@@ -166,7 +203,10 @@ export class UnifiedHistoryStorage {
             });
 
         const pushes = local
-            .filter(chat => chat.id && !backendIds.has(chat.id))
+            // Don't resurrect: a chat that is missing from the backend but
+            // tombstoned was deleted, not "not yet migrated" — skip the push
+            // (it's also deleted locally above; the backend would 409 anyway).
+            .filter(chat => chat.id && !backendIds.has(chat.id) && !deletedIds.has(chat.id))
             .map(async chat => {
                 try {
                     await createConversation({
@@ -180,10 +220,11 @@ export class UnifiedHistoryStorage {
                 }
             });
 
-        // Run all pulls/pushes to completion (one failure must not abort the
-        // others) but surface an aggregate failure so syncWithBackend() clears
-        // the cached promise and a later refresh retries the leftovers.
-        await Promise.all([...pulls, ...pushes]);
+        // Run all deletions/pulls/pushes to completion (one failure must not
+        // abort the others) but surface an aggregate failure so
+        // syncWithBackend() clears the cached promise and a later refresh
+        // retries the leftovers.
+        await Promise.all([...deletions, ...pulls, ...pushes]);
 
         if (failures > 0) {
             throw new Error(`Conversation sync finished with ${failures} failed operation(s); will retry on next refresh`);
@@ -218,8 +259,16 @@ export class UnifiedHistoryStorage {
         if (!deleted) {
             throw new Error(`Failed to delete chat history entry "${entry.id}"`);
         }
-        // Mirror the deletion to the backend (best-effort).
+        // Mirror the deletion to the backend, writing a tombstone (best-effort).
+        // If this fails the chat is already gone locally; it will reappear on a
+        // later sync (the backend row is still live) and the user can re-delete
+        // — an accepted, bounded degradation, never silent data loss.
         await deleteConversation(entry.id).catch(error => console.error(`Failed to delete conversation "${entry.id}" on backend`, error));
+        // Invalidate the once-per-instance sync guard so the next history read
+        // re-syncs against fresh state (including this new tombstone) instead of
+        // reusing a resolved promise built from pre-delete data — which could
+        // otherwise re-pull the just-deleted chat.
+        this.syncPromise = null;
     }
 
     async renameEntry(entry: UnifiedHistoryEntry, name: string): Promise<void> {

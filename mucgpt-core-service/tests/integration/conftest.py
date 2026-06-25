@@ -1,4 +1,5 @@
 import itertools
+from collections.abc import AsyncGenerator, Awaitable, Callable, Generator
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -7,7 +8,7 @@ from fastapi.testclient import TestClient
 from langchain_core.language_models.fake_chat_models import GenericFakeChatModel
 from langchain_core.messages import AIMessage
 from langgraph.checkpoint.memory import MemorySaver
-from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.pool import StaticPool
 
 from backend import api_app
@@ -25,15 +26,15 @@ class FakeChatModel(GenericFakeChatModel):
     (which binds tools to the model at graph construction).
     """
 
-    def bind_tools(self, tools, **kwargs):  # noqa: D401 - simple passthrough
+    def bind_tools(self, tools, **kwargs) -> "FakeChatModel":  # noqa: D401 - simple passthrough
         return self
 
 
 @pytest.fixture
-def override_authenticate_user():
+def override_authenticate_user() -> Callable[[], Awaitable[AuthenticationResult]]:
     """Override the authentication dependency."""
 
-    async def _get_test_user():
+    async def _get_test_user() -> AuthenticationResult:
         return AuthenticationResult(
             token="dummy_access_token",
             user_id="test_user_123",
@@ -47,7 +48,7 @@ def override_authenticate_user():
 
 
 @pytest_asyncio.fixture
-async def db_sessionmaker():
+async def db_sessionmaker() -> AsyncGenerator[async_sessionmaker[AsyncSession]]:
     """A shared in-memory SQLite engine + session factory for integration tests.
 
     Uses StaticPool so every session sees the same in-memory database within a
@@ -69,10 +70,13 @@ async def db_sessionmaker():
 
 
 @pytest.fixture
-def test_client(override_authenticate_user, db_sessionmaker):
+def test_client(
+    override_authenticate_user: Callable[[], Awaitable[AuthenticationResult]],
+    db_sessionmaker: async_sessionmaker[AsyncSession],
+) -> Generator[TestClient]:
     """Create a test client with authentication and database overrides."""
 
-    async def _get_test_session():
+    async def _get_test_session() -> AsyncGenerator[AsyncSession]:
         async with db_sessionmaker() as session:
             yield session
 
@@ -90,7 +94,7 @@ def test_client(override_authenticate_user, db_sessionmaker):
 
 
 @pytest.fixture
-def fake_chat_model():
+def fake_chat_model() -> FakeChatModel:
     """A FakeChatModel that cycles through scripted assistant replies.
 
     Cycling keeps it producing for multi-turn tests without exhausting.
@@ -106,7 +110,11 @@ def fake_chat_model():
 
 
 @pytest.fixture
-def test_client_with_fake_model(override_authenticate_user, db_sessionmaker, fake_chat_model):
+def test_client_with_fake_model(
+    override_authenticate_user: Callable[[], Awaitable[AuthenticationResult]],
+    db_sessionmaker: async_sessionmaker[AsyncSession],
+    fake_chat_model: FakeChatModel,
+) -> Generator[TestClient]:
     """Test client wired for fully offline chat: fake model + in-memory DB +
     in-process MemorySaver checkpointer.
 
@@ -115,7 +123,7 @@ def test_client_with_fake_model(override_authenticate_user, db_sessionmaker, fak
     model with no tools and no network.
     """
 
-    async def _get_test_session():
+    async def _get_test_session() -> AsyncGenerator[AsyncSession]:
         async with db_sessionmaker() as session:
             yield session
 

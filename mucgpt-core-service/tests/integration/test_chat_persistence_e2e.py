@@ -28,7 +28,7 @@ def _create_conversation(client: TestClient, title: str = "e2e") -> str:
     return resp.json()["id"]
 
 
-def test_non_streaming_persists_user_and_assistant(test_client_with_fake_model):
+def test_non_streaming_persists_user_and_assistant(test_client_with_fake_model: TestClient) -> None:
     client = test_client_with_fake_model
     conv_id = _create_conversation(client)
 
@@ -52,7 +52,7 @@ def test_non_streaming_persists_user_and_assistant(test_client_with_fake_model):
     assert len(roles) == 2
 
 
-def test_streaming_persists_assembled_assistant_once(test_client_with_fake_model):
+def test_streaming_persists_assembled_assistant_once(test_client_with_fake_model: TestClient) -> None:
     client = test_client_with_fake_model
     conv_id = _create_conversation(client)
 
@@ -86,7 +86,7 @@ def test_streaming_persists_assembled_assistant_once(test_client_with_fake_model
     assert assistant_msgs[0]["content"] == assembled
 
 
-def test_without_conversation_id_is_stateless(test_client_with_fake_model):
+def test_without_conversation_id_is_stateless(test_client_with_fake_model: TestClient) -> None:
     client = test_client_with_fake_model
 
     resp = client.post(
@@ -102,7 +102,7 @@ def test_without_conversation_id_is_stateless(test_client_with_fake_model):
     assert client.get(BASE).json() == []
 
 
-def test_unknown_conversation_id_is_auto_created(test_client_with_fake_model):
+def test_unknown_conversation_id_is_auto_created(test_client_with_fake_model: TestClient) -> None:
     """A client-supplied conversation_id that does not exist yet is created on
     first use (the id is the client-generated UUID), so chats persist without a
     separate create call."""
@@ -128,7 +128,7 @@ def test_unknown_conversation_id_is_auto_created(test_client_with_fake_model):
     assert len(roles) == 2
 
 
-def test_history_syncs_and_accumulates_in_db(test_client_with_fake_model):
+def test_history_syncs_and_accumulates_in_db(test_client_with_fake_model: TestClient) -> None:
     """Request-authoritative store: the client resends its full history each
     turn; the durable copy is synced to it and the assistant turn appended, so
     the stored conversation grows across turns."""
@@ -172,7 +172,7 @@ def test_history_syncs_and_accumulates_in_db(test_client_with_fake_model):
     assert roles[2] == ("user", "second turn")
 
 
-def test_history_sync_mirrors_client_truncation(test_client_with_fake_model):
+def test_history_sync_mirrors_client_truncation(test_client_with_fake_model: TestClient) -> None:
     """Client-side rollback/regenerate shrink the history the client resends;
     the durable store mirrors that truncation with no stale trailing turns
     (this is what request-authoritative buys us for free)."""
@@ -220,7 +220,7 @@ def test_history_sync_mirrors_client_truncation(test_client_with_fake_model):
     assert roles[0] == ("user", "u1")
 
 
-def test_chat_flow_does_not_engage_checkpointer(test_client_with_fake_model):
+def test_chat_flow_does_not_engage_checkpointer(test_client_with_fake_model: TestClient) -> None:
     """The chat flow is request-authoritative; the checkpointer is intentionally
     left disengaged (reserved for a future resume feature), so a normal turn
     writes no checkpoint for the conversation thread."""

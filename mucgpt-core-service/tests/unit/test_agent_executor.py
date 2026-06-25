@@ -95,14 +95,14 @@ class DummyAgent:
 
 
 class TestMUCGPTAgentExecutor:
-    def setup_method(self):
+    def setup_method(self) -> None:
         self.llm = DummyRunnerLLM()
         self.agent = DummyAgent(self.llm)
         self.runner = MUCGPTAgentExecutor(self.agent)
 
     @pytest.mark.skip(reason="Temporarily disabled")
     @pytest.mark.asyncio
-    async def test_run_with_streaming_yields_content(self):
+    async def test_run_with_streaming_yields_content(self) -> None:
         messages = [InputMessage(role="user", content="hi")]
         chunks = []
         async for chunk in self.runner.run_with_streaming(
@@ -119,7 +119,7 @@ class TestMUCGPTAgentExecutor:
 
     @pytest.mark.skip(reason="Temporarily disabled")
     @pytest.mark.asyncio
-    async def test_run_with_streaming_yields_tool_call_chunk(self):
+    async def test_run_with_streaming_yields_tool_call_chunk(self) -> None:
         llm = DummyRunnerLLM(respond_with_tool_call=True)
         agent = DummyAgent(llm)
         runner = MUCGPTAgentExecutor(agent)
@@ -143,7 +143,7 @@ class TestMUCGPTAgentExecutor:
 
     @pytest.mark.skip(reason="Temporarily disabled")
     @pytest.mark.asyncio
-    async def test_run_with_streaming_yields_stop_chunk(self):
+    async def test_run_with_streaming_yields_stop_chunk(self) -> None:
         messages = [InputMessage(role="user", content="hi")]
         chunks = []
         async for chunk in self.runner.run_with_streaming(
@@ -157,7 +157,7 @@ class TestMUCGPTAgentExecutor:
         assert chunks[-1]["choices"][0]["finish_reason"] == "stop"
 
     @pytest.mark.asyncio
-    async def test_run_without_streaming_returns_error_message_on_exception(self):
+    async def test_run_without_streaming_returns_error_message_on_exception(self) -> None:
         llm = DummyRunnerLLM(fail=True)
         agent = DummyAgent(llm)
         runner = MUCGPTAgentExecutor(agent)
@@ -172,7 +172,7 @@ class TestMUCGPTAgentExecutor:
         assert response.choices[0].finish_reason == "error"
 
     @pytest.mark.skip(reason="Temporarily disabled")
-    def test_run_without_streaming_uses_enabled_tools_in_config(self):
+    def test_run_without_streaming_uses_enabled_tools_in_config(self) -> None:
         llm = DummyRunnerLLM()
         agent = DummyAgent(llm)
         runner = MUCGPTAgentExecutor(agent)
@@ -188,7 +188,7 @@ class TestMUCGPTAgentExecutor:
         assert llm.config["enabled_tools"] == enabled_tools
 
     @pytest.mark.skip(reason="Temporarily disabled")
-    def test_run_without_streaming_sets_llm_config(self):
+    def test_run_without_streaming_sets_llm_config(self) -> None:
         llm = DummyRunnerLLM()
         agent = DummyAgent(llm)
         runner = MUCGPTAgentExecutor(agent)
@@ -204,7 +204,7 @@ class TestMUCGPTAgentExecutor:
         assert llm.config["llm_streaming"] is False
 
     @pytest.mark.asyncio
-    async def test_run_without_streaming_returns_error_on_exception(self):
+    async def test_run_without_streaming_returns_error_on_exception(self) -> None:
         llm = DummyRunnerLLM(fail=True)
         agent = DummyAgent(llm)
         runner = MUCGPTAgentExecutor(agent)
@@ -229,7 +229,9 @@ class TestChatGraphNeverCarriesCheckpointer:
     """
 
     @pytest.mark.asyncio
-    async def test_rebuild_path_compiles_without_checkpointer(self, monkeypatch):
+    async def test_rebuild_path_compiles_without_checkpointer(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
         from langgraph.checkpoint.memory import MemorySaver
 
         import agent.react_agent as react_agent

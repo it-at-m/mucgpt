@@ -1,12 +1,18 @@
+from collections.abc import AsyncGenerator
+
 import pytest_asyncio
-from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
+from sqlalchemy.ext.asyncio import (
+    AsyncSession,
+    async_sessionmaker,
+    create_async_engine,
+)
 from sqlalchemy.pool import StaticPool
 
 from database.base import Base
 
 
 @pytest_asyncio.fixture
-async def db_session():
+async def db_session() -> AsyncGenerator[AsyncSession]:
     """Yield an AsyncSession backed by a fresh in-memory SQLite database.
 
     StaticPool keeps the same in-memory connection across the test so writes are

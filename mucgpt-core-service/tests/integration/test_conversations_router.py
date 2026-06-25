@@ -9,7 +9,7 @@ from core.auth_models import AuthenticationResult
 BASE = "/v1/conversations"
 
 
-def test_create_then_list_and_get(test_client: TestClient):
+def test_create_then_list_and_get(test_client: TestClient) -> None:
     create = test_client.post(
         BASE,
         json={
@@ -33,11 +33,11 @@ def test_create_then_list_and_get(test_client: TestClient):
     assert got.json()["messages"][0]["role"] == "user"
 
 
-def test_get_unknown_returns_404(test_client: TestClient):
+def test_get_unknown_returns_404(test_client: TestClient) -> None:
     assert test_client.get(f"{BASE}/nope").status_code == 404
 
 
-def test_patch_updates_title_and_favorite(test_client: TestClient):
+def test_patch_updates_title_and_favorite(test_client: TestClient) -> None:
     conv_id = test_client.post(BASE, json={"title": "old"}).json()["id"]
 
     patched = test_client.patch(
@@ -48,7 +48,7 @@ def test_patch_updates_title_and_favorite(test_client: TestClient):
     assert patched.json()["favorite"] is True
 
 
-def test_append_message(test_client: TestClient):
+def test_append_message(test_client: TestClient) -> None:
     conv_id = test_client.post(BASE, json={"title": "chat"}).json()["id"]
 
     appended = test_client.post(
@@ -60,7 +60,7 @@ def test_append_message(test_client: TestClient):
     assert [m["content"] for m in detail["messages"]] == ["first"]
 
 
-def test_delete_then_404(test_client: TestClient):
+def test_delete_then_404(test_client: TestClient) -> None:
     conv_id = test_client.post(BASE, json={"title": "temp"}).json()["id"]
 
     deleted = test_client.delete(f"{BASE}/{conv_id}")
@@ -68,11 +68,11 @@ def test_delete_then_404(test_client: TestClient):
     assert test_client.get(f"{BASE}/{conv_id}").status_code == 404
 
 
-def test_cross_user_isolation(test_client: TestClient):
+def test_cross_user_isolation(test_client: TestClient) -> None:
     """A conversation created by user A is invisible to user B."""
     conv_id = test_client.post(BASE, json={"title": "private"}).json()["id"]
 
-    async def _other_user():
+    async def _other_user() -> AuthenticationResult:
         return AuthenticationResult(
             token="t",
             user_id="other_user_999",

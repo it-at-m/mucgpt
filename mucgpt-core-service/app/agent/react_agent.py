@@ -196,8 +196,12 @@ class _ConfiguredLangChainAgentGraph:
     async def aget_state(self, config: RunnableConfig):
         """Return the checkpointed state for the thread_id in ``config``.
 
-        Uses the base agent graph, which shares the process-wide checkpointer,
-        so state is readable regardless of which per-request graph produced it.
+        NOTE: the base agent graph is built with ``checkpointer=None`` (the chat
+        flow is request-authoritative), so today this raises
+        ``ValueError("No checkpointer set")`` and callers treat that as "no
+        checkpoint". The method is kept as the read path for a future resume
+        feature: once a dedicated checkpointed graph is wired in, point this at
+        it without changing call sites.
         """
         return await self.agent.aget_state(config)
 

@@ -214,9 +214,16 @@ async def get_conversation_state(
     config = RunnableConfig(configurable={"thread_id": conversation_id})
     try:
         snapshot = await ae.agent.graph.aget_state(config)
-    except Exception as exc:
-        # No checkpointer configured, or thread not found -> empty state.
-        logger.debug("Could not read agent state for %s: %s", conversation_id, exc)
+    except ValueError as exc:
+        # LangGraph raises ValueError("No checkpointer set") when persistence is
+        # not configured (the request-authoritative chat graph runs without a
+        # checkpointer). Treat only that as "no checkpoint"; storage/runtime
+        # failures must surface rather than be masked as has_checkpoint=False.
+        logger.debug(
+            "No checkpointed state for %s (checkpointer disabled): %s",
+            conversation_id,
+            exc,
+        )
         return ConversationStateResponse(
             conversation_id=conversation_id, has_checkpoint=False
         )

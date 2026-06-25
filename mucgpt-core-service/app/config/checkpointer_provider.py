@@ -69,6 +69,17 @@ class CheckpointerProvider:
                 cfg.backend,
                 exc,
             )
+            # If __aenter__() succeeded but setup() (or a later step) raised,
+            # the context manager is half-entered; exit it so the underlying DB
+            # connection/context is not leaked.
+            if cls._cm is not None:
+                try:
+                    await cls._cm.__aexit__(type(exc), exc, exc.__traceback__)
+                except Exception as close_exc:  # pragma: no cover - best effort
+                    logger.warning(
+                        "Error closing checkpointer after failed init: %s",
+                        close_exc,
+                    )
             cls._checkpointer = None
             cls._cm = None
 

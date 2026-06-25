@@ -520,6 +520,30 @@ class Settings(BaseSettings):
         # Split by '@' and take the first part to remove the sha256 hash
         return value.split("@")[0]
 
+    @model_validator(mode="after")
+    def validate_postgres_checkpointer(self) -> "Settings":
+        """Require usable Postgres DB settings when the checkpointer uses postgres.
+
+        ``CheckpointerProvider`` builds the Postgres saver from ``settings.DB``,
+        so a postgres checkpointer needs the same connection fields a postgres
+        ``DB`` backend does. ``DBConfig.validate_postgres`` only runs when
+        ``DB.backend == "postgres"``, so without this cross-field check a config
+        with ``CHECKPOINTER.backend == "postgres"`` but a non-postgres ``DB``
+        loads successfully and only fails later at saver construction.
+        """
+        if self.CHECKPOINTER.backend == "postgres":
+            missing = [
+                field
+                for field in ("HOST", "NAME", "USER", "PASSWORD")
+                if getattr(self.DB, field) in (None, "")
+            ]
+            if missing:
+                raise ValueError(
+                    "CHECKPOINTER.backend=postgres requires DB connection "
+                    "settings: " + ", ".join(missing)
+                )
+        return self
+
 
 def enrich_model_metadata(model: ModelsConfig) -> None:
     """Populate missing metadata for a model via the remote info endpoint."""

@@ -334,8 +334,13 @@ class MUCGPTAgentExecutor:
             try:
                 logger.debug("Starting non-streaming response")
                 if conversation_id:
-                    # Route through the agent graph so state is checkpointed
-                    # under this thread_id (enables resume).
+                    # Persisted chats run through the full agent graph (tools +
+                    # middleware) instead of the direct-model fast path below, so
+                    # non-streaming turns get the same capabilities as streaming
+                    # ones. NOTE: the chat graph runs without a checkpointer
+                    # (request-authoritative persistence), so nothing is
+                    # checkpointed here today; thread_id is carried only for a
+                    # future resume path that would attach a checkpointed graph.
                     result = await self.agent.graph.ainvoke(
                         {"messages": msgs}, config=config
                     )

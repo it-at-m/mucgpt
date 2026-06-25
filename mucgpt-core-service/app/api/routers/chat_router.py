@@ -8,6 +8,7 @@ from api.api_models import (
     ChatCompletionMessage,
     ChatCompletionRequest,
     ChatCompletionResponse,
+    ConversationConflict,
     CreateAssistantRequest,
     CreateAssistantResult,
 )
@@ -16,7 +17,7 @@ from config.settings import get_settings
 from core.auth import authenticate_user
 from core.auth_models import AuthenticationResult
 from core.logtools import getLogger
-from database.conversation_repo import ConversationRepository
+from database.conversation_repo import ConflictError, ConversationRepository
 from database.session import get_db_session
 from init_app import init_agent
 
@@ -87,6 +88,15 @@ def get_temperature_from_request(request: ChatCompletionRequest) -> float:
     response_model=ChatCompletionResponse,
     responses={
         200: {"description": "Successful Response"},
+        409: {
+            "model": ConversationConflict,
+            "description": (
+                "Optimistic-concurrency conflict: the conversation was modified "
+                "by another client since the revision this request was based on. "
+                "No model call is made and nothing is persisted; the client "
+                "should reload the conversation and retry."
+            ),
+        },
         500: {"description": "Internal Server Error"},
     },
 )
@@ -101,6 +111,17 @@ async def chat_completions(
     When ``conversation_id`` is supplied, the incoming user message and the
     produced assistant message are persisted to that conversation. Without it,
     the request is fully stateless (unchanged legacy behavior).
+
+    Optimistic concurrency: when ``conversation_revision`` is also supplied, the
+    history sync is rejected with **HTTP 409** (``ConversationConflict`` body) if
+    the stored conversation has advanced past that revision — before any model
+    call, so a stale cross-device turn neither overwrites newer history nor
+    spends a generation. The new revision is returned to the client:
+      - non-streaming: ``conversation_revision`` on the response body;
+      - streaming: a final SSE event
+        ``data: {"object": "conversation.revision", "conversation_revision": <int>}``
+        emitted after the terminal ``finish_reason: "stop"`` chunk (and only on a
+        successful turn — failed/aborted streams emit no revision event).
     """
     # TODO: init_agent currently rebuilds the tool collection and LangChain agent
     # for every message, even within the same chat. Consider introducing a
@@ -128,12 +149,27 @@ async def chat_completions(
                 assistant_id=request.assistant_id,
             )
         # Sync the stored history to the (authoritative) request history,
-        # including the incoming user turn, before invoking the agent.
-        await repo.replace_messages(
-            conversation_id,
-            user_info.user_id,
-            _storable_messages(request.messages),
-        )
+        # including the incoming user turn, before invoking the agent. The
+        # optimistic-concurrency precondition runs here, before any model call:
+        # a stale cross-device turn is rejected with 409 and nothing is written
+        # or generated. Mapping ConflictError here (outside the main try/except
+        # below) keeps the 409 from being reconverted into a 500.
+        try:
+            await repo.replace_messages(
+                conversation_id,
+                user_info.user_id,
+                _storable_messages(request.messages),
+                expected_revision=request.conversation_revision,
+            )
+        except ConflictError as conflict:
+            await session.rollback()
+            raise HTTPException(
+                status_code=409,
+                detail=ConversationConflict(
+                    current_revision=conflict.current_revision,
+                    expected_revision=conflict.expected_revision,
+                ).model_dump(),
+            )
         await session.commit()
 
     try:
@@ -163,6 +199,7 @@ async def chat_completions(
             async def sse_generator():
                 assistant_content: list[str] = []
                 stream_failed = False
+                new_revision: int | None = None
                 try:
                     async for chunk in gen:
                         # Accumulate assistant text deltas for persistence.
@@ -183,7 +220,9 @@ async def chat_completions(
                     # ends (also runs if the client disconnects mid-stream, so
                     # whatever arrived is saved). Skip persistence when the run
                     # surfaced an error so failed generations are not written to
-                    # the durable log and echoed back on the next sync.
+                    # the durable log and echoed back on the next sync. No yield
+                    # here: this also runs under GeneratorExit (client gone),
+                    # where yielding would raise.
                     if repo is not None and assistant_content and not stream_failed:
                         await repo.append_message(
                             conversation_id,
@@ -192,6 +231,26 @@ async def chat_completions(
                             content="".join(assistant_content),
                         )
                         await session.commit()
+                        new_revision = await repo.current_revision(
+                            conversation_id, user_info.user_id
+                        )
+
+                # Emit the post-turn revision as a final event. Reached only on
+                # normal completion: a client disconnect propagates GeneratorExit
+                # past the finally and skips this, so we never yield into a
+                # closing generator. Gated by new_revision (set only on a
+                # successful, persisted turn).
+                if new_revision is not None:
+                    yield (
+                        "data: "
+                        + json.dumps(
+                            {
+                                "object": "conversation.revision",
+                                "conversation_revision": new_revision,
+                            }
+                        )
+                        + "\n\n"
+                    )
 
             return StreamingResponse(sse_generator(), media_type="text/event-stream")
         else:
@@ -219,6 +278,11 @@ async def chat_completions(
                     content=response.choices[0].message.content,
                 )
                 await session.commit()
+                # Surface the post-turn revision so the client can send it as the
+                # precondition on its next turn.
+                response.conversation_revision = await repo.current_revision(
+                    conversation_id, user_info.user_id
+                )
             return response
     except HTTPException:
         raise

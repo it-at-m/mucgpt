@@ -58,6 +58,7 @@ def _to_detail(conversation: Conversation) -> ConversationDetail:
         model=conversation.model,
         created_at=conversation.created_at,
         updated_at=conversation.updated_at,
+        revision=conversation.revision,
         messages=[
             ChatCompletionMessage(role=m.role, content=m.content)
             for m in conversation.messages

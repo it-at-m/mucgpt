@@ -68,11 +68,16 @@ def test_streaming_persists_assembled_assistant_once(test_client_with_fake_model
     ) as resp:
         assert resp.status_code == 200, resp.text
         streamed = []
+        revision_event = None
         for line in resp.iter_lines():
             if not line:
                 continue
             payload = line[len("data: ") :] if line.startswith("data: ") else line
             chunk = json.loads(payload)
+            # The final SSE event carries the new revision and has no choices.
+            if chunk.get("object") == "conversation.revision":
+                revision_event = chunk
+                continue
             delta = chunk["choices"][0]["delta"].get("content")
             if delta:
                 streamed.append(delta)
@@ -84,6 +89,10 @@ def test_streaming_persists_assembled_assistant_once(test_client_with_fake_model
     # Exactly one assistant message persisted, equal to the assembled stream.
     assert len(assistant_msgs) == 1
     assert assistant_msgs[0]["content"] == assembled
+    # A successful stream ends with a revision event reflecting the persisted
+    # turn, matching the conversation's stored revision (one completed turn).
+    assert revision_event is not None
+    assert revision_event["conversation_revision"] == detail["revision"] == 1
 
 
 def test_without_conversation_id_is_stateless(test_client_with_fake_model: TestClient) -> None:
@@ -218,6 +227,119 @@ def test_history_sync_mirrors_client_truncation(test_client_with_fake_model: Tes
     roles = [(m["role"], m["content"]) for m in client.get(f"{BASE}/{conv_id}").json()["messages"]]
     assert [r for r, _ in roles] == ["user", "assistant"]
     assert roles[0] == ("user", "u1")
+
+
+def test_non_streaming_revision_roundtrip_and_stale_conflict(
+    test_client_with_fake_model: TestClient,
+) -> None:
+    """A non-streaming turn returns the post-turn revision; sending the matching
+    revision next turn succeeds and advances it; a now-stale revision is 409."""
+    client = test_client_with_fake_model
+    conv_id = _create_conversation(client)
+
+    # Turn 1: no precondition (brand-new chat) -> ok, revision advances to 1.
+    r1 = client.post(
+        CHAT,
+        json={
+            "model": "fake",
+            "messages": [{"role": "user", "content": "first"}],
+            "stream": False,
+            "conversation_id": conv_id,
+        },
+    )
+    assert r1.status_code == 200, r1.text
+    assert r1.json()["conversation_revision"] == 1
+
+    # Turn 2: send the matching revision -> ok, advances to 2.
+    a1 = client.get(f"{BASE}/{conv_id}").json()["messages"][1]["content"]
+    r2 = client.post(
+        CHAT,
+        json={
+            "model": "fake",
+            "messages": [
+                {"role": "user", "content": "first"},
+                {"role": "assistant", "content": a1},
+                {"role": "user", "content": "second"},
+            ],
+            "stream": False,
+            "conversation_id": conv_id,
+            "conversation_revision": 1,
+        },
+    )
+    assert r2.status_code == 200, r2.text
+    assert r2.json()["conversation_revision"] == 2
+
+    # Turn 3: reuse the now-stale revision 1 (simulating another device having
+    # advanced the chat) -> 409 with the conflict body, nothing overwritten.
+    r3 = client.post(
+        CHAT,
+        json={
+            "model": "fake",
+            "messages": [{"role": "user", "content": "stale overwrite"}],
+            "stream": False,
+            "conversation_id": conv_id,
+            "conversation_revision": 1,
+        },
+    )
+    assert r3.status_code == 409, r3.text
+    body = r3.json()["detail"]
+    assert body["current_revision"] == 2
+    assert body["expected_revision"] == 1
+    # The stale request neither overwrote history nor advanced the revision.
+    detail = client.get(f"{BASE}/{conv_id}").json()
+    assert detail["revision"] == 2
+    assert [m["content"] for m in detail["messages"] if m["role"] == "user"] == [
+        "first",
+        "second",
+    ]
+
+
+def test_streaming_stale_revision_returns_409_before_any_chunk(
+    test_client_with_fake_model: TestClient,
+) -> None:
+    """A stale revision on a streaming request is rejected with 409 up front (no
+    stream opened, nothing persisted)."""
+    client = test_client_with_fake_model
+    conv_id = _create_conversation(client)
+
+    # Establish revision 1 with one streamed turn.
+    with client.stream(
+        "POST",
+        CHAT,
+        json={
+            "model": "fake",
+            "messages": [{"role": "user", "content": "hi"}],
+            "stream": True,
+            "conversation_id": conv_id,
+        },
+    ) as resp:
+        assert resp.status_code == 200
+        for _ in resp.iter_lines():
+            pass
+    before = client.get(f"{BASE}/{conv_id}").json()
+    assert before["revision"] == 1
+    assistants_before = len([m for m in before["messages"] if m["role"] == "assistant"])
+
+    # Stale streaming request: 409 is raised before the StreamingResponse, so it
+    # surfaces as a normal JSON error (no SSE body).
+    resp = client.post(
+        CHAT,
+        json={
+            "model": "fake",
+            "messages": [{"role": "user", "content": "stale"}],
+            "stream": True,
+            "conversation_id": conv_id,
+            "conversation_revision": 0,
+        },
+    )
+    assert resp.status_code == 409, resp.text
+    body = resp.json()["detail"]
+    assert body["current_revision"] == 1
+    assert body["expected_revision"] == 0
+
+    after = client.get(f"{BASE}/{conv_id}").json()
+    assert after["revision"] == 1
+    assert len([m for m in after["messages"] if m["role"] == "assistant"]) == assistants_before
 
 
 def test_chat_flow_does_not_engage_checkpointer(test_client_with_fake_model: TestClient) -> None:

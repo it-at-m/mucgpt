@@ -2,7 +2,7 @@ import { MutableRefObject, Dispatch, SetStateAction } from "react";
 import { DBMessage, StorageService } from "../service/storage";
 import { DBObject } from "../service/storage";
 import { ChatMessage, ChatOptions } from "./chat/Chat";
-import { ChatRequest, ChatResponse, ChatTurn, DataSource } from "../api";
+import { ChatRequest, ChatResponse, ChatTurn, ConversationMessage, DataSource } from "../api";
 import { ChatCompletionChunk, ChatCompletionChunkChoice } from "../api/models";
 import { ToolStreamHandler, ToolStatus } from "../utils/ToolStreamHandler";
 
@@ -11,7 +11,62 @@ import { AssistantStorageService } from "../service/assistantstorage";
 import { v4 as uuid } from "uuid";
 import { handleRedirect } from "../api/fetch-utils";
 import { createChatName } from "../api/core-client";
-import { deleteConversation, patchConversation } from "../api/conversations-client";
+import { deleteConversation, getConversation, patchConversation } from "../api/conversations-client";
+
+/**
+ * Thrown by makeApiRequest when the backend rejects a chat turn with HTTP 409
+ * (optimistic-concurrency conflict: the chat was modified on another device).
+ * makeApiRequest has already reloaded the authoritative server history into the
+ * store and UI; the caller catches this to surface a non-blocking notice and
+ * restore the user's unsent input so they can resend (no auto-resend).
+ */
+export class ConversationConflictError extends Error {
+    constructor(public readonly conversationId: string) {
+        super("Conversation was modified by another client");
+        this.name = "ConversationConflictError";
+    }
+}
+
+/** Pair backend (role, content) messages into the chat page's user→response turns. */
+export const backendMessagesToAnswers = (messages: ConversationMessage[]): ChatMessage[] => {
+    const result: ChatMessage[] = [];
+    let pendingUser: string | null = null;
+    for (const message of messages) {
+        if (message.role === "system") continue;
+        if (message.role === "user") {
+            if (pendingUser !== null) result.push({ user: pendingUser, response: { answer: "" } as ChatResponse });
+            pendingUser = message.content;
+        } else {
+            result.push({ user: pendingUser ?? "", response: { answer: message.content } as ChatResponse });
+            pendingUser = null;
+        }
+    }
+    if (pendingUser !== null) result.push({ user: pendingUser, response: { answer: "" } as ChatResponse });
+    return result;
+};
+
+/**
+ * On a 409, pull the authoritative conversation from the backend and overwrite
+ * the local copy (messages + revision) and the on-screen history with it. The
+ * user's unsent input is NOT touched here (the caller restores it), and no turn
+ * is auto-resent — the reconciled revision lets the user resend successfully.
+ */
+const reconcileConversationConflict = async (
+    conversationId: string,
+    dispatch: Dispatch<any>,
+    storageService: StorageService<any, any>,
+    options: ChatOptions,
+    fetchHistory?: () => void
+): Promise<void> => {
+    const detail = await getConversation(conversationId);
+    const answers = backendMessagesToAnswers(detail.messages);
+    // Replace the local copy with the server's authoritative history + revision.
+    await storageService.update(conversationId, answers, options);
+    await storageService.setRevision(conversationId, detail.revision);
+    // Reflect the reloaded history in the UI.
+    dispatch({ type: "SET_ANSWERS", payload: answers });
+    if (fetchHistory) fetchHistory();
+};
 
 /**
  * @fileoverview Chat page helper functions for managing chat state, API requests, and user interactions.
@@ -251,6 +306,16 @@ export const makeApiRequest = async (
     // stay local-only for now, so they are not persisted server-side.
     const conversation_id = assistant_id ? undefined : (activeChatRef.current ?? uuid());
 
+    // Optimistic-concurrency precondition: send the revision the local copy of
+    // this chat is based on so the backend can reject a stale cross-device
+    // overwrite (409). Omitted for brand-new chats (no stored revision yet) so a
+    // first turn is never falsely rejected.
+    let knownRevision: number | undefined;
+    if (conversation_id) {
+        const storedChat = await storageService.get(conversation_id);
+        knownRevision = storedChat?.revision;
+    }
+
     // Build the API request object
     const request: ChatRequest = {
         history: [...history, { user: question, assistant: undefined }],
@@ -262,12 +327,23 @@ export const makeApiRequest = async (
         enabled_tools: enabled_tools && enabled_tools.length > 0 ? enabled_tools : undefined,
         assistant_id: assistant_id,
         data_sources: data_sources && data_sources.length > 0 ? data_sources : undefined,
-        conversation_id: conversation_id
+        conversation_id: conversation_id,
+        conversation_revision: knownRevision
     };
 
     // Make the API call
     const response = await chatApi(request);
     handleRedirect(response);
+
+    // Optimistic-concurrency conflict: the chat was advanced on another
+    // device/tab. Reload the authoritative server history into the store and UI
+    // (preserving the user's unsent question for resend) and signal the caller.
+    if (response.status === 409 && conversation_id) {
+        await reconcileConversationConflict(conversation_id, dispatch, storageService, options, fetchHistory);
+        isLoadingRef.current = false;
+        onLoadingChange?.(false);
+        throw new ConversationConflictError(conversation_id);
+    }
 
     // Ensure we have a response body for streaming
     if (!response.body) {
@@ -306,6 +382,11 @@ export const makeApiRequest = async (
         requestAnimationFrame(scrollToCurrentGeneration);
         setTimeout(scrollToCurrentGeneration, 120);
     });
+
+    // Captured from the final `conversation.revision` SSE event (emitted after
+    // the terminal stop chunk); persisted locally so the next turn's precondition
+    // is up to date. Trust the server value rather than incrementing locally.
+    let capturedRevision: number | undefined;
 
     // Buffer management for optimized UI updates
     let textBuffer = ""; // Accumulates regular text content
@@ -363,18 +444,33 @@ export const makeApiRequest = async (
                 if (line.startsWith("data: ")) {
                     const data = line.slice(6).trim();
 
-                    // Check for stream end marker
+                    // Stream end marker: stop accumulating but keep draining the
+                    // reader so a trailing revision event in a later read isn't
+                    // dropped. The loop ends naturally when the reader is done.
                     if (data === "[DONE]") {
-                        break;
+                        continue;
                     }
 
                     try {
                         // Parse the SSE chunk data
                         const chunk = JSON.parse(data) as ChatCompletionChunk;
+
+                        // Final optimistic-concurrency event (no `choices`). Check
+                        // this BEFORE the choice guard, and before the stop guard
+                        // below, since it is emitted after the terminal stop chunk
+                        // and may arrive in the same network read.
+                        const revisionChunk = chunk as unknown as { object?: string; conversation_revision?: number };
+                        if (revisionChunk.object === "conversation.revision") {
+                            capturedRevision = revisionChunk.conversation_revision;
+                            continue;
+                        }
+
                         const choice: ChatCompletionChunkChoice | undefined = chunk.choices?.[0];
-                        if (!choice) continue; // Check if streaming is complete
+                        if (!choice) continue;
+                        // Terminal chunk: stop UI updates but keep draining (see
+                        // [DONE] above) so the revision event is not missed.
                         if (choice.finish_reason === "stop") {
-                            break;
+                            continue;
                         }
 
                         // Handle token usage information if available
@@ -463,6 +559,12 @@ export const makeApiRequest = async (
     if (activeChatRef.current) {
         // Append to existing chat
         await storageService.appendMessage(finalMessage, activeChatRef.current, options);
+        // Persist the server's post-turn revision so the next turn sends an
+        // accurate optimistic-concurrency precondition (no-op for assistant
+        // chats, which carry no revision).
+        if (conversation_id && capturedRevision !== undefined) {
+            await storageService.setRevision(conversation_id, capturedRevision);
+        }
         if (fetchHistory) fetchHistory();
     } else {
         // Create a new chat with generated name
@@ -481,6 +583,11 @@ export const makeApiRequest = async (
                       false
                   )
                 : await storageService.create([finalMessage], options, conversation_id, chatname, false);
+
+        // Persist the server's post-turn revision on the freshly created local chat.
+        if (!assistant_id && conversation_id && capturedRevision !== undefined) {
+            await storageService.setRevision(conversation_id, capturedRevision);
+        }
 
         // Persist the generated title to the backend for normal chats (best-effort).
         if (!assistant_id && conversation_id) {

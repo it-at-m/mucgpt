@@ -12,7 +12,8 @@ import { CHAT_STORE, CREATIVITY_LOW } from "../../constants";
 import { DBMessage, StorageService } from "../../service/storage";
 import { AnswerList } from "../../components/AnswerList/AnswerList";
 import { FollowUpActionContext } from "../../components/FollowUpAction";
-import { getChatReducer, handleRegenerate, handleRollback, makeApiRequest } from "../page_helpers";
+import { ConversationConflictError, getChatReducer, handleRegenerate, handleRollback, makeApiRequest } from "../page_helpers";
+import { useGlobalToastContext } from "../../components/GlobalToastHandler/GlobalToastContext";
 import { STORAGE_KEYS } from "../layout/LayoutHelper";
 import { ToolStatus } from "../../utils/ToolStreamHandler";
 import { Model } from "../../api";
@@ -117,6 +118,7 @@ const Chat = () => {
     const [isLoading, setIsLoading] = useState<boolean>(false);
 
     useToolStatusToasts(toolStatuses);
+    const { showWarning } = useGlobalToastContext();
 
     // Related states with useReducer
     const [chatState, dispatch] = useReducer(chatReducer, {
@@ -288,12 +290,21 @@ const Chat = () => {
                     setLoadingState
                 );
             } catch (e) {
-                setError(e);
+                if (e instanceof ConversationConflictError) {
+                    // The turn was rejected because the chat changed on another
+                    // device; makeApiRequest already reloaded the authoritative
+                    // history. Restore the user's unsent prompt and tell them to
+                    // resend (no auto-resend, to avoid duplicate turns).
+                    setQuestion(question);
+                    showWarning(t("chat.conflict_title"), t("chat.conflict_message"));
+                } else {
+                    setError(e);
+                }
             } finally {
                 setLoadingState(false);
             }
         },
-        [answers, creativity, LLM, storageService, fetchHistory, selectedTools, setToolStatuses, setLoadingState]
+        [answers, creativity, LLM, storageService, fetchHistory, selectedTools, setToolStatuses, setLoadingState, showWarning, t]
     );
 
     // Regenerate-Funktion

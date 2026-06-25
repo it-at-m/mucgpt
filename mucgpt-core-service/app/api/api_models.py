@@ -103,6 +103,16 @@ class ChatCompletionRequest(BaseModel):
             "stateless (current default behavior)."
         ),
     )
+    conversation_revision: int | None = Field(
+        None,
+        description=(
+            "Revision the client's history is based on. Enables optimistic-"
+            "concurrency rejection: if the stored conversation has advanced past "
+            "this revision (another tab/device appended a turn), the request is "
+            "rejected with HTTP 409 instead of overwriting the newer history. "
+            "Omit it (e.g. a brand-new chat) to skip the check entirely."
+        ),
+    )
     model_config = ConfigDict(
         json_schema_extra={
             "example": {
@@ -179,6 +189,16 @@ class ChatCompletionResponse(BaseModel):
         ..., description="List of completion choices"
     )
     usage: Usage = Field(..., description="Token usage information")
+    conversation_revision: int | None = Field(
+        None,
+        description=(
+            "The conversation's new revision after this turn was persisted. "
+            "Populated only when the request carried a conversation_id (the chat "
+            "is server-persisted); null for stateless requests. The streaming "
+            "path delivers this via a final SSE event instead (see the "
+            "/chat/completions route docs)."
+        ),
+    )
     model_config = ConfigDict(
         json_schema_extra={
             "example": {
@@ -469,6 +489,14 @@ class ConversationSummary(BaseModel):
     model: str | None = None
     created_at: datetime
     updated_at: datetime
+    revision: int = Field(
+        0,
+        description=(
+            "Server-owned optimistic-concurrency revision. The client sends this "
+            "back as conversation_revision on the next chat turn to detect stale "
+            "cross-device overwrites."
+        ),
+    )
     model_config = ConfigDict(from_attributes=True)
 
 
@@ -477,6 +505,30 @@ class ConversationDetail(ConversationSummary):
 
     messages: list[ChatCompletionMessage] = Field(default_factory=list)
     model_config = ConfigDict(from_attributes=True)
+
+
+class ConversationConflict(BaseModel):
+    """409 body for an optimistic-concurrency rejection on a chat turn."""
+
+    detail: str = Field(
+        "Conversation was modified by another client; reload and retry.",
+        description="Human-readable explanation of the conflict.",
+    )
+    current_revision: int = Field(
+        ..., description="The conversation's current server-side revision."
+    )
+    expected_revision: int = Field(
+        ..., description="The revision the rejected request was based on."
+    )
+    model_config = ConfigDict(
+        json_schema_extra={
+            "example": {
+                "detail": "Conversation was modified by another client; reload and retry.",
+                "current_revision": 5,
+                "expected_revision": 4,
+            }
+        }
+    )
 
 
 class CreateConversationRequest(BaseModel):

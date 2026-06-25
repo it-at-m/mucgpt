@@ -19,6 +19,25 @@ from database.models import Conversation, Message
 _APPEND_MAX_ATTEMPTS = 5
 
 
+class ConflictError(Exception):
+    """Raised when an optimistic-concurrency precondition fails.
+
+    Distinct from ``IntegrityError`` (the intra-conversation sequence-collision
+    that ``append_message`` retries): this is the *inter-client* precondition
+    failure — another tab/device advanced the stored conversation past the
+    revision the current client's history is based on. The router maps it to
+    HTTP 409 instead of retrying.
+    """
+
+    def __init__(self, *, current_revision: int, expected_revision: int):
+        self.current_revision = current_revision
+        self.expected_revision = expected_revision
+        super().__init__(
+            f"conversation revision mismatch: stored={current_revision} "
+            f"expected={expected_revision}"
+        )
+
+
 class ConversationRepository:
     def __init__(self, session: AsyncSession):
         self.session = session
@@ -114,6 +133,7 @@ class ConversationRepository:
         conversation_id: str,
         user_id: str,
         messages: Iterable[tuple[str, str]],
+        expected_revision: int | None = None,
     ) -> Conversation | None:
         """Replace all stored messages with the given (role, content) sequence.
 
@@ -121,10 +141,31 @@ class ConversationRepository:
         authoritative conversation history each turn (so client-side
         rollback/regenerate edits are mirrored without extra endpoints).
         Returns None if the conversation is not owned by the user.
+
+        Optimistic-concurrency guard: when ``expected_revision`` is supplied and
+        the stored revision has moved on (another tab/device appended a turn the
+        caller has not seen), raise ``ConflictError`` and write nothing rather
+        than silently overwriting the newer history (last-write-wins data loss).
+        When ``expected_revision`` is None the check is skipped and the method
+        behaves exactly as before (backward-compatible, opt-in per request).
+
+        Note: this method does not itself bump ``revision`` — only completed
+        turns advance it, via ``append_message``. So a turn that fails after the
+        sync (no assistant message) leaves the revision untouched and the
+        client's own retry is not falsely rejected.
         """
         conversation = await self.get_for_user(conversation_id, user_id)
         if conversation is None:
             return None
+
+        if (
+            expected_revision is not None
+            and conversation.revision != expected_revision
+        ):
+            raise ConflictError(
+                current_revision=conversation.revision,
+                expected_revision=expected_revision,
+            )
 
         # Clear then flush the deletes first so re-inserting from sequence 0
         # cannot collide with the (conversation_id, sequence) unique constraint.
@@ -195,8 +236,13 @@ class ConversationRepository:
                     raise
                 continue
 
-        # Touch the conversation so updated_at advances (onupdate needs a change).
+        # Touch the conversation so updated_at advances (onupdate needs a change)
+        # and bump the optimistic-concurrency revision: a completed assistant
+        # turn is exactly the content mutation other clients must not clobber.
+        # Bumping here (and not in replace_messages) keeps revision == number of
+        # persisted turns, so a failed turn advances nothing.
         conversation.updated_at = func.now()
+        conversation.revision = conversation.revision + 1
         await self.session.flush()
         # The message was inserted directly (explicit FK), bypassing the loaded
         # ``messages`` collection; reload it so the in-memory conversation stays
@@ -204,3 +250,18 @@ class ConversationRepository:
         await self.session.refresh(conversation, ["messages"])
         await self.session.refresh(message)
         return message
+
+    async def current_revision(
+        self, conversation_id: str, user_id: str
+    ) -> int | None:
+        """Return the conversation's current revision, or None if not owned.
+
+        A lightweight single-column lookup so a caller (the chat router) can
+        surface the post-turn revision without re-loading the full message set.
+        """
+        return await self.session.scalar(
+            select(Conversation.revision).where(
+                Conversation.id == conversation_id,
+                Conversation.user_id == user_id,
+            )
+        )

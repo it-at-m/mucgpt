@@ -159,6 +159,9 @@ export class UnifiedHistoryStorage {
                         detail.title ?? undefined,
                         detail.favorite
                     );
+                    // Start the local copy at the server's current revision so the
+                    // next turn sends an accurate optimistic-concurrency precondition.
+                    await this.chatStorage.setRevision(detail.id, detail.revision);
                 } catch (error) {
                     failures++;
                     console.error(`Failed to pull conversation "${conversation.id}" from backend`, error);

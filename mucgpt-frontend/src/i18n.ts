@@ -58,6 +58,9 @@ i18n
                         prompt: "Stelle eine Frage oder lade ein Dokument hoch",
                         prompt_no_upload: "Stelle eine Frage",
                         answer_loading: "Erstelle Antwort",
+                        conflict_title: "Chat anderswo aktualisiert",
+                        conflict_message:
+                            "Dieser Chat wurde auf einem anderen Gerät aktualisiert. Die neueste Version wurde geladen – bitte sende deine Nachricht erneut.",
                         follow_up_actions: {
                             shorter_tooltip: "Schreibe eine kürzere Antwort",
                             longer_tooltip: "Schreibe eine längere Antwort",
@@ -814,6 +817,8 @@ i18n
                         prompt: "Ask a question or upload a document",
                         prompt_no_upload: "Ask a question",
                         answer_loading: "Generating answer",
+                        conflict_title: "Chat updated elsewhere",
+                        conflict_message: "This chat was updated on another device. The latest version has been loaded — please resend your message.",
                         follow_up_actions: {
                             shorter_tooltip: "Shorten your answer",
                             longer_tooltip: "Write a longer response",

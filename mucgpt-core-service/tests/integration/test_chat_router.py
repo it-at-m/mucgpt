@@ -407,3 +407,62 @@ class TestChatRouter:
         assert response.usage.prompt_tokens > 0
         assert response.usage.completion_tokens > 0
         assert response.usage.total_tokens > 0
+
+    @patch("api.routers.chat_router.init_agent", new_callable=AsyncMock)
+    def test_stale_revision_returns_409_without_model_call(
+        self, mock_init_agent, test_client: TestClient
+    ):
+        """A turn whose conversation_revision is stale is rejected with 409 and
+        the model is never invoked (reject-before-generate)."""
+        mock_response = ChatCompletionResponse(
+            id="chatcmpl-test123",
+            object="chat.completion",
+            created=1234567890,
+            choices=[
+                ChatCompletionChoice(
+                    index=0,
+                    message=ChatCompletionMessage(role="assistant", content="ok"),
+                    finish_reason="stop",
+                )
+            ],
+            usage=Usage(prompt_tokens=5, completion_tokens=1, total_tokens=6),
+        )
+        mock_agent_executor = Mock(MUCGPTAgentExecutor)
+        # Return the response object (the persistence path reads .choices and
+        # sets .conversation_revision on it).
+        mock_agent_executor.run_without_streaming.return_value = mock_response
+        mock_init_agent.return_value = mock_agent_executor
+
+        conv_id = "conv-conflict-router"
+
+        # Turn 1 (no precondition): auto-creates and advances revision to 1.
+        r1 = test_client.post(
+            "/v1/chat/completions",
+            json={
+                "model": "gpt-4o-mini",
+                "messages": [{"role": "user", "content": "hi"}],
+                "stream": False,
+                "conversation_id": conv_id,
+            },
+        )
+        assert r1.status_code == 200, r1.text
+        assert r1.json()["conversation_revision"] == 1
+
+        mock_agent_executor.run_without_streaming.reset_mock()
+
+        # Turn 2 with the now-stale revision 0: 409, and no generation happened.
+        r2 = test_client.post(
+            "/v1/chat/completions",
+            json={
+                "model": "gpt-4o-mini",
+                "messages": [{"role": "user", "content": "stale"}],
+                "stream": False,
+                "conversation_id": conv_id,
+                "conversation_revision": 0,
+            },
+        )
+        assert r2.status_code == 409, r2.text
+        body = r2.json()["detail"]
+        assert body["current_revision"] == 1
+        assert body["expected_revision"] == 0
+        mock_agent_executor.run_without_streaming.assert_not_called()

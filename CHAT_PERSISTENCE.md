@@ -199,6 +199,61 @@ MUCGPT_CORE_DB__NAME=mucgpt
 - **Rollback:** reverting the frontend leaves the new tables unused but harmless; there is
   no destructive migration.
 
+## Optimistic concurrency (cross-device conflict guard)
+
+Because every turn rewrites the stored conversation to the client's snapshot
+(`replace_messages`) before appending the assistant turn, the same chat open on
+two devices could **silently lose turns** (last-write-wins). A server-owned
+revision rejects a turn based on a **stale completed revision** — the common
+**sequential** cross-device case (device B finishes a turn, device A then sends
+based on the pre-B revision → 409 → reconcile).
+
+> **Residual (known, out of scope):** two turns generating *simultaneously* are
+> not caught — both run `replace_messages` (which overwrites but does **not**
+> bump) before either appends, so neither sees the other's bump. Bumping on
+> `replace` too would catch this but would falsely 409 every failed-generation
+> retry; for a chat app, protecting the sequential case while never punishing a
+> retry is the deliberate tradeoff. Merge-on-conflict is also out of scope.
+
+- **`conversations.revision`** — a monotonic integer, server-owned. Bumped by
+  **exactly one per persisted turn**, only in `append_message` (not in
+  `replace_messages`), so a turn that fails *after* the history sync advances
+  nothing and the client's own retry is never falsely rejected.
+- **Request:** the client may send `conversation_revision` (the revision its
+  history is based on) on `POST /v1/chat/completions`. It is **optional** — omit
+  it (e.g. a brand-new chat) and the precondition check is skipped, exactly
+  today's behavior.
+- **Conflict:** if the stored revision has moved past the supplied value, the
+  turn is rejected with **HTTP 409** carrying a `ConversationConflict` body
+  (`detail`, `current_revision`, `expected_revision`). The rejection happens
+  **before any model call** — no generation is spent and nothing is written.
+- **New revision back to the client:**
+  - non-streaming: `conversation_revision` on the response body;
+  - streaming: a final SSE event after the terminal `stop` chunk —
+    `data: {"object": "conversation.revision", "conversation_revision": <int>}` —
+    emitted only on a successful turn (never on a failed/aborted stream).
+  `revision` is also returned on conversation read/create models so a freshly
+  pulled or created chat starts with the correct precondition.
+- **Client behavior on 409:** pull the authoritative history
+  (`GET /v1/conversations/{id}`), replace local messages + revision, show a
+  non-blocking notice, and preserve the unsent prompt. **No auto-resend** (avoids
+  duplicate turns); the user resends with the refreshed revision.
+
+**Production migration.** `create_all` adds `revision` only to *fresh* DBs. For an
+existing Postgres deployment, apply the column before deploy:
+
+```sql
+ALTER TABLE conversations ADD COLUMN revision INTEGER NOT NULL DEFAULT 0;
+```
+
+core-service has no Alembic yet (only `mucgpt-assistant-service-migrations/`);
+run this DDL manually in the deploy runbook, or add it as the first revision if
+core-service later adopts Alembic.
+
+**Rollout is backend-first and safe.** The guard is opt-in per request: no client
+sends `conversation_revision` until the frontend ships, so 409s cannot occur
+prematurely. (Related: issue #1069 cross-device deletion tombstones.)
+
 ## How it was verified
 
 - Automated: repository, router, and end-to-end persistence suites plus the

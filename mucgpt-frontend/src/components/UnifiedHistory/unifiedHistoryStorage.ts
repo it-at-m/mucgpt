@@ -141,6 +141,12 @@ export class UnifiedHistoryStorage {
         const localIds = new Set(local.filter(chat => chat.id).map(chat => chat.id as string));
         const backendIds = new Set(backendList.map(conversation => conversation.id));
 
+        // Count per-conversation failures so a transient pull/push error makes
+        // the whole sync fail (below). Otherwise runSync would resolve despite
+        // the failure and the resolved syncPromise guard would block any retry
+        // until reload, leaving a chat unpulled or unmigrated.
+        let failures = 0;
+
         const pulls = backendList
             .filter(conversation => !localIds.has(conversation.id))
             .map(async conversation => {
@@ -154,6 +160,7 @@ export class UnifiedHistoryStorage {
                         detail.favorite
                     );
                 } catch (error) {
+                    failures++;
                     console.error(`Failed to pull conversation "${conversation.id}" from backend`, error);
                 }
             });
@@ -168,11 +175,19 @@ export class UnifiedHistoryStorage {
                         messages: dbMessagesToBackendMessages(chat.messages ?? [])
                     });
                 } catch (error) {
+                    failures++;
                     console.error(`Failed to migrate local chat "${chat.id}" to backend`, error);
                 }
             });
 
+        // Run all pulls/pushes to completion (one failure must not abort the
+        // others) but surface an aggregate failure so syncWithBackend() clears
+        // the cached promise and a later refresh retries the leftovers.
         await Promise.all([...pulls, ...pushes]);
+
+        if (failures > 0) {
+            throw new Error(`Conversation sync finished with ${failures} failed operation(s); will retry on next refresh`);
+        }
     }
 
     async getAllHistoryEntries(): Promise<UnifiedHistoryEntry[]> {

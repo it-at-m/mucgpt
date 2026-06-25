@@ -11,7 +11,7 @@ import { AssistantStorageService } from "../service/assistantstorage";
 import { v4 as uuid } from "uuid";
 import { handleRedirect } from "../api/fetch-utils";
 import { createChatName } from "../api/core-client";
-import { patchConversation } from "../api/conversations-client";
+import { deleteConversation, patchConversation } from "../api/conversations-client";
 
 /**
  * @fileoverview Chat page helper functions for managing chat state, API requests, and user interactions.
@@ -100,6 +100,12 @@ export function handleDeleteChat(
 
     // Delete the chat from storage
     storageService.delete(id);
+
+    // Mirror the deletion to the backend (best-effort) so a persisted normal
+    // chat is not pulled back on the next sync/reload. deleteConversation
+    // treats 404 as success, so this is a harmless no-op for local-only
+    // (e.g. assistant) chats that were never persisted server-side.
+    deleteConversation(id).catch(error => console.error(`Failed to delete conversation "${id}" on backend`, error));
 
     // Clear the UI state
     setAnswers([]);

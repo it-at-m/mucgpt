@@ -72,6 +72,8 @@ export interface CreateConversationRequest {
     title?: string;
     assistant_id?: string;
     model?: string;
+    /** Optional snapshot of chat config (creativity, tools, ...). Mirrors the backend field. */
+    config?: Record<string, any>;
     messages?: ConversationMessage[];
 }
 

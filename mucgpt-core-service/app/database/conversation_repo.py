@@ -7,6 +7,7 @@ user's conversation, regardless of the id supplied in the request path.
 from __future__ import annotations
 
 from collections.abc import Iterable
+from datetime import datetime
 
 from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
@@ -17,6 +18,19 @@ from database.models import Conversation, Message
 # How many times append_message recomputes the next sequence and retries when a
 # concurrent writer wins the race for the same (conversation_id, sequence).
 _APPEND_MAX_ATTEMPTS = 5
+
+
+class ConversationDeletedError(Exception):
+    """Raised when a create targets an id that is already tombstoned.
+
+    A deleted conversation must not be resurrected by a client that still
+    caches it (the cross-device deletion loop). Re-creating a tombstoned id is
+    rejected at the source instead; the router maps this to HTTP 409.
+    """
+
+    def __init__(self, conversation_id: str):
+        self.conversation_id = conversation_id
+        super().__init__(f"Conversation {conversation_id!r} was deleted")
 
 
 class ConversationRepository:
@@ -39,7 +53,17 @@ class ConversationRepository:
         ``conversation_id`` lets the caller supply the primary key (e.g. a
         client-generated UUID so the same id is used end-to-end). When omitted
         the model's default UUID is generated.
+
+        Anti-resurrection: if the caller supplies an id that is already
+        tombstoned (deleted), the create is rejected with
+        ``ConversationDeletedError`` instead of inserting — a client that still
+        caches a deleted chat cannot bring it back. A live duplicate id keeps
+        today's behavior (the existing row's primary-key constraint applies).
         """
+        if conversation_id:
+            existing = await self._get_any(conversation_id, user_id)
+            if existing is not None and existing.deleted_at is not None:
+                raise ConversationDeletedError(conversation_id)
         conversation = Conversation(
             user_id=user_id,
             title=title,
@@ -65,10 +89,17 @@ class ConversationRepository:
         return conversation
 
     async def list_for_user(self, user_id: str) -> list[Conversation]:
-        """Return the user's conversations, most-recently-updated first."""
+        """Return the user's live conversations, most-recently-updated first.
+
+        Tombstoned (soft-deleted) conversations are excluded so a deleted chat
+        never reappears in the normal list.
+        """
         result = await self.session.execute(
             select(Conversation)
-            .where(Conversation.user_id == user_id)
+            .where(
+                Conversation.user_id == user_id,
+                Conversation.deleted_at.is_(None),
+            )
             .order_by(Conversation.updated_at.desc())
         )
         return list(result.scalars().all())
@@ -76,14 +107,35 @@ class ConversationRepository:
     async def get_for_user(
         self, conversation_id: str, user_id: str
     ) -> Conversation | None:
-        """Return the conversation (with messages) only if owned by user_id."""
+        """Return the live conversation (with messages) only if owned by user_id.
+
+        A tombstoned conversation reads as ``None`` (callers treat that as 404),
+        so soft-deleted chats are invisible to every normal read/write path.
+        """
+        result = await self.session.execute(
+            select(Conversation).where(
+                Conversation.id == conversation_id,
+                Conversation.user_id == user_id,
+                Conversation.deleted_at.is_(None),
+            )
+        )
+        # messages are eager-loaded via the relationship's lazy="selectin".
+        return result.scalars().first()
+
+    async def _get_any(
+        self, conversation_id: str, user_id: str
+    ) -> Conversation | None:
+        """Return the owned conversation **including** a tombstoned one.
+
+        Used by the resurrection guard (``create``) and idempotent ``delete``,
+        which both need to see soft-deleted rows that ``get_for_user`` hides.
+        """
         result = await self.session.execute(
             select(Conversation).where(
                 Conversation.id == conversation_id,
                 Conversation.user_id == user_id,
             )
         )
-        # messages are eager-loaded via the relationship's lazy="selectin".
         return result.scalars().first()
 
     async def update_meta(
@@ -101,13 +153,47 @@ class ConversationRepository:
         return conversation
 
     async def delete(self, conversation_id: str, user_id: str) -> bool:
-        """Delete the conversation (cascades to messages). Ownership enforced."""
-        conversation = await self.get_for_user(conversation_id, user_id)
+        """Soft-delete the conversation by stamping ``deleted_at``.
+
+        The row (and its messages) are retained so the deletion is a durable,
+        queryable fact — see ``list_deleted_for_user`` and the create-time
+        resurrection guard. Reads (``get_for_user``/``list_for_user``) then
+        exclude it, so callers still see a deleted chat as gone (404/absent).
+
+        Ownership is enforced and the operation is idempotent: deleting an
+        already-tombstoned chat is a no-op that returns ``True`` (the original
+        ``deleted_at`` is preserved for the retention/cursor semantics).
+        Returns ``False`` only when the conversation does not exist / is not
+        owned by the user.
+        """
+        conversation = await self._get_any(conversation_id, user_id)
         if conversation is None:
             return False
-        await self.session.delete(conversation)
-        await self.session.flush()
+        if conversation.deleted_at is None:
+            conversation.deleted_at = func.now()
+            await self.session.flush()
         return True
+
+    async def list_deleted_for_user(
+        self, user_id: str, since: datetime | None = None
+    ) -> list[Conversation]:
+        """Return the user's tombstoned conversations, oldest-deleted first.
+
+        Backs the tombstone feed: clients learn which ids were deleted (on any
+        device) so they can drop them locally instead of re-pushing them. When
+        ``since`` is given, only tombstones strictly newer than that cursor are
+        returned, so a client can sync incrementally by remembering the max
+        ``deleted_at`` it has already applied.
+        """
+        stmt = select(Conversation).where(
+            Conversation.user_id == user_id,
+            Conversation.deleted_at.is_not(None),
+        )
+        if since is not None:
+            stmt = stmt.where(Conversation.deleted_at > since)
+        stmt = stmt.order_by(Conversation.deleted_at)
+        result = await self.session.execute(stmt)
+        return list(result.scalars().all())
 
     async def replace_messages(
         self,

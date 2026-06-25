@@ -437,6 +437,12 @@ export const handlers = [
         }
         return HttpResponse.json(node.children || []);
     }),
+    // Tombstone feed for cross-device deletion sync. No backend in mocked dev
+    // mode, so default to an empty feed (no remote deletions to apply); the
+    // `since` cursor is accepted and ignored.
+    http.get("/api/backend/v1/conversations/deleted", () => {
+        return HttpResponse.json([]);
+    }),
     http.get("/api/backend/v1/tools", ({ request }) => {
         const url = new URL(request.url);
         const lang = url.searchParams.get("lang") || "deutsch";

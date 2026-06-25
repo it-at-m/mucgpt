@@ -82,6 +82,16 @@ export interface UpdateConversationRequest {
     favorite?: boolean;
 }
 
+/**
+ * Tombstone-feed item: a conversation the user deleted (on any device).
+ * Mirrors the backend model. `deleted_at` is an ISO-8601 string and doubles as
+ * the incremental-sync cursor.
+ */
+export interface DeletedConversation {
+    id: string;
+    deleted_at: string;
+}
+
 export type CreateAssistantRequest = {
     input: string;
     model?: string;

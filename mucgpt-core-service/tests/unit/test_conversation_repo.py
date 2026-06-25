@@ -3,11 +3,16 @@
 No model endpoint or network involved — pure persistence-layer validation.
 """
 
+from datetime import UTC, datetime, timedelta
+
 import pytest
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from database.conversation_repo import ConversationRepository
+from database.conversation_repo import (
+    ConversationDeletedError,
+    ConversationRepository,
+)
 from database.models import Message
 
 USER_A = "user-a"
@@ -217,7 +222,7 @@ async def test_update_meta(db_session: AsyncSession) -> None:
 
 
 @pytest.mark.asyncio
-async def test_delete_cascades_messages_and_enforces_ownership(db_session: AsyncSession) -> None:
+async def test_soft_delete_retains_row_and_messages_and_enforces_ownership(db_session: AsyncSession) -> None:
     repo = ConversationRepository(db_session)
     conv = await repo.create(
         user_id=USER_A, messages=[("user", "a"), ("assistant", "b")]
@@ -230,8 +235,103 @@ async def test_delete_cascades_messages_and_enforces_ownership(db_session: Async
     assert await repo.delete(conv.id, USER_A) is True
     await db_session.commit()
 
+    # The chat reads as gone from every normal path...
     assert await repo.get_for_user(conv.id, USER_A) is None
+    assert all(c.id != conv.id for c in await repo.list_for_user(USER_A))
+
+    # ...but soft delete retains the row and its messages (hidden with the
+    # parent; the retention sweep removes both together later).
+    tombstoned = await repo._get_any(conv.id, USER_A)
+    assert tombstoned is not None and tombstoned.deleted_at is not None
     remaining = await db_session.scalar(
         select(func.count()).select_from(Message)
     )
-    assert remaining == 0
+    assert remaining == 2
+
+
+@pytest.mark.asyncio
+async def test_delete_is_idempotent_and_preserves_first_timestamp(db_session: AsyncSession) -> None:
+    repo = ConversationRepository(db_session)
+    conv = await repo.create(user_id=USER_A, title="temp")
+    await db_session.commit()
+
+    assert await repo.delete(conv.id, USER_A) is True
+    await db_session.commit()
+    first_ts = (await repo._get_any(conv.id, USER_A)).deleted_at
+
+    # Deleting an already-tombstoned chat is a no-op that still returns True and
+    # does not re-stamp deleted_at (so the retention/cursor window is stable).
+    assert await repo.delete(conv.id, USER_A) is True
+    await db_session.commit()
+    assert (await repo._get_any(conv.id, USER_A)).deleted_at == first_ts
+
+
+@pytest.mark.asyncio
+async def test_create_with_tombstoned_id_is_rejected_not_resurrected(db_session: AsyncSession) -> None:
+    repo = ConversationRepository(db_session)
+    await repo.create(
+        user_id=USER_A, conversation_id="ghost", messages=[("user", "hi")]
+    )
+    await db_session.commit()
+    assert await repo.delete("ghost", USER_A) is True
+    await db_session.commit()
+
+    with pytest.raises(ConversationDeletedError):
+        await repo.create(user_id=USER_A, conversation_id="ghost")
+
+    # Nothing was written: the row stays tombstoned with its original message.
+    still = await repo._get_any("ghost", USER_A)
+    assert still is not None and still.deleted_at is not None
+    assert [m.content for m in still.messages] == ["hi"]
+
+    # A brand-new id is unaffected by the guard.
+    fresh = await repo.create(user_id=USER_A, conversation_id="brand-new")
+    await db_session.commit()
+    assert fresh.id == "brand-new"
+
+
+@pytest.mark.asyncio
+async def test_writes_to_tombstoned_id_fail_closed(db_session: AsyncSession) -> None:
+    repo = ConversationRepository(db_session)
+    conv = await repo.create(user_id=USER_A, messages=[("user", "hi")])
+    await db_session.commit()
+    assert await repo.delete(conv.id, USER_A) is True
+    await db_session.commit()
+
+    # Both writes go through get_for_user, which now hides the tombstone, so a
+    # deleted chat can never be appended to or rewritten.
+    assert await repo.replace_messages(conv.id, USER_A, [("user", "x")]) is None
+    assert (
+        await repo.append_message(conv.id, USER_A, role="user", content="x")
+        is None
+    )
+
+
+@pytest.mark.asyncio
+async def test_list_deleted_for_user_filters_and_respects_since(db_session: AsyncSession) -> None:
+    repo = ConversationRepository(db_session)
+    live = await repo.create(user_id=USER_A, conversation_id="live")
+    c1 = await repo.create(user_id=USER_A, conversation_id="d1")
+    c2 = await repo.create(user_id=USER_A, conversation_id="d2")
+    other = await repo.create(user_id=USER_B, conversation_id="d-other")
+    await db_session.commit()
+
+    # Stamp explicit, distinct timestamps: func.now() on SQLite is only
+    # second-granularity, so two deletes in one test can collide and make the
+    # `since` cursor flake. Setting them directly keeps the ordering crisp.
+    t0 = datetime(2026, 1, 1, 12, 0, 0, tzinfo=UTC)
+    (await repo._get_any("d1", USER_A)).deleted_at = t0
+    (await repo._get_any("d2", USER_A)).deleted_at = t0 + timedelta(minutes=5)
+    (await repo._get_any("d-other", USER_B)).deleted_at = t0
+    await db_session.flush()
+    await db_session.commit()
+    assert live.id and c1.id and c2.id and other.id  # silence unused warnings
+
+    # Full feed: only the user's tombstones, oldest-deleted first; live + other
+    # user's tombstone never leak.
+    deleted = await repo.list_deleted_for_user(USER_A)
+    assert [c.id for c in deleted] == ["d1", "d2"]
+
+    # since-cursor: only tombstones strictly newer than the cursor come back.
+    newer = await repo.list_deleted_for_user(USER_A, since=t0)
+    assert [c.id for c in newer] == ["d2"]

@@ -4,6 +4,8 @@ Conversations and their messages live in the backend database (see
 ``app/database``). All endpoints are owner-scoped via the authenticated user.
 """
 
+from datetime import datetime
+
 from fastapi import APIRouter, Depends, HTTPException, Response, status
 from langchain_core.runnables import RunnableConfig
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -11,16 +13,21 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from api.api_models import (
     AppendMessageRequest,
     ChatCompletionMessage,
+    ConversationConflict,
     ConversationDetail,
     ConversationStateResponse,
     ConversationSummary,
     CreateConversationRequest,
+    DeletedConversation,
     UpdateConversationRequest,
 )
 from core.auth import authenticate_user
 from core.auth_models import AuthenticationResult
 from core.logtools import getLogger
-from database.conversation_repo import ConversationRepository
+from database.conversation_repo import (
+    ConversationDeletedError,
+    ConversationRepository,
+)
 from database.models import Conversation
 from database.session import get_db_session
 from init_app import init_agent
@@ -76,15 +83,27 @@ async def create_conversation(
     session: AsyncSession = Depends(get_db_session),
 ) -> ConversationDetail:
     repo = ConversationRepository(session)
-    conversation = await repo.create(
-        user_id=user_info.user_id,
-        conversation_id=request.id,
-        title=request.title,
-        assistant_id=request.assistant_id,
-        model=request.model,
-        config=request.config,
-        messages=[(m.role, m.content) for m in request.messages],
-    )
+    try:
+        conversation = await repo.create(
+            user_id=user_info.user_id,
+            conversation_id=request.id,
+            title=request.title,
+            assistant_id=request.assistant_id,
+            model=request.model,
+            config=request.config,
+            messages=[(m.role, m.content) for m in request.messages],
+        )
+    except ConversationDeletedError as exc:
+        # Re-creating a tombstoned id is a lost race with a delete: 409 Conflict
+        # (the id is taken-and-deleted). The guard wrote nothing, so we must not
+        # commit — leave the rollback to the session dependency teardown.
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=ConversationConflict(
+                detail="Conversation was deleted and cannot be recreated",
+                conversation_id=exc.conversation_id,
+            ).model_dump(),
+        ) from exc
     await session.commit()
     await session.refresh(conversation)
     return _to_detail(conversation)
@@ -105,6 +124,31 @@ async def list_conversations(
 
 
 @router.get(
+    "/deleted",
+    response_model=list[DeletedConversation],
+    summary="List the current user's deleted-conversation tombstones",
+)
+async def list_deleted_conversations(
+    since: datetime | None = None,
+    user_info: AuthenticationResult = Depends(authenticate_user),
+    session: AsyncSession = Depends(get_db_session),
+) -> list[DeletedConversation]:
+    """Tombstone feed: ids the user deleted (on any device), oldest first.
+
+    Clients reconcile by dropping these ids locally instead of re-pushing them,
+    which is how a delete on one device propagates to another. Remember the max
+    ``deleted_at`` applied and pass it back as ``since`` for incremental sync;
+    with no ``since`` the full current tombstone set is returned.
+
+    Registered before ``/{conversation_id}`` so "deleted" is not captured as a
+    conversation id by the path parameter.
+    """
+    repo = ConversationRepository(session)
+    deleted = await repo.list_deleted_for_user(user_info.user_id, since)
+    return [DeletedConversation.model_validate(c) for c in deleted]
+
+
+@router.get(
     "/{conversation_id}",
     response_model=ConversationDetail,
     summary="Get a conversation with its messages",
@@ -117,6 +161,9 @@ async def get_conversation(
     repo = ConversationRepository(session)
     conversation = await repo.get_for_user(conversation_id, user_info.user_id)
     if conversation is None:
+        # 404 covers both "never existed" and "deleted" (tombstoned): a deleted
+        # chat reads as gone, not as a distinct state. Only GET /deleted exposes
+        # tombstones, and only as ids to reconcile away.
         raise HTTPException(status_code=404, detail="Conversation not found")
     return _to_detail(conversation)
 

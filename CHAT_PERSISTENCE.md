@@ -83,7 +83,10 @@ messages** via LangGraph's `add_messages` reducer and would require a per-turn
   - `GET    /v1/conversations` — list current user's conversations
   - `GET    /v1/conversations/{id}` — fetch one with messages
   - `PATCH  /v1/conversations/{id}` — update title / favorite (PATCH semantics)
-  - `DELETE /v1/conversations/{id}` — delete (cascades messages)
+  - `DELETE /v1/conversations/{id}` — **soft delete** (sets a `deleted_at`
+    tombstone; row + messages retained, see *Deletion tombstones* below)
+  - `GET    /v1/conversations/deleted?since=` — tombstone feed: ids the user
+    deleted (on any device), for cross-device deletion sync
   - `POST   /v1/conversations/{id}/messages` — append a message
   - `GET    /v1/conversations/{id}/state` — checkpoint state probe (returns
     `has_checkpoint=false` gracefully when no checkpointer is engaged)
@@ -135,12 +138,20 @@ messages** via LangGraph's `add_messages` reducer and would require a per-turn
   delete, **user isolation**, cross-user denial, monotonic sequencing, cascade delete.
 - `tests/integration/test_conversations_router.py` — router behavior.
 - `tests/integration/test_chat_persistence_e2e.py` — end-to-end: history syncs and
-  accumulates in the DB, an unknown `conversation_id` is auto-created, and the chat flow
-  does **not** engage the checkpointer.
+  accumulates in the DB, an unknown `conversation_id` is auto-created, the chat flow
+  does **not** engage the checkpointer, and a send to a **tombstoned**
+  `conversation_id` is rejected with 409 (the second resurrection vector) without
+  resurrecting the chat.
 - `tests/unit/test_agent_executor.py::TestChatGraphNeverCarriesCheckpointer` —
   regression guard: forces the per-request graph rebuild and asserts **no** chat graph is
   ever compiled with a checkpointer (prevents the `thread_id` error from recurring).
-- **Suite status: 89 passed, 5 skipped.**
+- `tests/unit/test_conversation_repo.py` — also covers tombstones: soft delete
+  retains the row/messages, idempotent delete, anti-resurrection guard, writes to
+  a tombstoned id fail closed, and `list_deleted_for_user` `since`-cursor.
+- `tests/integration/test_conversations_router.py` — also covers soft-delete →
+  404, `409` on re-creating a tombstoned id (writes nothing), and the
+  owner-scoped tombstone feed with `since`.
+- **Suite status: 100 passed, 5 skipped.**
 
 ---
 
@@ -199,9 +210,64 @@ MUCGPT_CORE_DB__NAME=mucgpt
 - **Rollback:** reverting the frontend leaves the new tables unused but harmless; there is
   no destructive migration.
 
+## Deletion tombstones (cross-device delete)
+
+Hard delete + the "push any local chat the backend is missing" reconcile used to
+combine into a **resurrection loop**: device A deletes chat *X*, device B still
+has *X* locally, B's next sync re-creates *X* on the backend, and A pulls it back
+— so deletes never stuck across devices. Deletion is now a **soft delete**:
+
+- `Conversation` carries a nullable `deleted_at`. `DELETE` stamps it instead of
+  removing the row (`NULL` = live, a timestamp = tombstoned). `delete()` is
+  idempotent and keeps the first timestamp.
+- All normal reads (`GET /{id}`, `GET /` list) **exclude tombstones**, so a
+  deleted chat returns **404** / is absent — 404 covers both "never existed" and
+  "deleted" (a deleted chat is just gone, not a distinct state).
+- **Re-creating a tombstoned id is rejected with `409 Conflict`** (body:
+  `{detail, conversation_id}`) — both on `POST /v1/conversations` and on the chat
+  completion auto-create path. The guard writes nothing, killing the resurrection
+  push at the source.
+- `GET /v1/conversations/deleted?since=<iso8601>` returns the caller's
+  tombstones (`{id, deleted_at}`, oldest-deleted first, owner-scoped). The
+  frontend `runSync` fetches it, **removes** those chats from IndexedDB, and
+  **excludes** them from the push set — so a delete on one device propagates and
+  no client can resurrect a chat it merely still caches. Clients may remember the
+  max applied `deleted_at` and pass it back as `since` for incremental sync.
+
+**Degraded path (accepted):** if the backend delete-mirror fails, the chat is
+already gone locally but its backend row is still live, so a later sync re-pulls
+it and the user can re-delete — a bounded reappearance, never silent data loss.
+
+### Production migration (existing DBs)
+
+`Base.metadata.create_all` only creates *missing tables*; it will **not** add
+`deleted_at` to an existing `conversations` table. Fresh DBs (and the default
+local SQLite) get the column automatically. For an existing Postgres deployment,
+apply once before deploying the new code:
+
+```sql
+ALTER TABLE conversations ADD COLUMN deleted_at TIMESTAMPTZ NULL;
+```
+
+(SQLite: `ALTER TABLE conversations ADD COLUMN deleted_at TIMESTAMP NULL;`.)
+core-service has no Alembic yet; when it adopts one, add this as a revision.
+
+### Retention / pruning
+
+Tombstones accumulate forever otherwise. A retention sweep can hard-delete
+conversations (and their messages) whose `deleted_at` is older than a generous
+window (e.g. 30–90 days), by which point all realistically-online clients have
+reconciled. Trade-off: a client offline **longer** than the window won't see the
+tombstone and could re-push the chat — so prune the **row** only after the window
+(while the row survives, the `409` guard still blocks the push). Pruning is
+**manual for now** (no scheduled job); the timestamp column is what makes it
+possible later. Related: optimistic-concurrency (`#1068`) guards content
+overwrites and is independent of these existence tombstones.
+
 ## How it was verified
 
 - Automated: repository, router, and end-to-end persistence suites plus the
-  checkpointer regression guard (89 passed, 5 skipped).
+  checkpointer regression guard, plus the deletion-tombstone repo/router/feed
+  tests (100 passed, 5 skipped).
 - Manual: a chat created in one browser appears in the history of a second browser /
   private tab for the same logged-in user after rebuild.

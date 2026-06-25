@@ -34,6 +34,11 @@ dependencies = [
     "redis>=7.3.0",
     "cloudpickle>=3.1.2",
     "python-multipart>=0.0.5",
+    "sqlalchemy[asyncio]>=2.0",
+    "aiosqlite>=0.20",
+    "asyncpg>=0.29",
+    "langgraph-checkpoint-sqlite>=2.0",
+    "langgraph-checkpoint-postgres>=2.0",
 ]
 
 [dependency-groups]

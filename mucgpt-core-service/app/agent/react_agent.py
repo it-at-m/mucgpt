@@ -33,12 +33,20 @@ class _ConfiguredLangChainAgentGraph:
         tools: list[BaseTool],
         logger,
         debug: bool = True,
+        checkpointer: Any | None = None,
     ):
         self.model = llm
         self.tool_collection = tool_collection
         self.tools = tools
         self.logger = logger
         self.debug = debug
+        # Held for a potential future resume feature, but intentionally NOT
+        # attached to the chat-serving graphs below: the chat flow is
+        # request-authoritative (the client resends full history each turn), so
+        # engaging the checkpointer would require a thread_id on every call and
+        # would double messages via the add_messages reducer. Keeping it off the
+        # graph makes a missing-thread_id error impossible by construction.
+        self.checkpointer = checkpointer
 
         logger.debug(
             "Initializing MUCGPT ReAct agent graph with tools: %s",
@@ -58,6 +66,8 @@ class _ConfiguredLangChainAgentGraph:
             debug=self.debug,
             state_schema=initial_state_schema,
             context_schema=RequestContext,
+            # Request-authoritative chat: no checkpointer on the chat graph.
+            checkpointer=None,
         )
 
     @staticmethod
@@ -163,6 +173,11 @@ class _ConfiguredLangChainAgentGraph:
                 debug=self.debug,
                 state_schema=agent_state_schema,
                 context_schema=RequestContext,
+                # Request-authoritative chat: the per-request rebuild must NOT
+                # carry the checkpointer either, or the graph would demand a
+                # thread_id on invoke (the LangGraph checkpoint error). The
+                # checkpointer stays dormant on self for a future resume path.
+                checkpointer=None,
             )
 
         input_payload = {"messages": messages}
@@ -177,6 +192,18 @@ class _ConfiguredLangChainAgentGraph:
             **kwargs,
         ):
             yield item
+
+    async def aget_state(self, config: RunnableConfig):
+        """Return the checkpointed state for the thread_id in ``config``.
+
+        NOTE: the base agent graph is built with ``checkpointer=None`` (the chat
+        flow is request-authoritative), so today this raises
+        ``ValueError("No checkpointer set")`` and callers treat that as "no
+        checkpoint". The method is kept as the read path for a future resume
+        feature: once a dedicated checkpointed graph is wired in, point this at
+        it without changing call sites.
+        """
+        return await self.agent.aget_state(config)
 
     async def ainvoke(
         self,
@@ -220,6 +247,8 @@ class _ConfiguredLangChainAgentGraph:
                 debug=self.debug,
                 state_schema=agent_state_schema,
                 context_schema=RequestContext,
+                # See astream: chat graphs never carry the checkpointer.
+                checkpointer=None,
             )
 
         input_payload = {"messages": messages}
@@ -241,13 +270,16 @@ class MUCGPTReActAgent:
         tools: list[BaseTool],
         logger=None,
         debug: bool = True,
+        checkpointer: Any | None = None,
     ):
         self.logger = logger if logger else getLogger(name="mucgpt-core-react-agent")
         self.model = llm  # required for non-streaming calls, e.g. assisted MUCGPT-Assistant generation.
+        self.checkpointer = checkpointer
         self.graph = _ConfiguredLangChainAgentGraph(
             llm=llm,
             tool_collection=tool_collection,
             tools=tools,
             logger=self.logger,
             debug=debug,
+            checkpointer=checkpointer,
         )

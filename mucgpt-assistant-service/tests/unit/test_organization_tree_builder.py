@@ -38,6 +38,50 @@ def test_tree_builder_ignores_prefix_and_suffix() -> None:
     assert [child.name for child in root.children[0].children] == ["Finance"]
 
 
+def test_ignore_suffix_can_be_bypassed_by_shortname_exception() -> None:
+    entries = [
+        {
+            "dn": "ou=Friedhoefe Bestattungen Muenchen - FBM-xxx,ou=GSR,o=example",
+            "attributes": {
+                "ou": ["Friedhoefe Bestattungen Muenchen - FBM-xxx"],
+                "distinguishedName": "ou=Friedhoefe Bestattungen Muenchen - FBM-xxx,ou=GSR,o=example",
+                "lhmOULongname": ["Friedhoefe Bestattungen Muenchen - FBM"],
+                "lhmOUShortname": ["FBM"],
+            },
+        },
+        {
+            "dn": "ou=Another-xxx,ou=GSR,o=example",
+            "attributes": {
+                "ou": ["Another-xxx"],
+                "distinguishedName": "ou=Another-xxx,ou=GSR,o=example",
+                "lhmOULongname": ["Another"],
+                "lhmOUShortname": ["ANOTHER"],
+            },
+        },
+        _entry(
+            "ou=Child,ou=Friedhoefe Bestattungen Muenchen - FBM-xxx,ou=GSR,o=example",
+            "Child",
+        ),
+    ]
+
+    builder = OrganizationTreeBuilder(
+        search_base="o=example",
+        ignored_suffixes=["-xxx"],
+        ignored_shortname_exceptions=["FBM"],
+    )
+
+    roots = builder.build(entries)
+    builder.sort_children(roots)
+
+    assert [node.name for node in roots] == ["example"]
+    root = roots[0]
+    assert [child.name for child in root.children] == ["GSR"]
+    assert [child.name for child in root.children[0].children] == [
+        "Friedhoefe Bestattungen Muenchen - FBM-xxx"
+    ]
+    assert [child.name for child in root.children[0].children[0].children] == ["Child"]
+
+
 def test_children_of_ignored_nodes_are_dropped() -> None:
     entries = [
         _entry("ou=_Archive,ou=ROOT,o=example", "_Archive"),

@@ -64,6 +64,7 @@ class LDAPConfig(BaseModel):
     )
     IGNORED_OU_PREFIXES: list[str] = Field(default_factory=lambda: ["_"])
     IGNORED_OU_SUFFIXES: list[str] = Field(default_factory=lambda: ["-xxx"])
+    IGNORED_OU_SHORTNAME_EXCEPTIONS: list[str] = Field(default_factory=list)
     PAGE_SIZE: int = 500
     CONNECT_TIMEOUT: float = 5.0
     READ_TIMEOUT: float = 10.0

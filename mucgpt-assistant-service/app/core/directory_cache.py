@@ -19,7 +19,15 @@ from core.organization import (
 
 logger = getLogger(__name__)
 
-_CACHE_TTL = timedelta(days=14)
+_DEFAULT_CACHE_TTL = timedelta(days=14)
+
+
+def _get_cache_ttl() -> timedelta:
+    ldap_settings = get_ldap_settings()
+    cache_ttl_seconds = getattr(ldap_settings, "CACHE_TTL", None)
+    if isinstance(cache_ttl_seconds, int) and cache_ttl_seconds > 0:
+        return timedelta(seconds=cache_ttl_seconds)
+    return _DEFAULT_CACHE_TTL
 
 
 class DirectoryTreeNode(TypedDict, total=False):
@@ -165,6 +173,7 @@ async def _get_cached_tree(key: str) -> _CacheEnvelope | None:
 
 async def _set_cached_tree(key: str, data: DirectoryTree) -> None:
     try:
+        cache_ttl = _get_cache_ttl()
         validated_nodes = _TREE_ADAPTER.validate_python(data)
         envelope = _CacheEnvelopeModel(
             data=validated_nodes, loaded_at=datetime.now(UTC)
@@ -172,13 +181,14 @@ async def _set_cached_tree(key: str, data: DirectoryTree) -> None:
         payload = envelope.model_dump(mode="json")
         # TTL slightly longer than freshness check to allow stale fallback
         await RedisCache.set_object(
-            key, payload, ttl=int(_CACHE_TTL.total_seconds() * 1.5)
+            key, payload, ttl=int(cache_ttl.total_seconds() * 1.5)
         )
     except Exception:
         logger.warning("Failed to write directory tree to Redis cache", exc_info=True)
 
 
 async def get_simplified_directory_tree() -> DirectoryTree:
+    cache_ttl = _get_cache_ttl()
     cache_key = "mucgpt:directory-tree:v1"
     cached_wrapper = await _get_cached_tree(cache_key)
 
@@ -194,7 +204,7 @@ async def get_simplified_directory_tree() -> DirectoryTree:
 
     # If we have fresh cached data, return it
     if cached_data is not None and cached_loaded_at is not None:
-        if datetime.now(UTC) - cached_loaded_at < _CACHE_TTL:
+        if datetime.now(UTC) - cached_loaded_at < cache_ttl:
             return cached_data
 
     # Either no cache, or stale cache: try refresh

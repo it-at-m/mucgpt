@@ -7,6 +7,7 @@ import {
     ChevronRight24Regular,
     CompassNorthwest24Regular,
     Dismiss24Regular,
+    Pin24Regular,
     Sparkle24Regular
 } from "@fluentui/react-icons";
 import { Link, useLocation, useNavigate } from "react-router-dom";
@@ -22,6 +23,7 @@ import styles from "./AppSidebar.module.css";
 interface AppSidebarProps {
     collapsed: boolean;
     isMobile: boolean;
+    isTemporarilyExpanded?: boolean;
     onToggleCollapsed?: () => void;
     onNavigate?: () => void;
     secondaryContent?: ReactNode | null;
@@ -64,6 +66,7 @@ const isAssistantRoute = (pathname: string) => {
 export const AppSidebar = ({
     collapsed,
     isMobile,
+    isTemporarilyExpanded = false,
     onToggleCollapsed,
     onNavigate,
     secondaryContent = null,
@@ -200,8 +203,17 @@ export const AppSidebar = ({
     }, [isCurrentAssistantChatRoute, isNewChatDialogOpen, loadRecentAssistant]);
 
     const desktopToggleEnabled = !isMobile && !!onToggleCollapsed;
-    const toggleLabel = t("app_sidebar.toggle_navigation");
+    const toggleLabel = isTemporarilyExpanded ? t("app_sidebar.pin_navigation", "Navigation anheften") : t("app_sidebar.toggle_navigation");
     const resizeLabel = t("app_sidebar.resize_navigation");
+    const toggleIcon = isMobile ? (
+        <Dismiss24Regular />
+    ) : isTemporarilyExpanded ? (
+        <Pin24Regular />
+    ) : collapsed ? (
+        <ChevronRight24Regular />
+    ) : (
+        <ChevronLeft24Regular />
+    );
     const toggleInteractiveClassName = desktopToggleEnabled ? styles.resizeCursor : "";
     const useCollapsedLogoToggle = collapsed && !isMobile && !!onToggleCollapsed;
     return (
@@ -252,8 +264,8 @@ export const AppSidebar = ({
                             <Tooltip content={toggleLabel} relationship="description" positioning="after">
                                 <Button
                                     appearance="subtle"
-                                    className={`${styles.topCollapseButton} ${collapsed && !isMobile ? styles.topCollapseButtonCollapsed : ""}`}
-                                    icon={isMobile ? <Dismiss24Regular /> : collapsed ? <ChevronRight24Regular /> : <ChevronLeft24Regular />}
+                                    className={`${styles.topCollapseButton} ${collapsed && !isMobile ? styles.topCollapseButtonCollapsed : ""} ${isTemporarilyExpanded ? styles.topCollapseButtonPin : ""}`}
+                                    icon={toggleIcon}
                                     aria-label={toggleLabel}
                                     onClick={onToggleCollapsed}
                                 />

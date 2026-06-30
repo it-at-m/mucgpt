@@ -176,6 +176,24 @@
     transform: translateX(2px);
 }
 
+.topCollapseButtonPin,
+.topCollapseButtonPin :global(svg) {
+    color: var(--colorNeutralForeground1) !important;
+}
+
+.topCollapseButtonPin:hover,
+.topCollapseButtonPin:hover :global(svg),
+.topCollapseButtonPin:focus-visible,
+.topCollapseButtonPin:focus-visible :global(svg) {
+    color: var(--colorBrandBackground) !important;
+}
+
+.topCollapseButtonPin:hover,
+.topCollapseButtonPin:focus-visible {
+    background-color: transparent !important;
+    transform: none;
+}
+
 .brandLogo {
     width: 24px;
     height: 24px;

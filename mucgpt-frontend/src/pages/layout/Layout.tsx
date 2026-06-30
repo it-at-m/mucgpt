@@ -1,5 +1,5 @@
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
-import { useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useContext, useEffect, useMemo, useRef, useState, type FocusEvent } from "react";
 import { Button, Divider, DrawerBody, OverlayDrawer, FluentProvider, InlineDrawer } from "@fluentui/react-components";
 import { CalendarNote24Regular, Navigation24Regular } from "@fluentui/react-icons";
 import { useTranslation } from "react-i18next";
@@ -66,6 +66,8 @@ const AppShell = ({ config, isLight, languagePreference, onLanguageSelectionChan
     const [isMobile, setIsMobile] = useState<boolean>(window.innerWidth <= MOBILE_LAYOUT_BREAKPOINT);
     const [mobileSidebarOpen, setMobileSidebarOpen] = useState<boolean>(false);
     const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(() => localStorage.getItem(APP_NAV_COLLAPSED_KEY) === "true");
+    const [isSidebarHoverExpanded, setIsSidebarHoverExpanded] = useState<boolean>(false);
+    const [isSidebarHoverSuppressed, setIsSidebarHoverSuppressed] = useState<boolean>(false);
 
     useEffect(() => {
         const handleResize = () => {
@@ -73,6 +75,9 @@ const AppShell = ({ config, isLight, languagePreference, onLanguageSelectionChan
             setIsMobile(nextIsMobile);
             if (!nextIsMobile) {
                 setMobileSidebarOpen(false);
+            } else {
+                setIsSidebarHoverExpanded(false);
+                setIsSidebarHoverSuppressed(false);
             }
         };
 
@@ -86,11 +91,36 @@ const AppShell = ({ config, isLight, languagePreference, onLanguageSelectionChan
 
     const toggleSidebarCollapsed = useCallback(() => {
         setIsSidebarCollapsed(previous => {
-            const next = !previous;
+            const next = previous && isSidebarHoverExpanded ? false : !previous;
             localStorage.setItem(APP_NAV_COLLAPSED_KEY, String(next));
+            setIsSidebarHoverExpanded(false);
+            setIsSidebarHoverSuppressed(next);
             return next;
         });
+    }, [isSidebarHoverExpanded]);
+
+    const expandSidebarOnHover = useCallback(() => {
+        if (!isMobile && isSidebarCollapsed && !isSidebarHoverSuppressed) {
+            setIsSidebarHoverExpanded(true);
+        }
+    }, [isMobile, isSidebarCollapsed, isSidebarHoverSuppressed]);
+
+    const resetSidebarHover = useCallback(() => {
+        setIsSidebarHoverExpanded(false);
+        setIsSidebarHoverSuppressed(false);
     }, []);
+
+    const handleSidebarBlur = useCallback(
+        (event: FocusEvent<HTMLElement>) => {
+            const nextFocusTarget = event.relatedTarget;
+            if (nextFocusTarget instanceof Node && event.currentTarget.contains(nextFocusTarget)) {
+                return;
+            }
+
+            resetSidebarHover();
+        },
+        [resetSidebarHover]
+    );
 
     const secondaryTitle = t("components.history.history");
     const secondaryContent = !isMobile ? <UnifiedSidebarHistory /> : null;
@@ -172,6 +202,7 @@ const AppShell = ({ config, isLight, languagePreference, onLanguageSelectionChan
     );
     const logoSrc = config.alternative_logo ? alternative_logo : isLight ? logo_black : logo;
     const appTitleAriaLabel = t("common.environment_label", "Umgebung: {{env}}", { env: config.env_name });
+    const isSidebarVisuallyCollapsed = !isMobile && isSidebarCollapsed && !isSidebarHoverExpanded;
 
     return (
         <>
@@ -180,17 +211,20 @@ const AppShell = ({ config, isLight, languagePreference, onLanguageSelectionChan
                     {t("common.skip_to_content", "Zum Hauptinhalt springen")}
                 </a>
 
-                <div
-                    className={`${styles.shellBody} ${!isMobile && isSidebarCollapsed ? styles.shellBodyCollapsed : ""} ${
-                        isMobile ? styles.shellBodyMobile : ""
-                    }`}
-                >
+                <div className={`${styles.shellBody} ${isSidebarVisuallyCollapsed ? styles.shellBodyCollapsed : ""} ${isMobile ? styles.shellBodyMobile : ""}`}>
                     {!isMobile && (
-                        <aside className={styles.sidebarColumn}>
+                        <aside
+                            className={styles.sidebarColumn}
+                            onMouseEnter={expandSidebarOnHover}
+                            onMouseLeave={resetSidebarHover}
+                            onFocus={expandSidebarOnHover}
+                            onBlur={handleSidebarBlur}
+                        >
                             <InlineDrawer open position="start" separator className={styles.desktopSidebarDrawer}>
                                 <AppSidebar
-                                    collapsed={isSidebarCollapsed}
+                                    collapsed={isSidebarVisuallyCollapsed}
                                     isMobile={false}
+                                    isTemporarilyExpanded={isSidebarHoverExpanded}
                                     onToggleCollapsed={toggleSidebarCollapsed}
                                     secondaryContent={secondaryContent}
                                     secondaryTitle={secondaryTitle}

@@ -164,6 +164,22 @@
     padding: 8px 24px;
 }
 
+.scrollToBottomWrapper {
+    position: fixed;
+    left: var(--appSidebarWidth, 0);
+    right: 0;
+    bottom: calc(var(--chatInputHeight, 0px) + 18px);
+    z-index: 99;
+    display: flex;
+    justify-content: center;
+    pointer-events: none;
+    box-sizing: border-box;
+}
+
+.scrollToBottomButton {
+    pointer-events: auto;
+}
+
 .chatInput {
     position: fixed;
     left: var(--appSidebarWidth, 0);
@@ -176,6 +192,7 @@
     background: transparent;
 }
 
+.container[data-info-open="true"] .scrollToBottomWrapper,
 .container[data-info-open="true"] .chatInput {
     right: var(--assistantDetailsDrawerWidth);
 }
@@ -188,6 +205,7 @@
 
     .container[data-info-open="true"] .headerBar,
     .container[data-info-open="true"] .chatRoot,
+    .container[data-info-open="true"] .scrollToBottomWrapper,
     .container[data-info-open="true"] .chatInput {
         right: var(--assistantDetailsDrawerCompactWidth);
     }
@@ -220,6 +238,7 @@
 @media (max-width: 600px) {
     .container[data-info-open="true"] .headerBar,
     .container[data-info-open="true"] .chatRoot,
+    .container[data-info-open="true"] .scrollToBottomWrapper,
     .container[data-info-open="true"] .chatInput {
         right: 0;
     }

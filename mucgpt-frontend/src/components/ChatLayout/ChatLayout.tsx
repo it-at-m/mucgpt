@@ -1,5 +1,6 @@
-import { ReactNode, useEffect, useRef, useState, type CSSProperties } from "react";
+import { ReactNode, useCallback, useEffect, useRef, useState, type CSSProperties } from "react";
 import { Button } from "@fluentui/react-components";
+import { ArrowDown24Regular } from "@fluentui/react-icons";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
@@ -41,7 +42,9 @@ export const ChatLayout = ({
     actions
 }: Props) => {
     const chatInputRef = useRef<HTMLDivElement | null>(null);
+    const chatMessagesRef = useRef<HTMLUListElement | null>(null);
     const [chatInputHeight, setChatInputHeight] = useState(0);
+    const [showScrollToBottom, setShowScrollToBottom] = useState(false);
     const [isCompact, setIsCompact] = useState(() =>
         typeof window !== "undefined" && typeof window.matchMedia === "function" ? window.matchMedia("(max-width: 640px)").matches : false
     );
@@ -78,6 +81,58 @@ export const ChatLayout = ({
             observer.disconnect();
         };
     }, []);
+
+    const updateScrollToBottomVisibility = useCallback(() => {
+        const element = chatMessagesRef.current;
+        if (!element || showStarterPrompts) {
+            setShowScrollToBottom(false);
+            return;
+        }
+
+        const distanceFromBottom = element.scrollHeight - element.scrollTop - element.clientHeight;
+        const hasScrollableContent = element.scrollHeight > element.clientHeight + 1;
+        setShowScrollToBottom(hasScrollableContent && distanceFromBottom > 32);
+    }, [showStarterPrompts]);
+
+    useEffect(() => {
+        const element = chatMessagesRef.current;
+        if (!element || showStarterPrompts || typeof window === "undefined") {
+            setShowScrollToBottom(false);
+            return;
+        }
+
+        updateScrollToBottomVisibility();
+        const updateOnNextFrame = () => requestAnimationFrame(updateScrollToBottomVisibility);
+
+        element.addEventListener("scroll", updateScrollToBottomVisibility, { passive: true });
+        window.addEventListener("resize", updateOnNextFrame);
+
+        const resizeObserver = typeof ResizeObserver === "undefined" ? undefined : new ResizeObserver(updateOnNextFrame);
+        resizeObserver?.observe(element);
+
+        const mutationObserver = typeof MutationObserver === "undefined" ? undefined : new MutationObserver(updateOnNextFrame);
+        mutationObserver?.observe(element, { childList: true, subtree: true, characterData: true });
+
+        return () => {
+            element.removeEventListener("scroll", updateScrollToBottomVisibility);
+            window.removeEventListener("resize", updateOnNextFrame);
+            resizeObserver?.disconnect();
+            mutationObserver?.disconnect();
+        };
+    }, [answers, chatInputHeight, showStarterPrompts, updateScrollToBottomVisibility]);
+
+    const scrollToBottom = useCallback(() => {
+        const element = chatMessagesRef.current;
+        if (!element) {
+            return;
+        }
+
+        element.scrollTo({
+            top: element.scrollHeight,
+            behavior: "smooth"
+        });
+        requestAnimationFrame(updateScrollToBottomVisibility);
+    }, [updateScrollToBottomVisibility]);
 
     const containerStyle = { "--chatInputHeight": `${chatInputHeight}px` } as CSSProperties;
 
@@ -124,9 +179,22 @@ export const ChatLayout = ({
                             {starterPrompts}
                         </div>
                     ) : (
-                        <ul className={styles.allChatMessages} aria-description={messages_description}>
+                        <ul className={styles.allChatMessages} aria-description={messages_description} ref={chatMessagesRef}>
                             {answers}
                         </ul>
+                    )}
+                    {showScrollToBottom && (
+                        <div className={styles.scrollToBottomWrapper}>
+                            <Button
+                                appearance="secondary"
+                                shape="circular"
+                                size="medium"
+                                className={styles.scrollToBottomButton}
+                                icon={<ArrowDown24Regular />}
+                                onClick={scrollToBottom}
+                                aria-label="Zum Ende des Chats springen"
+                            />
+                        </div>
                     )}
                     <div className={styles.chatInput} ref={chatInputRef}>
                         {input}

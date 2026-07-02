@@ -10,13 +10,14 @@ import {
     DocumentText24Regular,
     TargetArrow24Regular,
     Color24Regular,
+    Person24Regular,
     Scales24Regular,
     MoreVertical20Regular,
     ArrowExportUp20Regular
 } from "@fluentui/react-icons";
 import { useTranslation } from "react-i18next";
 import styles from "./AssistantDetailsSidebar.module.css";
-import { Assistant, AssistantResponse, CommunityAssistantSnapshot, ToolBase } from "../../api/models";
+import { Assistant, AssistantResponse, CommunityAssistantSnapshot, OwnerDetailsResponse, ToolBase } from "../../api/models";
 import { MarkdownRenderer } from "../MarkdownRenderer/MarkdownRenderer";
 import { EdelweissSpinner } from "../EdelweissSpinner";
 
@@ -67,7 +68,8 @@ export const AssistantDetailsSidebar = ({
     hideStartChat
 }: AssistantDetailsSidebarProps) => {
     const { t } = useTranslation();
-    const latestVersion = assistant?.rawData && "latest_version" in assistant.rawData ? assistant.rawData.latest_version : undefined;
+    const responseData = assistant?.rawData && "latest_version" in assistant.rawData ? assistant.rawData : undefined;
+    const latestVersion = responseData?.latest_version;
     const snapshot = assistant?.rawData && !("latest_version" in assistant.rawData) ? assistant.rawData : undefined;
 
     const getCreativityConfig = (creativity: string) => {
@@ -98,6 +100,7 @@ export const AssistantDetailsSidebar = ({
 
     const enabledTools = (latestVersion?.tools || snapshot?.tools || []).filter((tool: ToolBase) => tool.config?.enabled);
     const systemPrompt = latestVersion?.system_prompt || snapshot?.system_message;
+    const ownersDetailed: OwnerDetailsResponse[] = latestVersion?.owners_detailed || responseData?.owners_detailed || [];
     const isOwned = assistant ? ownedAssistantIds.has(assistant.id) : false;
     const isDeletedSnapshot = Boolean(assistant?.isDeletedSnapshot);
     const isLocalAssistant = Boolean(assistant?.isLocalAssistant);
@@ -263,6 +266,23 @@ export const AssistantDetailsSidebar = ({
                                 <MarkdownRenderer className={styles.aboutText}>{assistant?.description ?? ""}</MarkdownRenderer>
                             </div>
                         </div>
+
+                        {ownersDetailed.length > 0 && (
+                            <div className={styles.sidebarSection}>
+                                <div className={styles.sectionHeader}>
+                                    <Person24Regular className={styles.sectionIcon} />
+                                    <span>{t("components.community_assistants.owner_details", "OWNERS")}</span>
+                                </div>
+                                <div className={styles.ownerList}>
+                                    {ownersDetailed.map(owner => (
+                                        <div key={owner.user_id} className={styles.ownerRow}>
+                                            <Text weight="semibold">{owner.username || owner.user_id}</Text>
+                                            {owner.contact_address && <Text className={styles.ownerContact}>{owner.contact_address}</Text>}
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
 
                         {enabledTools.length > 0 && (
                             <div className={styles.sidebarSection}>

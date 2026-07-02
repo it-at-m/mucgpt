@@ -502,6 +502,9 @@ async def getAssistant(
         if missing_owner_ids:
             await refresh_owner_details(missing_owner_ids, db)
             await db.commit()
+            # Session commit expires ORM state; reload entities used below.
+            assistant = await assistant_repo.get(id)
+            latest_version = await assistant_repo.get_latest_version(id)
             assistant_with_owners = await assistant_repo.get_with_owners(id)
 
     owners_detailed = await build_owner_details(
@@ -608,6 +611,9 @@ async def get_assistant_version(
         if missing_owner_ids:
             await refresh_owner_details(missing_owner_ids, db)
             await db.commit()
+            # Session commit expires ORM state; reload entities used below.
+            assistant = await assistant_repo.get(id)
+            assistant_version = await assistant_repo.get_assistant_version(id, version)
             assistant_with_owners = await assistant_repo.get_with_owners(id)
 
     owners_detailed = await build_owner_details(

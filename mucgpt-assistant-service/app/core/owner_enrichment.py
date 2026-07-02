@@ -207,7 +207,9 @@ async def refresh_owner_details(
         logger.warning("Failed to initialize LDAP person lookup loader: %s", exc)
         return
 
-    now = datetime.now(UTC)
+    # details_updated_at is stored as TIMESTAMP WITHOUT TIME ZONE,
+    # so persist UTC as a naive datetime value.
+    now = datetime.now(UTC).replace(tzinfo=None)
     for owner_id in deduped_owner_ids:
         owner = existing_owners[owner_id]
         try:

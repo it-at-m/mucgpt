@@ -174,10 +174,57 @@
     justify-content: center;
     pointer-events: none;
     box-sizing: border-box;
+    transform-origin: center bottom;
 }
 
 .scrollToBottomButton {
     pointer-events: auto;
+    opacity: 0.86;
+    box-shadow: var(--shadow4);
+    transition:
+        opacity 220ms cubic-bezier(0.25, 1, 0.5, 1),
+        transform 220ms cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+.scrollToBottomButton:hover,
+.scrollToBottomButton:focus-visible {
+    opacity: 1;
+}
+
+.scrollToBottomWrapper[data-state="entered"] {
+    animation: scrollToBottomEnter 200ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.scrollToBottomWrapper[data-state="exiting"] {
+    animation: scrollToBottomExit 200ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.scrollToBottomWrapper[data-state="exiting"] .scrollToBottomButton {
+    pointer-events: none;
+}
+
+@keyframes scrollToBottomEnter {
+    from {
+        opacity: 0;
+        transform: translateY(18px) scale(0.82);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+@keyframes scrollToBottomExit {
+    from {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+
+    to {
+        opacity: 0;
+        transform: translateY(18px) scale(0.82);
+    }
 }
 
 .chatInput {
@@ -241,5 +288,19 @@
     .container[data-info-open="true"] .scrollToBottomWrapper,
     .container[data-info-open="true"] .chatInput {
         right: 0;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .scrollToBottomWrapper {
+        animation: none;
+    }
+
+    .scrollToBottomWrapper[data-state="exiting"] {
+        opacity: 0;
+    }
+
+    .scrollToBottomButton {
+        transition: opacity 0.01ms linear;
     }
 }

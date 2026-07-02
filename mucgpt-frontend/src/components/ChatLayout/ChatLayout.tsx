@@ -45,6 +45,7 @@ export const ChatLayout = ({
     const chatMessagesRef = useRef<HTMLUListElement | null>(null);
     const [chatInputHeight, setChatInputHeight] = useState(0);
     const [showScrollToBottom, setShowScrollToBottom] = useState(false);
+    const [renderScrollToBottom, setRenderScrollToBottom] = useState(false);
     const [isCompact, setIsCompact] = useState(() =>
         typeof window !== "undefined" && typeof window.matchMedia === "function" ? window.matchMedia("(max-width: 640px)").matches : false
     );
@@ -120,6 +121,26 @@ export const ChatLayout = ({
             mutationObserver?.disconnect();
         };
     }, [answers, chatInputHeight, showStarterPrompts, updateScrollToBottomVisibility]);
+    useEffect(() => {
+        if (showScrollToBottom) {
+            setRenderScrollToBottom(true);
+            return;
+        }
+
+        if (!renderScrollToBottom || typeof window === "undefined" || typeof window.matchMedia !== "function") {
+            return;
+        }
+
+        if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+            setRenderScrollToBottom(false);
+        }
+    }, [renderScrollToBottom, showScrollToBottom]);
+
+    const handleScrollToBottomAnimationEnd = useCallback(() => {
+        if (!showScrollToBottom) {
+            setRenderScrollToBottom(false);
+        }
+    }, [showScrollToBottom]);
 
     const scrollToBottom = useCallback(() => {
         const element = chatMessagesRef.current;
@@ -183,8 +204,13 @@ export const ChatLayout = ({
                             {answers}
                         </ul>
                     )}
-                    {showScrollToBottom && (
-                        <div className={styles.scrollToBottomWrapper}>
+                    {renderScrollToBottom && (
+                        <div
+                            className={styles.scrollToBottomWrapper}
+                            data-state={showScrollToBottom ? "entered" : "exiting"}
+                            aria-hidden={!showScrollToBottom}
+                            onAnimationEnd={handleScrollToBottomAnimationEnd}
+                        >
                             <Button
                                 appearance="secondary"
                                 shape="circular"
@@ -192,6 +218,7 @@ export const ChatLayout = ({
                                 className={styles.scrollToBottomButton}
                                 icon={<ArrowDown24Regular />}
                                 onClick={scrollToBottom}
+                                tabIndex={showScrollToBottom ? undefined : -1}
                                 aria-label="Zum Ende des Chats springen"
                             />
                         </div>

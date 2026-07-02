@@ -3,7 +3,10 @@ import { ApplicationConfig, ChatRequest, CountTokenRequest, CountTokenResponse, 
 
 const PARSE_SERVICE_BASE = "/api/backend/v1/parse";
 export const CHAT_NAME_PROMPT =
-    "Gebe dem bisherigen Chatverlauf einen passenden und aussagekräftigen Namen, bestehend aus maximal 5 Wörtern. Über diesen Namen soll klar ersichtlich sein, welches Thema der Chat behandelt. Antworte nur mit dem vollständigen Namen und keinem weiteren Text, damit deine Antwort direkt weiterverwendet werden kann. Benutze keine Sonderzeichen sondern lediglich Zahlen und Buchstaben. Antworte in keinem Fall mit etwas anderem als dem Chat namen. Antworte immer nur mit dem namen des Chats";
+    "Gib dem bisherigen Chatverlauf einen passenden und aussagekraeftigen Namen mit maximal 4 Woertern. Ueber diesen Namen soll klar ersichtlich sein, welches Thema der Chat behandelt. Trenne jedes Wort mit einem Leerzeichen. Verwende kein CamelCase und klebe keine Woerter zusammen. Verwende keine Anfuehrungszeichen, kein Markdown, keine Satzzeichen und keine Zeilenumbrueche. Antworte nur mit dem vollstaendigen Namen und keinem weiteren Text, damit die Antwort direkt als Chatname verwendet werden kann.";
+
+const MAX_CHAT_NAME_WORDS = 4;
+const MAX_CHAT_NAME_LENGTH = 48;
 
 export const API_BASE = "/api/backend/";
 
@@ -92,8 +95,30 @@ export async function createChatName(query: string, answer: string, language: st
 
     const parsedResponse: any = await handleApiRequest(() => fetch(url, postConfig(body)), "Failed to create chat name");
 
-    // Extract content from ChatCompletion response
-    return parsedResponse.choices?.[0]?.message?.content || "New Chat";
+    const generatedName = parsedResponse.choices?.[0]?.message?.content;
+    return normalizeChatName(generatedName) || normalizeChatName(query) || "New Chat";
+}
+
+function normalizeChatName(value: unknown): string {
+    if (typeof value !== "string") {
+        return "";
+    }
+
+    const words = value
+        .replace(/["']/g, "")
+        .replace(/[^\p{L}\p{N}\s]/gu, " ")
+        .replace(/\s+/g, " ")
+        .trim()
+        .split(" ")
+        .filter(Boolean)
+        .slice(0, MAX_CHAT_NAME_WORDS);
+
+    let title = words.join(" ");
+    if (title.length > MAX_CHAT_NAME_LENGTH) {
+        title = title.slice(0, MAX_CHAT_NAME_LENGTH).trimEnd();
+    }
+
+    return title;
 }
 
 /**

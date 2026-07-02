@@ -128,7 +128,8 @@ const Chat = () => {
     });
 
     // Destructuring for easier access
-    const { answers, creativity, systemPrompt, active_chat } = chatState;
+    const { answers, creativity, systemPrompt, active_chat, allChats } = chatState;
+    const activeChatName = useMemo(() => allChats.find(chat => chat.id === active_chat)?.name, [active_chat, allChats]);
 
     // Refs
     const lastQuestionRef = useRef<string>("");
@@ -810,7 +811,7 @@ const Chat = () => {
                     answers={answerList}
                     input={inputComponent}
                     showStarterPrompts={!lastQuestionRef.current}
-                    header={t("chat.header")}
+                    header={activeChatName ?? t("chat.header")}
                     welcomeMessage={t("chat.header")}
                     header_as_markdown={false}
                     messages_description={t("common.messages")}
@@ -838,6 +839,7 @@ const Chat = () => {
             LLM.llm_name,
             onLLMSelectionChange,
             clearChat,
+            activeChatName,
             isLoading,
             isSettingsOpen,
             creativity,

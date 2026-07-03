@@ -3,7 +3,7 @@ import { ApplicationConfig, ChatRequest, CountTokenRequest, CountTokenResponse, 
 
 const PARSE_SERVICE_BASE = "/api/backend/v1/parse";
 export const CHAT_NAME_PROMPT =
-    "Gib dem bisherigen Chatverlauf einen passenden und aussagekraeftigen Namen mit maximal 4 Woertern. Ueber diesen Namen soll klar ersichtlich sein, welches Thema der Chat behandelt. Trenne jedes Wort mit einem Leerzeichen. Verwende kein CamelCase und klebe keine Woerter zusammen. Verwende keine Anfuehrungszeichen, kein Markdown, keine Satzzeichen und keine Zeilenumbrueche. Antworte nur mit dem vollstaendigen Namen und keinem weiteren Text, damit die Antwort direkt als Chatname verwendet werden kann.";
+    "Gib dem bisherigen Chatverlauf einen passenden und aussagekräftigen Namen mit maximal 4 Wörtern. Über diesen Namen soll klar ersichtlich sein, welches Thema der Chat behandelt. Trenne jedes Wort mit einem Leerzeichen. Verwende kein CamelCase und klebe keine Wörter zusammen. Verwende deutsche Umlaute direkt, also ä, ö, ü und ß, statt ae, oe, ue oder ss. Verwende keine Anführungszeichen, kein Markdown, keine Satzzeichen und keine Zeilenumbrüche. Antworte nur mit dem vollständigen Namen und keinem weiteren Text, damit die Antwort direkt als Chatname verwendet werden kann.";
 
 const MAX_CHAT_NAME_WORDS = 4;
 const MAX_CHAT_NAME_LENGTH = 48;

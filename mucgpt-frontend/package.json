@@ -55,7 +55,7 @@
         "node": ">=20.0.0"
     },
     "overrides": {
-        "@babel/core": "7.28.6",
+        "@babel/core": "7.29.6",
         "esbuild": "0.28.1"
     },
     "homepage": "https://it-at-m.github.io/mucgpt/",

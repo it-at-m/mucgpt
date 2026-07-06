@@ -1,3 +1,5 @@
+from typing import Any
+
 import pytest
 from ldap3.core import exceptions as ldap_exceptions
 
@@ -13,7 +15,7 @@ class _DummyConnection:
         return None
 
 
-def _build_settings(**kwargs) -> LDAPSettings:
+def _build_settings(**kwargs: Any) -> LDAPSettings:
     base = {
         "ENABLED": True,
         "HOST": "ldap.example.org",
@@ -27,7 +29,7 @@ def _build_settings(**kwargs) -> LDAPSettings:
     return LDAPSettings(**base)
 
 
-def test_lookup_maps_and_sanitizes_attributes(monkeypatch):
+def test_lookup_maps_and_sanitizes_attributes(monkeypatch: pytest.MonkeyPatch) -> None:
     settings = _build_settings()
     loader = LDAPPersonLookupLoader(settings)
 
@@ -60,7 +62,7 @@ def test_lookup_maps_and_sanitizes_attributes(monkeypatch):
     }
 
 
-def test_lookup_returns_none_when_not_found(monkeypatch):
+def test_lookup_returns_none_when_not_found(monkeypatch: pytest.MonkeyPatch) -> None:
     settings = _build_settings()
     loader = LDAPPersonLookupLoader(settings)
 
@@ -71,7 +73,7 @@ def test_lookup_returns_none_when_not_found(monkeypatch):
     assert loader.lookup_by_lhmobjectid("no-such-id") is None
 
 
-def test_lookup_raises_when_ldap_disabled():
+def test_lookup_raises_when_ldap_disabled() -> None:
     settings = _build_settings(ENABLED=False)
     loader = LDAPPersonLookupLoader(settings)
 
@@ -79,7 +81,7 @@ def test_lookup_raises_when_ldap_disabled():
         loader.lookup_by_lhmobjectid("123")
 
 
-def test_escape_filter_value_special_characters():
+def test_escape_filter_value_special_characters() -> None:
     settings = _build_settings()
     loader = LDAPPersonLookupLoader(settings)
 
@@ -87,7 +89,9 @@ def test_escape_filter_value_special_characters():
     assert escaped == r"a\2a\28b\29\5c\5cc"
 
 
-def test_build_connection_unbinds_when_start_tls_fails(monkeypatch):
+def test_build_connection_unbinds_when_start_tls_fails(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     settings = _build_settings(START_TLS=True, USE_SSL=False)
     loader = LDAPPersonLookupLoader(settings)
     unbind_calls = {"count": 0}
@@ -118,7 +122,9 @@ def test_build_connection_unbinds_when_start_tls_fails(monkeypatch):
     assert unbind_calls["count"] == 1
 
 
-def test_build_connection_unbinds_when_bind_returns_false(monkeypatch):
+def test_build_connection_unbinds_when_bind_returns_false(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     settings = _build_settings(START_TLS=False)
     loader = LDAPPersonLookupLoader(settings)
     unbind_calls = {"count": 0}

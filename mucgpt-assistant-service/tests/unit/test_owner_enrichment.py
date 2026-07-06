@@ -1,6 +1,7 @@
 import pytest
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy.ext.asyncio import AsyncSession
 
 import core.owner_enrichment as owner_enrichment
 from core.organization.ldap_person_loader import LDAPPersonLookupError
@@ -8,12 +9,16 @@ from database.database_models import Owner
 
 
 class _DummyLoader:
-    def __init__(self, responses=None, errors=None):
+    def __init__(
+        self,
+        responses: dict[str, dict[str, str | None] | None] | None = None,
+        errors: set[str] | None = None,
+    ) -> None:
         self.responses = responses or {}
         self.errors = errors or set()
         self.calls: list[str] = []
 
-    def lookup_by_lhmobjectid(self, owner_id: str):
+    def lookup_by_lhmobjectid(self, owner_id: str) -> dict[str, str | None] | None:
         self.calls.append(owner_id)
         if owner_id in self.errors:
             raise LDAPPersonLookupError("boom")
@@ -21,7 +26,9 @@ class _DummyLoader:
 
 
 @pytest.mark.asyncio
-async def test_build_owner_details_omits_unresolved_owner(monkeypatch):
+async def test_build_owner_details_omits_unresolved_owner(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     loader = _DummyLoader(responses={"known": None})
 
     monkeypatch.setattr(owner_enrichment, "get_ldap_settings", lambda: object())
@@ -33,7 +40,9 @@ async def test_build_owner_details_omits_unresolved_owner(monkeypatch):
 
 
 @pytest.mark.asyncio
-async def test_build_owner_details_omits_owner_without_useful_fields(monkeypatch):
+async def test_build_owner_details_omits_owner_without_useful_fields(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     loader = _DummyLoader(
         responses={
             "known": {
@@ -55,7 +64,9 @@ async def test_build_owner_details_omits_owner_without_useful_fields(monkeypatch
 
 
 @pytest.mark.asyncio
-async def test_build_owner_details_returns_resolved_owner(monkeypatch):
+async def test_build_owner_details_returns_resolved_owner(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     loader = _DummyLoader(
         responses={
             "111160470": {
@@ -80,7 +91,9 @@ async def test_build_owner_details_returns_resolved_owner(monkeypatch):
 
 
 @pytest.mark.asyncio
-async def test_build_owner_details_uses_mail_as_username_when_name_missing(monkeypatch):
+async def test_build_owner_details_uses_mail_as_username_when_name_missing(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     loader = _DummyLoader(
         responses={
             "mail-only": {
@@ -103,7 +116,9 @@ async def test_build_owner_details_uses_mail_as_username_when_name_missing(monke
 
 
 @pytest.mark.asyncio
-async def test_build_owner_details_omits_owner_when_lookup_errors(monkeypatch):
+async def test_build_owner_details_omits_owner_when_lookup_errors(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     loader = _DummyLoader(errors={"broken"})
 
     monkeypatch.setattr(owner_enrichment, "get_ldap_settings", lambda: object())
@@ -115,7 +130,9 @@ async def test_build_owner_details_omits_owner_when_lookup_errors(monkeypatch):
 
 
 @pytest.mark.asyncio
-async def test_build_owner_details_caches_negative_results(monkeypatch):
+async def test_build_owner_details_caches_negative_results(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     loader = _DummyLoader(responses={"missing": None})
 
     monkeypatch.setattr(owner_enrichment, "get_ldap_settings", lambda: object())
@@ -132,8 +149,9 @@ async def test_build_owner_details_caches_negative_results(monkeypatch):
 
 @pytest.mark.asyncio
 async def test_refresh_owner_details_retries_after_integrity_error(
-    monkeypatch, db_session
-):
+    monkeypatch: pytest.MonkeyPatch,
+    db_session: AsyncSession,
+) -> None:
     loader = _DummyLoader(
         responses={
             "race-user": {
@@ -152,7 +170,7 @@ async def test_refresh_owner_details_retries_after_integrity_error(
     original_flush = db_session.flush
     raised = {"value": False}
 
-    async def flaky_flush(*args, **kwargs):
+    async def flaky_flush(*args: object, **kwargs: object) -> object:
         if not raised["value"]:
             raised["value"] = True
             raise IntegrityError("INSERT INTO owners ...", {}, Exception("duplicate"))

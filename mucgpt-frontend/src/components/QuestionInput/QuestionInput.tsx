@@ -30,6 +30,7 @@ interface Props {
     uploadedData?: UploadedData[];
     setUploadedData?: Dispatch<SetStateAction<UploadedData[]>>;
     draftCacheKey?: string;
+    skipDraftRestore?: boolean;
     onTranscription?: (text: string) => void;
 }
 
@@ -50,6 +51,7 @@ export const QuestionInput = ({
     uploadedData: externalUploadedData,
     setUploadedData: setExternalUploadedData,
     draftCacheKey,
+    skipDraftRestore = false,
     onTranscription
 }: Props) => {
     const { t } = useTranslation();
@@ -132,6 +134,17 @@ export const QuestionInput = ({
             return;
         }
 
+        if (skipDraftRestore) {
+            try {
+                sessionStorage.removeItem(draftStorageKey);
+            } catch {
+                // Ignore sessionStorage errors while clearing skipped drafts.
+            } finally {
+                isDraftHydratedRef.current = true;
+            }
+            return;
+        }
+
         try {
             const draftQuestion = sessionStorage.getItem(draftStorageKey);
 
@@ -143,10 +156,10 @@ export const QuestionInput = ({
         } finally {
             isDraftHydratedRef.current = true;
         }
-    }, [draftStorageKey]);
+    }, [draftStorageKey, skipDraftRestore]);
 
     useEffect(() => {
-        if (!draftStorageKey || !isDraftHydratedRef.current) {
+        if (!draftStorageKey || skipDraftRestore || !isDraftHydratedRef.current) {
             return;
         }
 
@@ -159,7 +172,7 @@ export const QuestionInput = ({
         } catch {
             // Ignore sessionStorage errors and continue without draft persistence.
         }
-    }, [draftStorageKey, question]);
+    }, [draftStorageKey, question, skipDraftRestore]);
 
     const hasFileData = useCallback((dataTransfer?: DataTransfer | null) => {
         if (!dataTransfer?.types) {

@@ -21,6 +21,10 @@ class LocalTool:
     metadata: ToolMetadata
     needs_model: bool = True
     is_configured: Callable[[], bool] = lambda: True
+    # Mirrors the mcp_group the built tool sets on its own BaseTool.metadata (used
+    # by select_agent_state_schema at runtime); repeated here so the /v1/tools
+    # listing can report it without constructing the tool.
+    mcp_group: str | None = None
 
     def build(self, model: RunnableSerializable, logger: Logger) -> BaseTool:
         return self.factory(model, logger) if self.needs_model else self.factory(logger)

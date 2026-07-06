@@ -15,6 +15,10 @@ from config.settings import InternetSearchConfig, get_internet_search_settings
 # Single-line summary shown to the LLM as this tool's description.
 INTERNET_SEARCH_SUMMARY = "Searches the internet via the configured SearXNG engine and returns sourced results."
 
+# Group used for both this tool's own runtime metadata (read by select_agent_state_schema)
+# and its LocalTool registration below - kept as one constant so they can't drift apart.
+INTERNET_SEARCH_MCP_GROUP = "internet"
+
 # User-facing name/description per language, shown in the /v1/tools tool picker.
 # No français/bairisch/ukrainisch translation yet; LocalTool.display() falls back to english.
 INTERNET_SEARCH_METADATA = {
@@ -164,7 +168,7 @@ def make_internet_search_tool(logger: logging.Logger) -> BaseTool:
             )
         return result
 
-    internet_search_tool.metadata = {"mcp_group": "internet"}
+    internet_search_tool.metadata = {"mcp_group": INTERNET_SEARCH_MCP_GROUP}
     return internet_search_tool
 
 
@@ -174,4 +178,5 @@ TOOL = LocalTool(
     metadata=INTERNET_SEARCH_METADATA,
     needs_model=False,
     is_configured=is_internet_search_configured,
+    mcp_group=INTERNET_SEARCH_MCP_GROUP,
 )

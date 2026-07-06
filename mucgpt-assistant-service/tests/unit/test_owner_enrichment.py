@@ -178,7 +178,9 @@ async def test_refresh_owner_details_retries_after_integrity_error(
 
     monkeypatch.setattr(db_session, "flush", flaky_flush)
 
-    await owner_enrichment.refresh_owner_details(["race-user"], db_session)
+    # Prevent unrelated autoflush calls from consuming the one-shot failure.
+    with db_session.no_autoflush:
+        await owner_enrichment.refresh_owner_details(["race-user"], db_session)
     await db_session.commit()
 
     owner = (

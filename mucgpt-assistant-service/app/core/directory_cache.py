@@ -179,10 +179,14 @@ async def _set_cached_tree(key: str, data: DirectoryTree) -> None:
             data=validated_nodes, loaded_at=datetime.now(UTC)
         )
         payload = envelope.model_dump(mode="json")
-        # TTL slightly longer than freshness check to allow stale fallback
-        await RedisCache.set_object(
-            key, payload, ttl=int(cache_ttl.total_seconds() * 1.5)
+        # Keep stale entries around briefly so refresh failures can fall back.
+        freshness_ttl_seconds = cache_ttl.total_seconds()
+        min_stale_fallback_ttl = int(freshness_ttl_seconds) + 1
+        redis_ttl = max(
+            int(freshness_ttl_seconds * 1.5),
+            min_stale_fallback_ttl,
         )
+        await RedisCache.set_object(key, payload, ttl=redis_ttl)
     except Exception:
         logger.warning("Failed to write directory tree to Redis cache", exc_info=True)
 

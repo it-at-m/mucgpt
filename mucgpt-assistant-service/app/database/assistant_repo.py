@@ -123,7 +123,15 @@ class AssistantRepository(Repository[Assistant]):
             raise
 
     async def get_all_possible_assistants_for_user_with_department(
-        self, department: str
+        self,
+        department: str,
+        search: str | None = None,
+        sort_by: str = "subscriptions",
+        sort_order: str = "desc",
+        offset: int = 0,
+        limit: int | None = None,
+        exclude_owned_by_user_id: str | None = None,
+        exclude_subscribed_by_user_id: str | None = None,
     ) -> list[Assistant]:
         logger.info(f"Fetching all assistants for department: {department}")
         """Get all assistants that are allowed for a specific department.
@@ -135,9 +143,30 @@ class AssistantRepository(Repository[Assistant]):
         But a user from the department ITM-AB-DI is not allowed to use this assistant.
         """  # Since SQLite doesn't support ANY(), we need to implement this logic differently
         # We'll get all assistants and filter them in Python
-        all_assistants_query = await self.session.execute(
-            select(Assistant).where(Assistant.is_visible.is_(True))
+        stmt = (
+            select(Assistant)
+            .options(
+                selectinload(Assistant.owners),
+                selectinload(Assistant.versions).selectinload(
+                    AssistantVersion.tool_associations
+                ),
+            )
+            .where(Assistant.is_visible.is_(True))
         )
+
+        if exclude_owned_by_user_id:
+            owned_assistant_ids = select(assistant_owners.c.assistant_id).where(
+                assistant_owners.c.user_id == exclude_owned_by_user_id
+            )
+            stmt = stmt.where(Assistant.id.not_in(owned_assistant_ids))
+
+        if exclude_subscribed_by_user_id:
+            subscribed_assistant_ids = select(Subscription.assistant_id).where(
+                Subscription.user_id == exclude_subscribed_by_user_id
+            )
+            stmt = stmt.where(Assistant.id.not_in(subscribed_assistant_ids))
+
+        all_assistants_query = await self.session.execute(stmt)
         all_assistants = list(all_assistants_query.scalars().all())
 
         matching_assistants: list[Assistant] = []
@@ -150,22 +179,49 @@ class AssistantRepository(Repository[Assistant]):
             ):
                 matching_assistants.append(assistant)
 
+        matching_assistants = self._filter_assistants_by_search(
+            matching_assistants, search
+        )
+        matching_assistants = self._sort_assistants(
+            matching_assistants, sort_by, sort_order
+        )
+        matching_assistants = self._slice_assistants(
+            matching_assistants, offset=offset, limit=limit
+        )
+
         logger.info(
             f"Returning {len(matching_assistants)} assistants for department: {department}"
         )
         return matching_assistants
 
-    async def get_assistants_by_owner(self, user_id: str) -> list[Assistant]:
+    async def get_assistants_by_owner(
+        self,
+        user_id: str,
+        search: str | None = None,
+        sort_by: str = "updated",
+        sort_order: str = "desc",
+        offset: int = 0,
+        limit: int | None = None,
+    ) -> list[Assistant]:
         logger.info(f"Fetching assistants for owner: {user_id}")
         """Get all assistants where the given user_id is an owner."""
         stmt = (
             select(Assistant)
+            .options(
+                selectinload(Assistant.owners),
+                selectinload(Assistant.versions).selectinload(
+                    AssistantVersion.tool_associations
+                ),
+            )
             .join(assistant_owners, Assistant.id == assistant_owners.c.assistant_id)
             .where(assistant_owners.c.user_id == user_id)
         )
 
         result = await self.session.execute(stmt)
-        assistants = result.scalars().all()
+        assistants = list(result.scalars().all())
+        assistants = self._filter_assistants_by_search(assistants, search)
+        assistants = self._sort_assistants(assistants, sort_by, sort_order)
+        assistants = self._slice_assistants(assistants, offset=offset, limit=limit)
         logger.info(f"Returning {len(assistants)} assistants for owner: {user_id}")
         return list(assistants)
 
@@ -437,7 +493,15 @@ class AssistantRepository(Repository[Assistant]):
             await self.session.rollback()
             raise
 
-    async def get_user_subscriptions(self, user_id: str) -> list[Assistant]:
+    async def get_user_subscriptions(
+        self,
+        user_id: str,
+        search: str | None = None,
+        sort_by: str = "updated",
+        sort_order: str = "desc",
+        offset: int = 0,
+        limit: int | None = None,
+    ) -> list[Assistant]:
         """Get all assistants a user has subscribed to."""
         logger.info(f"Fetching subscriptions for user {user_id}")
 
@@ -445,14 +509,116 @@ class AssistantRepository(Repository[Assistant]):
             # Join Subscription with Assistant to get all subscribed assistants
             result = await self.session.execute(
                 select(Assistant)
+                .options(
+                    selectinload(Assistant.owners),
+                    selectinload(Assistant.versions).selectinload(
+                        AssistantVersion.tool_associations
+                    ),
+                )
                 .join(Subscription, Assistant.id == Subscription.assistant_id)
                 .where(Subscription.user_id == user_id)
             )
 
             assistants = list(result.scalars().all())
+            assistants = self._filter_assistants_by_search(assistants, search)
+            assistants = self._sort_assistants(assistants, sort_by, sort_order)
+            assistants = self._slice_assistants(assistants, offset=offset, limit=limit)
             logger.info(f"Found {len(assistants)} subscriptions for user {user_id}")
             return assistants
         except Exception as e:
             logger.error(f"Error fetching user subscriptions: {e}")
             await self.session.rollback()
             raise
+
+    def _slice_assistants(
+        self,
+        assistants: list[Assistant],
+        offset: int = 0,
+        limit: int | None = None,
+    ) -> list[Assistant]:
+        if offset < 0:
+            offset = 0
+        if limit is None:
+            return assistants[offset:]
+        return assistants[offset : offset + max(limit, 0)]
+
+    def _assistant_latest_version(
+        self, assistant: Assistant
+    ) -> AssistantVersion | None:
+        if not assistant.versions:
+            return None
+        return assistant.versions[0]
+
+    def _assistant_title(self, assistant: Assistant) -> str:
+        latest_version = self._assistant_latest_version(assistant)
+        return (
+            latest_version.name if latest_version and latest_version.name else ""
+        ).lower()
+
+    def _assistant_description(self, assistant: Assistant) -> str:
+        latest_version = self._assistant_latest_version(assistant)
+        return (
+            latest_version.description.lower()
+            if latest_version and latest_version.description
+            else ""
+        )
+
+    def _assistant_tags(self, assistant: Assistant) -> list[str]:
+        latest_version = self._assistant_latest_version(assistant)
+        if not latest_version or not latest_version.tags:
+            return []
+        return [str(tag).lower() for tag in latest_version.tags]
+
+    def _filter_assistants_by_search(
+        self, assistants: list[Assistant], search: str | None
+    ) -> list[Assistant]:
+        if not search:
+            return assistants
+
+        normalized_search = search.strip().lower()
+        if not normalized_search:
+            return assistants
+
+        filtered: list[Assistant] = []
+        for assistant in assistants:
+            if normalized_search in self._assistant_title(assistant):
+                filtered.append(assistant)
+                continue
+            if normalized_search in self._assistant_description(assistant):
+                filtered.append(assistant)
+                continue
+            if any(normalized_search in tag for tag in self._assistant_tags(assistant)):
+                filtered.append(assistant)
+
+        return filtered
+
+    def _sort_assistants(
+        self,
+        assistants: list[Assistant],
+        sort_by: str,
+        sort_order: str,
+    ) -> list[Assistant]:
+        normalized_sort_by = (sort_by or "updated").lower()
+        reverse = (sort_order or "desc").lower() != "asc"
+
+        if normalized_sort_by == "title":
+            return sorted(assistants, key=self._assistant_title, reverse=reverse)
+
+        if normalized_sort_by == "subscriptions":
+            return sorted(
+                assistants,
+                key=lambda assistant: (
+                    getattr(assistant, "subscriptions_count", 0) or 0,
+                    getattr(assistant, "updated_at", datetime.min),
+                ),
+                reverse=reverse,
+            )
+
+        return sorted(
+            assistants,
+            key=lambda assistant: (
+                getattr(assistant, "updated_at", datetime.min),
+                self._assistant_title(assistant),
+            ),
+            reverse=reverse,
+        )

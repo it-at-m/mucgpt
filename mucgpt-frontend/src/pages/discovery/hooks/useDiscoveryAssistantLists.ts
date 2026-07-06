@@ -1,7 +1,7 @@
 import { Dispatch, SetStateAction, useCallback, useEffect, useMemo, useState } from "react";
 
 import { getAllCommunityAssistantsApi, getOwnedCommunityAssistants, getUserSubscriptionsApi } from "../../../api/assistant-client";
-import { Assistant, AssistantResponse, CommunityAssistantSnapshot } from "../../../api/models";
+import { Assistant, AssistantResponse, CommunityAssistant, CommunityAssistantSnapshot } from "../../../api/models";
 import type { AssistantCardData } from "../../../components/AssistantDetailsSidebar/AssistantDetailsSidebar";
 import { AssistantStorageService } from "../../../service/assistantstorage";
 import { CommunityAssistantStorageService } from "../../../service/communityassistantstorage";
@@ -104,6 +104,7 @@ export const useDiscoveryAssistantLists = ({
     );
     const [showAllMyAssistants, setShowAllMyAssistants] = useState(false);
     const [ownedAssistantIds, setOwnedAssistantIds] = useState<Set<string>>(new Set());
+    const normalizedSearchText = searchText.trim().toLowerCase();
 
     useEffect(() => {
         localStorage.setItem("discovery_communitySortMethod", communitySortMethod);
@@ -121,12 +122,42 @@ export const useDiscoveryAssistantLists = ({
         const fetchAssistants = async () => {
             setIsLoading(true);
             try {
+                const backendMyAssistantsSort = myAssistantsSortMethod === "lastUsed" ? "updated" : myAssistantsSortMethod;
+                const listQuery = {
+                    search: normalizedSearchText || undefined,
+                    sort_order: "desc" as const,
+                    offset: 0,
+                    limit: 500
+                };
+
+                const shouldFetchOwnedAssistants = myAssistantFilter !== "subscribed";
+                const shouldFetchSubscribedAssistants = myAssistantFilter !== "owned";
+
+                const ownedAssistantsPromise = shouldFetchOwnedAssistants
+                    ? getOwnedCommunityAssistants({
+                          ...listQuery,
+                          sort_by: backendMyAssistantsSort
+                      })
+                    : Promise.resolve([] as AssistantResponse[]);
+
+                const subscriptionsPromise = shouldFetchSubscribedAssistants
+                    ? getUserSubscriptionsApi({
+                          ...listQuery,
+                          sort_by: backendMyAssistantsSort
+                      })
+                    : Promise.resolve([] as CommunityAssistant[]);
+
                 const [localAssistantsResponse, allAssistantsResponse, ownedAssistants, userSubscriptions, localCommunityAssistants, assistantChatRecords] =
                     await Promise.all([
                         assistantStorageService.getAllAssistantConfigs(),
-                        getAllCommunityAssistantsApi(),
-                        getOwnedCommunityAssistants(),
-                        getUserSubscriptionsApi(),
+                        getAllCommunityAssistantsApi({
+                            ...listQuery,
+                            sort_by: communitySortMethod,
+                            exclude_owned: true,
+                            exclude_subscribed: true
+                        }),
+                        ownedAssistantsPromise,
+                        subscriptionsPromise,
                         communityAssistantStorageService.getAllAssistantConfigs(),
                         assistantStorageService.getChatStorageService().getAll()
                     ]);
@@ -149,7 +180,10 @@ export const useDiscoveryAssistantLists = ({
                     }
                 }
 
-                const toCardData = (a: AssistantResponse | CommunityAssistantSnapshot | Assistant, extra?: Partial<AssistantCardData>): AssistantCardData => {
+                const toCardData = (
+                    a: AssistantResponse | CommunityAssistantSnapshot | CommunityAssistant | Assistant,
+                    extra?: Partial<AssistantCardData>
+                ): AssistantCardData => {
                     const assistantId = a.id || "";
                     if ("latest_version" in a) {
                         return {
@@ -160,6 +194,22 @@ export const useDiscoveryAssistantLists = ({
                             updated: a.updated_at || undefined,
                             lastUsed: assistantLastUsedById.get(assistantId),
                             tags: a.latest_version?.tags || [],
+                            rawData: a,
+                            ...extra
+                        };
+                    }
+
+                    if ("title" in a && !("snapshot_version" in a)) {
+                        const subscriptions = "subscriptions_count" in a ? a.subscriptions_count || 0 : 0;
+                        const updated = "updated_at" in a ? a.updated_at || undefined : undefined;
+                        return {
+                            id: assistantId,
+                            title: a.title || "Unknown Assistant",
+                            description: a.description || "",
+                            subscriptions,
+                            updated,
+                            lastUsed: assistantLastUsedById.get(assistantId),
+                            tags: a.tags || [],
                             rawData: a,
                             ...extra
                         };
@@ -194,14 +244,13 @@ export const useDiscoveryAssistantLists = ({
                 ownedAssistants.forEach(a => fullAssistantById.set(a.id, a));
 
                 const validLocalCommunityAssistants = localCommunityAssistants.filter(isCompleteCommunityAssistantSnapshot);
-                const deletedCommunityAssistants = validLocalCommunityAssistants.filter(local => !fullAssistantById.has(local.id));
 
                 const subscribedData = [
                     ...userSubscriptions
                         .map(sub => {
                             const fullData = fullAssistantById.get(sub.id);
                             const localData = validLocalCommunityAssistants.find(local => local.id === sub.id);
-                            const assistantData = fullData || localData;
+                            const assistantData = fullData || sub || localData;
 
                             if (!assistantData) {
                                 return null;
@@ -209,20 +258,11 @@ export const useDiscoveryAssistantLists = ({
 
                             return toCardData(assistantData, {
                                 subscriptions: fullData?.subscriptions_count ?? 0,
-                                updated: fullData ? fullData.updated_at : localData ? getSnapshotUpdatedAt(localData) : undefined,
-                                isDeletedSnapshot: !fullData,
+                                updated: fullData ? fullData.updated_at : sub.updated_at || (localData ? getSnapshotUpdatedAt(localData) : undefined),
                                 isSubscribedAssistant: true
                             });
                         })
-                        .filter((assistant): assistant is AssistantCardData => assistant !== null),
-                    ...deletedCommunityAssistants.map(deleted =>
-                        toCardData(deleted, {
-                            subscriptions: 0,
-                            updated: getSnapshotUpdatedAt(deleted),
-                            isDeletedSnapshot: !fullAssistantById.has(deleted.id),
-                            isSubscribedAssistant: true
-                        })
-                    )
+                        .filter((assistant): assistant is AssistantCardData => assistant !== null)
                 ];
                 setSubscribedAssistants(subscribedData);
             } catch (error) {
@@ -233,24 +273,10 @@ export const useDiscoveryAssistantLists = ({
         };
 
         fetchAssistants();
-    }, [assistantStorageService, communityAssistantStorageService]);
+    }, [assistantStorageService, communityAssistantStorageService, communitySortMethod, myAssistantFilter, myAssistantsSortMethod, normalizedSearchText]);
 
-    const normalizedSearchText = searchText.trim().toLowerCase();
     const isSearching = normalizedSearchText.length > 0;
     const subscribedAssistantIds = useMemo(() => new Set(subscribedAssistants.map(assistant => assistant.id)), [subscribedAssistants]);
-
-    const matchesSearch = useCallback(
-        (assistant: AssistantCardData): boolean => {
-            if (!normalizedSearchText) return true;
-
-            return (
-                assistant.title.toLowerCase().includes(normalizedSearchText) ||
-                assistant.description.toLowerCase().includes(normalizedSearchText) ||
-                assistant.tags.some(tag => tag.toLowerCase().includes(normalizedSearchText))
-            );
-        },
-        [normalizedSearchText]
-    );
 
     const myAssistants = useMemo(() => {
         const byId = new Map<string, AssistantCardData>();
@@ -285,19 +311,16 @@ export const useDiscoveryAssistantLists = ({
         const filtered = myAssistants.filter(assistant => {
             if (myAssistantFilter === "owned" && !assistant.isOwnedAssistant) return false;
             if (myAssistantFilter === "subscribed" && !assistant.isSubscribedAssistant) return false;
-            return matchesSearch(assistant);
+            return true;
         });
 
+        if (myAssistantsSortMethod !== "lastUsed") return filtered;
         return sortAssistants(filtered, myAssistantsSortMethod);
-    }, [matchesSearch, myAssistantFilter, myAssistants, myAssistantsSortMethod]);
+    }, [myAssistantFilter, myAssistants, myAssistantsSortMethod]);
 
     const communityAssistants = useMemo(() => {
-        const filtered = allAssistants.filter(
-            assistant => !ownedAssistantIds.has(assistant.id) && !subscribedAssistantIds.has(assistant.id) && matchesSearch(assistant)
-        );
-
-        return sortAssistants(filtered, communitySortMethod);
-    }, [allAssistants, communitySortMethod, matchesSearch, ownedAssistantIds, subscribedAssistantIds]);
+        return allAssistants.filter(assistant => !ownedAssistantIds.has(assistant.id) && !subscribedAssistantIds.has(assistant.id));
+    }, [allAssistants, ownedAssistantIds, subscribedAssistantIds]);
 
     const displayedMyAssistants = useMemo(() => {
         if (isSearching || showAllMyAssistants) return filteredMyAssistants;

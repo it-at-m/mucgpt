@@ -2,13 +2,16 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Any
+from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field  # added ConfigDict
 
 CREATIVITY_LOW = "low"
 CREATIVITY_MEDIUM = "medium"
 CREATIVITY_HIGH = "high"
+
+AssistantListSortBy = Literal["title", "updated", "subscriptions"]
+AssistantListSortOrder = Literal["asc", "desc"]
 
 
 class ExampleModel(BaseModel):
@@ -532,6 +535,26 @@ class SubscriptionResponse(BaseModel):
         description="A brief description of the assistant's purpose",
         example="An AI assistant specialized in providing technical support for software issues",
     )
+    updated_at: datetime | None = Field(
+        None,
+        description="Timestamp when the subscribed assistant was last updated",
+        example="2025-06-18T15:45:00Z",
+    )
+    subscriptions_count: int = Field(
+        0,
+        description="Number of users subscribed to this assistant",
+        example=42,
+    )
+    tags: list[str] = Field(
+        default_factory=list,
+        description="Tags of the subscribed assistant's latest version",
+        example=["support", "technical"],
+    )
+    is_visible: bool = Field(
+        True,
+        description="Whether this assistant is publicly listed in the UI",
+        example=True,
+    )
 
     # replaced inner Config with model_config
     model_config = ConfigDict(
@@ -541,6 +564,10 @@ class SubscriptionResponse(BaseModel):
                 "id": "123e4567-e89b-12d3-a456-426614174000",
                 "title": "Technical Support Assistant",
                 "description": "An AI assistant specialized in providing technical support for software issues",
+                "updated_at": "2025-06-18T15:45:00Z",
+                "subscriptions_count": 42,
+                "tags": ["support", "technical"],
+                "is_visible": True,
             }
         },
     )

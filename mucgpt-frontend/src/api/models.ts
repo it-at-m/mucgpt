@@ -256,6 +256,10 @@ export type CommunityAssistant = {
     title: string;
     description: string;
     id: string;
+    updated_at?: string;
+    subscriptions_count?: number;
+    tags?: string[];
+    is_visible?: boolean;
 };
 
 export type CommunityAssistantSnapshot = {

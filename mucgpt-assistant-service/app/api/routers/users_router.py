@@ -1,9 +1,11 @@
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.api_models import (
+    AssistantListSortBy,
+    AssistantListSortOrder,
     AssistantResponse,
     AssistantVersionResponse,
     StatusResponse,
@@ -34,20 +36,15 @@ async def _build_assistant_response_list(
     Helper function to build a list of AssistantResponse objects from a list of Assistants.
     This centralizes the logic and avoids code duplication.
     """
-    # In a production environment, the repository methods should be optimized
-    # to fetch all necessary data (latest versions, owners) in a more efficient way
-    # (e.g., using SQLAlchemy joined loads) to avoid the N+1 query problem.
     response_list: list[AssistantResponse] = []
     for assistant in assistants:
-        # These calls are inefficient in a loop (N+1 problem).
-        # Consider refactoring the repository to fetch this data more efficiently.
         assistant_id = str(assistant.id)
-        assistant_with_owners = await assistant_repo.get_with_owners(assistant_id)
-        latest_version = await assistant_repo.get_latest_version(assistant_id)
+        latest_version = assistant.versions[0] if assistant.versions else None
+        owner_ids = [owner.user_id for owner in assistant.owners]
         is_visible = (
             bool(assistant.is_visible) if assistant.is_visible is not None else True
         )
-        if latest_version and assistant_with_owners:
+        if latest_version:
             assistant_version_response = AssistantVersionResponse(
                 id=assistant_id,
                 version=getattr(latest_version, "version", 0),
@@ -64,7 +61,7 @@ async def _build_assistant_response_list(
                 quick_prompts=latest_version.quick_prompts or [],
                 tags=latest_version.tags or [],
                 tools=assistant_repo.get_tools_from_version(latest_version),
-                owner_ids=[owner.user_id for owner in assistant_with_owners.owners],
+                owner_ids=owner_ids,
                 is_visible=is_visible,
             )
             response = AssistantResponse(
@@ -73,7 +70,7 @@ async def _build_assistant_response_list(
                 updated_at=getattr(assistant, "updated_at"),
                 hierarchical_access=assistant.hierarchical_access or [],
                 is_visible=is_visible,
-                owner_ids=[owner.user_id for owner in assistant_with_owners.owners],
+                owner_ids=owner_ids,
                 subscriptions_count=getattr(assistant, "subscriptions_count", 0) or 0,
                 latest_version=assistant_version_response,
             )
@@ -96,6 +93,24 @@ async def _build_assistant_response_list(
     tags=["Assistants", "Users"],
 )
 async def getUserAssistants(
+    search: str | None = Query(
+        None,
+        description="Search term matched against latest version title, description, and tags.",
+    ),
+    sort_by: AssistantListSortBy = Query(
+        "updated",
+        description="Sort assistants by title, updated timestamp, or subscriptions.",
+    ),
+    sort_order: AssistantListSortOrder = Query(
+        "desc", description="Sort order, ascending or descending."
+    ),
+    offset: int = Query(0, ge=0, description="Number of items to skip."),
+    limit: int = Query(
+        200,
+        ge=1,
+        le=500,
+        description="Maximum number of items to return.",
+    ),
     db: AsyncSession = Depends(get_db_session),
     user_info: AuthenticationResult = Depends(authenticate_user),
 ):
@@ -104,7 +119,12 @@ async def getUserAssistants(
     # Get all assistants where this user_id is an owner
     assistant_repo = AssistantRepository(db)
     assistants = await assistant_repo.get_assistants_by_owner(
-        user_info.user_id
+        user_info.user_id,
+        search=search,
+        sort_by=sort_by,
+        sort_order=sort_order,
+        offset=offset,
+        limit=limit,
     )  # Create explicit response models
     response_list = await _build_assistant_response_list(assistants, assistant_repo)
 
@@ -213,6 +233,24 @@ async def unsubscribe_from_assistant(
     tags=["Subscriptions", "Users"],
 )
 async def get_user_subscriptions(
+    search: str | None = Query(
+        None,
+        description="Search term matched against latest version title, description, and tags.",
+    ),
+    sort_by: AssistantListSortBy = Query(
+        "updated",
+        description="Sort subscriptions by title, updated timestamp, or subscriptions.",
+    ),
+    sort_order: AssistantListSortOrder = Query(
+        "desc", description="Sort order, ascending or descending."
+    ),
+    offset: int = Query(0, ge=0, description="Number of items to skip."),
+    limit: int = Query(
+        200,
+        ge=1,
+        le=500,
+        description="Maximum number of items to return.",
+    ),
     db: AsyncSession = Depends(get_db_session),
     user_info: AuthenticationResult = Depends(authenticate_user),
 ):
@@ -220,18 +258,29 @@ async def get_user_subscriptions(
     logger.info(f"Fetching subscriptions for user {user_info.user_id}")
 
     assistant_repo = AssistantRepository(db)
-    assistants = await assistant_repo.get_user_subscriptions(user_info.user_id)
+    assistants = await assistant_repo.get_user_subscriptions(
+        user_info.user_id,
+        search=search,
+        sort_by=sort_by,
+        sort_order=sort_order,
+        offset=offset,
+        limit=limit,
+    )
 
     # Build simplified response with only ID and name
     response_list = []
     for assistant in assistants:
         assistant_id = str(assistant.id)
-        latest_version = await assistant_repo.get_latest_version(assistant_id)
+        latest_version = assistant.versions[0] if assistant.versions else None
         if latest_version:
             response = SubscriptionResponse(
                 id=assistant_id,
                 title=getattr(latest_version, "name", ""),
                 description=getattr(latest_version, "description", ""),
+                updated_at=getattr(assistant, "updated_at", None),
+                subscriptions_count=getattr(assistant, "subscriptions_count", 0) or 0,
+                tags=latest_version.tags or [],
+                is_visible=bool(getattr(assistant, "is_visible", True)),
             )
             response_list.append(response)
 

@@ -734,10 +734,13 @@ def test_get_user_subscriptions_multiple(test_client):
         # Also validate that only expected fields are present
         assert "id" in subscription
         assert "title" in subscription
+        assert "updated_at" in subscription
+        assert "subscriptions_count" in subscription
+        assert "tags" in subscription
+        assert "is_visible" in subscription
         # Should NOT have complex fields like latest_version
         assert "latest_version" not in subscription
         assert "created_at" not in subscription
-        assert "updated_at" not in subscription
 
 
 @pytest.mark.integration

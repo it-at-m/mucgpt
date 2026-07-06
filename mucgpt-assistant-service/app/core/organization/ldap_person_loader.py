@@ -91,7 +91,9 @@ class LDAPPersonLookupLoader:
         attributes: list[str],
     ) -> list[dict[str, Any]]:
         entries: list[dict[str, Any]] = []
-        page_size = self._parse_int(self.settings.PAGE_SIZE, "MUCGPT_LDAP_PAGE_SIZE")
+        page_size = self._parse_int(
+            self.settings.PAGE_SIZE, "MUCGPT_ASSISTANT_LDAP__PAGE_SIZE"
+        )
         try:
             for entry in connection.extend.standard.paged_search(
                 search_base=search_base,
@@ -132,9 +134,10 @@ class LDAPPersonLookupLoader:
 
     def _build_server(self) -> Server:
         host = self._normalized_host()
-        port = self._parse_int(self.settings.PORT, "MUCGPT_LDAP_PORT")
-        connect_timeout = self._parse_int(
-            self.settings.CONNECT_TIMEOUT, "MUCGPT_LDAP_CONNECT_TIMEOUT"
+        port = self._parse_int(self.settings.PORT, "MUCGPT_ASSISTANT_LDAP__PORT")
+        connect_timeout = self._parse_float(
+            self.settings.CONNECT_TIMEOUT,
+            "MUCGPT_ASSISTANT_LDAP__CONNECT_TIMEOUT",
         )
 
         tls = self._build_tls_context()
@@ -165,8 +168,9 @@ class LDAPPersonLookupLoader:
             if self.settings.BIND_PASSWORD
             else None
         )
-        receive_timeout = self._parse_int(
-            self.settings.READ_TIMEOUT, "MUCGPT_LDAP_READ_TIMEOUT"
+        receive_timeout = self._parse_float(
+            self.settings.READ_TIMEOUT,
+            "MUCGPT_ASSISTANT_LDAP__READ_TIMEOUT",
         )
         try:
             connection = Connection(
@@ -248,6 +252,12 @@ class LDAPPersonLookupLoader:
             return int(value)
         except Exception as exc:
             raise LDAPPersonLookupError(f"{env_name} must be an integer") from exc
+
+    def _parse_float(self, value: Any, env_name: str) -> float:
+        try:
+            return float(value)
+        except Exception as exc:
+            raise LDAPPersonLookupError(f"{env_name} must be a number") from exc
 
     def _escape_filter_value(self, value: str) -> str:
         escaped: list[str] = []

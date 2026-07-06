@@ -494,6 +494,14 @@ export const handlers = [
                     mcp_group: null
                 },
                 {
+                    id: "RetrievePMDocs",
+                    name: "PM-Dokumente suchen",
+                    long_description: "Sucht relevante Projektmanagement-Dokumente und gibt Quellen mit Metadaten und Inhalten zurück.",
+                    lang: "deutsch",
+                    config: { enabled: true },
+                    mcp_group: null
+                },
+                {
                     id: "WebSuche",
                     name: "Web Suche",
                     long_description: "Führt eine Websuche durch und fasst die wichtigsten Ergebnisse übersichtlich zusammen.",
@@ -550,6 +558,14 @@ export const handlers = [
                     id: "Vereinfachen",
                     name: "Simplify",
                     long_description: "Transforms dense German text into accessible language for wider audiences.",
+                    lang: "english",
+                    config: { enabled: true },
+                    mcp_group: null
+                },
+                {
+                    id: "RetrievePMDocs",
+                    name: "Search PM Documents",
+                    long_description: "Searches relevant project management documents and returns sources with metadata and content.",
                     lang: "english",
                     config: { enabled: true },
                     mcp_group: null
@@ -616,6 +632,14 @@ export const handlers = [
                     mcp_group: null
                 },
                 {
+                    id: "RetrievePMDocs",
+                    name: "Rechercher les documents PM",
+                    long_description: "Recherche des documents de gestion de projet pertinents et renvoie les sources avec métadonnées et contenu.",
+                    lang: "français",
+                    config: { enabled: true },
+                    mcp_group: null
+                },
+                {
                     id: "WebSuche",
                     name: "Recherche Web",
                     long_description: "Lance une recherche en ligne et résume les résultats les plus importants.",
@@ -677,6 +701,14 @@ export const handlers = [
                     mcp_group: null
                 },
                 {
+                    id: "RetrievePMDocs",
+                    name: "PM-Dokumente suachn",
+                    long_description: "Suacht relevante Projektmanagement-Dokumente und gibt Quellen mit Metadaten und Inhalt zruck.",
+                    lang: "bairisch",
+                    config: { enabled: true },
+                    mcp_group: null
+                },
+                {
                     id: "WebSuche",
                     name: "Internet-Suach",
                     long_description: "Macht a Websuche und fasst d'wichtigsten Ergebnisse zamm.",
@@ -733,6 +765,14 @@ export const handlers = [
                     id: "Vereinfachen",
                     name: "Спростити",
                     long_description: "Перетворює складні фрагменти тексту на зрозуміліші речення.",
+                    lang: "українська",
+                    config: { enabled: true },
+                    mcp_group: null
+                },
+                {
+                    id: "RetrievePMDocs",
+                    name: "Пошук PM-документів",
+                    long_description: "Шукає релевантні документи з управління проєктами та повертає джерела з метаданими й вмістом.",
                     lang: "українська",
                     config: { enabled: true },
                     mcp_group: null

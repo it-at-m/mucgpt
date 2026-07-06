@@ -1,9 +1,13 @@
 import logging
+import os
 import re
+import uuid
 from typing import cast
 
+from httpx import Client, HTTPStatusError
 from langchain_core.messages import SystemMessage
 from langchain_core.runnables.base import RunnableSerializable
+from langchain_core.tools import tool as langchain_tool
 from langchain_core.tools.base import BaseTool
 
 from agent.state_models.default_state import DefaultAgentState
@@ -34,6 +38,78 @@ TOOL_INSTRUCTIONS_TEMPLATE = """
 - If no tool is suitable, answer directly without a tool call.
 
 """
+
+@langchain_tool("RetrievePMDocs", description="Retrieves relevant project management documents from the configured retrieval backend.")
+def retrieve_pm_tools(query: str, max_results: int = 3) -> str:
+    """Retrieve relevant project management documents from the configured retrieval backend.
+
+    Sends the query to the retrieval service, requests full results from the configured
+    knowledge-base collection, and returns a readable list of matching documents with
+    title, source URL, metadata, and page content. Use this tool for questions that
+    need grounding in project management documentation.
+    Args:
+        query: Search query or user question to retrieve supporting documents for.
+        limit: Maximum number of retrieved documents to include. Defaults to 3.
+    Returns:
+        A formatted string containing the retrieved documents, or an explanatory
+        message if no matches are found or retrieval fails.
+    """
+    # using the dlf search backend for document retrieval
+    retrieval_endpoint = os.getenv(
+        "DLF_RETRIEVAL_API_URL",
+        "http://host.docker.internal:8080/api/retrieval",
+    )
+
+    payload = {
+        "query": query,
+        "enhance_query": True,
+        "keywords": None,
+        "categories": None,
+        "run_id": str(uuid.uuid4()),
+        "result": "full",  # if the answer tool is used to generate an answer using the dlf answer endpoint, "minimal" would sufficient here
+        "collections": ["ki_pm_documents_3072", "LACE_documents_3072", "ProjektPlus_documents_3072"],  # default for dlf
+        "category_match": "any",
+        "rerank": True,
+        "easy_language": False,
+    }
+
+    headers = {
+        "accept": "application/json",
+        "Content-Type": "application/json",
+    }
+    with Client(timeout=60.0) as client:
+        response = client.post(
+            url=retrieval_endpoint,
+            json=payload,
+            headers=headers,
+        )
+
+        try:
+            response.raise_for_status()
+        except HTTPStatusError as e:
+            print(f"Retrieval request failed: {e}")
+            print(f"Response body: {response.text}")
+            raise
+
+        data = response.json()
+
+    n = min(
+        4, len(data.get("retrieval_documents", []))
+    )  # 10 if len(data.get("retrieval_documents", [])) > 10 else len(data.get("retrieval_documents", []))
+    docs = data.get("retrieval_documents", [])[:n]
+
+    # parse to string
+    docs_str = "\n\n".join(
+        f"Result {i+1}: {doc.get('name', 'Untitled')}\nSource: {doc.get('url', 'unknown source')}\nMetadata: {doc.get('metadata', 'no metadata')}\n{doc.get('page_content', '')}"
+        for i, doc in enumerate(docs)
+    )
+
+    print(f"tool> Retrieved {len(docs)} documents for query: {query}")
+    print(f"tool> Retrieved documents:\n{docs_str[:100]}....")
+
+    return docs_str if docs_str else "No matching documents found."
+
+#####################################################################################################
 
 
 def _metadata_value(metadata, key: str, default=None):
@@ -120,6 +196,7 @@ class ToolCollection:
         return [
             make_brainstorm_tool(brainstorm_model, self.logger),
             make_simplify_tool(simplify_model, self.logger),
+            retrieve_pm_tools, 
         ] + self._build_configured_tools()
 
     def _build_configured_tools(self) -> list[BaseTool]:
@@ -188,6 +265,10 @@ class ToolCollection:
                     "name": "Internetsuche",
                     "description": "Sucht im Internet ueber die konfigurierte SearXNG-Instanz und liefert Quellen mit Titeln, URLs und Textauszuegen.",
                 },
+                "RetrievePMDocs": {
+                    "name": "PM-Dokumente suchen",
+                    "description": "Sucht relevante Projektmanagement-Dokumente in der konfigurierten Wissensbasis und liefert Quellen mit Metadaten und Inhalten.",
+                },
             },
             "english": {
                 "Brainstorming": {
@@ -201,6 +282,10 @@ class ToolCollection:
                 "InternetSearch": {
                     "name": "Internet Search",
                     "description": "Searches the internet via the configured SearXNG engine and returns sourced titles, URLs and snippets.",
+                },
+                "RetrievePMDocs": {
+                    "name": "Search PM Documents",
+                    "description": "Searches relevant project management documents in the configured knowledge base and returns sources with metadata and content.",
                 },
             },
             "français": {
@@ -256,7 +341,7 @@ class ToolCollection:
             user_info=user_info, force_reload=force_reload
         )
 
-        tools = [brainstorm_tool, simplify_tool] + configured_tools + mcp_tools
+        tools = [brainstorm_tool, simplify_tool, retrieve_pm_tools] + configured_tools + mcp_tools
 
         mcp_source_keys = set((get_mcp_settings().SOURCES or {}).keys())
 

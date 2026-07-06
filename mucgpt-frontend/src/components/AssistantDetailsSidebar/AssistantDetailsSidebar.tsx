@@ -100,7 +100,7 @@ export const AssistantDetailsSidebar = ({
 
     const enabledTools = (latestVersion?.tools || snapshot?.tools || []).filter((tool: ToolBase) => tool.config?.enabled);
     const systemPrompt = latestVersion?.system_prompt || snapshot?.system_message;
-    const ownersDetailed: OwnerDetailsResponse[] = latestVersion?.owners_detailed || responseData?.owners_detailed || [];
+    const ownersDetailed: OwnerDetailsResponse[] = responseData?.owners_detailed || latestVersion?.owners_detailed || [];
     const isOwned = assistant ? ownedAssistantIds.has(assistant.id) : false;
     const isDeletedSnapshot = Boolean(assistant?.isDeletedSnapshot);
     const isLocalAssistant = Boolean(assistant?.isLocalAssistant);

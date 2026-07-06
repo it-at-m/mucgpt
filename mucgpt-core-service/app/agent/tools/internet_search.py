@@ -8,11 +8,25 @@ from langchain_core.tools.base import BaseTool
 from langgraph.config import get_stream_writer
 from langgraph.types import StreamWriter
 
+from agent.tools.spec import LocalTool
 from agent.tools.tool_chunk import ToolStreamChunk, ToolStreamState
 from config.settings import InternetSearchConfig, get_internet_search_settings
 
 # Single-line summary shown to the LLM as this tool's description.
 INTERNET_SEARCH_SUMMARY = "Searches the internet via the configured SearXNG engine and returns sourced results."
+
+# User-facing name/description per language, shown in the /v1/tools tool picker.
+# No français/bairisch/ukrainisch translation yet; LocalTool.display() falls back to english.
+INTERNET_SEARCH_METADATA = {
+    "deutsch": {
+        "name": "Internetsuche",
+        "description": "Sucht im Internet ueber die konfigurierte SearXNG-Instanz und liefert Quellen mit Titeln, URLs und Textauszuegen.",
+    },
+    "english": {
+        "name": "Internet Search",
+        "description": "Searches the internet via the configured SearXNG engine and returns sourced titles, URLs and snippets.",
+    },
+}
 
 
 def is_internet_search_configured(settings: InternetSearchConfig | None = None) -> bool:
@@ -152,3 +166,12 @@ def make_internet_search_tool(logger: logging.Logger) -> BaseTool:
 
     internet_search_tool.metadata = {"mcp_group": "internet"}
     return internet_search_tool
+
+
+TOOL = LocalTool(
+    id="InternetSearch",
+    factory=make_internet_search_tool,
+    metadata=INTERNET_SEARCH_METADATA,
+    needs_model=False,
+    is_configured=is_internet_search_configured,
+)

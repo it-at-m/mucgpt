@@ -8,10 +8,35 @@ from langchain_core.tools.base import BaseTool
 from langgraph.config import get_stream_writer
 from langgraph.types import StreamWriter
 
+from agent.tools.spec import LocalTool
 from agent.tools.tool_chunk import ToolStreamChunk, ToolStreamState
 
 # Single-line summary shown to the LLM as this tool's description.
 BRAINSTORMING_SUMMARY = "Generates or refines a detailed markdown mind map."  # one-line
+
+# User-facing name/description per language, shown in the /v1/tools tool picker.
+BRAINSTORMING_METADATA = {
+    "deutsch": {
+        "name": "Brainstorming",
+        "description": "Erstellt oder verbessert eine detaillierte Mindmap zu einem Thema im Markdown-Format, basierend auf Nutzer-Feedback.",
+    },
+    "english": {
+        "name": "Brainstorming",
+        "description": "Generates or refines a detailed mind map for a given topic in markdown format based on user feedback.",
+    },
+    "français": {
+        "name": "Remue-méninges",
+        "description": "Génère ou améliore une carte mentale détaillée pour un sujet donné au format markdown selon les commentaires de l'utilisateur.",
+    },
+    "bairisch": {
+        "name": "Brainstorming",
+        "description": "Macht a genaue Mindmap zu am Thema im Markdown-Format oder verbessert eine, wenn da Nutzer Feedback gibt.",
+    },
+    "ukrainisch": {
+        "name": "Мозковий штурм",
+        "description": "Створює або вдосконалює детальну ментальну карту для заданої теми у форматі markdown на основі відгуків користувачів.",
+    },
+}
 
 BRAINSTORM_SYSTEM_MESSAGE = "You are a creative brainstorming assistant that creates and refines detailed mind maps in markdown format."
 
@@ -214,3 +239,10 @@ def make_brainstorm_tool(
         return result
 
     return brainstorm_tool
+
+
+TOOL = LocalTool(
+    id="Brainstorming",
+    factory=make_brainstorm_tool,
+    metadata=BRAINSTORMING_METADATA,
+)

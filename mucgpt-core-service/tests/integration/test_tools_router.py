@@ -21,4 +21,3 @@ def test_tools_list(test_client: TestClient):
         and "mcp_group" in tool
         for tool in data["tools"]
     )
-    assert any(tool["id"] == "RetrievePMDocs" for tool in data["tools"])

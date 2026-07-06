@@ -90,6 +90,20 @@ MCP:
 #   LANGUAGE: "de"
 #   SAFESEARCH: 1
 
+# PM Document Retrieval Settings (optional - backed by the DLF retrieval API)
+# Configure this to enable the RetrievePMDocs tool.
+# Override via environment variables, e.g.:
+#   MUCGPT_CORE_RETRIEVAL__API_URL=https://your-retrieval-instance/api/retrieval
+# RETRIEVAL:
+#   API_URL: "https://your-retrieval-instance/api/retrieval"
+#   TIMEOUT: 30.0
+#   MAX_RESULTS: 4
+#   COLLECTIONS:
+#     - "ki_pm_documents_3072"
+#     - "LACE_documents_3072"
+#     - "ProjektPlus_documents_3072"
+#   RERANK: true
+
 # Redis Settings (optional - nested under REDIS key)
 # Override individual fields via environment variables, e.g.:
 #   MUCGPT_CORE_REDIS__HOST=my-redis

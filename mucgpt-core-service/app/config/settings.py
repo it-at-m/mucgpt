@@ -377,12 +377,27 @@ class InternetSearchConfig(BaseModel):
     SAFESEARCH: int = 1
 
 
+class RetrievalConfig(BaseModel):
+    """PM document retrieval configuration (nested under RETRIEVAL key in YAML)."""
+
+    API_URL: str = ""
+    TIMEOUT: float = 30.0
+    MAX_RESULTS: PositiveInt = 4
+    COLLECTIONS: list[str] = [
+        "ki_pm_documents_3072",
+        "LACE_documents_3072",
+        "ProjektPlus_documents_3072",
+    ]
+    RERANK: bool = True
+
+
 # Backward-compatible aliases
 SSOSettings = SSOConfig
 LangfuseSettings = LangfuseConfig
 MCPSettings = MCPConfig
 RedisSettings = RedisConfig
 InternetSearchSettings = InternetSearchConfig
+RetrievalSettings = RetrievalConfig
 
 
 class Settings(BaseSettings):
@@ -437,6 +452,7 @@ class Settings(BaseSettings):
     INTERNET_SEARCH: InternetSearchConfig = Field(
         default_factory=InternetSearchConfig
     )
+    RETRIEVAL: RetrievalConfig = Field(default_factory=RetrievalConfig)
 
     # Customize settings sources to prioritize YAML config
     @classmethod
@@ -781,3 +797,9 @@ def get_redis_settings() -> RedisConfig:
 def get_internet_search_settings() -> InternetSearchConfig:
     """Return cached InternetSearchSettings instance."""
     return get_settings().INTERNET_SEARCH
+
+
+@lru_cache(maxsize=1)
+def get_retrieval_settings() -> RetrievalConfig:
+    """Return cached RetrievalSettings instance."""
+    return get_settings().RETRIEVAL

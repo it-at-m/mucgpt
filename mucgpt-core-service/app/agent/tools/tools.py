@@ -1,10 +1,9 @@
 import logging
-import os
 import re
 import uuid
 from typing import cast
 
-from httpx import Client, HTTPStatusError
+from httpx import Client, HTTPStatusError, RequestError, TimeoutException
 from langchain_core.messages import SystemMessage
 from langchain_core.runnables.base import RunnableSerializable
 from langchain_core.tools import tool as langchain_tool
@@ -21,7 +20,7 @@ from agent.tools.internet_search import (
 from agent.tools.mcp import McpLoader
 from agent.tools.simplify import make_simplify_tool
 from api.api_models import ToolInfo, ToolListResponse
-from config.settings import get_mcp_settings
+from config.settings import RetrievalConfig, get_mcp_settings, get_retrieval_settings
 from core.auth import AuthenticationResult
 from core.logtools import getLogger
 
@@ -39,77 +38,94 @@ TOOL_INSTRUCTIONS_TEMPLATE = """
 
 """
 
-@langchain_tool("RetrievePMDocs", description="Retrieves relevant project management documents from the configured retrieval backend.")
-def retrieve_pm_tools(query: str, max_results: int = 3) -> str:
-    """Retrieve relevant project management documents from the configured retrieval backend.
+def is_retrieval_configured(settings: RetrievalConfig | None = None) -> bool:
+    settings = settings or get_retrieval_settings()
+    url = settings.API_URL.strip()
+    return bool(url) and not (url.startswith("<") and url.endswith(">"))
 
-    Sends the query to the retrieval service, requests full results from the configured
-    knowledge-base collection, and returns a readable list of matching documents with
-    title, source URL, metadata, and page content. Use this tool for questions that
-    need grounding in project management documentation.
-    Args:
-        query: Search query or user question to retrieve supporting documents for.
-        limit: Maximum number of retrieved documents to include. Defaults to 3.
-    Returns:
-        A formatted string containing the retrieved documents, or an explanatory
-        message if no matches are found or retrieval fails.
-    """
-    # using the dlf search backend for document retrieval
-    retrieval_endpoint = os.getenv(
-        "DLF_RETRIEVAL_API_URL",
-        "http://host.docker.internal:8080/api/retrieval",
+
+def make_retrieval_tool(logger: logging.Logger) -> BaseTool:
+    @langchain_tool(
+        "RetrievePMDocs",
+        description="Retrieves relevant project management documents from the configured retrieval backend.",
     )
+    def retrieve_pm_tools(query: str, max_results: int = 3) -> str:
+        """Retrieve relevant project management documents from the configured retrieval backend.
 
-    payload = {
-        "query": query,
-        "enhance_query": True,
-        "keywords": None,
-        "categories": None,
-        "run_id": str(uuid.uuid4()),
-        "result": "full",  # if the answer tool is used to generate an answer using the dlf answer endpoint, "minimal" would sufficient here
-        "collections": ["ki_pm_documents_3072", "LACE_documents_3072", "ProjektPlus_documents_3072"],  # default for dlf
-        "category_match": "any",
-        "rerank": True,
-        "easy_language": False,
-    }
+        Sends the query to the retrieval service, requests full results from the configured
+        knowledge-base collections, and returns a readable list of matching documents with
+        title, source URL, metadata, and page content. Use this tool for questions that
+        need grounding in project management documentation.
+        Args:
+            query: Search query or user question to retrieve supporting documents for.
+            max_results: Maximum number of retrieved documents to include. Defaults to 3.
+        Returns:
+            A formatted string containing the retrieved documents, or an explanatory
+            message if no matches are found or retrieval fails.
+        """
+        settings = get_retrieval_settings()
+        result_limit = max(1, min(int(max_results), settings.MAX_RESULTS))
 
-    headers = {
-        "accept": "application/json",
-        "Content-Type": "application/json",
-    }
-    with Client(timeout=60.0) as client:
-        response = client.post(
-            url=retrieval_endpoint,
-            json=payload,
-            headers=headers,
-        )
+        payload = {
+            "query": query,
+            "enhance_query": True,
+            "keywords": None,
+            "categories": None,
+            "run_id": str(uuid.uuid4()),
+            "result": "full",  # if the answer tool is used to generate an answer using the dlf answer endpoint, "minimal" would suffice here
+            "collections": settings.COLLECTIONS,
+            "category_match": "any",
+            "rerank": settings.RERANK,
+            "easy_language": False,
+        }
+
+        headers = {
+            "accept": "application/json",
+            "Content-Type": "application/json",
+        }
 
         try:
-            response.raise_for_status()
-        except HTTPStatusError as e:
-            print(f"Retrieval request failed: {e}")
-            print(f"Response body: {response.text}")
-            raise
+            with Client(timeout=settings.TIMEOUT) as client:
+                response = client.post(
+                    url=settings.API_URL,
+                    json=payload,
+                    headers=headers,
+                )
+                response.raise_for_status()
+                data = response.json()
+        except TimeoutException:
+            logger.warning("PM document retrieval timed out for query=%s", query)
+            return "PM document retrieval timed out."
+        except HTTPStatusError as exc:
+            logger.warning(
+                "PM document retrieval failed with status=%s query=%s",
+                exc.response.status_code,
+                query,
+            )
+            return f"PM document retrieval failed with status {exc.response.status_code}."
+        except RequestError as exc:
+            logger.warning(
+                "PM document retrieval request failed for query=%s: %s", query, exc
+            )
+            return f"PM document retrieval request failed: {exc}"
+        except ValueError:
+            logger.warning(
+                "PM document retrieval returned invalid JSON for query=%s", query
+            )
+            return "PM document retrieval returned invalid JSON."
 
-        data = response.json()
+        docs = data.get("retrieval_documents", [])[:result_limit]
 
-    n = min(
-        4, len(data.get("retrieval_documents", []))
-    )  # 10 if len(data.get("retrieval_documents", [])) > 10 else len(data.get("retrieval_documents", []))
-    docs = data.get("retrieval_documents", [])[:n]
+        docs_str = "\n\n".join(
+            f"Result {i + 1}: {doc.get('name', 'Untitled')}\nSource: {doc.get('url', 'unknown source')}\nMetadata: {doc.get('metadata', 'no metadata')}\n{doc.get('page_content', '')}"
+            for i, doc in enumerate(docs)
+        )
 
-    # parse to string
-    docs_str = "\n\n".join(
-        f"Result {i+1}: {doc.get('name', 'Untitled')}\nSource: {doc.get('url', 'unknown source')}\nMetadata: {doc.get('metadata', 'no metadata')}\n{doc.get('page_content', '')}"
-        for i, doc in enumerate(docs)
-    )
+        logger.debug("Retrieved %d PM documents for query=%s", len(docs), query)
 
-    print(f"tool> Retrieved {len(docs)} documents for query: {query}")
-    print(f"tool> Retrieved documents:\n{docs_str[:100]}....")
+        return docs_str if docs_str else "No matching documents found."
 
-    return docs_str if docs_str else "No matching documents found."
-
-#####################################################################################################
+    return retrieve_pm_tools
 
 
 def _metadata_value(metadata, key: str, default=None):
@@ -196,13 +212,14 @@ class ToolCollection:
         return [
             make_brainstorm_tool(brainstorm_model, self.logger),
             make_simplify_tool(simplify_model, self.logger),
-            retrieve_pm_tools, 
         ] + self._build_configured_tools()
 
     def _build_configured_tools(self) -> list[BaseTool]:
         tools: list[BaseTool] = []
         if is_internet_search_configured():
             tools.append(make_internet_search_tool(self.logger))
+        if is_retrieval_configured():
+            tools.append(make_retrieval_tool(self.logger))
         return tools
 
     async def get_tools(
@@ -337,11 +354,13 @@ class ToolCollection:
         configured_tools = []
         if is_internet_search_configured():
             configured_tools.append(make_internet_search_tool(dummy_logger))
+        if is_retrieval_configured():
+            configured_tools.append(make_retrieval_tool(dummy_logger))
         mcp_tools = await McpLoader.load_mcp_tools(
             user_info=user_info, force_reload=force_reload
         )
 
-        tools = [brainstorm_tool, simplify_tool, retrieve_pm_tools] + configured_tools + mcp_tools
+        tools = [brainstorm_tool, simplify_tool] + configured_tools + mcp_tools
 
         mcp_source_keys = set((get_mcp_settings().SOURCES or {}).keys())
 

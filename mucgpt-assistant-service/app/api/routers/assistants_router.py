@@ -110,13 +110,22 @@ async def createAssistant(
         await db.refresh(new_assistant)
         # first_version is already committed and refreshed by create_assistant_version
 
-        # Get assistant with owners and latest version safely
+        # Get assistant with owners safely
         assistant_with_owners = await assistant_repo.get_with_owners(assistant_id)
-        latest_version = await assistant_repo.get_latest_version(assistant_id)
         owner_ids = [owner.user_id for owner in assistant_with_owners.owners]
         await refresh_owner_details(owner_ids, db)
         await db.commit()
+
+        # Commit expires ORM instances; re-fetch before reading attributes.
+        assistant_record = await assistant_repo.get(assistant_id)
         assistant_with_owners = await assistant_repo.get_with_owners(assistant_id)
+        latest_version = await assistant_repo.get_latest_version(assistant_id)
+
+        if assistant_record is None:
+            raise AssistantNotFoundException(assistant_id)
+        if latest_version is None:
+            raise NoVersionException(assistant_id)
+
         owners_detailed = await build_owner_details(
             owner_ids,
             owner_lookup_cache,
@@ -131,7 +140,7 @@ async def createAssistant(
             name=latest_version.name,
             description=latest_version.description or "",
             system_prompt=latest_version.system_prompt,
-            hierarchical_access=new_assistant.hierarchical_access or [],
+            hierarchical_access=assistant_record.hierarchical_access or [],
             creativity=latest_version.creativity,
             default_model=latest_version.default_model,
             examples=latest_version.examples or [],
@@ -144,13 +153,14 @@ async def createAssistant(
         )  # Build AssistantResponse
         response = AssistantResponse(
             id=assistant_id,
-            created_at=new_assistant.created_at,
-            updated_at=new_assistant.updated_at,
-            hierarchical_access=new_assistant.hierarchical_access or [],
+            created_at=assistant_record.created_at,
+            updated_at=assistant_record.updated_at,
+            hierarchical_access=assistant_record.hierarchical_access or [],
             is_visible=is_visible,
             owner_ids=owner_ids,
             owners_detailed=owners_detailed,
-            subscriptions_count=getattr(new_assistant, "subscriptions_count", 0) or 0,
+            subscriptions_count=getattr(assistant_record, "subscriptions_count", 0)
+            or 0,
             latest_version=assistant_version_response,
         )
 

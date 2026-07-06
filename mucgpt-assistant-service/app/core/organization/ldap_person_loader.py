@@ -186,12 +186,19 @@ class LDAPPersonLookupLoader:
                 raise LDAPPersonLookupError(
                     f"Failed to open LDAP connection (host={server.host}, port={server.port}): {exc}"
                 ) from exc
-            if self.settings.START_TLS:
-                connection.start_tls()
-            if not connection.bind():
-                raise LDAPPersonLookupError(
-                    f"Failed to bind to LDAP server: {connection.last_error}"
-                )
+            try:
+                if self.settings.START_TLS:
+                    connection.start_tls()
+                if not connection.bind():
+                    raise LDAPPersonLookupError(
+                        f"Failed to bind to LDAP server: {connection.last_error}"
+                    )
+            except Exception:
+                try:
+                    connection.unbind()
+                except ldap_exceptions.LDAPExceptionError:
+                    pass
+                raise
         except ldap_exceptions.LDAPException as exc:  # pragma: no cover - network
             raise LDAPPersonLookupError(str(exc)) from exc
         return connection

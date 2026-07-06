@@ -1,4 +1,5 @@
 import pytest
+from ldap3.core import exceptions as ldap_exceptions
 
 from config.settings import LDAPSettings
 from core.organization.ldap_person_loader import (
@@ -84,3 +85,65 @@ def test_escape_filter_value_special_characters():
 
     escaped = loader._escape_filter_value(r"a*(b)\\c")
     assert escaped == r"a\2a\28b\29\5c\5cc"
+
+
+def test_build_connection_unbinds_when_start_tls_fails(monkeypatch):
+    settings = _build_settings(START_TLS=True, USE_SSL=False)
+    loader = LDAPPersonLookupLoader(settings)
+    unbind_calls = {"count": 0}
+
+    class _FailingStartTLSConnection:
+        def __init__(self, *args, **kwargs):
+            self.last_error = ""
+
+        def open(self) -> None:
+            return None
+
+        def start_tls(self) -> None:
+            raise ldap_exceptions.LDAPExceptionError("start_tls failed")
+
+        def bind(self) -> bool:
+            return True
+
+        def unbind(self) -> None:
+            unbind_calls["count"] += 1
+
+    monkeypatch.setattr(
+        "core.organization.ldap_person_loader.Connection", _FailingStartTLSConnection
+    )
+
+    with pytest.raises(LDAPPersonLookupError, match="start_tls failed"):
+        loader._build_connection(loader._build_server())
+
+    assert unbind_calls["count"] == 1
+
+
+def test_build_connection_unbinds_when_bind_returns_false(monkeypatch):
+    settings = _build_settings(START_TLS=False)
+    loader = LDAPPersonLookupLoader(settings)
+    unbind_calls = {"count": 0}
+
+    class _BindFalseConnection:
+        def __init__(self, *args, **kwargs):
+            self.last_error = "invalid credentials"
+
+        def open(self) -> None:
+            return None
+
+        def start_tls(self) -> None:
+            return None
+
+        def bind(self) -> bool:
+            return False
+
+        def unbind(self) -> None:
+            unbind_calls["count"] += 1
+
+    monkeypatch.setattr(
+        "core.organization.ldap_person_loader.Connection", _BindFalseConnection
+    )
+
+    with pytest.raises(LDAPPersonLookupError, match="Failed to bind"):
+        loader._build_connection(loader._build_server())
+
+    assert unbind_calls["count"] == 1

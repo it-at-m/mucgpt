@@ -1,7 +1,10 @@
 import pytest
+from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 
 import core.owner_enrichment as owner_enrichment
 from core.organization.ldap_person_loader import LDAPPersonLookupError
+from database.database_models import Owner
 
 
 class _DummyLoader:
@@ -125,3 +128,44 @@ async def test_build_owner_details_caches_negative_results(monkeypatch):
     assert first == []
     assert second == []
     assert loader.calls == ["missing"]
+
+
+@pytest.mark.asyncio
+async def test_refresh_owner_details_retries_after_integrity_error(
+    monkeypatch, db_session
+):
+    loader = _DummyLoader(
+        responses={
+            "race-user": {
+                "lhmobjectid": "race-user",
+                "givenName": "Race",
+                "sn": "Winner",
+                "mail": "race.winner@example.org",
+                "organizationalunit": "ITM-TEST",
+            }
+        }
+    )
+
+    monkeypatch.setattr(owner_enrichment, "get_ldap_settings", lambda: object())
+    monkeypatch.setattr(owner_enrichment, "LDAPPersonLookupLoader", lambda _s: loader)
+
+    original_flush = db_session.flush
+    raised = {"value": False}
+
+    async def flaky_flush(*args, **kwargs):
+        if not raised["value"]:
+            raised["value"] = True
+            raise IntegrityError("INSERT INTO owners ...", {}, Exception("duplicate"))
+        return await original_flush(*args, **kwargs)
+
+    monkeypatch.setattr(db_session, "flush", flaky_flush)
+
+    await owner_enrichment.refresh_owner_details(["race-user"], db_session)
+    await db_session.commit()
+
+    owner = (
+        await db_session.execute(select(Owner).where(Owner.user_id == "race-user"))
+    ).scalar_one_or_none()
+    assert owner is not None
+    assert owner.display_name == "Race Winner"
+    assert owner.mail == "race.winner@example.org"

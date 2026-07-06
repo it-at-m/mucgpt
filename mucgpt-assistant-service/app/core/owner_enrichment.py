@@ -5,6 +5,7 @@ from datetime import UTC, datetime
 from typing import Any
 
 from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from config.settings import get_ldap_settings
@@ -200,8 +201,27 @@ async def refresh_owner_details(
     for owner_id in deduped_owner_ids:
         if owner_id not in existing_owners:
             owner = Owner(user_id=owner_id)
-            db.add(owner)
-            existing_owners[owner_id] = owner
+            try:
+                # Isolate duplicate-key races to this owner insert only.
+                async with db.begin_nested():
+                    db.add(owner)
+                    await db.flush()
+                existing_owners[owner_id] = owner
+            except IntegrityError:
+                concurrent_result = await db.execute(
+                    select(Owner).where(Owner.user_id == owner_id)
+                )
+                concurrent_owner = concurrent_result.scalar_one_or_none()
+                if concurrent_owner is not None:
+                    existing_owners[owner_id] = concurrent_owner
+                    continue
+
+                # If the competing transaction rolled back, retry once.
+                retry_owner = Owner(user_id=owner_id)
+                async with db.begin_nested():
+                    db.add(retry_owner)
+                    await db.flush()
+                existing_owners[owner_id] = retry_owner
 
     try:
         loader = LDAPPersonLookupLoader(get_ldap_settings())

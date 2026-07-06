@@ -51,5 +51,9 @@ LDAP:
   PARENT_ATTRIBUTE: null
   IGNORED_OU_PREFIXES: ["_"]
   IGNORED_OU_SUFFIXES: ["-xxx"]
+  # Keep specific OUs even when they match IGNORED_OU_PREFIXES / IGNORED_OU_SUFFIXES.
+  # Matching is done against lhmOUShortname (case-insensitive).
+  # Example: keep OU "_Hidden" if its lhmOUShortname is "FBM".
+  IGNORED_OU_SHORTNAME_EXCEPTIONS: ["FBM", "KVR-IT"]
   CACHE_TTL: 1209600 # 14 days in seconds
   PAGE_SIZE: 500

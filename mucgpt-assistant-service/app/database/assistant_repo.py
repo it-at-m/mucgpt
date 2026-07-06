@@ -3,9 +3,9 @@ from __future__ import annotations  # Enable forward references in annotations
 import uuid
 from datetime import datetime
 
-from sqlalchemy import delete, func, insert, select, update
+from sqlalchemy import String, delete, func, insert, or_, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import attributes, selectinload
+from sqlalchemy.orm import aliased, attributes, selectinload
 
 from core.logtools import getLogger
 from utils import serialize_list
@@ -143,12 +143,28 @@ class AssistantRepository(Repository[Assistant]):
         But a user from the department ITM-AB-DI is not allowed to use this assistant.
         """  # Since SQLite doesn't support ANY(), we need to implement this logic differently
         # We'll get all assistants and filter them in Python
-        stmt = (
+        latest_version_subquery = (
+            select(
+                AssistantVersion.assistant_id.label("assistant_id"),
+                func.max(AssistantVersion.version).label("max_version"),
+            )
+            .group_by(AssistantVersion.assistant_id)
+            .subquery()
+        )
+        latest_version_alias = aliased(AssistantVersion)
+
+        candidate_stmt = (
             select(Assistant)
-            .options(
-                selectinload(Assistant.owners),
-                selectinload(Assistant.versions).selectinload(
-                    AssistantVersion.tool_associations
+            .outerjoin(
+                latest_version_subquery,
+                latest_version_subquery.c.assistant_id == Assistant.id,
+            )
+            .outerjoin(
+                latest_version_alias,
+                (latest_version_alias.assistant_id == Assistant.id)
+                & (
+                    latest_version_alias.version
+                    == latest_version_subquery.c.max_version
                 ),
             )
             .where(Assistant.is_visible.is_(True))
@@ -158,35 +174,68 @@ class AssistantRepository(Repository[Assistant]):
             owned_assistant_ids = select(assistant_owners.c.assistant_id).where(
                 assistant_owners.c.user_id == exclude_owned_by_user_id
             )
-            stmt = stmt.where(Assistant.id.not_in(owned_assistant_ids))
+            candidate_stmt = candidate_stmt.where(
+                Assistant.id.not_in(owned_assistant_ids)
+            )
 
         if exclude_subscribed_by_user_id:
             subscribed_assistant_ids = select(Subscription.assistant_id).where(
                 Subscription.user_id == exclude_subscribed_by_user_id
             )
-            stmt = stmt.where(Assistant.id.not_in(subscribed_assistant_ids))
+            candidate_stmt = candidate_stmt.where(
+                Assistant.id.not_in(subscribed_assistant_ids)
+            )
 
-        all_assistants_query = await self.session.execute(stmt)
-        all_assistants = list(all_assistants_query.scalars().all())
+        candidate_stmt = self._apply_search_filters_sql(
+            candidate_stmt, latest_version_alias, search
+        )
+        candidate_stmt = self._apply_sort_sql(
+            candidate_stmt, latest_version_alias, sort_by, sort_order
+        )
 
-        matching_assistants: list[Assistant] = []
+        candidate_result = await self.session.execute(candidate_stmt)
+        candidate_assistants = list(candidate_result.scalars().all())
+
+        accessible_assistant_ids: list[str] = []
         directory_index = await _get_directory_index()
 
-        for assistant in all_assistants:
+        for assistant in candidate_assistants:
             if await assistant.is_allowed_for_user(
                 department,
                 directory_index=directory_index,
             ):
-                matching_assistants.append(assistant)
+                accessible_assistant_ids.append(str(assistant.id))
 
-        matching_assistants = self._filter_assistants_by_search(
-            matching_assistants, search
+        paged_assistant_ids = self._slice_assistants(
+            accessible_assistant_ids, offset=offset, limit=limit
         )
-        matching_assistants = self._sort_assistants(
-            matching_assistants, sort_by, sort_order
+
+        if not paged_assistant_ids:
+            logger.info(
+                "Returning 0 assistants for department: %s after accessibility and pagination",
+                department,
+            )
+            return []
+
+        paged_stmt = (
+            select(Assistant)
+            .options(
+                selectinload(Assistant.owners),
+                selectinload(Assistant.versions).selectinload(
+                    AssistantVersion.tool_associations
+                ),
+            )
+            .where(Assistant.id.in_(paged_assistant_ids))
         )
-        matching_assistants = self._slice_assistants(
-            matching_assistants, offset=offset, limit=limit
+
+        paged_result = await self.session.execute(paged_stmt)
+        matching_assistants = list(paged_result.scalars().all())
+        position_by_id = {
+            assistant_id: index
+            for index, assistant_id in enumerate(paged_assistant_ids)
+        }
+        matching_assistants.sort(
+            key=lambda assistant: position_by_id.get(str(assistant.id), 0)
         )
 
         logger.info(
@@ -205,6 +254,16 @@ class AssistantRepository(Repository[Assistant]):
     ) -> list[Assistant]:
         logger.info(f"Fetching assistants for owner: {user_id}")
         """Get all assistants where the given user_id is an owner."""
+        latest_version_subquery = (
+            select(
+                AssistantVersion.assistant_id.label("assistant_id"),
+                func.max(AssistantVersion.version).label("max_version"),
+            )
+            .group_by(AssistantVersion.assistant_id)
+            .subquery()
+        )
+        latest_version_alias = aliased(AssistantVersion)
+
         stmt = (
             select(Assistant)
             .options(
@@ -214,14 +273,30 @@ class AssistantRepository(Repository[Assistant]):
                 ),
             )
             .join(assistant_owners, Assistant.id == assistant_owners.c.assistant_id)
+            .outerjoin(
+                latest_version_subquery,
+                latest_version_subquery.c.assistant_id == Assistant.id,
+            )
+            .outerjoin(
+                latest_version_alias,
+                (latest_version_alias.assistant_id == Assistant.id)
+                & (
+                    latest_version_alias.version
+                    == latest_version_subquery.c.max_version
+                ),
+            )
             .where(assistant_owners.c.user_id == user_id)
         )
 
+        stmt = self._apply_search_filters_sql(stmt, latest_version_alias, search)
+        stmt = self._apply_sort_sql(stmt, latest_version_alias, sort_by, sort_order)
+        if offset > 0:
+            stmt = stmt.offset(offset)
+        if limit is not None:
+            stmt = stmt.limit(limit)
+
         result = await self.session.execute(stmt)
         assistants = list(result.scalars().all())
-        assistants = self._filter_assistants_by_search(assistants, search)
-        assistants = self._sort_assistants(assistants, sort_by, sort_order)
-        assistants = self._slice_assistants(assistants, offset=offset, limit=limit)
         logger.info(f"Returning {len(assistants)} assistants for owner: {user_id}")
         return list(assistants)
 
@@ -506,8 +581,18 @@ class AssistantRepository(Repository[Assistant]):
         logger.info(f"Fetching subscriptions for user {user_id}")
 
         try:
+            latest_version_subquery = (
+                select(
+                    AssistantVersion.assistant_id.label("assistant_id"),
+                    func.max(AssistantVersion.version).label("max_version"),
+                )
+                .group_by(AssistantVersion.assistant_id)
+                .subquery()
+            )
+            latest_version_alias = aliased(AssistantVersion)
+
             # Join Subscription with Assistant to get all subscribed assistants
-            result = await self.session.execute(
+            stmt = (
                 select(Assistant)
                 .options(
                     selectinload(Assistant.owners),
@@ -516,13 +601,31 @@ class AssistantRepository(Repository[Assistant]):
                     ),
                 )
                 .join(Subscription, Assistant.id == Subscription.assistant_id)
+                .outerjoin(
+                    latest_version_subquery,
+                    latest_version_subquery.c.assistant_id == Assistant.id,
+                )
+                .outerjoin(
+                    latest_version_alias,
+                    (latest_version_alias.assistant_id == Assistant.id)
+                    & (
+                        latest_version_alias.version
+                        == latest_version_subquery.c.max_version
+                    ),
+                )
                 .where(Subscription.user_id == user_id)
             )
 
+            stmt = self._apply_search_filters_sql(stmt, latest_version_alias, search)
+            stmt = self._apply_sort_sql(stmt, latest_version_alias, sort_by, sort_order)
+            if offset > 0:
+                stmt = stmt.offset(offset)
+            if limit is not None:
+                stmt = stmt.limit(limit)
+
+            result = await self.session.execute(stmt)
+
             assistants = list(result.scalars().all())
-            assistants = self._filter_assistants_by_search(assistants, search)
-            assistants = self._sort_assistants(assistants, sort_by, sort_order)
-            assistants = self._slice_assistants(assistants, offset=offset, limit=limit)
             logger.info(f"Found {len(assistants)} subscriptions for user {user_id}")
             return assistants
         except Exception as e:
@@ -621,4 +724,56 @@ class AssistantRepository(Repository[Assistant]):
                 self._assistant_title(assistant),
             ),
             reverse=reverse,
+        )
+
+    def _apply_search_filters_sql(self, stmt, latest_version_alias, search: str | None):
+        if not search:
+            return stmt
+
+        normalized_search = search.strip()
+        if not normalized_search:
+            return stmt
+
+        pattern = f"%{normalized_search}%"
+        return stmt.where(
+            or_(
+                latest_version_alias.name.ilike(pattern),
+                latest_version_alias.description.ilike(pattern),
+                func.lower(
+                    func.coalesce(latest_version_alias.tags.cast(String), "")
+                ).ilike(f"%{normalized_search.lower()}%"),
+            )
+        )
+
+    def _apply_sort_sql(
+        self, stmt, latest_version_alias, sort_by: str, sort_order: str
+    ):
+        normalized_sort_by = (sort_by or "updated").lower()
+        order_desc = (sort_order or "desc").lower() != "asc"
+
+        if normalized_sort_by == "title":
+            title_order = func.lower(func.coalesce(latest_version_alias.name, ""))
+            return stmt.order_by(
+                title_order.desc() if order_desc else title_order.asc()
+            )
+
+        if normalized_sort_by == "subscriptions":
+            primary = (
+                Assistant.subscriptions_count.desc()
+                if order_desc
+                else Assistant.subscriptions_count.asc()
+            )
+            secondary = (
+                Assistant.updated_at.desc()
+                if order_desc
+                else Assistant.updated_at.asc()
+            )
+            return stmt.order_by(primary, secondary)
+
+        primary = (
+            Assistant.updated_at.desc() if order_desc else Assistant.updated_at.asc()
+        )
+        secondary = func.lower(func.coalesce(latest_version_alias.name, ""))
+        return stmt.order_by(
+            primary, secondary.desc() if order_desc else secondary.asc()
         )

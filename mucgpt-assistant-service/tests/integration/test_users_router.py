@@ -1512,3 +1512,110 @@ def test_subscription_count_persists_across_requests(test_client):
         )
         assert our_assistant is not None
         assert our_assistant["subscriptions_count"] == 1
+
+
+@pytest.mark.integration
+def test_get_user_assistants_query_params_contract(test_client):
+    """Contract test for /user/assistants query params: search, sort, and pagination."""
+    assistant_inputs = [
+        AssistantCreate(
+            name="Gamma Assistant",
+            system_prompt="gamma",
+            hierarchical_access=["IT-Test-Department"],
+            tags=["ops-query"],
+        ),
+        AssistantCreate(
+            name="Alpha Assistant",
+            system_prompt="alpha",
+            hierarchical_access=["IT-Test-Department"],
+            tags=["ops-query"],
+        ),
+        AssistantCreate(
+            name="Beta Assistant",
+            system_prompt="beta",
+            hierarchical_access=["IT-Test-Department"],
+            tags=["ops-query"],
+        ),
+        AssistantCreate(
+            name="No Match Assistant",
+            system_prompt="nomatch",
+            hierarchical_access=["IT-Test-Department"],
+            tags=["other-tag"],
+        ),
+    ]
+
+    for assistant_data in assistant_inputs:
+        create_response = test_client.post(
+            "/assistant/create", json=assistant_data.model_dump(), headers=headers
+        )
+        assert create_response.status_code == 200
+
+    response = test_client.get(
+        "/user/assistants",
+        params={
+            "search": "ops-query",
+            "sort_by": "title",
+            "sort_order": "asc",
+            "offset": 1,
+            "limit": 2,
+        },
+        headers=headers,
+    )
+    assert response.status_code == 200
+
+    payload = response.json()
+    assert len(payload) == 2
+    returned_names = [item["latest_version"]["name"] for item in payload]
+    assert returned_names == ["Beta Assistant", "Gamma Assistant"]
+
+
+@pytest.mark.integration
+def test_get_user_subscriptions_query_params_contract(test_client):
+    """Contract test for /user/subscriptions query params: search, sort, and pagination."""
+    assistant_names = [
+        "Gamma Subscription",
+        "Alpha Subscription",
+        "Beta Subscription",
+        "Different Topic",
+    ]
+    created_ids: list[str] = []
+
+    for name in assistant_names:
+        create_response = test_client.post(
+            "/assistant/create",
+            json=AssistantCreate(
+                name=name,
+                system_prompt=f"prompt-{name}",
+                hierarchical_access=["IT-Test-Department"],
+                tags=["ops-sub"] if "Subscription" in name else ["other-tag"],
+            ).model_dump(),
+            headers=headers,
+        )
+        assert create_response.status_code == 200
+        created_ids.append(create_response.json()["id"])
+
+    for assistant_id in created_ids[:3]:
+        subscribe_response = test_client.post(
+            f"/user/subscriptions/{assistant_id}", headers=headers
+        )
+        assert subscribe_response.status_code == 200
+
+    response = test_client.get(
+        "/user/subscriptions",
+        params={
+            "search": "ops-sub",
+            "sort_by": "title",
+            "sort_order": "asc",
+            "offset": 1,
+            "limit": 1,
+        },
+        headers=headers,
+    )
+    assert response.status_code == 200
+
+    payload = response.json()
+    assert len(payload) == 1
+    assert payload[0]["title"] == "Beta Subscription"
+    assert "subscriptions_count" in payload[0]
+    assert "updated_at" in payload[0]
+    assert "tags" in payload[0]

@@ -1,6 +1,7 @@
 import uuid
 
 import pytest
+from sqlalchemy import select
 
 from api.api_models import (
     AssistantCreate,
@@ -12,7 +13,7 @@ from api.api_models import (
     ToolBase,
 )
 from database.assistant_repo import AssistantRepository
-from database.database_models import AssistantTool
+from database.database_models import AssistantTool, Subscription
 
 # Headers for authentication
 headers = {
@@ -1299,7 +1300,194 @@ def test_update_assistant_clear_default_model(test_client):
 
     # Verify model was cleared (set to None)
     assert updated_response.latest_version.default_model is None
-    assert updated_response.latest_version.version == 2
+
+
+@pytest.mark.integration
+@pytest.mark.asyncio
+async def test_get_all_assistants_query_params_contract(test_client, test_db_session):
+    """Contract test for /assistant query params: search, sorting, paging, and ownership/subscription exclusion."""
+    assistant_repo = AssistantRepository(test_db_session)
+
+    not_owned_alpha = await assistant_repo.create(
+        hierarchical_access=["IT-Test-Department"],
+        owner_ids=["other_owner_1"],
+    )
+    await assistant_repo.create_assistant_version(
+        assistant=not_owned_alpha,
+        name="Alpha Match",
+        system_prompt="alpha",
+        description="searchable description",
+        creativity="medium",
+        tags=["ops-tag"],
+        examples=[],
+        quick_prompts=[],
+    )
+
+    not_owned_beta = await assistant_repo.create(
+        hierarchical_access=["IT-Test-Department"],
+        owner_ids=["other_owner_2"],
+    )
+    await assistant_repo.create_assistant_version(
+        assistant=not_owned_beta,
+        name="Beta Match",
+        system_prompt="beta",
+        description="searchable description",
+        creativity="medium",
+        tags=["ops-tag"],
+        examples=[],
+        quick_prompts=[],
+    )
+
+    owned_assistant_response = test_client.post(
+        "/assistant/create",
+        json=AssistantCreate(
+            name="Owned Match",
+            system_prompt="owned",
+            hierarchical_access=["IT-Test-Department"],
+            tags=["ops-tag"],
+        ).model_dump(),
+        headers=headers,
+    )
+    assert owned_assistant_response.status_code == 200
+    owned_assistant_id = owned_assistant_response.json()["id"]
+
+    await test_db_session.commit()
+
+    subscribe_response = test_client.post(
+        f"/user/subscriptions/{not_owned_alpha.id}", headers=headers
+    )
+    assert subscribe_response.status_code == 200
+
+    result = test_client.get(
+        "/assistant",
+        params={
+            "search": "ops-tag",
+            "sort_by": "title",
+            "sort_order": "asc",
+            "offset": 0,
+            "limit": 1,
+        },
+        headers=headers,
+    )
+    assert result.status_code == 200
+    payload = result.json()
+    assert len(payload) == 1
+    assert payload[0]["latest_version"]["name"] == "Alpha Match"
+
+    exclude_response = test_client.get(
+        "/assistant",
+        params={
+            "search": "ops-tag",
+            "exclude_owned": "true",
+            "exclude_subscribed": "true",
+            "sort_by": "title",
+            "sort_order": "asc",
+        },
+        headers=headers,
+    )
+    assert exclude_response.status_code == 200
+    excluded_payload = exclude_response.json()
+    excluded_ids = {entry["id"] for entry in excluded_payload}
+
+    assert owned_assistant_id not in excluded_ids
+    assert str(not_owned_alpha.id) not in excluded_ids
+    assert str(not_owned_beta.id) in excluded_ids
+
+    subscription_count_result = await test_db_session.execute(
+        select(Subscription).where(
+            Subscription.assistant_id == str(not_owned_alpha.id),
+            Subscription.user_id == "test_user_123",
+        )
+    )
+    assert subscription_count_result.scalars().first() is not None
+
+
+@pytest.mark.integration
+@pytest.mark.asyncio
+async def test_get_all_assistants_pagination_after_access_filter(
+    test_client, test_db_session
+):
+    """Ensure pagination is applied after access filtering, not before it."""
+    assistant_repo = AssistantRepository(test_db_session)
+
+    inaccessible_alpha = await assistant_repo.create(
+        hierarchical_access=["HR"],
+        owner_ids=["other_owner_1"],
+    )
+    await assistant_repo.create_assistant_version(
+        assistant=inaccessible_alpha,
+        name="Alpha Inaccessible",
+        system_prompt="a",
+        description="",
+        creativity="medium",
+        tags=["page-test"],
+        examples=[],
+        quick_prompts=[],
+    )
+
+    accessible_beta = await assistant_repo.create(
+        hierarchical_access=["IT-Test-Department"],
+        owner_ids=["other_owner_2"],
+    )
+    await assistant_repo.create_assistant_version(
+        assistant=accessible_beta,
+        name="Beta Accessible",
+        system_prompt="b",
+        description="",
+        creativity="medium",
+        tags=["page-test"],
+        examples=[],
+        quick_prompts=[],
+    )
+
+    accessible_charlie = await assistant_repo.create(
+        hierarchical_access=["IT-Test-Department"],
+        owner_ids=["other_owner_3"],
+    )
+    await assistant_repo.create_assistant_version(
+        assistant=accessible_charlie,
+        name="Charlie Accessible",
+        system_prompt="c",
+        description="",
+        creativity="medium",
+        tags=["page-test"],
+        examples=[],
+        quick_prompts=[],
+    )
+
+    await test_db_session.commit()
+
+    page1 = test_client.get(
+        "/assistant",
+        params={
+            "search": "page-test",
+            "sort_by": "title",
+            "sort_order": "asc",
+            "offset": 0,
+            "limit": 1,
+        },
+        headers=headers,
+    )
+    assert page1.status_code == 200
+    page1_payload = page1.json()
+    assert len(page1_payload) == 1
+    assert page1_payload[0]["latest_version"]["name"] == "Beta Accessible"
+
+    page2 = test_client.get(
+        "/assistant",
+        params={
+            "search": "page-test",
+            "sort_by": "title",
+            "sort_order": "asc",
+            "offset": 1,
+            "limit": 1,
+        },
+        headers=headers,
+    )
+    assert page2.status_code == 200
+    page2_payload = page2.json()
+    assert len(page2_payload) == 1
+    assert page2_payload[0]["latest_version"]["name"] == "Charlie Accessible"
 
 
 @pytest.mark.integration

@@ -110,9 +110,7 @@ async def init_agent(user_info: AuthenticationResult) -> MUCGPTAgentExecutor:
         logger.debug(
             f"Initializing MUCGPTAgent with tools: {[tool.name for tool in tools]}"
         )
-        agent = MUCGPTReActAgent(
-            llm=model, tools=tools, tool_collection=tool_collection, debug=False
-        )
+        agent = MUCGPTReActAgent(llm=model, tools=tools, debug=False)
     except Exception as e:
         logger.error("Failed to initialize MUCGPTAgent: %s", e)
         raise

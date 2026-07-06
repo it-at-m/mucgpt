@@ -2,13 +2,11 @@ import logging
 import re
 from typing import cast
 
-from langchain_core.messages import SystemMessage
 from langchain_core.runnables.base import RunnableSerializable
 from langchain_core.tools.base import BaseTool
 
 from agent.state_models.default_state import DefaultAgentState
 from agent.state_models.registry import registry as AGENT_STATE_SCHEMA_REGISTRY
-from agent.tools import brainstorm, internet_search, simplify
 from agent.tools.brainstorm import make_brainstorm_tool
 from agent.tools.internet_search import (
     is_internet_search_configured,
@@ -22,18 +20,6 @@ from core.auth import AuthenticationResult
 from core.logtools import getLogger
 
 logger = getLogger(name="mucgpt-core-tools-schema")
-
-TOOL_INSTRUCTIONS_TEMPLATE = """
-# Tools
-## Available tools:
-{tool_descriptions}
-
-## General Tool guidelines
-- Use as many tool calls as needed to complete the request correctly.
-- Never say you will use a tool later. If you decide a tool is needed, call it now.
-- If no tool is suitable, answer directly without a tool call.
-
-"""
 
 
 def _metadata_value(metadata, key: str, default=None):
@@ -96,30 +82,26 @@ class ToolCollection:
         self.model = model
         self.logger = logger or getLogger(name="mucgpt-core-tools")
 
-    def _bind_model(
-        self,
-        llm_user: str | None = None,
-        assistant_id: str | None = None,
-        tool_name: str | None = None,
-    ) -> RunnableSerializable:
-        model = self.model
-        if llm_user:
-            model = model.bind(user=llm_user)
-        extra_tags: list[str] = []
-        if assistant_id:
-            extra_tags.append(f"MUCGPT_ASSISTANT_ID:{assistant_id}")
-        if tool_name:
-            extra_tags.append(f"MUCGPT_TOOL_NAME:{tool_name}")
-        if extra_tags:
-            model = model.bind(extra_body={"metadata": {"tags": extra_tags}})
-        return cast(RunnableSerializable, model)
+    def _bind_model(self, tool_name: str) -> RunnableSerializable:
+        """Bind a per-tool Langfuse tag onto the model for tools that call the LLM themselves.
 
-    def _build_tools(self, model: RunnableSerializable) -> list[BaseTool]:
-        brainstorm_model = self._bind_model(tool_name="Brainstorming")
-        simplify_model = self._bind_model(tool_name="Vereinfachen")
+        This used to also bind llm_user/assistant_id, but that data isn't available
+        yet at this point: tools are built in init_agent() before AgentExecutor.
+        run_with_streaming/run_without_streaming ever compute llm_user/assistant_id
+        for the request. See app/agent/tools/README.md for the full story and the
+        proper fix.
+        """
+        return cast(
+            RunnableSerializable,
+            self.model.bind(
+                extra_body={"metadata": {"tags": [f"MUCGPT_TOOL_NAME:{tool_name}"]}}
+            ),
+        )
+
+    def _build_tools(self) -> list[BaseTool]:
         return [
-            make_brainstorm_tool(brainstorm_model, self.logger),
-            make_simplify_tool(simplify_model, self.logger),
+            make_brainstorm_tool(self._bind_model(tool_name="Brainstorming"), self.logger),
+            make_simplify_tool(self._bind_model(tool_name="Vereinfachen"), self.logger),
         ] + self._build_configured_tools()
 
     def _build_configured_tools(self) -> list[BaseTool]:
@@ -132,12 +114,9 @@ class ToolCollection:
         self,
         user_info: AuthenticationResult,
         enabled_tools: list[str] = None,
-        llm_user: str | None = None,
-        assistant_id: str | None = None,
     ) -> list[BaseTool]:
-        """Return available tools, binding model per-request with user and assistant metadata."""
-        base_model = self._bind_model(llm_user=llm_user, assistant_id=assistant_id)
-        tools = self._build_tools(base_model) + await McpLoader.load_mcp_tools(
+        """Return the tools available for this request, filtered by enabled_tools if given."""
+        tools = self._build_tools() + await McpLoader.load_mcp_tools(
             user_info=user_info
         )
         if enabled_tools:
@@ -314,44 +293,3 @@ class ToolCollection:
         if match:
             return match.group(1)
         return None
-
-    @staticmethod
-    def add_instructions(messages, enabled_tools: list[str], tools: list[BaseTool]):
-        """Inject a system message describing available tools with concise summaries and detailed guidance."""
-        if not enabled_tools:
-            return messages
-
-        # Map tool name to detailed block
-        detailed_map = {
-            "Brainstorming": brainstorm.BRAINSTORMING_DETAILED,
-            "Vereinfachen": simplify.SIMPLIFY_DETAILED,
-            "InternetSearch": internet_search.INTERNET_SEARCH_DETAILED,
-        }
-
-        tool_descriptions = []  # single-line summaries
-        tool_detailed_instructions = []
-
-        for t in enabled_tools:
-            tool_obj = next((tool for tool in tools if tool.name == t), None)
-            if not tool_obj:
-                continue
-            summary = tool_obj.description.strip().replace("\n", " ")
-            tool_descriptions.append(f"- {tool_obj.name}: {summary}")
-            detailed = detailed_map.get(tool_obj.name)
-            if detailed:
-                tool_detailed_instructions.append(detailed.strip())
-
-        if not tool_descriptions:
-            return messages
-
-        tool_instructions = TOOL_INSTRUCTIONS_TEMPLATE.format(
-            tool_descriptions="\n".join(tool_descriptions),
-        )
-
-        if messages and isinstance(messages[0], SystemMessage):
-            messages[0] = SystemMessage(
-                content=f"{messages[0].content}\n\n{tool_instructions}"
-            )
-        else:
-            messages.insert(0, SystemMessage(content=tool_instructions))
-        return messages

@@ -1,5 +1,4 @@
 import logging
-import textwrap
 from typing import Any
 from urllib.parse import urljoin
 
@@ -12,30 +11,8 @@ from langgraph.types import StreamWriter
 from agent.tools.tool_chunk import ToolStreamChunk, ToolStreamState
 from config.settings import InternetSearchConfig, get_internet_search_settings
 
+# Single-line summary shown to the LLM as this tool's description.
 INTERNET_SEARCH_SUMMARY = "Searches the internet via the configured SearXNG engine and returns sourced results."
-
-INTERNET_SEARCH_DETAILED = textwrap.dedent(
-    """
-    **InternetSearch**
-
-    Description: Searches the internet through the configured SearXNG instance and returns titles, URLs and snippets.
-
-    Use for:
-    - Current or time-sensitive information
-    - External facts not available in the conversation
-    - Finding source URLs for claims
-
-    Parameters:
-    - query (required) Search query
-    - max_results (optional) Number of results to return, capped by server configuration
-    - language (optional) Search language code, for example "de" or "en"
-
-    Best Practices:
-    - Use specific queries with names, dates or domains when helpful.
-    - Cite the returned URLs in the final answer when using search results.
-    - If results are empty or weak, say so instead of inventing facts.
-    """
-)
 
 
 def is_internet_search_configured(settings: InternetSearchConfig | None = None) -> bool:

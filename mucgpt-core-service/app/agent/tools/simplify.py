@@ -1,5 +1,4 @@
 import logging
-import textwrap
 
 from langchain_core.runnables.base import RunnableSerializable
 from langchain_core.tools import tool
@@ -10,37 +9,9 @@ from langgraph.types import StreamWriter
 from agent.tools.simplify_agent import SimplifyAgent
 from agent.tools.tool_chunk import ToolStreamChunk, ToolStreamState
 
-# Centralized single-line summaries to avoid duplication across decorator, metadata and system prompt
+# Single-line summary shown to the LLM as this tool's description.
 SIMPLIFY_SUMMARY = (
     "Simplifies complex German text to A2 Easy Language (Leichte Sprache)."  # one-line
-)
-
-# Detailed instruction templates (dedented for clean system prompts)
-SIMPLIFY_DETAILED = textwrap.dedent(
-    """
-    **Vereinfachen (Simplify)**
-
-    Description: Converts German text to A2 level (Leichte Sprache) while preserving meaning.
-
-    Use for:
-    • Accessibility
-    • Language learning support
-    • Plain-language rewrites
-
-    Technical:
-    • Short sentences (≤15 words), active voice, concrete vocabulary
-    • Blank lines separate logical units
-    • Preserve factual accuracy; no omissions
-
-    Parameter:
-    - text (required) Entire source text (single call; do not split)
-
-    Best Practices:
-    - Reject fragments; request full text if incomplete
-    - Keep proper nouns; explain only if ambiguous
-    - No idioms, passive voice, nested clauses
-    - Reference earlier output blocks shown as ```MUCGPTVereinfachen ...``` when user wants adjustments.
-    """
 )
 
 

@@ -7,6 +7,7 @@ from langchain_core.tools.base import BaseTool
 
 from agent.state_models.default_state import DefaultAgentState
 from agent.state_models.registry import registry as AGENT_STATE_SCHEMA_REGISTRY
+from agent.tools import brainstorm, internet_search, simplify
 from agent.tools.brainstorm import make_brainstorm_tool
 from agent.tools.internet_search import (
     is_internet_search_configured,
@@ -14,12 +15,16 @@ from agent.tools.internet_search import (
 )
 from agent.tools.mcp import McpLoader
 from agent.tools.simplify import make_simplify_tool
+from agent.tools.spec import LocalTool
 from api.api_models import ToolInfo, ToolListResponse
 from config.settings import get_mcp_settings
 from core.auth import AuthenticationResult
 from core.logtools import getLogger
 
 logger = getLogger(name="mucgpt-core-tools-schema")
+
+# Registering a new local tool: add its `TOOL = LocalTool(...)` here.
+LOCAL_TOOLS: list[LocalTool] = [brainstorm.TOOL, simplify.TOOL, internet_search.TOOL]
 
 
 def _metadata_value(metadata, key: str, default=None):
@@ -100,15 +105,10 @@ class ToolCollection:
 
     def _build_tools(self) -> list[BaseTool]:
         return [
-            make_brainstorm_tool(self._bind_model(tool_name="Brainstorming"), self.logger),
-            make_simplify_tool(self._bind_model(tool_name="Vereinfachen"), self.logger),
-        ] + self._build_configured_tools()
-
-    def _build_configured_tools(self) -> list[BaseTool]:
-        tools: list[BaseTool] = []
-        if is_internet_search_configured():
-            tools.append(make_internet_search_tool(self.logger))
-        return tools
+            t.build(self._bind_model(tool_name=t.id), self.logger)
+            for t in LOCAL_TOOLS
+            if t.is_configured()
+        ]
 
     async def get_tools(
         self,

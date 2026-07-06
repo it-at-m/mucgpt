@@ -196,6 +196,7 @@ const Chat = () => {
                     dispatch({ type: "SET_CREATIVITY", payload: chat.config.creativity });
                     dispatch({ type: "SET_SYSTEM_PROMPT", payload: chat.config.system });
                     dispatch({ type: "SET_ACTIVE_CHAT", payload: id });
+                    setQuestion("");
                     lastQuestionRef.current = chat.messages.length > 0 ? chat.messages[chat.messages.length - 1].user : "";
 
                     // Scroll to bottom after a short delay to ensure DOM is updated
@@ -214,22 +215,6 @@ const Chat = () => {
         },
         [storageService, scrollToBottom]
     );
-
-    const loadNewestChat = useCallback(async () => {
-        const existingData = await storageService.getNewestChat();
-        if (!existingData) {
-            lastQuestionRef.current = "";
-            dispatch({ type: "SET_ACTIVE_CHAT", payload: undefined });
-            dispatch({ type: "CLEAR_ANSWERS" });
-            return;
-        }
-
-        dispatch({ type: "SET_ANSWERS", payload: existingData.messages });
-        dispatch({ type: "SET_CREATIVITY", payload: existingData.config.creativity });
-        dispatch({ type: "SET_SYSTEM_PROMPT", payload: existingData.config.system });
-        dispatch({ type: "SET_ACTIVE_CHAT", payload: existingData.id });
-        lastQuestionRef.current = existingData.messages.length > 0 ? existingData.messages[existingData.messages.length - 1].user : "";
-    }, [storageService]);
 
     // Clear chat state
     const clearChat = useCallback(() => {
@@ -576,7 +561,7 @@ const Chat = () => {
                 .then(async loaded => {
                     if (!loaded) {
                         clearNavigationQueryParams();
-                        await loadNewestChat();
+                        clearChat();
                     }
                     return fetchHistory();
                 })
@@ -606,7 +591,7 @@ const Chat = () => {
                 });
         } else {
             // Normal initialization ohne URL-Parameter
-            loadNewestChat()
+            Promise.resolve(clearChat())
                 .then(() => {
                     setIsInitialized(true);
                     return fetchHistory();
@@ -615,7 +600,7 @@ const Chat = () => {
                     isLoadingRef.current = false;
                 });
         }
-    }, [clearChat, clearNavigationQueryParams, fetchHistory, getNavigationParams, loadChat, loadNewestChat]);
+    }, [clearChat, clearNavigationQueryParams, fetchHistory, getNavigationParams, loadChat]);
 
     useEffect(() => {
         if (!isInitialized) {
@@ -628,7 +613,7 @@ const Chat = () => {
             void loadChat(chatIdFromUrl).then(async loaded => {
                 if (!loaded) {
                     clearNavigationQueryParams();
-                    await loadNewestChat();
+                    clearChat();
                     await fetchHistory();
                 }
             });
@@ -648,7 +633,7 @@ const Chat = () => {
         setPendingQuestion(null);
         void startFreshChat();
         clearNavigationQueryParams();
-    }, [clearNavigationQueryParams, fetchHistory, getNavigationParams, isCurrentChatEmpty, isInitialized, loadChat, loadNewestChat, startFreshChat]);
+    }, [clearNavigationQueryParams, fetchHistory, getNavigationParams, isCurrentChatEmpty, isInitialized, loadChat, startFreshChat]);
 
     useEffect(() => {
         if (!isInitialized || !pendingQuestion || tools === undefined) {

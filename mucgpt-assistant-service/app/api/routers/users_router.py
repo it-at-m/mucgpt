@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import asyncio
+
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -263,6 +265,7 @@ async def get_user_subscriptions(
         200: {"description": "User found"},
         401: {"description": "Unauthorized"},
         404: {"description": "User not found"},
+        502: {"description": "Malformed LDAP response"},
         503: {"description": "LDAP lookup unavailable"},
     },
     tags=["Users", "Directory"],
@@ -279,7 +282,7 @@ async def lookup_user_by_lhmobjectid(
 
     loader = LDAPPersonLookupLoader(get_ldap_settings())
     try:
-        payload = loader.lookup_by_lhmobjectid(lhmobjectid)
+        payload = await asyncio.to_thread(loader.lookup_by_lhmobjectid, lhmobjectid)
     except LDAPPersonLookupError as exc:
         raise HTTPException(status_code=503, detail=str(exc)) from exc
 

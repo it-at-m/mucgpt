@@ -42,6 +42,21 @@ class McpLoader:
         Only secret-free raw tool metadata (name/description/inputSchema) is ever cached in Redis.
         Auth/headers are rebuilt fresh from current config + user_info on every call, cache hit or
         not, so no credential ever gets persisted to the cache.
+
+        Why this matters (this used to be a real vulnerability, not just a style choice):
+        a LangChain `BaseTool` object is not inert metadata. Each tool's invocation closure
+        holds a live reference to its full MCP connection dict — including any decrypted
+        secret header values and a per-user bearer-auth object. Earlier versions of this
+        loader cached those whole `BaseTool` objects via `RedisCache`, which serializes with
+        `cloudpickle` (see core/cache.py). Unlike `json`, `cloudpickle` happily serializes
+        arbitrary Python object graphs, closures and all — so credentials were being written
+        into Redis without a single line of this file ever mentioning `secret_value`. The
+        result: anyone with read access to that Redis instance could recover live, working
+        credentials for up to `CACHE_TTL` (12h by default) after they were cached, well past
+        the lifetime of the request that produced them. That's why every code path below
+        keeps only secret-free raw `MCPTool` metadata in the cached payload, and always
+        rebuilds the live connection/auth via `_build_connection` fresh from current config
+        and `user_info` — never from anything that was ever persisted to Redis.
         """
         sources = McpLoader._mcp_settings.SOURCES
         McpLoader._logger.info(
@@ -59,7 +74,9 @@ class McpLoader:
 
         # Decide effective force-reload behavior
         effective_force = (
-            McpLoader._mcp_settings.FORCE_RELOAD if force_reload is None else force_reload
+            McpLoader._mcp_settings.FORCE_RELOAD
+            if force_reload is None
+            else force_reload
         )
 
         async def cached_or_none() -> list[BaseTool] | None:
@@ -75,7 +92,9 @@ class McpLoader:
             if cached is not None:
                 return cached
         else:
-            McpLoader._logger.info("Force-reload enabled: bypassing MCP tools cache read")
+            McpLoader._logger.info(
+                "Force-reload enabled: bypassing MCP tools cache read"
+            )
 
         # Helper to discover raw (secret-free) tool metadata from all sources
         async def fetch_all_tools() -> tuple[dict[str, list[MCPTool]], set[str]]:

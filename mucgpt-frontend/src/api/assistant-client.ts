@@ -14,6 +14,10 @@ export interface AssistantListQueryParams {
     exclude_subscribed?: boolean;
 }
 
+interface AssistantRequestOptions {
+    signal?: AbortSignal;
+}
+
 const buildQueryString = (params?: AssistantListQueryParams): string => {
     if (!params) return "";
 
@@ -35,8 +39,11 @@ const buildQueryString = (params?: AssistantListQueryParams): string => {
  * @returns Array of SubscriptionResponse
  */
 
-export async function getUserSubscriptionsApi(params?: AssistantListQueryParams): Promise<CommunityAssistant[]> {
-    return handleApiRequest(() => fetch(`/api/user/subscriptions${buildQueryString(params)}`, getConfig()), "Failed to get user subscriptions");
+export async function getUserSubscriptionsApi(params?: AssistantListQueryParams, options?: AssistantRequestOptions): Promise<CommunityAssistant[]> {
+    return handleApiRequest(
+        () => fetch(`/api/user/subscriptions${buildQueryString(params)}`, { ...getConfig(), signal: options?.signal }),
+        "Failed to get user subscriptions"
+    );
 } /**
  * Unsubscribe the current user from an assistant.
  * @param assistantId The assistant's ID.
@@ -49,15 +56,21 @@ export async function unsubscribeFromAssistantApi(assistantId: string): Promise<
 export async function subscribeToAssistantApi(assistantId: string): Promise<{ message: string }> {
     return handleApiRequest(() => fetch(`/api/user/subscriptions/${assistantId}`, postConfig({})), "Failed to subscribe to assistant");
 }
-export async function getOwnedCommunityAssistants(params?: AssistantListQueryParams): Promise<AssistantResponse[]> {
-    return handleApiRequest(() => fetch(`/api/user/assistants${buildQueryString(params)}`, getConfig()), "Failed to get owned community assistants");
+export async function getOwnedCommunityAssistants(params?: AssistantListQueryParams, options?: AssistantRequestOptions): Promise<AssistantResponse[]> {
+    return handleApiRequest(
+        () => fetch(`/api/user/assistants${buildQueryString(params)}`, { ...getConfig(), signal: options?.signal }),
+        "Failed to get owned community assistants"
+    );
 }
 export async function createCommunityAssistantApi(input: AssistantCreateInput): Promise<AssistantCreateResponse> {
     return handleApiRequest(() => fetch("/api/assistant/create", postConfig(input)), "Failed to create community assistant");
 }
 
-export async function getAllCommunityAssistantsApi(params?: AssistantListQueryParams): Promise<AssistantResponse[]> {
-    return handleApiRequest(() => fetch(`/api/assistant${buildQueryString(params)}`, getConfig()), "Failed to get all community assistants");
+export async function getAllCommunityAssistantsApi(params?: AssistantListQueryParams, options?: AssistantRequestOptions): Promise<AssistantResponse[]> {
+    return handleApiRequest(
+        () => fetch(`/api/assistant${buildQueryString(params)}`, { ...getConfig(), signal: options?.signal }),
+        "Failed to get all community assistants"
+    );
 }
 
 export async function getCommunityAssistantApi(id: string): Promise<AssistantResponse> {

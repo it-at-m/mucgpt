@@ -110,9 +110,12 @@ class McpLoader:
             failed_sources: set[str] = set()
 
             for source_id, source_cfg in sources.items():
+                # Deliberately omit source_cfg.url: some MCP source conventions put
+                # API keys in the query string, and logging the full URL would open
+                # a second place for that secret to leak besides Redis.
                 McpLoader._logger.info(
                     f"Configuring MCP connection for source '{source_id}' "
-                    f"with transport '{source_cfg.transport}' and url '{source_cfg.url}'"
+                    f"with transport '{source_cfg.transport}'"
                 )
 
                 con = McpLoader._build_connection(source_id, source_cfg, user_info)

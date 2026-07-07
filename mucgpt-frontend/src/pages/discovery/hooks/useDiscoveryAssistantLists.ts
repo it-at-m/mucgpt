@@ -85,6 +85,10 @@ const sortAssistants = (assistantsList: AssistantCardData[], method: SortKey): A
     return [...assistantsList].sort(sortFunctions[method] ?? compareByTitle);
 };
 
+const getSortOrder = (sortBy: SortKey | CommunitySortKey): "asc" | "desc" => {
+    return sortBy === "title" ? "asc" : "desc";
+};
+
 export const useDiscoveryAssistantLists = ({
     assistantStorageService,
     communityAssistantStorageService
@@ -131,9 +135,10 @@ export const useDiscoveryAssistantLists = ({
             }
             try {
                 const backendMyAssistantsSort = myAssistantsSortMethod === "lastUsed" ? "updated" : myAssistantsSortMethod;
+                const myAssistantsSortOrder = getSortOrder(backendMyAssistantsSort);
+                const communitySortOrder = getSortOrder(communitySortMethod);
                 const listQuery = {
                     search: debouncedNormalizedSearchText || undefined,
-                    sort_order: "desc" as const,
                     offset: 0,
                     limit: 500
                 };
@@ -145,7 +150,8 @@ export const useDiscoveryAssistantLists = ({
                     ? getOwnedCommunityAssistants(
                           {
                               ...listQuery,
-                              sort_by: backendMyAssistantsSort
+                              sort_by: backendMyAssistantsSort,
+                              sort_order: myAssistantsSortOrder
                           },
                           { signal: abortController.signal }
                       )
@@ -155,7 +161,8 @@ export const useDiscoveryAssistantLists = ({
                     ? getUserSubscriptionsApi(
                           {
                               ...listQuery,
-                              sort_by: backendMyAssistantsSort
+                              sort_by: backendMyAssistantsSort,
+                              sort_order: myAssistantsSortOrder
                           },
                           { signal: abortController.signal }
                       )
@@ -168,6 +175,7 @@ export const useDiscoveryAssistantLists = ({
                             {
                                 ...listQuery,
                                 sort_by: communitySortMethod,
+                                sort_order: communitySortOrder,
                                 exclude_owned: true,
                                 exclude_subscribed: true
                             },
@@ -267,7 +275,7 @@ export const useDiscoveryAssistantLists = ({
                         .map(sub => {
                             const fullData = fullAssistantById.get(sub.id);
                             const localData = validLocalCommunityAssistants.find(local => local.id === sub.id);
-                            const assistantData = fullData || sub || localData;
+                            const assistantData = fullData || localData || sub;
 
                             if (!assistantData) {
                                 return null;
@@ -275,7 +283,7 @@ export const useDiscoveryAssistantLists = ({
 
                             return toCardData(assistantData, {
                                 subscriptions: fullData?.subscriptions_count ?? 0,
-                                updated: fullData ? fullData.updated_at : sub.updated_at || (localData ? getSnapshotUpdatedAt(localData) : undefined),
+                                updated: fullData?.updated_at ?? (localData ? getSnapshotUpdatedAt(localData) : undefined) ?? sub.updated_at,
                                 isSubscribedAssistant: true
                             });
                         })

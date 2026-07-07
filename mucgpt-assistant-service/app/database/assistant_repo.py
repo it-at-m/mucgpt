@@ -635,10 +635,10 @@ class AssistantRepository(Repository[Assistant]):
 
     def _slice_assistants(
         self,
-        assistants: list[Assistant],
+        assistants: list[str],
         offset: int = 0,
         limit: int | None = None,
-    ) -> list[Assistant]:
+    ) -> list[str]:
         if offset < 0:
             offset = 0
         if limit is None:

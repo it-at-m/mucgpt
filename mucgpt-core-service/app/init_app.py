@@ -125,7 +125,6 @@ async def init_agent(user_info: AuthenticationResult) -> MUCGPTAgentExecutor:
         agent = MUCGPTReActAgent(
             llm=model,
             tools=tools,
-            tool_collection=tool_collection,
             debug=False,
             checkpointer=CheckpointerProvider.get_checkpointer(),
         )

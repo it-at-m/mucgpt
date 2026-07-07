@@ -256,7 +256,6 @@ class TestChatGraphNeverCarriesCheckpointer:
         # A live MemorySaver is supplied — exactly the dormant-for-resume setup.
         graph = _ConfiguredLangChainAgentGraph(
             llm=DummyLLM(),
-            tool_collection=MagicMock(),
             tools=[],
             logger=MagicMock(),
             checkpointer=MemorySaver(),

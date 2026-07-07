@@ -1,5 +1,4 @@
 import logging
-import textwrap
 
 from langchain_core.messages import BaseMessage, HumanMessage, SystemMessage
 from langchain_core.prompts import PromptTemplate
@@ -9,41 +8,35 @@ from langchain_core.tools.base import BaseTool
 from langgraph.config import get_stream_writer
 from langgraph.types import StreamWriter
 
+from agent.tools.spec import LocalTool
 from agent.tools.tool_chunk import ToolStreamChunk, ToolStreamState
 
-# Centralized single-line summaries to avoid duplication across decorator, metadata and system prompt
+# Single-line summary shown to the LLM as this tool's description.
 BRAINSTORMING_SUMMARY = "Generates or refines a detailed markdown mind map."  # one-line
 
-# Detailed instruction templates (dedented for clean system prompts)
-BRAINSTORMING_DETAILED = textwrap.dedent(
-    """
-    **Brainstorming**
-
-    Description: Generates or refines a detailed mind map (pure markdown; no code fences).
-
-    Use for:
-    • New idea exploration
-    • Organizing complex / hierarchical domains
-    • Structured refinement based on user feedback
-
-    Technical:
-    • Hierarchical markdown (headings + bullet lists)
-    • 4–7 main branches recommended; 2–4 nested levels where meaningful
-    • Bold only once for central concept line
-
-    Parameters:
-    - topic (required)
-    - context (optional) Supplemental info to integrate selectively
-    - existing_mindmap (optional) Full previous map for refinement
-    - feedback (optional) Specific change requests
-
-    Best Practices:
-    - In refinement: keep unchanged branches stable; modify only targeted areas
-    - Avoid generic placeholders (e.g., "Misc")
-    - Prefer parallel grammatical structure for sibling nodes
-    - Reference earlier output blocks shown as ```MUCGPTBrainstorming ...``` when refining.
-    """
-)
+# User-facing name/description per language, shown in the /v1/tools tool picker.
+BRAINSTORMING_METADATA = {
+    "deutsch": {
+        "name": "Brainstorming",
+        "description": "Erstellt oder verbessert eine detaillierte Mindmap zu einem Thema im Markdown-Format, basierend auf Nutzer-Feedback.",
+    },
+    "english": {
+        "name": "Brainstorming",
+        "description": "Generates or refines a detailed mind map for a given topic in markdown format based on user feedback.",
+    },
+    "français": {
+        "name": "Remue-méninges",
+        "description": "Génère ou améliore une carte mentale détaillée pour un sujet donné au format markdown selon les commentaires de l'utilisateur.",
+    },
+    "bairisch": {
+        "name": "Brainstorming",
+        "description": "Macht a genaue Mindmap zu am Thema im Markdown-Format oder verbessert eine, wenn da Nutzer Feedback gibt.",
+    },
+    "ukrainisch": {
+        "name": "Мозковий штурм",
+        "description": "Створює або вдосконалює детальну ментальну карту для заданої теми у форматі markdown на основі відгуків користувачів.",
+    },
+}
 
 BRAINSTORM_SYSTEM_MESSAGE = "You are a creative brainstorming assistant that creates and refines detailed mind maps in markdown format."
 
@@ -246,3 +239,10 @@ def make_brainstorm_tool(
         return result
 
     return brainstorm_tool
+
+
+TOOL = LocalTool(
+    id="Brainstorming",
+    factory=make_brainstorm_tool,
+    metadata=BRAINSTORMING_METADATA,
+)

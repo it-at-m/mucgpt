@@ -1,4 +1,5 @@
-from contextlib import asynccontextmanager
+from collections.abc import AsyncIterator, Callable, Iterator
+from contextlib import AbstractAsyncContextManager, asynccontextmanager
 from unittest.mock import AsyncMock, patch
 
 import cloudpickle
@@ -12,10 +13,11 @@ from core.auth_models import AuthenticationResult
 
 SECRET_HEADER_VALUE = "supersecretheadervalue123"
 SECRET_OVERRIDE_VALUE = "supersecretoverridevalue456"
+FORWARDED_TOKEN_VALUE = "supersecretforwardedtoken789"
 
 
 class FakeSession:
-    def __init__(self, pages: list[list[MCPTool]]):
+    def __init__(self, pages: list[list[MCPTool]]) -> None:
         self._pages = pages
 
     async def initialize(self) -> None:
@@ -29,10 +31,10 @@ class FakeSession:
 
 
 class FakeLock:
-    def __init__(self, raise_on_enter: Exception | None = None):
+    def __init__(self, raise_on_enter: Exception | None = None) -> None:
         self._raise_on_enter = raise_on_enter
 
-    async def __aenter__(self):
+    async def __aenter__(self) -> "FakeLock":
         if self._raise_on_enter:
             raise self._raise_on_enter
         return self
@@ -42,7 +44,7 @@ class FakeLock:
 
 
 class FakeRedis:
-    def __init__(self, raise_on_enter: Exception | None = None):
+    def __init__(self, raise_on_enter: Exception | None = None) -> None:
         self._raise_on_enter = raise_on_enter
 
     def lock(self, name: str, timeout: int, blocking_timeout: int) -> FakeLock:
@@ -51,9 +53,11 @@ class FakeRedis:
 
 def make_fake_create_session(
     sessions_by_url: dict[str, FakeSession], fail_urls: frozenset[str] = frozenset()
-):
+) -> Callable[..., AbstractAsyncContextManager[FakeSession]]:
     @asynccontextmanager
-    async def _fake_create_session(connection, *, mcp_callbacks=None):
+    async def _fake_create_session(
+        connection, *, mcp_callbacks=None
+    ) -> AsyncIterator[FakeSession]:
         url = connection["url"]
         if url in fail_urls:
             raise RuntimeError(f"simulated connection failure for {url}")
@@ -84,7 +88,7 @@ def make_user(uid: str = "u1", token: str = "user-jwt-token") -> AuthenticationR
 
 
 @pytest.fixture(autouse=True)
-def reset_token_store():
+def reset_token_store() -> Iterator[None]:
     McpBearerAuthProvider._tokens.clear()
     yield
     McpBearerAuthProvider._tokens.clear()
@@ -223,7 +227,9 @@ class TestLoadMcpTools:
                 "agent.tools.mcp.RedisCache.set_object", AsyncMock()
             ) as mock_set_object,
         ):
-            tools = await McpLoader.load_mcp_tools(make_user(), force_reload=True)
+            tools = await McpLoader.load_mcp_tools(
+                make_user(token=FORWARDED_TOKEN_VALUE), force_reload=True
+            )
 
         assert len(tools) == 1
         mock_set_object.assert_called_once()
@@ -235,6 +241,9 @@ class TestLoadMcpTools:
         dumped = cloudpickle.dumps(cached_obj)
         assert SECRET_HEADER_VALUE.encode() not in dumped
         assert SECRET_OVERRIDE_VALUE.encode() not in dumped
+        # The forwarded user bearer token is a secret too, not just static config
+        # headers/overrides - make sure it's just as absent from what gets cached.
+        assert FORWARDED_TOKEN_VALUE.encode() not in dumped
 
     @pytest.mark.asyncio
     async def test_partial_failure_caches_only_successful_sources_short_ttl(
@@ -341,6 +350,10 @@ class TestLoadMcpTools:
         cached_raw = {"src": [MCPTool(name="a", inputSchema={"type": "object"})]}
 
         create_session_mock = AsyncMock(side_effect=AssertionError("should not connect"))
+        # Spy on the real _build_connection rather than stubbing it out, so we can
+        # prove the live connection/auth is rebuilt fresh on this cache-hit path -
+        # never reused or reconstructed from anything that came out of Redis.
+        original_build_connection = McpLoader._build_connection
 
         with (
             patch("agent.tools.mcp.create_session", create_session_mock),
@@ -348,10 +361,14 @@ class TestLoadMcpTools:
                 "agent.tools.mcp.RedisCache.get_object",
                 AsyncMock(return_value=cached_raw),
             ),
+            patch.object(
+                McpLoader, "_build_connection", side_effect=original_build_connection
+            ) as build_connection_spy,
         ):
             tools = await McpLoader.load_mcp_tools(make_user(), force_reload=False)
 
         create_session_mock.assert_not_called()
+        build_connection_spy.assert_called_once()
         assert len(tools) == 1
         assert tools[0].name == "a"
         assert tools[0].metadata["mcp_source"] == "src"

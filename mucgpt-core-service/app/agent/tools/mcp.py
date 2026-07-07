@@ -24,7 +24,15 @@ _MAX_LIST_TOOLS_ITERATIONS = 1000
 
 
 class McpLoader:
-    _CACHE_PREFIX = "mcp_tools"
+    # "_raw" marks the cache schema: only secret-free raw MCPTool metadata (see
+    # _wrap_raw_tools' docstring). Older deployments cached a different shape
+    # (pickled live BaseTool objects) under the plain "mcp_tools" prefix. Keeping
+    # the prefix distinct means any pre-upgrade entries still sitting in Redis are
+    # simply never read - a clean cache miss - instead of reaching _wrap_raw_tools
+    # with the wrong shape and crashing on the first read after a deploy. If this
+    # cache's stored shape ever changes again, bump this suffix again rather than
+    # reusing a prefix that may already hold a different payload shape.
+    _CACHE_PREFIX = "mcp_tools_raw"
     _logger = getLogger(name="mucgpt-core-mcp-loader")
     _mcp_settings = get_mcp_settings()
 

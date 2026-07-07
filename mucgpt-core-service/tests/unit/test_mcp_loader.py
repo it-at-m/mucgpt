@@ -300,6 +300,35 @@ class TestLoadMcpTools:
         mock_set_object.assert_not_called()
 
     @pytest.mark.asyncio
+    async def test_unsupported_transport_source_counts_as_failed_not_cached(
+        self, monkeypatch
+    ):
+        """A source with an unsupported transport must not be treated as a healthy
+        empty result. Otherwise an all-unsupported config would cache [] with the
+        full TTL instead of the short-TTL failure path used for real failures."""
+        unsupported = make_source("http://unsupported/sse")
+        object.__setattr__(unsupported, "transport", "stdio")
+        monkeypatch.setattr(
+            McpLoader,
+            "_mcp_settings",
+            MCPConfig(SOURCES={"unsupported": unsupported}, CACHE_TTL=100),
+        )
+
+        with (
+            patch(
+                "agent.tools.mcp.RedisCache.get_redis",
+                AsyncMock(return_value=FakeRedis()),
+            ),
+            patch(
+                "agent.tools.mcp.RedisCache.set_object", AsyncMock()
+            ) as mock_set_object,
+        ):
+            tools = await McpLoader.load_mcp_tools(make_user(), force_reload=True)
+
+        assert tools == []
+        mock_set_object.assert_not_called()
+
+    @pytest.mark.asyncio
     async def test_cache_hit_wraps_without_refetching(self, monkeypatch):
         source_cfg = make_source(
             "http://mcp.example/sse", forward_token=True, headers={"X-Api-Key": "live-secret"}

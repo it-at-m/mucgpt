@@ -109,6 +109,12 @@ class McpLoader:
 
                 con = McpLoader._build_connection(source_id, source_cfg, user_info)
                 if con is None:
+                    # Unsupported transport: this source can never yield tools, so
+                    # count it as failed. Otherwise an all-unsupported config would
+                    # leave raw_by_source and failed_sources both empty, which takes
+                    # the "healthy load" branch below and caches an empty tool set
+                    # for the full TTL instead of the short-TTL failure path.
+                    failed_sources.add(source_id)
                     continue
 
                 try:

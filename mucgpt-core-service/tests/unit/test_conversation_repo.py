@@ -7,7 +7,7 @@ import pytest
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from database.conversation_repo import ConversationRepository
+from database.conversation_repo import ConflictError, ConversationRepository
 from database.models import Message
 
 USER_A = "user-a"
@@ -214,6 +214,90 @@ async def test_update_meta(db_session: AsyncSession) -> None:
     assert again.favorite is True
 
     assert await repo.update_meta(conv.id, USER_B, title="hacked") is None
+
+
+@pytest.mark.asyncio
+async def test_revision_starts_at_zero_and_bumps_only_on_append(
+    db_session: AsyncSession,
+) -> None:
+    """revision == number of persisted turns: a fresh conversation is 0, every
+    append bumps by exactly 1, and neither replace_messages nor update_meta
+    advances it (only completed turns count)."""
+    repo = ConversationRepository(db_session)
+    conv = await repo.create(user_id=USER_A, title="rev")
+    await db_session.commit()
+    assert conv.revision == 0
+
+    # replace_messages syncs client history but does NOT bump (a turn that fails
+    # after the sync must not advance the revision).
+    await repo.replace_messages(conv.id, USER_A, [("user", "u1")])
+    await db_session.commit()
+    assert (await repo.current_revision(conv.id, USER_A)) == 0
+
+    # Metadata-only updates never bump.
+    await repo.update_meta(conv.id, USER_A, title="renamed", favorite=True)
+    await db_session.commit()
+    assert (await repo.current_revision(conv.id, USER_A)) == 0
+
+    # Each append bumps by exactly 1.
+    await repo.append_message(conv.id, USER_A, role="assistant", content="a1")
+    await db_session.commit()
+    assert (await repo.current_revision(conv.id, USER_A)) == 1
+
+    await repo.append_message(conv.id, USER_A, role="user", content="u2")
+    await db_session.commit()
+    assert (await repo.current_revision(conv.id, USER_A)) == 2
+
+
+@pytest.mark.asyncio
+async def test_replace_messages_stale_revision_raises_and_writes_nothing(
+    db_session: AsyncSession,
+) -> None:
+    """A stale expected_revision is a cross-client conflict: ConflictError is
+    raised and the stored history + revision are left untouched."""
+    repo = ConversationRepository(db_session)
+    conv = await repo.create(user_id=USER_A, messages=[("user", "orig")])
+    await db_session.commit()
+    conv_id = conv.id  # capture before the rollback expires the instance
+    # Advance the stored revision so the client's expectation (0) goes stale.
+    await repo.append_message(conv_id, USER_A, role="assistant", content="a1")
+    await db_session.commit()
+    assert (await repo.current_revision(conv_id, USER_A)) == 1
+
+    with pytest.raises(ConflictError) as excinfo:
+        await repo.replace_messages(
+            conv_id, USER_A, [("user", "overwrite")], expected_revision=0
+        )
+    assert excinfo.value.current_revision == 1
+    assert excinfo.value.expected_revision == 0
+
+    await db_session.rollback()
+    fetched = await repo.get_for_user(conv_id, USER_A)
+    # Nothing overwritten; revision unchanged.
+    assert [m.content for m in fetched.messages] == ["orig", "a1"]
+    assert fetched.revision == 1
+
+
+@pytest.mark.asyncio
+async def test_replace_messages_matching_revision_applies(
+    db_session: AsyncSession,
+) -> None:
+    """A matching (or absent) expected_revision applies the write as usual."""
+    repo = ConversationRepository(db_session)
+    conv = await repo.create(user_id=USER_A, messages=[("user", "u1")])
+    await db_session.commit()
+    assert conv.revision == 0
+
+    replaced = await repo.replace_messages(
+        conv.id, USER_A, [("user", "u1"), ("assistant", "a1")], expected_revision=0
+    )
+    await db_session.commit()
+    assert replaced is not None
+
+    fetched = await repo.get_for_user(conv.id, USER_A)
+    assert [m.content for m in fetched.messages] == ["u1", "a1"]
+    # replace_messages itself does not bump the revision.
+    assert fetched.revision == 0
 
 
 @pytest.mark.asyncio

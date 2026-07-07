@@ -56,6 +56,14 @@ class Conversation(Base):
         onupdate=_utcnow,
         nullable=False,
     )
+    # Server-owned monotonic version for optimistic-concurrency. Bumped on every
+    # content mutation (assistant turn appended); used as the precondition a
+    # client sends to reject stale cross-device overwrites with HTTP 409.
+    # NOTE: create_all only adds this to FRESH databases; existing/Postgres
+    # deployments need the explicit ALTER TABLE migration (see docs/roadmap 12).
+    revision: Mapped[int] = mapped_column(
+        Integer, server_default="0", default=0, nullable=False
+    )
 
     messages: Mapped[list[Message]] = relationship(
         "Message",

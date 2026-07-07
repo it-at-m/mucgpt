@@ -45,6 +45,11 @@ export type ChatRequest = {
     // Server-side conversation id. When set, the backend persists this chat's
     // history under it (created on first use), keyed by the authenticated user.
     conversation_id?: string;
+    // Revision the client's history is based on. When set, the backend rejects a
+    // stale cross-device overwrite with HTTP 409 instead of clobbering newer
+    // history. Omitted for brand-new chats (no revision yet) so the first turn is
+    // never falsely rejected.
+    conversation_revision?: number;
 };
 
 // Server-side chat persistence (mirrors the backend conversations API).
@@ -61,6 +66,8 @@ export interface ConversationSummary {
     model?: string | null;
     created_at: string;
     updated_at: string;
+    /** Server-owned optimistic-concurrency revision; sent back as conversation_revision on the next turn. */
+    revision?: number;
 }
 
 export interface ConversationDetail extends ConversationSummary {

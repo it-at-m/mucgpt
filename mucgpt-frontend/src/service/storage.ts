@@ -14,6 +14,14 @@ export interface DBObject<M, C> {
     favorite?: boolean;
     messages: DBMessage<M>[];
     config: C;
+    /**
+     * Server-side optimistic-concurrency revision this chat's local history is
+     * based on. Sent back to the backend as `conversation_revision` so a stale
+     * cross-device overwrite is rejected (409). Absent = unknown -> no
+     * precondition sent (e.g. a brand-new chat's first turn). Stored as a plain
+     * optional property; no IndexedDB schema bump is needed to add it.
+     */
+    revision?: number;
 }
 
 /**
@@ -192,6 +200,26 @@ export class StorageService<M, C> {
                 setQuestion(last.user);
                 return updated;
             } else throw new Error("No object with id " + id + " found");
+        } catch (error) {
+            this.onError(error);
+        }
+    }
+
+    /**
+     * Persist the server-side optimistic-concurrency revision for a chat so the
+     * next turn sends it as the precondition. No-op if the chat is unknown.
+     */
+    async setRevision(id: string, revision: number | undefined) {
+        try {
+            if (revision === undefined) return undefined;
+            const db = await this.connectToDB();
+            const stored = await this.get(id);
+            if (stored) {
+                stored.revision = revision;
+                await db.put(this.config.objectStore_name, stored);
+                return stored;
+            }
+            return undefined;
         } catch (error) {
             this.onError(error);
         }

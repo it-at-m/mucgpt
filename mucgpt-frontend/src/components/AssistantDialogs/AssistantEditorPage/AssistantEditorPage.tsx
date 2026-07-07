@@ -8,14 +8,9 @@ import {
     AccordionItem,
     AccordionPanel,
     Button,
-    Dialog,
-    DialogActions,
-    DialogBody,
-    DialogContent,
-    DialogSurface,
-    DialogTitle,
+    Divider,
     Field,
-    InfoLabel,
+    Text,
     Textarea,
     TextareaOnChangeData
 } from "@fluentui/react-components";
@@ -42,9 +37,9 @@ import { FollowUpActionModel } from "../../FollowUpAction";
 import { useToolsContext } from "../../ToolsProvider";
 import { useAssistantState } from "../shared/hooks/useAssistantState";
 import { useCreateAssistantState } from "../shared/hooks/useCreateAssistantState";
-import { ToolsSection, ConversationOptionsSection, AdvancedSettingsSection, VisibilitySection, ExpandableTextarea } from "../shared";
+import { ToolsSection, ConversationOptionsSection, AdvancedSettingsSection, VisibilitySection, ExpandableTextarea, CloseConfirmationDialog } from "../shared";
 import { AssistantStrategy } from "../../../pages/assistant/AssistantStrategy";
-import { CREATIVITY_LOW } from "../../../constants";
+import { CREATIVITY_MEDIUM } from "../../../constants";
 import { EdelweissSpinner } from "../../EdelweissSpinner";
 
 type CreateView = "mode_select" | "ai_input" | "settings";
@@ -185,24 +180,12 @@ function SettingsForm(props: SettingsFormProps) {
                     <Field
                         size="large"
                         className={styles.formField}
-                        label={{
-                            className: styles.formLabel,
-                            children: (
-                                <>
-                                    {t("components.assistant_editor.system_prompt")}
-                                    <InfoLabel
-                                        info={
-                                            <div>
-                                                <i>{t("components.chattsettingsdrawer.system_prompt")}s </i>
-                                                {t("components.chattsettingsdrawer.system_prompt_info")}
-                                            </div>
-                                        }
-                                    />
-                                </>
-                            )
-                        }}
+                        label={{ className: styles.formLabel, children: t("components.assistant_editor.system_prompt") }}
                         required
                     >
+                        <Text as="p" size={200} className={styles.fieldDescription}>
+                            {t("components.assistant_editor.system_prompt_description")}
+                        </Text>
                         <ExpandableTextarea
                             value={props.systemPrompt}
                             placeholder={t("components.assistant_editor.prompt_placeholder")}
@@ -215,6 +198,7 @@ function SettingsForm(props: SettingsFormProps) {
                             dialogTitle={t("components.assistant_editor.system_prompt")}
                         />
                     </Field>
+                    <Divider />
                     <AdvancedSettingsSection
                         creativity={props.creativity}
                         defaultModel={props.defaultModel}
@@ -298,7 +282,7 @@ export const AssistantEditorPage = (props: AssistantEditorPageProps) => {
             system_message: "",
             quick_prompts: [],
             starterPrompts: [],
-            creativity: CREATIVITY_LOW,
+            creativity: CREATIVITY_MEDIUM,
             default_model: LLM.llm_name,
             tools: [],
             publish: false,
@@ -590,22 +574,7 @@ export const AssistantEditorPage = (props: AssistantEditorPageProps) => {
                 </div>
             )}
 
-            <Dialog open={discardOpen} onOpenChange={(_event, data) => setDiscardOpen(data.open)}>
-                <DialogSurface>
-                    <DialogBody>
-                        <DialogTitle>{t("components.assistant_editor.discard_title")}</DialogTitle>
-                        <DialogContent>{t("components.assistant_editor.discard_message")}</DialogContent>
-                        <DialogActions>
-                            <Button appearance="secondary" onClick={() => setDiscardOpen(false)}>
-                                {t("common.cancel")}
-                            </Button>
-                            <Button appearance="primary" onClick={handleDiscardConfirm}>
-                                {t("common.close")}
-                            </Button>
-                        </DialogActions>
-                    </DialogBody>
-                </DialogSurface>
-            </Dialog>
+            <CloseConfirmationDialog open={discardOpen} onOpenChange={setDiscardOpen} onConfirmClose={handleDiscardConfirm} />
         </div>
     );
 };

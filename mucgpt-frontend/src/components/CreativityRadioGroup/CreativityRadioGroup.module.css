@@ -1,0 +1,142 @@
+.responseStyleCards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 10px;
+    width: 100%;
+    padding: 4px 0;
+    box-sizing: border-box;
+}
+
+.responseStyleCard {
+    appearance: none;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    justify-content: flex-start !important;
+    width: 100%;
+    min-width: 0;
+    min-height: 96px;
+    padding: 13px 16px !important;
+    border: 2px solid transparent !important;
+    border-radius: 8px !important;
+    background-color: color-mix(in srgb, var(--colorBrandBackground) 14%, var(--colorNeutralBackground1)) !important;
+    color: var(--colorNeutralForeground1) !important;
+    cursor: pointer;
+    font: inherit;
+    text-align: left !important;
+    box-sizing: border-box;
+    transition:
+        background-color 0.15s ease,
+        border-color 0.15s ease,
+        box-shadow 0.15s ease;
+}
+
+.responseStyleCard :global(.fui-Button__content) {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    justify-content: flex-start !important;
+    gap: 10px;
+    width: 100%;
+    min-width: 0;
+    text-align: left;
+}
+
+.responseStyleCard:hover:not(:disabled):not([data-selected="true"]) {
+    border-color: var(--colorBrandStroke2) !important;
+    background-color: color-mix(in srgb, var(--colorBrandBackground) 18%, var(--colorNeutralBackground1)) !important;
+    color: var(--colorNeutralForeground1) !important;
+}
+
+.responseStyleCard:focus-visible {
+    outline: 2px solid var(--colorStrokeFocus2);
+    outline-offset: 2px;
+}
+
+.responseStyleCard:disabled {
+    cursor: not-allowed;
+    opacity: 0.65;
+}
+
+.responseStyleCard[data-selected="true"],
+.responseStyleCard[data-selected="true"]:hover,
+.responseStyleCard[data-selected="true"]:active,
+.responseStyleCard[data-selected="true"]:focus-visible {
+    border-color: var(--colorBrandStroke1) !important;
+    background-color: var(--colorBrandBackground) !important;
+    color: var(--colorNeutralForegroundOnBrand) !important;
+    box-shadow:
+        inset 0 0 0 1px var(--colorNeutralForegroundOnBrand),
+        var(--shadow4);
+}
+
+.styleCardHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    width: 100%;
+    text-align: left;
+}
+
+.styleCardTitleGroup {
+    display: inline-grid;
+    grid-template-columns: 26px minmax(0, 1fr);
+    align-items: center;
+    justify-content: flex-start;
+    min-width: 0;
+    gap: 10px;
+    text-align: left;
+}
+
+.styleCardIcon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 26px;
+    width: 26px;
+    height: 26px;
+    color: inherit;
+    line-height: 0;
+}
+
+.styleCardIcon svg {
+    display: block;
+    width: 22px;
+    height: 22px;
+}
+
+.styleCardTitle {
+    min-width: 0;
+    color: inherit;
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 24px;
+    overflow-wrap: anywhere;
+    text-align: left;
+}
+
+.styleCardDescription {
+    display: block;
+    width: 100%;
+    color: var(--colorNeutralForeground2);
+    font-size: 12px;
+    font-weight: 500;
+    line-height: 1.55;
+    overflow-wrap: anywhere;
+    text-align: left;
+}
+
+.responseStyleCard[data-selected="true"] .styleCardDescription {
+    color: var(--colorNeutralForegroundOnBrand);
+}
+
+@media (max-width: 860px) {
+    .responseStyleCards {
+        grid-template-columns: 1fr;
+    }
+
+    .responseStyleCard {
+        min-height: auto;
+    }
+}

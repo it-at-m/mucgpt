@@ -310,6 +310,13 @@
     gap: 4px;
 }
 
+.fieldDescription {
+    width: 100%;
+    margin: -2px 0 8px 0;
+    color: var(--colorNeutralForeground2);
+    line-height: 1.4;
+}
+
 .formField :global(.fui-Label) {
     font-size: 14px;
     font-weight: 600;

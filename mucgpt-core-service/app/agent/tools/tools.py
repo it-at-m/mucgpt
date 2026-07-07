@@ -8,14 +8,20 @@ from langchain_core.tools.base import BaseTool
 
 from agent.state_models.default_state import DefaultAgentState
 from agent.state_models.registry import registry as AGENT_STATE_SCHEMA_REGISTRY
-from agent.tools import brainstorm, simplify
+from agent.tools import brainstorm, internet_search, simplify
 from agent.tools.brainstorm import make_brainstorm_tool
+from agent.tools.internet_search import (
+    is_internet_search_configured,
+    make_internet_search_tool,
+)
 from agent.tools.mcp import McpLoader
 from agent.tools.simplify import make_simplify_tool
 from api.api_models import ToolInfo, ToolListResponse
 from config.settings import get_mcp_settings
 from core.auth import AuthenticationResult
 from core.logtools import getLogger
+
+logger = getLogger(name="mucgpt-core-tools-schema")
 
 TOOL_INSTRUCTIONS_TEMPLATE = """
 # Tools
@@ -30,14 +36,57 @@ TOOL_INSTRUCTIONS_TEMPLATE = """
 """
 
 
+def _metadata_value(metadata, key: str, default=None):
+    if isinstance(metadata, dict):
+        return metadata.get(key, default)
+    return getattr(metadata, key, default)
+
+
 def select_agent_state_schema(tools: list[BaseTool]) -> type[DefaultAgentState]:
-    tool_groups = set()
+    tool_groups: set[str] = set()
+    tool_group_details: list[str] = []
+
     for tool in tools:
-        if tool.metadata:
-            tool_groups.add(tool.metadata.get("mcp_group", "default"))
-    if len(tool_groups) > 1:
+        metadata = getattr(tool, "metadata", None)
+        if metadata:
+            group = _metadata_value(metadata, "mcp_group", "default") or "default" # if mcp_group has been set to none or empty string, treat it as "default" group
+            source = _metadata_value(metadata, "mcp_source", "unknown-source")
+
+            tool_groups.add(group)
+            tool_group_details.append(f"{tool.name}:{group} (source={source})")
+
+    if not tool_groups:
+        logger.info(
+            "Schema decision: DefaultAgentState because no tool groups were found on %d selected tools.",
+            len(tools),
+        )
         return DefaultAgentState
-    return AGENT_STATE_SCHEMA_REGISTRY.get(f"{list(tool_groups)[0]}", DefaultAgentState)
+
+    if len(tool_groups) > 1:
+        logger.warning(
+            "Schema decision: DefaultAgentState because multiple mcp_group values were detected: %s. Tool/group mapping: %s",
+            sorted(tool_groups),
+            ", ".join(tool_group_details),
+        )
+        return DefaultAgentState
+
+    group = list(tool_groups)[0]
+    selected_schema = AGENT_STATE_SCHEMA_REGISTRY.get(group)
+    if selected_schema is None:
+        logger.info(
+            "Schema decision: DefaultAgentState because group '%s' has no registered state schema. Registry keys: %s",
+            group,
+            sorted(AGENT_STATE_SCHEMA_REGISTRY.keys()),
+        )
+        return DefaultAgentState
+
+    logger.info(
+        "Schema decision: %s because all selected tools resolve to single group '%s'. Tool/group mapping: %s",
+        selected_schema.__name__,
+        group,
+        ", ".join(tool_group_details),
+    )
+    return selected_schema
 
 
 class ToolCollection:
@@ -71,7 +120,13 @@ class ToolCollection:
         return [
             make_brainstorm_tool(brainstorm_model, self.logger),
             make_simplify_tool(simplify_model, self.logger),
-        ]
+        ] + self._build_configured_tools()
+
+    def _build_configured_tools(self) -> list[BaseTool]:
+        tools: list[BaseTool] = []
+        if is_internet_search_configured():
+            tools.append(make_internet_search_tool(self.logger))
+        return tools
 
     async def get_tools(
         self,
@@ -129,6 +184,10 @@ class ToolCollection:
                     "name": "Vereinfachen",
                     "description": "Vereinfacht komplexe deutsche Texte auf A2-Niveau nach Prinzipien der Leichten Sprache.",
                 },
+                "InternetSearch": {
+                    "name": "Internetsuche",
+                    "description": "Sucht im Internet ueber die konfigurierte SearXNG-Instanz und liefert Quellen mit Titeln, URLs und Textauszuegen.",
+                },
             },
             "english": {
                 "Brainstorming": {
@@ -138,6 +197,10 @@ class ToolCollection:
                 "Vereinfachen": {
                     "name": "Simplify",
                     "description": "Simplifies complex German text to A2 level using Easy Language principles.",
+                },
+                "InternetSearch": {
+                    "name": "Internet Search",
+                    "description": "Searches the internet via the configured SearXNG engine and returns sourced titles, URLs and snippets.",
                 },
             },
             "français": {
@@ -186,11 +249,14 @@ class ToolCollection:
         # Create tool instances
         brainstorm_tool = make_brainstorm_tool(DummyModel(), dummy_logger)
         simplify_tool = make_simplify_tool(DummyModel(), dummy_logger)
+        configured_tools = []
+        if is_internet_search_configured():
+            configured_tools.append(make_internet_search_tool(dummy_logger))
         mcp_tools = await McpLoader.load_mcp_tools(
             user_info=user_info, force_reload=force_reload
         )
 
-        tools = [brainstorm_tool, simplify_tool] + mcp_tools
+        tools = [brainstorm_tool, simplify_tool] + configured_tools + mcp_tools
 
         mcp_source_keys = set((get_mcp_settings().SOURCES or {}).keys())
 
@@ -259,6 +325,7 @@ class ToolCollection:
         detailed_map = {
             "Brainstorming": brainstorm.BRAINSTORMING_DETAILED,
             "Vereinfachen": simplify.SIMPLIFY_DETAILED,
+            "InternetSearch": internet_search.INTERNET_SEARCH_DETAILED,
         }
 
         tool_descriptions = []  # single-line summaries

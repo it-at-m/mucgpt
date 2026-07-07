@@ -1,7 +1,21 @@
-FROM node:24.15.0-alpine@sha256:d1b3b4da11eefd5941e7f0b9cf17783fc99d9c6fc34884a665f40a06dbdfc94f AS builder
+FROM node:24.18.0-alpine@sha256:a0b9bf06e4e6193cf7a0f58816cc935ff8c2a908f81e6f1a95432d679c54fbfd AS builder
+
+ARG HTTP_PROXY
+ARG HTTPS_PROXY
+ARG NO_PROXY
 
 ENV GENERATE_SOURCEMAP=false
 ENV NODE_OPTIONS=--max_old_space_size=4096
+ENV VITE_DISABLE_PWA=true
+#ENV ONNXRUNTIME_NODE_INSTALL=skip
+ENV HTTP_PROXY=${HTTP_PROXY}
+ENV http_proxy=${HTTP_PROXY}
+ENV HTTPS_PROXY=${HTTPS_PROXY}
+ENV https_proxy=${HTTPS_PROXY}
+ENV NO_PROXY=${NO_PROXY}
+ENV no_proxy=${NO_PROXY}
+ENV GLOBAL_AGENT_HTTP_PROXY=${HTTP_PROXY}
+ENV GLOBAL_AGENT_HTTPS_PROXY=${HTTPS_PROXY}
 
 WORKDIR /build
 
@@ -25,7 +39,7 @@ COPY src/ ./src/
 RUN --mount=type=cache,target=/build/node_modules/.vite \
     npm run build
 
-FROM registry.access.redhat.com/ubi9/nginx-124:9.7-1775695181@sha256:a58ed1b3229e6fb750a8459b2c1bdd7a278aa4c65e96ae40957fc7fba37ca89f
+FROM registry.access.redhat.com/ubi9/nginx-124:9.8-1781729662@sha256:fc282f9fc249d9b9606d1d93769e1b6e1c042221fdae285b53032b59ba9690d0
 
 # Copy built web application
 COPY --from=builder /build/dist ./

@@ -1,0 +1,10 @@
+.wrapper {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    flex-shrink: 0;
+}
+
+.micButton.busy {
+    opacity: 0.6;
+}

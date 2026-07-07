@@ -54,3 +54,23 @@ def test_document_processing_disabled_when_no_parser_backend(test_client):
         response = test_client.get("/config", headers=headers)
     assert response.status_code == 200
     assert response.json()["document_processing_enabled"] is False
+
+
+@pytest.mark.integration
+def test_transcription_enabled_reflects_settings(test_client):
+    """transcription_enabled follows the TRANSCRIPTION_ENABLED setting."""
+    mock_settings = Settings(TRANSCRIPTION_ENABLED=True)
+    with patch("api.routers.system_router.settings", mock_settings):
+        response = test_client.get("/config", headers=headers)
+    assert response.status_code == 200
+    assert response.json()["transcription_enabled"] is True
+
+
+@pytest.mark.integration
+def test_transcription_disabled_by_default(test_client):
+    """transcription_enabled is False by default."""
+    mock_settings = Settings()
+    with patch("api.routers.system_router.settings", mock_settings):
+        response = test_client.get("/config", headers=headers)
+    assert response.status_code == 200
+    assert response.json()["transcription_enabled"] is False

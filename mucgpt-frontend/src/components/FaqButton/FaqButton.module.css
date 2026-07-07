@@ -1,0 +1,11 @@
+.faqButton {
+    color: var(--colorNeutralForeground1) !important;
+}
+
+.faqButton:hover {
+    background-color: var(--colorNeutralStroke2) !important;
+}
+
+.icon {
+    color: var(--colorNeutralForeground1) !important;
+}

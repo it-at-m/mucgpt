@@ -367,11 +367,22 @@ class RedisConfig(BaseModel):
     PASSWORD: SecretStr | None = None
 
 
+class InternetSearchConfig(BaseModel):
+    """Internet search configuration (nested under INTERNET_SEARCH key in YAML)."""
+
+    SEARXNG_URL: str = ""
+    TIMEOUT: float = 10.0
+    MAX_RESULTS: PositiveInt = 5
+    LANGUAGE: str = "de"
+    SAFESEARCH: int = 1
+
+
 # Backward-compatible aliases
 SSOSettings = SSOConfig
 LangfuseSettings = LangfuseConfig
 MCPSettings = MCPConfig
 RedisSettings = RedisConfig
+InternetSearchSettings = InternetSearchConfig
 
 
 class Settings(BaseSettings):
@@ -399,6 +410,11 @@ class Settings(BaseSettings):
     ASSISTANT_VERSION: str = "unknown"
     FOOTER_LINK_URL: str | None = None
     FOOTER_LABEL: str | None = None
+    FAQ_URL: str | None = None
+    INCIDENT_REPORT_URL: str | None = None
+    FEATURE_REQUEST_URL: str | None = None
+    CONTACT_MAIL_URL: str | None = None
+    AD2IMAGE_URL: str | None = None
 
     # Backend settings
     UNAUTHORIZED_USER_REDIRECT_URL: str = ""
@@ -410,11 +426,17 @@ class Settings(BaseSettings):
     KREUZBERG_URL: str = ""
     KREUZBERG_TIMEOUT: float = 120.0
 
+    # Frontend feature flags
+    TRANSCRIPTION_ENABLED: bool = False
+
     # Nested sub-configurations
     SSO: SSOConfig = Field(default_factory=SSOConfig)
     LANGFUSE: LangfuseConfig = Field(default_factory=LangfuseConfig)
     MCP: MCPConfig = Field(default_factory=MCPConfig)
     REDIS: RedisConfig = Field(default_factory=RedisConfig)
+    INTERNET_SEARCH: InternetSearchConfig = Field(
+        default_factory=InternetSearchConfig
+    )
 
     # Customize settings sources to prioritize YAML config
     @classmethod
@@ -753,3 +775,9 @@ def get_mcp_settings() -> MCPConfig:
 def get_redis_settings() -> RedisConfig:
     """Return cached RedisSettings instance."""
     return get_settings().REDIS
+
+
+@lru_cache(maxsize=1)
+def get_internet_search_settings() -> InternetSearchConfig:
+    """Return cached InternetSearchSettings instance."""
+    return get_settings().INTERNET_SEARCH

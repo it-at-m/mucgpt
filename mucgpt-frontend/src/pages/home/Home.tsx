@@ -15,8 +15,6 @@ import { QuestionInput } from "../../components/QuestionInput/QuestionInput";
 import { getAllCommunityAssistantsApi, getUserSubscriptionsApi, getOwnedCommunityAssistants } from "../../api/assistant-client";
 import { DiscoveryCard } from "../../components/DiscoveryCard";
 import { useToolsContext } from "../../components/ToolsProvider";
-import { TermsOfUseDialog } from "../../components/TermsOfUseDialog";
-import { VersionInfo } from "../../components/VersionInfo/VersionInfo";
 import { ConfigContext } from "../../context/ConfigContext";
 import { UploadedData } from "../../components/ContextManagerDialog/ContextManagerDialog";
 import { STORAGE_KEYS } from "../layout/LayoutHelper";
@@ -33,10 +31,6 @@ type HomeMode = "recommended" | "recent";
 
 const MAX_CARDS = 5;
 const MIN_RECENT_FOR_DEFAULT = 1;
-
-const formatDate = (date: Date) => {
-    return date.getDate() + "-" + (date.getMonth() + 1) + "-" + date.getFullYear();
-};
 
 function parseStoredStringArray(value: unknown): string[] {
     if (!Array.isArray(value)) {
@@ -73,20 +67,25 @@ const Home = () => {
 
     useEffect(() => {
         if (user) {
-            setUserName(user.givenname || user.displayName || user.username || "User");
+            setUserName(user.given_name || user.name || "User");
         } else {
             setUserName("");
         }
     }, [user]);
 
     useEffect(() => {
-        let query = null;
         const search = location.search || window.location.search;
-        if (search) {
-            const params = new URLSearchParams(search);
-            query = params.get("q");
+        if (!search) {
+            return;
         }
-        setQuestion(query || "");
+
+        const params = new URLSearchParams(search);
+        const query = params.get("q");
+
+        // Only overwrite the local draft when q is explicitly provided in the URL.
+        if (query !== null) {
+            setQuestion(query);
+        }
     }, [location.search]);
 
     useEffect(() => {
@@ -263,14 +262,6 @@ const Home = () => {
         navigate(`/chat?${params.toString()}`);
     };
 
-    const onAcceptTermsOfUse = () => {
-        localStorage.setItem(STORAGE_KEYS.TERMS_OF_USE_READ, formatDate(new Date()));
-        if (config && localStorage.getItem(STORAGE_KEYS.VERSION_UPDATE_SEEN) !== config.frontend_version) {
-            localStorage.setItem(STORAGE_KEYS.VERSION_UPDATE_SEEN, config.frontend_version);
-            navigate("/version");
-        }
-    };
-
     const displayedCards = useMemo(() => {
         return mode === "recent" ? recentAssistants : recommendedAssistants;
     }, [mode, recentAssistants, recommendedAssistants]);
@@ -298,11 +289,13 @@ const Home = () => {
                         onSend={onSendQuestion}
                         disabled={false}
                         placeholder={t("chat.prompt")}
+                        draftCacheKey="home-chat-starter"
                         setQuestion={q => setQuestion(q)}
                         selectedTools={selectedTools}
                         setSelectedTools={setSelectedTools}
                         tools={tools}
                         question={question}
+                        onTranscription={text => setQuestion(text)}
                     />
                 </div>
             </section>
@@ -378,23 +371,6 @@ const Home = () => {
             <footer className={styles.inlineFooter} role="contentinfo" aria-label={t("common.footer_info", "Fu\u00dfzeileninformationen")}>
                 <div className={styles.footerContent}>
                     <div className={styles.footerMetaRow}>
-                        <div className={styles.footerLeftBlock}>
-                            {config ? (
-                                <div className={styles.footerVersionBlock}>
-                                    <VersionInfo
-                                        core_version={config.core_version}
-                                        frontend_version={config.frontend_version}
-                                        assistant_version={config.assistant_version}
-                                        versionUrl={import.meta.env.BASE_URL + "#/version"}
-                                        variant="compact"
-                                    />
-                                </div>
-                            ) : (
-                                <a href={import.meta.env.BASE_URL + "#/version"} className={styles.footerLink}>
-                                    {t("components.versioninfo.whats_new", "Was gibt's neues?")}
-                                </a>
-                            )}
-                        </div>
                         <div className={styles.footerCenterBlock}>
                             <div className={styles.footerCompanyBlock}>
                                 <span>{t("common.footer_credit", "Made with ❤️ & ☕ by")}</span>{" "}
@@ -402,9 +378,6 @@ const Home = () => {
                                     {config?.footer_label || "DAICE"}
                                 </a>
                             </div>
-                        </div>
-                        <div className={styles.footerRightBlock}>
-                            <TermsOfUseDialog defaultOpen={false} onAccept={onAcceptTermsOfUse} triggerClassName={styles.footerTermsTrigger} />
                         </div>
                     </div>
                 </div>

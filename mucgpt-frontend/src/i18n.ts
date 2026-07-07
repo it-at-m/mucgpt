@@ -2,7 +2,6 @@ import i18n from "i18next";
 import { initReactI18next } from "react-i18next";
 import { tutorialsTranslations } from "./i18n.tutorials";
 import { versionTranslations } from "./i18n.version";
-import { faqTranslation } from "./i18n.faq";
 
 i18n
     // pass the i18n instance to react-i18next.
@@ -21,7 +20,6 @@ i18n
                     header: {
                         nutzungsbedingungen: "Nutzungsbedingungen",
                         create_assistant: "Assistent erstellen",
-                        go_to_tutorials_tooltip: "Tutorials und Anleitungen zu Fragments und Tools",
                         go_to_tutorials_aria: "Zu Tutorials und Anleitungen navigieren",
                         go_to_tutorials: "Tutorials"
                     },
@@ -60,7 +58,7 @@ i18n
                         prompt: "Stelle eine Frage oder lade ein Dokument hoch",
                         prompt_no_upload: "Stelle eine Frage",
                         answer_loading: "Erstelle Antwort",
-                        quickprompts: {
+                        follow_up_actions: {
                             shorter_tooltip: "Schreibe eine kürzere Antwort",
                             longer_tooltip: "Schreibe eine längere Antwort",
                             formal_tooltip: "Schreibe eine förmlichere Antwort",
@@ -101,7 +99,7 @@ i18n
                         language: "Sprache",
                         close: "Schließen",
                         messages: "Nachrichten",
-                        examples: "Beispiele",
+                        starter_prompts: "Startvorschläge",
                         sidebar_show: "Sidebar anzeigen",
                         sidebar_hide: "Sidebar ausblenden",
                         cancel: "Abbrechen",
@@ -110,7 +108,13 @@ i18n
                         ok: "OK",
                         next: "Weiter",
                         loading: "Lade Konfiguration...",
-                        hint: "Hinweis:",
+                        language_names: {
+                            DE: "Deutsch",
+                            EN: "Englisch",
+                            BA: "Bairisch",
+                            FR: "Französisch",
+                            UK: "Ukrainisch"
+                        },
                         edit: "Bearbeiten",
                         delete: "Löschen",
                         errors: {
@@ -186,32 +190,34 @@ i18n
                             remove_department: "Abteilung {{name}} entfernen"
                         },
                         terms_of_use: {
-                            tooltip: "Nutzungsbedingungen anzeigen",
                             label: "Nutzungsbedingungen",
+                            acceptance_required: "Nutzungsbedingungen (Zustimmung erforderlich)",
                             accept: "Zustimmen"
                         },
                         versioninfo: {
                             label: "Version",
+                            details: "Versionsdetails",
                             whats_new: "Was gibt's neues?"
                         },
                         feedback: {
-                            tooltip: "Feedback geben",
                             aria_label: "Feedback per E-Mail senden",
                             label: "Feedback"
                         },
-                        helpbutton: {
-                            help: "Hilfe",
-                            label: "Hilfe & FAQ",
-                            tooltip: "Hilfe und häufig gestelle Fragen anzeigen",
-                            aria_label: "Hilfe und FAQ öffnen"
+                        faqbutton: {
+                            label: "Fragen & Antworten",
+                            aria_label: "Fragen und Antworten öffnen"
                         },
-                        language_selector: {
-                            change_language: "Sprache ändern"
+                        incident_report_button: {
+                            label: "Störung melden",
+                            aria_label: "Störung melden"
+                        },
+                        feature_request_button: {
+                            label: "Verbesserungswünsche",
+                            aria_label: "Verbesserungswünsche"
                         },
                         theme_selector: {
-                            theme_light: "Helles Thema",
-                            theme_dark: "Dunkles Thema",
-                            change_theme: "Thema wechseln",
+                            theme_light: "Helles Design",
+                            theme_dark: "Dunkles Design",
                             light_short: "Hell",
                             dark_short: "Dunkel"
                         },
@@ -304,6 +310,35 @@ i18n
                             storage_error_one: "1 Dokument konnte nicht lokal gespeichert werden.",
                             storage_error_other: "{{count}} Dokumente konnten nicht lokal gespeichert werden."
                         },
+                        microphonebutton: {
+                            record: "Sprachaufnahme starten",
+                            stop: "Aufnahme beenden",
+                            transcribing: "Transkribiere...",
+                            loading_model: "Modell wird geladen..."
+                        },
+                        transcriptionSettings: {
+                            title: "Transkription",
+                            beta: "Beta",
+                            open_tooltip: "Transkriptionseinstellungen öffnen",
+                            disclaimer:
+                                "Beta-Funktion: Die Transkriptionsqualität ist nicht validiert und kann je nach Sprache, Audioqualität und lokaler Hardware variieren. Das Modell läuft vollständig im Browser – keine Audiodaten verlassen dein Gerät.",
+                            webgpu_warning:
+                                "Dein Browser unterstützt kein WebGPU. Die Transkription läuft auf CPU (WebAssembly) und kann deutlich langsamer sein. Für beste Leistung verwende Chrome oder Edge (Version 113+).",
+                            webgpu_only_error:
+                                "Dieses Modell erfordert WebGPU, das in deinem Browser nicht verfügbar ist. Verwende Chrome oder Edge (Version 113+) oder wähle Whisper Small.",
+                            enable_label: "Transkription aktivieren",
+                            enable_hint: "Ist diese Option aktiv und ein Modell heruntergeladen, erscheint im Chat ein Mikrofon-Button.",
+                            model_label: "Modell",
+                            model_ready: "bereit",
+                            download: "Modell herunterladen",
+                            redownload: "Erneut herunterladen",
+                            status_idle: "Nicht geladen",
+                            status_loading: "Lädt … {{progress}} %",
+                            status_loading_mb: "Lädt … {{downloaded_mb}} MB / {{total_mb}} MB ({{progress}} %)",
+                            status_loading_indeterminate: "Lädt …",
+                            status_ready: "Bereit",
+                            close: "Schließen"
+                        },
                         suminput: {
                             tokensused: "Token verbraucht",
                             limit: ". Ältere Eingaben werden bei der Generierung nicht berücksichtigt!",
@@ -359,10 +394,13 @@ i18n
                         example: {
                             label: "Beispiel"
                         },
+                        starter_prompt: {
+                            label: "Startvorschlag"
+                        },
                         deleteMessage: {
                             label: "Nachricht zurückziehen"
                         },
-                        quickprompt: {
+                        follow_up_action: {
                             name: "Vorgeschlagene Antworten"
                         },
                         history: {
@@ -408,6 +446,15 @@ i18n
                             // Page titles (differ between create and edit)
                             create_title: "Assistent erstellen",
                             edit_title: "Assistent bearbeiten",
+                            page_helper_create:
+                                "Erstellen Sie einen Assistenten für einen klaren Anwendungsfall. Legen Sie fest, was er tun soll, wie er sich verhält und welche Werkzeuge er nutzen darf.",
+                            page_helper_edit:
+                                "Bearbeiten Sie Aufgabe, Verhalten und Werkzeuge dieses Assistenten. Änderungen gelten für künftige Unterhaltungen.",
+                            builder_main_label: "Assistent konfigurieren",
+                            action_status_required_open: "Pflichtfelder offen",
+                            action_status_ready_create: "Bereit zum Erstellen",
+                            action_status_ready_save: "Bereit zum Speichern",
+                            action_status_read_only: "Nur lesbar",
 
                             // Create-only: Mode selector
                             subtitle_mode_select: "Wähle, wie du starten möchtest",
@@ -451,7 +498,7 @@ i18n
                             section_basic: "Grundlegende Informationen",
                             section_behaviour: "Verhalten & Konfiguration",
                             section_tools: "Werkzeuge",
-                            section_prompts: "Prompts & Beispiele",
+                            section_conversation_options: "Unterhaltungsoptionen",
                             section_access: "Zugriff & Sichtbarkeit",
 
                             // Advanced settings fields
@@ -469,28 +516,35 @@ i18n
                             departments_info:
                                 "Dies sind die Abteilungen, die Zugriff auf den Assistenten haben. Alle Abteilungen in der Hierarchie unter den ausgewählten Abteilungen haben ebenfalls Zugriff.",
 
-                            // Quick prompts
-                            quick_prompts: "Vorgeschlagene Antworten",
-                            quick_prompts_placeholder: "Fügen Sie Vorgeschlagene Antworten hinzu, eine pro Zeile (Label|Prompt)",
-                            quick_prompt_label_placeholder: "Geben Sie das Label ein...",
-                            quick_prompt_text_placeholder: "Geben Sie den Prompt-Text ein...",
-                            add_quick_prompt: "Vorgeschlagene Antwort hinzufügen",
-                            no_quick_prompts_selected: "Keine vorgeschlagenen Antworten hinzugefügt",
+                            // Follow-up actions
+                            follow_up_actions: "Folgeaktionen",
+                            follow_up_actions_description: "Aktionen, die nach einer Antwort als nächster Schritt angeboten werden.",
+                            follow_up_action_label_placeholder: "z. B. Kürzer formulieren",
+                            follow_up_action_display_text: "Anzeigetext",
+                            follow_up_action_prompt: "Prompt",
+                            follow_up_action_untitled: "Neue Folgeaktion",
+                            finish_follow_up_action_edit: "Fertig",
+                            follow_up_action_text_placeholder: "z. B. Formuliere die letzte Antwort kürzer und behalte die wichtigsten Punkte bei.",
+                            add_follow_up_action: "Hinzufügen",
+                            follow_up_actions_empty_title: "Keine Folgeaktionen",
+                            follow_up_actions_empty_description:
+                                "Fügen Sie Aktionen hinzu, die nach einer Antwort angeboten werden, zum Beispiel kürzen oder vereinfachen.",
 
-                            // Examples
-                            examples: "Beispiele",
-                            examples_placeholder: "Fügen Sie Beispiele hinzu, eine pro Zeile (Text|Wert)",
-                            example_text_placeholder: "Geben Sie den Beispiel-Text ein...",
-                            example_value_placeholder: "Geben Sie den Beispiel-Wert ein...",
-                            add_example: "Beispiel hinzufügen",
-                            no_examples_selected: "Keine Beispiele hinzugefügt",
-
-                            // Tools
-                            select_tools: "Werkzeuge auswählen",
-                            no_tools_selected: "Keine Werkzeuge ausgewählt",
+                            // Starter prompts
+                            starter_prompts: "Startvorschläge",
+                            starter_prompts_description: "Typische Aufgaben, die beim Öffnen des Assistenten angezeigt werden.",
+                            starter_prompt_display_text: "Anzeigetext",
+                            starter_prompt_prompt: "Prompt",
+                            starter_prompt_untitled: "Neuer Startvorschlag",
+                            finish_starter_prompt_edit: "Fertig",
+                            starter_prompt_text_placeholder: "z. B. E-Mail an Bürgerin formulieren",
+                            starter_prompt_value_placeholder:
+                                "z. B. Formuliere eine freundliche und verständliche E-Mail an eine Bürgerin, die nach dem Bearbeitungsstand ihres Antrags fragt. Erkläre, dass die Prüfung noch läuft, nenne keine konkreten Fristen und biete an, fehlende Unterlagen nachzureichen.",
+                            add_starter_prompt: "Hinzufügen",
+                            starter_prompts_empty_title: "Keine Startvorschläge",
+                            starter_prompts_empty_description: "Fügen Sie typische Aufgaben hinzu, damit Nutzer schneller ins Gespräch kommen.",
 
                             // DnD / list controls
-                            dnd_reorder_hint: "Ziehen Sie die Elemente am Griff, um die Reihenfolge zu ändern.",
                             drag_to_reorder: "Ziehen zum Neu-Anordnen",
                             dnd_aria_label: "Element {{position}} von {{total}} neu anordnen",
                             move_up: "Nach oben",
@@ -555,18 +609,35 @@ i18n
                         community_assistants: {
                             title: "Community Assistenten",
                             about: "Über", // Deutsch
-                            search: "Assistenten suchen",
+                            search: "Assistenten nach Titel oder Beschreibung suchen.",
                             filter_by_tag: "Nach Tag filtern",
                             filter_all: "Community",
                             filter_yours: "Eigene",
                             filter_subscribed: "Abonniert",
+                            my_assistants: "Meine Assistenten",
+                            discover_community: "Community entdecken",
+                            filter_my_all: "Alle",
+                            filter_created_short: "Erstellt",
+                            metadata_you: "Du",
+                            private_label: "Privat",
+                            show_more_personal_assistants: "Mehr persönliche Assistenten anzeigen",
+                            empty_search_title: "Keine passenden Assistenten gefunden",
+                            empty_search_description: "Prüfen Sie den Suchbegriff oder setzen Sie die Suche zurück.",
+                            empty_search_reset: "Suche zurücksetzen",
+                            empty_my_title: "Ihre Bibliothek ist noch leer",
+                            empty_my_description: "Erstellen oder importieren Sie einen Assistenten für Aufgaben, die regelmäßig wiederkommen.",
+                            empty_community_title: "Noch keine Community-Assistenten verfügbar",
+                            empty_community_description: "Veröffentlichte Assistenten erscheinen hier, sobald sie mit der Organisation geteilt wurden.",
+                            empty_create_own: "Eigenen Assistenten erstellen",
                             system_prompt: "System-Prompt",
                             enabled_tools: "Aktivierte Werkzeuge",
                             start_chat: "Chat starten",
                             sort_by: "Sortieren nach",
-                            sort_title: "Titel",
+                            sort_title: "Name",
+                            sort_last_used: "Zuletzt benutzt",
                             sort_updated: "Zuletzt aktualisiert",
                             sort_subscriptions: "Abonnements",
+                            sort_popular: "Beliebteste",
                             sort_by_tooltip: "Sortierung der Assistenten ändern",
                             save: "Assistent speichern",
 
@@ -591,6 +662,14 @@ i18n
                             times_subscribed: "mal abonniert",
                             owned_assistant: "Eigener Assistent",
                             subscribed_assistant: "Abonniert",
+                            unsubscribe: "Abonnement entfernen",
+                            unsubscribe_confirm_title: "Abonnement entfernen?",
+                            unsubscribe_confirm_message:
+                                "Möchten Sie das Abonnement für „{{title}}“ entfernen? Lokale Chats mit diesem Assistenten werden ebenfalls gelöscht.",
+                            unsubscribe_success_title: "Abonnement entfernt",
+                            unsubscribe_success_message: "Das Abonnement für „{{title}}“ wurde entfernt.",
+                            unsubscribe_failed_title: "Abonnement konnte nicht entfernt werden",
+                            unsubscribe_failed_message: "Beim Entfernen des Abonnements ist ein Fehler aufgetreten.",
                             more_options: "Weitere Optionen",
                             duplicate: "Private Kopie erstellen",
                             duplicate_confirm_title: "Eigene private Kopie erstellen",
@@ -607,7 +686,7 @@ i18n
                             duplicate_failed_rate_limited: "Zu viele Anfragen. Bitte versuchen Sie es später erneut.",
                             duplicate_failed_forbidden: "Sie haben keine Berechtigung, diesen Assistenten zu duplizieren.",
                             duplicate_failed_not_found: "Der Assistent wurde nicht gefunden und kann nicht dupliziert werden.",
-                            local_badge: "Veraltet - Lokal",
+                            local_badge: "Lokal",
                             local_state_title: "Dieser lokale Assistent ist veraltet",
                             discovery_local_hint:
                                 "Dieser Assistent ist nur lokal in Ihrem Browser gesichert und geht verloren, falls Sie das Gerät wechseln. Sichern Sie ihn jetzt, damit er dauerhaft erhalten bleibt.",
@@ -685,12 +764,11 @@ i18n
                         }
                     },
                     discovery: {
-                        title: "Assistenten entdecken",
-                        subtitle: "Optimiere deinen Workflow mit spezialisierten KI-Agenten."
+                        title: "Assistenten",
+                        subtitle: "Nutze deine Assistenten oder entdecke neue für wiederkehrende Aufgaben."
                     },
                     ...tutorialsTranslations.DE,
-                    ...versionTranslations.DE,
-                    ...faqTranslation.DE
+                    ...versionTranslations.DE
                 }
             },
             EN: {
@@ -698,7 +776,6 @@ i18n
                     header: {
                         nutzungsbedingungen: "Terms of use",
                         create_assistant: "Create assistant",
-                        go_to_tutorials_tooltip: "Tutorials and guides for fragments and tools",
                         go_to_tutorials_aria: "Go to tutorials and guides",
                         go_to_tutorials: "Tutorials"
                     },
@@ -737,7 +814,7 @@ i18n
                         prompt: "Ask a question or upload a document",
                         prompt_no_upload: "Ask a question",
                         answer_loading: "Generating answer",
-                        quickprompts: {
+                        follow_up_actions: {
                             shorter_tooltip: "Shorten your answer",
                             longer_tooltip: "Write a longer response",
                             formal_tooltip: "Write your answer more formal",
@@ -776,7 +853,7 @@ i18n
                         theme: "Theme",
                         language: "Language",
                         messages: "Messages",
-                        examples: "Examples",
+                        starter_prompts: "Starter prompts",
                         sidebar_show: "Show sidebar",
                         sidebar_hide: "Hide sidebar",
                         cancel: "Cancel",
@@ -786,7 +863,13 @@ i18n
                         ok: "OK",
                         next: "Next",
                         loading: "Loading...",
-                        hint: "Hint:",
+                        language_names: {
+                            DE: "German",
+                            EN: "English",
+                            BA: "Bavarian",
+                            FR: "French",
+                            UK: "Ukrainian"
+                        },
                         edit: "Edit",
                         delete: "Delete",
                         errors: {
@@ -862,32 +945,34 @@ i18n
                             remove_department: "Remove department {{name}}"
                         },
                         terms_of_use: {
-                            tooltip: "Show terms of use",
                             label: "Terms of use",
+                            acceptance_required: "Terms of use (acceptance required)",
                             accept: "Accept"
                         },
                         versioninfo: {
                             label: "Version",
+                            details: "Version details",
                             whats_new: "What's new?"
                         },
                         feedback: {
-                            tooltip: "Give feedback",
                             aria_label: "Send feedback via email",
                             label: "Feedback"
                         },
-                        helpbutton: {
-                            help: "Help",
-                            label: "Help & FAQ",
-                            tooltip: "Show help and frequently asked questions",
-                            aria_label: "Open help and FAQ"
+                        faqbutton: {
+                            label: "FAQ",
+                            aria_label: "Open FAQ"
                         },
-                        language_selector: {
-                            change_language: "Change language"
+                        incident_report_button: {
+                            label: "Report incident",
+                            aria_label: "Report an incident"
+                        },
+                        feature_request_button: {
+                            label: "Request feature",
+                            aria_label: "Request feature"
                         },
                         theme_selector: {
                             theme_light: "Light theme",
                             theme_dark: "Dark theme",
-                            change_theme: "Change theme",
                             light_short: "Light",
                             dark_short: "Dark"
                         },
@@ -980,6 +1065,35 @@ i18n
                             storage_error_one: "1 document could not be saved locally.",
                             storage_error_other: "{{count}} documents could not be saved locally."
                         },
+                        microphonebutton: {
+                            record: "Start voice recording",
+                            stop: "Stop recording",
+                            transcribing: "Transcribing...",
+                            loading_model: "Loading model..."
+                        },
+                        transcriptionSettings: {
+                            title: "Transcription",
+                            beta: "Beta",
+                            open_tooltip: "Open transcription settings",
+                            disclaimer:
+                                "Beta feature: transcription quality is not validated and may vary with language, audio quality, and your local hardware. The model runs fully in your browser – no audio leaves your device.",
+                            webgpu_warning:
+                                "Your browser does not support WebGPU. Transcription will run on CPU (WebAssembly) and may be noticeably slower. For best performance, use Chrome or Edge (version 113+).",
+                            webgpu_only_error:
+                                "This model requires WebGPU, which is not available in your browser. Try Chrome or Edge (version 113+) or select Whisper Small.",
+                            enable_label: "Enable transcription",
+                            enable_hint: "When enabled and a model is downloaded, a microphone button appears in the chat.",
+                            model_label: "Model",
+                            model_ready: "ready",
+                            download: "Download model",
+                            redownload: "Re-download",
+                            status_idle: "Not loaded",
+                            status_loading: "Loading … {{progress}} %",
+                            status_loading_mb: "Loading … {{downloaded_mb}} MB / {{total_mb}} MB ({{progress}} %)",
+                            status_loading_indeterminate: "Loading …",
+                            status_ready: "Ready",
+                            close: "Close"
+                        },
                         suminput: {
                             tokensused: "Token used",
                             limit: ". Previous inputs are not considered during generation!",
@@ -1035,10 +1149,13 @@ i18n
                         example: {
                             label: "Example"
                         },
+                        starter_prompt: {
+                            label: "Starter prompt"
+                        },
                         deleteMessage: {
                             label: "Retract message"
                         },
-                        quickprompt: {
+                        follow_up_action: {
                             name: "Recommended answers"
                         },
                         history: {
@@ -1084,6 +1201,14 @@ i18n
                             // Page titles (differ between create and edit)
                             create_title: "Create Assistant",
                             edit_title: "Edit Assistant",
+                            page_helper_create:
+                                "Create an assistant for a clear use case. Define what it should do, how it should behave, and which tools it may use.",
+                            page_helper_edit: "Edit this assistant's task, behavior, and tools. Changes apply to future conversations.",
+                            builder_main_label: "Configure assistant",
+                            action_status_required_open: "Required fields open",
+                            action_status_ready_create: "Ready to create",
+                            action_status_ready_save: "Ready to save",
+                            action_status_read_only: "Read only",
 
                             // Create-only: Mode selector
                             subtitle_mode_select: "Choose how you want to start",
@@ -1125,7 +1250,7 @@ i18n
                             section_basic: "Basic Information",
                             section_behaviour: "Behaviour & Configuration",
                             section_tools: "Tools",
-                            section_prompts: "Prompts & Examples",
+                            section_conversation_options: "Conversation Options",
                             section_access: "Access & Visibility",
 
                             // Advanced settings fields
@@ -1142,28 +1267,34 @@ i18n
                             departments_info:
                                 "These are the departments that have access to the assistant. All departments in the hierarchy below the selected departments also have access.",
 
-                            // Quick prompts
-                            quick_prompts: "Quick Prompts",
-                            quick_prompts_placeholder: "Add quick prompts, one per line (label|prompt)",
-                            quick_prompt_label_placeholder: "Enter the label...",
-                            quick_prompt_text_placeholder: "Enter the prompt text...",
-                            add_quick_prompt: "Add Quick Prompt",
-                            no_quick_prompts_selected: "No quick prompts added",
+                            // Follow-up actions
+                            follow_up_actions: "Follow-up Actions",
+                            follow_up_actions_description: "Actions offered after an answer as the next step.",
+                            follow_up_action_label_placeholder: "e.g. Make it shorter",
+                            follow_up_action_display_text: "Display text",
+                            follow_up_action_prompt: "Prompt",
+                            follow_up_action_untitled: "New follow-up action",
+                            finish_follow_up_action_edit: "Done",
+                            follow_up_action_text_placeholder: "e.g. Rewrite the last answer more concisely and keep the key points.",
+                            add_follow_up_action: "Add",
+                            follow_up_actions_empty_title: "No follow-up actions",
+                            follow_up_actions_empty_description: "Add actions that are offered after an answer, such as shorten or simplify.",
 
-                            // Examples
-                            examples: "Examples",
-                            examples_placeholder: "Add examples, one per line (text|value)",
-                            example_text_placeholder: "Enter the example text...",
-                            example_value_placeholder: "Enter the example value...",
-                            add_example: "Add Example",
-                            no_examples_selected: "No examples added",
-
-                            // Tools
-                            select_tools: "Select Tools",
-                            no_tools_selected: "No tools selected",
+                            // Starter prompts
+                            starter_prompts: "Starter Prompts",
+                            starter_prompts_description: "Typical tasks shown when users open the assistant.",
+                            starter_prompt_display_text: "Display text",
+                            starter_prompt_prompt: "Prompt",
+                            starter_prompt_untitled: "New starter prompt",
+                            finish_starter_prompt_edit: "Done",
+                            starter_prompt_text_placeholder: "e.g. Draft an email to a citizen",
+                            starter_prompt_value_placeholder:
+                                "e.g. Draft a friendly and easy-to-understand email to a female citizen asking about the status of her application. Explain that the review is still ongoing, do not mention specific deadlines, and offer the option to submit missing documents.",
+                            add_starter_prompt: "Add",
+                            starter_prompts_empty_title: "No starter prompts",
+                            starter_prompts_empty_description: "Add typical tasks so users can start the conversation faster.",
 
                             // DnD / list controls
-                            dnd_reorder_hint: "Drag items by the handle to change their order.",
                             drag_to_reorder: "Drag to reorder",
                             dnd_aria_label: "Reorder item {{position}} of {{total}}",
                             move_up: "Move up",
@@ -1227,18 +1358,35 @@ i18n
                         community_assistants: {
                             title: "Community Assistants",
                             about: "About", // Englisch
-                            search: "Search assistants",
+                            search: "Search assistants by title or description.",
                             filter_by_tag: "Filter by tag",
                             filter_all: "Community",
                             filter_yours: "Yours",
                             filter_subscribed: "Subscribed",
+                            my_assistants: "My assistants",
+                            discover_community: "Discover community",
+                            filter_my_all: "All",
+                            filter_created_short: "Created",
+                            metadata_you: "You",
+                            private_label: "Private",
+                            show_more_personal_assistants: "Show more personal assistants",
+                            empty_search_title: "No matching assistants found",
+                            empty_search_description: "Check your search term or reset the search.",
+                            empty_search_reset: "Reset search",
+                            empty_my_title: "Your library is empty",
+                            empty_my_description: "Create or import an assistant for tasks that come up regularly.",
+                            empty_community_title: "No community assistants available yet",
+                            empty_community_description: "Published assistants appear here as soon as they are shared with the organization.",
+                            empty_create_own: "Create your own assistant",
                             system_prompt: "System prompt",
                             enabled_tools: "Enabled tools",
                             start_chat: "Start conversation",
                             sort_by: "Sort by",
-                            sort_title: "Title",
+                            sort_title: "Name",
+                            sort_last_used: "Last used",
                             sort_updated: "Last updated",
                             sort_subscriptions: "Subscriptions",
+                            sort_popular: "Most popular",
                             sort_by_tooltip: "Change sorting of assistants",
                             save: "Save assistant",
 
@@ -1263,6 +1411,14 @@ i18n
                             times_subscribed: "times subscribed",
                             owned_assistant: "Own Assistant",
                             subscribed_assistant: "Subscribed",
+                            unsubscribe: "Remove subscription",
+                            unsubscribe_confirm_title: "Remove subscription?",
+                            unsubscribe_confirm_message:
+                                'Do you want to remove the subscription for "{{title}}"? Local chats with this assistant will also be deleted.',
+                            unsubscribe_success_title: "Subscription removed",
+                            unsubscribe_success_message: 'The subscription for "{{title}}" was removed.',
+                            unsubscribe_failed_title: "Subscription could not be removed",
+                            unsubscribe_failed_message: "An error occurred while removing the subscription.",
                             more_options: "More options",
                             duplicate: "Create private copy",
                             duplicate_confirm_title: "Create your own private copy",
@@ -1279,7 +1435,7 @@ i18n
                             duplicate_failed_rate_limited: "Too many requests. Please try again later.",
                             duplicate_failed_forbidden: "You do not have permission to duplicate this assistant.",
                             duplicate_failed_not_found: "The assistant was not found and cannot be duplicated.",
-                            local_badge: "Deprecated - Local",
+                            local_badge: "Local",
                             local_state_title: "This local assistant is deprecated",
                             discovery_local_hint:
                                 "This assistant is only saved locally in your browser and will be lost if you switch devices. Save it now so it remains available.",
@@ -1355,12 +1511,11 @@ i18n
                         }
                     },
                     discovery: {
-                        title: "Discover Assistants",
-                        subtitle: "Supercharge your workflow with specialized AI agents."
+                        title: "Assistants",
+                        subtitle: "Use your assistants or discover new ones for recurring tasks."
                     },
                     ...tutorialsTranslations.EN,
-                    ...versionTranslations.EN,
-                    ...faqTranslation.EN
+                    ...versionTranslations.EN
                 }
             },
             BA: {
@@ -1368,7 +1523,6 @@ i18n
                     header: {
                         nutzungsbedingungen: "Gebrauchsvorschriftn",
                         create_assistant: "Assistenten erstoin",
-                        go_to_tutorials_tooltip: "Tutorials und Anleitungen fia Fragments und Tools",
                         go_to_tutorials_aria: "Zu de Tutorials und Anleitungen navigiern",
                         go_to_tutorials: "Tutorials"
                     },
@@ -1407,7 +1561,7 @@ i18n
                         prompt: "Stell a Froog oder lad a Dokument hoch",
                         prompt_no_upload: "Stell a Froog",
                         answer_loading: "I bearbeit grad de Frog",
-                        quickprompts: {
+                        follow_up_actions: {
                             shorter_tooltip: "Schreib a kürzere Antwort",
                             longer_tooltip: "Schreib a längere Antwort",
                             formal_tooltip: "Schreib a förmlichere Antwort",
@@ -1441,7 +1595,7 @@ i18n
                         theme: "Farbschema",
                         language: "Sproch",
                         messages: "Nochrichten",
-                        examples: "Beispui",
+                        starter_prompts: "Startvorschläge",
                         sidebar_show: "Sidebar zoagn",
                         sidebar_hide: "Sidebar ausblenden",
                         cancel: "Obbrecha",
@@ -1451,7 +1605,13 @@ i18n
                         ok: "OK",
                         next: "Weida",
                         loading: "Lade Konfiguration...",
-                        hint: "Hinweis:",
+                        language_names: {
+                            DE: "Deitsch",
+                            EN: "Englisch",
+                            BA: "Boarisch",
+                            FR: "Französisch",
+                            UK: "Ukrainisch"
+                        },
                         edit: "Beorbeitn",
                         delete: "Löschn",
                         errors: {
@@ -1531,32 +1691,34 @@ i18n
                             remove_department: "Abteilung {{name}} wecka"
                         },
                         terms_of_use: {
-                            tooltip: "Nutzungsbedingunga zeig'n",
                             label: "Nutzungsbedingunga",
+                            acceptance_required: "Nutzungsbedingunga (Zustimmung erforderlich)",
                             accept: "Zustimm'n"
                         },
                         versioninfo: {
                             label: "Version",
+                            details: "Versionsdetails",
                             whats_new: "Wos gibt's Nei's?"
                         },
                         feedback: {
-                            tooltip: "Feedback geb'n",
                             aria_label: "Feedback per E-Mail schick'n",
                             label: "Feedback"
                         },
-                        helpbutton: {
-                            help: "Hilfe",
-                            label: "Hilfe & FAQ",
-                            tooltip: "Hilfe und häufige Frog'n zeig'n",
-                            aria_label: "Hilfe und FAQ aufmach'n"
+                        faqbutton: {
+                            label: "Frogn & Antwortn",
+                            aria_label: "Frogn und Antwortn aufmach'n"
                         },
-                        language_selector: {
-                            change_language: "Sprach wechs'l"
+                        incident_report_button: {
+                            label: "Störung melden",
+                            aria_label: "Störung melden"
+                        },
+                        feature_request_button: {
+                            label: "Vobessarungswünsch",
+                            aria_label: "Vobessarungswünsch"
                         },
                         theme_selector: {
-                            theme_light: "Helles Thema",
-                            theme_dark: "Dunkles Thema",
-                            change_theme: "Thema wechs'l",
+                            theme_light: "Helles Design",
+                            theme_dark: "Dunkles Design",
                             light_short: "Hell",
                             dark_short: "Dunkl"
                         },
@@ -1640,6 +1802,35 @@ i18n
                             selection_count: "Im Ratsch verwendet: {{selected}} vo {{total}}",
                             storage_error: "Dokument hod ned gspeichert wern kenna (Speicher voi)."
                         },
+                        microphonebutton: {
+                            record: "Sprachaufnahm starten",
+                            stop: "Aufnahm beenden",
+                            transcribing: "Transkribier...",
+                            loading_model: "Modell wead gladn..."
+                        },
+                        transcriptionSettings: {
+                            title: "Transkription",
+                            beta: "Beta",
+                            open_tooltip: "Transkriptions-Einstellunga aufmacha",
+                            disclaimer:
+                                "Beta-Funktion: D'Transkriptionsqualität is ned validiert und ko je noch Sproch, Audioqualität und lokala Hardware variiern. S'Modell läuft kompled im Browser – koa Audiodaten varoaßn dei Gerät.",
+                            webgpu_warning:
+                                "Dei Browser ko koa WebGPU. D'Transkription lafft afm CPU (WebAssembly) und ko deitli langsamer sei. Für de beste Leistung nimm Chrome oder Edge (Version 113+).",
+                            webgpu_only_error:
+                                "Des Modell braucht WebGPU, des in deim Browser ned verfügbar is. Nimm Chrome oder Edge (Version 113+) oder wähl Whisper Small.",
+                            enable_label: "Transkription aktivieren",
+                            enable_hint: "Is des aktiv und a Modell obagladn, erscheint im Ratsch a Mikrofon-Knopf.",
+                            model_label: "Modell",
+                            model_ready: "bereit",
+                            download: "Modell obaladn",
+                            redownload: "Nei obaladn",
+                            status_idle: "Ned gladn",
+                            status_loading: "Lodt … {{progress}} %",
+                            status_loading_mb: "Lodt … {{downloaded_mb}} MB / {{total_mb}} MB ({{progress}} %)",
+                            status_loading_indeterminate: "Lodt …",
+                            status_ready: "Bereit",
+                            close: "Zuamacha"
+                        },
                         suminput: {
                             tokensused: "Token vabrocht",
                             limit: ". Oide Eingabn wean bei da Generierung ned mit einbezogn!",
@@ -1695,10 +1886,13 @@ i18n
                         example: {
                             label: "Beispui"
                         },
+                        starter_prompt: {
+                            label: "Startvorschlag"
+                        },
                         deleteMessage: {
                             label: "Nachricht zruckziang"
                         },
-                        quickprompt: {
+                        follow_up_action: {
                             name: "Vogschlagene Antworten"
                         },
                         history: {
@@ -1744,6 +1938,14 @@ i18n
                             // Page titles (differ between create and edit)
                             create_title: "An neia Assistentn o'legn",
                             edit_title: "Assistent bearbeiten",
+                            page_helper_create:
+                                "Erstell an Assistentn für an klaren Anwendungsfall. Leg fest, wos er doa soi, wia er se verhoit und welche Werkzeig er nutzen derf.",
+                            page_helper_edit: "Bearbeit Aufgabe, Verhoitn und Werkzeig von dem Assistentn. Änderungen gelten für künftige Unterhaltungen.",
+                            builder_main_label: "Assistent konfigurieren",
+                            action_status_required_open: "Pflichtfelder offen",
+                            action_status_ready_create: "Bereit zum Erstellen",
+                            action_status_ready_save: "Bereit zum Speichern",
+                            action_status_read_only: "Nur lesbar",
 
                             // Create-only: Mode selector
                             subtitle_mode_select: "Wia möchst da starten?",
@@ -1786,7 +1988,7 @@ i18n
                             section_basic: "Grundlegnde Infos",
                             section_behaviour: "Verhoitn & Konfiguration",
                             section_tools: "Werkzeig",
-                            section_prompts: "Prompts & Beispui",
+                            section_conversation_options: "Unterhaltungsoptionen",
                             section_access: "Zugriff & Sichtbarkeit",
 
                             // Advanced settings fields
@@ -1804,28 +2006,35 @@ i18n
                             departments_info:
                                 "Des san de Abteilungen, de Zugriff auf den Assistenten ham. Olle Abteilungen in da Hierarchie unter de ausgsuachten Abteilungen ham a Zugriff.",
 
-                            // Quick prompts
-                            quick_prompts: "Vorgeschlagene Antworten",
-                            quick_prompts_placeholder: "Füg vorgschlagene Antworn hinzu, oane pro Zeile (Label|Prompt)",
-                            quick_prompt_label_placeholder: "Gib des Label ei...",
-                            quick_prompt_text_placeholder: "Gib den Prompt-Text ei...",
-                            add_quick_prompt: "Vorgeschlagene Antwort hinzufügn",
-                            no_quick_prompts_selected: "Koane vorgeschlagene Antworn hinzugfügt",
+                            // Follow-up actions
+                            follow_up_actions: "Folgeaktionen",
+                            follow_up_actions_description: "Aktionen, de nach ana Antwort ois nächster Schritt ogbotn werdn.",
+                            follow_up_action_label_placeholder: "z. B. Kürzer macha",
+                            follow_up_action_display_text: "Anzeigetext",
+                            follow_up_action_prompt: "Prompt",
+                            follow_up_action_untitled: "Neue Folgeaktion",
+                            finish_follow_up_action_edit: "Fertig",
+                            follow_up_action_text_placeholder: "z. B. Formulier de letzte Antwort kürzer und behalt de wichtigsten Punkte bei.",
+                            add_follow_up_action: "Hinzufügn",
+                            follow_up_actions_empty_title: "Koane Folgeaktionen",
+                            follow_up_actions_empty_description:
+                                "Füg Aktionen hinzu, de nach ana Antwort ogbotn werdn, zum Beispiel kürzen oder einfacher macha.",
 
-                            // Examples
-                            examples: "Beispui",
-                            examples_placeholder: "Füg Beispui hinzu, oans pro Zeile (Text|Wert)",
-                            example_text_placeholder: "Gib den Beispui-Text ei...",
-                            example_value_placeholder: "Gib den Beispui-Wert ei...",
-                            add_example: "Beispui hinzufügn",
-                            no_examples_selected: "Koane Beispui hinzugfügt",
-
-                            // Tools
-                            select_tools: "Werkzeig aussuachn",
-                            no_tools_selected: "Koane Werkzeig ausgsuacht",
+                            // Starter prompts
+                            starter_prompts: "Startvorschläge",
+                            starter_prompts_description: "Typische Aufgaben, de beim Öffnen vom Assistenten ozoagt werdn.",
+                            starter_prompt_display_text: "Anzeigetext",
+                            starter_prompt_prompt: "Prompt",
+                            starter_prompt_untitled: "Neuer Startvorschlag",
+                            finish_starter_prompt_edit: "Fertig",
+                            starter_prompt_text_placeholder: "z. B. E-Mail an Bürgerin formuliern",
+                            starter_prompt_value_placeholder:
+                                "z. B. Formulier a freundliche und verständliche E-Mail an a Bürgerin, de nachm Bearbeitungsstand von ihrm Antrag fragt. Erklär, dass de Prüfung no lafft, nenn koane konkretn Fristn und biet o, fehlende Unterlagen nachzureichn.",
+                            add_starter_prompt: "Hinzufügn",
+                            starter_prompts_empty_title: "Koane Startvorschläge",
+                            starter_prompts_empty_description: "Füg typische Aufgaben hinzu, damit Nutzende schneller ins Gespräch kemma.",
 
                             // DnD / list controls
-                            dnd_reorder_hint: "Ziag de Elementa am Griff, um de Reihenfoig zum ändern.",
                             drag_to_reorder: "Ziagn zum Nei-Ordna",
                             dnd_aria_label: "Element {{position}} vo {{total}} nei ordna",
                             move_up: "Nach obm",
@@ -1890,18 +2099,35 @@ i18n
                         community_assistants: {
                             title: "Community Assistentn", // Bairisch
                             about: "Über",
-                            search: "Assistentn durchschaun",
+                            search: "Assistentn noch Titel oder Beschreibung durchschaun.",
                             filter_by_tag: "Noch Tag filtern",
                             filter_all: "Community",
                             filter_yours: "Eigne",
                             filter_subscribed: "Abonniert",
+                            my_assistants: "Meine Assistenten",
+                            discover_community: "Community entdecken",
+                            filter_my_all: "Alle",
+                            filter_created_short: "Erstellt",
+                            metadata_you: "Du",
+                            private_label: "Privat",
+                            show_more_personal_assistants: "Mehr persönliche Assistentn anzeigen",
+                            empty_search_title: "Koane passenden Assistentn gfundn",
+                            empty_search_description: "Prüf dein Suchbegriff oder setz de Such zruck.",
+                            empty_search_reset: "Such zrucksetzn",
+                            empty_my_title: "Dei Bibliothek is no leer",
+                            empty_my_description: "Erstell oder importier an Assistentn für Aufgaben, de regelmäßig wiederkemma.",
+                            empty_community_title: "No koane Community-Assistentn verfügbar",
+                            empty_community_description: "Veröffentlichte Assistentn erscheina do, sobald's mit da Organisation teilt worn san.",
+                            empty_create_own: "Eignen Assistentn erstellen",
                             system_prompt: "System-Prompt",
                             enabled_tools: "Aktivierte Werkzeig",
                             start_chat: "Ratsch o'fanga",
                             sort_by: "Sortieren noch",
-                            sort_title: "Titel",
+                            sort_title: "Name",
+                            sort_last_used: "Zuletzt benutzt",
                             sort_updated: "Zletzt aktualisiert",
                             sort_subscriptions: "Abonnements",
+                            sort_popular: "Beliebteste",
                             sort_by_tooltip: "Sortierung vo de Assistentn ändern",
                             save: "Assistent speichan",
 
@@ -1926,6 +2152,13 @@ i18n
                             times_subscribed: "moi abonniert",
                             owned_assistant: "Eigener Assistent",
                             subscribed_assistant: "Abonniert",
+                            unsubscribe: "Abo entfernen",
+                            unsubscribe_confirm_title: "Abo entfernen?",
+                            unsubscribe_confirm_message: "Wuißt du des Abo für „{{title}}“ entfernen? Lokale Chats mit dem Assistenten werdn aa glöscht.",
+                            unsubscribe_success_title: "Abo entfernt",
+                            unsubscribe_success_message: "Des Abo für „{{title}}“ is entfernt worn.",
+                            unsubscribe_failed_title: "Abo konnt ned entfernt werdn",
+                            unsubscribe_failed_message: "Beim Entfernen vom Abo is a Fehler aufgetreten.",
                             more_options: "Weitere Optionen",
                             duplicate: "Private Kopie erstoin",
                             duplicate_confirm_title: "Eigene private Kopie erstoin",
@@ -1942,7 +2175,7 @@ i18n
                             duplicate_failed_rate_limited: "Zvui Anfragen. Bitte probier's spada nomoi.",
                             duplicate_failed_forbidden: "Du host koa Berechtigung, den Assistentn zum Dupliziern.",
                             duplicate_failed_not_found: "Da Assistent is ned gfundn worn und ko ned dupliziert wern.",
-                            local_badge: "Veraltet - Lokal",
+                            local_badge: "Lokal",
                             local_state_title: "Der lokale Assistent is veraltet",
                             discovery_local_hint:
                                 "Der Assistent is bloß lokal in deim Browser gesichert und geht verloren, wennst des Gerät wechselst. Sicher eam jetzt, damit a dauerhaft erhalten bleibt.",
@@ -2019,12 +2252,11 @@ i18n
                         }
                     },
                     discovery: {
-                        title: "Assistentn entdeckn",
-                        subtitle: "Optimier dein Workflow mit spezialisierten KI-Agenten."
+                        title: "Assistentn",
+                        subtitle: "Nutze deine Assistenten oder entdecke neue für wiederkehrende Aufgaben."
                     },
                     ...tutorialsTranslations.BA,
-                    ...versionTranslations.BA,
-                    ...faqTranslation.BA
+                    ...versionTranslations.BA
                 }
             },
             FR: {
@@ -2032,7 +2264,6 @@ i18n
                     header: {
                         nutzungsbedingungen: "Conditions d'utilisation",
                         create_assistant: "Créer un assistant",
-                        go_to_tutorials_tooltip: "Tutoriels et guides pour les fragments et les outils",
                         go_to_tutorials_aria: "Aller aux tutoriels et guides",
                         go_to_tutorials: "Tutoriels"
                     },
@@ -2071,7 +2302,7 @@ i18n
                         prompt: "Posez une question ou téléchargez un document",
                         prompt_no_upload: "Posez une question",
                         answer_loading: "Créer une réponse",
-                        quickprompts: {
+                        follow_up_actions: {
                             shorter_tooltip: "Écrire une réponse plus courte",
                             longer_tooltip: "Écrire une réponse plus longue",
                             formal_tooltip: "Écrire une réponse plus formelle",
@@ -2111,7 +2342,7 @@ i18n
                         theme: "Thème",
                         language: "Langue",
                         messages: "Messages",
-                        examples: "Exemples",
+                        starter_prompts: "Starter prompts",
                         sidebar_show: "Afficher la barre latérale",
                         sidebar_hide: "Masquer la barre latérale",
                         cancel: "Annuler",
@@ -2121,7 +2352,13 @@ i18n
                         ok: "OK",
                         next: "Suivant",
                         loading: "Chargement de la configuration...",
-                        hint: "Conseil :",
+                        language_names: {
+                            DE: "Allemand",
+                            EN: "Anglais",
+                            BA: "Bavarois",
+                            FR: "Français",
+                            UK: "Ukrainien"
+                        },
                         edit: "Modifier",
                         delete: "Supprimer",
                         errors: {
@@ -2196,32 +2433,34 @@ i18n
                             remove_department: "Supprimer le département {{name}}"
                         },
                         terms_of_use: {
-                            tooltip: "Afficher les conditions d'utilisation",
                             label: "Conditions d'utilisation",
+                            acceptance_required: "Conditions d'utilisation (acceptation requise)",
                             accept: "Accepter"
                         },
                         versioninfo: {
                             label: "Version",
+                            details: "Détails de version",
                             whats_new: "Quoi de neuf ?"
                         },
                         feedback: {
-                            tooltip: "Donner un avis",
                             aria_label: "Envoyer des retours par e-mail",
                             label: "Feedback"
                         },
-                        helpbutton: {
-                            help: "Aide",
-                            label: "Aide & FAQ",
-                            tooltip: "Afficher l'aide et les questions fréquentes",
-                            aria_label: "Ouvrir l'aide et la FAQ"
+                        faqbutton: {
+                            label: "Questions et réponses",
+                            aria_label: "Ouvrir les questions et réponses"
                         },
-                        language_selector: {
-                            change_language: "Changer la langue"
+                        incident_report_button: {
+                            label: "Signaler un incident",
+                            aria_label: "Signaler un incident"
+                        },
+                        feature_request_button: {
+                            label: "Suggestion d'amélioration",
+                            aria_label: "Suggestion d'amélioration"
                         },
                         theme_selector: {
                             theme_light: "Thème clair",
                             theme_dark: "Thème sombre",
-                            change_theme: "Changer de thème",
                             light_short: "Clair",
                             dark_short: "Sombre"
                         },
@@ -2305,6 +2544,35 @@ i18n
                             selection_count: "{{selected}} sur {{total}} sélectionné(s)",
                             storage_error: "Le document n'a pas pu être enregistré (stockage plein)."
                         },
+                        microphonebutton: {
+                            record: "Démarrer l'enregistrement vocal",
+                            stop: "Arrêter l'enregistrement",
+                            transcribing: "Transcription en cours...",
+                            loading_model: "Chargement du modèle..."
+                        },
+                        transcriptionSettings: {
+                            title: "Transcription",
+                            beta: "Bêta",
+                            open_tooltip: "Ouvrir les paramètres de transcription",
+                            disclaimer:
+                                "Fonctionnalité bêta : la qualité de la transcription n'est pas validée et peut varier selon la langue, la qualité audio et votre matériel local. Le modèle s'exécute entièrement dans le navigateur – aucun audio ne quitte votre appareil.",
+                            webgpu_warning:
+                                "Votre navigateur ne prend pas en charge WebGPU. La transcription s'exécutera sur le CPU (WebAssembly) et peut être nettement plus lente. Pour de meilleures performances, utilisez Chrome ou Edge (version 113+).",
+                            webgpu_only_error:
+                                "Ce modèle nécessite WebGPU, qui n'est pas disponible dans votre navigateur. Utilisez Chrome ou Edge (version 113+) ou sélectionnez Whisper Small.",
+                            enable_label: "Activer la transcription",
+                            enable_hint: "Lorsque l'option est activée et qu'un modèle est téléchargé, un bouton microphone apparaît dans le chat.",
+                            model_label: "Modèle",
+                            model_ready: "prêt",
+                            download: "Télécharger le modèle",
+                            redownload: "Re-télécharger",
+                            status_idle: "Non chargé",
+                            status_loading: "Chargement … {{progress}} %",
+                            status_loading_mb: "Chargement … {{downloaded_mb}} MB / {{total_mb}} MB ({{progress}} %)",
+                            status_loading_indeterminate: "Chargement …",
+                            status_ready: "Prêt",
+                            close: "Fermer"
+                        },
                         suminput: {
                             tokensused: "Tokens utilisés",
                             limit: ". Les entrées plus anciennes ne seront pas prises en compte lors de la génération !",
@@ -2360,10 +2628,13 @@ i18n
                         example: {
                             label: "Exemple"
                         },
+                        starter_prompt: {
+                            label: "Suggestion pour débuter"
+                        },
                         deleteMessage: {
                             label: "Retirer le message"
                         },
-                        quickprompt: {
+                        follow_up_action: {
                             name: "Réponses suggérées"
                         },
                         history: {
@@ -2409,6 +2680,15 @@ i18n
                             // Page titles (differ between create and edit)
                             create_title: "Créer un assistant",
                             edit_title: "Modifier l'assistant",
+                            page_helper_create:
+                                "Créez un assistant pour un cas d'utilisation clair. Définissez ce qu'il doit faire, son comportement et les outils qu'il peut utiliser.",
+                            page_helper_edit:
+                                "Modifiez la tâche, le comportement et les outils de cet assistant. Les changements s'appliquent aux futures conversations.",
+                            builder_main_label: "Configurer l'assistant",
+                            action_status_required_open: "Champs obligatoires ouverts",
+                            action_status_ready_create: "Prêt à créer",
+                            action_status_ready_save: "Prêt à enregistrer",
+                            action_status_read_only: "Lecture seule",
 
                             // Create-only: Mode selector
                             subtitle_mode_select: "Choisissez comment vous souhaitez commencer",
@@ -2451,7 +2731,7 @@ i18n
                             section_basic: "Informations de base",
                             section_behaviour: "Comportement et configuration",
                             section_tools: "Outils",
-                            section_prompts: "Prompts et exemples",
+                            section_conversation_options: "Options de conversation",
                             section_access: "Accès et visibilité",
 
                             // Advanced settings fields
@@ -2469,28 +2749,34 @@ i18n
                             departments_info:
                                 "Ce sont les départements qui ont accès à l'assistant. Tous les départements situés en dessous dans la hiérarchie y ont également accès.",
 
-                            // Quick prompts
-                            quick_prompts: "Prompts rapides",
-                            quick_prompts_placeholder: "Ajouter des prompts rapides, un par ligne (label|prompt)",
-                            quick_prompt_label_placeholder: "Saisir le libellé...",
-                            quick_prompt_text_placeholder: "Saisir le texte du prompt...",
-                            add_quick_prompt: "Ajouter un prompt rapide",
-                            no_quick_prompts_selected: "Aucun prompt rapide ajouté",
+                            // Follow-up actions
+                            follow_up_actions: "Mesures de suivi",
+                            follow_up_actions_description: "Actions proposées après une réponse comme prochaine étape.",
+                            follow_up_action_label_placeholder: "p. ex. Raccourcir",
+                            follow_up_action_display_text: "Texte affiché",
+                            follow_up_action_prompt: "Prompt",
+                            follow_up_action_untitled: "Nouvelle action de suivi",
+                            finish_follow_up_action_edit: "Terminé",
+                            follow_up_action_text_placeholder: "p. ex. Reformule la dernière réponse plus brièvement en gardant les points clés.",
+                            add_follow_up_action: "Ajouter",
+                            follow_up_actions_empty_title: "Aucune action de suivi",
+                            follow_up_actions_empty_description: "Ajoutez des actions proposées après une réponse, par exemple raccourcir ou simplifier.",
 
-                            // Examples
-                            examples: "Exemples",
-                            examples_placeholder: "Ajouter des exemples, un par ligne (texte|valeur)",
-                            example_text_placeholder: "Saisir le texte de l'exemple...",
-                            example_value_placeholder: "Saisir la valeur de l'exemple...",
-                            add_example: "Ajouter un exemple",
-                            no_examples_selected: "Aucun exemple ajouté",
-
-                            // Tools
-                            select_tools: "Sélectionner des outils",
-                            no_tools_selected: "Aucun outil sélectionné",
+                            // Starter prompts
+                            starter_prompts: "Suggestions pour débuter",
+                            starter_prompts_description: "Tâches typiques affichées à l'ouverture de l'assistant.",
+                            starter_prompt_display_text: "Texte affiché",
+                            starter_prompt_prompt: "Prompt",
+                            starter_prompt_untitled: "Nouvelle suggestion pour débuter",
+                            finish_starter_prompt_edit: "Terminé",
+                            starter_prompt_text_placeholder: "p. ex. Rédiger un e-mail à une citoyenne",
+                            starter_prompt_value_placeholder:
+                                "p. ex. Rédige un e-mail aimable et facile à comprendre à une citoyenne qui demande l'état d'avancement de sa demande. Explique que l'examen est toujours en cours, ne mentionne aucun délai précis et propose de transmettre les documents manquants.",
+                            add_starter_prompt: "Ajouter",
+                            starter_prompts_empty_title: "Aucune suggestion pour débuter",
+                            starter_prompts_empty_description: "Ajoutez des tâches typiques pour aider les utilisateurs à démarrer plus vite.",
 
                             // DnD / list controls
-                            dnd_reorder_hint: "Faites glisser les éléments avec la poignée pour modifier l'ordre.",
                             drag_to_reorder: "Glisser pour réordonner",
                             dnd_aria_label: "Réorganiser l'élément {{position}} sur {{total}}",
                             move_up: "Monter",
@@ -2556,18 +2842,27 @@ i18n
                         community_assistants: {
                             title: "Assistants Communautaires",
                             about: "À propos",
-                            search: "Rechercher des assistants",
+                            search: "Rechercher des assistants par titre ou description.",
                             filter_by_tag: "Filtrer par tag",
                             filter_all: "Communauté",
                             filter_yours: "Vos",
                             filter_subscribed: "Abonnés",
+                            my_assistants: "Mes assistants",
+                            discover_community: "Découvrir la communauté",
+                            filter_my_all: "Tous",
+                            filter_created_short: "Créés",
+                            metadata_you: "Vous",
+                            private_label: "Privé",
+                            show_more_personal_assistants: "Afficher plus d'assistants personnels",
                             system_prompt: "Prompt système",
                             enabled_tools: "Outils activés",
                             start_chat: "Démarrer la conversation",
                             sort_by: "Trier par",
-                            sort_title: "Titre",
+                            sort_title: "Nom",
+                            sort_last_used: "Dernière utilisation",
                             sort_updated: "Dernière mise à jour",
                             sort_subscriptions: "Abonnements",
+                            sort_popular: "Les plus populaires",
                             sort_by_tooltip: "Modifier le tri des assistants",
                             save: "Enregistrer l'assistant",
 
@@ -2592,6 +2887,14 @@ i18n
                             times_subscribed: "fois abonné",
                             owned_assistant: "Assistant Propre",
                             subscribed_assistant: "Abonné",
+                            unsubscribe: "Supprimer l'abonnement",
+                            unsubscribe_confirm_title: "Supprimer l'abonnement ?",
+                            unsubscribe_confirm_message:
+                                'Voulez-vous supprimer l’abonnement à "{{title}}" ? Les conversations locales avec cet assistant seront également supprimées.',
+                            unsubscribe_success_title: "Abonnement supprimé",
+                            unsubscribe_success_message: 'L’abonnement à "{{title}}" a été supprimé.',
+                            unsubscribe_failed_title: "L'abonnement n'a pas pu être supprimé",
+                            unsubscribe_failed_message: "Une erreur est survenue lors de la suppression de l'abonnement.",
                             more_options: "Plus d'options",
                             duplicate: "Créer une copie privée",
                             duplicate_confirm_title: "Créer votre propre copie privée",
@@ -2606,7 +2909,7 @@ i18n
                             duplicate_failed_rate_limited: "Trop de requêtes. Veuillez réessayer plus tard.",
                             duplicate_failed_forbidden: "Vous n'avez pas la permission de dupliquer cet assistant.",
                             duplicate_failed_not_found: "L'assistant n'a pas été trouvé et ne peut pas être dupliqué.",
-                            local_badge: "Obsolète - Local",
+                            local_badge: "Local",
                             local_state_title: "Cet assistant local est obsolète",
                             discovery_local_hint:
                                 "Cet assistant est uniquement enregistré localement dans votre navigateur et sera perdu si vous changez d'appareil. Enregistrez-le maintenant pour le conserver durablement.",
@@ -2684,18 +2987,16 @@ i18n
                         }
                     },
                     discovery: {
-                        title: "Découvrir les Assistants",
-                        subtitle: "Boostez votre flux de travail avec des agents IA spécialisés."
+                        title: "Assistants",
+                        subtitle: "Utilisez vos assistants ou découvrez-en de nouveaux pour les tâches récurrentes."
                     },
                     ...tutorialsTranslations.FR,
-                    ...versionTranslations.FR,
-                    ...faqTranslation.FR
+                    ...versionTranslations.FR
                 }
             },
             UK: {
                 translation: {
                     header: {
-                        go_to_tutorials_tooltip: "Навчальні матеріали та інструкції для фрагментів та інструментів",
                         go_to_tutorials_aria: "Перейти до навчальних матеріалів та інструкцій",
                         go_to_tutorials: "Навчальні матеріали",
                         create_assistant: "Створити асистента",
@@ -2736,7 +3037,7 @@ i18n
                         prompt: "Задайте питання або завантажте документ",
                         prompt_no_upload: "Задайте питання",
                         answer_loading: "Створення відповіді",
-                        quickprompts: {
+                        follow_up_actions: {
                             shorter_tooltip: "Написати коротшу відповідь",
                             longer_tooltip: "Написати довшу відповідь",
                             formal_tooltip: "Написати офіційнішу відповідь",
@@ -2776,7 +3077,7 @@ i18n
                         theme: "Тема",
                         language: "Мова",
                         messages: "Повідомлення",
-                        examples: "Приклади",
+                        starter_prompts: "Стартові підказки",
                         sidebar_show: "Показати бічну панель",
                         sidebar_hide: "Сховати бічну панель",
                         cancel: "Скасувати",
@@ -2786,7 +3087,13 @@ i18n
                         ok: "OK",
                         next: "Далі",
                         loading: "Завантаження конфігурації...",
-                        hint: "Підказка:",
+                        language_names: {
+                            DE: "Німецька",
+                            EN: "Англійська",
+                            BA: "Баварська",
+                            FR: "Французька",
+                            UK: "Українська"
+                        },
                         edit: "Редагувати",
                         delete: "Видалити",
                         errors: {
@@ -2861,32 +3168,34 @@ i18n
                             remove_department: "Видалити відділ {{name}}"
                         },
                         terms_of_use: {
-                            tooltip: "Показати умови використання",
                             label: "Умови використання",
+                            acceptance_required: "Умови використання (потрібне прийняття)",
                             accept: "Прийняти"
                         },
                         versioninfo: {
                             label: "Версія",
+                            details: "Деталі версії",
                             whats_new: "Що нового?"
                         },
                         feedback: {
-                            tooltip: "Залишити відгук",
                             aria_label: "Надіслати відгук електронною поштою",
                             label: "Відгук"
                         },
-                        helpbutton: {
-                            help: "Допомога",
-                            label: "Допомога та FAQ",
-                            tooltip: "Показати допомогу та часто задавані питання",
-                            aria_label: "Відкрити допомогу та FAQ"
+                        faqbutton: {
+                            label: "Запитання та відповіді",
+                            aria_label: "Відкрити запитання та відповіді"
                         },
-                        language_selector: {
-                            change_language: "Змінити мову"
+                        incident_report_button: {
+                            label: "Повідомити про збій",
+                            aria_label: "Повідомити про збій"
+                        },
+                        feature_request_button: {
+                            label: "Удосконалення",
+                            aria_label: "Удосконалення"
                         },
                         theme_selector: {
                             theme_light: "Світла тема",
                             theme_dark: "Темна тема",
-                            change_theme: "Змінити тему",
                             light_short: "Світло",
                             dark_short: "Темно"
                         },
@@ -2970,6 +3279,35 @@ i18n
                             selection_count: "{{selected}} з {{total}} вибрано",
                             storage_error: "Документ не вдалося зберегти (сховище переповнене)."
                         },
+                        microphonebutton: {
+                            record: "Почати голосовий запис",
+                            stop: "Зупинити запис",
+                            transcribing: "Транскрибування...",
+                            loading_model: "Завантаження моделі..."
+                        },
+                        transcriptionSettings: {
+                            title: "Транскрипція",
+                            beta: "Бета",
+                            open_tooltip: "Відкрити налаштування транскрипції",
+                            disclaimer:
+                                "Бета-функція: якість транскрипції не перевірена і може залежати від мови, якості звуку та локального обладнання. Модель працює повністю у браузері – аудіо не залишає ваш пристрій.",
+                            webgpu_warning:
+                                "Ваш браузер не підтримує WebGPU. Транскрипція виконуватиметься на CPU (WebAssembly) і може бути помітно повільнішою. Для найкращої продуктивності використовуйте Chrome або Edge (версія 113+).",
+                            webgpu_only_error:
+                                "Ця модель потребує WebGPU, яке недоступне у вашому браузері. Спробуйте Chrome або Edge (версія 113+) або виберіть Whisper Small.",
+                            enable_label: "Увімкнути транскрипцію",
+                            enable_hint: "Якщо увімкнено й модель завантажено, у чаті з'явиться кнопка мікрофона.",
+                            model_label: "Модель",
+                            model_ready: "готова",
+                            download: "Завантажити модель",
+                            redownload: "Завантажити знову",
+                            status_idle: "Не завантажено",
+                            status_loading: "Завантаження … {{progress}} %",
+                            status_loading_mb: "Завантаження … {{downloaded_mb}} MB / {{total_mb}} MB ({{progress}} %)",
+                            status_loading_indeterminate: "Завантаження …",
+                            status_ready: "Готова",
+                            close: "Закрити"
+                        },
                         suminput: {
                             tokensused: "Використано токени",
                             limit: ". Старіші введення не будуть враховані при генерації!",
@@ -3025,10 +3363,13 @@ i18n
                         example: {
                             label: "Приклад"
                         },
+                        starter_prompt: {
+                            label: "Початковий запит"
+                        },
                         deleteMessage: {
                             label: "Видалити повідомлення"
                         },
-                        quickprompt: {
+                        follow_up_action: {
                             name: "Рекомендовані відповіді"
                         },
                         history: {
@@ -3074,6 +3415,14 @@ i18n
                             // Page titles (differ between create and edit)
                             create_title: "Створити асистента",
                             edit_title: "Редагувати асистента",
+                            page_helper_create:
+                                "Створіть асистента для чіткого сценарію використання. Визначте, що він має робити, як поводитися та які інструменти може використовувати.",
+                            page_helper_edit: "Редагуйте завдання, поведінку та інструменти цього асистента. Зміни застосовуються до майбутніх розмов.",
+                            builder_main_label: "Налаштувати асистента",
+                            action_status_required_open: "Обов'язкові поля відкриті",
+                            action_status_ready_create: "Готово до створення",
+                            action_status_ready_save: "Готово до збереження",
+                            action_status_read_only: "Лише читання",
 
                             // Create-only: Mode selector
                             subtitle_mode_select: "Оберіть, як ви хочете почати",
@@ -3115,7 +3464,7 @@ i18n
                             section_basic: "Основна інформація",
                             section_behaviour: "Поведінка та конфігурація",
                             section_tools: "Інструменти",
-                            section_prompts: "Промпти та приклади",
+                            section_conversation_options: "Опції розмови",
                             section_access: "Доступ і видимість",
 
                             // Advanced settings fields
@@ -3132,28 +3481,34 @@ i18n
                             departments: "Підрозділи",
                             departments_info: "Це підрозділи, які мають доступ до асистента. Усі підрозділи нижче у вибраній ієрархії також матимуть доступ.",
 
-                            // Quick prompts
-                            quick_prompts: "Швидкі промпти",
-                            quick_prompts_placeholder: "Додайте швидкі промпти, по одному в рядку (label|prompt)",
-                            quick_prompt_label_placeholder: "Введіть мітку...",
-                            quick_prompt_text_placeholder: "Введіть текст промпту...",
-                            add_quick_prompt: "Додати швидкий промпт",
-                            no_quick_prompts_selected: "Швидкі промпти не додано",
+                            // Follow-up actions
+                            follow_up_actions: "Наступні кроки",
+                            follow_up_actions_description: "Дії, які пропонуються після відповіді як наступний крок.",
+                            follow_up_action_label_placeholder: "напр. Скоротити",
+                            follow_up_action_display_text: "Текст кнопки",
+                            follow_up_action_prompt: "Промпт",
+                            follow_up_action_untitled: "Нова наступна дія",
+                            finish_follow_up_action_edit: "Готово",
+                            follow_up_action_text_placeholder: "напр. Перепиши останню відповідь коротше, зберігши ключові пункти.",
+                            add_follow_up_action: "Додати",
+                            follow_up_actions_empty_title: "Немає наступних дій",
+                            follow_up_actions_empty_description: "Додайте дії, які пропонуються після відповіді, наприклад скоротити або спростити.",
 
-                            // Examples
-                            examples: "Приклади",
-                            examples_placeholder: "Додайте приклади, по одному в рядку (text|value)",
-                            example_text_placeholder: "Введіть текст прикладу...",
-                            example_value_placeholder: "Введіть значення прикладу...",
-                            add_example: "Додати приклад",
-                            no_examples_selected: "Приклади не додано",
-
-                            // Tools
-                            select_tools: "Обрати інструменти",
-                            no_tools_selected: "Інструменти не обрано",
+                            // Starter prompts
+                            starter_prompts: "Початкові запити",
+                            starter_prompts_description: "Типові завдання, які показуються під час відкриття асистента.",
+                            starter_prompt_display_text: "Текст кнопки",
+                            starter_prompt_prompt: "Промпт",
+                            starter_prompt_untitled: "Новий початковий запит",
+                            finish_starter_prompt_edit: "Готово",
+                            starter_prompt_text_placeholder: "напр. Написати лист громадянці",
+                            starter_prompt_value_placeholder:
+                                "напр. Склади дружній і зрозумілий електронний лист громадянці, яка запитує про стан розгляду своєї заяви. Поясни, що перевірка ще триває, не називай конкретних строків і запропонуй подати відсутні документи.",
+                            add_starter_prompt: "Додати",
+                            starter_prompts_empty_title: "Немає початкових запитів",
+                            starter_prompts_empty_description: "Додайте типові завдання, щоб користувачі швидше починали розмову.",
 
                             // DnD / list controls
-                            dnd_reorder_hint: "Перетягуйте елементи за ручку, щоб змінити порядок.",
                             drag_to_reorder: "Перетягнути для зміни порядку",
                             dnd_aria_label: "Змінити порядок елемента {{position}} з {{total}}",
                             move_up: "Вгору",
@@ -3217,18 +3572,35 @@ i18n
                         community_assistants: {
                             title: "Громадські Асистенти", // Ukrainisch
                             about: "Про",
-                            search: "Пошук асистентів",
+                            search: "Шукати асистентів за назвою або описом.",
                             filter_by_tag: "Фільтрувати за тегом",
                             filter_all: "Спільнота",
                             filter_yours: "Ваші",
                             filter_subscribed: "Підписані",
+                            my_assistants: "Мої асистенти",
+                            discover_community: "Відкрити спільноту",
+                            filter_my_all: "Усі",
+                            filter_created_short: "Створені",
+                            metadata_you: "Ви",
+                            private_label: "Приватний",
+                            show_more_personal_assistants: "Показати більше особистих асистентів",
+                            empty_search_title: "Відповідних асистентів не знайдено",
+                            empty_search_description: "Перевірте пошуковий запит або скиньте пошук.",
+                            empty_search_reset: "Скинути пошук",
+                            empty_my_title: "Ваша бібліотека порожня",
+                            empty_my_description: "Створіть або імпортуйте асистента для завдань, які регулярно повторюються.",
+                            empty_community_title: "Громадські асистенти ще недоступні",
+                            empty_community_description: "Опубліковані асистенти з'являться тут, щойно їх буде поширено в організації.",
+                            empty_create_own: "Створити власного асистента",
                             system_prompt: "Системний запит",
                             enabled_tools: "Увімкнені інструменти",
                             start_chat: "Розпочати розмову",
                             sort_by: "Сортувати за",
-                            sort_title: "Заголовок",
+                            sort_title: "Назва",
+                            sort_last_used: "Останнє використання",
                             sort_updated: "Останнє оновлення",
                             sort_subscriptions: "Підписки",
+                            sort_popular: "Найпопулярніші",
                             sort_by_tooltip: "Змінити сортування асистентів",
                             save: "Зберегти асистента",
 
@@ -3253,6 +3625,13 @@ i18n
                             times_subscribed: "разів підписано",
                             owned_assistant: "Власний Асистент",
                             subscribed_assistant: "Підписаний",
+                            unsubscribe: "Скасувати підписку",
+                            unsubscribe_confirm_title: "Скасувати підписку?",
+                            unsubscribe_confirm_message: 'Ви хочете скасувати підписку на "{{title}}"? Локальні чати з цим асистентом також буде видалено.',
+                            unsubscribe_success_title: "Підписку скасовано",
+                            unsubscribe_success_message: 'Підписку на "{{title}}" було скасовано.',
+                            unsubscribe_failed_title: "Не вдалося скасувати підписку",
+                            unsubscribe_failed_message: "Під час скасування підписки сталася помилка.",
                             more_options: "Додаткові параметри",
                             duplicate: "Створити приватну копію",
                             duplicate_confirm_title: "Створити власну приватну копію",
@@ -3269,7 +3648,7 @@ i18n
                             duplicate_failed_rate_limited: "Забагато запитів. Будь ласка, спробуйте пізніше.",
                             duplicate_failed_forbidden: "У вас немає дозволу на дублювання цього асистента.",
                             duplicate_failed_not_found: "Асистента не знайдено, дублювання неможливе.",
-                            local_badge: "Застарілий - локальний",
+                            local_badge: "Локальний",
                             local_state_title: "Цей локальний асистент застарів",
                             discovery_local_hint:
                                 "Цей асистент збережено лише локально у вашому браузері, і він буде втрачений, якщо ви зміните пристрій. Збережіть його зараз, щоб він залишався доступним.",
@@ -3346,12 +3725,11 @@ i18n
                         }
                     },
                     discovery: {
-                        title: "Відкрийте асистентів",
-                        subtitle: "Прискорте свою роботу за допомогою спеціалізованих ШІ-агентів."
+                        title: "Асистенти",
+                        subtitle: "Використовуйте своїх асистентів або відкривайте нових для повторюваних завдань."
                     },
                     ...tutorialsTranslations.UK,
-                    ...versionTranslations.UK,
-                    ...faqTranslation.UK
+                    ...versionTranslations.UK
                 }
             }
         }

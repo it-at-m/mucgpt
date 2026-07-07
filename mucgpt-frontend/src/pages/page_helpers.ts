@@ -274,6 +274,24 @@ export const makeApiRequest = async (
     onLoadingChange?.(false);
     dispatch({ type: "ADD_ANSWER", payload: initialMessage });
 
+    // Ensure the currently generating answer placeholder is brought into view
+    // immediately after submit. We retry because the ref may not be attached
+    // on the first frame right after dispatch.
+    const scrollToCurrentGeneration = () => {
+        if (answerTopRef?.current) {
+            answerTopRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+            return;
+        }
+
+        chatMessageStreamEnd.current?.scrollIntoView({ behavior: "smooth" });
+    };
+
+    requestAnimationFrame(() => {
+        scrollToCurrentGeneration();
+        requestAnimationFrame(scrollToCurrentGeneration);
+        setTimeout(scrollToCurrentGeneration, 120);
+    });
+
     // Buffer management for optimized UI updates
     let textBuffer = ""; // Accumulates regular text content
     let updateTimer: ReturnType<typeof setTimeout> | null = null; // Debounces UI updates

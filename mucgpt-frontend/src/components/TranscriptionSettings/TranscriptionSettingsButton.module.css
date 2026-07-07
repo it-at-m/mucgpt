@@ -1,0 +1,11 @@
+.button {
+    color: var(--colorNeutralForeground1) !important;
+}
+
+.button:hover {
+    background-color: var(--colorNeutralStroke2) !important;
+}
+
+.icon {
+    color: var(--colorNeutralForeground1);
+}

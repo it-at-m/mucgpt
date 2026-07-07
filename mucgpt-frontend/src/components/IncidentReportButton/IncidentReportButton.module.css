@@ -1,0 +1,11 @@
+.incidentReportButton {
+    color: var(--colorNeutralForeground1) !important;
+}
+
+.incidentReportButton:hover {
+    background-color: var(--colorNeutralStroke2) !important;
+}
+
+.icon {
+    color: var(--colorNeutralForeground1) !important;
+}

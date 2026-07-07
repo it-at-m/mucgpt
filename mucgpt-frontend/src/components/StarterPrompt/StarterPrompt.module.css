@@ -1,0 +1,95 @@
+.starterPromptNavList {
+    list-style: none;
+    margin: 0 auto 4px;
+    width: min(100%, 980px);
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    justify-content: center;
+    gap: 10px;
+    padding: 0 20px;
+}
+
+.starterPromptNavList > li {
+    display: flex;
+    flex: 1 1 260px;
+    max-width: 320px;
+    min-width: 0;
+}
+
+.starterPrompt {
+    width: 100%;
+    min-width: 0;
+    text-align: left;
+    overflow: hidden;
+    height: auto;
+    min-height: 52px;
+    border-radius: 8px;
+    text-decoration: none;
+    background: var(--colorNeutralBackground2);
+    border: 1px solid var(--colorNeutralStroke1);
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: flex-start;
+    padding: 10px 14px;
+    box-shadow: none;
+    transition:
+        background-color 160ms ease,
+        border-color 160ms ease,
+        box-shadow 160ms ease,
+        transform 160ms ease;
+    cursor: pointer;
+}
+
+.starterPrompt :global(.fui-Button__content) {
+    display: block;
+    width: 100%;
+    min-width: 0;
+    text-align: left;
+}
+
+.starterPrompt:hover {
+    background: var(--colorNeutralBackground2Hover);
+    border-color: var(--colorNeutralStroke1Hover);
+    box-shadow: var(--shadow4);
+    transform: translateY(-1px);
+}
+
+.starterPromptText {
+    margin: 0;
+    font-size: var(--fontSizeBase400);
+    color: var(--colorNeutralForeground2);
+    line-height: 1.4;
+    white-space: normal;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 4;
+    line-clamp: 4;
+    -webkit-box-orient: vertical;
+    overflow-wrap: anywhere;
+    hyphens: auto;
+}
+
+@media only screen and (max-height: 780px) {
+    .starterPrompt {
+        min-height: 48px;
+        padding-block: 10px;
+    }
+
+    .starterPromptText {
+        font-size: var(--fontSizeBase300);
+        -webkit-line-clamp: 3;
+        line-clamp: 3;
+    }
+}
+
+@media only screen and (max-width: 520px) {
+    .starterPromptNavList {
+        padding-inline: 12px;
+    }
+
+    .starterPromptNavList > li {
+        max-width: none;
+    }
+}

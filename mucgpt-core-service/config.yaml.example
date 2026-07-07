@@ -17,10 +17,16 @@ LOG_CONFIG: "logconf.yaml"
 # Frontend settings
 ENV_NAME: "MUCGPT"
 ALTERNATIVE_LOGO: false
+TRANSCRIPTION_ENABLED: false
 FRONTEND_VERSION: "unknown"
 ASSISTANT_VERSION: "unknown"
 FOOTER_LINK_URL: "https://ki.muenchen.de"
 FOOTER_LABEL: "DAICE"
+FAQ_URL: "https://ki.muenchen.de/"
+INCIDENT_REPORT_URL: "https://ki.muenchen.de/"
+FEATURE_REQUEST_URL: "https://ki.muenchen.de/"
+CONTACT_MAIL_URL: "mailto:ki@muenchen.de"
+AD2IMAGE_URL: "http://localhost:8084"  # Base URL of the ad2image service
 
 # Backend settings
 UNAUTHORIZED_USER_REDIRECT_URL: ""
@@ -72,6 +78,17 @@ MCP:
       #   - name: "searchConfluenceUsingCql"
       #     description: "Search Confluence content using CQL queries. Use for structured or advanced filtering."
   CACHE_TTL: 43200
+
+# Internet Search Settings (optional - backed by SearXNG)
+# Configure this to enable the InternetSearch tool.
+# Override via environment variables, e.g.:
+#   MUCGPT_CORE_INTERNET_SEARCH__SEARXNG_URL=https://your-searxng-instance/
+# INTERNET_SEARCH:
+#   SEARXNG_URL: "https://your-searxng-instance/"
+#   TIMEOUT: 10.0
+#   MAX_RESULTS: 5
+#   LANGUAGE: "de"
+#   SAFESEARCH: 1
 
 # Redis Settings (optional - nested under REDIS key)
 # Override individual fields via environment variables, e.g.:

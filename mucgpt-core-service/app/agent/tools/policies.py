@@ -5,6 +5,9 @@ from typing import Any
 
 from langchain.agents.middleware import ModelRequest
 from langchain_core.messages import SystemMessage
+from langchain_core.runnables import RunnableConfig
+from langchain_core.runnables.config import merge_configs
+from langgraph.config import get_config as get_runtime_config
 
 from agent.state_models.atlassian_state import AtlassianAgentState, ScopeDecision
 from core.logtools import getLogger
@@ -62,12 +65,14 @@ class DefaultScopePolicy:
     def infer_scope(
         self,
         request: ModelRequest,
+        callbacks: list | None = None,
     ) -> ModelRequest:
         return request
 
     async def ainfer_scope(
         self,
         request: ModelRequest,
+        callbacks: list | None = None,
     ) -> ModelRequest:
         return request
 
@@ -240,6 +245,7 @@ class AtlassianScopePolicy(DefaultScopePolicy):
     async def ainfer_scope(
         self,
         request: ModelRequest,
+        callbacks: list | None = None,
     ) -> ModelRequest:
         # NOTE: currently the frontend is stateless!
         #       this means that there is no agent state persisted across messages, so we have to infer the scope from the message history on every turn.
@@ -278,11 +284,41 @@ class AtlassianScopePolicy(DefaultScopePolicy):
             ],
         ]
 
+        # Prefer the current request model to preserve callback lineage and
+        # keep routing traces nested under the active agent run.
+        # NOTE: this might increase the cost drastically depending on the model!
+        #       also, privatemode model gpt-oss-120b struggles with structured output
+        #       e.g. https://github.com/lmstudio-ai/lmstudio-bug-tracker/issues/1105
+        routing_model = self.model
+        request_model = getattr(request, "model", None)
+        if request_model is not None:
+            try:
+                routing_model = request_model.with_config(
+                    {
+                        "configurable": {
+                            "llm_streaming": False,
+                            "llm_temperature": 0,
+                        }
+                    }
+                ).with_structured_output(ScopeDecision)
+            except Exception:
+                # Fall back to the dedicated router model when request model
+                # cannot be adapted to structured output.
+                routing_model = self.model
+
         try:
-            result: ScopeDecision = await self.model.ainvoke(
-                messages,
-                config={
-                    "callbacks": [],
+            parent_config: RunnableConfig | dict[str, Any] | None = {}
+            try:
+                parent_config = get_runtime_config() or {}
+            except Exception:
+                # If no runtime config is available, fall back to local config only.
+                parent_config = {}
+
+            effective_callbacks = parent_config.get("callbacks") or callbacks or []
+            router_config = merge_configs(
+                parent_config,
+                {
+                    "callbacks": effective_callbacks,
                     "run_name": "internal_scope_router",
                     "tags": ["internal", "scope-router"],
                     "metadata": {
@@ -293,6 +329,11 @@ class AtlassianScopePolicy(DefaultScopePolicy):
                         "llm_streaming": False,
                     },
                 },
+            )
+
+            result: ScopeDecision = await routing_model.ainvoke(
+                messages,
+                config=router_config,
             )  # type: ignore
             scope = result.scope.lower()
             confidence = result.confidence
@@ -356,7 +397,7 @@ class AtlassianScopePolicy(DefaultScopePolicy):
             "confluence": "atlassian_confluence.md",
             "general": "atlassian_general.md",
         }
-
+        # TODO: keep assistant prompt if user uses an assistant and only append scope-specific instructions
         current_scope = request.state.get("current_scope", self.DEFAULT_SCOPE)
         prompt_file = registry.get(current_scope)
         prompt_file_path = (
@@ -436,4 +477,19 @@ def get_policy_for_state(state_type: type) -> DefaultScopePolicy:
     global _POLICY_REGISTRY
     if _POLICY_REGISTRY is None:
         _POLICY_REGISTRY = _build_policy_registry()
-    return _POLICY_REGISTRY.get(state_type, _DEFAULT_POLICY)
+
+    policy = _POLICY_REGISTRY.get(state_type)
+    if policy is None:
+        logger.warning(
+            "Policy decision: using %s because no policy is registered for state type '%s'.",
+            _DEFAULT_POLICY.__class__.__name__,
+            getattr(state_type, "__name__", str(state_type)),
+        )
+        return _DEFAULT_POLICY
+
+    logger.info(
+        "Policy decision: using %s for state type '%s'.",
+        policy.__class__.__name__,
+        getattr(state_type, "__name__", str(state_type)),
+    )
+    return policy

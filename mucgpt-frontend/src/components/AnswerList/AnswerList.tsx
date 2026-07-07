@@ -1,15 +1,15 @@
-import React, { ReactNode, useEffect, useMemo, useState } from "react";
+import React, { ReactNode, useLayoutEffect, useMemo, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { ChatTurnComponent } from "../ChatTurnComponent/ChatTurnComponent";
 import { UserChatMessage } from "../UserChatMessage";
 import { AnswerLoading } from "../Answer/AnswerLoading";
 import { AnswerError } from "../Answer/AnswerError";
 import { ChatMessage } from "../../pages/chat/Chat";
-import { QuickPrompt } from "../QuickPrompt/QuickPrompt";
+import { FollowUpActionModel } from "../FollowUpAction";
 
 interface Props {
     answers: ChatMessage[];
-    regularAssistantMsg: (answer: ChatMessage, index: number, quickPrompts?: QuickPrompt[]) => ReactNode;
+    regularAssistantMsg: (answer: ChatMessage, index: number, followUpActions?: FollowUpActionModel[]) => ReactNode;
     onRollbackMessage?: (index: number) => void;
     isLoading: boolean;
     error: unknown;
@@ -34,36 +34,47 @@ export const AnswerList = ({
 }: Props) => {
     const { t } = useTranslation();
 
-    const [answersComponent, setAnswersComponent] = useState<React.JSX.Element[]>([]);
+    const loadingTurnRef = useRef<HTMLDivElement | null>(null);
 
-    useEffect(() => {
-        let shownAnswers = answers;
+    const shownAnswers = useMemo(() => {
         if (error) {
-            shownAnswers = answers.slice(0, -1); // Exclude the last answer if there is an error
+            return answers.slice(0, -1);
         }
-        setAnswersComponent(
-            shownAnswers.map((answer, index) => {
-                const isLastAnswer = index === shownAnswers.length - 1;
-                return (
-                    <ChatTurnComponent
-                        key={index}
-                        innerRef={isLastAnswer ? lastAnswerRef : undefined}
-                        usermsg={
-                            <UserChatMessage message={answer.user} onRollbackMessage={onRollbackMessage ? () => onRollbackMessage(index - 1) : undefined} />
-                        }
-                        usermsglabel={t("components.usericon.label") + " " + (index + 1).toString()}
-                        assistantmsglabel={t("components.answericon.label") + " " + (index + 1).toString()}
-                        assistantmsg={regularAssistantMsg(answer, index)}
-                    ></ChatTurnComponent>
-                );
-            })
-        );
-    }, [answers, isLoading, error, lastAnswerRef]);
+        return answers;
+    }, [answers, error]);
+
+    useLayoutEffect(() => {
+        if (!isLoading) {
+            return;
+        }
+
+        requestAnimationFrame(() => {
+            if (loadingTurnRef.current) {
+                loadingTurnRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+            } else {
+                chatMessageStreamEnd.current?.scrollIntoView({ behavior: "smooth" });
+            }
+        });
+    }, [isLoading, shownAnswers.length, chatMessageStreamEnd]);
 
     const answerList = useMemo(() => {
         return (
             <>
-                {answersComponent}
+                {shownAnswers.map((answer, index) => {
+                    const isLastAnswer = index === shownAnswers.length - 1;
+                    return (
+                        <ChatTurnComponent
+                            key={index}
+                            innerRef={isLastAnswer ? lastAnswerRef : undefined}
+                            usermsg={
+                                <UserChatMessage message={answer.user} onRollbackMessage={onRollbackMessage ? () => onRollbackMessage(index - 1) : undefined} />
+                            }
+                            usermsglabel={t("components.usericon.label") + " " + (index + 1).toString()}
+                            assistantmsglabel={t("components.answericon.label") + " " + (index + 1).toString()}
+                            assistantmsg={regularAssistantMsg(answer, index)}
+                        ></ChatTurnComponent>
+                    );
+                })}
                 {error ? (
                     <ChatTurnComponent
                         usermsg={<UserChatMessage message={lastQuestionRef.current} onRollbackMessage={onRollbackError} />}
@@ -76,6 +87,7 @@ export const AnswerList = ({
                 )}
                 {isLoading ? (
                     <ChatTurnComponent
+                        innerRef={loadingTurnRef}
                         usermsg={<UserChatMessage message={lastQuestionRef.current} />}
                         usermsglabel={t("components.usericon.label") + " " + (answers.length + 1).toString()}
                         assistantmsglabel={t("components.answericon.label") + " " + (answers.length + 1).toString()}
@@ -87,7 +99,20 @@ export const AnswerList = ({
                 <div ref={chatMessageStreamEnd} />
             </>
         );
-    }, [answers, isLoading, error, makeApiRequest, chatMessageStreamEnd, lastQuestionRef, t, answersComponent]);
+    }, [
+        shownAnswers,
+        onRollbackMessage,
+        lastAnswerRef,
+        t,
+        regularAssistantMsg,
+        error,
+        lastQuestionRef,
+        onRollbackError,
+        makeApiRequest,
+        answers.length,
+        isLoading,
+        chatMessageStreamEnd
+    ]);
 
     return answerList;
 };

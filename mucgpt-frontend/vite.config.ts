@@ -6,35 +6,72 @@ import { resolve } from "path";
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
     const isGHPages = mode === "ghpages";
+    const isPWAEnabled = process.env.VITE_DISABLE_PWA !== "true";
+    const shouldSelfDestroyPWA = !isPWAEnabled && mode !== "development";
 
     return {
         plugins: [
             react(),
-            VitePWA({
-                registerType: "prompt",
-                strategies: "generateSW",
-                manifest: {
-                    name: "MUCGPT",
-                    short_name: "MUCGPT",
-                    description: "KI-Assistent der Landeshauptstadt München",
-                    theme_color: "#2563eb",
-                    background_color: "#f8fafc",
-                    display: "standalone",
-                    start_url: isGHPages ? "/mucgpt/" : "/",
-                    scope: isGHPages ? "/mucgpt/" : "/",
-                    icons: [
-                        { src: "pwa-64x64.png", sizes: "64x64", type: "image/png" },
-                        { src: "pwa-192x192.png", sizes: "192x192", type: "image/png" },
-                        { src: "pwa-512x512.png", sizes: "512x512", type: "image/png", purpose: "any" },
-                        { src: "maskable-icon-512x512.png", sizes: "512x512", type: "image/png", purpose: "maskable" }
+            ...(isPWAEnabled
+                ? [
+                      VitePWA({
+                          registerType: "prompt",
+                          strategies: "generateSW",
+                          manifest: {
+                              name: "MUCGPT",
+                              short_name: "MUCGPT",
+                              description: "KI-Assistent der Landeshauptstadt München",
+                              theme_color: "#2563eb",
+                              background_color: "#f8fafc",
+                              display: "standalone",
+                              start_url: isGHPages ? "/mucgpt/" : "/",
+                              scope: isGHPages ? "/mucgpt/" : "/",
+                              icons: [
+                                  { src: "pwa-64x64.png", sizes: "64x64", type: "image/png" },
+                                  { src: "pwa-192x192.png", sizes: "192x192", type: "image/png" },
+                                  { src: "pwa-512x512.png", sizes: "512x512", type: "image/png", purpose: "any" },
+                                  { src: "maskable-icon-512x512.png", sizes: "512x512", type: "image/png", purpose: "maskable" }
+                              ]
+                          },
+                          workbox: {
+                              maximumFileSizeToCacheInBytes: 3000000,
+                              globIgnores: ["**/*.wasm"],
+                              navigateFallbackDenylist: [/^\/api\//, /^\/auth\//, /^\/sso\//, /^\/realms\//, /^\/oauth2\//, /^\/login\//, /^\/logout\//],
+                              runtimeCaching: [
+                                  {
+                                      urlPattern: /\/assets\/.*\.wasm$/,
+                                      handler: "CacheFirst",
+                                      options: {
+                                          cacheName: "wasm-assets",
+                                          expiration: {
+                                              maxEntries: 10
+                                          }
+                                      }
+                                  },
+                                  {
+                                      urlPattern: /^\/api\/.*$/,
+                                      handler: "NetworkOnly"
+                                  },
+                                  {
+                                      urlPattern: /^\/(auth|sso|realms|oauth2|login|logout)\/.*$/,
+                                      handler: "NetworkOnly"
+                                  }
+                              ]
+                          }
+                      })
+                  ]
+                : shouldSelfDestroyPWA
+                  ? [
+                        VitePWA({
+                            selfDestroying: true
+                        })
                     ]
-                },
-                workbox: {
-                    maximumFileSizeToCacheInBytes: 3000000
-                }
-            })
+                  : [])
         ],
         base: isGHPages ? "/mucgpt/" : "/",
+        worker: {
+            format: "es"
+        },
         build: {
             outDir: "dist",
             sourcemap: !isGHPages,
@@ -44,7 +81,8 @@ export default defineConfig(({ mode }) => {
                         react: ["react", "react-dom", "react-router-dom"],
                         fluentui: ["@fluentui/react", "@fluentui/react-components", "@fluentui/react-icons"],
                         markdown: ["react-markdown", "remark-gfm"],
-                        visualizations: ["markmap-view", "markmap-lib", "mermaid"]
+                        visualizations: ["markmap-view", "markmap-lib", "mermaid"],
+                        transformers: ["@huggingface/transformers"]
                     }
                 }
             }
@@ -55,7 +93,12 @@ export default defineConfig(({ mode }) => {
             }
         },
         preview: {
-            port: 4173
+            port: 4173,
+            headers: {
+                "x-frame-options": "SAMEORIGIN", // required to use devtools behind proxy (e.g. API Gateway)
+                "Cross-Origin-Opener-Policy": "same-origin", // required for SharedArrayBuffer (ONNX runtime)
+                "Cross-Origin-Embedder-Policy": "credentialless" // allows anonymous cross-origin fetches (e.g. HuggingFace model downloads)
+            }
         },
         // Add environment variable handling
         define: {
@@ -69,7 +112,9 @@ export default defineConfig(({ mode }) => {
             },
             allowedHosts: ["host.docker.internal"], // required to use frontend behind proxy (e.g. API Gateway)
             headers: {
-                "x-frame-options": "SAMEORIGIN" // required to use devtools behind proxy (e.g. API Gateway)
+                "x-frame-options": "SAMEORIGIN", // required to use devtools behind proxy (e.g. API Gateway)
+                "Cross-Origin-Opener-Policy": "same-origin", // required for SharedArrayBuffer (ONNX runtime)
+                "Cross-Origin-Embedder-Policy": "credentialless" // allows anonymous cross-origin fetches (e.g. HuggingFace model downloads)
             }
         }
     };

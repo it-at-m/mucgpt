@@ -1,6 +1,6 @@
 <!-- PROJECT LOGO -->
 <div align="center">
-  <img src="assets/mucgpt_title.svg" alt="MUCGPT logo" width="900" />
+  <img src="mucgpt-frontend/src/assets/edelweiss_full.svg" alt="MUCGPT logo" width="900" />
 </div>
 <br />
 
@@ -142,37 +142,34 @@ Please check the [Getting Started documentation](docs/GETTING_STARTED.md) for de
       "secondaryColor": "#B6E2D3",
       "tertiaryColor": "#FFFFFF",
       "background": "#FFF8F0",
-      "fontSize": "20px",
-      "fontFamily": "Inter, Segoe UI, Trebuchet MS, Verdana, Arial, sans-serif"
+      "fontSize": "18px",
+      "fontFamily": "Inter, sans-serif"
   }
 }
 }%%
 timeline
-  title 🚀 MUCGPT Roadmap (24.11.2025)
+  title 🚀 MUCGPT Roadmap (July 2026)
 
-  section 🎉 Open Source
-    2024-06 : 🟢 Open Source : Public release for everyone!
+  section 🔄 Ongoing
+    Improve UI/UX
+    Improve agentic capabilities
 
-  section 🖥️ UI & Experience
-    2024-07 : 💾 Chat History : Save chats in your browser
-    2024-08 : ⚙️ LLM Config : Tune the LLM to your needs
-    2024-09 : 🗣️ Easy Language : Simplify any text
+  section 2.0.x 🛠️ Admin Tools
+    Add admin/beta user roles
+    Delete/disable assistants
+    Track assistant stats 📊
 
-  section 🤖 Custom Assistants
-    2025-01 : 🛠️ Build Assistants : Create your own helpers
+  section 2.1 📄 Chat with Docs
+    Upload docs (limited)
+    Search web 🌐
 
-  section 🌐 MUCGPT 2.0: Agent Mode
-    2025-07 : 🧩 Microservices : API-Gateway, Core, Assistant-Service
-    2025-12 : ☁️ Share Assistants : Share & use tools (Summarize, Brainstorm, Simple Language)
-    2025-12 : 🛡️ MCP Tools : Connect MCP tools
+  section 2.2 🔒 Privacy Update
+    Internal vs. confidential areas
+    Restrict models/tools/assistants in each area
 
-  section 💡 Knowledge and document processing
-    2026: 📃 Chat with your documents
-    2026: 📂 Shared Knowledge Base: Access shared information in chat and assistants (reuse F13 components)
-
-  section 🪚 Additional tools
-    2026: 🔍 Websearch: Search the Web
-    2026: ...
+  section 2.3 🧠 Knowledge Base
+    Sync chats across devices
+    Assistants use KB data
 ```
 
 ## 📃 Documentation
@@ -243,4 +240,4 @@ Please note that MUCGPT uses **Kreuzberg** as an optional dependency for documen
 
 ## 📬 Contact
 
-it@M - <itm.kicc@muenchen.de>
+it@M - <ki@muenchen.de>

@@ -409,6 +409,10 @@ class ConfigResponse(BaseModel):
         False,
         description="Whether document upload and parsing is enabled. True when a parser backend (e.g. Kreuzberg) is configured.",
     )
+    transcription_enabled: bool = Field(
+        False,
+        description="Whether browser-based audio transcription is enabled in the frontend.",
+    )
     footer_link_url: str | None = Field(
         None,
         description="URL for the footer link.",
@@ -416,4 +420,24 @@ class ConfigResponse(BaseModel):
     footer_label: str | None = Field(
         None,
         description="Label for the footer link.",
+    )
+    faq_url: str | None = Field(
+        None,
+        description="URL for the FAQ link.",
+    )
+    incident_report_url: str | None = Field(
+        None,
+        description="URL for the incident report link.",
+    )
+    feature_request_url: str | None = Field(
+        None,
+        description="URL for the feature request link.",
+    )
+    contact_mail_url: str | None = Field(
+        None,
+        description="URL for the contact mail link.",
+    )
+    ad2image_url: str | None = Field(
+        None,
+        description="Base URL of the ad2image service for Gravatar-compatible avatar images.",
     )

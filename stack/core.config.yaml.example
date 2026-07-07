@@ -10,12 +10,14 @@ LOG_CONFIG: "logconf.yaml"
 # Frontend settings
 ENV_NAME: "MUCGPT🦜"
 ALTERNATIVE_LOGO: false
+TRANSCRIPTION_ENABLED: false
 APP_VERSION: "2.0"
 FRONTEND_VERSION: "0.0.2"
 ASSISTANT_VERSION: "0.0.3"
 
 # Backend settings
 UNAUTHORIZED_USER_REDIRECT_URL: "<your-url>"
+AD2IMAGE_URL: "<your-ad2image-url>"  # Base URL of the ad2image service for avatar images
 
 # Parsing settings
 PARSER_BACKEND: "kreuzberg"
@@ -65,6 +67,15 @@ MCP:
           description: "Resolve available Atlassian sites and their cloudIds (i.e. the url). Use when cloudId is unknown or a hostname-based guess fails."
       # ...
   CACHE_TTL: 123
+
+# Internet Search Settings (SearXNG)
+# Replace the placeholder URL with your SearXNG instance to enable the InternetSearch tool.
+INTERNET_SEARCH:
+  SEARXNG_URL: "<your-searxng-url>"
+  TIMEOUT: 10.0
+  MAX_RESULTS: 5
+  LANGUAGE: "de"
+  SAFESEARCH: 1
 
 # Models configuration
 # Configure your LLM models here instead of using base64-encoded JSON in environment variables

@@ -1,14 +1,20 @@
 .container {
+    --chatReadableWidth: 1000px;
+    --chatContentWidth: min(60%, var(--chatReadableWidth));
     display: flex;
     flex-direction: column;
     flex: 1;
-    min-height: calc(100vh - 50px);
+    min-height: 100vh;
+    height: 100vh;
+    height: 100dvh;
+    overflow: hidden;
     background: var(--colorNeutralBackground1);
 }
 
 .headerBar {
-    position: sticky;
+    position: fixed;
     top: 0;
+    left: var(--appSidebarWidth, 0);
     right: 0;
     height: 60px;
     display: flex;
@@ -16,7 +22,7 @@
     justify-content: space-between;
     padding: 0 16px;
     background: var(--colorNeutralBackground1);
-    z-index: 5;
+    z-index: 6;
     box-sizing: border-box;
 }
 
@@ -77,6 +83,8 @@
     flex-direction: column;
     flex: 1;
     min-height: 0;
+    margin-top: 60px;
+    overflow: hidden;
     z-index: 1;
     box-sizing: border-box;
     background: var(--colorNeutralBackground1);
@@ -93,15 +101,20 @@
     align-items: center;
     width: 100%;
     min-height: 0;
+    padding-bottom: var(--chatInputHeight, 0);
+    overflow: hidden;
     box-sizing: border-box;
 }
 
 .chatEmptyState {
-    flex-grow: 1;
+    flex: 1 1 auto;
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
+    width: 100%;
+    min-height: 0;
+    overflow-y: auto;
 }
 
 .chatEmptyStateTitle {
@@ -148,38 +161,146 @@
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
     box-sizing: border-box;
-    padding: 8px 12px;
+    padding: 8px 24px;
 }
 
-.chatMessageStream {
-    display: block;
-    width: 100%;
+.scrollToBottomWrapper {
+    position: fixed;
+    left: var(--appSidebarWidth, 0);
+    right: 0;
+    bottom: calc(var(--chatInputHeight, 0px) + 18px);
+    z-index: 99;
+    display: flex;
+    justify-content: center;
+    pointer-events: none;
+    box-sizing: border-box;
+    transform-origin: center bottom;
+}
+
+.scrollToBottomButton {
+    pointer-events: auto;
+    opacity: 0.86;
+    box-shadow: var(--shadow4);
+    transition:
+        opacity 220ms cubic-bezier(0.25, 1, 0.5, 1),
+        transform 220ms cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+.scrollToBottomButton:hover,
+.scrollToBottomButton:focus-visible {
+    opacity: 1;
+}
+
+.scrollToBottomWrapper[data-state="entered"] {
+    animation: scrollToBottomEnter 200ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.scrollToBottomWrapper[data-state="exiting"] {
+    animation: scrollToBottomExit 200ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.scrollToBottomWrapper[data-state="exiting"] .scrollToBottomButton {
+    pointer-events: none;
+}
+
+@keyframes scrollToBottomEnter {
+    from {
+        opacity: 0;
+        transform: translateY(18px) scale(0.82);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+@keyframes scrollToBottomExit {
+    from {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+
+    to {
+        opacity: 0;
+        transform: translateY(18px) scale(0.82);
+    }
 }
 
 .chatInput {
-    width: 100%;
-    padding: 0 0 10px;
-    max-width: 100%;
+    position: fixed;
+    left: var(--appSidebarWidth, 0);
+    right: 0;
+    bottom: 0;
+    z-index: 4;
+    padding: 0 24px 10px;
     min-width: 0;
     box-sizing: border-box;
+    background: transparent;
+}
+
+.container[data-info-open="true"] .scrollToBottomWrapper,
+.container[data-info-open="true"] .chatInput {
+    right: var(--assistantDetailsDrawerWidth);
 }
 
 @media (max-width: 1200px) {
+    .container {
+        --chatReadableWidth: 80%;
+        --chatContentWidth: min(80%, var(--chatReadableWidth));
+    }
+
     .container[data-info-open="true"] .headerBar,
-    .container[data-info-open="true"] .chatRoot {
+    .container[data-info-open="true"] .chatRoot,
+    .container[data-info-open="true"] .scrollToBottomWrapper,
+    .container[data-info-open="true"] .chatInput {
         right: var(--assistantDetailsDrawerCompactWidth);
     }
 }
 
+@media (max-width: 768px) {
+    .container {
+        --chatContentWidth: min(90%, var(--chatReadableWidth));
+    }
+}
+
 @media (max-width: 650px) {
+    .container {
+        --chatReadableWidth: 100%;
+    }
+
     .chatRoot {
         min-height: 0;
+    }
+
+    .allChatMessages {
+        padding-inline: 12px;
+    }
+
+    .chatInput {
+        padding-inline: 12px;
     }
 }
 
 @media (max-width: 600px) {
     .container[data-info-open="true"] .headerBar,
-    .container[data-info-open="true"] .chatRoot {
+    .container[data-info-open="true"] .chatRoot,
+    .container[data-info-open="true"] .scrollToBottomWrapper,
+    .container[data-info-open="true"] .chatInput {
         right: 0;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .scrollToBottomWrapper {
+        animation: none;
+    }
+
+    .scrollToBottomWrapper[data-state="exiting"] {
+        opacity: 0;
+    }
+
+    .scrollToBottomButton {
+        transition: opacity 0.01ms linear;
     }
 }

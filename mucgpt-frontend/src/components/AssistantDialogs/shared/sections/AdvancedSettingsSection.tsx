@@ -1,0 +1,107 @@
+import { DialogContent, Field, InfoLabel, Dropdown, Option, type OptionOnSelectData, type SelectionEvents } from "@fluentui/react-components";
+import { useTranslation } from "react-i18next";
+import { useCallback, useContext } from "react";
+import { LLMContext } from "../../../LLMSelector/LLMContextProvider";
+import sharedStyles from "../AssistantDialog.module.css";
+import { CREATIVITY_HIGH, CREATIVITY_LOW, CREATIVITY_MEDIUM } from "../../../../constants";
+
+interface AdvancedSettingsSectionProps {
+    creativity: string;
+    defaultModel?: string;
+    isOwner: boolean;
+    onCreativityChange: (creativity: string) => void;
+    onDefaultModelChange?: (model: string | undefined) => void;
+    onHasChanged?: (hasChanged: boolean) => void;
+}
+
+export const AdvancedSettingsSection = ({
+    creativity,
+    defaultModel,
+    isOwner,
+    onCreativityChange,
+    onDefaultModelChange,
+    onHasChanged
+}: AdvancedSettingsSectionProps) => {
+    const { t } = useTranslation();
+    const { availableLLMs } = useContext(LLMContext);
+
+    // Creativity change
+    const onCreativityChangeHandler = useCallback(
+        (_ev: SelectionEvents, data: OptionOnSelectData) => {
+            if (!data.optionValue) return;
+            onCreativityChange(data.optionValue);
+            onHasChanged?.(true);
+        },
+        [onCreativityChange, onHasChanged]
+    );
+
+    // Model change
+    const onDefaultModelChangeHandler = useCallback(
+        (_ev: SelectionEvents, data: OptionOnSelectData) => {
+            const value = data.optionValue === "none" ? undefined : data.optionValue;
+            onDefaultModelChange?.(value);
+            onHasChanged?.(true);
+        },
+        [onDefaultModelChange, onHasChanged]
+    );
+
+    const creativityMap: Record<string, string> = {
+        [CREATIVITY_LOW]: t("components.assistant_editor.creativity_low"),
+        [CREATIVITY_MEDIUM]: t("components.assistant_editor.creativity_medium"),
+        [CREATIVITY_HIGH]: t("components.assistant_editor.creativity_high")
+    };
+    const noDefaultModelOptionValue = "none";
+    const noDefaultModelLabel = t("components.assistant_editor.no_default_model");
+    const defaultModelValue = defaultModel ? availableLLMs.find(model => model.llm_name === defaultModel)?.llm_name || defaultModel : noDefaultModelLabel;
+    const selectedDefaultModelOptions = defaultModel ? [defaultModelValue] : [noDefaultModelOptionValue];
+
+    return (
+        <DialogContent>
+            <Field size="large" className={sharedStyles.fieldSection}>
+                <label className={sharedStyles.formLabel}>
+                    <InfoLabel info={<div>{t("components.chattsettingsdrawer.creativity_info")}</div>}>{t("components.assistant_editor.creativity")}</InfoLabel>
+                </label>
+                <Dropdown
+                    placeholder={t("components.assistant_editor.creativity_placeholder")}
+                    value={creativityMap[creativity] || creativity}
+                    selectedOptions={[creativity]}
+                    onOptionSelect={onCreativityChangeHandler}
+                    disabled={!isOwner}
+                >
+                    <Option key={CREATIVITY_LOW} value={CREATIVITY_LOW}>
+                        {t("components.assistant_editor.creativity_low")}
+                    </Option>
+                    <Option key={CREATIVITY_MEDIUM} value={CREATIVITY_MEDIUM}>
+                        {t("components.assistant_editor.creativity_medium")}
+                    </Option>
+                    <Option key={CREATIVITY_HIGH} value={CREATIVITY_HIGH}>
+                        {t("components.assistant_editor.creativity_high")}
+                    </Option>
+                </Dropdown>
+            </Field>
+            <Field size="large" className={sharedStyles.fieldSection}>
+                <label className={sharedStyles.formLabel}>
+                    <InfoLabel info={<div>{t("components.assistant_editor.default_model_info")}</div>}>
+                        {t("components.assistant_editor.default_model")}
+                    </InfoLabel>
+                </label>
+                <Dropdown
+                    placeholder={t("components.assistant_editor.default_model_placeholder")}
+                    value={defaultModelValue}
+                    selectedOptions={selectedDefaultModelOptions}
+                    onOptionSelect={onDefaultModelChangeHandler}
+                    disabled={!isOwner}
+                >
+                    <Option key={noDefaultModelOptionValue} value={noDefaultModelOptionValue}>
+                        {noDefaultModelLabel}
+                    </Option>
+                    {availableLLMs.map(model => (
+                        <Option key={model.llm_name} value={model.llm_name}>
+                            {model.llm_name}
+                        </Option>
+                    ))}
+                </Dropdown>
+            </Field>
+        </DialogContent>
+    );
+};

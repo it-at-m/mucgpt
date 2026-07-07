@@ -1,0 +1,56 @@
+.item {
+    width: auto;
+    min-width: 140px;
+    padding: 10px 14px;
+    border-radius: 999px;
+    font-weight: 600;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+    transition:
+        background-color 0.2s ease,
+        color 0.2s ease,
+        border-color 0.2s ease,
+        box-shadow 0.2s ease,
+        transform 0.15s ease;
+}
+
+.buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: flex-start;
+    align-items: flex-start;
+    margin-top: 4px;
+    flex-direction: row;
+}
+
+.item:hover {
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.12);
+    transform: translateY(-1px);
+}
+
+.item:active {
+    background-color: var(--colorBrandBackground);
+    color: var(--colorNeutralStrokeDisabled);
+    border-color: var(--colorNeutralStroke2);
+    transform: translateY(0);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+}
+
+.item:focus-visible {
+    outline: 2px solid var(--colorBrandBackground);
+    outline-offset: 2px;
+}
+
+.item:disabled {
+    background-color: var(--colorNeutralBackground1);
+    color: var(--colorNeutralForegroundDisabled);
+    border-color: var(--colorNeutralStroke1);
+    box-shadow: none;
+}
+
+@media (max-width: 650px) {
+    .buttons {
+        flex-direction: column;
+        align-items: stretch;
+    }
+}

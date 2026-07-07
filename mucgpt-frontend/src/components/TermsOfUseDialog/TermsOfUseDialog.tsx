@@ -1,28 +1,37 @@
-import { Dialog, DialogTrigger, DialogSurface, DialogTitle, DialogBody, DialogActions, DialogContent, Button, Link, Tooltip } from "@fluentui/react-components";
+import { Dialog, DialogTrigger, DialogSurface, DialogTitle, DialogBody, DialogActions, DialogContent, Button, Link } from "@fluentui/react-components";
 import { Checkmark24Filled, DocumentBulletListMultiple24Regular } from "@fluentui/react-icons";
 import { useTranslation } from "react-i18next";
 import { useState } from "react";
 
 import styles from "./TermsOfUseDialog.module.css";
 
+import { useConfigContext } from "../../context/ConfigContext";
+
 interface TermsOfUseDialogProps {
     defaultOpen: boolean;
     onAccept: () => void;
     showTrigger?: boolean;
     triggerClassName?: string;
+    requireAcceptance?: boolean;
 }
 
-export const TermsOfUseDialog = ({ defaultOpen, onAccept, showTrigger = true, triggerClassName }: TermsOfUseDialogProps) => {
+export const TermsOfUseDialog = ({ defaultOpen, onAccept, showTrigger = true, triggerClassName, requireAcceptance = true }: TermsOfUseDialogProps) => {
     const { t } = useTranslation();
+    const config = useConfigContext();
+    const faqUrl = config.faq_url;
+    const contactMailUrl = config.contact_mail_url;
+    const contactMailLabel = contactMailUrl?.replace(/^mailto:/, "").split("?")[0];
     const [open, setOpen] = useState<boolean>(defaultOpen);
     const trigger = showTrigger ? (
         <DialogTrigger disableButtonEnhancement>
-            <Tooltip content={t("components.terms_of_use.tooltip", "Nutzungsbedingungen anzeigen")} relationship="description" positioning="above">
-                <div className={`${styles.triggerContainer}${triggerClassName ? ` ${triggerClassName}` : ""}`}>
-                    <DocumentBulletListMultiple24Regular className={styles.termsIcon} />
-                    <span className={styles.termsText}>{t("components.terms_of_use.label", "Nutzungsbedingungen")}</span>
-                </div>
-            </Tooltip>
+            <Button
+                appearance="transparent"
+                className={`${styles.triggerContainer}${triggerClassName ? ` ${triggerClassName}` : ""}`}
+                onClick={() => setOpen(true)}
+            >
+                <DocumentBulletListMultiple24Regular className={styles.termsIcon} />
+                <span className={styles.termsText}>{t("components.terms_of_use.label", "Nutzungsbedingungen")}</span>
+            </Button>
         </DialogTrigger>
     ) : (
         <></>
@@ -30,11 +39,15 @@ export const TermsOfUseDialog = ({ defaultOpen, onAccept, showTrigger = true, tr
 
     return (
         <div className={styles.container}>
-            <Dialog modalType="alert" open={open} onOpenChange={(_event, data) => setOpen(data.open)}>
+            <Dialog modalType={requireAcceptance ? "alert" : "modal"} open={open} onOpenChange={(_event, data) => setOpen(data.open)}>
                 {trigger}
                 <DialogSurface className={styles.dialog}>
                     <DialogBody className={styles.dialogContent}>
-                        <DialogTitle>Nutzungsbedingungen (Zustimmung erforderlich)</DialogTitle>
+                        <DialogTitle>
+                            {requireAcceptance
+                                ? t("components.terms_of_use.acceptance_required", "Nutzungsbedingungen (Zustimmung erforderlich)")
+                                : t("components.terms_of_use.label", "Nutzungsbedingungen")}
+                        </DialogTitle>
                         <DialogContent>
                             <ul>
                                 <li>
@@ -66,11 +79,17 @@ export const TermsOfUseDialog = ({ defaultOpen, onAccept, showTrigger = true, tr
                                 <li>
                                     <strong>Weiterverwendung der Ergebnisse:</strong> Die Verantwortung für die Weiterverwendung der Ergebnisse trägt die/der
                                     MUCGPT Nutzer*in. Die Ergebnisse müssen als solche sowohl für intern, als auch für extern gekennzeichnet (z.B.: „Quelle:
-                                    MUCGPT“) werden. Siehe Details und weitere Zitierstile hierzu in den{" "}
-                                    <Link inline className={styles.link} href={import.meta.env.BASE_URL + "#/faq"}>
-                                        FAQs
-                                    </Link>
-                                    .
+                                    MUCGPT“) werden.
+                                    {faqUrl && (
+                                        <>
+                                            {" "}
+                                            Siehe Details und weitere Zitierstile hierzu in den{" "}
+                                            <Link inline className={styles.link} href={faqUrl} target="_blank" rel="noopener noreferrer">
+                                                FAQs
+                                            </Link>
+                                            .
+                                        </>
+                                    )}
                                 </li>
                                 <li>
                                     <strong>Entscheidungsfindung:</strong> MUCGPT darf nicht für abschließende Entscheidungen verwendet werden, die gegenüber
@@ -83,31 +102,36 @@ export const TermsOfUseDialog = ({ defaultOpen, onAccept, showTrigger = true, tr
                                     verwenden.
                                 </li>
                                 <li>
-                                    <strong>Ansprechpartner*innen:</strong> Bei Fragen und Feedback, sowie zum Melden von unangemessenen Ergebnissen von MUCGPT
-                                    bitte an{" "}
-                                    <Link inline className={styles.link} href="mailto:itm.kicc@muenchen.de?subject=MUCGPT">
-                                        {" "}
-                                        itm.kicc@muenchen.de
-                                    </Link>{" "}
-                                    wenden. Technische Fehler bitte an den{" "}
+                                    <strong>Ansprechpartner*innen:</strong>{" "}
+                                    {contactMailUrl && (
+                                        <>
+                                            Bei Fragen und Feedback, sowie zum Melden von unangemessenen Ergebnissen von MUCGPT bitte an{" "}
+                                            <Link inline className={styles.link} href={contactMailUrl}>
+                                                {contactMailLabel}
+                                            </Link>{" "}
+                                            wenden.{" "}
+                                        </>
+                                    )}
+                                    Technische Fehler bitte an den{" "}
                                     <Link
                                         inline
                                         className={styles.link}
                                         href="https://wilma.muenchen.de/pages/it-nutzung-support/apps/content/it-servicedesk-neu"
                                     >
-                                        {" "}
                                         zuständigen Servicedesk
                                     </Link>{" "}
                                     melden
                                 </li>
-                                <li>
-                                    <strong>FAQs:</strong> Weitere Fragen und Antworten (u.a. zu Ziel und Einsatzzwecke von MUCGPT sowie zur Weiterverwendung
-                                    der Eingaben und Ergebnisse) geben die{" "}
-                                    <Link inline className={styles.link} href={import.meta.env.BASE_URL + "#/faq"}>
-                                        FAQs
-                                    </Link>
-                                    .
-                                </li>
+                                {faqUrl && (
+                                    <li>
+                                        <strong>FAQs:</strong> Weitere Fragen und Antworten (u.a. zu Ziel und Einsatzzwecke von MUCGPT sowie zur
+                                        Weiterverwendung der Eingaben und Ergebnisse) geben die{" "}
+                                        <Link inline className={styles.link} href={faqUrl} target="_blank" rel="noopener noreferrer">
+                                            FAQs
+                                        </Link>
+                                        .
+                                    </li>
+                                )}
                                 <li>
                                     <strong>Best-Practice Dokumentation/Wissensmanagement:</strong> Erfolgreiche Anwendungsfälle von MUCGPT sollen dokumentiert
                                     werden, um wertvolles Wissen für zukünftige Projekte zu generieren. Tragen Sie diese Beispiele gerne{" "}
@@ -129,16 +153,18 @@ export const TermsOfUseDialog = ({ defaultOpen, onAccept, showTrigger = true, tr
                         <DialogActions className={styles.dialogActions}>
                             <DialogTrigger disableButtonEnhancement>
                                 <Button
-                                    appearance="primary"
+                                    appearance={requireAcceptance ? "primary" : "secondary"}
                                     size="medium"
                                     onClick={() => {
-                                        onAccept();
+                                        if (requireAcceptance) {
+                                            onAccept();
+                                        }
                                         setOpen(false);
                                     }}
                                     className={styles.acceptButton}
                                 >
-                                    <Checkmark24Filled className={styles.checkIcon} />
-                                    {t("components.terms_of_use.accept", "Zustimmen")}
+                                    {requireAcceptance && <Checkmark24Filled className={styles.checkIcon} />}
+                                    {requireAcceptance ? t("components.terms_of_use.accept", "Zustimmen") : t("common.close", "Schließen")}
                                 </Button>
                             </DialogTrigger>
                         </DialogActions>

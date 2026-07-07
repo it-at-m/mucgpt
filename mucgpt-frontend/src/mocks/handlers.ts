@@ -1,5 +1,5 @@
 // mocks/handlers.js
-import { http, HttpResponse, delay } from "msw";
+import { http, HttpResponse, delay, passthrough } from "msw";
 import { ApplicationConfig, AssistantCreateResponse, AssistantUpdateInput } from "../api";
 import {
     buildAssistantCreateResponse,
@@ -79,10 +79,10 @@ function findNode(pathSegments: string[]) {
 const CONFIG_RESPONSE: ApplicationConfig = {
     models: [
         {
-            llm_name: "KICCGPT",
+            llm_name: "KIESGPT",
             max_input_tokens: 128000,
             max_output_tokens: 12000,
-            description: "GPT build by KICC",
+            description: "GPT build by KIES",
             knowledge_cut_off: "2024-07-01",
             input_cost_per_token: 3e-7,
             output_cost_per_token: 9e-7,
@@ -127,11 +127,35 @@ const CONFIG_RESPONSE: ApplicationConfig = {
     frontend_version: "0.0.1",
     assistant_version: "0.0.1",
     document_processing_enabled: true,
+    transcription_enabled: true,
     footer_link_url: "https://ki.muenchen.de",
-    footer_label: "DAICE"
+    footer_label: "DAICE",
+    faq_url: "https://ki.muenchen.de/",
+    incident_report_url: "https://ki.muenchen.de/",
+    feature_request_url: "https://ki.muenchen.de/",
+    contact_mail_url: "mailto:ki@muenchen.de",
+    ad2image_url: ""
 };
 
 const DYNAMIC_ASSISTANTS: AssistantCreateResponse[] = buildAssistantList(6);
+
+const MOCK_SUBSCRIPTION_COUNTS = [10350, 2500, 1400, 980, 620, 410, 275, 190, 135, 88, 42, 17];
+
+function getMockSubscriptionCount(assistantId: string): number {
+    const exists = DYNAMIC_ASSISTANTS.some(assistant => assistant.id === assistantId);
+    if (!exists) return 0;
+
+    const stableIndex = Array.from(assistantId).reduce((sum, char) => sum + char.charCodeAt(0), 0) % MOCK_SUBSCRIPTION_COUNTS.length;
+    return MOCK_SUBSCRIPTION_COUNTS[stableIndex];
+}
+
+function withMockSubscriptionCount(assistant: AssistantCreateResponse) {
+    return {
+        ...assistant,
+        is_visible: assistant.latest_version.is_visible ?? true,
+        subscriptions_count: getMockSubscriptionCount(assistant.id)
+    };
+}
 
 // Add a specific assistant with a default model
 DYNAMIC_ASSISTANTS.push(
@@ -141,12 +165,12 @@ DYNAMIC_ASSISTANTS.push(
             id: "version-default-model-1",
             version: 1,
             created_at: new Date().toISOString(),
-            name: "KICC Research Assistant",
-            description: "A specialized research assistant that always uses the KICCGPT model for consistent, high-quality responses.",
-            system_prompt: "You are the KICC Research Assistant. Provide detailed, well-researched answers with citations when possible.",
+            name: "KIES Research Assistant",
+            description: "A specialized research assistant that always uses the KIESGPT model for consistent, high-quality responses.",
+            system_prompt: "You are the KIES Research Assistant. Provide detailed, well-researched answers with citations when possible.",
             hierarchical_access: ["RIT-AI", "ITM-KM-DI"],
             creativity: "low",
-            default_model: "KICCGPT",
+            default_model: "KIESGPT",
             is_visible: true,
             tools: [
                 { id: "Brainstorming", config: { enabled: true } },
@@ -163,7 +187,7 @@ DYNAMIC_ASSISTANTS.push(
                 { label: "Research Topic", prompt: "Please research this topic in detail:", tooltip: "Deep research" },
                 { label: "Summarize Paper", prompt: "Summarize this research paper:", tooltip: "Academic summary" }
             ],
-            tags: ["research", "academic", "kiccgpt"]
+            tags: ["research", "academic", "kiesgpt"]
         }
     })
 );
@@ -381,6 +405,8 @@ async function parseUploadHandler({ request }: { request: Request }) {
 }
 
 export const handlers = [
+    http.all("https://huggingface.co/*", () => passthrough()),
+    http.all("https://cdn-lfs.huggingface.co/*", () => passthrough()),
     http.get("/api/backend/config", () => {
         return HttpResponse.json(CONFIG_RESPONSE);
     }),
@@ -771,7 +797,7 @@ export const handlers = [
             id: `chatcmpl-mock-${Math.random().toString(36).slice(2, 10)}`,
             object: "chat.completion",
             created: Math.floor(Date.now() / 1000),
-            model: "KICCGPT",
+            model: "KIESGPT",
             choices: [{ index: 0, message: { role: "assistant", content: buildChatMessage() }, finish_reason: "stop" }],
             usage: { prompt_tokens: 12, completion_tokens: 28, total_tokens: 40 }
         });
@@ -788,22 +814,13 @@ export const handlers = [
     }),
 
     http.get("/api/assistant", () => {
-        const asResponses = DYNAMIC_ASSISTANTS.map((a, i) => ({
-            ...a,
-            is_visible: a.latest_version.is_visible ?? true,
-            subscriptions_count: Math.max(1, DYNAMIC_ASSISTANTS.length - i) * 3
-        }));
-        return HttpResponse.json(asResponses);
+        return HttpResponse.json(DYNAMIC_ASSISTANTS.map(withMockSubscriptionCount));
     }),
 
     http.get("/api/assistant/:id", ({ params }) => {
         const a = DYNAMIC_ASSISTANTS.find(x => x.id === params.id);
         if (!a) return new HttpResponse(null, { status: 404 });
-        return HttpResponse.json({
-            ...a,
-            is_visible: a.latest_version.is_visible ?? true,
-            subscriptions_count: 5
-        });
+        return HttpResponse.json(withMockSubscriptionCount(a));
     }),
 
     http.post("/api/assistant/:id/update", async ({ params, request }) => {
@@ -852,24 +869,20 @@ export const handlers = [
     }),
 
     http.get("/api/user/assistants", () => {
-        return HttpResponse.json(DYNAMIC_ASSISTANTS.slice(0, 3));
+        return HttpResponse.json(DYNAMIC_ASSISTANTS.slice(0, 3).map(withMockSubscriptionCount));
     }),
 
     http.get("/api/sso/userinfo", () => {
         return HttpResponse.json({
             sub: "mock-user-123",
-            displayName: "Mucci",
-            surname: "Maskottchen",
-            telephoneNumber: "+49 89 1234567",
-            email: "mucci.maskottchen@muc.de",
-            username: "mucci.maskottchen",
-            givenname: "Max",
+            name: "Max Maskottchen",
+            family_name: "Maskottchen",
+            given_name: "Max",
+            middle_name: "Theo",
+            email: "mucgpt@user.com",
+            preferred_username: "mucgpt-user",
             department: "IT-KI",
-            lhmObjectID: "2232324224",
-            preferred_username: "mucci.maskottchen@muc.de",
-            memberof: ["IT", "IT-KI"],
-            user_roles: ["lhm-ab-mucgpt-user"],
-            authorities: []
+            lhmObjectID: "2232324224"
         });
     }),
 
@@ -880,7 +893,8 @@ export const handlers = [
         const subscriptions = DYNAMIC_ASSISTANTS.slice(0, 2).map(assistant => ({
             id: assistant.id,
             title: assistant.latest_version.name,
-            description: assistant.latest_version.description
+            description: assistant.latest_version.description,
+            subscriptions_count: getMockSubscriptionCount(assistant.id)
         }));
         return HttpResponse.json(subscriptions);
     }),
@@ -896,7 +910,8 @@ export const handlers = [
         return HttpResponse.json({
             id: assistant.id,
             title: assistant.latest_version.name,
-            description: assistant.latest_version.description
+            description: assistant.latest_version.description,
+            subscriptions_count: getMockSubscriptionCount(assistant.id)
         });
     }),
 

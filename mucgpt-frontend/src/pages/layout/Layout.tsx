@@ -1,13 +1,13 @@
-import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
+import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
-import { Button, DrawerBody, OverlayDrawer, FluentProvider, InlineDrawer, Spinner } from "@fluentui/react-components";
-import { DismissRegular, Navigation24Regular } from "@fluentui/react-icons";
+import { Button, Divider, DrawerBody, OverlayDrawer, FluentProvider, InlineDrawer } from "@fluentui/react-components";
+import { CalendarNote24Regular, Navigation24Regular } from "@fluentui/react-icons";
 import { useTranslation } from "react-i18next";
 
 import styles from "./Layout.module.css";
-import logo from "../../assets/mucgpt_frost.png";
+import logo from "../../assets/edelweiss_pride.svg";
 import alternative_logo from "../../assets/mugg_tschibidi.png";
-import logo_black from "../../assets/mucgpt_frost.png";
+import logo_black from "../../assets/edelweiss_pride.svg";
 import { DEFAULTLANG, LanguageContext } from "../../components/LanguageSelector/LanguageContextProvider";
 import { TermsOfUseDialog } from "../../components/TermsOfUseDialog";
 import { ApplicationConfig } from "../../api";
@@ -19,17 +19,23 @@ import { UserContextProvider } from "./UserContextProvider";
 import { LanguageSelector } from "../../components/LanguageSelector";
 import { ThemeSelector } from "../../components/ThemeSelector";
 import { FeedbackButton } from "../../components/FeedbackButton";
-import { HelpButton } from "../../components/HelpButton";
+import { FaqButton } from "../../components/FaqButton";
+import { IncidentReportButton } from "../../components/IncidentReportButton";
+import { FeatureRequestButton } from "../../components/FeatureRequestButton";
 import { configApi } from "../../api/core-client";
 import { ApiError } from "../../api/fetch-utils";
 import { useGlobalToastContext } from "../../components/GlobalToastHandler/GlobalToastContext";
 import GlobalToastHandler from "../../components/GlobalToastHandler/GlobalToastHandler";
 import TutorialsButton from "../../components/TutorialsButton";
+import { TranscriptionSettingsButton } from "../../components/TranscriptionSettings/TranscriptionSettingsButton";
+import { TranscriptionSettingsProvider } from "../../components/TranscriptionSettings/TranscriptionSettingsContext";
 import { ToolsProvider } from "../../components/ToolsProvider";
 import Unauthorized from "../Unauthorized";
 import { ConfigContext } from "../../context/ConfigContext";
 import { AppSidebar } from "../../components/AppSidebar";
 import { UnifiedHistoryProvider, UnifiedSidebarHistory } from "../../components/UnifiedHistory";
+import { EdelweissSpinner } from "../../components/EdelweissSpinner";
+import { VersionInfo } from "../../components/VersionInfo";
 
 const APP_NAV_COLLAPSED_KEY = "APP_NAV_COLLAPSED";
 const MOBILE_LAYOUT_BREAKPOINT = 640;
@@ -52,6 +58,11 @@ interface AppShellProps {
 const AppShell = ({ config, isLight, languagePreference, onLanguageSelectionChanged, onThemeChange, onAcceptTermsOfUse, termsOfUseRead }: AppShellProps) => {
     const { t } = useTranslation();
     const location = useLocation();
+    const navigate = useNavigate();
+    const faqUrl = config.faq_url;
+    const incidentReportUrl = config.incident_report_url;
+    const featureRequestUrl = config.feature_request_url;
+    const contactMailUrl = config.contact_mail_url;
     const [isMobile, setIsMobile] = useState<boolean>(window.innerWidth <= MOBILE_LAYOUT_BREAKPOINT);
     const [mobileSidebarOpen, setMobileSidebarOpen] = useState<boolean>(false);
     const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(() => localStorage.getItem(APP_NAV_COLLAPSED_KEY) === "true");
@@ -84,26 +95,83 @@ const AppShell = ({ config, isLight, languagePreference, onLanguageSelectionChan
     const secondaryTitle = t("components.history.history");
     const secondaryContent = !isMobile ? <UnifiedSidebarHistory /> : null;
     const mobileSecondaryContent = isMobile ? <UnifiedSidebarHistory requestClose={() => setMobileSidebarOpen(false)} /> : null;
+    const handleOpenVersionNotes = useCallback(() => {
+        navigate("/version");
+        setMobileSidebarOpen(false);
+    }, [navigate]);
 
     const utilitiesContent = (
         <div className={styles.mobileUtilities}>
-            <div className={styles.mobileUtilityRow}>
-                <ThemeSelector isLight={isLight} onThemeChange={onThemeChange} layout="row" label={t("common.theme")} />
+            <div className={styles.mobileUtilityGroup}>
+                <div className={styles.mobileUtilityRow}>
+                    <LanguageSelector
+                        defaultlang={languagePreference}
+                        onSelectionChange={onLanguageSelectionChanged}
+                        layout="row"
+                        label={t("common.language")}
+                    />
+                </div>
+                <div className={styles.mobileUtilityRow}>{config.transcription_enabled ? <TranscriptionSettingsButton /> : null}</div>
+                <div className={styles.mobileUtilityRow}>
+                    <ThemeSelector isLight={isLight} onThemeChange={onThemeChange} layout="row" label={t("common.theme")} />
+                </div>
             </div>
-            <div className={styles.mobileUtilityRow}>
-                <LanguageSelector defaultlang={languagePreference} onSelectionChange={onLanguageSelectionChanged} layout="row" label={t("common.language")} />
+            <Divider className={styles.settingsDivider} />
+            <div className={styles.mobileUtilityGroup}>
+                <div className={styles.mobileUtilityRow}>
+                    <TutorialsButton />
+                </div>
+                {faqUrl && (
+                    <div className={styles.mobileUtilityRow}>
+                        <FaqButton url={faqUrl} label={t("components.faqbutton.label")} />
+                    </div>
+                )}
+                {incidentReportUrl && (
+                    <div className={styles.mobileUtilityRow}>
+                        <IncidentReportButton url={incidentReportUrl} />
+                    </div>
+                )}
+                {featureRequestUrl && (
+                    <div className={styles.mobileUtilityRow}>
+                        <FeatureRequestButton url={featureRequestUrl} />
+                    </div>
+                )}
+                {contactMailUrl && (
+                    <div className={styles.mobileUtilityRow}>
+                        <FeedbackButton contactMailUrl={contactMailUrl} />
+                    </div>
+                )}
             </div>
-            <div className={styles.mobileUtilityRow}>
-                <TutorialsButton />
-            </div>
-            <div className={styles.mobileUtilityRow}>
-                <HelpButton url={import.meta.env.BASE_URL + "#/faq"} label={t("components.helpbutton.help")} />
-            </div>
-            <div className={styles.mobileUtilityRow}>
-                <FeedbackButton emailAddress="itm.kicc@muenchen.de" subject="MUCGPT" />
+            <Divider className={styles.settingsDivider} />
+            <div className={styles.mobileUtilityGroup}>
+                <div className={styles.mobileUtilityRow}>
+                    <TermsOfUseDialog
+                        defaultOpen={false}
+                        onAccept={onAcceptTermsOfUse}
+                        showTrigger
+                        requireAcceptance={false}
+                        triggerClassName={styles.mobileUtilityTrigger}
+                    />
+                </div>
+                <div className={styles.mobileUtilityRow}>
+                    <Button appearance="subtle" icon={<CalendarNote24Regular />} onClick={handleOpenVersionNotes}>
+                        {t("components.versioninfo.whats_new", "Was gibt's neues?")}
+                    </Button>
+                </div>
+                <div className={styles.mobileUtilityRow}>
+                    <VersionInfo
+                        app_version={config.app_version}
+                        core_version={config.core_version}
+                        frontend_version={config.frontend_version}
+                        assistant_version={config.assistant_version}
+                        layout="menu"
+                    />
+                </div>
             </div>
         </div>
     );
+    const logoSrc = config.alternative_logo ? alternative_logo : isLight ? logo_black : logo;
+    const appTitleAriaLabel = t("common.environment_label", "Umgebung: {{env}}", { env: config.env_name });
 
     return (
         <>
@@ -111,48 +179,6 @@ const AppShell = ({ config, isLight, languagePreference, onLanguageSelectionChan
                 <a href="#main-content" className={styles.skipLink}>
                     {t("common.skip_to_content", "Zum Hauptinhalt springen")}
                 </a>
-
-                <header className={styles.header} role="banner" aria-label={t("common.main_navigation", "Hauptnavigation")}>
-                    <Link to="/" className={styles.headerTitleContainer} aria-label={t("common.home_link", "Zur Startseite")}>
-                        <img src={config.alternative_logo ? alternative_logo : isLight ? logo : logo_black} alt="MUCGPT" className={styles.logo} />
-                        <h1 className={styles.headerTitle} aria-label={t("common.environment_label", "Umgebung: {{env}}", { env: config.env_name })}>
-                            {config.env_name}
-                        </h1>
-                    </Link>
-
-                    {isMobile ? (
-                        <Button
-                            className={styles.mobileMenuButton}
-                            icon={mobileSidebarOpen ? <DismissRegular className={styles.iconSize24} /> : <Navigation24Regular className={styles.iconSize24} />}
-                            onClick={() => setMobileSidebarOpen(previous => !previous)}
-                            aria-label={t("app_sidebar.toggle_navigation")}
-                            aria-expanded={mobileSidebarOpen}
-                            size="medium"
-                        />
-                    ) : (
-                        <>
-                            <nav className={styles.headerNavList} aria-label={t("common.user_settings", "Benutzereinstellungen")}>
-                                <div className={styles.headerNavRightContainer}>
-                                    <div className={styles.headerNavList}>
-                                        <TutorialsButton />
-                                    </div>
-                                    <div className={styles.headerNavList}>
-                                        <LanguageSelector defaultlang={languagePreference} onSelectionChange={onLanguageSelectionChanged} />
-                                    </div>
-                                    <div className={styles.headerNavList}>
-                                        <ThemeSelector isLight={isLight} onThemeChange={onThemeChange} />
-                                    </div>
-                                    <div className={styles.headerNavList}>
-                                        <HelpButton url={import.meta.env.BASE_URL + "#/faq"} label={t("components.helpbutton.help")} />
-                                    </div>
-                                    <div className={styles.headerNavList}>
-                                        <FeedbackButton emailAddress="itm.kicc@muenchen.de" subject="MUCGPT" />
-                                    </div>
-                                </div>
-                            </nav>
-                        </>
-                    )}
-                </header>
 
                 <div
                     className={`${styles.shellBody} ${!isMobile && isSidebarCollapsed ? styles.shellBodyCollapsed : ""} ${
@@ -168,6 +194,10 @@ const AppShell = ({ config, isLight, languagePreference, onLanguageSelectionChan
                                     onToggleCollapsed={toggleSidebarCollapsed}
                                     secondaryContent={secondaryContent}
                                     secondaryTitle={secondaryTitle}
+                                    utilitiesContent={utilitiesContent}
+                                    logoSrc={logoSrc}
+                                    appTitle={config.env_name}
+                                    appTitleAriaLabel={appTitleAriaLabel}
                                 />
                             </InlineDrawer>
                         </aside>
@@ -178,6 +208,17 @@ const AppShell = ({ config, isLight, languagePreference, onLanguageSelectionChan
                     </main>
                 </div>
             </div>
+
+            {isMobile && !mobileSidebarOpen && (
+                <Button
+                    className={styles.mobileMenuButton}
+                    icon={<Navigation24Regular className={styles.iconSize24} />}
+                    onClick={() => setMobileSidebarOpen(true)}
+                    aria-label={t("app_sidebar.toggle_navigation")}
+                    aria-expanded={false}
+                    size="medium"
+                />
+            )}
 
             {isMobile && (
                 <OverlayDrawer
@@ -195,6 +236,9 @@ const AppShell = ({ config, isLight, languagePreference, onLanguageSelectionChan
                             secondaryContent={mobileSecondaryContent}
                             secondaryTitle={secondaryTitle}
                             utilitiesContent={utilitiesContent}
+                            logoSrc={logoSrc}
+                            appTitle={config.env_name}
+                            appTitleAriaLabel={appTitleAriaLabel}
                         />
                     </DrawerBody>
                 </OverlayDrawer>
@@ -311,25 +355,27 @@ export const Layout = () => {
                 <UserContextProvider>
                     {isLoadingConfig ? (
                         <div className={styles.loadingContainer}>
-                            <Spinner size="large" label={t("common.loading", "Lade Konfiguration...")} />
+                            <EdelweissSpinner size="large" label={t("common.loading", "Lade Konfiguration...")} />
                         </div>
                     ) : isUnauthorized ? (
                         <Unauthorized redirectUrl={unauthorizedRedirectUrl} />
                     ) : (
                         <ConfigContext.Provider value={config}>
-                            <ToolsProvider>
-                                <UnifiedHistoryProvider>
-                                    <AppShell
-                                        config={config}
-                                        isLight={isLight}
-                                        languagePreference={languagePreference}
-                                        onLanguageSelectionChanged={onLanguageSelectionChanged}
-                                        onThemeChange={onThemeChange}
-                                        onAcceptTermsOfUse={onAcceptTermsOfUse}
-                                        termsOfUseRead={termsOfUseRead}
-                                    />
-                                </UnifiedHistoryProvider>
-                            </ToolsProvider>
+                            <TranscriptionSettingsProvider deploymentEnabled={config.transcription_enabled}>
+                                <ToolsProvider>
+                                    <UnifiedHistoryProvider>
+                                        <AppShell
+                                            config={config}
+                                            isLight={isLight}
+                                            languagePreference={languagePreference}
+                                            onLanguageSelectionChanged={onLanguageSelectionChanged}
+                                            onThemeChange={onThemeChange}
+                                            onAcceptTermsOfUse={onAcceptTermsOfUse}
+                                            termsOfUseRead={termsOfUseRead}
+                                        />
+                                    </UnifiedHistoryProvider>
+                                </ToolsProvider>
+                            </TranscriptionSettingsProvider>
                         </ConfigContext.Provider>
                     )}
                     <GlobalToastHandler />

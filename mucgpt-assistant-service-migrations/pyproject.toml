@@ -1,13 +1,13 @@
 [project]
 name = "mucgpt-assistant-service-migrations"
-version = "0.4.1"
+version = "0.4.2"
 description = "Migrations for mucgpt-assistant-service"
 authors = [
     { name = "Michael Jaumann", email = "michael.jaumann@muenchen.de" },
     { name = "Paul Ilitz", email = "paul.ilitz@muenchen.de" },
 ]
 maintainers = [
-    { name = " ITM KICC", email = "itm.kicc@muenchen.de" },
+    { name = " ITM KIES", email = "ki@muenchen.de" },
     { name = "Michael Jaumann", email = "michael.jaumann@muenchen.de" },
     { name = "Paul Ilitz", email = "paul.ilitz@muenchen.de" },
 ]

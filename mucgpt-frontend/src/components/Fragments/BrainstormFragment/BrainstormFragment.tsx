@@ -3,12 +3,13 @@ import { Markmap } from "markmap-view";
 import { useCallback, useContext, useLayoutEffect, useMemo, useRef, useState, useEffect } from "react";
 import styles from "./BrainstormFragment.module.css";
 import { useTranslation } from "react-i18next";
-import { Button, Tooltip, Spinner, MessageBar } from "@fluentui/react-components";
+import { Button, Tooltip, MessageBar } from "@fluentui/react-components";
 import { ArrowDownload24Regular, ContentView24Regular, ScaleFill24Regular, ArrowExpand24Regular } from "@fluentui/react-icons";
 import { IPureNode } from "markmap-common";
 import { LightContext } from "../../../pages/layout/LightContext";
 import { BaseFragment } from "../BaseFragment/BaseFragment";
 import { BaseFragmentProps } from "../types";
+import { EdelweissSpinner } from "../../EdelweissSpinner";
 
 // Constants
 const DEBOUNCE_DELAY = 500; // Increased for better performance
@@ -23,6 +24,11 @@ const TEXT_ATTRIBUTE = "TEXT";
 const FOLDED_ATTRIBUTE = "FOLDED";
 const VERSION_ATTRIBUTE = "version";
 const MIN_CONTENT_LENGTH = 10;
+const htmlToText = (html: string): string => {
+    const el = document.createElement("div");
+    el.innerHTML = html;
+    return el.textContent ?? "";
+};
 
 interface Props extends BaseFragmentProps {
     markdown?: string;
@@ -56,7 +62,7 @@ export const BrainstormFragment = ({ content, markdown, showLineNumbers = true }
     // parse Nodes
     const parseNodes = useCallback((to_be_parsed: IPureNode, parent: Element, doc: Document): void => {
         const result = doc.createElement(NODE_ELEMENT);
-        result.setAttribute(TEXT_ATTRIBUTE, to_be_parsed.content);
+        result.setAttribute(TEXT_ATTRIBUTE, htmlToText(to_be_parsed.content));
 
         for (const child of to_be_parsed.children || []) {
             parseNodes(child, result, doc);
@@ -72,7 +78,7 @@ export const BrainstormFragment = ({ content, markdown, showLineNumbers = true }
             mapElem.setAttribute(VERSION_ATTRIBUTE, FREEPLANE_VERSION);
 
             const question = doc.createElement(NODE_ELEMENT);
-            question.setAttribute(TEXT_ATTRIBUTE, parsed.content);
+            question.setAttribute(TEXT_ATTRIBUTE, htmlToText(parsed.content));
             question.setAttribute(FOLDED_ATTRIBUTE, "false");
 
             for (const child of parsed.children || []) {
@@ -273,7 +279,7 @@ export const BrainstormFragment = ({ content, markdown, showLineNumbers = true }
 
             {isLoading && (
                 <div className={styles.loadingContainer}>
-                    <Spinner label={t("components.mindmap.loading")} />
+                    <EdelweissSpinner label={t("components.mindmap.loading")} />
                 </div>
             )}
 

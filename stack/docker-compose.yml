@@ -80,7 +80,7 @@ services:
         ]
     security_opt: *security_settings
   init-keycloak:
-    image: klg71/keycloakmigration:0.2.127@sha256:a48ce70ba2698e055d96184ce058cdd473e23707366955fe687707457730a073
+    image: klg71/keycloakmigration:0.2.129@sha256:356bb15df86d6476f1469789718f597ac70583f83c2ae9c90408a3e00e3a1796
     depends_on:
       - keycloak
     environment:
@@ -100,7 +100,7 @@ services:
   # #### Valkey ####
   #
   valkey:
-    image: valkey/valkey:9.0.4@sha256:8436e10bc65c94886a91d4415b6a6dfa9cb5a306fb3b996e5bb67cd2b4854193
+    image: valkey/valkey:9.0.4@sha256:080455d715687e61cff6a3110e9fb8957775f15057bc70ccea5ba56e5f3d7975
     ports:
       - "6379:6379"
     command: ["valkey-server", "--requirepass", "password"]
@@ -145,7 +145,7 @@ services:
       - SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_SSO_PROVIDER=sso
       - SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_SSO_CLIENTID=mucgpt
       - SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_SSO_CLIENTSECRET=client_secret
-      - SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_SSO_SCOPE=profile,openid,LHM,LHM_Extended
+      - SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_SSO_SCOPE=openid,profile,roles,email,lhm-core
     #  - LOGGING_LEVEL_REACTOR_NETTY=INFO
     #  - LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_CLOUD_GATEWAY=TRACE
     #  - SPRING_CLOUD_GATEWAY_HTTPCLIENT_WIRETAP=TRUE
@@ -253,7 +253,9 @@ services:
       context: ../mucgpt-frontend
       dockerfile: Dockerfile
       args:
+        - HTTP_PROXY=${HTTP_PROXY:-}
         - HTTPS_PROXY=${HTTPS_PROXY}
+        - NO_PROXY=${NO_PROXY:-}
     ports:
       - "8081:8080"
     networks:

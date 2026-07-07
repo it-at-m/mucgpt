@@ -188,7 +188,7 @@
     margin-right: 10px;
 }
 .markdownDescription {
-    max-width: calc(var(--sidebarWidth) - 20px);
+    max-width: 100%;
 }
 
 .markdownDescription code {

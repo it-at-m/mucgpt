@@ -2,7 +2,29 @@
 <html lang="de">
     <head>
         <meta charset="UTF-8" />
-        <link rel="icon" type="image/svg+xml" href="/edelweiss_pride.svg" />
+        <link
+            id="favicon"
+            rel="icon"
+            type="image/svg+xml"
+            href="/edelweiss_black_96.svg"
+        />
+
+        <script>
+            function updateFavicon() {
+                const isDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+                const favicon = document.getElementById("favicon");
+
+                favicon.href = isDark
+                    ? "/edelweiss_white_96.svg?v=3"
+                    : "/edelweiss_black_96.svg?v=3";
+            }
+
+        updateFavicon();
+
+        window
+            .matchMedia("(prefers-color-scheme: dark)")
+            .addEventListener("change", updateFavicon);
+    </script>
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <meta name="theme-color" content="#2563eb" />
         <meta name="description" content="KI-Assistent der Landeshauptstadt München" />

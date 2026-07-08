@@ -1,5 +1,4 @@
 import logging
-import textwrap
 
 from langchain_core.runnables.base import RunnableSerializable
 from langchain_core.tools import tool
@@ -8,40 +7,37 @@ from langgraph.config import get_stream_writer
 from langgraph.types import StreamWriter
 
 from agent.tools.simplify_agent import SimplifyAgent
+from agent.tools.spec import LocalTool
 from agent.tools.tool_chunk import ToolStreamChunk, ToolStreamState
 
-# Centralized single-line summaries to avoid duplication across decorator, metadata and system prompt
+# Single-line summary shown to the LLM as this tool's description.
 SIMPLIFY_SUMMARY = (
     "Simplifies complex German text to A2 Easy Language (Leichte Sprache)."  # one-line
 )
 
-# Detailed instruction templates (dedented for clean system prompts)
-SIMPLIFY_DETAILED = textwrap.dedent(
-    """
-    **Vereinfachen (Simplify)**
-
-    Description: Converts German text to A2 level (Leichte Sprache) while preserving meaning.
-
-    Use for:
-    • Accessibility
-    • Language learning support
-    • Plain-language rewrites
-
-    Technical:
-    • Short sentences (≤15 words), active voice, concrete vocabulary
-    • Blank lines separate logical units
-    • Preserve factual accuracy; no omissions
-
-    Parameter:
-    - text (required) Entire source text (single call; do not split)
-
-    Best Practices:
-    - Reject fragments; request full text if incomplete
-    - Keep proper nouns; explain only if ambiguous
-    - No idioms, passive voice, nested clauses
-    - Reference earlier output blocks shown as ```MUCGPTVereinfachen ...``` when user wants adjustments.
-    """
-)
+# User-facing name/description per language, shown in the /v1/tools tool picker.
+SIMPLIFY_METADATA = {
+    "deutsch": {
+        "name": "Vereinfachen",
+        "description": "Vereinfacht komplexe deutsche Texte auf A2-Niveau nach Prinzipien der Leichten Sprache.",
+    },
+    "english": {
+        "name": "Simplify",
+        "description": "Simplifies complex German text to A2 level using Easy Language principles.",
+    },
+    "français": {
+        "name": "Simplifier",
+        "description": "Simplifie les textes allemands complexes au niveau A2 selon les principes du langage facile.",
+    },
+    "bairisch": {
+        "name": "Eifacher machen",
+        "description": "Macht schwere deutsche Text eifacher auf A2-Level mit da Leichten Sprach.",
+    },
+    "ukrainisch": {
+        "name": "Спростити",
+        "description": "Спрощує складні німецькі тексти до рівня A2 за принципами простої мови.",
+    },
+}
 
 
 def simplify(
@@ -81,3 +77,10 @@ def make_simplify_tool(model: RunnableSerializable, logger: logging.Logger) -> B
         return result
 
     return simplify_tool
+
+
+TOOL = LocalTool(
+    id="Vereinfachen",
+    factory=make_simplify_tool,
+    metadata=SIMPLIFY_METADATA,
+)

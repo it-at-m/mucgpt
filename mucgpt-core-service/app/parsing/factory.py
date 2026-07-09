@@ -1,6 +1,7 @@
 from config.settings import ParserBackendType, get_settings
 from core.logtools import getLogger
 from parsing.base import ParserBackend
+from parsing.xberg import XbergBackend
 
 logger = getLogger()
 
@@ -18,10 +19,8 @@ def get_parser() -> ParserBackend | None:
         logger.info("Document processing disabled (PARSER_BACKEND=none)")
         return None
 
-    if backend == ParserBackendType.KREUZBERG:
-        from parsing.kreuzberg import KreuzbergBackend
-
-        logger.info("Using KreuzbergBackend for parsing")
-        return KreuzbergBackend()
+    if backend == ParserBackendType.XBERG:
+        logger.info("Using XbergBackend for parsing")
+        return XbergBackend()
 
     raise ValueError(f"Unknown parser backend: '{backend}'")

@@ -49,7 +49,23 @@ async def parse_file(file: UploadFile, user_info=Depends(authenticate_user)) -> 
             status_code=504,
             detail=f"Parser service timed out while processing '{file.filename}'.",
         )
-    except (httpx.ConnectError, httpx.NetworkError, httpx.HTTPStatusError) as exc:
+    except httpx.HTTPStatusError as exc:
+        status_code = (
+            exc.response.status_code if exc.response is not None else "unknown"
+        )
+        response_text = exc.response.text if exc.response is not None else ""
+        logger.error(
+            "Parser backend HTTP error while parsing file '%s': status=%s body=%s",
+            file.filename,
+            status_code,
+            response_text,
+            exc_info=True,
+        )
+        raise HTTPException(
+            status_code=502,
+            detail=f"Parser service returned an error while processing '{file.filename}'.",
+        )
+    except (httpx.ConnectError, httpx.NetworkError) as exc:
         logger.error(
             f"Parser backend error while parsing file '{file.filename}': {exc}",
             exc_info=True,

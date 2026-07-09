@@ -1,6 +1,6 @@
 <!-- PROJECT LOGO -->
 <div align="center">
-  <img src="mucgpt-frontend/src/assets/edelweiss_full.svg" alt="MUCGPT logo" width="900" />
+  <img src="mucgpt-frontend/src/assets/edelweiss_full_borderd.svg" alt="MUCGPT logo" width="900" />
 </div>
 <br />
 

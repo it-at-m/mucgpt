@@ -443,6 +443,36 @@ class TestSettings:
             with pytest.raises(ValueError):
                 get_mcp_settings()
 
+    def test_postgres_checkpointer_requires_db_settings(self):
+        """A postgres checkpointer must fail load when DB connection fields are
+        missing, since the saver is built from settings.DB."""
+        with patch.dict(
+            os.environ,
+            {"MUCGPT_CORE_CHECKPOINTER__BACKEND": "postgres"},
+            clear=True,
+        ):
+            get_settings.cache_clear()
+            with pytest.raises(ValueError, match="CHECKPOINTER.backend=postgres"):
+                Settings()
+
+    def test_postgres_checkpointer_with_db_settings_loads(self):
+        """A postgres checkpointer loads when DB connection fields are present."""
+        with patch.dict(
+            os.environ,
+            {
+                "MUCGPT_CORE_CHECKPOINTER__BACKEND": "postgres",
+                "MUCGPT_CORE_DB__HOST": "db.example.com",
+                "MUCGPT_CORE_DB__NAME": "mucgpt",
+                "MUCGPT_CORE_DB__USER": "mucgpt",
+                "MUCGPT_CORE_DB__PASSWORD": "secret",
+            },
+            clear=True,
+        ):
+            get_settings.cache_clear()
+            settings = Settings()
+            assert settings.CHECKPOINTER.backend == "postgres"
+            assert settings.DB.HOST == "db.example.com"
+
     def test_mcp_settings_default(self):
         """Test MCP settings default values."""
         with patch.dict(os.environ, {}, clear=True):

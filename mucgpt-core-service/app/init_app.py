@@ -3,6 +3,7 @@ from typing import Any
 from agent.agent_executor import MUCGPTAgentExecutor
 from agent.react_agent import MUCGPTReActAgent
 from agent.tools.tools import ToolCollection
+from config.checkpointer_provider import CheckpointerProvider
 from config.langfuse_provider import LangfuseProvider
 from config.model_provider import ModelProvider
 from config.settings import (
@@ -14,6 +15,7 @@ from config.settings import (
 from core.auth_models import AuthenticationResult
 from core.cache import RedisCache
 from core.logtools import getLogger
+from database.session import init_db
 
 logger = getLogger()
 
@@ -62,6 +64,14 @@ async def warmup_app():
     LangfuseProvider.init(version=settings.VERSION, langfuse_cfg=langfuse_settings)
     # init redis
     await RedisCache.init_redis()
+    # init chat-persistence database (creates tables for sqlite; idempotent)
+    try:
+        await init_db(settings)
+    except Exception as exc:
+        logger.error("Failed to initialize chat-persistence database: %s", exc)
+        raise
+    # init agent-state checkpointer (best-effort; service boots even if it fails)
+    await CheckpointerProvider.init(settings)
     logger.info("App context warmed up")
 
 
@@ -73,6 +83,8 @@ async def destroy_app():
         await redis.aclose()
     except RuntimeError:
         pass
+    # close checkpointer
+    await CheckpointerProvider.close()
 
 
 def _initialize_models_metadata(cfg: Settings) -> None:
@@ -110,7 +122,12 @@ async def init_agent(user_info: AuthenticationResult) -> MUCGPTAgentExecutor:
         logger.debug(
             f"Initializing MUCGPTAgent with tools: {[tool.name for tool in tools]}"
         )
-        agent = MUCGPTReActAgent(llm=model, tools=tools, debug=False)
+        agent = MUCGPTReActAgent(
+            llm=model,
+            tools=tools,
+            debug=False,
+            checkpointer=CheckpointerProvider.get_checkpointer(),
+        )
     except Exception as e:
         logger.error("Failed to initialize MUCGPTAgent: %s", e)
         raise

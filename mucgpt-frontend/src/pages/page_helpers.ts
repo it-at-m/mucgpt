@@ -11,6 +11,7 @@ import { AssistantStorageService } from "../service/assistantstorage";
 import { v4 as uuid } from "uuid";
 import { handleRedirect } from "../api/fetch-utils";
 import { createChatName } from "../api/core-client";
+import { deleteConversation, patchConversation } from "../api/conversations-client";
 
 /**
  * @fileoverview Chat page helper functions for managing chat state, API requests, and user interactions.
@@ -99,6 +100,12 @@ export function handleDeleteChat(
 
     // Delete the chat from storage
     storageService.delete(id);
+
+    // Mirror the deletion to the backend (best-effort) so a persisted normal
+    // chat is not pulled back on the next sync/reload. deleteConversation
+    // treats 404 as success, so this is a harmless no-op for local-only
+    // (e.g. assistant) chats that were never persisted server-side.
+    deleteConversation(id).catch(error => console.error(`Failed to delete conversation "${id}" on backend`, error));
 
     // Clear the UI state
     setAnswers([]);
@@ -237,6 +244,13 @@ export const makeApiRequest = async (
     // Create conversation history for the API request
     const history: ChatTurn[] = answers.map((a: { user: any; response: { answer: any } }) => ({ user: a.user, assistant: a.response.answer }));
 
+    // Resolve the server-side conversation id used to persist this chat in the
+    // backend (keyed by the authenticated user). Normal chats reuse the active
+    // chat id, or generate one up front so the very first turn is persisted and
+    // the same id is used end-to-end (local store + backend). Assistant chats
+    // stay local-only for now, so they are not persisted server-side.
+    const conversation_id = assistant_id ? undefined : (activeChatRef.current ?? uuid());
+
     // Build the API request object
     const request: ChatRequest = {
         history: [...history, { user: question, assistant: undefined }],
@@ -247,7 +261,8 @@ export const makeApiRequest = async (
         model: LLM.llm_name,
         enabled_tools: enabled_tools && enabled_tools.length > 0 ? enabled_tools : undefined,
         assistant_id: assistant_id,
-        data_sources: data_sources && data_sources.length > 0 ? data_sources : undefined
+        data_sources: data_sources && data_sources.length > 0 ? data_sources : undefined,
+        conversation_id: conversation_id
     };
 
     // Make the API call
@@ -453,10 +468,24 @@ export const makeApiRequest = async (
         // Create a new chat with generated name
         const chatname = await createChatName(question, finalResponse.answer, language, options.creativity, options.system ?? "", LLM.llm_name);
 
-        // Create chat with assistant-specific ID if assistant_id is provided, otherwise use regular UUID
-        const id = assistant_id
-            ? await storageService.create([finalMessage], options, AssistantStorageService.GENERATE_BOT_CHAT_ID(assistant_id, uuid()), chatname, false)
-            : await storageService.create([finalMessage], options, uuid(), chatname, false);
+        // Create chat with assistant-specific ID if assistant_id is provided.
+        // For normal chats reuse the conversation_id already sent to the backend
+        // (created there on the first turn) so local and server ids stay aligned.
+        const id =
+            assistant_id || !conversation_id
+                ? await storageService.create(
+                      [finalMessage],
+                      options,
+                      AssistantStorageService.GENERATE_BOT_CHAT_ID(assistant_id ?? "", uuid()),
+                      chatname,
+                      false
+                  )
+                : await storageService.create([finalMessage], options, conversation_id, chatname, false);
+
+        // Persist the generated title to the backend for normal chats (best-effort).
+        if (!assistant_id && conversation_id) {
+            patchConversation(conversation_id, { title: chatname }).catch(error => console.error("Failed to persist conversation title", error));
+        }
 
         // Set the new chat as active and refresh history
         dispatch({ type: "SET_ACTIVE_CHAT", payload: id });

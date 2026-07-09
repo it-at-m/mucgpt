@@ -101,3 +101,27 @@ REDIS:
   PORT: 6379
   USERNAME: "default"
   PASSWORD: "<your-password>"
+
+# Chat persistence database (optional - nested under DB key)
+# Stores conversations + messages server-side. Defaults to a local SQLite file
+# so it works with zero external infrastructure.
+# Override via env vars, e.g. MUCGPT_CORE_DB__BACKEND=postgres
+DB:
+  backend: "sqlite"            # "sqlite" (default) or "postgres"
+  sqlite_path: "./data/mucgpt_chat.db"
+  # PostgreSQL (required when backend == "postgres"):
+  # HOST: "localhost"
+  # PORT: 5432
+  # NAME: "mucgpt"
+  # USER: "mucgpt"
+  # PASSWORD: "<your-password>"
+  # SCHEMA: null
+
+# LangGraph agent-state checkpointer (optional - nested under CHECKPOINTER key)
+# Persists agent graph state per conversation thread_id so runs can resume.
+#   memory  -> in-process (default; no infra, great for tests)
+#   sqlite  -> persistent file at sqlite_path
+#   postgres-> uses the DB connection settings above
+CHECKPOINTER:
+  backend: "memory"
+  sqlite_path: "./data/mucgpt_checkpoints.db"

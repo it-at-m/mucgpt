@@ -6,17 +6,22 @@
             id="favicon"
             rel="icon"
             type="image/svg+xml"
-            href="/edelweiss_black_96.svg"
+            href="%BASE_URL%edelweiss_black_96.svg"
         />
 
-        <script>
+        <script type="module">
+
+            const baseUrl = import.meta.env.BASE_URL;
+
             function updateFavicon() {
                 const isDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
                 const favicon = document.getElementById("favicon");
 
+                if (!favicon) return;
+
                 favicon.href = isDark
-                    ? "/edelweiss_white_96.svg?v=3"
-                    : "/edelweiss_black_96.svg?v=3";
+                    ? `${baseUrl}edelweiss_white_96.svg?v=3`
+                    : `${baseUrl}edelweiss_black_96.svg?v=3`;
             }
 
             updateFavicon();

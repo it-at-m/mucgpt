@@ -59,9 +59,7 @@ class LDAPConfig(BaseModel):
     DISPLAY_ATTRIBUTE: str = "ou"
     PARENT_ATTRIBUTE: str | None = None
     ADDITIONAL_ATTRIBUTES: list[str] | None = None
-    REQUIRED_ATTRIBUTES: list[str] = Field(
-        default_factory=lambda: ["lhmOULongname", "lhmOUShortname"]
-    )
+    REQUIRED_ATTRIBUTES: list[str] = Field(default_factory=lambda: ["lhmOUShortname"])
     IGNORED_OU_PREFIXES: list[str] = Field(default_factory=lambda: ["_"])
     IGNORED_OU_SUFFIXES: list[str] = Field(default_factory=lambda: ["-xxx"])
     IGNORED_OU_SHORTNAME_EXCEPTIONS: list[str] = Field(default_factory=list)

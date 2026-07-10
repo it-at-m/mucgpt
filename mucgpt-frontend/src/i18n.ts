@@ -498,7 +498,8 @@ i18n
                             creativity_description: "Legt fest, wie der Assistent formuliert.",
                             creativity_low_description: "Kurze, klare Antworten mit Fokus auf Fakten und Vorgaben.",
                             creativity_medium_description: "Verlässliche Antworten mit etwas Spielraum für bessere Formulierungen und Struktur.",
-                            creativity_high_description: "Mehr Vorschläge, Varianten und alternative Formulierungen, hält sich aber weniger strikt an Anweisungen.",
+                            creativity_high_description:
+                                "Mehr Vorschläge, Varianten und alternative Formulierungen, hält sich aber weniger strikt an Anweisungen.",
                             default_model: "Standard-Modell",
                             default_model_description:
                                 "Dieses Modell ist vorausgewählt. Nutzer können beim Start einer Unterhaltung weiterhin ein anderes verfügbares Modell auswählen.",
@@ -1242,7 +1243,8 @@ i18n
                             creativity_description: "Controls how freely the assistant phrases answers and develops suggestions.",
                             creativity_low_description: "Precise: Answers stay close to the task and avoid unnecessary variation.",
                             creativity_medium_description: "Balanced: A good balance between reliable answers and flexible wording.",
-                            creativity_high_description: "Creative: More room for ideas, alternative wording, and less obvious suggestions, but may follow instructions less strictly.",
+                            creativity_high_description:
+                                "Creative: More room for ideas, alternative wording, and less obvious suggestions, but may follow instructions less strictly.",
                             default_model: "Default Model",
                             default_model_description:
                                 "This model is preselected. Users can still choose another available model when starting a conversation.",
@@ -1973,7 +1975,8 @@ i18n
                             creativity_description: "Steuert, wie frei der Assistent formuliert und Vorschläge entwickelt.",
                             creativity_low_description: "Präzise: Antworten bleiben nah an der Aufgabe und vermeiden unnötige Varianten.",
                             creativity_medium_description: "Ausgewogen: Gute Balance aus verlässlichen Antworten und flexibler Formulierung.",
-                            creativity_high_description: "Kreativ: Mehr Spielraum für Ideen, alternative Formulierungen und ungewöhnlichere Vorschläge, hält sich aber weniger strikt an Anweisungen.",
+                            creativity_high_description:
+                                "Kreativ: Mehr Spielraum für Ideen, alternative Formulierungen und ungewöhnlichere Vorschläge, hält sich aber weniger strikt an Anweisungen.",
                             default_model: "Standard-Modell",
                             default_model_description:
                                 "Dieses Modell ist vorausgewählt. Nutzer können beim Start einer Unterhaltung weiterhin ein anderes verfügbares Modell auswählen.",
@@ -3434,7 +3437,8 @@ i18n
                             creativity_description: "Керує тим, наскільки вільно асистент формулює відповіді та розвиває пропозиції.",
                             creativity_low_description: "Точно: відповіді залишаються близькими до завдання та уникають зайвих варіантів.",
                             creativity_medium_description: "Збалансовано: хороший баланс між надійними відповідями та гнучким формулюванням.",
-                            creativity_high_description: "Креативно: більше простору для ідей, альтернативних формулювань і менш очевидних пропозицій, але може менш строго дотримуватися інструкцій.",
+                            creativity_high_description:
+                                "Креативно: більше простору для ідей, альтернативних формулювань і менш очевидних пропозицій, але може менш строго дотримуватися інструкцій.",
                             default_model: "Модель за замовчуванням",
                             default_model_description:
                                 "Ця модель попередньо вибрана. Користувачі все ще можуть вибрати іншу доступну модель на початку розмови.",

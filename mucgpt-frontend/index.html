@@ -2,15 +2,9 @@
 <html lang="de">
     <head>
         <meta charset="UTF-8" />
-        <link
-            id="favicon"
-            rel="icon"
-            type="image/svg+xml"
-            href="%BASE_URL%edelweiss_black_96.svg"
-        />
+        <link id="favicon" rel="icon" type="image/svg+xml" href="%BASE_URL%edelweiss_black_96.svg" />
 
         <script type="module">
-
             const baseUrl = import.meta.env.BASE_URL;
 
             function updateFavicon() {
@@ -19,16 +13,12 @@
 
                 if (!favicon) return;
 
-                favicon.href = isDark
-                    ? `${baseUrl}edelweiss_white_96.svg?v=3`
-                    : `${baseUrl}edelweiss_black_96.svg?v=3`;
+                favicon.href = isDark ? `${baseUrl}edelweiss_white_96.svg?v=3` : `${baseUrl}edelweiss_black_96.svg?v=3`;
             }
 
             updateFavicon();
 
-            window
-                .matchMedia("(prefers-color-scheme: dark)")
-                .addEventListener("change", updateFavicon);
+            window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", updateFavicon);
         </script>
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <meta name="theme-color" content="#2563eb" />

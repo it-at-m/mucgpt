@@ -25,5 +25,5 @@ export const getCreativityOptions = (t: TFunction) => [
 
 export const getCreativityOption = (t: TFunction, creativity: string) => {
     const options = getCreativityOptions(t);
-    return options.find(option => option.value === creativity.toLowerCase()) ?? options.find(option => option.value === CREATIVITY_MEDIUM) ?? options[0];
+    return options.find(option => option.value === creativity.toLowerCase()) ?? options.find(option => option.value === CREATIVITY_LOW) ?? options[0];
 };

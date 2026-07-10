@@ -1,6 +1,7 @@
 import { Button } from "@fluentui/react-components";
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
+import { CREATIVITY_LOW } from "../../constants";
 import { getCreativityOptions } from "../../utils/creativityOptions";
 import styles from "./CreativityRadioGroup.module.css";
 
@@ -16,11 +17,13 @@ interface CreativityRadioGroupProps {
 export const CreativityRadioGroup = ({ value, onChange, disabled = false, ariaLabel, ariaLabelledBy, className }: CreativityRadioGroupProps) => {
     const { t } = useTranslation();
     const creativityOptions = useMemo(() => getCreativityOptions(t), [t]);
+    const selectedValue = creativityOptions.some(option => option.value === value) ? value : CREATIVITY_LOW;
 
     return (
         <div className={`${styles.responseStyleCards} ${className ?? ""}`} role="radiogroup" aria-label={ariaLabel} aria-labelledby={ariaLabelledBy}>
             {creativityOptions.map(option => {
-                const isSelected = option.value === value;
+                const isCurrentValue = option.value === value;
+                const isSelected = option.value === selectedValue;
                 return (
                     <Button
                         key={option.value}
@@ -32,7 +35,7 @@ export const CreativityRadioGroup = ({ value, onChange, disabled = false, ariaLa
                         data-selected={isSelected ? "true" : undefined}
                         disabled={disabled}
                         onClick={() => {
-                            if (isSelected) return;
+                            if (isCurrentValue) return;
                             onChange(option.value);
                         }}
                     >

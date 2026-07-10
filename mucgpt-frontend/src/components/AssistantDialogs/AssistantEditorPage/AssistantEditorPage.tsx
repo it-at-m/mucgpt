@@ -39,7 +39,7 @@ import { useAssistantState } from "../shared/hooks/useAssistantState";
 import { useCreateAssistantState } from "../shared/hooks/useCreateAssistantState";
 import { ToolsSection, ConversationOptionsSection, AdvancedSettingsSection, VisibilitySection, ExpandableTextarea, CloseConfirmationDialog } from "../shared";
 import { AssistantStrategy } from "../../../pages/assistant/AssistantStrategy";
-import { CREATIVITY_MEDIUM } from "../../../constants";
+import { CREATIVITY_LOW } from "../../../constants";
 import { EdelweissSpinner } from "../../EdelweissSpinner";
 
 type CreateView = "mode_select" | "ai_input" | "settings";
@@ -282,7 +282,7 @@ export const AssistantEditorPage = (props: AssistantEditorPageProps) => {
             system_message: "",
             quick_prompts: [],
             starterPrompts: [],
-            creativity: CREATIVITY_MEDIUM,
+            creativity: CREATIVITY_LOW,
             default_model: LLM.llm_name,
             tools: [],
             publish: false,

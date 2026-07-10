@@ -456,7 +456,8 @@
 }
 
 .fieldDescription {
-    max-width: 72ch;
+    width: 100%;
+    max-width: none;
     margin: -2px 0 12px 0;
     color: var(--colorNeutralForeground2);
     line-height: 1.4;

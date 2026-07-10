@@ -3,7 +3,7 @@ import { ToolBase } from "../../../../api";
 import { FollowUpActionModel } from "../../../FollowUpAction";
 import { StarterPromptModel } from "../../../StarterPrompt";
 import { LLMContext } from "../../../LLMSelector/LLMContextProvider";
-import { CREATIVITY_MEDIUM } from "../../../../constants";
+import { CREATIVITY_LOW } from "../../../../constants";
 import { ensurePromptIds } from "../promptIds";
 
 export const useCreateAssistantState = () => {
@@ -21,7 +21,7 @@ export const useCreateAssistantState = () => {
     const [starterPrompts, setStarterPromptsState] = useState<StarterPromptModel[]>([]);
     const [hierarchicalAccess, setHierarchicalAccess] = useState<string[]>([]);
     const [isVisible, setIsVisible] = useState<boolean>(false);
-    const [creativity, setCreativity] = useState<string>(CREATIVITY_MEDIUM);
+    const [creativity, setCreativity] = useState<string>(CREATIVITY_LOW);
     const [defaultModel, setDefaultModel] = useState<string | undefined>(LLM.llm_name);
 
     // Track if user has made any changes
@@ -36,7 +36,7 @@ export const useCreateAssistantState = () => {
             starterPrompts.length > 0 ||
             hierarchicalAccess.length > 0 ||
             isVisible !== false ||
-            creativity !== CREATIVITY_MEDIUM ||
+            creativity !== CREATIVITY_LOW ||
             (defaultModel !== undefined && defaultModel !== LLM.llm_name)
         );
     }, [
@@ -139,7 +139,7 @@ export const useCreateAssistantState = () => {
         setStarterPromptsState([]);
         setHierarchicalAccess([]);
         setIsVisible(false);
-        setCreativity(CREATIVITY_MEDIUM);
+        setCreativity(CREATIVITY_LOW);
         setDefaultModel(LLM.llm_name);
     }, [LLM.llm_name]);
 

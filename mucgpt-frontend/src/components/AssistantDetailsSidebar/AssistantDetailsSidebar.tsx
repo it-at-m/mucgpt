@@ -15,7 +15,7 @@ import {
     MoreVertical20Regular,
     ArrowExportUp20Regular
 } from "@fluentui/react-icons";
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import styles from "./AssistantDetailsSidebar.module.css";
 import { Assistant, AssistantResponse, CommunityAssistantSnapshot, ToolBase } from "../../api/models";
@@ -102,14 +102,27 @@ export const AssistantDetailsSidebar = ({
     const enabledTools = (latestVersion?.tools || snapshot?.tools || []).filter((tool: ToolBase) => tool.config?.enabled);
     const systemPrompt = latestVersion?.system_prompt || snapshot?.system_message;
 
-    const onCopySystemPrompt = useCallback(() => {
+    const copyTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+    const onCopySystemPrompt = useCallback(async () => {
         if (!systemPrompt) return;
-        setSystemPromptCopied(true);
-        navigator.clipboard.writeText(systemPrompt);
-        setTimeout(() => {
-            setSystemPromptCopied(false);
-        }, 1000);
+        try {
+            await navigator.clipboard.writeText(systemPrompt);
+            setSystemPromptCopied(true);
+            if (copyTimeoutRef.current) clearTimeout(copyTimeoutRef.current);
+            copyTimeoutRef.current = setTimeout(() => {
+                setSystemPromptCopied(false);
+            }, 1000);
+        } catch (err) {
+            console.error("Failed to copy system prompt:", err);
+        }
     }, [systemPrompt]);
+
+    useEffect(() => {
+        return () => {
+            if (copyTimeoutRef.current) clearTimeout(copyTimeoutRef.current);
+        };
+    }, []);
 
     const isOwned = assistant ? ownedAssistantIds.has(assistant.id) : false;
     const isDeletedSnapshot = Boolean(assistant?.isDeletedSnapshot);
@@ -299,14 +312,22 @@ export const AssistantDetailsSidebar = ({
                                     <DocumentText24Regular className={styles.sectionIcon} />
                                     <span>{t("components.community_assistants.system_prompt", "SYSTEM PROMPT")}</span>
                                     <Tooltip
-                                        content={t("components.community_assistants.system_prompt_copy", "Copy system prompt")}
+                                        content={
+                                            systemPromptCopied
+                                                ? t("components.community_assistants.system_prompt_copied", "Copied")
+                                                : t("components.community_assistants.system_prompt_copy", "Copy system prompt")
+                                        }
                                         relationship="description"
                                         positioning="below"
                                     >
                                         <Button
                                             style={{ marginLeft: "auto" }}
                                             appearance="subtle"
-                                            aria-label={t("components.community_assistants.system_prompt_copy", "Copy system prompt")}
+                                            aria-label={
+                                                systemPromptCopied
+                                                    ? t("components.community_assistants.system_prompt_copied", "Copied")
+                                                    : t("components.community_assistants.system_prompt_copy", "Copy system prompt")
+                                            }
                                             icon={!systemPromptCopied ? <Copy20Regular /> : <Checkmark20Regular />}
                                             onClick={onCopySystemPrompt}
                                             size="small"

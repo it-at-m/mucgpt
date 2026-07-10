@@ -15,7 +15,7 @@ changes:
             user.attribute: "lhmObjectID"
             userinfo.token.claim: "true"
             id.token.claim: "true"
-            access.token.claim: "false"
+            access.token.claim: "true"
             aggregate.attrs: "false"
             multivalued: "false"
         - name: department

@@ -205,7 +205,7 @@ Each service provides specialized functionality:
 
 - **Migration Service**: Handles database migrations for the Assistant Service, ensuring schema updates are applied consistently.
 
-- **Document Parsing**: Extracts text and structure from uploaded documents for the Core Service. Currently, only Kreuzberg is supported as the parsing backend.
+- **Document Parsing**: Extracts text and structure from uploaded documents for the Core Service. Currently, only Xberg is supported as the parsing backend.
 
 The API Gateway is developed in Java based on the [Spring Cloud Gateway](https://spring.io/projects/spring-cloud-gateway), providing robust routing, security, and scalability for all services. [IT@M](https://github.com/it-at-m) distributes the gateway as a container image: `ghcr.io/it-at-m/refarch/refarch-gateway`. For detailed documentation, see the [gateway documentation](https://refarch.oss.muenchen.de/gateway.html).
 
@@ -235,8 +235,6 @@ More about this in the [CODE_OF_CONDUCT](/CODE_OF_CONDUCT.md) file.
 ## 📝 License
 
 Distributed under the MIT License. See [LICENSE](LICENSE) file for more information.
-
-Please note that MUCGPT uses **Kreuzberg** as an optional dependency for document parsing. Kreuzberg is distributed under the **Elastic License v2.0 (ELv2)**, which deviates from the MIT license used for the rest of this project.
 
 ## 📬 Contact
 

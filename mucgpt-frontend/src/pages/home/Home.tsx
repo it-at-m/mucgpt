@@ -8,12 +8,13 @@ import { CompassNorthwest24Regular } from "@fluentui/react-icons";
 import { useContext, useEffect, useMemo, useState } from "react";
 
 import { AssistantStorageService } from "../../service/assistantstorage";
-import { AssistantResponse, CommunityAssistant } from "../../api/models";
+import { AssistantResponse, CommunityAssistant, OwnerDetailsResponse } from "../../api/models";
 import { ASSISTANT_STORE } from "../../constants";
 import { UserContext } from "../layout/UserContextProvider";
 import { QuestionInput } from "../../components/QuestionInput/QuestionInput";
 import { getAllCommunityAssistantsApi, getUserSubscriptionsApi, getOwnedCommunityAssistants } from "../../api/assistant-client";
 import { DiscoveryCard } from "../../components/DiscoveryCard";
+import { OwnerMetadataLink, getPrimaryOwnerDetails } from "../../components/OwnerMetadataLink/OwnerMetadataLink";
 import { useToolsContext } from "../../components/ToolsProvider";
 import { ConfigContext } from "../../context/ConfigContext";
 import { UploadedData } from "../../components/ContextManagerDialog/ContextManagerDialog";
@@ -25,6 +26,8 @@ interface HomeAssistant {
     description: string;
     lastUsed: number;
     linkTo: string;
+    metadataOwner?: OwnerDetailsResponse;
+    metadataFallbackLabel?: string;
 }
 
 type HomeMode = "recommended" | "recent";
@@ -153,7 +156,9 @@ const Home = () => {
                             title: own.latest_version.name,
                             description: own.latest_version.description || "",
                             lastUsed,
-                            linkTo: `/owned/communityassistant/${assistantId}`
+                            linkTo: `/owned/communityassistant/${assistantId}`,
+                            metadataOwner: getPrimaryOwnerDetails(own),
+                            metadataFallbackLabel: t("components.community_assistants.metadata_you", "Du")
                         });
                         continue;
                     }
@@ -169,7 +174,9 @@ const Home = () => {
                             title: sub.title,
                             description: sub.description,
                             lastUsed,
-                            linkTo: `/communityassistant/${assistantId}`
+                            linkTo: `/communityassistant/${assistantId}`,
+                            metadataOwner: getPrimaryOwnerDetails(community),
+                            metadataFallbackLabel: t("components.community_assistants.filter_all", "Community")
                         });
                     }
                 }
@@ -190,7 +197,9 @@ const Home = () => {
                         title: a.latest_version.name,
                         description: a.latest_version.description || "",
                         lastUsed: 0,
-                        linkTo: `/communityassistant/${a.id}`
+                        linkTo: `/communityassistant/${a.id}`,
+                        metadataOwner: getPrimaryOwnerDetails(a),
+                        metadataFallbackLabel: t("components.community_assistants.filter_all", "Community")
                     }));
                 if (!mounted) {
                     return;
@@ -323,6 +332,7 @@ const Home = () => {
                                     id={assistant.id}
                                     title={assistant.title}
                                     description={assistant.description}
+                                    metadataStartNode={<OwnerMetadataLink owner={assistant.metadataOwner} fallbackLabel={assistant.metadataFallbackLabel} />}
                                     linkTo={assistant.linkTo}
                                     role="listitem"
                                 />

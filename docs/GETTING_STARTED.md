@@ -56,19 +56,19 @@ See `mucgpt-core-service/config.yaml.example` and `mucgpt-assistant-service/conf
 
 The core service supports extracting text and structure from uploaded documents using an optional parser. Configure the document parser in `core.config.yaml`. By default, document parsing is disabled (`PARSER_BACKEND: "none"`).
 
-Currently, Kreuzberg is the only supported parser backend. To enable it, set the parser backend to `"kreuzberg"` and configure the URL and timeout:
+Currently, Xberg is the only supported parser backend. To enable it, set the parser backend to `"xberg"` and configure the URL and timeout:
 
 ```yaml
-PARSER_BACKEND: "kreuzberg" # Default is "none"
-KREUZBERG_URL: "http://kreuzberg-full:8000"
-KREUZBERG_TIMEOUT: 120.0
+PARSER_BACKEND: "xberg" # Default is "none"
+XBERG_URL: "http://xberg-full:8000"
+XBERG_TIMEOUT: 120.0
 ```
 
 Where:
 
-- `PARSER_BACKEND`: Defines the parser used (`none` to disable, or `kreuzberg`).
-- `KREUZBERG_URL`: Points to your Kreuzberg parsing service.
-- `KREUZBERG_TIMEOUT`: Execution timeout in seconds.
+- `PARSER_BACKEND`: Defines the parser used (`none` to disable, or `xberg`).
+- `XBERG_URL`: Points to your Xberg parsing service.
+- `XBERG_TIMEOUT`: Execution timeout in seconds.
 
 ### Models Configuration (Environment Variable)
 

@@ -1,3 +1,5 @@
+import importlib
+
 import pytest
 from sqlalchemy import select
 
@@ -6,16 +8,141 @@ from api.api_models import (
     AssistantResponse,
     StatusResponse,
     SubscriptionResponse,
+    UserLookupResponse,
 )
 from config.settings import get_settings
+from core.organization.ldap_person_loader import LDAPPersonLookupError
 from database.assistant_repo import AssistantRepository
 from database.database_models import Subscription
 from database.session import create_database_url, get_engine_and_factory
+
+users_router_module = importlib.import_module("api.routers.users_router")
 
 # Headers for authentication
 headers = {
     "Authorization": "Bearer dummy_access_token",
 }
+
+
+@pytest.mark.integration
+def test_lookup_user_by_lhmobjectid_success(test_client, monkeypatch):
+    def _lookup(_self, lhmobjectid: str):
+        assert lhmobjectid == "12345"
+        return {
+            "lhmobjectid": "12345",
+            "givenName": "Max",
+            "sn": "Mustermann",
+            "mail": "max.mustermann@muenchen.de",
+            "organizationalunit": "RIT-GL5",
+        }
+
+    monkeypatch.setattr(
+        users_router_module.LDAPPersonLookupLoader,
+        "lookup_by_lhmobjectid",
+        _lookup,
+    )
+
+    response = test_client.get("/user/lookup/12345", headers=headers)
+    assert response.status_code == 200
+
+    payload = UserLookupResponse.model_validate(response.json())
+    assert payload.lhmobjectid == "12345"
+    assert payload.givenName == "Max"
+    assert payload.sn == "Mustermann"
+    assert payload.mail == "max.mustermann@muenchen.de"
+    assert payload.organizationalunit == "RIT-GL5"
+
+
+@pytest.mark.integration
+def test_lookup_user_by_lhmobjectid_not_found(test_client, monkeypatch):
+    monkeypatch.setattr(
+        users_router_module.LDAPPersonLookupLoader,
+        "lookup_by_lhmobjectid",
+        lambda _self, _lhmobjectid: None,
+    )
+
+    response = test_client.get("/user/lookup/does-not-exist", headers=headers)
+    assert response.status_code == 404
+    assert response.json()["detail"] == "User not found"
+
+
+@pytest.mark.integration
+def test_lookup_user_by_lhmobjectid_ldap_unavailable(test_client, monkeypatch):
+    def _raise_error(_self, _lhmobjectid: str):
+        raise LDAPPersonLookupError("LDAP lookup is disabled")
+
+    monkeypatch.setattr(
+        users_router_module.LDAPPersonLookupLoader,
+        "lookup_by_lhmobjectid",
+        _raise_error,
+    )
+
+    response = test_client.get("/user/lookup/12345", headers=headers)
+    assert response.status_code == 503
+    assert "disabled" in response.json()["detail"].lower()
+
+
+@pytest.mark.integration
+def test_lookup_user_by_lhmobjectid_missing_required_id(test_client, monkeypatch):
+    monkeypatch.setattr(
+        users_router_module.LDAPPersonLookupLoader,
+        "lookup_by_lhmobjectid",
+        lambda _self, _lhmobjectid: {
+            "lhmobjectid": None,
+            "givenName": "Max",
+            "sn": "Mustermann",
+            "mail": "max.mustermann@muenchen.de",
+            "organizationalunit": "RIT-GL5",
+        },
+    )
+
+    response = test_client.get("/user/lookup/12345", headers=headers)
+    assert response.status_code == 502
+    assert "required lhmobjectid" in response.json()["detail"]
+
+
+@pytest.mark.integration
+def test_get_user_assistants_includes_owners_detailed(test_client, monkeypatch):
+    async def _fake_owner_details(owner_ids, cache=None, owners=None):
+        return [
+            {
+                "user_id": owner_id,
+                "username": f"User {owner_id}",
+                "contact_address": f"{owner_id}@example.org",
+                "givenName": "Test",
+                "sn": "User",
+                "mail": f"{owner_id}@example.org",
+                "organizationalunit": "IT-Test-Department",
+            }
+            for owner_id in owner_ids
+        ]
+
+    monkeypatch.setattr(
+        users_router_module,
+        "build_owner_details",
+        _fake_owner_details,
+    )
+
+    assistant_data = AssistantCreate(
+        name="Detailed Owners Assistant",
+        system_prompt="Owners detailed test.",
+        owner_ids=["test_user_123"],
+    )
+    create_response = test_client.post(
+        "/assistant/create",
+        json=assistant_data.model_dump(),
+        headers=headers,
+    )
+    assert create_response.status_code == 200
+
+    response = test_client.get("/user/assistants", headers=headers)
+    assert response.status_code == 200
+    assistants = response.json()
+    assert len(assistants) == 1
+    assert "owners_detailed" in assistants[0]
+    assert len(assistants[0]["owners_detailed"]) >= 1
+    assert "username" in assistants[0]["owners_detailed"][0]
+    assert "contact_address" in assistants[0]["owners_detailed"][0]
 
 
 # Helper function to create a new database session

@@ -22,6 +22,8 @@ DB:
 # Backend settings
 UNAUTHORIZED_USER_REDIRECT_URL: ""
 LOG_CONFIG: "app/logconf.yaml"
+# Optional: if true, assistant read endpoints repopulate missing owner cache fields from LDAP
+OWNER_CACHE_REFRESH_ON_READ: false
 
 # SSO Settings (nested under SSO key)
 SSO:
@@ -52,3 +54,12 @@ LDAP:
   IGNORED_OU_PREFIXES: ["_"]
   IGNORED_OU_SUFFIXES: ["-xxx"]
   PAGE_SIZE: 500
+  # Dedicated user/person lookup settings (independent from OU filtering/required-attributes)
+  USER_SEARCH_BASE: "o=Landeshauptstadt München,c=de"
+  USER_SEARCH_FILTER: "(objectClass=person)"
+  USER_SEARCH_ATTRIBUTES: ["givenName", "sn", "mail", "lhmobjectid", "organizationalunit"]
+  USER_ID_ATTRIBUTE: "lhmobjectid"
+  USER_GIVEN_NAME_ATTRIBUTE: "givenName"
+  USER_SURNAME_ATTRIBUTE: "sn"
+  USER_MAIL_ATTRIBUTE: "mail"
+  USER_ORGANIZATIONAL_UNIT_ATTRIBUTE: "organizationalunit"

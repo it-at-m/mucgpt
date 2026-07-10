@@ -101,6 +101,12 @@ class Owner(Base):
     __tablename__ = "owners"
 
     user_id = Column(String(255), primary_key=True)
+    display_name = Column(String(255), nullable=True)
+    given_name = Column(String(255), nullable=True)
+    surname = Column(String(255), nullable=True)
+    mail = Column(String(255), nullable=True)
+    organizational_unit = Column(String(255), nullable=True)
+    details_updated_at = Column(DateTime, nullable=True)
 
 
 class Subscription(Base):

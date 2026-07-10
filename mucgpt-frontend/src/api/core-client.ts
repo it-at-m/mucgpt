@@ -2,8 +2,36 @@ import { getConfig, handleApiRequest, postConfig, postFormDataConfig } from "./f
 import { ApplicationConfig, ChatRequest, CountTokenRequest, CountTokenResponse, CreateAssistantRequest, ToolListResponse } from "./models";
 
 const PARSE_SERVICE_BASE = "/api/backend/v1/parse";
-export const CHAT_NAME_PROMPT =
-    "Gebe dem bisherigen Chatverlauf einen passenden und aussagekräftigen Namen, bestehend aus maximal 5 Wörtern. Über diesen Namen soll klar ersichtlich sein, welches Thema der Chat behandelt. Antworte nur mit dem vollständigen Namen und keinem weiteren Text, damit deine Antwort direkt weiterverwendet werden kann. Benutze keine Sonderzeichen sondern lediglich Zahlen und Buchstaben. Antworte in keinem Fall mit etwas anderem als dem Chat namen. Antworte immer nur mit dem namen des Chats";
+export const CHAT_NAME_PROMPT = `Du bist ein Assistent, der kurze und aussagekräftige Titel für Chatverläufe erstellt.
+
+Erstelle anhand der vorherigen Nutzerfrage und Antwort einen kurzen Chatnamen, der das Hauptthema der Unterhaltung zusammenfasst.
+
+Richtlinien:
+- Maximal 4 Wörter
+- Sei spezifisch und beschreibend, nicht generisch
+- Erfasse die zentrale Absicht oder das konkrete Problem
+- Vermeide Füllwörter wie "Frage zu" oder "Diskussion über"
+- Schreibe in natürlicher deutscher Titelschreibweise
+- Schreibe Substantive und Eigennamen groß
+- Schreibe nicht alles klein
+- Verwende kein CamelCase und klebe keine Wörter zusammen
+- Verwende deutsche Umlaute direkt, also ä, ö, ü und ß
+- Verwende keine Anführungszeichen, kein Markdown, keine Satzzeichen und keine Zeilenumbrüche
+- Gib nur den Chatnamen aus, nichts anderes
+
+Gute Beispiele:
+Mietvertrag Prüfung
+Excel Formel Kostenstellen
+Projektstatus Zusammenfassung
+
+Schlechte Beispiele:
+mietvertrag prüfung
+Hilfe mit Dokument
+Neue Unterhaltung`;
+
+const MAX_CHAT_NAME_WORDS = 4;
+const MAX_CHAT_NAME_LENGTH = 48;
+const CHAT_NAME_CREATIVITY = "low";
 
 export const API_BASE = "/api/backend/";
 
@@ -72,9 +100,8 @@ export async function createAssistantApi(options: CreateAssistantRequest): Promi
     );
 }
 
-export async function createChatName(query: string, answer: string, language: string, creativity: string, system_message: string, model: string) {
+export async function createChatName(query: string, answer: string, system_message: string, model: string) {
     const url = API_BASE + "v1/chat/completions";
-    // build OpenAI-compatible messages array
     const messages: Array<{ role: string; content: string }> = [];
     if (system_message) {
         messages.push({ role: "system", content: system_message });
@@ -86,14 +113,36 @@ export async function createChatName(query: string, answer: string, language: st
     const body = {
         model: model,
         messages,
-        creativity: creativity,
+        creativity: CHAT_NAME_CREATIVITY,
         stream: false
     };
 
     const parsedResponse: any = await handleApiRequest(() => fetch(url, postConfig(body)), "Failed to create chat name");
 
-    // Extract content from ChatCompletion response
-    return parsedResponse.choices?.[0]?.message?.content || "New Chat";
+    const generatedName = parsedResponse.choices?.[0]?.message?.content;
+    return normalizeChatName(generatedName) || normalizeChatName(query) || "New Chat";
+}
+
+function normalizeChatName(value: unknown): string {
+    if (typeof value !== "string") {
+        return "";
+    }
+
+    const words = value
+        .replace(/["']/g, "")
+        .replace(/[^\p{L}\p{N}\s]/gu, " ")
+        .replace(/\s+/g, " ")
+        .trim()
+        .split(" ")
+        .filter(Boolean)
+        .slice(0, MAX_CHAT_NAME_WORDS);
+
+    let title = words.join(" ");
+    if (title.length > MAX_CHAT_NAME_LENGTH) {
+        title = title.slice(0, MAX_CHAT_NAME_LENGTH).trimEnd();
+    }
+
+    return title;
 }
 
 /**

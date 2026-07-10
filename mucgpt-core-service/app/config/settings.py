@@ -34,7 +34,7 @@ class MCPTransport(StrEnum):
 
 class ParserBackendType(StrEnum):
     NONE = "none"
-    KREUZBERG = "kreuzberg"
+    XBERG = "xberg"
 
 
 _logger = logging.getLogger(__name__)
@@ -423,8 +423,8 @@ class Settings(BaseSettings):
 
     # Parsing
     PARSER_BACKEND: ParserBackendType = ParserBackendType.NONE
-    KREUZBERG_URL: str = ""
-    KREUZBERG_TIMEOUT: float = 120.0
+    XBERG_URL: str = ""
+    XBERG_TIMEOUT: float = 120.0
 
     # Frontend feature flags
     TRANSCRIPTION_ENABLED: bool = False
@@ -434,9 +434,7 @@ class Settings(BaseSettings):
     LANGFUSE: LangfuseConfig = Field(default_factory=LangfuseConfig)
     MCP: MCPConfig = Field(default_factory=MCPConfig)
     REDIS: RedisConfig = Field(default_factory=RedisConfig)
-    INTERNET_SEARCH: InternetSearchConfig = Field(
-        default_factory=InternetSearchConfig
-    )
+    INTERNET_SEARCH: InternetSearchConfig = Field(default_factory=InternetSearchConfig)
 
     # Customize settings sources to prioritize YAML config
     @classmethod

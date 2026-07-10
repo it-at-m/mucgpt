@@ -188,7 +188,7 @@ services:
       - LOG_LEVEL_MUCGPT_CORE=INFO
       - LOG_LEVEL_MUCGPT_CORE_AGENT=INFO
     depends_on:
-      kreuzberg-full:
+      xberg-full:
         condition: service_started
     volumes:
       - ${CA_BUNDLE_PATH:-./ca-bundle.crt}:${SSL_MOUNT_PATH:-/etc/pki/ca-trust/extracted/pem/ca-bundle.crt}:ro,Z
@@ -301,15 +301,23 @@ services:
       test: ["CMD-SHELL", "curl -f http://localhost:8088/sse || exit 1"]
     security_opt: *security_settings
 
-  kreuzberg-full:
-    image: ghcr.io/kreuzberg-dev/kreuzberg:latest
+  xberg-full:
+    image: ghcr.io/xberg-io/xberg:1.0.0-rc.17
     ports:
       - "8086:8000"
     environment:
-      - KREUZBERG_CORS_ORIGINS=https://localhost
+      - XBERG_CORS_ORIGINS=https://localhost
+      - XBERG_MAX_UPLOAD_SIZE_MB=500
+      - RUST_LOG=info
     volumes:
-      - cache-data:/app/.kreuzberg
+      - cache-data:/app/.xberg
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "xberg", "--version"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 5s
     networks:
       - internal
 

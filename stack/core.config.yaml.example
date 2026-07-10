@@ -20,9 +20,9 @@ UNAUTHORIZED_USER_REDIRECT_URL: "<your-url>"
 AD2IMAGE_URL: "<your-ad2image-url>"  # Base URL of the ad2image service for avatar images
 
 # Parsing settings
-PARSER_BACKEND: "kreuzberg"
-KREUZBERG_URL: "http://kreuzberg-full:8000"
-KREUZBERG_TIMEOUT: 120.0
+PARSER_BACKEND: "xberg"
+XBERG_URL: "http://xberg-full:8000"
+XBERG_TIMEOUT: 120.0
 
 # Langfuse Settings (Optional - for LLM observability)
 # Used by core service for tracing and monitoring

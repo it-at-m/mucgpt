@@ -544,7 +544,7 @@ ENV_NAME: "YAML_ENV"
 
 
 class TestParserSettings:
-    """Test cases for parsing / Kreuzberg configuration."""
+    """Test cases for parsing / XBerg configuration."""
 
     def test_parser_backend_default(self):
         """PARSER_BACKEND defaults to 'none'."""
@@ -552,27 +552,27 @@ class TestParserSettings:
             settings = Settings()
             assert settings.PARSER_BACKEND == ParserBackendType.NONE
 
-    def test_kreuzberg_url_and_timeout_defaults(self):
-        """KREUZBERG_URL defaults to empty string and KREUZBERG_TIMEOUT to 120.0."""
+    def test_xberg_url_and_timeout_defaults(self):
+        """XBERG_URL defaults to empty string and XBERG_TIMEOUT to 120.0."""
         with patch.dict(os.environ, {}, clear=True):
             settings = Settings()
-            assert settings.KREUZBERG_URL == ""
-            assert settings.KREUZBERG_TIMEOUT == 120.0
+            assert settings.XBERG_URL == ""
+            assert settings.XBERG_TIMEOUT == 120.0
 
-    def test_parser_backend_kreuzberg_via_env(self):
-        """PARSER_BACKEND can be set to 'kreuzberg' via environment variable."""
+    def test_parser_backend_xberg_via_env(self):
+        """PARSER_BACKEND can be set to 'xberg' via environment variable."""
         with patch.dict(
             os.environ,
             {
-                "MUCGPT_CORE_PARSER_BACKEND": "kreuzberg",
-                "MUCGPT_CORE_KREUZBERG_URL": "https://kreuzberg.example.com",
-                "MUCGPT_CORE_KREUZBERG_TIMEOUT": "60.5",
+                "MUCGPT_CORE_PARSER_BACKEND": "xberg",
+                "MUCGPT_CORE_XBERG_URL": "https://xberg.example.com",
+                "MUCGPT_CORE_XBERG_TIMEOUT": "60.5",
             },
         ):
             settings = Settings()
-            assert settings.PARSER_BACKEND == ParserBackendType.KREUZBERG
-            assert settings.KREUZBERG_URL == "https://kreuzberg.example.com"
-            assert settings.KREUZBERG_TIMEOUT == 60.5
+            assert settings.PARSER_BACKEND == ParserBackendType.XBERG
+            assert settings.XBERG_URL == "https://xberg.example.com"
+            assert settings.XBERG_TIMEOUT == 60.5
 
     def test_parser_backend_none_via_env(self):
         """PARSER_BACKEND can be explicitly set to 'none' via environment variable."""
@@ -599,9 +599,9 @@ class TestParserSettings:
     def test_parser_settings_from_yaml(self, monkeypatch):
         """Parsing settings can be loaded from a YAML configuration file."""
         yaml_content = """
-PARSER_BACKEND: "kreuzberg"
-KREUZBERG_URL: "https://yaml-kreuzberg.example.com"
-KREUZBERG_TIMEOUT: 30.0
+PARSER_BACKEND: "xberg"
+XBERG_URL: "https://yaml-xberg.example.com"
+XBERG_TIMEOUT: 30.0
 """
         with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as tmpdir:
             config_path = Path(tmpdir) / "config.yaml"
@@ -610,16 +610,16 @@ KREUZBERG_TIMEOUT: 30.0
             monkeypatch.chdir(tmpdir)
             with patch.dict(os.environ, {}, clear=True):
                 settings = Settings()
-                assert settings.PARSER_BACKEND == ParserBackendType.KREUZBERG
-                assert settings.KREUZBERG_URL == "https://yaml-kreuzberg.example.com"
-                assert settings.KREUZBERG_TIMEOUT == 30.0
+                assert settings.PARSER_BACKEND == ParserBackendType.XBERG
+                assert settings.XBERG_URL == "https://yaml-xberg.example.com"
+                assert settings.XBERG_TIMEOUT == 30.0
 
     def test_env_overrides_yaml_for_parser(self, monkeypatch):
         """Environment variables override YAML for parsing settings."""
         yaml_content = """
-PARSER_BACKEND: "kreuzberg"
-KREUZBERG_URL: "https://yaml-kreuzberg.example.com"
-KREUZBERG_TIMEOUT: 30.0
+PARSER_BACKEND: "xberg"
+XBERG_URL: "https://yaml-xberg.example.com"
+XBERG_TIMEOUT: 30.0
 """
         with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as tmpdir:
             config_path = Path(tmpdir) / "config.yaml"
@@ -630,14 +630,14 @@ KREUZBERG_TIMEOUT: 30.0
                 os.environ,
                 {
                     "MUCGPT_CORE_PARSER_BACKEND": "none",
-                    "MUCGPT_CORE_KREUZBERG_TIMEOUT": "999.9",
+                    "MUCGPT_CORE_XBERG_TIMEOUT": "999.9",
                 },
             ):
                 settings = Settings()
                 assert settings.PARSER_BACKEND == ParserBackendType.NONE
-                assert settings.KREUZBERG_TIMEOUT == 999.9
+                assert settings.XBERG_TIMEOUT == 999.9
                 assert (
-                    settings.KREUZBERG_URL == "https://yaml-kreuzberg.example.com"
+                    settings.XBERG_URL == "https://yaml-xberg.example.com"
                 )  # from YAML
 
     def teardown_method(self):

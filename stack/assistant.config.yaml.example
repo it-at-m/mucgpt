@@ -18,6 +18,8 @@ DB:
 # Backend settings
 UNAUTHORIZED_USER_REDIRECT_URL: "https://it-services.muenchen.de/sp?id=sc_cat_item&sys_id=ee55a6911b40ce90757797539b4bcb1f&table=sc_cat_item&searchTerm=mucgpt"
 LOG_CONFIG: "logconf.yaml"
+# Optional: if true, assistant read endpoints repopulate missing owner cache fields from LDAP
+OWNER_CACHE_REFRESH_ON_READ: false
 
 # SSO Settings (Keycloak)
 # Used by both core and assistant services for authentication
@@ -45,6 +47,10 @@ LDAP:
   BIND_PASSWORD: ""
   SEARCH_BASE: "o=Landeshauptstadt München,c=de"
   SEARCH_FILTER: "(objectClass=organizationalUnit)"
+  USER_SEARCH_BASE: "c=de"
+  USER_SEARCH_FILTER: "(objectClass=person)"
+  USER_SEARCH_ATTRIBUTES: ["givenName", "sn", "mail", "lhmobjectid", "ou"]
+  USER_ORGANIZATIONAL_UNIT_ATTRIBUTE: "ou"
   DISPLAY_ATTRIBUTE: "ou"
   PARENT_ATTRIBUTE: null
   IGNORED_OU_PREFIXES: ["_"]

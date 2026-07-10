@@ -201,6 +201,29 @@
     word-break: anywhere;
 }
 
+.ownerList {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.ownerRow {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 10px 12px;
+    background-color: var(--colorNeutralBackground1);
+    border: 1px solid var(--colorNeutralStroke2);
+    border-radius: 8px;
+}
+
+.ownerContact {
+    color: var(--colorNeutralForeground2);
+    font-size: 12px;
+    line-height: 1.4;
+    overflow-wrap: anywhere;
+}
+
 .inlineDrawer {
     border-left: 1px solid var(--colorNeutralStroke1) !important;
     border-right: none;

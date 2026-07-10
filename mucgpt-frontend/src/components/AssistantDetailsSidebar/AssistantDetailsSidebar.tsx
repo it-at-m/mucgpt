@@ -1,8 +1,9 @@
-import { InlineDrawer, DrawerHeader, Button, DrawerBody, Text, Menu, MenuTrigger, MenuPopover, MenuList, MenuItem } from "@fluentui/react-components";
+import { InlineDrawer, DrawerHeader, Button, DrawerBody, Text, Menu, MenuTrigger, MenuPopover, MenuList, MenuItem, Tooltip } from "@fluentui/react-components";
 import {
     Dismiss24Regular,
     Chat24Regular,
     Copy20Regular,
+    Checkmark20Regular,
     Edit20Regular,
     Delete20Regular,
     Book24Regular,
@@ -14,6 +15,7 @@ import {
     MoreVertical20Regular,
     ArrowExportUp20Regular
 } from "@fluentui/react-icons";
+import { useState, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import styles from "./AssistantDetailsSidebar.module.css";
 import { Assistant, AssistantResponse, CommunityAssistantSnapshot, ToolBase } from "../../api/models";
@@ -67,6 +69,7 @@ export const AssistantDetailsSidebar = ({
     hideStartChat
 }: AssistantDetailsSidebarProps) => {
     const { t } = useTranslation();
+    const [systemPromptCopied, setSystemPromptCopied] = useState<boolean>(false);
     const latestVersion = assistant?.rawData && "latest_version" in assistant.rawData ? assistant.rawData.latest_version : undefined;
     const snapshot = assistant?.rawData && !("latest_version" in assistant.rawData) ? assistant.rawData : undefined;
 
@@ -98,6 +101,16 @@ export const AssistantDetailsSidebar = ({
 
     const enabledTools = (latestVersion?.tools || snapshot?.tools || []).filter((tool: ToolBase) => tool.config?.enabled);
     const systemPrompt = latestVersion?.system_prompt || snapshot?.system_message;
+
+    const onCopySystemPrompt = useCallback(() => {
+        if (!systemPrompt) return;
+        setSystemPromptCopied(true);
+        navigator.clipboard.writeText(systemPrompt);
+        setTimeout(() => {
+            setSystemPromptCopied(false);
+        }, 1000);
+    }, [systemPrompt]);
+
     const isOwned = assistant ? ownedAssistantIds.has(assistant.id) : false;
     const isDeletedSnapshot = Boolean(assistant?.isDeletedSnapshot);
     const isLocalAssistant = Boolean(assistant?.isLocalAssistant);
@@ -285,6 +298,20 @@ export const AssistantDetailsSidebar = ({
                                 <div className={styles.sectionHeader}>
                                     <DocumentText24Regular className={styles.sectionIcon} />
                                     <span>{t("components.community_assistants.system_prompt", "SYSTEM PROMPT")}</span>
+                                    <Tooltip
+                                        content={t("components.community_assistants.system_prompt_copy", "Copy system prompt")}
+                                        relationship="description"
+                                        positioning="below"
+                                    >
+                                        <Button
+                                            style={{ marginLeft: "auto" }}
+                                            appearance="subtle"
+                                            aria-label={t("components.community_assistants.system_prompt_copy", "Copy system prompt")}
+                                            icon={!systemPromptCopied ? <Copy20Regular /> : <Checkmark20Regular />}
+                                            onClick={onCopySystemPrompt}
+                                            size="small"
+                                        />
+                                    </Tooltip>
                                 </div>
                                 <div className={styles.systemPromptContainer}>
                                     <MarkdownRenderer className={styles.promptMarkdown}>{systemPrompt}</MarkdownRenderer>

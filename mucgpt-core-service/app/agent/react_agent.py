@@ -10,7 +10,7 @@ from langchain_core.tools.base import BaseTool
 from agent.middleware import ContextMiddleware, RequestContext, ToolErrorMiddleware
 from agent.state_models.default_state import DefaultAgentState
 from agent.tools.mcp import McpBearerAuthProvider
-from agent.tools.tools import ToolCollection, select_agent_state_schema
+from agent.tools.tools import select_agent_state_schema
 from core.auth_models import AuthenticationResult
 from core.logtools import getLogger
 
@@ -29,13 +29,11 @@ class _ConfiguredLangChainAgentGraph:
     def __init__(
         self,
         llm: BaseChatModel,
-        tool_collection: ToolCollection,
         tools: list[BaseTool],
         logger,
         debug: bool = True,
     ):
         self.model = llm
-        self.tool_collection = tool_collection
         self.tools = tools
         self.logger = logger
         self.debug = debug
@@ -237,7 +235,6 @@ class MUCGPTReActAgent:
     def __init__(
         self,
         llm: BaseChatModel,
-        tool_collection: ToolCollection,
         tools: list[BaseTool],
         logger=None,
         debug: bool = True,
@@ -246,7 +243,6 @@ class MUCGPTReActAgent:
         self.model = llm  # required for non-streaming calls, e.g. assisted MUCGPT-Assistant generation.
         self.graph = _ConfiguredLangChainAgentGraph(
             llm=llm,
-            tool_collection=tool_collection,
             tools=tools,
             logger=self.logger,
             debug=debug,

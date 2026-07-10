@@ -170,6 +170,10 @@ const Chat = () => {
         [activeChatRef.current, storageService]
     );
 
+    const resetInputState = useCallback(() => {
+        setQuestion("");
+        setUploadedData([]);
+    }, []);
     // Fetch chat history
     const fetchHistory = useCallback(async () => {
         try {
@@ -197,6 +201,7 @@ const Chat = () => {
                     dispatch({ type: "SET_CREATIVITY", payload: chat.config.creativity });
                     dispatch({ type: "SET_SYSTEM_PROMPT", payload: chat.config.system });
                     dispatch({ type: "SET_ACTIVE_CHAT", payload: id });
+                    resetInputState();
                     lastQuestionRef.current = chat.messages.length > 0 ? chat.messages[chat.messages.length - 1].user : "";
 
                     // Scroll to bottom after a short delay to ensure DOM is updated
@@ -213,24 +218,8 @@ const Chat = () => {
                 return false;
             }
         },
-        [storageService, scrollToBottom]
+        [storageService, scrollToBottom, resetInputState]
     );
-
-    const loadNewestChat = useCallback(async () => {
-        const existingData = await storageService.getNewestChat();
-        if (!existingData) {
-            lastQuestionRef.current = "";
-            dispatch({ type: "SET_ACTIVE_CHAT", payload: undefined });
-            dispatch({ type: "CLEAR_ANSWERS" });
-            return;
-        }
-
-        dispatch({ type: "SET_ANSWERS", payload: existingData.messages });
-        dispatch({ type: "SET_CREATIVITY", payload: existingData.config.creativity });
-        dispatch({ type: "SET_SYSTEM_PROMPT", payload: existingData.config.system });
-        dispatch({ type: "SET_ACTIVE_CHAT", payload: existingData.id });
-        lastQuestionRef.current = existingData.messages.length > 0 ? existingData.messages[existingData.messages.length - 1].user : "";
-    }, [storageService]);
 
     // Clear chat state
     const clearChat = useCallback(() => {
@@ -247,11 +236,12 @@ const Chat = () => {
                 activeChatId: active_chat,
                 resetActiveChat: (chatId: string) => {
                     if (chatId === activeChatRef.current) {
+                        resetInputState();
                         clearChat();
                     }
                 }
             }),
-            [active_chat, clearChat]
+            [active_chat, clearChat, resetInputState]
         )
     );
 
@@ -454,10 +444,9 @@ const Chat = () => {
 
     const startFreshChat = useCallback(async () => {
         scheduledQuestionRef.current = null;
-        setQuestion("");
-        setUploadedData([]);
+        resetInputState();
         clearChat();
-    }, [clearChat]);
+    }, [clearChat, resetInputState]);
 
     const isCurrentChatEmpty = useMemo(
         () => answers.length === 0 && question.trim() === "" && uploadedData.length === 0 && pendingQuestion === null,
@@ -577,7 +566,8 @@ const Chat = () => {
                 .then(async loaded => {
                     if (!loaded) {
                         clearNavigationQueryParams();
-                        await loadNewestChat();
+                        resetInputState();
+                        clearChat();
                     }
                     return fetchHistory();
                 })
@@ -607,7 +597,7 @@ const Chat = () => {
                 });
         } else {
             // Normal initialization ohne URL-Parameter
-            loadNewestChat()
+            Promise.resolve(clearChat())
                 .then(() => {
                     setIsInitialized(true);
                     return fetchHistory();
@@ -616,7 +606,7 @@ const Chat = () => {
                     isLoadingRef.current = false;
                 });
         }
-    }, [clearChat, clearNavigationQueryParams, fetchHistory, getNavigationParams, loadChat, loadNewestChat]);
+    }, [clearChat, clearNavigationQueryParams, fetchHistory, getNavigationParams, loadChat, resetInputState]);
 
     useEffect(() => {
         if (!isInitialized) {
@@ -629,7 +619,8 @@ const Chat = () => {
             void loadChat(chatIdFromUrl).then(async loaded => {
                 if (!loaded) {
                     clearNavigationQueryParams();
-                    await loadNewestChat();
+                    resetInputState();
+                    clearChat();
                     await fetchHistory();
                 }
             });
@@ -649,7 +640,7 @@ const Chat = () => {
         setPendingQuestion(null);
         void startFreshChat();
         clearNavigationQueryParams();
-    }, [clearNavigationQueryParams, fetchHistory, getNavigationParams, isCurrentChatEmpty, isInitialized, loadChat, loadNewestChat, startFreshChat]);
+    }, [clearNavigationQueryParams, fetchHistory, getNavigationParams, isCurrentChatEmpty, isInitialized, loadChat, resetInputState, startFreshChat]);
 
     useEffect(() => {
         if (!isInitialized || !pendingQuestion || tools === undefined) {
@@ -772,12 +763,15 @@ const Chat = () => {
         [onStarterPromptClicked]
     );
 
-    const inputComponent = useMemo(
-        () => (
+    const inputComponent = useMemo(() => {
+        const { questionFromUrl, newChatRequested } = getNavigationParams();
+
+        return (
             <QuestionInput
                 clearOnSend
                 disabled={isLoading || error !== undefined}
                 draftCacheKey="chat-main"
+                skipDraftRestore={!!questionFromUrl || newChatRequested}
                 onSend={(question, datas) => {
                     const dataSources = uploadedDataToDataSources(datas);
                     callApi(question, systemPrompt, dataSources.length > 0 ? dataSources : undefined);
@@ -791,9 +785,8 @@ const Chat = () => {
                 setUploadedData={setUploadedData}
                 onTranscription={text => setQuestion(text)}
             />
-        ),
-        [callApi, systemPrompt, question, t, isLoading, selectedTools, tools, uploadedData, uploadedDataToDataSources]
-    );
+        );
+    }, [callApi, systemPrompt, question, t, isLoading, selectedTools, tools, uploadedData, uploadedDataToDataSources, getNavigationParams]);
 
     const layout = useMemo(
         () => (

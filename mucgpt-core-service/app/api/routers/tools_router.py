@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends
 
-from agent.tools.tools import ToolCollection
+from agent.tools.tool_metadata import list_tool_metadata
 from api.api_models import ToolListResponse
 from config.settings import get_settings
 from core.auth import authenticate_user
@@ -30,6 +30,6 @@ async def list_tools(
         :param lang: Language for tool metadata. Supported: deutsch, english, français, bairisch, українська
         :param force_reload: If true, bypass cache and force-refresh MCP tools for this request
     """
-    return await ToolCollection.list_tool_metadata(
+    return await list_tool_metadata(
         lang=lang, user_info=user_info, force_reload=force_reload
     )

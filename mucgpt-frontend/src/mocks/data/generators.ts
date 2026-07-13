@@ -1,13 +1,68 @@
 // Utility generators for mock data (no external libs)
-import { AssistantCreateResponse } from "../../api";
+import { AssistantCreateResponse, OwnerDetailsResponse } from "../../api";
 import { CREATIVITY_HIGH, CREATIVITY_LOW, CREATIVITY_MEDIUM } from "../../constants";
 
 const adjectives = ["Smart", "Agile", "Clever", "Helpful", "Trusted", "Adaptive", "Efficient", "Express", "Secure", "Eco"];
 const domains = ["Docs", "Mail", "Code", "Policy", "Legal", "Finance", "HR", "Support", "Data", "Research"];
 const roles = ["Assistant", "Agent", "Bot", "Helper", "Advisor", "Companion"];
 
+const MOCK_OWNER_DIRECTORY: Record<string, OwnerDetailsResponse> = {
+    "111160470": {
+        user_id: "111160470",
+        username: "Michael Jaumann",
+        contact_address: "michael.jaumann@muenchen.de",
+        givenName: "Michael",
+        sn: "Jaumann",
+        mail: "michael.jaumann@muenchen.de",
+        organizationalunit: "ITM-SLP43"
+    },
+    "user-mock-001": {
+        user_id: "user-mock-001",
+        username: "Mia Sommer",
+        contact_address: "mia.sommer@muenchen.de",
+        givenName: "Mia",
+        sn: "Sommer",
+        mail: "mia.sommer@muenchen.de",
+        organizationalunit: "ITM-KM-DI"
+    },
+    "user-mock-002": {
+        user_id: "user-mock-002",
+        username: "Lukas Winter",
+        contact_address: "lukas.winter@muenchen.de",
+        givenName: "Lukas",
+        sn: "Winter",
+        mail: "lukas.winter@muenchen.de",
+        organizationalunit: "POR-O"
+    },
+    "user-mock-003": {
+        user_id: "user-mock-003",
+        username: "Sara Neumann",
+        contact_address: "sara.neumann@muenchen.de",
+        givenName: "Sara",
+        sn: "Neumann",
+        mail: "sara.neumann@muenchen.de",
+        organizationalunit: "POR-P"
+    },
+    "user-mock-123": {
+        user_id: "user-mock-123",
+        username: "Max Mustermann",
+        contact_address: "max.mustermann@muenchen.de",
+        givenName: "Max",
+        sn: "Mustermann",
+        mail: "max.mustermann@muenchen.de",
+        organizationalunit: "RIT-AI"
+    }
+};
+
 export function randomOf<T>(arr: T[]): T {
     return arr[Math.floor(Math.random() * arr.length)];
+}
+
+export function buildOwnersDetailedFromOwnerIds(ownerIds: string[] | undefined): OwnerDetailsResponse[] {
+    if (!ownerIds?.length) return [];
+
+    // Match backend behavior: unresolved owners are omitted instead of returning UUID placeholders.
+    return ownerIds.map(ownerId => MOCK_OWNER_DIRECTORY[ownerId]).filter((owner): owner is OwnerDetailsResponse => Boolean(owner));
 }
 
 export function randomName() {
@@ -50,12 +105,14 @@ export function buildAssistant(): AssistantCreateResponse {
     const id = `assistant-${Math.random().toString(36).slice(2, 9)}`;
     const versionId = `version-${Math.random().toString(36).slice(2, 9)}`;
     const created = new Date().toISOString();
+    const ownerIds = ["user-mock-123"];
     return {
         id,
         created_at: created,
         updated_at: created,
         hierarchical_access: ["POR-O"],
-        owner_ids: ["user-mock-456"],
+        owner_ids: ownerIds,
+        owners_detailed: buildOwnersDetailedFromOwnerIds(ownerIds),
         latest_version: {
             id: versionId,
             version: 1,
@@ -71,7 +128,8 @@ export function buildAssistant(): AssistantCreateResponse {
                 { id: "brainstorm", config: { enabled: Math.random() > 0.3 } },
                 { id: "simplify", config: { enabled: Math.random() > 0.5 } }
             ],
-            owner_ids: ["user-mock-456"],
+            owner_ids: ownerIds,
+            owners_detailed: buildOwnersDetailedFromOwnerIds(ownerIds),
             examples: [
                 { text: "Was kannst du?", value: randomSentence() },
                 { text: "Fasse ein Dokument zusammen", value: randomSentence() }
@@ -115,12 +173,15 @@ export function buildChatMessage() {
 export function buildAssistantCreateResponse(overrides: Partial<AssistantCreateResponse> = {}): AssistantCreateResponse {
     const name = overrides.latest_version?.name || buildAssistantName();
     const description = overrides.latest_version?.description || buildAssistantDescription(name);
+    const ownerIds = overrides.owner_ids || [`user-mock-${Math.random().toString(36).slice(2, 10)}`];
+    const versionOwnerIds = overrides.latest_version?.owner_ids || ownerIds;
     const base: AssistantCreateResponse = {
         id: overrides.id || `assistant-mock-${Math.random().toString(36).slice(2, 10)}`,
         created_at: overrides.created_at || new Date().toISOString(),
         updated_at: overrides.updated_at || new Date().toISOString(),
         hierarchical_access: overrides.hierarchical_access || ["BAU", randomOf(["ITM-KM", "ITM-KM-DI", "RIT"])],
-        owner_ids: overrides.owner_ids || [`user-mock-${Math.random().toString(36).slice(2, 10)}`],
+        owner_ids: ownerIds,
+        owners_detailed: overrides.owners_detailed || buildOwnersDetailedFromOwnerIds(ownerIds),
         latest_version: {
             id: overrides.latest_version?.id || `version-${Math.random().toString(36).slice(2, 8)}`,
             version: overrides.latest_version?.version || 1,
@@ -136,7 +197,8 @@ export function buildAssistantCreateResponse(overrides: Partial<AssistantCreateR
                 { id: "Brainstorming", config: { enabled: Math.random() > 0.4 } },
                 { id: "Vereinfachen", config: { enabled: Math.random() > 0.6 } }
             ],
-            owner_ids: overrides.latest_version?.owner_ids || [`user-mock-${Math.random().toString(36).slice(2, 10)}`],
+            owner_ids: versionOwnerIds,
+            owners_detailed: overrides.latest_version?.owners_detailed || buildOwnersDetailedFromOwnerIds(versionOwnerIds),
             examples: overrides.latest_version?.examples || [
                 {
                     text: "Kannst du mir bei einem Dokument helfen?",

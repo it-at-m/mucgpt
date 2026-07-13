@@ -35,10 +35,10 @@ def test_health_check(test_client):
 
 @pytest.mark.integration
 def test_document_processing_enabled_when_parser_backend_set(test_client):
-    """document_processing_enabled is True when PARSER_BACKEND is set to kreuzberg."""
+    """document_processing_enabled is True when PARSER_BACKEND is set to xberg."""
     mock_settings = Settings(
-        PARSER_BACKEND=ParserBackendType.KREUZBERG,
-        KREUZBERG_URL="https://kreuzberg.example.com",
+        PARSER_BACKEND=ParserBackendType.XBERG,
+        XBERG_URL="https://xberg.example.com",
     )
     with patch("api.routers.system_router.settings", mock_settings):
         response = test_client.get("/config", headers=headers)

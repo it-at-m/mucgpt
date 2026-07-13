@@ -56,19 +56,19 @@ See `mucgpt-core-service/config.yaml.example` and `mucgpt-assistant-service/conf
 
 The core service supports extracting text and structure from uploaded documents using an optional parser. Configure the document parser in `core.config.yaml`. By default, document parsing is disabled (`PARSER_BACKEND: "none"`).
 
-Currently, Kreuzberg is the only supported parser backend. To enable it, set the parser backend to `"kreuzberg"` and configure the URL and timeout:
+Currently, Xberg is the only supported parser backend. To enable it, set the parser backend to `"xberg"` and configure the URL and timeout:
 
 ```yaml
-PARSER_BACKEND: "kreuzberg" # Default is "none"
-KREUZBERG_URL: "http://kreuzberg-full:8000"
-KREUZBERG_TIMEOUT: 120.0
+PARSER_BACKEND: "xberg" # Default is "none"
+XBERG_URL: "http://xberg-full:8000"
+XBERG_TIMEOUT: 120.0
 ```
 
 Where:
 
-- `PARSER_BACKEND`: Defines the parser used (`none` to disable, or `kreuzberg`).
-- `KREUZBERG_URL`: Points to your Kreuzberg parsing service.
-- `KREUZBERG_TIMEOUT`: Execution timeout in seconds.
+- `PARSER_BACKEND`: Defines the parser used (`none` to disable, or `xberg`).
+- `XBERG_URL`: Points to your Xberg parsing service.
+- `XBERG_TIMEOUT`: Execution timeout in seconds.
 
 ### Models Configuration (Environment Variable)
 
@@ -166,6 +166,7 @@ LDAP:
   REQUIRED_ATTRIBUTES: ["lhmOULongname", "lhmOUShortname"]
   IGNORED_OU_PREFIXES: ["_"]
   IGNORED_OU_SUFFIXES: ["-xxx"]
+  IGNORED_OU_SHORTNAME_EXCEPTIONS: ["FBM", "KVR-IT"]
   PAGE_SIZE: 500
   CONNECT_TIMEOUT: 5.0
   READ_TIMEOUT: 10.0
@@ -176,6 +177,7 @@ Individual fields can be overridden via environment variables using the `MUCGPT_
 ```bash
 MUCGPT_ASSISTANT_LDAP__ENABLED=true
 MUCGPT_ASSISTANT_LDAP__BIND_PASSWORD=<secret>
+MUCGPT_ASSISTANT_LDAP__IGNORED_OU_SHORTNAME_EXCEPTIONS=["FBM","KVR-IT"]
 ```
 
 - `SEARCH_BASE` defines the root of the organization tree.
@@ -183,6 +185,8 @@ MUCGPT_ASSISTANT_LDAP__BIND_PASSWORD=<secret>
 - `DISPLAY_ATTRIBUTE` (default `ou`) controls the label shown for each organizational unit; `PARENT_ATTRIBUTE` can be set if your LDAP schema exposes a parent reference.
 - `ADDITIONAL_ATTRIBUTES` fetches extra attributes for display; `REQUIRED_ATTRIBUTES` are enforced and default to `lhmOULongname` and `lhmOUShortname`.
 - `IGNORED_OU_PREFIXES` / `_SUFFIXES` let you skip placeholder OUs (by default everything starting with `_` or ending with `-xxx`).
+- `IGNORED_OU_SHORTNAME_EXCEPTIONS` allows specific OUs to bypass ignore rules when their `lhmOUShortname` matches one of the listed values (case-insensitive).
+- Typical use case: keep a business-relevant OU like `_Hidden` by adding its shortname (for example `FBM`) to `IGNORED_OU_SHORTNAME_EXCEPTIONS`.
 - Pagination and robustness: `PAGE_SIZE` (default 500), `CONNECT_TIMEOUT` (default 5s), and `READ_TIMEOUT` (default 10s).
 
 ### SSO integration

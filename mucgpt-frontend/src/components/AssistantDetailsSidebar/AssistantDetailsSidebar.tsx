@@ -1,19 +1,25 @@
-import { InlineDrawer, DrawerHeader, Button, DrawerBody, Text, Menu, MenuTrigger, MenuPopover, MenuList, MenuItem } from "@fluentui/react-components";
+import { InlineDrawer, DrawerHeader, Button, DrawerBody, Text, Menu, MenuTrigger, MenuPopover, MenuList, MenuItem, Tooltip } from "@fluentui/react-components";
 import {
     Dismiss24Regular,
     Chat24Regular,
     Copy20Regular,
+    Checkmark20Regular,
     Edit20Regular,
     Delete20Regular,
     Book24Regular,
     Sparkle24Regular,
     DocumentText24Regular,
+    TargetArrow24Regular,
+    Color24Regular,
+    Person24Regular,
+    Scales24Regular,
     MoreVertical20Regular,
     ArrowExportUp20Regular
 } from "@fluentui/react-icons";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import styles from "./AssistantDetailsSidebar.module.css";
-import { Assistant, AssistantResponse, CommunityAssistantSnapshot, ToolBase } from "../../api/models";
+import { Assistant, AssistantResponse, CommunityAssistant, CommunityAssistantSnapshot, OwnerDetailsResponse, ToolBase } from "../../api/models";
 import { MarkdownRenderer } from "../MarkdownRenderer/MarkdownRenderer";
 import { EdelweissSpinner } from "../EdelweissSpinner";
 import { getCreativityOption } from "../../utils/creativityOptions";
@@ -26,7 +32,7 @@ export interface AssistantCardData {
     updated?: string | null;
     lastUsed?: number;
     tags: string[];
-    rawData: AssistantResponse | CommunityAssistantSnapshot | Assistant;
+    rawData: AssistantResponse | CommunityAssistantSnapshot | CommunityAssistant | Assistant;
     isDeletedSnapshot?: boolean;
     isLocalAssistant?: boolean;
     isOwnedAssistant?: boolean;
@@ -65,14 +71,66 @@ export const AssistantDetailsSidebar = ({
     hideStartChat
 }: AssistantDetailsSidebarProps) => {
     const { t } = useTranslation();
-    const latestVersion = assistant?.rawData && "latest_version" in assistant.rawData ? assistant.rawData.latest_version : undefined;
-    const snapshot = assistant?.rawData && !("latest_version" in assistant.rawData) ? assistant.rawData : undefined;
+    const [systemPromptCopied, setSystemPromptCopied] = useState<boolean>(false);
+    const responseData = assistant?.rawData && "latest_version" in assistant.rawData ? assistant.rawData : undefined;
+    const latestVersion = responseData?.latest_version;
+    const snapshot =
+        assistant?.rawData && !("latest_version" in assistant.rawData) && "system_message" in assistant.rawData
+            ? (assistant.rawData as CommunityAssistantSnapshot | Assistant)
+            : undefined;
+
+    const getCreativityConfig = (creativity: string) => {
+        switch (creativity.toLowerCase()) {
+            case "low":
+                return {
+                    text: t("components.chattsettingsdrawer.creativity_low"),
+                    icon: <TargetArrow24Regular />,
+                    description: t("components.chattsettingsdrawer.creativity_low_description")
+                };
+            case "high":
+                return {
+                    text: t("components.chattsettingsdrawer.creativity_high"),
+                    icon: <Color24Regular />,
+                    description: t("components.chattsettingsdrawer.creativity_high_description")
+                };
+            default:
+                return {
+                    text: t("components.chattsettingsdrawer.creativity_medium"),
+                    icon: <Scales24Regular />,
+                    description: t("components.chattsettingsdrawer.creativity_medium_description")
+                };
+        }
+    };
 
     const assistantCreativity = latestVersion?.creativity || snapshot?.creativity || "balanced";
     const creativityConfig = getCreativityOption(t, assistantCreativity);
 
     const enabledTools = (latestVersion?.tools || snapshot?.tools || []).filter((tool: ToolBase) => tool.config?.enabled);
     const systemPrompt = latestVersion?.system_prompt || snapshot?.system_message;
+
+    const copyTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+    const onCopySystemPrompt = useCallback(async () => {
+        if (!systemPrompt) return;
+        try {
+            await navigator.clipboard.writeText(systemPrompt);
+            setSystemPromptCopied(true);
+            if (copyTimeoutRef.current) clearTimeout(copyTimeoutRef.current);
+            copyTimeoutRef.current = setTimeout(() => {
+                setSystemPromptCopied(false);
+            }, 1000);
+        } catch (err) {
+            console.error("Failed to copy system prompt:", err);
+        }
+    }, [systemPrompt]);
+
+    useEffect(() => {
+        return () => {
+            if (copyTimeoutRef.current) clearTimeout(copyTimeoutRef.current);
+        };
+    }, []);
+
+    const ownersDetailed: OwnerDetailsResponse[] = responseData?.owners_detailed || latestVersion?.owners_detailed || [];
     const isOwned = assistant ? ownedAssistantIds.has(assistant.id) : false;
     const isDeletedSnapshot = Boolean(assistant?.isDeletedSnapshot);
     const isLocalAssistant = Boolean(assistant?.isLocalAssistant);
@@ -239,6 +297,23 @@ export const AssistantDetailsSidebar = ({
                             </div>
                         </div>
 
+                        {ownersDetailed.length > 0 && (
+                            <div className={styles.sidebarSection}>
+                                <div className={styles.sectionHeader}>
+                                    <Person24Regular className={styles.sectionIcon} />
+                                    <span>{t("components.community_assistants.owner_details", "OWNERS")}</span>
+                                </div>
+                                <div className={styles.ownerList}>
+                                    {ownersDetailed.map(owner => (
+                                        <div key={owner.user_id} className={styles.ownerRow}>
+                                            <Text weight="semibold">{owner.username || owner.user_id}</Text>
+                                            {owner.contact_address && <Text className={styles.ownerContact}>{owner.contact_address}</Text>}
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
                         {enabledTools.length > 0 && (
                             <div className={styles.sidebarSection}>
                                 <div className={styles.sectionHeader}>
@@ -246,7 +321,7 @@ export const AssistantDetailsSidebar = ({
                                     <span>{t("components.community_assistants.enabled_tools", "ENABLED TOOLS")}</span>
                                 </div>
                                 <div className={styles.toolList}>
-                                    {enabledTools.map(tool => (
+                                    {enabledTools.map((tool: ToolBase) => (
                                         <div key={tool.id} className={styles.toolPill}>
                                             {tool.id}
                                         </div>
@@ -260,6 +335,28 @@ export const AssistantDetailsSidebar = ({
                                 <div className={styles.sectionHeader}>
                                     <DocumentText24Regular className={styles.sectionIcon} />
                                     <span>{t("components.community_assistants.system_prompt", "SYSTEM PROMPT")}</span>
+                                    <Tooltip
+                                        content={
+                                            systemPromptCopied
+                                                ? t("components.community_assistants.system_prompt_copied", "Copied")
+                                                : t("components.community_assistants.system_prompt_copy", "Copy system prompt")
+                                        }
+                                        relationship="description"
+                                        positioning="below"
+                                    >
+                                        <Button
+                                            style={{ marginLeft: "auto" }}
+                                            appearance="subtle"
+                                            aria-label={
+                                                systemPromptCopied
+                                                    ? t("components.community_assistants.system_prompt_copied", "Copied")
+                                                    : t("components.community_assistants.system_prompt_copy", "Copy system prompt")
+                                            }
+                                            icon={!systemPromptCopied ? <Copy20Regular /> : <Checkmark20Regular />}
+                                            onClick={onCopySystemPrompt}
+                                            size="small"
+                                        />
+                                    </Tooltip>
                                 </div>
                                 <div className={styles.systemPromptContainer}>
                                     <MarkdownRenderer className={styles.promptMarkdown}>{systemPrompt}</MarkdownRenderer>

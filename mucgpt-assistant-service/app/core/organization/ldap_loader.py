@@ -32,6 +32,7 @@ class LDAPOrganizationLoader:
             search_base=self.settings.SEARCH_BASE,
             ignored_suffixes=self.settings.IGNORED_OU_SUFFIXES,
             ignored_prefixes=self.settings.IGNORED_OU_PREFIXES,
+            ignored_shortname_exceptions=self.settings.IGNORED_OU_SHORTNAME_EXCEPTIONS,
             required_attributes=self.settings.REQUIRED_ATTRIBUTES,
         )
         roots = builder.build(entries)

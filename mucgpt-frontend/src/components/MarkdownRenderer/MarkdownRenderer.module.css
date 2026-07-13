@@ -1,0 +1,16 @@
+.markdown a {
+    color: var(--colorBrandForegroundLink);
+    text-decoration: underline;
+}
+
+.markdown a:hover {
+    color: var(--colorBrandForegroundLinkHover);
+}
+
+.markdown a:active {
+    color: var(--colorBrandForegroundLinkPressed);
+}
+
+.markdown a:visited {
+    color: var(--colorBrandForegroundLink);
+}

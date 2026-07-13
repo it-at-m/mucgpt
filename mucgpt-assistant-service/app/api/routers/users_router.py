@@ -51,12 +51,11 @@ async def _build_assistant_response_list(
         is_visible = (
             bool(assistant.is_visible) if assistant.is_visible is not None else True
         )
-        if latest_version and assistant_with_owners:
-            owner_ids = [owner.user_id for owner in assistant_with_owners.owners]
+        if latest_version:
             owners_detailed = await build_owner_details(
                 owner_ids,
                 owner_lookup_cache,
-                owners=assistant_with_owners.owners,
+                owners=assistant.owners,
             )
             assistant_version_response = AssistantVersionResponse(
                 id=assistant_id,

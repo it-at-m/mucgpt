@@ -451,11 +451,11 @@ async def getAllAssistants(
                 assistant.is_visible if assistant.is_visible is not None else True
             )
             assistant_id = str(assistant.id)
-            owner_ids = [owner.user_id for owner in assistant_with_owners.owners]
+            owner_ids = [owner.user_id for owner in assistant.owners]
             owners_detailed = await build_owner_details(
                 owner_ids,
                 owner_lookup_cache,
-                owners=assistant_with_owners.owners,
+                owners=assistant.owners,
             )
             # Build AssistantVersionResponse
             assistant_version_response = AssistantVersionResponse(

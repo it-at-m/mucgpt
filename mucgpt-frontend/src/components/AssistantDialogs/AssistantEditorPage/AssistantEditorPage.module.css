@@ -199,20 +199,24 @@
     order: 1;
 }
 
-.sectionBehaviour {
+.sectionInstructions {
     order: 2;
 }
 
-.sectionTools {
-    order: 4;
-}
-
-.sectionConversationOptions {
+.sectionBehaviour {
     order: 3;
 }
 
-.sectionAccess {
+.sectionConversationOptions {
+    order: 4;
+}
+
+.sectionTools {
     order: 5;
+}
+
+.sectionAccess {
+    order: 6;
 }
 
 .sectionAccordion,

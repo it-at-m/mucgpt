@@ -484,7 +484,8 @@ i18n
 
                             // Settings section headers
                             section_basic: "Grundlegende Informationen",
-                            section_behaviour: "Verhalten & Konfiguration",
+                            section_instructions: "Instruktionen",
+                            section_behaviour: "Modell & Generierung",
                             section_tools: "Werkzeuge",
                             section_conversation_options: "Unterhaltungsoptionen",
                             section_access: "Zugriff & Sichtbarkeit",
@@ -1233,7 +1234,8 @@ i18n
 
                             // Settings section headers
                             section_basic: "Basic Information",
-                            section_behaviour: "Behaviour & Configuration",
+                            section_instructions: "Instructions",
+                            section_behaviour: "Model & Generation",
                             section_tools: "Tools",
                             section_conversation_options: "Conversation Options",
                             section_access: "Access & Visibility",
@@ -1969,7 +1971,8 @@ i18n
 
                             // Settings section headers
                             section_basic: "Grundlegnde Infos",
-                            section_behaviour: "Verhoitn & Konfiguration",
+                            section_instructions: "Instruktiona",
+                            section_behaviour: "Modell & Generierung",
                             section_tools: "Werkzeig",
                             section_conversation_options: "Unterhaltungsoptionen",
                             section_access: "Zugriff & Sichtbarkeit",
@@ -2709,7 +2712,8 @@ i18n
 
                             // Settings section headers
                             section_basic: "Informations de base",
-                            section_behaviour: "Comportement et configuration",
+                            section_instructions: "Instructions",
+                            section_behaviour: "Modèle et génération",
                             section_tools: "Outils",
                             section_conversation_options: "Options de conversation",
                             section_access: "Accès et visibilité",
@@ -3439,7 +3443,8 @@ i18n
 
                             // Settings section headers
                             section_basic: "Основна інформація",
-                            section_behaviour: "Поведінка та конфігурація",
+                            section_instructions: "Інструкції",
+                            section_behaviour: "Модель та генерація",
                             section_tools: "Інструменти",
                             section_conversation_options: "Опції розмови",
                             section_access: "Доступ і видимість",

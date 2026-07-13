@@ -8,7 +8,6 @@ import {
     AccordionItem,
     AccordionPanel,
     Button,
-    Divider,
     Field,
     Text,
     Textarea,
@@ -18,9 +17,10 @@ import {
     Bot24Regular,
     Chat24Regular,
     Dismiss24Regular,
+    DocumentText24Regular,
     Info24Regular,
     Save24Regular,
-    Settings24Regular,
+    Sparkle24Regular,
     Shield24Regular,
     Wrench24Regular
 } from "@fluentui/react-icons";
@@ -176,7 +176,7 @@ function SettingsForm(props: SettingsFormProps) {
                     </Field>
                 </SectionCard>
 
-                <SectionCard title={t("components.assistant_editor.section_behaviour")} icon={<Settings24Regular />} className={styles.sectionBehaviour}>
+                <SectionCard title={t("components.assistant_editor.section_instructions")} icon={<DocumentText24Regular />} className={styles.sectionInstructions}>
                     <Field
                         size="large"
                         className={styles.formField}
@@ -198,7 +198,9 @@ function SettingsForm(props: SettingsFormProps) {
                             dialogTitle={t("components.assistant_editor.system_prompt")}
                         />
                     </Field>
-                    <Divider />
+                </SectionCard>
+
+                <SectionCard title={t("components.assistant_editor.section_behaviour")} icon={<Sparkle24Regular />} className={styles.sectionBehaviour}>
                     <AdvancedSettingsSection
                         creativity={props.creativity}
                         defaultModel={props.defaultModel}

@@ -65,6 +65,60 @@ class DirectoryNode(BaseModel):
     )
 
 
+class UserLookupResponse(BaseModel):
+    """Response payload for LDAP user lookup by lhmobjectid."""
+
+    lhmobjectid: str = Field(..., description="LHM object id", example="123456789")
+    givenName: str | None = Field(
+        None, description="User first name from LDAP", example="Max"
+    )
+    sn: str | None = Field(
+        None, description="User surname from LDAP", example="Mustermann"
+    )
+    mail: str | None = Field(
+        None,
+        description="User contact email address from LDAP",
+        example="max.mustermann@muenchen.de",
+    )
+    organizationalunit: str | None = Field(
+        None,
+        description="Organizational unit value from LDAP",
+        example="RIT-GL5",
+    )
+
+
+class OwnerDetailsResponse(BaseModel):
+    """Enriched owner information resolved from LDAP."""
+
+    user_id: str = Field(
+        ..., description="Owner user id (lhmobjectid)", example="12345"
+    )
+    username: str = Field(
+        ..., description="Display-friendly owner name", example="Max Mustermann"
+    )
+    contact_address: str | None = Field(
+        None,
+        description="Primary contact address of the owner",
+        example="max.mustermann@muenchen.de",
+    )
+    givenName: str | None = Field(
+        None, description="Owner given name from LDAP", example="Max"
+    )
+    sn: str | None = Field(
+        None, description="Owner surname from LDAP", example="Mustermann"
+    )
+    mail: str | None = Field(
+        None,
+        description="Owner email address from LDAP",
+        example="max.mustermann@muenchen.de",
+    )
+    organizationalunit: str | None = Field(
+        None,
+        description="Owner organizational unit from LDAP",
+        example="RIT-GL5",
+    )
+
+
 class QuickPrompt(BaseModel):
     label: str = Field(
         ...,
@@ -406,6 +460,10 @@ class AssistantVersionResponse(AssistantBase):
         description="Timestamp when this version was created",
         example="2025-06-18T10:30:00Z",
     )
+    owners_detailed: list[OwnerDetailsResponse] | None = Field(
+        None,
+        description="Owner details enriched from LDAP",
+    )
 
 
 class AssistantResponse(BaseModel):
@@ -446,6 +504,10 @@ class AssistantResponse(BaseModel):
         [],
         description="List of ids who will owner this assistant",
         example=["12345", "67890"],
+    )
+    owners_detailed: list[OwnerDetailsResponse] | None = Field(
+        None,
+        description="Owner details enriched from LDAP",
     )
     subscriptions_count: int = Field(
         0,

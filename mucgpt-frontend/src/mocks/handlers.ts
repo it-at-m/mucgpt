@@ -4,6 +4,7 @@ import { ApplicationConfig, AssistantCreateResponse, AssistantUpdateInput } from
 import {
     buildAssistantCreateResponse,
     buildAssistantList,
+    buildOwnersDetailedFromOwnerIds,
     buildChatMessage,
     generateChatStreamChunks,
     generateMindmapStreamChunks,
@@ -829,9 +830,13 @@ export const handlers = [
         const idx = DYNAMIC_ASSISTANTS.findIndex(a => a.id === params.id);
         if (idx === -1) return new HttpResponse(null, { status: 404 });
         const current = DYNAMIC_ASSISTANTS[idx];
+        const updatedOwnerIds = body.owner_ids || current.latest_version.owner_ids;
+        const updatedOwnersDetailed = buildOwnersDetailedFromOwnerIds(updatedOwnerIds);
         const updated: AssistantCreateResponse = {
             ...current,
             updated_at: new Date().toISOString(),
+            owner_ids: updatedOwnerIds,
+            owners_detailed: updatedOwnersDetailed,
             latest_version: {
                 ...current.latest_version,
                 version: body.version || current.latest_version.version + 1,
@@ -843,7 +848,8 @@ export const handlers = [
                 default_model:
                     body.default_model !== undefined ? (body.default_model === "" ? undefined : body.default_model) : current.latest_version.default_model,
                 tools: body.tools || current.latest_version.tools,
-                owner_ids: body.owner_ids || current.latest_version.owner_ids,
+                owner_ids: updatedOwnerIds,
+                owners_detailed: updatedOwnersDetailed,
                 examples: body.examples || current.latest_version.examples,
                 quick_prompts: body.quick_prompts || current.latest_version.quick_prompts,
                 tags: body.tags || current.latest_version.tags,

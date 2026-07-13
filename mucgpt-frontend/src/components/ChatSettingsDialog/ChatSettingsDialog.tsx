@@ -69,7 +69,9 @@ export const ChatSettingsDialog = ({ open, onOpenChange, creativity, setCreativi
         <Dialog open={open} onOpenChange={handleOpenChange}>
             <DialogSurface className={styles.surface}>
                 <DialogBody className={styles.body}>
-                    <DialogTitle className={styles.title}>{t("components.chattsettingsdrawer.title")}</DialogTitle>
+                    <DialogTitle className={styles.title} tabIndex={0}>
+                        {t("components.chattsettingsdrawer.title")}
+                    </DialogTitle>
                     <DialogContent className={styles.content}>
                         <ChatSettingsContent
                             creativity={draftValues.creativity}

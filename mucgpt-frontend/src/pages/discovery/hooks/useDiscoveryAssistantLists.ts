@@ -1,10 +1,11 @@
-import { Dispatch, SetStateAction, useCallback, useEffect, useMemo, useState } from "react";
+import { Dispatch, SetStateAction, useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { getAllCommunityAssistantsApi, getOwnedCommunityAssistants, getUserSubscriptionsApi } from "../../../api/assistant-client";
-import { Assistant, AssistantResponse, CommunityAssistantSnapshot } from "../../../api/models";
+import { Assistant, AssistantResponse, CommunityAssistant, CommunityAssistantSnapshot } from "../../../api/models";
 import type { AssistantCardData } from "../../../components/AssistantDetailsSidebar/AssistantDetailsSidebar";
 import { AssistantStorageService } from "../../../service/assistantstorage";
 import { CommunityAssistantStorageService } from "../../../service/communityassistantstorage";
+import useDebounce from "../../../hooks/debouncehook";
 import { isCompleteCommunityAssistantSnapshot } from "../../../utils/community-assistant-snapshots";
 
 export type SortKey = "title" | "updated" | "subscriptions" | "lastUsed";
@@ -84,10 +85,15 @@ const sortAssistants = (assistantsList: AssistantCardData[], method: SortKey): A
     return [...assistantsList].sort(sortFunctions[method] ?? compareByTitle);
 };
 
+const getSortOrder = (sortBy: SortKey | CommunitySortKey): "asc" | "desc" => {
+    return sortBy === "title" ? "asc" : "desc";
+};
+
 export const useDiscoveryAssistantLists = ({
     assistantStorageService,
     communityAssistantStorageService
 }: UseDiscoveryAssistantListsParams): UseDiscoveryAssistantListsResult => {
+    const hasLoadedOnceRef = useRef(false);
     const [allAssistants, setAllAssistants] = useState<AssistantCardData[]>([]);
     const [yoursAssistants, setYoursAssistants] = useState<AssistantCardData[]>([]);
     const [subscribedAssistants, setSubscribedAssistants] = useState<AssistantCardData[]>([]);
@@ -104,6 +110,9 @@ export const useDiscoveryAssistantLists = ({
     );
     const [showAllMyAssistants, setShowAllMyAssistants] = useState(false);
     const [ownedAssistantIds, setOwnedAssistantIds] = useState<Set<string>>(new Set());
+    const debouncedSearchText = useDebounce(searchText, 400);
+    const normalizedSearchText = searchText.trim().toLowerCase();
+    const debouncedNormalizedSearchText = debouncedSearchText.trim().toLowerCase();
 
     useEffect(() => {
         localStorage.setItem("discovery_communitySortMethod", communitySortMethod);
@@ -118,15 +127,62 @@ export const useDiscoveryAssistantLists = ({
     }, [myAssistantFilter]);
 
     useEffect(() => {
+        const abortController = new AbortController();
+
         const fetchAssistants = async () => {
-            setIsLoading(true);
+            if (!hasLoadedOnceRef.current) {
+                setIsLoading(true);
+            }
             try {
+                const backendMyAssistantsSort = myAssistantsSortMethod === "lastUsed" ? "updated" : myAssistantsSortMethod;
+                const myAssistantsSortOrder = getSortOrder(backendMyAssistantsSort);
+                const communitySortOrder = getSortOrder(communitySortMethod);
+                const listQuery = {
+                    search: debouncedNormalizedSearchText || undefined,
+                    offset: 0,
+                    limit: 500
+                };
+
+                const shouldFetchOwnedAssistants = myAssistantFilter !== "subscribed";
+                const shouldFetchSubscribedAssistants = myAssistantFilter !== "owned";
+
+                const ownedAssistantsPromise = shouldFetchOwnedAssistants
+                    ? getOwnedCommunityAssistants(
+                          {
+                              ...listQuery,
+                              sort_by: backendMyAssistantsSort,
+                              sort_order: myAssistantsSortOrder
+                          },
+                          { signal: abortController.signal }
+                      )
+                    : Promise.resolve([] as AssistantResponse[]);
+
+                const subscriptionsPromise = shouldFetchSubscribedAssistants
+                    ? getUserSubscriptionsApi(
+                          {
+                              ...listQuery,
+                              sort_by: backendMyAssistantsSort,
+                              sort_order: myAssistantsSortOrder
+                          },
+                          { signal: abortController.signal }
+                      )
+                    : Promise.resolve([] as CommunityAssistant[]);
+
                 const [localAssistantsResponse, allAssistantsResponse, ownedAssistants, userSubscriptions, localCommunityAssistants, assistantChatRecords] =
                     await Promise.all([
                         assistantStorageService.getAllAssistantConfigs(),
-                        getAllCommunityAssistantsApi(),
-                        getOwnedCommunityAssistants(),
-                        getUserSubscriptionsApi(),
+                        getAllCommunityAssistantsApi(
+                            {
+                                ...listQuery,
+                                sort_by: communitySortMethod,
+                                sort_order: communitySortOrder,
+                                exclude_owned: true,
+                                exclude_subscribed: true
+                            },
+                            { signal: abortController.signal }
+                        ),
+                        ownedAssistantsPromise,
+                        subscriptionsPromise,
                         communityAssistantStorageService.getAllAssistantConfigs(),
                         assistantStorageService.getChatStorageService().getAll()
                     ]);
@@ -149,7 +205,10 @@ export const useDiscoveryAssistantLists = ({
                     }
                 }
 
-                const toCardData = (a: AssistantResponse | CommunityAssistantSnapshot | Assistant, extra?: Partial<AssistantCardData>): AssistantCardData => {
+                const toCardData = (
+                    a: AssistantResponse | CommunityAssistantSnapshot | CommunityAssistant | Assistant,
+                    extra?: Partial<AssistantCardData>
+                ): AssistantCardData => {
                     const assistantId = a.id || "";
                     if ("latest_version" in a) {
                         return {
@@ -160,6 +219,22 @@ export const useDiscoveryAssistantLists = ({
                             updated: a.updated_at || undefined,
                             lastUsed: assistantLastUsedById.get(assistantId),
                             tags: a.latest_version?.tags || [],
+                            rawData: a,
+                            ...extra
+                        };
+                    }
+
+                    if ("title" in a && !("snapshot_version" in a)) {
+                        const subscriptions = "subscriptions_count" in a ? a.subscriptions_count || 0 : 0;
+                        const updated = "updated_at" in a ? a.updated_at || undefined : undefined;
+                        return {
+                            id: assistantId,
+                            title: a.title || "Unknown Assistant",
+                            description: a.description || "",
+                            subscriptions,
+                            updated,
+                            lastUsed: assistantLastUsedById.get(assistantId),
+                            tags: a.tags || [],
                             rawData: a,
                             ...extra
                         };
@@ -194,14 +269,13 @@ export const useDiscoveryAssistantLists = ({
                 ownedAssistants.forEach(a => fullAssistantById.set(a.id, a));
 
                 const validLocalCommunityAssistants = localCommunityAssistants.filter(isCompleteCommunityAssistantSnapshot);
-                const deletedCommunityAssistants = validLocalCommunityAssistants.filter(local => !fullAssistantById.has(local.id));
 
                 const subscribedData = [
                     ...userSubscriptions
                         .map(sub => {
                             const fullData = fullAssistantById.get(sub.id);
                             const localData = validLocalCommunityAssistants.find(local => local.id === sub.id);
-                            const assistantData = fullData || localData;
+                            const assistantData = fullData || localData || sub;
 
                             if (!assistantData) {
                                 return null;
@@ -209,48 +283,42 @@ export const useDiscoveryAssistantLists = ({
 
                             return toCardData(assistantData, {
                                 subscriptions: fullData?.subscriptions_count ?? 0,
-                                updated: fullData ? fullData.updated_at : localData ? getSnapshotUpdatedAt(localData) : undefined,
-                                isDeletedSnapshot: !fullData,
+                                updated: fullData?.updated_at ?? (localData ? getSnapshotUpdatedAt(localData) : undefined) ?? sub.updated_at,
                                 isSubscribedAssistant: true
                             });
                         })
-                        .filter((assistant): assistant is AssistantCardData => assistant !== null),
-                    ...deletedCommunityAssistants.map(deleted =>
-                        toCardData(deleted, {
-                            subscriptions: 0,
-                            updated: getSnapshotUpdatedAt(deleted),
-                            isDeletedSnapshot: !fullAssistantById.has(deleted.id),
-                            isSubscribedAssistant: true
-                        })
-                    )
+                        .filter((assistant): assistant is AssistantCardData => assistant !== null)
                 ];
                 setSubscribedAssistants(subscribedData);
+                hasLoadedOnceRef.current = true;
             } catch (error) {
+                if (error instanceof Error && error.name === "AbortError") {
+                    return;
+                }
                 console.error("Failed to fetch assistants:", error);
             } finally {
-                setIsLoading(false);
+                if (!abortController.signal.aborted) {
+                    setIsLoading(false);
+                }
             }
         };
 
         fetchAssistants();
-    }, [assistantStorageService, communityAssistantStorageService]);
 
-    const normalizedSearchText = searchText.trim().toLowerCase();
+        return () => {
+            abortController.abort();
+        };
+    }, [
+        assistantStorageService,
+        communityAssistantStorageService,
+        communitySortMethod,
+        myAssistantFilter,
+        myAssistantsSortMethod,
+        debouncedNormalizedSearchText
+    ]);
+
     const isSearching = normalizedSearchText.length > 0;
     const subscribedAssistantIds = useMemo(() => new Set(subscribedAssistants.map(assistant => assistant.id)), [subscribedAssistants]);
-
-    const matchesSearch = useCallback(
-        (assistant: AssistantCardData): boolean => {
-            if (!normalizedSearchText) return true;
-
-            return (
-                assistant.title.toLowerCase().includes(normalizedSearchText) ||
-                assistant.description.toLowerCase().includes(normalizedSearchText) ||
-                assistant.tags.some(tag => tag.toLowerCase().includes(normalizedSearchText))
-            );
-        },
-        [normalizedSearchText]
-    );
 
     const myAssistants = useMemo(() => {
         const byId = new Map<string, AssistantCardData>();
@@ -285,19 +353,16 @@ export const useDiscoveryAssistantLists = ({
         const filtered = myAssistants.filter(assistant => {
             if (myAssistantFilter === "owned" && !assistant.isOwnedAssistant) return false;
             if (myAssistantFilter === "subscribed" && !assistant.isSubscribedAssistant) return false;
-            return matchesSearch(assistant);
+            return true;
         });
 
+        if (myAssistantsSortMethod !== "lastUsed") return filtered;
         return sortAssistants(filtered, myAssistantsSortMethod);
-    }, [matchesSearch, myAssistantFilter, myAssistants, myAssistantsSortMethod]);
+    }, [myAssistantFilter, myAssistants, myAssistantsSortMethod]);
 
     const communityAssistants = useMemo(() => {
-        const filtered = allAssistants.filter(
-            assistant => !ownedAssistantIds.has(assistant.id) && !subscribedAssistantIds.has(assistant.id) && matchesSearch(assistant)
-        );
-
-        return sortAssistants(filtered, communitySortMethod);
-    }, [allAssistants, communitySortMethod, matchesSearch, ownedAssistantIds, subscribedAssistantIds]);
+        return allAssistants.filter(assistant => !ownedAssistantIds.has(assistant.id) && !subscribedAssistantIds.has(assistant.id));
+    }, [allAssistants, ownedAssistantIds, subscribedAssistantIds]);
 
     const displayedMyAssistants = useMemo(() => {
         if (isSearching || showAllMyAssistants) return filteredMyAssistants;

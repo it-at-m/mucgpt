@@ -19,7 +19,7 @@ import {
 import { useState, useCallback, useRef, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import styles from "./AssistantDetailsSidebar.module.css";
-import { Assistant, AssistantResponse, CommunityAssistantSnapshot, OwnerDetailsResponse, ToolBase } from "../../api/models";
+import { Assistant, AssistantResponse, CommunityAssistant, CommunityAssistantSnapshot, OwnerDetailsResponse, ToolBase } from "../../api/models";
 import { MarkdownRenderer } from "../MarkdownRenderer/MarkdownRenderer";
 import { EdelweissSpinner } from "../EdelweissSpinner";
 
@@ -31,7 +31,7 @@ export interface AssistantCardData {
     updated?: string | null;
     lastUsed?: number;
     tags: string[];
-    rawData: AssistantResponse | CommunityAssistantSnapshot | Assistant;
+    rawData: AssistantResponse | CommunityAssistantSnapshot | CommunityAssistant | Assistant;
     isDeletedSnapshot?: boolean;
     isLocalAssistant?: boolean;
     isOwnedAssistant?: boolean;
@@ -73,7 +73,10 @@ export const AssistantDetailsSidebar = ({
     const [systemPromptCopied, setSystemPromptCopied] = useState<boolean>(false);
     const responseData = assistant?.rawData && "latest_version" in assistant.rawData ? assistant.rawData : undefined;
     const latestVersion = responseData?.latest_version;
-    const snapshot = assistant?.rawData && !("latest_version" in assistant.rawData) ? assistant.rawData : undefined;
+    const snapshot =
+        assistant?.rawData && !("latest_version" in assistant.rawData) && "system_message" in assistant.rawData
+            ? (assistant.rawData as CommunityAssistantSnapshot | Assistant)
+            : undefined;
 
     const getCreativityConfig = (creativity: string) => {
         switch (creativity.toLowerCase()) {
@@ -317,7 +320,7 @@ export const AssistantDetailsSidebar = ({
                                     <span>{t("components.community_assistants.enabled_tools", "ENABLED TOOLS")}</span>
                                 </div>
                                 <div className={styles.toolList}>
-                                    {enabledTools.map(tool => (
+                                    {enabledTools.map((tool: ToolBase) => (
                                         <div key={tool.id} className={styles.toolPill}>
                                             {tool.id}
                                         </div>

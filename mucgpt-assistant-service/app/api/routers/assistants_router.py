@@ -1,10 +1,12 @@
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.api_models import (
     AssistantCreate,
+    AssistantListSortBy,
+    AssistantListSortOrder,
     AssistantResponse,
     AssistantUpdate,
     AssistantVersionResponse,
@@ -393,6 +395,32 @@ async def updateAssistant(
     tags=["Assistants"],
 )
 async def getAllAssistants(
+    search: str | None = Query(
+        None,
+        description="Search term matched against latest version title, description, and tags.",
+    ),
+    sort_by: AssistantListSortBy = Query(
+        "subscriptions",
+        description="Sort assistants by title, updated timestamp, or subscriptions.",
+    ),
+    sort_order: AssistantListSortOrder = Query(
+        "desc", description="Sort order, ascending or descending."
+    ),
+    offset: int = Query(0, ge=0, description="Number of items to skip."),
+    limit: int = Query(
+        200,
+        ge=1,
+        le=500,
+        description="Maximum number of items to return.",
+    ),
+    exclude_owned: bool = Query(
+        False,
+        description="Exclude assistants owned by the authenticated user.",
+    ),
+    exclude_subscribed: bool = Query(
+        False,
+        description="Exclude assistants subscribed by the authenticated user.",
+    ),
     db: AsyncSession = Depends(get_db_session),
     user_info: AuthenticationResult = Depends(authenticate_user),
 ):
@@ -401,26 +429,33 @@ async def getAllAssistants(
     assistant_repo = AssistantRepository(db)
     assistants = (
         await assistant_repo.get_all_possible_assistants_for_user_with_department(
-            user_info.department
+            user_info.department,
+            search=search,
+            sort_by=sort_by,
+            sort_order=sort_order,
+            offset=offset,
+            limit=limit,
+            exclude_owned_by_user_id=user_info.user_id if exclude_owned else None,
+            exclude_subscribed_by_user_id=user_info.user_id
+            if exclude_subscribed
+            else None,
         )
     )
 
     # Create explicit response models
     response_list = []
-    for assistant in assistants:  # Use safe method to get assistant with owners
-        assistant_with_owners = await assistant_repo.get_with_owners(assistant.id)
-        # Use safe method to access latest version through repository
-        latest_version = await assistant_repo.get_latest_version(assistant.id)
+    for assistant in assistants:
+        latest_version = assistant.versions[0] if assistant.versions else None
         if latest_version:
             is_visible = (
                 assistant.is_visible if assistant.is_visible is not None else True
             )
             assistant_id = str(assistant.id)
-            owner_ids = [owner.user_id for owner in assistant_with_owners.owners]
+            owner_ids = [owner.user_id for owner in assistant.owners]
             owners_detailed = await build_owner_details(
                 owner_ids,
                 owner_lookup_cache,
-                owners=assistant_with_owners.owners,
+                owners=assistant.owners,
             )
             # Build AssistantVersionResponse
             assistant_version_response = AssistantVersionResponse(

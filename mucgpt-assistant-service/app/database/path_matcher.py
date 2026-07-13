@@ -24,6 +24,7 @@ Implementation Details:
 
 from __future__ import annotations
 
+import re
 from collections.abc import Iterable, Mapping, Sequence
 from datetime import UTC, datetime, timedelta
 from typing import Any
@@ -39,6 +40,19 @@ def _normalize_value(value: str | None) -> str | None:
         return None
     cleaned = value.strip()
     return cleaned.lower() if cleaned else None
+
+
+def _extract_name_aliases(name: str | None) -> set[str]:
+    """Extract aliases from display names, e.g. '(AWM)' from a node name."""
+    if not isinstance(name, str):
+        return set()
+
+    aliases: set[str] = set()
+    for match in re.findall(r"\(([^()]+)\)", name):
+        alias = _normalize_value(match)
+        if alias:
+            aliases.add(alias)
+    return aliases
 
 
 class _DirectoryIndex:
@@ -65,6 +79,22 @@ class _DirectoryIndex:
             current = self.parent.get(current)
         return False
 
+    def ancestors_with_self(self, node_id: int) -> list[int]:
+        ancestors: list[int] = []
+        current = node_id
+        while current is not None:
+            ancestors.append(current)
+            current = self.parent.get(current)
+        return ancestors
+
+    def depth(self, node_id: int) -> int:
+        depth = 0
+        current = self.parent.get(node_id)
+        while current is not None:
+            depth += 1
+            current = self.parent.get(current)
+        return depth
+
 
 def _build_index(tree: Iterable[Mapping[str, Any]]) -> _DirectoryIndex:
     parent: dict[int, int | None] = {}
@@ -86,7 +116,9 @@ def _build_index(tree: Iterable[Mapping[str, Any]]) -> _DirectoryIndex:
         )
         name = _normalize_value(node.get("name")) if isinstance(node, Mapping) else None
 
-        for key in {shortname, name}:
+        name_aliases = _extract_name_aliases(node.get("name"))
+
+        for key in {shortname, name, *name_aliases}:
             if key:
                 key_to_ids.setdefault(key, set()).add(node_id)
 
@@ -101,6 +133,70 @@ def _build_index(tree: Iterable[Mapping[str, Any]]) -> _DirectoryIndex:
 
 _INDEX_CACHE: dict[str, Any] = {"index": None, "expires_at": None}
 _INDEX_TTL = timedelta(minutes=10)
+
+
+def _resolve_department_ids(
+    department_key: str | None, index: _DirectoryIndex
+) -> set[int]:
+    """Resolve department IDs by exact key and dashed-suffix fallback."""
+    if department_key is None:
+        return set()
+
+    exact = index.find_ids(department_key)
+    if exact:
+        return exact
+
+    parts = [part for part in department_key.split("-") if part]
+    if len(parts) < 2:
+        return set()
+
+    for start in range(1, len(parts)):
+        candidate = "-".join(parts[start:])
+        candidate_ids = index.find_ids(candidate)
+        if candidate_ids:
+            return candidate_ids
+
+    return set()
+
+
+def _resolve_access_ids(access_key: str | None, index: _DirectoryIndex) -> set[int]:
+    """Resolve access IDs by exact key and family-prefix fallback.
+
+    Family-prefix fallback supports selecting high-level codes where the exact node
+    has no shortname (for example 'KULT' matching descendants 'KULT-*').
+    """
+    if access_key is None:
+        return set()
+
+    exact = index.find_ids(access_key)
+    if exact:
+        return exact
+
+    candidates: set[int] = set()
+    family_prefix = f"{access_key}-"
+    for key, ids in index.key_to_ids.items():
+        if key.startswith(family_prefix):
+            candidates.update(ids)
+
+    if not candidates:
+        return set()
+
+    common_ancestors: set[int] | None = None
+    for node_id in candidates:
+        ancestors = set(index.ancestors_with_self(node_id))
+        if common_ancestors is None:
+            common_ancestors = ancestors
+        else:
+            common_ancestors &= ancestors
+
+        if not common_ancestors:
+            return candidates
+
+    if not common_ancestors:
+        return candidates
+
+    deepest_common = max(common_ancestors, key=index.depth)
+    return {deepest_common}
 
 
 async def _get_directory_index(
@@ -167,8 +263,8 @@ async def path_matches_department(
         logger.warning("No directory index available; denying access")
         return False
 
-    access_ids = index.find_ids(access_key)
-    department_ids = index.find_ids(dept_key)
+    access_ids = _resolve_access_ids(access_key, index)
+    department_ids = _resolve_department_ids(dept_key, index)
 
     if not access_ids or not department_ids:
         return False

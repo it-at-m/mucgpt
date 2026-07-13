@@ -94,6 +94,7 @@ class OrganizationTreeBuilder:
         search_base: str | None = None,
         ignored_prefixes: Sequence[str] | None = None,
         ignored_suffixes: Sequence[str] | None = None,
+        ignored_shortname_exceptions: Sequence[str] | None = None,
         required_attributes: Sequence[str] | None = None,
     ) -> None:
         self.display_attribute = display_attribute
@@ -101,6 +102,9 @@ class OrganizationTreeBuilder:
         self.search_base = search_base.lower() if search_base else None
         self.ignored_prefixes = self._normalize_patterns(ignored_prefixes)
         self.ignored_suffixes = self._normalize_patterns(ignored_suffixes)
+        self.ignored_shortname_exceptions = self._normalize_patterns(
+            ignored_shortname_exceptions
+        )
         self.required_attributes = tuple(
             (value or "").strip().lower()
             for value in (required_attributes or [])
@@ -214,17 +218,46 @@ class OrganizationTreeBuilder:
                 normalized.append(cleaned)
         return tuple(normalized)
 
-    def _matches_ignore_rule(self, name: str) -> bool:
-        if not (self.ignored_prefixes or self.ignored_suffixes):
+    def _matches_ignore_prefix_rule(self, name: str) -> bool:
+        if not self.ignored_prefixes:
             return False
 
         normalized = name.strip().lower()
         if not normalized:
             return False
 
-        return any(
-            normalized.startswith(prefix) for prefix in self.ignored_prefixes
-        ) or any(normalized.endswith(suffix) for suffix in self.ignored_suffixes)
+        return any(normalized.startswith(prefix) for prefix in self.ignored_prefixes)
+
+    def _matches_ignore_suffix_rule(self, name: str) -> bool:
+        if not self.ignored_suffixes:
+            return False
+
+        normalized = name.strip().lower()
+        if not normalized:
+            return False
+
+        return any(normalized.endswith(suffix) for suffix in self.ignored_suffixes)
+
+    def _extract_shortname(self, attributes: dict[str, Any]) -> str | None:
+        normalized_keys = {key.strip().lower(): key for key in attributes.keys() if key}
+        shortname_key = normalized_keys.get("lhmoushortname")
+        shortname = attributes.get(shortname_key) if shortname_key else None
+        if isinstance(shortname, list | tuple | set):
+            shortname = next((value for value in shortname if value is not None), None)
+        if isinstance(shortname, bytes):
+            shortname = shortname.decode("utf-8", errors="ignore")
+        if not isinstance(shortname, str):
+            return None
+        shortname = shortname.strip().lower()
+        return shortname or None
+
+    def _is_ignore_exception(self, node: OrganizationNode) -> bool:
+        if not self.ignored_shortname_exceptions:
+            return False
+        shortname = self._extract_shortname(node.attributes)
+        if shortname is None:
+            return False
+        return shortname in self.ignored_shortname_exceptions
 
     def _is_ignored_node(
         self,
@@ -236,7 +269,15 @@ class OrganizationTreeBuilder:
             return cache[node_id]
 
         node = nodes[node_id]
-        ignore = self._matches_ignore_rule(node.name)
+        ignore_by_prefix = self._matches_ignore_prefix_rule(node.name)
+        ignore_by_suffix = self._matches_ignore_suffix_rule(node.name)
+        # Suffix-based exclusion applies only when no shortname is present.
+        if ignore_by_suffix and self._extract_shortname(node.attributes) is not None:
+            ignore_by_suffix = False
+
+        ignore = ignore_by_prefix or ignore_by_suffix
+        if ignore and self._is_ignore_exception(node):
+            ignore = False
         if not ignore and node.parent_id and node.parent_id in nodes:
             ignore = self._is_ignored_node(node.parent_id, nodes, cache)
 

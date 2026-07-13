@@ -489,6 +489,12 @@ i18n
                             section_tools: "Werkzeuge",
                             section_conversation_options: "Unterhaltungsoptionen",
                             section_access: "Zugriff & Sichtbarkeit",
+                            section_review: "Prüfung",
+
+                            // Review section
+                            review_confirmation_label:
+                                "Ich bestätige, dass dieser Assistent nicht für einen in MUCGPT unzulässigen Hochrisiko-Anwendungsfall eingesetzt werden soll.",
+                            review_required_hint: "Diese Bestätigung ist erforderlich, um den Assistenten zu erstellen oder zu speichern.",
 
                             // Advanced settings fields
                             creativity: "Antwortstil",
@@ -1239,6 +1245,12 @@ i18n
                             section_tools: "Tools",
                             section_conversation_options: "Conversation Options",
                             section_access: "Access & Visibility",
+                            section_review: "Review",
+
+                            // Review section
+                            review_confirmation_label:
+                                "I confirm that this assistant is not intended to be used for a high-risk use case that is not permitted in MUCGPT.",
+                            review_required_hint: "This confirmation is required in order to create or save the assistant.",
 
                             // Advanced settings fields
                             creativity: "Answer style",
@@ -1976,6 +1988,12 @@ i18n
                             section_tools: "Werkzeig",
                             section_conversation_options: "Unterhaltungsoptionen",
                             section_access: "Zugriff & Sichtbarkeit",
+                            section_review: "Prüfung",
+
+                            // Review section
+                            review_confirmation_label:
+                                "I bstätig, dass der Assistent net für an in MUCGPT unzulässign Hochrisiko-Anwendungsfall herghalten soi.",
+                            review_required_hint: "De Bstätigung braucht ma, damit ma an Assistenten erstelln oda speichern ko.",
 
                             // Advanced settings fields
                             creativity: "Antwortstil",
@@ -2717,6 +2735,12 @@ i18n
                             section_tools: "Outils",
                             section_conversation_options: "Options de conversation",
                             section_access: "Accès et visibilité",
+                            section_review: "Vérification",
+
+                            // Review section
+                            review_confirmation_label:
+                                "Je confirme que cet assistant n'est pas destiné à être utilisé pour un cas d'usage à haut risque non autorisé dans MUCGPT.",
+                            review_required_hint: "Cette confirmation est requise pour créer ou enregistrer l'assistant.",
 
                             // Advanced settings fields
                             creativity: "Style de réponse",
@@ -3448,6 +3472,12 @@ i18n
                             section_tools: "Інструменти",
                             section_conversation_options: "Опції розмови",
                             section_access: "Доступ і видимість",
+                            section_review: "Перевірка",
+
+                            // Review section
+                            review_confirmation_label:
+                                "Я підтверджую, що цей асистент не призначений для використання у високоризиковому сценарії, недозволеному в MUCGPT.",
+                            review_required_hint: "Це підтвердження необхідне для створення або збереження асистента.",
 
                             // Advanced settings fields
                             creativity: "Стиль відповіді",

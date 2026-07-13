@@ -16,6 +16,7 @@ import {
 import {
     Bot24Regular,
     Chat24Regular,
+    ClipboardCheckmark24Regular,
     Dismiss24Regular,
     DocumentText24Regular,
     Info24Regular,
@@ -37,7 +38,15 @@ import { FollowUpActionModel } from "../../FollowUpAction";
 import { useToolsContext } from "../../ToolsProvider";
 import { useAssistantState } from "../shared/hooks/useAssistantState";
 import { useCreateAssistantState } from "../shared/hooks/useCreateAssistantState";
-import { ToolsSection, ConversationOptionsSection, AdvancedSettingsSection, VisibilitySection, ExpandableTextarea, CloseConfirmationDialog } from "../shared";
+import {
+    ToolsSection,
+    ConversationOptionsSection,
+    AdvancedSettingsSection,
+    VisibilitySection,
+    ReviewSection,
+    ExpandableTextarea,
+    CloseConfirmationDialog
+} from "../shared";
 import { AssistantStrategy } from "../../../pages/assistant/AssistantStrategy";
 import { CREATIVITY_LOW } from "../../../constants";
 import { EdelweissSpinner } from "../../EdelweissSpinner";
@@ -135,6 +144,9 @@ interface SettingsFormProps {
     setPublishDepartments: (departments: string[]) => void;
     setInvisibleChecked: (invisible: boolean) => void;
     onHasChanged?: (changed: boolean) => void;
+    confirmed: boolean;
+    confirmationResetKey: number;
+    onConfirmedChange: (confirmed: boolean) => void;
 }
 
 function SettingsForm(props: SettingsFormProps) {
@@ -250,6 +262,15 @@ function SettingsForm(props: SettingsFormProps) {
                         setInvisibleChecked={invisible => props.setInvisibleChecked(invisible)}
                     />
                 </SectionCard>
+
+                <SectionCard title={t("components.assistant_editor.section_review")} icon={<ClipboardCheckmark24Regular />} className={styles.sectionReview}>
+                    <ReviewSection
+                        confirmed={props.confirmed}
+                        confirmationResetKey={props.confirmationResetKey}
+                        isOwner={props.isOwner}
+                        onConfirmedChange={props.onConfirmedChange}
+                    />
+                </SectionCard>
             </main>
         </div>
     );
@@ -303,6 +324,10 @@ export const AssistantEditorPage = (props: AssistantEditorPageProps) => {
     const [loading, setLoading] = useState(false);
     const [discardOpen, setDiscardOpen] = useState(false);
     const [discardTarget, setDiscardTarget] = useState<DiscardTarget>("back");
+    // Compliance confirmation. Must be re-confirmed after every change to the assistant.
+    const [reviewConfirmed, setReviewConfirmed] = useState(false);
+    // Bumped whenever the confirmation is reset so the checkbox remounts and reliably reflects the cleared state.
+    const [reviewResetKey, setReviewResetKey] = useState(0);
 
     const selectedTools = useMemo(() => {
         if (!availableTools) return [] as ToolInfo[];
@@ -360,7 +385,7 @@ export const AssistantEditorPage = (props: AssistantEditorPageProps) => {
         const assistantTitle = s.title.trim();
         const systemPrompt = s.systemPrompt.trim();
 
-        if (assistantTitle === "" || systemPrompt === "") {
+        if (assistantTitle === "" || systemPrompt === "" || !reviewConfirmed) {
             showError(t("components.assistant_editor.assistant_save_failed"), t("components.assistant_editor.save_config_failed"));
             return;
         }
@@ -421,7 +446,7 @@ export const AssistantEditorPage = (props: AssistantEditorPageProps) => {
         } finally {
             setLoading(false);
         }
-    }, [loading, state, isCreate, createState, editState, t, showError, showSuccess, navigate, props]);
+    }, [loading, state, isCreate, createState, editState, reviewConfirmed, t, showError, showSuccess, navigate, props]);
 
     const handleGenerate = useCallback(async () => {
         if (!createState.input.trim() || loading) return;
@@ -455,10 +480,25 @@ export const AssistantEditorPage = (props: AssistantEditorPageProps) => {
         }
     }, [createState, LLM.llm_name, loading, showError, showSuccess, t]);
 
+    // Any change to the assistant invalidates the compliance confirmation and resets the edit "hasChanged" flag.
+    const handleHasChanged = useCallback(
+        (changed: boolean) => {
+            if (!changed) return;
+            setReviewConfirmed(prev => {
+                if (prev) setReviewResetKey(key => key + 1);
+                return false;
+            });
+            if (!isCreate) {
+                editState.setHasChanged?.(true);
+            }
+        },
+        [isCreate, editState]
+    );
+
     const pageTitle = isCreate ? t("components.assistant_editor.create_title") : t("components.assistant_editor.edit_title");
     const pageHelper = isCreate ? t("components.assistant_editor.page_helper_create") : t("components.assistant_editor.page_helper_edit");
     const settingsState = isCreate ? createState : editState;
-    const isSettingsValid = settingsState.title.trim() !== "" && settingsState.systemPrompt.trim() !== "";
+    const isSettingsValid = settingsState.title.trim() !== "" && settingsState.systemPrompt.trim() !== "" && reviewConfirmed;
     const showSettingsForm = !isCreate || createView === "settings";
     const showCreateModeSelector = isCreate && createView === "mode_select";
     const actionStatusLabel = !isOwner
@@ -547,7 +587,10 @@ export const AssistantEditorPage = (props: AssistantEditorPageProps) => {
                         isVisible={settingsState.isVisible ?? false}
                         setPublishDepartments={settingsState.updateHierarchicalAccess}
                         setInvisibleChecked={invisible => settingsState.updateIsVisible(!invisible)}
-                        onHasChanged={isCreate ? undefined : value => value && editState.setHasChanged?.(true)}
+                        onHasChanged={handleHasChanged}
+                        confirmed={reviewConfirmed}
+                        confirmationResetKey={reviewResetKey}
+                        onConfirmedChange={setReviewConfirmed}
                     />
                 )}
             </div>

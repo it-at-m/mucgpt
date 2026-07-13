@@ -1,0 +1,21 @@
+.reviewWrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.confirmationCheckbox {
+    align-items: flex-start;
+}
+
+.confirmationCheckbox :global(.fui-Checkbox__label) {
+    font-size: 14px;
+    line-height: 1.4;
+}
+
+.requiredHint {
+    color: var(--colorPaletteRedForeground3);
+    font-size: 12px;
+    line-height: 1.3;
+    padding-left: 4px;
+}

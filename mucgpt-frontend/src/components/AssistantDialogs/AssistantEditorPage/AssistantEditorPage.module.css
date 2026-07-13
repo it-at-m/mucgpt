@@ -219,6 +219,10 @@
     order: 6;
 }
 
+.sectionReview {
+    order: 7;
+}
+
 .sectionAccordion,
 .sectionAccordionItem {
     width: 100%;

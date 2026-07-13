@@ -13,13 +13,15 @@ import {
     ChevronRight16Regular,
     Bot24Regular,
     ShieldError24Regular,
-    Apps24Regular
+    Apps24Regular,
+    Warning24Regular
 } from "@fluentui/react-icons";
 import styles from "./Tutorials.module.css";
 import { BrainstormTutorial } from "./components/BrainstormTutorial";
 import { SimplifyTutorial } from "./components/SimplifyTutorial";
 import { ToolsTutorial } from "./components/ToolsTutorial";
 import { AIBasicsTutorial } from "./components/AIBasicsTutorial";
+import { HighRiskTutorial } from "./components/HighRiskTutorial";
 
 interface TutorialSection {
     id: string;
@@ -118,6 +120,17 @@ export const Tutorials = () => {
                         icon: <Apps24Regular />,
                         badge: t("tutorials.badges.in_construction", "Im Aufbau"),
                         component: <div>KI-Anwendungsgebiete Tutorial coming soon...</div>
+                    },
+                    {
+                        id: "high-risk",
+                        title: t("tutorials.high_risk.title", "Hochrisiko-Anwendungsfälle"),
+                        description: t(
+                            "tutorials.high_risk.description",
+                            "Wann gilt ein Einsatz von KI als Hochrisiko-Anwendungsfall und was Sie dabei beachten sollten."
+                        ),
+                        icon: <Warning24Regular />,
+                        badge: t("tutorials.badges.new", "Neu"),
+                        component: <HighRiskTutorial />
                     }
                 ]
             },

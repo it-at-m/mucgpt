@@ -1,0 +1,21 @@
+.tutorial {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.headerIcon {
+    color: var(--colorBrandForeground1);
+    flex-shrink: 0;
+}
+
+.description {
+    color: var(--colorNeutralForeground2);
+    line-height: 1.5;
+}

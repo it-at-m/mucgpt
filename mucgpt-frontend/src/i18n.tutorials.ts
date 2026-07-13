@@ -211,6 +211,14 @@ export const tutorialsTranslations = {
                 title: "Einsatzmöglicheiten von MUCGPT",
                 description: "Zuvor haben wir erfahren was MUCGPT nicht kann, jetzt schauen wir uns an, was MUCGPT kann."
             },
+            high_risk: {
+                title: "Hochrisiko-Anwendungsfälle",
+                description: "Wann gilt ein Einsatz von KI als Hochrisiko-Anwendungsfall und was Sie dabei beachten sollten.",
+                intro: {
+                    title: "Hochrisiko-Anwendungsfälle",
+                    description: "Hier erfahren Sie mehr über Hochrisiko-Anwendungsfälle."
+                }
+            },
             tools: {
                 title: "Übersicht",
                 description: "Erfahre, was Werkzeuge im Kontext von MUCGPT sind und wie du sie effektiv nutzen kannst.",
@@ -593,6 +601,14 @@ export const tutorialsTranslations = {
                 title: "Application Possibilities of MUCGPT",
                 description: "Previously we learned what MUCGPT cannot do, now let's look at what MUCGPT can do."
             },
+            high_risk: {
+                title: "High-risk use cases",
+                description: "When is the use of AI considered a high-risk use case and what you should keep in mind.",
+                intro: {
+                    title: "High-risk use cases",
+                    description: "Here you will learn more about high-risk use cases."
+                }
+            },
             tools: {
                 title: "Overview",
                 description: "Learn what tools are in the context of MUCGPT and how you can use them effectively.",
@@ -972,6 +988,14 @@ export const tutorialsTranslations = {
             ai_applications: {
                 title: "Einsatzmöglichkeiten von MUCGPT",
                 description: "Vorher hamma glernt, was MUCGPT ned kann, jetz schau ma uns an, was MUCGPT kann."
+            },
+            high_risk: {
+                title: "Hochrisiko-Anwendungsfäi",
+                description: "Wann gilt a Eisatz vo KI ois Hochrisiko-Anwendungsfoi und wos'd dabei beachtn soidst.",
+                intro: {
+                    title: "Hochrisiko-Anwendungsfäi",
+                    description: "Do erfahrst mehr über Hochrisiko-Anwendungsfäi."
+                }
             },
             tools: {
                 title: "Übersicht",
@@ -1363,6 +1387,14 @@ export const tutorialsTranslations = {
                 title: "Possibilités d'utilisation de MUCGPT",
                 description: "Auparavant, nous avons appris ce que MUCGPT ne peut pas faire, maintenant voyons ce que MUCGPT peut faire."
             },
+            high_risk: {
+                title: "Cas d'usage à haut risque",
+                description: "Quand l'utilisation de l'IA est-elle considérée comme un cas d'usage à haut risque et ce à quoi vous devez faire attention.",
+                intro: {
+                    title: "Cas d'usage à haut risque",
+                    description: "Ici, vous en apprendrez davantage sur les cas d'usage à haut risque."
+                }
+            },
             tools: {
                 title: "Aperçu",
                 description: "Découvrez quels sont les outils dans le contexte de MUCGPT et comment vous pouvez les utiliser efficacement.",
@@ -1742,6 +1774,14 @@ export const tutorialsTranslations = {
             ai_applications: {
                 title: "Можливості використання MUCGPT",
                 description: "Раніше ми дізналися, що MUCGPT не може, тепер давайте подивимось, що MUCGPT може."
+            },
+            high_risk: {
+                title: "Сценарії використання з високим ризиком",
+                description: "Коли використання ШІ вважається сценарієм з високим ризиком і на що слід звертати увагу.",
+                intro: {
+                    title: "Сценарії використання з високим ризиком",
+                    description: "Тут ви дізнаєтеся більше про сценарії використання з високим ризиком."
+                }
             },
             tools: {
                 title: "Огляд",

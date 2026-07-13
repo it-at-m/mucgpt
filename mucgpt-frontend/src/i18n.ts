@@ -495,6 +495,15 @@ i18n
                             review_confirmation_label:
                                 "Ich bestätige, dass dieser Assistent nicht für einen in MUCGPT unzulässigen Hochrisiko-Anwendungsfall eingesetzt werden soll.",
                             review_required_hint: "Diese Bestätigung ist erforderlich, um den Assistenten zu erstellen oder zu speichern.",
+                            review_intro_title: "Was sind Hochrisiko-Anwendungsfälle?",
+                            review_intro_description:
+                                "Hochrisiko-Anwendungsfälle sind KI-Einsätze, bei denen Entscheidungen oder Bewertungen über Menschen besonders folgenreich sein können – etwa in Personal, Bildung, öffentlichen Leistungen oder Migration.",
+                            review_check_title: "Anweisungen prüfen",
+                            review_check_description: "Prüfen Sie die Assistentenanweisungen auf Hinweise auf mögliche Hochrisiko-Anwendungsfälle.",
+                            review_check_learn_more: "Mehr über Hochrisiko-Anwendungsfälle erfahren",
+                            review_check_start: "Prüfung starten",
+                            review_check_recheck: "Erneut prüfen",
+                            review_check_disclaimer: "Die Prüfung dient als Orientierung und ersetzt nicht Ihre eigene Bewertung.",
 
                             // Advanced settings fields
                             creativity: "Antwortstil",
@@ -1251,6 +1260,15 @@ i18n
                             review_confirmation_label:
                                 "I confirm that this assistant is not intended to be used for a high-risk use case that is not permitted in MUCGPT.",
                             review_required_hint: "This confirmation is required in order to create or save the assistant.",
+                            review_intro_title: "What are high-risk use cases?",
+                            review_intro_description:
+                                "High-risk use cases are AI applications in which decisions or assessments about people can be especially consequential – for example in human resources, education, public services or migration.",
+                            review_check_title: "Check instructions",
+                            review_check_description: "Check the assistant instructions for indications of possible high-risk use cases.",
+                            review_check_learn_more: "Learn more about high-risk use cases",
+                            review_check_start: "Start check",
+                            review_check_recheck: "Check again",
+                            review_check_disclaimer: "The check serves as guidance and does not replace your own assessment.",
 
                             // Advanced settings fields
                             creativity: "Answer style",
@@ -1994,6 +2012,15 @@ i18n
                             review_confirmation_label:
                                 "I bstätig, dass der Assistent net für an in MUCGPT unzulässign Hochrisiko-Anwendungsfall herghalten soi.",
                             review_required_hint: "De Bstätigung braucht ma, damit ma an Assistenten erstelln oda speichern ko.",
+                            review_intro_title: "Wos san Hochrisiko-Anwendungsfäi?",
+                            review_intro_description:
+                                "Hochrisiko-Anwendungsfäi san KI-Eisätz, wo Entscheidunga oda Bewertunga über Menschn bsonders folgnreich sei kennan – zum Beispui in Personoi, Buidung, öffentliche Leistunga oda Migration.",
+                            review_check_title: "Anweisungen prüfa",
+                            review_check_description: "Prüf de Assistentenanweisungen auf Hinweis auf möglche Hochrisiko-Anwendungsfäi.",
+                            review_check_learn_more: "Mehr über Hochrisiko-Anwendungsfäi erfahrn",
+                            review_check_start: "Prüfung starten",
+                            review_check_recheck: "Nochamoi prüfa",
+                            review_check_disclaimer: "De Prüfung is bloß a Orientierung und ersetzt net dei eigene Bewertung.",
 
                             // Advanced settings fields
                             creativity: "Antwortstil",
@@ -2741,6 +2768,15 @@ i18n
                             review_confirmation_label:
                                 "Je confirme que cet assistant n'est pas destiné à être utilisé pour un cas d'usage à haut risque non autorisé dans MUCGPT.",
                             review_required_hint: "Cette confirmation est requise pour créer ou enregistrer l'assistant.",
+                            review_intro_title: "Que sont les cas d'usage à haut risque ?",
+                            review_intro_description:
+                                "Les cas d'usage à haut risque sont des utilisations de l'IA dans lesquelles les décisions ou les évaluations concernant des personnes peuvent avoir des conséquences particulièrement lourdes – par exemple dans les ressources humaines, l'éducation, les services publics ou la migration.",
+                            review_check_title: "Vérifier les instructions",
+                            review_check_description: "Vérifiez les instructions de l'assistant pour détecter d'éventuels cas d'usage à haut risque.",
+                            review_check_learn_more: "En savoir plus sur les cas d'usage à haut risque",
+                            review_check_start: "Lancer la vérification",
+                            review_check_recheck: "Vérifier à nouveau",
+                            review_check_disclaimer: "La vérification sert d'orientation et ne remplace pas votre propre évaluation.",
 
                             // Advanced settings fields
                             creativity: "Style de réponse",
@@ -3478,6 +3514,15 @@ i18n
                             review_confirmation_label:
                                 "Я підтверджую, що цей асистент не призначений для використання у високоризиковому сценарії, недозволеному в MUCGPT.",
                             review_required_hint: "Це підтвердження необхідне для створення або збереження асистента.",
+                            review_intro_title: "Що таке сценарії використання з високим ризиком?",
+                            review_intro_description:
+                                "Сценарії використання з високим ризиком – це застосування ШІ, у яких рішення або оцінки щодо людей можуть мати особливо серйозні наслідки – наприклад у сфері персоналу, освіти, державних послуг або міграції.",
+                            review_check_title: "Перевірити інструкції",
+                            review_check_description: "Перевірте інструкції асистента на ознаки можливих сценаріїв використання з високим ризиком.",
+                            review_check_learn_more: "Дізнатися більше про сценарії використання з високим ризиком",
+                            review_check_start: "Почати перевірку",
+                            review_check_recheck: "Перевірити знову",
+                            review_check_disclaimer: "Перевірка слугує орієнтиром і не замінює вашої власної оцінки.",
 
                             // Advanced settings fields
                             creativity: "Стиль відповіді",

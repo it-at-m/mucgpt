@@ -561,7 +561,8 @@ i18n
 
                             // Discard confirmation
                             discard_title: "Änderungen verwerfen?",
-                            discard_message: "Sie haben ungespeicherte Änderungen. Möchten Sie wirklich abbrechen?"
+                            discard_message: "Sie haben ungespeicherte Änderungen. Möchten Sie wirklich abbrechen?",
+                            discard_confirm_label: "Verwerfen"
                         },
                         expandable_textarea: {
                             default_title: "Bearbeiten"
@@ -1308,7 +1309,8 @@ i18n
 
                             // Discard confirmation
                             discard_title: "Discard changes?",
-                            discard_message: "You have unsaved changes. Are you sure you want to cancel?"
+                            discard_message: "You have unsaved changes. Are you sure you want to cancel?",
+                            discard_confirm_label: "Discard"
                         },
                         expandable_textarea: {
                             default_title: "Edit"
@@ -2044,7 +2046,8 @@ i18n
 
                             // Discard confirmation
                             discard_title: "Änderungen verwerfn?",
-                            discard_message: "Du hosd ungespeicherte Änderungen. Wuißt du wirklich abbrechen?"
+                            discard_message: "Du hosd ungespeicherte Änderungen. Wuißt du wirklich abbrechen?",
+                            discard_confirm_label: "Verwerfn"
                         },
                         expandable_textarea: {
                             default_title: "Bearbeiten"
@@ -2783,7 +2786,8 @@ i18n
 
                             // Discard confirmation
                             discard_title: "Annuler les modifications ?",
-                            discard_message: "Vous avez des modifications non enregistrées. Voulez-vous vraiment annuler ?"
+                            discard_message: "Vous avez des modifications non enregistrées. Voulez-vous vraiment annuler ?",
+                            discard_confirm_label: "Annuler les modifications"
                         },
                         expandable_textarea: {
                             default_title: "Modifier"
@@ -3510,7 +3514,8 @@ i18n
 
                             // Discard confirmation
                             discard_title: "Скасувати зміни?",
-                            discard_message: "У вас є незбережені зміни. Ви впевнені, що хочете скасувати?"
+                            discard_message: "У вас є незбережені зміни. Ви впевнені, що хочете скасувати?",
+                            discard_confirm_label: "Скасувати зміни"
                         },
                         expandable_textarea: {
                             default_title: "Редагувати"

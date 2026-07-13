@@ -9,10 +9,7 @@ import {
     Book24Regular,
     Sparkle24Regular,
     DocumentText24Regular,
-    TargetArrow24Regular,
-    Color24Regular,
     Person24Regular,
-    Scales24Regular,
     MoreVertical20Regular,
     ArrowExportUp20Regular
 } from "@fluentui/react-icons";
@@ -22,6 +19,7 @@ import styles from "./AssistantDetailsSidebar.module.css";
 import { Assistant, AssistantResponse, CommunityAssistant, CommunityAssistantSnapshot, OwnerDetailsResponse, ToolBase } from "../../api/models";
 import { MarkdownRenderer } from "../MarkdownRenderer/MarkdownRenderer";
 import { EdelweissSpinner } from "../EdelweissSpinner";
+import { CREATIVITY_MEDIUM } from "../../constants";
 import { getCreativityOption } from "../../utils/creativityOptions";
 
 export interface AssistantCardData {
@@ -79,30 +77,7 @@ export const AssistantDetailsSidebar = ({
             ? (assistant.rawData as CommunityAssistantSnapshot | Assistant)
             : undefined;
 
-    const getCreativityConfig = (creativity: string) => {
-        switch (creativity.toLowerCase()) {
-            case "low":
-                return {
-                    text: t("components.chattsettingsdrawer.creativity_low"),
-                    icon: <TargetArrow24Regular />,
-                    description: t("components.chattsettingsdrawer.creativity_low_description")
-                };
-            case "high":
-                return {
-                    text: t("components.chattsettingsdrawer.creativity_high"),
-                    icon: <Color24Regular />,
-                    description: t("components.chattsettingsdrawer.creativity_high_description")
-                };
-            default:
-                return {
-                    text: t("components.chattsettingsdrawer.creativity_medium"),
-                    icon: <Scales24Regular />,
-                    description: t("components.chattsettingsdrawer.creativity_medium_description")
-                };
-        }
-    };
-
-    const assistantCreativity = latestVersion?.creativity || snapshot?.creativity || "balanced";
+    const assistantCreativity = latestVersion?.creativity || snapshot?.creativity || CREATIVITY_MEDIUM;
     const creativityConfig = getCreativityOption(t, assistantCreativity);
 
     const enabledTools = (latestVersion?.tools || snapshot?.tools || []).filter((tool: ToolBase) => tool.config?.enabled);

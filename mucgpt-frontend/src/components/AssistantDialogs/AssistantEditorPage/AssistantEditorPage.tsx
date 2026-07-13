@@ -574,7 +574,12 @@ export const AssistantEditorPage = (props: AssistantEditorPageProps) => {
                 </div>
             )}
 
-            <CloseConfirmationDialog open={discardOpen} onOpenChange={setDiscardOpen} onConfirmClose={handleDiscardConfirm} />
+            <CloseConfirmationDialog
+                open={discardOpen}
+                onOpenChange={setDiscardOpen}
+                onConfirmClose={handleDiscardConfirm}
+                confirmLabel={t("components.assistant_editor.discard_confirm_label")}
+            />
         </div>
     );
 };

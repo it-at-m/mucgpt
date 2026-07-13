@@ -70,7 +70,7 @@ This directory contains the Docker Compose configuration for running the complet
 │                    │  └──────┬─────┘  │   │            │         │
 │                    │         │        │   │ ┌────────┐ │         │
 │                    │  ┌──────▼─────┐  │   │ │pgAdmin │ │         │
-│                    │  │ kreuzberg- │  │   │ │:5050   │ │         │
+│                    │  │ xberg -    │  │   │ |:5050   │ │         │
 │                    │  │ full :8000 │  │   │ └────────┘ │         │
 │                    │  └────────────┘  │   │            │         │
 │                    │                  │   │ ┌────────┐ │         │
@@ -100,7 +100,7 @@ This directory contains the Docker Compose configuration for running the complet
 | **keycloak** | 8100 | Identity and access management |
 | **valkey** | 6379 | In-memory data store (Redis-compatible) |
 | **refarch-gateway** | 8083 | API Gateway with OAuth2/OIDC |
-| **kreuzberg-full** | 8086 | Document extraction service |
+| **xberg-full** | 8086 | Document extraction service |
 
 ### Application Services
 

@@ -1,3 +1,4 @@
+import importlib
 import uuid
 
 import pytest
@@ -13,6 +14,8 @@ from api.api_models import (
 )
 from database.assistant_repo import AssistantRepository
 from database.database_models import AssistantTool
+
+assistants_router_module = importlib.import_module("api.routers.assistants_router")
 
 # Headers for authentication
 headers = {
@@ -502,6 +505,52 @@ def test_create_assistant_with_different_models(test_client):
         assistant_response = AssistantResponse.model_validate(response_data)
 
         assert assistant_response.latest_version.default_model == model_name
+
+
+@pytest.mark.integration
+def test_get_assistant_includes_owners_detailed(test_client, monkeypatch):
+    async def _fake_owner_details(owner_ids, cache=None, owners=None):
+        return [
+            {
+                "user_id": owner_id,
+                "username": f"User {owner_id}",
+                "contact_address": f"{owner_id}@example.org",
+                "givenName": "Test",
+                "sn": "User",
+                "mail": f"{owner_id}@example.org",
+                "organizationalunit": "IT-Test-Department",
+            }
+            for owner_id in owner_ids
+        ]
+
+    monkeypatch.setattr(
+        assistants_router_module,
+        "build_owner_details",
+        _fake_owner_details,
+    )
+
+    create_payload = AssistantCreate(
+        name="Owner Detail Assistant",
+        system_prompt="Owner detail test assistant.",
+        owner_ids=["other_user_456"],
+    )
+
+    create_response = test_client.post(
+        "assistant/create",
+        json=create_payload.model_dump(),
+        headers=headers,
+    )
+    assert create_response.status_code == 200
+    assistant_id = create_response.json()["id"]
+
+    get_response = test_client.get(f"assistant/{assistant_id}", headers=headers)
+    assert get_response.status_code == 200
+
+    response_data = get_response.json()
+    assert "owners_detailed" in response_data
+    assert len(response_data["owners_detailed"]) >= 1
+    assert "username" in response_data["owners_detailed"][0]
+    assert "contact_address" in response_data["owners_detailed"][0]
 
 
 @pytest.fixture

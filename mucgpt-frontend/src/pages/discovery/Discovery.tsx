@@ -16,6 +16,7 @@ import { useGlobalToastContext } from "../../components/GlobalToastHandler/Globa
 import { DiscoveryCard } from "../../components/DiscoveryCard/DiscoveryCard";
 import type { DiscoveryCardBadge } from "../../components/DiscoveryCard/DiscoveryCard";
 import { DiscoveryCardSkeleton } from "../../components/DiscoveryCard/DiscoveryCardSkeleton";
+import { OwnerMetadataLink, getPrimaryOwnerDetails } from "../../components/OwnerMetadataLink/OwnerMetadataLink";
 import { AssistantDetailsSidebar, AssistantCardData } from "../../components/AssistantDetailsSidebar/AssistantDetailsSidebar";
 import { CloseConfirmationDialog } from "../../components/AssistantDialogs/shared/CloseConfirmationDialog";
 import { useUnifiedHistory } from "../../components/UnifiedHistory";
@@ -279,11 +280,8 @@ const Discovery = () => {
         return false;
     };
 
-    const getMetadataStartLabel = (assistant: AssistantCardData): string | undefined => {
-        return assistant.isOwnedAssistant
-            ? t("components.community_assistants.metadata_you", "Du")
-            : t("components.community_assistants.filter_all", "Community");
-    };
+    const getMetadataFallbackLabel = (assistant: AssistantCardData): string =>
+        assistant.isOwnedAssistant ? t("components.community_assistants.metadata_you", "Du") : t("components.community_assistants.filter_all", "Community");
 
     const handleAssistantClick = async (assistant: AssistantCardData) => {
         if (closeTimerRef.current !== null) {
@@ -423,7 +421,12 @@ const Discovery = () => {
             title={assistant.title}
             description={assistant.description}
             badges={getAssistantBadges(assistant)}
-            metadataStartLabel={getMetadataStartLabel(assistant)}
+            metadataStartNode={
+                <OwnerMetadataLink
+                    owner={getPrimaryOwnerDetails("latest_version" in assistant.rawData ? assistant.rawData : undefined)}
+                    fallbackLabel={getMetadataFallbackLabel(assistant)}
+                />
+            }
             subscriberCount={assistant.subscriptions}
             isPrivate={isAssistantPrivate(assistant)}
             privateLabel={t("components.community_assistants.private_label", "Privat")}

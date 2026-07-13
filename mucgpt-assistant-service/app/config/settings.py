@@ -67,6 +67,22 @@ class LDAPConfig(BaseModel):
     PAGE_SIZE: int = 500
     CONNECT_TIMEOUT: float = 5.0
     READ_TIMEOUT: float = 10.0
+    USER_SEARCH_BASE: str | None = None
+    USER_SEARCH_FILTER: str = "(objectClass=person)"
+    USER_SEARCH_ATTRIBUTES: list[str] = Field(
+        default_factory=lambda: [
+            "givenName",
+            "sn",
+            "mail",
+            "lhmobjectid",
+            "organizationalunit",
+        ]
+    )
+    USER_ID_ATTRIBUTE: str = "lhmobjectid"
+    USER_GIVEN_NAME_ATTRIBUTE: str = "givenName"
+    USER_SURNAME_ATTRIBUTE: str = "sn"
+    USER_MAIL_ATTRIBUTE: str = "mail"
+    USER_ORGANIZATIONAL_UNIT_ATTRIBUTE: str = "organizationalunit"
 
 
 # Backward-compatible aliases so existing imports keep working
@@ -97,6 +113,7 @@ class Settings(BaseSettings):
     # General settings
     UNAUTHORIZED_USER_REDIRECT_URL: str = ""
     LOG_CONFIG: str = str(Path(__file__).resolve().parent.parent / "logconf.yaml")
+    OWNER_CACHE_REFRESH_ON_READ: bool = False
 
     # Nested sub-configurations
     DB: DBConfig

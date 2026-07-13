@@ -19,7 +19,15 @@ def _entry(dn: str, name: str) -> dict[str, object]:
 def test_tree_builder_ignores_prefix_and_suffix() -> None:
     entries = [
         _entry("ou=_System,ou=ROOT,o=example", "_System"),
-        _entry("ou=Finance-xxx,ou=ROOT,o=example", "Finance-xxx"),
+        {
+            "dn": "ou=Finance-xxx,ou=ROOT,o=example",
+            "attributes": {
+                "ou": ["Finance-xxx"],
+                "distinguishedName": "ou=Finance-xxx,ou=ROOT,o=example",
+                "lhmOULongname": ["Finance legacy"],
+                # no shortname -> should remain excluded by suffix rule
+            },
+        },
         _entry("ou=Finance,ou=ROOT,o=example", "Finance"),
     ]
     builder = OrganizationTreeBuilder(
@@ -36,6 +44,74 @@ def test_tree_builder_ignores_prefix_and_suffix() -> None:
     root = roots[0]
     assert [child.name for child in root.children] == ["ROOT"]
     assert [child.name for child in root.children[0].children] == ["Finance"]
+
+
+def test_suffix_xxx_with_shortname_is_kept() -> None:
+    entries = [
+        _entry("ou=Finance-xxx,ou=ROOT,o=example", "Finance-xxx"),
+        _entry("ou=Finance,ou=ROOT,o=example", "Finance"),
+    ]
+
+    builder = OrganizationTreeBuilder(
+        search_base="o=example",
+        ignored_suffixes=["-xxx"],
+    )
+
+    roots = builder.build(entries)
+    builder.sort_children(roots)
+
+    assert [node.name for node in roots] == ["example"]
+    root = roots[0]
+    assert [child.name for child in root.children] == ["ROOT"]
+    assert set(child.name for child in root.children[0].children) == {
+        "Finance",
+        "Finance-xxx",
+    }
+
+
+def test_ignore_prefix_can_be_bypassed_by_shortname_exception() -> None:
+    entries = [
+        {
+            "dn": "ou=_Hidden,ou=GSR,o=example",
+            "attributes": {
+                "ou": ["_Hidden"],
+                "distinguishedName": "ou=_Hidden,ou=GSR,o=example",
+                "lhmOULongname": ["Hidden Unit"],
+                "lhmOUShortname": ["FBM"],
+            },
+        },
+        {
+            "dn": "ou=Another,ou=GSR,o=example",
+            "attributes": {
+                "ou": ["Another"],
+                "distinguishedName": "ou=Another,ou=GSR,o=example",
+                "lhmOULongname": ["Another"],
+                "lhmOUShortname": ["ANOTHER"],
+            },
+        },
+        _entry("ou=Child,ou=_Hidden,ou=GSR,o=example", "Child"),
+    ]
+
+    builder = OrganizationTreeBuilder(
+        search_base="o=example",
+        ignored_prefixes=["_"],
+        ignored_shortname_exceptions=["FBM"],
+    )
+
+    roots = builder.build(entries)
+    builder.sort_children(roots)
+
+    assert [node.name for node in roots] == ["example"]
+    root = roots[0]
+    assert [child.name for child in root.children] == ["GSR"]
+    assert set(child.name for child in root.children[0].children) == {
+        "_Hidden",
+        "Another",
+    }
+    hidden_node = next(
+        child for child in root.children[0].children if child.name == "_Hidden"
+    )
+    assert [child.name for child in hidden_node.children] == ["Child"]
 
 
 def test_children_of_ignored_nodes_are_dropped() -> None:

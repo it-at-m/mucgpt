@@ -60,6 +60,55 @@ TEST_TREE = [
     },
 ]
 
+FALLBACK_TREE = [
+    {
+        "shortname": "KR",
+        "name": "Kommunalreferat",
+        "children": [
+            {
+                "shortname": "KR-BB",
+                "name": "Betriebsbereich",
+                "children": [
+                    {
+                        "shortname": None,
+                        "name": "Abfallwirtschaftsbetrieb München (AWM)",
+                        "children": [
+                            {
+                                "shortname": "AWM-PI",
+                                "name": "Abteilung Personal, Organisation und IT (PI)",
+                                "children": [
+                                    {
+                                        "shortname": "PI-IT",
+                                        "name": "Unterabteilung IT-Service (PI-IT)",
+                                        "children": [],
+                                    }
+                                ],
+                            }
+                        ],
+                    }
+                ],
+            }
+        ],
+    },
+    {
+        "shortname": None,
+        "name": "Kulturreferat",
+        "children": [
+            {
+                "shortname": "KULT-BIB",
+                "name": "Münchner Stadtbibliothek",
+                "children": [
+                    {
+                        "shortname": "KULT-BIB-ZB",
+                        "name": "Zentralbibliothek",
+                        "children": [],
+                    }
+                ],
+            }
+        ],
+    },
+]
+
 
 @pytest.mark.asyncio
 async def test_tree_exact_and_ancestor_match():
@@ -102,3 +151,17 @@ async def test_case_insensitive_tree_match():
 async def test_empty_access_path_allows_all():
     assert await path_matches_department("", "ANY-DEPT", directory_tree=TEST_TREE)
     assert await path_matches_department("", "", directory_tree=TEST_TREE)
+
+
+@pytest.mark.asyncio
+async def test_access_alias_and_department_suffix_fallback():
+    assert await path_matches_department(
+        "AWM", "AWM-PI-IT", directory_tree=FALLBACK_TREE
+    )
+
+
+@pytest.mark.asyncio
+async def test_access_family_fallback_for_null_shortname_parent():
+    assert await path_matches_department(
+        "KULT", "KULT-BIB-ZB", directory_tree=FALLBACK_TREE
+    )

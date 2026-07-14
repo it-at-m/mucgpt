@@ -30,6 +30,7 @@ export interface DiscoveryCardProps extends CardProps {
     titleClassName?: string;
     isSelected?: boolean;
     metadataStartLabel?: string;
+    metadataStartNode?: ReactNode;
     subscriberCount?: number;
     isPrivate?: boolean;
     privateLabel?: string;
@@ -61,6 +62,7 @@ export const DiscoveryCard = forwardRef<HTMLDivElement, DiscoveryCardProps>((pro
         titleClassName,
         isSelected,
         metadataStartLabel,
+        metadataStartNode,
         subscriberCount,
         isPrivate,
         privateLabel = "Private",
@@ -137,7 +139,7 @@ export const DiscoveryCard = forwardRef<HTMLDivElement, DiscoveryCardProps>((pro
 
     const renderMetadata = () => {
         const hasSubscriberCount = typeof subscriberCount === "number";
-        const hasMetadata = Boolean(metadataStartLabel) || isPrivate || hasSubscriberCount;
+        const hasMetadata = Boolean(metadataStartNode) || Boolean(metadataStartLabel) || isPrivate || hasSubscriberCount;
 
         if (!hasMetadata) {
             return null;
@@ -147,7 +149,7 @@ export const DiscoveryCard = forwardRef<HTMLDivElement, DiscoveryCardProps>((pro
             <div className={styles.metadataBlock}>
                 <div className={styles.metadataDivider} aria-hidden="true" />
                 <div className={styles.metadataRow}>
-                    <span className={styles.metadataStart}>{metadataStartLabel}</span>
+                    <span className={styles.metadataStart}>{metadataStartNode || metadataStartLabel}</span>
                     {isPrivate ? (
                         <span className={styles.metadataEnd}>
                             <LockClosed16Regular aria-hidden="true" />

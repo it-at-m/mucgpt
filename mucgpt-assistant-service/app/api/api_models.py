@@ -2,13 +2,16 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Any
+from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field  # added ConfigDict
 
 CREATIVITY_LOW = "low"
 CREATIVITY_MEDIUM = "medium"
 CREATIVITY_HIGH = "high"
+
+AssistantListSortBy = Literal["title", "updated", "subscriptions"]
+AssistantListSortOrder = Literal["asc", "desc"]
 
 
 class ExampleModel(BaseModel):
@@ -59,6 +62,60 @@ class DirectoryNode(BaseModel):
                 ],
             }
         }
+    )
+
+
+class UserLookupResponse(BaseModel):
+    """Response payload for LDAP user lookup by lhmobjectid."""
+
+    lhmobjectid: str = Field(..., description="LHM object id", example="123456789")
+    givenName: str | None = Field(
+        None, description="User first name from LDAP", example="Max"
+    )
+    sn: str | None = Field(
+        None, description="User surname from LDAP", example="Mustermann"
+    )
+    mail: str | None = Field(
+        None,
+        description="User contact email address from LDAP",
+        example="max.mustermann@muenchen.de",
+    )
+    organizationalunit: str | None = Field(
+        None,
+        description="Organizational unit value from LDAP",
+        example="RIT-GL5",
+    )
+
+
+class OwnerDetailsResponse(BaseModel):
+    """Enriched owner information resolved from LDAP."""
+
+    user_id: str = Field(
+        ..., description="Owner user id (lhmobjectid)", example="12345"
+    )
+    username: str = Field(
+        ..., description="Display-friendly owner name", example="Max Mustermann"
+    )
+    contact_address: str | None = Field(
+        None,
+        description="Primary contact address of the owner",
+        example="max.mustermann@muenchen.de",
+    )
+    givenName: str | None = Field(
+        None, description="Owner given name from LDAP", example="Max"
+    )
+    sn: str | None = Field(
+        None, description="Owner surname from LDAP", example="Mustermann"
+    )
+    mail: str | None = Field(
+        None,
+        description="Owner email address from LDAP",
+        example="max.mustermann@muenchen.de",
+    )
+    organizationalunit: str | None = Field(
+        None,
+        description="Owner organizational unit from LDAP",
+        example="RIT-GL5",
     )
 
 
@@ -403,6 +460,10 @@ class AssistantVersionResponse(AssistantBase):
         description="Timestamp when this version was created",
         example="2025-06-18T10:30:00Z",
     )
+    owners_detailed: list[OwnerDetailsResponse] | None = Field(
+        None,
+        description="Owner details enriched from LDAP",
+    )
 
 
 class AssistantResponse(BaseModel):
@@ -443,6 +504,10 @@ class AssistantResponse(BaseModel):
         [],
         description="List of ids who will owner this assistant",
         example=["12345", "67890"],
+    )
+    owners_detailed: list[OwnerDetailsResponse] | None = Field(
+        None,
+        description="Owner details enriched from LDAP",
     )
     subscriptions_count: int = Field(
         0,
@@ -532,6 +597,26 @@ class SubscriptionResponse(BaseModel):
         description="A brief description of the assistant's purpose",
         example="An AI assistant specialized in providing technical support for software issues",
     )
+    updated_at: datetime | None = Field(
+        None,
+        description="Timestamp when the subscribed assistant was last updated",
+        example="2025-06-18T15:45:00Z",
+    )
+    subscriptions_count: int = Field(
+        0,
+        description="Number of users subscribed to this assistant",
+        example=42,
+    )
+    tags: list[str] = Field(
+        default_factory=list,
+        description="Tags of the subscribed assistant's latest version",
+        example=["support", "technical"],
+    )
+    is_visible: bool = Field(
+        True,
+        description="Whether this assistant is publicly listed in the UI",
+        example=True,
+    )
 
     # replaced inner Config with model_config
     model_config = ConfigDict(
@@ -541,6 +626,10 @@ class SubscriptionResponse(BaseModel):
                 "id": "123e4567-e89b-12d3-a456-426614174000",
                 "title": "Technical Support Assistant",
                 "description": "An AI assistant specialized in providing technical support for software issues",
+                "updated_at": "2025-06-18T15:45:00Z",
+                "subscriptions_count": 42,
+                "tags": ["support", "technical"],
+                "is_visible": True,
             }
         },
     )

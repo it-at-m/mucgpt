@@ -152,6 +152,16 @@ export interface ToolBase {
     config?: Record<string, any>;
 }
 
+export interface OwnerDetailsResponse {
+    user_id: string;
+    username: string;
+    contact_address?: string | null;
+    givenName?: string | null;
+    sn?: string | null;
+    mail?: string | null;
+    organizationalunit?: string | null;
+}
+
 export interface StarterPromptInput {
     text: string;
     value: string;
@@ -184,6 +194,7 @@ export interface AssistantVersionResponse {
     default_model?: string;
     tools?: ToolBase[];
     owner_ids?: string[];
+    owners_detailed?: OwnerDetailsResponse[];
     examples?: StarterPromptInput[];
     quick_prompts?: FollowUpActionModel[];
     tags?: string[];
@@ -196,6 +207,7 @@ export interface AssistantCreateResponse {
     updated_at: string;
     hierarchical_access?: string[];
     owner_ids?: string[];
+    owners_detailed?: OwnerDetailsResponse[];
     latest_version: AssistantVersionResponse;
 }
 
@@ -222,6 +234,7 @@ export interface AssistantResponse {
     subscriptions_count: number;
     hierarchical_access?: string[];
     owner_ids?: string[];
+    owners_detailed?: OwnerDetailsResponse[];
     latest_version: AssistantVersionResponse;
     is_visible: boolean;
 }
@@ -256,6 +269,10 @@ export type CommunityAssistant = {
     title: string;
     description: string;
     id: string;
+    updated_at?: string;
+    subscriptions_count?: number;
+    tags?: string[];
+    is_visible?: boolean;
 };
 
 export type CommunityAssistantSnapshot = {

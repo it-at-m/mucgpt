@@ -45,7 +45,7 @@ class TestParsingRouter:
             patch("api.routers.parsing_router.settings") as mock_settings,
             patch("api.routers.parsing_router._parser", mock_parser),
         ):
-            mock_settings.PARSER_BACKEND = ParserBackendType.KREUZBERG
+            mock_settings.PARSER_BACKEND = ParserBackendType.XBERG
             response = test_client.post(
                 "/v1/parse",
                 files={
@@ -74,7 +74,7 @@ class TestParsingRouter:
             patch("api.routers.parsing_router.settings") as mock_settings,
             patch("api.routers.parsing_router._parser", mock_parser),
         ):
-            mock_settings.PARSER_BACKEND = ParserBackendType.KREUZBERG
+            mock_settings.PARSER_BACKEND = ParserBackendType.XBERG
             test_client.post(
                 "/v1/parse",
                 files={
@@ -92,7 +92,7 @@ class TestParsingRouter:
     def test_parse_requires_authentication(self, unauthenticated_client: TestClient):
         """With an invalid token, the endpoint should reject the request with 401."""
         with patch("api.routers.parsing_router.settings") as mock_settings:
-            mock_settings.PARSER_BACKEND = ParserBackendType.KREUZBERG
+            mock_settings.PARSER_BACKEND = ParserBackendType.XBERG
             response = unauthenticated_client.post(
                 "/v1/parse",
                 files={"file": ("test.txt", b"hello", "text/plain")},
@@ -111,7 +111,7 @@ class TestParsingRouter:
             patch("api.routers.parsing_router.settings") as mock_settings,
             patch("api.routers.parsing_router._parser", mock_parser),
         ):
-            mock_settings.PARSER_BACKEND = ParserBackendType.KREUZBERG
+            mock_settings.PARSER_BACKEND = ParserBackendType.XBERG
             # raise_server_exceptions=False makes the test client return a 500
             # response instead of re-raising the exception in the test process.
             with TestClient(api_app, raise_server_exceptions=False) as error_client:
@@ -132,7 +132,7 @@ class TestParsingRouter:
             patch("api.routers.parsing_router.settings") as mock_settings,
             patch("api.routers.parsing_router._parser", mock_parser),
         ):
-            mock_settings.PARSER_BACKEND = ParserBackendType.KREUZBERG
+            mock_settings.PARSER_BACKEND = ParserBackendType.XBERG
             response = test_client.post(
                 "/v1/parse",
                 files={"file": ("slow.pdf", b"pdf bytes", "application/pdf")},
@@ -153,7 +153,7 @@ class TestParsingRouter:
             patch("api.routers.parsing_router.settings") as mock_settings,
             patch("api.routers.parsing_router._parser", mock_parser),
         ):
-            mock_settings.PARSER_BACKEND = ParserBackendType.KREUZBERG
+            mock_settings.PARSER_BACKEND = ParserBackendType.XBERG
             response = test_client.post(
                 "/v1/parse",
                 files={"file": ("unreachable.pdf", b"pdf bytes", "application/pdf")},
@@ -182,7 +182,7 @@ class TestParsingRouter:
             patch("api.routers.parsing_router.settings") as mock_settings,
             patch("api.routers.parsing_router._parser", mock_parser),
         ):
-            mock_settings.PARSER_BACKEND = ParserBackendType.KREUZBERG
+            mock_settings.PARSER_BACKEND = ParserBackendType.XBERG
             response = test_client.post(
                 "/v1/parse",
                 files={"file": ("bad.pdf", b"pdf bytes", "application/pdf")},

@@ -407,7 +407,7 @@ class ConfigResponse(BaseModel):
     assistant_version: str
     document_processing_enabled: bool = Field(
         False,
-        description="Whether document upload and parsing is enabled. True when a parser backend (e.g. Kreuzberg) is configured.",
+        description="Whether document upload and parsing is enabled. True when a parser backend (e.g. Xberg) is configured.",
     )
     transcription_enabled: bool = Field(
         False,

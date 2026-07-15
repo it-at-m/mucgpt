@@ -144,6 +144,8 @@ interface SettingsFormProps {
     setPublishDepartments: (departments: string[]) => void;
     setInvisibleChecked: (invisible: boolean) => void;
     onHasChanged?: (changed: boolean) => void;
+    // Fired only when the system prompt changes, so the compliance confirmation can be invalidated selectively.
+    onSystemPromptChanged?: () => void;
     confirmed: boolean;
     confirmationResetKey: number;
     onConfirmedChange: (confirmed: boolean) => void;
@@ -205,6 +207,7 @@ function SettingsForm(props: SettingsFormProps) {
                             onChange={v => {
                                 props.onSystemPromptChange(v);
                                 props.onHasChanged?.(true);
+                                props.onSystemPromptChanged?.();
                             }}
                             disabled={!props.isOwner}
                             dialogTitle={t("components.assistant_editor.system_prompt")}
@@ -480,20 +483,24 @@ export const AssistantEditorPage = (props: AssistantEditorPageProps) => {
         }
     }, [createState, LLM.llm_name, loading, showError, showSuccess, t]);
 
-    // Any change to the assistant invalidates the compliance confirmation and resets the edit "hasChanged" flag.
+    // Any change to the assistant marks the edit "hasChanged" flag (used for discard detection).
     const handleHasChanged = useCallback(
         (changed: boolean) => {
             if (!changed) return;
-            setReviewConfirmed(prev => {
-                if (prev) setReviewResetKey(key => key + 1);
-                return false;
-            });
             if (!isCreate) {
                 editState.setHasChanged?.(true);
             }
         },
         [isCreate, editState]
     );
+
+    // Only changes to the system prompt invalidate the compliance confirmation, forcing the user to re-confirm.
+    const handleSystemPromptChanged = useCallback(() => {
+        setReviewConfirmed(prev => {
+            if (prev) setReviewResetKey(key => key + 1);
+            return false;
+        });
+    }, []);
 
     const pageTitle = isCreate ? t("components.assistant_editor.create_title") : t("components.assistant_editor.edit_title");
     const pageHelper = isCreate ? t("components.assistant_editor.page_helper_create") : t("components.assistant_editor.page_helper_edit");
@@ -588,6 +595,7 @@ export const AssistantEditorPage = (props: AssistantEditorPageProps) => {
                         setPublishDepartments={settingsState.updateHierarchicalAccess}
                         setInvisibleChecked={invisible => settingsState.updateIsVisible(!invisible)}
                         onHasChanged={handleHasChanged}
+                        onSystemPromptChanged={handleSystemPromptChanged}
                         confirmed={reviewConfirmed}
                         confirmationResetKey={reviewResetKey}
                         onConfirmedChange={setReviewConfirmed}

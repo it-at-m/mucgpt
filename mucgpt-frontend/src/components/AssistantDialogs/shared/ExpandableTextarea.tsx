@@ -123,8 +123,8 @@ export function ExpandableTextarea({ value, onChange, placeholder, rows, disable
                         </DialogTitle>
                         <DialogContent className={styles.dialogContent}>
                             <Textarea
-                                style={{ flex: 1, width: "100%", display: "flex" }}
-                                textarea={{ ref: dialogTextareaRef, style: { flex: 1, maxHeight: "none" } }}
+                                className={styles.dialogTextarea}
+                                textarea={{ ref: dialogTextareaRef, className: styles.dialogTextareaInner }}
                                 value={dialogDraft}
                                 placeholder={placeholder}
                                 resize="none"

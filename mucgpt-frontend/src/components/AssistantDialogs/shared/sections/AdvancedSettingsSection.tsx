@@ -1,9 +1,10 @@
-import { DialogContent, Field, InfoLabel, Dropdown, Option, type OptionOnSelectData, type SelectionEvents } from "@fluentui/react-components";
+import { DialogContent, Divider, Field, Dropdown, Option, Text, type OptionOnSelectData, type SelectionEvents } from "@fluentui/react-components";
 import { useTranslation } from "react-i18next";
 import { useCallback, useContext } from "react";
 import { LLMContext } from "../../../LLMSelector/LLMContextProvider";
 import sharedStyles from "../AssistantDialog.module.css";
-import { CREATIVITY_HIGH, CREATIVITY_LOW, CREATIVITY_MEDIUM } from "../../../../constants";
+import styles from "./AdvancedSettingsSection.module.css";
+import { CreativityRadioGroup } from "../../../CreativityRadioGroup/CreativityRadioGroup";
 
 interface AdvancedSettingsSectionProps {
     creativity: string;
@@ -25,14 +26,13 @@ export const AdvancedSettingsSection = ({
     const { t } = useTranslation();
     const { availableLLMs } = useContext(LLMContext);
 
-    // Creativity change
-    const onCreativityChangeHandler = useCallback(
-        (_ev: SelectionEvents, data: OptionOnSelectData) => {
-            if (!data.optionValue) return;
-            onCreativityChange(data.optionValue);
+    const onCreativitySelect = useCallback(
+        (nextCreativity: string) => {
+            if (nextCreativity === creativity) return;
+            onCreativityChange(nextCreativity);
             onHasChanged?.(true);
         },
-        [onCreativityChange, onHasChanged]
+        [creativity, onCreativityChange, onHasChanged]
     );
 
     // Model change
@@ -45,46 +45,31 @@ export const AdvancedSettingsSection = ({
         [onDefaultModelChange, onHasChanged]
     );
 
-    const creativityMap: Record<string, string> = {
-        [CREATIVITY_LOW]: t("components.assistant_editor.creativity_low"),
-        [CREATIVITY_MEDIUM]: t("components.assistant_editor.creativity_medium"),
-        [CREATIVITY_HIGH]: t("components.assistant_editor.creativity_high")
-    };
     const noDefaultModelOptionValue = "none";
     const noDefaultModelLabel = t("components.assistant_editor.no_default_model");
     const defaultModelValue = defaultModel ? availableLLMs.find(model => model.llm_name === defaultModel)?.llm_name || defaultModel : noDefaultModelLabel;
     const selectedDefaultModelOptions = defaultModel ? [defaultModelValue] : [noDefaultModelOptionValue];
 
     return (
-        <DialogContent>
-            <Field size="large" className={sharedStyles.fieldSection}>
-                <label className={sharedStyles.formLabel}>
-                    <InfoLabel info={<div>{t("components.chattsettingsdrawer.creativity_info")}</div>}>{t("components.assistant_editor.creativity")}</InfoLabel>
-                </label>
-                <Dropdown
-                    placeholder={t("components.assistant_editor.creativity_placeholder")}
-                    value={creativityMap[creativity] || creativity}
-                    selectedOptions={[creativity]}
-                    onOptionSelect={onCreativityChangeHandler}
+        <DialogContent className={styles.advancedContent}>
+            <Field size="large" className={`${sharedStyles.fieldSection} ${styles.compactField}`}>
+                <label className={sharedStyles.formLabel}>{t("components.assistant_editor.creativity")}</label>
+                <Text as="p" size={200} className={styles.fieldDescription}>
+                    {t("components.assistant_editor.creativity_description")}
+                </Text>
+                <CreativityRadioGroup
+                    value={creativity}
+                    onChange={onCreativitySelect}
                     disabled={!isOwner}
-                >
-                    <Option key={CREATIVITY_LOW} value={CREATIVITY_LOW}>
-                        {t("components.assistant_editor.creativity_low")}
-                    </Option>
-                    <Option key={CREATIVITY_MEDIUM} value={CREATIVITY_MEDIUM}>
-                        {t("components.assistant_editor.creativity_medium")}
-                    </Option>
-                    <Option key={CREATIVITY_HIGH} value={CREATIVITY_HIGH}>
-                        {t("components.assistant_editor.creativity_high")}
-                    </Option>
-                </Dropdown>
+                    ariaLabel={t("components.assistant_editor.creativity")}
+                />
             </Field>
-            <Field size="large" className={sharedStyles.fieldSection}>
-                <label className={sharedStyles.formLabel}>
-                    <InfoLabel info={<div>{t("components.assistant_editor.default_model_info")}</div>}>
-                        {t("components.assistant_editor.default_model")}
-                    </InfoLabel>
-                </label>
+            <Divider />
+            <Field size="large" className={`${sharedStyles.fieldSection} ${styles.compactField}`}>
+                <label className={sharedStyles.formLabel}>{t("components.assistant_editor.default_model")}</label>
+                <Text as="p" size={200} className={`${styles.fieldDescription} ${styles.defaultModelDescription}`}>
+                    {t("components.assistant_editor.default_model_description")}
+                </Text>
                 <Dropdown
                     placeholder={t("components.assistant_editor.default_model_placeholder")}
                     value={defaultModelValue}

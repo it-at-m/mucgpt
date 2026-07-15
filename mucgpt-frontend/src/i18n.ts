@@ -345,21 +345,7 @@ i18n
                             removedocument: "Dokument löschen"
                         },
                         chattsettingsdrawer: {
-                            title: "Chat Einstellungen",
-                            creativity: "Kreativität",
-                            creativity_low: "Niedrig",
-                            creativity_medium: "Normal",
-                            creativity_high: "Hoch",
-                            creativity_low_description: "Konzentriert sich auf Genauigkeit und sachliche Antworten",
-                            creativity_medium_description: "Hält einen neutralen und informativen Ton bei",
-                            creativity_high_description: "Fördert besonders kreative und vielfältige Antworten",
-                            creativity_info: `bestimmt, wie kreativ oder vorhersehbar die Antworten des Sprachmodells sind. "low" liefert konservative und genaue Antworten, "Normal" ist ausgewogen, und "Hoch" führt zu kreativeren und unvorhersehbareren Antworten.`,
-                            max_lenght: "Maximale Antwortlänge",
-                            max_lenght_info: "Wie viele Token dürfen maximal bei einer Antwort generiert werden.",
-                            system_prompt_clear: "System-Prompt löschen",
-                            system_prompt: "System-Prompt",
-                            system_prompt_info:
-                                "sind vordefinierte Abfragen oder Anweisungen, die dazu dienen, die Antworten von MUCGPT gezielter und kontrollierter zu gestalten. Dabei nimmt die KI oft eine bestimmte Rolle ein, antwortet in einem bestimmten Format oder beachtet andere Einschränkungen."
+                            title: "Chat Einstellungen"
                         },
                         assistantsettingsdrawer: {
                             expand: "Ansicht erweitern",
@@ -491,25 +477,33 @@ i18n
                             default_assistant_title: "Assistent",
                             default_assistant_description: "Assistent",
                             system_prompt: "System-Prompt",
+                            system_prompt_description:
+                                "Die Grundanweisung für den Assistenten. Sie legt seine Rolle, Aufgaben und Verhaltensregeln für Antworten fest.",
                             prompt_placeholder:
-                                "# Anforderung\n# Schritte\n# Output Format\n# Beispiele\n\nZum Beispiel:\nStelle sicher, dass die Übersetzung den ursprünglichen Satzbau und die Bedeutung beibehält. Achte auf kontextabhängige Wörter und kulturelle Unterschiede die möglicherweise vorliegen könnten.",
+                                "Du bist ein Assistent für E-Mails.\n\nAufgabe:\nSchreibe kurze und höfliche Entwürfe.\n\nRegeln:\n- Verwende die Höflichkeitsform (Sie).\n- Fasse dich kurz.",
 
                             // Settings section headers
                             section_basic: "Grundlegende Informationen",
-                            section_behaviour: "Verhalten & Konfiguration",
+                            section_instructions: "Instruktionen",
+                            section_behaviour: "Modell & Generierung",
                             section_tools: "Werkzeuge",
                             section_conversation_options: "Unterhaltungsoptionen",
                             section_access: "Zugriff & Sichtbarkeit",
 
                             // Advanced settings fields
-                            creativity: "Kreativität",
-                            creativity_placeholder: "Wählen Sie eine Kreativitätsstufe...",
-                            creativity_low: "Aus (konservativ)",
-                            creativity_medium: "Normal (ausgewogen)",
-                            creativity_high: "Hoch (kreativ)",
+                            creativity: "Antwortstil",
+                            creativity_placeholder: "Wählen Sie einen Antwortstil...",
+                            creativity_low: "Präzise",
+                            creativity_medium: "Ausgewogen",
+                            creativity_high: "Ideenreich",
+                            creativity_description: "Legt fest, wie der Assistent formuliert.",
+                            creativity_low_description: "Kurze, klare Antworten mit Fokus auf Fakten und Vorgaben.",
+                            creativity_medium_description: "Verlässliche Antworten mit etwas Spielraum für bessere Formulierungen und Struktur.",
+                            creativity_high_description:
+                                "Mehr Vorschläge, Varianten und alternative Formulierungen, hält sich aber weniger strikt an Anweisungen.",
                             default_model: "Standard-Modell",
-                            default_model_info:
-                                "Das Standard-Modell, das für diesen Assistenten verwendet wird. Wenn kein Modell ausgewählt ist, wird das Benutzer-ausgewählte Modell verwendet.",
+                            default_model_description:
+                                "Dieses Modell ist vorausgewählt. Nutzer können beim Start einer Unterhaltung weiterhin ein anderes verfügbares Modell auswählen.",
                             default_model_placeholder: "Wählen Sie ein Standard-Modell...",
                             no_default_model: "Kein Standard-Modell (Benutzer wählt)",
                             departments: "Abteilungen",
@@ -568,7 +562,8 @@ i18n
 
                             // Discard confirmation
                             discard_title: "Änderungen verwerfen?",
-                            discard_message: "Sie haben ungespeicherte Änderungen. Möchten Sie wirklich abbrechen?"
+                            discard_message: "Sie haben ungespeicherte Änderungen. Möchten Sie wirklich abbrechen?",
+                            discard_confirm_label: "Verwerfen"
                         },
                         expandable_textarea: {
                             default_title: "Bearbeiten"
@@ -1103,21 +1098,7 @@ i18n
                             removedocument: "Delete document"
                         },
                         chattsettingsdrawer: {
-                            title: "Chat Settings",
-                            creativity: "Creativity",
-                            creativity_low: "Low",
-                            creativity_medium: "Normal",
-                            creativity_high: "High",
-                            creativity_low_description: "Focuses on accuracy and factual responses",
-                            creativity_medium_description: "Maintains a neutral and informative tone",
-                            creativity_high_description: "Encourages highly creative and diverse responses",
-                            creativity_info: `determines how creative or predictable the language model's responses are. "Low" provides conservative and precise answers, "Normal" is balanced, and "High" leads to more creative and unpredictable responses.`,
-                            max_lenght: "Maximum response length",
-                            max_lenght_info: "How many tokens (words) can be generated at most in a response.",
-                            system_prompt_clear: "Clear system prompt",
-                            system_prompt: "System prompt",
-                            system_prompt_info:
-                                "are predefined queries or instructions that serve to make the responses of MUCGPT more targeted and controlled. The AI often takes on a certain role, responds in a certain format, or observes other restrictions"
+                            title: "Chat Settings"
                         },
                         assistantsettingsdrawer: {
                             expand: "Expand view",
@@ -1246,24 +1227,33 @@ i18n
                             default_assistant_title: "Assistant",
                             default_assistant_description: "Assistant",
                             system_prompt: "System Prompt",
+                            system_prompt_description:
+                                "The basic instruction for the assistant. It defines its role, tasks, and rules of behavior for responses.",
                             prompt_placeholder:
-                                "# Requirement\n# Steps\n# Output Format\n# Examples\n\nFor example:\nEnsure that the translation maintains the original sentence structure and meaning. Pay attention to context-dependent words and cultural differences that may exist.",
+                                "You are an email assistant.\n\nTask:\nWrite short and polite drafts.\n\nRules:\n- Use formal language (you/your).\n- Keep it concise.",
 
                             // Settings section headers
                             section_basic: "Basic Information",
-                            section_behaviour: "Behaviour & Configuration",
+                            section_instructions: "Instructions",
+                            section_behaviour: "Model & Generation",
                             section_tools: "Tools",
                             section_conversation_options: "Conversation Options",
                             section_access: "Access & Visibility",
 
                             // Advanced settings fields
-                            creativity: "Creativity",
-                            creativity_placeholder: "Select a creativity level...",
-                            creativity_low: "Off (conservative)",
-                            creativity_medium: "Normal (balanced)",
-                            creativity_high: "High (creative)",
+                            creativity: "Answer style",
+                            creativity_placeholder: "Select an answer style...",
+                            creativity_low: "Precise",
+                            creativity_medium: "Balanced",
+                            creativity_high: "Creative",
+                            creativity_description: "Controls how freely the assistant phrases answers and develops suggestions.",
+                            creativity_low_description: "Precise: Answers stay close to the task and avoid unnecessary variation.",
+                            creativity_medium_description: "Balanced: A good balance between reliable answers and flexible wording.",
+                            creativity_high_description:
+                                "Creative: More room for ideas, alternative wording, and less obvious suggestions, but may follow instructions less strictly.",
                             default_model: "Default Model",
-                            default_model_info: "The default model to use for this assistant. If no model is selected, the user-selected model will be used.",
+                            default_model_description:
+                                "This model is preselected. Users can still choose another available model when starting a conversation.",
                             default_model_placeholder: "Select a default model...",
                             no_default_model: "No default model (user chooses)",
                             departments: "Departments",
@@ -1321,7 +1311,8 @@ i18n
 
                             // Discard confirmation
                             discard_title: "Discard changes?",
-                            discard_message: "You have unsaved changes. Are you sure you want to cancel?"
+                            discard_message: "You have unsaved changes. Are you sure you want to cancel?",
+                            discard_confirm_label: "Discard"
                         },
                         expandable_textarea: {
                             default_title: "Edit"
@@ -1843,21 +1834,7 @@ i18n
                             removedocument: "Dokument löschn"
                         },
                         chattsettingsdrawer: {
-                            title: "Ratsch Einstellunga",
-                            creativity: "Kreativität",
-                            creativity_low: "Niadrig",
-                            creativity_medium: "Normal",
-                            creativity_high: "Hoch",
-                            creativity_low_description: "Konzentriert si auf Genauigkeit und sachliche Antwortn",
-                            creativity_medium_description: "Hoit an neutralen und informativen Ton bei",
-                            creativity_high_description: "Fördert bsonders kreative und vielfältige Antwortn",
-                            creativity_info: `entscheidt, wia kreativ oda vorhersehbar de Antowortn vom Sprachmodell san. "Niadrig" liefert konservative und genaue Antwortn, "Normal" is ausgwogen, und "Hoch" führt zu kreativeren und spinnerten Antwortn.`,
-                            max_lenght: "Maximale Antwortläng",
-                            max_lenght_info: "Wia vui Token dürfen maximal bei am Antwort generiert werdn.",
-                            system_prompt_clear: "System Prompt löschn",
-                            system_prompt: "System Prompt",
-                            system_prompt_info:
-                                "san vorgegebene Abfragen oder Anweisungen, de dazu dienen, de Antworten von MUCGPT zielgerichteter und kontrollierter zum doa. Dabei nimmt de KI oft a bestimmte Rolle ei, antwortet in am bestimmten Format oder beachtet andere Einschränkungen."
+                            title: "Ratsch Einstellunga"
                         },
                         assistantsettingsdrawer: {
                             expand: "Ansicht erweitern",
@@ -1987,25 +1964,33 @@ i18n
                             default_assistant_title: "Assistent",
                             default_assistant_description: "Assistent",
                             system_prompt: "System-Prompt",
+                            system_prompt_description:
+                                "De Grundanweisung fürn Assistentn. Sie legt sei Rolle, Aufgabn und Verhoitensregeln für Antworten fest.",
                             prompt_placeholder:
-                                "# Anforderung\n# Schritt für Schritt\n# Format\n# Beispiele\n\nZum Beispiel:\nSchau drauf, dass de Ibasetzung an originalen Satzbau und an Sinn beihoid. Pass auf bei Wörtern, de auf'n Zusammenhang okemma, und auf de feinen kulturelln Untaschiede, de 's gebn ko.",
+                                "Du bist a Assistent für E-Mails.\n\nAufgabe:\nSchreib kurze und feine Entwürfe.\n\nRegeln:\n- Verwende de Höflichkeitsform (Sie).\n- Fass di kurz.",
 
                             // Settings section headers
                             section_basic: "Grundlegnde Infos",
-                            section_behaviour: "Verhoitn & Konfiguration",
+                            section_instructions: "Instruktiona",
+                            section_behaviour: "Modell & Generierung",
                             section_tools: "Werkzeig",
                             section_conversation_options: "Unterhaltungsoptionen",
                             section_access: "Zugriff & Sichtbarkeit",
 
                             // Advanced settings fields
-                            creativity: "Kreativität",
-                            creativity_placeholder: "Wähl a Kreativitätsstufn...",
-                            creativity_low: "Aus (konservativ)",
-                            creativity_medium: "Normal (ausgwogen)",
-                            creativity_high: "Hoch (kreativ)",
+                            creativity: "Antwortstil",
+                            creativity_placeholder: "Wähl an Antwortstil...",
+                            creativity_low: "Präzise",
+                            creativity_medium: "Ausgewogen",
+                            creativity_high: "Kreativ",
+                            creativity_description: "Steuert, wie frei der Assistent formuliert und Vorschläge entwickelt.",
+                            creativity_low_description: "Präzise: Antworten bleiben nah an der Aufgabe und vermeiden unnötige Varianten.",
+                            creativity_medium_description: "Ausgewogen: Gute Balance aus verlässlichen Antworten und flexibler Formulierung.",
+                            creativity_high_description:
+                                "Kreativ: Mehr Spielraum für Ideen, alternative Formulierungen und ungewöhnlichere Vorschläge, hält sich aber weniger strikt an Anweisungen.",
                             default_model: "Standard-Modell",
-                            default_model_info:
-                                "Des Standard-Modell, des da Assistent hernimmt. Wenn koa Modell ausgewählt is, nimmt ma des, wos da Nutzer aussucht.",
+                            default_model_description:
+                                "Dieses Modell ist vorausgewählt. Nutzer können beim Start einer Unterhaltung weiterhin ein anderes verfügbares Modell auswählen.",
                             default_model_placeholder: "Such da a Standard-Modell aus...",
                             no_default_model: "Koan Standard-Modell (da Nutzer entscheidet)",
                             departments: "Abteilungen",
@@ -2064,7 +2049,8 @@ i18n
 
                             // Discard confirmation
                             discard_title: "Änderungen verwerfn?",
-                            discard_message: "Du hosd ungespeicherte Änderungen. Wuißt du wirklich abbrechen?"
+                            discard_message: "Du hosd ungespeicherte Änderungen. Wuißt du wirklich abbrechen?",
+                            discard_confirm_label: "Verwerfn"
                         },
                         expandable_textarea: {
                             default_title: "Bearbeiten"
@@ -2588,21 +2574,7 @@ i18n
                             removedocument: "Supprimer le document"
                         },
                         chattsettingsdrawer: {
-                            title: "Paramètres de discussion",
-                            creativity: "Créativité",
-                            creativity_low: "Faible",
-                            creativity_medium: "Normal",
-                            creativity_high: "Élevé",
-                            creativity_low_description: "Se concentre sur la précision et les réponses factuelles",
-                            creativity_medium_description: "Maintient un ton neutre et informatif",
-                            creativity_high_description: "Favorise des réponses particulièrement créatives et variées",
-                            creativity_info: `détermine à quel point les réponses du modèle linguistique sont créatives ou prévisibles. "Faible" fournit des réponses conservatrices et précises, "Normal" est équilibré, et "Élevé" conduit à des réponses plus créatives et imprévisibles.`,
-                            max_lenght: "Longueur maximale de la réponse",
-                            max_lenght_info: "Nombre maximal de tokens pouvant être générés pour une réponse.",
-                            system_prompt_clear: "Effacer le Prompt système",
-                            system_prompt: "Prompt système",
-                            system_prompt_info:
-                                "sont des requêtes ou des instructions prédéfinies destinées à rendre les réponses de MUCGPT plus ciblées et contrôlées. L'IA prend souvent un rôle spécifique, répond dans un format particulier ou respecte d'autres contraintes."
+                            title: "Paramètres de discussion"
                         },
                         assistantsettingsdrawer: {
                             expand: "Développer la vue",
@@ -2733,25 +2705,33 @@ i18n
                             default_assistant_title: "Assistant",
                             default_assistant_description: "Assistant",
                             system_prompt: "Prompt système",
+                            system_prompt_description:
+                                "L'instruction de base pour l'assistant. Elle définit son rôle, ses tâches et ses règles de comportement pour les réponses.",
                             prompt_placeholder:
-                                "# Exigence\n# Étapes\n# Format de sortie\n# Exemples\n\nPar exemple :\nAssurez-vous que la traduction conserve la structure et le sens de la phrase d'origine. Tenez compte des nuances contextuelles et des différences culturelles.",
+                                "Vous êtes un assistant pour les e-mails.\n\nMission :\nRédigez des brouillons courts et polis.\n\nRègles :\n- Utilisez le vouvoiement.\n- Soyez concis.",
 
                             // Settings section headers
                             section_basic: "Informations de base",
-                            section_behaviour: "Comportement et configuration",
+                            section_instructions: "Instructions",
+                            section_behaviour: "Modèle et génération",
                             section_tools: "Outils",
                             section_conversation_options: "Options de conversation",
                             section_access: "Accès et visibilité",
 
                             // Advanced settings fields
-                            creativity: "Créativité",
-                            creativity_placeholder: "Sélectionnez un niveau de créativité...",
-                            creativity_low: "Désactivée (conservateur)",
-                            creativity_medium: "Normale (équilibrée)",
-                            creativity_high: "Élevée (créative)",
+                            creativity: "Style de réponse",
+                            creativity_placeholder: "Sélectionnez un style de réponse...",
+                            creativity_low: "Précise",
+                            creativity_medium: "Équilibrée",
+                            creativity_high: "Créative",
+                            creativity_description: "Contrôle la liberté avec laquelle l’assistant formule ses réponses et développe des suggestions.",
+                            creativity_low_description: "Précise : les réponses restent proches de la tâche et évitent les variantes inutiles.",
+                            creativity_medium_description: "Équilibrée : bon équilibre entre réponses fiables et formulation flexible.",
+                            creativity_high_description:
+                                "Créative : plus de marge pour les idées, les formulations alternatives et les suggestions moins évidentes, mais peut suivre les consignes moins strictement.",
                             default_model: "Modèle par défaut",
-                            default_model_info:
-                                "Le modèle par défaut utilisé pour cet assistant. Si aucun modèle n'est sélectionné, le modèle choisi par l'utilisateur sera utilisé.",
+                            default_model_description:
+                                "Ce modèle est présélectionné. Les utilisateurs peuvent toujours choisir un autre modèle disponible au début d’une conversation.",
                             default_model_placeholder: "Sélectionnez un modèle par défaut...",
                             no_default_model: "Aucun modèle par défaut (l'utilisateur choisit)",
                             departments: "Départements",
@@ -2810,7 +2790,8 @@ i18n
 
                             // Discard confirmation
                             discard_title: "Annuler les modifications ?",
-                            discard_message: "Vous avez des modifications non enregistrées. Voulez-vous vraiment annuler ?"
+                            discard_message: "Vous avez des modifications non enregistrées. Voulez-vous vraiment annuler ?",
+                            discard_confirm_label: "Annuler les modifications"
                         },
                         expandable_textarea: {
                             default_title: "Modifier"
@@ -3326,21 +3307,7 @@ i18n
                             removedocument: "Видалити документ"
                         },
                         chattsettingsdrawer: {
-                            title: "Налаштування чату",
-                            creativity: "Креативність",
-                            creativity_low: "Низька",
-                            creativity_medium: "Нормальна",
-                            creativity_high: "Висока",
-                            creativity_low_description: "Зосереджується на точності та фактичних відповідях",
-                            creativity_medium_description: "Підтримує нейтральний та інформативний тон",
-                            creativity_high_description: "Сприяє створенню дуже креативних і різноманітних відповідей",
-                            creativity_info: `визначає, наскільки креативними чи передбачуваними є відповіді мовної моделі. "Низька" забезпечує консервативні та точні відповіді, "Нормальна" є збалансованою, а "Висока" призводить до більш креативних та непередбачуваних відповідей.`,
-                            max_lenght: "Максимальна довжина відповіді",
-                            max_lenght_info: "Яка кількість токенів може бути згенерована при відповіді.",
-                            system_prompt_clear: "Очистити системний запит",
-                            system_prompt: "Системний запит",
-                            system_prompt_info:
-                                "це передвизначені запити або вказівки, які спрямовані на точне та контрольоване створення відповідей від MUCGPT. ШІ часто бере на себе певну роль, відповідає в певному форматі або дотримується інших обмежень."
+                            title: "Налаштування чату"
                         },
                         assistantsettingsdrawer: {
                             expand: "Розгорнути вигляд",
@@ -3469,25 +3436,33 @@ i18n
                             default_assistant_title: "Асистент",
                             default_assistant_description: "Асистент",
                             system_prompt: "Системний промпт",
+                            system_prompt_description:
+                                "Базова інструкція для асистента. Вона визначає його роль, завдання та правила поведінки при відповідях.",
                             prompt_placeholder:
-                                "# Вимога\n# Кроки\n# Формат відповіді\n# Приклади\n\nНаприклад:\nПереконайтеся, що переклад зберігає структуру та зміст оригінального речення. Звертайте увагу на контекстно-залежні слова та культурні відмінності.",
+                                "Ти асистент для електронних листів.\n\nЗавдання:\nПиши короткі та ввічливі чернетки.\n\nПравила:\n- Використовуй ввічливе звернення (Ви).\n- Пиши лаконічно.",
 
                             // Settings section headers
                             section_basic: "Основна інформація",
-                            section_behaviour: "Поведінка та конфігурація",
+                            section_instructions: "Інструкції",
+                            section_behaviour: "Модель та генерація",
                             section_tools: "Інструменти",
                             section_conversation_options: "Опції розмови",
                             section_access: "Доступ і видимість",
 
                             // Advanced settings fields
-                            creativity: "Креативність",
-                            creativity_placeholder: "Оберіть рівень креативності...",
-                            creativity_low: "Вимкнено (консервативно)",
-                            creativity_medium: "Нормально (збалансовано)",
-                            creativity_high: "Високо (креативно)",
+                            creativity: "Стиль відповіді",
+                            creativity_placeholder: "Виберіть стиль відповіді...",
+                            creativity_low: "Точно",
+                            creativity_medium: "Збалансовано",
+                            creativity_high: "Креативно",
+                            creativity_description: "Керує тим, наскільки вільно асистент формулює відповіді та розвиває пропозиції.",
+                            creativity_low_description: "Точно: відповіді залишаються близькими до завдання та уникають зайвих варіантів.",
+                            creativity_medium_description: "Збалансовано: хороший баланс між надійними відповідями та гнучким формулюванням.",
+                            creativity_high_description:
+                                "Креативно: більше простору для ідей, альтернативних формулювань і менш очевидних пропозицій, але може менш строго дотримуватися інструкцій.",
                             default_model: "Модель за замовчуванням",
-                            default_model_info:
-                                "Модель за замовчуванням для цього асистента. Якщо модель не вибрано, використовуватиметься модель, яку обрав користувач.",
+                            default_model_description:
+                                "Ця модель попередньо вибрана. Користувачі все ще можуть вибрати іншу доступну модель на початку розмови.",
                             default_model_placeholder: "Оберіть модель за замовчуванням...",
                             no_default_model: "Без моделі за замовчуванням (обирає користувач)",
                             departments: "Підрозділи",
@@ -3544,7 +3519,8 @@ i18n
 
                             // Discard confirmation
                             discard_title: "Скасувати зміни?",
-                            discard_message: "У вас є незбережені зміни. Ви впевнені, що хочете скасувати?"
+                            discard_message: "У вас є незбережені зміни. Ви впевнені, що хочете скасувати?",
+                            discard_confirm_label: "Скасувати зміни"
                         },
                         expandable_textarea: {
                             default_title: "Редагувати"

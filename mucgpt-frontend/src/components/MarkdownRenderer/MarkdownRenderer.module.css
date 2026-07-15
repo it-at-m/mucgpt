@@ -3,14 +3,14 @@
     text-decoration: underline;
 }
 
+.markdown a:visited {
+    color: var(--colorBrandForegroundLink);
+}
+
 .markdown a:hover {
     color: var(--colorBrandForegroundLinkHover);
 }
 
 .markdown a:active {
     color: var(--colorBrandForegroundLinkPressed);
-}
-
-.markdown a:visited {
-    color: var(--colorBrandForegroundLink);
 }

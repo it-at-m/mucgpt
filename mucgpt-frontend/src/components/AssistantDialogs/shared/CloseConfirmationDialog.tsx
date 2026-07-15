@@ -56,8 +56,6 @@ export const CloseConfirmationDialog = ({
         }
     }, [open]);
 
-
-
     return (
         <Dialog open={open} onOpenChange={(_event, data) => onOpenChange(data.open)} inertTrapFocus>
             <DialogSurface>

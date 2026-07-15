@@ -1,6 +1,6 @@
 import { Dialog, DialogSurface, DialogTitle, DialogBody, DialogContent, DialogActions, Button } from "@fluentui/react-components";
 import { useTranslation } from "react-i18next";
-import { useCallback } from "react";
+import { useCallback, useRef, useEffect } from "react";
 import styles from "./CloseConfirmationDialog.module.css";
 
 interface CloseConfirmationDialogProps {
@@ -44,6 +44,20 @@ export const CloseConfirmationDialog = ({
         onConfirmClose();
     }, [confirmDisabled, onOpenChange, onConfirmClose]);
 
+    const confirmButtonRef = useRef<HTMLButtonElement>(null);
+
+    useEffect(() => {
+        if (open) {
+            // Kleines Timeout stellt sicher, dass das Dialog-Rendering abgeschlossen ist
+            const timer = setTimeout(() => {
+                confirmButtonRef.current?.focus();
+            }, 50);
+            return () => clearTimeout(timer);
+        }
+    }, [open]);
+
+
+
     return (
         <Dialog open={open} onOpenChange={(_event, data) => onOpenChange(data.open)} inertTrapFocus>
             <DialogSurface>
@@ -55,6 +69,7 @@ export const CloseConfirmationDialog = ({
                             {t("common.cancel")}
                         </Button>
                         <Button
+                            ref={confirmButtonRef}
                             appearance="primary"
                             onClick={handleConfirm}
                             disabled={confirmDisabled}

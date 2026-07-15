@@ -5,6 +5,7 @@ import rehypeKatex from "rehype-katex";
 import rehypeExternalLinks from "rehype-external-links";
 import CodeBlockRenderer from "../CodeBlockRenderer/CodeBlockRenderer";
 import TableRenderer from "../TableRenderer/TableRenderer";
+import styles from "./MarkdownRenderer.module.css";
 
 interface MarkdownRendererProps {
     children: string;
@@ -39,9 +40,7 @@ export const MarkdownRenderer = ({ children, className }: MarkdownRendererProps)
         </Markdown>
     );
 
-    if (className) {
-        return <div className={className}>{content}</div>;
-    }
+    const wrapperClassName = className ? `${styles.markdown} ${className}` : styles.markdown;
 
-    return content;
+    return <div className={wrapperClassName}>{content}</div>;
 };

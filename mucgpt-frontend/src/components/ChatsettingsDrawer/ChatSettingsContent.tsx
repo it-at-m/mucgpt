@@ -1,11 +1,10 @@
-import { Dismiss24Regular } from "@fluentui/react-icons";
-import { Button, useId, Field, InfoLabel, Tooltip, Dropdown, Option } from "@fluentui/react-components";
+import { Field, Divider, Text } from "@fluentui/react-components";
 import { ExpandableTextarea } from "../AssistantDialogs/shared";
 
 import styles from "./ChatsettingsDrawer.module.css";
 import { useCallback } from "react";
 import { useTranslation } from "react-i18next";
-import { CREATIVITY_HIGH, CREATIVITY_LOW, CREATIVITY_MEDIUM } from "../../constants";
+import { CreativityRadioGroup } from "../CreativityRadioGroup/CreativityRadioGroup";
 
 interface Props {
     creativity: string;
@@ -17,18 +16,6 @@ interface Props {
 export const ChatSettingsContent = ({ creativity, setCreativity, systemPrompt, setSystemPrompt }: Props) => {
     const { t } = useTranslation();
 
-    const creativity_headerID = useId("header-creativity");
-    const creativityID = useId("input-creativity");
-    const systemPromptID = useId("header-system-prompt");
-
-    // Creativity change
-    const onCreativityChangeHandler = useCallback(
-        (_ev: any, data: any) => {
-            setCreativity(data.optionValue);
-        },
-        [setCreativity]
-    );
-
     // System prompt change
     const onSytemPromptChange = useCallback(
         (newValue: string) => {
@@ -37,91 +24,39 @@ export const ChatSettingsContent = ({ creativity, setCreativity, systemPrompt, s
         [setSystemPrompt]
     );
 
-    // Clear system prompt
-    const onClearSystemPrompt = () => {
-        setSystemPrompt("");
-    };
-
     return (
         <div className={styles.actionSectionContent}>
             {/* System Prompt Section */}
-            <div className={styles.sectionContainer}>
-                <div className={styles.header} role="heading" aria-level={3} id={systemPromptID}>
-                    <div className={styles.headerContent}>
-                        <InfoLabel
-                            info={
-                                <div>
-                                    <i>{t("components.chattsettingsdrawer.system_prompt")}s </i>
-                                    {t("components.chattsettingsdrawer.system_prompt_info")}
-                                </div>
-                            }
-                        >
-                            {t("components.chattsettingsdrawer.system_prompt")}
-                        </InfoLabel>
-                    </div>
-                    <div className={styles.systemPromptHeadingContainer}>
-                        <Tooltip content={t("components.chattsettingsdrawer.system_prompt_clear")} relationship="description" positioning="below">
-                            <Button
-                                aria-label={t("components.chattsettingsdrawer.system_prompt_clear")}
-                                icon={<Dismiss24Regular />}
-                                appearance="subtle"
-                                onClick={onClearSystemPrompt}
-                                size="small"
-                            />
-                        </Tooltip>
-                    </div>
-                </div>
+            <Field size="large" className={styles.fieldSection}>
+                <label className={styles.formLabel}>{t("components.assistant_editor.system_prompt")}</label>
+                <Text as="p" size={200} className={styles.fieldDescription}>
+                    {t("components.assistant_editor.system_prompt_description")}
+                </Text>
+                <ExpandableTextarea
+                    className={styles.systempromptTextArea}
+                    placeholder={t("components.assistant_editor.prompt_placeholder")}
+                    value={systemPrompt}
+                    rows={4}
+                    onChange={onSytemPromptChange}
+                    dialogTitle={t("components.assistant_editor.system_prompt")}
+                />
+            </Field>
 
-                <div>
-                    <div>
-                        <Field size="large">
-                            <ExpandableTextarea
-                                className={styles.systempromptTextArea}
-                                placeholder={t("components.chattsettingsdrawer.system_prompt")}
-                                value={systemPrompt}
-                                rows={7}
-                                onChange={onSytemPromptChange}
-                                dialogTitle={t("components.chattsettingsdrawer.system_prompt")}
-                                ariaLabelledBy={systemPromptID}
-                            />
-                        </Field>
-                    </div>
-                </div>
-            </div>
+            <Divider className={styles.sectionDivider} />
 
             {/* Creativity Section */}
-            <div className={styles.sectionContainer}>
-                <div className={styles.header} role="heading" aria-level={3} id={creativity_headerID}>
-                    <div className={styles.headerContent}>
-                        <InfoLabel info={<div>{t("components.chattsettingsdrawer.creativity_info")}</div>}>
-                            {t("components.chattsettingsdrawer.creativity")}
-                        </InfoLabel>
-                    </div>
-                </div>
-
-                <div>
-                    <Field size="large">
-                        <Dropdown
-                            placeholder={t("components.assistant_editor.creativity_placeholder")}
-                            value={creativity}
-                            selectedOptions={[creativity]}
-                            onOptionSelect={onCreativityChangeHandler}
-                            id={creativityID}
-                            aria-labelledby={creativity_headerID}
-                        >
-                            <Option key={CREATIVITY_LOW} value={CREATIVITY_LOW}>
-                                {t("components.assistant_editor.creativity_low")}
-                            </Option>
-                            <Option key={CREATIVITY_MEDIUM} value={CREATIVITY_MEDIUM}>
-                                {t("components.assistant_editor.creativity_medium")}
-                            </Option>
-                            <Option key={CREATIVITY_HIGH} value={CREATIVITY_HIGH}>
-                                {t("components.assistant_editor.creativity_high")}
-                            </Option>
-                        </Dropdown>
-                    </Field>
-                </div>
-            </div>
+            <Field size="large" className={styles.fieldSection}>
+                <label className={styles.formLabel}>{t("components.assistant_editor.creativity")}</label>
+                <Text as="p" size={200} className={styles.fieldDescription}>
+                    {t("components.assistant_editor.creativity_description")}
+                </Text>
+                <CreativityRadioGroup
+                    value={creativity}
+                    onChange={setCreativity}
+                    ariaLabel={t("components.assistant_editor.creativity")}
+                    className={styles.compactRadioGroup}
+                />
+            </Field>
         </div>
     );
 };

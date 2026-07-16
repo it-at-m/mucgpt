@@ -55,6 +55,11 @@
     line-height: 1.35;
 }
 
+/* Red asterisk marking the check as a mandatory step, matching required form fields. */
+.requiredMark {
+    color: var(--colorPaletteRedForeground1);
+}
+
 .confirmationGroup {
     display: flex;
     flex-direction: column;

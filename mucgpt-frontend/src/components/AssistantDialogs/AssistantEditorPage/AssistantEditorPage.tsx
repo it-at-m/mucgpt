@@ -144,11 +144,13 @@ interface SettingsFormProps {
     setPublishDepartments: (departments: string[]) => void;
     setInvisibleChecked: (invisible: boolean) => void;
     onHasChanged?: (changed: boolean) => void;
-    // Fired only when the system prompt changes, so the compliance confirmation can be invalidated selectively.
+    // Fired only when the system prompt changes, so the compliance review can be invalidated selectively.
     onSystemPromptChanged?: () => void;
     confirmed: boolean;
     confirmationResetKey: number;
+    checked: boolean;
     onConfirmedChange: (confirmed: boolean) => void;
+    onCheckedChange: (checked: boolean) => void;
 }
 
 function SettingsForm(props: SettingsFormProps) {
@@ -270,8 +272,10 @@ function SettingsForm(props: SettingsFormProps) {
                     <ReviewSection
                         confirmed={props.confirmed}
                         confirmationResetKey={props.confirmationResetKey}
+                        checked={props.checked}
                         isOwner={props.isOwner}
                         onConfirmedChange={props.onConfirmedChange}
+                        onCheckedChange={props.onCheckedChange}
                     />
                 </SectionCard>
             </main>
@@ -327,8 +331,10 @@ export const AssistantEditorPage = (props: AssistantEditorPageProps) => {
     const [loading, setLoading] = useState(false);
     const [discardOpen, setDiscardOpen] = useState(false);
     const [discardTarget, setDiscardTarget] = useState<DiscardTarget>("back");
-    // Compliance confirmation. Must be re-confirmed after every change to the assistant.
+    // Compliance confirmation. Must be re-confirmed after every change to the system prompt.
     const [reviewConfirmed, setReviewConfirmed] = useState(false);
+    // Whether the compliance check has been performed. Must be re-done after every change to the system prompt.
+    const [reviewChecked, setReviewChecked] = useState(false);
     // Bumped whenever the confirmation is reset so the checkbox remounts and reliably reflects the cleared state.
     const [reviewResetKey, setReviewResetKey] = useState(0);
 
@@ -388,7 +394,7 @@ export const AssistantEditorPage = (props: AssistantEditorPageProps) => {
         const assistantTitle = s.title.trim();
         const systemPrompt = s.systemPrompt.trim();
 
-        if (assistantTitle === "" || systemPrompt === "" || !reviewConfirmed) {
+        if (assistantTitle === "" || systemPrompt === "" || !reviewChecked || !reviewConfirmed) {
             showError(t("components.assistant_editor.assistant_save_failed"), t("components.assistant_editor.save_config_failed"));
             return;
         }
@@ -494,8 +500,9 @@ export const AssistantEditorPage = (props: AssistantEditorPageProps) => {
         [isCreate, editState]
     );
 
-    // Only changes to the system prompt invalidate the compliance confirmation, forcing the user to re-confirm.
+    // Only changes to the system prompt invalidate the compliance review, forcing the user to re-check and re-confirm.
     const handleSystemPromptChanged = useCallback(() => {
+        setReviewChecked(false);
         setReviewConfirmed(prev => {
             if (prev) setReviewResetKey(key => key + 1);
             return false;
@@ -505,7 +512,7 @@ export const AssistantEditorPage = (props: AssistantEditorPageProps) => {
     const pageTitle = isCreate ? t("components.assistant_editor.create_title") : t("components.assistant_editor.edit_title");
     const pageHelper = isCreate ? t("components.assistant_editor.page_helper_create") : t("components.assistant_editor.page_helper_edit");
     const settingsState = isCreate ? createState : editState;
-    const isSettingsValid = settingsState.title.trim() !== "" && settingsState.systemPrompt.trim() !== "" && reviewConfirmed;
+    const isSettingsValid = settingsState.title.trim() !== "" && settingsState.systemPrompt.trim() !== "" && reviewChecked && reviewConfirmed;
     const showSettingsForm = !isCreate || createView === "settings";
     const showCreateModeSelector = isCreate && createView === "mode_select";
     const actionStatusLabel = !isOwner
@@ -598,7 +605,9 @@ export const AssistantEditorPage = (props: AssistantEditorPageProps) => {
                         onSystemPromptChanged={handleSystemPromptChanged}
                         confirmed={reviewConfirmed}
                         confirmationResetKey={reviewResetKey}
+                        checked={reviewChecked}
                         onConfirmedChange={setReviewConfirmed}
+                        onCheckedChange={setReviewChecked}
                     />
                 )}
             </div>

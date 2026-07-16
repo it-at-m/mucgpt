@@ -1,6 +1,6 @@
 import { Button, Checkbox, CheckboxOnChangeData, Field, Link, Text } from "@fluentui/react-components";
 import { useTranslation } from "react-i18next";
-import { ChangeEvent, useState } from "react";
+import { ChangeEvent } from "react";
 import { ShieldTask24Regular } from "@fluentui/react-icons";
 
 import styles from "./ReviewSection.module.css";
@@ -9,24 +9,23 @@ interface ReviewSectionProps {
     confirmed: boolean;
     // Changes whenever the confirmation is reset, forcing the checkbox to remount so it reliably reflects the cleared state.
     confirmationResetKey: number;
+    // Whether the compliance check has been performed for the current system prompt.
+    checked: boolean;
     isOwner: boolean;
     onConfirmedChange: (confirmed: boolean) => void;
+    onCheckedChange: (checked: boolean) => void;
 }
 
-export const ReviewSection = ({ confirmed, confirmationResetKey, isOwner, onConfirmedChange }: ReviewSectionProps) => {
+export const ReviewSection = ({ confirmed, confirmationResetKey, checked, isOwner, onConfirmedChange, onCheckedChange }: ReviewSectionProps) => {
     const { t } = useTranslation();
-
-    // Tracks whether a check has already been started once, so the button label switches to "check again".
-    // The check itself is not implemented yet – the button is currently a placeholder.
-    const [hasChecked, setHasChecked] = useState(false);
 
     const onCheckboxChange = (_event: ChangeEvent<HTMLInputElement>, data: CheckboxOnChangeData) => {
         onConfirmedChange(data.checked === true);
     };
 
     const onStartCheck = () => {
-        // Placeholder: no check is performed yet.
-        setHasChecked(true);
+        // Placeholder: no real check is performed yet – marking it as done satisfies the mandatory review.
+        onCheckedChange(true);
     };
 
     return (
@@ -47,7 +46,7 @@ export const ReviewSection = ({ confirmed, confirmationResetKey, isOwner, onConf
 
                     <div className={styles.cardRight}>
                         <Text as="h4" size={400} weight="semibold" className={styles.columnTitle}>
-                            {t("components.assistant_editor.review_check_title")}
+                            {t("components.assistant_editor.review_check_title")} <span className={styles.requiredMark}>*</span>
                         </Text>
                         <Text size={300} className={styles.columnText}>
                             {t("components.assistant_editor.review_check_description")}
@@ -60,11 +59,13 @@ export const ReviewSection = ({ confirmed, confirmationResetKey, isOwner, onConf
                             type="button"
                             className={styles.checkButton}
                         >
-                            {t(hasChecked ? "components.assistant_editor.review_check_recheck" : "components.assistant_editor.review_check_start")}
+                            {t(checked ? "components.assistant_editor.review_check_recheck" : "components.assistant_editor.review_check_start")}
                         </Button>
-                        <Text size={200} className={styles.checkDisclaimer}>
-                            {t("components.assistant_editor.review_check_disclaimer")}
-                        </Text>
+                        {checked && (
+                            <Text size={200} className={styles.checkDisclaimer}>
+                                {t("components.assistant_editor.review_check_disclaimer")}
+                            </Text>
+                        )}
                     </div>
                 </div>
             </div>
@@ -74,7 +75,7 @@ export const ReviewSection = ({ confirmed, confirmationResetKey, isOwner, onConf
                     key={confirmationResetKey}
                     checked={confirmed}
                     onChange={onCheckboxChange}
-                    disabled={!isOwner}
+                    disabled={!isOwner || !checked}
                     required
                     className={styles.confirmationCheckbox}
                     label={t("components.assistant_editor.review_confirmation_label")}

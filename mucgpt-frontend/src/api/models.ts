@@ -180,6 +180,9 @@ export interface AssistantCreateInput {
     quick_prompts?: FollowUpActionModel[];
     tags?: string[];
     is_visible: boolean;
+    // Hash of the system prompt that was confirmed compliant (from ComplianceCheckResponse.prompt_hash).
+    // Links the confirmed high-risk screening to the created assistant. TODO: wire through the editor save flow.
+    compliance_prompt_hash?: string;
 }
 export interface AssistantVersionResponse {
     id: string;
@@ -225,6 +228,9 @@ export interface AssistantUpdateInput {
     tags?: string[];
     is_visible: boolean;
     version: number;
+    // Hash of the system prompt that was confirmed compliant (from ComplianceCheckResponse.prompt_hash).
+    // Links the confirmed high-risk screening to the updated assistant. TODO: wire through the editor save flow.
+    compliance_prompt_hash?: string;
 }
 
 export interface AssistantResponse {
@@ -274,6 +280,36 @@ export type CommunityAssistant = {
     tags?: string[];
     is_visible?: boolean;
 };
+
+// Compliance check (EU AI Act high-risk screening) -------------------------
+
+// Stable category ids, mapped to Annex III of the EU AI Act.
+export type ComplianceCategoryId =
+    | "migration_asylum_border" // Annex III No. 7
+    | "public_services_access" // Annex III No. 5
+    | "hr_employment" // Annex III No. 4
+    | "education"; // Annex III No. 3
+
+export type ComplianceStatus = "passed" | "high_risk_detected" | "error";
+
+export interface ComplianceCategoryResult {
+    category: ComplianceCategoryId;
+    status: ComplianceStatus;
+    reasoning?: string; // Only present when status is "high_risk_detected".
+}
+
+export interface ComplianceCheckRequest {
+    system_prompt: string;
+}
+
+export interface ComplianceCheckResponse {
+    overall_status: ComplianceStatus;
+    // One entry per checked category; may be empty when overall_status is "error".
+    results: ComplianceCategoryResult[];
+    // Hash of the checked system prompt. Sent back to the backend on create/update to link the confirmed
+    // compliance result to the saved assistant (the backend assigns the assistant id itself).
+    prompt_hash?: string;
+}
 
 export type CommunityAssistantSnapshot = {
     snapshot_version: number;

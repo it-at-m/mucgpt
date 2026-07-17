@@ -1,6 +1,6 @@
 // mocks/handlers.js
 import { http, HttpResponse, delay, passthrough } from "msw";
-import { ApplicationConfig, AssistantCreateResponse, AssistantUpdateInput } from "../api";
+import { ApplicationConfig, AssistantCreateResponse, AssistantUpdateInput, ComplianceCategoryResult, ComplianceCheckResponse } from "../api";
 import {
     buildAssistantCreateResponse,
     buildAssistantList,
@@ -385,6 +385,61 @@ function chooseStreamType(enabledTools?: string[]) {
     if (enabledTools?.includes("Vereinfachen")) options.push("simplify");
     if (options.length === 0) return "chat" as const; // Kein Tool aktiv => normaler Chat
     return options[Math.floor(Math.random() * options.length)];
+}
+
+// Mock reasonings for high-risk findings of the EU AI Act compliance check, per category.
+// Written to read like an LLM that analysed a concrete system prompt, not like an abstract rule description.
+const COMPLIANCE_HIGH_RISK_REASONINGS: Record<string, string> = {
+    migration_asylum_border:
+        "Der Prompt weist den Assistenten an, die Identität von Personen im Kontext von Asyl oder Grenzkontrolle festzustellen (Anhang III Nr. 7). Beschränken Sie ihn darauf, allgemein über Abläufe zu informieren.",
+    public_services_access:
+        "Der Prompt weist den Assistenten an, über den Anspruch auf Leistungen wie Bürgergeld oder Wohngeld zu entscheiden (Anhang III Nr. 5). Beschränken Sie ihn darauf, Voraussetzungen und Antragsweg zu erklären.",
+    hr_employment:
+        "Der Prompt weist den Assistenten an, Bewerbungen zu bewerten und in eine Rangfolge zu bringen (Anhang III Nr. 4). Beschränken Sie ihn auf unterstützende Aufgaben wie das Formulieren einer Stellenausschreibung.",
+    education:
+        "Der Prompt weist den Assistenten an, Leistungen final zu benoten oder das Bildungsniveau einzustufen (Anhang III Nr. 3). Beschränken Sie ihn auf Lernhilfe wie das Erklären von Fehlern."
+};
+
+const COMPLIANCE_CATEGORIES = ["migration_asylum_border", "public_services_access", "hr_employment", "education"] as const;
+
+/**
+ * Mock for the compliance check. The outcome can be forced via control words in the system prompt
+ * for deterministic visual testing:
+ *   - "#error"          -> backend error (HTTP 500)
+ *   - "#pass"           -> all categories passed
+ *   - "#risk1".."#risk4" -> exactly that many categories flagged ("#risk" = 1)
+ * Without a control word: ~10% error, ~33% with 1-2 random high-risk findings, otherwise passed.
+ */
+function buildComplianceCheckResponse(systemPrompt: string): ComplianceCheckResponse | null {
+    const forcedRisk = systemPrompt.match(/#risk([1-4])?/i);
+
+    let flaggedCount: number;
+    if (/#error/i.test(systemPrompt)) {
+        return null; // caller translates this into a 500
+    } else if (/#pass/i.test(systemPrompt)) {
+        flaggedCount = 0;
+    } else if (forcedRisk) {
+        flaggedCount = forcedRisk[1] ? Number(forcedRisk[1]) : 1;
+    } else {
+        // Randomized default behaviour.
+        if (Math.random() < 0.1) return null;
+        flaggedCount = Math.random() < 0.33 ? (Math.random() < 0.3 ? 2 : 1) : 0;
+    }
+
+    // Flag a random subset of the requested size.
+    const shuffled = [...COMPLIANCE_CATEGORIES].sort(() => Math.random() - 0.5);
+    const flagged = new Set<string>(shuffled.slice(0, flaggedCount));
+
+    const results: ComplianceCategoryResult[] = COMPLIANCE_CATEGORIES.map(category =>
+        flagged.has(category)
+            ? { category, status: "high_risk_detected", reasoning: COMPLIANCE_HIGH_RISK_REASONINGS[category] }
+            : { category, status: "passed" }
+    );
+
+    return {
+        overall_status: flagged.size > 0 ? "high_risk_detected" : "passed",
+        results
+    };
 }
 
 async function parseUploadHandler({ request }: { request: Request }) {
@@ -919,6 +974,17 @@ export const handlers = [
             description: assistant.latest_version.description,
             subscriptions_count: getMockSubscriptionCount(assistant.id)
         });
+    }),
+
+    http.post("/api/assistant/compliance/check", async ({ request }) => {
+        const body = (await request.json().catch(() => ({}))) as { system_prompt?: string };
+        // Simulate the LLM-based check taking a moment.
+        await delay(1500 + Math.random() * 1500);
+        const response = buildComplianceCheckResponse(body.system_prompt ?? "");
+        if (!response) {
+            return HttpResponse.json({ message: "Compliance check failed" }, { status: 500 });
+        }
+        return HttpResponse.json(response);
     }),
 
     // Parse API handlers (core-service route + legacy compatibility)

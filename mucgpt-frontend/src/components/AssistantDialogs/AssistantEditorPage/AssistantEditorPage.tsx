@@ -2,17 +2,7 @@ import type { FormEvent, ReactNode } from "react";
 import { useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
-import {
-    Accordion,
-    AccordionHeader,
-    AccordionItem,
-    AccordionPanel,
-    Button,
-    Field,
-    Text,
-    Textarea,
-    TextareaOnChangeData
-} from "@fluentui/react-components";
+import { Accordion, AccordionHeader, AccordionItem, AccordionPanel, Button, Field, Text, Textarea, TextareaOnChangeData } from "@fluentui/react-components";
 import {
     Bot24Regular,
     Chat24Regular,
@@ -28,8 +18,8 @@ import {
 
 import styles from "./AssistantEditorPage.module.css";
 import { AssistantCreateFlow } from "./AssistantCreateFlow";
-import { Assistant, ToolBase, ToolInfo } from "../../../api";
-import { createCommunityAssistantApi } from "../../../api/assistant-client";
+import { Assistant, ComplianceCheckResponse, ToolBase, ToolInfo } from "../../../api";
+import { checkAssistantComplianceApi, createCommunityAssistantApi } from "../../../api/assistant-client";
 import { createAssistantApi } from "../../../api/core-client";
 import { useGlobalToastContext } from "../../GlobalToastHandler/GlobalToastContext";
 import { StarterPromptModel } from "../../StarterPrompt";
@@ -148,9 +138,10 @@ interface SettingsFormProps {
     onSystemPromptChanged?: () => void;
     confirmed: boolean;
     confirmationResetKey: number;
-    checked: boolean;
+    checkResult: ComplianceCheckResponse | null;
+    checkLoading: boolean;
     onConfirmedChange: (confirmed: boolean) => void;
-    onCheckedChange: (checked: boolean) => void;
+    onStartCheck: () => void;
 }
 
 function SettingsForm(props: SettingsFormProps) {
@@ -192,7 +183,11 @@ function SettingsForm(props: SettingsFormProps) {
                     </Field>
                 </SectionCard>
 
-                <SectionCard title={t("components.assistant_editor.section_instructions")} icon={<DocumentText24Regular />} className={styles.sectionInstructions}>
+                <SectionCard
+                    title={t("components.assistant_editor.section_instructions")}
+                    icon={<DocumentText24Regular />}
+                    className={styles.sectionInstructions}
+                >
                     <Field
                         size="large"
                         className={styles.formField}
@@ -272,10 +267,11 @@ function SettingsForm(props: SettingsFormProps) {
                     <ReviewSection
                         confirmed={props.confirmed}
                         confirmationResetKey={props.confirmationResetKey}
-                        checked={props.checked}
+                        checkResult={props.checkResult}
+                        checkLoading={props.checkLoading}
                         isOwner={props.isOwner}
                         onConfirmedChange={props.onConfirmedChange}
-                        onCheckedChange={props.onCheckedChange}
+                        onStartCheck={props.onStartCheck}
                     />
                 </SectionCard>
             </main>
@@ -333,8 +329,10 @@ export const AssistantEditorPage = (props: AssistantEditorPageProps) => {
     const [discardTarget, setDiscardTarget] = useState<DiscardTarget>("back");
     // Compliance confirmation. Must be re-confirmed after every change to the system prompt.
     const [reviewConfirmed, setReviewConfirmed] = useState(false);
-    // Whether the compliance check has been performed. Must be re-done after every change to the system prompt.
-    const [reviewChecked, setReviewChecked] = useState(false);
+    // Result of the compliance check. Must be re-done after every change to the system prompt.
+    // On failure this holds a synthetic result with overall_status "error"; the user is not blocked in that case.
+    const [reviewCheckResult, setReviewCheckResult] = useState<ComplianceCheckResponse | null>(null);
+    const [reviewCheckLoading, setReviewCheckLoading] = useState(false);
     // Bumped whenever the confirmation is reset so the checkbox remounts and reliably reflects the cleared state.
     const [reviewResetKey, setReviewResetKey] = useState(0);
 
@@ -394,7 +392,7 @@ export const AssistantEditorPage = (props: AssistantEditorPageProps) => {
         const assistantTitle = s.title.trim();
         const systemPrompt = s.systemPrompt.trim();
 
-        if (assistantTitle === "" || systemPrompt === "" || !reviewChecked || !reviewConfirmed) {
+        if (assistantTitle === "" || systemPrompt === "" || !reviewCheckResult || !reviewConfirmed) {
             showError(t("components.assistant_editor.assistant_save_failed"), t("components.assistant_editor.save_config_failed"));
             return;
         }
@@ -502,17 +500,44 @@ export const AssistantEditorPage = (props: AssistantEditorPageProps) => {
 
     // Only changes to the system prompt invalidate the compliance review, forcing the user to re-check and re-confirm.
     const handleSystemPromptChanged = useCallback(() => {
-        setReviewChecked(false);
+        setReviewCheckResult(null);
         setReviewConfirmed(prev => {
             if (prev) setReviewResetKey(key => key + 1);
             return false;
         });
     }, []);
 
+    // Runs the EU AI Act high-risk compliance check on the current system prompt.
+    const handleStartComplianceCheck = useCallback(async () => {
+        if (reviewCheckLoading) return;
+
+        const s = state as typeof createState & typeof editState;
+        setReviewCheckLoading(true);
+        // A re-check invalidates the previous result and confirmation.
+        setReviewCheckResult(null);
+        setReviewConfirmed(prev => {
+            if (prev) setReviewResetKey(key => key + 1);
+            return false;
+        });
+
+        try {
+            const result = await checkAssistantComplianceApi({
+                system_prompt: s.systemPrompt
+            });
+            setReviewCheckResult(result);
+        } catch {
+            // A failed check is rare and must not block the user: record it as an error result so the
+            // error message is shown, but still allow confirming and saving.
+            setReviewCheckResult({ overall_status: "error", results: [] });
+        } finally {
+            setReviewCheckLoading(false);
+        }
+    }, [reviewCheckLoading, state]);
+
     const pageTitle = isCreate ? t("components.assistant_editor.create_title") : t("components.assistant_editor.edit_title");
     const pageHelper = isCreate ? t("components.assistant_editor.page_helper_create") : t("components.assistant_editor.page_helper_edit");
     const settingsState = isCreate ? createState : editState;
-    const isSettingsValid = settingsState.title.trim() !== "" && settingsState.systemPrompt.trim() !== "" && reviewChecked && reviewConfirmed;
+    const isSettingsValid = settingsState.title.trim() !== "" && settingsState.systemPrompt.trim() !== "" && reviewCheckResult !== null && reviewConfirmed;
     const showSettingsForm = !isCreate || createView === "settings";
     const showCreateModeSelector = isCreate && createView === "mode_select";
     const actionStatusLabel = !isOwner
@@ -605,9 +630,10 @@ export const AssistantEditorPage = (props: AssistantEditorPageProps) => {
                         onSystemPromptChanged={handleSystemPromptChanged}
                         confirmed={reviewConfirmed}
                         confirmationResetKey={reviewResetKey}
-                        checked={reviewChecked}
+                        checkResult={reviewCheckResult}
+                        checkLoading={reviewCheckLoading}
                         onConfirmedChange={setReviewConfirmed}
-                        onCheckedChange={setReviewChecked}
+                        onStartCheck={handleStartComplianceCheck}
                     />
                 )}
             </div>

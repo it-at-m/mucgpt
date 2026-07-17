@@ -479,8 +479,9 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
         ]
     );
 
-    useEffect(() => chatMessageStreamEnd.current?.scrollIntoView({ behavior: "smooth" }), [answers.length]);
-
+    useEffect(() => {
+        chatMessageStreamEnd.current?.scrollIntoView({ behavior: "smooth" });
+    }, [answers.length]);
     // Add a scroll function
     const scrollToBottom = useCallback(() => {
         if (chatMessageStreamEnd.current) {

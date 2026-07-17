@@ -2,17 +2,7 @@ import type { FormEvent, ReactNode } from "react";
 import { useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
-import {
-    Accordion,
-    AccordionHeader,
-    AccordionItem,
-    AccordionPanel,
-    Button,
-    Field,
-    Text,
-    Textarea,
-    TextareaOnChangeData
-} from "@fluentui/react-components";
+import { Accordion, AccordionHeader, AccordionItem, AccordionPanel, Button, Field, Text, Textarea, TextareaOnChangeData } from "@fluentui/react-components";
 import {
     Bot24Regular,
     Chat24Regular,
@@ -176,7 +166,11 @@ function SettingsForm(props: SettingsFormProps) {
                     </Field>
                 </SectionCard>
 
-                <SectionCard title={t("components.assistant_editor.section_instructions")} icon={<DocumentText24Regular />} className={styles.sectionInstructions}>
+                <SectionCard
+                    title={t("components.assistant_editor.section_instructions")}
+                    icon={<DocumentText24Regular />}
+                    className={styles.sectionInstructions}
+                >
                     <Field
                         size="large"
                         className={styles.formField}

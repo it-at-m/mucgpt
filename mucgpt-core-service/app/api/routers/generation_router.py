@@ -117,7 +117,7 @@ async def generate_assistant_draft(
         messages: list[ChatCompletionMessage] = [
             ChatCompletionMessage(role="system", content=system_message),
             ChatCompletionMessage(
-                role="user", content="Funktion: " + request.system_prompt
+                role="user", content="Funktion: " + request.prompt_seed
             ),
         ]
 

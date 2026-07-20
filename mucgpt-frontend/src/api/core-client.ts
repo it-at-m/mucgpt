@@ -80,7 +80,7 @@ export async function countTokensAPI(options: CountTokenRequest): Promise<CountT
 
 export async function generateAssistantDraftApi(request: AssistantDraftRequest): Promise<AssistantDraftResponse> {
     return handleApiRequest(
-        () => fetch(API_BASE + "v1/generations/assistant-draft", postConfig({ system_prompt: request.system_prompt })),
+        () => fetch(API_BASE + "v1/generations/assistant-draft", postConfig({ prompt_seed: request.prompt_seed })),
         "Failed to generate assistant draft"
     );
 }

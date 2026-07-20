@@ -328,7 +328,7 @@ class AssistantDraftRequest(BaseModel):
     into a full assistant system prompt before title and description are generated.
     """
 
-    system_prompt: str = Field(
+    prompt_seed: str = Field(
         ...,
         description="Short description or rough system prompt to expand into a complete assistant draft.",
     )

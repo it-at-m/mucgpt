@@ -45,7 +45,7 @@ export type ChatRequest = {
 };
 
 export type AssistantDraftRequest = {
-    system_prompt: string;
+    prompt_seed: string;
 };
 
 export type AssistantDraftResponse = {

@@ -806,12 +806,12 @@ export const handlers = [
 
     http.post("/api/backend/v1/generations/assistant-draft", async ({ request }) => {
         await delay(500);
-        const body = (await request.json()) as { system_prompt?: string };
-        const systemPrompt = body.system_prompt?.trim() || "You are a helpful assistant.";
+        const body = (await request.json()) as { prompt_seed?: string };
+        const promptSeed = body.prompt_seed?.trim() || "You are a helpful assistant.";
         return HttpResponse.json({
             title: "Generated Assistant",
-            description: "A draft assistant generated from the provided system prompt.",
-            system_prompt: systemPrompt
+            description: "A draft assistant generated from the provided prompt seed.",
+            system_prompt: promptSeed
         });
     }),
 

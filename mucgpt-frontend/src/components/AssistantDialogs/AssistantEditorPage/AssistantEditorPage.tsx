@@ -408,7 +408,7 @@ export const AssistantEditorPage = (props: AssistantEditorPageProps) => {
         try {
             // We treat the AI input as a first draft of the system prompt and
             // use the assistant-draft endpoint to suggest title/description.
-            const draft = await generateAssistantDraftApi({ system_prompt: createState.input });
+            const draft = await generateAssistantDraftApi({ prompt_seed: createState.input });
 
             if (!draft.title?.trim()) {
                 throw new Error(t("components.assistant_editor.assistant_generation_failed"));

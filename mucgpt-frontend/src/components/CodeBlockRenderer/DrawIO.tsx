@@ -60,7 +60,7 @@ function hostHasDiagram(host: HTMLElement, mxgraph: HTMLElement): boolean {
     return Boolean(host.querySelector("svg") || mxgraph.querySelector("svg"));
 }
 
-/** Strip dangerous tags/attrs from viewer output; keep foreignObject label text. Basically a thin wrapper 
+/** Strip dangerous tags/attrs from viewer output; keep foreignObject label text. Basically a thin wrapper
  *  around digramXecurity.ts
  */
 function sanitizeViewerOutput(host: HTMLElement): boolean {

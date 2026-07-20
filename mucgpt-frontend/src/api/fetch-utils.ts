@@ -70,8 +70,8 @@ export function postFormDataConfig(formData: FormData): RequestInit {
 
 export function putConfig(body?: { version?: string | number } & Record<string, unknown>): RequestInit {
     const headers = getHeaders();
-    if (body.version) {
-        headers.append("If-Match", body.version);
+    if (body?.version !== undefined) {
+        headers.append("If-Match", String(body.version));
     }
     return {
         method: "PUT",
@@ -91,8 +91,8 @@ export function putConfig(body?: { version?: string | number } & Record<string, 
 
 export function patchConfig(body?: { version?: string | number } & Record<string, unknown>): RequestInit {
     const headers = getHeaders();
-    if (body.version !== undefined) {
-        headers.append("If-Match", body.version);
+    if (body?.version !== undefined) {
+        headers.append("If-Match", String(body.version));
     }
     return {
         method: "PATCH",

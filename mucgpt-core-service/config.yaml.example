@@ -45,6 +45,7 @@ MODELS:
       max_output_tokens: 16384
       max_input_tokens: 128000
       description: "<description>"
+      internal_task_model_strength: null  # Optional: "weak" for chat titles, "strong" for assistant drafts
       input_cost_per_token: 0.00000009
       output_cost_per_token: 0.00000036
       supports_function_calling: true

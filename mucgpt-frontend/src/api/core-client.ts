@@ -1,37 +1,16 @@
 import { getConfig, handleApiRequest, postConfig, postFormDataConfig } from "./fetch-utils";
-import { ApplicationConfig, ChatRequest, CountTokenRequest, CountTokenResponse, CreateAssistantRequest, ToolListResponse } from "./models";
+import {
+    ApplicationConfig,
+    AssistantDraftRequest,
+    AssistantDraftResponse,
+    ChatTitleResponse,
+    ChatRequest,
+    CountTokenRequest,
+    CountTokenResponse,
+    ToolListResponse
+} from "./models";
 
 const PARSE_SERVICE_BASE = "/api/backend/v1/parse";
-export const CHAT_NAME_PROMPT = `Du bist ein Assistent, der kurze und aussagekräftige Titel für Chatverläufe erstellt.
-
-Erstelle anhand der vorherigen Nutzerfrage und Antwort einen kurzen Chatnamen, der das Hauptthema der Unterhaltung zusammenfasst.
-
-Richtlinien:
-- Maximal 4 Wörter
-- Sei spezifisch und beschreibend, nicht generisch
-- Erfasse die zentrale Absicht oder das konkrete Problem
-- Vermeide Füllwörter wie "Frage zu" oder "Diskussion über"
-- Schreibe in natürlicher deutscher Titelschreibweise
-- Schreibe Substantive und Eigennamen groß
-- Schreibe nicht alles klein
-- Verwende kein CamelCase und klebe keine Wörter zusammen
-- Verwende deutsche Umlaute direkt, also ä, ö, ü und ß
-- Verwende keine Anführungszeichen, kein Markdown, keine Satzzeichen und keine Zeilenumbrüche
-- Gib nur den Chatnamen aus, nichts anderes
-
-Gute Beispiele:
-Mietvertrag Prüfung
-Excel Formel Kostenstellen
-Projektstatus Zusammenfassung
-
-Schlechte Beispiele:
-mietvertrag prüfung
-Hilfe mit Dokument
-Neue Unterhaltung`;
-
-const MAX_CHAT_NAME_WORDS = 4;
-const MAX_CHAT_NAME_LENGTH = 48;
-const CHAT_NAME_CREATIVITY = "low";
 
 export const API_BASE = "/api/backend/";
 
@@ -53,7 +32,16 @@ export async function chatApi(options: ChatRequest): Promise<Response> {
             messages.push({ role: "assistant", content: turn.assistant });
         }
     }
-    const body: any = {
+    const body: {
+        model?: string;
+        messages: Array<{ role: string; content: string }>;
+        temperature?: number;
+        stream?: boolean;
+        creativity?: string;
+        enabled_tools?: string[];
+        assistant_id?: string;
+        data_sources?: ChatRequest["data_sources"];
+    } = {
         model: options.model,
         messages,
         temperature: options.temperature,
@@ -90,59 +78,25 @@ export async function countTokensAPI(options: CountTokenRequest): Promise<CountT
     );
 }
 
-export async function createAssistantApi(options: CreateAssistantRequest): Promise<Response> {
-    return await fetch(
-        API_BASE + "v1/generate/assistant",
-        postConfig({
-            input: options.input,
-            model: options.model
-        })
+export async function generateAssistantDraftApi(request: AssistantDraftRequest): Promise<AssistantDraftResponse> {
+    return handleApiRequest(
+        () => fetch(API_BASE + "v1/generations/assistant-draft", postConfig({ system_prompt: request.system_prompt })),
+        "Failed to generate assistant draft"
     );
 }
 
-export async function createChatName(query: string, answer: string, system_message: string, model: string) {
-    const url = API_BASE + "v1/chat/completions";
-    const messages: Array<{ role: string; content: string }> = [];
-    if (system_message) {
-        messages.push({ role: "system", content: system_message });
-    }
-    messages.push({ role: "user", content: query });
-    messages.push({ role: "assistant", content: answer });
-    messages.push({ role: "user", content: CHAT_NAME_PROMPT });
-
+export async function createChatName(query: string, answer: string, system_message: string) {
+    const url = API_BASE + "v1/generations/chat-title";
     const body = {
-        model: model,
-        messages,
-        creativity: CHAT_NAME_CREATIVITY,
-        stream: false
+        query,
+        answer,
+        system_message
     };
 
-    const parsedResponse: any = await handleApiRequest(() => fetch(url, postConfig(body)), "Failed to create chat name");
+    const parsedResponse = await handleApiRequest<ChatTitleResponse>(() => fetch(url, postConfig(body)), "Failed to create chat name");
 
-    const generatedName = parsedResponse.choices?.[0]?.message?.content;
-    return normalizeChatName(generatedName) || normalizeChatName(query) || "New Chat";
-}
-
-function normalizeChatName(value: unknown): string {
-    if (typeof value !== "string") {
-        return "";
-    }
-
-    const words = value
-        .replace(/["']/g, "")
-        .replace(/[^\p{L}\p{N}\s]/gu, " ")
-        .replace(/\s+/g, " ")
-        .trim()
-        .split(" ")
-        .filter(Boolean)
-        .slice(0, MAX_CHAT_NAME_WORDS);
-
-    let title = words.join(" ");
-    if (title.length > MAX_CHAT_NAME_LENGTH) {
-        title = title.slice(0, MAX_CHAT_NAME_LENGTH).trimEnd();
-    }
-
-    return title;
+    const generatedName = parsedResponse.title;
+    return generatedName || "New Chat";
 }
 
 /**

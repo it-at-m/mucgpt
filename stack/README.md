@@ -188,16 +188,25 @@ The stack uses **YAML configuration files** as the primary configuration source,
 
    ```yaml
    MODELS:
-     - type: "OPENAI"
-       llm_name: "gpt-4.1"
-       endpoint: "https://your-endpoint.example.com/v1"
-       api_key: "sk-..."
-       model_info:
-         auto_enrich_from_model_info_endpoint: true
+      - type: "OPENAI"
+        llm_name: "gpt-4.1"
+        endpoint: "https://your-endpoint.example.com/v1"
+        api_key: "sk-..."
+        model_info:
+          auto_enrich_from_model_info_endpoint: true
+          internal_task_model_strength: "strong"
 
-   REDIS:
-     HOST: "valkey"
-     PORT: 6379
+      - type: "OPENAI"
+        llm_name: "gpt-4.1-nano"
+        endpoint: "https://your-endpoint.example.com/v1"
+        api_key: "sk-..."
+        model_info:
+          auto_enrich_from_model_info_endpoint: true
+          internal_task_model_strength: "weak"
+
+    REDIS:
+      HOST: "valkey"
+      PORT: 6379
 
    LANGFUSE:
      HOST: "https://your-langfuse-host.example.com"
@@ -207,9 +216,45 @@ The stack uses **YAML configuration files** as the primary configuration source,
    MCP:
      SOURCES:
        "my-mcp-server":
-         url: "http://mcpdoc-server:8088/sse"
-         transport: "sse"
-   ```
+          url: "http://mcpdoc-server:8088/sse"
+          transport: "sse"
+    ```
+
+### Internal Task Models
+
+The core service supports an optional internal model hint for lightweight generation tasks.
+
+Set this per model under `MODELS[].model_info.internal_task_model_strength`:
+
+- `strong`: preferred for assistant draft generation
+- `weak`: preferred for chat title generation
+
+Example:
+
+```yaml
+MODELS:
+  - type: "OPENAI"
+    llm_name: "gpt-4.1-mini"
+    endpoint: "https://your-endpoint.example.com/v1"
+    api_key: "sk-..."
+    model_info:
+      internal_task_model_strength: "strong"
+
+  - type: "OPENAI"
+    llm_name: "gpt-4.1-nano"
+    endpoint: "https://your-endpoint.example.com/v1"
+    api_key: "sk-..."
+    model_info:
+      internal_task_model_strength: "weak"
+```
+
+Selection behavior:
+
+- Assistant drafts use the first model marked as `strong`
+- Chat title generation uses the first model marked as `weak`
+- If no matching model is configured for a task, the first model in `MODELS` is used as a fallback
+
+This setting is internal to the core service and is not exposed to the frontend config API.
 
 3. Edit `assistant.config.yaml` – configure database and optional LDAP:
 

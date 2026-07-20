@@ -60,7 +60,7 @@ export const Answer = ({ answer, onRegenerateResponseClicked, onFollowUpActionSe
                 <Stack.Item className={styles.growItem} grow>
                     {formatted && (
                         <div className={styles.answerText}>
-                            <MarkdownRenderer>{processedText}</MarkdownRenderer>
+                            <MarkdownRenderer allowDrawio>{processedText}</MarkdownRenderer>
                         </div>
                     )}
                     {!formatted && (

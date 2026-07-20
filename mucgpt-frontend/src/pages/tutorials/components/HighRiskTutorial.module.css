@@ -1,21 +1,161 @@
-.tutorial {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-}
-
-.header {
+.sectionTitle {
     display: flex;
     align-items: center;
     gap: 12px;
+    margin: 0 0 12px 0;
 }
 
-.headerIcon {
-    color: var(--colorBrandForeground1);
+.sectionHeading {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--colorNeutralForeground1);
+}
+
+.sectionIcon {
+    color: var(--colorNeutralForeground1);
+    flex-shrink: 0;
+    font-size: 20px;
+}
+
+.emojiIcon {
+    font-size: 20px;
     flex-shrink: 0;
 }
 
-.description {
-    color: var(--colorNeutralForeground2);
+.paragraph {
+    margin: 0 0 12px 0;
+    line-height: 1.6;
+    color: var(--colorNeutralForeground1);
+}
+
+.areaCard {
+    margin-bottom: 16px;
+    padding: 16px;
+    background: var(--colorNeutralBackground1);
+    border: 1px solid var(--colorNeutralStroke1);
+    border-radius: 8px;
+    scroll-margin-top: 24px;
+}
+
+.areaTitle {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0 0 8px 0;
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--colorNeutralForeground1);
+}
+
+.areaEmoji {
+    font-size: 20px;
+    flex-shrink: 0;
+}
+
+.exampleRow {
+    margin-top: 8px;
+    padding: 8px 12px;
+    border-radius: 4px;
+}
+
+.exampleText {
+    margin: 0;
+    font-size: 14px;
     line-height: 1.5;
+    color: var(--colorNeutralForeground1);
+}
+
+.exampleNotAllowed {
+    background: var(--colorPaletteRedBackground1);
+    border-left: 3px solid var(--colorPaletteRedBorder1);
+}
+
+.exampleAllowed {
+    background: var(--colorPaletteGreenBackground1);
+    border-left: 3px solid var(--colorPaletteGreenBorder1);
+}
+
+.conceptGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 16px;
+    margin-top: 16px;
+}
+
+.conceptCard {
+    padding: 16px;
+    background: var(--colorNeutralBackground1);
+    border: 1px solid var(--colorNeutralStroke1);
+    border-radius: 8px;
+}
+
+.conceptDescription {
+    margin: 0;
+    font-size: 14px;
+    line-height: 1.5;
+    color: var(--colorNeutralForeground2);
+}
+
+.highlightBox {
+    margin: 16px 0;
+    padding: 16px;
+    border-radius: 6px;
+    background: var(--colorNeutralBackground3);
+    border: 1px solid var(--colorNeutralStroke1);
+}
+
+.stepsTitle {
+    margin: 16px 0 4px 0;
+    font-weight: 600;
+    color: var(--colorNeutralForeground1);
+}
+
+.checkList {
+    margin: 8px 0 16px 0;
+    padding-left: 24px;
+    line-height: 1.8;
+    color: var(--colorNeutralForeground1);
+}
+
+.tipsContainer {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.tipItem {
+    padding: 16px;
+    background: var(--colorNeutralBackground1);
+    border: 1px solid var(--colorNeutralStroke1);
+    border-radius: 8px;
+}
+
+.tipItem strong {
+    display: block;
+    margin-bottom: 8px;
+    color: var(--colorNeutralForeground1);
+}
+
+.tipItem p {
+    margin: 0;
+    line-height: 1.5;
+    color: var(--colorNeutralForeground1);
+}
+
+.linksList {
+    margin: 8px 0 0 0;
+    padding-left: 20px;
+    line-height: 1.8;
+    color: var(--colorNeutralForeground1);
+}
+
+@media (max-width: 900px) {
+    .areaCard {
+        scroll-margin-top: 64px;
+    }
+
+    .conceptGrid {
+        grid-template-columns: 1fr;
+    }
 }

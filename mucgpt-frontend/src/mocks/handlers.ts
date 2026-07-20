@@ -6,6 +6,7 @@ import {
     buildAssistantList,
     buildOwnersDetailedFromOwnerIds,
     buildChatMessage,
+    buildDrawioChatMessage,
     generateChatStreamChunks,
     generateMindmapStreamChunks,
     generateSimplifyStreamChunks
@@ -753,6 +754,14 @@ export const handlers = [
     }),
     http.post("/api/backend/v1/chat/completions", async ({ request }) => {
         const body = (await request.json()) as { stream?: boolean; messages?: { role: string; content: string }[]; enabled_tools?: string[] };
+        const latestUserMessage =
+            body.messages
+                ?.slice()
+                .reverse()
+                .find(m => m.role === "user")?.content || "";
+        // E2E demo: say "drawio" alone (or "show drawio"). A ```drawio fence must NOT trigger this.
+        const wantsDrawioMock = /^\s*drawio\s*$/i.test(latestUserMessage) || /\bshow\s+drawio\b/i.test(latestUserMessage);
+
         if (body?.stream) {
             const encoder = new TextEncoder();
             const streamType = chooseStreamType(body.enabled_tools);
@@ -760,14 +769,12 @@ export const handlers = [
                 async start(controller) {
                     let chunks: any[] = [];
                     if (streamType === "mindmap") {
-                        const topic =
-                            body.messages
-                                ?.slice()
-                                .reverse()
-                                .find(m => m.role === "user")?.content || "Künstliche Intelligenz";
+                        const topic = latestUserMessage || "Künstliche Intelligenz";
                         chunks = generateMindmapStreamChunks(topic);
                     } else if (streamType === "simplify") {
                         chunks = generateSimplifyStreamChunks();
+                    } else if (wantsDrawioMock) {
+                        chunks = generateChatStreamChunks(buildDrawioChatMessage());
                     } else {
                         let reply = buildChatMessage();
                         if (Math.random() > 0.7) {
@@ -799,7 +806,13 @@ export const handlers = [
             object: "chat.completion",
             created: Math.floor(Date.now() / 1000),
             model: "KIESGPT",
-            choices: [{ index: 0, message: { role: "assistant", content: buildChatMessage() }, finish_reason: "stop" }],
+            choices: [
+                {
+                    index: 0,
+                    message: { role: "assistant", content: wantsDrawioMock ? buildDrawioChatMessage() : buildChatMessage() },
+                    finish_reason: "stop"
+                }
+            ],
             usage: { prompt_tokens: 12, completion_tokens: 28, total_tokens: 40 }
         });
     }),

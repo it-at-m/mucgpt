@@ -2,7 +2,6 @@
     "dependencies": {
         "@atlaskit/pragmatic-drag-and-drop": "^1.7.7",
         "@atlaskit/pragmatic-drag-and-drop-hitbox": "^1.1.0",
-        "@fluentui/react": "8.125.6",
         "@fluentui/react-components": "9.73.8",
         "@fluentui/react-icons": "2.0.328",
         "@fontsource/montserrat": "^5.2.8",

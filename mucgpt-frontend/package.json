@@ -56,7 +56,8 @@
     },
     "overrides": {
         "@babel/core": "7.29.6",
-        "esbuild": "0.28.1"
+        "esbuild": "0.28.1",
+        "adm-zip": "0.6.0"
     },
     "homepage": "https://it-at-m.github.io/mucgpt/",
     "msw": {

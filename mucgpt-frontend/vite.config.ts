@@ -35,7 +35,8 @@ export default defineConfig(({ mode }) => {
                           },
                           workbox: {
                               maximumFileSizeToCacheInBytes: 3000000,
-                              globIgnores: ["**/*.wasm"],
+                              // draw.io viewer is ~4MB and must stay local; skip PWA precache
+                              globIgnores: ["**/*.wasm", "**/vendor/drawio/**"],
                               navigateFallbackDenylist: [/^\/api\//, /^\/auth\//, /^\/sso\//, /^\/realms\//, /^\/oauth2\//, /^\/login\//, /^\/logout\//],
                               runtimeCaching: [
                                   {

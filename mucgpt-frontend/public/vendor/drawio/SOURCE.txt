@@ -1,0 +1,10 @@
+draw.io / diagrams.net viewer (vendored)
+
+File:    viewer-static.min.js
+Version: v30.3.14 (jgraph/drawio GitHub tag)
+Source:  https://github.com/jgraph/drawio/blob/v30.3.14/src/main/webapp/js/viewer-static.min.js
+License: Apache License 2.0 (see LICENSE in this folder)
+
+Do not load this script from viewer.diagrams.net or any other CDN at runtime.
+Before loading the script, clear the viewer's default remote URL settings
+(PROXY_URL, STYLE_PATH, STENCIL_PATH, etc.) so it does not contact draw.io servers.

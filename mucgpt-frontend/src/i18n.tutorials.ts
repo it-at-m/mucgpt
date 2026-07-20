@@ -319,8 +319,7 @@ export const tutorialsTranslations = {
                 tips: {
                     no_decisions: {
                         title: "Keine folgenreichen Entscheidungen über Menschen",
-                        description:
-                            "MUCGPT darf nicht für entsprechende Bewertungen, Einstufungen oder Auswahlentscheidungen eingesetzt werden."
+                        description: "MUCGPT darf nicht für entsprechende Bewertungen, Einstufungen oder Auswahlentscheidungen eingesetzt werden."
                     },
                     orientation: {
                         title: "Prüfung nur als Orientierung",
@@ -768,10 +767,10 @@ export const tutorialsTranslations = {
                     },
                     education: {
                         title: "Education and vocational training",
-                        description:
-                            "Assistants must not decide on admissions, award final grades, or classify a person's level of education.",
+                        description: "Assistants must not decide on admissions, award final grades, or classify a person's level of education.",
                         not_allowed: "An assistant that gives final grades to exams or decides whether a child is suited for grammar school.",
-                        allowed: "An assistant that, as a learning aid, marks mistakes and offers suggestions for improvement without giving binding assessments."
+                        allowed:
+                            "An assistant that, as a learning aid, marks mistakes and offers suggestions for improvement without giving binding assessments."
                     }
                 },
                 other: {
@@ -784,8 +783,7 @@ export const tutorialsTranslations = {
                     },
                     infrastructure: {
                         title: "Critical infrastructure",
-                        description:
-                            "AI as a safety component for electricity, water, gas and heat supply, road traffic, or critical digital infrastructure."
+                        description: "AI as a safety component for electricity, water, gas and heat supply, road traffic, or critical digital infrastructure."
                     },
                     law_enforcement: {
                         title: "Law enforcement",
@@ -823,8 +821,7 @@ export const tutorialsTranslations = {
                 tips: {
                     no_decisions: {
                         title: "No consequential decisions about people",
-                        description:
-                            "MUCGPT must not be used for corresponding assessments, classifications or selection decisions."
+                        description: "MUCGPT must not be used for corresponding assessments, classifications or selection decisions."
                     },
                     orientation: {
                         title: "The check is only a guide",
@@ -832,8 +829,7 @@ export const tutorialsTranslations = {
                     },
                     contact: {
                         title: "Actual use is decisive",
-                        description:
-                            "What is decisive is what the assistant is actually used for. The check can only consider the stored instructions."
+                        description: "What is decisive is what the assistant is actually used for. The check can only consider the stored instructions."
                     }
                 }
             },
@@ -1250,8 +1246,7 @@ export const tutorialsTranslations = {
                         title: "Migration, Asyl und Grenzkontroi",
                         description:
                             "Assistentn derfn ned dazu dena, Leit im Zammenhang mit Flucht, Asyl oder Grenzkontroi zum identifiziern, zum bewertn oder zum überwacha. A de automatisierte Prüfung oder Bewertung vo Asyl- und Visumanträg is ned zulässig.",
-                        not_allowed:
-                            "A Assistent, der Angaben aus am Asylverfahrn af Glaubwürdigkeit prüft oder Leit an da Grenz identifiziern soi.",
+                        not_allowed: "A Assistent, der Angaben aus am Asylverfahrn af Glaubwürdigkeit prüft oder Leit an da Grenz identifiziern soi.",
                         allowed: "A Assistent, der Textdaten aus güitige Reisedokument strukturiert auslest, ohne a Bewertung vo da Person vorzunehma."
                     },
                     services: {
@@ -1325,8 +1320,7 @@ export const tutorialsTranslations = {
                 tips: {
                     no_decisions: {
                         title: "Koane folgnreichn Entscheidunga über Menschn",
-                        description:
-                            "MUCGPT derf ned für entsprechende Bewertunga, Eistufunga oder Auswoientscheidunga eigsetzt werdn."
+                        description: "MUCGPT derf ned für entsprechende Bewertunga, Eistufunga oder Auswoientscheidunga eigsetzt werdn."
                     },
                     orientation: {
                         title: "Prüfung bloß ois Orientierung",
@@ -1764,14 +1758,17 @@ export const tutorialsTranslations = {
                             "Les assistants ne doivent pas servir à identifier, évaluer ou surveiller des personnes en lien avec la fuite, l'asile ou le contrôle aux frontières. L'examen ou l'évaluation automatisés des demandes d'asile et de visa ne sont pas non plus autorisés.",
                         not_allowed:
                             "Un assistant qui vérifie la crédibilité de déclarations issues d'une procédure d'asile ou qui doit identifier des personnes à la frontière.",
-                        allowed: "Un assistant qui extrait de manière structurée des données textuelles à partir de documents de voyage valides, sans procéder à une évaluation de la personne."
+                        allowed:
+                            "Un assistant qui extrait de manière structurée des données textuelles à partir de documents de voyage valides, sans procéder à une évaluation de la personne."
                     },
                     services: {
                         title: "Accès aux prestations publiques",
                         description:
                             "Les assistants ne doivent pas vérifier ni décider si une personne a droit à des prestations publiques telles que le revenu de base, l'allocation logement ou les services de santé.",
-                        not_allowed: "Un assistant qui, sur la base de données de dossier, évalue si une demande d'allocation logement doit être approuvée ou rejetée.",
-                        allowed: "Un assistant qui explique de manière générale quelles conditions s'appliquent à l'allocation logement et quels documents sont nécessaires."
+                        not_allowed:
+                            "Un assistant qui, sur la base de données de dossier, évalue si une demande d'allocation logement doit être approuvée ou rejetée.",
+                        allowed:
+                            "Un assistant qui explique de manière générale quelles conditions s'appliquent à l'allocation logement et quels documents sont nécessaires."
                     },
                     hr: {
                         title: "Emploi et personnel",
@@ -1785,7 +1782,8 @@ export const tutorialsTranslations = {
                         description:
                             "Les assistants ne doivent pas décider des admissions, attribuer des notes finales ni classer le niveau de formation d'une personne.",
                         not_allowed: "Un assistant qui attribue des notes finales à des examens ou décide si un enfant est apte à entrer au lycée.",
-                        allowed: "Un assistant qui, comme aide à l'apprentissage, signale les erreurs et propose des améliorations sans porter d'évaluation contraignante."
+                        allowed:
+                            "Un assistant qui, comme aide à l'apprentissage, signale les erreurs et propose des améliorations sans porter d'évaluation contraignante."
                     }
                 },
                 other: {
@@ -1794,7 +1792,8 @@ export const tutorialsTranslations = {
                         "Le règlement sur l'IA désigne en outre ces domaines. Ils ne jouent pratiquement aucun rôle dans MUCGPT, car le système, par exemple, ne traite pas de données biométriques et ne pilote pas d'infrastructures. Les cas d'usage correspondants ne sont néanmoins pas autorisés.",
                     biometrics: {
                         title: "Biométrie",
-                        description: "Identification à distance des personnes, catégorisation selon des caractéristiques sensibles et reconnaissance des émotions."
+                        description:
+                            "Identification à distance des personnes, catégorisation selon des caractéristiques sensibles et reconnaissance des émotions."
                     },
                     infrastructure: {
                         title: "Infrastructures critiques",
@@ -1837,8 +1836,7 @@ export const tutorialsTranslations = {
                 tips: {
                     no_decisions: {
                         title: "Aucune décision lourde de conséquences concernant des personnes",
-                        description:
-                            "MUCGPT ne doit pas être utilisé pour de telles évaluations, classifications ou décisions de sélection."
+                        description: "MUCGPT ne doit pas être utilisé pour de telles évaluations, classifications ou décisions de sélection."
                     },
                     orientation: {
                         title: "La vérification n'est qu'une orientation",
@@ -2264,8 +2262,7 @@ export const tutorialsTranslations = {
                         title: "Міграція, притулок і прикордонний контроль",
                         description:
                             "Асистенти не повинні використовуватися для ідентифікації, оцінювання чи спостереження за людьми у зв'язку з утечею, притулком або прикордонним контролем. Автоматизована перевірка чи оцінювання заяв про притулок і візових заяв також не дозволяються.",
-                        not_allowed:
-                            "Асистент, який перевіряє достовірність даних із процедури надання притулку або має ідентифікувати людей на кордоні.",
+                        not_allowed: "Асистент, який перевіряє достовірність даних із процедури надання притулку або має ідентифікувати людей на кордоні.",
                         allowed: "Асистент, який структуровано зчитує текстові дані з дійсних проїзних документів, не оцінюючи особу."
                     },
                     services: {
@@ -2284,8 +2281,7 @@ export const tutorialsTranslations = {
                     },
                     education: {
                         title: "Освіта та професійне навчання",
-                        description:
-                            "Асистенти не повинні вирішувати щодо зарахування, виставляти підсумкові оцінки чи класифікувати рівень освіти особи.",
+                        description: "Асистенти не повинні вирішувати щодо зарахування, виставляти підсумкові оцінки чи класифікувати рівень освіти особи.",
                         not_allowed: "Асистент, який остаточно оцінює іспити або вирішує, чи придатна дитина для гімназії.",
                         allowed: "Асистент, який як навчальний помічник позначає помилки та пропонує покращення, не даючи обов'язкових оцінок."
                     }
@@ -2339,8 +2335,7 @@ export const tutorialsTranslations = {
                 tips: {
                     no_decisions: {
                         title: "Жодних рішень із серйозними наслідками щодо людей",
-                        description:
-                            "MUCGPT не можна використовувати для відповідних оцінок, класифікацій чи рішень щодо відбору."
+                        description: "MUCGPT не можна використовувати для відповідних оцінок, класифікацій чи рішень щодо відбору."
                     },
                     orientation: {
                         title: "Перевірка лише як орієнтир",
@@ -2348,8 +2343,7 @@ export const tutorialsTranslations = {
                     },
                     contact: {
                         title: "Вирішальним є фактичне використання",
-                        description:
-                            "Вирішальним є те, для чого асистент фактично використовується. Перевірка може враховувати лише збережені інструкції."
+                        description: "Вирішальним є те, для чого асистент фактично використовується. Перевірка може враховувати лише збережені інструкції."
                     }
                 }
             },

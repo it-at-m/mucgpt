@@ -40,10 +40,7 @@ export const WikiTutorial = ({ tocTitle, sections }: WikiTutorialProps) => {
     const tocSections = useMemo(() => sections.filter(section => !section.hideFromToc), [sections]);
 
     // All anchor ids in document order.
-    const anchorIds = useMemo(
-        () => tocSections.flatMap(section => [section.id, ...(section.subsections?.map(sub => sub.id) ?? [])]),
-        [tocSections]
-    );
+    const anchorIds = useMemo(() => tocSections.flatMap(section => [section.id, ...(section.subsections?.map(sub => sub.id) ?? [])]), [tocSections]);
 
     const parentOf = useMemo(() => {
         const map = new Map<string, string>();

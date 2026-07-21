@@ -1,27 +1,138 @@
+import asyncio
+import hashlib
 from pathlib import Path
+from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException
+from langchain_core.messages import AIMessage, BaseMessage, HumanMessage, SystemMessage
+from langchain_core.runnables import RunnableConfig
+from langfuse import observe, propagate_attributes
 
 from api.api_models import (
     AssistantDraftRequest,
     AssistantDraftResult,
     ChatCompletionMessage,
-    ChatCompletionResponse,
     ChatTitleRequest,
     ChatTitleResult,
 )
 from api.exception import llm_exception_handler
+from config.langfuse_provider import LangfuseProvider
+from config.model_provider import ModelProvider
 from config.settings import InternalTaskModelStrength, Settings, get_settings
 from core.auth import authenticate_user
 from core.auth_models import AuthenticationResult
 from core.logtools import getLogger
-from init_app import init_agent
 
 logger = getLogger()
 router = APIRouter(prefix="/v1")
 
 
-PROMPTS_DIR = Path("create_assistant")
+PROMPTS_DIR = Path(__file__).resolve().parents[2] / "create_assistant"
+
+
+def _hash_user_id(user_id: str | None) -> str | None:
+    if not user_id:
+        return None
+    return hashlib.sha256(user_id.encode("utf-8")).hexdigest()
+
+
+def _extract_department_prefix(department: str | None) -> str | None:
+    if not department:
+        return None
+    prefix_chars: list[str] = []
+    for char in department:
+        if char.isalpha():
+            prefix_chars.append(char)
+        else:
+            break
+    return "".join(prefix_chars) if prefix_chars else None
+
+
+def _to_langchain_messages(messages: list[ChatCompletionMessage]) -> list[BaseMessage]:
+    lc_messages: list[BaseMessage] = []
+    for msg in messages:
+        if msg.role == "system":
+            lc_messages.append(SystemMessage(content=msg.content))
+        elif msg.role == "user":
+            lc_messages.append(HumanMessage(content=msg.content))
+        else:
+            lc_messages.append(AIMessage(content=msg.content))
+    return lc_messages
+
+
+def _extract_message_content(content: Any) -> str:
+    if isinstance(content, str):
+        return content
+    if isinstance(content, list):
+        return " ".join(str(part) for part in content if part is not None).strip()
+    if content is None:
+        return ""
+    return str(content)
+
+
+async def _invoke_internal_generation(
+    *,
+    model_name: str,
+    temperature: float,
+    messages: list[ChatCompletionMessage],
+    user_info: AuthenticationResult,
+    trace_tags: list[str],
+    run_name: str,
+) -> str:
+    callbacks = []
+    langfuse_handler = LangfuseProvider.get_callback_handler()
+    if langfuse_handler:
+        callbacks.append(langfuse_handler)
+
+    request_config = RunnableConfig(
+        run_name=run_name,
+        callbacks=callbacks if callbacks else None,  # type: ignore[arg-type]
+        configurable={
+            "llm": model_name,
+            "llm_temperature": temperature,
+            "llm_streaming": False,
+            "user_info": user_info,
+            "llm_user": _extract_department_prefix(user_info.department),
+        },
+    )
+
+    llm = ModelProvider.get_model().with_config(request_config)
+    with propagate_attributes(
+        user_id=_hash_user_id(user_info.user_id if user_info else None),
+        tags=trace_tags,
+    ):
+        ai_message = await llm.ainvoke(_to_langchain_messages(messages))
+
+    return _extract_message_content(ai_message.content)
+
+
+@observe(
+    name="assistant-draft-part-generation",
+    capture_input=False,
+    capture_output=False,
+)
+async def _invoke_assistant_draft_part(
+    *,
+    model_name: str,
+    temperature: float,
+    messages: list[ChatCompletionMessage],
+    user_info: AuthenticationResult,
+    trace_tags: list[str],
+    run_name: str,
+) -> str:
+    """Trace wrapper for assistant-draft sub-generations.
+
+    Keeps the three parallel draft calls grouped under one parent endpoint trace.
+    """
+
+    return await _invoke_internal_generation(
+        model_name=model_name,
+        temperature=temperature,
+        messages=messages,
+        user_info=user_info,
+        trace_tags=trace_tags,
+        run_name=run_name,
+    )
 
 
 def _get_internal_task_model(
@@ -100,79 +211,61 @@ def _normalize_chat_title(value: str) -> str:
     ),
     response_model=AssistantDraftResult,
 )
+@observe(name="assistant-draft-generation", capture_input=False, capture_output=False)
 async def generate_assistant_draft(
     request: AssistantDraftRequest,
     user_info: AuthenticationResult = Depends(authenticate_user),
 ) -> AssistantDraftResult:
     """Generate a full assistant draft from a short prompt seed."""
 
-    ae = await init_agent(user_info=user_info)
     settings = get_settings()
 
     model_name = _get_internal_task_model(settings, InternalTaskModelStrength.STRONG)
 
     try:
-        logger.info("assistant-draft: reading system prompt generator")
-        system_message = _read_prompt_file("prompt_for_systemprompt.md")
-        messages: list[ChatCompletionMessage] = [
-            ChatCompletionMessage(role="system", content=system_message),
-            ChatCompletionMessage(
-                role="user", content="Funktion: " + request.prompt_seed
+        logger.info("assistant-draft: reading prompt templates")
+        system_prompt_system = _read_prompt_file("prompt_for_systemprompt.md")
+        description_system = _read_prompt_file("prompt_for_description_from_seed.md")
+        title_system = _read_prompt_file("prompt_for_title_from_seed.md")
+
+        base_user_content = "Funktion: " + request.prompt_seed
+
+        logger.info("assistant-draft: running llm calls in parallel")
+        generated_system_prompt, description, title = await asyncio.gather(
+            _invoke_assistant_draft_part(
+                model_name=model_name,
+                temperature=1.0,
+                messages=[
+                    ChatCompletionMessage(role="system", content=system_prompt_system),
+                    ChatCompletionMessage(role="user", content=base_user_content),
+                ],
+                user_info=user_info,
+                trace_tags=["assistant-draft", "system-prompt"],
+                run_name="assistant-draft-system-prompt",
             ),
-        ]
-
-        logger.info("assistant-draft: creating system prompt")
-        system_prompt_resp: ChatCompletionResponse = ae.run_without_streaming(
-            messages=messages,
-            temperature=1.0,
-            model=model_name,
-            user_info=user_info,
-        )
-        generated_system_prompt = system_prompt_resp.choices[0].message.content
-
-        logger.info("assistant-draft: reading description prompt")
-        system_message = _read_prompt_file("prompt_for_description.md")
-        messages = [
-            ChatCompletionMessage(role="system", content=system_message),
-            ChatCompletionMessage(
-                role="user",
-                content="Systempromt: ```" + generated_system_prompt + "```",
+            _invoke_assistant_draft_part(
+                model_name=model_name,
+                temperature=1.0,
+                messages=[
+                    ChatCompletionMessage(role="system", content=description_system),
+                    ChatCompletionMessage(role="user", content=base_user_content),
+                ],
+                user_info=user_info,
+                trace_tags=["assistant-draft", "description"],
+                run_name="assistant-draft-description",
             ),
-        ]
-
-        logger.info("assistant-draft: creating description")
-        description_resp: ChatCompletionResponse = ae.run_without_streaming(
-            messages=messages,
-            temperature=1.0,
-            model=model_name,
-            user_info=user_info,
-        )
-        description = description_resp.choices[0].message.content
-
-        logger.info("assistant-draft: reading title prompt")
-        system_message = _read_prompt_file("prompt_for_title.md")
-        messages = [
-            ChatCompletionMessage(role="system", content=system_message),
-            ChatCompletionMessage(
-                role="user",
-                content=(
-                    "Systempromt: ```"
-                    + generated_system_prompt
-                    + "```\nBeschreibung: ```"
-                    + description
-                    + "```"
-                ),
+            _invoke_assistant_draft_part(
+                model_name=model_name,
+                temperature=1.0,
+                messages=[
+                    ChatCompletionMessage(role="system", content=title_system),
+                    ChatCompletionMessage(role="user", content=base_user_content),
+                ],
+                user_info=user_info,
+                trace_tags=["assistant-draft", "title"],
+                run_name="assistant-draft-title",
             ),
-        ]
-
-        logger.info("assistant-draft: creating title")
-        title_resp: ChatCompletionResponse = ae.run_without_streaming(
-            messages=messages,
-            temperature=1.0,
-            model=model_name,
-            user_info=user_info,
         )
-        title = title_resp.choices[0].message.content
 
         logger.info("assistant-draft: returning finished draft")
         return AssistantDraftResult(
@@ -201,7 +294,6 @@ async def generate_chat_title(
 ) -> ChatTitleResult:
     """Generate and normalize a chat title from the last user/assistant turn."""
 
-    ae = await init_agent(user_info=user_info)
     settings = get_settings()
 
     model_name = _get_internal_task_model(settings, InternalTaskModelStrength.WEAK)
@@ -245,13 +337,14 @@ async def generate_chat_title(
 
     try:
         logger.info("chat-title: generating title")
-        completion: ChatCompletionResponse = ae.run_without_streaming(
-            messages=messages,
+        raw_title = await _invoke_internal_generation(
+            model_name=model_name,
             temperature=0.0,
-            model=model_name,
+            messages=messages,
             user_info=user_info,
+            trace_tags=["chat-title"],
+            run_name="chat-title-generation",
         )
-        raw_title = completion.choices[0].message.content
         normalized = _normalize_chat_title(raw_title)
         if not normalized:
             normalized = _normalize_chat_title(request.query) or "New Chat"

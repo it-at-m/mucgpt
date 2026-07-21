@@ -34,7 +34,9 @@ export default defineConfig(({ mode }) => {
                               ]
                           },
                           workbox: {
-                              maximumFileSizeToCacheInBytes: 3000000,
+                              // Raised from 3 MB: Rolldown (Vite 8) bundles the mermaid/markmap
+                              // "visualizations" chunk slightly larger (~3.5 MB) than Rollup did.
+                              maximumFileSizeToCacheInBytes: 4000000,
                               globIgnores: ["**/*.wasm"],
                               navigateFallbackDenylist: [/^\/api\//, /^\/auth\//, /^\/sso\//, /^\/realms\//, /^\/oauth2\//, /^\/login\//, /^\/logout\//],
                               runtimeCaching: [
@@ -75,14 +77,20 @@ export default defineConfig(({ mode }) => {
         build: {
             outDir: "dist",
             sourcemap: !isGHPages,
-            rollupOptions: {
+            rolldownOptions: {
                 output: {
-                    manualChunks: {
-                        react: ["react", "react-dom", "react-router-dom"],
-                        fluentui: ["@fluentui/react", "@fluentui/react-components", "@fluentui/react-icons"],
-                        markdown: ["react-markdown", "remark-gfm"],
-                        visualizations: ["markmap-view", "markmap-lib", "mermaid"],
-                        transformers: ["@huggingface/transformers"]
+                    // Vite 8 / Rolldown replaces the removed object-form `manualChunks`
+                    // with `codeSplitting.groups`, matching modules by path via `test`.
+                    // Higher `priority` groups match first, so the more specific
+                    // react-* packages are claimed before the broad `react` group.
+                    codeSplitting: {
+                        groups: [
+                            { name: "fluentui", test: /node_modules[\\/]@fluentui[\\/]/, priority: 30 },
+                            { name: "visualizations", test: /node_modules[\\/](markmap-view|markmap-lib|mermaid)[\\/]/, priority: 30 },
+                            { name: "transformers", test: /node_modules[\\/]@huggingface[\\/]transformers[\\/]/, priority: 30 },
+                            { name: "markdown", test: /node_modules[\\/](react-markdown|remark-gfm)[\\/]/, priority: 20 },
+                            { name: "react", test: /node_modules[\\/](react|react-dom|react-router-dom)[\\/]/, priority: 10 }
+                        ]
                     }
                 }
             }

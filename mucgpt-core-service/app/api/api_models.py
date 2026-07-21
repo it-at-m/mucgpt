@@ -321,42 +321,48 @@ class ToolListResponse(BaseModel):
     )
 
 
-class CreateAssistantRequest(BaseModel):
-    """Request model for creating a assistant."""
+class AssistantDraftRequest(BaseModel):
+    """Request model for generating an assistant draft from a prompt seed.
 
-    input: str = Field(..., description="The input to create the assistant.")
-    model: str = Field(
-        "gpt-4o-mini", description="The model to use for assistant creation."
-    )
-    max_tokens: int = Field(
-        4096, description="The maximum number of output tokens for the assistant."
-    )
-    model_config = ConfigDict(
-        json_schema_extra={
-            "example": {
-                "input": "Create an assistant that answers questions about internal IT policies.",
-                "model": "gpt-4o-mini",
-                "max_tokens": 1024,
-            }
-        }
+    The input is a short description or rough system prompt that is expanded
+    into a full assistant system prompt before title and description are generated.
+    """
+
+    prompt_seed: str = Field(
+        ...,
+        description="Short description or rough system prompt to expand into a complete assistant draft.",
     )
 
 
-class CreateAssistantResult(BaseModel):
-    """Result model for creating a assistant."""
+class AssistantDraftResult(BaseModel):
+    """Result model for assistant draft generation."""
 
-    system_prompt: str = Field(..., description="The system prompt for the assistant.")
-    description: str = Field(..., description="The description of the assistant.")
-    title: str = Field(..., description="The title of the assistant.")
-    model_config = ConfigDict(
-        json_schema_extra={
-            "example": {
-                "system_prompt": "You are an assistant specialized in internal IT policy guidance.",
-                "description": "Provides answers about acceptable use, data handling, and security practices.",
-                "title": "IT Policy Assistant",
-            }
-        }
+    system_prompt: str = Field(
+        ..., description="The original system prompt for the assistant."
     )
+    description: str = Field(
+        ..., description="Generated description for the assistant."
+    )
+    title: str = Field(..., description="Generated title for the assistant.")
+
+
+class ChatTitleRequest(BaseModel):
+    """Request model for generating a chat title based on the last turn."""
+
+    query: str = Field(
+        ..., description="The user's last question or message in the chat."
+    )
+    answer: str = Field(..., description="The assistant's last answer in the chat.")
+    system_message: str | None = Field(
+        None,
+        description="Optional system message that was used for the chat.",
+    )
+
+
+class ChatTitleResult(BaseModel):
+    """Result model for chat title generation."""
+
+    title: str = Field(..., description="Normalized, human-readable chat title.")
 
 
 class ModelsDTO(BaseModel):

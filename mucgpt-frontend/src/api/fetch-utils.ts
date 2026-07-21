@@ -29,7 +29,7 @@ export function getConfig(): RequestInit {
  * @param body Optional body to be transferred
  */
 
-export function postConfig(body: any): RequestInit {
+export function postConfig(body?: unknown): RequestInit {
     return {
         method: "POST",
         body: body ? JSON.stringify(body) : undefined,
@@ -68,10 +68,10 @@ export function postFormDataConfig(formData: FormData): RequestInit {
  * @param body Optional body to be transferred
  */
 
-export function putConfig(body: any): RequestInit {
+export function putConfig(body?: { version?: string | number } & Record<string, unknown>): RequestInit {
     const headers = getHeaders();
-    if (body.version) {
-        headers.append("If-Match", body.version);
+    if (body?.version !== undefined) {
+        headers.append("If-Match", String(body.version));
     }
     return {
         method: "PUT",
@@ -89,10 +89,10 @@ export function putConfig(body: any): RequestInit {
  * @param body Optional body to be transferred
  */
 
-export function patchConfig(body: any): RequestInit {
+export function patchConfig(body?: { version?: string | number } & Record<string, unknown>): RequestInit {
     const headers = getHeaders();
-    if (body.version !== undefined) {
-        headers.append("If-Match", body.version);
+    if (body?.version !== undefined) {
+        headers.append("If-Match", String(body.version));
     }
     return {
         method: "PATCH",
@@ -108,7 +108,7 @@ export function patchConfig(body: any): RequestInit {
  * Returns a default DELETE-Config for fetch
  * @param body Optional body to be transferred
  */
-export function deleteConfig(body?: any): RequestInit {
+export function deleteConfig(body?: unknown): RequestInit {
     return {
         method: "DELETE",
         body: body ? JSON.stringify(body) : undefined,

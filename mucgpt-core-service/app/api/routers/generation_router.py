@@ -259,34 +259,7 @@ async def generate_chat_title(
     """Generate and normalize a chat title from the last user/assistant turn."""
 
     settings = get_settings()
-
-    # Chat title prompt lives next to other assistant-generation prompts for now.
-    # If you prefer, move it to a dedicated folder later.
-    try:
-        system_prompt = _read_prompt_file("prompt_for_chat_title.md")
-    except HTTPException:
-        # Fallback: hard-coded German instructions matching previous frontend prompt
-        logger.warning(
-            "prompt_for_chat_title.md missing, falling back to built-in prompt"
-        )
-        system_prompt = (
-            "Du bist ein Assistent, der kurze und aussagekräftige Titel für "
-            "Chatverläufe erstellt.\n\n"
-            "Erstelle anhand der vorherigen Nutzerfrage und Antwort einen kurzen "
-            "Chatnamen, der das Hauptthema der Unterhaltung zusammenfasst.\n\n"
-            "Richtlinien:\n"
-            "- Maximal 4 Wörter\n"
-            "- Sei spezifisch und beschreibend, nicht generisch\n"
-            "- Erfasse die zentrale Absicht oder das konkrete Problem\n"
-            '- Vermeide Füllwörter wie "Frage zu" oder "Diskussion über"\n'
-            "- Schreibe in natürlicher deutscher Titelschreibweise\n"
-            "- Schreibe Substantive und Eigennamen groß\n"
-            "- Schreibe nicht alles klein\n"
-            "- Verwende kein CamelCase und klebe keine Wörter zusammen\n"
-            "- Verwende deutsche Umlaute direkt, also ä, ö, ü und ß\n"
-            "- Verwende keine Anführungszeichen, kein Markdown, keine Satzzeichen und keine Zeilenumbrüche\n"
-            "- Gib nur den Chatnamen aus, nichts anderes\n"
-        )
+    system_prompt = _read_prompt_file("prompt_for_title.md")
 
     messages: list[ChatCompletionMessage] = []
     messages.append(ChatCompletionMessage(role="system", content=system_prompt))

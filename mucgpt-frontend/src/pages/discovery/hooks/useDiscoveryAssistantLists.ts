@@ -282,7 +282,7 @@ export const useDiscoveryAssistantLists = ({
                             }
 
                             return toCardData(assistantData, {
-                                subscriptions: fullData?.subscriptions_count ?? 0,
+                                subscriptions: fullData?.subscriptions_count ?? sub.subscriptions_count ?? 0,
                                 updated: fullData?.updated_at ?? (localData ? getSnapshotUpdatedAt(localData) : undefined) ?? sub.updated_at,
                                 isSubscribedAssistant: true
                             });

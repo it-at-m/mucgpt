@@ -1,10 +1,7 @@
 import asyncio
-import hashlib
 from pathlib import Path
-from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException
-from langchain_core.messages import AIMessage, BaseMessage, HumanMessage, SystemMessage
 from langchain_core.runnables import RunnableConfig
 from langfuse import observe, propagate_attributes
 
@@ -21,6 +18,12 @@ from config.model_provider import ModelProvider
 from config.settings import InternalTaskModelStrength, Settings, get_settings
 from core.auth import authenticate_user
 from core.auth_models import AuthenticationResult
+from core.llm_helpers import (
+    extract_department_prefix,
+    extract_message_content,
+    hash_user_id,
+    to_langchain_messages,
+)
 from core.logtools import getLogger
 
 logger = getLogger()
@@ -28,46 +31,6 @@ router = APIRouter(prefix="/v1")
 
 
 PROMPTS_DIR = Path(__file__).resolve().parents[2] / "create_assistant"
-
-
-def _hash_user_id(user_id: str | None) -> str | None:
-    if not user_id:
-        return None
-    return hashlib.sha256(user_id.encode("utf-8")).hexdigest()
-
-
-def _extract_department_prefix(department: str | None) -> str | None:
-    if not department:
-        return None
-    prefix_chars: list[str] = []
-    for char in department:
-        if char.isalpha():
-            prefix_chars.append(char)
-        else:
-            break
-    return "".join(prefix_chars) if prefix_chars else None
-
-
-def _to_langchain_messages(messages: list[ChatCompletionMessage]) -> list[BaseMessage]:
-    lc_messages: list[BaseMessage] = []
-    for msg in messages:
-        if msg.role == "system":
-            lc_messages.append(SystemMessage(content=msg.content))
-        elif msg.role == "user":
-            lc_messages.append(HumanMessage(content=msg.content))
-        else:
-            lc_messages.append(AIMessage(content=msg.content))
-    return lc_messages
-
-
-def _extract_message_content(content: Any) -> str:
-    if isinstance(content, str):
-        return content
-    if isinstance(content, list):
-        return " ".join(str(part) for part in content if part is not None).strip()
-    if content is None:
-        return ""
-    return str(content)
 
 
 async def _invoke_internal_generation(
@@ -92,18 +55,18 @@ async def _invoke_internal_generation(
             "llm_temperature": temperature,
             "llm_streaming": False,
             "user_info": user_info,
-            "llm_user": _extract_department_prefix(user_info.department),
+            "llm_user": extract_department_prefix(user_info.department),
         },
     )
 
     llm = ModelProvider.get_model().with_config(request_config)
     with propagate_attributes(
-        user_id=_hash_user_id(user_info.user_id if user_info else None),
+        user_id=hash_user_id(user_info.user_id if user_info else None),
         tags=trace_tags,
     ):
-        ai_message = await llm.ainvoke(_to_langchain_messages(messages))
+        ai_message = await llm.ainvoke(to_langchain_messages(messages))
 
-    return _extract_message_content(ai_message.content)
+    return extract_message_content(ai_message.content)
 
 
 @observe(

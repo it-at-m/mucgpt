@@ -40,7 +40,7 @@
         "@types/react-syntax-highlighter": "15.5.13",
         "@vite-pwa/assets-generator": "^1.0.2",
         "@vitejs/plugin-react": "6.0.3",
-        "brace-expansion": "5.0.6",
+        "brace-expansion": "5.0.7",
         "eslint": "9.39.4",
         "eslint-plugin-react": "7.37.5",
         "gh-pages": "6.3.0",

@@ -67,5 +67,6 @@
 
 .dialogTextareaInner {
     flex: 1;
-    max-height: none;
+    height: 100%;
+    max-height: none !important;
 }

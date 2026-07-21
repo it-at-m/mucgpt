@@ -1,4 +1,5 @@
-import { IconButton } from "@fluentui/react";
+import { Button } from "@fluentui/react-components";
+import { Copy24Regular, CheckmarkSquare24Regular } from "@fluentui/react-icons";
 import { ClassAttributes, HTMLAttributes, useState, useCallback } from "react";
 import { ExtraProps } from "react-markdown";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
@@ -19,17 +20,7 @@ const MERMAID_DIAGRAM_TYPES = ["flowchart", "classDiagram", "sequenceDiagram", "
 
 const FRAGMENT_LANGUAGES = ["mucgptbrainstorming", "mucgpt-brainstorming", "mucgptsimplify", "mucgpt-simplify"] as const;
 
-const COPY_ICONS = {
-    DEFAULT: "Copy",
-    SUCCESS: "Checkmark"
-} as const;
-
-type CodeBlockRendererProps = ClassAttributes<HTMLElement> &
-    HTMLAttributes<HTMLElement> &
-    ExtraProps & {
-        /** When true, render ```drawio as a diagram. Only set for assistant answers. */
-        allowDrawio?: boolean;
-    };
+type CodeBlockRendererProps = ClassAttributes<HTMLElement> & HTMLAttributes<HTMLElement> & ExtraProps;
 
 // Utility functions
 const getLanguageFromClassName = (className?: string): string => {
@@ -58,14 +49,12 @@ const isDrawioDiagram = (language: string): boolean => {
 };
 
 export default function CodeBlockRenderer(props: CodeBlockRendererProps) {
-    const { children, className, allowDrawio, ...rest } = props;
-    const [icon, setIcon] = useState<string>(COPY_ICONS.DEFAULT);
+    const { children, className, ...rest } = props;
+    const [copied, setCopied] = useState<boolean>(false);
     const language = getLanguageFromClassName(className);
     const text = String(children);
     const lightThemePref = getThemePreference();
-    // Prefer explicit prop from MarkdownRenderer; context is a fallback.
-    const allowDrawioFromContext = useAllowDrawioRender();
-    const allowDrawioRender = allowDrawio ?? allowDrawioFromContext;
+    const allowDrawioRender = useAllowDrawioRender();
 
     // Debug logging
     if (language && (language.toLowerCase().includes("mucgpt") || language.toLowerCase().includes("brainstorm"))) {
@@ -74,9 +63,9 @@ export default function CodeBlockRenderer(props: CodeBlockRendererProps) {
 
     const onCopy = useCallback(() => {
         navigator.clipboard.writeText(text);
-        setIcon(COPY_ICONS.SUCCESS);
+        setCopied(true);
         setTimeout(() => {
-            setIcon(COPY_ICONS.DEFAULT);
+            setCopied(false);
         }, COPY_FEEDBACK_TIMEOUT);
     }, [text]);
 
@@ -122,7 +111,12 @@ export default function CodeBlockRenderer(props: CodeBlockRendererProps) {
                 />
                 <div className={styles.copyContainer}>
                     {language}
-                    <IconButton style={{ color: "black" }} iconProps={{ iconName: icon }} onClick={onCopy} />
+                    <Button
+                        appearance="transparent"
+                        aria-label="Copy code"
+                        icon={copied ? <CheckmarkSquare24Regular /> : <Copy24Regular />}
+                        onClick={onCopy}
+                    />
                 </div>
             </div>
         );

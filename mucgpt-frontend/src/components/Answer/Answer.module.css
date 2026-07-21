@@ -3,6 +3,9 @@
 }
 
 .answerContainer {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between; /* replaces v8 Stack verticalAlign="space-between" */
     padding: 1.25em;
     margin: 4px 0 0;
     background: var(--colorNeutralBackground3);
@@ -12,6 +15,11 @@
     max-width: 100%;
     box-sizing: border-box;
     transition: box-shadow 0.2s ease-in-out; /* Smooth transition for hover effect */
+}
+
+.answerHeader {
+    display: flex;
+    flex-direction: row; /* replaces v8 Stack horizontal */
 }
 
 .followUpActionsBelow {
@@ -103,6 +111,7 @@
 }
 
 .growItem {
+    flex-grow: 1; /* replaces v8 Stack.Item grow */
     width: 100%; /* Change from min-width to use full width */
     overflow-x: auto;
 }

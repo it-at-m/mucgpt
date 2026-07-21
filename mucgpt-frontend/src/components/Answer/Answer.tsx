@@ -1,7 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
 
-import { Stack } from "@fluentui/react";
-
 import styles from "./Answer.module.css";
 
 import { AskResponse } from "../../api";
@@ -50,14 +48,14 @@ export const Answer = ({ answer, onRegenerateResponseClicked, onFollowUpActionSe
 
     return (
         <div className={styles.answerWithActions}>
-            <Stack className={styles.answerContainer} verticalAlign="space-between">
-                <Stack.Item>
-                    <Stack horizontal>
+            <div className={styles.answerContainer}>
+                <div>
+                    <div className={styles.answerHeader}>
                         <AnswerIcon aria-hidden />
-                    </Stack>
-                </Stack.Item>
+                    </div>
+                </div>
 
-                <Stack.Item className={styles.growItem} grow>
+                <div className={styles.growItem}>
                     {formatted && (
                         <div className={styles.answerText}>
                             <MarkdownRenderer allowDrawio>{processedText}</MarkdownRenderer>
@@ -68,8 +66,8 @@ export const Answer = ({ answer, onRegenerateResponseClicked, onFollowUpActionSe
                             {processedText}
                         </div>
                     )}
-                </Stack.Item>
-            </Stack>
+                </div>
+            </div>
             <div className={styles.answerActionsBelow}>
                 <Tooltip content={t("components.answer.copy")} relationship="description" positioning={{ target: ref }}>
                     <Button

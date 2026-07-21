@@ -17,7 +17,12 @@ export interface DrawIOProps {
  * Accepts raw <mxGraphModel>, <mxfile>, or a tiny JSON wrapper with an "xml" key.
  */
 export function normalizeDrawioXml(raw: string): string | null {
-    let xml = raw.replaceAll("`", "").trim();
+    // Only strip stray markdown fences at the edges — keep backticks inside labels.
+    let xml = raw
+        .trim()
+        .replace(/^`+/, "")
+        .replace(/`+$/, "")
+        .trim();
     if (!xml) return null;
 
     if (xml.startsWith("{")) {
@@ -41,7 +46,7 @@ export function normalizeDrawioXml(raw: string): string | null {
 
 /** Checks the completeness of the figure via checking for <mxgraphmodel> tag closing */
 export function isLikelyIncompleteDrawioXml(raw: string): boolean {
-    const xml = raw.replaceAll("`", "").trim().toLowerCase();
+    const xml = raw.trim().toLowerCase();
     if (!xml) return true;
 
     const openedModel = xml.includes("<mxgraphmodel");
@@ -81,8 +86,10 @@ function downloadDrawioXml(xml: string): void {
     const link = document.createElement("a");
     link.href = url;
     link.download = "diagram.drawio";
+    document.body.appendChild(link);
     link.click();
-    URL.revokeObjectURL(url);
+    document.body.removeChild(link);
+    setTimeout(() => URL.revokeObjectURL(url), 100);
 }
 
 export const DrawIO: React.FC<DrawIOProps> = ({ text, darkTheme }) => {
@@ -224,7 +231,7 @@ export const DrawIO: React.FC<DrawIOProps> = ({ text, darkTheme }) => {
         return (
             <div className={styles.errorFallback}>
                 <p className={styles.status}>{t("components.drawio.error")}</p>
-                <HighlightedCodeBlock text={text} language="drawio" />
+                <HighlightedCodeBlock text={text} language="drawio" lightTheme={!darkTheme} />
             </div>
         );
     }

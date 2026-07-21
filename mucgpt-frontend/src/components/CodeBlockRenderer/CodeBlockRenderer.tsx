@@ -42,8 +42,8 @@ const getThemePreference = (): boolean => {
     return storedTheme === null ? true : storedTheme === "true";
 };
 
-const isFragmentLanguage = (language: string): boolean => {
-    const normalizedLanguage = language.toLowerCase();
+const isFragmentLanguage = (language?: string): boolean => {
+    const normalizedLanguage = language?.toLowerCase();
     return FRAGMENT_LANGUAGES.some(lang => normalizedLanguage === lang);
 };
 

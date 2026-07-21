@@ -39,8 +39,15 @@ export function sanitizeDrawioViewerHost(host: HTMLElement): boolean {
     host.querySelectorAll("*").forEach(element => {
         for (const attr of Array.from(element.attributes)) {
             const name = attr.name;
-            const value = attr.value;
-            if (/^on/i.test(name) || /javascript:/i.test(value) || /data:text\/html/i.test(value) || /vbscript:/i.test(value)) {
+            // Browsers ignore C0 controls / space in URL schemes, so
+            // `java\nscript:` still executes as javascript: — strip them first.
+            const normalizedValue = attr.value.replace(/[\x00-\x20]/g, "");
+            if (
+                /^on/i.test(name) ||
+                /javascript:/i.test(normalizedValue) ||
+                /data:text\/html/i.test(normalizedValue) ||
+                /vbscript:/i.test(normalizedValue)
+            ) {
                 element.removeAttribute(name);
             }
         }

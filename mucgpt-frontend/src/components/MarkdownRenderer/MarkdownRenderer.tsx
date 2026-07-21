@@ -36,8 +36,7 @@ export const MarkdownRenderer = ({ children, className, allowDrawio = false }: M
                     [rehypeExternalLinks, rehypeExternalLinksOptions]
                 ]}
                 components={{
-                    // Bind allowDrawio explicitly so user vs assistant cannot leak via context quirks
-                    code: codeProps => <CodeBlockRenderer {...codeProps} allowDrawio={allowDrawio} />,
+                    code: CodeBlockRenderer,
                     table: TableRenderer
                 }}
             >

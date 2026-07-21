@@ -65,12 +65,7 @@ export function loadDrawioViewer(): Promise<DrawioGraphViewer> {
 
         const existing = document.querySelector<HTMLScriptElement>(`script[data-mucgpt-drawio-viewer="true"]`);
         if (existing) {
-            existing.addEventListener("load", () => {
-                if (window.GraphViewer) resolve(window.GraphViewer);
-                else reject(new Error("Draw.io viewer loaded but GraphViewer is missing"));
-            });
-            existing.addEventListener("error", () => reject(new Error("Failed to load draw.io viewer script")));
-            return;
+            existing.remove();
         }
 
         const script = document.createElement("script");

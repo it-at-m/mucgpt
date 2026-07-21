@@ -1,3 +1,5 @@
+from collections.abc import Sequence
+from typing import Any
 from unittest.mock import patch
 
 import pytest
@@ -6,17 +8,23 @@ from langchain_core.messages import AIMessage
 
 class _FakeConfiguredModel:
     def __init__(
-        self, response_by_run_name: dict[str, str], fail_run_name: str | None = None
-    ):
+        self,
+        response_by_run_name: dict[str, str],
+        fail_run_name: str | None = None,
+    ) -> None:
         self._response_by_run_name = response_by_run_name
         self._fail_run_name = fail_run_name
         self._run_name = ""
 
-    def with_config(self, config):
-        self._run_name = config.get("run_name") or ""
-        return self
+    def with_config(self, config: Any) -> "_FakeConfiguredModel":
+        configured = _FakeConfiguredModel(
+            response_by_run_name=self._response_by_run_name.copy(),
+            fail_run_name=self._fail_run_name,
+        )
+        configured._run_name = config.get("run_name") or ""
+        return configured
 
-    async def ainvoke(self, messages):
+    async def ainvoke(self, messages: Sequence[Any]) -> AIMessage:
         if self._fail_run_name and self._run_name == self._fail_run_name:
             raise RuntimeError("boom")
         return AIMessage(

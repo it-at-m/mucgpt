@@ -183,9 +183,10 @@ async def generate_assistant_draft(
 
     settings = get_settings()
 
-    model_name = _get_internal_task_model(settings, InternalTaskModelStrength.STRONG)
-
     try:
+        model_name = _get_internal_task_model(
+            settings, InternalTaskModelStrength.STRONG
+        )
         logger.info("assistant-draft: reading prompt templates")
         system_prompt_system = _read_prompt_file("prompt_for_systemprompt.md")
         description_system = _read_prompt_file("prompt_for_description_from_seed.md")
@@ -259,8 +260,6 @@ async def generate_chat_title(
 
     settings = get_settings()
 
-    model_name = _get_internal_task_model(settings, InternalTaskModelStrength.WEAK)
-
     # Chat title prompt lives next to other assistant-generation prompts for now.
     # If you prefer, move it to a dedicated folder later.
     try:
@@ -299,6 +298,7 @@ async def generate_chat_title(
     messages.append(ChatCompletionMessage(role="assistant", content=request.answer))
 
     try:
+        model_name = _get_internal_task_model(settings, InternalTaskModelStrength.WEAK)
         logger.info("chat-title: generating title")
         raw_title = await _invoke_internal_generation(
             model_name=model_name,

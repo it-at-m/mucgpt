@@ -1,4 +1,4 @@
-import { Stack, PrimaryButton } from "@fluentui/react";
+import { Button } from "@fluentui/react-components";
 import { ErrorCircle24Regular } from "@fluentui/react-icons";
 
 import styles from "./Answer.module.css";
@@ -12,14 +12,16 @@ interface Props {
 export const AnswerError = ({ error, onRetry }: Props) => {
     const { t } = useTranslation();
     return (
-        <Stack className={styles.answerContainer} verticalAlign="space-between">
+        <div className={styles.answerContainer}>
             <ErrorCircle24Regular aria-hidden="true" aria-label="Error icon" primaryFill="red" />
 
-            <Stack.Item className={styles.growItem} grow>
+            <div className={styles.growItem}>
                 <p className={styles.answerText}>{error}</p>
-            </Stack.Item>
+            </div>
 
-            <PrimaryButton className={styles.retryButton} onClick={onRetry} text={t("components.answererror.retry")} />
-        </Stack>
+            <Button appearance="primary" onClick={onRetry}>
+                {t("components.answererror.retry")}
+            </Button>
+        </div>
     );
 };

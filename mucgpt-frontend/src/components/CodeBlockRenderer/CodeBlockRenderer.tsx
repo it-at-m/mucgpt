@@ -95,12 +95,7 @@ export default function CodeBlockRenderer(props: CodeBlockRendererProps) {
                 />
                 <div className={styles.copyContainer}>
                     {language}
-                    <Button
-                        appearance="transparent"
-                        aria-label="Copy code"
-                        icon={copied ? <CheckmarkSquare24Regular /> : <Copy24Regular />}
-                        onClick={onCopy}
-                    />
+                    <Button appearance="transparent" aria-label="Copy code" icon={copied ? <CheckmarkSquare24Regular /> : <Copy24Regular />} onClick={onCopy} />
                 </div>
             </div>
         );

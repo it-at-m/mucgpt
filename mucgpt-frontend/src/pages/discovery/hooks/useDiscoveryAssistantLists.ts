@@ -3,6 +3,7 @@ import { Dispatch, SetStateAction, useCallback, useEffect, useMemo, useRef, useS
 import { getAllCommunityAssistantsApi, getOwnedCommunityAssistants, getUserSubscriptionsApi } from "../../../api/assistant-client";
 import { Assistant, AssistantResponse, CommunityAssistant, CommunityAssistantSnapshot } from "../../../api/models";
 import type { AssistantCardData } from "../../../components/AssistantDetailsSidebar/AssistantDetailsSidebar";
+import { getPrimaryOwnerDetails } from "../../../components/OwnerMetadataLink/OwnerMetadataLink";
 import { AssistantStorageService } from "../../../service/assistantstorage";
 import { CommunityAssistantStorageService } from "../../../service/communityassistantstorage";
 import useDebounce from "../../../hooks/debouncehook";
@@ -281,11 +282,20 @@ export const useDiscoveryAssistantLists = ({
                                 return null;
                             }
 
-                            return toCardData(assistantData, {
+                            // The chosen source (e.g. a locally cached snapshot) may not carry owner
+                            // details, while the subscription payload does. Preserve the subscription's
+                            // owner details so the card can still render the creator.
+                            const cardData = toCardData(assistantData, {
                                 subscriptions: fullData?.subscriptions_count ?? sub.subscriptions_count ?? 0,
                                 updated: fullData?.updated_at ?? (localData ? getSnapshotUpdatedAt(localData) : undefined) ?? sub.updated_at,
                                 isSubscribedAssistant: true
                             });
+
+                            if (getPrimaryOwnerDetails(cardData.rawData) === undefined && sub.owners_detailed && sub.owners_detailed.length > 0) {
+                                cardData.rawData = { ...cardData.rawData, owners_detailed: sub.owners_detailed };
+                            }
+
+                            return cardData;
                         })
                         .filter((assistant): assistant is AssistantCardData => assistant !== null)
                 ];

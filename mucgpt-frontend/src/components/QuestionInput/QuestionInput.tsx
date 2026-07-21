@@ -62,6 +62,7 @@ export const QuestionInput = ({
     const textareaRef = useRef<HTMLTextAreaElement | null>(null);
     const sendButtonRef = useRef<HTMLButtonElement | null>(null);
     const uploadButtonRef = useRef<HTMLButtonElement | null>(null);
+    const wasDisabledRef = useRef(disabled);
     const wasDialogOpenRef = useRef(false);
     const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
     const [internalUploadedData, setInternalUploadedData] = useState<UploadedData[]>([]);
@@ -267,6 +268,14 @@ export const QuestionInput = ({
             onDataChange?.([]);
         }
     }, [clearOnSend, disabled, draftStorageKey, externalUploadedData, onDataChange, onSend, question, setQuestion, setUploadedData, uploadedData]);
+
+    useEffect(() => {
+        if (wasDisabledRef.current && !disabled && document.activeElement === document.body) {
+            textareaRef.current?.focus({ preventScroll: true });
+        }
+
+        wasDisabledRef.current = disabled;
+    }, [disabled]);
 
     const onEnterPress = useCallback(
         (event: React.KeyboardEvent<Element>) => {

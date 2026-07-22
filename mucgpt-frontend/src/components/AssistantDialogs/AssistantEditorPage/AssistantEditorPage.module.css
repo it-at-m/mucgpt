@@ -84,29 +84,18 @@
     background-color: var(--colorBrandForeground1);
 }
 
+/* Below this width the preview chat is hidden entirely: a live chat next to the
+   form does not fit a narrow screen, so only the full-width form is shown. */
 @media (max-width: 900px) {
-    .splitLayout {
-        flex-direction: column;
-        overflow-y: auto;
-    }
-
-    .formPane,
-    .previewPane {
-        width: 100% !important;
-        height: auto;
-    }
-
     .formPane {
+        width: 100%;
+        height: auto;
         overflow-y: visible;
     }
 
-    .previewPane {
-        border-left: none;
-        border-top: 1px solid var(--colorNeutralStroke2);
-        height: 70vh;
-    }
-
-    .previewDivider {
+    .previewPane,
+    .previewDivider,
+    .previewExpandButton {
         display: none;
     }
 }

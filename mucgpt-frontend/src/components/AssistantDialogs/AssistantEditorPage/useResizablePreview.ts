@@ -6,6 +6,8 @@ const MIN_PREVIEW_PX = 340;
 const MIN_FORM_PX = 480;
 /** Keyboard resize step in percent. */
 const KEY_STEP_PERCENT = 3;
+/** Absolute ceiling for the preview width, so the form pane can never collapse fully. */
+const HARD_MAX_PERCENT = 80;
 
 /**
  * Manages the width of the preview pane as a percentage of the split container,
@@ -25,8 +27,11 @@ export const useResizablePreview = (containerRef: React.RefObject<HTMLElement | 
             if (width === 0) return percent;
             const minPreviewPercent = (MIN_PREVIEW_PX / width) * 100;
             const maxPreviewPercent = ((width - MIN_FORM_PX) / width) * 100;
-            // On narrow screens the two minimums can cross; keep the preview minimum as the floor.
-            if (maxPreviewPercent <= minPreviewPercent) return minPreviewPercent;
+            // On very narrow containers the pixel minimums can exceed the container,
+            // which would otherwise produce a percentage > 100 (and a negative form
+            // width via calc()). Cap the floor so the returned value stays sane even
+            // if this hook ever runs below the stacking breakpoint.
+            if (maxPreviewPercent <= minPreviewPercent) return Math.min(minPreviewPercent, HARD_MAX_PERCENT);
             return Math.min(maxPreviewPercent, Math.max(minPreviewPercent, percent));
         },
         [containerRef]

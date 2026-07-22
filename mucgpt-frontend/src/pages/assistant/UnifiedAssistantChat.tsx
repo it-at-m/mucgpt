@@ -114,6 +114,9 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
     const [deletedAssistantSnapshot, setDeletedAssistantSnapshot] = useState<CommunityAssistantSnapshot | null>(null);
     const [lastQuestion, setLastQuestion] = useState<string>("");
     const [isLoading, setIsLoading] = useState<boolean>(false);
+    // True from request start until the answer has fully finished streaming (see the same flag in Chat.tsx).
+    // Used to hide follow-up actions until the message is completely rendered.
+    const [isStreaming, setIsStreaming] = useState<boolean>(false);
     const [isAssistantContentLoading, setIsAssistantContentLoading] = useState<boolean>(true);
     const isDeletedAssistant = strategy instanceof DeletedCommunityAssistantStrategy;
     const isLocalAssistant = strategy instanceof LocalAssistantStrategy;
@@ -432,6 +435,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
             setLastQuestionValue(question);
             if (error) setError(undefined);
             setIsLoadingValue(true);
+            setIsStreaming(true);
 
             const askResponse: AskResponse = {} as AskResponse;
             const options: ChatOptions = {
@@ -463,6 +467,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                 setError(e);
             }
             setIsLoadingValue(false);
+            setIsStreaming(false);
         },
         [
             error,
@@ -852,6 +857,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                                     key={index}
                                     answer={answer.response}
                                     isLatest
+                                    isStreaming={isStreaming}
                                     onRegenerateResponseClicked={isDeletedAssistant ? undefined : onRegenerateResponseClicked}
                                     onFollowUpActionSend={
                                         isDeletedAssistant
@@ -892,6 +898,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
             onRegenerateResponseClicked,
             onRollbackMessage,
             isLoading,
+            isStreaming,
             error,
             callApi,
             chatMessageStreamEnd,

@@ -9,19 +9,18 @@
     width: 100%;
     max-width: 100%;
     box-sizing: border-box;
-
 }
 
 .followUpActionsBelow {
-    margin: 2px 0 0;
+    margin: 8px 0 8px;
 }
 
 .answerActionsBelow {
     display: flex;
     justify-content: flex-start;
     align-items: center;
-    gap: 2px;
-    margin: 2px 0 0;
+    margin: 8px 0 0;
+    gap: 4px;
     opacity: 0;
     transition: opacity 0.15s ease-in-out;
 }
@@ -35,10 +34,6 @@
 /* The newest answer keeps its actions permanently visible. */
 .answerWithActions.latest .answerActionsBelow {
     opacity: 1;
-}
-
-.iconRightMargin {
-    margin-right: 5 px;
 }
 
 .answerText {

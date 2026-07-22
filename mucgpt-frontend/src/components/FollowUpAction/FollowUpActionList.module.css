@@ -1,8 +1,9 @@
 .item {
     width: auto;
-    min-width: 140px;
-    padding: 10px 14px;;
-    font-size: var(--fontSizeBase400);
+    min-width: 120px;
+    padding: 4px 10px !important;
+    color: var(--colorNeutralForeground3) !important;
+    border-color: var(--colorNeutralStroke3) !important;
     transition:
         background-color 0.2s ease,
         color 0.2s ease,
@@ -21,26 +22,7 @@
 }
 
 .item:hover {
-    transform: translateY(-1px);
-}
-
-.item:active {
-    background-color: var(--colorBrandBackground);
-    color: var(--colorNeutralStrokeDisabled);
-    border-color: var(--colorNeutralStroke2);
-    transform: translateY(0);
-}
-
-.item:focus-visible {
-    outline: 2px solid var(--colorBrandBackground);
-    outline-offset: 2px;
-}
-
-.item:disabled {
-    background-color: var(--colorNeutralBackground1);
-    color: var(--colorNeutralForegroundDisabled);
-    border-color: var(--colorNeutralStroke1);
-    box-shadow: none;
+    color: var(--colorNeutralForeground1) !important;
 }
 
 @media (max-width: 650px) {

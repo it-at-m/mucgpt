@@ -1,4 +1,4 @@
-import { MutableRefObject, Dispatch, SetStateAction } from "react";
+import { RefObject, Dispatch, SetStateAction } from "react";
 import { DBMessage, StorageService } from "../service/storage";
 import { DBObject } from "../service/storage";
 import { ChatMessage, ChatOptions } from "./chat/Chat";
@@ -38,7 +38,7 @@ export async function setupStore(
     storageService: StorageService<any, any>,
     setAnswers: (answers: ChatMessage[]) => void,
     answers: any[],
-    lastQuestionRef: MutableRefObject<string>,
+    lastQuestionRef: RefObject<string>,
     setActiveChat: (id: string | undefined) => void
 ) {
     // Clear any existing errors
@@ -79,7 +79,7 @@ export async function setupStore(
  */
 export function handleDeleteChat(
     id: string | undefined,
-    lastQuestionRef: MutableRefObject<string>,
+    lastQuestionRef: RefObject<string>,
     error: unknown,
     setError: Dispatch<unknown>,
     storageService: StorageService<any, any>,
@@ -123,7 +123,7 @@ export async function handleRollback(
     activeChat: string,
     dispatch: Dispatch<any>,
     storageService: StorageService<any, any>,
-    lastQuestionRef: MutableRefObject<string>,
+    lastQuestionRef: RefObject<string>,
     setQuestion: Dispatch<SetStateAction<string>>,
     clearChat: () => void,
     fetchHistory?: () => unknown | Promise<unknown>,
@@ -170,7 +170,7 @@ export async function handleRegenerate(
     storageService: StorageService<any, any>,
     systemPrompt: string,
     callApi: (question: string, ...args: any[]) => Promise<void>,
-    isLoadingRef: MutableRefObject<boolean>
+    isLoadingRef: RefObject<boolean>
 ) {
     // Remove the last message from storage
     await storageService.popMessage(activeChat);
@@ -222,18 +222,18 @@ export const makeApiRequest = async (
     dispatch: Dispatch<any>,
     chatApi: (options: ChatRequest) => Promise<Response>,
     LLM: Model,
-    activeChatRef: MutableRefObject<string | undefined>,
+    activeChatRef: RefObject<string | undefined>,
     storageService: StorageService<any, any>,
     options: ChatOptions,
     askResponse: ChatResponse,
-    chatMessageStreamEnd: MutableRefObject<HTMLDivElement | null>,
-    isLoadingRef: MutableRefObject<boolean>,
+    chatMessageStreamEnd: RefObject<HTMLDivElement | null>,
+    isLoadingRef: RefObject<boolean>,
     fetchHistory?: () => void,
     assistant_id?: string,
     enabled_tools?: string[],
     onToolStatusUpdate?: (statuses: ToolStatus[]) => void,
     data_sources?: DataSource[],
-    answerTopRef?: MutableRefObject<HTMLElement | null>,
+    answerTopRef?: RefObject<HTMLElement | null>,
     onLoadingChange?: (isLoading: boolean) => void,
     persist: boolean = true
 ) => {

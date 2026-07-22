@@ -1,0 +1,93 @@
+.previewContainer {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    min-height: 0;
+    min-width: 0;
+    background-color: var(--app-assistant-config-surface);
+    box-sizing: border-box;
+    /* Chat turns and the question input read this variable to size their content
+       column. In the narrow preview pane we want the full width, not the 60% used
+       in the full-page chat, so bubbles and the input are not cramped. */
+    --chatContentWidth: 100%;
+}
+
+.previewHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--colorNeutralStroke2);
+    background-color: var(--colorNeutralBackground1);
+    flex-shrink: 0;
+}
+
+.previewHeaderLeft {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 0;
+}
+
+.previewHeaderActions {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex-shrink: 0;
+}
+
+.previewTitle {
+    font-size: var(--fontSizeBase400);
+    font-weight: 600;
+    color: var(--colorNeutralForeground1);
+    white-space: nowrap;
+}
+
+.previewBody {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+}
+
+.previewEmptyState {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+    padding: 24px;
+    text-align: center;
+}
+
+.previewWelcome {
+    margin: 0;
+    color: var(--colorNeutralForeground2);
+    font-size: var(--fontSizeBase400);
+    max-width: 40ch;
+}
+
+.previewMessages {
+    list-style: none;
+    margin: 0;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+/* Give the user bubble more room in the narrow pane, like the mobile layout does. */
+.previewMessages [class*="chatMessageUser"] {
+    max-width: 92%;
+}
+
+.previewInput {
+    flex-shrink: 0;
+    padding: 12px 16px;
+    border-top: 1px solid var(--colorNeutralStroke2);
+    box-sizing: border-box;
+    background-color: var(--colorNeutralBackground1);
+}

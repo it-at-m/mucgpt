@@ -213,6 +213,8 @@ export async function handleRegenerate(
  * @param assistant_id - Optional assistant ID for assistant-specific chat storage
  * @param enabled_tools - Optional array of enabled tool names
  * @param onToolStatusUpdate - Optional callback for tool status updates
+ * @param persist - When false, the answer is streamed and rendered but never written to
+ *                  storage or the history list. Used by the ephemeral assistant preview chat.
  */
 export const makeApiRequest = async (
     answers: any[],
@@ -232,7 +234,8 @@ export const makeApiRequest = async (
     onToolStatusUpdate?: (statuses: ToolStatus[]) => void,
     data_sources?: DataSource[],
     answerTopRef?: MutableRefObject<HTMLElement | null>,
-    onLoadingChange?: (isLoading: boolean) => void
+    onLoadingChange?: (isLoading: boolean) => void,
+    persist: boolean = true
 ) => {
     // Create conversation history for the API request
     const history: ChatTurn[] = answers.map((a: { user: any; response: { answer: any } }) => ({ user: a.user, assistant: a.response.answer }));
@@ -443,6 +446,12 @@ export const makeApiRequest = async (
             chatMessageStreamEnd.current?.scrollIntoView({ behavior: "smooth" });
         }
     });
+
+    // The preview chat is ephemeral: stream and render the answer, but never write
+    // it to storage or the history list.
+    if (!persist) {
+        return;
+    }
 
     // Save the chat to storage
     if (activeChatRef.current) {

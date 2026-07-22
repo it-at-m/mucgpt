@@ -43,7 +43,6 @@
 
 .answerText {
     font-size: var(--fontSizeBase400);
-    line-height: 1.5;
     overflow-x: auto;
 }
 
@@ -108,7 +107,7 @@
 }
 
 .growItem {
-    flex-grow: 1; /* replaces v8 Stack.Item grow */
-    width: 100%; /* Change from min-width to use full width */
+    flex-grow: 1;
+    width: 100%;
     overflow-x: auto;
 }

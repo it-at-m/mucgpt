@@ -200,6 +200,7 @@ export const AssistantPreviewChat = ({
                             <Answer
                                 key={index}
                                 answer={answer.response}
+                                isLatest
                                 onRegenerateResponseClicked={onRegenerate}
                                 onFollowUpActionSend={prompt => void callApi(prompt)}
                             />

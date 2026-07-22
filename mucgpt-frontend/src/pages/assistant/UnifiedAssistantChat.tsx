@@ -851,6 +851,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                                 <Answer
                                     key={index}
                                     answer={answer.response}
+                                    isLatest
                                     onRegenerateResponseClicked={isDeletedAssistant ? undefined : onRegenerateResponseClicked}
                                     onFollowUpActionSend={
                                         isDeletedAssistant

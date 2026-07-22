@@ -729,6 +729,7 @@ const Chat = () => {
                                 <Answer
                                     key={`answer-${index}`}
                                     answer={answer.response}
+                                    isLatest
                                     onRegenerateResponseClicked={onRegenerateResponseClicked}
                                     onFollowUpActionSend={prompt => callApi(prompt, systemPrompt)}
                                 />

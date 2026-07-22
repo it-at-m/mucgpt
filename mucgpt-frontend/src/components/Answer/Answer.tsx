@@ -13,9 +13,11 @@ interface Props {
     answer: AskResponse;
     onRegenerateResponseClicked?: () => void;
     onFollowUpActionSend?: (prompt: string) => void;
+    /** Whether this is the newest answer in the chat. Latest answers keep their actions permanently visible; older ones reveal them on hover. */
+    isLatest?: boolean;
 }
 
-export const Answer = ({ answer, onRegenerateResponseClicked, onFollowUpActionSend }: Props) => {
+export const Answer = ({ answer, onRegenerateResponseClicked, onFollowUpActionSend, isLatest = false }: Props) => {
     const { t } = useTranslation();
 
     const [copied, setCopied] = useState<boolean>(false);
@@ -46,7 +48,7 @@ export const Answer = ({ answer, onRegenerateResponseClicked, onFollowUpActionSe
     }, [answer.answer]); // Run this effect only when the message changes
 
     return (
-        <div className={styles.answerWithActions}>
+        <div className={`${styles.answerWithActions} ${isLatest ? styles.latest : ""}`}>
             <div className={styles.answerContainer}>
                 <div className={styles.growItem}>
                     {formatted && (

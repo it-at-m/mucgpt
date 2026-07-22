@@ -15,6 +15,11 @@ export const UserChatMessage = ({ message, onRollbackMessage: onRollbackMessage 
                     <MarkdownRenderer>{message}</MarkdownRenderer>
                 </div>
             </div>
+            {onRollbackMessage && (
+                <div className={styles.messageActions}>
+                    <RollBackMessage onRollback={onRollbackMessage} />
+                </div>
+            )}
         </div>
     );
 };

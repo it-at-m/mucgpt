@@ -6,31 +6,40 @@
 }
 
 .message {
-    padding: 1.25em;
-    margin: 0 0 4px;
+    padding: 0.75em 1.1em;
+    /* Subtle tinted bubble without a hard border: the own message is gently highlighted, not boxed. */
     background: var(--colorNeutralBackground3);
     color: var(--colorNeutralForeground1);
     border-radius: var(--borderRadiusLarge);
     overflow-x: auto;
     max-width: 100%; /* Ensure it doesn't overflow container */
-    transition: all 0.2s ease-in-out;
-    border: 1px solid var(--colorNeutralStroke1);
 }
 
 .answerText {
     white-space: pre-wrap;
     font-size: var(--fontSizeBase300);
-    line-height: 1.35;
+    line-height: 1.4;
     width: 100%; /* Use full width */
     overflow-x: auto;
-    margin-top: 8px;
 }
 
-.messageHeader {
+/*
+ * Rollback action sits below the message, right-aligned.
+ * Its space is always reserved so revealing it on hover only changes opacity,
+ * never the layout.
+ */
+.messageActions {
     display: flex;
-    align-items: center;
-    justify-content: space-between;
+    justify-content: flex-end;
     min-height: 24px;
+    margin-top: 2px;
+    opacity: 0;
+    transition: opacity 0.15s ease-in-out;
+}
+
+.messageWrapper:hover .messageActions,
+.messageWrapper:focus-within .messageActions {
+    opacity: 1;
 }
 
 .rollbackButton {

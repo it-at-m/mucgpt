@@ -199,16 +199,6 @@
     color: var(--colorBrandBackground);
 }
 
-.emptyStateBadge {
-    min-height: var(--badge-height);
-    height: var(--badge-height);
-    padding: 3px 12px;
-    border-radius: 100px;
-    border: 1px dashed var(--colorNeutralStroke2);
-    background-color: var(--colorNeutralBackground2);
-    color: var(--colorNeutralForeground2);
-}
-
 .addToolBadge {
     min-height: var(--badge-height) !important;
     height: var(--badge-height) !important;

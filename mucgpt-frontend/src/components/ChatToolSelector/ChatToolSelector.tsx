@@ -685,8 +685,6 @@ export const ChatToolSelector = ({ tools, selectedTools, setSelectedTools, allow
 
     return (
         <div className={styles.toolSelectorRow}>
-            {activeBadges.length === 0 && <span className={styles.emptyStateBadge}>{t("components.questioninput.no_tools_active")}</span>}
-
             {visibleBadges.map(badge => {
                 if (badge.type === "group") {
                     return (

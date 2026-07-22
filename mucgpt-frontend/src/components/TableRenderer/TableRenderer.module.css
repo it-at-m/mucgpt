@@ -3,8 +3,6 @@
     flex-direction: row;
     align-items: flex-start;
     overflow-x: auto;
-    margin: 1em 0;
-    gap: 8px;
 }
 
 .tableWrapper {

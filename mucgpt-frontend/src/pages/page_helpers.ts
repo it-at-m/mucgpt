@@ -2,7 +2,7 @@ import { MutableRefObject, Dispatch, SetStateAction } from "react";
 import { DBMessage, StorageService } from "../service/storage";
 import { DBObject } from "../service/storage";
 import { ChatMessage, ChatOptions } from "./chat/Chat";
-import { ChatRequest, ChatResponse, ChatTurn, DataSource } from "../api";
+import { ChatRequest, ChatResponse, ChatTurn, DataSource, Model } from "../api";
 import { ChatCompletionChunk, ChatCompletionChunkChoice } from "../api/models";
 import { ToolStreamHandler, ToolStatus } from "../utils/ToolStreamHandler";
 
@@ -220,8 +220,8 @@ export const makeApiRequest = async (
     answers: any[],
     question: string,
     dispatch: Dispatch<any>,
-    chatApi: any,
-    LLM: any,
+    chatApi: (options: ChatRequest) => Promise<Response>,
+    LLM: Model,
     activeChatRef: MutableRefObject<string | undefined>,
     storageService: StorageService<any, any>,
     options: ChatOptions,

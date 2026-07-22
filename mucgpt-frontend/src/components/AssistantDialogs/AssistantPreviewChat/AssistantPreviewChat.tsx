@@ -4,7 +4,7 @@ import { Button, Tooltip } from "@fluentui/react-components";
 import { ArrowClockwise24Regular } from "@fluentui/react-icons";
 
 import styles from "./AssistantPreviewChat.module.css";
-import { AskResponse, ChatResponse } from "../../../api";
+import { ChatResponse } from "../../../api";
 import { chatApi } from "../../../api/core-client";
 import { Answer } from "../../Answer";
 import { AnswerList } from "../../AnswerList/AnswerList";
@@ -122,7 +122,7 @@ export const AssistantPreviewChat = ({
             if (error) setError(undefined);
             setIsLoadingValue(true);
 
-            const askResponse: ChatResponse = {} as AskResponse;
+            const askResponse: ChatResponse = { answer: "", tokens: 0, user_tokens: 0 };
             const { systemPrompt: system, creativity: temp, selectedToolIds: toolIds } = configRef.current;
             try {
                 await makeApiRequest(

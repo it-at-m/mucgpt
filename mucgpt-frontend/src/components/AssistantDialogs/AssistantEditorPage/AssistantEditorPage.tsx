@@ -243,7 +243,7 @@ function SettingsForm(props: SettingsFormProps) {
                         publishDepartments={props.publishDepartments}
                         invisibleChecked={!props.isVisible}
                         setPublishDepartments={props.setPublishDepartments}
-                        onHasChanged={props.onHasChanged ?? (() => { })}
+                        onHasChanged={props.onHasChanged ?? (() => {})}
                         setInvisibleChecked={invisible => props.setInvisibleChecked(invisible)}
                     />
                 </SectionCard>
@@ -441,8 +441,8 @@ export const AssistantEditorPage = (props: AssistantEditorPageProps) => {
     const actionStatusLabel = !isOwner
         ? t("components.assistant_editor.action_status_read_only")
         : isSettingsValid
-            ? t(isCreate ? "components.assistant_editor.action_status_ready_create" : "components.assistant_editor.action_status_ready_save")
-            : t("components.assistant_editor.action_status_required_open");
+          ? t(isCreate ? "components.assistant_editor.action_status_ready_create" : "components.assistant_editor.action_status_ready_save")
+          : t("components.assistant_editor.action_status_required_open");
     const actionStatusTone = !isOwner ? "subtle" : isSettingsValid ? "success" : "warning";
 
     useEffect(() => {

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
-const DEFAULT_PREVIEW_PERCENT = 40
+const DEFAULT_PREVIEW_PERCENT = 40;
 /** Minimum usable width for either pane, in pixels. Drag never pushes a pane below this. */
 const MIN_PREVIEW_PX = 340;
 const MIN_FORM_PX = 480;

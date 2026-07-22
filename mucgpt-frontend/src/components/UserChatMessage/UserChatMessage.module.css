@@ -1,3 +1,10 @@
+.messageWrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    max-width: 100%;
+}
+
 .message {
     padding: 1.25em;
     margin: 0 0 4px;
@@ -43,8 +50,4 @@
 
 .answerText :where(p:last-child, ul:last-child, ol:last-child, blockquote:last-child) {
     margin-bottom: 0;
-}
-
-.iconRightMargin {
-    margin-right: 5 px;
 }

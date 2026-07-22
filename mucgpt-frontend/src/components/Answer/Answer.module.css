@@ -5,25 +5,15 @@
 .answerContainer {
     display: flex;
     flex-direction: column;
-    justify-content: space-between; /* replaces v8 Stack verticalAlign="space-between" */
-    padding: 1.25em;
-    margin: 4px 0 0;
-    background: var(--colorNeutralBackground3);
-    border: 1px solid var(--colorNeutralStroke1);
-    border-radius: var(--borderRadiusLarge);
+    justify-content: space-between;
     width: 100%;
     max-width: 100%;
     box-sizing: border-box;
-    transition: box-shadow 0.2s ease-in-out; /* Smooth transition for hover effect */
-}
 
-.answerHeader {
-    display: flex;
-    flex-direction: row; /* replaces v8 Stack horizontal */
 }
 
 .followUpActionsBelow {
-    margin: 4px 0 0;
+    margin: 2px 0 0;
 }
 
 .answerActionsBelow {
@@ -31,22 +21,29 @@
     justify-content: flex-start;
     align-items: center;
     gap: 2px;
-    margin: 4px 0 0;
+    margin: 2px 0 0;
+    opacity: 0;
+    transition: opacity 0.15s ease-in-out;
+}
+
+/* Reveal actions of an older answer when its turn is hovered or focused within. */
+.answerWithActions:hover .answerActionsBelow,
+.answerWithActions:focus-within .answerActionsBelow {
+    opacity: 1;
+}
+
+/* The newest answer keeps its actions permanently visible. */
+.answerWithActions.latest .answerActionsBelow {
+    opacity: 1;
 }
 
 .iconRightMargin {
     margin-right: 5 px;
 }
 
-.answerLogo {
-    font-size: 28px;
-}
-
 .answerText {
-    padding-top: 4px;
-    padding-bottom: 4px;
     font-size: var(--fontSizeBase400);
-    line-height: 1.35;
+    line-height: 1.5;
     overflow-x: auto;
 }
 

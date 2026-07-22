@@ -3,7 +3,6 @@ import { useCallback, useEffect, useState } from "react";
 import styles from "./Answer.module.css";
 
 import { AskResponse } from "../../api";
-import { AnswerIcon } from "./AnswerIcon";
 import { useTranslation } from "react-i18next";
 import { ArrowSync24Regular, CheckmarkSquare24Regular, ContentView24Regular, Copy24Regular } from "@fluentui/react-icons";
 import { Button, Tooltip } from "@fluentui/react-components";
@@ -49,12 +48,6 @@ export const Answer = ({ answer, onRegenerateResponseClicked, onFollowUpActionSe
     return (
         <div className={styles.answerWithActions}>
             <div className={styles.answerContainer}>
-                <div>
-                    <div className={styles.answerHeader}>
-                        <AnswerIcon aria-hidden />
-                    </div>
-                </div>
-
                 <div className={styles.growItem}>
                     {formatted && (
                         <div className={styles.answerText}>

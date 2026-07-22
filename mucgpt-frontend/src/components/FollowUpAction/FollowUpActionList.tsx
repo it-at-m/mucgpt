@@ -13,7 +13,7 @@ export const FollowUpActionList = ({ onSend }: Props) => {
         <div className={styles.buttons}>
             {followUpActions.map((followUpAction, index) => (
                 <Tooltip content={followUpAction.tooltip} relationship="description" positioning="above" key={followUpAction.id || index}>
-                    <Button onClick={() => onSend(followUpAction.prompt)} appearance="secondary" className={styles.item}>
+                    <Button onClick={() => onSend(followUpAction.prompt)} shape="circular" appearance="secondary" className={styles.item}>
                         {followUpAction.label}
                     </Button>
                 </Tooltip>

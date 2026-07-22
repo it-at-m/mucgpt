@@ -1,15 +1,12 @@
 .item {
     width: auto;
     min-width: 140px;
-    padding: 10px 14px;
-    border-radius: 999px;
-    font-weight: 600;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+    padding: 10px 14px;;
+    font-size: var(--fontSizeBase400);
     transition:
         background-color 0.2s ease,
         color 0.2s ease,
         border-color 0.2s ease,
-        box-shadow 0.2s ease,
         transform 0.15s ease;
 }
 
@@ -24,7 +21,6 @@
 }
 
 .item:hover {
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.12);
     transform: translateY(-1px);
 }
 
@@ -33,7 +29,6 @@
     color: var(--colorNeutralStrokeDisabled);
     border-color: var(--colorNeutralStroke2);
     transform: translateY(0);
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
 }
 
 .item:focus-visible {

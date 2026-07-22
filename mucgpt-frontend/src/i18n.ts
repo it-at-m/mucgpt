@@ -63,10 +63,10 @@ i18n
                             longer_tooltip: "Schreibe eine längere Antwort",
                             formal_tooltip: "Schreibe eine förmlichere Antwort",
                             informal_tooltip: "Schreibe eine informellere Antwort",
-                            shorter: "➖ Kürzer",
-                            longer: "➕ Länger",
-                            formal: "👔 Förmlicher",
-                            informal: "👕 Informeller",
+                            shorter: "Kürzer",
+                            longer: "Länger",
+                            formal: "Förmlicher",
+                            informal: "Informeller",
                             shorter_prompt:
                                 "Formuliere deine letzte Nachricht zu einem neuen kürzeren Text, der den ursprünglichen Inhalt in einer kürzeren und prägnanteren Form wiedergibt. Dieser Text sollte die wichtigsten Informationen enthalten und das Verständnis des Lesers verbessern.",
                             longer_prompt:

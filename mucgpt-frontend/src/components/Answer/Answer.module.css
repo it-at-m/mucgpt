@@ -115,3 +115,10 @@
     width: 100%;
     margin-bottom: 8px;
 }
+
+@media (max-width: 650px) {
+    .answerWithActions .answerActionsBelow {
+        opacity: 1;
+        margin-bottom: 12px;
+    }
+}

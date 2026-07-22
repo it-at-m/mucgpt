@@ -333,9 +333,15 @@ export const makeApiRequest = async (
         }, 100);
     };
 
+    // Set once the server signals the end of the stream ([DONE] or finish_reason:
+    // "stop"). Needed because those markers only break the inner line loop; the outer
+    // read loop must check this flag to stop reading, otherwise it hangs until the
+    // server closes the connection.
+    let streamDone = false;
+
     try {
         // Main streaming loop - process chunks as they arrive
-        while (true) {
+        while (!streamDone) {
             const { done, value } = await reader.read();
             if (done) break;
 
@@ -353,6 +359,7 @@ export const makeApiRequest = async (
 
                     // Check for stream end marker
                     if (data === "[DONE]") {
+                        streamDone = true;
                         break;
                     }
 
@@ -362,6 +369,7 @@ export const makeApiRequest = async (
                         const choice: ChatCompletionChunkChoice | undefined = chunk.choices?.[0];
                         if (!choice) continue; // Check if streaming is complete
                         if (choice.finish_reason === "stop") {
+                            streamDone = true;
                             break;
                         }
 

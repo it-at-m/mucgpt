@@ -361,8 +361,7 @@ export const AssistantEditorPage = (props: AssistantEditorPageProps) => {
                     examples: validStarterPrompts.map(starterPrompt => ({ text: starterPrompt.text, value: starterPrompt.value })),
                     quick_prompts: validFollowUpActions.map(followUpAction => ({
                         label: followUpAction.label,
-                        prompt: followUpAction.prompt,
-                        tooltip: followUpAction.tooltip
+                        prompt: followUpAction.prompt
                     })),
                     tags: [],
                     hierarchical_access: createState.hierarchicalAccess ?? [],

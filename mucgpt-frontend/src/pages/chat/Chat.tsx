@@ -686,23 +686,19 @@ const Chat = () => {
         setFollowUpActions([
             {
                 label: t("chat.follow_up_actions.shorter", { lng: language }),
-                prompt: t("chat.follow_up_actions.shorter_prompt", { lng: language }),
-                tooltip: t("chat.follow_up_actions.shorter_tooltip", { lng: language })
+                prompt: t("chat.follow_up_actions.shorter_prompt", { lng: language })
             },
             {
                 label: t("chat.follow_up_actions.formal", { lng: language }),
-                prompt: t("chat.follow_up_actions.formal_prompt", { lng: language }),
-                tooltip: t("chat.follow_up_actions.formal_tooltip", { lng: language })
+                prompt: t("chat.follow_up_actions.formal_prompt", { lng: language })
             },
             {
                 label: t("chat.follow_up_actions.informal", { lng: language }),
-                prompt: t("chat.follow_up_actions.informal_prompt", { lng: language }),
-                tooltip: t("chat.follow_up_actions.informal_tooltip", { lng: language })
+                prompt: t("chat.follow_up_actions.informal_prompt", { lng: language })
             },
             {
                 label: t("chat.follow_up_actions.longer", { lng: language }),
-                prompt: t("chat.follow_up_actions.longer_prompt", { lng: language }),
-                tooltip: t("chat.follow_up_actions.longer_tooltip", { lng: language })
+                prompt: t("chat.follow_up_actions.longer_prompt", { lng: language })
             }
         ]);
 

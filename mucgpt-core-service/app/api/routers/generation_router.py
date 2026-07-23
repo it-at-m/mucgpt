@@ -30,7 +30,9 @@ logger = getLogger()
 router = APIRouter(prefix="/v1")
 
 
-PROMPTS_DIR = Path(__file__).resolve().parents[2] / "create_assistant"
+PROMPTS_DIR = (
+    Path(__file__).resolve().parents[2] / "agent/prompt_pool/generation_prompts"
+)
 
 
 async def _invoke_internal_generation(
@@ -259,16 +261,21 @@ async def generate_chat_title(
     """Generate and normalize a chat title from the last user/assistant turn."""
 
     settings = get_settings()
-    system_prompt = _read_prompt_file("prompt_for_title.md")
+    system_prompt = _read_prompt_file("prompt_for_chat_title.md")
 
-    messages: list[ChatCompletionMessage] = []
-    messages.append(ChatCompletionMessage(role="system", content=system_prompt))
+    conversation_parts = []
     if request.system_message:
-        messages.append(
-            ChatCompletionMessage(role="system", content=request.system_message)
-        )
-    messages.append(ChatCompletionMessage(role="user", content=request.query))
-    messages.append(ChatCompletionMessage(role="assistant", content=request.answer))
+        conversation_parts.append(f"System-Prompt:\n{request.system_message}")
+    conversation_parts.extend(
+        [
+            f"Nutzernachricht:\n{request.query}",
+            f"Assistentenantwort:\n{request.answer}",
+        ]
+    )
+    messages: list[ChatCompletionMessage] = [
+        ChatCompletionMessage(role="system", content=system_prompt),
+        ChatCompletionMessage(role="user", content="\n\n".join(conversation_parts)),
+    ]
 
     try:
         model_name = _get_internal_task_model(settings, InternalTaskModelStrength.WEAK)

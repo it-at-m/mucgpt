@@ -15,6 +15,8 @@ class _FakeConfiguredModel:
         self._response_by_run_name = response_by_run_name
         self._fail_run_name = fail_run_name
         self._run_name = ""
+        self.messages: list[Any] = []
+        self._capture_owner: _FakeConfiguredModel = self
 
     def with_config(self, config: Any) -> "_FakeConfiguredModel":
         configured = _FakeConfiguredModel(
@@ -22,9 +24,11 @@ class _FakeConfiguredModel:
             fail_run_name=self._fail_run_name,
         )
         configured._run_name = config.get("run_name") or ""
+        configured._capture_owner = self._capture_owner
         return configured
 
     async def ainvoke(self, messages: Sequence[Any]) -> AIMessage:
+        self._capture_owner.messages = list(messages)
         if self._fail_run_name and self._run_name == self._fail_run_name:
             raise RuntimeError("boom")
         return AIMessage(
@@ -75,6 +79,14 @@ def test_generate_chat_title_direct_model(mock_get_model, test_client):
     body = resp.json()
     assert body["title"] == "E-Mail Hilfe"
     assert mock_get_model.call_count == 1
+    messages = mock_get_model.return_value.messages
+    assert len(messages) == 2
+    assert messages[0].type == "system"
+    assert messages[1].type == "human"
+    assert messages[1].content == (
+        "Nutzernachricht:\nWie schreibe ich eine Antwort?\n\n"
+        "Assistentenantwort:\nHier ist eine Struktur..."
+    )
 
 
 @pytest.mark.integration

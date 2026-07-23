@@ -617,6 +617,10 @@ class SubscriptionResponse(BaseModel):
         description="Whether this assistant is publicly listed in the UI",
         example=True,
     )
+    owners_detailed: list[OwnerDetailsResponse] | None = Field(
+        None,
+        description="Owner details enriched from LDAP",
+    )
 
     # replaced inner Config with model_config
     model_config = ConfigDict(

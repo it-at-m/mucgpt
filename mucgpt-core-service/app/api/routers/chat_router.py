@@ -4,11 +4,8 @@ from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import StreamingResponse
 
 from api.api_models import (
-    ChatCompletionMessage,
     ChatCompletionRequest,
     ChatCompletionResponse,
-    CreateAssistantRequest,
-    CreateAssistantResult,
 )
 from api.exception import llm_exception_handler
 from config.settings import get_settings
@@ -129,80 +126,5 @@ async def chat_completions(
             )
     except Exception as e:
         logger.exception("Exception in /chat/completions")
-        msg = llm_exception_handler(ex=e, logger=logger)
-        raise HTTPException(status_code=500, detail=msg)
-
-
-@router.post(
-    "/generate/assistant",
-)
-async def create_assistant(
-    request: CreateAssistantRequest, user_info=Depends(authenticate_user)
-) -> CreateAssistantResult:
-    ae = await init_agent(user_info=user_info)
-    try:
-        logger.info("createAssistant: reading system prompt generator")
-        with open("create_assistant/prompt_for_systemprompt.md", encoding="utf-8") as f:
-            system_message = f.read()
-        messages: list[ChatCompletionMessage] = [
-            ChatCompletionMessage(role="system", content=system_message),
-            ChatCompletionMessage(role="user", content="Funktion: " + request.input),
-        ]
-        logger.info("createAssistant: creating system prompt")
-        system_prompt = ae.run_without_streaming(
-            messages=messages,
-            temperature=1.0,
-            model=request.model,
-            user_info=user_info,
-        )
-        system_prompt = system_prompt.choices[0].message.content
-        logger.info(system_prompt)
-        logger.info("createAssistant: creating description prompt")
-        with open("create_assistant/prompt_for_description.md", encoding="utf-8") as f:
-            system_message = f.read()
-        messages: list[ChatCompletionMessage] = [
-            ChatCompletionMessage(role="system", content=system_message),
-            ChatCompletionMessage(
-                role="user", content="Systempromt: ```" + system_prompt + "```"
-            ),
-        ]
-        logger.info("createAssistant: creating description")
-        description = ae.run_without_streaming(
-            messages=messages,
-            temperature=1.0,
-            model=request.model,
-            user_info=user_info,
-        )
-        description = description.choices[0].message.content
-        logger.info("createAssistant: creating title prompt")
-        with open("create_assistant/prompt_for_title.md", encoding="utf-8") as f:
-            system_message = f.read()
-        logger.info("createAssistant: creating title")
-        messages: list[ChatCompletionMessage] = [
-            ChatCompletionMessage(role="system", content=system_message),
-            ChatCompletionMessage(
-                role="user",
-                content="Systempromt: ```"
-                + system_prompt
-                + "```\nBeschreibung: ```"
-                + description
-                + "```",
-            ),
-        ]
-        title = ae.run_without_streaming(
-            messages=messages,
-            temperature=1.0,
-            model=request.model,
-            user_info=user_info,
-        )
-        title = title.choices[0].message.content
-        logger.info("createAssistant: returning finished")
-        return CreateAssistantResult(
-            title=title,
-            description=description,
-            system_prompt=system_prompt,
-        )
-    except Exception as e:
-        logger.exception("Exception in /create_assistant")
         msg = llm_exception_handler(ex=e, logger=logger)
         raise HTTPException(status_code=500, detail=msg)

@@ -6,6 +6,7 @@ import { Accordion, AccordionHeader, AccordionItem, AccordionPanel, Button, Fiel
 import {
     Bot24Regular,
     Chat24Regular,
+    ClipboardCheckmark24Regular,
     Dismiss24Regular,
     DocumentText24Regular,
     Info24Regular,
@@ -17,9 +18,9 @@ import {
 
 import styles from "./AssistantEditorPage.module.css";
 import { AssistantCreateFlow } from "./AssistantCreateFlow";
-import { Assistant, ToolBase, ToolInfo } from "../../../api";
-import { createCommunityAssistantApi } from "../../../api/assistant-client";
-import { createAssistantApi } from "../../../api/core-client";
+import { Assistant, ComplianceCheckResponse, ToolBase, ToolInfo } from "../../../api";
+import { checkAssistantComplianceApi, createCommunityAssistantApi } from "../../../api/assistant-client";
+import { generateAssistantDraftApi } from "../../../api/core-client";
 import { useGlobalToastContext } from "../../GlobalToastHandler/GlobalToastContext";
 import { StarterPromptModel } from "../../StarterPrompt";
 import { LLMContext } from "../../LLMSelector/LLMContextProvider";
@@ -27,22 +28,21 @@ import { FollowUpActionModel } from "../../FollowUpAction";
 import { useToolsContext } from "../../ToolsProvider";
 import { useAssistantState } from "../shared/hooks/useAssistantState";
 import { useCreateAssistantState } from "../shared/hooks/useCreateAssistantState";
-import { ToolsSection, ConversationOptionsSection, AdvancedSettingsSection, VisibilitySection, ExpandableTextarea, CloseConfirmationDialog } from "../shared";
+import {
+    ToolsSection,
+    ConversationOptionsSection,
+    AdvancedSettingsSection,
+    VisibilitySection,
+    ReviewSection,
+    ExpandableTextarea,
+    CloseConfirmationDialog
+} from "../shared";
 import { AssistantStrategy } from "../../../pages/assistant/AssistantStrategy";
 import { CREATIVITY_LOW } from "../../../constants";
 import { EdelweissSpinner } from "../../EdelweissSpinner";
 
 type CreateView = "mode_select" | "ai_input" | "settings";
 type DiscardTarget = "back" | "discovery";
-type GeneratedAssistantResponse = {
-    title?: string;
-    description?: string;
-    system_prompt?: string;
-    detail?: string;
-    error?: string;
-    message?: string;
-};
-
 interface AssistantEditorPageCreateProps {
     mode: "create";
 }
@@ -125,6 +125,14 @@ interface SettingsFormProps {
     setPublishDepartments: (departments: string[]) => void;
     setInvisibleChecked: (invisible: boolean) => void;
     onHasChanged?: (changed: boolean) => void;
+    // Fired only when the system prompt changes, so the compliance review can be invalidated selectively.
+    onSystemPromptChanged?: () => void;
+    confirmed: boolean;
+    confirmationResetKey: number;
+    checkResult: ComplianceCheckResponse | null;
+    checkLoading: boolean;
+    onConfirmedChange: (confirmed: boolean) => void;
+    onStartCheck: () => void;
 }
 
 function SettingsForm(props: SettingsFormProps) {
@@ -187,6 +195,7 @@ function SettingsForm(props: SettingsFormProps) {
                             onChange={v => {
                                 props.onSystemPromptChange(v);
                                 props.onHasChanged?.(true);
+                                props.onSystemPromptChanged?.();
                             }}
                             disabled={!props.isOwner}
                             dialogTitle={t("components.assistant_editor.system_prompt")}
@@ -244,16 +253,21 @@ function SettingsForm(props: SettingsFormProps) {
                         setInvisibleChecked={invisible => props.setInvisibleChecked(invisible)}
                     />
                 </SectionCard>
+
+                <SectionCard title={t("components.assistant_editor.section_review")} icon={<ClipboardCheckmark24Regular />} className={styles.sectionReview}>
+                    <ReviewSection
+                        confirmed={props.confirmed}
+                        confirmationResetKey={props.confirmationResetKey}
+                        checkResult={props.checkResult}
+                        checkLoading={props.checkLoading}
+                        isOwner={props.isOwner}
+                        onConfirmedChange={props.onConfirmedChange}
+                        onStartCheck={props.onStartCheck}
+                    />
+                </SectionCard>
             </main>
         </div>
     );
-}
-
-function getGenerationErrorMessage(result: GeneratedAssistantResponse, fallbackMessage: string) {
-    if (typeof result.detail === "string" && result.detail.trim() !== "") return result.detail;
-    if (typeof result.error === "string" && result.error.trim() !== "") return result.error;
-    if (typeof result.message === "string" && result.message.trim() !== "") return result.message;
-    return fallbackMessage;
 }
 
 export const AssistantEditorPage = (props: AssistantEditorPageProps) => {
@@ -297,6 +311,14 @@ export const AssistantEditorPage = (props: AssistantEditorPageProps) => {
     const [loading, setLoading] = useState(false);
     const [discardOpen, setDiscardOpen] = useState(false);
     const [discardTarget, setDiscardTarget] = useState<DiscardTarget>("back");
+    // Compliance confirmation. Must be re-confirmed after every change to the system prompt.
+    const [reviewConfirmed, setReviewConfirmed] = useState(false);
+    // Result of the compliance check. Must be re-done after every change to the system prompt.
+    // On failure this holds a synthetic result with overall_status "error"; the user is not blocked in that case.
+    const [reviewCheckResult, setReviewCheckResult] = useState<ComplianceCheckResponse | null>(null);
+    const [reviewCheckLoading, setReviewCheckLoading] = useState(false);
+    // Bumped whenever the confirmation is reset so the checkbox remounts and reliably reflects the cleared state.
+    const [reviewResetKey, setReviewResetKey] = useState(0);
 
     const selectedTools = useMemo(() => {
         if (!availableTools) return [] as ToolInfo[];
@@ -354,7 +376,7 @@ export const AssistantEditorPage = (props: AssistantEditorPageProps) => {
         const assistantTitle = s.title.trim();
         const systemPrompt = s.systemPrompt.trim();
 
-        if (assistantTitle === "" || systemPrompt === "") {
+        if (assistantTitle === "" || systemPrompt === "" || !reviewCheckResult || !reviewConfirmed) {
             showError(t("components.assistant_editor.assistant_save_failed"), t("components.assistant_editor.save_config_failed"));
             return;
         }
@@ -415,30 +437,22 @@ export const AssistantEditorPage = (props: AssistantEditorPageProps) => {
         } finally {
             setLoading(false);
         }
-    }, [loading, state, isCreate, createState, editState, t, showError, showSuccess, navigate, props]);
+    }, [loading, state, isCreate, createState, editState, reviewConfirmed, t, showError, showSuccess, navigate, props]);
 
     const handleGenerate = useCallback(async () => {
         if (!createState.input.trim() || loading) return;
         setLoading(true);
 
         try {
-            const response = await createAssistantApi({ input: createState.input, model: LLM.llm_name });
-            const result = (await response.json().catch(() => ({}))) as GeneratedAssistantResponse;
+            // We treat the AI input as a first draft of the system prompt and
+            // use the assistant-draft endpoint to suggest title/description.
+            const draft = await generateAssistantDraftApi({ prompt_seed: createState.input });
 
-            if (!response.ok) {
-                throw new Error(getGenerationErrorMessage(result, t("components.assistant_editor.assistant_generation_failed")));
-            }
-
-            if (
-                typeof result.title !== "string" ||
-                result.title.trim() === "" ||
-                typeof result.system_prompt !== "string" ||
-                result.system_prompt.trim() === ""
-            ) {
+            if (!draft.title?.trim()) {
                 throw new Error(t("components.assistant_editor.assistant_generation_failed"));
             }
 
-            createState.setGeneratedAssistant(result.title, result.description ?? "", result.system_prompt);
+            createState.setGeneratedAssistant(draft.title, draft.description ?? "", draft.system_prompt || createState.input);
             setCreateView("settings");
             showSuccess(t("components.assistant_editor.assistant_generated_success"), t("components.assistant_editor.assistant_generated_message"));
         } catch (error) {
@@ -447,12 +461,59 @@ export const AssistantEditorPage = (props: AssistantEditorPageProps) => {
         } finally {
             setLoading(false);
         }
-    }, [createState, LLM.llm_name, loading, showError, showSuccess, t]);
+    }, [createState, loading, showError, showSuccess, t]);
+
+    // Any change to the assistant marks the edit "hasChanged" flag (used for discard detection).
+    const handleHasChanged = useCallback(
+        (changed: boolean) => {
+            if (!changed) return;
+            if (!isCreate) {
+                editState.setHasChanged?.(true);
+            }
+        },
+        [isCreate, editState]
+    );
+
+    // Only changes to the system prompt invalidate the compliance review, forcing the user to re-check and re-confirm.
+    const handleSystemPromptChanged = useCallback(() => {
+        setReviewCheckResult(null);
+        setReviewConfirmed(prev => {
+            if (prev) setReviewResetKey(key => key + 1);
+            return false;
+        });
+    }, []);
+
+    // Runs the EU AI Act high-risk compliance check on the current system prompt.
+    const handleStartComplianceCheck = useCallback(async () => {
+        if (reviewCheckLoading) return;
+
+        const s = state as typeof createState & typeof editState;
+        setReviewCheckLoading(true);
+        // A re-check invalidates the previous result and confirmation.
+        setReviewCheckResult(null);
+        setReviewConfirmed(prev => {
+            if (prev) setReviewResetKey(key => key + 1);
+            return false;
+        });
+
+        try {
+            const result = await checkAssistantComplianceApi({
+                system_prompt: s.systemPrompt
+            });
+            setReviewCheckResult(result);
+        } catch {
+            // A failed check is rare and must not block the user: record it as an error result so the
+            // error message is shown, but still allow confirming and saving.
+            setReviewCheckResult({ overall_status: "error", results: [] });
+        } finally {
+            setReviewCheckLoading(false);
+        }
+    }, [reviewCheckLoading, state]);
 
     const pageTitle = isCreate ? t("components.assistant_editor.create_title") : t("components.assistant_editor.edit_title");
     const pageHelper = isCreate ? t("components.assistant_editor.page_helper_create") : t("components.assistant_editor.page_helper_edit");
     const settingsState = isCreate ? createState : editState;
-    const isSettingsValid = settingsState.title.trim() !== "" && settingsState.systemPrompt.trim() !== "";
+    const isSettingsValid = settingsState.title.trim() !== "" && settingsState.systemPrompt.trim() !== "" && reviewCheckResult !== null && reviewConfirmed;
     const showSettingsForm = !isCreate || createView === "settings";
     const showCreateModeSelector = isCreate && createView === "mode_select";
     const actionStatusLabel = !isOwner
@@ -541,7 +602,14 @@ export const AssistantEditorPage = (props: AssistantEditorPageProps) => {
                         isVisible={settingsState.isVisible ?? false}
                         setPublishDepartments={settingsState.updateHierarchicalAccess}
                         setInvisibleChecked={invisible => settingsState.updateIsVisible(!invisible)}
-                        onHasChanged={isCreate ? undefined : value => value && editState.setHasChanged?.(true)}
+                        onHasChanged={handleHasChanged}
+                        onSystemPromptChanged={handleSystemPromptChanged}
+                        confirmed={reviewConfirmed}
+                        confirmationResetKey={reviewResetKey}
+                        checkResult={reviewCheckResult}
+                        checkLoading={reviewCheckLoading}
+                        onConfirmedChange={setReviewConfirmed}
+                        onStartCheck={handleStartComplianceCheck}
                     />
                 )}
             </div>

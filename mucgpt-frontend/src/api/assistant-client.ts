@@ -1,5 +1,15 @@
 import { getConfig, handleApiRequest, postConfig, deleteConfig } from "./fetch-utils";
-import { AssistantCreateInput, AssistantCreateResponse, AssistantResponse, AssistantUpdateInput, Assistant, CommunityAssistant, DirectoryNode } from "./models";
+import {
+    AssistantCreateInput,
+    AssistantCreateResponse,
+    AssistantResponse,
+    AssistantUpdateInput,
+    Assistant,
+    CommunityAssistant,
+    ComplianceCheckRequest,
+    ComplianceCheckResponse,
+    DirectoryNode
+} from "./models";
 
 export type AssistantListSortBy = "title" | "updated" | "subscriptions";
 export type AssistantListSortOrder = "asc" | "desc";
@@ -87,6 +97,14 @@ export async function deleteCommunityAssistantApi(id: string): Promise<{ message
 
 export async function getCommunityAssistantVersionApi(id: string, version: string): Promise<Assistant> {
     return handleApiRequest(() => fetch(`/api/assistant/${id}/version/${version}`, getConfig()), "Failed to get community assistant version");
+}
+
+/**
+ * Run the EU AI Act high-risk compliance check for an assistant's system prompt.
+ * Returns one result per checked category plus an overall status.
+ */
+export async function checkAssistantComplianceApi(input: ComplianceCheckRequest): Promise<ComplianceCheckResponse> {
+    return handleApiRequest(() => fetch("/api/assistant/compliance/check", postConfig(input)), "Failed to run compliance check");
 }
 
 export async function getDirectoryChildren(path: string[] = []): Promise<DirectoryNode[]> {

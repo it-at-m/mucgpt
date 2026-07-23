@@ -13,13 +13,15 @@ import {
     ChevronRight16Regular,
     Bot24Regular,
     ShieldError24Regular,
-    Apps24Regular
+    Apps24Regular,
+    Warning24Regular
 } from "@fluentui/react-icons";
 import styles from "./Tutorials.module.css";
 import { BrainstormTutorial } from "./components/BrainstormTutorial";
 import { SimplifyTutorial } from "./components/SimplifyTutorial";
 import { ToolsTutorial } from "./components/ToolsTutorial";
 import { AIBasicsTutorial } from "./components/AIBasicsTutorial";
+import { HighRiskTutorial } from "./components/HighRiskTutorial";
 
 interface TutorialSection {
     id: string;
@@ -118,6 +120,17 @@ export const Tutorials = () => {
                         icon: <Apps24Regular />,
                         badge: t("tutorials.badges.in_construction", "Im Aufbau"),
                         component: <div>KI-Anwendungsgebiete Tutorial coming soon...</div>
+                    },
+                    {
+                        id: "high-risk",
+                        title: t("tutorials.high_risk.title", "Hochrisiko-Anwendungsfälle"),
+                        description: t(
+                            "tutorials.high_risk.description",
+                            "Wann gilt ein Einsatz von KI als Hochrisiko-Anwendungsfall und was Sie dabei beachten sollten."
+                        ),
+                        icon: <Warning24Regular />,
+                        badge: t("tutorials.badges.new", "Neu"),
+                        component: <HighRiskTutorial />
                     }
                 ]
             },
@@ -385,15 +398,17 @@ export const Tutorials = () => {
                     <div className={styles.tutorialTitleContainer}>
                         <div className={styles.tutorialIcon}>{tutorial.icon}</div>
                         <div>
-                            <Text as="h2" size={600} weight="semibold">
-                                {tutorial.title}
-                            </Text>
-                            <Text size={400} className={styles.tutorialSubtitle}>
+                            <div className={styles.tutorialTitleRow}>
+                                <Text as="h2" size={600} weight="semibold">
+                                    {tutorial.title}
+                                </Text>
+                                {tutorial.badge && <Badge appearance="tint">{tutorial.badge}</Badge>}
+                            </div>
+                            <Text as="p" size={400} className={styles.tutorialSubtitle}>
                                 {tutorial.description}
                             </Text>
                         </div>
                     </div>
-                    {tutorial.badge && <Badge appearance="tint">{tutorial.badge}</Badge>}
                 </div>
 
                 <Divider />
@@ -411,24 +426,26 @@ export const Tutorials = () => {
     };
 
     return (
-        <div className={styles.container}>
-            <div className={styles.headerContainer}>
-                <div className={styles.titleSection}>
-                    <Book24Regular className={styles.pageIcon} />
-                    <div>
-                        <Text as="h1" size={700} weight="bold">
-                            {t("tutorials.title", "Anleitungen")}
-                        </Text>
-                        <Text size={400} className={styles.subtitle}>
-                            {t("tutorials.subtitle", "Lerne, wie MUCGPT funktioniert")}
-                        </Text>
+        <div className={`${styles.container} ${currentTutorial ? styles.containerDetail : ""}`}>
+            {!currentTutorial && (
+                <div className={styles.headerContainer}>
+                    <div className={styles.titleSection}>
+                        <Book24Regular className={styles.pageIcon} />
+                        <div>
+                            <Text as="h1" size={700} weight="bold">
+                                {t("tutorials.title", "Anleitungen")}
+                            </Text>
+                            <Text size={400} className={styles.subtitle}>
+                                {t("tutorials.subtitle", "Lerne, wie MUCGPT funktioniert")}
+                            </Text>
+                        </div>
                     </div>
-                </div>
 
-                <Tooltip content={t("common.close")} relationship="description" positioning="below">
-                    <Button aria-label={t("common.close")} icon={<Dismiss24Regular />} appearance="subtle" onClick={onClose} size="large" />
-                </Tooltip>
-            </div>{" "}
+                    <Tooltip content={t("common.close")} relationship="description" positioning="below">
+                        <Button aria-label={t("common.close")} icon={<Dismiss24Regular />} appearance="subtle" onClick={onClose} size="large" />
+                    </Tooltip>
+                </div>
+            )}
             <div className={styles.content}>{currentTutorial ? renderSelectedTutorial() : renderOverview()}</div>
         </div>
     );

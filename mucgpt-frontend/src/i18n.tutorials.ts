@@ -211,6 +211,127 @@ export const tutorialsTranslations = {
                 title: "Einsatzmöglicheiten von MUCGPT",
                 description: "Zuvor haben wir erfahren was MUCGPT nicht kann, jetzt schauen wir uns an, was MUCGPT kann."
             },
+            high_risk: {
+                title: "Hochrisiko-Anwendungsfälle",
+                description: "Wann gilt ein Einsatz von KI als Hochrisiko-Anwendungsfall und was Sie dabei beachten sollten.",
+                toc_title: "Auf dieser Seite",
+                sections: {
+                    titles: {
+                        intro: "Was sind Hochrisiko-KI-Systeme?",
+                        relevant: "Wichtige Bereiche",
+                        other: "Weitere Bereiche",
+                        check: "Prüfung",
+                        conclusion: "Das Wichtigste"
+                    }
+                },
+                intro: {
+                    title: "Was sind Hochrisiko-KI-Systeme?",
+                    description:
+                        "Die EU regelt mit dem AI Act (EU-KI-Verordnung), wie Künstliche Intelligenz eingesetzt werden darf. Als Hochrisiko gelten unter anderem KI-Systeme, die in sensiblen Bereichen wichtige Entscheidungen oder Bewertungen über Menschen treffen oder wesentlich beeinflussen. Hochrisiko-KI-Systeme unterliegen besonderen gesetzlichen Anforderungen. MUCGPT ist nicht für solche Einsatzbereiche vorgesehen. Deshalb dürfen Assistenten in MUCGPT keine Hochrisiko-Aufgaben übernehmen."
+                },
+                overview: {
+                    title: "Welche Bereiche gelten als Hochrisiko?",
+                    description:
+                        "Der Anhang III der EU-KI-Verordnung benennt acht Bereiche. Vier davon sind für die Arbeit mit MUCGPT besonders relevant, die übrigen stellen wir kurz vor."
+                },
+                relevant: {
+                    title: "Diese vier Bereiche sind für MUCGPT besonders wichtig",
+                    description:
+                        "In diesen Bereichen besteht bei der Nutzung von Assistenten ein besonders hohes Risiko, einen unzulässigen Verwendungszweck zu beschreiben. Schauen Sie hier besonders genau hin.",
+                    not_allowed_label: "Nicht erlaubt:",
+                    allowed_label: "Erlaubt:",
+                    migration: {
+                        title: "Migration, Asyl und Grenzkontrolle",
+                        description:
+                            "Assistenten dürfen nicht dazu dienen, Personen im Zusammenhang mit Flucht, Asyl oder Grenzkontrolle zu identifizieren, zu bewerten oder zu überwachen. Auch die automatisierte Prüfung oder Bewertung von Asyl- und Visumanträgen ist nicht zulässig.",
+                        not_allowed:
+                            "Ein Assistent, der Angaben aus einem Asylverfahren auf Glaubwürdigkeit prüft oder Personen an der Grenze identifizieren soll.",
+                        allowed: "Ein Assistent, der Textdaten aus gültigen Reisedokumenten strukturiert ausliest, ohne eine Bewertung der Person vorzunehmen."
+                    },
+                    services: {
+                        title: "Zugang zu öffentlichen Leistungen",
+                        description:
+                            "Assistenten dürfen nicht prüfen oder entscheiden, ob eine Person Anspruch auf staatliche Leistungen wie Bürgergeld, Wohngeld oder Gesundheitsdienste hat.",
+                        not_allowed: "Ein Assistent, der anhand von Falldaten bewertet, ob ein Wohngeldantrag bewilligt oder abgelehnt werden soll.",
+                        allowed: "Ein Assistent, der allgemein erklärt, welche Voraussetzungen für Wohngeld gelten und welche Unterlagen benötigt werden."
+                    },
+                    hr: {
+                        title: "Beschäftigung und Personal",
+                        description:
+                            "Assistenten dürfen Bewerbende oder Beschäftigte nicht automatisiert bewerten, sortieren oder überwachen. Dazu gehören auch Vorschläge für Kündigungen oder Beförderungen.",
+                        not_allowed: "Ein Assistent, der Lebensläufe filtert und eine Rangliste der Bewerbenden erstellt.",
+                        allowed: "Ein Assistent, der beim Formulieren einer Stellenanzeige oder von Interviewfragen unterstützt."
+                    },
+                    education: {
+                        title: "Bildung und Berufsbildung",
+                        description:
+                            "Assistenten dürfen nicht über Zulassungen entscheiden, keine finalen Noten vergeben und das Bildungsniveau einer Person nicht einstufen.",
+                        not_allowed: "Ein Assistent, der Prüfungen abschließend benotet oder entscheidet, ob ein Kind für das Gymnasium geeignet ist.",
+                        allowed: "Ein Assistent, der als Lernhilfe Fehler markiert und Verbesserungsvorschläge macht, ohne verbindlich zu bewerten."
+                    }
+                },
+                other: {
+                    title: "Weitere Hochrisiko-Bereiche im Überblick",
+                    description:
+                        "Der AI Act benennt außerdem diese Bereiche. Sie spielen in MUCGPT kaum eine Rolle, weil das System zum Beispiel keine biometrischen Daten verarbeitet und keine Infrastruktur steuert. Entsprechende Anwendungsfälle sind trotzdem nicht erlaubt.",
+                    biometrics: {
+                        title: "Biometrie",
+                        description: "Fernidentifizierung von Personen, Kategorisierung nach sensiblen Merkmalen und Emotionserkennung."
+                    },
+                    infrastructure: {
+                        title: "Kritische Infrastruktur",
+                        description:
+                            "KI als Sicherheitsbauteil für Strom-, Wasser-, Gas- und Wärmeversorgung, Straßenverkehr oder kritische digitale Infrastruktur."
+                    },
+                    law_enforcement: {
+                        title: "Strafverfolgung",
+                        description: "Einschätzung von Straftat-Risiken, Lügendetektoren und die Bewertung von Beweismitteln."
+                    },
+                    justice: {
+                        title: "Rechtspflege und Wahlen",
+                        description: "Unterstützung von Gerichten bei der Auslegung und Anwendung von Recht sowie die Beeinflussung von Wahlen."
+                    },
+                    essential_services: {
+                        title: "Private Basisleistungen und Notdienste",
+                        description:
+                            "Kreditwürdigkeitsprüfung, Risikobewertung bei Lebens- und Krankenversicherungen sowie die Klassifizierung und Priorisierung von Notrufen."
+                    }
+                },
+                check: {
+                    title: "Die Prüfung im Assistenten-Editor",
+                    description:
+                        "Wenn Sie einen Assistenten erstellen oder bearbeiten, können Sie den System-Prompt im Editor prüfen lassen. MUCGPT sucht dabei nach Formulierungen, die auf einen möglicherweise unzulässigen Hochrisiko-Anwendungsfall in einem der vier beschriebenen Bereiche hindeuten. Das Ergebnis sehen Sie direkt im Editor.",
+                    disclaimer_title: "Wichtig:",
+                    disclaimer:
+                        "Die Prüfung ist eine Orientierungshilfe und keine rechtliche oder abschließende Bewertung. Sie berücksichtigt nur die hinterlegten Assistentenanweisungen und kann Hinweise übersehen oder zu vorsichtig sein. Entscheidend bleibt der tatsächliche vorgesehene Einsatz.",
+                    steps_title: "Wenn die Prüfung einen möglichen Hochrisiko-Anwendungsfall meldet:",
+                    step1: "Lesen Sie Ihren System-Prompt noch einmal aufmerksam durch.",
+                    step2: "Überlegen Sie, ob Ihr Assistent in einen der beschriebenen Bereiche fällt.",
+                    step3: "Passen Sie den Prompt an, wenn er eine kritische Aufgabe beschreibt oder missverständlich formuliert ist.",
+                    step4: "Sind Sie unsicher, wenden Sie sich an die Verantwortlichen für MUCGPT.",
+                    outro: "Auch ohne Hinweis bleiben Sie selbst verantwortlich: Beim Speichern bestätigen Sie, dass der vorgesehene Einsatz des Assistenten keinem in MUCGPT unzulässigen Hochrisiko-Anwendungsfall entspricht."
+                },
+                links: {
+                    title: "Weiterführende Links",
+                    eu_ai_act: "EU AI Act, Anhang III: Hochrisiko-KI-Systeme",
+                    contact: "Fragen oder unsicher? Schreiben Sie uns:"
+                },
+                tips: {
+                    no_decisions: {
+                        title: "Keine folgenreichen Entscheidungen über Menschen",
+                        description: "MUCGPT darf nicht für entsprechende Bewertungen, Einstufungen oder Auswahlentscheidungen eingesetzt werden."
+                    },
+                    orientation: {
+                        title: "Prüfung nur als Orientierung",
+                        description: "Das Ergebnis kann Hinweise geben, ist aber keine abschließende Bewertung."
+                    },
+                    contact: {
+                        title: "Tatsächlicher Einsatz ist entscheidend",
+                        description:
+                            "Entscheidend ist, wofür der Assistent tatsächlich eingesetzt wird. Die Prüfung kann nur die hinterlegten Anweisungen berücksichtigen."
+                    }
+                }
+            },
             tools: {
                 title: "Übersicht",
                 description: "Erfahre, was Werkzeuge im Kontext von MUCGPT sind und wie du sie effektiv nutzen kannst.",
@@ -593,6 +714,125 @@ export const tutorialsTranslations = {
                 title: "Application Possibilities of MUCGPT",
                 description: "Previously we learned what MUCGPT cannot do, now let's look at what MUCGPT can do."
             },
+            high_risk: {
+                title: "High-risk use cases",
+                description: "When is the use of AI considered a high-risk use case and what you should keep in mind.",
+                toc_title: "On this page",
+                sections: {
+                    titles: {
+                        intro: "What are high-risk AI systems?",
+                        relevant: "Key areas",
+                        other: "Further areas",
+                        check: "Check",
+                        conclusion: "Key takeaways"
+                    }
+                },
+                intro: {
+                    title: "What are high-risk AI systems?",
+                    description:
+                        "With the AI Act (EU AI Regulation), the EU governs how artificial intelligence may be used. High-risk systems include, among others, AI systems that make or significantly influence important decisions or assessments about people in sensitive areas. High-risk AI systems are subject to special legal requirements. MUCGPT is not intended for such areas of use. For this reason, assistants in MUCGPT must not take on any high-risk tasks."
+                },
+                overview: {
+                    title: "Which areas are considered high-risk?",
+                    description:
+                        "Annex III of the EU AI Regulation names eight areas. Four of them are particularly relevant to working with MUCGPT; we briefly introduce the others."
+                },
+                relevant: {
+                    title: "These four areas are especially important for MUCGPT",
+                    description:
+                        "In these areas, using assistants carries a particularly high risk of describing an impermissible purpose. Take an especially close look here.",
+                    not_allowed_label: "Not allowed:",
+                    allowed_label: "Allowed:",
+                    migration: {
+                        title: "Migration, asylum and border control",
+                        description:
+                            "Assistants must not be used to identify, assess or monitor people in connection with fleeing, asylum or border control. The automated review or assessment of asylum and visa applications is likewise not permitted.",
+                        not_allowed:
+                            "An assistant that checks statements from an asylum procedure for credibility or is meant to identify people at the border.",
+                        allowed: "An assistant that extracts text data from valid travel documents in a structured way, without assessing the person."
+                    },
+                    services: {
+                        title: "Access to public services",
+                        description:
+                            "Assistants must not check or decide whether a person is entitled to state benefits such as basic income support, housing benefit or health services.",
+                        not_allowed: "An assistant that uses case data to assess whether a housing benefit application should be approved or rejected.",
+                        allowed: "An assistant that explains in general terms which requirements apply for housing benefit and which documents are needed."
+                    },
+                    hr: {
+                        title: "Employment and personnel",
+                        description:
+                            "Assistants must not automatically assess, rank or monitor applicants or employees. This also includes suggestions for dismissals or promotions.",
+                        not_allowed: "An assistant that filters CVs and creates a ranking of the applicants.",
+                        allowed: "An assistant that helps draft a job advertisement or interview questions."
+                    },
+                    education: {
+                        title: "Education and vocational training",
+                        description: "Assistants must not decide on admissions, award final grades, or classify a person's level of education.",
+                        not_allowed: "An assistant that gives final grades to exams or decides whether a child is suited for grammar school.",
+                        allowed:
+                            "An assistant that, as a learning aid, marks mistakes and offers suggestions for improvement without giving binding assessments."
+                    }
+                },
+                other: {
+                    title: "Further high-risk areas at a glance",
+                    description:
+                        "The AI Act also names these areas. They play hardly any role in MUCGPT, because the system, for example, does not process biometric data and does not control infrastructure. Corresponding use cases are nonetheless not allowed.",
+                    biometrics: {
+                        title: "Biometrics",
+                        description: "Remote identification of people, categorisation by sensitive characteristics, and emotion recognition."
+                    },
+                    infrastructure: {
+                        title: "Critical infrastructure",
+                        description: "AI as a safety component for electricity, water, gas and heat supply, road traffic, or critical digital infrastructure."
+                    },
+                    law_enforcement: {
+                        title: "Law enforcement",
+                        description: "Assessing the risk of criminal offences, lie detectors, and the evaluation of evidence."
+                    },
+                    justice: {
+                        title: "Administration of justice and elections",
+                        description: "Supporting courts in interpreting and applying the law, as well as influencing elections."
+                    },
+                    essential_services: {
+                        title: "Private essential services and emergency services",
+                        description:
+                            "Creditworthiness assessments, risk assessment for life and health insurance, and the classification and prioritisation of emergency calls."
+                    }
+                },
+                check: {
+                    title: "The check in the assistant editor",
+                    description:
+                        "When you create or edit an assistant, you can have the system prompt checked in the editor. MUCGPT looks for wording that suggests a possibly impermissible high-risk use case in one of the four areas described. You see the result directly in the editor.",
+                    disclaimer_title: "Important:",
+                    disclaimer:
+                        "The check is a guide, not a legal or final assessment. It only considers the stored assistant instructions and may miss indications or be too cautious. What matters is the actual intended use.",
+                    steps_title: "If the check reports a possible high-risk use case:",
+                    step1: "Read through your system prompt carefully once more.",
+                    step2: "Consider whether your assistant falls into one of the areas described.",
+                    step3: "Adjust the prompt if it describes a critical task or is phrased ambiguously.",
+                    step4: "If you are unsure, contact those responsible for MUCGPT.",
+                    outro: "Even without a warning, you remain responsible yourself: when saving, you confirm that the intended use of the assistant does not correspond to any high-risk use case that is impermissible in MUCGPT."
+                },
+                links: {
+                    title: "Further links",
+                    eu_ai_act: "EU AI Act, Annex III: High-risk AI systems",
+                    contact: "Questions or unsure? Write to us:"
+                },
+                tips: {
+                    no_decisions: {
+                        title: "No consequential decisions about people",
+                        description: "MUCGPT must not be used for corresponding assessments, classifications or selection decisions."
+                    },
+                    orientation: {
+                        title: "The check is only a guide",
+                        description: "The result can provide indications, but is not a final assessment."
+                    },
+                    contact: {
+                        title: "Actual use is decisive",
+                        description: "What is decisive is what the assistant is actually used for. The check can only consider the stored instructions."
+                    }
+                }
+            },
             tools: {
                 title: "Overview",
                 description: "Learn what tools are in the context of MUCGPT and how you can use them effectively.",
@@ -972,6 +1212,126 @@ export const tutorialsTranslations = {
             ai_applications: {
                 title: "Einsatzmöglichkeiten von MUCGPT",
                 description: "Vorher hamma glernt, was MUCGPT ned kann, jetz schau ma uns an, was MUCGPT kann."
+            },
+            high_risk: {
+                title: "Hochrisiko-Anwendungsfäi",
+                description: "Wann gilt a Eisatz vo KI ois Hochrisiko-Anwendungsfoi und wos'd dabei beachtn soidst.",
+                toc_title: "Af dera Seitn",
+                sections: {
+                    titles: {
+                        intro: "Wos san Hochrisiko-KI-Systeme?",
+                        relevant: "Wichtige Bereiche",
+                        other: "Weitere Bereiche",
+                        check: "Prüfung",
+                        conclusion: "As Wichtigste"
+                    }
+                },
+                intro: {
+                    title: "Wos san Hochrisiko-KI-Systeme?",
+                    description:
+                        "D'EU reglt mit'm AI Act (EU-KI-Verordnung), wia Künstliche Intelligenz eigsetzt werdn derf. Ois Hochrisiko gejtn unter anderm KI-Systeme, de in sensiblen Bereichn wichtige Entscheidungen oder Bewertungen über Menschn treffen oder wesentlich beeiflussn. Hochrisiko-KI-Systeme unterliegn bsondere gesetzliche Ofoderunga. MUCGPT is ned für solche Eisatzbereiche vorgsehn. Drum derfn Assistentn in MUCGPT koane Hochrisiko-Aufgabn übernehma."
+                },
+                overview: {
+                    title: "Wöiche Bereiche gejtn ois Hochrisiko?",
+                    description:
+                        "Da Anhang III vo da EU-KI-Verordnung benennt acht Bereiche. Vier davo san für d'Arbeit mit MUCGPT bsonders relevant, de übrign stölln ma kurz vor."
+                },
+                relevant: {
+                    title: "De vier Bereiche san für MUCGPT bsonders wichtig",
+                    description:
+                        "In dene Bereich bestäht bei da Nutzung vo Assistentn a bsonders hohes Risiko, an unzulässign Verwendungszweck zum beschreibn. Schau do bsonders genau hi.",
+                    not_allowed_label: "Ned erlaubt:",
+                    allowed_label: "Erlaubt:",
+                    migration: {
+                        title: "Migration, Asyl und Grenzkontroi",
+                        description:
+                            "Assistentn derfn ned dazu dena, Leit im Zammenhang mit Flucht, Asyl oder Grenzkontroi zum identifiziern, zum bewertn oder zum überwacha. A de automatisierte Prüfung oder Bewertung vo Asyl- und Visumanträg is ned zulässig.",
+                        not_allowed: "A Assistent, der Angaben aus am Asylverfahrn af Glaubwürdigkeit prüft oder Leit an da Grenz identifiziern soi.",
+                        allowed: "A Assistent, der Textdaten aus güitige Reisedokument strukturiert auslest, ohne a Bewertung vo da Person vorzunehma."
+                    },
+                    services: {
+                        title: "Zuagang zu öffentliche Leistunga",
+                        description:
+                            "Assistentn derfn ned prüfen oder entscheidn, ob a Person Ospruch af staatliche Leistunga wia Bürgergeld, Wohngeld oder Gsundheitsdienste hod.",
+                        not_allowed: "A Assistent, der anhand vo Fojdaten bewert, ob a Wohngeldantrag bewuidigt oder oglehnt werdn soi.",
+                        allowed: "A Assistent, der allgemein erklärt, wöiche Voraussetzunga für Wohngeld gejtn und wöiche Unterlagn braucht werdn."
+                    },
+                    hr: {
+                        title: "Beschäftigung und Personal",
+                        description:
+                            "Assistentn derfn Bewerber oder Beschäftigte ned automatisiert bewertn, sortiern oder überwacha. Dazua gherng a Vorschläg für Kündigunga oder Beförderunga.",
+                        not_allowed: "A Assistent, der Lebensläuf fuitert und a Rangliste vo de Bewerber erstöit.",
+                        allowed: "A Assistent, der beim Formuliern vo ana Stölleozeig oder vo Interviewfragn hüift."
+                    },
+                    education: {
+                        title: "Buidung und Berufsbuidung",
+                        description:
+                            "Assistentn derfn ned über Zulassunga entscheidn, koane finaln Notn vergebn und as Buidungsniveau vo ana Person ned eistufa.",
+                        not_allowed: "A Assistent, der Prüfunga obschließend benot oder entscheid, ob a Kind fürs Gymnasium geeignet is.",
+                        allowed: "A Assistent, der ois Lernhüif Feja markiert und Verbesserungsvorschläg macht, ohne verbindlich zum bewertn."
+                    }
+                },
+                other: {
+                    title: "Weitere Hochrisiko-Bereiche im Überblick",
+                    description:
+                        "Da AI Act benennt außerdem de Bereiche. De spuin in MUCGPT kaum a Roin, wei as System zum Beispui koane biometrischn Daten verarbeit und koane Infrastruktur steuert. Entsprechende Anwendungsfäi san trotzdem ned erlaubt.",
+                    biometrics: {
+                        title: "Biometrie",
+                        description: "Fernidentifizierung vo Leit, Kategorisierung noch sensible Merkmoi und Emotionserkennung."
+                    },
+                    infrastructure: {
+                        title: "Kritische Infrastruktur",
+                        description:
+                            "KI ois Sicherheitsbauteui für Strom-, Wasser-, Gas- und Wärmeversorgung, Straßnverkehr oder kritische digitale Infrastruktur."
+                    },
+                    law_enforcement: {
+                        title: "Strafverfolgung",
+                        description: "Eischätzung vo Straftat-Risiken, Lügndetektorn und de Bewertung vo Beweismittl."
+                    },
+                    justice: {
+                        title: "Rechtspflege und Wohln",
+                        description: "Unterstützung vo Gricht bei da Auslegung und Awendung vo Recht sowia de Beeiflussung vo Wohln."
+                    },
+                    essential_services: {
+                        title: "Private Basisleistunga und Notdienste",
+                        description:
+                            "Kreditwürdigkeitsprüfung, Risikobewertung bei Lebens- und Krankaversicherunga sowia de Klassifizierung und Priorisierung vo Notruaf."
+                    }
+                },
+                check: {
+                    title: "De Prüfung im Assistentn-Editor",
+                    description:
+                        "Wenn'st an Assistentn erstöist oder bearbeitst, kannst du den System-Prompt im Editor prüfen lassn. MUCGPT suacht dabei noch Formulierunga, de af an möglicherweis unzulässign Hochrisiko-Anwendungsfoi in oam vo de vier beschriebne Bereiche hideitn. As Ergebnis siagst du direkt im Editor.",
+                    disclaimer_title: "Wichtig:",
+                    disclaimer:
+                        "De Prüfung is a Orientierungshüif und koa rechtliche oder obschließende Bewertung. Sie berücksichtigt bloß de hinterlegtn Assistentnanweisunga und ko Hinweise übersehng oder z'vorsichtig sei. Entscheidend bleibt da tatsächliche vorgsehne Eisatz.",
+                    steps_title: "Wenn de Prüfung an möglichn Hochrisiko-Anwendungsfoi mejdt:",
+                    step1: "Lies dein System-Prompt no amoi aufmerksam durch.",
+                    step2: "Überleg da, ob dei Assistent in oan vo de beschriebne Bereiche fäjt.",
+                    step3: "Pass an Prompt o, wenn er a kritische Aufgab beschreibt oder missverständlich formuliert is.",
+                    step4: "Bist da unsicher, wend di an de Verantwortlichn für MUCGPT.",
+                    outro: "A ohne Hinweis bleibst du selba verantwortlich: Beim Speichern bestätigst du, dass da vorgsehne Eisatz vo deim Assistentn koam in MUCGPT unzulässign Hochrisiko-Anwendungsfoi entspricht."
+                },
+                links: {
+                    title: "Weiterführende Links",
+                    eu_ai_act: "EU AI Act, Anhang III: Hochrisiko-KI-Systeme",
+                    contact: "Fragn oder unsicher? Schreib uns:"
+                },
+                tips: {
+                    no_decisions: {
+                        title: "Koane folgnreichn Entscheidunga über Menschn",
+                        description: "MUCGPT derf ned für entsprechende Bewertunga, Eistufunga oder Auswoientscheidunga eigsetzt werdn."
+                    },
+                    orientation: {
+                        title: "Prüfung bloß ois Orientierung",
+                        description: "As Ergebnis ko Hinweise gebn, is aba koa obschließende Bewertung."
+                    },
+                    contact: {
+                        title: "Tatsächlicher Eisatz is entscheidend",
+                        description:
+                            "Entscheidend is, wofür da Assistent tatsächlich eigsetzt werd. De Prüfung ko bloß de hinterlegtn Anweisunga berücksichtign."
+                    }
+                }
             },
             tools: {
                 title: "Übersicht",
@@ -1363,6 +1723,132 @@ export const tutorialsTranslations = {
                 title: "Possibilités d'utilisation de MUCGPT",
                 description: "Auparavant, nous avons appris ce que MUCGPT ne peut pas faire, maintenant voyons ce que MUCGPT peut faire."
             },
+            high_risk: {
+                title: "Cas d'usage à haut risque",
+                description: "Quand l'utilisation de l'IA est-elle considérée comme un cas d'usage à haut risque et ce à quoi vous devez faire attention.",
+                toc_title: "Sur cette page",
+                sections: {
+                    titles: {
+                        intro: "Que sont les systèmes d'IA à haut risque ?",
+                        relevant: "Domaines importants",
+                        other: "Autres domaines",
+                        check: "Vérification",
+                        conclusion: "L'essentiel"
+                    }
+                },
+                intro: {
+                    title: "Que sont les systèmes d'IA à haut risque ?",
+                    description:
+                        "Avec le règlement sur l'IA (règlement européen sur l'IA), l'UE encadre la manière dont l'intelligence artificielle peut être utilisée. Sont notamment considérés comme à haut risque les systèmes d'IA qui prennent ou influencent de manière substantielle des décisions ou des évaluations importantes concernant des personnes dans des domaines sensibles. Les systèmes d'IA à haut risque sont soumis à des exigences légales particulières. MUCGPT n'est pas prévu pour de tels domaines d'utilisation. C'est pourquoi les assistants dans MUCGPT ne doivent assumer aucune tâche à haut risque."
+                },
+                overview: {
+                    title: "Quels domaines sont considérés comme à haut risque ?",
+                    description:
+                        "L'annexe III du règlement européen sur l'IA désigne huit domaines. Quatre d'entre eux sont particulièrement pertinents pour le travail avec MUCGPT ; nous présentons brièvement les autres."
+                },
+                relevant: {
+                    title: "Ces quatre domaines sont particulièrement importants pour MUCGPT",
+                    description:
+                        "Dans ces domaines, l'utilisation d'assistants présente un risque particulièrement élevé de décrire une finalité non autorisée. Examinez-les ici avec une attention particulière.",
+                    not_allowed_label: "Non autorisé :",
+                    allowed_label: "Autorisé :",
+                    migration: {
+                        title: "Migration, asile et contrôle aux frontières",
+                        description:
+                            "Les assistants ne doivent pas servir à identifier, évaluer ou surveiller des personnes en lien avec la fuite, l'asile ou le contrôle aux frontières. L'examen ou l'évaluation automatisés des demandes d'asile et de visa ne sont pas non plus autorisés.",
+                        not_allowed:
+                            "Un assistant qui vérifie la crédibilité de déclarations issues d'une procédure d'asile ou qui doit identifier des personnes à la frontière.",
+                        allowed:
+                            "Un assistant qui extrait de manière structurée des données textuelles à partir de documents de voyage valides, sans procéder à une évaluation de la personne."
+                    },
+                    services: {
+                        title: "Accès aux prestations publiques",
+                        description:
+                            "Les assistants ne doivent pas vérifier ni décider si une personne a droit à des prestations publiques telles que le revenu de base, l'allocation logement ou les services de santé.",
+                        not_allowed:
+                            "Un assistant qui, sur la base de données de dossier, évalue si une demande d'allocation logement doit être approuvée ou rejetée.",
+                        allowed:
+                            "Un assistant qui explique de manière générale quelles conditions s'appliquent à l'allocation logement et quels documents sont nécessaires."
+                    },
+                    hr: {
+                        title: "Emploi et personnel",
+                        description:
+                            "Les assistants ne doivent pas évaluer, classer ou surveiller de manière automatisée les candidats ou les employés. Cela inclut également les propositions de licenciements ou de promotions.",
+                        not_allowed: "Un assistant qui filtre les CV et établit un classement des candidats.",
+                        allowed: "Un assistant qui aide à rédiger une offre d'emploi ou des questions d'entretien."
+                    },
+                    education: {
+                        title: "Éducation et formation professionnelle",
+                        description:
+                            "Les assistants ne doivent pas décider des admissions, attribuer des notes finales ni classer le niveau de formation d'une personne.",
+                        not_allowed: "Un assistant qui attribue des notes finales à des examens ou décide si un enfant est apte à entrer au lycée.",
+                        allowed:
+                            "Un assistant qui, comme aide à l'apprentissage, signale les erreurs et propose des améliorations sans porter d'évaluation contraignante."
+                    }
+                },
+                other: {
+                    title: "Autres domaines à haut risque en un coup d'œil",
+                    description:
+                        "Le règlement sur l'IA désigne en outre ces domaines. Ils ne jouent pratiquement aucun rôle dans MUCGPT, car le système, par exemple, ne traite pas de données biométriques et ne pilote pas d'infrastructures. Les cas d'usage correspondants ne sont néanmoins pas autorisés.",
+                    biometrics: {
+                        title: "Biométrie",
+                        description:
+                            "Identification à distance des personnes, catégorisation selon des caractéristiques sensibles et reconnaissance des émotions."
+                    },
+                    infrastructure: {
+                        title: "Infrastructures critiques",
+                        description:
+                            "L'IA comme composant de sécurité pour l'approvisionnement en électricité, en eau, en gaz et en chaleur, la circulation routière ou les infrastructures numériques critiques."
+                    },
+                    law_enforcement: {
+                        title: "Répression pénale",
+                        description: "Évaluation des risques d'infraction, détecteurs de mensonge et appréciation des éléments de preuve."
+                    },
+                    justice: {
+                        title: "Administration de la justice et élections",
+                        description: "Aide aux tribunaux pour l'interprétation et l'application du droit, ainsi que l'influence sur les élections."
+                    },
+                    essential_services: {
+                        title: "Services essentiels privés et services d'urgence",
+                        description:
+                            "Évaluation de la solvabilité, évaluation des risques pour les assurances vie et maladie, ainsi que la classification et la priorisation des appels d'urgence."
+                    }
+                },
+                check: {
+                    title: "La vérification dans l'éditeur d'assistant",
+                    description:
+                        "Lorsque vous créez ou modifiez un assistant, vous pouvez faire vérifier l'invite système dans l'éditeur. MUCGPT recherche à cette occasion des formulations qui indiquent un cas d'usage à haut risque potentiellement non autorisé dans l'un des quatre domaines décrits. Vous voyez le résultat directement dans l'éditeur.",
+                    disclaimer_title: "Important :",
+                    disclaimer:
+                        "La vérification est une aide à l'orientation et non une évaluation juridique ou définitive. Elle ne prend en compte que les instructions d'assistant enregistrées et peut passer à côté d'indices ou se montrer trop prudente. Ce qui est déterminant reste l'utilisation réellement prévue.",
+                    steps_title: "Si la vérification signale un cas d'usage à haut risque possible :",
+                    step1: "Relisez attentivement votre invite système.",
+                    step2: "Réfléchissez à la question de savoir si votre assistant relève de l'un des domaines décrits.",
+                    step3: "Adaptez l'invite si elle décrit une tâche critique ou si elle est formulée de manière ambiguë.",
+                    step4: "Si vous n'êtes pas sûr, adressez-vous aux responsables de MUCGPT.",
+                    outro: "Même sans avertissement, vous restez vous-même responsable : lors de l'enregistrement, vous confirmez que l'utilisation prévue de l'assistant ne correspond à aucun cas d'usage à haut risque non autorisé dans MUCGPT."
+                },
+                links: {
+                    title: "Liens complémentaires",
+                    eu_ai_act: "Règlement européen sur l'IA, annexe III : systèmes d'IA à haut risque",
+                    contact: "Des questions ou des doutes ? Écrivez-nous :"
+                },
+                tips: {
+                    no_decisions: {
+                        title: "Aucune décision lourde de conséquences concernant des personnes",
+                        description: "MUCGPT ne doit pas être utilisé pour de telles évaluations, classifications ou décisions de sélection."
+                    },
+                    orientation: {
+                        title: "La vérification n'est qu'une orientation",
+                        description: "Le résultat peut donner des indications, mais n'est pas une évaluation définitive."
+                    },
+                    contact: {
+                        title: "L'utilisation réelle est déterminante",
+                        description:
+                            "Ce qui est déterminant, c'est l'usage réel de l'assistant. La vérification ne peut prendre en compte que les instructions enregistrées."
+                    }
+                }
+            },
             tools: {
                 title: "Aperçu",
                 description: "Découvrez quels sont les outils dans le contexte de MUCGPT et comment vous pouvez les utiliser efficacement.",
@@ -1742,6 +2228,124 @@ export const tutorialsTranslations = {
             ai_applications: {
                 title: "Можливості використання MUCGPT",
                 description: "Раніше ми дізналися, що MUCGPT не може, тепер давайте подивимось, що MUCGPT може."
+            },
+            high_risk: {
+                title: "Сценарії використання з високим ризиком",
+                description: "Коли використання ШІ вважається сценарієм з високим ризиком і на що слід звертати увагу.",
+                toc_title: "На цій сторінці",
+                sections: {
+                    titles: {
+                        intro: "Що таке системи ШІ з високим ризиком?",
+                        relevant: "Важливі сфери",
+                        other: "Інші сфери",
+                        check: "Перевірка",
+                        conclusion: "Найголовніше"
+                    }
+                },
+                intro: {
+                    title: "Що таке системи ШІ з високим ризиком?",
+                    description:
+                        "За допомогою Акта про ШІ (Регламент ЄС про ШІ) ЄС регулює, як можна використовувати штучний інтелект. До систем з високим ризиком належать, серед іншого, системи ШІ, які приймають або суттєво впливають на важливі рішення чи оцінки щодо людей у чутливих сферах. Системи ШІ з високим ризиком підлягають особливим правовим вимогам. MUCGPT не призначений для таких сфер використання. Тому асистенти в MUCGPT не повинні виконувати жодних завдань з високим ризиком."
+                },
+                overview: {
+                    title: "Які сфери вважаються такими, що мають високий ризик?",
+                    description:
+                        "Додаток III до Регламенту ЄС про ШІ називає вісім сфер. Чотири з них особливо важливі для роботи з MUCGPT, решту ми коротко представимо."
+                },
+                relevant: {
+                    title: "Ці чотири сфери особливо важливі для MUCGPT",
+                    description:
+                        "У цих сферах під час використання асистентів існує особливо високий ризик описати недозволену мету використання. Придивіться тут особливо уважно.",
+                    not_allowed_label: "Не дозволено:",
+                    allowed_label: "Дозволено:",
+                    migration: {
+                        title: "Міграція, притулок і прикордонний контроль",
+                        description:
+                            "Асистенти не повинні використовуватися для ідентифікації, оцінювання чи спостереження за людьми у зв'язку з утечею, притулком або прикордонним контролем. Автоматизована перевірка чи оцінювання заяв про притулок і візових заяв також не дозволяються.",
+                        not_allowed: "Асистент, який перевіряє достовірність даних із процедури надання притулку або має ідентифікувати людей на кордоні.",
+                        allowed: "Асистент, який структуровано зчитує текстові дані з дійсних проїзних документів, не оцінюючи особу."
+                    },
+                    services: {
+                        title: "Доступ до державних послуг",
+                        description:
+                            "Асистенти не повинні перевіряти чи вирішувати, чи має особа право на державні виплати, як-от базова допомога, житлова субсидія або медичні послуги.",
+                        not_allowed: "Асистент, який на основі даних справи оцінює, чи слід задовольнити або відхилити заяву на житлову субсидію.",
+                        allowed: "Асистент, який загалом пояснює, які умови діють для житлової субсидії та які документи потрібні."
+                    },
+                    hr: {
+                        title: "Зайнятість і персонал",
+                        description:
+                            "Асистенти не повинні автоматизовано оцінювати, сортувати чи контролювати кандидатів або працівників. Сюди також належать пропозиції щодо звільнень або підвищень.",
+                        not_allowed: "Асистент, який фільтрує резюме та складає рейтинг кандидатів.",
+                        allowed: "Асистент, який допомагає сформулювати оголошення про вакансію або питання для співбесіди."
+                    },
+                    education: {
+                        title: "Освіта та професійне навчання",
+                        description: "Асистенти не повинні вирішувати щодо зарахування, виставляти підсумкові оцінки чи класифікувати рівень освіти особи.",
+                        not_allowed: "Асистент, який остаточно оцінює іспити або вирішує, чи придатна дитина для гімназії.",
+                        allowed: "Асистент, який як навчальний помічник позначає помилки та пропонує покращення, не даючи обов'язкових оцінок."
+                    }
+                },
+                other: {
+                    title: "Інші сфери з високим ризиком — огляд",
+                    description:
+                        "Акт про ШІ також називає ці сфери. Вони майже не відіграють ролі в MUCGPT, оскільки система, наприклад, не обробляє біометричних даних і не керує інфраструктурою. Відповідні сценарії використання все одно не дозволені.",
+                    biometrics: {
+                        title: "Біометрія",
+                        description: "Дистанційна ідентифікація людей, категоризація за чутливими ознаками та розпізнавання емоцій."
+                    },
+                    infrastructure: {
+                        title: "Критична інфраструктура",
+                        description:
+                            "ШІ як компонент безпеки для постачання електроенергії, води, газу й тепла, дорожнього руху або критичної цифрової інфраструктури."
+                    },
+                    law_enforcement: {
+                        title: "Правоохоронна діяльність",
+                        description: "Оцінка ризиків скоєння злочинів, детектори брехні та оцінювання доказів."
+                    },
+                    justice: {
+                        title: "Правосуддя та вибори",
+                        description: "Підтримка судів у тлумаченні та застосуванні права, а також вплив на вибори."
+                    },
+                    essential_services: {
+                        title: "Приватні базові послуги та служби екстреної допомоги",
+                        description:
+                            "Оцінка кредитоспроможності, оцінка ризиків у страхуванні життя та здоров'я, а також класифікація та пріоритизація екстрених викликів."
+                    }
+                },
+                check: {
+                    title: "Перевірка в редакторі асистента",
+                    description:
+                        "Коли Ви створюєте або редагуєте асистента, Ви можете перевірити системний промпт у редакторі. При цьому MUCGPT шукає формулювання, які вказують на можливо недозволений сценарій використання з високим ризиком в одній із чотирьох описаних сфер. Результат Ви бачите безпосередньо в редакторі.",
+                    disclaimer_title: "Важливо:",
+                    disclaimer:
+                        "Перевірка є орієнтиром, а не юридичною чи остаточною оцінкою. Вона враховує лише збережені інструкції асистента й може пропустити ознаки або бути надто обережною. Вирішальним залишається фактичне передбачене використання.",
+                    steps_title: "Якщо перевірка повідомляє про можливий сценарій використання з високим ризиком:",
+                    step1: "Ще раз уважно прочитайте свій системний промпт.",
+                    step2: "Подумайте, чи належить Ваш асистент до однієї з описаних сфер.",
+                    step3: "Скоригуйте промпт, якщо він описує критичне завдання або сформульований неоднозначно.",
+                    step4: "Якщо Ви не впевнені, зверніться до відповідальних за MUCGPT.",
+                    outro: "Навіть без попередження Ви самі залишаєтеся відповідальними: під час збереження Ви підтверджуєте, що передбачене використання Вашого асистента не відповідає жодному недозволеному в MUCGPT сценарію використання з високим ризиком."
+                },
+                links: {
+                    title: "Додаткові посилання",
+                    eu_ai_act: "Акт ЄС про ШІ, Додаток III: системи ШІ з високим ризиком",
+                    contact: "Питання чи сумніви? Напишіть нам:"
+                },
+                tips: {
+                    no_decisions: {
+                        title: "Жодних рішень із серйозними наслідками щодо людей",
+                        description: "MUCGPT не можна використовувати для відповідних оцінок, класифікацій чи рішень щодо відбору."
+                    },
+                    orientation: {
+                        title: "Перевірка лише як орієнтир",
+                        description: "Результат може дати ознаки, але не є остаточною оцінкою."
+                    },
+                    contact: {
+                        title: "Вирішальним є фактичне використання",
+                        description: "Вирішальним є те, для чого асистент фактично використовується. Перевірка може враховувати лише збережені інструкції."
+                    }
+                }
             },
             tools: {
                 title: "Огляд",

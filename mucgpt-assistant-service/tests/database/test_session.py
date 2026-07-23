@@ -124,7 +124,9 @@ class TestDatabaseSession:
         assert connect_args["password"] == "Ay#W-67CQt)y8f'3"  # Exact password
 
         # Verify sessionmaker was called
-        mock_sessionmaker.assert_called_once_with(mock_engine_instance)
+        mock_sessionmaker.assert_called_once_with(
+            mock_engine_instance, expire_on_commit=False
+        )
 
     @pytest.mark.asyncio
     async def test_connection_test_with_special_chars(self):

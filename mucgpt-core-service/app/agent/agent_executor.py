@@ -1,16 +1,10 @@
-import hashlib
-import re
 import time
 import uuid
 from collections.abc import AsyncGenerator
 from typing import Any
 
 from langchain_core.messages import (
-    AIMessage,
     AIMessageChunk,
-    BaseMessage,
-    HumanMessage,
-    SystemMessage,
 )
 from langchain_core.runnables import RunnableConfig
 from langchain_core.runnables.config import merge_configs
@@ -32,29 +26,14 @@ from api.api_models import ChatCompletionMessage as InputMessage
 from api.exception import llm_exception_handler
 from config.langfuse_provider import LangfuseProvider
 from core.auth_models import AuthenticationResult
+from core.llm_helpers import (
+    extract_department_prefix,
+    hash_user_id,
+    to_langchain_messages,
+)
 from core.logtools import getLogger
 
 logger = getLogger(name="mucgpt-core-agent")
-
-
-def _convert_to_langchain_messages(messages: list[InputMessage]) -> list[BaseMessage]:
-    """Converts API messages to LangChain message objects."""
-    msgs: list[BaseMessage] = []
-    for m in messages:
-        if m.role == "system":
-            msgs.append(SystemMessage(m.content))
-        elif m.role == "user":
-            msgs.append(HumanMessage(m.content))
-        else:
-            msgs.append(AIMessage(m.content))
-    return msgs
-
-
-def _hash_user_id(user_id: str | None) -> str | None:
-    """Return a deterministic SHA-256 hash for user IDs used in tracing."""
-    if not user_id:
-        return None
-    return hashlib.sha256(user_id.encode("utf-8")).hexdigest()
 
 
 def _is_internal_chunk(metadata: dict[str, Any]) -> bool:
@@ -111,19 +90,13 @@ class MUCGPTAgentExecutor:
         self.agent = agent
 
         langfuse_handler = LangfuseProvider.get_callback_handler()
-        callbacks: list[CallbackHandler] | None = [langfuse_handler] if langfuse_handler else None
+        callbacks: list[CallbackHandler] | None = (
+            [langfuse_handler] if langfuse_handler else None
+        )
         self.base_config: RunnableConfig = RunnableConfig(
-            callbacks=callbacks, # type: ignore
+            callbacks=callbacks,  # type: ignore
             run_name="MUCGPTAgent",
         )
-
-    @staticmethod
-    def _extract_department_prefix(department: str | None) -> str | None:
-        """Return leading alphabetic prefix of department (e.g., POR from POR/3 or POR_Han)."""
-        if not department:
-            return None
-        match = re.match(r"[A-Za-z]+", department)
-        return match.group(0) if match else None
 
     def _build_llm_extra_body(self, assistant_id: str | None) -> dict[str, Any] | None:
         tags: list[str] = []
@@ -149,12 +122,12 @@ class MUCGPTAgentExecutor:
             temperature,
             model,
         )
-        msgs = _convert_to_langchain_messages(messages)
+        msgs = to_langchain_messages(messages)
         id_ = str(uuid.uuid4())
         created = int(time.time())
         logger.debug("Stream ID: %s, created: %s", id_, created)
         dept_prefix = (
-            self._extract_department_prefix(user_info.department) if user_info else None
+            extract_department_prefix(user_info.department) if user_info else None
         )
         llm_user = dept_prefix
         llm_extra_body = self._build_llm_extra_body(assistant_id)
@@ -164,7 +137,7 @@ class MUCGPTAgentExecutor:
             else ["default-assistant"]
         )
         with propagate_attributes(
-            user_id=_hash_user_id(user_info.user_id if user_info else None),
+            user_id=hash_user_id(user_info.user_id if user_info else None),
             tags=tags,
         ):
             config = merge_configs(
@@ -229,7 +202,7 @@ class MUCGPTAgentExecutor:
                                     ChatCompletionChunkChoice(
                                         delta=ChatCompletionDelta(
                                             content=chunk_content
-                                        ), # type: ignore
+                                        ),  # type: ignore
                                         index=0,
                                         finish_reason=None,
                                     )
@@ -260,7 +233,7 @@ class MUCGPTAgentExecutor:
                     created=created,
                     choices=[
                         ChatCompletionChunkChoice(
-                            delta=ChatCompletionDelta(content=error_msg), # type: ignore
+                            delta=ChatCompletionDelta(content=error_msg),  # type: ignore
                             index=0,
                             finish_reason="error",
                         )
@@ -275,7 +248,9 @@ class MUCGPTAgentExecutor:
                 created=created,
                 choices=[
                     ChatCompletionChunkChoice(
-                        delta=ChatCompletionDelta(), index=0, finish_reason="stop" # type: ignore
+                        delta=ChatCompletionDelta(),
+                        index=0,
+                        finish_reason="stop",  # type: ignore
                     )
                 ],
             ).model_dump()
@@ -296,9 +271,9 @@ class MUCGPTAgentExecutor:
             temperature,
             model,
         )
-        msgs = _convert_to_langchain_messages(messages)
+        msgs = to_langchain_messages(messages)
         dept_prefix = (
-            self._extract_department_prefix(user_info.department) if user_info else None
+            extract_department_prefix(user_info.department) if user_info else None
         )
         llm_user = dept_prefix
         llm_extra_body = self._build_llm_extra_body(assistant_id)
@@ -308,7 +283,7 @@ class MUCGPTAgentExecutor:
             else ["default-assistant"]
         )
         with propagate_attributes(
-            user_id=_hash_user_id(user_info.user_id if user_info else None),
+            user_id=hash_user_id(user_info.user_id if user_info else None),
             tags=tags,
         ):
             request_config = RunnableConfig(
@@ -339,7 +314,7 @@ class MUCGPTAgentExecutor:
                         ChatCompletionChoice(
                             message=ChatCompletionMessage(
                                 role="assistant",
-                                content=ai_message.content, # type: ignore
+                                content=ai_message.content,  # type: ignore
                             ),
                             index=0,
                             finish_reason="stop",

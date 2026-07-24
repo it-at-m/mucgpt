@@ -19,7 +19,7 @@ import styles from "./AssistantEditorPage.module.css";
 import { AssistantCreateFlow } from "./AssistantCreateFlow";
 import { Assistant, ToolBase, ToolInfo } from "../../../api";
 import { createCommunityAssistantApi } from "../../../api/assistant-client";
-import { createAssistantApi } from "../../../api/core-client";
+import { generateAssistantDraftApi } from "../../../api/core-client";
 import { useGlobalToastContext } from "../../GlobalToastHandler/GlobalToastContext";
 import { StarterPromptModel } from "../../StarterPrompt";
 import { LLMContext } from "../../LLMSelector/LLMContextProvider";
@@ -34,15 +34,6 @@ import { EdelweissSpinner } from "../../EdelweissSpinner";
 
 type CreateView = "mode_select" | "ai_input" | "settings";
 type DiscardTarget = "back" | "discovery";
-type GeneratedAssistantResponse = {
-    title?: string;
-    description?: string;
-    system_prompt?: string;
-    detail?: string;
-    error?: string;
-    message?: string;
-};
-
 interface AssistantEditorPageCreateProps {
     mode: "create";
 }
@@ -249,13 +240,6 @@ function SettingsForm(props: SettingsFormProps) {
     );
 }
 
-function getGenerationErrorMessage(result: GeneratedAssistantResponse, fallbackMessage: string) {
-    if (typeof result.detail === "string" && result.detail.trim() !== "") return result.detail;
-    if (typeof result.error === "string" && result.error.trim() !== "") return result.error;
-    if (typeof result.message === "string" && result.message.trim() !== "") return result.message;
-    return fallbackMessage;
-}
-
 export const AssistantEditorPage = (props: AssistantEditorPageProps) => {
     const { t } = useTranslation();
     const navigate = useNavigate();
@@ -422,23 +406,15 @@ export const AssistantEditorPage = (props: AssistantEditorPageProps) => {
         setLoading(true);
 
         try {
-            const response = await createAssistantApi({ input: createState.input, model: LLM.llm_name });
-            const result = (await response.json().catch(() => ({}))) as GeneratedAssistantResponse;
+            // We treat the AI input as a first draft of the system prompt and
+            // use the assistant-draft endpoint to suggest title/description.
+            const draft = await generateAssistantDraftApi({ prompt_seed: createState.input });
 
-            if (!response.ok) {
-                throw new Error(getGenerationErrorMessage(result, t("components.assistant_editor.assistant_generation_failed")));
-            }
-
-            if (
-                typeof result.title !== "string" ||
-                result.title.trim() === "" ||
-                typeof result.system_prompt !== "string" ||
-                result.system_prompt.trim() === ""
-            ) {
+            if (!draft.title?.trim()) {
                 throw new Error(t("components.assistant_editor.assistant_generation_failed"));
             }
 
-            createState.setGeneratedAssistant(result.title, result.description ?? "", result.system_prompt);
+            createState.setGeneratedAssistant(draft.title, draft.description ?? "", draft.system_prompt || createState.input);
             setCreateView("settings");
             showSuccess(t("components.assistant_editor.assistant_generated_success"), t("components.assistant_editor.assistant_generated_message"));
         } catch (error) {
@@ -447,7 +423,7 @@ export const AssistantEditorPage = (props: AssistantEditorPageProps) => {
         } finally {
             setLoading(false);
         }
-    }, [createState, LLM.llm_name, loading, showError, showSuccess, t]);
+    }, [createState, loading, showError, showSuccess, t]);
 
     const pageTitle = isCreate ? t("components.assistant_editor.create_title") : t("components.assistant_editor.edit_title");
     const pageHelper = isCreate ? t("components.assistant_editor.page_helper_create") : t("components.assistant_editor.page_helper_edit");

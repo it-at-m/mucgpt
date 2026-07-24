@@ -89,6 +89,7 @@ MODELS:
     api_key: "<your-sk>" # IMPORTANT: Replace with actual API key or use MUCGPT_CORE_MODELS env var
     api_version: ""
     model_info:
+      internal_task_model_strength: null  # Optional: "weak" for chat titles, "strong" for assistant drafts
       auto_enrich_from_model_info_endpoint: true
       max_output_tokens: 16384
       max_input_tokens: 128000

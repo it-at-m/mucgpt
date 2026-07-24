@@ -81,7 +81,9 @@ def get_engine_and_factory(database_url: str):
             pool_pre_ping=True,  # Verify connections before use
             pool_recycle=3600,  # Recycle connections after 1 hour
         )
-        factory = async_sessionmaker(engine)
+        # expire_on_commit=False keeps ORM attributes accessible after commit();
+        # otherwise async lazy-loads on expired objects raise MissingGreenlet.
+        factory = async_sessionmaker(engine, expire_on_commit=False)
         logger.info("Successfully created engine and session factory")
         return engine, factory
     except Exception as e:
@@ -134,7 +136,9 @@ def get_engine_and_factory_direct(settings: Settings):
             pool_pre_ping=True,  # Verify connections before use
             pool_recycle=3600,  # Recycle connections after 1 hour
         )
-        factory = async_sessionmaker(engine)
+        # expire_on_commit=False keeps ORM attributes accessible after commit();
+        # otherwise async lazy-loads on expired objects raise MissingGreenlet.
+        factory = async_sessionmaker(engine, expire_on_commit=False)
 
         # Cache the results
         _engine_cache = engine

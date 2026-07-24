@@ -1,15 +1,11 @@
-import { Dispatch, SetStateAction, useState, useCallback, useMemo, useContext, useEffect } from "react";
+import { Dispatch, SetStateAction, useState, useCallback, useMemo } from "react";
 import { ToolBase } from "../../../../api";
 import { FollowUpActionModel } from "../../../FollowUpAction";
 import { StarterPromptModel } from "../../../StarterPrompt";
-import { LLMContext } from "../../../LLMSelector/LLMContextProvider";
 import { CREATIVITY_LOW } from "../../../../constants";
 import { ensurePromptIds } from "../promptIds";
 
 export const useCreateAssistantState = () => {
-    // Context
-    const { LLM } = useContext(LLMContext);
-
     // All state variables
     const [input, setInput] = useState<string>("");
     const [title, setTitle] = useState<string>("");
@@ -22,7 +18,7 @@ export const useCreateAssistantState = () => {
     const [hierarchicalAccess, setHierarchicalAccess] = useState<string[]>([]);
     const [isVisible, setIsVisible] = useState<boolean>(false);
     const [creativity, setCreativity] = useState<string>(CREATIVITY_LOW);
-    const [defaultModel, setDefaultModel] = useState<string | undefined>(LLM.llm_name);
+    const [defaultModel, setDefaultModel] = useState<string | undefined>(undefined);
 
     // Track if user has made any changes
     const hasChanges = useMemo(() => {
@@ -37,7 +33,7 @@ export const useCreateAssistantState = () => {
             hierarchicalAccess.length > 0 ||
             isVisible !== false ||
             creativity !== CREATIVITY_LOW ||
-            (defaultModel !== undefined && defaultModel !== LLM.llm_name)
+            defaultModel !== undefined
         );
     }, [
         input,
@@ -50,13 +46,8 @@ export const useCreateAssistantState = () => {
         hierarchicalAccess,
         isVisible,
         creativity,
-        defaultModel,
-        LLM.llm_name
+        defaultModel
     ]);
-
-    useEffect(() => {
-        setDefaultModel(LLM.llm_name);
-    }, [LLM.llm_name]);
 
     // Change handlers that automatically track changes
     const updateInput = useCallback((newInput: string) => {
@@ -140,8 +131,8 @@ export const useCreateAssistantState = () => {
         setHierarchicalAccess([]);
         setIsVisible(false);
         setCreativity(CREATIVITY_LOW);
-        setDefaultModel(LLM.llm_name);
-    }, [LLM.llm_name]);
+        setDefaultModel(undefined);
+    }, []);
 
     return {
         // State

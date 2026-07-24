@@ -1,8 +1,8 @@
-import { MutableRefObject, Dispatch, SetStateAction } from "react";
+import { RefObject, Dispatch, SetStateAction } from "react";
 import { DBMessage, StorageService } from "../service/storage";
 import { DBObject } from "../service/storage";
 import { ChatMessage, ChatOptions } from "./chat/Chat";
-import { ChatRequest, ChatResponse, ChatTurn, DataSource } from "../api";
+import { ChatRequest, ChatResponse, ChatTurn, DataSource, Model } from "../api";
 import { ChatCompletionChunk, ChatCompletionChunkChoice } from "../api/models";
 import { ToolStreamHandler, ToolStatus } from "../utils/ToolStreamHandler";
 
@@ -38,7 +38,7 @@ export async function setupStore(
     storageService: StorageService<any, any>,
     setAnswers: (answers: ChatMessage[]) => void,
     answers: any[],
-    lastQuestionRef: MutableRefObject<string>,
+    lastQuestionRef: RefObject<string>,
     setActiveChat: (id: string | undefined) => void
 ) {
     // Clear any existing errors
@@ -79,7 +79,7 @@ export async function setupStore(
  */
 export function handleDeleteChat(
     id: string | undefined,
-    lastQuestionRef: MutableRefObject<string>,
+    lastQuestionRef: RefObject<string>,
     error: unknown,
     setError: Dispatch<unknown>,
     storageService: StorageService<any, any>,
@@ -123,7 +123,7 @@ export async function handleRollback(
     activeChat: string,
     dispatch: Dispatch<any>,
     storageService: StorageService<any, any>,
-    lastQuestionRef: MutableRefObject<string>,
+    lastQuestionRef: RefObject<string>,
     setQuestion: Dispatch<SetStateAction<string>>,
     clearChat: () => void,
     fetchHistory?: () => unknown | Promise<unknown>,
@@ -170,7 +170,7 @@ export async function handleRegenerate(
     storageService: StorageService<any, any>,
     systemPrompt: string,
     callApi: (question: string, ...args: any[]) => Promise<void>,
-    isLoadingRef: MutableRefObject<boolean>
+    isLoadingRef: RefObject<boolean>
 ) {
     // Remove the last message from storage
     await storageService.popMessage(activeChat);
@@ -213,26 +213,29 @@ export async function handleRegenerate(
  * @param assistant_id - Optional assistant ID for assistant-specific chat storage
  * @param enabled_tools - Optional array of enabled tool names
  * @param onToolStatusUpdate - Optional callback for tool status updates
+ * @param persist - When false, the answer is streamed and rendered but never written to
+ *                  storage or the history list. Used by the ephemeral assistant preview chat.
  */
 export const makeApiRequest = async (
     answers: any[],
     question: string,
     dispatch: Dispatch<any>,
-    chatApi: any,
-    LLM: any,
-    activeChatRef: MutableRefObject<string | undefined>,
+    chatApi: (options: ChatRequest) => Promise<Response>,
+    LLM: Model,
+    activeChatRef: RefObject<string | undefined>,
     storageService: StorageService<any, any>,
     options: ChatOptions,
     askResponse: ChatResponse,
-    chatMessageStreamEnd: MutableRefObject<HTMLDivElement | null>,
-    isLoadingRef: MutableRefObject<boolean>,
+    chatMessageStreamEnd: RefObject<HTMLDivElement | null>,
+    isLoadingRef: RefObject<boolean>,
     fetchHistory?: () => void,
     assistant_id?: string,
     enabled_tools?: string[],
     onToolStatusUpdate?: (statuses: ToolStatus[]) => void,
     data_sources?: DataSource[],
-    answerTopRef?: MutableRefObject<HTMLElement | null>,
-    onLoadingChange?: (isLoading: boolean) => void
+    answerTopRef?: RefObject<HTMLElement | null>,
+    onLoadingChange?: (isLoading: boolean) => void,
+    persist: boolean = true
 ) => {
     // Create conversation history for the API request
     const history: ChatTurn[] = answers.map((a: { user: any; response: { answer: any } }) => ({ user: a.user, assistant: a.response.answer }));
@@ -330,9 +333,15 @@ export const makeApiRequest = async (
         }, 100);
     };
 
+    // Set once the server signals the end of the stream ([DONE] or finish_reason:
+    // "stop"). Needed because those markers only break the inner line loop; the outer
+    // read loop must check this flag to stop reading, otherwise it hangs until the
+    // server closes the connection.
+    let streamDone = false;
+
     try {
         // Main streaming loop - process chunks as they arrive
-        while (true) {
+        while (!streamDone) {
             const { done, value } = await reader.read();
             if (done) break;
 
@@ -350,6 +359,7 @@ export const makeApiRequest = async (
 
                     // Check for stream end marker
                     if (data === "[DONE]") {
+                        streamDone = true;
                         break;
                     }
 
@@ -359,6 +369,7 @@ export const makeApiRequest = async (
                         const choice: ChatCompletionChunkChoice | undefined = chunk.choices?.[0];
                         if (!choice) continue; // Check if streaming is complete
                         if (choice.finish_reason === "stop") {
+                            streamDone = true;
                             break;
                         }
 
@@ -443,6 +454,12 @@ export const makeApiRequest = async (
             chatMessageStreamEnd.current?.scrollIntoView({ behavior: "smooth" });
         }
     });
+
+    // The preview chat is ephemeral: stream and render the answer, but never write
+    // it to storage or the history list.
+    if (!persist) {
+        return;
+    }
 
     // Save the chat to storage
     if (activeChatRef.current) {

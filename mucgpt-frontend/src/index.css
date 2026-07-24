@@ -36,3 +36,9 @@ html {
 #root {
     height: 100%;
 }
+
+/* Prevent text selection / cursor flicker while dragging the assistant preview divider. */
+body.resizing-preview {
+    cursor: col-resize;
+    user-select: none;
+}

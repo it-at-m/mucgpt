@@ -8,6 +8,98 @@
     box-sizing: border-box;
 }
 
+/* Two-pane split: form on the left, preview chat on the right. */
+.splitLayout {
+    position: relative;
+    display: flex;
+    flex: 1;
+    min-height: 0;
+    width: 100%;
+    overflow: hidden;
+}
+
+.formPane {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    width: calc(100% - var(--previewPercent, 35%));
+    height: 100%;
+    overflow-y: auto;
+}
+
+/* Inside the split, the page-level header divider is redundant next to the form. */
+.formPane .header {
+    border-bottom: none;
+}
+
+.splitLayoutCollapsed .formPane {
+    width: 100%;
+}
+
+/* Floating button to bring the preview back when collapsed. */
+.previewExpandButton {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    z-index: 3;
+    box-shadow: var(--shadow8);
+}
+
+.previewPane {
+    min-width: 0;
+    width: var(--previewPercent, 35%);
+    height: 100%;
+    border-left: 1px solid var(--colorNeutralStroke2);
+    box-sizing: border-box;
+    overflow: hidden;
+}
+
+.previewDivider {
+    flex: 0 0 6px;
+    align-self: stretch;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: col-resize;
+    background-color: var(--colorNeutralBackground3);
+    border: none;
+    padding: 0;
+}
+
+.previewDivider:hover,
+.previewDivider:focus-visible {
+    background-color: var(--colorBrandBackground2);
+    outline: none;
+}
+
+.previewDividerHandle {
+    width: 2px;
+    height: 32px;
+    border-radius: var(--borderRadiusCircular);
+    background-color: var(--colorNeutralStroke1);
+}
+
+.previewDivider:hover .previewDividerHandle,
+.previewDivider:focus-visible .previewDividerHandle {
+    background-color: var(--colorBrandForeground1);
+}
+
+/* Below this width the preview chat is hidden entirely: a live chat next to the
+   form does not fit a narrow screen, so only the full-width form is shown. */
+@media (max-width: 900px) {
+    .formPane {
+        width: 100%;
+        height: auto;
+        overflow-y: visible;
+    }
+
+    .previewPane,
+    .previewDivider,
+    .previewExpandButton {
+        display: none;
+    }
+}
+
 .header {
     background-color: var(--colorNeutralBackground1);
     border-bottom: 1px solid var(--colorNeutralStroke2);
@@ -30,7 +122,7 @@
     max-width: 1060px;
     width: 100%;
     margin: 0 auto;
-    padding: 24px 32px;
+    padding: 24px 32px 0px;
     box-sizing: border-box;
 }
 
@@ -72,21 +164,17 @@
 
 .headerDescription {
     margin: 0;
-    max-width: 72ch;
+    max-width: 80ch;
     color: var(--colorNeutralForeground2);
     font-size: var(--fontSizeBase300);
     line-height: 1.45;
-}
-
-.headerCloseButton {
-    flex-shrink: 0;
 }
 
 .body {
     flex: 1;
     display: flex;
     flex-direction: column;
-    padding: 30px 32px;
+    padding: 16px 32px 30px;
     max-width: 1060px;
     margin: 0 auto;
     width: 100%;

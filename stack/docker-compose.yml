@@ -302,7 +302,7 @@ services:
     security_opt: *security_settings
 
   xberg-full:
-    image: ghcr.io/xberg-io/xberg:1.0.0-rc.17
+    image: ghcr.io/xberg-io/xberg:1.0.0-rc.17@sha256:0c18a6817ced0e38ae839c24256ea9573b6d044446c7d7d5ac1465d9dec822af
     ports:
       - "8086:8000"
     environment:

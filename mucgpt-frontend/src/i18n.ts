@@ -244,6 +244,16 @@ i18n
                             panHint: "Ziehen zum Verschieben • Strg/Cmd+Mausrad zum Zoomen • Doppelklick zum Zurücksetzen",
                             zoomHint: "Strg+Mausrad zum Zoomen • Doppelklick zum Anpassen"
                         },
+                        drawio: {
+                            download: "Diagramm herunterladen",
+                            render: "Zeichne Diagramm...",
+                            error: "Das draw.io-Diagramm kann leider nicht dargestellt werden, da es Fehler enthält.",
+                            zoomIn: "Vergrößern",
+                            zoomOut: "Verkleinern",
+                            resetZoom: "Zoom zurücksetzen",
+                            panHint: "Ziehen zum Verschieben • Strg/Cmd+Mausrad zum Zoomen • Doppelklick zum Zurücksetzen",
+                            zoomHint: "Strg+Mausrad zum Zoomen • Doppelklick zum Anpassen"
+                        },
                         mindmap: {
                             download: "Herunterladen",
                             reset: "Ansicht zurücksetzen",
@@ -1010,6 +1020,16 @@ i18n
                             panHint: "Drag to pan • Ctrl+Scroll to zoom • Double-click to reset",
                             zoomHint: "Ctrl+Scroll to zoom • Double-click to fit"
                         },
+                        drawio: {
+                            download: "Download diagram",
+                            render: "Draw diagram...",
+                            error: "Unfortunately, the draw.io diagram cannot be displayed as it contains errors.",
+                            zoomIn: "Zoom In",
+                            zoomOut: "Zoom Out",
+                            resetZoom: "Reset Zoom",
+                            panHint: "Drag to pan • Ctrl+Scroll to zoom • Double-click to reset",
+                            zoomHint: "Ctrl+Scroll to zoom • Double-click to fit"
+                        },
                         sumanswer: {
                             header: "Unique entities/aspects:",
                             alternative: "Summary ",
@@ -1755,6 +1775,16 @@ i18n
                             panHint: "Ziahn zum Veschibn • Strg+Mausradl zum Zoomen • Doppelklick zum Zrucksetzn",
                             zoomHint: "Strg+Mausradl zum Zoomen • Doppelklick zum Anpassn"
                         },
+                        drawio: {
+                            download: "Schau-Buidl obalada",
+                            render: "Zeichne Schau-Buidl...",
+                            error: "Des draw.io-Schau-Buidl ko leiwa net duagstellt wern, wei's Fehla håd.",
+                            zoomIn: "Vergrößern",
+                            zoomOut: "Verkleinern",
+                            resetZoom: "Zoom zrucksetzn",
+                            panHint: "Ziahn zum Veschibn • Strg+Mausradl zum Zoomen • Doppelklick zum Zrucksetzn",
+                            zoomHint: "Strg+Mausradl zum Zoomen • Doppelklick zum Anpassn"
+                        },
                         sumanswer: {
                             header: "Einzigartige Schwerpunkte:",
                             alternative: "Zsammanfassung ",
@@ -2476,6 +2506,16 @@ i18n
                             download: "Télécharger le diagramme",
                             render: "Dessiner le diagramme...",
                             error: "Le diagramme ne peut malheureusement pas être affiché en raison d'erreurs.",
+                            zoomIn: "Agrandir",
+                            zoomOut: "Réduire",
+                            resetZoom: "Réinitialiser le zoom",
+                            panHint: "Glisser pour déplacer • Ctrl+Molette pour zoomer • Double-clic pour réinitialiser",
+                            zoomHint: "Ctrl+Molette pour zoomer • Double-clic pour ajuster"
+                        },
+                        drawio: {
+                            download: "Télécharger le diagramme",
+                            render: "Dessiner le diagramme...",
+                            error: "Le diagramme draw.io ne peut malheureusement pas être affiché en raison d'erreurs.",
                             zoomIn: "Agrandir",
                             zoomOut: "Réduire",
                             resetZoom: "Réinitialiser le zoom",
@@ -3209,6 +3249,16 @@ i18n
                             download: "Завантажити діаграму",
                             render: "Малювати діаграму...",
                             error: "На жаль, діаграму не можна відобразити через помилки.",
+                            zoomIn: "Збільшити",
+                            zoomOut: "Зменшити",
+                            resetZoom: "Скинути масштаб",
+                            panHint: "Перетягніть для переміщення • Ctrl+прокрутка для масштабування • Подвійний клік для скидання",
+                            zoomHint: "Ctrl+прокрутка для масштабування • Подвійний клік для підгонки"
+                        },
+                        drawio: {
+                            download: "Завантажити діаграму",
+                            render: "Малювати діаграму...",
+                            error: "На жаль, діаграму draw.io не можна відобразити через помилки.",
                             zoomIn: "Збільшити",
                             zoomOut: "Зменшити",
                             resetZoom: "Скинути масштаб",

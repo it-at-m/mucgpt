@@ -86,7 +86,11 @@ async def chat_completions(
     # enabled tools, prompts, data sources, and policy state request-scoped.
     ae = await init_agent(user_info=user_info)
     if request.conversation_id:
-        logger.debug("Received conversation_id=%s", request.conversation_id)
+        logger.debug(
+            "Received conversation_id=%s",
+            request.conversation_id,
+            extra={"conversation_id": request.conversation_id},
+        )
     try:
         # Convert creativity to temperature
         temperature = get_temperature_from_request(request)

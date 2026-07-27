@@ -283,10 +283,17 @@ async def get_user_subscriptions(
 
     # Build simplified response with only ID and name
     response_list = []
+    owner_lookup_cache: dict[str, dict[str, object]] = {}
     for assistant in assistants:
         assistant_id = str(assistant.id)
         latest_version = assistant.versions[0] if assistant.versions else None
         if latest_version:
+            owner_ids = [owner.user_id for owner in assistant.owners]
+            owners_detailed = await build_owner_details(
+                owner_ids,
+                owner_lookup_cache,
+                owners=assistant.owners,
+            )
             response = SubscriptionResponse(
                 id=assistant_id,
                 title=getattr(latest_version, "name", ""),
@@ -295,6 +302,7 @@ async def get_user_subscriptions(
                 subscriptions_count=getattr(assistant, "subscriptions_count", 0) or 0,
                 tags=latest_version.tags or [],
                 is_visible=bool(getattr(assistant, "is_visible", True)),
+                owners_detailed=owners_detailed,
             )
             response_list.append(response)
 

@@ -30,7 +30,9 @@ logger = getLogger()
 router = APIRouter(prefix="/v1")
 
 
-PROMPTS_DIR = Path(__file__).resolve().parents[2] / "create_assistant"
+PROMPTS_DIR = (
+    Path(__file__).resolve().parents[2] / "agent/prompt_pool/generation_prompts"
+)
 
 
 async def _invoke_internal_generation(
@@ -259,43 +261,21 @@ async def generate_chat_title(
     """Generate and normalize a chat title from the last user/assistant turn."""
 
     settings = get_settings()
+    system_prompt = _read_prompt_file("prompt_for_chat_title.md")
 
-    # Chat title prompt lives next to other assistant-generation prompts for now.
-    # If you prefer, move it to a dedicated folder later.
-    try:
-        system_prompt = _read_prompt_file("prompt_for_chat_title.md")
-    except HTTPException:
-        # Fallback: hard-coded German instructions matching previous frontend prompt
-        logger.warning(
-            "prompt_for_chat_title.md missing, falling back to built-in prompt"
-        )
-        system_prompt = (
-            "Du bist ein Assistent, der kurze und aussagekräftige Titel für "
-            "Chatverläufe erstellt.\n\n"
-            "Erstelle anhand der vorherigen Nutzerfrage und Antwort einen kurzen "
-            "Chatnamen, der das Hauptthema der Unterhaltung zusammenfasst.\n\n"
-            "Richtlinien:\n"
-            "- Maximal 4 Wörter\n"
-            "- Sei spezifisch und beschreibend, nicht generisch\n"
-            "- Erfasse die zentrale Absicht oder das konkrete Problem\n"
-            '- Vermeide Füllwörter wie "Frage zu" oder "Diskussion über"\n'
-            "- Schreibe in natürlicher deutscher Titelschreibweise\n"
-            "- Schreibe Substantive und Eigennamen groß\n"
-            "- Schreibe nicht alles klein\n"
-            "- Verwende kein CamelCase und klebe keine Wörter zusammen\n"
-            "- Verwende deutsche Umlaute direkt, also ä, ö, ü und ß\n"
-            "- Verwende keine Anführungszeichen, kein Markdown, keine Satzzeichen und keine Zeilenumbrüche\n"
-            "- Gib nur den Chatnamen aus, nichts anderes\n"
-        )
-
-    messages: list[ChatCompletionMessage] = []
-    messages.append(ChatCompletionMessage(role="system", content=system_prompt))
+    conversation_parts = []
     if request.system_message:
-        messages.append(
-            ChatCompletionMessage(role="system", content=request.system_message)
-        )
-    messages.append(ChatCompletionMessage(role="user", content=request.query))
-    messages.append(ChatCompletionMessage(role="assistant", content=request.answer))
+        conversation_parts.append(f"System-Prompt:\n{request.system_message}")
+    conversation_parts.extend(
+        [
+            f"Nutzernachricht:\n{request.query}",
+            f"Assistentenantwort:\n{request.answer}",
+        ]
+    )
+    messages: list[ChatCompletionMessage] = [
+        ChatCompletionMessage(role="system", content=system_prompt),
+        ChatCompletionMessage(role="user", content="\n\n".join(conversation_parts)),
+    ]
 
     try:
         model_name = _get_internal_task_model(settings, InternalTaskModelStrength.WEAK)

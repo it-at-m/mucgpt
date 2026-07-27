@@ -7,7 +7,7 @@ type OwnerSource = {
     owners_detailed?: OwnerDetailsResponse[];
     latest_version?: {
         owners_detailed?: OwnerDetailsResponse[];
-    };
+    } | null;
 };
 
 interface OwnerMetadataLinkProps {
@@ -15,17 +15,19 @@ interface OwnerMetadataLinkProps {
     fallbackLabel?: string;
 }
 
-export function getPrimaryOwnerDetails(source: OwnerSource | null | undefined): OwnerDetailsResponse | undefined {
+export function getPrimaryOwnerDetails(source: OwnerSource | object | null | undefined): OwnerDetailsResponse | undefined {
     if (!source) {
         return undefined;
     }
 
-    if (source.owners_detailed && source.owners_detailed.length > 0) {
-        return source.owners_detailed[0];
+    const { owners_detailed, latest_version } = source as OwnerSource;
+
+    if (owners_detailed && owners_detailed.length > 0) {
+        return owners_detailed[0];
     }
 
-    if (source.latest_version?.owners_detailed && source.latest_version.owners_detailed.length > 0) {
-        return source.latest_version.owners_detailed[0];
+    if (latest_version?.owners_detailed && latest_version.owners_detailed.length > 0) {
+        return latest_version.owners_detailed[0];
     }
 
     return undefined;

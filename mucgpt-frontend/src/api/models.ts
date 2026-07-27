@@ -288,6 +288,7 @@ export type CommunityAssistant = {
     subscriptions_count?: number;
     tags?: string[];
     is_visible?: boolean;
+    owners_detailed?: OwnerDetailsResponse[];
 };
 
 // Compliance check (EU AI Act high-risk screening) -------------------------

@@ -804,14 +804,30 @@ export const handlers = [
         });
     }),
 
-    // Replace /api/assistant/create with dynamic builder
-    http.post("/api/backend/v1/generate/assistant", async ({ request }) => {
+    http.post("/api/backend/v1/generations/assistant-draft", async ({ request }) => {
         await delay(500);
-        const raw = await request.json();
-        const body = raw && typeof raw === "object" && (raw as any).latest_version ? (raw as any).latest_version : {};
-        const assistant = buildAssistantCreateResponse({ latest_version: body });
-        DYNAMIC_ASSISTANTS.push(assistant);
-        return HttpResponse.json(assistant);
+        const body = (await request.json()) as { prompt_seed?: string };
+        const promptSeed = body.prompt_seed?.trim() || "You are a helpful assistant.";
+        return HttpResponse.json({
+            title: "Generated Assistant",
+            description: "A draft assistant generated from the provided prompt seed.",
+            system_prompt: promptSeed
+        });
+    }),
+
+    http.post("/api/backend/v1/generations/chat-title", async ({ request }) => {
+        await delay(250);
+        const body = (await request.json()) as { query?: string; answer?: string; system_message?: string };
+        const fallback = body.query?.trim() || "New Chat";
+        const words = fallback
+            .replace(/["']/g, "")
+            .replace(/[^\p{L}\p{N}\s]/gu, " ")
+            .replace(/\s+/g, " ")
+            .trim()
+            .split(" ")
+            .filter(Boolean)
+            .slice(0, 4);
+        return HttpResponse.json({ title: words.join(" ") || "New Chat" });
     }),
 
     http.get("/api/assistant", () => {

@@ -7,6 +7,7 @@ from fastapi.responses import JSONResponse
 
 from api.routers import (
     chat_router,
+    generation_router,
     parsing_router,
     system_router,
     tools_router,
@@ -68,6 +69,7 @@ api_app.add_middleware(CorrelationIdMiddleware)
 
 
 api_app.include_router(chat_router.router, prefix="", tags=["Chat"])
+api_app.include_router(generation_router.router, prefix="", tags=["Generations"])
 api_app.include_router(system_router.router, prefix="", tags=["System"])
 api_app.include_router(tools_router.router, prefix="", tags=["Tools"])
 api_app.include_router(parsing_router.router, prefix="", tags=["Parsing"])

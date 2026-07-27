@@ -44,9 +44,18 @@ export type ChatRequest = {
     data_sources?: DataSource[];
 };
 
-export type CreateAssistantRequest = {
-    input: string;
-    model?: string;
+export type AssistantDraftRequest = {
+    prompt_seed: string;
+};
+
+export type AssistantDraftResponse = {
+    system_prompt: string;
+    description: string;
+    title: string;
+};
+
+export type ChatTitleResponse = {
+    title: string;
 };
 
 export interface ApplicationConfig {
@@ -92,7 +101,7 @@ export interface ToolCall {
     name: string;
     state: string;
     content: string;
-    metadata?: Record<string, any>;
+    metadata?: Record<string, unknown>;
 }
 
 export interface ChatCompletionDelta {
@@ -149,7 +158,7 @@ export type Assistant = {
 
 export interface ToolBase {
     id: string;
-    config?: Record<string, any>;
+    config?: Record<string, unknown>;
 }
 
 export interface OwnerDetailsResponse {

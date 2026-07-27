@@ -509,11 +509,11 @@ i18n
                             creativity_medium_description: "Verlässliche Antworten mit etwas Spielraum für bessere Formulierungen und Struktur.",
                             creativity_high_description:
                                 "Mehr Vorschläge, Varianten und alternative Formulierungen, hält sich aber weniger strikt an Anweisungen.",
-                            default_model: "Standard-Modell",
+                            default_model: "Festgelegtes Modell",
                             default_model_description:
-                                "Dieses Modell ist vorausgewählt. Nutzer können beim Start einer Unterhaltung weiterhin ein anderes verfügbares Modell auswählen.",
-                            default_model_placeholder: "Wählen Sie ein Standard-Modell...",
-                            no_default_model: "Kein Standard-Modell (Benutzer wählt)",
+                                "Dieses Modell wird für alle Unterhaltungen verwendet. Nutzer können kein anderes Modell auswählen.",
+                            default_model_placeholder: "Wählen Sie ein Modell aus...",
+                            no_default_model: "Kein festes Modell (Nutzer wählt)",
                             departments: "Abteilungen",
                             departments_info:
                                 "Dies sind die Abteilungen, die Zugriff auf den Assistenten haben. Alle Abteilungen in der Hierarchie unter den ausgewählten Abteilungen haben ebenfalls Zugriff.",
@@ -1267,11 +1267,11 @@ i18n
                             creativity_medium_description: "Balanced: A good balance between reliable answers and flexible wording.",
                             creativity_high_description:
                                 "Creative: More room for ideas, alternative wording, and less obvious suggestions, but may follow instructions less strictly.",
-                            default_model: "Default Model",
+                            default_model: "Fixed Model",
                             default_model_description:
-                                "This model is preselected. Users can still choose another available model when starting a conversation.",
-                            default_model_placeholder: "Select a default model...",
-                            no_default_model: "No default model (user chooses)",
+                                "This model is used for all conversations. Users cannot choose a different model.",
+                            default_model_placeholder: "Select a model...",
+                            no_default_model: "No fixed model (default)",
                             departments: "Departments",
                             departments_info:
                                 "These are the departments that have access to the assistant. All departments in the hierarchy below the selected departments also have access.",
@@ -2012,11 +2012,11 @@ i18n
                             creativity_medium_description: "Ausgewogen: Gute Balance aus verlässlichen Antworten und flexibler Formulierung.",
                             creativity_high_description:
                                 "Kreativ: Mehr Spielraum für Ideen, alternative Formulierungen und ungewöhnlichere Vorschläge, hält sich aber weniger strikt an Anweisungen.",
-                            default_model: "Standard-Modell",
+                            default_model: "Festglegts Modell",
                             default_model_description:
-                                "Dieses Modell ist vorausgewählt. Nutzer können beim Start einer Unterhaltung weiterhin ein anderes verfügbares Modell auswählen.",
-                            default_model_placeholder: "Such da a Standard-Modell aus...",
-                            no_default_model: "Koan Standard-Modell (da Nutzer entscheidet)",
+                                "Dieses Modell wird für alle Unterhaltungen verwendet. Nutzer können kein anderes Modell auswählen.",
+                            default_model_placeholder: "Such da a Modell aus...",
+                            no_default_model: "Koa fixes Modell (da Nutzer entscheidet)",
                             departments: "Abteilungen",
                             departments_info:
                                 "Des san de Abteilungen, de Zugriff auf den Assistenten ham. Olle Abteilungen in da Hierarchie unter de ausgsuachten Abteilungen ham a Zugriff.",
@@ -2761,11 +2761,11 @@ i18n
                             creativity_medium_description: "Équilibrée : bon équilibre entre réponses fiables et formulation flexible.",
                             creativity_high_description:
                                 "Créative : plus de marge pour les idées, les formulations alternatives et les suggestions moins évidentes, mais peut suivre les consignes moins strictement.",
-                            default_model: "Modèle par défaut",
+                            default_model: "Modèle imposé",
                             default_model_description:
-                                "Ce modèle est présélectionné. Les utilisateurs peuvent toujours choisir un autre modèle disponible au début d’une conversation.",
-                            default_model_placeholder: "Sélectionnez un modèle par défaut...",
-                            no_default_model: "Aucun modèle par défaut (l'utilisateur choisit)",
+                                "Ce modèle est utilisé pour toutes les conversations. Les utilisateurs ne peuvent pas choisir un autre modèle.",
+                            default_model_placeholder: "Sélectionnez un modèle...",
+                            no_default_model: "Aucun modèle imposé (l'utilisateur choisit)",
                             departments: "Départements",
                             departments_info:
                                 "Ce sont les départements qui ont accès à l'assistant. Tous les départements situés en dessous dans la hiérarchie y ont également accès.",
@@ -3500,11 +3500,11 @@ i18n
                             creativity_medium_description: "Збалансовано: хороший баланс між надійними відповідями та гнучким формулюванням.",
                             creativity_high_description:
                                 "Креативно: більше простору для ідей, альтернативних формулювань і менш очевидних пропозицій, але може менш строго дотримуватися інструкцій.",
-                            default_model: "Модель за замовчуванням",
+                            default_model: "Фіксована модель",
                             default_model_description:
-                                "Ця модель попередньо вибрана. Користувачі все ще можуть вибрати іншу доступну модель на початку розмови.",
-                            default_model_placeholder: "Оберіть модель за замовчуванням...",
-                            no_default_model: "Без моделі за замовчуванням (обирає користувач)",
+                                "Ця модель використовується для всіх розмов. Користувачі не можуть вибрати іншу модель.",
+                            default_model_placeholder: "Оберіть модель...",
+                            no_default_model: "Без фіксованої моделі (обирає користувач)",
                             departments: "Підрозділи",
                             departments_info: "Це підрозділи, які мають доступ до асистента. Усі підрозділи нижче у вибраній ієрархії також матимуть доступ.",
 

@@ -542,26 +542,9 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
             if (!strategy.canEdit) return;
 
             setError(undefined);
-            try {
-                const result = await strategy.updateAssistant?.(assistant_id, newAssistant);
-
-                if (result?.updatedAssistant) {
-                    setAssistantConfig(result.updatedAssistant);
-                    setFollowUpActions(result.updatedAssistant.quick_prompts || []);
-                    showSuccess(
-                        t("components.assistant_chat.update_assistant_success"),
-                        t("components.assistant_chat.update_assistant_success_message", { title: result.updatedAssistant.title })
-                    );
-                }
-            } catch (err) {
-                console.error("Error updating assistant:", err);
-                showError(
-                    t("components.assistant_chat.update_assistant_failed"),
-                    err instanceof Error ? err.message : t("components.assistant_chat.update_assistant_failed_message")
-                );
-            }
+            await strategy.updateAssistant?.(assistant_id, newAssistant);
         },
-        [strategy, assistant_id, assistantConfig, LLM, setFollowUpActions, showError, showSuccess, t]
+        [strategy, assistant_id]
     );
 
     // Regenerate-Funktion

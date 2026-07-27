@@ -468,7 +468,7 @@ export const makeApiRequest = async (
         if (fetchHistory) fetchHistory();
     } else {
         // Create a new chat with generated name
-        const chatname = await createChatName(question, finalResponse.answer, options.system ?? "", LLM.llm_name);
+        const chatname = await createChatName(question, finalResponse.answer, options.system ?? "");
 
         // Create chat with assistant-specific ID if assistant_id is provided, otherwise use regular UUID
         const id = assistant_id

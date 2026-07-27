@@ -37,6 +37,11 @@ class ParserBackendType(StrEnum):
     XBERG = "xberg"
 
 
+class InternalTaskModelStrength(StrEnum):
+    WEAK = "weak"
+    STRONG = "strong"
+
+
 _logger = logging.getLogger(__name__)
 _positive_int_adapter = TypeAdapter(PositiveInt)
 _decimal_adapter = TypeAdapter(Decimal)
@@ -47,6 +52,7 @@ class ModelInfo(BaseModel):
     max_output_tokens: PositiveInt | None = None
     max_input_tokens: PositiveInt | None = None
     description: str | None = None
+    internal_task_model_strength: InternalTaskModelStrength | None = None
     input_cost_per_token: Decimal | None = None
     output_cost_per_token: Decimal | None = None
     supports_function_calling: bool | None = None
@@ -90,6 +96,7 @@ class ModelsConfig(BaseModel):
             "max_output_tokens",
             "max_input_tokens",
             "description",
+            "internal_task_model_strength",
             "input_cost_per_token",
             "output_cost_per_token",
             "supports_function_calling",

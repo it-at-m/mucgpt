@@ -199,20 +199,24 @@
     order: 1;
 }
 
-.sectionBehaviour {
+.sectionInstructions {
     order: 2;
 }
 
-.sectionTools {
-    order: 4;
-}
-
-.sectionConversationOptions {
+.sectionBehaviour {
     order: 3;
 }
 
-.sectionAccess {
+.sectionConversationOptions {
+    order: 4;
+}
+
+.sectionTools {
     order: 5;
+}
+
+.sectionAccess {
+    order: 6;
 }
 
 .sectionAccordion,
@@ -308,6 +312,13 @@
 
 .formField {
     gap: 4px;
+}
+
+.fieldDescription {
+    width: 100%;
+    margin: -2px 0 8px 0;
+    color: var(--colorNeutralForeground2);
+    line-height: 1.4;
 }
 
 .formField :global(.fui-Label) {

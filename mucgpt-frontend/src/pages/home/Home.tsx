@@ -297,7 +297,6 @@ const Home = () => {
                     <QuestionInput
                         onSend={onSendQuestion}
                         disabled={false}
-                        placeholder={t("chat.prompt")}
                         draftCacheKey="home-chat-starter"
                         setQuestion={q => setQuestion(q)}
                         selectedTools={selectedTools}

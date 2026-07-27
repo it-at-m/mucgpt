@@ -11,6 +11,8 @@ export interface AppThemeTokens {
     primarySubtle: string;
     primarySubtleOn: string;
     primaryStrong: string;
+    linkForeground: string;
+    linkForegroundHover: string;
     textDefault: string;
     textSecondary: string;
     textTertiary: string;
@@ -55,6 +57,8 @@ export const lightThemeTokens: AppThemeTokens = {
     primarySubtle: "#DBEAFE",
     primarySubtleOn: "#1E3A8A",
     primaryStrong: "#1A4DBB",
+    linkForeground: "#1A4DBB",
+    linkForegroundHover: "#2563eb",
     textDefault: "#1E293B",
     textSecondary: "#4a5665",
     textTertiary: "#526077",
@@ -99,6 +103,8 @@ export const darkThemeTokens: AppThemeTokens = {
     primarySubtle: "#1A4DBB",
     primarySubtleOn: "#DBEAFE",
     primaryStrong: "#2563EB",
+    linkForeground: "#93C5FD",
+    linkForegroundHover: "#BFDBFE",
     textDefault: "#F1F5F9",
     textSecondary: "#94A3B8",
     textTertiary: "#64748B",

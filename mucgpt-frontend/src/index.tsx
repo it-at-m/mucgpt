@@ -1,7 +1,6 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
 import { createHashRouter, RouterProvider } from "react-router-dom";
-import { initializeIcons } from "@fluentui/react";
 import "./i18n";
 
 import "@fontsource/montserrat/latin-700.css";
@@ -23,7 +22,6 @@ import Unauthorized from "./pages/Unauthorized";
 import Discovery from "./pages/discovery/Discovery";
 import Home from "./pages/home/Home";
 import { AssistantEditorPage } from "./components/AssistantDialogs/AssistantEditorPage/AssistantEditorPage";
-initializeIcons();
 
 async function cleanupServiceWorkerForGatewayBuild() {
     const pwaEnabled = import.meta.env.VITE_DISABLE_PWA !== "true";

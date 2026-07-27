@@ -1,0 +1,21 @@
+.advancedContent {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.compactField {
+    margin-bottom: 0;
+}
+
+.fieldDescription {
+    max-width: 72ch;
+    margin: -2px 0 12px 0;
+    color: var(--colorNeutralForeground2);
+    line-height: 1.4;
+}
+
+.defaultModelDescription {
+    width: 100%;
+    max-width: none;
+}

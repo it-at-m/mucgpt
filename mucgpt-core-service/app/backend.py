@@ -7,6 +7,7 @@ from fastapi.responses import JSONResponse
 
 from api.routers import (
     chat_router,
+    compliance_router,
     generation_router,
     parsing_router,
     system_router,
@@ -61,6 +62,10 @@ api_app = FastAPI(
             "name": "Parsing",
             "description": "Operations for parsing uploaded files into text",
         },
+        {
+            "name": "Compliance",
+            "description": "EU AI Act high-risk screening for assistant prompts",
+        },
     ],
 )
 backend.mount("/api/", api_app)
@@ -69,6 +74,7 @@ api_app.add_middleware(CorrelationIdMiddleware)
 
 
 api_app.include_router(chat_router.router, prefix="", tags=["Chat"])
+api_app.include_router(compliance_router.router, prefix="", tags=["Compliance"])
 api_app.include_router(generation_router.router, prefix="", tags=["Generations"])
 api_app.include_router(system_router.router, prefix="", tags=["System"])
 api_app.include_router(tools_router.router, prefix="", tags=["Tools"])

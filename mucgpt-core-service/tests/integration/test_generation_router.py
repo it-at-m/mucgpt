@@ -37,7 +37,7 @@ class _FakeConfiguredModel:
 
 
 @pytest.mark.integration
-@patch("api.routers.generation_router.ModelProvider.get_model")
+@patch("core.llm_helpers.ModelProvider.get_model")
 def test_generate_assistant_draft_direct_and_parallel(mock_get_model, test_client):
     responses = {
         "assistant-draft-system-prompt": "System Prompt Text",
@@ -60,7 +60,7 @@ def test_generate_assistant_draft_direct_and_parallel(mock_get_model, test_clien
 
 
 @pytest.mark.integration
-@patch("api.routers.generation_router.ModelProvider.get_model")
+@patch("core.llm_helpers.ModelProvider.get_model")
 def test_generate_chat_title_direct_model(mock_get_model, test_client):
     responses = {
         "chat-title-generation": "E-Mail Hilfe",
@@ -90,7 +90,7 @@ def test_generate_chat_title_direct_model(mock_get_model, test_client):
 
 
 @pytest.mark.integration
-@patch("api.routers.generation_router.ModelProvider.get_model")
+@patch("core.llm_helpers.ModelProvider.get_model")
 def test_generate_chat_title_fallback_when_empty(mock_get_model, test_client):
     responses = {
         "chat-title-generation": "",
@@ -111,7 +111,7 @@ def test_generate_chat_title_fallback_when_empty(mock_get_model, test_client):
 
 
 @pytest.mark.integration
-@patch("api.routers.generation_router.ModelProvider.get_model")
+@patch("core.llm_helpers.ModelProvider.get_model")
 def test_generate_assistant_draft_error_mapping(mock_get_model, test_client):
     responses = {
         "assistant-draft-system-prompt": "System Prompt Text",

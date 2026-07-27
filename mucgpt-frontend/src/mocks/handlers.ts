@@ -992,7 +992,7 @@ export const handlers = [
         });
     }),
 
-    http.post("/api/assistant/compliance/check", async ({ request }) => {
+    http.post("/api/backend/v1/compliance/check", async ({ request }) => {
         const body = (await request.json().catch(() => ({}))) as { system_prompt?: string };
         // Simulate the LLM-based check taking a moment.
         await delay(1500 + Math.random() * 1500);

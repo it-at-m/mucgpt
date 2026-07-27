@@ -5,6 +5,8 @@ import {
     AssistantDraftResponse,
     ChatTitleResponse,
     ChatRequest,
+    ComplianceCheckRequest,
+    ComplianceCheckResponse,
     CountTokenRequest,
     CountTokenResponse,
     ToolListResponse
@@ -83,6 +85,11 @@ export async function generateAssistantDraftApi(request: AssistantDraftRequest):
         () => fetch(API_BASE + "v1/generations/assistant-draft", postConfig({ prompt_seed: request.prompt_seed })),
         "Failed to generate assistant draft"
     );
+}
+
+/** Run the EU AI Act high-risk compliance check for an assistant system prompt. */
+export async function checkAssistantComplianceApi(input: ComplianceCheckRequest): Promise<ComplianceCheckResponse> {
+    return handleApiRequest(() => fetch(API_BASE + "v1/compliance/check", postConfig(input)), "Failed to run compliance check");
 }
 
 export async function createChatName(query: string, answer: string, system_message: string) {

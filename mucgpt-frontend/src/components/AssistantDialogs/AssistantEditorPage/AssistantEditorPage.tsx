@@ -19,8 +19,8 @@ import {
 import styles from "./AssistantEditorPage.module.css";
 import { AssistantCreateFlow } from "./AssistantCreateFlow";
 import { Assistant, ComplianceCheckResponse, ToolBase, ToolInfo } from "../../../api";
-import { checkAssistantComplianceApi, createCommunityAssistantApi } from "../../../api/assistant-client";
-import { generateAssistantDraftApi } from "../../../api/core-client";
+import { createCommunityAssistantApi } from "../../../api/assistant-client";
+import { checkAssistantComplianceApi, generateAssistantDraftApi } from "../../../api/core-client";
 import { useGlobalToastContext } from "../../GlobalToastHandler/GlobalToastContext";
 import { StarterPromptModel } from "../../StarterPrompt";
 import { LLMContext } from "../../LLMSelector/LLMContextProvider";

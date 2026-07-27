@@ -346,6 +346,45 @@ class AssistantDraftResult(BaseModel):
     title: str = Field(..., description="Generated title for the assistant.")
 
 
+ComplianceCategoryId = Literal[
+    "migration_asylum_border",
+    "public_services_access",
+    "hr_employment",
+    "education",
+]
+ComplianceStatus = Literal["passed", "high_risk_detected", "error"]
+
+
+class ComplianceCheckRequest(BaseModel):
+    """System prompt to screen for EU AI Act high-risk use cases."""
+
+    system_prompt: str = Field(
+        ..., min_length=1, description="Assistant system prompt to evaluate."
+    )
+
+
+class ComplianceCategoryResult(BaseModel):
+    """Result of one EU AI Act high-risk category evaluation."""
+
+    category: ComplianceCategoryId
+    status: ComplianceStatus
+    reasoning: str | None = Field(
+        None,
+        description="Concise explanation when the category was identified as high risk.",
+    )
+
+
+class ComplianceCheckResponse(BaseModel):
+    """Aggregated EU AI Act high-risk screening result."""
+
+    overall_status: ComplianceStatus
+    results: list[ComplianceCategoryResult]
+    prompt_hash: str | None = Field(
+        None,
+        description="SHA-256 hash of the screened system prompt.",
+    )
+
+
 class ChatTitleRequest(BaseModel):
     """Request model for generating a chat title based on the last turn."""
 

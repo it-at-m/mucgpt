@@ -35,19 +35,7 @@ export const useCreateAssistantState = () => {
             creativity !== CREATIVITY_LOW ||
             defaultModel !== undefined
         );
-    }, [
-        input,
-        title,
-        description,
-        systemPrompt,
-        tools,
-        followUpActions,
-        starterPrompts,
-        hierarchicalAccess,
-        isVisible,
-        creativity,
-        defaultModel
-    ]);
+    }, [input, title, description, systemPrompt, tools, followUpActions, starterPrompts, hierarchicalAccess, isVisible, creativity, defaultModel]);
 
     // Change handlers that automatically track changes
     const updateInput = useCallback((newInput: string) => {

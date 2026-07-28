@@ -510,8 +510,7 @@ i18n
                             creativity_high_description:
                                 "Mehr Vorschläge, Varianten und alternative Formulierungen, hält sich aber weniger strikt an Anweisungen.",
                             default_model: "Festgelegtes Modell",
-                            default_model_description:
-                                "Dieses Modell wird für alle Unterhaltungen verwendet. Nutzer können kein anderes Modell auswählen.",
+                            default_model_description: "Dieses Modell wird für alle Unterhaltungen verwendet. Nutzer können kein anderes Modell auswählen.",
                             default_model_placeholder: "Wählen Sie ein Modell aus...",
                             no_default_model: "Kein festes Modell (Nutzer wählt)",
                             departments: "Abteilungen",
@@ -1268,8 +1267,7 @@ i18n
                             creativity_high_description:
                                 "Creative: More room for ideas, alternative wording, and less obvious suggestions, but may follow instructions less strictly.",
                             default_model: "Fixed Model",
-                            default_model_description:
-                                "This model is used for all conversations. Users cannot choose a different model.",
+                            default_model_description: "This model is used for all conversations. Users cannot choose a different model.",
                             default_model_placeholder: "Select a model...",
                             no_default_model: "No fixed model (default)",
                             departments: "Departments",
@@ -2013,8 +2011,7 @@ i18n
                             creativity_high_description:
                                 "Kreativ: Mehr Spielraum für Ideen, alternative Formulierungen und ungewöhnlichere Vorschläge, hält sich aber weniger strikt an Anweisungen.",
                             default_model: "Festglegts Modell",
-                            default_model_description:
-                                "Dieses Modell wird für alle Unterhaltungen verwendet. Nutzer können kein anderes Modell auswählen.",
+                            default_model_description: "Dieses Modell wird für alle Unterhaltungen verwendet. Nutzer können kein anderes Modell auswählen.",
                             default_model_placeholder: "Such da a Modell aus...",
                             no_default_model: "Koa fixes Modell (da Nutzer entscheidet)",
                             departments: "Abteilungen",
@@ -3501,8 +3498,7 @@ i18n
                             creativity_high_description:
                                 "Креативно: більше простору для ідей, альтернативних формулювань і менш очевидних пропозицій, але може менш строго дотримуватися інструкцій.",
                             default_model: "Фіксована модель",
-                            default_model_description:
-                                "Ця модель використовується для всіх розмов. Користувачі не можуть вибрати іншу модель.",
+                            default_model_description: "Ця модель використовується для всіх розмов. Користувачі не можуть вибрати іншу модель.",
                             default_model_placeholder: "Оберіть модель...",
                             no_default_model: "Без фіксованої моделі (обирає користувач)",
                             departments: "Підрозділи",

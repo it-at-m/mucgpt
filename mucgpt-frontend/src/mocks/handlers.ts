@@ -408,7 +408,7 @@ const COMPLIANCE_CATEGORIES = ["migration_asylum_border", "public_services_acces
  *   - "#error"          -> backend error (HTTP 500)
  *   - "#pass"           -> all categories passed
  *   - "#risk1".."#risk4" -> exactly that many categories flagged ("#risk" = 1)
- * Without a control word: ~10% error, ~33% with 1-2 random high-risk findings, otherwise passed.
+ * Without a control word the check always passes, so tests can assert on a stable result.
  */
 function buildComplianceCheckResponse(systemPrompt: string): ComplianceCheckResponse | null {
     const forcedRisk = systemPrompt.match(/#risk([1-4])?/i);
@@ -416,19 +416,15 @@ function buildComplianceCheckResponse(systemPrompt: string): ComplianceCheckResp
     let flaggedCount: number;
     if (/#error/i.test(systemPrompt)) {
         return null; // caller translates this into a 500
-    } else if (/#pass/i.test(systemPrompt)) {
-        flaggedCount = 0;
     } else if (forcedRisk) {
         flaggedCount = forcedRisk[1] ? Number(forcedRisk[1]) : 1;
     } else {
-        // Randomized default behaviour.
-        if (Math.random() < 0.1) return null;
-        flaggedCount = Math.random() < 0.33 ? (Math.random() < 0.3 ? 2 : 1) : 0;
+        // Default (including the explicit "#pass" control word): everything passes.
+        flaggedCount = 0;
     }
 
-    // Flag a random subset of the requested size.
-    const shuffled = [...COMPLIANCE_CATEGORIES].sort(() => Math.random() - 0.5);
-    const flagged = new Set<string>(shuffled.slice(0, flaggedCount));
+    // Flag the first n categories so the same prompt always yields the same findings.
+    const flagged = new Set<string>(COMPLIANCE_CATEGORIES.slice(0, flaggedCount));
 
     const results: ComplianceCategoryResult[] = COMPLIANCE_CATEGORIES.map(category =>
         flagged.has(category)
@@ -994,8 +990,7 @@ export const handlers = [
 
     http.post("/api/backend/v1/compliance/check", async ({ request }) => {
         const body = (await request.json().catch(() => ({}))) as { system_prompt?: string };
-        // Simulate the LLM-based check taking a moment.
-        await delay(1500 + Math.random() * 1500);
+        await delay(1500);
         const response = buildComplianceCheckResponse(body.system_prompt ?? "");
         if (!response) {
             return HttpResponse.json({ message: "Compliance check failed" }, { status: 500 });

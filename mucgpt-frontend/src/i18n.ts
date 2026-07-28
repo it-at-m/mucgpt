@@ -428,6 +428,14 @@ i18n
                             import_invalid_format: "Ungültiges Dateiformat. Die Datei muss einen Titel und System-Prompt enthalten.",
                             import_save_failed: "Fehler beim Speichern des importierten Assistenten"
                         },
+                        assistant_preview: {
+                            title: "Vorschau-Chat",
+                            welcome: "Teste deinen Assistenten hier. Diese Unterhaltung wird nicht gespeichert.",
+                            reset: "Chat leeren",
+                            resize: "Vorschau-Breite anpassen",
+                            hide: "Vorschau ausblenden",
+                            show: "Vorschau anzeigen"
+                        },
                         assistant_editor: {
                             // Page titles (differ between create and edit)
                             create_title: "Assistent erstellen",
@@ -502,8 +510,7 @@ i18n
                             creativity_high_description:
                                 "Mehr Vorschläge, Varianten und alternative Formulierungen, hält sich aber weniger strikt an Anweisungen.",
                             default_model: "Festgelegtes Modell",
-                            default_model_description:
-                                "Dieses Modell wird für alle Unterhaltungen verwendet. Nutzer können kein anderes Modell auswählen.",
+                            default_model_description: "Dieses Modell wird für alle Unterhaltungen verwendet. Nutzer können kein anderes Modell auswählen.",
                             default_model_placeholder: "Wählen Sie ein Modell aus...",
                             no_default_model: "Kein festes Modell (Nutzer wählt)",
                             departments: "Abteilungen",
@@ -1181,6 +1188,14 @@ i18n
                             import_invalid_format: "Invalid file format. The file must contain a title and system prompt.",
                             import_save_failed: "Error saving imported assistant"
                         },
+                        assistant_preview: {
+                            title: "Preview Chat",
+                            welcome: "Test your assistant here. This conversation is not saved.",
+                            reset: "Clear chat",
+                            resize: "Adjust preview width",
+                            hide: "Hide preview",
+                            show: "Show preview"
+                        },
                         assistant_editor: {
                             // Page titles (differ between create and edit)
                             create_title: "Create Assistant",
@@ -1252,8 +1267,7 @@ i18n
                             creativity_high_description:
                                 "Creative: More room for ideas, alternative wording, and less obvious suggestions, but may follow instructions less strictly.",
                             default_model: "Fixed Model",
-                            default_model_description:
-                                "This model is used for all conversations. Users cannot choose a different model.",
+                            default_model_description: "This model is used for all conversations. Users cannot choose a different model.",
                             default_model_placeholder: "Select a model...",
                             no_default_model: "No fixed model (default)",
                             departments: "Departments",
@@ -1917,6 +1931,14 @@ i18n
                             import_invalid_format: "Ungültigs Dateiformat. De Datei muass an Titel und System-Prompt enthoidn.",
                             import_save_failed: "Fehler beim Speichern vom importierten Assistentn"
                         },
+                        assistant_preview: {
+                            title: "Vorschau-Chat",
+                            welcome: "Probier deinen Assistentn do aus. De Unterhaltung wead ned gspeichert.",
+                            reset: "Chat leeren",
+                            resize: "Vorschau-Breitn oschtoin",
+                            hide: "Vorschau ausblendn",
+                            show: "Vorschau zoagn"
+                        },
                         assistant_editor: {
                             // Page titles (differ between create and edit)
                             create_title: "An neia Assistentn o'legn",
@@ -1989,8 +2011,7 @@ i18n
                             creativity_high_description:
                                 "Kreativ: Mehr Spielraum für Ideen, alternative Formulierungen und ungewöhnlichere Vorschläge, hält sich aber weniger strikt an Anweisungen.",
                             default_model: "Festglegts Modell",
-                            default_model_description:
-                                "Dieses Modell wird für alle Unterhaltungen verwendet. Nutzer können kein anderes Modell auswählen.",
+                            default_model_description: "Dieses Modell wird für alle Unterhaltungen verwendet. Nutzer können kein anderes Modell auswählen.",
                             default_model_placeholder: "Such da a Modell aus...",
                             no_default_model: "Koa fixes Modell (da Nutzer entscheidet)",
                             departments: "Abteilungen",
@@ -2656,6 +2677,14 @@ i18n
                             import_failed: "Le fichier n'a pas pu être importé",
                             import_invalid_format: "Format de fichier invalide. Le fichier doit contenir un titre et un prompt système.",
                             import_save_failed: "Erreur lors de l'enregistrement de l'assistant importé"
+                        },
+                        assistant_preview: {
+                            title: "Chat d'aperçu",
+                            welcome: "Testez votre assistant ici. Cette conversation n'est pas enregistrée.",
+                            reset: "Vider le chat",
+                            resize: "Ajuster la largeur de l'aperçu",
+                            hide: "Masquer l'aperçu",
+                            show: "Afficher l'aperçu"
                         },
                         assistant_editor: {
                             // Page titles (differ between create and edit)
@@ -3390,6 +3419,14 @@ i18n
                             import_invalid_format: "Недійсний формат файлу. Файл повинен містити назву та системний запит.",
                             import_save_failed: "Помилка збереження імпортованого асистента"
                         },
+                        assistant_preview: {
+                            title: "Чат попереднього перегляду",
+                            welcome: "Протестуйте свого асистента тут. Ця розмова не зберігається.",
+                            reset: "Очистити чат",
+                            resize: "Налаштувати ширину перегляду",
+                            hide: "Сховати перегляд",
+                            show: "Показати перегляд"
+                        },
                         assistant_editor: {
                             // Page titles (differ between create and edit)
                             create_title: "Створити асистента",
@@ -3461,8 +3498,7 @@ i18n
                             creativity_high_description:
                                 "Креативно: більше простору для ідей, альтернативних формулювань і менш очевидних пропозицій, але може менш строго дотримуватися інструкцій.",
                             default_model: "Фіксована модель",
-                            default_model_description:
-                                "Ця модель використовується для всіх розмов. Користувачі не можуть вибрати іншу модель.",
+                            default_model_description: "Ця модель використовується для всіх розмов. Користувачі не можуть вибрати іншу модель.",
                             default_model_placeholder: "Оберіть модель...",
                             no_default_model: "Без фіксованої моделі (обирає користувач)",
                             departments: "Підрозділи",

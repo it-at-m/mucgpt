@@ -92,8 +92,8 @@ export const ReviewSection = ({
                                 checkLoading
                                     ? "components.assistant_editor.review_check_running"
                                     : checkCompleted
-                                        ? "components.assistant_editor.review_check_recheck"
-                                        : "components.assistant_editor.review_check_start"
+                                      ? "components.assistant_editor.review_check_recheck"
+                                      : "components.assistant_editor.review_check_start"
                             )}
                         </Button>
                     </div>

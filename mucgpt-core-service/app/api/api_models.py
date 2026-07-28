@@ -1,5 +1,5 @@
 from decimal import Decimal
-from typing import Any, Literal
+from typing import Any, Final, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, PositiveInt
 
@@ -353,6 +353,9 @@ ComplianceCategoryId = Literal[
     "education",
 ]
 ComplianceStatus = Literal["passed", "high_risk_detected", "error"]
+COMPLIANCE_STATUS_PASSED: Final[ComplianceStatus] = "passed"
+COMPLIANCE_STATUS_HIGH_RISK_DETECTED: Final[ComplianceStatus] = "high_risk_detected"
+COMPLIANCE_STATUS_ERROR: Final[ComplianceStatus] = "error"
 
 
 class ComplianceCheckRequest(BaseModel):

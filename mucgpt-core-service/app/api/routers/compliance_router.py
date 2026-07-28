@@ -7,11 +7,15 @@ from langfuse import observe
 from pydantic import BaseModel, Field
 
 from api.api_models import (
+    COMPLIANCE_STATUS_ERROR,
+    COMPLIANCE_STATUS_HIGH_RISK_DETECTED,
+    COMPLIANCE_STATUS_PASSED,
     ChatCompletionMessage,
     ComplianceCategoryId,
     ComplianceCategoryResult,
     ComplianceCheckRequest,
     ComplianceCheckResponse,
+    ComplianceStatus,
 )
 from config.settings import InternalTaskModelStrength, get_settings
 from core.auth import authenticate_user
@@ -78,7 +82,11 @@ async def _check_category(
     return ComplianceCategoryResult(
         category=category,
         status=parsed.verdict,
-        reasoning=parsed.reasoning if parsed.verdict == "high_risk_detected" else None,
+        reasoning=(
+            parsed.reasoning
+            if parsed.verdict == COMPLIANCE_STATUS_HIGH_RISK_DETECTED
+            else None
+        ),
     )
 
 
@@ -115,13 +123,17 @@ async def check_assistant_compliance(
     except Exception as exc:
         logger.exception("Assistant compliance check failed: %s", type(exc).__name__)
         return ComplianceCheckResponse(
-            overall_status="error", results=[], prompt_hash=prompt_hash
+            overall_status=COMPLIANCE_STATUS_ERROR,
+            results=[],
+            prompt_hash=prompt_hash,
         )
 
-    overall_status: ComplianceVerdict = (
-        "high_risk_detected"
-        if any(result.status == "high_risk_detected" for result in results)
-        else "passed"
+    overall_status: ComplianceStatus = (
+        COMPLIANCE_STATUS_HIGH_RISK_DETECTED
+        if any(
+            result.status == COMPLIANCE_STATUS_HIGH_RISK_DETECTED for result in results
+        )
+        else COMPLIANCE_STATUS_PASSED
     )
     return ComplianceCheckResponse(
         overall_status=overall_status,

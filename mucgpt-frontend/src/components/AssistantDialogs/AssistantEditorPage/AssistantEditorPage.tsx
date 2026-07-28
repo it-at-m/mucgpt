@@ -311,11 +311,10 @@ export const AssistantEditorPage = (props: AssistantEditorPageProps) => {
     const [loading, setLoading] = useState(false);
     const [discardOpen, setDiscardOpen] = useState(false);
     const [discardTarget, setDiscardTarget] = useState<DiscardTarget>("back");
-    // Compliance confirmation. Must be re-confirmed after every change to the system prompt.
+    // Compliance confirmation is displayed independently from the optional screening result.
     const [reviewConfirmed, setReviewConfirmed] = useState(false);
-    // Result of the compliance check. Must be re-done after every change to the system prompt.
-    // On failure this holds a synthetic result with overall_status "error"; the user is not blocked in that case.
-    const [reviewCheckResult, setReviewCheckResult] = useState<ComplianceCheckResponse | null>(null);
+    // On failure this holds a synthetic result with overall_status "error".
+    const [reviewCheckResult, setReviewCheckResult] = useState<ComplianceCheckResponse | null>(editAssistant?.compliance_check_result ?? null);
     const [reviewCheckLoading, setReviewCheckLoading] = useState(false);
     // Bumped whenever the confirmation is reset so the checkbox remounts and reliably reflects the cleared state.
     const [reviewResetKey, setReviewResetKey] = useState(0);
@@ -375,8 +374,10 @@ export const AssistantEditorPage = (props: AssistantEditorPageProps) => {
         const s = state as typeof createState & typeof editState;
         const assistantTitle = s.title.trim();
         const systemPrompt = s.systemPrompt.trim();
+        const systemPromptChanged = !isCreate && systemPrompt !== editAssistant?.system_message.trim();
+        const requiresComplianceReview = isCreate || systemPromptChanged;
 
-        if (assistantTitle === "" || systemPrompt === "" || !reviewCheckResult || !reviewConfirmed) {
+        if (assistantTitle === "" || systemPrompt === "" || (requiresComplianceReview && (!reviewCheckResult || !reviewConfirmed))) {
             showError(t("components.assistant_editor.assistant_save_failed"), t("components.assistant_editor.save_config_failed"));
             return;
         }
@@ -409,7 +410,8 @@ export const AssistantEditorPage = (props: AssistantEditorPageProps) => {
                     })),
                     tags: [],
                     hierarchical_access: createState.hierarchicalAccess ?? [],
-                    is_visible: createState.isVisible
+                    is_visible: createState.isVisible,
+                    compliance_check_result: reviewCheckResult ?? undefined
                 });
 
                 if (response?.id) {
@@ -424,6 +426,7 @@ export const AssistantEditorPage = (props: AssistantEditorPageProps) => {
             } else {
                 const editProps = props as AssistantEditorPageEditProps;
                 const updatedAssistant = editState.createAssistantForSaving();
+                updatedAssistant.compliance_check_result = reviewCheckResult ?? undefined;
                 await editProps.onSave(updatedAssistant);
                 showSuccess(
                     t("components.assistant_editor.saved_successfully"),
@@ -437,7 +440,7 @@ export const AssistantEditorPage = (props: AssistantEditorPageProps) => {
         } finally {
             setLoading(false);
         }
-    }, [loading, state, isCreate, createState, editState, reviewConfirmed, t, showError, showSuccess, navigate, props]);
+    }, [loading, state, isCreate, createState, editState, editAssistant, reviewCheckResult, reviewConfirmed, t, showError, showSuccess, navigate, props]);
 
     const handleGenerate = useCallback(async () => {
         if (!createState.input.trim() || loading) return;
@@ -474,7 +477,7 @@ export const AssistantEditorPage = (props: AssistantEditorPageProps) => {
         [isCreate, editState]
     );
 
-    // Only changes to the system prompt invalidate the compliance review, forcing the user to re-check and re-confirm.
+    // Only changes to the system prompt invalidate the optional compliance review.
     const handleSystemPromptChanged = useCallback(() => {
         setReviewCheckResult(null);
         setReviewConfirmed(prev => {
@@ -513,7 +516,12 @@ export const AssistantEditorPage = (props: AssistantEditorPageProps) => {
     const pageTitle = isCreate ? t("components.assistant_editor.create_title") : t("components.assistant_editor.edit_title");
     const pageHelper = isCreate ? t("components.assistant_editor.page_helper_create") : t("components.assistant_editor.page_helper_edit");
     const settingsState = isCreate ? createState : editState;
-    const isSettingsValid = settingsState.title.trim() !== "" && settingsState.systemPrompt.trim() !== "" && reviewCheckResult !== null && reviewConfirmed;
+    const systemPromptChanged = !isCreate && settingsState.systemPrompt.trim() !== editAssistant?.system_message.trim();
+    const requiresComplianceReview = isCreate || systemPromptChanged;
+    const isSettingsValid =
+        settingsState.title.trim() !== "" &&
+        settingsState.systemPrompt.trim() !== "" &&
+        (!requiresComplianceReview || (reviewCheckResult !== null && reviewConfirmed));
     const showSettingsForm = !isCreate || createView === "settings";
     const showCreateModeSelector = isCreate && createView === "mode_select";
     const actionStatusLabel = !isOwner

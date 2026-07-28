@@ -12,6 +12,29 @@ CREATIVITY_HIGH = "high"
 
 AssistantListSortBy = Literal["title", "updated", "subscriptions"]
 AssistantListSortOrder = Literal["asc", "desc"]
+ComplianceCategoryId = Literal[
+    "migration_asylum_border",
+    "public_services_access",
+    "hr_employment",
+    "education",
+]
+ComplianceStatus = Literal["passed", "high_risk_detected", "error"]
+
+
+class ComplianceCategoryResult(BaseModel):
+    """Result for one EU AI Act high-risk category."""
+
+    category: ComplianceCategoryId
+    status: ComplianceStatus
+    reasoning: str | None = None
+
+
+class ComplianceCheckResult(BaseModel):
+    """EU AI Act high-risk screening result for an assistant system prompt."""
+
+    overall_status: ComplianceStatus
+    results: list[ComplianceCategoryResult]
+    prompt_hash: str | None = None
 
 
 class ExampleModel(BaseModel):
@@ -309,6 +332,11 @@ class AssistantCreate(AssistantBase):
     during assistant creation.
     """
 
+    compliance_check_result: ComplianceCheckResult | None = Field(
+        None,
+        description="Optional EU AI Act screening result for this assistant version.",
+    )
+
     # replaced inner Config with model_config
     model_config = ConfigDict(
         json_schema_extra={
@@ -437,6 +465,10 @@ class AssistantUpdate(BaseModel):
         description="List of ids who will own this assistant",
         example=["12345", "67890"],
     )
+    compliance_check_result: ComplianceCheckResult | None = Field(
+        None,
+        description="Optional EU AI Act screening result for the new assistant version.",
+    )
 
 
 class AssistantVersionResponse(AssistantBase):
@@ -463,6 +495,10 @@ class AssistantVersionResponse(AssistantBase):
     owners_detailed: list[OwnerDetailsResponse] | None = Field(
         None,
         description="Owner details enriched from LDAP",
+    )
+    compliance_check_result: ComplianceCheckResult | None = Field(
+        None,
+        description="EU AI Act screening result stored for this assistant version.",
     )
 
 

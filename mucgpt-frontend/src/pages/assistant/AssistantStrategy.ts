@@ -54,7 +54,8 @@ export class LocalAssistantStrategy implements AssistantStrategy {
             quick_prompts: newAssistant.quick_prompts || [],
             tags: newAssistant.tags || [],
             hierarchical_access: newAssistant.hierarchical_access || [],
-            is_visible: newAssistant.is_visible
+            is_visible: newAssistant.is_visible,
+            compliance_check_result: newAssistant.compliance_check_result
         });
 
         await assistantStorageService.deleteConfigAndChatsForAssistant(assistantId);
@@ -147,7 +148,8 @@ export class OwnedCommunityAssistantStrategy implements AssistantStrategy {
             quick_prompts: newAssistant.quick_prompts || [],
             tags: newAssistant.tags || [],
             version: Number(newAssistant.version),
-            is_visible: newAssistant.is_visible
+            is_visible: newAssistant.is_visible,
+            compliance_check_result: newAssistant.compliance_check_result
         };
 
         await updateCommunityAssistantApi(assistantId, updateInput);

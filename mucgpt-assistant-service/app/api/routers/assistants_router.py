@@ -88,6 +88,11 @@ async def createAssistant(
             examples=assistant.examples or [],
             quick_prompts=assistant.quick_prompts or [],
             tags=assistant.tags or [],
+            compliance_check_result=(
+                assistant.compliance_check_result.model_dump()
+                if assistant.compliance_check_result
+                else None
+            ),
         )  # Add tools if specified
         if assistant.tools:
             for tool_data in assistant.tools:
@@ -152,6 +157,7 @@ async def createAssistant(
             owner_ids=owner_ids,
             owners_detailed=owners_detailed,
             is_visible=is_visible,
+            compliance_check_result=latest_version.compliance_check_result,
         )  # Build AssistantResponse
         response = AssistantResponse(
             id=assistant_id,
@@ -315,6 +321,18 @@ async def updateAssistant(
         tags=assistant_update.tags
         if assistant_update.tags is not None
         else latest_version.tags,
+        compliance_check_result=(
+            assistant_update.compliance_check_result.model_dump()
+            if assistant_update.compliance_check_result
+            else (
+                None
+                if (
+                    assistant_update.system_prompt is not None
+                    and assistant_update.system_prompt != latest_version.system_prompt
+                )
+                else latest_version.compliance_check_result
+            )
+        ),
     )  # Handle tools for the new version
     if assistant_update.tools is not None:
         for tool_data in assistant_update.tools:
@@ -360,6 +378,7 @@ async def updateAssistant(
         owner_ids=owner_ids,
         owners_detailed=owners_detailed,
         is_visible=is_visible,
+        compliance_check_result=latest_version.compliance_check_result,
     )
 
     # Build AssistantResponse
@@ -475,6 +494,7 @@ async def getAllAssistants(
                 owner_ids=owner_ids,
                 owners_detailed=owners_detailed,
                 is_visible=is_visible,
+                compliance_check_result=latest_version.compliance_check_result,
             )
 
             # Build AssistantResponse
@@ -581,6 +601,7 @@ async def getAssistant(
         owner_ids=owner_ids,
         owners_detailed=owners_detailed,
         is_visible=is_visible,
+        compliance_check_result=latest_version.compliance_check_result,
     )  # Build AssistantResponse
     response = AssistantResponse(
         id=id,
@@ -685,6 +706,7 @@ async def get_assistant_version(
         owner_ids=owner_ids,
         owners_detailed=owners_detailed,
         is_visible=assistant.is_visible,
+        compliance_check_result=assistant_version.compliance_check_result,
     )
 
     logger.info(f"Returning version {version} of assistant {id}")

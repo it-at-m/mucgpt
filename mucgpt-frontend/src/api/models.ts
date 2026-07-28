@@ -154,6 +154,7 @@ export type Assistant = {
     hierarchical_access?: string[];
     tools?: ToolBase[];
     is_visible: boolean;
+    compliance_check_result?: ComplianceCheckResponse;
 };
 
 export interface ToolBase {
@@ -189,9 +190,7 @@ export interface AssistantCreateInput {
     quick_prompts?: FollowUpActionModel[];
     tags?: string[];
     is_visible: boolean;
-    // Hash of the system prompt that was confirmed compliant (from ComplianceCheckResponse.prompt_hash).
-    // Links the confirmed high-risk screening to the created assistant. TODO: wire through the editor save flow.
-    compliance_prompt_hash?: string;
+    compliance_check_result?: ComplianceCheckResponse;
 }
 export interface AssistantVersionResponse {
     id: string;
@@ -211,6 +210,7 @@ export interface AssistantVersionResponse {
     quick_prompts?: FollowUpActionModel[];
     tags?: string[];
     is_visible: boolean;
+    compliance_check_result?: ComplianceCheckResponse;
 }
 
 export interface AssistantCreateResponse {
@@ -237,9 +237,7 @@ export interface AssistantUpdateInput {
     tags?: string[];
     is_visible: boolean;
     version: number;
-    // Hash of the system prompt that was confirmed compliant (from ComplianceCheckResponse.prompt_hash).
-    // Links the confirmed high-risk screening to the updated assistant. TODO: wire through the editor save flow.
-    compliance_prompt_hash?: string;
+    compliance_check_result?: ComplianceCheckResponse;
 }
 
 export interface AssistantResponse {
@@ -336,4 +334,5 @@ export type CommunityAssistantSnapshot = {
     hierarchical_access?: string[];
     tools?: ToolBase[];
     is_visible: boolean;
+    compliance_check_result?: ComplianceCheckResponse;
 };

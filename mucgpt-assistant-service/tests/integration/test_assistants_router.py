@@ -9,6 +9,7 @@ from api.api_models import (
     AssistantResponse,
     AssistantUpdate,
     AssistantVersionResponse,
+    ComplianceCheckResult,
     ExampleModel,
     QuickPrompt,
     ToolBase,
@@ -139,6 +140,57 @@ def test_create_assistant_success(sample_assistant_create, test_client):
             for tool in sample_assistant_create.tools:
                 tool_id = tool.get("id") if isinstance(tool, dict) else tool.id
                 assert tool_id in response_tool_ids
+
+
+@pytest.mark.integration
+def test_compliance_check_result_is_versioned_and_cleared_for_changed_prompt(
+    test_client,
+):
+    """The optional screening result follows its saved prompt, not future versions."""
+    result = ComplianceCheckResult(
+        overall_status="passed",
+        results=[
+            {
+                "category": "education",
+                "status": "passed",
+            }
+        ],
+        prompt_hash="checked-prompt",
+    )
+    create_response = test_client.post(
+        "assistant/create",
+        json=AssistantCreate(
+            name="Compliance test assistant",
+            system_prompt="Initial system prompt.",
+            compliance_check_result=result,
+        ).model_dump(),
+        headers=headers,
+    )
+
+    assert create_response.status_code == 200
+    created = AssistantResponse.model_validate(create_response.json())
+    assert created.latest_version.compliance_check_result == result
+
+    update_response = test_client.post(
+        f"assistant/{created.id}/update",
+        json=AssistantUpdate(
+            version=created.latest_version.version,
+            system_prompt="Changed system prompt.",
+        ).model_dump(),
+        headers=headers,
+    )
+
+    assert update_response.status_code == 200
+    updated = AssistantResponse.model_validate(update_response.json())
+    assert updated.latest_version.compliance_check_result is None
+
+    historical_response = test_client.get(
+        f"assistant/{created.id}/version/{created.latest_version.version}",
+        headers=headers,
+    )
+    assert historical_response.status_code == 200
+    historical = AssistantVersionResponse.model_validate(historical_response.json())
+    assert historical.compliance_check_result == result
 
 
 @pytest.mark.integration

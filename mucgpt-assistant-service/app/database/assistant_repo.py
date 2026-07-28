@@ -2,6 +2,7 @@ from __future__ import annotations  # Enable forward references in annotations
 
 import uuid
 from datetime import datetime
+from typing import Any
 
 from sqlalchemy import String, delete, func, insert, or_, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -82,6 +83,7 @@ class AssistantRepository(Repository[Assistant]):
         examples: list[Example] | None = None,
         quick_prompts: list[QuickPrompt] | None = None,
         tags: list[str] | None = None,
+        compliance_check_result: dict[str, Any] | None = None,
     ) -> AssistantVersion:
         """Creates a new version for an assistant with explicit parameters."""
         logger.info(f"Creating new version for assistant {assistant.id}")
@@ -108,6 +110,7 @@ class AssistantRepository(Repository[Assistant]):
                 examples=serialized_examples,
                 quick_prompts=serialized_quick_prompts,
                 tags=tags or [],
+                compliance_check_result=compliance_check_result,
             )
 
             self.session.add(new_version)

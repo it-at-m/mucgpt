@@ -132,14 +132,6 @@ export const TermsOfUseDialog = ({ defaultOpen, onAccept, showTrigger = true, tr
                                         .
                                     </li>
                                 )}
-                                <li>
-                                    <strong>Best-Practice Dokumentation/Wissensmanagement:</strong> Erfolgreiche Anwendungsfälle von MUCGPT sollen dokumentiert
-                                    werden, um wertvolles Wissen für zukünftige Projekte zu generieren. Tragen Sie diese Beispiele gerne{" "}
-                                    <Link inline className={styles.link} href="https://wilma.muenchen.de/workspaces/innovationcenter/apps/list/best-practices">
-                                        hier
-                                    </Link>{" "}
-                                    ein.
-                                </li>
                             </ul>
                             <div className={styles.responsibleContainer}>
                                 Verantwortlich für die Nutzungsbedingungen ist RIT-IV-2 Compliance und Policies. Bei Fragen oder Anmerkungen hierzu bitte an

@@ -1,7 +1,7 @@
-import { useCallback, useContext, useEffect, useMemo, useReducer, useRef, useState, type ReactElement } from "react";
+import { useCallback, useContext, useEffect, useMemo, useReducer, useRef, useState, type CSSProperties, type ReactElement } from "react";
 import { useTranslation } from "react-i18next";
 import { Button, Tooltip } from "@fluentui/react-components";
-import { ArrowClockwise24Regular } from "@fluentui/react-icons";
+import { ArrowClockwise24Regular, ArrowDown24Regular } from "@fluentui/react-icons";
 
 import styles from "./AssistantPreviewChat.module.css";
 import { ChatResponse } from "../../../api";
@@ -65,12 +65,18 @@ export const AssistantPreviewChat = ({
 
     const [question, setQuestion] = useState<string>("");
     const [lastQuestion, setLastQuestion] = useState<string>("");
+    const showStarterPrompts = !lastQuestion && answers.length === 0;
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [error, setError] = useState<unknown>();
     const [toolStatuses, setToolStatuses] = useState<ToolStatus[]>([]);
+    const [showScrollToBottom, setShowScrollToBottom] = useState(false);
+    const [renderScrollToBottom, setRenderScrollToBottom] = useState(false);
+    const [previewInputHeight, setPreviewInputHeight] = useState(0);
 
     const isLoadingRef = useRef(false);
     const lastQuestionRef = useRef<string>("");
+    const previewMessagesRef = useRef<HTMLDivElement | null>(null);
+    const previewInputRef = useRef<HTMLDivElement | null>(null);
     const chatMessageStreamEnd = useRef<HTMLDivElement | null>(null);
     const lastAnswerRef = useRef<HTMLDivElement | null>(null);
 
@@ -105,6 +111,86 @@ export const AssistantPreviewChat = ({
         const defaultModelConfig = availableLLMs.find(m => m.llm_name === defaultModel);
         if (defaultModelConfig) setLLM(defaultModelConfig);
     }, [defaultModel, availableLLMs, LLM.llm_name, setLLM]);
+
+    useEffect(() => {
+        const element = previewInputRef.current;
+        if (!element || typeof window === "undefined") return;
+
+        const updateInputHeight = () => {
+            const nextHeight = Math.ceil(element.getBoundingClientRect().height);
+            setPreviewInputHeight(previousHeight => (previousHeight === nextHeight ? previousHeight : nextHeight));
+        };
+
+        updateInputHeight();
+        const observer = typeof ResizeObserver === "undefined" ? undefined : new ResizeObserver(updateInputHeight);
+        observer?.observe(element);
+
+        return () => observer?.disconnect();
+    }, []);
+
+    const updateScrollToBottomVisibility = useCallback(() => {
+        const element = previewMessagesRef.current;
+        if (!element || showStarterPrompts) {
+            setShowScrollToBottom(false);
+            return;
+        }
+
+        const distanceFromBottom = element.scrollHeight - element.scrollTop - element.clientHeight;
+        const hasScrollableContent = element.scrollHeight > element.clientHeight + 1;
+        setShowScrollToBottom(hasScrollableContent && distanceFromBottom > 32);
+    }, [showStarterPrompts]);
+
+    useEffect(() => {
+        const element = previewMessagesRef.current;
+        if (!element || showStarterPrompts || typeof window === "undefined") {
+            setShowScrollToBottom(false);
+            return;
+        }
+
+        updateScrollToBottomVisibility();
+        const updateOnNextFrame = () => requestAnimationFrame(updateScrollToBottomVisibility);
+
+        element.addEventListener("scroll", updateScrollToBottomVisibility, { passive: true });
+        window.addEventListener("resize", updateOnNextFrame);
+
+        const resizeObserver = typeof ResizeObserver === "undefined" ? undefined : new ResizeObserver(updateOnNextFrame);
+        resizeObserver?.observe(element);
+
+        const mutationObserver = typeof MutationObserver === "undefined" ? undefined : new MutationObserver(updateOnNextFrame);
+        mutationObserver?.observe(element, { childList: true, subtree: true, characterData: true });
+
+        return () => {
+            element.removeEventListener("scroll", updateScrollToBottomVisibility);
+            window.removeEventListener("resize", updateOnNextFrame);
+            resizeObserver?.disconnect();
+            mutationObserver?.disconnect();
+        };
+    }, [answers, isLoading, showStarterPrompts, updateScrollToBottomVisibility]);
+
+    useEffect(() => {
+        if (showScrollToBottom) {
+            setRenderScrollToBottom(true);
+            return;
+        }
+
+        if (!renderScrollToBottom || typeof window === "undefined" || typeof window.matchMedia !== "function") return;
+
+        if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+            setRenderScrollToBottom(false);
+        }
+    }, [renderScrollToBottom, showScrollToBottom]);
+
+    const handleScrollToBottomAnimationEnd = useCallback(() => {
+        if (!showScrollToBottom) setRenderScrollToBottom(false);
+    }, [showScrollToBottom]);
+
+    const scrollToBottom = useCallback(() => {
+        const element = previewMessagesRef.current;
+        if (!element) return;
+
+        element.scrollTo({ top: element.scrollHeight, behavior: "smooth" });
+        requestAnimationFrame(updateScrollToBottomVisibility);
+    }, [updateScrollToBottomVisibility]);
 
     const setLastQuestionValue = useCallback((value: string) => {
         lastQuestionRef.current = value;
@@ -229,10 +315,10 @@ export const AssistantPreviewChat = ({
         [answers, isLoading, error, callApi, lastQuestion, onRegenerate]
     );
 
-    const showStarterPrompts = !lastQuestion && answers.length === 0;
+    const containerStyle = { "--previewInputHeight": `${previewInputHeight}px` } as CSSProperties;
 
     return (
-        <div className={styles.previewContainer}>
+        <div className={styles.previewContainer} style={containerStyle}>
             <header className={styles.previewHeader}>
                 <div className={styles.previewHeaderLeft}>
                     <span className={styles.previewTitle}>{t("components.assistant_preview.title")}</span>
@@ -256,7 +342,7 @@ export const AssistantPreviewChat = ({
                 </div>
             </header>
 
-            <div className={styles.previewBody}>
+            <div className={styles.previewBody} ref={previewMessagesRef}>
                 {showStarterPrompts ? (
                     <div className={styles.previewEmptyState}>
                         <p className={styles.previewWelcome}>{t("components.assistant_preview.welcome")}</p>
@@ -269,7 +355,27 @@ export const AssistantPreviewChat = ({
                 )}
             </div>
 
-            <div className={styles.previewInput}>
+            {renderScrollToBottom && (
+                <div
+                    className={styles.scrollToBottomWrapper}
+                    data-state={showScrollToBottom ? "entered" : "exiting"}
+                    aria-hidden={!showScrollToBottom}
+                    onAnimationEnd={handleScrollToBottomAnimationEnd}
+                >
+                    <Button
+                        appearance="secondary"
+                        shape="circular"
+                        size="medium"
+                        className={styles.scrollToBottomButton}
+                        icon={<ArrowDown24Regular />}
+                        onClick={scrollToBottom}
+                        tabIndex={showScrollToBottom ? undefined : -1}
+                        aria-label={t("components.chat.scroll_to_bottom")}
+                    />
+                </div>
+            )}
+
+            <div className={styles.previewInput} ref={previewInputRef}>
                 <QuestionInput
                     clearOnSend
                     disabled={isLoading || error !== undefined}

@@ -319,6 +319,13 @@ export const AssistantEditorPage = (props: AssistantEditorPageProps) => {
     // Bumped whenever the confirmation is reset so the checkbox remounts and reliably reflects the cleared state.
     const [reviewResetKey, setReviewResetKey] = useState(0);
 
+    useEffect(() => {
+        if (!isCreate && !editState.hasChanged) {
+            setReviewCheckResult(editAssistant?.compliance_check_result ?? null);
+            setReviewConfirmed(false);
+        }
+    }, [isCreate, editAssistant?.id, editAssistant?.version, editAssistant?.compliance_check_result, editState.hasChanged]);
+
     const selectedTools = useMemo(() => {
         if (!availableTools) return [] as ToolInfo[];
         const toolMap = new Map(availableTools.tools.map(tool => [tool.id, tool]));

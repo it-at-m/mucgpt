@@ -248,6 +248,28 @@ const Discovery = () => {
 
     const getAssistantBadges = (assistant: AssistantCardData): DiscoveryCardBadge[] => {
         const badges: DiscoveryCardBadge[] = [];
+        const complianceCheckResult =
+            "latest_version" in assistant.rawData
+                ? assistant.rawData.latest_version.compliance_check_result
+                : "compliance_check_result" in assistant.rawData
+                  ? assistant.rawData.compliance_check_result
+                  : undefined;
+
+        if (complianceCheckResult?.overall_status === "passed") {
+            badges.push({
+                label: t("components.community_assistants.compliance_passed_badge", "Keine Hochrisiko-Hinweise"),
+                color: "success",
+                tone: "success"
+            });
+        }
+
+        if (complianceCheckResult?.overall_status === "high_risk_detected") {
+            badges.push({
+                label: t("components.community_assistants.compliance_high_risk_badge", "Hochrisiko-Hinweis"),
+                color: "danger",
+                tone: "danger"
+            });
+        }
 
         if (assistant.isLocalAssistant) {
             badges.push({

@@ -240,6 +240,12 @@ export const makeApiRequest = async (
     // Create conversation history for the API request
     const history: ChatTurn[] = answers.map((a: { user: any; response: { answer: any } }) => ({ user: a.user, assistant: a.response.answer }));
 
+    // Normal-chat conversation id: reuse the active local chat id when continuing
+    // an existing chat, otherwise generate one now so it can be sent with the
+    // first request too (instead of only after the first response). Assistant
+    // chats are out of scope for now.
+    const conversationId = assistant_id ? undefined : (activeChatRef.current ?? uuid());
+
     // Build the API request object
     const request: ChatRequest = {
         history: [...history, { user: question, assistant: undefined }],
@@ -250,6 +256,7 @@ export const makeApiRequest = async (
         model: LLM.llm_name,
         enabled_tools: enabled_tools && enabled_tools.length > 0 ? enabled_tools : undefined,
         assistant_id: assistant_id,
+        conversation_id: conversationId,
         data_sources: data_sources && data_sources.length > 0 ? data_sources : undefined
     };
 
@@ -470,10 +477,12 @@ export const makeApiRequest = async (
         // Create a new chat with generated name
         const chatname = await createChatName(question, finalResponse.answer, options.system ?? "");
 
-        // Create chat with assistant-specific ID if assistant_id is provided, otherwise use regular UUID
+        // Create chat with assistant-specific ID if assistant_id is provided, otherwise
+        // reuse the id already generated above (and sent as conversation_id) for a
+        // regular chat, so the local id matches what the backend was sent.
         const id = assistant_id
             ? await storageService.create([finalMessage], options, AssistantStorageService.GENERATE_BOT_CHAT_ID(assistant_id, uuid()), chatname, false)
-            : await storageService.create([finalMessage], options, uuid(), chatname, false);
+            : await storageService.create([finalMessage], options, conversationId ?? uuid(), chatname, false);
 
         // Set the new chat as active and refresh history
         dispatch({ type: "SET_ACTIVE_CHAT", payload: id });

@@ -166,11 +166,12 @@ export const AssistantPreviewChat = ({
         setLastQuestionValue("");
         setError(undefined);
         setQuestion("");
+        setToolStatuses([]);
         dispatch({ type: "CLEAR_ANSWERS" });
     }, [setLastQuestionValue]);
 
     // Selection is driven by the editor form, so the input's tool selector is read-only.
-    const noopSetSelectedTools = useCallback(() => {}, []);
+    const noopSetSelectedTools = useCallback(() => { }, []);
 
     const onStarterPromptClicked = useCallback((value: string) => callApi(value), [callApi]);
 
@@ -243,7 +244,7 @@ export const AssistantPreviewChat = ({
                             appearance="subtle"
                             icon={<ArrowClockwise24Regular />}
                             onClick={resetChat}
-                            disabled={answers.length === 0 && !lastQuestion && error === undefined}
+                            disabled={isLoading || (answers.length === 0 && !lastQuestion && error === undefined)}
                             aria-label={t("components.assistant_preview.reset")}
                         />
                     </Tooltip>

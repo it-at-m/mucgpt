@@ -69,6 +69,20 @@ export const useResizablePreview = (containerRef: React.RefObject<HTMLElement | 
         };
     }, [applyClientX]);
 
+    useEffect(() => {
+        const container = containerRef.current;
+        if (!container) return;
+
+        const observer = new ResizeObserver(() => {
+            setPreviewPercent(prev => {
+                const clamped = clampPercent(prev);
+                return clamped === prev ? prev : clamped;
+            });
+        });
+        observer.observe(container);
+        return () => observer.disconnect();
+    }, [clampPercent, containerRef]);
+
     const onDividerMouseDown = useCallback((event: React.MouseEvent) => {
         event.preventDefault();
         isDraggingRef.current = true;

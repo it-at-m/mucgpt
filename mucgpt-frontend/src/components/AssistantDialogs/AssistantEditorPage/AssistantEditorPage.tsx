@@ -1,5 +1,5 @@
-import type { FormEvent, ReactNode } from "react";
-import { useCallback, useContext, useEffect, useMemo, useState } from "react";
+import type { CSSProperties, FormEvent, ReactNode } from "react";
+import { useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { Accordion, AccordionHeader, AccordionItem, AccordionPanel, Button, Field, Text, Textarea, TextareaOnChangeData } from "@fluentui/react-components";
@@ -10,6 +10,8 @@ import {
     Dismiss24Regular,
     DocumentText24Regular,
     Info24Regular,
+    PanelRightContract24Regular,
+    PanelRightExpand20Regular,
     Save24Regular,
     Sparkle24Regular,
     Shield24Regular,
@@ -40,6 +42,8 @@ import {
 import { AssistantStrategy } from "../../../pages/assistant/AssistantStrategy";
 import { CREATIVITY_LOW } from "../../../constants";
 import { EdelweissSpinner } from "../../EdelweissSpinner";
+import { AssistantPreviewChat } from "../AssistantPreviewChat/AssistantPreviewChat";
+import { useResizablePreview } from "./useResizablePreview";
 
 type CreateView = "mode_select" | "ai_input" | "settings";
 type DiscardTarget = "back" | "discovery";
@@ -257,7 +261,7 @@ function SettingsForm(props: SettingsFormProps) {
                         publishDepartments={props.publishDepartments}
                         invisibleChecked={!props.isVisible}
                         setPublishDepartments={props.setPublishDepartments}
-                        onHasChanged={props.onHasChanged ?? (() => {})}
+                        onHasChanged={props.onHasChanged ?? (() => { })}
                         setInvisibleChecked={invisible => props.setInvisibleChecked(invisible)}
                     />
                 </SectionCard>
@@ -352,30 +356,6 @@ export const AssistantEditorPage = (props: AssistantEditorPageProps) => {
             navigate(-1);
         }
     }, [isCreate, createState.hasChanges, editState.hasChanged, navigate]);
-
-    const handleHeaderClose = useCallback(() => {
-        if (!isCreate) {
-            handleCancel();
-            return;
-        }
-
-        if (createView === "mode_select") {
-            navigate("/discovery");
-            return;
-        }
-
-        if (createView === "ai_input") {
-            if (createState.hasChanges) {
-                setDiscardTarget("discovery");
-                setDiscardOpen(true);
-            } else {
-                navigate("/discovery");
-            }
-            return;
-        }
-
-        handleCancel();
-    }, [isCreate, createView, createState.hasChanges, navigate, handleCancel]);
 
     const handleDiscardConfirm = useCallback(() => {
         setDiscardOpen(false);
@@ -550,9 +530,13 @@ export const AssistantEditorPage = (props: AssistantEditorPageProps) => {
         }
     }, [reviewCheckLoading, state]);
 
+    const splitContainerRef = useRef<HTMLDivElement | null>(null);
+    const { previewPercent, isCollapsed, collapsePreview, expandPreview, onDividerMouseDown, onDividerKeyDown } = useResizablePreview(splitContainerRef);
+
     const pageTitle = isCreate ? t("components.assistant_editor.create_title") : t("components.assistant_editor.edit_title");
     const pageHelper = isCreate ? t("components.assistant_editor.page_helper_create") : t("components.assistant_editor.page_helper_edit");
     const settingsState = isCreate ? createState : editState;
+    const previewToolIds = useMemo(() => (settingsState.tools ?? []).map(tool => tool.id), [settingsState.tools]);
     const systemPromptChanged = !isCreate && settingsState.systemPrompt.trim() !== editAssistant?.system_message.trim();
     const requiresComplianceReview = isCreate || systemPromptChanged;
     const isSettingsValid =
@@ -564,8 +548,8 @@ export const AssistantEditorPage = (props: AssistantEditorPageProps) => {
     const actionStatusLabel = !isOwner
         ? t("components.assistant_editor.action_status_read_only")
         : isSettingsValid
-          ? t(isCreate ? "components.assistant_editor.action_status_ready_create" : "components.assistant_editor.action_status_ready_save")
-          : t("components.assistant_editor.action_status_required_open");
+            ? t(isCreate ? "components.assistant_editor.action_status_ready_create" : "components.assistant_editor.action_status_ready_save")
+            : t("components.assistant_editor.action_status_required_open");
     const actionStatusTone = !isOwner ? "subtle" : isSettingsValid ? "success" : "warning";
 
     useEffect(() => {
@@ -581,8 +565,8 @@ export const AssistantEditorPage = (props: AssistantEditorPageProps) => {
         });
     }, []);
 
-    return (
-        <div className={styles.page}>
+    const formPane = (
+        <>
             <div className={[styles.header, showCreateModeSelector ? styles.headerNoDivider : ""].filter(Boolean).join(" ")}>
                 <div className={styles.headerContent}>
                     {!showCreateModeSelector && (
@@ -595,16 +579,6 @@ export const AssistantEditorPage = (props: AssistantEditorPageProps) => {
                                 <p className={styles.headerDescription}>{pageHelper}</p>
                             </div>
                         </div>
-                    )}
-                    {isCreate && (
-                        <Button
-                            appearance="subtle"
-                            aria-label={t("common.close")}
-                            icon={<Dismiss24Regular />}
-                            onClick={handleHeaderClose}
-                            disabled={loading}
-                            className={styles.headerCloseButton}
-                        />
                     )}
                 </div>
             </div>
@@ -682,6 +656,53 @@ export const AssistantEditorPage = (props: AssistantEditorPageProps) => {
                         </div>
                     </div>
                 </div>
+            )}
+        </>
+    );
+
+    return (
+        <div className={styles.page}>
+            {showSettingsForm ? (
+                <div
+                    className={[styles.splitLayout, isCollapsed ? styles.splitLayoutCollapsed : ""].filter(Boolean).join(" ")}
+                    ref={splitContainerRef}
+                    style={{ "--previewPercent": `${previewPercent}%` } as CSSProperties}
+                >
+                    <div className={styles.formPane}>{formPane}</div>
+                    {isCollapsed ? (
+                        <Button appearance="primary" className={styles.previewExpandButton} icon={<PanelRightExpand20Regular />} onClick={expandPreview}>
+                            {t("components.assistant_preview.show")}
+                        </Button>
+                    ) : (
+                        <>
+                            <div
+                                className={styles.previewDivider}
+                                role="separator"
+                                aria-orientation="vertical"
+                                aria-label={t("components.assistant_preview.resize")}
+                                tabIndex={0}
+                                onMouseDown={onDividerMouseDown}
+                                onKeyDown={onDividerKeyDown}
+                            >
+                                <span className={styles.previewDividerHandle} aria-hidden="true" />
+                            </div>
+                            <div className={styles.previewPane}>
+                                <AssistantPreviewChat
+                                    systemPrompt={settingsState.systemPrompt}
+                                    creativity={settingsState.creativity}
+                                    selectedToolIds={previewToolIds}
+                                    starterPrompts={settingsState.starterPrompts ?? []}
+                                    followUpActions={settingsState.followUpActions ?? []}
+                                    defaultModel={settingsState.defaultModel}
+                                    onCollapse={collapsePreview}
+                                    collapseIcon={<PanelRightContract24Regular />}
+                                />
+                            </div>
+                        </>
+                    )}
+                </div>
+            ) : (
+                formPane
             )}
 
             <CloseConfirmationDialog

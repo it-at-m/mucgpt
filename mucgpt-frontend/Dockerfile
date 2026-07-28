@@ -19,6 +19,9 @@ ENV GLOBAL_AGENT_HTTPS_PROXY=${HTTPS_PROXY}
 
 WORKDIR /build
 
+# Keep npm's lockfile resolver aligned with the supported local development version.
+RUN npm install --global npm@11.6.2
+
 # Copy only dependency files first for better caching
 COPY package*.json .npmrc ./
 

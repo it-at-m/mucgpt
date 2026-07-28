@@ -479,6 +479,7 @@ i18n
                             system_prompt: "System-Prompt",
                             system_prompt_description:
                                 "Die Grundanweisung für den Assistenten. Sie legt seine Rolle, Aufgaben und Verhaltensregeln für Antworten fest.",
+                            system_prompt_locked_during_check: "Der System-Prompt ist gesperrt, solange die Prüfung läuft.",
                             prompt_placeholder:
                                 "Du bist ein Assistent für E-Mails.\n\nAufgabe:\nSchreibe kurze und höfliche Entwürfe.\n\nRegeln:\n- Verwende die Höflichkeitsform (Sie).\n- Fasse dich kurz.",
 
@@ -1260,6 +1261,7 @@ i18n
                             system_prompt: "System Prompt",
                             system_prompt_description:
                                 "The basic instruction for the assistant. It defines its role, tasks, and rules of behavior for responses.",
+                            system_prompt_locked_during_check: "The system prompt is locked while the check is running.",
                             prompt_placeholder:
                                 "You are an email assistant.\n\nTask:\nWrite short and polite drafts.\n\nRules:\n- Use formal language (you/your).\n- Keep it concise.",
 
@@ -2027,6 +2029,7 @@ i18n
                             system_prompt: "System-Prompt",
                             system_prompt_description:
                                 "De Grundanweisung fürn Assistentn. Sie legt sei Rolle, Aufgabn und Verhoitensregeln für Antworten fest.",
+                            system_prompt_locked_during_check: "Da System-Prompt is gsperrt, solang de Prüfung lafft.",
                             prompt_placeholder:
                                 "Du bist a Assistent für E-Mails.\n\nAufgabe:\nSchreib kurze und feine Entwürfe.\n\nRegeln:\n- Verwende de Höflichkeitsform (Sie).\n- Fass di kurz.",
 
@@ -2798,6 +2801,7 @@ i18n
                             system_prompt: "Prompt système",
                             system_prompt_description:
                                 "L'instruction de base pour l'assistant. Elle définit son rôle, ses tâches et ses règles de comportement pour les réponses.",
+                            system_prompt_locked_during_check: "Le prompt système est verrouillé pendant la vérification.",
                             prompt_placeholder:
                                 "Vous êtes un assistant pour les e-mails.\n\nMission :\nRédigez des brouillons courts et polis.\n\nRègles :\n- Utilisez le vouvoiement.\n- Soyez concis.",
 
@@ -3561,6 +3565,7 @@ i18n
                             system_prompt: "Системний промпт",
                             system_prompt_description:
                                 "Базова інструкція для асистента. Вона визначає його роль, завдання та правила поведінки при відповідях.",
+                            system_prompt_locked_during_check: "Системний промпт заблоковано, поки триває перевірка.",
                             prompt_placeholder:
                                 "Ти асистент для електронних листів.\n\nЗавдання:\nПиши короткі та ввічливі чернетки.\n\nПравила:\n- Використовуй ввічливе звернення (Ви).\n- Пиши лаконічно.",
 

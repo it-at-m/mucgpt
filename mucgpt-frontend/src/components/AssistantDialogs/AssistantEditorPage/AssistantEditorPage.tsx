@@ -197,9 +197,16 @@ function SettingsForm(props: SettingsFormProps) {
                                 props.onHasChanged?.(true);
                                 props.onSystemPromptChanged?.();
                             }}
-                            disabled={!props.isOwner}
+                            // Locked while the compliance check runs so its result cannot end up attached to a
+                            // prompt that changed in the meantime.
+                            disabled={!props.isOwner || props.checkLoading}
                             dialogTitle={t("components.assistant_editor.system_prompt")}
                         />
+                        {props.checkLoading && (
+                            <Text as="p" size={200} className={styles.fieldDescription} role="status" aria-live="polite">
+                                {t("components.assistant_editor.system_prompt_locked_during_check")}
+                            </Text>
+                        )}
                     </Field>
                 </SectionCard>
 

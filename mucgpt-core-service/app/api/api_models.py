@@ -88,6 +88,10 @@ class ChatCompletionRequest(BaseModel):
     assistant_id: str | None = Field(
         None, description="ID of the assistant to use for this completion request"
     )
+    conversation_id: str | None = Field(
+        None,
+        description="Stable client-generated id for this conversation. Accepted but not yet used server-side.",
+    )
     data_sources: list[ChatDataSource] | None = Field(
         None,
         description="Structured document payload with title, content and metadata",

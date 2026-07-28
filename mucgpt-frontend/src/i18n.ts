@@ -514,6 +514,9 @@ i18n
                             review_result_error_title: "Prüfung fehlgeschlagen",
                             review_result_error_description:
                                 "Die Prüfung konnte nicht durchgeführt werden. Bitte versuchen Sie es später erneut oder wenden Sie sich an einen Administrator.",
+                            review_result_outdated_title: "Ergebnis nicht mehr aktuell",
+                            review_result_outdated_description:
+                                "Der System-Prompt wurde nach dieser Prüfung geändert. Die Hinweise beziehen sich auf die vorherige Fassung. Starten Sie die Prüfung erneut, um ein aktuelles Ergebnis zu erhalten.",
                             review_confirmation_label_high_risk:
                                 "Ich habe die Hinweise geprüft und bestätige, dass dieser Assistent nicht für einen in MUCGPT unzulässigen Hochrisiko-Anwendungsfall eingesetzt werden soll.",
                             review_category_migration_asylum_border: "Migration, Asyl und Grenzkontrolle",
@@ -1295,6 +1298,9 @@ i18n
                                 "Please review the following parts of the instructions and change them if necessary so that no high-risk use case remains. The check is for guidance only.",
                             review_result_error_title: "Check failed",
                             review_result_error_description: "The check could not be performed. Please try again later or contact an administrator.",
+                            review_result_outdated_title: "Result no longer up to date",
+                            review_result_outdated_description:
+                                "The system prompt was changed after this check. The findings refer to the previous version. Run the check again to get an up-to-date result.",
                             review_confirmation_label_high_risk:
                                 "I have reviewed the findings and confirm that this assistant is not intended for a high-risk use case that is not permitted in MUCGPT.",
                             review_category_migration_asylum_border: "Migration, asylum and border control",
@@ -2063,6 +2069,9 @@ i18n
                                 "Bitte schau da de foigenden Stelln in de Anweisungen o und änder's wenn nötig, dass koa Hochrisiko-Anwendungsfoi entsteht. De Prüfung is bloß a Orientierung.",
                             review_result_error_title: "Prüfung fehlgschlogn",
                             review_result_error_description: "De Prüfung hod net klappt. Probiers spada nochamoi oda meld di bei am Admin.",
+                            review_result_outdated_title: "Ergebnis nimma aktuell",
+                            review_result_outdated_description:
+                                "Da System-Prompt is noch der Prüfung gändert worn. De Hinweis ghean zua vorherign Fassung. Stort de Prüfung nochamoi, damitst a aktuells Ergebnis kriagst.",
                             review_confirmation_label_high_risk:
                                 "I hob ma de Hinweis oogschaut und bestätig, dass der Assistent net für an in MUCGPT unzulässigen Hochrisiko-Anwendungsfoi eigsetzt wern soi.",
                             review_category_migration_asylum_border: "Migration, Asyl und Grenzkontrolle",
@@ -2836,6 +2845,9 @@ i18n
                             review_result_error_title: "Échec de la vérification",
                             review_result_error_description:
                                 "La vérification n'a pas pu être effectuée. Veuillez réessayer plus tard ou contacter un administrateur.",
+                            review_result_outdated_title: "Résultat plus à jour",
+                            review_result_outdated_description:
+                                "Le prompt système a été modifié après cette vérification. Les indices se rapportent à la version précédente. Relancez la vérification pour obtenir un résultat à jour.",
                             review_confirmation_label_high_risk:
                                 "J'ai examiné les indices et je confirme que cet assistant n'est pas destiné à un cas d'usage à haut risque non autorisé dans MUCGPT.",
                             review_category_migration_asylum_border: "Migration, asile et contrôle des frontières",
@@ -3599,6 +3611,9 @@ i18n
                                 "Будь ласка, перегляньте наведені нижче місця в інструкціях і за потреби змініть їх, щоб не залишалося сценарію використання з високим ризиком. Перевірка слугує лише орієнтиром.",
                             review_result_error_title: "Помилка перевірки",
                             review_result_error_description: "Перевірку не вдалося виконати. Будь ласка, спробуйте пізніше або зверніться до адміністратора.",
+                            review_result_outdated_title: "Результат більше не актуальний",
+                            review_result_outdated_description:
+                                "Системний промпт було змінено після цієї перевірки. Виявлені ознаки стосуються попередньої версії. Запустіть перевірку ще раз, щоб отримати актуальний результат.",
                             review_confirmation_label_high_risk:
                                 "Я переглянув(-ла) виявлені ознаки та підтверджую, що цей асистент не призначений для недопустимого в MUCGPT сценарію використання з високим ризиком.",
                             review_category_migration_asylum_border: "Міграція, притулок та прикордонний контроль",

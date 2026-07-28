@@ -131,6 +131,7 @@ interface SettingsFormProps {
     confirmationResetKey: number;
     checkResult: ComplianceCheckResponse | null;
     checkLoading: boolean;
+    checkOutdated: boolean;
     onConfirmedChange: (confirmed: boolean) => void;
     onStartCheck: () => void;
 }
@@ -256,7 +257,7 @@ function SettingsForm(props: SettingsFormProps) {
                         publishDepartments={props.publishDepartments}
                         invisibleChecked={!props.isVisible}
                         setPublishDepartments={props.setPublishDepartments}
-                        onHasChanged={props.onHasChanged ?? (() => {})}
+                        onHasChanged={props.onHasChanged ?? (() => { })}
                         setInvisibleChecked={invisible => props.setInvisibleChecked(invisible)}
                     />
                 </SectionCard>
@@ -267,6 +268,7 @@ function SettingsForm(props: SettingsFormProps) {
                         confirmationResetKey={props.confirmationResetKey}
                         checkResult={props.checkResult}
                         checkLoading={props.checkLoading}
+                        checkOutdated={props.checkOutdated}
                         isOwner={props.isOwner}
                         onConfirmedChange={props.onConfirmedChange}
                         onStartCheck={props.onStartCheck}
@@ -323,12 +325,14 @@ export const AssistantEditorPage = (props: AssistantEditorPageProps) => {
     // On failure this holds a synthetic result with overall_status "error".
     const [reviewCheckResult, setReviewCheckResult] = useState<ComplianceCheckResponse | null>(editAssistant?.compliance_check_result ?? null);
     const [reviewCheckLoading, setReviewCheckLoading] = useState(false);
+    const [reviewCheckOutdated, setReviewCheckOutdated] = useState(false);
     // Bumped whenever the confirmation is reset so the checkbox remounts and reliably reflects the cleared state.
     const [reviewResetKey, setReviewResetKey] = useState(0);
 
     useEffect(() => {
         if (!isCreate && !editState.hasChanged) {
             setReviewCheckResult(editAssistant?.compliance_check_result ?? null);
+            setReviewCheckOutdated(false);
             setReviewConfirmed(false);
         }
     }, [isCreate, editAssistant?.id, editAssistant?.version, editAssistant?.compliance_check_result, editState.hasChanged]);
@@ -391,12 +395,14 @@ export const AssistantEditorPage = (props: AssistantEditorPageProps) => {
         const systemPromptChanged = !isCreate && systemPrompt !== editAssistant?.system_message.trim();
         const requiresComplianceReview = isCreate || systemPromptChanged;
 
-        if (assistantTitle === "" || systemPrompt === "" || (requiresComplianceReview && (!reviewCheckResult || !reviewConfirmed))) {
+        if (assistantTitle === "" || systemPrompt === "" || (requiresComplianceReview && (!reviewCheckResult || reviewCheckOutdated || !reviewConfirmed))) {
             showError(t("components.assistant_editor.assistant_save_failed"), t("components.assistant_editor.save_config_failed"));
             return;
         }
 
         setLoading(true);
+
+        const complianceResultToSave = reviewCheckOutdated ? undefined : (reviewCheckResult ?? undefined);
 
         const validFollowUpActions = (s.followUpActions ?? []).filter(
             (followUpAction: FollowUpActionModel) => followUpAction.label?.trim() && followUpAction.prompt?.trim()
@@ -425,7 +431,7 @@ export const AssistantEditorPage = (props: AssistantEditorPageProps) => {
                     tags: [],
                     hierarchical_access: createState.hierarchicalAccess ?? [],
                     is_visible: createState.isVisible,
-                    compliance_check_result: reviewCheckResult ?? undefined
+                    compliance_check_result: complianceResultToSave
                 });
 
                 if (response?.id) {
@@ -440,7 +446,7 @@ export const AssistantEditorPage = (props: AssistantEditorPageProps) => {
             } else {
                 const editProps = props as AssistantEditorPageEditProps;
                 const updatedAssistant = editState.createAssistantForSaving();
-                updatedAssistant.compliance_check_result = reviewCheckResult ?? undefined;
+                updatedAssistant.compliance_check_result = complianceResultToSave;
                 await editProps.onSave(updatedAssistant);
                 showSuccess(
                     t("components.assistant_editor.saved_successfully"),
@@ -454,7 +460,22 @@ export const AssistantEditorPage = (props: AssistantEditorPageProps) => {
         } finally {
             setLoading(false);
         }
-    }, [loading, state, isCreate, createState, editState, editAssistant, reviewCheckResult, reviewConfirmed, t, showError, showSuccess, navigate, props]);
+    }, [
+        loading,
+        state,
+        isCreate,
+        createState,
+        editState,
+        editAssistant,
+        reviewCheckResult,
+        reviewCheckOutdated,
+        reviewConfirmed,
+        t,
+        showError,
+        showSuccess,
+        navigate,
+        props
+    ]);
 
     const handleGenerate = useCallback(async () => {
         if (!createState.input.trim() || loading) return;
@@ -493,7 +514,7 @@ export const AssistantEditorPage = (props: AssistantEditorPageProps) => {
 
     // Only changes to the system prompt invalidate the optional compliance review.
     const handleSystemPromptChanged = useCallback(() => {
-        setReviewCheckResult(null);
+        setReviewCheckOutdated(true);
         setReviewConfirmed(prev => {
             if (prev) setReviewResetKey(key => key + 1);
             return false;
@@ -506,8 +527,8 @@ export const AssistantEditorPage = (props: AssistantEditorPageProps) => {
 
         const s = state as typeof createState & typeof editState;
         setReviewCheckLoading(true);
-        // A re-check invalidates the previous result and confirmation.
-        setReviewCheckResult(null);
+        // A re-check invalidates the previous confirmation. The previous result stays on screen until the new one
+        // arrives, so the user keeps the findings in view while the check runs.
         setReviewConfirmed(prev => {
             if (prev) setReviewResetKey(key => key + 1);
             return false;
@@ -518,10 +539,12 @@ export const AssistantEditorPage = (props: AssistantEditorPageProps) => {
                 system_prompt: s.systemPrompt
             });
             setReviewCheckResult(result);
+            setReviewCheckOutdated(false);
         } catch {
             // A failed check is rare and must not block the user: record it as an error result so the
             // error message is shown, but still allow confirming and saving.
             setReviewCheckResult({ overall_status: "error", results: [] });
+            setReviewCheckOutdated(false);
         } finally {
             setReviewCheckLoading(false);
         }
@@ -535,14 +558,14 @@ export const AssistantEditorPage = (props: AssistantEditorPageProps) => {
     const isSettingsValid =
         settingsState.title.trim() !== "" &&
         settingsState.systemPrompt.trim() !== "" &&
-        (!requiresComplianceReview || (reviewCheckResult !== null && reviewConfirmed));
+        (!requiresComplianceReview || (reviewCheckResult !== null && !reviewCheckOutdated && reviewConfirmed));
     const showSettingsForm = !isCreate || createView === "settings";
     const showCreateModeSelector = isCreate && createView === "mode_select";
     const actionStatusLabel = !isOwner
         ? t("components.assistant_editor.action_status_read_only")
         : isSettingsValid
-          ? t(isCreate ? "components.assistant_editor.action_status_ready_create" : "components.assistant_editor.action_status_ready_save")
-          : t("components.assistant_editor.action_status_required_open");
+            ? t(isCreate ? "components.assistant_editor.action_status_ready_create" : "components.assistant_editor.action_status_ready_save")
+            : t("components.assistant_editor.action_status_required_open");
     const actionStatusTone = !isOwner ? "subtle" : isSettingsValid ? "success" : "warning";
 
     useEffect(() => {
@@ -630,6 +653,7 @@ export const AssistantEditorPage = (props: AssistantEditorPageProps) => {
                         confirmationResetKey={reviewResetKey}
                         checkResult={reviewCheckResult}
                         checkLoading={reviewCheckLoading}
+                        checkOutdated={reviewCheckOutdated}
                         onConfirmedChange={setReviewConfirmed}
                         onStartCheck={handleStartComplianceCheck}
                     />

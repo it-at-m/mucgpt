@@ -10,15 +10,25 @@ interface ReviewSectionProps {
     confirmed: boolean;
     // Changes whenever the confirmation is reset, forcing the checkbox to remount so it reliably reflects the cleared state.
     confirmationResetKey: number;
-    // Result of the last compliance check for the current system prompt, if any.
+    // Result of the last compliance check, if any. It may belong to an earlier system prompt, see checkOutdated.
     checkResult: ComplianceCheckResponse | null;
     checkLoading: boolean;
+    checkOutdated: boolean;
     isOwner: boolean;
     onConfirmedChange: (confirmed: boolean) => void;
     onStartCheck: () => void;
 }
 
-export const ReviewSection = ({ confirmed, confirmationResetKey, checkResult, checkLoading, isOwner, onConfirmedChange, onStartCheck }: ReviewSectionProps) => {
+export const ReviewSection = ({
+    confirmed,
+    confirmationResetKey,
+    checkResult,
+    checkLoading,
+    checkOutdated,
+    isOwner,
+    onConfirmedChange,
+    onStartCheck
+}: ReviewSectionProps) => {
     const { t } = useTranslation();
 
     const confirmationRef = useRef<HTMLDivElement>(null);
@@ -32,11 +42,11 @@ export const ReviewSection = ({ confirmed, confirmationResetKey, checkResult, ch
     const hasHighRisk = checkResult?.overall_status === "high_risk_detected";
     const passed = checkResult?.overall_status === "passed";
     const showError = checkResult?.overall_status === "error";
-    // The confirmation becomes available once a check has run. On error we intentionally do not block the user,
-    // since the check failing is rare and should not prevent saving.
-    const checkCompleted = checkResult !== null;
-    // Only a usable (non-error) result guides the user to the confirmation.
-    const hasUsableResult = passed || hasHighRisk;
+    // The confirmation becomes available once a check has run for the current prompt. On error we intentionally do
+    // not block the user, since the check failing is rare and should not prevent saving.
+    const checkCompleted = checkResult !== null && !checkOutdated;
+    // Only a usable (non-error) result for the current prompt guides the user to the confirmation.
+    const hasUsableResult = (passed || hasHighRisk) && !checkOutdated;
 
     // After a completed check, guide the user to the now-enabled confirmation: scroll it into view and highlight it briefly.
     useEffect(() => {
@@ -82,12 +92,23 @@ export const ReviewSection = ({ confirmed, confirmationResetKey, checkResult, ch
                                 checkLoading
                                     ? "components.assistant_editor.review_check_running"
                                     : checkCompleted
-                                      ? "components.assistant_editor.review_check_recheck"
-                                      : "components.assistant_editor.review_check_start"
+                                        ? "components.assistant_editor.review_check_recheck"
+                                        : "components.assistant_editor.review_check_start"
                             )}
                         </Button>
                     </div>
                 </div>
+
+                {checkOutdated && checkResult !== null && (
+                    <MessageBar intent="info" layout="multiline" className={styles.resultMessageBar}>
+                        <MessageBarBody className={styles.resultBody}>
+                            <MessageBarTitle>{t("components.assistant_editor.review_result_outdated_title")}</MessageBarTitle>
+                            <Text as="p" className={styles.resultText}>
+                                {t("components.assistant_editor.review_result_outdated_description")}
+                            </Text>
+                        </MessageBarBody>
+                    </MessageBar>
+                )}
 
                 {showError && (
                     <MessageBar intent="error" layout="multiline" className={styles.resultMessageBar}>

@@ -52,7 +52,7 @@ export const WikiTutorial = ({ tocTitle, sections }: WikiTutorialProps) => {
     // the viewport, reported by an IntersectionObserver.
     useEffect(() => {
         const visible = new Set<string>();
-        const orderOf = new Map(anchorIds.map((id, index) => [id, index]));
+        const orderOf = new Map(anchorIds.map((id, index): [string, number] => [id, index]));
 
         const pickActive = () => {
             if (Date.now() < suppressSpyUntil.current) return;
@@ -69,7 +69,7 @@ export const WikiTutorial = ({ tocTitle, sections }: WikiTutorialProps) => {
             if (bestId) setActiveId(previous => (previous === bestId ? previous : bestId));
         };
 
-        const idOf = new Map(anchorIds.map(id => [wikiAnchor(id), id]));
+        const idOf = new Map(anchorIds.map((id): [string, string] => [wikiAnchor(id), id]));
         const observer = new IntersectionObserver(
             entries => {
                 for (const entry of entries) {

@@ -39,7 +39,7 @@
         "@types/react-syntax-highlighter": "15.5.13",
         "@vite-pwa/assets-generator": "^1.0.2",
         "@vitejs/plugin-react": "6.0.3",
-        "brace-expansion": "5.0.7",
+        "brace-expansion": "5.0.8",
         "eslint": "9.39.4",
         "eslint-plugin-react": "7.37.5",
         "gh-pages": "6.3.0",
@@ -57,7 +57,7 @@
         "adm-zip": "0.6.0",
         "brace-expansion@^1.1.7": "1.1.16",
         "brace-expansion@^2.0.1": "2.1.2",
-        "brace-expansion@^5.0.5": "5.0.7",
+        "brace-expansion@^5.0.5": "5.0.8",
         "protobufjs": "7.6.5"
     },
     "homepage": "https://it-at-m.github.io/mucgpt/",

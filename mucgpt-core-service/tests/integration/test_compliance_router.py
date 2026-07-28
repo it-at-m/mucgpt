@@ -18,11 +18,15 @@ class _FakeConfiguredModel:
         configured = _FakeConfiguredModel(self._response_by_run_name)
         configured._run_name = config.get("run_name") or ""
         configured._capture_owner = self._capture_owner
+        if hasattr(self, "_structured_output_schema"):
+            configured._structured_output_schema = self._structured_output_schema
         return configured
 
     def with_structured_output(self, schema: type[Any]) -> "_FakeConfiguredModel":
-        self._structured_output_schema = schema
-        return self
+        structured = _FakeConfiguredModel(self._response_by_run_name)
+        structured._structured_output_schema = schema
+        structured._capture_owner = self._capture_owner
+        return structured
 
     async def ainvoke(self, messages: Sequence[Any]) -> AIMessage:
         self._capture_owner.run_names.append(self._run_name)

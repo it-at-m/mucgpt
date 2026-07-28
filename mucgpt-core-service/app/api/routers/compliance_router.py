@@ -49,8 +49,8 @@ _CATEGORY_PROMPTS: tuple[tuple[ComplianceCategoryId, str], ...] = (
 
 @observe(
     name="assistant-compliance-category-check",
-    capture_input=True,
-    capture_output=True,
+    capture_input=False,
+    capture_output=False,
 )
 async def _check_category(
     *,

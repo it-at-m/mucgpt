@@ -257,7 +257,7 @@ const Discovery = () => {
 
         if (complianceCheckResult?.overall_status === "passed") {
             badges.push({
-                label: t("components.community_assistants.compliance_passed_badge", "Keine Hochrisiko-Hinweise"),
+                label: t("components.community_assistants.compliance_passed_badge"),
                 color: "success",
                 tone: "success"
             });
@@ -265,7 +265,7 @@ const Discovery = () => {
 
         if (complianceCheckResult?.overall_status === "high_risk_detected") {
             badges.push({
-                label: t("components.community_assistants.compliance_high_risk_badge", "Hochrisiko-Hinweis"),
+                label: t("components.community_assistants.compliance_high_risk_badge"),
                 color: "danger",
                 tone: "danger"
             });

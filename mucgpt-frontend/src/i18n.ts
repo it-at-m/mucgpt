@@ -714,6 +714,8 @@ i18n
                             duplicate_failed_forbidden: "Sie haben keine Berechtigung, diesen Assistenten zu duplizieren.",
                             duplicate_failed_not_found: "Der Assistent wurde nicht gefunden und kann nicht dupliziert werden.",
                             local_badge: "Lokal",
+                            compliance_passed_badge: "AI Act: Konform",
+                            compliance_high_risk_badge: "AI Act: Unzulässig",
                             local_state_title: "Dieser lokale Assistent ist veraltet",
                             discovery_local_hint:
                                 "Dieser Assistent ist nur lokal in Ihrem Browser gesichert und geht verloren, falls Sie das Gerät wechseln. Sichern Sie ihn jetzt, damit er dauerhaft erhalten bleibt.",
@@ -1490,6 +1492,8 @@ i18n
                             duplicate_failed_forbidden: "You do not have permission to duplicate this assistant.",
                             duplicate_failed_not_found: "The assistant was not found and cannot be duplicated.",
                             local_badge: "Local",
+                            compliance_passed_badge: "AI Act: Compliant",
+                            compliance_high_risk_badge: "AI Act: Not permitted",
                             local_state_title: "This local assistant is deprecated",
                             discovery_local_hint:
                                 "This assistant is only saved locally in your browser and will be lost if you switch devices. Save it now so it remains available.",
@@ -2256,6 +2260,8 @@ i18n
                             duplicate_failed_forbidden: "Du host koa Berechtigung, den Assistentn zum Dupliziern.",
                             duplicate_failed_not_found: "Da Assistent is ned gfundn worn und ko ned dupliziert wern.",
                             local_badge: "Lokal",
+                            compliance_passed_badge: "AI Act: Konform",
+                            compliance_high_risk_badge: "AI Act: Ned erlaubt",
                             local_state_title: "Der lokale Assistent is veraltet",
                             discovery_local_hint:
                                 "Der Assistent is bloß lokal in deim Browser gesichert und geht verloren, wennst des Gerät wechselst. Sicher eam jetzt, damit a dauerhaft erhalten bleibt.",
@@ -3018,6 +3024,8 @@ i18n
                             duplicate_failed_forbidden: "Vous n'avez pas la permission de dupliquer cet assistant.",
                             duplicate_failed_not_found: "L'assistant n'a pas été trouvé et ne peut pas être dupliqué.",
                             local_badge: "Local",
+                            compliance_passed_badge: "AI Act: Conforme",
+                            compliance_high_risk_badge: "AI Act: Non autorisé",
                             local_state_title: "Cet assistant local est obsolète",
                             discovery_local_hint:
                                 "Cet assistant est uniquement enregistré localement dans votre navigateur et sera perdu si vous changez d'appareil. Enregistrez-le maintenant pour le conserver durablement.",
@@ -3783,6 +3791,8 @@ i18n
                             duplicate_failed_forbidden: "У вас немає дозволу на дублювання цього асистента.",
                             duplicate_failed_not_found: "Асистента не знайдено, дублювання неможливе.",
                             local_badge: "Локальний",
+                            compliance_passed_badge: "AI Act: Відповідає вимогам",
+                            compliance_high_risk_badge: "AI Act: Недопустимо",
                             local_state_title: "Цей локальний асистент застарів",
                             discovery_local_hint:
                                 "Цей асистент збережено лише локально у вашому браузері, і він буде втрачений, якщо ви зміните пристрій. Збережіть його зараз, щоб він залишався доступним.",

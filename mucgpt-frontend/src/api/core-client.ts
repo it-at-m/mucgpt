@@ -40,6 +40,7 @@ export async function chatApi(options: ChatRequest): Promise<Response> {
         creativity?: string;
         enabled_tools?: string[];
         assistant_id?: string;
+        conversation_id?: string;
         data_sources?: ChatRequest["data_sources"];
     } = {
         model: options.model,
@@ -53,6 +54,9 @@ export async function chatApi(options: ChatRequest): Promise<Response> {
     }
     if (options.assistant_id) {
         body.assistant_id = options.assistant_id;
+    }
+    if (options.conversation_id) {
+        body.conversation_id = options.conversation_id;
     }
     if (options.data_sources) {
         body.data_sources = options.data_sources;

@@ -11,6 +11,14 @@
         transform 0.15s ease;
 }
 
+.label {
+    display: block;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
 .buttons {
     display: flex;
     flex-wrap: wrap;
@@ -25,9 +33,16 @@
     color: var(--colorNeutralForeground1) !important;
 }
 
+/* On narrow screens the pills wrap into short rows instead of stacking full-width,
+   so the action list costs as little vertical space as possible above the input. */
 @media (max-width: 650px) {
     .buttons {
-        flex-direction: column;
-        align-items: stretch;
+        gap: 6px;
+    }
+
+    .item {
+        min-width: 0;
+        flex: 0 1 auto;
+        max-width: 100%;
     }
 }

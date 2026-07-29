@@ -126,7 +126,7 @@ export const UserSidebarProfile = ({ collapsed, isMobile, utilitiesContent, popo
     const { t } = useTranslation();
     const { user } = useContext(UserContext);
     const config = useConfigContext();
-    const fallbackName = t("common.user", "User");
+    const fallbackName = t("common.my_profile", "My Profile");
 
     const userProfile = useMemo(() => deriveUserProfile(user, fallbackName), [user, fallbackName]);
     const tooltipLabel = useMemo(() => getPreferredNameSource(user) || userProfile.displayName, [user, userProfile.displayName]);

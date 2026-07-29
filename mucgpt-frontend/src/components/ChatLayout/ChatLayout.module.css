@@ -161,7 +161,9 @@
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
     box-sizing: border-box;
-    padding: 8px 24px;
+    margin: 0;
+    padding: 0 24px;
+    list-style: none;
 }
 
 .scrollToBottomWrapper {

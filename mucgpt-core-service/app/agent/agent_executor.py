@@ -8,7 +8,7 @@ from langchain_core.messages import (
 )
 from langchain_core.runnables import RunnableConfig
 from langchain_core.runnables.config import merge_configs
-from langfuse import observe, propagate_attributes
+from langfuse import get_client, observe, propagate_attributes
 from langfuse.langchain import CallbackHandler
 
 from agent.react_agent import MUCGPTReActAgent
@@ -142,6 +142,13 @@ class MUCGPTAgentExecutor:
             tags=tags,
             session_id=conversation_id
         ):
+            # capture_input/output are disabled on @observe above to avoid
+            # duplicating the full resent history; set a lightweight
+            # trace-level summary instead so it isn't blank in the UI.
+            get_client().update_current_span(
+                input=messages[-1].content if messages else None
+            )
+            answer_chunks: list[str] = []
             config = merge_configs(
                 self.base_config,
                 RunnableConfig(
@@ -196,6 +203,8 @@ class MUCGPTAgentExecutor:
                             else:
                                 # If content is not a string (e.g., list for multimodal), keep existing behavior and pass through.
                                 pass
+                            if isinstance(chunk_content, str):
+                                answer_chunks.append(chunk_content)
                             yield ChatCompletionChunk(
                                 id=id_,
                                 object="chat.completion.chunk",
@@ -226,6 +235,7 @@ class MUCGPTAgentExecutor:
                         )
                         continue
                 logger.debug("Streaming completed successfully.")
+                get_client().update_current_span(output="".join(answer_chunks))
             except Exception as ex:
                 logger.error("Streaming error: %s", str(ex), exc_info=True)
                 error_msg = llm_exception_handler(ex=ex, logger=logger)
@@ -310,6 +320,13 @@ class MUCGPTAgentExecutor:
                 llm = self.agent.model.with_config(config)
                 ai_message = llm.invoke(msgs)
                 logger.info("Non-streaming completed successfully.")
+                # capture_input/output are disabled on @observe above to avoid
+                # duplicating the full resent history; set a lightweight
+                # trace-level summary instead so it isn't blank in the UI.
+                get_client().update_current_span(
+                    input=messages[-1].content if messages else None,
+                    output=ai_message.content,
+                )
                 response = ChatCompletionResponse(
                     id=str(uuid.uuid4()),
                     object="chat.completion",

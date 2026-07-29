@@ -116,6 +116,7 @@ class MUCGPTAgentExecutor:
         enabled_tools: list[str] | None = None,
         assistant_id: str | None = None,
         data_sources: list[dict[str, Any]] | None = None,
+        conversation_id: str | None = None
     ) -> AsyncGenerator[dict]:
         logger.info(
             "Chat streaming started with temperature %s, model %s",
@@ -139,6 +140,7 @@ class MUCGPTAgentExecutor:
         with propagate_attributes(
             user_id=hash_user_id(user_info.user_id if user_info else None),
             tags=tags,
+            session_id=conversation_id
         ):
             config = merge_configs(
                 self.base_config,
@@ -265,6 +267,7 @@ class MUCGPTAgentExecutor:
         enabled_tools: list[str] | None = None,
         assistant_id: str | None = None,
         data_sources: list[dict[str, Any]] | None = None,
+        conversation_id: str | None = None
     ) -> ChatCompletionResponse:
         logger.info(
             "Chat non-streaming started with temperature %s, model %s",
@@ -285,6 +288,7 @@ class MUCGPTAgentExecutor:
         with propagate_attributes(
             user_id=hash_user_id(user_info.user_id if user_info else None),
             tags=tags,
+            session_id=conversation_id
         ):
             request_config = RunnableConfig(
                 configurable={

@@ -38,7 +38,8 @@
 
 .answerText {
     font-size: var(--fontSizeBase400);
-    overflow-x: auto;
+    min-width: 0;
+    overflow-wrap: anywhere;
 }
 
 .answerText :where(p, ul, ol, blockquote) {
@@ -99,12 +100,13 @@
 .unformattedAnswer {
     white-space: pre-wrap;
     line-height: 1.35;
+    overflow-wrap: anywhere;
 }
 
 .growItem {
     flex-grow: 1;
     width: 100%;
-    overflow-x: auto;
+    min-width: 0;
 }
 
 .errorRow {

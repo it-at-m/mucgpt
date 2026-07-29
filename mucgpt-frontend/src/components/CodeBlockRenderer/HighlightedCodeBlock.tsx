@@ -1,4 +1,3 @@
-import { IconButton } from "@fluentui/react";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { dark, duotoneLight } from "react-syntax-highlighter/dist/esm/styles/prism";
 import styles from "./CodeBlockRenderer.module.css";
@@ -13,12 +12,10 @@ export type HighlightedCodeBlockProps = {
     text: string;
     language: string;
     lightTheme?: boolean;
-    copyIcon?: string;
-    onCopy?: () => void;
 };
 
 /** Shared Prism code block used by CodeBlockRenderer and diagram error fallbacks. */
-export function HighlightedCodeBlock({ text, language, lightTheme, copyIcon, onCopy }: HighlightedCodeBlockProps) {
+export function HighlightedCodeBlock({ text, language, lightTheme }: HighlightedCodeBlockProps) {
     const resolvedLightTheme = lightTheme ?? getCodeBlockLightThemePreference();
 
     return (
@@ -32,10 +29,7 @@ export function HighlightedCodeBlock({ text, language, lightTheme, copyIcon, onC
                 wrapLongLines={true}
                 codeTagProps={{ style: { fontSize: "var(--fontSizeBase400)" } }}
             />
-            <div className={styles.copyContainer}>
-                {language}
-                {onCopy && copyIcon ? <IconButton style={{ color: "black" }} iconProps={{ iconName: copyIcon }} onClick={onCopy} /> : null}
-            </div>
+            <div className={styles.copyContainer}>{language}</div>
         </div>
     );
 }

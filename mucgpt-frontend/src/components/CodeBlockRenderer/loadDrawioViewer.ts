@@ -5,7 +5,6 @@
  */
 
 export type DrawioGraphViewer = {
-    processElements: (className?: string) => void;
     createViewerForElement: (element: HTMLElement) => void;
 };
 

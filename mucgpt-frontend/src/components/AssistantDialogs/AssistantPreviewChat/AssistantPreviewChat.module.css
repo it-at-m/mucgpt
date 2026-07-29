@@ -1,6 +1,7 @@
 .previewContainer {
     display: flex;
     flex-direction: column;
+    position: relative;
     height: 100%;
     min-height: 0;
     min-width: 0;
@@ -50,6 +51,7 @@
     overflow-y: auto;
     display: flex;
     flex-direction: column;
+    position: relative;
 }
 
 .previewEmptyState {
@@ -90,4 +92,80 @@
     border-top: 1px solid var(--colorNeutralStroke2);
     box-sizing: border-box;
     background-color: var(--colorNeutralBackground1);
+}
+
+.scrollToBottomWrapper {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: calc(var(--previewInputHeight, 0px) + 12px);
+    z-index: 1;
+    display: flex;
+    justify-content: center;
+    pointer-events: none;
+    transform-origin: center bottom;
+}
+
+.scrollToBottomButton {
+    pointer-events: auto;
+    opacity: 0.86;
+    box-shadow: var(--shadow4);
+    transition:
+        opacity 220ms cubic-bezier(0.25, 1, 0.5, 1),
+        transform 220ms cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+.scrollToBottomButton:hover,
+.scrollToBottomButton:focus-visible {
+    opacity: 1;
+}
+
+.scrollToBottomWrapper[data-state="entered"] {
+    animation: scrollToBottomEnter 200ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.scrollToBottomWrapper[data-state="exiting"] {
+    animation: scrollToBottomExit 200ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.scrollToBottomWrapper[data-state="exiting"] .scrollToBottomButton {
+    pointer-events: none;
+}
+
+@keyframes scrollToBottomEnter {
+    from {
+        opacity: 0;
+        transform: translateY(18px) scale(0.82);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+@keyframes scrollToBottomExit {
+    from {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+
+    to {
+        opacity: 0;
+        transform: translateY(18px) scale(0.82);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .scrollToBottomWrapper {
+        animation: none;
+    }
+
+    .scrollToBottomWrapper[data-state="exiting"] {
+        opacity: 0;
+    }
+
+    .scrollToBottomButton {
+        transition: opacity 0.01ms linear;
+    }
 }

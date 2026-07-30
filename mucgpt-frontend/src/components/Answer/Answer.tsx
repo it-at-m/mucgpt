@@ -14,9 +14,11 @@ interface Props {
     answer: AskResponse;
     onRegenerateResponseClicked?: () => void;
     onFollowUpActionSend?: (prompt: string) => void;
+    /** True while this answer is still being streamed. */
+    isStreaming?: boolean;
 }
 
-export const Answer = ({ answer, onRegenerateResponseClicked, onFollowUpActionSend }: Props) => {
+export const Answer = ({ answer, onRegenerateResponseClicked, onFollowUpActionSend, isStreaming = false }: Props) => {
     const { t } = useTranslation();
 
     const [copied, setCopied] = useState<boolean>(false);
@@ -58,7 +60,9 @@ export const Answer = ({ answer, onRegenerateResponseClicked, onFollowUpActionSe
                 <div className={styles.growItem}>
                     {formatted && (
                         <div className={styles.answerText}>
-                            <MarkdownRenderer allowDrawio>{processedText}</MarkdownRenderer>
+                            <MarkdownRenderer allowDrawio isStreaming={isStreaming}>
+                                {processedText}
+                            </MarkdownRenderer>
                         </div>
                     )}
                     {!formatted && (

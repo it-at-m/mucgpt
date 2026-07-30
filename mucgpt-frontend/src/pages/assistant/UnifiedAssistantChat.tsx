@@ -114,6 +114,8 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
     const [deletedAssistantSnapshot, setDeletedAssistantSnapshot] = useState<CommunityAssistantSnapshot | null>(null);
     const [lastQuestion, setLastQuestion] = useState<string>("");
     const [isLoading, setIsLoading] = useState<boolean>(false);
+    /** True for the full chat request lifetime (SSE included). Unlike isLoading, stays true after the answer placeholder is added. */
+    const [isStreamingAnswer, setIsStreamingAnswer] = useState<boolean>(false);
     const [isAssistantContentLoading, setIsAssistantContentLoading] = useState<boolean>(true);
     const isDeletedAssistant = strategy instanceof DeletedCommunityAssistantStrategy;
     const isLocalAssistant = strategy instanceof LocalAssistantStrategy;
@@ -432,6 +434,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
             setLastQuestionValue(question);
             if (error) setError(undefined);
             setIsLoadingValue(true);
+            setIsStreamingAnswer(true);
 
             const askResponse: AskResponse = {} as AskResponse;
             const options: ChatOptions = {
@@ -461,8 +464,10 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                 );
             } catch (e) {
                 setError(e);
+            } finally {
+                setIsLoadingValue(false);
+                setIsStreamingAnswer(false);
             }
-            setIsLoadingValue(false);
         },
         [
             error,
@@ -851,6 +856,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                                 <Answer
                                     key={index}
                                     answer={answer.response}
+                                    isStreaming={isStreamingAnswer}
                                     onRegenerateResponseClicked={isDeletedAssistant ? undefined : onRegenerateResponseClicked}
                                     onFollowUpActionSend={
                                         isDeletedAssistant
@@ -891,6 +897,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
             onRegenerateResponseClicked,
             onRollbackMessage,
             isLoading,
+            isStreamingAnswer,
             error,
             callApi,
             chatMessageStreamEnd,

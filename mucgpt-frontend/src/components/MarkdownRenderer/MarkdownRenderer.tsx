@@ -13,9 +13,11 @@ interface MarkdownRendererProps {
     className?: string;
     /** When true, fenced ```drawio blocks render as diagrams (assistant answers). */
     allowDrawio?: boolean;
+    /** True while the assistant answer is still streaming. */
+    isStreaming?: boolean;
 }
 
-export const MarkdownRenderer = ({ children, className, allowDrawio = false }: MarkdownRendererProps) => {
+export const MarkdownRenderer = ({ children, className, allowDrawio = false, isStreaming = false }: MarkdownRendererProps) => {
     const remarkMathOptions = {
         singleDollarTextMath: false
     };
@@ -28,7 +30,7 @@ export const MarkdownRenderer = ({ children, className, allowDrawio = false }: M
     };
 
     const content = (
-        <DrawioRenderContext.Provider value={allowDrawio}>
+        <DrawioRenderContext.Provider value={{ allowDrawio, isStreaming }}>
             <Markdown
                 remarkPlugins={[[remarkMath, remarkMathOptions], remarkGfm]}
                 rehypePlugins={[

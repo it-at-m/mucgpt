@@ -247,7 +247,8 @@ i18n
                         drawio: {
                             download: "Diagramm herunterladen",
                             render: "Zeichne Diagramm...",
-                            error: "Das draw.io-Diagramm kann leider nicht dargestellt werden, da es Fehler enthält."
+                            error: "Das draw.io-Diagramm kann leider nicht dargestellt werden, da es Fehler enthält.",
+                            charactersWritten: "Zeichen geschrieben"
                         },
                         mindmap: {
                             download: "Herunterladen",
@@ -1018,7 +1019,8 @@ i18n
                         drawio: {
                             download: "Download diagram",
                             render: "Draw diagram...",
-                            error: "Unfortunately, the draw.io diagram cannot be displayed as it contains errors."
+                            error: "Unfortunately, the draw.io diagram cannot be displayed as it contains errors.",
+                            charactersWritten: "Characters written"
                         },
                         sumanswer: {
                             header: "Unique entities/aspects:",
@@ -1768,7 +1770,8 @@ i18n
                         drawio: {
                             download: "Schau-Buidl obalada",
                             render: "Zeichne Schau-Buidl...",
-                            error: "Des draw.io-Schau-Buidl ko leiwa net duagstellt wern, wei's Fehla håd."
+                            error: "Des draw.io-Schau-Buidl ko leiwa net duagstellt wern, wei's Fehla håd.",
+                            charactersWritten: "Zeichn gschriebn"
                         },
                         sumanswer: {
                             header: "Einzigartige Schwerpunkte:",
@@ -2500,7 +2503,8 @@ i18n
                         drawio: {
                             download: "Télécharger le diagramme",
                             render: "Dessiner le diagramme...",
-                            error: "Le diagramme draw.io ne peut malheureusement pas être affiché en raison d'erreurs."
+                            error: "Le diagramme draw.io ne peut malheureusement pas être affiché en raison d'erreurs.",
+                            charactersWritten: "Caractères écrits"
                         },
                         mindmap: {
                             download: "Télécharger",
@@ -3238,7 +3242,8 @@ i18n
                         drawio: {
                             download: "Завантажити діаграму",
                             render: "Малювати діаграму...",
-                            error: "На жаль, діаграму draw.io не можна відобразити через помилки."
+                            error: "На жаль, діаграму draw.io не можна відобразити через помилки.",
+                            charactersWritten: "Написано символів"
                         },
                         mindmap: {
                             download: "Завантажити",

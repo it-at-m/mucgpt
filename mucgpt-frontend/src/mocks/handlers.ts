@@ -7,6 +7,7 @@ import {
     buildOwnersDetailedFromOwnerIds,
     buildChatMessage,
     buildDrawioChatMessage,
+    buildInvalidDrawioChatMessage,
     generateChatStreamChunks,
     generateMindmapStreamChunks,
     generateSimplifyStreamChunks
@@ -759,8 +760,9 @@ export const handlers = [
                 ?.slice()
                 .reverse()
                 .find(m => m.role === "user")?.content || "";
-        // E2E demo: say "drawio" alone (or "show drawio"). A ```drawio fence must NOT trigger this.
-        const wantsDrawioMock = /^\s*drawio\s*$/i.test(latestUserMessage) || /\bshow\s+drawio\b/i.test(latestUserMessage);
+        // E2E demos (tools off): exact phrases only. A ```drawio fence must NOT trigger this.
+        const wantsValidDrawioMock = /^\s*valid-drawio\s*$/i.test(latestUserMessage);
+        const wantsInvalidDrawioMock = /^\s*invalid-drawio\s*$/i.test(latestUserMessage);
 
         if (body?.stream) {
             const encoder = new TextEncoder();
@@ -773,8 +775,10 @@ export const handlers = [
                         chunks = generateMindmapStreamChunks(topic);
                     } else if (streamType === "simplify") {
                         chunks = generateSimplifyStreamChunks();
-                    } else if (wantsDrawioMock) {
+                    } else if (wantsValidDrawioMock) {
                         chunks = generateChatStreamChunks(buildDrawioChatMessage());
+                    } else if (wantsInvalidDrawioMock) {
+                        chunks = generateChatStreamChunks(buildInvalidDrawioChatMessage());
                     } else {
                         let reply = buildChatMessage();
                         if (Math.random() > 0.7) {
@@ -809,7 +813,14 @@ export const handlers = [
             choices: [
                 {
                     index: 0,
-                    message: { role: "assistant", content: wantsDrawioMock ? buildDrawioChatMessage() : buildChatMessage() },
+                    message: {
+                        role: "assistant",
+                        content: wantsValidDrawioMock
+                            ? buildDrawioChatMessage()
+                            : wantsInvalidDrawioMock
+                              ? buildInvalidDrawioChatMessage()
+                              : buildChatMessage()
+                    },
                     finish_reason: "stop"
                 }
             ],

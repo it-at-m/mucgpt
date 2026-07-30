@@ -6,6 +6,7 @@ import styles from "./DrawIO.module.css";
 import { loadDrawioViewer } from "./loadDrawioViewer";
 import { isSafeDiagramInput, sanitizeDrawioViewerHost } from "./diagramSecurity";
 import { HighlightedCodeBlock } from "./HighlightedCodeBlock";
+import { useDrawioRenderContext } from "./drawioRenderContext";
 
 export interface DrawIOProps {
     text: string;
@@ -97,6 +98,7 @@ export const DrawIO: React.FC<DrawIOProps> = ({ text, darkTheme }) => {
     const [diagram, setDiagram] = useState<string | boolean>(true);
     const containerRef = useRef<HTMLDivElement>(null);
     const { t } = useTranslation();
+    const { isStreaming } = useDrawioRenderContext();
 
     const onDownloadXml = useCallback(() => {
         const xml = normalizeDrawioXml(text);
@@ -105,14 +107,22 @@ export const DrawIO: React.FC<DrawIOProps> = ({ text, darkTheme }) => {
         }
     }, [text]);
 
-    // Phase 1: guards + load local viewer + validate XML shape.
+    // Phase 1: while streaming, only show generating — no validity verdict yet.
+    // After the stream ends, validate once and render or fall back to error + raw XML.
     useEffect(() => {
         let cancelled = false;
         setDiagram(true);
 
+        if (isStreaming) {
+            return () => {
+                cancelled = true;
+            };
+        }
+
         (async () => {
             try {
                 if (isLikelyIncompleteDrawioXml(text)) {
+                    if (!cancelled) setDiagram(false);
                     return;
                 }
 
@@ -138,7 +148,7 @@ export const DrawIO: React.FC<DrawIOProps> = ({ text, darkTheme }) => {
         return () => {
             cancelled = true;
         };
-    }, [text]);
+    }, [text, isStreaming]);
 
     // Phase 2: viewer writes into the ref; we sanitize SVG before leaving it on screen.
     useEffect(() => {
@@ -224,7 +234,12 @@ export const DrawIO: React.FC<DrawIOProps> = ({ text, darkTheme }) => {
     }, [diagram, text, darkTheme]);
 
     if (diagram === true) {
-        return <p className={styles.status}>{t("components.drawio.render")}</p>;
+        return (
+            <p className={styles.status}>
+                {t("components.drawio.render")}
+                {isStreaming ? ` — ${t("components.drawio.charactersWritten")}: ${text.length}` : null}
+            </p>
+        );
     }
 
     if (diagram === false) {

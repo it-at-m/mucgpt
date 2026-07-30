@@ -2892,7 +2892,7 @@ i18n
                             review_result_error_title: "Échec de la vérification",
                             review_result_error_description:
                                 "La vérification n'a pas pu être effectuée. L'enregistrement reste bloqué jusqu'à une nouvelle vérification réussie.",
-                            review_result_outdated_title: "Résultat plus à jour",
+                            review_result_outdated_title: "Résultat n'est plus à jour",
                             review_result_outdated_description:
                                 "Le prompt système a été modifié après cette vérification. Les indices se rapportent à la version précédente. Relancez la vérification pour obtenir un résultat à jour.",
                             review_confirmation_label_high_risk:
@@ -3745,6 +3745,9 @@ i18n
                             assistant_creation_failed: "Не вдалося створити асистента",
                             save_config_failed: "Не вдалося зберегти конфігурацію асистента",
                             assistant_save_failed: "Не вдалося зберегти асистента",
+                            compliance_not_persisted_title: "Асистента збережено, результат перевірки не збережено",
+                            compliance_not_persisted_message:
+                                "Останній результат перевірки відповідності не вдалося підтвердити на сервері, тому його не було збережено. Асистента все одно збережено.",
                             compliance_verification_failed_actionable:
                                 "Сервер не зміг підтвердити перевірку відповідності. Будь ласка, запустіть перевірку ще раз і зберігайте лише після успішної перевірки. Якщо проблема не зникне, зверніться до адміністратора.",
                             assistant_generated_success: "Асистента успішно згенеровано!",

@@ -3,6 +3,7 @@ import importlib
 import uuid
 
 import pytest
+from fastapi.testclient import TestClient
 from sqlalchemy import select
 
 from api.api_models import (
@@ -145,9 +146,9 @@ def test_create_assistant_success(sample_assistant_create, test_client):
 
 @pytest.mark.integration
 def test_compliance_check_result_is_versioned_and_cleared_for_changed_prompt(
-    test_client,
+    test_client: TestClient,
     monkeypatch: pytest.MonkeyPatch,
-):
+) -> None:
     """Unverified or missing screening results block create/update operations."""
     monkeypatch.setattr(
         assistants_router_module.get_settings(),

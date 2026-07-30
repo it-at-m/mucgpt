@@ -4,6 +4,7 @@ from typing import Any
 from unittest.mock import patch
 
 import pytest
+from fastapi.testclient import TestClient
 from langchain_core.messages import AIMessage
 
 
@@ -38,8 +39,8 @@ class _FakeConfiguredModel:
 @pytest.mark.integration
 @patch("core.llm_helpers.ModelProvider.get_model")
 def test_check_assistant_compliance_aggregates_category_results(
-    mock_get_model, test_client
-):
+    mock_get_model, test_client: TestClient
+) -> None:
     system_prompt = "Bewerte Bewerbungen und erstelle eine Rangliste."
     mock_get_model.return_value = _FakeConfiguredModel(
         {
@@ -82,8 +83,8 @@ def test_check_assistant_compliance_aggregates_category_results(
 @pytest.mark.integration
 @patch("core.llm_helpers.ModelProvider.get_model")
 def test_check_assistant_compliance_returns_error_for_malformed_verdict(
-    mock_get_model, test_client
-):
+    mock_get_model, test_client: TestClient
+) -> None:
     system_prompt = "Hilf beim Formulieren einer Stellenanzeige."
     mock_get_model.return_value = _FakeConfiguredModel(
         {

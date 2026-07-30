@@ -559,6 +559,37 @@ class TestParserSettings:
             assert settings.XBERG_URL == ""
             assert settings.XBERG_TIMEOUT == 120.0
 
+
+class TestComplianceCacheSettings:
+    """Test cases for compliance cache configuration."""
+
+    def test_compliance_cache_ttl_default_and_positive_value(self):
+        """COMPLIANCE_CACHE_TTL_SECONDS defaults correctly and allows positive values."""
+        with patch.dict(os.environ, {}, clear=True):
+            settings = Settings()
+            assert settings.COMPLIANCE_CACHE_TTL_SECONDS == 1800
+
+        with patch.dict(
+            os.environ,
+            {
+                "MUCGPT_CORE_COMPLIANCE_CACHE_TTL_SECONDS": "300",
+            },
+        ):
+            settings = Settings()
+            assert settings.COMPLIANCE_CACHE_TTL_SECONDS == 300
+
+    def test_compliance_cache_ttl_rejects_zero_and_negative(self):
+        """COMPLIANCE_CACHE_TTL_SECONDS must be strictly positive."""
+        for invalid_ttl in ("0", "-1"):
+            with patch.dict(
+                os.environ,
+                {
+                    "MUCGPT_CORE_COMPLIANCE_CACHE_TTL_SECONDS": invalid_ttl,
+                },
+            ):
+                with pytest.raises(ValueError):
+                    Settings()
+
     def test_parser_backend_xberg_via_env(self):
         """PARSER_BACKEND can be set to 'xberg' via environment variable."""
         with patch.dict(

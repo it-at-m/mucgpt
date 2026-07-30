@@ -337,6 +337,75 @@ def test_update_assistant_strict_mode_accepts_verified_prompt_change(
 
 
 @pytest.mark.integration
+def test_update_assistant_strict_mode_unchanged_prompt_preserves_compliance_result(
+    test_client, monkeypatch: pytest.MonkeyPatch
+):
+    """Strict mode should not require re-verification when the prompt value is unchanged."""
+    monkeypatch.setattr(
+        assistants_router_module.get_settings(),
+        "COMPLIANCE_REQUIRE_VERIFICATION",
+        True,
+    )
+
+    system_prompt = "Stable prompt for unchanged-update compliance test."
+    prompt_hash = hashlib.sha256(system_prompt.encode("utf-8")).hexdigest()
+    result = ComplianceCheckResult(
+        overall_status="passed",
+        results=[
+            {
+                "category": "education",
+                "status": "passed",
+            }
+        ],
+        prompt_hash=prompt_hash,
+    )
+
+    async def _noop_init_redis() -> None:
+        return None
+
+    async def _get_object(_key: str):
+        return result.model_dump()
+
+    monkeypatch.setattr(
+        assistants_router_module.RedisCache,
+        "init_redis",
+        _noop_init_redis,
+    )
+    monkeypatch.setattr(
+        assistants_router_module.RedisCache,
+        "get_object",
+        _get_object,
+    )
+
+    create_response = test_client.post(
+        "assistant/create",
+        json=AssistantCreate(
+            name="Strict unchanged prompt assistant",
+            system_prompt=system_prompt,
+            compliance_check_result=result,
+        ).model_dump(),
+        headers=headers,
+    )
+    assert create_response.status_code == 200
+    created = AssistantResponse.model_validate(create_response.json())
+    assert created.latest_version.compliance_check_result == result
+
+    update_response = test_client.post(
+        f"assistant/{created.id}/update",
+        json=AssistantUpdate(
+            version=created.latest_version.version,
+            system_prompt=system_prompt,
+            name="Updated name only",
+        ).model_dump(),
+        headers=headers,
+    )
+
+    assert update_response.status_code == 200
+    updated = AssistantResponse.model_validate(update_response.json())
+    assert updated.latest_version.compliance_check_result == result
+
+
+@pytest.mark.integration
 def test_create_assistant_minimal_data(test_client):
     """Test creating assistant with minimal required data."""
     minimal_assistant = AssistantCreate(

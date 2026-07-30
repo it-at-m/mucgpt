@@ -436,7 +436,7 @@ class Settings(BaseSettings):
     # Frontend feature flags
     TRANSCRIPTION_ENABLED: bool = False
     COMPLIANCE_CACHE_ENABLED: bool = True
-    COMPLIANCE_CACHE_TTL_SECONDS: int = 30 * 60
+    COMPLIANCE_CACHE_TTL_SECONDS: PositiveInt = 30 * 60
 
     # Nested sub-configurations
     SSO: SSOConfig = Field(default_factory=SSOConfig)

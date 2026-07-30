@@ -389,6 +389,10 @@ async def updateAssistant(
         if assistant_update.system_prompt is not None
         else latest_version.system_prompt
     )
+    system_prompt_changed = (
+        assistant_update.system_prompt is not None
+        and assistant_update.system_prompt != latest_version.system_prompt
+    )
 
     existing_compliance_result: ComplianceCheckResult | None = None
     if latest_version.compliance_check_result:
@@ -409,7 +413,7 @@ async def updateAssistant(
             system_prompt=effective_system_prompt,
             candidate=assistant_update.compliance_check_result,
         )
-    elif assistant_update.system_prompt is not None:
+    elif system_prompt_changed:
         settings = get_settings()
         if settings.COMPLIANCE_REQUIRE_VERIFICATION:
             raise ComplianceVerificationFailedException(

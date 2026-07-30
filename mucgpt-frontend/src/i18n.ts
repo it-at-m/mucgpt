@@ -521,7 +521,7 @@ i18n
                                 "Bitte prüfen Sie die folgenden Stellen in den Anweisungen und ändern Sie diese gegebenenfalls, damit kein Hochrisiko-Anwendungsfall entsteht. Die Prüfung dient nur zur Orientierung.",
                             review_result_error_title: "Prüfung fehlgeschlagen",
                             review_result_error_description:
-                                "Die Prüfung konnte nicht durchgeführt werden. Bitte versuchen Sie es später erneut oder wenden Sie sich an einen Administrator.",
+                                "Die Prüfung konnte nicht durchgeführt werden. Speichern ist erst nach einer erfolgreichen erneuten Prüfung möglich.",
                             review_result_outdated_title: "Ergebnis nicht mehr aktuell",
                             review_result_outdated_description:
                                 "Der System-Prompt wurde nach dieser Prüfung geändert. Die Hinweise beziehen sich auf die vorherige Fassung. Starten Sie die Prüfung erneut, um ein aktuelles Ergebnis zu erhalten.",
@@ -597,6 +597,11 @@ i18n
                             assistant_creation_failed: "Assistent konnte nicht erstellt werden",
                             save_config_failed: "Speichern der Assistenten-Konfiguration fehlgeschlagen",
                             assistant_save_failed: "Speichern des Assistenten fehlgeschlagen",
+                            compliance_not_persisted_title: "Assistent gespeichert, Prüfungsergebnis nicht gespeichert",
+                            compliance_not_persisted_message:
+                                "Das letzte Prüfergebnis konnte serverseitig nicht verifiziert werden und wurde daher nicht mitgespeichert. Der Assistent wurde trotzdem gespeichert.",
+                            compliance_verification_failed_actionable:
+                                "Die Compliance-Prüfung konnte nicht serverseitig verifiziert werden. Bitte starten Sie die Prüfung erneut und speichern Sie erst nach erfolgreicher Prüfung. Wenn das Problem bestehen bleibt, kontaktieren Sie die Administration.",
                             assistant_generated_success: "Assistent erfolgreich generiert!",
                             assistant_generated_message: "Die Konfiguration Ihres Assistenten wurde generiert. Sie können sie jetzt überprüfen und anpassen.",
                             assistant_generation_failed: "Generierung der Assistenten-Konfiguration fehlgeschlagen",
@@ -1313,7 +1318,7 @@ i18n
                             review_result_warning_guidance:
                                 "Please review the following parts of the instructions and change them if necessary so that no high-risk use case remains. The check is for guidance only.",
                             review_result_error_title: "Check failed",
-                            review_result_error_description: "The check could not be performed. Please try again later or contact an administrator.",
+                            review_result_error_description: "The check could not be performed. Saving is blocked until a successful re-check is available.",
                             review_result_outdated_title: "Result no longer up to date",
                             review_result_outdated_description:
                                 "The system prompt was changed after this check. The findings refer to the previous version. Run the check again to get an up-to-date result.",
@@ -1388,6 +1393,11 @@ i18n
                             assistant_creation_failed: "Assistant could not be created",
                             save_config_failed: "Failed to save assistant configuration",
                             assistant_save_failed: "Failed to save assistant",
+                            compliance_not_persisted_title: "Assistant saved, compliance result not saved",
+                            compliance_not_persisted_message:
+                                "The latest compliance check result could not be verified by the server and was not persisted. The assistant was saved successfully.",
+                            compliance_verification_failed_actionable:
+                                "The compliance check could not be verified by the server. Please run the check again and save only after a successful check. If the problem persists, contact an administrator.",
                             assistant_generated_success: "Assistant generated successfully!",
                             assistant_generated_message: "Your assistant configuration has been generated. You can now review and customize it.",
                             assistant_generation_failed: "Failed to generate assistant configuration",
@@ -2092,7 +2102,7 @@ i18n
                             review_result_warning_guidance:
                                 "Bitte schau da de foigenden Stelln in de Anweisungen o und änder's wenn nötig, dass koa Hochrisiko-Anwendungsfoi entsteht. De Prüfung is bloß a Orientierung.",
                             review_result_error_title: "Prüfung fehlgschlogn",
-                            review_result_error_description: "De Prüfung hod net klappt. Probiers spada nochamoi oda meld di bei am Admin.",
+                            review_result_error_description: "De Prüfung hod net klappt. Speichern geht erst noch ana erfolgreichen erneuten Prüfung.",
                             review_result_outdated_title: "Ergebnis nimma aktuell",
                             review_result_outdated_description:
                                 "Da System-Prompt is noch der Prüfung gändert worn. De Hinweis ghean zua vorherign Fassung. Stort de Prüfung nochamoi, damitst a aktuells Ergebnis kriagst.",
@@ -2168,6 +2178,11 @@ i18n
                             assistant_creation_failed: "Assistent konnt ned erstellt werdn",
                             save_config_failed: "Speichern vo da Assistenten-Konfiguration is fehlgschlogn",
                             assistant_save_failed: "Speichern vom Assistenten is fehlgschlogn",
+                            compliance_not_persisted_title: "Assistent gspeichert, Prüfergebnis ned gspeichert",
+                            compliance_not_persisted_message:
+                                "Des letzde Prüfergebnis hod da Server ned verifiziern kenna und hods drum ned mitgspreichert. Da Assistent is trotzdem gspeichert worn.",
+                            compliance_verification_failed_actionable:
+                                "De Compliance-Prüfung hod da Server ned verifiziern kenna. Bitte stoat de Prüfung noamoi und speicher erst noch ana erfolgreichen Prüfung. Wenn's Problem bleibt, meld di bei da Administration.",
                             assistant_generated_success: "Assistent erfolgreich generiert!",
                             assistant_generated_message: "Dei Assistent-Konfiguration is generiert wordn. Du kannst sie jetzt überprüfn und anpassn.",
                             assistant_generation_failed: "Generierung vo da Assistenten-Konfiguration is fehlgschlogn",
@@ -2876,7 +2891,7 @@ i18n
                                 "Veuillez examiner les passages suivants des instructions et les modifier si nécessaire afin qu'aucun cas d'usage à haut risque ne subsiste. La vérification sert uniquement d'orientation.",
                             review_result_error_title: "Échec de la vérification",
                             review_result_error_description:
-                                "La vérification n'a pas pu être effectuée. Veuillez réessayer plus tard ou contacter un administrateur.",
+                                "La vérification n'a pas pu être effectuée. L'enregistrement reste bloqué jusqu'à une nouvelle vérification réussie.",
                             review_result_outdated_title: "Résultat plus à jour",
                             review_result_outdated_description:
                                 "Le prompt système a été modifié après cette vérification. Les indices se rapportent à la version précédente. Relancez la vérification pour obtenir un résultat à jour.",
@@ -2952,6 +2967,11 @@ i18n
                             assistant_creation_failed: "Impossible de créer l'assistant",
                             save_config_failed: "Échec de l'enregistrement de la configuration de l'assistant",
                             assistant_save_failed: "Échec de l'enregistrement de l'assistant",
+                            compliance_not_persisted_title: "Assistant enregistré, résultat de conformité non enregistré",
+                            compliance_not_persisted_message:
+                                "Le dernier résultat de contrôle de conformité n'a pas pu être vérifié par le serveur et n'a donc pas été conservé. L'assistant a néanmoins été enregistré.",
+                            compliance_verification_failed_actionable:
+                                "La vérification de conformité n'a pas pu être validée par le serveur. Veuillez relancer la vérification et n'enregistrer qu'après une vérification réussie. Si le problème persiste, contactez l'administration.",
                             assistant_generated_success: "Assistant généré avec succès !",
                             assistant_generated_message:
                                 "La configuration de votre assistant a été générée. Vous pouvez maintenant la vérifier et la personnaliser.",
@@ -3650,7 +3670,8 @@ i18n
                             review_result_warning_guidance:
                                 "Будь ласка, перегляньте наведені нижче місця в інструкціях і за потреби змініть їх, щоб не залишалося сценарію використання з високим ризиком. Перевірка слугує лише орієнтиром.",
                             review_result_error_title: "Помилка перевірки",
-                            review_result_error_description: "Перевірку не вдалося виконати. Будь ласка, спробуйте пізніше або зверніться до адміністратора.",
+                            review_result_error_description:
+                                "Перевірку не вдалося виконати. Збереження заблоковано, доки повторна перевірка не завершиться успішно.",
                             review_result_outdated_title: "Результат більше не актуальний",
                             review_result_outdated_description:
                                 "Системний промпт було змінено після цієї перевірки. Виявлені ознаки стосуються попередньої версії. Запустіть перевірку ще раз, щоб отримати актуальний результат.",
@@ -3724,6 +3745,8 @@ i18n
                             assistant_creation_failed: "Не вдалося створити асистента",
                             save_config_failed: "Не вдалося зберегти конфігурацію асистента",
                             assistant_save_failed: "Не вдалося зберегти асистента",
+                            compliance_verification_failed_actionable:
+                                "Сервер не зміг підтвердити перевірку відповідності. Будь ласка, запустіть перевірку ще раз і зберігайте лише після успішної перевірки. Якщо проблема не зникне, зверніться до адміністратора.",
                             assistant_generated_success: "Асистента успішно згенеровано!",
                             assistant_generated_message: "Конфігурацію вашого асистента згенеровано. Тепер ви можете переглянути та налаштувати її.",
                             assistant_generation_failed: "Не вдалося згенерувати конфігурацію асистента",

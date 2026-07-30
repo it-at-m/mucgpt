@@ -7,7 +7,6 @@ import {
     Bot24Regular,
     Chat24Regular,
     ClipboardCheckmark24Regular,
-    Dismiss24Regular,
     DocumentText24Regular,
     Info24Regular,
     PanelRightContract24Regular,
@@ -23,6 +22,7 @@ import { AssistantCreateFlow } from "./AssistantCreateFlow";
 import { Assistant, ComplianceCheckResponse, ToolBase, ToolInfo } from "../../../api";
 import { createCommunityAssistantApi } from "../../../api/assistant-client";
 import { checkAssistantComplianceApi, generateAssistantDraftApi } from "../../../api/core-client";
+import { ApiError } from "../../../api/fetch-utils";
 import { useGlobalToastContext } from "../../GlobalToastHandler/GlobalToastContext";
 import { StarterPromptModel } from "../../StarterPrompt";
 import { LLMContext } from "../../LLMSelector/LLMContextProvider";
@@ -56,7 +56,7 @@ interface AssistantEditorPageEditProps {
     assistant: Assistant;
     isOwner: boolean;
     strategy: AssistantStrategy;
-    onSave: (assistant: Assistant) => void;
+    onSave: (assistant: Assistant) => Promise<{ persistedComplianceCheckResult?: ComplianceCheckResponse | null } | void>;
 }
 
 type AssistantEditorPageProps = AssistantEditorPageCreateProps | AssistantEditorPageEditProps;
@@ -261,7 +261,7 @@ function SettingsForm(props: SettingsFormProps) {
                         publishDepartments={props.publishDepartments}
                         invisibleChecked={!props.isVisible}
                         setPublishDepartments={props.setPublishDepartments}
-                        onHasChanged={props.onHasChanged ?? (() => { })}
+                        onHasChanged={props.onHasChanged ?? (() => {})}
                         setInvisibleChecked={invisible => props.setInvisibleChecked(invisible)}
                     />
                 </SectionCard>
@@ -375,7 +375,12 @@ export const AssistantEditorPage = (props: AssistantEditorPageProps) => {
         const systemPromptChanged = !isCreate && systemPrompt !== editAssistant?.system_message.trim();
         const requiresComplianceReview = isCreate || systemPromptChanged;
 
-        if (assistantTitle === "" || systemPrompt === "" || (requiresComplianceReview && (!reviewCheckResult || reviewCheckOutdated || !reviewConfirmed))) {
+        const complianceCheckFailed = reviewCheckResult?.overall_status === "error";
+        if (
+            assistantTitle === "" ||
+            systemPrompt === "" ||
+            (requiresComplianceReview && (!reviewCheckResult || reviewCheckOutdated || complianceCheckFailed || !reviewConfirmed))
+        ) {
             showError(t("components.assistant_editor.assistant_save_failed"), t("components.assistant_editor.save_config_failed"));
             return;
         }
@@ -414,6 +419,11 @@ export const AssistantEditorPage = (props: AssistantEditorPageProps) => {
                     compliance_check_result: complianceResultToSave
                 });
 
+                const persistedComplianceResult = response?.latest_version?.compliance_check_result;
+                if (complianceResultToSave && !persistedComplianceResult) {
+                    throw new Error(t("components.assistant_editor.compliance_not_persisted_message"));
+                }
+
                 if (response?.id) {
                     showSuccess(
                         t("components.assistant_editor.assistant_saved_success"),
@@ -427,7 +437,10 @@ export const AssistantEditorPage = (props: AssistantEditorPageProps) => {
                 const editProps = props as AssistantEditorPageEditProps;
                 const updatedAssistant = editState.createAssistantForSaving();
                 updatedAssistant.compliance_check_result = complianceResultToSave;
-                await editProps.onSave(updatedAssistant);
+                const saveResult = await editProps.onSave(updatedAssistant);
+                if (complianceResultToSave && !saveResult?.persistedComplianceCheckResult) {
+                    throw new Error(t("components.assistant_editor.compliance_not_persisted_message"));
+                }
                 showSuccess(
                     t("components.assistant_editor.saved_successfully"),
                     t("components.assistant_editor.assistant_saved_description", { assistantName: updatedAssistant.title || "" })
@@ -435,7 +448,10 @@ export const AssistantEditorPage = (props: AssistantEditorPageProps) => {
                 navigate(-1);
             }
         } catch (error) {
-            const errorMessage = error instanceof Error ? error.message : t("components.assistant_editor.save_config_failed");
+            let errorMessage = error instanceof Error ? error.message : t("components.assistant_editor.save_config_failed");
+            if (error instanceof ApiError && error.status === 422 && error.message.toLowerCase().includes("compliance")) {
+                errorMessage = t("components.assistant_editor.compliance_verification_failed_actionable");
+            }
             showError(t("components.assistant_editor.assistant_save_failed"), errorMessage);
         } finally {
             setLoading(false);
@@ -521,8 +537,7 @@ export const AssistantEditorPage = (props: AssistantEditorPageProps) => {
             setReviewCheckResult(result);
             setReviewCheckOutdated(false);
         } catch {
-            // A failed check is rare and must not block the user: record it as an error result so the
-            // error message is shown, but still allow confirming and saving.
+            // A failed check blocks saving until a successful re-check exists.
             setReviewCheckResult({ overall_status: "error", results: [] });
             setReviewCheckOutdated(false);
         } finally {
@@ -542,14 +557,14 @@ export const AssistantEditorPage = (props: AssistantEditorPageProps) => {
     const isSettingsValid =
         settingsState.title.trim() !== "" &&
         settingsState.systemPrompt.trim() !== "" &&
-        (!requiresComplianceReview || (reviewCheckResult !== null && !reviewCheckOutdated && reviewConfirmed));
+        (!requiresComplianceReview || (reviewCheckResult !== null && reviewCheckResult.overall_status !== "error" && !reviewCheckOutdated && reviewConfirmed));
     const showSettingsForm = !isCreate || createView === "settings";
     const showCreateModeSelector = isCreate && createView === "mode_select";
     const actionStatusLabel = !isOwner
         ? t("components.assistant_editor.action_status_read_only")
         : isSettingsValid
-            ? t(isCreate ? "components.assistant_editor.action_status_ready_create" : "components.assistant_editor.action_status_ready_save")
-            : t("components.assistant_editor.action_status_required_open");
+          ? t(isCreate ? "components.assistant_editor.action_status_ready_create" : "components.assistant_editor.action_status_ready_save")
+          : t("components.assistant_editor.action_status_required_open");
     const actionStatusTone = !isOwner ? "subtle" : isSettingsValid ? "success" : "warning";
 
     useEffect(() => {

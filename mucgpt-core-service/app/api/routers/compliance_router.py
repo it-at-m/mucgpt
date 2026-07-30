@@ -20,6 +20,7 @@ from api.api_models import (
 from config.settings import InternalTaskModelStrength, get_settings
 from core.auth import authenticate_user
 from core.auth_models import AuthenticationResult
+from core.cache import RedisCache
 from core.llm_helpers import (
     COMPLIANCE_PROMPTS_DIR,
     get_internal_task_model,
@@ -30,6 +31,9 @@ from core.logtools import getLogger
 
 logger = getLogger()
 router = APIRouter(prefix="/v1")
+
+_COMPLIANCE_CACHE_TTL_SECONDS = 30 * 60
+_COMPLIANCE_CACHE_KEY_PREFIX = "mucgpt:assistant-compliance:v1:"
 
 ComplianceVerdict = Literal["passed", "high_risk_detected"]
 
@@ -45,6 +49,28 @@ _CATEGORY_PROMPTS: tuple[tuple[ComplianceCategoryId, str], ...] = (
     ("hr_employment", "prompt_for_compliance_hr_employment.md"),
     ("education", "prompt_for_compliance_education.md"),
 )
+
+
+def _build_compliance_cache_key(prompt_hash: str) -> str:
+    return f"{_COMPLIANCE_CACHE_KEY_PREFIX}{prompt_hash}"
+
+
+async def _cache_compliance_result(result: ComplianceCheckResponse) -> None:
+    if not result.prompt_hash:
+        return
+    try:
+        await RedisCache.init_redis()
+        await RedisCache.set_object(
+            _build_compliance_cache_key(result.prompt_hash),
+            result.model_dump(),
+            ttl=_COMPLIANCE_CACHE_TTL_SECONDS,
+        )
+    except Exception:
+        logger.warning(
+            "Failed to cache compliance result for prompt hash %s",
+            result.prompt_hash,
+            exc_info=True,
+        )
 
 
 @observe(
@@ -122,11 +148,13 @@ async def check_assistant_compliance(
         )
     except Exception as exc:
         logger.exception("Assistant compliance check failed: %s", type(exc).__name__)
-        return ComplianceCheckResponse(
+        response = ComplianceCheckResponse(
             overall_status=COMPLIANCE_STATUS_ERROR,
             results=[],
             prompt_hash=prompt_hash,
         )
+        await _cache_compliance_result(response)
+        return response
 
     overall_status: ComplianceStatus = (
         COMPLIANCE_STATUS_HIGH_RISK_DETECTED
@@ -135,8 +163,10 @@ async def check_assistant_compliance(
         )
         else COMPLIANCE_STATUS_PASSED
     )
-    return ComplianceCheckResponse(
+    response = ComplianceCheckResponse(
         overall_status=overall_status,
         results=results,
         prompt_hash=prompt_hash,
     )
+    await _cache_compliance_result(response)
+    return response

@@ -42,8 +42,8 @@ export const ReviewSection = ({
     const hasHighRisk = checkResult?.overall_status === "high_risk_detected";
     const passed = checkResult?.overall_status === "passed";
     const showError = checkResult?.overall_status === "error";
-    // The confirmation becomes available once a check has run for the current prompt. On error we intentionally do
-    // not block the user, since the check failing is rare and should not prevent saving.
+    // The confirmation becomes available once a successful check has run for the current prompt.
+    // On error, saving remains blocked until a successful re-check is available.
     const checkCompleted = checkResult !== null && !checkOutdated;
     // Only a usable (non-error) result for the current prompt guides the user to the confirmation.
     const hasUsableResult = (passed || hasHighRisk) && !checkOutdated;

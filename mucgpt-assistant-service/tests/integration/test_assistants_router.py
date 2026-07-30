@@ -1,3 +1,4 @@
+import hashlib
 import importlib
 import uuid
 
@@ -146,7 +147,7 @@ def test_create_assistant_success(sample_assistant_create, test_client):
 def test_compliance_check_result_is_versioned_and_cleared_for_changed_prompt(
     test_client,
 ):
-    """The optional screening result follows its saved prompt, not future versions."""
+    """Unverified or missing screening results block create/update operations."""
     result = ComplianceCheckResult(
         overall_status="passed",
         results=[
@@ -167,30 +168,57 @@ def test_compliance_check_result_is_versioned_and_cleared_for_changed_prompt(
         headers=headers,
     )
 
-    assert create_response.status_code == 200
-    created = AssistantResponse.model_validate(create_response.json())
-    assert created.latest_version.compliance_check_result == result
+    assert create_response.status_code == 422
 
-    update_response = test_client.post(
-        f"assistant/{created.id}/update",
-        json=AssistantUpdate(
-            version=created.latest_version.version,
-            system_prompt="Changed system prompt.",
+
+@pytest.mark.integration
+def test_create_assistant_with_verified_compliance_result_persists_payload(
+    test_client, monkeypatch: pytest.MonkeyPatch
+):
+    """Create succeeds when compliance payload matches authoritative cached result."""
+    system_prompt = "Initial system prompt."
+    prompt_hash = hashlib.sha256(system_prompt.encode("utf-8")).hexdigest()
+    result = ComplianceCheckResult(
+        overall_status="passed",
+        results=[
+            {
+                "category": "education",
+                "status": "passed",
+            }
+        ],
+        prompt_hash=prompt_hash,
+    )
+
+    async def _noop_init_redis() -> None:
+        return None
+
+    async def _get_object(_key: str):
+        return result.model_dump()
+
+    monkeypatch.setattr(
+        assistants_router_module.RedisCache,
+        "init_redis",
+        _noop_init_redis,
+    )
+    monkeypatch.setattr(
+        assistants_router_module.RedisCache,
+        "get_object",
+        _get_object,
+    )
+
+    create_response = test_client.post(
+        "assistant/create",
+        json=AssistantCreate(
+            name="Compliance verified assistant",
+            system_prompt=system_prompt,
+            compliance_check_result=result,
         ).model_dump(),
         headers=headers,
     )
 
-    assert update_response.status_code == 200
-    updated = AssistantResponse.model_validate(update_response.json())
-    assert updated.latest_version.compliance_check_result is None
-
-    historical_response = test_client.get(
-        f"assistant/{created.id}/version/{created.latest_version.version}",
-        headers=headers,
-    )
-    assert historical_response.status_code == 200
-    historical = AssistantVersionResponse.model_validate(historical_response.json())
-    assert historical.compliance_check_result == result
+    assert create_response.status_code == 200
+    created = AssistantResponse.model_validate(create_response.json())
+    assert created.latest_version.compliance_check_result == result
 
 
 @pytest.mark.integration

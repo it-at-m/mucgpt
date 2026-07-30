@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import hashlib
+
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -10,9 +12,11 @@ from api.api_models import (
     AssistantResponse,
     AssistantUpdate,
     AssistantVersionResponse,
+    ComplianceCheckResult,
 )
 from api.exceptions import (
     AssistantNotFoundException,
+    ComplianceVerificationFailedException,
     DeleteFailedException,
     NotAllowedToAccessException,
     NotOwnerException,
@@ -23,6 +27,7 @@ from api.exceptions import (
 from config.settings import get_settings
 from core.auth import authenticate_user
 from core.auth_models import AuthenticationResult
+from core.cache import RedisCache
 from core.logtools import getLogger
 from core.owner_enrichment import (
     build_owner_details,
@@ -36,6 +41,95 @@ from database.session import get_db_session
 logger = getLogger("assistants_router")
 
 router = APIRouter()
+
+_COMPLIANCE_CACHE_KEY_PREFIX = "mucgpt:assistant-compliance:v1:"
+
+
+def _build_compliance_cache_key(prompt_hash: str) -> str:
+    return f"{_COMPLIANCE_CACHE_KEY_PREFIX}{prompt_hash}"
+
+
+def _hash_prompt(system_prompt: str) -> str:
+    return hashlib.sha256(system_prompt.encode("utf-8")).hexdigest()
+
+
+async def _get_verified_compliance_result(
+    *,
+    system_prompt: str,
+    candidate: ComplianceCheckResult | None,
+) -> dict[str, object] | None:
+    if candidate is None:
+        return None
+
+    expected_prompt_hash = _hash_prompt(system_prompt)
+    if candidate.prompt_hash != expected_prompt_hash:
+        logger.warning(
+            "Discarding compliance result due to prompt hash mismatch. expected=%s provided=%s",
+            expected_prompt_hash,
+            candidate.prompt_hash,
+        )
+        return None
+
+    try:
+        await RedisCache.init_redis()
+        cached = await RedisCache.get_object(
+            _build_compliance_cache_key(expected_prompt_hash)
+        )
+    except Exception:
+        logger.warning(
+            "Compliance cache unavailable; discarding provided compliance result",
+            exc_info=True,
+        )
+        return None
+
+    if not isinstance(cached, dict):
+        logger.warning(
+            "Discarding compliance result because no authoritative cached result exists for prompt hash %s",
+            expected_prompt_hash,
+        )
+        return None
+
+    try:
+        authoritative = ComplianceCheckResult.model_validate(cached)
+    except Exception:
+        logger.warning(
+            "Discarding malformed compliance cache entry for prompt hash %s",
+            expected_prompt_hash,
+            exc_info=True,
+        )
+        return None
+
+    if authoritative.prompt_hash != expected_prompt_hash:
+        logger.warning(
+            "Discarding compliance result due to inconsistent cached prompt hash for %s",
+            expected_prompt_hash,
+        )
+        return None
+
+    if candidate != authoritative:
+        logger.warning(
+            "Discarding compliance result because provided payload does not match authoritative cache for prompt hash %s",
+            expected_prompt_hash,
+        )
+        return None
+
+    return authoritative.model_dump()
+
+
+async def _require_verified_compliance_result(
+    *,
+    system_prompt: str,
+    candidate: ComplianceCheckResult | None,
+) -> dict[str, object]:
+    verified = await _get_verified_compliance_result(
+        system_prompt=system_prompt,
+        candidate=candidate,
+    )
+    if verified is None:
+        raise ComplianceVerificationFailedException(
+            "Compliance result is required and could not be verified for the current system prompt"
+        )
+    return verified
 
 
 @router.post(
@@ -77,6 +171,11 @@ async def createAssistant(
             is_visible=is_visible,
         )
         assistant_id: str = str(new_assistant.id)
+        verified_compliance_result = await _require_verified_compliance_result(
+            system_prompt=assistant.system_prompt,
+            candidate=assistant.compliance_check_result,
+        )
+
         # Create the first version with the actual assistant data
         first_version = await assistant_repo.create_assistant_version(
             new_assistant,
@@ -88,11 +187,7 @@ async def createAssistant(
             examples=assistant.examples or [],
             quick_prompts=assistant.quick_prompts or [],
             tags=assistant.tags or [],
-            compliance_check_result=(
-                assistant.compliance_check_result.model_dump()
-                if assistant.compliance_check_result
-                else None
-            ),
+            compliance_check_result=verified_compliance_result,
         )  # Add tools if specified
         if assistant.tools:
             for tool_data in assistant.tools:
@@ -280,6 +375,42 @@ async def updateAssistant(
         raise VersionConflictException(
             assistant_update.version, latest_version.version
         )  # Handle global properties using the repository update method
+
+    effective_system_prompt = (
+        assistant_update.system_prompt
+        if assistant_update.system_prompt is not None
+        else latest_version.system_prompt
+    )
+
+    existing_compliance_result: ComplianceCheckResult | None = None
+    if latest_version.compliance_check_result:
+        try:
+            existing_compliance_result = ComplianceCheckResult.model_validate(
+                latest_version.compliance_check_result
+            )
+        except Exception:
+            logger.warning(
+                "Discarding malformed persisted compliance result for assistant %s version %s",
+                id,
+                latest_version.version,
+                exc_info=True,
+            )
+
+    if assistant_update.compliance_check_result is not None:
+        compliance_check_result = await _require_verified_compliance_result(
+            system_prompt=effective_system_prompt,
+            candidate=assistant_update.compliance_check_result,
+        )
+    elif assistant_update.system_prompt is not None:
+        raise ComplianceVerificationFailedException(
+            "A verified compliance result is required when changing the system prompt"
+        )
+    else:
+        compliance_check_result = await _require_verified_compliance_result(
+            system_prompt=latest_version.system_prompt,
+            candidate=existing_compliance_result,
+        )
+
     await assistant_repo.update(
         assistant_id=id,
         hierarchical_access=assistant_update.hierarchical_access,
@@ -321,18 +452,7 @@ async def updateAssistant(
         tags=assistant_update.tags
         if assistant_update.tags is not None
         else latest_version.tags,
-        compliance_check_result=(
-            assistant_update.compliance_check_result.model_dump()
-            if assistant_update.compliance_check_result
-            else (
-                None
-                if (
-                    assistant_update.system_prompt is not None
-                    and assistant_update.system_prompt != latest_version.system_prompt
-                )
-                else latest_version.compliance_check_result
-            )
-        ),
+        compliance_check_result=compliance_check_result,
     )  # Handle tools for the new version
     if assistant_update.tools is not None:
         for tool_data in assistant_update.tools:

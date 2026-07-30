@@ -20,6 +20,9 @@ UNAUTHORIZED_USER_REDIRECT_URL: "https://it-services.muenchen.de/sp?id=sc_cat_it
 LOG_CONFIG: "logconf.yaml"
 # Optional: if true, assistant read endpoints repopulate missing owner cache fields from LDAP
 OWNER_CACHE_REFRESH_ON_READ: false
+# Optional: require server-side compliance verification before assistant create/update is accepted
+# Set to false for local setups without Redis-backed compliance cache.
+COMPLIANCE_REQUIRE_VERIFICATION: true
 
 # SSO Settings (Keycloak)
 # Used by both core and assistant services for authentication

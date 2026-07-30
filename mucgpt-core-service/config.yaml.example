@@ -31,6 +31,12 @@ AD2IMAGE_URL: "http://localhost:8084"  # Base URL of the ad2image service
 # Backend settings
 UNAUTHORIZED_USER_REDIRECT_URL: ""
 
+# Compliance cache settings
+# If enabled, compliance check results are cached in Redis and can be verified by the assistant service.
+COMPLIANCE_CACHE_ENABLED: true
+# Time-to-live for compliance cache entries in seconds (default: 30 minutes)
+COMPLIANCE_CACHE_TTL_SECONDS: 1800
+
 # Models configuration
 # Instead of base64 encoded JSON in environment variables, you can configure models here
 MODELS:

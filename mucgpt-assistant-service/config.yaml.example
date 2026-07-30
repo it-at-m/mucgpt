@@ -24,6 +24,9 @@ UNAUTHORIZED_USER_REDIRECT_URL: ""
 LOG_CONFIG: "app/logconf.yaml"
 # Optional: if true, assistant read endpoints repopulate missing owner cache fields from LDAP
 OWNER_CACHE_REFRESH_ON_READ: false
+# Optional: require server-side compliance verification before assistant create/update is accepted
+# Set to false for local setups without Redis-backed compliance cache.
+COMPLIANCE_REQUIRE_VERIFICATION: true
 
 # SSO Settings (nested under SSO key)
 SSO:

@@ -146,8 +146,15 @@ def test_create_assistant_success(sample_assistant_create, test_client):
 @pytest.mark.integration
 def test_compliance_check_result_is_versioned_and_cleared_for_changed_prompt(
     test_client,
+    monkeypatch: pytest.MonkeyPatch,
 ):
     """Unverified or missing screening results block create/update operations."""
+    monkeypatch.setattr(
+        assistants_router_module.get_settings(),
+        "COMPLIANCE_REQUIRE_VERIFICATION",
+        True,
+    )
+
     result = ComplianceCheckResult(
         overall_status="passed",
         results=[
@@ -176,6 +183,12 @@ def test_create_assistant_with_verified_compliance_result_persists_payload(
     test_client, monkeypatch: pytest.MonkeyPatch
 ):
     """Create succeeds when compliance payload matches authoritative cached result."""
+    monkeypatch.setattr(
+        assistants_router_module.get_settings(),
+        "COMPLIANCE_REQUIRE_VERIFICATION",
+        True,
+    )
+
     system_prompt = "Initial system prompt."
     prompt_hash = hashlib.sha256(system_prompt.encode("utf-8")).hexdigest()
     result = ComplianceCheckResult(

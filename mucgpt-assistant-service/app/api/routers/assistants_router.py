@@ -121,6 +121,12 @@ async def _require_verified_compliance_result(
     system_prompt: str,
     candidate: ComplianceCheckResult | None,
 ) -> dict[str, object]:
+    settings = get_settings()
+    if not settings.COMPLIANCE_REQUIRE_VERIFICATION:
+        if candidate is None:
+            return {}
+        return candidate.model_dump()
+
     verified = await _get_verified_compliance_result(
         system_prompt=system_prompt,
         candidate=candidate,
@@ -175,6 +181,8 @@ async def createAssistant(
             system_prompt=assistant.system_prompt,
             candidate=assistant.compliance_check_result,
         )
+        if not verified_compliance_result:
+            verified_compliance_result = None
 
         # Create the first version with the actual assistant data
         first_version = await assistant_repo.create_assistant_version(
@@ -402,14 +410,19 @@ async def updateAssistant(
             candidate=assistant_update.compliance_check_result,
         )
     elif assistant_update.system_prompt is not None:
-        raise ComplianceVerificationFailedException(
-            "A verified compliance result is required when changing the system prompt"
-        )
+        settings = get_settings()
+        if settings.COMPLIANCE_REQUIRE_VERIFICATION:
+            raise ComplianceVerificationFailedException(
+                "A verified compliance result is required when changing the system prompt"
+            )
+        compliance_check_result = None
     else:
         compliance_check_result = await _require_verified_compliance_result(
             system_prompt=latest_version.system_prompt,
             candidate=existing_compliance_result,
         )
+        if not compliance_check_result:
+            compliance_check_result = latest_version.compliance_check_result
 
     await assistant_repo.update(
         assistant_id=id,

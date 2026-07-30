@@ -1,0 +1,8 @@
+[project]
+name = "mucgpt-mcpdoc-server"
+version = "0.1.0"
+requires-python = ">=3.12"
+dependencies = [
+    "mcpdoc==0.0.10",
+    "mcp==1.29.0",
+]

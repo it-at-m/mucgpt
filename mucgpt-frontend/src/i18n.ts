@@ -816,10 +816,10 @@ i18n
                         prompt_no_upload: "Ask a question",
                         answer_loading: "Generating answer",
                         follow_up_actions: {
-                            shorter: "➖ less detail",
-                            longer: "➕  more detail",
-                            formal: "👔 more formal",
-                            informal: "👕 more informal",
+                            shorter: "Less detail",
+                            longer: "More detail",
+                            formal: "More formal",
+                            informal: "More informal",
                             shorter_prompt:
                                 "Rewrite your last message into a new, shorter text that conveys the original content in a more concise and impactful way. This text should include the most important information and improve the reader's understanding.",
                             longer_prompt:
@@ -1565,10 +1565,10 @@ i18n
                         prompt_no_upload: "Stell a Froog",
                         answer_loading: "I bearbeit grad de Frog",
                         follow_up_actions: {
-                            shorter: "➖ Kürzer",
-                            longer: "➕ Länger",
-                            formal: "👔 Förmlicher",
-                            informal: "👕 Informeller",
+                            shorter: "Kürzer",
+                            longer: "Länger",
+                            formal: "Förmlicher",
+                            informal: "Informeller",
                             shorter_prompt:
                                 "Formulier dei letzte Nachricht zu am neuen kürzeren Text, der an ursprünglichen Inhalt in a kürzere und prägnantere Form wiedagibt. Der Text soidad die wichtigsten Informationen enthalten und as Verständnis des Lesers verbessern.",
                             longer_prompt:
@@ -2307,10 +2307,10 @@ i18n
                         prompt_no_upload: "Posez une question",
                         answer_loading: "Créer une réponse",
                         follow_up_actions: {
-                            shorter: "➖ Plus court",
-                            longer: "➕ Plus long",
-                            formal: "👔 Plus formel",
-                            informal: "👕 Plus informel",
+                            shorter: "Plus court",
+                            longer: "Plus long",
+                            formal: "Plus formel",
+                            informal: "Plus informel",
                             shorter_prompt:
                                 "Formulez votre dernier message en un nouveau texte plus court qui reflète le contenu original sous une forme plus courte et plus concise. Ce texte doit contenir les informations les plus importantes et améliorer la compréhension du lecteur.",
                             longer_prompt:
@@ -3044,10 +3044,10 @@ i18n
                         prompt_no_upload: "Задайте питання",
                         answer_loading: "Створення відповіді",
                         follow_up_actions: {
-                            shorter: "➖ Коротше",
-                            longer: "➕ Довше",
-                            formal: "👔 Офіційніше",
-                            informal: "👕 Неофіційніше",
+                            shorter: "Коротше",
+                            longer: "Довше",
+                            formal: "Офіційніше",
+                            informal: "Неофіційніше",
                             shorter_prompt:
                                 "Сформулюйте ваше останнє повідомлення в новий коротший текст, який відображає оригінальний зміст у скороченому та стислому вигляді. Цей текст має містити найважливішу інформацію та покращити розуміння читача.",
                             longer_prompt:

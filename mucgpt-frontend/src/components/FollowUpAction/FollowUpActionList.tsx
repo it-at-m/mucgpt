@@ -18,7 +18,6 @@ export const FollowUpActionList = ({ onSend }: Props) => {
                     shape="circular"
                     appearance="secondary"
                     className={styles.item}
-                    title={followUpAction.label}
                 >
                     <span className={styles.label}>{followUpAction.label}</span>
                 </Button>

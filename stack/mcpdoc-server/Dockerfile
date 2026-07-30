@@ -42,7 +42,7 @@ ENV UV_TOOL_HOME=/opt/uv \
     PATH="/home/mcpuser/.local/bin:${PATH}"
 
 # Install mcpdoc as non-root user
-RUN uv tool install --force mcpdoc && \
+RUN uv tool install --force mcpdoc --with "mcp>=1.28,<2" && \
     uv tool list
 
 # Remove proxy variables from runtime environment

@@ -14,7 +14,7 @@ interface Props {
     input: ReactNode;
     showStarterPrompts: boolean;
     header: string;
-    welcomeMessage: string;
+    welcomeMessage?: string;
     header_as_markdown: boolean;
     messages_description: string;
     onHeaderClick?: () => void;
@@ -62,7 +62,10 @@ export const ChatLayout = ({
 
     useEffect(() => {
         const element = chatInputRef.current;
-        if (!element || typeof window === "undefined") return;
+        if (!element || typeof window === "undefined") {
+            setChatInputHeight(0);
+            return;
+        }
 
         const updateInputHeight = () => {
             const nextHeight = Math.ceil(element.getBoundingClientRect().height);
@@ -83,7 +86,7 @@ export const ChatLayout = ({
             window.removeEventListener("resize", updateInputHeight);
             observer.disconnect();
         };
-    }, []);
+    }, [showStarterPrompts]);
 
     const updateScrollToBottomVisibility = useCallback(() => {
         const element = chatMessagesRef.current;
@@ -192,8 +195,8 @@ export const ChatLayout = ({
                 <div className={styles.chatContainer}>
                     {showStarterPrompts ? (
                         <div className={styles.chatEmptyState} tabIndex={0}>
-                            <div className={styles.welcomeMessageContainer}>
-                                {header_as_markdown ? (
+                            {welcomeMessage &&
+                                (header_as_markdown ? (
                                     <div className={styles.chatEmptyStateSubtitleMarkdown}>
                                         <div className={styles.answerText}>
                                             <Markdown remarkPlugins={[remarkGfm]}>{welcomeMessage}</Markdown>
@@ -201,8 +204,8 @@ export const ChatLayout = ({
                                     </div>
                                 ) : (
                                     <h2 className={styles.chatEmptyStateSubtitle}>{welcomeMessage}</h2>
-                                )}
-                            </div>
+                                ))}
+                            <div className={styles.chatEmptyStateInput}>{input}</div>
                             {starterPrompts}
                         </div>
                     ) : (
@@ -235,9 +238,11 @@ export const ChatLayout = ({
                             />
                         </div>
                     )}
-                    <div className={styles.chatInput} ref={chatInputRef}>
-                        {input}
-                    </div>
+                    {!showStarterPrompts && (
+                        <div className={styles.chatInput} ref={chatInputRef}>
+                            {input}
+                        </div>
+                    )}
                 </div>
             </div>
         </div>

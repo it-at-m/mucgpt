@@ -821,7 +821,6 @@ const Chat = () => {
                     input={inputComponent}
                     showStarterPrompts={!lastQuestionRef.current}
                     header={activeChatName ?? ""}
-                    welcomeMessage={t("chat.header")}
                     header_as_markdown={false}
                     messages_description={t("common.messages")}
                     llmOptions={availableLLMs}

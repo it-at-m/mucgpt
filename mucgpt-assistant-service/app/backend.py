@@ -101,6 +101,9 @@ async def add_process_time_header(request: Request, call_next):
 
 @api_app.exception_handler(Exception)
 async def handle_general_exception(request: Request, exc: Exception):
+    logger.exception(
+        "Unhandled exception during %s %s", request.method, request.url.path
+    )
     return JSONResponse(
         status_code=500,
         content={"detail": "An internal server error occurred."},

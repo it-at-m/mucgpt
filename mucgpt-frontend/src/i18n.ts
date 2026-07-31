@@ -92,6 +92,7 @@ i18n
                         environment_label: "Umgebung: {{env}}",
                         footer_credit: "Made with ❤️ & ☕ by",
                         user_settings: "Benutzereinstellungen",
+                        my_profile: "Mein Profil",
                         main_content: "Hauptinhalt",
                         footer_info: "Fußzeileninformationen",
                         settings: "Einstellungen",
@@ -434,6 +435,14 @@ i18n
                             import_invalid_format: "Ungültiges Dateiformat. Die Datei muss einen Titel und System-Prompt enthalten.",
                             import_save_failed: "Fehler beim Speichern des importierten Assistenten"
                         },
+                        assistant_preview: {
+                            title: "Vorschau-Chat",
+                            welcome: "Teste deinen Assistenten hier. Diese Unterhaltung wird nicht gespeichert.",
+                            reset: "Chat leeren",
+                            resize: "Vorschau-Breite anpassen",
+                            hide: "Vorschau ausblenden",
+                            show: "Vorschau anzeigen"
+                        },
                         assistant_editor: {
                             // Page titles (differ between create and edit)
                             create_title: "Assistent erstellen",
@@ -507,11 +516,10 @@ i18n
                             creativity_medium_description: "Verlässliche Antworten mit etwas Spielraum für bessere Formulierungen und Struktur.",
                             creativity_high_description:
                                 "Mehr Vorschläge, Varianten und alternative Formulierungen, hält sich aber weniger strikt an Anweisungen.",
-                            default_model: "Standard-Modell",
-                            default_model_description:
-                                "Dieses Modell ist vorausgewählt. Nutzer können beim Start einer Unterhaltung weiterhin ein anderes verfügbares Modell auswählen.",
-                            default_model_placeholder: "Wählen Sie ein Standard-Modell...",
-                            no_default_model: "Kein Standard-Modell (Benutzer wählt)",
+                            default_model: "Festgelegtes Modell",
+                            default_model_description: "Dieses Modell wird für alle Unterhaltungen verwendet. Nutzer können kein anderes Modell auswählen.",
+                            default_model_placeholder: "Wählen Sie ein Modell aus...",
+                            no_default_model: "Kein festes Modell (Nutzer wählt)",
                             departments: "Abteilungen",
                             departments_info:
                                 "Dies sind die Abteilungen, die Zugriff auf den Assistenten haben. Alle Abteilungen in der Hierarchie unter den ausgewählten Abteilungen haben ebenfalls Zugriff.",
@@ -851,6 +859,7 @@ i18n
                         environment_label: "Environment: {{env}}",
                         footer_credit: "Made with ❤️ & ☕ by",
                         user_settings: "User settings",
+                        my_profile: "My Profile",
                         main_content: "Main content",
                         footer_info: "Footer information",
                         settings: "Settings",
@@ -1193,6 +1202,14 @@ i18n
                             import_invalid_format: "Invalid file format. The file must contain a title and system prompt.",
                             import_save_failed: "Error saving imported assistant"
                         },
+                        assistant_preview: {
+                            title: "Preview Chat",
+                            welcome: "Test your assistant here. This conversation is not saved.",
+                            reset: "Clear chat",
+                            resize: "Adjust preview width",
+                            hide: "Hide preview",
+                            show: "Show preview"
+                        },
                         assistant_editor: {
                             // Page titles (differ between create and edit)
                             create_title: "Create Assistant",
@@ -1263,11 +1280,10 @@ i18n
                             creativity_medium_description: "Balanced: A good balance between reliable answers and flexible wording.",
                             creativity_high_description:
                                 "Creative: More room for ideas, alternative wording, and less obvious suggestions, but may follow instructions less strictly.",
-                            default_model: "Default Model",
-                            default_model_description:
-                                "This model is preselected. Users can still choose another available model when starting a conversation.",
-                            default_model_placeholder: "Select a default model...",
-                            no_default_model: "No default model (user chooses)",
+                            default_model: "Fixed Model",
+                            default_model_description: "This model is used for all conversations. Users cannot choose a different model.",
+                            default_model_placeholder: "Select a model...",
+                            no_default_model: "No fixed model (default)",
                             departments: "Departments",
                             departments_info:
                                 "These are the departments that have access to the assistant. All departments in the hierarchy below the selected departments also have access.",
@@ -1598,6 +1614,7 @@ i18n
                         environment_label: "Umgebung: {{env}}",
                         footer_credit: "Made with ❤️ & ☕ by",
                         user_settings: "Nutzereinstellungen",
+                        my_profile: "Mei Profil",
                         main_content: "Hauptinhalt",
                         footer_info: "Fußzeilen-Info",
                         settings: "Konfiguration",
@@ -1935,6 +1952,14 @@ i18n
                             import_invalid_format: "Ungültigs Dateiformat. De Datei muass an Titel und System-Prompt enthoidn.",
                             import_save_failed: "Fehler beim Speichern vom importierten Assistentn"
                         },
+                        assistant_preview: {
+                            title: "Vorschau-Chat",
+                            welcome: "Probier deinen Assistentn do aus. De Unterhaltung wead ned gspeichert.",
+                            reset: "Chat leeren",
+                            resize: "Vorschau-Breitn oschtoin",
+                            hide: "Vorschau ausblendn",
+                            show: "Vorschau zoagn"
+                        },
                         assistant_editor: {
                             // Page titles (differ between create and edit)
                             create_title: "An neia Assistentn o'legn",
@@ -2006,11 +2031,10 @@ i18n
                             creativity_medium_description: "Ausgewogen: Gute Balance aus verlässlichen Antworten und flexibler Formulierung.",
                             creativity_high_description:
                                 "Kreativ: Mehr Spielraum für Ideen, alternative Formulierungen und ungewöhnlichere Vorschläge, hält sich aber weniger strikt an Anweisungen.",
-                            default_model: "Standard-Modell",
-                            default_model_description:
-                                "Dieses Modell ist vorausgewählt. Nutzer können beim Start einer Unterhaltung weiterhin ein anderes verfügbares Modell auswählen.",
-                            default_model_placeholder: "Such da a Standard-Modell aus...",
-                            no_default_model: "Koan Standard-Modell (da Nutzer entscheidet)",
+                            default_model: "Festglegts Modell",
+                            default_model_description: "Dieses Modell wird für alle Unterhaltungen verwendet. Nutzer können kein anderes Modell auswählen.",
+                            default_model_placeholder: "Such da a Modell aus...",
+                            no_default_model: "Koa fixes Modell (da Nutzer entscheidet)",
                             departments: "Abteilungen",
                             departments_info:
                                 "Des san de Abteilungen, de Zugriff auf den Assistenten ham. Olle Abteilungen in da Hierarchie unter de ausgsuachten Abteilungen ham a Zugriff.",
@@ -2348,6 +2372,7 @@ i18n
                         home_link: "Retour à la page d’accueil",
                         environment_label: "Environnement : {{env}}",
                         footer_credit: "Made with ❤️ & ☕ by",
+                        my_profile: "Mon profil",
                         user_settings: "Paramètres utilisateur",
                         main_content: "Contenu principal",
                         footer_info: "Informations du pied de page",
@@ -2681,6 +2706,14 @@ i18n
                             import_invalid_format: "Format de fichier invalide. Le fichier doit contenir un titre et un prompt système.",
                             import_save_failed: "Erreur lors de l'enregistrement de l'assistant importé"
                         },
+                        assistant_preview: {
+                            title: "Chat d'aperçu",
+                            welcome: "Testez votre assistant ici. Cette conversation n'est pas enregistrée.",
+                            reset: "Vider le chat",
+                            resize: "Ajuster la largeur de l'aperçu",
+                            hide: "Masquer l'aperçu",
+                            show: "Afficher l'aperçu"
+                        },
                         assistant_editor: {
                             // Page titles (differ between create and edit)
                             create_title: "Créer un assistant",
@@ -2753,11 +2786,11 @@ i18n
                             creativity_medium_description: "Équilibrée : bon équilibre entre réponses fiables et formulation flexible.",
                             creativity_high_description:
                                 "Créative : plus de marge pour les idées, les formulations alternatives et les suggestions moins évidentes, mais peut suivre les consignes moins strictement.",
-                            default_model: "Modèle par défaut",
+                            default_model: "Modèle imposé",
                             default_model_description:
-                                "Ce modèle est présélectionné. Les utilisateurs peuvent toujours choisir un autre modèle disponible au début d’une conversation.",
-                            default_model_placeholder: "Sélectionnez un modèle par défaut...",
-                            no_default_model: "Aucun modèle par défaut (l'utilisateur choisit)",
+                                "Ce modèle est utilisé pour toutes les conversations. Les utilisateurs ne peuvent pas choisir un autre modèle.",
+                            default_model_placeholder: "Sélectionnez un modèle...",
+                            no_default_model: "Aucun modèle imposé (l'utilisateur choisit)",
                             departments: "Départements",
                             departments_info:
                                 "Ce sont les départements qui ont accès à l'assistant. Tous les départements situés en dessous dans la hiérarchie y ont également accès.",
@@ -3088,6 +3121,7 @@ i18n
                         environment_label: "Середовище: {{env}}",
                         footer_credit: "Made with ❤️ & ☕ by",
                         user_settings: "Налаштування користувача",
+                        my_profile: "Мій профіль",
                         main_content: "Основний контент",
                         footer_info: "Інформація у футері",
                         settings: "Налаштування",
@@ -3420,6 +3454,14 @@ i18n
                             import_invalid_format: "Недійсний формат файлу. Файл повинен містити назву та системний запит.",
                             import_save_failed: "Помилка збереження імпортованого асистента"
                         },
+                        assistant_preview: {
+                            title: "Чат попереднього перегляду",
+                            welcome: "Протестуйте свого асистента тут. Ця розмова не зберігається.",
+                            reset: "Очистити чат",
+                            resize: "Налаштувати ширину перегляду",
+                            hide: "Сховати перегляд",
+                            show: "Показати перегляд"
+                        },
                         assistant_editor: {
                             // Page titles (differ between create and edit)
                             create_title: "Створити асистента",
@@ -3490,11 +3532,10 @@ i18n
                             creativity_medium_description: "Збалансовано: хороший баланс між надійними відповідями та гнучким формулюванням.",
                             creativity_high_description:
                                 "Креативно: більше простору для ідей, альтернативних формулювань і менш очевидних пропозицій, але може менш строго дотримуватися інструкцій.",
-                            default_model: "Модель за замовчуванням",
-                            default_model_description:
-                                "Ця модель попередньо вибрана. Користувачі все ще можуть вибрати іншу доступну модель на початку розмови.",
-                            default_model_placeholder: "Оберіть модель за замовчуванням...",
-                            no_default_model: "Без моделі за замовчуванням (обирає користувач)",
+                            default_model: "Фіксована модель",
+                            default_model_description: "Ця модель використовується для всіх розмов. Користувачі не можуть вибрати іншу модель.",
+                            default_model_placeholder: "Оберіть модель...",
+                            no_default_model: "Без фіксованої моделі (обирає користувач)",
                             departments: "Підрозділи",
                             departments_info: "Це підрозділи, які мають доступ до асистента. Усі підрозділи нижче у вибраній ієрархії також матимуть доступ.",
 

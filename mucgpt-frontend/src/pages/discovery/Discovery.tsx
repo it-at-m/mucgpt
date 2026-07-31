@@ -421,12 +421,7 @@ const Discovery = () => {
             title={assistant.title}
             description={assistant.description}
             badges={getAssistantBadges(assistant)}
-            metadataStartNode={
-                <OwnerMetadataLink
-                    owner={getPrimaryOwnerDetails("latest_version" in assistant.rawData ? assistant.rawData : undefined)}
-                    fallbackLabel={getMetadataFallbackLabel(assistant)}
-                />
-            }
+            metadataStartNode={<OwnerMetadataLink owner={getPrimaryOwnerDetails(assistant.rawData)} fallbackLabel={getMetadataFallbackLabel(assistant)} />}
             subscriberCount={assistant.subscriptions}
             isPrivate={isAssistantPrivate(assistant)}
             privateLabel={t("components.community_assistants.private_label", "Privat")}

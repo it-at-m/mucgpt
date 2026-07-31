@@ -1,14 +1,15 @@
-import type { FormEvent, ReactNode } from "react";
-import { useCallback, useContext, useEffect, useMemo, useState } from "react";
+import type { CSSProperties, FormEvent, ReactNode } from "react";
+import { useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { Accordion, AccordionHeader, AccordionItem, AccordionPanel, Button, Field, Text, Textarea, TextareaOnChangeData } from "@fluentui/react-components";
 import {
     Bot24Regular,
     Chat24Regular,
-    Dismiss24Regular,
     DocumentText24Regular,
     Info24Regular,
+    PanelRightContract24Regular,
+    PanelRightExpand20Regular,
     Save24Regular,
     Sparkle24Regular,
     Shield24Regular,
@@ -19,7 +20,7 @@ import styles from "./AssistantEditorPage.module.css";
 import { AssistantCreateFlow } from "./AssistantCreateFlow";
 import { Assistant, ToolBase, ToolInfo } from "../../../api";
 import { createCommunityAssistantApi } from "../../../api/assistant-client";
-import { createAssistantApi } from "../../../api/core-client";
+import { generateAssistantDraftApi } from "../../../api/core-client";
 import { useGlobalToastContext } from "../../GlobalToastHandler/GlobalToastContext";
 import { StarterPromptModel } from "../../StarterPrompt";
 import { LLMContext } from "../../LLMSelector/LLMContextProvider";
@@ -31,18 +32,11 @@ import { ToolsSection, ConversationOptionsSection, AdvancedSettingsSection, Visi
 import { AssistantStrategy } from "../../../pages/assistant/AssistantStrategy";
 import { CREATIVITY_LOW } from "../../../constants";
 import { EdelweissSpinner } from "../../EdelweissSpinner";
+import { AssistantPreviewChat } from "../AssistantPreviewChat/AssistantPreviewChat";
+import { useResizablePreview } from "./useResizablePreview";
 
 type CreateView = "mode_select" | "ai_input" | "settings";
 type DiscardTarget = "back" | "discovery";
-type GeneratedAssistantResponse = {
-    title?: string;
-    description?: string;
-    system_prompt?: string;
-    detail?: string;
-    error?: string;
-    message?: string;
-};
-
 interface AssistantEditorPageCreateProps {
     mode: "create";
 }
@@ -249,13 +243,6 @@ function SettingsForm(props: SettingsFormProps) {
     );
 }
 
-function getGenerationErrorMessage(result: GeneratedAssistantResponse, fallbackMessage: string) {
-    if (typeof result.detail === "string" && result.detail.trim() !== "") return result.detail;
-    if (typeof result.error === "string" && result.error.trim() !== "") return result.error;
-    if (typeof result.message === "string" && result.message.trim() !== "") return result.message;
-    return fallbackMessage;
-}
-
 export const AssistantEditorPage = (props: AssistantEditorPageProps) => {
     const { t } = useTranslation();
     const navigate = useNavigate();
@@ -313,30 +300,6 @@ export const AssistantEditorPage = (props: AssistantEditorPageProps) => {
             navigate(-1);
         }
     }, [isCreate, createState.hasChanges, editState.hasChanged, navigate]);
-
-    const handleHeaderClose = useCallback(() => {
-        if (!isCreate) {
-            handleCancel();
-            return;
-        }
-
-        if (createView === "mode_select") {
-            navigate("/discovery");
-            return;
-        }
-
-        if (createView === "ai_input") {
-            if (createState.hasChanges) {
-                setDiscardTarget("discovery");
-                setDiscardOpen(true);
-            } else {
-                navigate("/discovery");
-            }
-            return;
-        }
-
-        handleCancel();
-    }, [isCreate, createView, createState.hasChanges, navigate, handleCancel]);
 
     const handleDiscardConfirm = useCallback(() => {
         setDiscardOpen(false);
@@ -422,23 +385,15 @@ export const AssistantEditorPage = (props: AssistantEditorPageProps) => {
         setLoading(true);
 
         try {
-            const response = await createAssistantApi({ input: createState.input, model: LLM.llm_name });
-            const result = (await response.json().catch(() => ({}))) as GeneratedAssistantResponse;
+            // We treat the AI input as a first draft of the system prompt and
+            // use the assistant-draft endpoint to suggest title/description.
+            const draft = await generateAssistantDraftApi({ prompt_seed: createState.input });
 
-            if (!response.ok) {
-                throw new Error(getGenerationErrorMessage(result, t("components.assistant_editor.assistant_generation_failed")));
-            }
-
-            if (
-                typeof result.title !== "string" ||
-                result.title.trim() === "" ||
-                typeof result.system_prompt !== "string" ||
-                result.system_prompt.trim() === ""
-            ) {
+            if (!draft.title?.trim()) {
                 throw new Error(t("components.assistant_editor.assistant_generation_failed"));
             }
 
-            createState.setGeneratedAssistant(result.title, result.description ?? "", result.system_prompt);
+            createState.setGeneratedAssistant(draft.title, draft.description ?? "", draft.system_prompt || createState.input);
             setCreateView("settings");
             showSuccess(t("components.assistant_editor.assistant_generated_success"), t("components.assistant_editor.assistant_generated_message"));
         } catch (error) {
@@ -447,11 +402,15 @@ export const AssistantEditorPage = (props: AssistantEditorPageProps) => {
         } finally {
             setLoading(false);
         }
-    }, [createState, LLM.llm_name, loading, showError, showSuccess, t]);
+    }, [createState, loading, showError, showSuccess, t]);
+
+    const splitContainerRef = useRef<HTMLDivElement | null>(null);
+    const { previewPercent, isCollapsed, collapsePreview, expandPreview, onDividerMouseDown, onDividerKeyDown } = useResizablePreview(splitContainerRef);
 
     const pageTitle = isCreate ? t("components.assistant_editor.create_title") : t("components.assistant_editor.edit_title");
     const pageHelper = isCreate ? t("components.assistant_editor.page_helper_create") : t("components.assistant_editor.page_helper_edit");
     const settingsState = isCreate ? createState : editState;
+    const previewToolIds = useMemo(() => (settingsState.tools ?? []).map(tool => tool.id), [settingsState.tools]);
     const isSettingsValid = settingsState.title.trim() !== "" && settingsState.systemPrompt.trim() !== "";
     const showSettingsForm = !isCreate || createView === "settings";
     const showCreateModeSelector = isCreate && createView === "mode_select";
@@ -475,8 +434,8 @@ export const AssistantEditorPage = (props: AssistantEditorPageProps) => {
         });
     }, []);
 
-    return (
-        <div className={styles.page}>
+    const formPane = (
+        <>
             <div className={[styles.header, showCreateModeSelector ? styles.headerNoDivider : ""].filter(Boolean).join(" ")}>
                 <div className={styles.headerContent}>
                     {!showCreateModeSelector && (
@@ -489,16 +448,6 @@ export const AssistantEditorPage = (props: AssistantEditorPageProps) => {
                                 <p className={styles.headerDescription}>{pageHelper}</p>
                             </div>
                         </div>
-                    )}
-                    {isCreate && (
-                        <Button
-                            appearance="subtle"
-                            aria-label={t("common.close")}
-                            icon={<Dismiss24Regular />}
-                            onClick={handleHeaderClose}
-                            disabled={loading}
-                            className={styles.headerCloseButton}
-                        />
                     )}
                 </div>
             </div>
@@ -568,6 +517,53 @@ export const AssistantEditorPage = (props: AssistantEditorPageProps) => {
                         </div>
                     </div>
                 </div>
+            )}
+        </>
+    );
+
+    return (
+        <div className={styles.page}>
+            {showSettingsForm ? (
+                <div
+                    className={[styles.splitLayout, isCollapsed ? styles.splitLayoutCollapsed : ""].filter(Boolean).join(" ")}
+                    ref={splitContainerRef}
+                    style={{ "--previewPercent": `${previewPercent}%` } as CSSProperties}
+                >
+                    <div className={styles.formPane}>{formPane}</div>
+                    {isCollapsed ? (
+                        <Button appearance="primary" className={styles.previewExpandButton} icon={<PanelRightExpand20Regular />} onClick={expandPreview}>
+                            {t("components.assistant_preview.show")}
+                        </Button>
+                    ) : (
+                        <>
+                            <div
+                                className={styles.previewDivider}
+                                role="separator"
+                                aria-orientation="vertical"
+                                aria-label={t("components.assistant_preview.resize")}
+                                tabIndex={0}
+                                onMouseDown={onDividerMouseDown}
+                                onKeyDown={onDividerKeyDown}
+                            >
+                                <span className={styles.previewDividerHandle} aria-hidden="true" />
+                            </div>
+                            <div className={styles.previewPane}>
+                                <AssistantPreviewChat
+                                    systemPrompt={settingsState.systemPrompt}
+                                    creativity={settingsState.creativity}
+                                    selectedToolIds={previewToolIds}
+                                    starterPrompts={settingsState.starterPrompts ?? []}
+                                    followUpActions={settingsState.followUpActions ?? []}
+                                    defaultModel={settingsState.defaultModel}
+                                    onCollapse={collapsePreview}
+                                    collapseIcon={<PanelRightContract24Regular />}
+                                />
+                            </div>
+                        </>
+                    )}
+                </div>
+            ) : (
+                formPane
             )}
 
             <CloseConfirmationDialog

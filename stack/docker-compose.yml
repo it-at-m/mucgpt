@@ -282,7 +282,6 @@ services:
       - run
       - --from
       - mcpdoc
-      - mcpdoc
       - --urls
       - "KI in München:https://ki.muenchen.de/llms.txt"
       - --transport

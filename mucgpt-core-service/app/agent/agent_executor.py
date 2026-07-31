@@ -36,6 +36,61 @@ from core.logtools import getLogger
 logger = getLogger(name="mucgpt-core-agent")
 
 
+def _json_safe(value: Any) -> Any:
+    """Convert LangChain/Pydantic objects into Langfuse-serializable data."""
+    if value is None or isinstance(value, str | int | float | bool):
+        return value
+    if isinstance(value, dict):
+        return {str(key): _json_safe(val) for key, val in value.items()}
+    if isinstance(value, list | tuple):
+        return [_json_safe(item) for item in value]
+    if hasattr(value, "model_dump"):
+        return _json_safe(value.model_dump())
+    if hasattr(value, "dict"):
+        return _json_safe(value.dict())
+    return str(value)
+
+
+def _message_chunk_trace_event(
+    message_chunk: Any, metadata: dict[str, Any]
+) -> dict[str, Any]:
+    return {
+        "stream": "messages",
+        "node": metadata.get("langgraph_node"),
+        "run_name": metadata.get("run_name"),
+        "tags": metadata.get("tags"),
+        "internal": _is_internal_chunk(metadata),
+        "message_type": type(message_chunk).__name__,
+        "content": _json_safe(getattr(message_chunk, "content", None)),
+        "tool_calls": _json_safe(getattr(message_chunk, "tool_calls", None)),
+        "additional_kwargs": _json_safe(
+            getattr(message_chunk, "additional_kwargs", None)
+        ),
+        "response_metadata": _json_safe(
+            getattr(message_chunk, "response_metadata", None)
+        ),
+        "usage_metadata": _json_safe(getattr(message_chunk, "usage_metadata", None)),
+    }
+
+
+def _write_stream_trace_span(
+    input_messages: list[InputMessage], trace_events: list[dict[str, Any]]
+) -> None:
+    if not trace_events:
+        return
+    try:
+        with get_client().start_as_current_observation(
+            as_type="span",
+            name="agent-stream-events",
+        ) as span:
+            span.update(
+                input=[message.model_dump() for message in input_messages],
+                output={"events": trace_events},
+            )
+    except Exception:
+        logger.debug("Failed to write agent stream trace span", exc_info=True)
+
+
 def _is_internal_chunk(metadata: dict[str, Any]) -> bool:
     """Return True when a streamed chunk belongs to internal helper calls."""
     if metadata.get("stream_to_user") is False or metadata.get("internal") is True:
@@ -116,7 +171,7 @@ class MUCGPTAgentExecutor:
         enabled_tools: list[str] | None = None,
         assistant_id: str | None = None,
         data_sources: list[dict[str, Any]] | None = None,
-        conversation_id: str | None = None
+        conversation_id: str | None = None,
     ) -> AsyncGenerator[dict]:
         logger.info(
             "Chat streaming started with temperature %s, model %s",
@@ -140,7 +195,7 @@ class MUCGPTAgentExecutor:
         with propagate_attributes(
             user_id=hash_user_id(user_info.user_id if user_info else None),
             tags=tags,
-            session_id=conversation_id
+            session_id=conversation_id,
         ):
             # capture_input/output are disabled on @observe above to avoid
             # duplicating the full resent history; set a lightweight
@@ -149,6 +204,7 @@ class MUCGPTAgentExecutor:
                 input=messages[-1].content if messages else None
             )
             answer_chunks: list[str] = []
+            trace_events: list[dict[str, Any]] = []
             config = merge_configs(
                 self.base_config,
                 RunnableConfig(
@@ -174,7 +230,7 @@ class MUCGPTAgentExecutor:
             try:
                 async for item in self.agent.graph.astream(
                     {"messages": msgs},
-                    stream_mode=["messages", "custom"],
+                    stream_mode=["messages", "custom", "updates"],
                     config=config,
                 ):
                     # item is a tuple of (messages, (message_chunk, meta_data)) or a tool call chunk
@@ -185,7 +241,11 @@ class MUCGPTAgentExecutor:
                         continue
                     if isinstance(item, tuple) and item[0] == "messages":
                         _, (message_chunk, metadata) = item
-                        if isinstance(metadata, dict) and _is_internal_chunk(metadata):
+                        metadata = metadata if isinstance(metadata, dict) else {}
+                        trace_events.append(
+                            _message_chunk_trace_event(message_chunk, metadata)
+                        )
+                        if _is_internal_chunk(metadata):
                             continue
                         # only stream assistant model output and no tool chunks
                         if metadata.get("langgraph_node") in {
@@ -222,21 +282,47 @@ class MUCGPTAgentExecutor:
                     elif isinstance(item, tuple) and item[0] == "custom":
                         try:
                             chunk_obj = ToolStreamChunk.model_validate_json(item[1])
+                            trace_events.append(
+                                {
+                                    "stream": "custom",
+                                    "type": "ToolStreamChunk",
+                                    "content": _json_safe(chunk_obj),
+                                }
+                            )
                             yield toolchunk_to_chatcompletionchunk(
                                 chunk_obj, id_, created
                             ).model_dump()
                         except Exception:
+                            trace_events.append(
+                                {
+                                    "stream": "custom",
+                                    "type": "raw",
+                                    "content": _json_safe(item[1]),
+                                }
+                            )
                             logger.debug(
                                 "Non-ToolStreamChunk custom chunk: %s", item[1]
                             )
+                    elif isinstance(item, tuple) and item[0] == "updates":
+                        trace_events.append(
+                            {
+                                "stream": "updates",
+                                "content": _json_safe(item[1]),
+                            }
+                        )
                     else:
                         logger.error(
                             "Unexpected item type in streaming response: %s", type(item)
                         )
                         continue
                 logger.debug("Streaming completed successfully.")
-                get_client().update_current_span(output="".join(answer_chunks))
+                _write_stream_trace_span(messages, trace_events)
+                get_client().update_current_span(
+                    output="".join(answer_chunks),
+                    metadata={"agent_stream_event_count": len(trace_events)},
+                )
             except Exception as ex:
+                _write_stream_trace_span(messages, trace_events)
                 logger.error("Streaming error: %s", str(ex), exc_info=True)
                 error_msg = llm_exception_handler(ex=ex, logger=logger)
                 yield ChatCompletionChunk(
@@ -277,7 +363,7 @@ class MUCGPTAgentExecutor:
         enabled_tools: list[str] | None = None,
         assistant_id: str | None = None,
         data_sources: list[dict[str, Any]] | None = None,
-        conversation_id: str | None = None
+        conversation_id: str | None = None,
     ) -> ChatCompletionResponse:
         logger.info(
             "Chat non-streaming started with temperature %s, model %s",
@@ -298,7 +384,7 @@ class MUCGPTAgentExecutor:
         with propagate_attributes(
             user_id=hash_user_id(user_info.user_id if user_info else None),
             tags=tags,
-            session_id=conversation_id
+            session_id=conversation_id,
         ):
             request_config = RunnableConfig(
                 configurable={

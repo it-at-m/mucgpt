@@ -3,6 +3,7 @@ import { Button } from "@fluentui/react-components";
 import { ArrowDown24Regular } from "@fluentui/react-icons";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import { useTranslation } from "react-i18next";
 
 import styles from "./ChatLayout.module.css";
 import { LLMSelector } from "../LLMSelector/LLMSelector";
@@ -41,6 +42,7 @@ export const ChatLayout = ({
     infoDrawerOpen,
     actions
 }: Props) => {
+    const { t } = useTranslation();
     const chatInputRef = useRef<HTMLDivElement | null>(null);
     const chatMessagesRef = useRef<HTMLUListElement | null>(null);
     const [chatInputHeight, setChatInputHeight] = useState(0);
@@ -238,11 +240,10 @@ export const ChatLayout = ({
                             />
                         </div>
                     )}
-                    {!showStarterPrompts && (
-                        <div className={styles.chatInput} ref={chatInputRef}>
-                            {input}
-                        </div>
-                    )}
+                    <div className={styles.bottomBar} ref={chatInputRef}>
+                        {!showStarterPrompts && <div className={styles.chatInput}>{input}</div>}
+                        <div className={styles.disclaimerText}>{t("components.questioninput.errorhint")}</div>
+                    </div>
                 </div>
             </div>
         </div>

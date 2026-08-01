@@ -766,6 +766,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                         lockedToolIds={lockedToolIds}
                         uploadedData={uploadedData}
                         setUploadedData={setUploadedData}
+                        hideDisclaimer
                     />
                 </>
             );
@@ -803,6 +804,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                 lockedToolIds={lockedToolIds}
                 uploadedData={uploadedData}
                 setUploadedData={setUploadedData}
+                hideDisclaimer
             />
         );
     }, [

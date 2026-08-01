@@ -800,6 +800,7 @@ const Chat = () => {
                 uploadedData={uploadedData}
                 setUploadedData={setUploadedData}
                 onTranscription={text => setQuestion(text)}
+                hideDisclaimer
             />
         );
     }, [callApi, systemPrompt, question, t, isLoading, selectedTools, tools, uploadedData, uploadedDataToDataSources, getNavigationParams]);

@@ -17,8 +17,16 @@ ROLE_PREFIX = "ROLE_"
 class AuthenticationHelper:
     """Authenticates by parsing JWT access tokens directly."""
 
-    def __init__(self, role: str, use_role_restriction: bool = False):
+    def __init__(
+        self,
+        role: str,
+        admin_role: str = "",
+        beta_role: str = "",
+        use_role_restriction: bool = True,
+    ):
         self.role = role
+        self.admin_role = admin_role
+        self.beta_role = beta_role
         self.use_role_restriction = use_role_restriction
 
     def parse_jwt_payload(self, token: str) -> dict:
@@ -61,9 +69,10 @@ class AuthenticationHelper:
 
     def authenticate(self, accesstoken: str) -> AuthenticationResult:
         """Authenticates the user based on the access token.
-        Checks if the user has the required role.
-        Returns an AuthenticationResult if authenticated.
-        Raises AuthError if the user is not authenticated or does not have the required role.
+        Basic access is granted to any user with a valid, parseable token,
+        regardless of assigned roles. Roles are only extracted to populate
+        informational flags (e.g. is_admin/is_beta) reserved for future use.
+        Raises AuthError if the token is missing or invalid.
         """
         logger.debug("Starting authentication process")
         if accesstoken is None:
@@ -83,20 +92,13 @@ class AuthenticationHelper:
                 status_code=401,
             )
 
-        if self.use_role_restriction and self.role not in roles:
-            logger.warning(
-                f"Authentication failed: Required role '{self.role}' not found in user roles"
-            )
-            raise AuthError(
-                ACCESS_DENIED_MESSAGE,
-                status_code=401,
-            )
-
         return AuthenticationResult(
             user_id=self.getLHMObjectID(token_payload),
             department=self.getDepartment(token_payload),
             name=self.getName(token_payload),
             roles=roles,
+            is_admin=bool(self.admin_role) and self.admin_role in roles,
+            is_beta=bool(self.beta_role) and self.beta_role in roles,
         )
 
     def getRoles(self, token_payload: dict) -> list[str]:
@@ -155,6 +157,8 @@ def authenticate_user(
     logger.debug("Loading configuration for authentication")
     auth_helper = AuthenticationHelper(
         role=sso_settings.ROLE,
+        admin_role=sso_settings.ADMIN_ROLE,
+        beta_role=sso_settings.BETA_ROLE,
         use_role_restriction=sso_settings.USE_ROLE_RESTRICTION,
     )
 

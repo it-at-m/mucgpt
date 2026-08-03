@@ -290,6 +290,7 @@ class ModelsConfig(BaseModel):
 class SSOConfig(BaseModel):
     """SSO configuration (nested under SSO key in YAML)."""
 
+    USE_ROLE_RESTRICTION: bool = False
     ROLE: str = "lhm-ab-mucgpt-user"
 
 

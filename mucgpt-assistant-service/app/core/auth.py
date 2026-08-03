@@ -17,8 +17,9 @@ ROLE_PREFIX = "ROLE_"
 class AuthenticationHelper:
     """Authenticates by parsing JWT access tokens directly."""
 
-    def __init__(self, role: str):
+    def __init__(self, role: str, use_role_restriction: bool = False):
         self.role = role
+        self.use_role_restriction = use_role_restriction
 
     def parse_jwt_payload(self, token: str) -> dict:
         """Parse JWT token and extract payload.
@@ -82,7 +83,7 @@ class AuthenticationHelper:
                 status_code=401,
             )
 
-        if self.role not in roles:
+        if self.use_role_restriction and self.role not in roles:
             logger.warning(
                 f"Authentication failed: Required role '{self.role}' not found in user roles"
             )
@@ -154,6 +155,7 @@ def authenticate_user(
     logger.debug("Loading configuration for authentication")
     auth_helper = AuthenticationHelper(
         role=sso_settings.ROLE,
+        use_role_restriction=sso_settings.USE_ROLE_RESTRICTION,
     )
 
     try:

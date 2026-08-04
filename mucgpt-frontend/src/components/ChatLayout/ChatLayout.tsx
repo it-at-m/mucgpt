@@ -6,8 +6,6 @@ import remarkGfm from "remark-gfm";
 import { useTranslation } from "react-i18next";
 
 import styles from "./ChatLayout.module.css";
-import { LLMSelector } from "../LLMSelector/LLMSelector";
-import { Model } from "../../api";
 
 interface Props {
     starterPrompts: ReactNode;
@@ -20,9 +18,6 @@ interface Props {
     messages_description: string;
     onHeaderClick?: () => void;
     infoDrawerOpen?: boolean;
-    onLLMSelectionChange: (nextLLM: string) => void;
-    llmOptions?: Model[];
-    defaultLLM?: string;
     actions?: ReactNode;
 }
 
@@ -35,9 +30,6 @@ export const ChatLayout = ({
     welcomeMessage,
     header_as_markdown,
     messages_description,
-    llmOptions,
-    defaultLLM,
-    onLLMSelectionChange,
     onHeaderClick,
     infoDrawerOpen,
     actions
@@ -50,18 +42,6 @@ export const ChatLayout = ({
     const [renderScrollToBottom, setRenderScrollToBottom] = useState(false);
     const [scrolledFromTop, setScrolledFromTop] = useState(false);
     const [scrolledFromBottom, setScrolledFromBottom] = useState(false);
-    const [isCompact, setIsCompact] = useState(() =>
-        typeof window !== "undefined" && typeof window.matchMedia === "function" ? window.matchMedia("(max-width: 640px)").matches : false
-    );
-
-    useEffect(() => {
-        if (typeof window === "undefined" || typeof window.matchMedia !== "function") return;
-        const mq = window.matchMedia("(max-width: 640px)");
-        const handler = (e: MediaQueryListEvent) => setIsCompact(e.matches);
-        mq.addEventListener("change", handler);
-        return () => mq.removeEventListener("change", handler);
-    }, []);
-
     useEffect(() => {
         const element = chatInputRef.current;
         if (!element || typeof window === "undefined") {
@@ -183,14 +163,7 @@ export const ChatLayout = ({
                     </h1>
                 </div>
 
-                <div className={styles.controlsContainer}>
-                    {llmOptions && defaultLLM && onLLMSelectionChange && (
-                        <div aria-label="LLM selector container" role="group">
-                            <LLMSelector onSelectionChange={onLLMSelectionChange} defaultLLM={defaultLLM} options={llmOptions} compact={isCompact} />
-                        </div>
-                    )}
-                    {actions}
-                </div>
+                <div className={styles.controlsContainer}>{actions}</div>
             </header>
 
             <div className={styles.chatRoot}>

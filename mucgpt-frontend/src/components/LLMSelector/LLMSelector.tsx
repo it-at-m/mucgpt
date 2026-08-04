@@ -11,7 +11,6 @@ interface Props {
     onSelectionChange: (nextLLM: string) => void;
     defaultLLM: string;
     options: Model[];
-    compact?: boolean;
 }
 
 const TOKENS_PER_MILLION = 1_000_000;
@@ -104,7 +103,7 @@ const InfoRow = ({ label, value, tooltip, className, useDefaultSpacing = true, s
     );
 };
 
-export const LLMSelector = ({ onSelectionChange, defaultLLM, options, compact }: Props) => {
+export const LLMSelector = ({ onSelectionChange, defaultLLM, options }: Props) => {
     const [selectedModel, setSelectedModel] = useState(defaultLLM);
 
     const { t } = useTranslation();
@@ -209,188 +208,185 @@ export const LLMSelector = ({ onSelectionChange, defaultLLM, options, compact }:
     };
 
     return (
-        <div className={compact ? `${styles.container} ${styles.compact}` : styles.container}>
-            <Dialog modalType="modal">
-                <DialogTrigger disableButtonEnhancement>
-                    <Tooltip content={title} relationship="description" positioning="after">
-                        <button type="button" className={`${styles.container} ${styles.buttonContainer}`}>
-                            <span className={styles.modelName}>{displayName}</span>
-                            <ChevronDown20Regular className={styles.iconLeftMargin} />
-                        </button>
-                    </Tooltip>
-                </DialogTrigger>
+        <Dialog modalType="modal">
+            <DialogTrigger disableButtonEnhancement>
+                <Tooltip content={title} relationship="description" positioning="above">
+                    <Button appearance="subtle" shape="circular" icon={<ChevronDown20Regular />} iconPosition="after">
+                        {displayName}
+                    </Button>
+                </Tooltip>
+            </DialogTrigger>
 
-                <DialogSurface className={styles.dialogSurface}>
-                    <DialogBody className={styles.dialogContent}>
-                        <DialogTitle>{title}</DialogTitle>
-                        <DialogContent>
-                            <div className={styles.main}>
-                                {options.map((item: Model) => {
-                                    // compute a single numeric price for this model from input/output prices
-                                    const inputPrice = parseCostPerToken(item.input_cost_per_token);
-                                    const outputPrice = parseCostPerToken(item.output_cost_per_token);
-                                    const priceVal = averageCostPerToken(inputPrice, outputPrice);
+            <DialogSurface className={styles.dialogSurface}>
+                <DialogBody className={styles.dialogContent}>
+                    <DialogTitle>{title}</DialogTitle>
+                    <DialogContent>
+                        <div className={styles.main}>
+                            {options.map((item: Model) => {
+                                // compute a single numeric price for this model from input/output prices
+                                const inputPrice = parseCostPerToken(item.input_cost_per_token);
+                                const outputPrice = parseCostPerToken(item.output_cost_per_token);
+                                const priceVal = averageCostPerToken(inputPrice, outputPrice);
 
-                                    const capabilityBadges: { key: string; label: string }[] = [];
-                                    if (item.supports_reasoning) capabilityBadges.push({ key: "reasoning", label: capabilityReasoning });
-                                    if (item.supports_function_calling) capabilityBadges.push({ key: "function-calling", label: capabilityFunctionCalling });
-                                    if (item.supports_vision) capabilityBadges.push({ key: "vision", label: capabilityVision });
+                                const capabilityBadges: { key: string; label: string }[] = [];
+                                if (item.supports_reasoning) capabilityBadges.push({ key: "reasoning", label: capabilityReasoning });
+                                if (item.supports_function_calling) capabilityBadges.push({ key: "function-calling", label: capabilityFunctionCalling });
+                                if (item.supports_vision) capabilityBadges.push({ key: "vision", label: capabilityVision });
 
-                                    const providerMeta: string[] = [];
-                                    const providerDisplay = item.litellm_provider?.trim();
-                                    const locationDisplay = item.inference_location?.trim();
-                                    if (providerDisplay) providerMeta.push(`${providerLabel}: ${providerDisplay}`);
-                                    if (locationDisplay) providerMeta.push(`${regionLabel}: ${locationDisplay}`);
+                                const providerMeta: string[] = [];
+                                const providerDisplay = item.litellm_provider?.trim();
+                                const locationDisplay = item.inference_location?.trim();
+                                if (providerDisplay) providerMeta.push(`${providerLabel}: ${providerDisplay}`);
+                                if (locationDisplay) providerMeta.push(`${regionLabel}: ${locationDisplay}`);
 
-                                    const capabilityContent = capabilityBadges.length ? (
+                                const capabilityContent = capabilityBadges.length ? (
+                                    <div className={styles.badgeList}>
+                                        {capabilityBadges.map(badge => (
+                                            <span key={badge.key} className={styles.badge}>
+                                                {badge.label}
+                                            </span>
+                                        ))}
+                                    </div>
+                                ) : null;
+
+                                const knowledgeText = item.knowledge_cut_off?.trim() || "";
+                                const knowledgeDisplay = knowledgeText ? formatKnowledgeDate(knowledgeText, notAvailable) : "";
+                                const knowledgeBadge = knowledgeText ? (
+                                    <Tooltip content={knowledgeTooltipText} relationship="description" positioning="above">
                                         <div className={styles.badgeList}>
-                                            {capabilityBadges.map(badge => (
-                                                <span key={badge.key} className={styles.badge}>
-                                                    {badge.label}
-                                                </span>
-                                            ))}
+                                            <span className={`${styles.badge} ${styles.badgeKnowledge}`}>
+                                                {t("components.llmSelector.knowledge")}: {knowledgeDisplay}
+                                            </span>
                                         </div>
-                                    ) : null;
+                                    </Tooltip>
+                                ) : null;
+                                const descriptionText = item.description && item.description.trim().length > 0 ? item.description : notAvailable;
+                                const inputTokensText = formatTokenCount(item.max_input_tokens, notAvailable, tokenLabel, tokenPluralLabel);
+                                const outputTokensText = formatTokenCount(item.max_output_tokens, notAvailable, tokenLabel, tokenPluralLabel);
+                                const inputPriceText = formatCostPerMillion(inputPrice, notAvailable, tokenPluralLabel);
+                                const outputPriceText = formatCostPerMillion(outputPrice, notAvailable, tokenPluralLabel);
+                                const contextRating = getContextRating(item.max_input_tokens);
 
-                                    const knowledgeText = item.knowledge_cut_off?.trim() || "";
-                                    const knowledgeDisplay = knowledgeText ? formatKnowledgeDate(knowledgeText, notAvailable) : "";
-                                    const knowledgeBadge = knowledgeText ? (
-                                        <Tooltip content={knowledgeTooltipText} relationship="description" positioning="above">
-                                            <div className={styles.badgeList}>
-                                                <span className={`${styles.badge} ${styles.badgeKnowledge}`}>
-                                                    {t("components.llmSelector.knowledge")}: {knowledgeDisplay}
-                                                </span>
-                                            </div>
-                                        </Tooltip>
-                                    ) : null;
-                                    const descriptionText = item.description && item.description.trim().length > 0 ? item.description : notAvailable;
-                                    const inputTokensText = formatTokenCount(item.max_input_tokens, notAvailable, tokenLabel, tokenPluralLabel);
-                                    const outputTokensText = formatTokenCount(item.max_output_tokens, notAvailable, tokenLabel, tokenPluralLabel);
-                                    const inputPriceText = formatCostPerMillion(inputPrice, notAvailable, tokenPluralLabel);
-                                    const outputPriceText = formatCostPerMillion(outputPrice, notAvailable, tokenPluralLabel);
-                                    const contextRating = getContextRating(item.max_input_tokens);
-
-                                    const priceRating = getPriceRating(priceVal ?? undefined);
-                                    return (
-                                        <Card
-                                            className={styles.card}
-                                            key={item.llm_name}
-                                            selected={selectedModel === item.llm_name}
-                                            data-selected={selectedModel === item.llm_name}
-                                            onSelectionChange={() => handleSelectModel(item.llm_name)}
-                                        >
-                                            <div className={styles.cardContent}>
-                                                <div className={styles.cardHeader}>
-                                                    <h2>{item.llm_name}</h2>
-                                                    {capabilityContent && capabilityContent}
-                                                    {!capabilityContent && (
-                                                        <div className={styles.badgeList}>
-                                                            <span className={styles.badge}>{notAvailable}</span>
-                                                        </div>
-                                                    )}
-                                                    {knowledgeBadge}
-                                                    <p className={styles.bestForText}>{descriptionText}</p>
-                                                </div>
-
-                                                <div className={styles.sectionGroup}>
-                                                    <SectionHeading title={originHeading} />
-                                                    {providerDisplay && <InfoRow label={t("components.llmSelector.provider")} value={providerDisplay} />}
-                                                    {locationDisplay ? (
-                                                        <InfoRow label={t("components.llmSelector.location")} value={locationDisplay} />
-                                                    ) : (
-                                                        <div className={`${styles.infoRow} ${styles.locationPlaceholder}`} aria-hidden="true" />
-                                                    )}
-                                                </div>
-                                                <div className={styles.sectionGroup}>
-                                                    <div className={styles.contextHeadingRow}>
-                                                        <SectionHeading title={t("components.llmSelector.context")} stacked={false} />
-                                                        <div
-                                                            className={styles.contextMeter}
-                                                            aria-label={`${t("components.llmSelector.context")} rating ${contextRating} / 3`}
-                                                        >
-                                                            {Array.from({ length: 3 }).map((_, i) => (
-                                                                <span
-                                                                    key={i}
-                                                                    className={`${styles.contextBar} ${i < contextRating ? styles.contextBarActive : ""}`.trim()}
-                                                                    aria-hidden="true"
-                                                                />
-                                                            ))}
-                                                        </div>
+                                const priceRating = getPriceRating(priceVal ?? undefined);
+                                return (
+                                    <Card
+                                        className={styles.card}
+                                        key={item.llm_name}
+                                        selected={selectedModel === item.llm_name}
+                                        data-selected={selectedModel === item.llm_name}
+                                        onSelectionChange={() => handleSelectModel(item.llm_name)}
+                                    >
+                                        <div className={styles.cardContent}>
+                                            <div className={styles.cardHeader}>
+                                                <h2>{item.llm_name}</h2>
+                                                {capabilityContent && capabilityContent}
+                                                {!capabilityContent && (
+                                                    <div className={styles.badgeList}>
+                                                        <span className={styles.badge}>{notAvailable}</span>
                                                     </div>
-                                                    <InfoRow
-                                                        label={t("components.llmSelector.maxInput")}
-                                                        value={inputTokensText}
-                                                        tooltip={
-                                                            <Tooltip content={maxInputDesc} relationship="description" positioning="above">
-                                                                <InfoRegular></InfoRegular>
-                                                            </Tooltip>
-                                                        }
-                                                    />
-                                                    <InfoRow
-                                                        label={t("components.llmSelector.maxOutput")}
-                                                        value={outputTokensText}
-                                                        tooltip={
-                                                            <Tooltip content={maxOutputDesc} relationship="description" positioning="above">
-                                                                <InfoRegular></InfoRegular>
-                                                            </Tooltip>
-                                                        }
-                                                    />
+                                                )}
+                                                {knowledgeBadge}
+                                                <p className={styles.bestForText}>{descriptionText}</p>
+                                            </div>
+
+                                            <div className={styles.sectionGroup}>
+                                                <SectionHeading title={originHeading} />
+                                                {providerDisplay && <InfoRow label={t("components.llmSelector.provider")} value={providerDisplay} />}
+                                                {locationDisplay ? (
+                                                    <InfoRow label={t("components.llmSelector.location")} value={locationDisplay} />
+                                                ) : (
+                                                    <div className={`${styles.infoRow} ${styles.locationPlaceholder}`} aria-hidden="true" />
+                                                )}
+                                            </div>
+                                            <div className={styles.sectionGroup}>
+                                                <div className={styles.contextHeadingRow}>
+                                                    <SectionHeading title={t("components.llmSelector.context")} stacked={false} />
+                                                    <div
+                                                        className={styles.contextMeter}
+                                                        aria-label={`${t("components.llmSelector.context")} rating ${contextRating} / 3`}
+                                                    >
+                                                        {Array.from({ length: 3 }).map((_, i) => (
+                                                            <span
+                                                                key={i}
+                                                                className={`${styles.contextBar} ${i < contextRating ? styles.contextBarActive : ""}`.trim()}
+                                                                aria-hidden="true"
+                                                            />
+                                                        ))}
+                                                    </div>
                                                 </div>
-                                                <div className={styles.sectionGroup}>
+                                                <InfoRow
+                                                    label={t("components.llmSelector.maxInput")}
+                                                    value={inputTokensText}
+                                                    tooltip={
+                                                        <Tooltip content={maxInputDesc} relationship="description" positioning="above">
+                                                            <InfoRegular></InfoRegular>
+                                                        </Tooltip>
+                                                    }
+                                                />
+                                                <InfoRow
+                                                    label={t("components.llmSelector.maxOutput")}
+                                                    value={outputTokensText}
+                                                    tooltip={
+                                                        <Tooltip content={maxOutputDesc} relationship="description" positioning="above">
+                                                            <InfoRegular></InfoRegular>
+                                                        </Tooltip>
+                                                    }
+                                                />
+                                            </div>
+                                            <div className={styles.sectionGroup}>
+                                                <div>
                                                     <div>
-                                                        <div>
-                                                            <div className={styles.price} aria-label={`Price ${priceVal ?? ""}`}>
-                                                                <SectionHeading title={t("components.llmSelector.price")} withSpacing stacked={false} />
-                                                                {Array.from({ length: 3 }).map((_, i) => {
-                                                                    const active = i < priceRating;
-                                                                    const cls = active ? `${styles.money} ${styles.moneyActive}` : styles.money;
-                                                                    return active ? (
-                                                                        <Money24Filled key={i} className={cls} aria-hidden="true" />
-                                                                    ) : (
-                                                                        <MoneyRegular key={i} className={cls} aria-hidden="true" />
-                                                                    );
-                                                                })}
-                                                            </div>
-                                                            <InfoRow
-                                                                label={t("components.llmSelector.inputPrice")}
-                                                                value={inputPriceText}
-                                                                tooltip={
-                                                                    <Tooltip content={inputPriceDesc} relationship="description" positioning="above">
-                                                                        <InfoRegular></InfoRegular>
-                                                                    </Tooltip>
-                                                                }
-                                                            />
-                                                            <InfoRow
-                                                                label={t("components.llmSelector.outputPrice")}
-                                                                value={outputPriceText}
-                                                                tooltip={
-                                                                    <Tooltip content={outputPriceDesc} relationship="description" positioning="above">
-                                                                        <InfoRegular></InfoRegular>
-                                                                    </Tooltip>
-                                                                }
-                                                            />
+                                                        <div className={styles.price} aria-label={`Price ${priceVal ?? ""}`}>
+                                                            <SectionHeading title={t("components.llmSelector.price")} withSpacing stacked={false} />
+                                                            {Array.from({ length: 3 }).map((_, i) => {
+                                                                const active = i < priceRating;
+                                                                const cls = active ? `${styles.money} ${styles.moneyActive}` : styles.money;
+                                                                return active ? (
+                                                                    <Money24Filled key={i} className={cls} aria-hidden="true" />
+                                                                ) : (
+                                                                    <MoneyRegular key={i} className={cls} aria-hidden="true" />
+                                                                );
+                                                            })}
                                                         </div>
+                                                        <InfoRow
+                                                            label={t("components.llmSelector.inputPrice")}
+                                                            value={inputPriceText}
+                                                            tooltip={
+                                                                <Tooltip content={inputPriceDesc} relationship="description" positioning="above">
+                                                                    <InfoRegular></InfoRegular>
+                                                                </Tooltip>
+                                                            }
+                                                        />
+                                                        <InfoRow
+                                                            label={t("components.llmSelector.outputPrice")}
+                                                            value={outputPriceText}
+                                                            tooltip={
+                                                                <Tooltip content={outputPriceDesc} relationship="description" positioning="above">
+                                                                    <InfoRegular></InfoRegular>
+                                                                </Tooltip>
+                                                            }
+                                                        />
                                                     </div>
                                                 </div>
                                             </div>
-                                        </Card>
-                                    );
-                                })}
-                            </div>
-                        </DialogContent>
+                                        </div>
+                                    </Card>
+                                );
+                            })}
+                        </div>
+                    </DialogContent>
 
-                        <DialogActions className={styles.dialogActions}>
-                            <DialogTrigger disableButtonEnhancement>
-                                <Button appearance="primary" size="medium" onClick={() => handleSelectModel(selectedModel)} className={styles.acceptButton}>
-                                    <Checkmark24Filled className={styles.checkIcon} />
-                                    {t("components.llmSelector.selectButton", { defaultValue: "Auswählen" })}
-                                </Button>
-                            </DialogTrigger>
-                        </DialogActions>
-                    </DialogBody>
-                </DialogSurface>
-            </Dialog>
-        </div>
+                    <DialogActions className={styles.dialogActions}>
+                        <DialogTrigger disableButtonEnhancement>
+                            <Button appearance="primary" size="medium" onClick={() => handleSelectModel(selectedModel)} className={styles.acceptButton}>
+                                <Checkmark24Filled className={styles.checkIcon} />
+                                {t("components.llmSelector.selectButton", { defaultValue: "Auswählen" })}
+                            </Button>
+                        </DialogTrigger>
+                    </DialogActions>
+                </DialogBody>
+            </DialogSurface>
+        </Dialog>
     );
 };
 

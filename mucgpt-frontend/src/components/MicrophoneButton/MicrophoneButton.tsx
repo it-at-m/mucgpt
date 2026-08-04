@@ -80,7 +80,8 @@ export const MicrophoneButton = ({ onTranscription, onLiveTranscription, onRecor
             <Tooltip content={getTooltipContent()} relationship="label">
                 <Button
                     size="large"
-                    appearance="transparent"
+                    appearance="subtle"
+                    shape="circular"
                     className={`${styles.micButton} ${isBusy ? styles.busy : ""}`}
                     icon={getIcon()}
                     aria-label={getTooltipContent()}

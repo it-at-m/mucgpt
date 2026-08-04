@@ -801,9 +801,26 @@ const Chat = () => {
                 setUploadedData={setUploadedData}
                 onTranscription={text => setQuestion(text)}
                 hideDisclaimer
+                llmOptions={availableLLMs}
+                defaultLLM={LLM.llm_name}
+                onLLMSelectionChange={onLLMSelectionChange}
             />
         );
-    }, [callApi, systemPrompt, question, t, isLoading, selectedTools, tools, uploadedData, uploadedDataToDataSources, getNavigationParams]);
+    }, [
+        callApi,
+        systemPrompt,
+        question,
+        t,
+        isLoading,
+        selectedTools,
+        tools,
+        uploadedData,
+        uploadedDataToDataSources,
+        getNavigationParams,
+        availableLLMs,
+        LLM.llm_name,
+        onLLMSelectionChange
+    ]);
 
     const layout = useMemo(
         () => (
@@ -824,9 +841,6 @@ const Chat = () => {
                     header={activeChatName ?? ""}
                     header_as_markdown={false}
                     messages_description={t("common.messages")}
-                    llmOptions={availableLLMs}
-                    defaultLLM={LLM.llm_name}
-                    onLLMSelectionChange={onLLMSelectionChange}
                     actions={
                         <Button
                             appearance="transparent"
@@ -844,9 +858,6 @@ const Chat = () => {
             inputComponent,
             lastQuestionRef.current,
             t,
-            availableLLMs,
-            LLM.llm_name,
-            onLLMSelectionChange,
             clearChat,
             activeChatName,
             isLoading,

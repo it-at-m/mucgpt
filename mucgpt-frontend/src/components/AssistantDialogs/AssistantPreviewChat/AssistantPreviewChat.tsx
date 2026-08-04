@@ -10,7 +10,6 @@ import { Answer } from "../../Answer";
 import { AnswerList } from "../../AnswerList/AnswerList";
 import { QuestionInput } from "../../QuestionInput";
 import { StarterPromptList, StarterPromptModel } from "../../StarterPrompt";
-import { LLMSelector } from "../../LLMSelector/LLMSelector";
 import { LLMContext } from "../../LLMSelector/LLMContextProvider";
 import { FollowUpActionContext, FollowUpActionModel } from "../../FollowUpAction";
 import { useToolsContext } from "../../ToolsProvider";
@@ -329,7 +328,6 @@ export const AssistantPreviewChat = ({
             <header className={styles.previewHeader}>
                 <div className={styles.previewHeaderLeft}>
                     <span className={styles.previewTitle}>{t("components.assistant_preview.title")}</span>
-                    <LLMSelector onSelectionChange={onLLMSelectionChange} defaultLLM={LLM.llm_name} options={modelsToShow} compact />
                 </div>
                 <div className={styles.previewHeaderActions}>
                     <Tooltip content={t("components.assistant_preview.reset")} relationship="label">
@@ -394,6 +392,9 @@ export const AssistantPreviewChat = ({
                     tools={tools}
                     allowToolSelection={false}
                     allowFileUpload={false}
+                    llmOptions={modelsToShow}
+                    defaultLLM={LLM.llm_name}
+                    onLLMSelectionChange={onLLMSelectionChange}
                 />
             </div>
         </div>

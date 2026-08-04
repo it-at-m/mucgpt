@@ -4,12 +4,14 @@ import { useCallback, useEffect, useRef, useState, type Dispatch, type SetStateA
 import { useTranslation } from "react-i18next";
 
 import styles from "./QuestionInput.module.css";
+import type { Model } from "../../api";
 import { uploadFileApi } from "../../api/core-client";
 import { ToolListResponse } from "../../api/models";
 import { useConfigContext } from "../../context/ConfigContext";
 import { upsertParsedDocumentFromUpload } from "../../service/parsedDocumentStorage";
 import { ContextManagerDialog, UploadedData, createUploadedData, getDataSignature, getFileSignature } from "../ContextManagerDialog/ContextManagerDialog";
 import { ChatToolSelector } from "../ChatToolSelector/ChatToolSelector";
+import { LLMSelector } from "../LLMSelector/LLMSelector";
 import { MicrophoneButton } from "../MicrophoneButton/MicrophoneButton";
 import { useTranscription } from "../TranscriptionSettings/TranscriptionSettingsContext";
 
@@ -33,6 +35,9 @@ interface Props {
     skipDraftRestore?: boolean;
     onTranscription?: (text: string) => void;
     hideDisclaimer?: boolean;
+    llmOptions?: Model[];
+    defaultLLM?: string;
+    onLLMSelectionChange?: (nextLLM: string) => void;
 }
 
 export const QuestionInput = ({
@@ -54,16 +59,21 @@ export const QuestionInput = ({
     draftCacheKey,
     skipDraftRestore = false,
     onTranscription,
-    hideDisclaimer = false
+    hideDisclaimer = false,
+    llmOptions,
+    defaultLLM,
+    onLLMSelectionChange
 }: Props) => {
     const { t } = useTranslation();
     const config = useConfigContext();
     const allowFileUpload = allowFileUploadProp ?? config.document_processing_enabled;
     const allowTranscription = config.transcription_enabled;
     const resolvedPlaceholder = placeholder ?? (allowFileUpload ? t("chat.prompt") : t("chat.prompt_no_upload"));
+    const questionInputContainerRef = useRef<HTMLDivElement | null>(null);
     const textareaRef = useRef<HTMLTextAreaElement | null>(null);
     const sendButtonRef = useRef<HTMLButtonElement | null>(null);
     const uploadButtonRef = useRef<HTMLButtonElement | null>(null);
+    const actionControlsRef = useRef<HTMLDivElement | null>(null);
     const wasDisabledRef = useRef(disabled);
     const wasDialogOpenRef = useRef(false);
     const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
@@ -84,6 +94,12 @@ export const QuestionInput = ({
     const uploadedData = externalUploadedData ?? internalUploadedData;
     const activeDocumentCount = uploadedData.filter(data => data.isActive !== false).length;
     const hasSendableQuestion = question.trim().length > 0;
+    const hasModelPicker = Boolean(llmOptions?.length && defaultLLM && onLLMSelectionChange);
+    const canUseTranscription = Boolean(allowTranscription && onTranscription && transcriptionReady);
+    const showMicrophoneButton = canUseTranscription && (!hasSendableQuestion || isTranscriptionActive);
+    const showSendButton = hasSendableQuestion && !isTranscriptionActive;
+    const hasRightActions = hasModelPicker || showMicrophoneButton || showSendButton;
+    const sendLabel = t("components.questioninput.send_question", "Frage senden");
 
     const setUploadedData = useCallback(
         (data: UploadedData[] | ((prev: UploadedData[]) => UploadedData[])) => {
@@ -194,12 +210,14 @@ export const QuestionInput = ({
     useEffect(() => {
         const resizeTextarea = () => {
             const textarea = textareaRef.current;
-            if (!textarea) {
+            const container = questionInputContainerRef.current;
+            if (!textarea || !container) {
                 return;
             }
 
             const maxHeight = 200;
             const computedStyle = window.getComputedStyle(textarea);
+            const containerStyle = window.getComputedStyle(container);
             const lineHeight = Number.parseFloat(computedStyle.lineHeight) || 24;
             const paddingTop = Number.parseFloat(computedStyle.paddingTop) || 0;
             const paddingBottom = Number.parseFloat(computedStyle.paddingBottom) || 0;
@@ -208,18 +226,41 @@ export const QuestionInput = ({
             const canvas = document.createElement("canvas");
             const context = canvas.getContext("2d");
             const horizontalPadding = (Number.parseFloat(computedStyle.paddingLeft) || 0) + (Number.parseFloat(computedStyle.paddingRight) || 0);
-            const availableLineWidth = textarea.clientWidth - horizontalPadding;
+            const containerHorizontalPadding = (Number.parseFloat(containerStyle.paddingLeft) || 0) + (Number.parseFloat(containerStyle.paddingRight) || 0);
+            const uploadControlWidth = allowFileUpload ? (uploadButtonRef.current?.getBoundingClientRect().width ?? 0) : 0;
+            const rightActionsWidth = hasRightActions ? (actionControlsRef.current?.getBoundingClientRect().width ?? 0) : 0;
+            const visibleControlGroups = Number(uploadControlWidth > 0) + Number(rightActionsWidth > 0);
+            const columnGap = Number.parseFloat(containerStyle.columnGap) || 0;
+            const availableLineWidth = Math.max(
+                0,
+                container.clientWidth -
+                containerHorizontalPadding -
+                uploadControlWidth -
+                rightActionsWidth -
+                visibleControlGroups * columnGap -
+                horizontalPadding
+            );
+            const hasInsufficientInlineSpace = availableLineWidth < 120;
             const needsWrappedLine =
-                context && availableLineWidth > 0
+                question.trim().length > 0 && context && availableLineWidth > 0
                     ? question.split("\n").some(line => {
-                          context.font = computedStyle.font;
-                          return context.measureText(line || " ").width > availableLineWidth;
-                      })
+                        context.font = computedStyle.font;
+                        return context.measureText(line || " ").width > availableLineWidth;
+                    })
                     : false;
-            const nextExpandedInput = question.trim().length > 0 && (question.includes("\n") || needsWrappedLine);
+            const nextExpandedInput = question.includes("\n") || hasInsufficientInlineSpace || needsWrappedLine;
 
-            setIsExpandedInput(nextExpandedInput);
+            if (nextExpandedInput !== isExpandedInput) {
+                setIsExpandedInput(nextExpandedInput);
+                return;
+            }
+
             textarea.style.height = "auto";
+
+            if (!question) {
+                textarea.style.overflowY = "hidden";
+                return;
+            }
 
             if (!nextExpandedInput) {
                 textarea.style.height = `${singleLineHeight}px`;
@@ -236,14 +277,22 @@ export const QuestionInput = ({
 
         resizeTextarea();
 
-        if (question === "") {
-            const textarea = textareaRef.current;
-            if (textarea) {
-                textarea.style.height = "auto";
-                textarea.style.overflowY = "hidden";
-            }
+        if (typeof ResizeObserver === "undefined") {
+            window.addEventListener("resize", resizeTextarea);
+            return () => window.removeEventListener("resize", resizeTextarea);
         }
-    }, [question]);
+
+        const resizeObserver = new ResizeObserver(resizeTextarea);
+        const container = questionInputContainerRef.current;
+        const uploadButton = uploadButtonRef.current;
+        const actionControls = actionControlsRef.current;
+
+        if (container) resizeObserver.observe(container);
+        if (uploadButton) resizeObserver.observe(uploadButton);
+        if (actionControls) resizeObserver.observe(actionControls);
+
+        return () => resizeObserver.disconnect();
+    }, [allowFileUpload, hasRightActions, isExpandedInput, question]);
 
     const sendQuestion = useCallback(() => {
         if (disabled || !question.trim()) {
@@ -334,15 +383,15 @@ export const QuestionInput = ({
                         const nextData = currentData.map(currentItem =>
                             currentItem.id === data.id
                                 ? {
-                                      ...currentItem,
-                                      status: "ready" as const,
-                                      fileContent,
-                                      storedDocumentId: storedDocument?.id,
-                                      parsedAt: storedDocument?.parsedAt,
-                                      fileSignature: storedDocument?.fileSignature,
-                                      mimeType: storedDocument?.mimeType,
-                                      source: "upload" as const
-                                  }
+                                    ...currentItem,
+                                    status: "ready" as const,
+                                    fileContent,
+                                    storedDocumentId: storedDocument?.id,
+                                    parsedAt: storedDocument?.parsedAt,
+                                    fileSignature: storedDocument?.fileSignature,
+                                    mimeType: storedDocument?.mimeType,
+                                    source: "upload" as const
+                                }
                                 : currentItem
                         );
 
@@ -451,9 +500,10 @@ export const QuestionInput = ({
                 ) : null}
 
                 <div
-                    className={`${styles.questionInputContainer} ${
-                        !tools?.tools?.length || !setSelectedTools ? styles.noTools : ""
-                    } ${isDragActive ? styles.dragActive : ""} ${isExpandedInput ? styles.expandedInput : ""} ${!allowFileUpload ? styles.noUpload : ""}`}
+                    ref={questionInputContainerRef}
+                    className={`${styles.questionInputContainer} ${!tools?.tools?.length || !setSelectedTools ? styles.noTools : ""
+                        } ${isDragActive ? styles.dragActive : ""} ${isExpandedInput ? styles.expandedInput : ""} ${!allowFileUpload ? styles.noUpload : ""} ${!hasRightActions ? styles.noRightActions : ""
+                        }`}
                     onDragEnter={allowFileUpload ? handleDragEnter : undefined}
                     onDragOver={allowFileUpload ? handleDragOver : undefined}
                     onDragLeave={allowFileUpload ? handleDragLeave : undefined}
@@ -465,6 +515,7 @@ export const QuestionInput = ({
                                 <Button
                                     ref={uploadButtonRef}
                                     size="large"
+                                    shape="circular"
                                     appearance="subtle"
                                     icon={<DocumentAdd24Regular />}
                                     aria-label={t("components.questioninput.upload_data", "Dokument hochladen")}
@@ -479,6 +530,7 @@ export const QuestionInput = ({
                         className={styles.questionInputTextArea}
                         placeholder={resolvedPlaceholder}
                         resize="none"
+                        rows={1}
                         value={question}
                         size="large"
                         onChange={onQuestionChange}
@@ -486,39 +538,46 @@ export const QuestionInput = ({
                         ref={textareaRef}
                         disabled={disabled || isTranscriptionActive}
                     />
-                    <div className={styles.questionInputButtons}>
-                        {allowTranscription && onTranscription && transcriptionReady && (
-                            <MicrophoneButton
-                                onRecordingStart={() => {
-                                    recordingBaseRef.current = question;
-                                }}
-                                onLiveTranscription={text => {
-                                    const full = recordingBaseRef.current ? `${recordingBaseRef.current} ${text}` : text;
-                                    setQuestion(full);
-                                    onTranscription(full);
-                                }}
-                                onTranscription={text => {
-                                    const full = recordingBaseRef.current ? `${recordingBaseRef.current} ${text}` : text;
-                                    setQuestion(full);
-                                    onTranscription(full);
-                                }}
-                                disabled={disabled}
-                            />
-                        )}
-                        {hasSendableQuestion ? (
-                            <Tooltip content={resolvedPlaceholder} relationship="label">
-                                <Button
-                                    ref={sendButtonRef}
-                                    size="large"
-                                    appearance="transparent"
-                                    icon={<Send28Filled />}
-                                    aria-label={t("components.questioninput.send_question", "Frage senden")}
-                                    disabled={disabled || isTranscriptionActive}
-                                    onClick={sendQuestion}
+                    {hasRightActions ? (
+                        <div className={styles.questionInputButtons} ref={actionControlsRef}>
+                            {llmOptions?.length && defaultLLM && onLLMSelectionChange ? (
+                                <div className={styles.modelPickerWrapper}>
+                                    <LLMSelector onSelectionChange={onLLMSelectionChange} defaultLLM={defaultLLM} options={llmOptions} />
+                                </div>
+                            ) : null}
+                            {showMicrophoneButton && onTranscription ? (
+                                <MicrophoneButton
+                                    onRecordingStart={() => {
+                                        recordingBaseRef.current = question;
+                                    }}
+                                    onLiveTranscription={text => {
+                                        const full = recordingBaseRef.current ? `${recordingBaseRef.current} ${text}` : text;
+                                        setQuestion(full);
+                                        onTranscription(full);
+                                    }}
+                                    onTranscription={text => {
+                                        const full = recordingBaseRef.current ? `${recordingBaseRef.current} ${text}` : text;
+                                        setQuestion(full);
+                                        onTranscription(full);
+                                    }}
+                                    disabled={disabled}
                                 />
-                            </Tooltip>
-                        ) : null}
-                    </div>
+                            ) : null}
+                            {showSendButton ? (
+                                <Tooltip content={sendLabel} relationship="label">
+                                    <Button
+                                        ref={sendButtonRef}
+                                        size="large"
+                                        appearance="transparent"
+                                        icon={<Send28Filled />}
+                                        aria-label={sendLabel}
+                                        disabled={disabled}
+                                        onClick={sendQuestion}
+                                    />
+                                </Tooltip>
+                            ) : null}
+                        </div>
+                    ) : null}
                 </div>
 
                 {hideDisclaimer ? null : (

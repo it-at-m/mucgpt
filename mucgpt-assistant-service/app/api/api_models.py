@@ -336,6 +336,11 @@ class AssistantCreate(AssistantBase):
         None,
         description="Optional EU AI Act screening result for this assistant version.",
     )
+    compliance_confirmation: bool | None = Field(
+        None,
+        description="Whether the owner confirmed the compliance review for this assistant version.",
+        example=False,
+    )
 
     # replaced inner Config with model_config
     model_config = ConfigDict(
@@ -469,6 +474,11 @@ class AssistantUpdate(BaseModel):
         None,
         description="Optional EU AI Act screening result for the new assistant version.",
     )
+    compliance_confirmation: bool | None = Field(
+        None,
+        description="Whether the owner confirmed the compliance review for the new assistant version.",
+        example=False,
+    )
 
 
 class AssistantVersionResponse(AssistantBase):
@@ -499,6 +509,10 @@ class AssistantVersionResponse(AssistantBase):
     compliance_check_result: ComplianceCheckResult | None = Field(
         None,
         description="EU AI Act screening result stored for this assistant version.",
+    )
+    compliance_confirmation: bool = Field(
+        False,
+        description="Whether the owner confirmed the compliance review for this assistant version.",
     )
 
 

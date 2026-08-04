@@ -325,7 +325,7 @@ export const AssistantEditorPage = (props: AssistantEditorPageProps) => {
     const [discardOpen, setDiscardOpen] = useState(false);
     const [discardTarget, setDiscardTarget] = useState<DiscardTarget>("back");
     // Compliance confirmation is displayed independently from the optional screening result.
-    const [reviewConfirmed, setReviewConfirmed] = useState(false);
+    const [reviewConfirmed, setReviewConfirmed] = useState<boolean>(editAssistant?.compliance_confirmation ?? false);
     // On failure this holds a synthetic result with overall_status "error".
     const [reviewCheckResult, setReviewCheckResult] = useState<ComplianceCheckResponse | null>(editAssistant?.compliance_check_result ?? null);
     const [reviewCheckLoading, setReviewCheckLoading] = useState(false);
@@ -337,9 +337,16 @@ export const AssistantEditorPage = (props: AssistantEditorPageProps) => {
         if (!isCreate && !editState.hasChanged) {
             setReviewCheckResult(editAssistant?.compliance_check_result ?? null);
             setReviewCheckOutdated(false);
-            setReviewConfirmed(false);
+            setReviewConfirmed(editAssistant?.compliance_confirmation ?? false);
         }
-    }, [isCreate, editAssistant?.id, editAssistant?.version, editAssistant?.compliance_check_result, editState.hasChanged]);
+    }, [
+        isCreate,
+        editAssistant?.id,
+        editAssistant?.version,
+        editAssistant?.compliance_check_result,
+        editAssistant?.compliance_confirmation,
+        editState.hasChanged
+    ]);
 
     const selectedTools = useMemo(() => {
         if (!availableTools) return [] as ToolInfo[];
@@ -388,6 +395,7 @@ export const AssistantEditorPage = (props: AssistantEditorPageProps) => {
         setLoading(true);
 
         const complianceResultToSave = reviewCheckOutdated ? undefined : (reviewCheckResult ?? undefined);
+        const complianceConfirmationToSave = reviewConfirmed;
 
         const validFollowUpActions = (s.followUpActions ?? []).filter(
             (followUpAction: FollowUpActionModel) => followUpAction.label?.trim() && followUpAction.prompt?.trim()
@@ -416,7 +424,8 @@ export const AssistantEditorPage = (props: AssistantEditorPageProps) => {
                     tags: [],
                     hierarchical_access: createState.hierarchicalAccess ?? [],
                     is_visible: createState.isVisible,
-                    compliance_check_result: complianceResultToSave
+                    compliance_check_result: complianceResultToSave,
+                    compliance_confirmation: complianceConfirmationToSave
                 });
 
                 const persistedComplianceResult = response?.latest_version?.compliance_check_result;
@@ -437,6 +446,7 @@ export const AssistantEditorPage = (props: AssistantEditorPageProps) => {
                 const editProps = props as AssistantEditorPageEditProps;
                 const updatedAssistant = editState.createAssistantForSaving();
                 updatedAssistant.compliance_check_result = complianceResultToSave;
+                updatedAssistant.compliance_confirmation = complianceConfirmationToSave;
                 const saveResult = await editProps.onSave(updatedAssistant);
                 if (complianceResultToSave && !saveResult?.persistedComplianceCheckResult) {
                     throw new Error(t("components.assistant_editor.compliance_not_persisted_message"));

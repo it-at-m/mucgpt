@@ -156,6 +156,7 @@ export type Assistant = {
     tools?: ToolBase[];
     is_visible: boolean;
     compliance_check_result?: ComplianceCheckResponse;
+    compliance_confirmation?: boolean;
 };
 
 export interface ToolBase {
@@ -192,6 +193,7 @@ export interface AssistantCreateInput {
     tags?: string[];
     is_visible: boolean;
     compliance_check_result?: ComplianceCheckResponse;
+    compliance_confirmation?: boolean;
 }
 export interface AssistantVersionResponse {
     id: string;
@@ -212,6 +214,7 @@ export interface AssistantVersionResponse {
     tags?: string[];
     is_visible: boolean;
     compliance_check_result?: ComplianceCheckResponse;
+    compliance_confirmation?: boolean;
 }
 
 export interface AssistantCreateResponse {
@@ -239,6 +242,7 @@ export interface AssistantUpdateInput {
     is_visible: boolean;
     version: number;
     compliance_check_result?: ComplianceCheckResponse;
+    compliance_confirmation?: boolean;
 }
 
 export interface AssistantResponse {
@@ -336,4 +340,5 @@ export type CommunityAssistantSnapshot = {
     tools?: ToolBase[];
     is_visible: boolean;
     compliance_check_result?: ComplianceCheckResponse;
+    compliance_confirmation?: boolean;
 };

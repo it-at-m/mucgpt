@@ -79,6 +79,9 @@ async def _build_assistant_response_list(
                 compliance_check_result=getattr(
                     latest_version, "compliance_check_result", None
                 ),
+                compliance_confirmation=bool(
+                    getattr(latest_version, "compliance_confirmation", False)
+                ),
             )
             response = AssistantResponse(
                 id=assistant_id,

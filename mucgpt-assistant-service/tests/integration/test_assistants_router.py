@@ -406,6 +406,87 @@ def test_update_assistant_strict_mode_unchanged_prompt_preserves_compliance_resu
 
 
 @pytest.mark.integration
+def test_create_assistant_persists_compliance_confirmation(test_client):
+    """Create persists explicit compliance confirmation on first version."""
+    response = test_client.post(
+        "assistant/create",
+        json=AssistantCreate(
+            name="Assistant with confirmation",
+            system_prompt="You are a confirmed assistant.",
+            compliance_confirmation=True,
+        ).model_dump(),
+        headers=headers,
+    )
+
+    assert response.status_code == 200
+    created = AssistantResponse.model_validate(response.json())
+    assert created.latest_version.compliance_confirmation is True
+
+
+@pytest.mark.integration
+def test_update_assistant_prompt_unchanged_carries_compliance_confirmation(test_client):
+    """Update carries prior confirmation when prompt is unchanged and confirmation omitted."""
+    create_response = test_client.post(
+        "assistant/create",
+        json=AssistantCreate(
+            name="Carry confirmation assistant",
+            system_prompt="Stable prompt.",
+            compliance_confirmation=True,
+        ).model_dump(),
+        headers=headers,
+    )
+    assert create_response.status_code == 200
+    created = AssistantResponse.model_validate(create_response.json())
+    assert created.latest_version.compliance_confirmation is True
+
+    update_response = test_client.post(
+        f"assistant/{created.id}/update",
+        json=AssistantUpdate(
+            version=created.latest_version.version,
+            name="Carry confirmation assistant updated",
+        ).model_dump(),
+        headers=headers,
+    )
+
+    assert update_response.status_code == 200
+    updated = AssistantResponse.model_validate(update_response.json())
+    assert updated.latest_version.compliance_confirmation is True
+
+
+@pytest.mark.integration
+def test_update_assistant_prompt_changed_defaults_confirmation_to_false(
+    test_client,
+):
+    """Update resets confirmation to false when prompt changes and no explicit confirmation is provided."""
+    create_response = test_client.post(
+        "assistant/create",
+        json=AssistantCreate(
+            name="Reset confirmation assistant",
+            system_prompt="Original prompt.",
+            compliance_confirmation=True,
+        ).model_dump(),
+        headers=headers,
+    )
+    assert create_response.status_code == 200
+    created = AssistantResponse.model_validate(create_response.json())
+    assert created.latest_version.compliance_confirmation is True
+
+    update_response = test_client.post(
+        f"assistant/{created.id}/update",
+        json=AssistantUpdate(
+            version=created.latest_version.version,
+            system_prompt="Changed prompt.",
+            compliance_confirmation=None,
+        ).model_dump(),
+        headers=headers,
+    )
+
+    assert update_response.status_code == 200
+    updated = AssistantResponse.model_validate(update_response.json())
+    assert updated.latest_version.compliance_confirmation is False
+
+
+@pytest.mark.integration
 def test_create_assistant_minimal_data(test_client):
     """Test creating assistant with minimal required data."""
     minimal_assistant = AssistantCreate(

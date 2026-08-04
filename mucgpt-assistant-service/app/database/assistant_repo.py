@@ -84,6 +84,7 @@ class AssistantRepository(Repository[Assistant]):
         quick_prompts: list[QuickPrompt] | None = None,
         tags: list[str] | None = None,
         compliance_check_result: dict[str, Any] | None = None,
+        compliance_confirmation: bool = False,
     ) -> AssistantVersion:
         """Creates a new version for an assistant with explicit parameters."""
         logger.info(f"Creating new version for assistant {assistant.id}")
@@ -111,6 +112,7 @@ class AssistantRepository(Repository[Assistant]):
                 quick_prompts=serialized_quick_prompts,
                 tags=tags or [],
                 compliance_check_result=compliance_check_result,
+                compliance_confirmation=compliance_confirmation,
             )
 
             self.session.add(new_version)

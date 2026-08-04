@@ -78,6 +78,9 @@ class AssistantVersion(Base):
     quick_prompts = Column(JSON, nullable=True)
     tags = Column(JSON, nullable=True)
     compliance_check_result = Column(JSON, nullable=True)
+    compliance_confirmation = Column(
+        Boolean, default=False, nullable=False, server_default="0"
+    )
 
     assistant = relationship("Assistant", back_populates="versions")
     tool_associations = relationship(
@@ -105,6 +108,7 @@ class AssistantVersion(Base):
             "quick_prompts": self.quick_prompts,
             "tags": self.tags,
             "compliance_check_result": self.compliance_check_result,
+            "compliance_confirmation": self.compliance_confirmation,
         }
 
     __table_args__ = (

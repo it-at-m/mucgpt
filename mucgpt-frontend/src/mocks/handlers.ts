@@ -920,6 +920,7 @@ export const handlers = [
                 examples: body.examples || current.latest_version.examples,
                 quick_prompts: body.quick_prompts || current.latest_version.quick_prompts,
                 tags: body.tags || current.latest_version.tags,
+                compliance_confirmation: body.compliance_confirmation ?? current.latest_version.compliance_confirmation ?? false,
                 created_at: new Date().toISOString()
             }
         };

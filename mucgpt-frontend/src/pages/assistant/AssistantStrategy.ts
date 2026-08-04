@@ -61,7 +61,8 @@ export class LocalAssistantStrategy implements AssistantStrategy {
             tags: newAssistant.tags || [],
             hierarchical_access: newAssistant.hierarchical_access || [],
             is_visible: newAssistant.is_visible,
-            compliance_check_result: newAssistant.compliance_check_result
+            compliance_check_result: newAssistant.compliance_check_result,
+            compliance_confirmation: newAssistant.compliance_confirmation
         });
 
         await assistantStorageService.deleteConfigAndChatsForAssistant(assistantId);
@@ -158,7 +159,8 @@ export class OwnedCommunityAssistantStrategy implements AssistantStrategy {
             tags: newAssistant.tags || [],
             version: Number(newAssistant.version),
             is_visible: newAssistant.is_visible,
-            compliance_check_result: newAssistant.compliance_check_result
+            compliance_check_result: newAssistant.compliance_check_result,
+            compliance_confirmation: newAssistant.compliance_confirmation
         };
 
         const response = await updateCommunityAssistantApi(assistantId, updateInput);

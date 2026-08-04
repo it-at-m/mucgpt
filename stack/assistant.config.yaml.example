@@ -22,7 +22,8 @@ LOG_CONFIG: "logconf.yaml"
 OWNER_CACHE_REFRESH_ON_READ: false
 # Optional: require server-side compliance verification before assistant create/update is accepted
 # Set to false for local setups without Redis-backed compliance cache.
-COMPLIANCE_REQUIRE_VERIFICATION: true
+# Keep this aligned with MUCGPT_CORE_AI_ACT_COMPLIANCE_CHECK_ENABLED.
+COMPLIANCE_REQUIRE_VERIFICATION: false
 
 # SSO Settings (Keycloak)
 # Used by both core and assistant services for authentication

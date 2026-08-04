@@ -26,6 +26,7 @@ import { ApiError } from "../../../api/fetch-utils";
 import { useGlobalToastContext } from "../../GlobalToastHandler/GlobalToastContext";
 import { StarterPromptModel } from "../../StarterPrompt";
 import { LLMContext } from "../../LLMSelector/LLMContextProvider";
+import { ConfigContext } from "../../../context/ConfigContext";
 import { FollowUpActionModel } from "../../FollowUpAction";
 import { useToolsContext } from "../../ToolsProvider";
 import { useAssistantState } from "../shared/hooks/useAssistantState";
@@ -136,6 +137,7 @@ interface SettingsFormProps {
     checkResult: ComplianceCheckResponse | null;
     checkLoading: boolean;
     checkOutdated: boolean;
+    complianceCheckEnabled: boolean;
     onConfirmedChange: (confirmed: boolean) => void;
     onStartCheck: () => void;
 }
@@ -266,18 +268,24 @@ function SettingsForm(props: SettingsFormProps) {
                     />
                 </SectionCard>
 
-                <SectionCard title={t("components.assistant_editor.section_review")} icon={<ClipboardCheckmark24Regular />} className={styles.sectionReview}>
-                    <ReviewSection
-                        confirmed={props.confirmed}
-                        confirmationResetKey={props.confirmationResetKey}
-                        checkResult={props.checkResult}
-                        checkLoading={props.checkLoading}
-                        checkOutdated={props.checkOutdated}
-                        isOwner={props.isOwner}
-                        onConfirmedChange={props.onConfirmedChange}
-                        onStartCheck={props.onStartCheck}
-                    />
-                </SectionCard>
+                {props.complianceCheckEnabled && (
+                    <SectionCard
+                        title={t("components.assistant_editor.section_review")}
+                        icon={<ClipboardCheckmark24Regular />}
+                        className={styles.sectionReview}
+                    >
+                        <ReviewSection
+                            confirmed={props.confirmed}
+                            confirmationResetKey={props.confirmationResetKey}
+                            checkResult={props.checkResult}
+                            checkLoading={props.checkLoading}
+                            checkOutdated={props.checkOutdated}
+                            isOwner={props.isOwner}
+                            onConfirmedChange={props.onConfirmedChange}
+                            onStartCheck={props.onStartCheck}
+                        />
+                    </SectionCard>
+                )}
             </main>
         </div>
     );
@@ -287,6 +295,7 @@ export const AssistantEditorPage = (props: AssistantEditorPageProps) => {
     const { t } = useTranslation();
     const navigate = useNavigate();
     const { LLM } = useContext(LLMContext);
+    const appConfig = useContext(ConfigContext);
     const { showError, showSuccess } = useGlobalToastContext();
     const { tools: availableTools } = useToolsContext();
 
@@ -320,6 +329,7 @@ export const AssistantEditorPage = (props: AssistantEditorPageProps) => {
     const editState = useAssistantState(editAssistant ?? emptyAssistant);
 
     const state = isCreate ? createState : editState;
+    const isComplianceCheckEnabled = appConfig.ai_act_compliance_check_enabled;
 
     const [loading, setLoading] = useState(false);
     const [discardOpen, setDiscardOpen] = useState(false);
@@ -380,7 +390,7 @@ export const AssistantEditorPage = (props: AssistantEditorPageProps) => {
         const assistantTitle = s.title.trim();
         const systemPrompt = s.systemPrompt.trim();
         const systemPromptChanged = !isCreate && systemPrompt !== editAssistant?.system_message.trim();
-        const requiresComplianceReview = isCreate || systemPromptChanged;
+        const requiresComplianceReview = isComplianceCheckEnabled && (isCreate || systemPromptChanged);
 
         const complianceCheckFailed = reviewCheckResult?.overall_status === "error";
         if (
@@ -394,8 +404,8 @@ export const AssistantEditorPage = (props: AssistantEditorPageProps) => {
 
         setLoading(true);
 
-        const complianceResultToSave = reviewCheckOutdated ? undefined : (reviewCheckResult ?? undefined);
-        const complianceConfirmationToSave = reviewConfirmed;
+        const complianceResultToSave = isComplianceCheckEnabled ? (reviewCheckOutdated ? undefined : (reviewCheckResult ?? undefined)) : undefined;
+        const complianceConfirmationToSave = isComplianceCheckEnabled ? reviewConfirmed : false;
 
         const validFollowUpActions = (s.followUpActions ?? []).filter(
             (followUpAction: FollowUpActionModel) => followUpAction.label?.trim() && followUpAction.prompt?.trim()
@@ -480,7 +490,8 @@ export const AssistantEditorPage = (props: AssistantEditorPageProps) => {
         showError,
         showSuccess,
         navigate,
-        props
+        props,
+        isComplianceCheckEnabled
     ]);
 
     const handleGenerate = useCallback(async () => {
@@ -563,7 +574,7 @@ export const AssistantEditorPage = (props: AssistantEditorPageProps) => {
     const settingsState = isCreate ? createState : editState;
     const previewToolIds = useMemo(() => (settingsState.tools ?? []).map(tool => tool.id), [settingsState.tools]);
     const systemPromptChanged = !isCreate && settingsState.systemPrompt.trim() !== editAssistant?.system_message.trim();
-    const requiresComplianceReview = isCreate || systemPromptChanged;
+    const requiresComplianceReview = isComplianceCheckEnabled && (isCreate || systemPromptChanged);
     const isSettingsValid =
         settingsState.title.trim() !== "" &&
         settingsState.systemPrompt.trim() !== "" &&
@@ -653,6 +664,7 @@ export const AssistantEditorPage = (props: AssistantEditorPageProps) => {
                         checkResult={reviewCheckResult}
                         checkLoading={reviewCheckLoading}
                         checkOutdated={reviewCheckOutdated}
+                        complianceCheckEnabled={isComplianceCheckEnabled}
                         onConfirmedChange={setReviewConfirmed}
                         onStartCheck={handleStartComplianceCheck}
                     />

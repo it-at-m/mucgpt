@@ -109,6 +109,7 @@ Any YAML setting can be overridden. Nested sections use `__` (double underscore)
 ```bash
 # Top-level field
 MUCGPT_CORE_VERSION=1.0.0              # → VERSION: "1.0.0"
+MUCGPT_CORE_AI_ACT_COMPLIANCE_CHECK_ENABLED=false  # → AI_ACT_COMPLIANCE_CHECK_ENABLED: false
 
 # Nested field (DB section in assistant service)
 MUCGPT_ASSISTANT_DB__HOST=postgres      # → DB: { HOST: "postgres" }

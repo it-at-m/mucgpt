@@ -465,6 +465,10 @@ class ConfigResponse(BaseModel):
         False,
         description="Whether browser-based audio transcription is enabled in the frontend.",
     )
+    ai_act_compliance_check_enabled: bool = Field(
+        True,
+        description="Whether the AI Act compliance check workflow is enabled in the frontend assistant editor and discovery UI.",
+    )
     footer_link_url: str | None = Field(
         None,
         description="URL for the footer link.",

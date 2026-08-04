@@ -699,6 +699,30 @@ class TestTranscriptionSettings:
         get_settings.cache_clear()
 
 
+class TestAiActComplianceCheckSettings:
+    """Test cases for AI Act compliance check frontend feature flag configuration."""
+
+    def test_ai_act_compliance_check_enabled_default(self):
+        """AI_ACT_COMPLIANCE_CHECK_ENABLED defaults to True."""
+        with patch.dict(os.environ, {}, clear=True):
+            settings = Settings()
+            assert settings.AI_ACT_COMPLIANCE_CHECK_ENABLED is True
+
+    def test_ai_act_compliance_check_enabled_via_env(self):
+        """AI_ACT_COMPLIANCE_CHECK_ENABLED can be disabled via environment variable."""
+        with patch.dict(
+            os.environ,
+            {
+                "MUCGPT_CORE_AI_ACT_COMPLIANCE_CHECK_ENABLED": "false",
+            },
+        ):
+            settings = Settings()
+            assert settings.AI_ACT_COMPLIANCE_CHECK_ENABLED is False
+
+    def teardown_method(self):
+        get_settings.cache_clear()
+
+
 class TestRedisSettings:
     """Test cases for Redis configuration (nested under Settings)."""
 

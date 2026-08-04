@@ -1,4 +1,4 @@
-import { type ReactElement, useCallback, useEffect, useRef, useState } from "react";
+import { type ReactElement, useCallback, useContext, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Title1, Body1, Text, SearchBox, Dropdown, Option, Button } from "@fluentui/react-components";
 import type { SearchBoxChangeEvent, InputOnChangeData, SelectionEvents, OptionOnSelectData } from "@fluentui/react-components";
@@ -26,6 +26,7 @@ import { useMigrateLocalAssistant } from "../../hooks/useMigrateLocalAssistant";
 import { downloadAssistantExport, mapAssistantToExportData, mapVersionToExportData } from "../../utils/assistant-export";
 import { isCompleteCommunityAssistantSnapshot, mapCommunitySnapshotToAssistant } from "../../utils/community-assistant-snapshots";
 import { ApiError } from "../../api/fetch-utils";
+import { ConfigContext } from "../../context/ConfigContext";
 
 const communityAssistantStorageService = new CommunityAssistantStorageService(COMMUNITY_ASSISTANT_STORE);
 const assistantStorageService = new AssistantStorageService(ASSISTANT_STORE);
@@ -49,8 +50,10 @@ type SectionEmptyStateProps = {
 const Discovery = () => {
     const { t } = useTranslation();
     const navigate = useNavigate();
+    const appConfig = useContext(ConfigContext);
     const { showError, showSuccess } = useGlobalToastContext();
     const { refreshHistory: refreshUnifiedHistory } = useUnifiedHistory();
+    const isComplianceCheckEnabled = appConfig.ai_act_compliance_check_enabled;
 
     const [isDrawerOpen, setIsDrawerOpen] = useState(false);
     const [selectedAssistant, setSelectedAssistant] = useState<AssistantCardData | null>(null);
@@ -255,7 +258,7 @@ const Discovery = () => {
                   ? assistant.rawData.compliance_check_result
                   : undefined;
 
-        if (complianceCheckResult?.overall_status === "passed") {
+        if (isComplianceCheckEnabled && complianceCheckResult?.overall_status === "passed") {
             badges.push({
                 label: t("components.community_assistants.compliance_passed_badge"),
                 color: "success",
@@ -263,7 +266,7 @@ const Discovery = () => {
             });
         }
 
-        if (complianceCheckResult?.overall_status === "high_risk_detected") {
+        if (isComplianceCheckEnabled && complianceCheckResult?.overall_status === "high_risk_detected") {
             badges.push({
                 label: t("components.community_assistants.compliance_high_risk_badge"),
                 color: "danger",

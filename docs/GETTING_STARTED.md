@@ -102,6 +102,44 @@ Settings are loaded in this order (highest priority wins):
 
 This means environment variables always override YAML values, which is useful for injecting secrets in CI/CD.
 
+### Data storage overview
+
+MUCGPT stores data in two layers:
+
+- PostgreSQL (persistent):
+  - Assistants and their versions
+  - Assistant subscriptions
+- Redis/Valkey (temporary cache):
+  - MCP tool metadata cache (core service, key prefix: `mcp_tools_raw:`)
+  - LDAP/Active Directory data cache (assistant service, key: `mucgpt:directory-tree:v1`)
+  - Assistant compliance verification cache (key prefix: `mucgpt:assistant-compliance:v1:`)
+
+Notes:
+
+- PostgreSQL is the source of truth for assistant and subscription data.
+- Redis/Valkey entries are TTL-based and can expire:
+  - MCP tools: configured via `MCP.CACHE_TTL` (default: 12h)
+  - LDAP directory cache: configured via `LDAP.CACHE_TTL` (default: 14d)
+  - Compliance verification cache: configured via `COMPLIANCE_CACHE_TTL_SECONDS` (default: 30m)
+
+### Browser storage (frontend)
+
+In addition to backend storage, the frontend uses browser storage for UX state and local history:
+
+- IndexedDB:
+  - `MUCGPT-ASSISTANTS` (assistant data)
+  - `MUCGPT-CHAT` (chat data)
+  - `MUCGPT-COMMUNITY-ASSISTANTS` (community assistant data)
+- localStorage:
+  - UI/user preferences (for example language, theme, selected tools, selected model)
+  - Parsed document history/content cache (`MUCGPT_PARSED_DOCUMENTS_V1`)
+- sessionStorage:
+  - Route-local draft text in the question input
+- Cookies:
+  - `XSRF-TOKEN` is read by the frontend and sent as `X-XSRF-TOKEN` request header
+
+Note: Browser storage is client-local and can be cleared by the user/browser.
+
 ### Environment Variable Override Examples
 
 Any YAML setting can be overridden. Nested sections use `__` (double underscore):

@@ -19,8 +19,8 @@ from pydantic_settings import (
 class SSOConfig(BaseModel):
     """SSO configuration (nested under SSO key in YAML)."""
 
-    ROLE: str | None = "lhm-ab-mucgpt-user"
-    ADMIN_ROLE: str | None = "lhm-ab-mucgpt-admin"
+    ROLE: str | None = None
+    ADMIN_ROLE: str | None = None
 
 
 class DBConfig(BaseModel):

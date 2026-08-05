@@ -21,12 +21,10 @@ class AuthenticationHelper:
         self,
         role: str,
         admin_role: str = "",
-        beta_role: str = "",
         use_role_restriction: bool = True,
     ):
         self.role = role
         self.admin_role = admin_role
-        self.beta_role = beta_role
         self.use_role_restriction = use_role_restriction
 
     def parse_jwt_payload(self, token: str) -> dict:
@@ -71,7 +69,7 @@ class AuthenticationHelper:
         """Authenticates the user based on the access token.
         Basic access is granted to any user with a valid, parseable token,
         regardless of assigned roles. Roles are only extracted to populate
-        informational flags (e.g. is_admin/is_beta) reserved for future use.
+        an informational is_admin flag reserved for future use.
         Raises AuthError if the token is missing or invalid.
         """
         logger.debug("Starting authentication process")
@@ -98,7 +96,6 @@ class AuthenticationHelper:
             name=self.getName(token_payload),
             roles=roles,
             is_admin=bool(self.admin_role) and self.admin_role in roles,
-            is_beta=bool(self.beta_role) and self.beta_role in roles,
         )
 
     def getRoles(self, token_payload: dict) -> list[str]:
@@ -158,7 +155,6 @@ def authenticate_user(
     auth_helper = AuthenticationHelper(
         role=sso_settings.ROLE,
         admin_role=sso_settings.ADMIN_ROLE,
-        beta_role=sso_settings.BETA_ROLE,
         use_role_restriction=sso_settings.USE_ROLE_RESTRICTION,
     )
 

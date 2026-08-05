@@ -11,7 +11,6 @@ class AuthenticationResult(BaseModel):
         name: The full name of the authenticated user
         roles: List of roles assigned to the user
         is_admin: Whether the user holds the configured admin role (reserved for future use)
-        is_beta: Whether the user holds the configured beta role (reserved for future use)
     """
 
     user_id: str
@@ -19,7 +18,6 @@ class AuthenticationResult(BaseModel):
     name: str | None = None
     roles: list[str] | None = None
     is_admin: bool = False
-    is_beta: bool = False
 
     class Config:
         json_schema_extra = {
@@ -29,7 +27,6 @@ class AuthenticationResult(BaseModel):
                 "name": "John Doe",
                 "roles": ["mucgpt-user"],
                 "is_admin": False,
-                "is_beta": False,
             }
         }
 

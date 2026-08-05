@@ -42,7 +42,7 @@ def test_admin_flag_defaults_to_false():
         _token(
             {
                 "sub": "user-id",
-                "resource_access": {"mucgpt": {"roles": ["mucgpt-user"]}},
+                "resource_access": {"mucgpt": {"roles": ["required-role"]}},
             }
         )
     )

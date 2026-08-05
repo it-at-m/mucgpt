@@ -19,13 +19,18 @@ class AuthenticationHelper:
 
     def __init__(
         self,
-        role: str,
-        admin_role: str = "",
-        use_role_restriction: bool = True,
+        role: str | None,
+        admin_role: str | None = None,
     ):
         self.role = role
         self.admin_role = admin_role
-        self.use_role_restriction = use_role_restriction
+
+    def _configured_roles(self) -> set[str]:
+        return {
+            role.strip()
+            for role in (self.role, self.admin_role)
+            if role and role.strip()
+        }
 
     def parse_jwt_payload(self, token: str) -> dict:
         """Parse JWT token and extract payload.
@@ -67,10 +72,12 @@ class AuthenticationHelper:
 
     def authenticate(self, accesstoken: str) -> AuthenticationResult:
         """Authenticates the user based on the access token.
-        Basic access is granted to any user with a valid, parseable token,
-        regardless of assigned roles. Roles are only extracted to populate
-        an informational is_admin flag reserved for future use.
-        Raises AuthError if the token is missing or invalid.
+        Access is granted to users holding either the configured basic role
+        or the configured admin role. If neither role is configured, any user
+        with a valid token is allowed.
+
+        Raises AuthError if the token is missing, invalid, or the user does
+        not hold any configured access role.
         """
         logger.debug("Starting authentication process")
         if accesstoken is None:
@@ -80,14 +87,17 @@ class AuthenticationHelper:
         token_payload = self.parse_jwt_payload(accesstoken)
         logger.debug(f"token_payload: {token_payload}")
 
-        try:
-            roles = self.getRoles(token_payload)
-            logger.debug(f"User roles: {roles}")
-        except KeyError:
-            logger.warning("Authentication failed: No roles found in token")
+        roles = self.getRoles(token_payload)
+        logger.debug(f"User roles: {roles}")
+
+        configured_roles = self._configured_roles()
+        if configured_roles and not configured_roles.intersection(roles):
+            logger.warning(
+                "Authentication failed: None of the configured access roles were found in user roles"
+            )
             raise AuthError(
                 ACCESS_DENIED_MESSAGE,
-                status_code=401,
+                status_code=403,
             )
 
         return AuthenticationResult(
@@ -155,7 +165,6 @@ def authenticate_user(
     auth_helper = AuthenticationHelper(
         role=sso_settings.ROLE,
         admin_role=sso_settings.ADMIN_ROLE,
-        use_role_restriction=sso_settings.USE_ROLE_RESTRICTION,
     )
 
     try:

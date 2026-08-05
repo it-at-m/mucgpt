@@ -3,7 +3,8 @@ import json
 
 import pytest
 
-from core.auth import AuthenticationHelper
+from core.auth import ACCESS_DENIED_MESSAGE, AuthenticationHelper
+from core.auth_models import AuthError
 
 
 def _token(payload: dict) -> str:
@@ -11,8 +12,8 @@ def _token(payload: dict) -> str:
     return f"header.{encoded_payload.rstrip('=')}.signature"
 
 
-def test_role_restriction_is_disabled_by_default():
-    result = AuthenticationHelper(role="required-role").authenticate(
+def test_access_is_open_when_no_roles_are_configured():
+    result = AuthenticationHelper(role=None, admin_role=None).authenticate(
         _token({"sub": "user-id"})
     )
 
@@ -20,16 +21,17 @@ def test_role_restriction_is_disabled_by_default():
     assert result.roles == []
 
 
-@pytest.mark.parametrize("use_role_restriction", [True, False])
-def test_basic_access_is_unconditional(use_role_restriction):
-    """A user without the required role must always get basic access,
-    regardless of USE_ROLE_RESTRICTION - it's reserved for future admin gating."""
-    helper = AuthenticationHelper(
-        role="required-role",
-        use_role_restriction=use_role_restriction,
-    )
+def test_basic_role_grants_access():
+    helper = AuthenticationHelper(role="required-role")
 
-    result = helper.authenticate(_token({"sub": "user-id"}))
+    result = helper.authenticate(
+        _token(
+            {
+                "sub": "user-id",
+                "resource_access": {"mucgpt": {"roles": ["required-role"]}},
+            }
+        )
+    )
 
     assert result.user_id == "user-id"
     assert result.is_admin is False
@@ -61,3 +63,36 @@ def test_admin_flag_is_set_when_admin_role_present():
     )
 
     assert result.is_admin is True
+
+
+def test_admin_role_grants_access_without_basic_role():
+    helper = AuthenticationHelper(role="required-role", admin_role="admin-role")
+
+    result = helper.authenticate(
+        _token(
+            {
+                "sub": "user-id",
+                "resource_access": {"mucgpt": {"roles": ["admin-role"]}},
+            }
+        )
+    )
+
+    assert result.user_id == "user-id"
+    assert result.is_admin is True
+
+
+def test_user_without_basic_or_admin_role_is_denied():
+    helper = AuthenticationHelper(role="required-role", admin_role="admin-role")
+
+    with pytest.raises(AuthError) as exc_info:
+        helper.authenticate(
+            _token(
+                {
+                    "sub": "user-id",
+                    "resource_access": {"mucgpt": {"roles": ["different-role"]}},
+                }
+            )
+        )
+
+    assert exc_info.value.status_code == 403
+    assert exc_info.value.error == ACCESS_DENIED_MESSAGE

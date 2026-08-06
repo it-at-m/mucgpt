@@ -1484,7 +1484,7 @@ wheels = [
 
 [[package]]
 name = "mucgpt-core-service"
-version = "0.15.11"
+version = "0.15.12"
 source = { virtual = "." }
 dependencies = [
     { name = "asgi-correlation-id" },

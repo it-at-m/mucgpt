@@ -222,7 +222,6 @@ class ContextMiddleware(AgentMiddleware):
 
     The policy is resolved from the state type via the policy registry:
     - ``DefaultAgentState``   → ``DefaultScopePolicy`` (no-op, all tools forwarded)
-    - ``AtlassianAgentState`` → ``AtlassianScopePolicy`` (scope-aware tool filtering)
 
     Additional state types can be registered in ``agent.tools.policies``.
     """

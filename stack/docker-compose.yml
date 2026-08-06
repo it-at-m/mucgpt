@@ -278,10 +278,6 @@ services:
       HTTPS_PROXY: ${HTTPS_PROXY:-}
       https_proxy: ${HTTPS_PROXY:-}
     command:
-      - tool
-      - run
-      - --from
-      - mcpdoc
       - mcpdoc
       - --urls
       - "KI in München:https://ki.muenchen.de/llms.txt"

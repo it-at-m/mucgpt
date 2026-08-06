@@ -1,9 +1,11 @@
+from contextlib import nullcontext
 from unittest.mock import MagicMock
 
 import pytest
-from langchain_core.messages import AIMessage, ToolCall
+from langchain_core.messages import AIMessage, AIMessageChunk, ToolCall
 
 from agent.agent_executor import MUCGPTAgentExecutor
+from agent.tools.tool_chunk import ToolStreamChunk, ToolStreamState
 from api.api_models import ChatCompletionMessage as InputMessage
 
 
@@ -87,6 +89,58 @@ class DummyAgent:
         self.model = llm
         self.graph = MagicMock()
         self.graph.astream = llm.astream
+
+
+class FakeLangfuseSpan:
+    def __init__(self):
+        self.updates = []
+
+    def update(self, **kwargs):
+        self.updates.append(kwargs)
+
+
+class FakeLangfuseClient:
+    def __init__(self):
+        self.current_span_updates = []
+        self.spans = []
+
+    def update_current_span(self, **kwargs):
+        self.current_span_updates.append(kwargs)
+
+    def start_as_current_observation(self, **_kwargs):
+        span = FakeLangfuseSpan()
+        self.spans.append(span)
+        return nullcontext(span)
+
+
+class StreamingGraph:
+    async def astream(self, *_args, **_kwargs):
+        yield (
+            "messages",
+            (
+                AIMessageChunk(content="hidden"),
+                {"langgraph_node": "model", "run_name": "internal_scope_router"},
+            ),
+        )
+        yield (
+            "messages",
+            (AIMessageChunk(content="visible"), {"langgraph_node": "model"}),
+        )
+        yield (
+            "custom",
+            ToolStreamChunk(
+                state=ToolStreamState.STARTED,
+                content="started",
+                tool_name="example_tool",
+            ).model_dump_json(),
+        )
+        yield ("updates", {"agent": {"messages": [AIMessage(content="done")]}})
+
+
+class StreamingAgent:
+    def __init__(self):
+        self.model = DummyRunnerLLM()
+        self.graph = StreamingGraph()
 
 
 class TestMUCGPTAgentExecutor:
@@ -209,3 +263,47 @@ class TestMUCGPTAgentExecutor:
             user_info=None,
         )
         assert response.choices[0].finish_reason == "error"
+
+    @pytest.mark.asyncio
+    async def test_run_with_streaming_traces_internal_tool_and_update_events(
+        self, monkeypatch
+    ):
+        langfuse_client = FakeLangfuseClient()
+        monkeypatch.setattr("agent.agent_executor.get_client", lambda: langfuse_client)
+        monkeypatch.setattr(
+            "agent.agent_executor.propagate_attributes",
+            lambda **_kwargs: nullcontext(),
+        )
+        runner = MUCGPTAgentExecutor(StreamingAgent())
+
+        chunks = []
+        async for chunk in runner.run_with_streaming(
+            messages=[InputMessage(role="user", content="hi")],
+            temperature=0.7,
+            model="test",
+            user_info=None,
+            conversation_id="chat-123",
+        ):
+            chunks.append(chunk)
+
+        streamed_content = "".join(
+            choice["delta"].get("content") or ""
+            for chunk in chunks
+            for choice in chunk["choices"]
+        )
+        assert "visible" in streamed_content
+        assert "hidden" not in streamed_content
+
+        trace_span = langfuse_client.spans[0]
+        trace_output = trace_span.updates[0]["output"]
+        events = trace_output["events"]
+        assert [event["stream"] for event in events] == [
+            "messages",
+            "messages",
+            "custom",
+            "updates",
+        ]
+        assert events[0]["internal"] is True
+        assert events[0]["content"] == "hidden"
+        assert events[2]["content"]["tool_name"] == "example_tool"
+        assert events[3]["content"]["agent"]["messages"][0]["content"] == "done"

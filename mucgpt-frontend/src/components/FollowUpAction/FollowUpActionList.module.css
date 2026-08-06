@@ -1,16 +1,22 @@
 .item {
     width: auto;
-    min-width: 140px;
-    padding: 10px 14px;
-    border-radius: 999px;
-    font-weight: 600;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+    min-width: 120px;
+    padding: 4px 10px !important;
+    color: var(--colorNeutralForeground3) !important;
+    border-color: var(--colorNeutralStroke3) !important;
     transition:
         background-color 0.2s ease,
         color 0.2s ease,
         border-color 0.2s ease,
-        box-shadow 0.2s ease,
         transform 0.15s ease;
+}
+
+.label {
+    display: block;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .buttons {
@@ -24,33 +30,19 @@
 }
 
 .item:hover {
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.12);
-    transform: translateY(-1px);
+    color: var(--colorNeutralForeground1) !important;
 }
 
-.item:active {
-    background-color: var(--colorBrandBackground);
-    color: var(--colorNeutralStrokeDisabled);
-    border-color: var(--colorNeutralStroke2);
-    transform: translateY(0);
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
-}
-
-.item:focus-visible {
-    outline: 2px solid var(--colorBrandBackground);
-    outline-offset: 2px;
-}
-
-.item:disabled {
-    background-color: var(--colorNeutralBackground1);
-    color: var(--colorNeutralForegroundDisabled);
-    border-color: var(--colorNeutralStroke1);
-    box-shadow: none;
-}
-
+/* On narrow screens the pills wrap into short rows instead of stacking full-width,
+   so the action list costs as little vertical space as possible above the input. */
 @media (max-width: 650px) {
     .buttons {
-        flex-direction: column;
-        align-items: stretch;
+        gap: 6px;
+    }
+
+    .item {
+        min-width: 0;
+        flex: 0 1 auto;
+        max-width: 100%;
     }
 }

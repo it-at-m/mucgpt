@@ -17,7 +17,10 @@ type AppCssVariableName =
     | "--app-assistant-config-surface-hover"
     | "--app-assistant-config-surface-editing"
     | "--app-assistant-config-border"
-    | "--app-assistant-config-border-hover";
+    | "--app-assistant-config-border-hover"
+    | "--app-user-message-background"
+    | "--app-radius-xsmall"
+    | "--app-radius-xxlarge";
 
 export type AppCssVariables = Record<AppCssVariableName, string>;
 
@@ -265,5 +268,8 @@ export const createAppCssVars = (tokens: AppThemeTokens): AppCssVariables => ({
     "--app-assistant-config-surface-hover": tokens.assistantConfigSurfaceHover,
     "--app-assistant-config-surface-editing": tokens.assistantConfigSurfaceEditing,
     "--app-assistant-config-border": tokens.assistantConfigBorder,
-    "--app-assistant-config-border-hover": tokens.assistantConfigBorderHover
+    "--app-assistant-config-border-hover": tokens.assistantConfigBorderHover,
+    "--app-user-message-background": tokens.userMessageBackground,
+    "--app-radius-xsmall": "2px",
+    "--app-radius-xxlarge": "24px"
 });

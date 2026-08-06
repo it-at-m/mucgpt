@@ -55,7 +55,7 @@ chat request), not accidental complexity - don't try to simplify this away.
 
 **State schema (`select_agent_state_schema`, `state_models/registry.py`)**
 The agent picks a LangGraph state schema based on which `mcp_group` the
-enabled tools share (e.g. all-Atlassian tools -> `AtlassianAgentState`). This
+enabled tools share. This
 reads `tool.metadata["mcp_group"]` off the actual constructed `BaseTool`
 objects at request time - untouched by this cleanup. `LocalTool.mcp_group` is
 a separate, read-only mirror of the same value used only by `tool_metadata.py`
@@ -100,9 +100,3 @@ pick it up automatically.
   and the redundant per-turn re-bind in `react_agent.py::_prepare_run`. Not
   done here - it touches the request pipeline outside `agent/tools/`, and
   wasn't in scope for this pass.
-
-- **Aside, unrelated to the above:** `policies.py`'s Atlassian scope router
-  reads `tool.metadata.get("mcp_scope")` (`policies.py:_tool_scope`), but
-  `McpLoader` only ever sets `metadata["mcp_group"]` - `mcp_scope` is never
-  set anywhere, so that lookup always falls through to name-matching
-  (`"jira" in tool_name`, etc). Separate subsystem, not touched here.

@@ -51,21 +51,19 @@ MCP:
     # Example for custom headers to authenticate with MCP server via litellm proxy
     # authentication with litellm via Bearer
     # authentication with mcp server via basic auth
-    "mcp-atlassian":
+    "mcp-name":
       url: "<your-mcp-url>"
       transport: "streamable_http"
       forward_token: true
       forward_auth_override: "Basic <base64 encoded email:token>"
       headers:
         x-litellm-api-key: "<your-api-key>"
-      group: "atlassian"
+      group: "name"
       # Example tool description overrides.
       descriptions:
-        - name: "atlassianUserInfo"
-          description: "Retrieve details about the currently authenticated Atlassian user (e.g. accountId). Use for user context or attribution."
-        - name: "getAccessibleAtlassianResources"
-          description: "Resolve available Atlassian sites and their cloudIds (i.e. the url). Use when cloudId is unknown or a hostname-based guess fails."
-      # ...
+        - name: "tool-name"
+          description: "detailed tool description"
+        # ...
   CACHE_TTL: 123
 
 # Internet Search Settings (SearXNG)

@@ -290,10 +290,8 @@ class ModelsConfig(BaseModel):
 class SSOConfig(BaseModel):
     """SSO configuration (nested under SSO key in YAML)."""
 
-    # Reserved for future admin-role gating; does not affect basic access.
-    USE_ROLE_RESTRICTION: bool = True
-    ROLE: str = "lhm-ab-mucgpt-user"
-    ADMIN_ROLE: str = "lhm-ab-mucgpt-admin"
+    ROLE: str | None = None
+    ADMIN_ROLE: str | None = None
 
 
 class LangfuseConfig(BaseModel):

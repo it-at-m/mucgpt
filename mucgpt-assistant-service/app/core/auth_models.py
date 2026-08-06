@@ -10,7 +10,7 @@ class AuthenticationResult(BaseModel):
         department: The department the user belongs to
         name: The full name of the authenticated user
         roles: List of roles assigned to the user
-        is_admin: Whether the user holds the configured admin role (reserved for future use)
+        is_admin: Whether the user holds the configured admin role
     """
 
     user_id: str

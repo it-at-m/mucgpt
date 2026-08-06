@@ -19,10 +19,8 @@ from pydantic_settings import (
 class SSOConfig(BaseModel):
     """SSO configuration (nested under SSO key in YAML)."""
 
-    ROLE: str = "lhm-ab-mucgpt-user"
-    # Reserved for future admin-role gating; does not affect basic access.
-    USE_ROLE_RESTRICTION: bool = True
-    ADMIN_ROLE: str = "lhm-ab-mucgpt-admin"
+    ROLE: str | None = None
+    ADMIN_ROLE: str | None = None
 
 
 class DBConfig(BaseModel):

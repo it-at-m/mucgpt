@@ -351,7 +351,7 @@ class TestSettings:
             get_sso_settings.cache_clear()
             get_settings.cache_clear()
             sso_settings = get_sso_settings()
-            assert sso_settings.ROLE == None
+            assert sso_settings.ROLE is None
 
     def test_langfuse_settings(self):
         """Test Langfuse settings configuration via nested env vars."""

@@ -488,6 +488,7 @@ i18n
                             system_prompt: "System-Prompt",
                             system_prompt_description:
                                 "Die Grundanweisung für den Assistenten. Sie legt seine Rolle, Aufgaben und Verhaltensregeln für Antworten fest.",
+                            system_prompt_locked_during_check: "Der System-Prompt ist gesperrt, solange die Prüfung läuft.",
                             prompt_placeholder:
                                 "Du bist ein Assistent für E-Mails.\n\nAufgabe:\nSchreibe kurze und höfliche Entwürfe.\n\nRegeln:\n- Verwende die Höflichkeitsform (Sie).\n- Fasse dich kurz.",
 
@@ -498,6 +499,39 @@ i18n
                             section_tools: "Werkzeuge",
                             section_conversation_options: "Unterhaltungsoptionen",
                             section_access: "Zugriff & Sichtbarkeit",
+                            section_review: "Prüfung",
+
+                            // Review section
+                            review_confirmation_label:
+                                "Ich bestätige, dass dieser Assistent nicht für einen in MUCGPT unzulässigen Hochrisiko-Anwendungsfall eingesetzt werden soll.",
+                            review_required_hint: "Diese Bestätigung ist erforderlich, um den Assistenten zu erstellen oder zu speichern.",
+                            review_intro_title: "Was sind Hochrisiko-Anwendungsfälle?",
+                            review_intro_description:
+                                "Hochrisiko-Anwendungsfälle sind KI-Einsätze, bei denen Entscheidungen oder Bewertungen über Menschen besonders folgenreich sein können, etwa in Personal, Bildung, öffentlichen Leistungen oder Migration.",
+                            review_check_title: "Anweisungen prüfen",
+                            review_check_description: "Prüfen Sie die Assistentenanweisungen auf Hinweise auf mögliche Hochrisiko-Anwendungsfälle.",
+                            review_check_learn_more: "Mehr über Hochrisiko-Anwendungsfälle erfahren",
+                            review_check_start: "Prüfung starten",
+                            review_check_recheck: "Erneut prüfen",
+                            review_check_running: "Prüfung läuft...",
+                            review_result_passed_title: "Alle Prüfungen bestanden",
+                            review_result_passed_description:
+                                "Es wurden keine Hinweise auf ein Hochrisikosystem gefunden. Die Prüfung dient nur zur Orientierung. Bitte bestätigen Sie abschließend, dass der Assistent für keinen unzulässigen Hochrisiko-Anwendungsfall eingesetzt wird.",
+                            review_result_warning_title: "Hinweis auf ein mögliches Hochrisikosystem",
+                            review_result_warning_guidance:
+                                "Bitte prüfen Sie die folgenden Stellen in den Anweisungen und ändern Sie diese gegebenenfalls, damit kein Hochrisiko-Anwendungsfall entsteht. Die Prüfung dient nur zur Orientierung.",
+                            review_result_error_title: "Prüfung fehlgeschlagen",
+                            review_result_error_description:
+                                "Die Prüfung konnte nicht durchgeführt werden. Speichern ist erst nach einer erfolgreichen erneuten Prüfung möglich.",
+                            review_result_outdated_title: "Ergebnis nicht mehr aktuell",
+                            review_result_outdated_description:
+                                "Der System-Prompt wurde nach dieser Prüfung geändert. Die Hinweise beziehen sich auf die vorherige Fassung. Starten Sie die Prüfung erneut, um ein aktuelles Ergebnis zu erhalten.",
+                            review_confirmation_label_high_risk:
+                                "Ich habe die Hinweise geprüft und bestätige, dass dieser Assistent nicht für einen in MUCGPT unzulässigen Hochrisiko-Anwendungsfall eingesetzt werden soll.",
+                            review_category_migration_asylum_border: "Migration, Asyl und Grenzkontrolle",
+                            review_category_public_services_access: "Zugang zu grundlegenden öffentlichen Diensten",
+                            review_category_hr_employment: "Beschäftigung und Personalmanagement",
+                            review_category_education: "Allgemeine und berufliche Bildung",
 
                             // Advanced settings fields
                             creativity: "Antwortstil",
@@ -564,6 +598,11 @@ i18n
                             assistant_creation_failed: "Assistent konnte nicht erstellt werden",
                             save_config_failed: "Speichern der Assistenten-Konfiguration fehlgeschlagen",
                             assistant_save_failed: "Speichern des Assistenten fehlgeschlagen",
+                            compliance_not_persisted_title: "Assistent gespeichert, Prüfungsergebnis nicht gespeichert",
+                            compliance_not_persisted_message:
+                                "Das letzte Prüfergebnis konnte serverseitig nicht verifiziert werden und wurde daher nicht mitgespeichert. Der Assistent wurde trotzdem gespeichert.",
+                            compliance_verification_failed_actionable:
+                                "Die Compliance-Prüfung konnte nicht serverseitig verifiziert werden. Bitte starten Sie die Prüfung erneut und speichern Sie erst nach erfolgreicher Prüfung. Wenn das Problem bestehen bleibt, kontaktieren Sie die Administration.",
                             assistant_generated_success: "Assistent erfolgreich generiert!",
                             assistant_generated_message: "Die Konfiguration Ihres Assistenten wurde generiert. Sie können sie jetzt überprüfen und anpassen.",
                             assistant_generation_failed: "Generierung der Assistenten-Konfiguration fehlgeschlagen",
@@ -693,6 +732,8 @@ i18n
                             duplicate_failed_forbidden: "Sie haben keine Berechtigung, diesen Assistenten zu duplizieren.",
                             duplicate_failed_not_found: "Der Assistent wurde nicht gefunden und kann nicht dupliziert werden.",
                             local_badge: "Lokal",
+                            compliance_passed_badge: "AI Act: Konform",
+                            compliance_high_risk_badge: "AI Act: Unzulässig",
                             local_state_title: "Dieser lokale Assistent ist veraltet",
                             discovery_local_hint:
                                 "Dieser Assistent ist nur lokal in Ihrem Browser gesichert und geht verloren, falls Sie das Gerät wechseln. Sichern Sie ihn jetzt, damit er dauerhaft erhalten bleibt.",
@@ -1246,6 +1287,7 @@ i18n
                             system_prompt: "System Prompt",
                             system_prompt_description:
                                 "The basic instruction for the assistant. It defines its role, tasks, and rules of behavior for responses.",
+                            system_prompt_locked_during_check: "The system prompt is locked while the check is running.",
                             prompt_placeholder:
                                 "You are an email assistant.\n\nTask:\nWrite short and polite drafts.\n\nRules:\n- Use formal language (you/your).\n- Keep it concise.",
 
@@ -1256,6 +1298,38 @@ i18n
                             section_tools: "Tools",
                             section_conversation_options: "Conversation Options",
                             section_access: "Access & Visibility",
+                            section_review: "Review",
+
+                            // Review section
+                            review_confirmation_label:
+                                "I confirm that this assistant is not intended to be used for a high-risk use case that is not permitted in MUCGPT.",
+                            review_required_hint: "This confirmation is required in order to create or save the assistant.",
+                            review_intro_title: "What are high-risk use cases?",
+                            review_intro_description:
+                                "High-risk use cases are AI applications in which decisions or assessments about people can be especially consequential, for example in human resources, education, public services or migration.",
+                            review_check_title: "Check instructions",
+                            review_check_description: "Check the assistant instructions for indications of possible high-risk use cases.",
+                            review_check_learn_more: "Learn more about high-risk use cases",
+                            review_check_start: "Start check",
+                            review_check_recheck: "Check again",
+                            review_check_running: "Check in progress...",
+                            review_result_passed_title: "All checks passed",
+                            review_result_passed_description:
+                                "No indications of a high-risk system were found. The check is for guidance only. Please confirm below that the assistant is not used for any impermissible high-risk use case.",
+                            review_result_warning_title: "Indication of a possible high-risk system",
+                            review_result_warning_guidance:
+                                "Please review the following parts of the instructions and change them if necessary so that no high-risk use case remains. The check is for guidance only.",
+                            review_result_error_title: "Check failed",
+                            review_result_error_description: "The check could not be performed. Saving is blocked until a successful re-check is available.",
+                            review_result_outdated_title: "Result no longer up to date",
+                            review_result_outdated_description:
+                                "The system prompt was changed after this check. The findings refer to the previous version. Run the check again to get an up-to-date result.",
+                            review_confirmation_label_high_risk:
+                                "I have reviewed the findings and confirm that this assistant is not intended for a high-risk use case that is not permitted in MUCGPT.",
+                            review_category_migration_asylum_border: "Migration, asylum and border control",
+                            review_category_public_services_access: "Access to essential public services",
+                            review_category_hr_employment: "Employment and personnel management",
+                            review_category_education: "General and vocational education",
 
                             // Advanced settings fields
                             creativity: "Answer style",
@@ -1321,6 +1395,11 @@ i18n
                             assistant_creation_failed: "Assistant could not be created",
                             save_config_failed: "Failed to save assistant configuration",
                             assistant_save_failed: "Failed to save assistant",
+                            compliance_not_persisted_title: "Assistant saved, compliance result not saved",
+                            compliance_not_persisted_message:
+                                "The latest compliance check result could not be verified by the server and was not persisted. The assistant was saved successfully.",
+                            compliance_verification_failed_actionable:
+                                "The compliance check could not be verified by the server. Please run the check again and save only after a successful check. If the problem persists, contact an administrator.",
                             assistant_generated_success: "Assistant generated successfully!",
                             assistant_generated_message: "Your assistant configuration has been generated. You can now review and customize it.",
                             assistant_generation_failed: "Failed to generate assistant configuration",
@@ -1449,6 +1528,8 @@ i18n
                             duplicate_failed_forbidden: "You do not have permission to duplicate this assistant.",
                             duplicate_failed_not_found: "The assistant was not found and cannot be duplicated.",
                             local_badge: "Local",
+                            compliance_passed_badge: "AI Act: Compliant",
+                            compliance_high_risk_badge: "AI Act: Not permitted",
                             local_state_title: "This local assistant is deprecated",
                             discovery_local_hint:
                                 "This assistant is only saved locally in your browser and will be lost if you switch devices. Save it now so it remains available.",
@@ -1991,6 +2072,7 @@ i18n
                             system_prompt: "System-Prompt",
                             system_prompt_description:
                                 "De Grundanweisung fürn Assistentn. Sie legt sei Rolle, Aufgabn und Verhoitensregeln für Antworten fest.",
+                            system_prompt_locked_during_check: "Da System-Prompt is gsperrt, solang de Prüfung lafft.",
                             prompt_placeholder:
                                 "Du bist a Assistent für E-Mails.\n\nAufgabe:\nSchreib kurze und feine Entwürfe.\n\nRegeln:\n- Verwende de Höflichkeitsform (Sie).\n- Fass di kurz.",
 
@@ -2001,6 +2083,38 @@ i18n
                             section_tools: "Werkzeig",
                             section_conversation_options: "Unterhaltungsoptionen",
                             section_access: "Zugriff & Sichtbarkeit",
+                            section_review: "Prüfung",
+
+                            // Review section
+                            review_confirmation_label:
+                                "I bstätig, dass der Assistent net für an in MUCGPT unzulässign Hochrisiko-Anwendungsfall herghalten soi.",
+                            review_required_hint: "De Bstätigung braucht ma, damit ma an Assistenten erstelln oda speichern ko.",
+                            review_intro_title: "Wos san Hochrisiko-Anwendungsfäi?",
+                            review_intro_description:
+                                "Hochrisiko-Anwendungsfäi san KI-Eisätz, wo Entscheidunga oda Bewertunga über Menschn bsonders folgnreich sei kennan, zum Beispui in Personoi, Buidung, öffentliche Leistunga oda Migration.",
+                            review_check_title: "Anweisungen prüfa",
+                            review_check_description: "Prüf de Assistentenanweisungen auf Hinweis auf möglche Hochrisiko-Anwendungsfäi.",
+                            review_check_learn_more: "Mehr über Hochrisiko-Anwendungsfäi erfahrn",
+                            review_check_start: "Prüfung starten",
+                            review_check_recheck: "Nochamoi prüfa",
+                            review_check_running: "Prüfung lafft...",
+                            review_result_passed_title: "Olle Prüfungen bestandn",
+                            review_result_passed_description:
+                                "Es gibt koane Hinweis auf a Hochrisikosystem. De Prüfung is bloß a Orientierung. Bitte bestätig no, dass da Assistent für koan unzulässigen Hochrisiko-Anwendungsfoi eigsetzt wird.",
+                            review_result_warning_title: "Hinweis auf a möglichs Hochrisikosystem",
+                            review_result_warning_guidance:
+                                "Bitte schau da de foigenden Stelln in de Anweisungen o und änder's wenn nötig, dass koa Hochrisiko-Anwendungsfoi entsteht. De Prüfung is bloß a Orientierung.",
+                            review_result_error_title: "Prüfung fehlgschlogn",
+                            review_result_error_description: "De Prüfung hod net klappt. Speichern geht erst noch ana erfolgreichen erneuten Prüfung.",
+                            review_result_outdated_title: "Ergebnis nimma aktuell",
+                            review_result_outdated_description:
+                                "Da System-Prompt is noch der Prüfung gändert worn. De Hinweis ghean zua vorherign Fassung. Stort de Prüfung nochamoi, damitst a aktuells Ergebnis kriagst.",
+                            review_confirmation_label_high_risk:
+                                "I hob ma de Hinweis oogschaut und bestätig, dass der Assistent net für an in MUCGPT unzulässigen Hochrisiko-Anwendungsfoi eigsetzt wern soi.",
+                            review_category_migration_asylum_border: "Migration, Asyl und Grenzkontrolle",
+                            review_category_public_services_access: "Zugang zu grundlegende öffentliche Dienste",
+                            review_category_hr_employment: "Beschäftigung und Personalmanagement",
+                            review_category_education: "Allgemeine und berufliche Bildung",
 
                             // Advanced settings fields
                             creativity: "Antwortstil",
@@ -2067,6 +2181,11 @@ i18n
                             assistant_creation_failed: "Assistent konnt ned erstellt werdn",
                             save_config_failed: "Speichern vo da Assistenten-Konfiguration is fehlgschlogn",
                             assistant_save_failed: "Speichern vom Assistenten is fehlgschlogn",
+                            compliance_not_persisted_title: "Assistent gspeichert, Prüfergebnis ned gspeichert",
+                            compliance_not_persisted_message:
+                                "Des letzde Prüfergebnis hod da Server ned verifiziern kenna und hods drum ned mitgspreichert. Da Assistent is trotzdem gspeichert worn.",
+                            compliance_verification_failed_actionable:
+                                "De Compliance-Prüfung hod da Server ned verifiziern kenna. Bitte stoat de Prüfung noamoi und speicher erst noch ana erfolgreichen Prüfung. Wenn's Problem bleibt, meld di bei da Administration.",
                             assistant_generated_success: "Assistent erfolgreich generiert!",
                             assistant_generated_message: "Dei Assistent-Konfiguration is generiert wordn. Du kannst sie jetzt überprüfn und anpassn.",
                             assistant_generation_failed: "Generierung vo da Assistenten-Konfiguration is fehlgschlogn",
@@ -2195,6 +2314,8 @@ i18n
                             duplicate_failed_forbidden: "Du host koa Berechtigung, den Assistentn zum Dupliziern.",
                             duplicate_failed_not_found: "Da Assistent is ned gfundn worn und ko ned dupliziert wern.",
                             local_badge: "Lokal",
+                            compliance_passed_badge: "AI Act: Konform",
+                            compliance_high_risk_badge: "AI Act: Ned erlaubt",
                             local_state_title: "Der lokale Assistent is veraltet",
                             discovery_local_hint:
                                 "Der Assistent is bloß lokal in deim Browser gesichert und geht verloren, wennst des Gerät wechselst. Sicher eam jetzt, damit a dauerhaft erhalten bleibt.",
@@ -2740,6 +2861,7 @@ i18n
                             system_prompt: "Prompt système",
                             system_prompt_description:
                                 "L'instruction de base pour l'assistant. Elle définit son rôle, ses tâches et ses règles de comportement pour les réponses.",
+                            system_prompt_locked_during_check: "Le prompt système est verrouillé pendant la vérification.",
                             prompt_placeholder:
                                 "Vous êtes un assistant pour les e-mails.\n\nMission :\nRédigez des brouillons courts et polis.\n\nRègles :\n- Utilisez le vouvoiement.\n- Soyez concis.",
 
@@ -2750,6 +2872,39 @@ i18n
                             section_tools: "Outils",
                             section_conversation_options: "Options de conversation",
                             section_access: "Accès et visibilité",
+                            section_review: "Vérification",
+
+                            // Review section
+                            review_confirmation_label:
+                                "Je confirme que cet assistant n'est pas destiné à être utilisé pour un cas d'usage à haut risque non autorisé dans MUCGPT.",
+                            review_required_hint: "Cette confirmation est requise pour créer ou enregistrer l'assistant.",
+                            review_intro_title: "Que sont les cas d'usage à haut risque ?",
+                            review_intro_description:
+                                "Les cas d'usage à haut risque sont des utilisations de l'IA dans lesquelles les décisions ou les évaluations concernant des personnes peuvent avoir des conséquences particulièrement lourdes, par exemple dans les ressources humaines, l'éducation, les services publics ou la migration.",
+                            review_check_title: "Vérifier les instructions",
+                            review_check_description: "Vérifiez les instructions de l'assistant pour détecter d'éventuels cas d'usage à haut risque.",
+                            review_check_learn_more: "En savoir plus sur les cas d'usage à haut risque",
+                            review_check_start: "Lancer la vérification",
+                            review_check_recheck: "Vérifier à nouveau",
+                            review_check_running: "Vérification en cours...",
+                            review_result_passed_title: "Toutes les vérifications réussies",
+                            review_result_passed_description:
+                                "Aucun indice de système à haut risque n'a été trouvé. La vérification sert uniquement d'orientation. Veuillez confirmer ci-dessous que l'assistant n'est pas utilisé pour un cas d'usage à haut risque non autorisé.",
+                            review_result_warning_title: "Indice d'un possible système à haut risque",
+                            review_result_warning_guidance:
+                                "Veuillez examiner les passages suivants des instructions et les modifier si nécessaire afin qu'aucun cas d'usage à haut risque ne subsiste. La vérification sert uniquement d'orientation.",
+                            review_result_error_title: "Échec de la vérification",
+                            review_result_error_description:
+                                "La vérification n'a pas pu être effectuée. L'enregistrement reste bloqué jusqu'à une nouvelle vérification réussie.",
+                            review_result_outdated_title: "Résultat n'est plus à jour",
+                            review_result_outdated_description:
+                                "Le prompt système a été modifié après cette vérification. Les indices se rapportent à la version précédente. Relancez la vérification pour obtenir un résultat à jour.",
+                            review_confirmation_label_high_risk:
+                                "J'ai examiné les indices et je confirme que cet assistant n'est pas destiné à un cas d'usage à haut risque non autorisé dans MUCGPT.",
+                            review_category_migration_asylum_border: "Migration, asile et contrôle des frontières",
+                            review_category_public_services_access: "Accès aux services publics essentiels",
+                            review_category_hr_employment: "Emploi et gestion du personnel",
+                            review_category_education: "Éducation générale et formation professionnelle",
 
                             // Advanced settings fields
                             creativity: "Style de réponse",
@@ -2816,6 +2971,11 @@ i18n
                             assistant_creation_failed: "Impossible de créer l'assistant",
                             save_config_failed: "Échec de l'enregistrement de la configuration de l'assistant",
                             assistant_save_failed: "Échec de l'enregistrement de l'assistant",
+                            compliance_not_persisted_title: "Assistant enregistré, résultat de conformité non enregistré",
+                            compliance_not_persisted_message:
+                                "Le dernier résultat de contrôle de conformité n'a pas pu être vérifié par le serveur et n'a donc pas été conservé. L'assistant a néanmoins été enregistré.",
+                            compliance_verification_failed_actionable:
+                                "La vérification de conformité n'a pas pu être validée par le serveur. Veuillez relancer la vérification et n'enregistrer qu'après une vérification réussie. Si le problème persiste, contactez l'administration.",
                             assistant_generated_success: "Assistant généré avec succès !",
                             assistant_generated_message:
                                 "La configuration de votre assistant a été générée. Vous pouvez maintenant la vérifier et la personnaliser.",
@@ -2936,6 +3096,8 @@ i18n
                             duplicate_failed_forbidden: "Vous n'avez pas la permission de dupliquer cet assistant.",
                             duplicate_failed_not_found: "L'assistant n'a pas été trouvé et ne peut pas être dupliqué.",
                             local_badge: "Local",
+                            compliance_passed_badge: "AI Act: Conforme",
+                            compliance_high_risk_badge: "AI Act: Non autorisé",
                             local_state_title: "Cet assistant local est obsolète",
                             discovery_local_hint:
                                 "Cet assistant est uniquement enregistré localement dans votre navigateur et sera perdu si vous changez d'appareil. Enregistrez-le maintenant pour le conserver durablement.",
@@ -3480,6 +3642,7 @@ i18n
                             system_prompt: "Системний промпт",
                             system_prompt_description:
                                 "Базова інструкція для асистента. Вона визначає його роль, завдання та правила поведінки при відповідях.",
+                            system_prompt_locked_during_check: "Системний промпт заблоковано, поки триває перевірка.",
                             prompt_placeholder:
                                 "Ти асистент для електронних листів.\n\nЗавдання:\nПиши короткі та ввічливі чернетки.\n\nПравила:\n- Використовуй ввічливе звернення (Ви).\n- Пиши лаконічно.",
 
@@ -3490,6 +3653,39 @@ i18n
                             section_tools: "Інструменти",
                             section_conversation_options: "Опції розмови",
                             section_access: "Доступ і видимість",
+                            section_review: "Перевірка",
+
+                            // Review section
+                            review_confirmation_label:
+                                "Я підтверджую, що цей асистент не призначений для використання у високоризиковому сценарії, недозволеному в MUCGPT.",
+                            review_required_hint: "Це підтвердження необхідне для створення або збереження асистента.",
+                            review_intro_title: "Що таке сценарії використання з високим ризиком?",
+                            review_intro_description:
+                                "Сценарії використання з високим ризиком — це застосування ШІ, у яких рішення або оцінки щодо людей можуть мати особливо серйозні наслідки, наприклад у сфері персоналу, освіти, державних послуг або міграції.",
+                            review_check_title: "Перевірити інструкції",
+                            review_check_description: "Перевірте інструкції асистента на ознаки можливих сценаріїв використання з високим ризиком.",
+                            review_check_learn_more: "Дізнатися більше про сценарії використання з високим ризиком",
+                            review_check_start: "Почати перевірку",
+                            review_check_recheck: "Перевірити знову",
+                            review_check_running: "Перевірка триває...",
+                            review_result_passed_title: "Усі перевірки пройдено",
+                            review_result_passed_description:
+                                "Ознак системи з високим ризиком не виявлено. Перевірка слугує лише орієнтиром. Будь ласка, підтвердьте нижче, що асистент не використовується для недопустимого сценарію використання з високим ризиком.",
+                            review_result_warning_title: "Ознака можливої системи з високим ризиком",
+                            review_result_warning_guidance:
+                                "Будь ласка, перегляньте наведені нижче місця в інструкціях і за потреби змініть їх, щоб не залишалося сценарію використання з високим ризиком. Перевірка слугує лише орієнтиром.",
+                            review_result_error_title: "Помилка перевірки",
+                            review_result_error_description:
+                                "Перевірку не вдалося виконати. Збереження заблоковано, доки повторна перевірка не завершиться успішно.",
+                            review_result_outdated_title: "Результат більше не актуальний",
+                            review_result_outdated_description:
+                                "Системний промпт було змінено після цієї перевірки. Виявлені ознаки стосуються попередньої версії. Запустіть перевірку ще раз, щоб отримати актуальний результат.",
+                            review_confirmation_label_high_risk:
+                                "Я переглянув(-ла) виявлені ознаки та підтверджую, що цей асистент не призначений для недопустимого в MUCGPT сценарію використання з високим ризиком.",
+                            review_category_migration_asylum_border: "Міграція, притулок та прикордонний контроль",
+                            review_category_public_services_access: "Доступ до основних державних послуг",
+                            review_category_hr_employment: "Зайнятість та управління персоналом",
+                            review_category_education: "Загальна та професійна освіта",
 
                             // Advanced settings fields
                             creativity: "Стиль відповіді",
@@ -3554,6 +3750,11 @@ i18n
                             assistant_creation_failed: "Не вдалося створити асистента",
                             save_config_failed: "Не вдалося зберегти конфігурацію асистента",
                             assistant_save_failed: "Не вдалося зберегти асистента",
+                            compliance_not_persisted_title: "Асистента збережено, результат перевірки не збережено",
+                            compliance_not_persisted_message:
+                                "Останній результат перевірки відповідності не вдалося підтвердити на сервері, тому його не було збережено. Асистента все одно збережено.",
+                            compliance_verification_failed_actionable:
+                                "Сервер не зміг підтвердити перевірку відповідності. Будь ласка, запустіть перевірку ще раз і зберігайте лише після успішної перевірки. Якщо проблема не зникне, зверніться до адміністратора.",
                             assistant_generated_success: "Асистента успішно згенеровано!",
                             assistant_generated_message: "Конфігурацію вашого асистента згенеровано. Тепер ви можете переглянути та налаштувати її.",
                             assistant_generation_failed: "Не вдалося згенерувати конфігурацію асистента",
@@ -3681,6 +3882,8 @@ i18n
                             duplicate_failed_forbidden: "У вас немає дозволу на дублювання цього асистента.",
                             duplicate_failed_not_found: "Асистента не знайдено, дублювання неможливе.",
                             local_badge: "Локальний",
+                            compliance_passed_badge: "AI Act: Відповідає вимогам",
+                            compliance_high_risk_badge: "AI Act: Недопустимо",
                             local_state_title: "Цей локальний асистент застарів",
                             discovery_local_hint:
                                 "Цей асистент збережено лише локально у вашому браузері, і він буде втрачений, якщо ви зміните пристрій. Збережіть його зараз, щоб він залишався доступним.",

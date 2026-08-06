@@ -37,13 +37,16 @@ RUN useradd -m -u 1000 -s /bin/bash mcpuser && \
 USER mcpuser
 WORKDIR /home/mcpuser
 
+COPY --chown=mcpuser:mcpuser pyproject.toml uv.lock ./
+
 # Set environment for uv
 ENV UV_TOOL_HOME=/opt/uv \
+    UV_PROJECT_ENVIRONMENT=/opt/uv/mcpdoc \
     PATH="/home/mcpuser/.local/bin:${PATH}"
 
-# Install mcpdoc as non-root user
-RUN uv tool install --force mcpdoc --with "mcp>=1.28,<2" && \
-    uv tool list
+# Install mcpdoc project dependencies as non-root user
+RUN uv sync --frozen --no-dev --no-install-project && \
+    uv run --no-sync mcpdoc --help
 
 # Remove proxy variables from runtime environment
 ENV HTTP_PROXY= \
@@ -52,4 +55,4 @@ ENV HTTP_PROXY= \
     http_proxy= \
     https_proxy=
 
-ENTRYPOINT ["uv"]
+ENTRYPOINT ["uv", "run", "--no-sync"]

@@ -28,6 +28,9 @@ OWNER_CACHE_REFRESH_ON_READ: false
 # SSO Settings (nested under SSO key)
 SSO:
   ROLE: "lhm-ab-mucgpt-user"
+  # ADMIN_ROLE / USE_ROLE_RESTRICTION are reserved for future admin
+  # functionality and don't affect basic access today.
+  # ADMIN_ROLE: "lhm-ab-mucgpt-admin"
 
 # Redis Settings (nested under REDIS key)
 REDIS:

@@ -58,6 +58,9 @@ MODELS:
 # SSO Settings (optional - nested under SSO key)
 SSO:
   ROLE: "lhm-ab-mucgpt-user"
+  # ADMIN_ROLE / USE_ROLE_RESTRICTION are reserved for future admin
+  # functionality and don't affect basic access today.
+  # ADMIN_ROLE: "lhm-ab-mucgpt-admin"
 
 # Langfuse Settings (optional - nested under LANGFUSE key)
 LANGFUSE:

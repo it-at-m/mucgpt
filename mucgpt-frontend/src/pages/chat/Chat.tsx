@@ -115,6 +115,8 @@ const Chat = () => {
     const [isSettingsOpen, setIsSettingsOpen] = useState<boolean>(false);
     const [uploadedData, setUploadedData] = useState<UploadedData[]>([]);
     const [isLoading, setIsLoading] = useState<boolean>(false);
+    /** True for the full chat request lifetime (SSE included). Unlike isLoading, stays true after the answer placeholder is added. */
+    const [isStreamingAnswer, setIsStreamingAnswer] = useState<boolean>(false);
 
     useToolStatusToasts(toolStatuses);
 
@@ -251,6 +253,7 @@ const Chat = () => {
             lastQuestionRef.current = question;
             setError(undefined);
             setLoadingState(true);
+            setIsStreamingAnswer(true);
 
             const askResponse: ChatResponse = { answer: "", tokens: 0, user_tokens: 0 } as AskResponse;
             const options: ChatOptions = {
@@ -282,6 +285,7 @@ const Chat = () => {
                 setError(e);
             } finally {
                 setLoadingState(false);
+                setIsStreamingAnswer(false);
             }
         },
         [answers, creativity, LLM, storageService, fetchHistory, selectedTools, setToolStatuses, setLoadingState]
@@ -729,6 +733,7 @@ const Chat = () => {
                                 <Answer
                                     key={`answer-${index}`}
                                     answer={answer.response}
+                                    isStreaming={isStreamingAnswer}
                                     onRegenerateResponseClicked={onRegenerateResponseClicked}
                                     onFollowUpActionSend={prompt => callApi(prompt, systemPrompt)}
                                 />
@@ -755,7 +760,7 @@ const Chat = () => {
                 lastAnswerRef={lastAnswerRef}
             />
         ),
-        [answers, onRegenerateResponseClicked, onRollbackMessage, error, callApi, systemPrompt, isLoading, lastQuestionRef, chatMessageStreamEnd, lastAnswerRef]
+        [answers, onRegenerateResponseClicked, onRollbackMessage, error, callApi, systemPrompt, isLoading, isStreamingAnswer, lastQuestionRef, chatMessageStreamEnd, lastAnswerRef]
     );
 
     const starterPromptsComponent = useMemo(

@@ -7,6 +7,7 @@ from api.api_models import (
     AssistantCreate,
     AssistantListSortBy,
     AssistantListSortOrder,
+    AssistantNameAvailabilityResponse,
     AssistantResponse,
     AssistantUpdate,
     AssistantVersionResponse,
@@ -507,6 +508,7 @@ async def getAllAssistants(
 
 @router.get(
     "/assistant/name-available",
+    response_model=AssistantNameAvailabilityResponse,
     summary="Check whether an assistant name is available",
     description="Returns whether the given name is free (not used by another assistant's latest version).",
     tags=["Assistants"],
@@ -520,10 +522,10 @@ async def assistant_name_available(
     exclude_id: str | None = None,
     db: AsyncSession = Depends(get_db_session),
     user_info: AuthenticationResult = Depends(authenticate_user),
-):
+) -> AssistantNameAvailabilityResponse:
     assistant_repo = AssistantRepository(db)
     exists = await assistant_repo.name_exists(name, exclude_assistant_id=exclude_id)
-    return {"available": not exists}
+    return AssistantNameAvailabilityResponse(available=not exists)
 
 
 @router.get(

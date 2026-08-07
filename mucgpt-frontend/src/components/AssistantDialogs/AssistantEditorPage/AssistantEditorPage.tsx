@@ -242,7 +242,7 @@ function SettingsForm(props: SettingsFormProps) {
                         publishDepartments={props.publishDepartments}
                         invisibleChecked={!props.isVisible}
                         setPublishDepartments={props.setPublishDepartments}
-                        onHasChanged={props.onHasChanged ?? (() => {})}
+                        onHasChanged={props.onHasChanged ?? (() => { })}
                         setInvisibleChecked={invisible => props.setInvisibleChecked(invisible)}
                     />
                 </SectionCard>
@@ -426,8 +426,8 @@ export const AssistantEditorPage = (props: AssistantEditorPageProps) => {
     const actionStatusLabel = !isOwner
         ? t("components.assistant_editor.action_status_read_only")
         : isSettingsValid
-          ? t(isCreate ? "components.assistant_editor.action_status_ready_create" : "components.assistant_editor.action_status_ready_save")
-          : t("components.assistant_editor.action_status_required_open");
+            ? t(isCreate ? "components.assistant_editor.action_status_ready_create" : "components.assistant_editor.action_status_ready_save")
+            : t("components.assistant_editor.action_status_required_open");
     const actionStatusTone = !isOwner ? "subtle" : isSettingsValid ? "success" : "warning";
 
     useEffect(() => {
@@ -436,15 +436,21 @@ export const AssistantEditorPage = (props: AssistantEditorPageProps) => {
             setNameError(null);
             return;
         }
+        let cancelled = false;
         const timer = setTimeout(async () => {
             try {
                 const { available } = await checkAssistantNameAvailableApi(name, editAssistant?.id);
-                setNameError(available ? null : t("components.assistant_editor.name_taken"));
+                if (!cancelled) {
+                    setNameError(available ? null : t("components.assistant_editor.name_taken"));
+                }
             } catch {
                 // Fehler ignorieren – das Backend blockt beim Speichern ohnehin.
             }
         }, 400);
-        return () => clearTimeout(timer);
+        return () => {
+            cancelled = true;
+            clearTimeout(timer);
+        };
     }, [settingsState.title, editAssistant?.id, t]);
 
     useEffect(() => {

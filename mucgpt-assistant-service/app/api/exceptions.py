@@ -14,7 +14,7 @@ class AssistantNotFoundException(HTTPException):
 
 
 class NotOwnerException(HTTPException):
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__(
             status_code=403,
             detail="Access denied: You must be an owner of this assistant to perform this action",

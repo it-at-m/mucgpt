@@ -26,7 +26,7 @@ COPY package*.json .npmrc ./
 
 # Install dependencies in a separate layer that's cached unless dependencies change
 RUN --mount=type=cache,target=/root/.npm \
-    npm ci --verbose || npm install --verbose
+    npm ci --verbose
 
 # Copy build configuration files (these change less frequently than source)
 COPY tsconfig.json vite.config.ts index.html ./

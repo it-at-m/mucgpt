@@ -19,7 +19,7 @@ import {
 import styles from "./AssistantEditorPage.module.css";
 import { AssistantCreateFlow } from "./AssistantCreateFlow";
 import { Assistant, ToolBase, ToolInfo } from "../../../api";
-import { createCommunityAssistantApi } from "../../../api/assistant-client";
+import { createCommunityAssistantApi, checkAssistantNameAvailableApi } from "../../../api/assistant-client";
 import { generateAssistantDraftApi } from "../../../api/core-client";
 import { useGlobalToastContext } from "../../GlobalToastHandler/GlobalToastContext";
 import { StarterPromptModel } from "../../StarterPrompt";
@@ -98,6 +98,7 @@ function SectionCard({
 
 interface SettingsFormProps {
     title: string;
+    nameError?: string | null;
     description: string;
     systemPrompt: string;
     onTitleChange: (value: string) => void;
@@ -134,7 +135,14 @@ function SettingsForm(props: SettingsFormProps) {
         <div className={styles.builderLayout}>
             <main className={styles.builderMain} aria-label={t("components.assistant_editor.builder_main_label")}>
                 <SectionCard title={t("components.assistant_editor.section_basic")} icon={<Info24Regular />} className={styles.sectionBasic}>
-                    <Field size="large" className={styles.formField} label={{ children: t("components.assistant_editor.title") }} required>
+                    <Field
+                        size="large"
+                        className={styles.formField}
+                        label={{ children: t("components.assistant_editor.title") }}
+                        required
+                        validationState={props.nameError ? "error" : "none"}
+                        validationMessage={props.nameError ?? undefined}
+                    >
                         <Textarea
                             placeholder={t("components.assistant_editor.title_placeholder")}
                             value={props.title}
@@ -234,7 +242,7 @@ function SettingsForm(props: SettingsFormProps) {
                         publishDepartments={props.publishDepartments}
                         invisibleChecked={!props.isVisible}
                         setPublishDepartments={props.setPublishDepartments}
-                        onHasChanged={props.onHasChanged ?? (() => {})}
+                        onHasChanged={props.onHasChanged ?? (() => { })}
                         setInvisibleChecked={invisible => props.setInvisibleChecked(invisible)}
                     />
                 </SectionCard>
@@ -282,6 +290,7 @@ export const AssistantEditorPage = (props: AssistantEditorPageProps) => {
     const state = isCreate ? createState : editState;
 
     const [loading, setLoading] = useState(false);
+    const [nameError, setNameError] = useState<string | null>(null);
     const [discardOpen, setDiscardOpen] = useState(false);
     const [discardTarget, setDiscardTarget] = useState<DiscardTarget>("back");
 
@@ -411,15 +420,32 @@ export const AssistantEditorPage = (props: AssistantEditorPageProps) => {
     const pageHelper = isCreate ? t("components.assistant_editor.page_helper_create") : t("components.assistant_editor.page_helper_edit");
     const settingsState = isCreate ? createState : editState;
     const previewToolIds = useMemo(() => (settingsState.tools ?? []).map(tool => tool.id), [settingsState.tools]);
-    const isSettingsValid = settingsState.title.trim() !== "" && settingsState.systemPrompt.trim() !== "";
+    const isSettingsValid = settingsState.title.trim() !== "" && settingsState.systemPrompt.trim() !== "" && !nameError;
     const showSettingsForm = !isCreate || createView === "settings";
     const showCreateModeSelector = isCreate && createView === "mode_select";
     const actionStatusLabel = !isOwner
         ? t("components.assistant_editor.action_status_read_only")
         : isSettingsValid
-          ? t(isCreate ? "components.assistant_editor.action_status_ready_create" : "components.assistant_editor.action_status_ready_save")
-          : t("components.assistant_editor.action_status_required_open");
+            ? t(isCreate ? "components.assistant_editor.action_status_ready_create" : "components.assistant_editor.action_status_ready_save")
+            : t("components.assistant_editor.action_status_required_open");
     const actionStatusTone = !isOwner ? "subtle" : isSettingsValid ? "success" : "warning";
+
+    useEffect(() => {
+        const name = settingsState.title.trim();
+        if (!name) {
+            setNameError(null);
+            return;
+        }
+        const timer = setTimeout(async () => {
+            try {
+                const { available } = await checkAssistantNameAvailableApi(name, editAssistant?.id);
+                setNameError(available ? null : t("components.assistant_editor.name_taken"));
+            } catch {
+                // Fehler ignorieren – das Backend blockt beim Speichern ohnehin.
+            }
+        }, 400);
+        return () => clearTimeout(timer);
+    }, [settingsState.title, editAssistant?.id, t]);
 
     useEffect(() => {
         // Support both hash router (/#/route#fragment) and regular routing (#fragment)
@@ -470,6 +496,7 @@ export const AssistantEditorPage = (props: AssistantEditorPageProps) => {
                 {showSettingsForm && (
                     <SettingsForm
                         title={settingsState.title}
+                        nameError={nameError}
                         description={settingsState.description}
                         systemPrompt={settingsState.systemPrompt}
                         onTitleChange={settingsState.updateTitle}

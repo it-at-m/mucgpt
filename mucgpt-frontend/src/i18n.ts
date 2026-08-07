@@ -481,6 +481,7 @@ i18n
                             // Shared field labels
                             title: "Titel",
                             title_placeholder: "Zum Beispiel: Englisch Übersetzer",
+                            name_taken: "Ein Assistent mit diesem Namen existiert bereits. Bitte wähle einen anderen Namen.",
                             description: "Beschreibung",
                             description_placeholder: "Zum Beispiel: Der Assistent übersetzt den eingegebenen Text ins Englische.",
                             default_assistant_title: "Assistent",
@@ -1239,6 +1240,7 @@ i18n
                             // Shared field labels
                             title: "Title",
                             title_placeholder: "For example: English Translator",
+                            name_taken: "An assistant with this name already exists. Please choose a different name.",
                             description: "Description",
                             description_placeholder: "For example: The assistant translates the entered text into English.",
                             default_assistant_title: "Assistant",
@@ -1984,6 +1986,7 @@ i18n
                             // Shared field labels
                             title: "Titel",
                             title_placeholder: "Zum Beispiel: Englisch-Ibasatza",
+                            name_taken: "A Assistent mit dem Nam gibt's scho. Bitte nimm an andern Nam.",
                             description: "Beschreibung",
                             description_placeholder: "Zum Beispiel: Der Assistent übersetzt ois, was'd eam gibst, ins Englische.",
                             default_assistant_title: "Assistent",
@@ -2733,6 +2736,7 @@ i18n
                             // Shared field labels
                             title: "Titre",
                             title_placeholder: "Par exemple : Traducteur anglais",
+                            name_taken: "Un assistant portant ce nom existe déjà. Veuillez choisir un autre nom.",
                             description: "Description",
                             description_placeholder: "Par exemple : l'assistant traduit le texte saisi en anglais.",
                             default_assistant_title: "Assistant",
@@ -3473,6 +3477,7 @@ i18n
                             // Shared field labels
                             title: "Назва",
                             title_placeholder: "Наприклад: Англійський перекладач",
+                            name_taken: "Асистент із такою назвою вже існує. Будь ласка, виберіть іншу назву.",
                             description: "Опис",
                             description_placeholder: "Наприклад: асистент перекладає введений текст англійською.",
                             default_assistant_title: "Асистент",

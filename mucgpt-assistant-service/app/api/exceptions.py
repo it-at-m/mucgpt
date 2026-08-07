@@ -73,3 +73,10 @@ class SubscriptionNotFoundException(HTTPException):
             status_code=404,
             detail=f"Subscription not found for assistant with ID {assistant_id}",
         )
+
+class AssistantNameAlreadyExistsException(HTTPException):
+    def __init__(self):
+        super().__init__(
+            status_code=409,
+            detail="An assistant with this name already exists. Please choose a different name.",
+        )

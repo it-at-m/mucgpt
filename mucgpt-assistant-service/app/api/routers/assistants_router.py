@@ -7,11 +7,13 @@ from api.api_models import (
     AssistantCreate,
     AssistantListSortBy,
     AssistantListSortOrder,
+    AssistantNameAvailabilityResponse,
     AssistantResponse,
     AssistantUpdate,
     AssistantVersionResponse,
 )
 from api.exceptions import (
+    AssistantNameAlreadyExistsException,
     AssistantNotFoundException,
     DeleteFailedException,
     NotAllowedToAccessException,
@@ -63,6 +65,8 @@ async def createAssistant(
         assistant_repo = AssistantRepository(
             db
         )  # Prepare owner_ids: include the creating user if not already present
+        if await assistant_repo.name_exists(assistant.name):
+            raise AssistantNameAlreadyExistsException()
         owner_ids = list(assistant.owner_ids) if assistant.owner_ids else []
         if user_info.user_id not in owner_ids:
             owner_ids.append(user_info.user_id)
@@ -261,6 +265,11 @@ async def updateAssistant(
 
     if not await assistant_repo.is_owner(id, user_info.user_id):
         raise NotOwnerException()
+
+    if assistant_update.name is not None and await assistant_repo.name_exists(
+        assistant_update.name, exclude_assistant_id=id
+    ):
+        raise AssistantNameAlreadyExistsException()
 
     is_visible: bool = (
         assistant_update.is_visible if assistant_update.is_visible is not None else True
@@ -495,6 +504,28 @@ async def getAllAssistants(
         f"Returning {len(response_list)} accessible assistants for user {user_info.user_id}"
     )
     return response_list
+
+
+@router.get(
+    "/assistant/name-available",
+    response_model=AssistantNameAvailabilityResponse,
+    summary="Check whether an assistant name is available",
+    description="Returns whether the given name is free (not used by another assistant's latest version).",
+    tags=["Assistants"],
+    responses={
+        200: {"description": "Availability result"},
+        401: {"description": "Unauthorized"},
+    },
+)
+async def assistant_name_available(
+    name: str,
+    exclude_id: str | None = None,
+    db: AsyncSession = Depends(get_db_session),
+    user_info: AuthenticationResult = Depends(authenticate_user),
+) -> AssistantNameAvailabilityResponse:
+    assistant_repo = AssistantRepository(db)
+    exists = await assistant_repo.name_exists(name, exclude_assistant_id=exclude_id)
+    return AssistantNameAvailabilityResponse(available=not exists)
 
 
 @router.get(

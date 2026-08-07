@@ -122,6 +122,33 @@ class AssistantRepository(Repository[Assistant]):
             await self.session.rollback()
             raise
 
+    async def name_exists(
+        self, name: str, exclude_assistant_id: str | None = None
+    ) -> bool:
+        """True, wenn ein *anderer* Assistent in seiner neuesten Version diesen Namen schon nutzt."""
+        normalized = name.strip().lower()
+        latest_version_subquery = (
+            select(
+                AssistantVersion.assistant_id.label("assistant_id"),
+                func.max(AssistantVersion.version).label("max_version"),
+            )
+            .group_by(AssistantVersion.assistant_id)
+            .subquery()
+        )
+        stmt = (
+            select(AssistantVersion.assistant_id)
+            .join(
+                latest_version_subquery,
+                (AssistantVersion.assistant_id == latest_version_subquery.c.assistant_id)
+                & (AssistantVersion.version == latest_version_subquery.c.max_version),
+            )
+            .where(func.lower(func.trim(AssistantVersion.name)) == normalized)
+        )
+        if exclude_assistant_id is not None:
+            stmt = stmt.where(AssistantVersion.assistant_id != exclude_assistant_id)
+        result = await self.session.execute(stmt.limit(1))
+        return result.first() is not None
+
     async def get_all_possible_assistants_for_user_with_department(
         self,
         department: str,

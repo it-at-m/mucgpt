@@ -637,3 +637,13 @@ class SubscriptionResponse(BaseModel):
             }
         },
     )
+
+
+class AssistantNameAvailabilityResponse(BaseModel):
+    """Response model indicating whether an assistant name is still available."""
+
+    available: bool = Field(
+        ...,
+        description="True if the name is not used by another assistant's latest version",
+        example=True,
+    )

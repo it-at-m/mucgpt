@@ -19,8 +19,7 @@ ENV GLOBAL_AGENT_HTTPS_PROXY=${HTTPS_PROXY}
 
 WORKDIR /build
 
-# Keep npm's lockfile resolver aligned with the supported local development version.
-RUN npm install --global npm@11.6.2
+# Use the npm version bundled with Node 24 for consistency with local and CI environments
 
 # Copy only dependency files first for better caching
 COPY package*.json .npmrc ./

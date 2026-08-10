@@ -80,6 +80,13 @@
     font-weight: var(--fontWeightSemibold) !important;
 }
 
+.headerBadgeSuccess {
+    color: var(--colorStatusSuccessForeground1) !important;
+    background-color: var(--colorStatusSuccessBackground1) !important;
+    border-color: var(--colorStatusSuccessBorder1) !important;
+    font-weight: var(--fontWeightSemibold) !important;
+}
+
 .headerBadgeDanger {
     color: var(--colorStatusDangerForeground1) !important;
     background-color: var(--colorStatusDangerBackground1) !important;

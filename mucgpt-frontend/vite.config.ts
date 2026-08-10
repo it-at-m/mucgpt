@@ -37,7 +37,8 @@ export default defineConfig(({ mode }) => {
                               // Raised from 3 MB: Rolldown (Vite 8) bundles the mermaid/markmap
                               // "visualizations" chunk slightly larger (~3.5 MB) than Rollup did.
                               maximumFileSizeToCacheInBytes: 4000000,
-                              globIgnores: ["**/*.wasm"],
+                              // draw.io viewer is ~4MB and must stay local; skip PWA precache
+                              globIgnores: ["**/*.wasm", "**/vendor/drawio/**"],
                               navigateFallbackDenylist: [/^\/api\//, /^\/auth\//, /^\/sso\//, /^\/realms\//, /^\/oauth2\//, /^\/login\//, /^\/logout\//],
                               runtimeCaching: [
                                   {

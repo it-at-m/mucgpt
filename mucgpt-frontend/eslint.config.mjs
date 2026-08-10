@@ -8,7 +8,7 @@ export default tseslint.config(
     ...tseslint.configs.recommended, // Spread the recommended configs
     {
         // Add ignores for directories and files you want to exclude
-        ignores: ["dist/**", "build/**", "node_modules/**"]
+        ignores: ["dist/**", "build/**", "node_modules/**", "public/vendor/**"]
     },
     {
         // Override specific rules here

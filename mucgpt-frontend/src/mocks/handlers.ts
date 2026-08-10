@@ -1,6 +1,6 @@
 // mocks/handlers.js
 import { http, HttpResponse, delay, passthrough } from "msw";
-import { ApplicationConfig, AssistantCreateResponse, AssistantUpdateInput } from "../api";
+import { ApplicationConfig, AssistantCreateResponse, AssistantUpdateInput, ComplianceCategoryResult, ComplianceCheckResponse } from "../api";
 import {
     buildAssistantCreateResponse,
     buildAssistantList,
@@ -129,6 +129,7 @@ const CONFIG_RESPONSE: ApplicationConfig = {
     assistant_version: "0.0.1",
     document_processing_enabled: true,
     transcription_enabled: true,
+    ai_act_compliance_check_enabled: true,
     footer_link_url: "https://ki.muenchen.de",
     footer_label: "DAICE",
     faq_url: "https://ki.muenchen.de/",
@@ -385,6 +386,57 @@ function chooseStreamType(enabledTools?: string[]) {
     if (enabledTools?.includes("Vereinfachen")) options.push("simplify");
     if (options.length === 0) return "chat" as const; // Kein Tool aktiv => normaler Chat
     return options[Math.floor(Math.random() * options.length)];
+}
+
+// Mock reasonings for high-risk findings of the EU AI Act compliance check, per category.
+// Written to read like an LLM that analysed a concrete system prompt, not like an abstract rule description.
+const COMPLIANCE_HIGH_RISK_REASONINGS: Record<string, string> = {
+    migration_asylum_border:
+        "Der Prompt weist den Assistenten an, die Identität von Personen im Kontext von Asyl oder Grenzkontrolle festzustellen (Anhang III Nr. 7). Beschränken Sie ihn darauf, allgemein über Abläufe zu informieren.",
+    public_services_access:
+        "Der Prompt weist den Assistenten an, über den Anspruch auf Leistungen wie Bürgergeld oder Wohngeld zu entscheiden (Anhang III Nr. 5). Beschränken Sie ihn darauf, Voraussetzungen und Antragsweg zu erklären.",
+    hr_employment:
+        "Der Prompt weist den Assistenten an, Bewerbungen zu bewerten und in eine Rangfolge zu bringen (Anhang III Nr. 4). Beschränken Sie ihn auf unterstützende Aufgaben wie das Formulieren einer Stellenausschreibung.",
+    education:
+        "Der Prompt weist den Assistenten an, Leistungen final zu benoten oder das Bildungsniveau einzustufen (Anhang III Nr. 3). Beschränken Sie ihn auf Lernhilfe wie das Erklären von Fehlern."
+};
+
+const COMPLIANCE_CATEGORIES = ["migration_asylum_border", "public_services_access", "hr_employment", "education"] as const;
+
+/**
+ * Mock for the compliance check. The outcome can be forced via control words in the system prompt
+ * for deterministic visual testing:
+ *   - "#error"          -> backend error (HTTP 500)
+ *   - "#pass"           -> all categories passed
+ *   - "#risk1".."#risk4" -> exactly that many categories flagged ("#risk" = 1)
+ * Without a control word the check always passes, so tests can assert on a stable result.
+ */
+function buildComplianceCheckResponse(systemPrompt: string): ComplianceCheckResponse | null {
+    const forcedRisk = systemPrompt.match(/#risk([1-4])?/i);
+
+    let flaggedCount: number;
+    if (/#error/i.test(systemPrompt)) {
+        return null; // caller translates this into a 500
+    } else if (forcedRisk) {
+        flaggedCount = forcedRisk[1] ? Number(forcedRisk[1]) : 1;
+    } else {
+        // Default (including the explicit "#pass" control word): everything passes.
+        flaggedCount = 0;
+    }
+
+    // Flag the first n categories so the same prompt always yields the same findings.
+    const flagged = new Set<string>(COMPLIANCE_CATEGORIES.slice(0, flaggedCount));
+
+    const results: ComplianceCategoryResult[] = COMPLIANCE_CATEGORIES.map(category =>
+        flagged.has(category)
+            ? { category, status: "high_risk_detected", reasoning: COMPLIANCE_HIGH_RISK_REASONINGS[category] }
+            : { category, status: "passed" }
+    );
+
+    return {
+        overall_status: flagged.size > 0 ? "high_risk_detected" : "passed",
+        results
+    };
 }
 
 async function parseUploadHandler({ request }: { request: Request }) {
@@ -869,6 +921,7 @@ export const handlers = [
                 examples: body.examples || current.latest_version.examples,
                 quick_prompts: body.quick_prompts || current.latest_version.quick_prompts,
                 tags: body.tags || current.latest_version.tags,
+                compliance_confirmation: body.compliance_confirmation ?? current.latest_version.compliance_confirmation ?? false,
                 created_at: new Date().toISOString()
             }
         };
@@ -935,6 +988,16 @@ export const handlers = [
             description: assistant.latest_version.description,
             subscriptions_count: getMockSubscriptionCount(assistant.id)
         });
+    }),
+
+    http.post("/api/backend/v1/compliance/check", async ({ request }) => {
+        const body = (await request.json().catch(() => ({}))) as { system_prompt?: string };
+        await delay(1500);
+        const response = buildComplianceCheckResponse(body.system_prompt ?? "");
+        if (!response) {
+            return HttpResponse.json({ message: "Compliance check failed" }, { status: 500 });
+        }
+        return HttpResponse.json(response);
     }),
 
     // Parse API handlers (core-service route + legacy compatibility)

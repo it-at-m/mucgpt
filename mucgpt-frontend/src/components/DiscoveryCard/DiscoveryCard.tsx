@@ -11,7 +11,7 @@ export interface DiscoveryCardBadge {
     appearance?: BadgeProps["appearance"];
     color?: BadgeProps["color"];
     size?: BadgeProps["size"];
-    tone?: "neutral" | "warning" | "danger";
+    tone?: "neutral" | "success" | "warning" | "danger";
 }
 
 export interface DiscoveryCardProps extends CardProps {
@@ -117,6 +117,7 @@ export const DiscoveryCard = forwardRef<HTMLDivElement, DiscoveryCardProps>((pro
                                     key={renderedBadge.label}
                                     className={mergeClasses(
                                         styles.headerBadge,
+                                        renderedBadge.tone === "success" && styles.headerBadgeSuccess,
                                         renderedBadge.tone === "warning" && styles.headerBadgeWarning,
                                         renderedBadge.tone === "danger" && styles.headerBadgeDanger,
                                         renderedBadge.className

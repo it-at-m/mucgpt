@@ -138,7 +138,8 @@ export function buildAssistant(): AssistantCreateResponse {
                 { label: "Begrüßung", prompt: "Hallo! Wie kann ich helfen?", tooltip: "Standard Begrüßung" },
                 { label: "Zusammenfassen", prompt: "Bitte fasse den Text oben in 3 Sätzen zusammen.", tooltip: "TL;DR" }
             ],
-            tags: ["mock", "dynamic", randomOf(["beta", "prod", "lab"])]
+            tags: ["mock", "dynamic", randomOf(["beta", "prod", "lab"])],
+            compliance_confirmation: false
         }
     };
 }
@@ -209,7 +210,8 @@ export function buildAssistantCreateResponse(overrides: Partial<AssistantCreateR
                 { label: "Begrüßung", prompt: "Hallo! Wobei kann ich heute unterstützen?", tooltip: "Freundliche Begrüßung" },
                 { label: "Zusammenfassen", prompt: "Fasse den Text bitte kurz und verständlich zusammen.", tooltip: "Kurze Zusammenfassung" }
             ],
-            tags: overrides.latest_version?.tags || ["mock", "assistant", randomOf(["docs", "email", "workflow", "research"])]
+            tags: overrides.latest_version?.tags || ["mock", "assistant", randomOf(["docs", "email", "workflow", "research"])],
+            compliance_confirmation: overrides.latest_version?.compliance_confirmation ?? false
         }
     };
     return base;

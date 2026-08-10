@@ -84,6 +84,11 @@ const router = createHashRouter([
                 errorElement: <div>Fehler</div>
             },
             {
+                path: "tutorials/high-risk",
+                element: <Tutorials />,
+                errorElement: <div>Fehler</div>
+            },
+            {
                 path: "tutorials/tools",
                 element: <Tutorials />,
                 errorElement: <div>Fehler</div>

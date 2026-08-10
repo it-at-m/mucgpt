@@ -110,6 +110,13 @@ class TestSettings:
             assert len(settings.MODELS) == 0
             assert settings.UNAUTHORIZED_USER_REDIRECT_URL == ""
 
+    def test_sso_role_defaults_are_unset(self):
+        """Test SSO role defaults remain open unless explicitly configured."""
+        with patch.dict(os.environ, {}, clear=True):
+            settings = Settings()
+            assert settings.SSO.ROLE is None
+            assert settings.SSO.ADMIN_ROLE is None
+
     def test_nested_env_variables(self):
         """Test that nested environment variables work correctly."""
         with patch.dict(
@@ -344,7 +351,7 @@ class TestSettings:
             get_sso_settings.cache_clear()
             get_settings.cache_clear()
             sso_settings = get_sso_settings()
-            assert sso_settings.ROLE == "lhm-ab-mucgpt-user"
+            assert sso_settings.ROLE is None
 
     def test_langfuse_settings(self):
         """Test Langfuse settings configuration via nested env vars."""

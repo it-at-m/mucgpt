@@ -240,11 +240,14 @@ export const makeApiRequest = async (
     // Create conversation history for the API request
     const history: ChatTurn[] = answers.map((a: { user: any; response: { answer: any } }) => ({ user: a.user, assistant: a.response.answer }));
 
-    // Normal-chat conversation id: reuse the active local chat id when continuing
-    // an existing chat, otherwise generate one now so it can be sent with the
-    // first request too (instead of only after the first response). Assistant
-    // chats are out of scope for now.
-    const conversationId = assistant_id ? undefined : (activeChatRef.current ?? uuid());
+    // Reuse the active chat id when continuing. For assistant chats, the local
+    // storage key includes the assistant prefix, but the backend conversation id
+    // should stay stable as the plain chat UUID portion.
+    const conversationId = activeChatRef.current
+        ? assistant_id
+            ? activeChatRef.current.slice(AssistantStorageService.GENERATE_BOT_CHAT_PREFIX(assistant_id).length)
+            : activeChatRef.current
+        : uuid();
 
     // Build the API request object
     const request: ChatRequest = {
@@ -477,11 +480,16 @@ export const makeApiRequest = async (
         // Create a new chat with generated name
         const chatname = await createChatName(question, finalResponse.answer, options.system ?? "");
 
-        // Create chat with assistant-specific ID if assistant_id is provided, otherwise
-        // reuse the id already generated above (and sent as conversation_id) for a
-        // regular chat, so the local id matches what the backend was sent.
+        // For assistant chats, keep the assistant-prefixed local storage key while
+        // reusing the same canonical conversation id sent to the backend.
         const id = assistant_id
-            ? await storageService.create([finalMessage], options, AssistantStorageService.GENERATE_BOT_CHAT_ID(assistant_id, uuid()), chatname, false)
+            ? await storageService.create(
+                  [finalMessage],
+                  options,
+                  AssistantStorageService.GENERATE_BOT_CHAT_ID(assistant_id, conversationId),
+                  chatname,
+                  false
+              )
             : await storageService.create([finalMessage], options, conversationId ?? uuid(), chatname, false);
 
         // Set the new chat as active and refresh history

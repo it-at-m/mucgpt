@@ -1,5 +1,5 @@
 from decimal import Decimal
-from typing import Any, Literal
+from typing import Any, Final, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, PositiveInt
 
@@ -350,6 +350,48 @@ class AssistantDraftResult(BaseModel):
     title: str = Field(..., description="Generated title for the assistant.")
 
 
+ComplianceCategoryId = Literal[
+    "migration_asylum_border",
+    "public_services_access",
+    "hr_employment",
+    "education",
+]
+ComplianceStatus = Literal["passed", "high_risk_detected", "error"]
+COMPLIANCE_STATUS_PASSED: Final[ComplianceStatus] = "passed"
+COMPLIANCE_STATUS_HIGH_RISK_DETECTED: Final[ComplianceStatus] = "high_risk_detected"
+COMPLIANCE_STATUS_ERROR: Final[ComplianceStatus] = "error"
+
+
+class ComplianceCheckRequest(BaseModel):
+    """System prompt to screen for EU AI Act high-risk use cases."""
+
+    system_prompt: str = Field(
+        ..., min_length=1, description="Assistant system prompt to evaluate."
+    )
+
+
+class ComplianceCategoryResult(BaseModel):
+    """Result of one EU AI Act high-risk category evaluation."""
+
+    category: ComplianceCategoryId
+    status: ComplianceStatus
+    reasoning: str | None = Field(
+        None,
+        description="Concise explanation when the category was identified as high risk.",
+    )
+
+
+class ComplianceCheckResponse(BaseModel):
+    """Aggregated EU AI Act high-risk screening result."""
+
+    overall_status: ComplianceStatus
+    results: list[ComplianceCategoryResult]
+    prompt_hash: str | None = Field(
+        None,
+        description="SHA-256 hash of the screened system prompt.",
+    )
+
+
 class ChatTitleRequest(BaseModel):
     """Request model for generating a chat title based on the last turn."""
 
@@ -422,6 +464,10 @@ class ConfigResponse(BaseModel):
     transcription_enabled: bool = Field(
         False,
         description="Whether browser-based audio transcription is enabled in the frontend.",
+    )
+    ai_act_compliance_check_enabled: bool = Field(
+        True,
+        description="Whether the AI Act compliance check workflow is enabled in the frontend assistant editor and discovery UI.",
     )
     footer_link_url: str | None = Field(
         None,

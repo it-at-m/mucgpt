@@ -1,7 +1,9 @@
+import hashlib
 import importlib
 import uuid
 
 import pytest
+from fastapi.testclient import TestClient
 from sqlalchemy import select
 
 from api.api_models import (
@@ -9,6 +11,7 @@ from api.api_models import (
     AssistantResponse,
     AssistantUpdate,
     AssistantVersionResponse,
+    ComplianceCheckResult,
     ExampleModel,
     QuickPrompt,
     ToolBase,
@@ -139,6 +142,348 @@ def test_create_assistant_success(sample_assistant_create, test_client):
             for tool in sample_assistant_create.tools:
                 tool_id = tool.get("id") if isinstance(tool, dict) else tool.id
                 assert tool_id in response_tool_ids
+
+
+@pytest.mark.integration
+def test_compliance_check_result_is_versioned_and_cleared_for_changed_prompt(
+    test_client: TestClient,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Unverified or missing screening results block create/update operations."""
+    monkeypatch.setattr(
+        assistants_router_module.get_settings(),
+        "COMPLIANCE_REQUIRE_VERIFICATION",
+        True,
+    )
+
+    result = ComplianceCheckResult(
+        overall_status="passed",
+        results=[
+            {
+                "category": "education",
+                "status": "passed",
+            }
+        ],
+        prompt_hash="checked-prompt",
+    )
+    create_response = test_client.post(
+        "assistant/create",
+        json=AssistantCreate(
+            name="Compliance test assistant",
+            system_prompt="Initial system prompt.",
+            compliance_check_result=result,
+        ).model_dump(),
+        headers=headers,
+    )
+
+    assert create_response.status_code == 422
+
+
+@pytest.mark.integration
+def test_create_assistant_with_verified_compliance_result_persists_payload(
+    test_client, monkeypatch: pytest.MonkeyPatch
+):
+    """Create succeeds when compliance payload matches authoritative cached result."""
+    monkeypatch.setattr(
+        assistants_router_module.get_settings(),
+        "COMPLIANCE_REQUIRE_VERIFICATION",
+        True,
+    )
+
+    system_prompt = "Initial system prompt."
+    prompt_hash = hashlib.sha256(system_prompt.encode("utf-8")).hexdigest()
+    result = ComplianceCheckResult(
+        overall_status="passed",
+        results=[
+            {
+                "category": "education",
+                "status": "passed",
+            }
+        ],
+        prompt_hash=prompt_hash,
+    )
+
+    async def _noop_init_redis() -> None:
+        return None
+
+    async def _get_object(_key: str):
+        return result.model_dump()
+
+    monkeypatch.setattr(
+        assistants_router_module.RedisCache,
+        "init_redis",
+        _noop_init_redis,
+    )
+    monkeypatch.setattr(
+        assistants_router_module.RedisCache,
+        "get_object",
+        _get_object,
+    )
+
+    create_response = test_client.post(
+        "assistant/create",
+        json=AssistantCreate(
+            name="Compliance verified assistant",
+            system_prompt=system_prompt,
+            compliance_check_result=result,
+        ).model_dump(),
+        headers=headers,
+    )
+
+    assert create_response.status_code == 200
+    created = AssistantResponse.model_validate(create_response.json())
+    assert created.latest_version.compliance_check_result == result
+
+
+@pytest.mark.integration
+def test_update_assistant_strict_mode_blocks_prompt_change_without_verified_result(
+    test_client, monkeypatch: pytest.MonkeyPatch
+):
+    """Strict mode rejects prompt updates that do not provide a verified compliance result."""
+    create_response = test_client.post(
+        "assistant/create",
+        json=AssistantCreate(
+            name="Strict update test assistant",
+            system_prompt="Initial prompt.",
+        ).model_dump(),
+        headers=headers,
+    )
+    assert create_response.status_code == 200
+    created = AssistantResponse.model_validate(create_response.json())
+
+    monkeypatch.setattr(
+        assistants_router_module.get_settings(),
+        "COMPLIANCE_REQUIRE_VERIFICATION",
+        True,
+    )
+
+    update_response = test_client.post(
+        f"assistant/{created.id}/update",
+        json=AssistantUpdate(
+            version=created.latest_version.version,
+            system_prompt="Changed prompt without new verified compliance result.",
+        ).model_dump(),
+        headers=headers,
+    )
+
+    assert update_response.status_code == 422
+
+
+@pytest.mark.integration
+def test_update_assistant_strict_mode_accepts_verified_prompt_change(
+    test_client, monkeypatch: pytest.MonkeyPatch
+):
+    """Strict mode allows prompt updates when a verified compliance result is provided."""
+    create_response = test_client.post(
+        "assistant/create",
+        json=AssistantCreate(
+            name="Strict verified update assistant",
+            system_prompt="Initial prompt.",
+        ).model_dump(),
+        headers=headers,
+    )
+    assert create_response.status_code == 200
+    created = AssistantResponse.model_validate(create_response.json())
+
+    monkeypatch.setattr(
+        assistants_router_module.get_settings(),
+        "COMPLIANCE_REQUIRE_VERIFICATION",
+        True,
+    )
+
+    new_system_prompt = "Changed prompt with verified compliance result."
+    prompt_hash = hashlib.sha256(new_system_prompt.encode("utf-8")).hexdigest()
+    result = ComplianceCheckResult(
+        overall_status="passed",
+        results=[
+            {
+                "category": "education",
+                "status": "passed",
+            }
+        ],
+        prompt_hash=prompt_hash,
+    )
+
+    async def _noop_init_redis() -> None:
+        return None
+
+    async def _get_object(_key: str):
+        return result.model_dump()
+
+    monkeypatch.setattr(
+        assistants_router_module.RedisCache,
+        "init_redis",
+        _noop_init_redis,
+    )
+    monkeypatch.setattr(
+        assistants_router_module.RedisCache,
+        "get_object",
+        _get_object,
+    )
+
+    update_response = test_client.post(
+        f"assistant/{created.id}/update",
+        json=AssistantUpdate(
+            version=created.latest_version.version,
+            system_prompt=new_system_prompt,
+            compliance_check_result=result,
+        ).model_dump(),
+        headers=headers,
+    )
+
+    assert update_response.status_code == 200
+    updated = AssistantResponse.model_validate(update_response.json())
+    assert updated.latest_version.compliance_check_result == result
+
+
+@pytest.mark.integration
+def test_update_assistant_strict_mode_unchanged_prompt_preserves_compliance_result(
+    test_client, monkeypatch: pytest.MonkeyPatch
+):
+    """Strict mode should not require re-verification when the prompt value is unchanged."""
+    monkeypatch.setattr(
+        assistants_router_module.get_settings(),
+        "COMPLIANCE_REQUIRE_VERIFICATION",
+        True,
+    )
+
+    system_prompt = "Stable prompt for unchanged-update compliance test."
+    prompt_hash = hashlib.sha256(system_prompt.encode("utf-8")).hexdigest()
+    result = ComplianceCheckResult(
+        overall_status="passed",
+        results=[
+            {
+                "category": "education",
+                "status": "passed",
+            }
+        ],
+        prompt_hash=prompt_hash,
+    )
+
+    async def _noop_init_redis() -> None:
+        return None
+
+    async def _get_object(_key: str):
+        return result.model_dump()
+
+    monkeypatch.setattr(
+        assistants_router_module.RedisCache,
+        "init_redis",
+        _noop_init_redis,
+    )
+    monkeypatch.setattr(
+        assistants_router_module.RedisCache,
+        "get_object",
+        _get_object,
+    )
+
+    create_response = test_client.post(
+        "assistant/create",
+        json=AssistantCreate(
+            name="Strict unchanged prompt assistant",
+            system_prompt=system_prompt,
+            compliance_check_result=result,
+        ).model_dump(),
+        headers=headers,
+    )
+    assert create_response.status_code == 200
+    created = AssistantResponse.model_validate(create_response.json())
+    assert created.latest_version.compliance_check_result == result
+
+    update_response = test_client.post(
+        f"assistant/{created.id}/update",
+        json=AssistantUpdate(
+            version=created.latest_version.version,
+            system_prompt=system_prompt,
+            name="Updated name only",
+        ).model_dump(),
+        headers=headers,
+    )
+
+    assert update_response.status_code == 200
+    updated = AssistantResponse.model_validate(update_response.json())
+    assert updated.latest_version.compliance_check_result == result
+
+
+@pytest.mark.integration
+def test_create_assistant_persists_compliance_confirmation(test_client):
+    """Create persists explicit compliance confirmation on first version."""
+    response = test_client.post(
+        "assistant/create",
+        json=AssistantCreate(
+            name="Assistant with confirmation",
+            system_prompt="You are a confirmed assistant.",
+            compliance_confirmation=True,
+        ).model_dump(),
+        headers=headers,
+    )
+
+    assert response.status_code == 200
+    created = AssistantResponse.model_validate(response.json())
+    assert created.latest_version.compliance_confirmation is True
+
+
+@pytest.mark.integration
+def test_update_assistant_prompt_unchanged_carries_compliance_confirmation(test_client):
+    """Update carries prior confirmation when prompt is unchanged and confirmation omitted."""
+    create_response = test_client.post(
+        "assistant/create",
+        json=AssistantCreate(
+            name="Carry confirmation assistant",
+            system_prompt="Stable prompt.",
+            compliance_confirmation=True,
+        ).model_dump(),
+        headers=headers,
+    )
+    assert create_response.status_code == 200
+    created = AssistantResponse.model_validate(create_response.json())
+    assert created.latest_version.compliance_confirmation is True
+
+    update_response = test_client.post(
+        f"assistant/{created.id}/update",
+        json=AssistantUpdate(
+            version=created.latest_version.version,
+            name="Carry confirmation assistant updated",
+        ).model_dump(),
+        headers=headers,
+    )
+
+    assert update_response.status_code == 200
+    updated = AssistantResponse.model_validate(update_response.json())
+    assert updated.latest_version.compliance_confirmation is True
+
+
+@pytest.mark.integration
+def test_update_assistant_prompt_changed_defaults_confirmation_to_false(
+    test_client,
+):
+    """Update resets confirmation to false when prompt changes and no explicit confirmation is provided."""
+    create_response = test_client.post(
+        "assistant/create",
+        json=AssistantCreate(
+            name="Reset confirmation assistant",
+            system_prompt="Original prompt.",
+            compliance_confirmation=True,
+        ).model_dump(),
+        headers=headers,
+    )
+    assert create_response.status_code == 200
+    created = AssistantResponse.model_validate(create_response.json())
+    assert created.latest_version.compliance_confirmation is True
+
+    update_response = test_client.post(
+        f"assistant/{created.id}/update",
+        json=AssistantUpdate(
+            version=created.latest_version.version,
+            system_prompt="Changed prompt.",
+            compliance_confirmation=None,
+        ).model_dump(),
+        headers=headers,
+    )
+
+    assert update_response.status_code == 200
+    updated = AssistantResponse.model_validate(update_response.json())
+    assert updated.latest_version.compliance_confirmation is False
 
 
 @pytest.mark.integration

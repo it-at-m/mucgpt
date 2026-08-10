@@ -59,6 +59,14 @@ class NotAllowedToAccessException(HTTPException):
         )
 
 
+class ComplianceVerificationFailedException(HTTPException):
+    def __init__(self, detail: str = "Compliance result could not be verified"):
+        super().__init__(
+            status_code=422,
+            detail=detail,
+        )
+
+
 class AlreadySubscribedException(HTTPException):
     def __init__(self, assistant_id: str):
         super().__init__(

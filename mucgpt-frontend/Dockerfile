@@ -19,8 +19,7 @@ ENV GLOBAL_AGENT_HTTPS_PROXY=${HTTPS_PROXY}
 
 WORKDIR /build
 
-# Keep npm's lockfile resolver aligned with the supported local development version.
-RUN npm install --global npm@11.6.2
+# Use the npm version bundled with Node 24 for consistency with local and CI environments
 
 # Copy only dependency files first for better caching
 COPY package*.json .npmrc ./
@@ -42,7 +41,7 @@ COPY src/ ./src/
 RUN --mount=type=cache,target=/build/node_modules/.vite \
     npm run build
 
-FROM registry.access.redhat.com/ubi9/nginx-124:9.8-1785716954@sha256:46ddcae20e61335ee5224c354721018b7cd9b35d5c505d9ba768d9b60569c48a
+FROM registry.access.redhat.com/ubi9/nginx-124:9.8-1785993104@sha256:2a819f43952e42003101db5dd6f3a7d9a14ca38cac4b95016f23dcf678e22d2d
 
 # Copy built web application
 COPY --from=builder /build/dist ./

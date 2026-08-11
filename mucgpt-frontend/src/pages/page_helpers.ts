@@ -483,13 +483,7 @@ export const makeApiRequest = async (
         // For assistant chats, keep the assistant-prefixed local storage key while
         // reusing the same canonical conversation id sent to the backend.
         const id = assistant_id
-            ? await storageService.create(
-                  [finalMessage],
-                  options,
-                  AssistantStorageService.GENERATE_BOT_CHAT_ID(assistant_id, conversationId),
-                  chatname,
-                  false
-              )
+            ? await storageService.create([finalMessage], options, AssistantStorageService.GENERATE_BOT_CHAT_ID(assistant_id, conversationId), chatname, false)
             : await storageService.create([finalMessage], options, conversationId ?? uuid(), chatname, false);
 
         // Set the new chat as active and refresh history

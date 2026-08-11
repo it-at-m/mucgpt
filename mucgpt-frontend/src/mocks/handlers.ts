@@ -830,7 +830,7 @@ export const handlers = [
                     }
                     for (const chunk of chunks) {
                         controller.enqueue(encoder.encode(`data: ${JSON.stringify(chunk)}\n\n`));
-                        await delay(200);
+                        await delay(50);
                     }
                     controller.enqueue(encoder.encode("data: [DONE]\n\n"));
                     controller.close();

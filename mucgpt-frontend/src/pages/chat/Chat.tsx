@@ -115,6 +115,10 @@ const Chat = () => {
     const [isSettingsOpen, setIsSettingsOpen] = useState<boolean>(false);
     const [uploadedData, setUploadedData] = useState<UploadedData[]>([]);
     const [isLoading, setIsLoading] = useState<boolean>(false);
+    // True from the moment a request is sent until the answer has fully finished streaming.
+    // Unlike `isLoading` (which only covers the wait for the first token), this stays true for the
+    // whole generation, so follow-up actions can be hidden until the message is completely rendered.
+    const [isStreaming, setIsStreaming] = useState<boolean>(false);
 
     useToolStatusToasts(toolStatuses);
 
@@ -251,6 +255,7 @@ const Chat = () => {
             lastQuestionRef.current = question;
             setError(undefined);
             setLoadingState(true);
+            setIsStreaming(true);
 
             const askResponse: ChatResponse = { answer: "", tokens: 0, user_tokens: 0 } as AskResponse;
             const options: ChatOptions = {
@@ -282,6 +287,7 @@ const Chat = () => {
                 setError(e);
             } finally {
                 setLoadingState(false);
+                setIsStreaming(false);
             }
         },
         [answers, creativity, LLM, storageService, fetchHistory, selectedTools, setToolStatuses, setLoadingState]
@@ -686,23 +692,19 @@ const Chat = () => {
         setFollowUpActions([
             {
                 label: t("chat.follow_up_actions.shorter", { lng: language }),
-                prompt: t("chat.follow_up_actions.shorter_prompt", { lng: language }),
-                tooltip: t("chat.follow_up_actions.shorter_tooltip", { lng: language })
+                prompt: t("chat.follow_up_actions.shorter_prompt", { lng: language })
             },
             {
                 label: t("chat.follow_up_actions.formal", { lng: language }),
-                prompt: t("chat.follow_up_actions.formal_prompt", { lng: language }),
-                tooltip: t("chat.follow_up_actions.formal_tooltip", { lng: language })
+                prompt: t("chat.follow_up_actions.formal_prompt", { lng: language })
             },
             {
                 label: t("chat.follow_up_actions.informal", { lng: language }),
-                prompt: t("chat.follow_up_actions.informal_prompt", { lng: language }),
-                tooltip: t("chat.follow_up_actions.informal_tooltip", { lng: language })
+                prompt: t("chat.follow_up_actions.informal_prompt", { lng: language })
             },
             {
                 label: t("chat.follow_up_actions.longer", { lng: language }),
-                prompt: t("chat.follow_up_actions.longer_prompt", { lng: language }),
-                tooltip: t("chat.follow_up_actions.longer_tooltip", { lng: language })
+                prompt: t("chat.follow_up_actions.longer_prompt", { lng: language })
             }
         ]);
 
@@ -729,6 +731,8 @@ const Chat = () => {
                                 <Answer
                                     key={`answer-${index}`}
                                     answer={answer.response}
+                                    isLatest
+                                    isStreaming={isStreaming}
                                     onRegenerateResponseClicked={onRegenerateResponseClicked}
                                     onFollowUpActionSend={prompt => callApi(prompt, systemPrompt)}
                                 />
@@ -755,7 +759,19 @@ const Chat = () => {
                 lastAnswerRef={lastAnswerRef}
             />
         ),
-        [answers, onRegenerateResponseClicked, onRollbackMessage, error, callApi, systemPrompt, isLoading, lastQuestionRef, chatMessageStreamEnd, lastAnswerRef]
+        [
+            answers,
+            onRegenerateResponseClicked,
+            onRollbackMessage,
+            error,
+            callApi,
+            systemPrompt,
+            isLoading,
+            isStreaming,
+            lastQuestionRef,
+            chatMessageStreamEnd,
+            lastAnswerRef
+        ]
     );
 
     const starterPromptsComponent = useMemo(

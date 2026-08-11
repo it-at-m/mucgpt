@@ -67,6 +67,9 @@ export const AssistantPreviewChat = ({
     const [lastQuestion, setLastQuestion] = useState<string>("");
     const showStarterPrompts = !lastQuestion && answers.length === 0;
     const [isLoading, setIsLoading] = useState<boolean>(false);
+    // True from request start until the answer has fully finished streaming (see the same flag in Chat.tsx).
+    // Used to hide follow-up actions until the message is completely rendered.
+    const [isStreaming, setIsStreaming] = useState<boolean>(false);
     const [error, setError] = useState<unknown>();
     const [toolStatuses, setToolStatuses] = useState<ToolStatus[]>([]);
     const [showScrollToBottom, setShowScrollToBottom] = useState(false);
@@ -207,6 +210,7 @@ export const AssistantPreviewChat = ({
             setLastQuestionValue(nextQuestion);
             if (error) setError(undefined);
             setIsLoadingValue(true);
+            setIsStreaming(true);
 
             const askResponse: ChatResponse = { answer: "", tokens: 0, user_tokens: 0 };
             const { systemPrompt: system, creativity: temp, selectedToolIds: toolIds } = configRef.current;
@@ -236,6 +240,7 @@ export const AssistantPreviewChat = ({
                 setError(e);
             }
             setIsLoadingValue(false);
+            setIsStreaming(false);
         },
         [answers, error, LLM, setIsLoadingValue, setLastQuestionValue]
     );
@@ -287,6 +292,8 @@ export const AssistantPreviewChat = ({
                             <Answer
                                 key={index}
                                 answer={answer.response}
+                                isLatest
+                                isStreaming={isStreaming}
                                 onRegenerateResponseClicked={onRegenerate}
                                 onFollowUpActionSend={prompt => void callApi(prompt)}
                             />
@@ -312,7 +319,7 @@ export const AssistantPreviewChat = ({
                 lastAnswerRef={lastAnswerRef}
             />
         ),
-        [answers, isLoading, error, callApi, lastQuestion, onRegenerate]
+        [answers, isLoading, isStreaming, error, callApi, lastQuestion, onRegenerate]
     );
 
     const containerStyle = { "--previewInputHeight": `${previewInputHeight}px` } as CSSProperties;

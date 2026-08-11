@@ -46,6 +46,8 @@ export const ChatLayout = ({
     const [chatInputHeight, setChatInputHeight] = useState(0);
     const [showScrollToBottom, setShowScrollToBottom] = useState(false);
     const [renderScrollToBottom, setRenderScrollToBottom] = useState(false);
+    const [scrolledFromTop, setScrolledFromTop] = useState(false);
+    const [scrolledFromBottom, setScrolledFromBottom] = useState(false);
     const [isCompact, setIsCompact] = useState(() =>
         typeof window !== "undefined" && typeof window.matchMedia === "function" ? window.matchMedia("(max-width: 640px)").matches : false
     );
@@ -87,12 +89,16 @@ export const ChatLayout = ({
         const element = chatMessagesRef.current;
         if (!element || showStarterPrompts) {
             setShowScrollToBottom(false);
+            setScrolledFromTop(false);
+            setScrolledFromBottom(false);
             return;
         }
 
         const distanceFromBottom = element.scrollHeight - element.scrollTop - element.clientHeight;
         const hasScrollableContent = element.scrollHeight > element.clientHeight + 1;
         setShowScrollToBottom(hasScrollableContent && distanceFromBottom > 32);
+        setScrolledFromTop(hasScrollableContent && element.scrollTop > 4);
+        setScrolledFromBottom(hasScrollableContent && distanceFromBottom > 4);
     }, [showStarterPrompts]);
 
     useEffect(() => {
@@ -200,7 +206,13 @@ export const ChatLayout = ({
                             {starterPrompts}
                         </div>
                     ) : (
-                        <ul className={styles.allChatMessages} aria-description={messages_description} ref={chatMessagesRef}>
+                        <ul
+                            className={styles.allChatMessages}
+                            aria-description={messages_description}
+                            ref={chatMessagesRef}
+                            data-fade-top={scrolledFromTop}
+                            data-fade-bottom={scrolledFromBottom}
+                        >
                             {answers}
                         </ul>
                     )}

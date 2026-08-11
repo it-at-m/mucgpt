@@ -21,8 +21,8 @@ def upgrade() -> None:
     # Add new name column to assistants table
     op.add_column(
         "assistants",
-        sa.Column("name", sa.String(), nullable=False),
-    )    
+        sa.Column("name", sa.String(), nullable=True),
+    )
 
     # Move existing name values from assistant_versions to assistants
     connection = op.get_bind()

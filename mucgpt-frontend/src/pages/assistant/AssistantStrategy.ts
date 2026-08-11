@@ -1,5 +1,5 @@
 import { AssistantStorageService } from "../../service/assistantstorage";
-import { AssistantUpdateInput, Assistant } from "../../api/models";
+import { AssistantUpdateInput, Assistant, ComplianceCheckResponse } from "../../api/models";
 import { ASSISTANT_STORE, COMMUNITY_ASSISTANT_STORE } from "../../constants";
 import {
     createCommunityAssistantApi,
@@ -19,7 +19,10 @@ import {
 export interface AssistantStrategy {
     loadAssistantConfig(assistantId: string, assistantStorageService: AssistantStorageService): Promise<Assistant | undefined>;
     deleteAssistant(assistantId: string, assistantStorageService: AssistantStorageService): Promise<void>;
-    updateAssistant?(assistantId: string, newAssistant: Assistant): Promise<{ updatedAssistant?: Assistant }>;
+    updateAssistant?(
+        assistantId: string,
+        newAssistant: Assistant
+    ): Promise<{ updatedAssistant?: Assistant; persistedComplianceCheckResult?: ComplianceCheckResponse | null }>;
     isOwned: boolean;
     canEdit: boolean;
     requiresReloadOnSave?: boolean; // New flag to indicate if page reload is needed after save
@@ -40,7 +43,10 @@ export class LocalAssistantStrategy implements AssistantStrategy {
         await assistantStorageService.deleteConfigAndChatsForAssistant(assistantId);
     }
 
-    async updateAssistant(assistantId: string, newAssistant: Assistant): Promise<{ updatedAssistant?: Assistant }> {
+    async updateAssistant(
+        assistantId: string,
+        newAssistant: Assistant
+    ): Promise<{ updatedAssistant?: Assistant; persistedComplianceCheckResult?: ComplianceCheckResponse | null }> {
         const assistantStorageService = new AssistantStorageService(ASSISTANT_STORE);
         const response = await createCommunityAssistantApi({
             name: newAssistant.title,
@@ -54,13 +60,15 @@ export class LocalAssistantStrategy implements AssistantStrategy {
             quick_prompts: newAssistant.quick_prompts || [],
             tags: newAssistant.tags || [],
             hierarchical_access: newAssistant.hierarchical_access || [],
-            is_visible: newAssistant.is_visible
+            is_visible: newAssistant.is_visible,
+            compliance_check_result: newAssistant.compliance_check_result,
+            compliance_confirmation: newAssistant.compliance_confirmation
         });
 
         await assistantStorageService.deleteConfigAndChatsForAssistant(assistantId);
         window.location.href = `/#/owned/communityassistant/${response.id}`;
 
-        return {};
+        return { persistedComplianceCheckResult: response.latest_version.compliance_check_result ?? null };
     }
 }
 
@@ -133,7 +141,10 @@ export class OwnedCommunityAssistantStrategy implements AssistantStrategy {
         await assistantStorageService.deleteConfigAndChatsForAssistant(assistantId);
     }
 
-    async updateAssistant(assistantId: string, newAssistant: Assistant): Promise<any> {
+    async updateAssistant(
+        assistantId: string,
+        newAssistant: Assistant
+    ): Promise<{ updatedAssistant?: Assistant; persistedComplianceCheckResult?: ComplianceCheckResponse | null }> {
         const updateInput: AssistantUpdateInput = {
             name: newAssistant.title,
             description: newAssistant.description,
@@ -147,11 +158,13 @@ export class OwnedCommunityAssistantStrategy implements AssistantStrategy {
             quick_prompts: newAssistant.quick_prompts || [],
             tags: newAssistant.tags || [],
             version: Number(newAssistant.version),
-            is_visible: newAssistant.is_visible
+            is_visible: newAssistant.is_visible,
+            compliance_check_result: newAssistant.compliance_check_result,
+            compliance_confirmation: newAssistant.compliance_confirmation
         };
 
-        await updateCommunityAssistantApi(assistantId, updateInput);
+        const response = await updateCommunityAssistantApi(assistantId, updateInput);
 
-        return {};
+        return { persistedComplianceCheckResult: response.latest_version.compliance_check_result ?? null };
     }
 }

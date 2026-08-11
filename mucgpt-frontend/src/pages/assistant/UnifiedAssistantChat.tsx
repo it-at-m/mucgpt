@@ -547,7 +547,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
             if (!strategy.canEdit) return;
 
             setError(undefined);
-            await strategy.updateAssistant?.(assistant_id, newAssistant);
+            return await strategy.updateAssistant?.(assistant_id, newAssistant);
         },
         [strategy, assistant_id]
     );
@@ -988,7 +988,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
             isOwner={strategy.canEdit || strategy.isOwned}
             strategy={strategy}
             onSave={async assistant => {
-                await onAssistantChanged(assistant);
+                return await onAssistantChanged(assistant);
             }}
         />
     ) : (

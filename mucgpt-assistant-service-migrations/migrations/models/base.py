@@ -77,6 +77,7 @@ class AssistantVersion(Base):
     examples = Column(JSON, nullable=True)
     quick_prompts = Column(JSON, nullable=True)
     tags = Column(JSON, nullable=True)
+    compliance_check_result = Column(JSON, nullable=True)
 
     __table_args__ = (
         UniqueConstraint("assistant_id", "version", name="uq_assistant_version"),

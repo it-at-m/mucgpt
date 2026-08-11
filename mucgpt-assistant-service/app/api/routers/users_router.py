@@ -61,7 +61,7 @@ async def _build_assistant_response_list(
                 id=assistant_id,
                 version=getattr(latest_version, "version", 0),
                 created_at=getattr(latest_version, "created_at"),
-                name=getattr(latest_version, "name", ""),
+                name=assistant.name,
                 description=getattr(latest_version, "description", ""),
                 system_prompt=getattr(latest_version, "system_prompt", ""),
                 hierarchical_access=assistant.hierarchical_access
@@ -296,7 +296,7 @@ async def get_user_subscriptions(
             )
             response = SubscriptionResponse(
                 id=assistant_id,
-                title=getattr(latest_version, "name", ""),
+                title=assistant.name,
                 description=getattr(latest_version, "description", ""),
                 updated_at=getattr(assistant, "updated_at", None),
                 subscriptions_count=getattr(assistant, "subscriptions_count", 0) or 0,

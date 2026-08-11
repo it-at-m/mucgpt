@@ -75,6 +75,7 @@ async def createAssistant(
         )
 
         new_assistant = await assistant_repo.create(
+            name=assistant.name,
             hierarchical_access=assistant.hierarchical_access or [],
             owner_ids=owner_ids,
             is_visible=is_visible,
@@ -83,7 +84,6 @@ async def createAssistant(
         # Create the first version with the actual assistant data
         first_version = await assistant_repo.create_assistant_version(
             new_assistant,
-            name=assistant.name,
             description=assistant.description or "",
             system_prompt=assistant.system_prompt,
             creativity=assistant.creativity,
@@ -142,7 +142,7 @@ async def createAssistant(
             id=assistant_id,
             version=latest_version.version,
             created_at=latest_version.created_at,
-            name=latest_version.name,
+            name=assistant_record.name,
             description=latest_version.description or "",
             system_prompt=latest_version.system_prompt,
             hierarchical_access=assistant_record.hierarchical_access or [],
@@ -284,6 +284,7 @@ async def updateAssistant(
         )  # Handle global properties using the repository update method
     await assistant_repo.update(
         assistant_id=id,
+        name=assistant_update.name,
         hierarchical_access=assistant_update.hierarchical_access,
         owner_ids=assistant_update.owner_ids,
         is_visible=is_visible,
@@ -293,9 +294,6 @@ async def updateAssistant(
     # Using the latest_version already retrieved above
     new_version = await assistant_repo.create_assistant_version(
         assistant,
-        name=assistant_update.name
-        if assistant_update.name is not None
-        else latest_version.name,
         description=assistant_update.description
         if assistant_update.description is not None
         else latest_version.description,
@@ -355,7 +353,7 @@ async def updateAssistant(
         id=id,
         version=latest_version.version,
         created_at=latest_version.created_at,
-        name=latest_version.name,
+        name=assistant.name,
         description=latest_version.description or "",
         system_prompt=latest_version.system_prompt,
         hierarchical_access=assistant.hierarchical_access or [],
@@ -470,7 +468,7 @@ async def getAllAssistants(
                 id=assistant_id,
                 version=latest_version.version,
                 created_at=latest_version.created_at,
-                name=latest_version.name,
+                name=assistant.name,
                 description=latest_version.description or "",
                 system_prompt=latest_version.system_prompt,
                 hierarchical_access=assistant.hierarchical_access or [],
@@ -576,7 +574,7 @@ async def getAssistant(
         id=id,
         version=latest_version.version,
         created_at=latest_version.created_at,
-        name=latest_version.name,
+        name=assistant.name,
         description=latest_version.description or "",
         system_prompt=latest_version.system_prompt,
         hierarchical_access=assistant.hierarchical_access or [],
@@ -680,7 +678,7 @@ async def get_assistant_version(
         id=id,
         version=assistant_version.version,
         created_at=assistant_version.created_at,
-        name=assistant_version.name,
+        name=assistant.name,
         description=assistant_version.description or "",
         system_prompt=assistant_version.system_prompt,
         hierarchical_access=assistant.hierarchical_access or [],

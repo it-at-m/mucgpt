@@ -204,7 +204,7 @@ def _load_settings(config_path: Path) -> Settings:
         raise RuntimeError(f"Configuration file not found: {config_path}")
 
     config_values = YamlConfigSettingsSource(Settings, yaml_file=config_path)()
-    return Settings(**config_values)
+    return Settings.model_validate(config_values)
 
 
 def _initialize_evaluation_context(

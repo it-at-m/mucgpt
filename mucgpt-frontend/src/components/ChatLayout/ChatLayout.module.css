@@ -1,6 +1,6 @@
 .container {
-    --chatReadableWidth: 1000px;
-    --chatContentWidth: min(60%, var(--chatReadableWidth));
+    --chatReadableWidth: 820px;
+    --chatContentWidth: min(50%, var(--chatReadableWidth));
     display: flex;
     flex-direction: column;
     flex: 1;
@@ -21,9 +21,17 @@
     align-items: center;
     justify-content: space-between;
     padding: 0 16px;
-    background: var(--colorNeutralBackground1);
+    background: color-mix(in srgb, var(--colorNeutralBackground1) 60%, transparent);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
     z-index: 6;
     box-sizing: border-box;
+}
+
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+    .headerBar {
+        background: var(--colorNeutralBackground1);
+    }
 }
 
 .container[data-info-open="true"] .headerBar {
@@ -74,7 +82,7 @@
     gap: 8px;
     border-radius: 8px;
     padding: 4px 8px;
-    background-color: var(--colorNeutralBackground1);
+    background-color: transparent;
     flex-shrink: 0;
 }
 
@@ -154,14 +162,45 @@
     }
 }
 
+@property --chatFadeTop {
+    syntax: "<length>";
+    inherits: false;
+    initial-value: 0px;
+}
+
+@property --chatFadeBottom {
+    syntax: "<length>";
+    inherits: false;
+    initial-value: 0px;
+}
+
 .allChatMessages {
+    --chatFadeSize: 28px;
+    --chatFadeTop: 0px;
+    --chatFadeBottom: 0px;
+
     flex: 1 1 auto;
     width: 100%;
     min-height: 0;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
     box-sizing: border-box;
-    padding: 8px 24px;
+    margin: 0;
+    padding: 0 24px;
+    list-style: none;
+    mask-image: linear-gradient(to bottom, transparent 0, #000 var(--chatFadeTop), #000 calc(100% - var(--chatFadeBottom)), transparent 100%);
+    -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 var(--chatFadeTop), #000 calc(100% - var(--chatFadeBottom)), transparent 100%);
+    transition:
+        --chatFadeTop 160ms ease,
+        --chatFadeBottom 160ms ease;
+}
+
+.allChatMessages[data-fade-top="true"] {
+    --chatFadeTop: var(--chatFadeSize);
+}
+
+.allChatMessages[data-fade-bottom="true"] {
+    --chatFadeBottom: var(--chatFadeSize);
 }
 
 .scrollToBottomWrapper {
@@ -292,6 +331,10 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+    .allChatMessages {
+        transition: none;
+    }
+
     .scrollToBottomWrapper {
         animation: none;
     }

@@ -1,29 +1,38 @@
+.messageWrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    max-width: 100%;
+}
+
 .message {
-    padding: 1.25em;
-    margin: 0 0 4px;
-    background: var(--colorNeutralBackground3);
+    padding: 0.9em 1.2em;
+    background: var(--app-user-message-background);
     color: var(--colorNeutralForeground1);
-    border-radius: var(--borderRadiusLarge);
+    border-radius: var(--app-radius-xxlarge) var(--app-radius-xxlarge) var(--app-radius-xsmall) var(--app-radius-xxlarge);
     overflow-x: auto;
     max-width: 100%; /* Ensure it doesn't overflow container */
-    transition: all 0.2s ease-in-out;
-    border: 1px solid var(--colorNeutralStroke1);
 }
 
 .answerText {
     white-space: pre-wrap;
-    font-size: var(--fontSizeBase300);
-    line-height: 1.35;
+    font-size: var(--fontSizeBase400);
     width: 100%; /* Use full width */
     overflow-x: auto;
-    margin-top: 8px;
 }
 
-.messageHeader {
+.messageActions {
     display: flex;
-    align-items: center;
-    justify-content: space-between;
+    justify-content: flex-end;
     min-height: 24px;
+    margin-top: 2px;
+    opacity: 0;
+    transition: opacity 0.15s ease-in-out;
+}
+
+.messageWrapper:hover .messageActions,
+.messageWrapper:focus-within .messageActions {
+    opacity: 1;
 }
 
 .rollbackButton {
@@ -43,8 +52,4 @@
 
 .answerText :where(p:last-child, ul:last-child, ol:last-child, blockquote:last-child) {
     margin-bottom: 0;
-}
-
-.iconRightMargin {
-    margin-right: 5 px;
 }

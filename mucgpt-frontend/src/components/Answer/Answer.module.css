@@ -5,49 +5,41 @@
 .answerContainer {
     display: flex;
     flex-direction: column;
-    justify-content: space-between; /* replaces v8 Stack verticalAlign="space-between" */
-    padding: 1.25em;
-    margin: 4px 0 0;
-    background: var(--colorNeutralBackground3);
-    border: 1px solid var(--colorNeutralStroke1);
-    border-radius: var(--borderRadiusLarge);
+    justify-content: space-between;
     width: 100%;
     max-width: 100%;
     box-sizing: border-box;
-    transition: box-shadow 0.2s ease-in-out; /* Smooth transition for hover effect */
-}
-
-.answerHeader {
-    display: flex;
-    flex-direction: row; /* replaces v8 Stack horizontal */
 }
 
 .followUpActionsBelow {
-    margin: 4px 0 0;
+    margin: 8px 0 8px;
 }
 
 .answerActionsBelow {
     display: flex;
     justify-content: flex-start;
     align-items: center;
-    gap: 2px;
-    margin: 4px 0 0;
+    margin: 8px 0 0;
+    gap: 4px;
+    opacity: 0;
+    transition: opacity 0.15s ease-in-out;
 }
 
-.iconRightMargin {
-    margin-right: 5 px;
+/* Reveal actions of an older answer when its turn is hovered or focused within. */
+.answerWithActions:hover .answerActionsBelow,
+.answerWithActions:focus-within .answerActionsBelow {
+    opacity: 1;
 }
 
-.answerLogo {
-    font-size: 28px;
+/* The newest answer keeps its actions permanently visible. */
+.answerWithActions.latest .answerActionsBelow {
+    opacity: 1;
 }
 
 .answerText {
-    padding-top: 4px;
-    padding-bottom: 4px;
     font-size: var(--fontSizeBase400);
-    line-height: 1.35;
-    overflow-x: auto;
+    min-width: 0;
+    overflow-wrap: anywhere;
 }
 
 .answerText :where(p, ul, ol, blockquote) {
@@ -108,10 +100,27 @@
 .unformattedAnswer {
     white-space: pre-wrap;
     line-height: 1.35;
+    overflow-wrap: anywhere;
 }
 
 .growItem {
-    flex-grow: 1; /* replaces v8 Stack.Item grow */
-    width: 100%; /* Change from min-width to use full width */
-    overflow-x: auto;
+    flex-grow: 1;
+    width: 100%;
+    min-width: 0;
+}
+
+.errorRow {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    margin-bottom: 8px;
+}
+
+@media (max-width: 650px) {
+    .answerWithActions .answerActionsBelow {
+        opacity: 1;
+        margin-bottom: 12px;
+    }
 }

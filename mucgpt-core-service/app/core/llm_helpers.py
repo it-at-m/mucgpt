@@ -67,7 +67,7 @@ def extract_message_content(content: Any) -> str:
 
 
 def get_internal_task_model(
-    settings: Settings, strength: InternalTaskModelStrength
+    settings: Settings, strength: str
 ) -> str:
     """Return the preferred configured model for an internal LLM task."""
 
@@ -170,7 +170,6 @@ async def invoke_internal_structured_generation[StructuredOutputT: BaseModel](
 
     llm = (
         ModelProvider.get_model()
-        .with_structured_output(schema)
         .with_config(
             _internal_request_config(
                 model_name=model_name,
@@ -179,6 +178,7 @@ async def invoke_internal_structured_generation[StructuredOutputT: BaseModel](
                 run_name=run_name,
             )
         )
+        .with_structured_output(schema)
     )
     with propagate_attributes(
         user_id=hash_user_id(user_info.user_id),

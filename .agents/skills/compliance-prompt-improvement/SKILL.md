@@ -11,6 +11,8 @@ Use this skill to improve the four prompt files under
 changes against the Langfuse `assistant-compliance` dataset. The objective is
 correct category-specific verdicts, not merely correct overall status.
 
+The default dataset name is `assistant-compliance`.
+
 ## Scope
 
 The evaluated categories are:
@@ -33,8 +35,8 @@ available for review but is not scored.
 
    ```powershell
    uv run python -m scripts.run_compliance_experiment `
-     --dataset "assistant-compliance" `
-     --model "gpt-4.1" `
+     --dataset "<dataset name>" `
+     --model "<configured model name>" `
      --max-concurrency 1 `
      --run-name "compliance-baseline" `
      --show-item-results
@@ -60,8 +62,8 @@ available for review but is not scored.
 
    ```powershell
    uv run python -m scripts.run_compliance_experiment `
-     --dataset "assistant-compliance" `
-     --model "gpt-4.1" `
+     --dataset "<dataset name>" `
+     --model "<configured model name>" `
      --max-concurrency 1 `
      --run-name "compliance-domain-boundaries" `
      --show-item-results

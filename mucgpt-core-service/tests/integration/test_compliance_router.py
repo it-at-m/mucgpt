@@ -25,6 +25,7 @@ class _FakeConfiguredModel:
 
     def with_structured_output(self, schema: type[Any]) -> "_FakeConfiguredModel":
         structured = _FakeConfiguredModel(self._response_by_run_name)
+        structured._run_name = self._run_name
         structured._structured_output_schema = schema
         structured._capture_owner = self._capture_owner
         return structured

@@ -12,7 +12,7 @@ from pydantic import BaseModel
 
 from config.langfuse_provider import LangfuseProvider
 from config.model_provider import ModelProvider
-from config.settings import InternalTaskModelStrength, Settings
+from config.settings import Settings
 from core.auth_models import AuthenticationResult
 from core.logtools import getLogger
 

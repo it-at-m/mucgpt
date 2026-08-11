@@ -77,12 +77,6 @@ export async function getCommunityAssistantApi(id: string): Promise<AssistantRes
     return handleApiRequest(() => fetch(`/api/assistant/${id}`, getConfig()), "Failed to get community assistant");
 }
 
-export async function checkAssistantNameAvailableApi(name: string, excludeId?: string): Promise<{ available: boolean }> {
-    const params = new URLSearchParams({ name });
-    if (excludeId) params.set("exclude_id", excludeId);
-    return handleApiRequest(() => fetch(`/api/assistant/name-available?${params.toString()}`, getConfig()), "Failed to check assistant name");
-}
-
 export async function updateCommunityAssistantApi(id: string, input: AssistantUpdateInput): Promise<AssistantResponse> {
     return handleApiRequest(() => fetch(`/api/assistant/${id}/update`, postConfig(input)), "Failed to update community assistant");
 }

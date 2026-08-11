@@ -186,8 +186,8 @@ DYNAMIC_ASSISTANTS.push(
                 }
             ],
             quick_prompts: [
-                { label: "Research Topic", prompt: "Please research this topic in detail:", tooltip: "Deep research" },
-                { label: "Summarize Paper", prompt: "Summarize this research paper:", tooltip: "Academic summary" }
+                { label: "Research Topic", prompt: "Please research this topic in detail:" },
+                { label: "Summarize Paper", prompt: "Summarize this research paper:" }
             ],
             tags: ["research", "academic", "kiesgpt"]
         }
@@ -221,8 +221,8 @@ DYNAMIC_ASSISTANTS.push(
                 }
             ],
             quick_prompts: [
-                { label: "Summarize", prompt: "Please summarize this document:", tooltip: "Quick summary" },
-                { label: "Key Points", prompt: "Extract the key points from this text:", tooltip: "Main ideas" }
+                { label: "Summarize", prompt: "Please summarize this document:" },
+                { label: "Key Points", prompt: "Extract the key points from this text:" }
             ],
             tags: ["documents", "legacy", "deprecated"]
         }
@@ -261,8 +261,8 @@ DYNAMIC_ASSISTANTS.push(
                 }
             ],
             quick_prompts: [
-                { label: "Follow-up", prompt: "Draft a follow-up e-mail for a meeting that took place yesterday.", tooltip: "Post-meeting follow-up" },
-                { label: "Apology", prompt: "Write a professional apology e-mail for a delayed response.", tooltip: "Apologize for delay" }
+                { label: "Follow-up", prompt: "Draft a follow-up e-mail for a meeting that took place yesterday." },
+                { label: "Apology", prompt: "Write a professional apology e-mail for a delayed response." }
             ],
             tags: ["e-mail", "communication", "writing"]
         }
@@ -291,8 +291,8 @@ DYNAMIC_ASSISTANTS.push(
             owner_ids: ["user-mock-002"],
             examples: [{ text: "Here are my rough notes from today's standup…", value: "I'll organize these into clean meeting minutes with action items." }],
             quick_prompts: [
-                { label: "Format Notes", prompt: "Please format the following rough meeting notes into structured minutes:", tooltip: "Structure raw notes" },
-                { label: "Extract Actions", prompt: "Extract all action items from the following meeting transcript:", tooltip: "Find action items" }
+                { label: "Format Notes", prompt: "Please format the following rough meeting notes into structured minutes:" },
+                { label: "Extract Actions", prompt: "Extract all action items from the following meeting transcript:" }
             ],
             tags: ["meetings", "productivity", "documentation"]
         }
@@ -327,8 +327,8 @@ DYNAMIC_ASSISTANTS.push(
                 }
             ],
             quick_prompts: [
-                { label: "Summarize Policy", prompt: "Summarize the following policy document in plain language:", tooltip: "Plain-language summary" },
-                { label: "Compare Versions", prompt: "Compare these two versions of the regulation and highlight what changed:", tooltip: "Version comparison" }
+                { label: "Summarize Policy", prompt: "Summarize the following policy document in plain language:" },
+                { label: "Compare Versions", prompt: "Compare these two versions of the regulation and highlight what changed:" }
             ],
             tags: ["policy", "legal", "compliance", "onboarding"]
         }

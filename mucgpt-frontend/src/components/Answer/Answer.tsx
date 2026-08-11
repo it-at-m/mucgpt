@@ -3,7 +3,6 @@ import { useCallback, useEffect, useState } from "react";
 import styles from "./Answer.module.css";
 
 import { AskResponse } from "../../api";
-import { AnswerIcon } from "./AnswerIcon";
 import { useTranslation } from "react-i18next";
 import { ArrowSync24Regular, CheckmarkSquare24Regular, ContentView24Regular, Copy24Regular } from "@fluentui/react-icons";
 import { Button, Tooltip } from "@fluentui/react-components";
@@ -14,9 +13,13 @@ interface Props {
     answer: AskResponse;
     onRegenerateResponseClicked?: () => void;
     onFollowUpActionSend?: (prompt: string) => void;
+    /** Whether this is the newest answer in the chat. Latest answers keep their actions permanently visible; older ones reveal them on hover. */
+    isLatest?: boolean;
+    /** Whether the answer is still being streamed/rendered. Follow-up actions are hidden until this is false. */
+    isStreaming?: boolean;
 }
 
-export const Answer = ({ answer, onRegenerateResponseClicked, onFollowUpActionSend }: Props) => {
+export const Answer = ({ answer, onRegenerateResponseClicked, onFollowUpActionSend, isLatest = false, isStreaming = false }: Props) => {
     const { t } = useTranslation();
 
     const [copied, setCopied] = useState<boolean>(false);
@@ -47,14 +50,8 @@ export const Answer = ({ answer, onRegenerateResponseClicked, onFollowUpActionSe
     }, [answer.answer]); // Run this effect only when the message changes
 
     return (
-        <div className={styles.answerWithActions}>
+        <div className={`${styles.answerWithActions} ${isLatest ? styles.latest : ""}`}>
             <div className={styles.answerContainer}>
-                <div>
-                    <div className={styles.answerHeader}>
-                        <AnswerIcon aria-hidden />
-                    </div>
-                </div>
-
                 <div className={styles.growItem}>
                     {formatted && (
                         <div className={styles.answerText}>
@@ -68,43 +65,45 @@ export const Answer = ({ answer, onRegenerateResponseClicked, onFollowUpActionSe
                     )}
                 </div>
             </div>
-            <div className={styles.answerActionsBelow}>
-                <Tooltip content={t("components.answer.copy")} relationship="description" positioning={{ target: ref }}>
-                    <Button
-                        ref={setRef}
-                        appearance="subtle"
-                        aria-label={t("components.answer.copy")}
-                        icon={!copied ? <Copy24Regular className={styles.iconRightMargin} /> : <CheckmarkSquare24Regular className={styles.iconRightMargin} />}
-                        size="small"
-                        onClick={() => {
-                            oncopy();
-                        }}
-                    ></Button>
-                </Tooltip>
+            {!isStreaming && (
+                <div className={styles.answerActionsBelow}>
+                    <Tooltip content={t("components.answer.copy")} relationship="description" positioning={{ target: ref }}>
+                        <Button
+                            ref={setRef}
+                            appearance="subtle"
+                            aria-label={t("components.answer.copy")}
+                            icon={!copied ? <Copy24Regular /> : <CheckmarkSquare24Regular />}
+                            size="small"
+                            onClick={() => {
+                                oncopy();
+                            }}
+                        ></Button>
+                    </Tooltip>
 
-                <Tooltip content={t("components.answer.unformat")} relationship="description" positioning="above">
-                    <Button
-                        appearance="subtle"
-                        aria-label={t("components.answer.unformat")}
-                        icon={<ContentView24Regular className={styles.iconRightMargin} />}
-                        onClick={() => setFormatted(!formatted)}
-                        size="small"
-                    ></Button>
-                </Tooltip>
-
-                {onRegenerateResponseClicked && (
-                    <Tooltip content={t("components.answer.regenerate")} relationship="description" positioning="above">
+                    <Tooltip content={t("components.answer.unformat")} relationship="description" positioning="above">
                         <Button
                             appearance="subtle"
-                            aria-label={t("components.answer.regenerate")}
-                            icon={<ArrowSync24Regular className={styles.iconRightMargin} />}
-                            onClick={() => onRegenerateResponseClicked()}
+                            aria-label={t("components.answer.unformat")}
+                            icon={<ContentView24Regular />}
+                            onClick={() => setFormatted(!formatted)}
                             size="small"
                         ></Button>
                     </Tooltip>
-                )}
-            </div>
-            {onRegenerateResponseClicked && onFollowUpActionSend && (
+
+                    {onRegenerateResponseClicked && (
+                        <Tooltip content={t("components.answer.regenerate")} relationship="description" positioning="above">
+                            <Button
+                                appearance="subtle"
+                                aria-label={t("components.answer.regenerate")}
+                                icon={<ArrowSync24Regular />}
+                                onClick={() => onRegenerateResponseClicked()}
+                                size="small"
+                            ></Button>
+                        </Tooltip>
+                    )}
+                </div>
+            )}
+            {onRegenerateResponseClicked && onFollowUpActionSend && !isStreaming && (
                 <div className={styles.followUpActionsBelow}>
                     <FollowUpActionList onSend={prompt => onFollowUpActionSend(prompt)} />
                 </div>

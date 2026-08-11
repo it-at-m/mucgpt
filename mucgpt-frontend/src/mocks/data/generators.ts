@@ -135,8 +135,8 @@ export function buildAssistant(): AssistantCreateResponse {
                 { text: "Fasse ein Dokument zusammen", value: randomSentence() }
             ],
             quick_prompts: [
-                { label: "Begrüßung", prompt: "Hallo! Wie kann ich helfen?", tooltip: "Standard Begrüßung" },
-                { label: "Zusammenfassen", prompt: "Bitte fasse den Text oben in 3 Sätzen zusammen.", tooltip: "TL;DR" }
+                { label: "Begrüßung", prompt: "Hallo! Wie kann ich helfen?" },
+                { label: "Zusammenfassen", prompt: "Bitte fasse den Text oben in 3 Sätzen zusammen." }
             ],
             tags: ["mock", "dynamic", randomOf(["beta", "prod", "lab"])],
             compliance_confirmation: false
@@ -207,8 +207,8 @@ export function buildAssistantCreateResponse(overrides: Partial<AssistantCreateR
                 }
             ],
             quick_prompts: overrides.latest_version?.quick_prompts || [
-                { label: "Begrüßung", prompt: "Hallo! Wobei kann ich heute unterstützen?", tooltip: "Freundliche Begrüßung" },
-                { label: "Zusammenfassen", prompt: "Fasse den Text bitte kurz und verständlich zusammen.", tooltip: "Kurze Zusammenfassung" }
+                { label: "Begrüßung", prompt: "Hallo! Wobei kann ich heute unterstützen?" },
+                { label: "Zusammenfassen", prompt: "Fasse den Text bitte kurz und verständlich zusammen." }
             ],
             tags: overrides.latest_version?.tags || ["mock", "assistant", randomOf(["docs", "email", "workflow", "research"])],
             compliance_confirmation: overrides.latest_version?.compliance_confirmation ?? false

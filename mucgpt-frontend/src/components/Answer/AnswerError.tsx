@@ -13,10 +13,12 @@ export const AnswerError = ({ error, onRetry }: Props) => {
     const { t } = useTranslation();
     return (
         <div className={styles.answerContainer}>
-            <ErrorCircle24Regular aria-hidden="true" aria-label="Error icon" primaryFill="red" />
+            <div className={styles.errorRow}>
+                <ErrorCircle24Regular aria-hidden="true" aria-label="Error icon" primaryFill="red" />
 
-            <div className={styles.growItem}>
-                <p className={styles.answerText}>{error}</p>
+                <div className={styles.growItem}>
+                    <p className={styles.answerText}>{error}</p>
+                </div>
             </div>
 
             <Button appearance="primary" onClick={onRetry}>

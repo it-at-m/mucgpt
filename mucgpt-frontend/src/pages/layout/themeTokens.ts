@@ -42,6 +42,7 @@ export interface AppThemeTokens {
     assistantConfigSurfaceEditing: string;
     assistantConfigBorder: string;
     assistantConfigBorderHover: string;
+    userMessageBackground: string;
 }
 
 export const lightThemeTokens: AppThemeTokens = {
@@ -87,7 +88,8 @@ export const lightThemeTokens: AppThemeTokens = {
     assistantConfigSurfaceHover: "#F1F6FD",
     assistantConfigSurfaceEditing: "#EFF6FF",
     assistantConfigBorder: "#C7D7F2",
-    assistantConfigBorderHover: "#9DB5E8"
+    assistantConfigBorderHover: "#9DB5E8",
+    userMessageBackground: "#E8F0FE"
 };
 
 export const darkThemeTokens: AppThemeTokens = {
@@ -133,5 +135,6 @@ export const darkThemeTokens: AppThemeTokens = {
     assistantConfigSurfaceHover: "#111C34",
     assistantConfigSurfaceEditing: "#101A31",
     assistantConfigBorder: "#263653",
-    assistantConfigBorderHover: "#3A4D73"
+    assistantConfigBorderHover: "#3A4D73",
+    userMessageBackground: "#1e293b"
 };

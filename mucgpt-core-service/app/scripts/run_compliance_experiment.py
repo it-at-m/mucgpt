@@ -2,7 +2,7 @@ import argparse
 import asyncio
 import logging
 import os
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 from datetime import datetime
 from pathlib import Path
 from typing import Any
@@ -106,7 +106,7 @@ def overall_status_accuracy(
 
 def category_status_accuracy(
     category: ComplianceCategoryId,
-):
+) -> Callable[..., Evaluation]:
     def evaluate(*, output: Any, expected_output: Any, **_: Any) -> Evaluation:
         actual = _result_by_category(_as_response(output)).get(category)
         expected = _result_by_category(
@@ -138,7 +138,7 @@ def all_category_statuses_match(
     )
 
 
-def _average_score(name: str):
+def _average_score(name: str) -> Callable[..., Evaluation]:
     def evaluate(*, item_results: Sequence[Any], **_: Any) -> Evaluation:
         values = [
             evaluation.value
@@ -250,47 +250,48 @@ async def _run_experiments(args: argparse.Namespace) -> None:
     selected_models = [models_by_name[model_name] for model_name in args.models]
     langfuse = _initialize_evaluation_context(settings, selected_models)
 
-    dataset = langfuse.get_dataset(args.dataset, version=args.dataset_version)
-    evaluators = [
-        overall_status_accuracy,
-        *(category_status_accuracy(category) for category in _CATEGORY_IDS),
-        all_category_statuses_match,
-    ]
-    run_evaluators = [
-        *(_average_score(evaluator.__name__) for evaluator in evaluators),
-        _failure_count,
-    ]
+    try:
+        dataset = langfuse.get_dataset(args.dataset, version=args.dataset_version)
+        evaluators = [
+            overall_status_accuracy,
+            *(category_status_accuracy(category) for category in _CATEGORY_IDS),
+            all_category_statuses_match,
+        ]
+        run_evaluators = [
+            *(_average_score(evaluator.__name__) for evaluator in evaluators),
+            _failure_count,
+        ]
 
-    for model_name in args.models:
+        for model_name in args.models:
 
-        async def task(*, item: Any, **_: Any) -> dict[str, Any]:
-            dataset_input, _ = validate_dataset_item(item)
-            response = await evaluate_compliance(
-                system_prompt=dataset_input.system_prompt,
-                model_name=model_name,
-                user_info=_EVALUATION_USER,
+            async def task(*, item: Any, **_: Any) -> dict[str, Any]:
+                dataset_input, _ = validate_dataset_item(item)
+                response = await evaluate_compliance(
+                    system_prompt=dataset_input.system_prompt,
+                    model_name=model_name,
+                    user_info=_EVALUATION_USER,
+                )
+                return response.model_dump(exclude={"prompt_hash"})
+
+            run_name = "-".join(part for part in (args.run_name, model_name) if part)
+            result = dataset.run_experiment(
+                name="assistant-compliance",
+                run_name=run_name or model_name,
+                description="EU AI Act compliance prompt classification benchmark",
+                task=task,
+                evaluators=evaluators,
+                run_evaluators=run_evaluators,
+                max_concurrency=args.max_concurrency,
+                metadata={
+                    "evaluation_type": "assistant-compliance",
+                    "model": model_name,
+                    "temperature": 0.0,
+                    "categories": list(_CATEGORY_IDS),
+                },
             )
-            return response.model_dump(exclude={"prompt_hash"})
-
-        run_name = "-".join(part for part in (args.run_name, model_name) if part)
-        result = dataset.run_experiment(
-            name="assistant-compliance",
-            run_name=run_name or model_name,
-            description="EU AI Act compliance prompt classification benchmark",
-            task=task,
-            evaluators=evaluators,
-            run_evaluators=run_evaluators,
-            max_concurrency=args.max_concurrency,
-            metadata={
-                "evaluation_type": "assistant-compliance",
-                "model": model_name,
-                "temperature": 0.0,
-                "categories": list(_CATEGORY_IDS),
-            },
-        )
-        print(result.format(include_item_results=args.show_item_results))
-
-    langfuse.flush()
+            print(result.format(include_item_results=args.show_item_results))
+    finally:
+        langfuse.flush()
 
 
 def main() -> None:

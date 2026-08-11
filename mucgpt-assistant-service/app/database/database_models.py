@@ -69,7 +69,6 @@ class AssistantVersion(Base):
     version = Column(Integer, nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow)
 
-    name = Column(String(255), nullable=False)
     description = Column(Text)
     system_prompt = Column(Text, nullable=False)
     creativity = Column(String(10), default="medium")
@@ -95,7 +94,6 @@ class AssistantVersion(Base):
     def to_dict(self):
         """Convert AssistantVersion instance to a dictionary for test compatibility."""
         return {
-            "name": self.name,
             "description": self.description,
             "system_prompt": self.system_prompt,
             "creativity": self.creativity,
@@ -117,6 +115,7 @@ class Assistant(Base):
     __tablename__ = "assistants"  # Use UUID version 4 (random) as the primary key
     id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
 
+    name = Column(String(255), nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     hierarchical_access = Column(JSON, default=list)

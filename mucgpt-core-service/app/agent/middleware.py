@@ -246,10 +246,10 @@ def _configure_model_request(request: ModelRequest) -> ModelRequest:
 def _filter_request_tools(request: ModelRequest) -> ModelRequest:
     """Restrict registered tools to the request-scoped allowlist."""
     runtime_context = getattr(getattr(request, "runtime", None), "context", None)
-    if not isinstance(runtime_context, RequestContext):
+    if not isinstance(runtime_context, RequestContext) or runtime_context.enabled_tools is None:
         return request
 
-    enabled_tools = set(runtime_context.enabled_tools or [])
+    enabled_tools = set(runtime_context.enabled_tools)
     return request.override(
         tools=[tool for tool in request.tools or [] if tool.name in enabled_tools]
     )

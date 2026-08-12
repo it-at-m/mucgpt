@@ -1,9 +1,11 @@
 # tests/integration/test_chat_router.py
 import json
+import logging
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 from fastapi.testclient import TestClient
+from langchain_core.language_models import BaseChatModel
 from langchain_core.language_models.fake_chat_models import FakeListChatModel
 
 from agent.agent_executor import MUCGPTAgentExecutor
@@ -23,10 +25,13 @@ DUMMY_USER_ID = "test_user_123"
 
 
 @pytest.fixture(autouse=True)
-def initialized_model_registry(monkeypatch):
+def initialized_model_registry(monkeypatch: pytest.MonkeyPatch) -> None:
     model = FakeListChatModel(responses=["test"])
 
-    def get_model(model_name=None, logger=None):
+    def get_model(
+        model_name: str | None = None,
+        logger: logging.Logger | None = None,
+    ) -> BaseChatModel:
         if model_name in {None, "gpt-4o-mini"}:
             return model
         raise ModelsConfigurationException(
@@ -34,6 +39,7 @@ def initialized_model_registry(monkeypatch):
         )
 
     monkeypatch.setattr(ModelRegistry, "get_model", get_model)
+
 
 # No need to include the router again since it's already included in backend.py
 # We're testing the mounted application directly
@@ -62,9 +68,7 @@ class TestChatRouter:
         )
         mock_agent_executor = Mock(MUCGPTAgentExecutor)
         mock_agent_executor.run_without_streaming = AsyncMock(
-            return_value=(
-            mock_response.model_dump()
-            )
+            return_value=(mock_response.model_dump())
         )
         mock_init_agent.return_value = mock_agent_executor
 

@@ -22,7 +22,9 @@ def _model_request(context: RequestContext | None) -> ModelRequest:
     )
 
 
-def test_wrap_model_call_selects_model_and_applies_settings(monkeypatch) -> None:
+def test_wrap_model_call_selects_model_and_applies_settings(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     selected_model = FakeListChatModel(responses=["selected"])
     get_model = MagicMock(return_value=selected_model)
     monkeypatch.setattr(ModelRegistry, "get_model", get_model)
@@ -51,7 +53,9 @@ def test_wrap_model_call_selects_model_and_applies_settings(monkeypatch) -> None
 
 
 @pytest.mark.asyncio
-async def test_awrap_model_call_matches_sync_selection(monkeypatch) -> None:
+async def test_awrap_model_call_matches_sync_selection(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     selected_model = FakeListChatModel(responses=["selected"])
     monkeypatch.setattr(ModelRegistry, "get_model", lambda _name=None: selected_model)
     handler = AsyncMock(return_value=ModelResponse(result=[]))
@@ -66,7 +70,9 @@ async def test_awrap_model_call_matches_sync_selection(monkeypatch) -> None:
     assert configured_request.model_settings["stream"] is False
 
 
-def test_wrap_model_call_omits_unsupported_temperature(monkeypatch) -> None:
+def test_wrap_model_call_omits_unsupported_temperature(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     selected_model = ChatOpenAI(model="gpt-5", api_key="test")
     monkeypatch.setattr(ModelRegistry, "get_model", lambda _name=None: selected_model)
     handler = MagicMock(return_value=ModelResponse(result=[]))
@@ -115,7 +121,35 @@ def test_initialized_model_uses_request_scoped_streaming_and_temperature() -> No
     assert model._should_stream(async_api=True, stream=False) is False
 
 
-def test_model_registry_uses_default_and_rejects_unknown(monkeypatch) -> None:
+def test_azure_model_alias_uses_base_model_profile() -> None:
+    config = ModelsConfig(
+        type="AZURE",
+        llm_name="gpt-5",
+        deployment="production-chat",
+        endpoint="https://example.openai.azure.com",
+        api_key="test",
+        api_version="2025-04-01-preview",
+        model_info={
+            "auto_enrich_from_model_info_endpoint": False,
+            "max_output_tokens": 128_000,
+            "max_input_tokens": 272_000,
+            "description": "GPT-5 Azure test model",
+        },
+    )
+
+    model = ModelRegistry.init_chat_model(config)
+    settings = ModelRegistry.normalize_model_settings(
+        model, {"temperature": 0.2, "stream": True}
+    )
+
+    assert model.model_name == "gpt-5"
+    assert model.deployment_name == "production-chat"
+    assert settings == {"stream": True}
+
+
+def test_model_registry_uses_default_and_rejects_unknown(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     default_model = FakeListChatModel(responses=["default"])
     monkeypatch.setattr(ModelRegistry, "_models", {"default": default_model})
     monkeypatch.setattr(ModelRegistry, "_default_model", default_model)

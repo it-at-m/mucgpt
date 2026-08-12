@@ -33,6 +33,7 @@ class ModelRegistry:
             if config.type == "AZURE":
                 return AzureChatOpenAI(
                     azure_deployment=config.deployment,
+                    model=config.llm_name,
                     api_key=config.api_key,
                     azure_endpoint=config.endpoint.unicode_string(),
                     api_version=config.api_version,

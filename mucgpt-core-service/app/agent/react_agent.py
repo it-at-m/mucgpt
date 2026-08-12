@@ -110,12 +110,18 @@ class _ConfiguredLangChainAgentGraph:
             assistant_id=str(assistant_id) if assistant_id else None,
             model_name=selected_llm,
             user=llm_user,
-            temperature=configurable.get("llm_temperature", 0.7),
+            temperature=configurable.get("llm_temperature", RequestContext.temperature),
             stream=configurable.get("llm_streaming", False),
             extra_body=extra_body,
         )
 
-        return messages, tools_to_use, agent_state_schema, data_sources, request_context
+        return (
+            messages,
+            tools_to_use,
+            agent_state_schema,
+            data_sources,
+            request_context,
+        )
 
     async def astream(
         self,
@@ -125,9 +131,13 @@ class _ConfiguredLangChainAgentGraph:
         config: RunnableConfig | None = None,
         **kwargs,
     ):
-        messages, tools_to_use, agent_state_schema, data_sources, request_context = (
-            self._prepare_run(input_data, config)
-        )
+        (
+            messages,
+            tools_to_use,
+            agent_state_schema,
+            data_sources,
+            request_context,
+        ) = self._prepare_run(input_data, config)
 
         # Merge agent_state_schema into trace metadata so Langfuse shows which
         # policy was selected for this run. Using merge_configs avoids mutating
@@ -183,9 +193,13 @@ class _ConfiguredLangChainAgentGraph:
         config: RunnableConfig | None = None,
         **kwargs,
     ):
-        messages, tools_to_use, agent_state_schema, data_sources, request_context = (
-            self._prepare_run(input_data, config)
-        )
+        (
+            messages,
+            tools_to_use,
+            agent_state_schema,
+            data_sources,
+            request_context,
+        ) = self._prepare_run(input_data, config)
 
         # Merge agent_state_schema into trace metadata.
         config = merge_configs(

@@ -45,6 +45,7 @@ class _ConfiguredLangChainAgentGraph:
         initial_state_schema = _ConfiguredLangChainAgentGraph.get_schema_from_tools(
             self.tools
         )
+        self.state_schema = initial_state_schema
         self.agent = create_agent(
             model=cast(Any, self.model),
             tools=self.tools,
@@ -114,12 +115,9 @@ class _ConfiguredLangChainAgentGraph:
 
         # Keep the stable graph schema visible in trace metadata without
         # mutating the caller's config dict.
-        agent_state_schema = self.get_schema_from_tools(self.tools)
         config = merge_configs(
             config or {},
-            RunnableConfig(
-                metadata={"agent_state_schema": agent_state_schema.__name__}
-            ),
+            RunnableConfig(metadata={"agent_state_schema": self.state_schema.__name__}),
         )
 
         input_payload = {"messages": messages}
@@ -145,12 +143,9 @@ class _ConfiguredLangChainAgentGraph:
         messages, data_sources, request_context = self._prepare_run(input_data, config)
 
         # Merge agent_state_schema into trace metadata.
-        agent_state_schema = self.get_schema_from_tools(self.tools)
         config = merge_configs(
             config or {},
-            RunnableConfig(
-                metadata={"agent_state_schema": agent_state_schema.__name__}
-            ),
+            RunnableConfig(metadata={"agent_state_schema": self.state_schema.__name__}),
         )
 
         input_payload = {"messages": messages}

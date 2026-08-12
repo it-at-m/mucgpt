@@ -77,10 +77,25 @@ class ModelRegistry:
         if len(model_names) != len(set(model_names)):
             raise ModelsConfigurationException("Model names must be unique")
 
-        cls._models = {
-            config.llm_name: cls.init_chat_model(config) for config in models_config
-        }
-        cls._default_model = cls._models[models_config[0].llm_name]
+        _logger = logger or logging.getLogger(__name__)
+
+        default_config = models_config[0]
+        try:
+            default_model = cls.init_chat_model(default_config)
+        except ModelsConfigurationException as exc:
+            raise ModelsConfigurationException(
+                f"Failed to initialize default model: {exc}"
+            ) from exc
+
+        models = {default_config.llm_name: default_model}
+        for config in models_config[1:]:
+            try:
+                models[config.llm_name] = cls.init_chat_model(config)
+            except ModelsConfigurationException as exc:
+                _logger.warning(f"Failed to initialize model {config.llm_name}: {exc}")
+
+        cls._models = models
+        cls._default_model = default_model
 
     @classmethod
     def get_model(

@@ -202,15 +202,28 @@ def _inject_data_sources(
     return messages_copy
 
 
-def _get_assistant_id_from_request(request: ModelRequest) -> str | None:
-    """Return the assistant id from runtime context or active config."""
+def _get_request_context(request: ModelRequest) -> RequestContext | None:
+    """Return the runtime context as a ``RequestContext``, coercing a dict if needed."""
     runtime_context = getattr(getattr(request, "runtime", None), "context", None)
     if isinstance(runtime_context, RequestContext):
-        return runtime_context.assistant_id
+        return runtime_context
     if isinstance(runtime_context, dict):
-        assistant_id = runtime_context.get("assistant_id")
-        if assistant_id:
-            return str(assistant_id)
+        known_fields = RequestContext.__dataclass_fields__
+        return RequestContext(
+            **{
+                key: value
+                for key, value in runtime_context.items()
+                if key in known_fields
+            }
+        )
+    return None
+
+
+def _get_assistant_id_from_request(request: ModelRequest) -> str | None:
+    """Return the assistant id from runtime context or active config."""
+    runtime_context = _get_request_context(request)
+    if runtime_context is not None and runtime_context.assistant_id:
+        return str(runtime_context.assistant_id)
 
     try:
         config = get_runtime_config() or {}
@@ -224,8 +237,8 @@ def _get_assistant_id_from_request(request: ModelRequest) -> str | None:
 
 def _configure_model_request(request: ModelRequest) -> ModelRequest:
     """Select a concrete model and apply request-scoped invocation settings."""
-    runtime_context = getattr(getattr(request, "runtime", None), "context", None)
-    if not isinstance(runtime_context, RequestContext):
+    runtime_context = _get_request_context(request)
+    if runtime_context is None:
         return request.override(model=ModelRegistry.get_model())
 
     model_settings = {
@@ -245,8 +258,8 @@ def _configure_model_request(request: ModelRequest) -> ModelRequest:
 
 def _filter_request_tools(request: ModelRequest) -> ModelRequest:
     """Restrict registered tools to the request-scoped allowlist."""
-    runtime_context = getattr(getattr(request, "runtime", None), "context", None)
-    if not isinstance(runtime_context, RequestContext) or runtime_context.enabled_tools is None:
+    runtime_context = _get_request_context(request)
+    if runtime_context is None or runtime_context.enabled_tools is None:
         return request
 
     enabled_tools = set(runtime_context.enabled_tools)

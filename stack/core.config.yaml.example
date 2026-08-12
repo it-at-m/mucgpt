@@ -11,6 +11,7 @@ LOG_CONFIG: "logconf.yaml"
 ENV_NAME: "MUCGPT🦜"
 ALTERNATIVE_LOGO: false
 TRANSCRIPTION_ENABLED: false
+AI_ACT_COMPLIANCE_CHECK_ENABLED: true
 APP_VERSION: "2.0"
 FRONTEND_VERSION: "0.0.2"
 ASSISTANT_VERSION: "0.0.3"
@@ -18,6 +19,12 @@ ASSISTANT_VERSION: "0.0.3"
 # Backend settings
 UNAUTHORIZED_USER_REDIRECT_URL: "<your-url>"
 AD2IMAGE_URL: "<your-ad2image-url>"  # Base URL of the ad2image service for avatar images
+
+# Compliance cache settings
+# If enabled, compliance check results are cached in Redis and can be verified by the assistant service.
+COMPLIANCE_CACHE_ENABLED: true
+# Time-to-live for compliance cache entries in seconds (default: 30 minutes)
+COMPLIANCE_CACHE_TTL_SECONDS: 1800
 
 # Parsing settings
 PARSER_BACKEND: "xberg"
@@ -51,21 +58,19 @@ MCP:
     # Example for custom headers to authenticate with MCP server via litellm proxy
     # authentication with litellm via Bearer
     # authentication with mcp server via basic auth
-    "mcp-atlassian":
+    "mcp-name":
       url: "<your-mcp-url>"
       transport: "streamable_http"
       forward_token: true
       forward_auth_override: "Basic <base64 encoded email:token>"
       headers:
         x-litellm-api-key: "<your-api-key>"
-      group: "atlassian"
+      group: "name"
       # Example tool description overrides.
       descriptions:
-        - name: "atlassianUserInfo"
-          description: "Retrieve details about the currently authenticated Atlassian user (e.g. accountId). Use for user context or attribution."
-        - name: "getAccessibleAtlassianResources"
-          description: "Resolve available Atlassian sites and their cloudIds (i.e. the url). Use when cloudId is unknown or a hostname-based guess fails."
-      # ...
+        - name: "tool-name"
+          description: "detailed tool description"
+        # ...
   CACHE_TTL: 123
 
 # Internet Search Settings (SearXNG)

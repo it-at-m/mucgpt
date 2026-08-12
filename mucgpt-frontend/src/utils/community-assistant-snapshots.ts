@@ -89,6 +89,8 @@ export const mapAssistantVersionToSnapshot = (assistantId: string, version: Assi
     snapshot_version: COMMUNITY_ASSISTANT_SNAPSHOT_VERSION,
     id: assistantId,
     version: version.version.toString(),
+    compliance_check_result: version.compliance_check_result,
+    compliance_confirmation: version.compliance_confirmation,
     ...mapAssistantVersionToCommunityConfig(version)
 });
 
@@ -100,6 +102,8 @@ export const mapAssistantToCommunitySnapshot = (assistant: Assistant): Community
     snapshot_version: COMMUNITY_ASSISTANT_SNAPSHOT_VERSION,
     id: assistant.id || "",
     version: assistant.version || "0",
+    compliance_check_result: assistant.compliance_check_result,
+    compliance_confirmation: assistant.compliance_confirmation,
     ...mapAssistantToCommunityConfig(assistant)
 });
 
@@ -108,6 +112,8 @@ export const mapCommunitySnapshotToAssistant = (snapshot: CommunityAssistantSnap
     publish: true,
     version: snapshot.version || "0",
     owner_ids: [],
+    compliance_check_result: snapshot.compliance_check_result,
+    compliance_confirmation: snapshot.compliance_confirmation,
     ...mapCommunitySnapshotToCommunityConfig(snapshot)
 });
 

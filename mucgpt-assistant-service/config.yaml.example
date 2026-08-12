@@ -24,10 +24,17 @@ UNAUTHORIZED_USER_REDIRECT_URL: ""
 LOG_CONFIG: "app/logconf.yaml"
 # Optional: if true, assistant read endpoints repopulate missing owner cache fields from LDAP
 OWNER_CACHE_REFRESH_ON_READ: false
+# Optional: require server-side compliance verification before assistant create/update is accepted
+# Set to false for local setups without Redis-backed compliance cache.
+# Keep this aligned with MUCGPT_CORE_AI_ACT_COMPLIANCE_CHECK_ENABLED.
+COMPLIANCE_REQUIRE_VERIFICATION: false
 
 # SSO Settings (nested under SSO key)
 SSO:
   ROLE: "lhm-ab-mucgpt-user"
+  # ADMIN_ROLE / USE_ROLE_RESTRICTION are reserved for future admin
+  # functionality and don't affect basic access today.
+  # ADMIN_ROLE: "lhm-ab-mucgpt-admin"
 
 # Redis Settings (nested under REDIS key)
 REDIS:

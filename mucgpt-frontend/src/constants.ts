@@ -52,6 +52,7 @@ export const DEFAULT_APP_CONFIG: ApplicationConfig = {
     assistant_version: "DEV 1.0.0",
     document_processing_enabled: false,
     transcription_enabled: false,
+    ai_act_compliance_check_enabled: true,
     faq_url: "https://ki.muenchen.de",
     incident_report_url: "https://ki.muenchen.de",
     feature_request_url: "https://ki.muenchen.de"

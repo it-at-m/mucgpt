@@ -74,3 +74,23 @@ def test_transcription_disabled_by_default(test_client):
         response = test_client.get("/config", headers=headers)
     assert response.status_code == 200
     assert response.json()["transcription_enabled"] is False
+
+
+@pytest.mark.integration
+def test_ai_act_compliance_check_enabled_reflects_settings(test_client):
+    """ai_act_compliance_check_enabled follows the AI_ACT_COMPLIANCE_CHECK_ENABLED setting."""
+    mock_settings = Settings(AI_ACT_COMPLIANCE_CHECK_ENABLED=True)
+    with patch("api.routers.system_router.settings", mock_settings):
+        response = test_client.get("/config", headers=headers)
+    assert response.status_code == 200
+    assert response.json()["ai_act_compliance_check_enabled"] is True
+
+
+@pytest.mark.integration
+def test_ai_act_compliance_check_disabled_reflects_settings(test_client):
+    """ai_act_compliance_check_enabled is False when the setting is disabled."""
+    mock_settings = Settings(AI_ACT_COMPLIANCE_CHECK_ENABLED=False)
+    with patch("api.routers.system_router.settings", mock_settings):
+        response = test_client.get("/config", headers=headers)
+    assert response.status_code == 200
+    assert response.json()["ai_act_compliance_check_enabled"] is False

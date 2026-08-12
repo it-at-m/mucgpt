@@ -53,3 +53,25 @@ class TestRedisSettings:
     def teardown_method(self):
         get_settings.cache_clear()
         get_redis_settings.cache_clear()
+
+
+class TestSettings:
+    def test_sso_role_defaults_are_unset(self):
+        with patch.dict(
+            os.environ,
+            {
+                "MUCGPT_ASSISTANT_DB__HOST": "localhost",
+                "MUCGPT_ASSISTANT_DB__NAME": "test",
+                "MUCGPT_ASSISTANT_DB__USER": "test",
+                "MUCGPT_ASSISTANT_DB__PASSWORD": "test",
+            },
+            clear=True,
+        ):
+            get_settings.cache_clear()
+            settings = get_settings()
+            assert settings.SSO.ROLE is None
+            assert settings.SSO.ADMIN_ROLE is None
+
+    def teardown_method(self):
+        get_settings.cache_clear()
+        get_redis_settings.cache_clear()

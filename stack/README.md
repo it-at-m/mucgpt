@@ -117,6 +117,8 @@ This directory contains the Docker Compose configuration for running the complet
 |---------|------|-------------|
 | **mcpdoc-server** | 8088 | Model Context Protocol server for documentation |
 
+The `mcpdoc-server` image installs `mcpdoc` through the local `mcpdoc-server/pyproject.toml` project. Pin or override transitive dependencies there, for example when an upstream `mcp` release is incompatible with `mcpdoc`.
+
 ## Docker Compose Files
 
 - **docker-compose.yml** - Main production configuration

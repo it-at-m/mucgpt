@@ -18,6 +18,7 @@ LOG_CONFIG: "logconf.yaml"
 ENV_NAME: "MUCGPT"
 ALTERNATIVE_LOGO: false
 TRANSCRIPTION_ENABLED: false
+AI_ACT_COMPLIANCE_CHECK_ENABLED: true
 FRONTEND_VERSION: "unknown"
 ASSISTANT_VERSION: "unknown"
 FOOTER_LINK_URL: "https://ki.muenchen.de"
@@ -30,6 +31,12 @@ AD2IMAGE_URL: "http://localhost:8084"  # Base URL of the ad2image service
 
 # Backend settings
 UNAUTHORIZED_USER_REDIRECT_URL: ""
+
+# Compliance cache settings
+# If enabled, compliance check results are cached in Redis and can be verified by the assistant service.
+COMPLIANCE_CACHE_ENABLED: true
+# Time-to-live for compliance cache entries in seconds (default: 30 minutes)
+COMPLIANCE_CACHE_TTL_SECONDS: 1800
 
 # Models configuration
 # Instead of base64 encoded JSON in environment variables, you can configure models here
@@ -58,6 +65,9 @@ MODELS:
 # SSO Settings (optional - nested under SSO key)
 SSO:
   ROLE: "lhm-ab-mucgpt-user"
+  # ADMIN_ROLE / USE_ROLE_RESTRICTION are reserved for future admin
+  # functionality and don't affect basic access today.
+  # ADMIN_ROLE: "lhm-ab-mucgpt-admin"
 
 # Langfuse Settings (optional - nested under LANGFUSE key)
 LANGFUSE:

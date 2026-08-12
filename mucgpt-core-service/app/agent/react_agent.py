@@ -74,7 +74,13 @@ class _ConfiguredLangChainAgentGraph:
 
     def _prepare_run(
         self, input_data: dict[str, Any], config: RunnableConfig | None
-    ) -> tuple[Any, list[Any], list[BaseTool], type[DefaultAgentState], list[dict[str, Any]] | None, RequestContext]:
+    ) -> tuple[
+        list[Any],
+        list[BaseTool],
+        type[DefaultAgentState],
+        list[dict[str, Any]] | None,
+        RequestContext,
+    ]:
         configurable = config.get("configurable", {}) if config else {}
         user_info = cast(AuthenticationResult | None, configurable.get("user_info"))
         if not user_info:
@@ -89,15 +95,6 @@ class _ConfiguredLangChainAgentGraph:
         # Keep MCP auth token map up-to-date for forwarded auth providers.
         McpBearerAuthProvider.set_token(user_info.user_id, user_info.token)
 
-        model = self.model
-        if selected_llm:
-            # Select the configured model alternative before adding request-specific bindings.
-            model = model.with_config(configurable={"llm": selected_llm})
-        if extra_body:
-            model = model.bind(extra_body=extra_body)
-        if llm_user:
-            model = model.bind(user=llm_user)
-
         messages = input_data.get("messages", [])
         tools_to_use = self._select_tools(enabled_tools)
 
@@ -107,14 +104,18 @@ class _ConfiguredLangChainAgentGraph:
         )
         logger.info(f"Using agent state schema: {agent_state_schema}")
 
-        configurable = config.get("configurable", {}) if config else {}
         data_sources = configurable.get("data_sources", [])
 
         request_context = RequestContext(
-            assistant_id=str(assistant_id) if assistant_id else None
+            assistant_id=str(assistant_id) if assistant_id else None,
+            model_name=selected_llm,
+            user=llm_user,
+            temperature=configurable.get("llm_temperature", 0.7),
+            stream=configurable.get("llm_streaming", False),
+            extra_body=extra_body,
         )
 
-        return model, messages, tools_to_use, agent_state_schema, data_sources, request_context
+        return messages, tools_to_use, agent_state_schema, data_sources, request_context
 
     async def astream(
         self,
@@ -124,7 +125,7 @@ class _ConfiguredLangChainAgentGraph:
         config: RunnableConfig | None = None,
         **kwargs,
     ):
-        model, messages, tools_to_use, agent_state_schema, data_sources, request_context = (
+        messages, tools_to_use, agent_state_schema, data_sources, request_context = (
             self._prepare_run(input_data, config)
         )
 
@@ -141,13 +142,12 @@ class _ConfiguredLangChainAgentGraph:
         active_agent = self.agent
         if (
             tools_to_use != self.tools
-            or model is not self.model
             or agent_state_schema
             != _ConfiguredLangChainAgentGraph.get_schema_from_tools(self.tools)
             or data_sources
         ):
             active_agent = create_agent(
-                model=cast(Any, model),
+                model=cast(Any, self.model),
                 tools=tools_to_use,
                 middleware=[
                     ContextMiddleware(
@@ -156,7 +156,7 @@ class _ConfiguredLangChainAgentGraph:
                     ToolErrorMiddleware(),
                 ],
                 system_prompt=DEFAULT_INSTRUCTIONS
-                if messages[0].content != DEFAULT_INSTRUCTIONS
+                if not messages or messages[0].content != DEFAULT_INSTRUCTIONS
                 else None,
                 debug=self.debug,
                 state_schema=agent_state_schema,
@@ -183,7 +183,7 @@ class _ConfiguredLangChainAgentGraph:
         config: RunnableConfig | None = None,
         **kwargs,
     ):
-        model, messages, tools_to_use, agent_state_schema, data_sources, request_context = (
+        messages, tools_to_use, agent_state_schema, data_sources, request_context = (
             self._prepare_run(input_data, config)
         )
 
@@ -198,13 +198,12 @@ class _ConfiguredLangChainAgentGraph:
         active_agent = self.agent
         if (
             tools_to_use != self.tools
-            or model is not self.model
             or agent_state_schema
             != _ConfiguredLangChainAgentGraph.get_schema_from_tools(self.tools)
             or data_sources
         ):
             active_agent = create_agent(
-                model=cast(Any, model),
+                model=cast(Any, self.model),
                 tools=tools_to_use,
                 middleware=[
                     ContextMiddleware(
@@ -213,7 +212,7 @@ class _ConfiguredLangChainAgentGraph:
                     ToolErrorMiddleware(),
                 ],
                 system_prompt=DEFAULT_INSTRUCTIONS
-                if messages[0].content != DEFAULT_INSTRUCTIONS
+                if not messages or messages[0].content != DEFAULT_INSTRUCTIONS
                 else None,
                 debug=self.debug,
                 state_schema=agent_state_schema,

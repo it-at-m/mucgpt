@@ -22,6 +22,7 @@ from langgraph.types import Command
 from agent.state_models.default_state import DefaultAgentState
 from agent.tools.policies import get_policy_for_state
 from config.langfuse_provider import LangfuseProvider
+from config.model_provider import ModelRegistry
 from core.logtools import getLogger
 
 logger = getLogger(name="agent-middleware")
@@ -30,6 +31,11 @@ logger = getLogger(name="agent-middleware")
 @dataclass
 class RequestContext:
     assistant_id: str | None = None
+    model_name: str | None = None
+    temperature: float = 0.5
+    stream: bool = False
+    user: str | None = None
+    extra_body: dict[str, Any] | None = None
 
 
 def _make_scoped_callbacks() -> list:
@@ -214,6 +220,26 @@ def _get_assistant_id_from_request(request: ModelRequest) -> str | None:
     assistant_id = configurable.get("assistant_id")
     return str(assistant_id) if assistant_id else None
 
+def _configure_model_request(request: ModelRequest) -> ModelRequest:
+    """Select a concrete model and apply request-scoped invocation settings."""
+    runtime_context = getattr(getattr(request, "runtime", None), "context", None)
+    if not isinstance(runtime_context, RequestContext):
+        return request.override(model=ModelRegistry.get_model())
+
+    model_settings = {
+        **request.model_settings,
+        "temperature": runtime_context.temperature,
+        "stream": runtime_context.stream,
+    }
+    if runtime_context.user is not None:
+        model_settings["user"] = runtime_context.user
+    if runtime_context.extra_body is not None:
+        model_settings["extra_body"] = runtime_context.extra_body
+
+    model = ModelRegistry.get_model(runtime_context.model_name)
+    model_settings = ModelRegistry.normalize_model_settings(model, model_settings)
+    return request.override(model=model, model_settings=model_settings)
+
 
 # TODO:
 # - Ensure the frontend is stateful and can send the current scope in the request
@@ -266,6 +292,7 @@ class ContextMiddleware(AgentMiddleware):
             new_messages = _inject_data_sources(request.messages, all_data_sources)
             request = request.override(messages=new_messages)
 
+        request = _configure_model_request(request)
         return handler(request)
 
     async def awrap_model_call(
@@ -300,6 +327,7 @@ class ContextMiddleware(AgentMiddleware):
             new_messages = _inject_data_sources(request.messages, all_data_sources)
             request = request.override(messages=new_messages)
 
+        request = _configure_model_request(request)
         return await handler(request)
 
 

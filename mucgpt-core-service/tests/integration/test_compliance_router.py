@@ -15,13 +15,8 @@ class _FakeConfiguredModel:
         self.run_names: list[str] = []
         self._capture_owner: _FakeConfiguredModel = self
 
-    def with_config(self, config: Any) -> "_FakeConfiguredModel":
-        configured = _FakeConfiguredModel(self._response_by_run_name)
-        configured._run_name = config.get("run_name") or ""
-        configured._capture_owner = self._capture_owner
-        if hasattr(self, "_structured_output_schema"):
-            configured._structured_output_schema = self._structured_output_schema
-        return configured
+    def bind(self, **_kwargs: Any) -> "_FakeConfiguredModel":
+        return self
 
     def with_structured_output(self, schema: type[Any]) -> "_FakeConfiguredModel":
         structured = _FakeConfiguredModel(self._response_by_run_name)
@@ -30,15 +25,16 @@ class _FakeConfiguredModel:
         structured._capture_owner = self._capture_owner
         return structured
 
-    async def ainvoke(self, messages: Sequence[Any]) -> AIMessage:
-        self._capture_owner.run_names.append(self._run_name)
+    async def ainvoke(self, messages: Sequence[Any], config: Any = None) -> AIMessage:
+        run_name = (config or {}).get("run_name") or ""
+        self._capture_owner.run_names.append(run_name)
         return self._structured_output_schema.model_validate_json(
-            self._response_by_run_name[self._run_name]
+            self._response_by_run_name[run_name]
         )
 
 
 @pytest.mark.integration
-@patch("core.llm_helpers.ModelProvider.get_model")
+@patch("core.llm_helpers.ModelRegistry.get_model")
 def test_check_assistant_compliance_aggregates_category_results(
     mock_get_model, test_client: TestClient
 ) -> None:
@@ -82,7 +78,7 @@ def test_check_assistant_compliance_aggregates_category_results(
 
 
 @pytest.mark.integration
-@patch("core.llm_helpers.ModelProvider.get_model")
+@patch("core.llm_helpers.ModelRegistry.get_model")
 def test_check_assistant_compliance_returns_error_for_malformed_verdict(
     mock_get_model, test_client: TestClient
 ) -> None:

@@ -11,7 +11,7 @@ from langfuse import propagate_attributes
 from pydantic import BaseModel
 
 from config.langfuse_provider import LangfuseProvider
-from config.model_provider import ModelProvider, ModelRegistry
+from config.model_provider import ModelRegistry
 from config.settings import Settings
 from core.auth_models import AuthenticationResult
 from core.logtools import getLogger
@@ -139,27 +139,27 @@ async def invoke_internal_generation(
 ) -> str:
     """Invoke an internal model for text generation with tracing metadata."""
 
-    llm = ModelProvider.get_model().with_config(
-        _internal_request_config(
-            model_name=model_name,
-            temperature=temperature,
-            user_info=user_info,
-            run_name=run_name,
-        )
+    run_config = _internal_request_config(
+        model_name=model_name,
+        temperature=temperature,
+        user_info=user_info,
+        run_name=run_name,
     )
-    llm = ModelRegistry.get_model(model_name).with_config(
-        _internal_request_config(
-            model_name=model_name,
-            temperature=temperature,
-            user_info=user_info,
-            run_name=run_name,
-        )
-    )
+    model_settings: dict[str, Any] = {
+        "temperature": temperature,
+        "stream": False,
+    }
+    llm_user = extract_department_prefix(user_info.department)
+    if llm_user is not None:
+        model_settings["user"] = llm_user
+    model = ModelRegistry.get_model(model_name)
+    model_settings = ModelRegistry.normalize_model_settings(model, model_settings)
+    llm = model.bind(**model_settings)
     with propagate_attributes(
         user_id=hash_user_id(user_info.user_id),
         tags=trace_tags,
     ):
-        ai_message = await llm.ainvoke(to_langchain_messages(messages))
+        ai_message = await llm.ainvoke(to_langchain_messages(messages), config=run_config)
 
     return extract_message_content(ai_message.content)
 
@@ -176,28 +176,24 @@ async def invoke_internal_structured_generation[StructuredOutputT: BaseModel](
 ) -> StructuredOutputT:
     """Invoke an internal model and validate its response against a Pydantic schema."""
 
-    llm = (
-        ModelProvider.get_model()
-        .with_config(
-            _internal_request_config(
-                model_name=model_name,
-                temperature=temperature,
-                user_info=user_info,
-                run_name=run_name,
-            )
-        )
-        .with_structured_output(schema)
+    run_config = _internal_request_config(
+        model_name=model_name,
+        temperature=temperature,
+        user_info=user_info,
+        run_name=run_name,
     )
-    llm = ModelRegistry.get_model(model_name).with_structured_output(schema).with_config(
-        _internal_request_config(
-            model_name=model_name,
-            temperature=temperature,
-            user_info=user_info,
-            run_name=run_name,
-        )
-    )
+    model_settings: dict[str, Any] = {
+        "temperature": temperature,
+        "stream": False,
+    }
+    llm_user = extract_department_prefix(user_info.department)
+    if llm_user is not None:
+        model_settings["user"] = llm_user
+    model = ModelRegistry.get_model(model_name)
+    model_settings = ModelRegistry.normalize_model_settings(model, model_settings)
+    llm = model.with_structured_output(schema).bind(**model_settings)
     with propagate_attributes(
         user_id=hash_user_id(user_info.user_id),
         tags=trace_tags,
     ):
-        return await llm.ainvoke(to_langchain_messages(messages))
+        return await llm.ainvoke(to_langchain_messages(messages), config=run_config)

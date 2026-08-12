@@ -90,7 +90,11 @@ async def chat_completions(
         try:
             ModelRegistry.get_model(request.model)
         except ModelsConfigurationException as exc:
-            raise HTTPException(status_code=400, detail=str(exc)) from exc
+            detail = str(exc)
+            status_code = 400
+            if "not initialized" in detail.lower():
+                status_code = 500
+            raise HTTPException(status_code=status_code, detail=detail) from exc
 
         ae = await init_agent(user_info=user_info)
         if request.conversation_id:

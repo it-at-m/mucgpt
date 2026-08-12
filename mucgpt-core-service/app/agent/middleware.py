@@ -36,6 +36,7 @@ class RequestContext:
     stream: bool = False
     user: str | None = None
     extra_body: dict[str, Any] | None = None
+    enabled_tools: list[str] | None = None
 
 
 def _make_scoped_callbacks() -> list:
@@ -220,6 +221,7 @@ def _get_assistant_id_from_request(request: ModelRequest) -> str | None:
     assistant_id = configurable.get("assistant_id")
     return str(assistant_id) if assistant_id else None
 
+
 def _configure_model_request(request: ModelRequest) -> ModelRequest:
     """Select a concrete model and apply request-scoped invocation settings."""
     runtime_context = getattr(getattr(request, "runtime", None), "context", None)
@@ -239,6 +241,18 @@ def _configure_model_request(request: ModelRequest) -> ModelRequest:
     model = ModelRegistry.get_model(runtime_context.model_name)
     model_settings = ModelRegistry.normalize_model_settings(model, model_settings)
     return request.override(model=model, model_settings=model_settings)
+
+
+def _filter_request_tools(request: ModelRequest) -> ModelRequest:
+    """Restrict registered tools to the request-scoped allowlist."""
+    runtime_context = getattr(getattr(request, "runtime", None), "context", None)
+    if not isinstance(runtime_context, RequestContext):
+        return request
+
+    enabled_tools = set(runtime_context.enabled_tools or [])
+    return request.override(
+        tools=[tool for tool in request.tools or [] if tool.name in enabled_tools]
+    )
 
 
 # TODO:
@@ -272,8 +286,9 @@ class ContextMiddleware(AgentMiddleware):
 
         # Fresh CallbackHandler inherits the current OTel context (active agent trace),
         # so any LLM calls inside infer_scope are nested under the parent trace.
-        #inference_callbacks = _make_scoped_callbacks()
-        #request = policy.infer_scope(request, callbacks=inference_callbacks)
+        # inference_callbacks = _make_scoped_callbacks()
+        # request = policy.infer_scope(request, callbacks=inference_callbacks)
+        request = _filter_request_tools(request)
         request = request.override(tools=policy.select_tools(request))
         logger.info(f"selected Tools: {len(request.tools or [])}")
         _annotate_span_with_policy_state(policy, request.state, self.state_schema)
@@ -305,11 +320,10 @@ class ContextMiddleware(AgentMiddleware):
 
         # Fresh CallbackHandler inherits the current OTel context (active agent trace),
         # so any LLM calls inside ainfer_scope are nested under the parent trace.
-        #inference_callbacks = _make_scoped_callbacks()
-        #request = await policy.ainfer_scope(request, callbacks=inference_callbacks)
-        request = request.override(
-            tools=policy.select_tools(request),
-        )
+        # inference_callbacks = _make_scoped_callbacks()
+        # request = await policy.ainfer_scope(request, callbacks=inference_callbacks)
+        request = _filter_request_tools(request)
+        request = request.override(tools=policy.select_tools(request))
         logger.info(f"selected Tools: {len(request.tools or [])}")
         _annotate_span_with_policy_state(policy, request.state, self.state_schema)
 

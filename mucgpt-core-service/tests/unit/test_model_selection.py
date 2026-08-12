@@ -3,6 +3,7 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 from langchain.agents.middleware import ModelRequest, ModelResponse
 from langchain_core.language_models.fake_chat_models import FakeListChatModel
+from langchain_core.tools import tool
 from langchain_openai import ChatOpenAI
 from langgraph.runtime import Runtime
 
@@ -11,11 +12,23 @@ from config.model_provider import ModelRegistry, ModelsConfigurationException
 from config.settings import ModelsConfig
 
 
+@tool
+def first_tool() -> str:
+    """Return the first test result."""
+    return "first"
+
+
+@tool
+def second_tool() -> str:
+    """Return the second test result."""
+    return "second"
+
+
 def _model_request(context: RequestContext | None) -> ModelRequest:
     return ModelRequest(
         model=FakeListChatModel(responses=["bootstrap"]),
         messages=[],
-        tools=[],
+        tools=[first_tool, second_tool],
         state={},
         runtime=Runtime(context=context),
         model_settings={"existing": "value"},
@@ -50,6 +63,41 @@ def test_wrap_model_call_selects_model_and_applies_settings(
         "user": "POR",
         "extra_body": {"metadata": {"tags": ["assistant-1"]}},
     }
+
+
+def test_wrap_model_call_filters_tools_from_request_context(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(
+        ModelRegistry,
+        "get_model",
+        lambda _name=None: FakeListChatModel(responses=["selected"]),
+    )
+    handler = MagicMock(return_value=ModelResponse(result=[]))
+
+    ContextMiddleware().wrap_model_call(
+        _model_request(RequestContext(enabled_tools=["first_tool"])), handler
+    )
+
+    assert handler.call_args.args[0].tools == [first_tool]
+
+
+@pytest.mark.asyncio
+async def test_awrap_model_call_filters_tools_from_request_context(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(
+        ModelRegistry,
+        "get_model",
+        lambda _name=None: FakeListChatModel(responses=["selected"]),
+    )
+    handler = AsyncMock(return_value=ModelResponse(result=[]))
+
+    await ContextMiddleware().awrap_model_call(
+        _model_request(RequestContext(enabled_tools=["second_tool"])), handler
+    )
+
+    assert handler.call_args.args[0].tools == [second_tool]
 
 
 @pytest.mark.asyncio

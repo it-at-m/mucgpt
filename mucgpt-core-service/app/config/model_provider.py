@@ -182,3 +182,66 @@ class ModelProvider:
         if ModelProvider._llm is None:
             raise RuntimeError("Model not initialized")
         return ModelProvider._llm
+
+
+class ModelRegistry:
+    """Registry containing all available models and their configurations."""
+
+    _models: dict[str, ChatOpenAI | AzureChatOpenAI]
+    _dafault_model: ChatOpenAI | AzureChatOpenAI
+
+    @staticmethod
+    def init_chat_model(name: ModelsConfig) -> ChatOpenAI | AzureChatOpenAI:
+        """initialize a chat model based on the provided configuration."""
+        if "ki-proxy" in name.endpoint.encoded_string().strip().lower():
+            try:
+                return ChatOpenAI(
+                    model=name.llm_name,
+                    api_key=name.api_key,
+                    base_url=name.endpoint.unicode_string(),
+                    n=1,
+                    streaming=False,
+                    temperature=0.7,
+                )
+            except Exception as e:
+                raise ModelsConfigurationException(
+                    f"Failed to initialize chat model {name.llm_name}: {str(e)}"
+                ) from e
+        else: 
+            try:
+                return AzureChatOpenAI(
+                    name=name.deployment,
+                    api_key=name.api_key,
+                    azure_endpoint=name.endpoint.unicode_string(),
+                    api_version=name.api_version,
+                    n=1,
+                    streaming=False,
+                    temperature=0.7,
+                    openai_api_type="azure",
+                )
+            except Exception as e:
+                raise ModelsConfigurationException(
+                    f"Failed to initialize chat model {name.llm_name}: {str(e)}"
+                ) from e
+
+    @classmethod
+    def init_models(cls, models_config: list[ModelsConfig], logger: logging.Logger | None = None) -> None:
+        """Initialize the model registry with a list of model configurations."""
+        if not models_config:
+            raise ModelsConfigurationException(
+                "No models found in the configuration.json"
+            )
+        cls._models = {config.llm_name: ModelRegistry.init_chat_model(config) for config in models_config}
+        cls._dafault_model = ModelRegistry.init_chat_model(models_config[0])
+
+    @classmethod
+    def get_model(cls, model_name: str | None = None, logger: logging.Logger | None = None,) -> ChatOpenAI | AzureChatOpenAI:
+        """Get the model configuration for a given model name."""
+        logger = logger or logging.getLogger(__name__)
+        if not model_name or model_name not in cls._models:
+            if not model_name:
+                logger.warning(f"No model name provided, defaulting to {cls._dafault_model.name}")
+            else:
+                logger.warning(f"Model {model_name} not found in the registry, defaulting to {cls._dafault_model.name}")
+            return cls._dafault_model
+        return cls._models[model_name]

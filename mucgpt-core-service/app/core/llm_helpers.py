@@ -11,7 +11,7 @@ from langfuse import propagate_attributes
 from pydantic import BaseModel
 
 from config.langfuse_provider import LangfuseProvider
-from config.model_provider import ModelProvider
+from config.model_provider import ModelProvider, ModelRegistry
 from config.settings import Settings
 from core.auth_models import AuthenticationResult
 from core.logtools import getLogger
@@ -147,6 +147,14 @@ async def invoke_internal_generation(
             run_name=run_name,
         )
     )
+    llm = ModelRegistry.get_model(model_name).with_config(
+        _internal_request_config(
+            model_name=model_name,
+            temperature=temperature,
+            user_info=user_info,
+            run_name=run_name,
+        )
+    )
     with propagate_attributes(
         user_id=hash_user_id(user_info.user_id),
         tags=trace_tags,
@@ -179,6 +187,14 @@ async def invoke_internal_structured_generation[StructuredOutputT: BaseModel](
             )
         )
         .with_structured_output(schema)
+    )
+    llm = ModelRegistry.get_model(model_name).with_structured_output(schema).with_config(
+        _internal_request_config(
+            model_name=model_name,
+            temperature=temperature,
+            user_info=user_info,
+            run_name=run_name,
+        )
     )
     with propagate_attributes(
         user_id=hash_user_id(user_info.user_id),

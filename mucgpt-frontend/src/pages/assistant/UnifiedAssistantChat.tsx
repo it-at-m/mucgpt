@@ -913,7 +913,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                     input={inputComponent}
                     showStarterPrompts={!lastQuestion}
                     header={assistantConfig.title}
-                    welcomeMessage={isDeletedAssistant ? t("components.community_assistants.deleted_state_title") : undefined}
+                    welcomeMessage={isDeletedAssistant ? t("components.community_assistants.deleted_state_title") : t("chat.header")}
                     header_as_markdown={false}
                     messages_description={t("common.messages")}
                     llmOptions={modelsToShow}

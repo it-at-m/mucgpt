@@ -125,7 +125,7 @@
     overflow-y: auto;
     padding: 0 24px;
     box-sizing: border-box;
-    gap: 8px;
+    gap: 20px;
 }
 
 .chatEmptyStateTitle {
@@ -136,18 +136,37 @@
 }
 
 .chatEmptyStateSubtitle {
+    font-size: 1.75rem;
     font-weight: 600;
-    margin: 1em;
+    margin: 0;
     text-align: center;
+    color: var(--colorNeutralForeground1);
+    letter-spacing: -0.3px;
+    line-height: 1.3;
+    max-width: var(--chatContentWidth, min(60%, 1000px));
 }
 
 .chatEmptyStateSubtitleMarkdown {
+    font-size: 1.75rem;
     font-weight: 600;
-    margin: 1em;
+    margin: 0;
     text-align: start;
+    color: var(--colorNeutralForeground1);
+    letter-spacing: -0.3px;
+    line-height: 1.3;
+    width: 100%;
+    max-width: var(--chatContentWidth, min(60%, 1000px));
+}
+
+.chatEmptyStateSubtitleMarkdown p {
+    margin: 0;
 }
 
 .chatEmptyStateInput {
+    width: 100%;
+}
+
+.chatEmptyStateStarterPrompts {
     width: 100%;
 }
 
@@ -159,6 +178,11 @@
     .chatEmptyStateTitle {
         font-size: 3rem;
         margin-bottom: 0;
+    }
+
+    .chatEmptyStateSubtitle,
+    .chatEmptyStateSubtitleMarkdown {
+        font-size: 1.25rem;
     }
 }
 

@@ -208,7 +208,7 @@ export const ChatLayout = ({
                                     <h2 className={styles.chatEmptyStateSubtitle}>{welcomeMessage}</h2>
                                 ))}
                             <div className={styles.chatEmptyStateInput}>{input}</div>
-                            {starterPrompts}
+                            {starterPrompts && <div className={styles.chatEmptyStateStarterPrompts}>{starterPrompts}</div>}
                         </div>
                     ) : (
                         <ul

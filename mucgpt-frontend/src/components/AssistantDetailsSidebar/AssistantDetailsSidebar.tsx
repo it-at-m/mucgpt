@@ -1,26 +1,46 @@
-import { InlineDrawer, DrawerHeader, Button, DrawerBody, Text, Menu, MenuTrigger, MenuPopover, MenuList, MenuItem, Tooltip } from "@fluentui/react-components";
 import {
-    Dismiss24Regular,
-    Chat24Regular,
+    Accordion,
+    AccordionHeader,
+    AccordionItem,
+    AccordionPanel,
+    InlineDrawer,
+    DrawerHeader,
+    Button,
+    DrawerBody,
+    Text,
+    Menu,
+    MenuTrigger,
+    MenuPopover,
+    MenuList,
+    MenuItem,
+    Tooltip
+} from "@fluentui/react-components";
+import {
+    Dismiss20Regular,
+    Chat20Regular,
     Copy20Regular,
     Checkmark20Regular,
     Edit20Regular,
     Delete20Regular,
-    Book24Regular,
-    Sparkle24Regular,
-    DocumentText24Regular,
-    Person24Regular,
+    Book20Regular,
+    Sparkle20Regular,
+    DocumentText20Regular,
+    LockClosed16Regular,
     MoreVertical20Regular,
-    ArrowExportUp20Regular
+    ArrowExportUp20Regular,
+    Settings20Regular,
+    Lightbulb20Regular,
+    ArrowRight20Regular
 } from "@fluentui/react-icons";
 import { useState, useCallback, useRef, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import styles from "./AssistantDetailsSidebar.module.css";
-import { Assistant, AssistantResponse, CommunityAssistant, CommunityAssistantSnapshot, OwnerDetailsResponse, ToolBase } from "../../api/models";
+import { Assistant, AssistantResponse, CommunityAssistant, CommunityAssistantSnapshot, ToolBase } from "../../api/models";
 import { MarkdownRenderer } from "../MarkdownRenderer/MarkdownRenderer";
 import { EdelweissSpinner } from "../EdelweissSpinner";
 import { CREATIVITY_MEDIUM } from "../../constants";
 import { getCreativityOption } from "../../utils/creativityOptions";
+import { getPrimaryOwnerDetails, OwnerMetadataLink } from "../OwnerMetadataLink/OwnerMetadataLink";
 
 export interface AssistantCardData {
     id: string;
@@ -36,6 +56,32 @@ export interface AssistantCardData {
     isOwnedAssistant?: boolean;
     isSubscribedAssistant?: boolean;
 }
+
+const formatConfigurationDate = (value: string | undefined, locale: string): string | undefined => {
+    if (!value) return undefined;
+
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return undefined;
+
+    return new Intl.DateTimeFormat(locale, {
+        day: "numeric",
+        month: "long",
+        year: "numeric"
+    }).format(date);
+};
+
+const getModelDisplayName = (model: string | undefined): string | undefined => {
+    if (!model) return undefined;
+    return model.split("/").pop() || model;
+};
+
+const formatSubscriberCount = (count: number): string => {
+    if (count >= 1000) {
+        return `${(count / 1000).toFixed(1).replace(/\.0$/, "")}k`;
+    }
+
+    return count.toString();
+};
 
 interface AssistantDetailsSidebarProps {
     isOpen: boolean;
@@ -68,8 +114,9 @@ export const AssistantDetailsSidebar = ({
     onMigrateLocal,
     hideStartChat
 }: AssistantDetailsSidebarProps) => {
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
     const [systemPromptCopied, setSystemPromptCopied] = useState<boolean>(false);
+    const [isSystemPromptOpen, setIsSystemPromptOpen] = useState<boolean>(false);
     const responseData = assistant?.rawData && "latest_version" in assistant.rawData ? assistant.rawData : undefined;
     const latestVersion = responseData?.latest_version;
     const snapshot =
@@ -82,6 +129,16 @@ export const AssistantDetailsSidebar = ({
 
     const enabledTools = (latestVersion?.tools || snapshot?.tools || []).filter((tool: ToolBase) => tool.config?.enabled);
     const systemPrompt = latestVersion?.system_prompt || snapshot?.system_message;
+    const defaultModel = latestVersion?.default_model || snapshot?.default_model;
+    const starterPrompts = latestVersion?.examples || snapshot?.examples || [];
+    const followUpActions = latestVersion?.quick_prompts || snapshot?.quick_prompts || [];
+    const rawData = assistant?.rawData;
+    const isVisible = (rawData && "is_visible" in rawData ? rawData.is_visible : undefined) ?? latestVersion?.is_visible ?? snapshot?.is_visible ?? true;
+    const version = latestVersion?.version ?? snapshot?.version;
+    const configurationDate = formatConfigurationDate(latestVersion?.created_at, i18n.resolvedLanguage || i18n.language);
+    const systemPromptCopyLabel = systemPromptCopied
+        ? t("components.community_assistants.system_prompt_copied", "Copied")
+        : t("components.community_assistants.system_prompt_copy", "Copy system prompt");
 
     const copyTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -100,25 +157,30 @@ export const AssistantDetailsSidebar = ({
     }, [systemPrompt]);
 
     useEffect(() => {
+        setSystemPromptCopied(false);
+        setIsSystemPromptOpen(false);
+    }, [assistant?.id]);
+
+    useEffect(() => {
         return () => {
             if (copyTimeoutRef.current) clearTimeout(copyTimeoutRef.current);
         };
     }, []);
 
-    const ownersDetailed: OwnerDetailsResponse[] = responseData?.owners_detailed || latestVersion?.owners_detailed || [];
+    const primaryOwner = getPrimaryOwnerDetails(rawData);
     const isOwned = assistant ? ownedAssistantIds.has(assistant.id) : false;
     const isDeletedSnapshot = Boolean(assistant?.isDeletedSnapshot);
     const isLocalAssistant = Boolean(assistant?.isLocalAssistant);
     const isLegacyAssistant = assistant ? /^\d+$/.test(assistant.id) : false;
     const canUnsubscribe = Boolean(assistant?.isSubscribedAssistant && !isOwned && !isDeletedSnapshot && !isLocalAssistant && !isLegacyAssistant);
+    const creatorFallbackLabel = t("components.community_assistants.filter_all", "Community");
+    const isPrivate = isLocalAssistant || !isVisible;
 
     return (
         <InlineDrawer open={isOpen} position="end" className={styles.inlineDrawer} aria-labelledby="sidebar-title">
             <DrawerHeader>
                 <div className={styles.headerContainer}>
-                    <div className={styles.closeButtonContainer}>
-                        <Button appearance="subtle" aria-label={t("common.close")} icon={<Dismiss24Regular />} onClick={onClose} />
-                    </div>
+                    <Button className={styles.closeButton} appearance="subtle" aria-label={t("common.close")} icon={<Dismiss20Regular />} onClick={onClose} />
                     <div id="sidebar-title" className={styles.sidebarTitle}>
                         {assistant?.title || (isLoading ? t("common.loading") : "")}
                     </div>
@@ -133,13 +195,35 @@ export const AssistantDetailsSidebar = ({
                     </div>
                 ) : (
                     <>
-                        <div className={styles.creativitySection}>
-                            <div className={styles.creativityBadge}>
-                                <span className={styles.creativityIcon}>{creativityConfig.icon}</span>
-                                <span>{creativityConfig.label}</span>
+                        {assistant && (
+                            <div className={styles.assistantMetadata}>
+                                <span className={styles.creatorMetadata}>
+                                    {isOwned || isLocalAssistant ? (
+                                        t("components.community_assistants.created_by_you", "Von dir")
+                                    ) : (
+                                        <>
+                                            {t("components.community_assistants.created_by", "Von")}{" "}
+                                            <OwnerMetadataLink owner={primaryOwner} fallbackLabel={creatorFallbackLabel} />
+                                        </>
+                                    )}
+                                </span>
+                                <span className={styles.metadataSeparator} aria-hidden="true">
+                                    ·
+                                </span>
+                                {isPrivate ? (
+                                    <span className={styles.metadataItem}>
+                                        <LockClosed16Regular aria-hidden="true" />
+                                        <span>{t("components.community_assistants.private_label", "Privat")}</span>
+                                    </span>
+                                ) : (
+                                    <span className={styles.metadataItem}>
+                                        {t("components.community_assistants.subscriber_count", {
+                                            count: formatSubscriberCount(assistant.subscriptions)
+                                        })}
+                                    </span>
+                                )}
                             </div>
-                            <Text className={styles.creativityDescription}>{creativityConfig.description}</Text>
-                        </div>
+                        )}
 
                         {assistant && isDeletedSnapshot && !hideStartChat && (
                             <div className={styles.deletedCallout}>
@@ -152,7 +236,7 @@ export const AssistantDetailsSidebar = ({
                                         </Button>
                                     )}
                                     {onStartChat && (
-                                        <Button appearance="secondary" icon={<Chat24Regular />} onClick={onStartChat}>
+                                        <Button appearance="secondary" icon={<Chat20Regular />} onClick={onStartChat}>
                                             {t("components.community_assistants.deleted_state_history_action")}
                                         </Button>
                                     )}
@@ -176,7 +260,7 @@ export const AssistantDetailsSidebar = ({
                                         </Button>
                                     )}
                                     {onStartChat && (
-                                        <Button appearance="secondary" icon={<Chat24Regular />} onClick={onStartChat}>
+                                        <Button appearance="secondary" icon={<Chat20Regular />} onClick={onStartChat}>
                                             {t("components.community_assistants.deleted_state_history_action")}
                                         </Button>
                                     )}
@@ -195,7 +279,7 @@ export const AssistantDetailsSidebar = ({
                                 <Text>{t("components.community_assistants.legacy_state_hint")}</Text>
                                 <div className={styles.deletedActionRow}>
                                     {onStartChat && (
-                                        <Button appearance="secondary" icon={<Chat24Regular />} onClick={onStartChat}>
+                                        <Button appearance="secondary" icon={<Chat20Regular />} onClick={onStartChat}>
                                             {t("components.community_assistants.deleted_state_history_action")}
                                         </Button>
                                     )}
@@ -213,7 +297,7 @@ export const AssistantDetailsSidebar = ({
                                 <Button
                                     appearance="primary"
                                     className={styles.startConversationButton}
-                                    icon={<Chat24Regular />}
+                                    icon={<Chat20Regular />}
                                     onClick={onStartChat}
                                     size="large"
                                 >
@@ -262,80 +346,126 @@ export const AssistantDetailsSidebar = ({
                             </div>
                         )}
 
-                        <div className={styles.sidebarSection}>
+                        <div className={`${styles.sidebarSection} ${systemPrompt ? styles.promptAdjacentSection : ""}`}>
                             <div className={styles.sectionHeader}>
-                                <Book24Regular className={styles.sectionIcon} />
-                                <span>{t("components.community_assistants.about", "ABOUT")}</span>
+                                <Book20Regular className={styles.sectionIcon} />
+                                <span>{t("components.assistant_editor.description")}</span>
                             </div>
-                            <div className={styles.descriptionContainer}>
-                                <MarkdownRenderer className={styles.aboutText}>{assistant?.description ?? ""}</MarkdownRenderer>
-                            </div>
+                            <MarkdownRenderer className={styles.aboutText}>{assistant?.description ?? ""}</MarkdownRenderer>
                         </div>
 
-                        {ownersDetailed.length > 0 && (
+                        {systemPrompt && (
+                            <div className={`${styles.sidebarSection} ${styles.promptAdjacentSection}`}>
+                                <Accordion
+                                    key={assistant?.id}
+                                    collapsible
+                                    className={styles.promptAccordion}
+                                    openItems={isSystemPromptOpen ? ["system-prompt"] : []}
+                                    onToggle={(_, data) => setIsSystemPromptOpen(data.openItems.some(item => item === "system-prompt"))}
+                                >
+                                    <AccordionItem value="system-prompt" className={styles.promptAccordionItem}>
+                                        <div className={`${styles.promptHeaderRow} ${isSystemPromptOpen ? styles.promptHeaderRowOpen : ""}`}>
+                                            <AccordionHeader expandIconPosition="end" className={styles.promptAccordionHeader}>
+                                                <span className={styles.accordionHeaderContent}>
+                                                    <DocumentText20Regular className={styles.sectionIcon} />
+                                                    <span>{t("components.assistant_editor.system_prompt")}</span>
+                                                </span>
+                                            </AccordionHeader>
+                                            {isSystemPromptOpen && (
+                                                <Tooltip content={systemPromptCopyLabel} relationship="description" positioning="below">
+                                                    <Button
+                                                        className={styles.promptCopyButton}
+                                                        appearance="subtle"
+                                                        aria-label={systemPromptCopyLabel}
+                                                        icon={!systemPromptCopied ? <Copy20Regular /> : <Checkmark20Regular />}
+                                                        onClick={onCopySystemPrompt}
+                                                        size="small"
+                                                    />
+                                                </Tooltip>
+                                            )}
+                                        </div>
+                                        <AccordionPanel className={styles.promptAccordionPanel}>
+                                            <MarkdownRenderer className={styles.promptMarkdown}>{systemPrompt}</MarkdownRenderer>
+                                        </AccordionPanel>
+                                    </AccordionItem>
+                                </Accordion>
+                            </div>
+                        )}
+
+                        <div className={styles.sidebarSection}>
+                            <div className={styles.sectionHeader}>
+                                <Settings20Regular className={styles.sectionIcon} />
+                                <span>{t("components.assistant_editor.section_behaviour")}</span>
+                            </div>
+                            <dl className={styles.configurationList}>
+                                <div className={styles.configurationRow}>
+                                    <dt>{t("components.assistant_editor.creativity")}</dt>
+                                    <dd>{creativityConfig.label}</dd>
+                                </div>
+                                <div className={styles.configurationRow}>
+                                    <dt>{t("components.assistant_editor.default_model")}</dt>
+                                    <dd>{getModelDisplayName(defaultModel) || t("components.assistant_editor.no_default_model")}</dd>
+                                </div>
+                            </dl>
+                        </div>
+
+                        {starterPrompts.length > 0 && (
                             <div className={styles.sidebarSection}>
                                 <div className={styles.sectionHeader}>
-                                    <Person24Regular className={styles.sectionIcon} />
-                                    <span>{t("components.community_assistants.owner_details", "OWNERS")}</span>
+                                    <Lightbulb20Regular className={styles.sectionIcon} />
+                                    <span>{t("components.assistant_editor.starter_prompts")}</span>
                                 </div>
-                                <div className={styles.ownerList}>
-                                    {ownersDetailed.map(owner => (
-                                        <div key={owner.user_id} className={styles.ownerRow}>
-                                            <Text weight="semibold">{owner.username || owner.user_id}</Text>
-                                            {owner.contact_address && <Text className={styles.ownerContact}>{owner.contact_address}</Text>}
-                                        </div>
+                                <ul className={styles.previewList}>
+                                    {starterPrompts.map((prompt, index) => (
+                                        <li key={`${prompt.text}-${index}`} className={styles.previewItem}>
+                                            {prompt.text}
+                                        </li>
                                     ))}
+                                </ul>
+                            </div>
+                        )}
+
+                        {followUpActions.length > 0 && (
+                            <div className={styles.sidebarSection}>
+                                <div className={styles.sectionHeader}>
+                                    <ArrowRight20Regular className={styles.sectionIcon} />
+                                    <span>{t("components.assistant_editor.follow_up_actions")}</span>
                                 </div>
+                                <ul className={styles.previewList}>
+                                    {followUpActions.map((action, index) => (
+                                        <li key={action.id ?? `${action.label}-${index}`} className={styles.previewItem}>
+                                            {action.label}
+                                        </li>
+                                    ))}
+                                </ul>
                             </div>
                         )}
 
                         {enabledTools.length > 0 && (
                             <div className={styles.sidebarSection}>
                                 <div className={styles.sectionHeader}>
-                                    <Sparkle24Regular className={styles.sectionIcon} />
-                                    <span>{t("components.community_assistants.enabled_tools", "ENABLED TOOLS")}</span>
+                                    <Sparkle20Regular className={styles.sectionIcon} />
+                                    <span>{t("components.assistant_editor.section_tools")}</span>
                                 </div>
-                                <div className={styles.toolList}>
+                                <ul className={styles.toolList}>
                                     {enabledTools.map((tool: ToolBase) => (
-                                        <div key={tool.id} className={styles.toolPill}>
+                                        <li key={tool.id} className={styles.toolItem}>
                                             {tool.id}
-                                        </div>
+                                        </li>
                                     ))}
-                                </div>
+                                </ul>
                             </div>
                         )}
 
-                        {systemPrompt && (
-                            <div className={styles.sidebarSection}>
-                                <div className={styles.sectionHeader}>
-                                    <DocumentText24Regular className={styles.sectionIcon} />
-                                    <span>{t("components.community_assistants.system_prompt", "SYSTEM PROMPT")}</span>
-                                    <Tooltip
-                                        content={
-                                            systemPromptCopied
-                                                ? t("components.community_assistants.system_prompt_copied", "Copied")
-                                                : t("components.community_assistants.system_prompt_copy", "Copy system prompt")
-                                        }
-                                        relationship="description"
-                                        positioning="below"
-                                    >
-                                        <Button
-                                            style={{ marginLeft: "auto" }}
-                                            appearance="subtle"
-                                            aria-label={
-                                                systemPromptCopied
-                                                    ? t("components.community_assistants.system_prompt_copied", "Copied")
-                                                    : t("components.community_assistants.system_prompt_copy", "Copy system prompt")
-                                            }
-                                            icon={!systemPromptCopied ? <Copy20Regular /> : <Checkmark20Regular />}
-                                            onClick={onCopySystemPrompt}
-                                            size="small"
-                                        />
-                                    </Tooltip>
-                                </div>
-                                <div className={styles.systemPromptContainer}>
-                                    <MarkdownRenderer className={styles.promptMarkdown}>{systemPrompt}</MarkdownRenderer>
-                                </div>
+                        {version !== undefined && version !== "" && (
+                            <div className={styles.metadataFooter}>
+                                <span>{t("components.community_assistants.version", { version })}</span>
+                                {configurationDate && (
+                                    <>
+                                        <span aria-hidden="true">·</span>
+                                        <span>{t("components.community_assistants.configuration_updated", { date: configurationDate })}</span>
+                                    </>
+                                )}
                             </div>
                         )}
                     </>

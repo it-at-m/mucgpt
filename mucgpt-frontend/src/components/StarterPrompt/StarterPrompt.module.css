@@ -25,7 +25,7 @@
     min-height: 36px;
     border-radius: 8px;
     text-decoration: none;
-    background: transparent;
+    background: transparent !important;
     border: none !important;
     outline: none !important;
     display: flex;
@@ -49,7 +49,6 @@
 .starterPromptIcon {
     flex-shrink: 0;
     margin-right: 4px !important;
-    margin-bottom: 1px !important;
     color: var(--colorNeutralForeground3);
     opacity: 0;
     transform: translateX(-6px);
@@ -67,7 +66,7 @@
 .starterPrompt:hover,
 .starterPrompt:active,
 .starterPrompt:focus {
-    background: var(--colorNeutralBackground2Hover);
+    background: var(--colorNeutralBackground2Hover) !important;
     border: none !important;
     box-shadow: none !important;
 }
@@ -81,6 +80,17 @@
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    display: inline-block;
+    transform-origin: left center;
+    transition:
+        transform 220ms cubic-bezier(0.22, 1, 0.36, 1),
+        color 200ms ease;
+}
+
+.starterPrompt:hover .starterPromptText,
+.starterPrompt:focus-visible .starterPromptText {
+    transform: scale(1.035);
+    color: var(--colorNeutralForeground1);
 }
 
 @media only screen and (max-height: 780px) {

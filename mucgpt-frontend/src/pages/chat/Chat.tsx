@@ -26,6 +26,7 @@ import { getStoredParsedDocuments } from "../../service/parsedDocumentStorage";
 import { useToolStatusToasts } from "../../hooks/useToolStatusToasts";
 import { useUnifiedHistory, useUnifiedHistoryRegistration } from "../../components/UnifiedHistory";
 import { useLocation } from "react-router-dom";
+import { UserContext } from "../layout/UserContextProvider";
 
 /**
  * Creates a debounced function that delays invoking the provided function
@@ -57,6 +58,15 @@ export type ChatMessage = DBMessage<ChatResponse>;
 export interface ChatOptions {
     system: string;
     creativity: string;
+}
+
+// Translation keys for the empty-state welcome greeting, shown above the question input.
+// Currently a single phrase (mirrors the home page greeting); add more keys here to have
+// `pickWelcomeMessageKey` rotate between them.
+const WELCOME_MESSAGE_KEYS = ["home.chat_header"];
+
+function pickWelcomeMessageKey(): string {
+    return WELCOME_MESSAGE_KEYS[Math.floor(Math.random() * WELCOME_MESSAGE_KEYS.length)];
 }
 
 // Define constants outside the component
@@ -99,6 +109,7 @@ const Chat = () => {
     const { refreshHistory: refreshUnifiedHistory } = useUnifiedHistory();
     const { setFollowUpActions } = useContext(FollowUpActionContext);
     const { tools } = useToolsContext();
+    const { user } = useContext(UserContext);
 
     // Independent states
     const [error, setError] = useState<unknown>();
@@ -134,6 +145,11 @@ const Chat = () => {
     // Destructuring for easier access
     const { answers, creativity, systemPrompt, active_chat, allChats } = chatState;
     const activeChatName = useMemo(() => allChats.find(chat => chat.id === active_chat)?.name, [active_chat, allChats]);
+
+    // Picked once per mount so the greeting doesn't change while the empty state is visible.
+    const welcomeMessageKeyRef = useRef(pickWelcomeMessageKey());
+    const username = user?.given_name || user?.name || "";
+    const welcomeMessage = t(welcomeMessageKeyRef.current, { user: username, defaultValue: "Hallo {{user}}, was hast du heute vor?" });
 
     // Refs
     const lastQuestionRef = useRef<string>("");
@@ -588,9 +604,9 @@ const Chat = () => {
                 newChatRequested
                     ? startFreshChat()
                     : (() => {
-                          clearChat();
-                          return fetchHistory();
-                      })()
+                        clearChat();
+                        return fetchHistory();
+                    })()
             )
                 .then(() => {
                     if (newChatRequested && !questionFromUrl) {
@@ -719,6 +735,7 @@ const Chat = () => {
         },
         [callApi, onSystemPromptChanged]
     );
+
     // Memo components
     const answerList = useMemo(
         () => (
@@ -839,6 +856,7 @@ const Chat = () => {
                     input={inputComponent}
                     showStarterPrompts={!lastQuestionRef.current}
                     header={activeChatName ?? ""}
+                    welcomeMessage={welcomeMessage}
                     header_as_markdown={false}
                     messages_description={t("common.messages")}
                     actions={
@@ -858,6 +876,10 @@ const Chat = () => {
             inputComponent,
             lastQuestionRef.current,
             t,
+            welcomeMessage,
+            availableLLMs,
+            LLM.llm_name,
+            onLLMSelectionChange,
             clearChat,
             activeChatName,
             isLoading,

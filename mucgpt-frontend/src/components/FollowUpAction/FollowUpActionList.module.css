@@ -1,14 +1,26 @@
 .item {
     width: auto;
-    min-width: 120px;
-    padding: 4px 10px !important;
-    color: var(--colorNeutralForeground3) !important;
-    border-color: var(--colorNeutralStroke3) !important;
+    max-width: 100%;
+    padding: 0.55em 0.9em !important;
+    font-size: var(--fontSizeBase300);
+    background: transparent !important;
+    color: var(--colorNeutralForeground2) !important;
+    border: 1.5px dashed var(--colorNeutralStroke2) !important;
+    border-radius: var(--app-radius-xxlarge) var(--app-radius-xxlarge) var(--app-radius-xsmall) var(--app-radius-xxlarge) !important;
+    display: flex;
+    flex-direction: row-reverse;
+    align-items: center;
+    gap: 6px;
     transition:
         background-color 0.2s ease,
         color 0.2s ease,
         border-color 0.2s ease,
         transform 0.15s ease;
+}
+
+.icon {
+    flex-shrink: 0;
+    color: var(--colorNeutralForeground3);
 }
 
 .label {
@@ -21,28 +33,26 @@
 
 .buttons {
     display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    justify-content: flex-start;
-    align-items: flex-start;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 6px;
     margin-top: 4px;
-    flex-direction: row;
 }
 
-.item:hover {
+.item:hover,
+.item:focus-visible {
+    background: var(--colorNeutralBackground2) !important;
     color: var(--colorNeutralForeground1) !important;
+    border-color: var(--colorNeutralStroke1) !important;
 }
 
-/* On narrow screens the pills wrap into short rows instead of stacking full-width,
-   so the action list costs as little vertical space as possible above the input. */
+.item:hover .icon,
+.item:focus-visible .icon {
+    color: var(--colorNeutralForeground1);
+}
+
 @media (max-width: 650px) {
     .buttons {
-        gap: 6px;
-    }
-
-    .item {
-        min-width: 0;
-        flex: 0 1 auto;
-        max-width: 100%;
+        gap: 5px;
     }
 }

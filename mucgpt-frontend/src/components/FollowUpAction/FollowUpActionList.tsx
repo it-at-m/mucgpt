@@ -1,4 +1,5 @@
 import { Button } from "@fluentui/react-components";
+import { ArrowEnterLeft20Regular } from "@fluentui/react-icons";
 import styles from "./FollowUpActionList.module.css";
 import { FollowUpActionContext } from "./FollowUpActionProvider";
 import { useContext } from "react";
@@ -19,6 +20,7 @@ export const FollowUpActionList = ({ onSend }: Props) => {
                     appearance="secondary"
                     className={styles.item}
                 >
+                    <ArrowEnterLeft20Regular className={styles.icon} aria-hidden="true" />
                     <span className={styles.label}>{followUpAction.label}</span>
                 </Button>
             ))}

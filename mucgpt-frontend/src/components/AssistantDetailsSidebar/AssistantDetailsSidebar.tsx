@@ -127,7 +127,9 @@ export const AssistantDetailsSidebar = ({
     const assistantCreativity = latestVersion?.creativity || snapshot?.creativity || CREATIVITY_MEDIUM;
     const creativityConfig = getCreativityOption(t, assistantCreativity);
 
-    const enabledTools = (latestVersion?.tools || snapshot?.tools || []).filter((tool: ToolBase) => tool.config?.enabled);
+    // Every persisted tool entry represents a tool selected for this assistant.
+    // `config` only holds tool-specific options and does not contain an `enabled` flag.
+    const enabledTools = latestVersion?.tools || snapshot?.tools || [];
     const systemPrompt = latestVersion?.system_prompt || snapshot?.system_message;
     const defaultModel = latestVersion?.default_model || snapshot?.default_model;
     const starterPrompts = latestVersion?.examples || snapshot?.examples || [];

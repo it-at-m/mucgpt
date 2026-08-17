@@ -301,7 +301,7 @@ export const AssistantDetailsSidebar = ({
                                     onClick={onStartChat}
                                     size="large"
                                 >
-                                    {t("components.community_assistants.start_chat", "Start Conversation")}
+                                    {t("components.community_assistants.start_chat", "Start new chat")}
                                 </Button>
                                 <Menu>
                                     <MenuTrigger disableButtonEnhancement>

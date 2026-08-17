@@ -25,7 +25,7 @@ import {
     Book24Regular,
     Sparkle24Regular,
     DocumentText24Regular,
-    LockClosed16Regular,
+    LockClosed20Regular,
     MoreVertical24Regular,
     ArrowExportUp24Regular,
     Settings24Regular,
@@ -212,7 +212,7 @@ export const AssistantDetailsSidebar = ({
                                 </span>
                                 {isPrivate ? (
                                     <span className={styles.metadataItem}>
-                                        <LockClosed16Regular aria-hidden="true" />
+                                        <LockClosed20Regular aria-hidden="true" />
                                         <span>{t("components.community_assistants.private_label", "Privat")}</span>
                                     </span>
                                 ) : (

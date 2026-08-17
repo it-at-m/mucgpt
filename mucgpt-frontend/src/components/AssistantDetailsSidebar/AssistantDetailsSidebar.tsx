@@ -16,21 +16,21 @@ import {
     Tooltip
 } from "@fluentui/react-components";
 import {
-    Dismiss20Regular,
-    Chat20Regular,
-    Copy20Regular,
-    Checkmark20Regular,
-    Edit20Regular,
-    Delete20Regular,
-    Book20Regular,
-    Sparkle20Regular,
-    DocumentText20Regular,
+    Dismiss24Regular,
+    Chat24Regular,
+    Copy24Regular,
+    Checkmark24Regular,
+    Edit24Regular,
+    Delete24Regular,
+    Book24Regular,
+    Sparkle24Regular,
+    DocumentText24Regular,
     LockClosed16Regular,
-    MoreVertical20Regular,
-    ArrowExportUp20Regular,
-    Settings20Regular,
-    Lightbulb20Regular,
-    ArrowRight20Regular
+    MoreVertical24Regular,
+    ArrowExportUp24Regular,
+    Settings24Regular,
+    Lightbulb24Regular,
+    ArrowRight24Regular
 } from "@fluentui/react-icons";
 import { useState, useCallback, useRef, useEffect } from "react";
 import { useTranslation } from "react-i18next";
@@ -180,7 +180,7 @@ export const AssistantDetailsSidebar = ({
         <InlineDrawer open={isOpen} position="end" className={styles.inlineDrawer} aria-labelledby="sidebar-title">
             <DrawerHeader>
                 <div className={styles.headerContainer}>
-                    <Button className={styles.closeButton} appearance="subtle" aria-label={t("common.close")} icon={<Dismiss20Regular />} onClick={onClose} />
+                    <Button className={styles.closeButton} appearance="subtle" aria-label={t("common.close")} icon={<Dismiss24Regular />} onClick={onClose} />
                     <div id="sidebar-title" className={styles.sidebarTitle}>
                         {assistant?.title || (isLoading ? t("common.loading") : "")}
                     </div>
@@ -231,17 +231,17 @@ export const AssistantDetailsSidebar = ({
                                 <Text>{t("components.community_assistants.discovery_deleted_hint")}</Text>
                                 <div className={styles.deletedActionRow}>
                                     {onDuplicate && (
-                                        <Button appearance="primary" icon={<Copy20Regular />} onClick={onDuplicate} size="medium">
+                                        <Button appearance="primary" icon={<Copy24Regular />} onClick={onDuplicate} size="medium">
                                             {t("components.community_assistants.deleted_state_save_action")}
                                         </Button>
                                     )}
                                     {onStartChat && (
-                                        <Button appearance="secondary" icon={<Chat20Regular />} onClick={onStartChat}>
+                                        <Button appearance="secondary" icon={<Chat24Regular />} onClick={onStartChat}>
                                             {t("components.community_assistants.deleted_state_history_action")}
                                         </Button>
                                     )}
                                     {onDelete && (
-                                        <Button appearance="outline" icon={<Delete20Regular />} onClick={onDelete} className={styles.deleteButton}>
+                                        <Button appearance="outline" icon={<Delete24Regular />} onClick={onDelete} className={styles.deleteButton}>
                                             {t("common.delete")}
                                         </Button>
                                     )}
@@ -255,17 +255,17 @@ export const AssistantDetailsSidebar = ({
                                 <Text>{t("components.community_assistants.discovery_local_hint")}</Text>
                                 <div className={styles.deletedActionRow}>
                                     {onMigrateLocal && (
-                                        <Button appearance="primary" icon={<ArrowExportUp20Regular />} onClick={onMigrateLocal} size="medium">
+                                        <Button appearance="primary" icon={<ArrowExportUp24Regular />} onClick={onMigrateLocal} size="medium">
                                             {t("components.community_assistants.local_state_publish_action")}
                                         </Button>
                                     )}
                                     {onStartChat && (
-                                        <Button appearance="secondary" icon={<Chat20Regular />} onClick={onStartChat}>
+                                        <Button appearance="secondary" icon={<Chat24Regular />} onClick={onStartChat}>
                                             {t("components.community_assistants.deleted_state_history_action")}
                                         </Button>
                                     )}
                                     {onDelete && (
-                                        <Button appearance="outline" icon={<Delete20Regular />} onClick={onDelete} className={styles.deleteButton}>
+                                        <Button appearance="outline" icon={<Delete24Regular />} onClick={onDelete} className={styles.deleteButton}>
                                             {t("common.delete")}
                                         </Button>
                                     )}
@@ -279,12 +279,12 @@ export const AssistantDetailsSidebar = ({
                                 <Text>{t("components.community_assistants.legacy_state_hint")}</Text>
                                 <div className={styles.deletedActionRow}>
                                     {onStartChat && (
-                                        <Button appearance="secondary" icon={<Chat20Regular />} onClick={onStartChat}>
+                                        <Button appearance="secondary" icon={<Chat24Regular />} onClick={onStartChat}>
                                             {t("components.community_assistants.deleted_state_history_action")}
                                         </Button>
                                     )}
                                     {onDelete && (
-                                        <Button appearance="outline" icon={<Delete20Regular />} onClick={onDelete} className={styles.deleteButton}>
+                                        <Button appearance="outline" icon={<Delete24Regular />} onClick={onDelete} className={styles.deleteButton}>
                                             {t("common.delete")}
                                         </Button>
                                     )}
@@ -297,7 +297,7 @@ export const AssistantDetailsSidebar = ({
                                 <Button
                                     appearance="primary"
                                     className={styles.startConversationButton}
-                                    icon={<Chat20Regular />}
+                                    icon={<Chat24Regular />}
                                     onClick={onStartChat}
                                     size="large"
                                 >
@@ -308,7 +308,7 @@ export const AssistantDetailsSidebar = ({
                                         <Button
                                             appearance="primary"
                                             className={styles.moreOptionsButton}
-                                            icon={<MoreVertical20Regular />}
+                                            icon={<MoreVertical24Regular />}
                                             aria-label={t("components.community_assistants.more_options", "More options")}
                                             size="large"
                                         />
@@ -316,27 +316,27 @@ export const AssistantDetailsSidebar = ({
                                     <MenuPopover>
                                         <MenuList>
                                             {isOwned && (
-                                                <MenuItem icon={<Edit20Regular />} onClick={onEdit}>
+                                                <MenuItem icon={<Edit24Regular />} onClick={onEdit}>
                                                     {t("common.edit")}
                                                 </MenuItem>
                                             )}
                                             {onDuplicate && (
-                                                <MenuItem icon={<Copy20Regular />} onClick={onDuplicate}>
+                                                <MenuItem icon={<Copy24Regular />} onClick={onDuplicate}>
                                                     {t("components.community_assistants.duplicate")}
                                                 </MenuItem>
                                             )}
                                             {onExport && (
-                                                <MenuItem icon={<ArrowExportUp20Regular />} onClick={onExport}>
+                                                <MenuItem icon={<ArrowExportUp24Regular />} onClick={onExport}>
                                                     {t("components.assistantsettingsdrawer.export")}
                                                 </MenuItem>
                                             )}
                                             {isOwned && (
-                                                <MenuItem icon={<Delete20Regular />} onClick={onDelete} className={styles.menuDeleteItem}>
+                                                <MenuItem icon={<Delete24Regular />} onClick={onDelete} className={styles.menuDeleteItem}>
                                                     {t("common.delete")}
                                                 </MenuItem>
                                             )}
                                             {canUnsubscribe && onUnsubscribe && (
-                                                <MenuItem icon={<Delete20Regular />} onClick={onUnsubscribe} className={styles.menuDeleteItem}>
+                                                <MenuItem icon={<Delete24Regular />} onClick={onUnsubscribe} className={styles.menuDeleteItem}>
                                                     {t("components.community_assistants.unsubscribe")}
                                                 </MenuItem>
                                             )}
@@ -348,7 +348,7 @@ export const AssistantDetailsSidebar = ({
 
                         <div className={`${styles.sidebarSection} ${systemPrompt ? styles.promptAdjacentSection : ""}`}>
                             <div className={styles.sectionHeader}>
-                                <Book20Regular className={styles.sectionIcon} />
+                                <Book24Regular className={styles.sectionIcon} />
                                 <span>{t("components.assistant_editor.description")}</span>
                             </div>
                             <MarkdownRenderer className={styles.aboutText}>{assistant?.description ?? ""}</MarkdownRenderer>
@@ -367,7 +367,7 @@ export const AssistantDetailsSidebar = ({
                                         <div className={`${styles.promptHeaderRow} ${isSystemPromptOpen ? styles.promptHeaderRowOpen : ""}`}>
                                             <AccordionHeader expandIconPosition="end" className={styles.promptAccordionHeader}>
                                                 <span className={styles.accordionHeaderContent}>
-                                                    <DocumentText20Regular className={styles.sectionIcon} />
+                                                    <DocumentText24Regular className={styles.sectionIcon} />
                                                     <span>{t("components.assistant_editor.system_prompt")}</span>
                                                 </span>
                                             </AccordionHeader>
@@ -377,7 +377,7 @@ export const AssistantDetailsSidebar = ({
                                                         className={styles.promptCopyButton}
                                                         appearance="subtle"
                                                         aria-label={systemPromptCopyLabel}
-                                                        icon={!systemPromptCopied ? <Copy20Regular /> : <Checkmark20Regular />}
+                                                        icon={!systemPromptCopied ? <Copy24Regular /> : <Checkmark24Regular />}
                                                         onClick={onCopySystemPrompt}
                                                         size="small"
                                                     />
@@ -394,7 +394,7 @@ export const AssistantDetailsSidebar = ({
 
                         <div className={styles.sidebarSection}>
                             <div className={styles.sectionHeader}>
-                                <Settings20Regular className={styles.sectionIcon} />
+                                <Settings24Regular className={styles.sectionIcon} />
                                 <span>{t("components.assistant_editor.section_behaviour")}</span>
                             </div>
                             <dl className={styles.configurationList}>
@@ -412,7 +412,7 @@ export const AssistantDetailsSidebar = ({
                         {starterPrompts.length > 0 && (
                             <div className={styles.sidebarSection}>
                                 <div className={styles.sectionHeader}>
-                                    <Lightbulb20Regular className={styles.sectionIcon} />
+                                    <Lightbulb24Regular className={styles.sectionIcon} />
                                     <span>{t("components.assistant_editor.starter_prompts")}</span>
                                 </div>
                                 <ul className={styles.previewList}>
@@ -428,7 +428,7 @@ export const AssistantDetailsSidebar = ({
                         {followUpActions.length > 0 && (
                             <div className={styles.sidebarSection}>
                                 <div className={styles.sectionHeader}>
-                                    <ArrowRight20Regular className={styles.sectionIcon} />
+                                    <ArrowRight24Regular className={styles.sectionIcon} />
                                     <span>{t("components.assistant_editor.follow_up_actions")}</span>
                                 </div>
                                 <ul className={styles.previewList}>
@@ -444,7 +444,7 @@ export const AssistantDetailsSidebar = ({
                         {enabledTools.length > 0 && (
                             <div className={styles.sidebarSection}>
                                 <div className={styles.sectionHeader}>
-                                    <Sparkle20Regular className={styles.sectionIcon} />
+                                    <Sparkle24Regular className={styles.sectionIcon} />
                                     <span>{t("components.assistant_editor.section_tools")}</span>
                                 </div>
                                 <ul className={styles.toolList}>

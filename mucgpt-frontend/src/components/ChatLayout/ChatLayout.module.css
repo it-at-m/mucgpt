@@ -92,14 +92,16 @@
     flex: 1;
     min-height: 0;
     margin-top: 60px;
+    margin-right: 0;
     overflow: hidden;
     z-index: 1;
     box-sizing: border-box;
     background: var(--colorNeutralBackground1);
+    transition: margin-right 280ms cubic-bezier(0.33, 1, 0.68, 1);
 }
 
 .container[data-info-open="true"] .chatRoot {
-    right: var(--assistantDetailsDrawerWidth);
+    margin-right: var(--assistantDetailsDrawerWidth);
 }
 
 .chatContainer {
@@ -290,10 +292,13 @@
     }
 
     .container[data-info-open="true"] .headerBar,
-    .container[data-info-open="true"] .chatRoot,
     .container[data-info-open="true"] .scrollToBottomWrapper,
     .container[data-info-open="true"] .chatInput {
         right: var(--assistantDetailsDrawerCompactWidth);
+    }
+
+    .container[data-info-open="true"] .chatRoot {
+        margin-right: var(--assistantDetailsDrawerCompactWidth);
     }
 }
 
@@ -323,10 +328,13 @@
 
 @media (max-width: 600px) {
     .container[data-info-open="true"] .headerBar,
-    .container[data-info-open="true"] .chatRoot,
     .container[data-info-open="true"] .scrollToBottomWrapper,
     .container[data-info-open="true"] .chatInput {
         right: 0;
+    }
+
+    .container[data-info-open="true"] .chatRoot {
+        margin-right: 0;
     }
 }
 
@@ -345,5 +353,9 @@
 
     .scrollToBottomButton {
         transition: opacity 0.01ms linear;
+    }
+
+    .chatRoot {
+        transition: none;
     }
 }

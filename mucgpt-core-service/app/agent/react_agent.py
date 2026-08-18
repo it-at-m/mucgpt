@@ -56,6 +56,7 @@ class _ConfiguredLangChainAgentGraph:
             debug=self.debug,
             state_schema=self.state_schema,
             context_schema=RequestContext,
+            checkpointer=None,
         )
 
     def _prepare_run(

@@ -63,7 +63,9 @@ const formatConfigurationDate = (value: string | undefined, locale: string): str
     const date = new Date(value);
     if (Number.isNaN(date.getTime())) return undefined;
 
-    return new Intl.DateTimeFormat(locale, {
+    const resolvedLocale = locale === "BA" ? "de-DE" : locale;
+
+    return new Intl.DateTimeFormat(resolvedLocale, {
         day: "numeric",
         month: "long",
         year: "numeric"

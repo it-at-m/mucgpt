@@ -4,6 +4,7 @@ import pytest
 from langchain_core.language_models.fake_chat_models import FakeListChatModel
 
 from agent.react_agent import _ConfiguredLangChainAgentGraph
+from agent.state_models.default_state import DefaultAgentState
 from core.auth_models import AuthenticationResult
 
 
@@ -31,6 +32,9 @@ async def test_ainvoke_reuses_compiled_agent_for_tool_changes(
         logger=MagicMock(),
     )
 
+    assert graph.state_schema is DefaultAgentState
+    assert create_agent.call_args.kwargs["state_schema"] is DefaultAgentState
+
     for enabled_tools in (["first"], ["second"]):
         await graph.ainvoke(
             {"messages": []},
@@ -47,6 +51,9 @@ async def test_ainvoke_reuses_compiled_agent_for_tool_changes(
     assert compiled_agent.ainvoke.call_args.kwargs["context"].enabled_tools == [
         "second"
     ]
+    assert compiled_agent.ainvoke.call_args.kwargs["config"]["metadata"][
+        "agent_state_schema"
+    ] == DefaultAgentState.__name__
 
 
 @pytest.mark.asyncio
@@ -66,6 +73,9 @@ async def test_astream_reuses_compiled_agent_for_tool_changes(
         tools=[],
         logger=MagicMock(),
     )
+
+    assert graph.state_schema is DefaultAgentState
+    assert create_agent.call_args.kwargs["state_schema"] is DefaultAgentState
 
     for enabled_tools in (["first"], ["second"]):
         items = [
@@ -87,3 +97,6 @@ async def test_astream_reuses_compiled_agent_for_tool_changes(
     assert compiled_agent.astream.call_args.kwargs["context"].enabled_tools == [
         "second"
     ]
+    assert compiled_agent.astream.call_args.kwargs["config"]["metadata"][
+        "agent_state_schema"
+    ] == DefaultAgentState.__name__

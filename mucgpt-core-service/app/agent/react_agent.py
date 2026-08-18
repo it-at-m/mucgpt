@@ -10,7 +10,6 @@ from langchain_core.tools.base import BaseTool
 from agent.middleware import ContextMiddleware, RequestContext, ToolErrorMiddleware
 from agent.state_models.default_state import DefaultAgentState
 from agent.tools.mcp import McpBearerAuthProvider
-from agent.tools.tools import select_agent_state_schema
 from core.auth_models import AuthenticationResult
 from core.logtools import getLogger
 
@@ -42,30 +41,22 @@ class _ConfiguredLangChainAgentGraph:
             "Initializing MUCGPT ReAct agent graph with tools: %s",
             [tool.name for tool in tools],
         )
-        initial_state_schema = _ConfiguredLangChainAgentGraph.get_schema_from_tools(
-            self.tools
-        )
-        self.state_schema = initial_state_schema
+
+        # After PR #1177 the agent graph is not compiled per request anymore.
+        # dynamically selecting the state schema based on the tools is not supported anymore --> defautling to DefaultAgentState for now.
+        self.state_schema = DefaultAgentState
         self.agent = create_agent(
             model=cast(Any, self.model),
             tools=self.tools,
             middleware=[
-                ContextMiddleware(state_schema=initial_state_schema),
+                ContextMiddleware(state_schema=self.state_schema),
                 ToolErrorMiddleware(),
-            ],
+            ], # type: ignore
             system_prompt=DEFAULT_INSTRUCTIONS,
             debug=self.debug,
-            state_schema=initial_state_schema,
+            state_schema=self.state_schema,
             context_schema=RequestContext,
         )
-
-    @staticmethod
-    def get_schema_from_tools(
-        enabled_tools: list[BaseTool] | None,
-    ) -> type[DefaultAgentState]:
-        if not enabled_tools:
-            return DefaultAgentState
-        return select_agent_state_schema(enabled_tools)
 
     def _prepare_run(
         self, input_data: dict[str, Any], config: RunnableConfig | None

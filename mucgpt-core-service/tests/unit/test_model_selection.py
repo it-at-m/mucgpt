@@ -82,6 +82,22 @@ def test_wrap_model_call_filters_tools_from_request_context(
     assert handler.call_args.args[0].tools == [first_tool]
 
 
+def test_wrap_model_call_preserves_deep_agent_builtin_tools(monkeypatch) -> None:
+    monkeypatch.setattr(
+        ModelRegistry,
+        "get_model",
+        lambda _name=None: FakeListChatModel(responses=["selected"]),
+    )
+    builtin_tool = first_tool.model_copy(update={"name": "write_todos"})
+    request = _model_request(RequestContext(enabled_tools=[]))
+    request = request.override(tools=[builtin_tool, second_tool])
+    handler = MagicMock(return_value=ModelResponse(result=[]))
+
+    ContextMiddleware().wrap_model_call(request, handler)
+
+    assert handler.call_args.args[0].tools == [builtin_tool]
+
+
 @pytest.mark.asyncio
 async def test_awrap_model_call_filters_tools_from_request_context(
     monkeypatch: pytest.MonkeyPatch,

@@ -58,7 +58,10 @@ class ModelRegistry:
         """Remove request parameters the selected model explicitly rejects."""
         normalized = dict(settings)
         profile = getattr(model, "profile", None)
-        if profile and profile.get("temperature") is False or model.model_name and "gpt-5" in model.model_name: # gpt-5 models do not support temperature parameter
+        model_name = getattr(model, "model_name", None)
+        if (profile and profile.get("temperature") is False) or (
+            model_name and "gpt-5" in model_name
+        ):
             normalized.pop("temperature", None)
         return normalized
 

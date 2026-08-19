@@ -47,6 +47,11 @@ MODELS:
     endpoint: "<your-endpoint>"
     api_key: "<your-sk>"
     api_version: ""
+    deep_agent:
+      # Built-in tools are disabled unless explicitly enabled for this model.
+      enabled_builtin_tools: ["write_todos", ...]
+      enable_summarization: true
+      enable_subagents: false
     model_info:
       auto_enrich_from_model_info_endpoint: true
       max_output_tokens: 16384

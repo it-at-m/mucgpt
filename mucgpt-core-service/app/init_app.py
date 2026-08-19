@@ -1,8 +1,9 @@
 from typing import Any
 
 from agent.agent_executor import MUCGPTAgentExecutor
-from agent.react_agent import MUCGPTReActAgent
+from agent.deep_agent import MUCGPTAgent
 from agent.tools.tools import ToolCollection
+from config.harness_profiles import register_model_harness_profile
 from config.langfuse_provider import LangfuseProvider
 from config.model_provider import ModelRegistry
 from config.settings import (
@@ -43,7 +44,7 @@ class ModelOptions:
         self.custom_model = custom_model
 
 
-async def warmup_app():
+async def warmup_app() -> None:
     logger.info("Warming up app context...")
     settings = get_settings()
     # init model metadata
@@ -53,6 +54,9 @@ async def warmup_app():
         models_config=settings.MODELS,
         logger=logger,
     )
+    # Register model-specific Deep Agents harness profiles.
+    for model_config in settings.MODELS:
+        register_model_harness_profile(model_config)
     # init langfuse
     langfuse_settings = get_langfuse_settings()
     LangfuseProvider.init(version=settings.VERSION, langfuse_cfg=langfuse_settings)
@@ -61,7 +65,7 @@ async def warmup_app():
     logger.info("App context warmed up")
 
 
-async def destroy_app():
+async def destroy_app() -> None:
     logger.info("Cleaning up app context...")
     # close redis
     try:
@@ -87,7 +91,9 @@ def _initialize_models_metadata(cfg: Settings) -> None:
             raise
 
 
-async def init_agent(user_info: AuthenticationResult) -> MUCGPTAgentExecutor:
+async def init_agent(
+    user_info: AuthenticationResult, model_name: str | None = None
+) -> MUCGPTAgentExecutor:
     """Initialize a MUCGPTAgentExecutor with configuration.
 
     Args:
@@ -98,7 +104,7 @@ async def init_agent(user_info: AuthenticationResult) -> MUCGPTAgentExecutor:
         Configured MUCGPTAgentExecutor
     """
     try:
-        model = ModelRegistry.get_model()
+        model = ModelRegistry.get_model(model_name)
         tool_collection = ToolCollection(model=model)
         tools = await tool_collection.get_tools(
             user_info=user_info
@@ -106,7 +112,7 @@ async def init_agent(user_info: AuthenticationResult) -> MUCGPTAgentExecutor:
         logger.debug(
             f"Initializing MUCGPTAgent with tools: {[tool.name for tool in tools]}"
         )
-        agent = MUCGPTReActAgent(llm=model, tools=tools, debug=False)
+        agent = MUCGPTAgent(llm=model, tools=tools, debug=False)
     except Exception as e:
         logger.error("Failed to initialize MUCGPTAgent: %s", e)
         raise

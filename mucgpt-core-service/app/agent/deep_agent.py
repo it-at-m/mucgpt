@@ -23,7 +23,6 @@ with open(
 
 # TODO:
 # - consider prompt pool in langfuse
-# - in agent_executor, check whether the message modifications are still needed with "PatchToolCallsMiddleware.before_agent" enabled by default in deepagents
 
 class _ConfiguredLangChainDeepAgentGraph:
     """Simple wrapper around a LangChain agent to configure it with user info and tools on each run."""

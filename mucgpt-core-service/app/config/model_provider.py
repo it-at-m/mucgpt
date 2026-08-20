@@ -107,14 +107,17 @@ class ModelRegistry:
             ) from exc
 
         models = {default_config.llm_name: default_model}
-        for config in models_config[1:]:
+        for config in models_config:
+            if config is default_config:
+                continue
+
             try:
                 models[config.llm_name] = cls.init_chat_model(config)
             except ModelsConfigurationException as exc:
-                _logger.warning(f"Failed to initialize model {config.llm_name}: {exc}")
+                _logger.warning("Failed to initialize model %s: %s", config.llm_name, exc)
 
-        cls._models = models
-        cls._default_model = default_model
+                cls._models = models
+                cls._default_model = default_model
 
     @classmethod
     def get_model(

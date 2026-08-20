@@ -10,7 +10,6 @@ from langchain_core.tools.base import BaseTool
 from agent.middleware import ContextMiddleware, RequestContext, ToolErrorMiddleware
 from agent.state_models.default_state import DefaultAgentState
 from agent.tools.mcp import McpBearerAuthProvider
-from agent.tools.tools import select_agent_state_schema
 from core.auth_models import AuthenticationResult
 from core.logtools import getLogger
 
@@ -42,39 +41,31 @@ class _ConfiguredLangChainAgentGraph:
             "Initializing MUCGPT ReAct agent graph with tools: %s",
             [tool.name for tool in tools],
         )
-        initial_state_schema = _ConfiguredLangChainAgentGraph.get_schema_from_tools(
-            self.tools
-        )
+
+        # After PR #1177 the agent graph is not compiled per request anymore.
+        # dynamically selecting the state schema based on the tools is not supported anymore --> defautling to DefaultAgentState for now.
+        self.state_schema = DefaultAgentState
         self.agent = create_agent(
             model=cast(Any, self.model),
             tools=self.tools,
             middleware=[
-                ContextMiddleware(state_schema=initial_state_schema),
+                ContextMiddleware(state_schema=self.state_schema),
                 ToolErrorMiddleware(),
-            ],
+            ], # type: ignore
             system_prompt=DEFAULT_INSTRUCTIONS,
             debug=self.debug,
-            state_schema=initial_state_schema,
+            state_schema=self.state_schema,
             context_schema=RequestContext,
+            checkpointer=None,
         )
-
-    @staticmethod
-    def get_schema_from_tools(
-        enabled_tools: list[BaseTool] | None,
-    ) -> type[DefaultAgentState]:
-        if not enabled_tools:
-            return DefaultAgentState
-        return select_agent_state_schema(enabled_tools)
-
-    def _select_tools(self, enabled_tools: list[str] | None) -> list[BaseTool]:
-        if not enabled_tools:
-            return []
-        enabled = set(enabled_tools)
-        return [tool for tool in self.tools if tool.name in enabled]
 
     def _prepare_run(
         self, input_data: dict[str, Any], config: RunnableConfig | None
-    ) -> tuple[Any, list[Any], list[BaseTool], type[DefaultAgentState], list[dict[str, Any]] | None, RequestContext]:
+    ) -> tuple[
+        list[Any],
+        list[dict[str, Any]] | None,
+        RequestContext,
+    ]:
         configurable = config.get("configurable", {}) if config else {}
         user_info = cast(AuthenticationResult | None, configurable.get("user_info"))
         if not user_info:
@@ -89,32 +80,20 @@ class _ConfiguredLangChainAgentGraph:
         # Keep MCP auth token map up-to-date for forwarded auth providers.
         McpBearerAuthProvider.set_token(user_info.user_id, user_info.token)
 
-        model = self.model
-        if selected_llm:
-            # Select the configured model alternative before adding request-specific bindings.
-            model = model.with_config(configurable={"llm": selected_llm})
-        if extra_body:
-            model = model.bind(extra_body=extra_body)
-        if llm_user:
-            model = model.bind(user=llm_user)
-
         messages = input_data.get("messages", [])
-        tools_to_use = self._select_tools(enabled_tools)
-
-        # Select agent state schema based on enabled tools (defines agent scope/policy)
-        agent_state_schema = _ConfiguredLangChainAgentGraph.get_schema_from_tools(
-            tools_to_use
-        )
-        logger.info(f"Using agent state schema: {agent_state_schema}")
-
-        configurable = config.get("configurable", {}) if config else {}
         data_sources = configurable.get("data_sources", [])
 
         request_context = RequestContext(
-            assistant_id=str(assistant_id) if assistant_id else None
+            assistant_id=str(assistant_id) if assistant_id else None,
+            model_name=selected_llm,
+            user=llm_user,
+            temperature=configurable.get("llm_temperature", RequestContext.temperature),
+            stream=configurable.get("llm_streaming", False),
+            extra_body=extra_body,
+            enabled_tools=enabled_tools,
         )
 
-        return model, messages, tools_to_use, agent_state_schema, data_sources, request_context
+        return messages, data_sources, request_context
 
     async def astream(
         self,
@@ -124,50 +103,20 @@ class _ConfiguredLangChainAgentGraph:
         config: RunnableConfig | None = None,
         **kwargs,
     ):
-        model, messages, tools_to_use, agent_state_schema, data_sources, request_context = (
-            self._prepare_run(input_data, config)
-        )
+        messages, data_sources, request_context = self._prepare_run(input_data, config)
 
-        # Merge agent_state_schema into trace metadata so Langfuse shows which
-        # policy was selected for this run. Using merge_configs avoids mutating
-        # the caller's config dict.
+        # Keep the stable graph schema visible in trace metadata without
+        # mutating the caller's config dict.
         config = merge_configs(
             config or {},
-            RunnableConfig(
-                metadata={"agent_state_schema": agent_state_schema.__name__}
-            ),
+            RunnableConfig(metadata={"agent_state_schema": self.state_schema.__name__}),
         )
-
-        active_agent = self.agent
-        if (
-            tools_to_use != self.tools
-            or model is not self.model
-            or agent_state_schema
-            != _ConfiguredLangChainAgentGraph.get_schema_from_tools(self.tools)
-            or data_sources
-        ):
-            active_agent = create_agent(
-                model=cast(Any, model),
-                tools=tools_to_use,
-                middleware=[
-                    ContextMiddleware(
-                        state_schema=agent_state_schema, data_sources=data_sources
-                    ),
-                    ToolErrorMiddleware(),
-                ],
-                system_prompt=DEFAULT_INSTRUCTIONS
-                if messages[0].content != DEFAULT_INSTRUCTIONS
-                else None,
-                debug=self.debug,
-                state_schema=agent_state_schema,
-                context_schema=RequestContext,
-            )
 
         input_payload = {"messages": messages}
         if data_sources:
             input_payload["data_sources"] = data_sources  # type: ignore
 
-        async for item in active_agent.astream(
+        async for item in self.agent.astream(
             input_payload,
             stream_mode=stream_mode,
             config=config,
@@ -183,48 +132,19 @@ class _ConfiguredLangChainAgentGraph:
         config: RunnableConfig | None = None,
         **kwargs,
     ):
-        model, messages, tools_to_use, agent_state_schema, data_sources, request_context = (
-            self._prepare_run(input_data, config)
-        )
+        messages, data_sources, request_context = self._prepare_run(input_data, config)
 
         # Merge agent_state_schema into trace metadata.
         config = merge_configs(
             config or {},
-            RunnableConfig(
-                metadata={"agent_state_schema": agent_state_schema.__name__}
-            ),
+            RunnableConfig(metadata={"agent_state_schema": self.state_schema.__name__}),
         )
-
-        active_agent = self.agent
-        if (
-            tools_to_use != self.tools
-            or model is not self.model
-            or agent_state_schema
-            != _ConfiguredLangChainAgentGraph.get_schema_from_tools(self.tools)
-            or data_sources
-        ):
-            active_agent = create_agent(
-                model=cast(Any, model),
-                tools=tools_to_use,
-                middleware=[
-                    ContextMiddleware(
-                        state_schema=agent_state_schema, data_sources=data_sources
-                    ),
-                    ToolErrorMiddleware(),
-                ],
-                system_prompt=DEFAULT_INSTRUCTIONS
-                if messages[0].content != DEFAULT_INSTRUCTIONS
-                else None,
-                debug=self.debug,
-                state_schema=agent_state_schema,
-                context_schema=RequestContext,
-            )
 
         input_payload = {"messages": messages}
         if data_sources:
             input_payload["data_sources"] = data_sources  # type: ignore
 
-        return await active_agent.ainvoke(
+        return await self.agent.ainvoke(
             input_payload, config=config, context=request_context, **kwargs
         )
 

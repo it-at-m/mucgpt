@@ -25,7 +25,7 @@ class TestInitApp:
         self.tool_collection = MagicMock(spec=ToolCollection)
 
     @pytest.mark.asyncio
-    @patch("config.model_provider.ModelProvider.get_model")
+    @patch("config.model_provider.ModelRegistry.get_model")
     @patch("agent.tools.tools.ToolCollection.get_tools", new_callable=AsyncMock)
     async def test_init_agent_calls_correct_components(
         self,

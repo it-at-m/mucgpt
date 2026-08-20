@@ -4,7 +4,7 @@ from agent.agent_executor import MUCGPTAgentExecutor
 from agent.react_agent import MUCGPTReActAgent
 from agent.tools.tools import ToolCollection
 from config.langfuse_provider import LangfuseProvider
-from config.model_provider import ModelProvider
+from config.model_provider import ModelRegistry
 from config.settings import (
     Settings,
     enrich_model_metadata,
@@ -49,12 +49,8 @@ async def warmup_app():
     # init model metadata
     _initialize_models_metadata(settings)
     # init model
-    options = ModelOptions()
-    ModelProvider.init_model(
-        models=settings.MODELS,
-        n=1,
-        streaming=options.streaming,
-        temperature=options.temperature,
+    ModelRegistry.init_models(
+        models_config=settings.MODELS,
         logger=logger,
     )
     # init langfuse
@@ -102,7 +98,7 @@ async def init_agent(user_info: AuthenticationResult) -> MUCGPTAgentExecutor:
         Configured MUCGPTAgentExecutor
     """
     try:
-        model = ModelProvider.get_model()
+        model = ModelRegistry.get_model()
         tool_collection = ToolCollection(model=model)
         tools = await tool_collection.get_tools(
             user_info=user_info

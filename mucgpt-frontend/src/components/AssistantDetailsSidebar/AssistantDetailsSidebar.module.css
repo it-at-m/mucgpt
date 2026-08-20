@@ -297,7 +297,6 @@
 
 .previewItem {
     box-sizing: border-box;
-    width: fit-content;
     max-width: 100%;
     padding: 5px 9px;
     border: 1px dashed var(--colorNeutralStroke1);
@@ -305,7 +304,9 @@
     background-color: var(--app-user-message-background);
     color: var(--colorNeutralForeground1);
     font-size: var(--fontSizeBase200);
+    font-weight: var(--fontWeightRegular);
     line-height: 1.35;
+    white-space: normal;
     overflow-wrap: anywhere;
 }
 
@@ -320,17 +321,8 @@
 }
 
 .toolItem {
-    display: inline-flex;
-    flex-shrink: 0;
-    align-items: center;
-    padding: 3px 9px;
-    border: 1px solid var(--colorNeutralStroke2);
-    border-radius: var(--borderRadiusCircular);
-    background-color: var(--app-user-message-background);
-    color: var(--colorNeutralForeground1);
-    font-size: var(--fontSizeBase200);
-    line-height: 1.35;
-    white-space: nowrap;
+    background-color: var(--app-user-message-background) !important;
+    color: var(--colorNeutralForeground1) !important;
 }
 
 .promptMarkdown {

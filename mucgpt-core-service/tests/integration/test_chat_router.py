@@ -1,8 +1,12 @@
 # tests/integration/test_chat_router.py
 import json
+import logging
 from unittest.mock import AsyncMock, Mock, patch
 
+import pytest
 from fastapi.testclient import TestClient
+from langchain_core.language_models import BaseChatModel
+from langchain_core.language_models.fake_chat_models import FakeListChatModel
 
 from agent.agent_executor import MUCGPTAgentExecutor
 from api.api_models import (
@@ -15,8 +19,27 @@ from api.api_models import (
     ChatCompletionResponse,
     Usage,
 )
+from config.model_provider import ModelRegistry, ModelsConfigurationException
 
 DUMMY_USER_ID = "test_user_123"
+
+
+@pytest.fixture(autouse=True)
+def initialized_model_registry(monkeypatch: pytest.MonkeyPatch) -> None:
+    model = FakeListChatModel(responses=["test"])
+
+    def get_model(
+        model_name: str | None = None,
+        logger: logging.Logger | None = None,
+    ) -> BaseChatModel:
+        if model_name in {None, "gpt-4o-mini"}:
+            return model
+        raise ModelsConfigurationException(
+            f"Model {model_name!r} not found in the registry"
+        )
+
+    monkeypatch.setattr(ModelRegistry, "get_model", get_model)
+
 
 # No need to include the router again since it's already included in backend.py
 # We're testing the mounted application directly
@@ -44,8 +67,8 @@ class TestChatRouter:
             usage=Usage(prompt_tokens=10, completion_tokens=8, total_tokens=18),
         )
         mock_agent_executor = Mock(MUCGPTAgentExecutor)
-        mock_agent_executor.run_without_streaming.return_value = (
-            mock_response.model_dump()
+        mock_agent_executor.run_without_streaming = AsyncMock(
+            return_value=(mock_response.model_dump())
         )
         mock_init_agent.return_value = mock_agent_executor
 
@@ -223,7 +246,9 @@ class TestChatRouter:
     ):
         """Test chat completion with invalid model."""
         mock_agent_executor = Mock(MUCGPTAgentExecutor)
-        mock_agent_executor.run_without_streaming.side_effect = Exception("Invalid model")
+        mock_agent_executor.run_without_streaming = AsyncMock(
+            side_effect=Exception("Invalid model")
+        )
         mock_init_agent.return_value = mock_agent_executor
 
         # Create payload using proper model
@@ -234,7 +259,8 @@ class TestChatRouter:
         )
         payload = payload_model.model_dump()
         resp = test_client.post("/v1/chat/completions", json=payload)
-        assert resp.status_code == 500
+        assert resp.status_code == 400
+        assert "invalid-model" in resp.json()["detail"]
 
     def test_chat_completion_missing_messages(self, test_client: TestClient):
         """Test chat completion with missing messages."""
@@ -250,8 +276,8 @@ class TestChatRouter:
     ):
         """Test chat completion with empty messages array."""
         mock_agent_executor = Mock(MUCGPTAgentExecutor)
-        mock_agent_executor.run_without_streaming.side_effect = Exception(
-            "Empty messages"
+        mock_agent_executor.run_without_streaming = AsyncMock(
+            side_effect=Exception("Empty messages")
         )
         mock_init_agent.return_value = mock_agent_executor
 
@@ -284,8 +310,8 @@ class TestChatRouter:
             usage=Usage(prompt_tokens=5, completion_tokens=3, total_tokens=8),
         )
         mock_agent_executor = Mock(MUCGPTAgentExecutor)
-        mock_agent_executor.run_without_streaming.return_value = (
-            mock_response.model_dump()
+        mock_agent_executor.run_without_streaming = AsyncMock(
+            return_value=mock_response.model_dump()
         )
         mock_init_agent.return_value = mock_agent_executor
 
@@ -311,8 +337,8 @@ class TestChatRouter:
     ):
         """Test chat completion with zero max tokens."""
         mock_agent_executor = Mock(MUCGPTAgentExecutor)
-        mock_agent_executor.run_without_streaming.side_effect = Exception(
-            "Zero max tokens"
+        mock_agent_executor.run_without_streaming = AsyncMock(
+            side_effect=Exception("Zero max tokens")
         )
         mock_init_agent.return_value = mock_agent_executor
 
@@ -334,7 +360,9 @@ class TestChatRouter:
     ):
         """Test chat completion when service raises exception."""
         mock_agent_executor = Mock(MUCGPTAgentExecutor)
-        mock_agent_executor.run_without_streaming.side_effect = Exception("Service error")
+        mock_agent_executor.run_without_streaming = AsyncMock(
+            side_effect=Exception("Service error")
+        )
         mock_init_agent.return_value = mock_agent_executor
 
         # Create payload using proper model
@@ -369,8 +397,8 @@ class TestChatRouter:
             usage=Usage(prompt_tokens=25, completion_tokens=10, total_tokens=35),
         )
         mock_agent_executor = Mock(MUCGPTAgentExecutor)
-        mock_agent_executor.run_without_streaming.return_value = (
-            mock_response.model_dump()
+        mock_agent_executor.run_without_streaming = AsyncMock(
+            return_value=mock_response.model_dump()
         )
         mock_init_agent.return_value = mock_agent_executor
 

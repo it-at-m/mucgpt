@@ -59,6 +59,15 @@ class ModelRegistry:
         normalized = dict(settings)
         profile = getattr(model, "profile", None)
         model_name = getattr(model, "model_name", None)
+
+        # NOTE: 
+        # as of 08.2026 13 models introduced after 17.02.2026 have no model profile
+        # until this is resolved, the model name is used to determine whether 
+        # the temperature parameter should be removed from the request settings.
+        # https://github.com/langchain-ai/langchainjs/issues/11313
+        #
+        # gpt-5 models do not support temperature anymore. the way to control the model output is via the reasoning effort parameter.
+        # https://medium.com/@skomarovsky/migrating-from-gpt-4-to-gpt-5-2-why-your-code-will-break-and-how-to-fix-it-372e0a89d449
         if (profile and profile.get("temperature") is False) or (
             model_name and "gpt-5" in model_name
         ):

@@ -123,6 +123,7 @@ export interface ChatCompletionChunk {
     object: "chat.completion.chunk";
     created: number;
     choices: ChatCompletionChunkChoice[];
+    usage?: { prompt_tokens?: number; completion_tokens?: number; total_tokens?: number };
 }
 
 export type CountTokenRequest = {

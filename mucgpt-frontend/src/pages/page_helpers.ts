@@ -377,19 +377,19 @@ export const makeApiRequest = async (
                         // Parse the SSE chunk data
                         const chunk = JSON.parse(data) as ChatCompletionChunk;
                         const choice: ChatCompletionChunkChoice | undefined = chunk.choices?.[0];
-                        if (!choice) continue; // Check if streaming is complete
+                        if (!choice) continue;
+
+                        // Handle token usage information if available. This is sent on the final
+                        // (finish_reason: "stop") chunk, so it must be read before that check below.
+                        if (chunk.usage) {
+                            user_tokens = user_tokens + (chunk.usage.prompt_tokens || 0);
+                            streamed_tokens = streamed_tokens + (chunk.usage.completion_tokens || 0);
+                        }
+
+                        // Check if streaming is complete
                         if (choice.finish_reason === "stop") {
                             streamDone = true;
                             break;
-                        }
-
-                        // Handle token usage information if available
-                        const chunkWithUsage = chunk as ChatCompletionChunk & {
-                            usage?: { prompt_tokens?: number; completion_tokens?: number; total_tokens?: number };
-                        };
-                        if (chunkWithUsage.usage) {
-                            user_tokens = user_tokens + (chunkWithUsage.usage.prompt_tokens || 0);
-                            streamed_tokens = streamed_tokens + (chunkWithUsage.usage.completion_tokens || 0);
                         }
 
                         // Handle tool calls if present in the response

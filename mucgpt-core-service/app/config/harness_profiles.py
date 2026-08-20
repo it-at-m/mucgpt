@@ -43,8 +43,8 @@ def _set_extra_middleware_for_model(model_config: ModelsConfig) -> tuple[AgentMi
         return ()
 
     summarization_middleware = ProfileSummarizationMiddleware(
-        model=ModelRegistry.get_model("gpt-5-mini"), # small model, will be called every time once the message history reaches the trigger threshold (with current setup)
-        backend=StateBackend(),  # Use default backend (per chat session)
+        model=ModelRegistry.get_model(), # default (small) model, will be called every time once the message history reaches the trigger threshold (with current setup)
+        backend=StateBackend(),  # Use default backend (per chat session); exchangeable with a custom backend after chats are backend persistent
         trigger=("fraction", 0.8),  # Trigger summarization when 80% of the token limit is reached
         keep=("messages", 10),  # Keep the last 10 messages in the conversation
     ) if model_config.deep_agent.enable_summarization and "write_file" in enabled_tools and "read_file" in enabled_tools and "edit_file" in enabled_tools else None
@@ -52,10 +52,14 @@ def _set_extra_middleware_for_model(model_config: ModelsConfig) -> tuple[AgentMi
     todo_middleware = TodoListMiddleware() if "write_todos" in enabled_tools else None
 
     call_limit_middleware = []
+    retrieval_keywords = ("read", "retrieve", "retrieval", "fetch", "get")
     for name in enabled_tools:
-        if name in {"read", "retriev", "fetch"}:  # Example of retrieval tools
-            # Limit retrieval tools to 2 calls per run to avoid excessive context/costs
-            call_limit_middleware.append(ToolCallLimitMiddleware(tool_name=name, run_limit=2))
+        normalized_name = name.lower()
+        if any(keyword in normalized_name for keyword in retrieval_keywords):
+            # Limit context retrieval tools to 2 calls per run
+            call_limit_middleware.append(
+                ToolCallLimitMiddleware(tool_name=name, run_limit=2)
+            )
 
     extra_middleware = cast(
         tuple[AgentMiddleware, ...],

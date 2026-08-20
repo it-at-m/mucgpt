@@ -91,7 +91,14 @@ class ModelRegistry:
 
         _logger = logger or logging.getLogger(__name__)
 
-        default_config = models_config[0]
+        default_config = next(
+            (
+                config
+                for config in models_config
+                if config.model_info.internal_task_model_strength == "weak"
+            ),
+            models_config[0],
+        )
         try:
             default_model = cls.init_chat_model(default_config)
         except ModelsConfigurationException as exc:

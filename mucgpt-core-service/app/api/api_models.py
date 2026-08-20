@@ -248,6 +248,9 @@ class ChatCompletionChunk(BaseModel):
     choices: list[ChatCompletionChunkChoice] = Field(
         ..., description="List of partial choices for this chunk"
     )
+    usage: Usage | None = Field(
+        None, description="Token usage information; present on the final chunk"
+    )
     model_config = ConfigDict(
         json_schema_extra={
             "example": {

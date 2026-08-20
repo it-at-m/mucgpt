@@ -52,6 +52,26 @@ def _json_safe(value: Any) -> Any:
     return str(value)
 
 
+def _usage_from_metadata(usage_metadata: dict[str, Any] | None) -> Usage | None:
+    """Map LangChain's usage_metadata (input_tokens/output_tokens/total_tokens) to our Usage schema."""
+    if not usage_metadata:
+        return None
+    prompt_tokens = usage_metadata.get("input_tokens") or usage_metadata.get(
+        "prompt_tokens", 0
+    )
+    completion_tokens = usage_metadata.get("output_tokens") or usage_metadata.get(
+        "completion_tokens", 0
+    )
+    total_tokens = (
+        usage_metadata.get("total_tokens") or prompt_tokens + completion_tokens
+    )
+    return Usage(
+        prompt_tokens=prompt_tokens,
+        completion_tokens=completion_tokens,
+        total_tokens=total_tokens,
+    )
+
+
 def _message_chunk_trace_event(
     message_chunk: Any, metadata: dict[str, Any]
 ) -> dict[str, Any]:
@@ -206,6 +226,7 @@ class MUCGPTAgentExecutor:
             )
             answer_chunks: list[str] = []
             trace_events: list[dict[str, Any]] = []
+            last_usage_metadata: dict[str, Any] | None = None
             config = merge_configs(
                 self.base_config,
                 RunnableConfig(
@@ -257,6 +278,11 @@ class MUCGPTAgentExecutor:
                             "assistant",
                             "model",
                         } and isinstance(message_chunk, AIMessageChunk):
+                            chunk_usage = getattr(
+                                message_chunk, "usage_metadata", None
+                            )
+                            if chunk_usage:
+                                last_usage_metadata = chunk_usage
                             chunk_content = message_chunk.content
                             if chunk_content is None:
                                 continue
@@ -355,6 +381,7 @@ class MUCGPTAgentExecutor:
                         finish_reason="stop",  # type: ignore
                     )
                 ],
+                usage=_usage_from_metadata(last_usage_metadata),
             ).model_dump()
 
     @observe(name="Completion", capture_input=False, capture_output=False)
@@ -443,11 +470,10 @@ class MUCGPTAgentExecutor:
                             finish_reason="stop",
                         )
                     ],
-                    usage=Usage(
-                        prompt_tokens=0,
-                        completion_tokens=0,
-                        total_tokens=0,
-                    ),
+                    usage=_usage_from_metadata(
+                        getattr(ai_message, "usage_metadata", None)
+                    )
+                    or Usage(prompt_tokens=0, completion_tokens=0, total_tokens=0),
                 )
                 return response
             except Exception as ex:

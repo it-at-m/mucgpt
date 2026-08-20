@@ -293,6 +293,49 @@ class TestMUCGPTAgentExecutor:
         assert response.choices[0].finish_reason == "error"
 
     @pytest.mark.asyncio
+    async def test_run_with_streaming_attaches_usage_to_final_chunk(self):
+        class UsageGraph:
+            async def astream(self, *_args, **_kwargs):
+                yield (
+                    "messages",
+                    (
+                        AIMessageChunk(
+                            content="hi",
+                            usage_metadata={
+                                "input_tokens": 12,
+                                "output_tokens": 3,
+                                "total_tokens": 15,
+                            },
+                        ),
+                        {"langgraph_node": "model"},
+                    ),
+                )
+
+        class UsageAgent:
+            def __init__(self):
+                self.model = DummyRunnerLLM()
+                self.graph = UsageGraph()
+
+        runner = MUCGPTAgentExecutor(UsageAgent())
+
+        chunks = []
+        async for chunk in runner.run_with_streaming(
+            messages=[InputMessage(role="user", content="hi")],
+            temperature=0.7,
+            model="test",
+            user_info=None,
+        ):
+            chunks.append(chunk)
+
+        stop_chunk = chunks[-1]
+        assert stop_chunk["choices"][0]["finish_reason"] == "stop"
+        assert stop_chunk["usage"] == {
+            "prompt_tokens": 12,
+            "completion_tokens": 3,
+            "total_tokens": 15,
+        }
+
+    @pytest.mark.asyncio
     async def test_run_with_streaming_traces_internal_tool_and_update_events(
         self, monkeypatch
     ):

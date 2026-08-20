@@ -1,8 +1,6 @@
 import logging
+from typing import Any
 
-from langchain_community.llms.fake import FakeListLLM
-from langchain_core.runnables import ConfigurableField
-from langchain_core.runnables.base import RunnableSerializable
 from langchain_openai import AzureChatOpenAI, ChatOpenAI
 
 from config.settings import ModelsConfig
@@ -14,171 +12,108 @@ class ModelsConfigurationException(Exception):
     pass
 
 
-class ModelProvider:
-    _llm = None
+class ModelRegistry:
+    """Registry containing all available models and their configurations."""
+
+    _models: dict[str, ChatOpenAI | AzureChatOpenAI] = {}
+    _default_model: ChatOpenAI | AzureChatOpenAI | None = None
 
     @staticmethod
-    def _create_configurable_fields() -> dict[str, ConfigurableField]:
-        """Create common configurable fields for LLM models.
-
-        Returns:
-            Dict[str, ConfigurableField]: Dictionary of configurable fields for LLM models
-        """
-        return {
-            "temperature": ConfigurableField(
-                id="llm_temperature",
-                name="LLM Temperature",
-                description="The temperature of the LLM (0.0-1.0). Higher values make output more random, lower values more deterministic.",
-            ),
-            "streaming": ConfigurableField(
-                id="llm_streaming",
-                name="Streaming",
-                description="Whether to stream the LLM response as it's being generated.",
-            ),
-            "callbacks": ConfigurableField(
-                id="llm_callbacks",
-                name="Callbacks",
-                description="Callback handlers for the LLM execution pipeline.",
-            ),
-        }
-
-    @staticmethod
-    def _create_llm_instance(
-        model_config: ModelsConfig,
-        n: int,
-        temperature: float,
-        streaming: bool,
-        logger: logging.Logger | None = None,
-    ) -> AzureChatOpenAI | ChatOpenAI:
-        """Create a specific LLM instance based on model configuration.
-
-        Args:
-            model_config: Configuration for the model
-            n: Number of completions to generate
-            temperature: Temperature for generation
-            streaming: Whether to stream the response
-            logger: Logger instance for logging messages (optional)
-
-        Returns:
-            Union[AzureChatOpenAI, ChatOpenAI]: The configured LLM instance
-
-        Raises:
-            ModelsConfigurationException: If the model type is unsupported
-        """
-        # Use default logger if none provided
-        _logger = logger or logging.getLogger(__name__)
-
-        # Validate parameters
-        if temperature < 0.0 or temperature > 1.0:
-            _logger.warning(
-                f"Temperature value {temperature} is outside recommended range [0.0-1.0]"
-            )
+    def init_chat_model(config: ModelsConfig) -> ChatOpenAI | AzureChatOpenAI:
+        """Initialize a concrete chat model from configuration."""
         try:
-            if model_config.type == "AZURE":
-                return AzureChatOpenAI(
-                    deployment_name=model_config.deployment,
-                    openai_api_key=model_config.api_key,
-                    azure_endpoint=model_config.endpoint.unicode_string(),
-                    openai_api_version=model_config.api_version,
-                    n=n,
-                    streaming=streaming,
-                    temperature=temperature,
-                    openai_api_type="azure",
-                )
-            elif model_config.type == "OPENAI":
+            if config.type == "OPENAI":
                 return ChatOpenAI(
                     default_headers={"extra-parameters": "drop"},
-                    model=model_config.llm_name,
-                    api_key=model_config.api_key,
-                    openai_api_base=model_config.endpoint.unicode_string(),
-                    n=n,
-                    streaming=streaming,
-                    temperature=temperature,
+                    model=config.llm_name,
+                    api_key=config.api_key,
+                    base_url=config.endpoint.unicode_string(),
+                    n=1,
                 )
-            else:
-                raise ModelsConfigurationException(
-                    f"Unknown model type: {model_config.type}. Currently only `AZURE` and `OPENAI` are supported."
+            if config.type == "AZURE":
+                return AzureChatOpenAI(
+                    azure_deployment=config.deployment,
+                    model=config.llm_name,
+                    api_key=config.api_key,
+                    azure_endpoint=config.endpoint.unicode_string(),
+                    api_version=config.api_version,
+                    n=1,
+                    openai_api_type="azure",
                 )
-        except Exception as e:
-            _logger.error(
-                f"Error creating LLM instance for {model_config.llm_name}: {str(e)}"
+            raise ModelsConfigurationException(
+                f"Unknown model type: {config.type}. Currently only `AZURE` and `OPENAI` are supported."
             )
-            raise
+        except Exception as exc:
+            if isinstance(exc, ModelsConfigurationException):
+                raise
+            raise ModelsConfigurationException(
+                f"Failed to initialize chat model {config.llm_name}: {exc}"
+            ) from exc
 
     @staticmethod
-    def init_model(
-        models: list[ModelsConfig],
-        n: int = 1,
-        temperature: float = 0.7,
-        streaming: bool = False,
+    def normalize_model_settings(
+        model: ChatOpenAI | AzureChatOpenAI,
+        settings: dict[str, Any],
+    ) -> dict[str, Any]:
+        """Remove request parameters the selected model explicitly rejects."""
+        normalized = dict(settings)
+        profile = getattr(model, "profile", None)
+        model_name = getattr(model, "model_name", None)
+        if (profile and profile.get("temperature") is False) or (
+            model_name and "gpt-5" in model_name
+        ):
+            normalized.pop("temperature", None)
+        return normalized
+
+    @classmethod
+    def init_models(
+        cls,
+        models_config: list[ModelsConfig],
         logger: logging.Logger | None = None,
     ) -> None:
-        """
-        Init model based on provided configuration.
-
-        Args:
-            models: List of model configurations
-            n: Number of completions to generate (default: 1)
-            temperature: Temperature for generation (default: 0.7)
-            streaming: Whether to stream the response (default: False)
-            logger: Logger instance for logging messages (optional)
-
-        Raises:
-            ModelsConfigurationException: If no models are configured
-        """
-        # Use default logger if none provided
-        _logger = logger or logging.getLogger(__name__)
-
-        if not models:
+        """Initialize the model registry with a list of model configurations."""
+        if not models_config:
             raise ModelsConfigurationException(
                 "No models found in the configuration.json"
             )
+        model_names = [config.llm_name for config in models_config]
+        if len(model_names) != len(set(model_names)):
+            raise ModelsConfigurationException("Model names must be unique")
 
-        default_model = models[0]
+        _logger = logger or logging.getLogger(__name__)
 
+        default_config = models_config[0]
         try:
-            llm = ModelProvider._create_llm_instance(
-                default_model, n, temperature, streaming, logger=_logger
-            )
-        except Exception as e:
+            default_model = cls.init_chat_model(default_config)
+        except ModelsConfigurationException as exc:
             raise ModelsConfigurationException(
-                f"Failed to initialize default model: {str(e)}"
-            ) from e
+                f"Failed to initialize default model: {exc}"
+            ) from exc
 
-        # Add configurable fields to default model
-        configurable_fields = ModelProvider._create_configurable_fields()
-        llm = llm.configurable_fields(**configurable_fields)
-
-        # Add alternative models
-        alternatives: dict[str, RunnableSerializable] = {
-            "fake": FakeListLLM(responses=["Test response"])
-        }
-
-        for model in models[1:]:
+        models = {default_config.llm_name: default_model}
+        for config in models_config[1:]:
             try:
-                alternative = ModelProvider._create_llm_instance(
-                    model, n, temperature, streaming, logger=_logger
-                )
-                # Add configurable fields to alternative model
-                alternative = alternative.configurable_fields(**configurable_fields)
-                alternatives[model.llm_name] = alternative
-            except Exception as e:
-                # Log the error but continue with other models
-                _logger.warning(
-                    f"Failed to initialize model {model.llm_name}: {str(e)}"
-                )
+                models[config.llm_name] = cls.init_chat_model(config)
+            except ModelsConfigurationException as exc:
+                _logger.warning(f"Failed to initialize model {config.llm_name}: {exc}")
 
-        # Configure alternatives
-        llm = llm.configurable_alternatives(
-            ConfigurableField(id="llm"),
-            default_key=default_model.llm_name,
-            **alternatives,
-        )
-        ModelProvider._llm = llm
+        cls._models = models
+        cls._default_model = default_model
 
-    @staticmethod
-    def get_model():
-        """Returns a configured LLM that can be parametrized during runtime."""
-        if ModelProvider._llm is None:
-            raise RuntimeError("Model not initialized")
-        return ModelProvider._llm
+    @classmethod
+    def get_model(
+        cls,
+        model_name: str | None = None,
+        logger: logging.Logger | None = None,
+    ) -> ChatOpenAI | AzureChatOpenAI:
+        """Return the default model or a concrete model selected by name."""
+        if cls._default_model is None:
+            raise ModelsConfigurationException("Model registry is not initialized")
+        if model_name is None:
+            return cls._default_model
+        try:
+            return cls._models[model_name]
+        except KeyError as exc:
+            raise ModelsConfigurationException(
+                f"Model {model_name!r} not found in the registry"
+            ) from exc

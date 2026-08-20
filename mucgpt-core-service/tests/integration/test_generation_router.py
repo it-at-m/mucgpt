@@ -19,26 +19,21 @@ class _FakeConfiguredModel:
         self.messages: list[Any] = []
         self._capture_owner: _FakeConfiguredModel = self
 
-    def with_config(self, config: Any) -> "_FakeConfiguredModel":
-        configured = _FakeConfiguredModel(
-            response_by_run_name=self._response_by_run_name.copy(),
-            fail_run_name=self._fail_run_name,
-        )
-        configured._run_name = config.get("run_name") or ""
-        configured._capture_owner = self._capture_owner
-        return configured
+    def bind(self, **_kwargs: Any) -> "_FakeConfiguredModel":
+        return self
 
-    async def ainvoke(self, messages: Sequence[Any]) -> AIMessage:
+    async def ainvoke(
+        self, messages: Sequence[Any], config: Any = None
+    ) -> AIMessage:
+        run_name = (config or {}).get("run_name") or ""
         self._capture_owner.messages = list(messages)
-        if self._fail_run_name and self._run_name == self._fail_run_name:
+        if self._fail_run_name and run_name == self._fail_run_name:
             raise RuntimeError("boom")
-        return AIMessage(
-            content=self._response_by_run_name.get(self._run_name, "fallback")
-        )
+        return AIMessage(content=self._response_by_run_name.get(run_name, "fallback"))
 
 
 @pytest.mark.integration
-@patch("core.llm_helpers.ModelProvider.get_model")
+@patch("core.llm_helpers.ModelRegistry.get_model")
 def test_generate_assistant_draft_direct_and_parallel(
     mock_get_model, test_client: TestClient
 ) -> None:
@@ -63,7 +58,7 @@ def test_generate_assistant_draft_direct_and_parallel(
 
 
 @pytest.mark.integration
-@patch("core.llm_helpers.ModelProvider.get_model")
+@patch("core.llm_helpers.ModelRegistry.get_model")
 def test_generate_chat_title_direct_model(
     mock_get_model, test_client: TestClient
 ) -> None:
@@ -95,7 +90,7 @@ def test_generate_chat_title_direct_model(
 
 
 @pytest.mark.integration
-@patch("core.llm_helpers.ModelProvider.get_model")
+@patch("core.llm_helpers.ModelRegistry.get_model")
 def test_generate_chat_title_fallback_when_empty(
     mock_get_model, test_client: TestClient
 ) -> None:
@@ -118,7 +113,7 @@ def test_generate_chat_title_fallback_when_empty(
 
 
 @pytest.mark.integration
-@patch("core.llm_helpers.ModelProvider.get_model")
+@patch("core.llm_helpers.ModelRegistry.get_model")
 def test_generate_assistant_draft_error_mapping(
     mock_get_model, test_client: TestClient
 ) -> None:

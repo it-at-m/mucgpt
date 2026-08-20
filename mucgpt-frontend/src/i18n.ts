@@ -377,9 +377,6 @@ i18n
                         example: {
                             label: "Beispiel"
                         },
-                        starter_prompt: {
-                            label: "Startvorschlag"
-                        },
                         deleteMessage: {
                             label: "Nachricht zurückziehen"
                         },
@@ -1175,9 +1172,6 @@ i18n
                         example: {
                             label: "Example"
                         },
-                        starter_prompt: {
-                            label: "Starter prompt"
-                        },
                         deleteMessage: {
                             label: "Retract message"
                         },
@@ -1954,9 +1948,6 @@ i18n
                         },
                         example: {
                             label: "Beispui"
-                        },
-                        starter_prompt: {
-                            label: "Startvorschlag"
                         },
                         deleteMessage: {
                             label: "Nachricht zruckziang"
@@ -2739,9 +2730,6 @@ i18n
                         example: {
                             label: "Exemple"
                         },
-                        starter_prompt: {
-                            label: "Suggestion pour débuter"
-                        },
                         deleteMessage: {
                             label: "Retirer le message"
                         },
@@ -3517,9 +3505,6 @@ i18n
                         },
                         example: {
                             label: "Приклад"
-                        },
-                        starter_prompt: {
-                            label: "Початковий запит"
                         },
                         deleteMessage: {
                             label: "Видалити повідомлення"

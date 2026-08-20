@@ -49,7 +49,18 @@ MODELS:
     api_version: ""
     deep_agent:
       # Built-in tools are disabled unless explicitly enabled for this model.
-      enabled_builtin_tools: ["write_todos", ...]
+      enabled_builtin_tools: [
+        "write_todos",
+        "ls",
+        "read_file",
+        "write_file",
+        "edit_file",
+        "delete",
+        "glob",
+        "grep",
+        "execute",
+        "task",
+        ]
       enable_summarization: true
       enable_subagents: false
     model_info:

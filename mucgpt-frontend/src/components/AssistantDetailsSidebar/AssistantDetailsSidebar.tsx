@@ -13,7 +13,8 @@ import {
     MenuPopover,
     MenuList,
     MenuItem,
-    Tooltip
+    Tooltip,
+    Badge
 } from "@fluentui/react-components";
 import {
     Dismiss24Regular,
@@ -201,7 +202,7 @@ export const AssistantDetailsSidebar = ({
                     <>
                         {assistant && (
                             <div className={styles.assistantMetadata}>
-                                <span className={styles.creatorMetadata}>
+                                <Text className={styles.creatorMetadata}>
                                     {isOwned || isLocalAssistant ? (
                                         t("components.community_assistants.created_by_you", "Von dir")
                                     ) : (
@@ -210,21 +211,21 @@ export const AssistantDetailsSidebar = ({
                                             <OwnerMetadataLink owner={primaryOwner} fallbackLabel={creatorFallbackLabel} />
                                         </>
                                     )}
-                                </span>
-                                <span className={styles.metadataSeparator} aria-hidden="true">
+                                </Text>
+                                <Text className={styles.metadataSeparator} aria-hidden="true">
                                     ·
-                                </span>
+                                </Text>
                                 {isPrivate ? (
-                                    <span className={styles.metadataItem}>
+                                    <Text className={styles.metadataItem}>
                                         <LockClosed20Regular aria-hidden="true" />
                                         <span>{t("components.community_assistants.private_label", "Privat")}</span>
-                                    </span>
+                                    </Text>
                                 ) : (
-                                    <span className={styles.metadataItem}>
+                                    <Text className={styles.metadataItem}>
                                         {t("components.community_assistants.subscriber_count", {
                                             count: formatSubscriberCount(assistant.subscriptions)
                                         })}
-                                    </span>
+                                    </Text>
                                 )}
                             </div>
                         )}
@@ -421,8 +422,10 @@ export const AssistantDetailsSidebar = ({
                                 </div>
                                 <ul className={styles.previewList}>
                                     {starterPrompts.map((prompt, index) => (
-                                        <li key={`${prompt.text}-${index}`} className={styles.previewItem}>
-                                            {prompt.text}
+                                        <li key={`${prompt.text}-${index}`}>
+                                            <Badge appearance="outline" shape="rounded" className={styles.previewItem}>
+                                                {prompt.text}
+                                            </Badge>
                                         </li>
                                     ))}
                                 </ul>
@@ -437,8 +440,10 @@ export const AssistantDetailsSidebar = ({
                                 </div>
                                 <ul className={styles.previewList}>
                                     {followUpActions.map((action, index) => (
-                                        <li key={action.id ?? `${action.label}-${index}`} className={styles.previewItem}>
-                                            {action.label}
+                                        <li key={action.id ?? `${action.label}-${index}`}>
+                                            <Badge appearance="outline" shape="rounded" className={styles.previewItem}>
+                                                {action.label}
+                                            </Badge>
                                         </li>
                                     ))}
                                 </ul>
@@ -453,8 +458,10 @@ export const AssistantDetailsSidebar = ({
                                 </div>
                                 <ul className={styles.toolList}>
                                     {enabledTools.map((tool: ToolBase) => (
-                                        <li key={tool.id} className={styles.toolItem}>
-                                            {tool.id}
+                                        <li key={tool.id}>
+                                            <Badge size="large" shape="circular" className={styles.toolItem}>
+                                                {tool.id}
+                                            </Badge>
                                         </li>
                                     ))}
                                 </ul>
@@ -463,11 +470,11 @@ export const AssistantDetailsSidebar = ({
 
                         {version !== undefined && version !== "" && (
                             <div className={styles.metadataFooter}>
-                                <span>{t("components.community_assistants.version", { version })}</span>
+                                <Text>{t("components.community_assistants.version", { version })}</Text>
                                 {configurationDate && (
                                     <>
-                                        <span aria-hidden="true">·</span>
-                                        <span>{t("components.community_assistants.configuration_updated", { date: configurationDate })}</span>
+                                        <Text aria-hidden="true">·</Text>
+                                        <Text>{t("components.community_assistants.configuration_updated", { date: configurationDate })}</Text>
                                     </>
                                 )}
                             </div>

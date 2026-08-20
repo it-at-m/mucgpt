@@ -297,15 +297,17 @@
 
 .previewItem {
     box-sizing: border-box;
-    width: fit-content;
     max-width: 100%;
-    padding: 5px 9px;
-    border: 1px dashed var(--colorNeutralStroke1);
-    border-radius: var(--app-radius-xxlarge) var(--app-radius-xxlarge) var(--app-radius-xxlarge) var(--app-radius-xsmall);
-    background-color: var(--app-user-message-background);
-    color: var(--colorNeutralForeground1);
-    font-size: var(--fontSizeBase200);
+    height: auto;
+    padding: 5px 9px !important;
+    border: 1px dashed var(--colorNeutralStroke1) !important;
+    border-radius: var(--app-radius-xxlarge) var(--app-radius-xxlarge) var(--app-radius-xxlarge) var(--app-radius-xsmall) !important;
+    background-color: var(--app-user-message-background) !important;
+    color: var(--colorNeutralForeground1) !important;
+    font-size: var(--fontSizeBase200) !important;
+    font-weight: var(--fontWeightRegular) !important;
     line-height: 1.35;
+    white-space: normal;
     overflow-wrap: anywhere;
 }
 
@@ -320,17 +322,8 @@
 }
 
 .toolItem {
-    display: inline-flex;
-    flex-shrink: 0;
-    align-items: center;
-    padding: 3px 9px;
-    border: 1px solid var(--colorNeutralStroke2);
-    border-radius: var(--borderRadiusCircular);
-    background-color: var(--app-user-message-background);
-    color: var(--colorNeutralForeground1);
-    font-size: var(--fontSizeBase200);
-    line-height: 1.35;
-    white-space: nowrap;
+    background-color: var(--app-user-message-background) !important;
+    color: var(--colorNeutralForeground1) !important;
 }
 
 .promptMarkdown {

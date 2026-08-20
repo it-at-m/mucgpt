@@ -58,6 +58,8 @@ i18n
                         prompt: "Stelle eine Frage oder lade ein Dokument hoch",
                         prompt_no_upload: "Stelle eine Frage",
                         answer_loading: "Erstelle Antwort",
+                        usage_context_percent: "{{percent}}% Kontext",
+                        usage_cost: "${{cost}}",
                         follow_up_actions: {
                             shorter: "Kürzer",
                             longer: "Länger",

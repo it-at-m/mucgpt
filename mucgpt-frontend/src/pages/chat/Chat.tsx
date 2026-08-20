@@ -774,6 +774,21 @@ const Chat = () => {
         ]
     );
 
+    // Running token/cost usage for this chat, derived from the usage data the backend
+    // attaches to the final chunk of each streamed response (see page_helpers.ts).
+    const usageSummary = useMemo(() => {
+        let totalCost = 0;
+        let lastContextTokens = 0;
+        for (const answer of answers) {
+            const promptTokens = answer.response.user_tokens ?? 0;
+            const completionTokens = answer.response.tokens ?? 0;
+            totalCost += promptTokens * (LLM.input_cost_per_token ?? 0) + completionTokens * (LLM.output_cost_per_token ?? 0);
+            lastContextTokens = promptTokens + completionTokens;
+        }
+        if (lastContextTokens === 0 && totalCost === 0) return undefined;
+        return { totalCost, lastContextTokens, maxInputTokens: LLM.max_input_tokens };
+    }, [answers, LLM]);
+
     const starterPromptsComponent = useMemo(
         () => <StarterPromptList starterPrompts={CHAT_STARTER_PROMPTS} onStarterPromptClicked={onStarterPromptClicked} />,
         [onStarterPromptClicked]
@@ -827,6 +842,7 @@ const Chat = () => {
                     llmOptions={availableLLMs}
                     defaultLLM={LLM.llm_name}
                     onLLMSelectionChange={onLLMSelectionChange}
+                    usage={usageSummary}
                     actions={
                         <Button
                             appearance="transparent"
@@ -847,6 +863,7 @@ const Chat = () => {
             availableLLMs,
             LLM.llm_name,
             onLLMSelectionChange,
+            usageSummary,
             clearChat,
             activeChatName,
             isLoading,

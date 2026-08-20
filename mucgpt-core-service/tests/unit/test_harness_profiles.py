@@ -50,7 +50,7 @@ def test_profile_summarizer_replaces_deep_agents_default(monkeypatch) -> None:
         "config.harness_profiles.register_harness_profile", register_profile
     )
     monkeypatch.setattr(
-        "config.harness_profiles.ModelRegistry.get_model", lambda _: summary_model
+        "config.harness_profiles.ModelRegistry.get_model", lambda: summary_model
     )
     model_config = ModelsConfig.model_construct(
         type="OPENAI",

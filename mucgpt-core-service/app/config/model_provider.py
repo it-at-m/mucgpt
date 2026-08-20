@@ -116,8 +116,8 @@ class ModelRegistry:
             except ModelsConfigurationException as exc:
                 _logger.warning("Failed to initialize model %s: %s", config.llm_name, exc)
 
-                cls._models = models
-                cls._default_model = default_model
+            cls._models = models
+            cls._default_model = default_model
 
     @classmethod
     def get_model(

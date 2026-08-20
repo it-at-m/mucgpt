@@ -52,7 +52,7 @@ def _set_extra_middleware_for_model(model_config: ModelsConfig) -> tuple[AgentMi
     todo_middleware = TodoListMiddleware() if "write_todos" in enabled_tools else None
 
     call_limit_middleware = []
-    retrieval_keywords = ("read", "retrieve", "retrieval", "fetch", "get")
+    retrieval_keywords = ("retrieve", "retrieval", "fetch", "get")
     for name in enabled_tools:
         normalized_name = name.lower()
         if any(keyword in normalized_name for keyword in retrieval_keywords):

@@ -15,6 +15,7 @@ from api.api_models import (
     ComplianceCheckResult,
 )
 from api.exceptions import (
+    AssistantNameAlreadyExistsException,
     AssistantNotFoundException,
     ComplianceVerificationFailedException,
     DeleteFailedException,
@@ -163,6 +164,8 @@ async def createAssistant(
         assistant_repo = AssistantRepository(
             db
         )  # Prepare owner_ids: include the creating user if not already present
+        if await assistant_repo.name_exists(assistant.name):
+            raise AssistantNameAlreadyExistsException()
         owner_ids = list(assistant.owner_ids) if assistant.owner_ids else []
         if user_info.user_id not in owner_ids:
             owner_ids.append(user_info.user_id)
@@ -172,6 +175,7 @@ async def createAssistant(
         )
 
         new_assistant = await assistant_repo.create(
+            name=assistant.name,
             hierarchical_access=assistant.hierarchical_access or [],
             owner_ids=owner_ids,
             is_visible=is_visible,
@@ -187,7 +191,6 @@ async def createAssistant(
         # Create the first version with the actual assistant data
         first_version = await assistant_repo.create_assistant_version(
             new_assistant,
-            name=assistant.name,
             description=assistant.description or "",
             system_prompt=assistant.system_prompt,
             creativity=assistant.creativity,
@@ -248,7 +251,7 @@ async def createAssistant(
             id=assistant_id,
             version=latest_version.version,
             created_at=latest_version.created_at,
-            name=latest_version.name,
+            name=assistant_record.name,
             description=latest_version.description or "",
             system_prompt=latest_version.system_prompt,
             hierarchical_access=assistant_record.hierarchical_access or [],
@@ -373,6 +376,11 @@ async def updateAssistant(
     if not await assistant_repo.is_owner(id, user_info.user_id):
         raise NotOwnerException()
 
+    if assistant_update.name is not None and await assistant_repo.name_exists(
+        assistant_update.name, exclude_assistant_id=id
+    ):
+        raise AssistantNameAlreadyExistsException()
+
     is_visible: bool = (
         assistant_update.is_visible if assistant_update.is_visible is not None else True
     )
@@ -441,6 +449,7 @@ async def updateAssistant(
 
     await assistant_repo.update(
         assistant_id=id,
+        name=assistant_update.name,
         hierarchical_access=assistant_update.hierarchical_access,
         owner_ids=assistant_update.owner_ids,
         is_visible=is_visible,
@@ -450,9 +459,6 @@ async def updateAssistant(
     # Using the latest_version already retrieved above
     new_version = await assistant_repo.create_assistant_version(
         assistant,
-        name=assistant_update.name
-        if assistant_update.name is not None
-        else latest_version.name,
         description=assistant_update.description
         if assistant_update.description is not None
         else latest_version.description,
@@ -514,7 +520,7 @@ async def updateAssistant(
         id=id,
         version=latest_version.version,
         created_at=latest_version.created_at,
-        name=latest_version.name,
+        name=assistant.name,
         description=latest_version.description or "",
         system_prompt=latest_version.system_prompt,
         hierarchical_access=assistant.hierarchical_access or [],
@@ -631,7 +637,7 @@ async def getAllAssistants(
                 id=assistant_id,
                 version=latest_version.version,
                 created_at=latest_version.created_at,
-                name=latest_version.name,
+                name=assistant.name,
                 description=latest_version.description or "",
                 system_prompt=latest_version.system_prompt,
                 hierarchical_access=assistant.hierarchical_access or [],
@@ -739,7 +745,7 @@ async def getAssistant(
         id=id,
         version=latest_version.version,
         created_at=latest_version.created_at,
-        name=latest_version.name,
+        name=assistant.name,
         description=latest_version.description or "",
         system_prompt=latest_version.system_prompt,
         hierarchical_access=assistant.hierarchical_access or [],
@@ -845,7 +851,7 @@ async def get_assistant_version(
         id=id,
         version=assistant_version.version,
         created_at=assistant_version.created_at,
-        name=assistant_version.name,
+        name=assistant.name,
         description=assistant_version.description or "",
         system_prompt=assistant_version.system_prompt,
         hierarchical_access=assistant.hierarchical_access or [],

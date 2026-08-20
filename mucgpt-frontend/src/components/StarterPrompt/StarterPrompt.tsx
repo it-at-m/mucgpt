@@ -7,12 +7,11 @@ interface Props {
     value: string;
     system?: string;
     onClick: (value: string, system?: string) => void;
-    ariaLabel: string;
 }
 
-export const StarterPrompt = ({ text, value, system, onClick, ariaLabel }: Props) => {
+export const StarterPrompt = ({ text, value, system, onClick }: Props) => {
     return (
-        <Button type="button" appearance="subtle" className={styles.starterPrompt} aria-label={ariaLabel} onClick={() => onClick(value, system)}>
+        <Button type="button" appearance="subtle" className={styles.starterPrompt} onClick={() => onClick(value, system)}>
             <ArrowRight16Regular className={styles.starterPromptIcon} aria-hidden="true" />
             <span className={styles.starterPromptText}>{text}</span>
         </Button>

@@ -24,17 +24,14 @@
     height: auto;
     min-height: 36px;
     border-radius: 8px;
-    text-decoration: none;
     background: transparent !important;
     border: none !important;
-    outline: none !important;
     display: flex;
     flex-direction: row;
     align-items: center;
     justify-content: flex-start;
     padding: 8px 12px;
     box-shadow: none !important;
-    transition: background-color 160ms ease;
     cursor: pointer;
 }
 
@@ -48,32 +45,29 @@
 
 .starterPromptIcon {
     flex-shrink: 0;
-    margin-right: 4px !important;
+    margin-right: 6px !important;
     color: var(--colorNeutralForeground3);
-    opacity: 0;
-    transform: translateX(-6px);
+    transform: translateX(0);
     transition:
-        opacity 120ms ease,
-        transform 120ms ease;
+        color 160ms ease,
+        transform 180ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .starterPrompt:hover .starterPromptIcon,
 .starterPrompt:focus-visible .starterPromptIcon {
-    opacity: 1;
-    transform: translateX(0);
+    color: var(--colorNeutralForeground1);
+    transform: translateX(3px);
 }
 
-.starterPrompt:hover,
-.starterPrompt:active,
-.starterPrompt:focus {
-    background: var(--colorNeutralBackground2Hover) !important;
-    border: none !important;
-    box-shadow: none !important;
+.starterPrompt:focus-visible {
+    outline: 2px solid var(--colorStrokeFocus2);
+    outline-offset: 1px;
 }
 
 .starterPromptText {
-    margin: 0;
-    width: 100%;
+    position: relative;
+    min-width: 0;
+    max-width: 100%;
     font-size: var(--fontSizeBase300);
     color: var(--colorNeutralForeground2);
     line-height: 1.35;
@@ -81,16 +75,44 @@
     overflow: hidden;
     text-overflow: ellipsis;
     display: inline-block;
+    transition: color 160ms ease;
+}
+
+.starterPromptText::after {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    height: 1px;
+    background: currentColor;
+    content: "";
+    transform: scaleX(0);
     transform-origin: left center;
-    transition:
-        transform 220ms cubic-bezier(0.22, 1, 0.36, 1),
-        color 200ms ease;
+    transition: transform 320ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .starterPrompt:hover .starterPromptText,
 .starterPrompt:focus-visible .starterPromptText {
-    transform: scale(1.035);
     color: var(--colorNeutralForeground1);
+}
+
+.starterPrompt:hover .starterPromptText::after,
+.starterPrompt:focus-visible .starterPromptText::after {
+    transform: scaleX(1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .starterPrompt,
+    .starterPromptIcon,
+    .starterPromptText,
+    .starterPromptText::after {
+        transition: none;
+    }
+
+    .starterPrompt:hover .starterPromptIcon,
+    .starterPrompt:focus-visible .starterPromptIcon {
+        transform: none;
+    }
 }
 
 @media only screen and (max-height: 780px) {
@@ -101,11 +123,5 @@
 
     .starterPromptText {
         font-size: var(--fontSizeBase200);
-    }
-}
-
-@media only screen and (max-width: 520px) {
-    .starterPromptNavList {
-        padding-inline: 0;
     }
 }

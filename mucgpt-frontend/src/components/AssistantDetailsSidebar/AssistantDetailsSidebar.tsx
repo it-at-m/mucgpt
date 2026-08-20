@@ -422,10 +422,8 @@ export const AssistantDetailsSidebar = ({
                                 </div>
                                 <ul className={styles.previewList}>
                                     {starterPrompts.map((prompt, index) => (
-                                        <li key={`${prompt.text}-${index}`}>
-                                            <Badge appearance="outline" shape="rounded" className={styles.previewItem}>
-                                                {prompt.text}
-                                            </Badge>
+                                        <li key={`${prompt.text}-${index}`} className={styles.previewItem}>
+                                            {prompt.text}
                                         </li>
                                     ))}
                                 </ul>
@@ -440,10 +438,8 @@ export const AssistantDetailsSidebar = ({
                                 </div>
                                 <ul className={styles.previewList}>
                                     {followUpActions.map((action, index) => (
-                                        <li key={action.id ?? `${action.label}-${index}`}>
-                                            <Badge appearance="outline" shape="rounded" className={styles.previewItem}>
-                                                {action.label}
-                                            </Badge>
+                                        <li key={action.id ?? `${action.label}-${index}`} className={styles.previewItem}>
+                                            {action.label}
                                         </li>
                                     ))}
                                 </ul>

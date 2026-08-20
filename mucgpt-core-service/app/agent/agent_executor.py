@@ -4,6 +4,7 @@ from collections.abc import AsyncGenerator
 from typing import Any
 
 from langchain_core.messages import (
+    AIMessage,
     AIMessageChunk,
 )
 from langchain_core.runnables import RunnableConfig
@@ -166,8 +167,8 @@ class MUCGPTAgentExecutor:
         self,
         messages: list[InputMessage],
         temperature: float,
-        model: str,
-        user_info: AuthenticationResult,
+        model: str | None,
+        user_info: AuthenticationResult | None,
         enabled_tools: list[str] | None = None,
         assistant_id: str | None = None,
         data_sources: list[dict[str, Any]] | None = None,
@@ -354,12 +355,12 @@ class MUCGPTAgentExecutor:
             ).model_dump()
 
     @observe(name="Completion", capture_input=False, capture_output=False)
-    def run_without_streaming(
+    async def run_without_streaming(
         self,
         messages: list[InputMessage],
         temperature: float,
-        model: str,
-        user_info: AuthenticationResult,
+        model: str | None,
+        user_info: AuthenticationResult | None,
         enabled_tools: list[str] | None = None,
         assistant_id: str | None = None,
         data_sources: list[dict[str, Any]] | None = None,
@@ -403,8 +404,20 @@ class MUCGPTAgentExecutor:
             config = merge_configs(self.base_config, request_config)
             try:
                 logger.debug("Starting non-streaming response")
-                llm = self.agent.model.with_config(config)
-                ai_message = llm.invoke(msgs)
+                result = await self.agent.graph.ainvoke(
+                    {"messages": msgs},
+                    config=config,
+                )
+                ai_message = next(
+                    (
+                        message
+                        for message in reversed(result.get("messages", []))
+                        if isinstance(message, AIMessage)
+                    ),
+                    None,
+                )
+                if ai_message is None:
+                    raise RuntimeError("Agent completed without an assistant message")
                 logger.info("Non-streaming completed successfully.")
                 # capture_input/output are disabled on @observe above to avoid
                 # duplicating the full resent history; set a lightweight

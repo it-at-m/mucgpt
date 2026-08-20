@@ -67,7 +67,7 @@ class ChatDataSource(BaseModel):
 
 
 class ChatCompletionRequest(BaseModel):
-    model: str = Field("gpt-4o-mini", description="The model to use")
+    model: str | None = Field(None, description="The model to use")
     messages: list[ChatCompletionMessage] = Field(
         ..., description="Sequence of messages in the conversation"
     )

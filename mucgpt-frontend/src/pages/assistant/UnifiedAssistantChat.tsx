@@ -593,8 +593,6 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                 t("components.community_assistants.unsubscribe_success_title"),
                 t("components.community_assistants.unsubscribe_success_message", { title: assistantConfig.title })
             );
-            refreshUnifiedHistory();
-            navigate("/discovery");
 
             try {
                 await assistantStorageService.deleteChatsForAssistant(assistant_id);
@@ -602,6 +600,9 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
             } catch (cleanupError) {
                 console.error("Failed to clean up local assistant data after unsubscribe:", cleanupError);
             }
+
+            refreshUnifiedHistory();
+            navigate("/discovery");
         } catch (err) {
             console.error("Failed to unsubscribe from assistant:", err);
             showError(t("components.community_assistants.unsubscribe_failed_title"), t("components.community_assistants.unsubscribe_failed_message"));
@@ -1136,12 +1137,13 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
             {(assistantInfoData || isAssistantInfoLoading || isInfoDrawerOpen) && (
                 <div className={styles.infoDrawerContainer} data-open={isInfoDrawerOpen}>
                     <AssistantDetailsSidebar
-                        isOpen={Boolean(assistantInfoData || isAssistantInfoLoading || isInfoDrawerOpen)}
+                        isOpen={isInfoDrawerOpen}
                         onClose={() => setIsInfoDrawerOpen(false)}
                         assistant={assistantInfoData}
                         isLoading={isAssistantInfoLoading}
                         ownedAssistantIds={strategy.isOwned && assistantInfoData ? new Set([assistantInfoData.id]) : new Set()}
                         onStartChat={() => {
+                            clearRequestedChatId();
                             clearChat();
                             setIsInfoDrawerOpen(false);
                         }}

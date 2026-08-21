@@ -723,6 +723,19 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
         [availableLLMs, setLLM, assistantConfig.default_model]
     );
 
+    const usageSummary = useMemo(() => {
+        let totalCost = 0;
+        let lastContextTokens = 0;
+        let maxInputTokens: number | null | undefined;
+        for (const answer of answers) {
+            totalCost += answer.response.usage_cost ?? 0;
+            lastContextTokens = answer.response.context_tokens ?? 0;
+            maxInputTokens = answer.response.usage_max_input_tokens;
+        }
+        if (lastContextTokens === 0 && totalCost === 0) return undefined;
+        return { totalCost, lastContextTokens, maxInputTokens };
+    }, [answers]);
+
     const starterPromptsComponent = useMemo(() => {
         if (isDeletedAssistant || isLegacyAssistant) {
             return null;
@@ -846,6 +859,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                         lockedToolIds={lockedToolIds}
                         uploadedData={uploadedData}
                         setUploadedData={setUploadedData}
+                        usage={usageSummary}
                     />
                 </>
             );
@@ -883,6 +897,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                 lockedToolIds={lockedToolIds}
                 uploadedData={uploadedData}
                 setUploadedData={setUploadedData}
+                usage={usageSummary}
             />
         );
     }, [
@@ -903,7 +918,8 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
         tools,
         lockedToolIds,
         draftCacheKey,
-        uploadedData
+        uploadedData,
+        usageSummary
     ]);
 
     // AnswerList component

@@ -1,9 +1,10 @@
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from langchain_core.language_models.fake_chat_models import FakeListChatModel
 
 from agent.agent_executor import MUCGPTAgentExecutor
-from agent.react_agent import MUCGPTReActAgent
+from agent.deep_agent import MUCGPTAgent
 from agent.tools.tools import ToolCollection
 from core.auth_models import AuthenticationResult
 from init_app import ModelOptions, init_agent
@@ -15,8 +16,8 @@ class TestInitApp:
     def setup_method(self):
         """Set up test fixtures before each test method."""
         # mock model
-        self.mock_model = MagicMock()
-        self.mock_agent = MagicMock(spec=MUCGPTReActAgent)
+        self.mock_model = FakeListChatModel(responses=["response"])
+        self.mock_agent = MagicMock(spec=MUCGPTAgent)
 
         # mock user
         self.mock_user = MagicMock(spec=AuthenticationResult)

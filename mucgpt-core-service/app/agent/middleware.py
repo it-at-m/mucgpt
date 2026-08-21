@@ -21,6 +21,7 @@ from langgraph.types import Command
 
 from agent.state_models.default_state import DefaultAgentState
 from agent.tools.policies import get_policy_for_state
+from config.harness_profiles import DEEP_AGENT_BUILTIN_TOOLS
 from config.langfuse_provider import LangfuseProvider
 from config.model_provider import ModelRegistry
 from core.logtools import getLogger
@@ -264,12 +265,14 @@ def _filter_request_tools(request: ModelRequest) -> ModelRequest:
 
     enabled_tools = set(runtime_context.enabled_tools)
     return request.override(
-        tools=[tool for tool in request.tools or [] if tool.name in enabled_tools]
+        tools=[
+            tool
+            for tool in request.tools or []
+            if tool.name in DEEP_AGENT_BUILTIN_TOOLS or tool.name in enabled_tools # type: ignore
+        ]
     )
 
 
-# TODO:
-# - Ensure the frontend is stateful and can send the current scope in the request
 class ContextMiddleware(AgentMiddleware):
     """Adjust model calls based on agent state and its associated policy.
 

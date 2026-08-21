@@ -3,7 +3,7 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 from langchain_core.language_models.fake_chat_models import FakeListChatModel
 
-from agent.react_agent import _ConfiguredLangChainAgentGraph
+from agent.deep_agent import _ConfiguredLangChainDeepAgentGraph
 from agent.state_models.default_state import DefaultAgentState
 from core.auth_models import AuthenticationResult
 
@@ -25,8 +25,8 @@ async def test_ainvoke_reuses_compiled_agent_for_tool_changes(
     compiled_agent = MagicMock()
     compiled_agent.ainvoke = AsyncMock(return_value={"messages": []})
     create_agent = MagicMock(return_value=compiled_agent)
-    monkeypatch.setattr("agent.react_agent.create_agent", create_agent)
-    graph = _ConfiguredLangChainAgentGraph(
+    monkeypatch.setattr("agent.deep_agent.create_deep_agent", create_agent)
+    graph = _ConfiguredLangChainDeepAgentGraph(
         llm=FakeListChatModel(responses=["response"]),
         tools=[],
         logger=MagicMock(),
@@ -51,9 +51,12 @@ async def test_ainvoke_reuses_compiled_agent_for_tool_changes(
     assert compiled_agent.ainvoke.call_args.kwargs["context"].enabled_tools == [
         "second"
     ]
-    assert compiled_agent.ainvoke.call_args.kwargs["config"]["metadata"][
-        "agent_state_schema"
-    ] == DefaultAgentState.__name__
+    assert (
+        compiled_agent.ainvoke.call_args.kwargs["config"]["metadata"][
+            "agent_state_schema"
+        ]
+        == DefaultAgentState.__name__
+    )
 
 
 @pytest.mark.asyncio
@@ -67,8 +70,8 @@ async def test_astream_reuses_compiled_agent_for_tool_changes(
     compiled_agent = MagicMock()
     compiled_agent.astream = MagicMock(side_effect=stream)
     create_agent = MagicMock(return_value=compiled_agent)
-    monkeypatch.setattr("agent.react_agent.create_agent", create_agent)
-    graph = _ConfiguredLangChainAgentGraph(
+    monkeypatch.setattr("agent.deep_agent.create_deep_agent", create_agent)
+    graph = _ConfiguredLangChainDeepAgentGraph(
         llm=FakeListChatModel(responses=["response"]),
         tools=[],
         logger=MagicMock(),
@@ -97,6 +100,9 @@ async def test_astream_reuses_compiled_agent_for_tool_changes(
     assert compiled_agent.astream.call_args.kwargs["context"].enabled_tools == [
         "second"
     ]
-    assert compiled_agent.astream.call_args.kwargs["config"]["metadata"][
-        "agent_state_schema"
-    ] == DefaultAgentState.__name__
+    assert (
+        compiled_agent.astream.call_args.kwargs["config"]["metadata"][
+            "agent_state_schema"
+        ]
+        == DefaultAgentState.__name__
+    )

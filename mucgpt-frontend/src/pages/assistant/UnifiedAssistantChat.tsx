@@ -913,10 +913,10 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                                         isDeletedAssistant
                                             ? undefined
                                             : prompt => {
-                                                  setLastQuestionValue(prompt);
-                                                  setIsLoadingValue(true);
-                                                  void callApi(prompt);
-                                              }
+                                                setLastQuestionValue(prompt);
+                                                setIsLoadingValue(true);
+                                                void callApi(prompt);
+                                            }
                                     }
                                 />
                             )}

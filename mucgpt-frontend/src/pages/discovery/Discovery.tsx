@@ -330,12 +330,15 @@ const Discovery = () => {
                 const resolvedTitle = isAssistantResponse(resolvedData) ? resolvedData.latest_version.name : resolvedData.title;
                 const resolvedDescription = isAssistantResponse(resolvedData) ? resolvedData.latest_version.description || "" : resolvedData.description || "";
                 const resolvedTags = isAssistantResponse(resolvedData) ? resolvedData.latest_version.tags || [] : resolvedData.tags || [];
+                const fallbackOwner = getPrimaryOwnerDetails(assistant.rawData);
+                const resolvedDataWithOwner =
+                    !getPrimaryOwnerDetails(resolvedData) && fallbackOwner ? { ...resolvedData, owners_detailed: [fallbackOwner] } : resolvedData;
                 setSelectedAssistant({
                     ...assistant,
                     title: resolvedTitle,
                     description: resolvedDescription,
                     tags: resolvedTags,
-                    rawData: resolvedData
+                    rawData: resolvedDataWithOwner
                 });
                 setIsDrawerOpen(true);
             } catch (error) {

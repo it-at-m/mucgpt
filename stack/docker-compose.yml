@@ -100,7 +100,7 @@ services:
   # #### Valkey ####
   #
   valkey:
-    image: valkey/valkey:9.0.4@sha256:bdf93f670fdb026eba9e2cf852c3fa8062f92e850fa181626c3b056e83ef04cf
+    image: valkey/valkey:9.0.5@sha256:2437dbc85bb67005fa7db135dfbc45075b800f4afa1ab2a301e3b878b0c273e2
     ports:
       - "6379:6379"
     command: ["valkey-server", "--requirepass", "password"]

@@ -18,8 +18,9 @@
 }
 
 .card:hover {
-    transform: translateY(-2px);
-    box-shadow: var(--shadow4) !important;
+    transform: translateY(-1px);
+    border-color: var(--colorBrandBackground) !important;
+    box-shadow: var(--shadow8) !important;
 }
 
 .card:hover .headerText {
@@ -148,10 +149,29 @@
 }
 
 .metadataStart {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
     min-width: 0;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+}
+
+.metadataStart svg {
+    width: 16px;
+    height: 16px;
+    flex: 0 0 auto;
+}
+
+.metadataStart > span {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.metadataStart a {
+    color: inherit;
 }
 
 .metadataEnd {

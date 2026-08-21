@@ -151,7 +151,7 @@ def toolchunk_to_chatcompletionchunk(
     )
     choice = ChatCompletionChunkChoice(delta=delta, index=index, finish_reason=None)
     return ChatCompletionChunk(
-        id=id_, object="chat.completion.chunk", created=created, choices=[choice]
+        id=id_, object="chat.completion.chunk", created=created, choices=[choice], usage=None
     )
 
 
@@ -376,7 +376,7 @@ class MUCGPTAgentExecutor:
                 created=created,
                 choices=[
                     ChatCompletionChunkChoice(
-                        delta=ChatCompletionDelta(),
+                        delta=ChatCompletionDelta(), # type: ignore
                         index=0,
                         finish_reason="stop",  # type: ignore
                     )

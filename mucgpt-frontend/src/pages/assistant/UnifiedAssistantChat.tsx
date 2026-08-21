@@ -589,17 +589,30 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
     const performUnsubscribeAssistant = useCallback(async () => {
         try {
             await unsubscribeFromAssistantApi(assistant_id);
+
+            const [chatsResult, configResult] = await Promise.allSettled([
+                assistantStorageService.deleteChatsForAssistant(assistant_id),
+                communityAssistantStorageService.deleteConfigForAssistant(assistant_id)
+            ]);
+
+            if (chatsResult.status === "rejected" || configResult.status === "rejected") {
+                if (chatsResult.status === "rejected") {
+                    console.error("Failed to delete local chats after unsubscribe:", chatsResult.reason);
+                }
+                if (configResult.status === "rejected") {
+                    console.error("Failed to delete local assistant config after unsubscribe:", configResult.reason);
+                }
+                showError(
+                    t("components.community_assistants.unsubscribe_failed_title"),
+                    t("components.community_assistants.unsubscribe_failed_message")
+                );
+                return;
+            }
+
             showSuccess(
                 t("components.community_assistants.unsubscribe_success_title"),
                 t("components.community_assistants.unsubscribe_success_message", { title: assistantConfig.title })
             );
-
-            try {
-                await assistantStorageService.deleteChatsForAssistant(assistant_id);
-                await communityAssistantStorageService.deleteConfigForAssistant(assistant_id);
-            } catch (cleanupError) {
-                console.error("Failed to clean up local assistant data after unsubscribe:", cleanupError);
-            }
 
             refreshUnifiedHistory();
             navigate("/discovery");

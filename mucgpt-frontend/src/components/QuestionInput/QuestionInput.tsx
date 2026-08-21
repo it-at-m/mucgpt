@@ -11,9 +11,12 @@ import { useConfigContext } from "../../context/ConfigContext";
 import { upsertParsedDocumentFromUpload } from "../../service/parsedDocumentStorage";
 import { ContextManagerDialog, UploadedData, createUploadedData, getDataSignature, getFileSignature } from "../ContextManagerDialog/ContextManagerDialog";
 import { ChatToolSelector } from "../ChatToolSelector/ChatToolSelector";
+import { ChatUsageIndicator, type ChatUsageSummary } from "../ChatUsageIndicator/ChatUsageIndicator";
 import { LLMSelector } from "../LLMSelector/LLMSelector";
 import { MicrophoneButton } from "../MicrophoneButton/MicrophoneButton";
 import { useTranscription } from "../TranscriptionSettings/TranscriptionSettingsContext";
+
+export type { ChatUsageSummary } from "../ChatUsageIndicator/ChatUsageIndicator";
 
 interface Props {
     onSend: (question: string, data: UploadedData[]) => void;
@@ -34,6 +37,7 @@ interface Props {
     draftCacheKey?: string;
     skipDraftRestore?: boolean;
     onTranscription?: (text: string) => void;
+    usage?: ChatUsageSummary;
     hideDisclaimer?: boolean;
     llmOptions?: Model[];
     defaultLLM?: string;
@@ -59,6 +63,7 @@ export const QuestionInput = ({
     draftCacheKey,
     skipDraftRestore = false,
     onTranscription,
+    usage,
     hideDisclaimer = false,
     llmOptions,
     defaultLLM,
@@ -98,7 +103,7 @@ export const QuestionInput = ({
     const canUseTranscription = Boolean(allowTranscription && onTranscription && transcriptionReady);
     const showMicrophoneButton = canUseTranscription && (!hasSendableQuestion || isTranscriptionActive);
     const showSendButton = hasSendableQuestion && !isTranscriptionActive;
-    const hasRightActions = hasModelPicker || showMicrophoneButton || showSendButton;
+    const hasRightActions = hasModelPicker || showMicrophoneButton || showSendButton || Boolean(usage);
     const sendLabel = t("components.questioninput.send_question", "Frage senden");
 
     const setUploadedData = useCallback(
@@ -545,6 +550,7 @@ export const QuestionInput = ({
                                     <LLMSelector onSelectionChange={onLLMSelectionChange} defaultLLM={defaultLLM} options={llmOptions} />
                                 </div>
                             ) : null}
+                            {usage && <ChatUsageIndicator usage={usage} />}
                             {showMicrophoneButton && onTranscription ? (
                                 <MicrophoneButton
                                     onRecordingStart={() => {

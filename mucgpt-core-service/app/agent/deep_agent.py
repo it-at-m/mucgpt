@@ -1,7 +1,7 @@
 import os
 from typing import Any, cast
 
-from langchain.agents import create_agent
+from deepagents import create_deep_agent
 from langchain_core.language_models import BaseChatModel
 from langchain_core.runnables import RunnableConfig
 from langchain_core.runnables.config import merge_configs
@@ -21,8 +21,10 @@ with open(
 ) as fp:
     DEFAULT_INSTRUCTIONS = fp.read()
 
+# TODO:
+# - consider prompt pool in langfuse
 
-class _ConfiguredLangChainAgentGraph:
+class _ConfiguredLangChainDeepAgentGraph:
     """Simple wrapper around a LangChain agent to configure it with user info and tools on each run."""
 
     def __init__(
@@ -37,15 +39,10 @@ class _ConfiguredLangChainAgentGraph:
         self.logger = logger
         self.debug = debug
 
-        logger.debug(
-            "Initializing MUCGPT ReAct agent graph with tools: %s",
-            [tool.name for tool in tools],
-        )
-
         # After PR #1177 the agent graph is not compiled per request anymore.
         # dynamically selecting the state schema based on the tools is not supported anymore --> defautling to DefaultAgentState for now.
         self.state_schema = DefaultAgentState
-        self.agent = create_agent(
+        self.agent = create_deep_agent(
             model=cast(Any, self.model),
             tools=self.tools,
             middleware=[
@@ -69,7 +66,7 @@ class _ConfiguredLangChainAgentGraph:
         configurable = config.get("configurable", {}) if config else {}
         user_info = cast(AuthenticationResult | None, configurable.get("user_info"))
         if not user_info:
-            raise ValueError("user_info is required in config for MUCGPTReActAgent")
+            raise ValueError("user_info is required in config for MUCGPTAgent")
 
         llm_user = configurable.get("llm_user")
         extra_body = configurable.get("llm_extra_body")
@@ -149,8 +146,8 @@ class _ConfiguredLangChainAgentGraph:
         )
 
 
-class MUCGPTReActAgent:
-    """Minimal ReAct agent."""
+class MUCGPTAgent:
+    """MUCGPT Deep Agent."""
 
     def __init__(
         self,
@@ -161,7 +158,7 @@ class MUCGPTReActAgent:
     ):
         self.logger = logger if logger else getLogger(name="mucgpt-core-react-agent")
         self.model = llm  # required for non-streaming calls, e.g. assisted MUCGPT-Assistant generation.
-        self.graph = _ConfiguredLangChainAgentGraph(
+        self.graph = _ConfiguredLangChainDeepAgentGraph(
             llm=llm,
             tools=tools,
             logger=self.logger,

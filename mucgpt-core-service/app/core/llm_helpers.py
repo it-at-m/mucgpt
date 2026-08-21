@@ -23,8 +23,11 @@ COMPLIANCE_PROMPTS_DIR = PROMPT_POOL_DIR / "compliance_prompts"
 
 
 class MessageLike(Protocol):
-    role: str
-    content: str
+    @property
+    def role(self) -> str: ...
+
+    @property
+    def content(self) -> str: ...
 
 
 def to_langchain_messages(messages: Sequence[MessageLike]) -> list[BaseMessage]:
@@ -196,4 +199,4 @@ async def invoke_internal_structured_generation[StructuredOutputT: BaseModel](
         user_id=hash_user_id(user_info.user_id),
         tags=trace_tags,
     ):
-        return await llm.ainvoke(to_langchain_messages(messages), config=run_config)
+        return await llm.ainvoke(to_langchain_messages(messages), config=run_config) # type: ignore

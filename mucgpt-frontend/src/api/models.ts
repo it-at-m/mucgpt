@@ -12,6 +12,10 @@ export type ChatResponse = {
     error?: string;
     tokens?: number;
     user_tokens?: number;
+    context_tokens?: number;
+    usage_cost?: number;
+    usage_model?: string;
+    usage_max_input_tokens?: number | null;
     activeTools?: Array<{
         name: string;
         message: string;
@@ -123,6 +127,7 @@ export interface ChatCompletionChunk {
     object: "chat.completion.chunk";
     created: number;
     choices: ChatCompletionChunkChoice[];
+    usage?: { prompt_tokens?: number; completion_tokens?: number; total_tokens?: number; context_tokens?: number };
 }
 
 export type CountTokenRequest = {

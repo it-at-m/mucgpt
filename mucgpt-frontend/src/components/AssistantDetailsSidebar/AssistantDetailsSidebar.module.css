@@ -1,5 +1,6 @@
 .drawerBody {
     overflow-y: auto;
+    padding-bottom: 24px;
 }
 
 .loadingContainer {
@@ -17,59 +18,74 @@
     width: 100%;
 }
 
-.closeButtonContainer {
-    display: flex;
-    justify-content: flex-end;
-    margin-bottom: 8px;
+.closeButton {
+    flex-shrink: 0;
+    align-self: flex-end;
+    margin: -4px -4px 0 0;
 }
 
 .sidebarTitle {
+    width: 100%;
+    margin: 14px 0 6px;
     font-weight: 700;
     text-align: center;
-    width: 100%;
-    font-size: 24px;
-    margin-bottom: 16px;
-    line-height: 1.2;
+    font-size: 22px;
+    line-height: 1.25;
+    overflow-wrap: anywhere;
 }
 
-.creativitySection {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 8px;
-    margin: 0 auto 24px auto;
-}
-
-.creativityIcon {
+.assistantMetadata {
     display: flex;
     align-items: center;
-}
-
-.creativityBadge {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    padding: 4px 10px;
-    background-color: var(--colorNeutralBackground3);
-    border-radius: 8px;
-    font-size: 12px;
-    font-weight: 500;
-    width: fit-content;
-    border: 1px solid var(--colorNeutralStroke2);
-}
-
-.creativityDescription {
-    font-size: 13px;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 5px;
+    min-height: 20px;
+    margin: 2px 0 20px;
     color: var(--colorNeutralForeground2);
-    text-align: center;
-    line-height: 1.4;
+    font-size: 12px;
+}
+
+.creatorMetadata {
+    min-width: 0;
+    max-width: 60%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.creatorMetadata a {
+    color: inherit;
+}
+
+.metadataSeparator {
+    color: var(--colorNeutralForeground4);
+}
+
+.metadataItem {
+    display: inline-flex;
+    align-items: center;
+    min-width: 0;
+    gap: 5px;
+}
+
+.metadataItem svg {
+    width: 14px;
+    height: 14px;
+    flex-shrink: 0;
+}
+
+.metadataItem span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .startButtonRow {
     display: flex;
     align-items: stretch;
     gap: 2px;
-    margin-bottom: 24px;
+    margin: 0 0 28px;
     border-radius: 8px;
 }
 
@@ -137,14 +153,18 @@
 }
 
 .sidebarSection {
-    margin-bottom: 32px;
+    margin-bottom: 16px;
+}
+
+.promptAdjacentSection {
+    margin-bottom: 12px;
 }
 
 .sectionHeader {
     display: flex;
     align-items: center;
     gap: 8px;
-    margin-bottom: 12px;
+    margin-bottom: 6px;
     color: var(--colorNeutralForeground2);
     font-size: 12px;
     font-weight: 600;
@@ -153,75 +173,188 @@
 }
 
 .sectionIcon {
-    font-size: 16px;
-}
-
-.descriptionContainer {
-    background-color: var(--colorNeutralBackground1);
-    padding: 12px;
-    border-radius: 8px;
-    border: 1px solid var(--colorNeutralStroke2);
+    width: 18px;
+    height: 18px;
+    font-size: 18px;
+    flex-shrink: 0;
 }
 
 .aboutText {
+    margin-left: 20px;
+    margin-right: 20px;
     font-size: 14px;
     line-height: 1.6;
-    color: var(--colorNeutralForeground1);
+    color: var(--colorNeutralForeground2);
     white-space: pre-wrap;
+}
+
+.aboutText > :first-child {
+    margin-top: 0;
+}
+
+.aboutText > :last-child {
+    margin-bottom: 0;
+}
+
+.promptAccordion {
+    border: 0;
+}
+
+.promptAccordionItem {
+    background: transparent;
+}
+
+.promptHeaderRow {
+    position: relative;
+}
+
+.promptAccordionHeader {
+    width: 100%;
+}
+
+.promptAccordionHeader button {
+    padding: 7px 0 !important;
+    color: var(--colorNeutralForeground2);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+}
+
+.promptAccordionHeader button:hover {
+    color: var(--colorNeutralForeground1);
+}
+
+.promptCopyButton {
+    position: absolute !important;
+    top: 50%;
+    right: 30px;
+    z-index: 1;
+    width: 24px;
+    min-width: 24px !important;
+    height: 24px;
+    padding: 0 !important;
+    color: var(--colorNeutralForeground2) !important;
+    transform: translateY(-50%);
+}
+
+.accordionHeaderContent {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+}
+
+.promptHeaderRowOpen .accordionHeaderContent {
+    padding-right: 40px;
+}
+
+.promptAccordionPanel {
+    margin: 0 !important;
+    padding: 0 0 10px !important;
+}
+
+.configurationList {
+    margin: 0 20px;
+}
+
+.configurationRow {
+    display: grid;
+    grid-template-columns: minmax(104px, 0.9fr) minmax(0, 1.25fr);
+    gap: 16px;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--colorNeutralStroke2);
+}
+
+.configurationRow:last-child {
+    border-bottom: 0;
+}
+
+.configurationRow dt {
+    color: var(--colorNeutralForeground2);
+    font-size: 13px;
+}
+
+.configurationRow dd {
+    min-width: 0;
+    margin: 0;
+    color: var(--colorNeutralForeground2);
+    font-size: 13px;
+    font-weight: 600;
+    text-align: right;
+    overflow-wrap: anywhere;
+}
+
+.previewList {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+    margin: 0 20px;
+    padding: 0;
+    list-style: none;
+}
+
+.previewItem {
+    box-sizing: border-box;
+    max-width: 100%;
+    padding: 5px 9px;
+    border: 1px dashed var(--colorNeutralStroke1);
+    border-radius: var(--app-radius-xxlarge) var(--app-radius-xxlarge) var(--app-radius-xxlarge) var(--app-radius-xsmall);
+    background-color: var(--app-user-message-background);
+    color: var(--colorNeutralForeground1);
+    font-size: var(--fontSizeBase200);
+    font-weight: var(--fontWeightRegular);
+    line-height: 1.35;
+    white-space: normal;
+    overflow-wrap: anywhere;
 }
 
 .toolList {
     display: flex;
     flex-wrap: wrap;
-    gap: 8px;
+    align-items: flex-start;
+    gap: 6px;
+    margin: 0 20px;
+    padding: 0;
+    list-style: none;
 }
 
-.toolPill {
-    padding: 4px 10px;
-    background-color: var(--colorNeutralBackground3);
-    border-radius: 8px;
-    font-size: 12px;
-    font-weight: 500;
-    color: var(--colorNeutralForeground1);
-    border: 1px solid var(--colorNeutralStroke2);
-}
-
-.systemPromptContainer {
-    background-color: var(--colorNeutralBackground1);
-    padding: 12px;
-    border-radius: 8px;
-    border: 1px solid var(--colorNeutralStroke2);
+.toolItem {
+    background-color: var(--app-user-message-background) !important;
+    color: var(--colorNeutralForeground1) !important;
 }
 
 .promptMarkdown {
+    margin-right: 20px;
+    margin-left: 20px;
     font-size: 13px;
     color: var(--colorNeutralForeground2);
-    font-family: var(--fontFamilyMonospace);
+    font-family: inherit;
     white-space: pre-wrap;
     word-break: anywhere;
 }
 
-.ownerList {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
+.promptMarkdown > :first-child {
+    margin-top: 0;
 }
 
-.ownerRow {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-    padding: 10px 12px;
-    background-color: var(--colorNeutralBackground1);
-    border: 1px solid var(--colorNeutralStroke2);
-    border-radius: 8px;
+.promptMarkdown > :last-child {
+    margin-bottom: 0;
 }
 
-.ownerContact {
+.metadataFooter {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 4px 8px;
+    margin-top: 4px;
+    padding-top: 16px;
+    border-top: 1px solid var(--colorNeutralStroke2);
     color: var(--colorNeutralForeground2);
     font-size: 12px;
     line-height: 1.4;
-    overflow-wrap: anywhere;
+    text-align: center;
 }
 
 .inlineDrawer {
@@ -240,6 +373,15 @@
 @media (max-width: 1200px) {
     .inlineDrawer {
         width: var(--assistantDetailsDrawerCompactWidth) !important;
+    }
+
+    .configurationRow {
+        grid-template-columns: 1fr;
+        gap: 3px;
+    }
+
+    .configurationRow dd {
+        text-align: left;
     }
 }
 

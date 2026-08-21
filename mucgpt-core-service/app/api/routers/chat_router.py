@@ -96,7 +96,7 @@ async def chat_completions(
                 status_code = 500
             raise HTTPException(status_code=status_code, detail=detail) from exc
 
-        ae = await init_agent(user_info=user_info)
+        ae = await init_agent(user_info=user_info, model_name=request.model)
         if request.conversation_id:
             logger.debug(
                 "Received conversation_id=%s",
@@ -125,7 +125,7 @@ async def chat_completions(
                 enabled_tools=enabled_tools,
                 assistant_id=request.assistant_id,
                 data_sources=data_sources,
-                conversation_id=request.conversation_id
+                conversation_id=request.conversation_id,
             )
 
             async def sse_generator():
@@ -142,7 +142,7 @@ async def chat_completions(
                 enabled_tools=enabled_tools,
                 assistant_id=request.assistant_id,
                 data_sources=data_sources,
-                conversation_id=request.conversation_id
+                conversation_id=request.conversation_id,
             )
     except HTTPException:
         raise

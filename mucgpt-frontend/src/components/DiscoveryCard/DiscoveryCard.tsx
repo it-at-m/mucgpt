@@ -1,7 +1,7 @@
 import React, { forwardRef, ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
 import { Badge, Card, CardPreview, mergeClasses, CardProps, BadgeProps } from "@fluentui/react-components";
-import { LockClosed16Regular, People16Regular } from "@fluentui/react-icons";
+import { LockClosed16Regular, People16Regular, Person16Regular } from "@fluentui/react-icons";
 import styles from "./DiscoveryCard.module.css";
 import { MarkdownRenderer } from "../MarkdownRenderer/MarkdownRenderer";
 
@@ -95,7 +95,7 @@ export const DiscoveryCard = forwardRef<HTMLDivElement, DiscoveryCardProps>((pro
             badges && badges.length > 0
                 ? badges
                 : badge
-                  ? [
+                    ? [
                         {
                             label: badge,
                             className: badgeClassName,
@@ -104,7 +104,7 @@ export const DiscoveryCard = forwardRef<HTMLDivElement, DiscoveryCardProps>((pro
                             size: badgeSize
                         }
                     ]
-                  : [];
+                    : [];
 
         if (title) {
             return (
@@ -150,7 +150,12 @@ export const DiscoveryCard = forwardRef<HTMLDivElement, DiscoveryCardProps>((pro
             <div className={styles.metadataBlock}>
                 <div className={styles.metadataDivider} aria-hidden="true" />
                 <div className={styles.metadataRow}>
-                    <span className={styles.metadataStart}>{metadataStartNode || metadataStartLabel}</span>
+                    {(metadataStartNode || metadataStartLabel) && (
+                        <span className={styles.metadataStart}>
+                            <Person16Regular aria-hidden="true" />
+                            <span>{metadataStartNode || metadataStartLabel}</span>
+                        </span>
+                    )}
                     {isPrivate ? (
                         <span className={styles.metadataEnd}>
                             <LockClosed16Regular aria-hidden="true" />

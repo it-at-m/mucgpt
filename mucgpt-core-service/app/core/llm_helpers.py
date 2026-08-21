@@ -196,4 +196,4 @@ async def invoke_internal_structured_generation[StructuredOutputT: BaseModel](
         user_id=hash_user_id(user_info.user_id),
         tags=trace_tags,
     ):
-        return await llm.ainvoke(to_langchain_messages(messages), config=run_config)
+        return await llm.ainvoke(to_langchain_messages(messages), config=run_config) # type: ignore

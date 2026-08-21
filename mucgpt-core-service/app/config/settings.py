@@ -2,7 +2,7 @@ import logging
 from decimal import Decimal
 from enum import StrEnum
 from functools import lru_cache
-from typing import Any
+from typing import Any, Literal
 from urllib.parse import urljoin
 
 import httpx
@@ -67,7 +67,30 @@ class ModelInfo(BaseModel):
     creativity_high_temperature: float | None = None
 
 
+DeepAgentBuiltinTool = Literal[
+    "write_todos",
+    "ls",
+    "read_file",
+    "write_file",
+    "edit_file",
+    "delete",
+    "glob",
+    "grep",
+    "execute",
+    "task",
+]
+
+
+class DeepAgentModelConfig(BaseModel):
+    """Model-specific Deep Agents harness configuration."""
+
+    enabled_builtin_tools: set[DeepAgentBuiltinTool] = Field(default_factory=set)
+    enable_subagents: bool = False
+    enable_summarization: bool | None = False
+
+
 class ModelsConfig(BaseModel):
+    deep_agent: DeepAgentModelConfig = Field(default_factory=DeepAgentModelConfig)
     type: str = Field(..., min_length=1)
     llm_name: str = Field(..., min_length=1)
     deployment: str = ""

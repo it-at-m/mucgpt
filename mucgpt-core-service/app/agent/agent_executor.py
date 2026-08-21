@@ -12,7 +12,7 @@ from langchain_core.runnables.config import merge_configs
 from langfuse import get_client, observe, propagate_attributes
 from langfuse.langchain import CallbackHandler
 
-from agent.react_agent import MUCGPTReActAgent
+from agent.deep_agent import MUCGPTAgent
 from agent.tools.tool_chunk import ToolStreamChunk
 from api.api_models import (
     ChatCompletionChoice,
@@ -140,7 +140,7 @@ class MUCGPTAgentExecutor:
 
     def __init__(
         self,
-        agent: MUCGPTReActAgent,
+        agent: MUCGPTAgent,
     ):
         self.logger = logger
         self.agent = agent
@@ -247,6 +247,9 @@ class MUCGPTAgentExecutor:
                             _message_chunk_trace_event(message_chunk, metadata)
                         )
                         if _is_internal_chunk(metadata):
+                            continue
+                        # dont stream summarization chunks
+                        if metadata.get("lc_source") == "summarization":
                             continue
                         # only stream assistant model output and no tool chunks
                         if metadata.get("langgraph_node") in {

@@ -59,6 +59,15 @@ class ModelRegistry:
         normalized = dict(settings)
         profile = getattr(model, "profile", None)
         model_name = getattr(model, "model_name", None)
+
+        # NOTE: 
+        # as of 08.2026 13 models introduced after 17.02.2026 have no model profile
+        # until this is resolved, the model name is used to determine whether 
+        # the temperature parameter should be removed from the request settings.
+        # https://github.com/langchain-ai/langchainjs/issues/11313
+        #
+        # gpt-5 models do not support temperature anymore. the way to control the model output is via the reasoning effort parameter.
+        # https://medium.com/@skomarovsky/migrating-from-gpt-4-to-gpt-5-2-why-your-code-will-break-and-how-to-fix-it-372e0a89d449
         if (profile and profile.get("temperature") is False) or (
             model_name and "gpt-5" in model_name
         ):
@@ -82,7 +91,14 @@ class ModelRegistry:
 
         _logger = logger or logging.getLogger(__name__)
 
-        default_config = models_config[0]
+        default_config = next(
+            (
+                config
+                for config in models_config
+                if config.model_info.internal_task_model_strength == "weak"
+            ),
+            models_config[0],
+        )
         try:
             default_model = cls.init_chat_model(default_config)
         except ModelsConfigurationException as exc:
@@ -91,14 +107,17 @@ class ModelRegistry:
             ) from exc
 
         models = {default_config.llm_name: default_model}
-        for config in models_config[1:]:
+        for config in models_config:
+            if config is default_config:
+                continue
+
             try:
                 models[config.llm_name] = cls.init_chat_model(config)
             except ModelsConfigurationException as exc:
-                _logger.warning(f"Failed to initialize model {config.llm_name}: {exc}")
+                _logger.warning("Failed to initialize model %s: %s", config.llm_name, exc)
 
-        cls._models = models
-        cls._default_model = default_model
+            cls._models = models
+            cls._default_model = default_model
 
     @classmethod
     def get_model(

@@ -10,8 +10,11 @@ import { useConfigContext } from "../../context/ConfigContext";
 import { upsertParsedDocumentFromUpload } from "../../service/parsedDocumentStorage";
 import { ContextManagerDialog, UploadedData, createUploadedData, getDataSignature, getFileSignature } from "../ContextManagerDialog/ContextManagerDialog";
 import { ChatToolSelector } from "../ChatToolSelector/ChatToolSelector";
+import { ChatUsageIndicator, type ChatUsageSummary } from "../ChatUsageIndicator/ChatUsageIndicator";
 import { MicrophoneButton } from "../MicrophoneButton/MicrophoneButton";
 import { useTranscription } from "../TranscriptionSettings/TranscriptionSettingsContext";
+
+export type { ChatUsageSummary } from "../ChatUsageIndicator/ChatUsageIndicator";
 
 interface Props {
     onSend: (question: string, data: UploadedData[]) => void;
@@ -32,6 +35,7 @@ interface Props {
     draftCacheKey?: string;
     skipDraftRestore?: boolean;
     onTranscription?: (text: string) => void;
+    usage?: ChatUsageSummary;
 }
 
 export const QuestionInput = ({
@@ -52,7 +56,8 @@ export const QuestionInput = ({
     setUploadedData: setExternalUploadedData,
     draftCacheKey,
     skipDraftRestore = false,
-    onTranscription
+    onTranscription,
+    usage
 }: Props) => {
     const { t } = useTranslation();
     const config = useConfigContext();
@@ -485,6 +490,7 @@ export const QuestionInput = ({
                         disabled={disabled || isTranscriptionActive}
                     />
                     <div className={styles.questionInputButtons}>
+                        {usage && <ChatUsageIndicator usage={usage} />}
                         {allowTranscription && onTranscription && transcriptionReady && (
                             <MicrophoneButton
                                 onRecordingStart={() => {

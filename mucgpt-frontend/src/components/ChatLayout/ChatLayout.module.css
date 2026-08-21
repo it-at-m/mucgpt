@@ -278,16 +278,6 @@
     background: transparent;
 }
 
-.usageIndicator {
-    display: flex;
-    justify-content: flex-end;
-    gap: 8px;
-    font-size: 11px;
-    color: var(--colorNeutralForeground3);
-    padding: 0 4px 4px;
-    font-variant-numeric: tabular-nums;
-}
-
 .container[data-info-open="true"] .scrollToBottomWrapper,
 .container[data-info-open="true"] .chatInput {
     right: var(--assistantDetailsDrawerWidth);

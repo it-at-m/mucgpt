@@ -815,9 +815,10 @@ const Chat = () => {
                 uploadedData={uploadedData}
                 setUploadedData={setUploadedData}
                 onTranscription={text => setQuestion(text)}
+                usage={usageSummary}
             />
         );
-    }, [callApi, systemPrompt, question, t, isLoading, selectedTools, tools, uploadedData, uploadedDataToDataSources, getNavigationParams]);
+    }, [callApi, systemPrompt, question, t, isLoading, selectedTools, tools, uploadedData, uploadedDataToDataSources, getNavigationParams, usageSummary]);
 
     const layout = useMemo(
         () => (
@@ -842,7 +843,6 @@ const Chat = () => {
                     llmOptions={availableLLMs}
                     defaultLLM={LLM.llm_name}
                     onLLMSelectionChange={onLLMSelectionChange}
-                    usage={usageSummary}
                     actions={
                         <Button
                             appearance="transparent"
@@ -863,7 +863,6 @@ const Chat = () => {
             availableLLMs,
             LLM.llm_name,
             onLLMSelectionChange,
-            usageSummary,
             clearChat,
             activeChatName,
             isLoading,

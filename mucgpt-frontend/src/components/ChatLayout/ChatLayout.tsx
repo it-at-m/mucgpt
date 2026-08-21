@@ -3,17 +3,10 @@ import { Button } from "@fluentui/react-components";
 import { ArrowDown24Regular } from "@fluentui/react-icons";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { useTranslation } from "react-i18next";
 
 import styles from "./ChatLayout.module.css";
 import { LLMSelector } from "../LLMSelector/LLMSelector";
 import { Model } from "../../api";
-
-export interface ChatUsageSummary {
-    totalCost: number;
-    lastContextTokens: number;
-    maxInputTokens?: number | null;
-}
 
 interface Props {
     starterPrompts: ReactNode;
@@ -30,7 +23,6 @@ interface Props {
     llmOptions?: Model[];
     defaultLLM?: string;
     actions?: ReactNode;
-    usage?: ChatUsageSummary;
 }
 
 export const ChatLayout = ({
@@ -47,10 +39,8 @@ export const ChatLayout = ({
     onLLMSelectionChange,
     onHeaderClick,
     infoDrawerOpen,
-    actions,
-    usage
+    actions
 }: Props) => {
-    const { t } = useTranslation();
     const chatInputRef = useRef<HTMLDivElement | null>(null);
     const chatMessagesRef = useRef<HTMLUListElement | null>(null);
     const [chatInputHeight, setChatInputHeight] = useState(0);
@@ -246,18 +236,6 @@ export const ChatLayout = ({
                         </div>
                     )}
                     <div className={styles.chatInput} ref={chatInputRef}>
-                        {usage && (usage.maxInputTokens || usage.totalCost > 0) && (
-                            <div className={styles.usageIndicator}>
-                                {usage.maxInputTokens ? (
-                                    <span>
-                                        {t("chat.usage_context_percent", {
-                                            percent: Math.min(100, Math.round((usage.lastContextTokens / usage.maxInputTokens) * 100))
-                                        })}
-                                    </span>
-                                ) : null}
-                                {usage.totalCost > 0 ? <span>{t("chat.usage_cost", { cost: usage.totalCost.toFixed(4) })}</span> : null}
-                            </div>
-                        )}
                         {input}
                     </div>
                 </div>

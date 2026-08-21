@@ -235,7 +235,12 @@ function wordChunksFromMessage(message: string) {
     }));
 }
 
-export function generateChatStreamChunks(finalMessage: string) {
+/**
+ * @param forcedContextTokens - When set, overrides the randomized prompt token count so callers
+ * can pin the resulting context-usage percentage for deterministic visual testing (see the
+ * "#usage<0-100>" control word handled in handlers.ts).
+ */
+export function generateChatStreamChunks(finalMessage: string, forcedContextTokens?: number) {
     const base = wordChunksFromMessage(finalMessage);
     base.push({
         id: `chatcmpl-mock-${Math.random().toString(36).slice(2, 8)}`,
@@ -252,8 +257,8 @@ export function generateChatStreamChunks(finalMessage: string) {
         model: "KIESGPT",
         choices: [{ index: 0, delta: { content: "" }, finish_reason: "stop" as any }],
         usage: (() => {
-            const prompt_tokens = 400 + Math.floor(Math.random() * 2000);
             const completion_tokens = Math.round(finalMessage.length / 4);
+            const prompt_tokens = forcedContextTokens ?? 400 + Math.floor(Math.random() * 2000);
             return { prompt_tokens, completion_tokens, total_tokens: prompt_tokens + completion_tokens };
         })()
     });

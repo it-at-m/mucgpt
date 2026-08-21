@@ -265,7 +265,7 @@ export function generateChatStreamChunks(finalMessage: string, forcedContextToke
     return base;
 }
 
-export function generateMindmapStreamChunks(topic: string) {
+export function generateMindmapStreamChunks(topic: string, forcedContextTokens?: number) {
     const t = topic || "Artificial Intelligence";
     const chunks: any[] = [];
 
@@ -359,12 +359,17 @@ export function generateMindmapStreamChunks(topic: string) {
         object: "chat.completion.chunk",
         created: Math.floor(Date.now() / 1000),
         model: "KIESGPT",
-        choices: [{ index: 0, delta: { content: "" }, finish_reason: "stop" as any }]
+        choices: [{ index: 0, delta: { content: "" }, finish_reason: "stop" as any }],
+        usage: (() => {
+            const completion_tokens = Math.round(consolidated.length / 4);
+            const prompt_tokens = forcedContextTokens ?? 400 + Math.floor(Math.random() * 2000);
+            return { prompt_tokens, completion_tokens, total_tokens: prompt_tokens + completion_tokens };
+        })()
     });
     return chunks;
 }
 
-export function generateSimplifyStreamChunks() {
+export function generateSimplifyStreamChunks(forcedContextTokens?: number) {
     const chunks: any[] = [];
     const push = (state: string, content: string, metadata: any = {}) => {
         chunks.push({
@@ -450,7 +455,12 @@ export function generateSimplifyStreamChunks() {
         object: "chat.completion.chunk",
         created: Math.floor(Date.now() / 1000),
         model: "KIESGPT",
-        choices: [{ index: 0, delta: { content: "" }, finish_reason: "stop" as any }]
+        choices: [{ index: 0, delta: { content: "" }, finish_reason: "stop" as any }],
+        usage: (() => {
+            const completion_tokens = 300;
+            const prompt_tokens = forcedContextTokens ?? 400 + Math.floor(Math.random() * 2000);
+            return { prompt_tokens, completion_tokens, total_tokens: prompt_tokens + completion_tokens };
+        })()
     });
     return chunks;
 }

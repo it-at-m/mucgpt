@@ -1,5 +1,5 @@
 from contextlib import nullcontext
-from unittest.mock import MagicMock
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 from langchain_core.messages import AIMessage, AIMessageChunk, ToolCall
@@ -89,6 +89,12 @@ class DummyAgent:
         self.model = llm
         self.graph = MagicMock()
         self.graph.astream = llm.astream
+        self.graph.ainvoke = AsyncMock(
+            side_effect=RuntimeError("Simulated failure")
+            if llm.fail
+            else None,
+            return_value={"messages": [AIMessage(content="Simplified text.")]},
+        )
 
 
 class FakeLangfuseSpan:
@@ -205,12 +211,13 @@ class TestMUCGPTAgentExecutor:
         # The last chunk should have finish_reason "stop"
         assert chunks[-1]["choices"][0]["finish_reason"] == "stop"
 
-    def test_run_without_streaming_returns_error_message_on_exception(self):
+    @pytest.mark.asyncio
+    async def test_run_without_streaming_returns_error_message_on_exception(self):
         llm = DummyRunnerLLM(fail=True)
         agent = DummyAgent(llm)
         runner = MUCGPTAgentExecutor(agent)
         messages = [InputMessage(role="user", content="fail")]
-        response = runner.run_without_streaming(
+        response = await runner.run_without_streaming(
             messages=messages,
             temperature=0.7,
             model="test",
@@ -251,12 +258,33 @@ class TestMUCGPTAgentExecutor:
         assert llm.config["llm"] == "test-model"
         assert llm.config["llm_streaming"] is False
 
-    def test_run_without_streaming_returns_error_on_exception(self):
+    @pytest.mark.asyncio
+    async def test_run_without_streaming_invokes_agent_graph(self):
+        messages = [InputMessage(role="user", content="hi")]
+
+        response = await self.runner.run_without_streaming(
+            messages=messages,
+            temperature=0.5,
+            model="test-model",
+            user_info=None,
+            enabled_tools=["simplify"],
+        )
+
+        assert response.choices[0].message.content == "Simplified text."
+        call = self.agent.graph.ainvoke.await_args
+        config = call.kwargs["config"]["configurable"]
+        assert config["llm_temperature"] == 0.5
+        assert config["llm"] == "test-model"
+        assert config["llm_streaming"] is False
+        assert config["enabled_tools"] == ["simplify"]
+
+    @pytest.mark.asyncio
+    async def test_run_without_streaming_returns_error_on_exception(self):
         llm = DummyRunnerLLM(fail=True)
         agent = DummyAgent(llm)
         runner = MUCGPTAgentExecutor(agent)
         messages = [InputMessage(role="user", content="fail")]
-        response = runner.run_without_streaming(
+        response = await runner.run_without_streaming(
             messages=messages,
             temperature=0.7,
             model="test",

@@ -1,6 +1,6 @@
 [project]
 name = "mucgpt-core-service"
-version = "0.16.1"
+version = "0.16.2"
 description = "a web interface for large language models for the public administration"
 readme = "README.md"
 requires-python= ">=3.13"
@@ -34,6 +34,7 @@ dependencies = [
     "redis>=7.3.0",
     "cloudpickle>=3.1.2",
     "python-multipart>=0.0.5",
+    "deepagents>=0.7.6",
 ]
 
 [dependency-groups]

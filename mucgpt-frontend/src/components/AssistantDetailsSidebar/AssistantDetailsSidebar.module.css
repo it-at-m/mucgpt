@@ -70,8 +70,8 @@
 }
 
 .metadataItem svg {
-    width: 12px;
-    height: 12px;
+    width: 14px;
+    height: 14px;
     flex-shrink: 0;
 }
 
@@ -173,9 +173,9 @@
 }
 
 .sectionIcon {
-    width: 15px;
-    height: 15px;
-    font-size: 15px;
+    width: 18px;
+    height: 18px;
+    font-size: 18px;
     flex-shrink: 0;
 }
 
@@ -297,7 +297,6 @@
 
 .previewItem {
     box-sizing: border-box;
-    width: fit-content;
     max-width: 100%;
     padding: 5px 9px;
     border: 1px dashed var(--colorNeutralStroke1);
@@ -305,13 +304,16 @@
     background-color: var(--app-user-message-background);
     color: var(--colorNeutralForeground1);
     font-size: var(--fontSizeBase200);
+    font-weight: var(--fontWeightRegular);
     line-height: 1.35;
+    white-space: normal;
     overflow-wrap: anywhere;
 }
 
 .toolList {
     display: flex;
     flex-wrap: wrap;
+    align-items: flex-start;
     gap: 6px;
     margin: 0 20px;
     padding: 0;
@@ -319,15 +321,8 @@
 }
 
 .toolItem {
-    display: inline-flex;
-    align-items: center;
-    padding: 3px 9px;
-    border: 1px solid var(--colorNeutralStroke2);
-    border-radius: var(--borderRadiusCircular);
-    background-color: var(--app-user-message-background);
-    color: var(--colorNeutralForeground1);
-    font-size: var(--fontSizeBase200);
-    line-height: 1.35;
+    background-color: var(--app-user-message-background) !important;
+    color: var(--colorNeutralForeground1) !important;
 }
 
 .promptMarkdown {

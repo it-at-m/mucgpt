@@ -287,12 +287,7 @@ class SimplifyAgent:
             HumanMessage(content=prompt),
         ]
 
-        llm = self.model.with_config(
-            {
-                "llm_temperature": 0.0,
-                "llm_streaming": True,  # Enable streaming
-            }
-        )
+        llm = self.model.model_copy(update={"temperature": 0.0, "streaming": True})
 
         # Stream the response
         self._start_stream_section(
@@ -321,11 +316,8 @@ class SimplifyAgent:
             rules=SIMPLFIY_RULES,
         )
 
-        critique_llm = self.model.with_config(
-            {
-                "llm_temperature": 0.0,
-                "llm_streaming": True,  # Enable streaming
-            }
+        critique_llm = self.model.model_copy(
+            update={"temperature": 0.0, "streaming": True}
         )
 
         critique = ""
@@ -363,11 +355,8 @@ class SimplifyAgent:
             critique=state["critique"],
         )
 
-        refine_llm = self.model.with_config(
-            {
-                "llm_temperature": 0.0,
-                "llm_streaming": True,  # Enable streaming
-            }
+        refine_llm = self.model.model_copy(
+            update={"temperature": 0.0, "streaming": True}
         )
         self._start_stream_section(
             section_name=REFINE_SECTION, revision=state.get("revisions")

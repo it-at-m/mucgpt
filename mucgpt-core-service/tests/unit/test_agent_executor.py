@@ -90,9 +90,7 @@ class DummyAgent:
         self.graph = MagicMock()
         self.graph.astream = llm.astream
         self.graph.ainvoke = AsyncMock(
-            side_effect=RuntimeError("Simulated failure")
-            if llm.fail
-            else None,
+            side_effect=RuntimeError("Simulated failure") if llm.fail else None,
             return_value={"messages": [AIMessage(content="Simplified text.")]},
         )
 
@@ -333,6 +331,55 @@ class TestMUCGPTAgentExecutor:
             "prompt_tokens": 12,
             "completion_tokens": 3,
             "total_tokens": 15,
+            "context_tokens": 15,
+        }
+
+    @pytest.mark.asyncio
+    async def test_run_with_streaming_aggregates_cost_usage_and_keeps_last_context(
+        self,
+    ):
+        class UsageGraph:
+            async def astream(self, *_args, **_kwargs):
+                for content, input_tokens, output_tokens in (
+                    ("tool call", 10, 2),
+                    ("final answer", 20, 4),
+                ):
+                    yield (
+                        "messages",
+                        (
+                            AIMessageChunk(
+                                content=content,
+                                usage_metadata={
+                                    "input_tokens": input_tokens,
+                                    "output_tokens": output_tokens,
+                                    "total_tokens": input_tokens + output_tokens,
+                                },
+                            ),
+                            {"langgraph_node": "model"},
+                        ),
+                    )
+
+        class UsageAgent:
+            def __init__(self):
+                self.model = DummyRunnerLLM()
+                self.graph = UsageGraph()
+
+        runner = MUCGPTAgentExecutor(UsageAgent())
+
+        chunks = []
+        async for chunk in runner.run_with_streaming(
+            messages=[InputMessage(role="user", content="hi")],
+            temperature=0.7,
+            model="test",
+            user_info=None,
+        ):
+            chunks.append(chunk)
+
+        assert chunks[-1]["usage"] == {
+            "prompt_tokens": 30,
+            "completion_tokens": 6,
+            "total_tokens": 36,
+            "context_tokens": 24,
         }
 
     @pytest.mark.asyncio

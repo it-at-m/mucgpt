@@ -285,6 +285,7 @@
     font-size: 11px;
     color: var(--colorNeutralForeground3);
     padding: 0 4px 4px;
+    font-variant-numeric: tabular-nums;
 }
 
 .container[data-info-open="true"] .scrollToBottomWrapper,

@@ -69,6 +69,7 @@ def _usage_from_metadata(usage_metadata: dict[str, Any] | None) -> Usage | None:
         prompt_tokens=prompt_tokens,
         completion_tokens=completion_tokens,
         total_tokens=total_tokens,
+        context_tokens=total_tokens,
     )
 
 
@@ -151,7 +152,11 @@ def toolchunk_to_chatcompletionchunk(
     )
     choice = ChatCompletionChunkChoice(delta=delta, index=index, finish_reason=None)
     return ChatCompletionChunk(
-        id=id_, object="chat.completion.chunk", created=created, choices=[choice], usage=None
+        id=id_,
+        object="chat.completion.chunk",
+        created=created,
+        choices=[choice],
+        usage=None,
     )
 
 
@@ -226,7 +231,9 @@ class MUCGPTAgentExecutor:
             )
             answer_chunks: list[str] = []
             trace_events: list[dict[str, Any]] = []
-            last_usage_metadata: dict[str, Any] | None = None
+            total_prompt_tokens = 0
+            total_completion_tokens = 0
+            last_context_tokens: int | None = None
             config = merge_configs(
                 self.base_config,
                 RunnableConfig(
@@ -278,11 +285,13 @@ class MUCGPTAgentExecutor:
                             "assistant",
                             "model",
                         } and isinstance(message_chunk, AIMessageChunk):
-                            chunk_usage = getattr(
-                                message_chunk, "usage_metadata", None
-                            )
+                            chunk_usage = getattr(message_chunk, "usage_metadata", None)
                             if chunk_usage:
-                                last_usage_metadata = chunk_usage
+                                usage = _usage_from_metadata(chunk_usage)
+                                if usage:
+                                    total_prompt_tokens += usage.prompt_tokens
+                                    total_completion_tokens += usage.completion_tokens
+                                    last_context_tokens = usage.total_tokens
                             chunk_content = message_chunk.content
                             if chunk_content is None:
                                 continue
@@ -376,12 +385,21 @@ class MUCGPTAgentExecutor:
                 created=created,
                 choices=[
                     ChatCompletionChunkChoice(
-                        delta=ChatCompletionDelta(), # type: ignore
+                        delta=ChatCompletionDelta(),  # type: ignore
                         index=0,
                         finish_reason="stop",  # type: ignore
                     )
                 ],
-                usage=_usage_from_metadata(last_usage_metadata),
+                usage=(
+                    Usage(
+                        prompt_tokens=total_prompt_tokens,
+                        completion_tokens=total_completion_tokens,
+                        total_tokens=total_prompt_tokens + total_completion_tokens,
+                        context_tokens=last_context_tokens,
+                    )
+                    if last_context_tokens is not None
+                    else None
+                ),
             ).model_dump()
 
     @observe(name="Completion", capture_input=False, capture_output=False)
@@ -473,7 +491,7 @@ class MUCGPTAgentExecutor:
                     usage=_usage_from_metadata(
                         getattr(ai_message, "usage_metadata", None)
                     )
-                    or Usage(prompt_tokens=0, completion_tokens=0, total_tokens=0),
+                    or Usage(prompt_tokens=0, completion_tokens=0, total_tokens=0, context_tokens=0),
                 )
                 return response
             except Exception as ex:
@@ -497,5 +515,6 @@ class MUCGPTAgentExecutor:
                         prompt_tokens=0,
                         completion_tokens=0,
                         total_tokens=0,
+                        context_tokens=None,
                     ),
                 )

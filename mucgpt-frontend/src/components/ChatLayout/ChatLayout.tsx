@@ -248,12 +248,14 @@ export const ChatLayout = ({
                     <div className={styles.chatInput} ref={chatInputRef}>
                         {usage && (usage.maxInputTokens || usage.totalCost > 0) && (
                             <div className={styles.usageIndicator}>
-                                {usage.maxInputTokens
-                                    ? t("chat.usage_context_percent", {
-                                          percent: Math.min(100, Math.round((usage.lastContextTokens / usage.maxInputTokens) * 100))
-                                      })
-                                    : null}
-                                {usage.totalCost > 0 ? t("chat.usage_cost", { cost: usage.totalCost.toFixed(4) }) : null}
+                                {usage.maxInputTokens ? (
+                                    <span>
+                                        {t("chat.usage_context_percent", {
+                                            percent: Math.min(100, Math.round((usage.lastContextTokens / usage.maxInputTokens) * 100))
+                                        })}
+                                    </span>
+                                ) : null}
+                                {usage.totalCost > 0 ? <span>{t("chat.usage_cost", { cost: usage.totalCost.toFixed(4) })}</span> : null}
                             </div>
                         )}
                         {input}

@@ -863,6 +863,8 @@ i18n
                         prompt: "Ask a question or upload a document",
                         prompt_no_upload: "Ask a question",
                         answer_loading: "Generating answer",
+                        usage_context_percent: "{{percent}}% context",
+                        usage_cost: "${{cost}}",
                         follow_up_actions: {
                             shorter: "Less detail",
                             longer: "More detail",
@@ -1657,6 +1659,8 @@ i18n
                         prompt: "Stell a Froog oder lad a Dokument hoch",
                         prompt_no_upload: "Stell a Froog",
                         answer_loading: "I bearbeit grad de Frog",
+                        usage_context_percent: "{{percent}}% Kontext",
+                        usage_cost: "${{cost}}",
                         follow_up_actions: {
                             shorter: "Kürzer",
                             longer: "Länger",
@@ -2444,6 +2448,8 @@ i18n
                         prompt: "Posez une question ou téléchargez un document",
                         prompt_no_upload: "Posez une question",
                         answer_loading: "Créer une réponse",
+                        usage_context_percent: "{{percent}} % de contexte",
+                        usage_cost: "{{cost}} $",
                         follow_up_actions: {
                             shorter: "Plus court",
                             longer: "Plus long",
@@ -3227,6 +3233,8 @@ i18n
                         prompt: "Задайте питання або завантажте документ",
                         prompt_no_upload: "Задайте питання",
                         answer_loading: "Створення відповіді",
+                        usage_context_percent: "Контекст: {{percent}}%",
+                        usage_cost: "${{cost}}",
                         follow_up_actions: {
                             shorter: "Коротше",
                             longer: "Довше",

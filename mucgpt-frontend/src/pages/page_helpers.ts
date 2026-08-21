@@ -273,6 +273,7 @@ export const makeApiRequest = async (
     } // Initialize token counters for usage tracking
     let user_tokens = 0;
     let streamed_tokens = 0;
+    let context_tokens = 0;
 
     // Initialize tool stream handler for processing tool calls
     const toolStreamHandler = new ToolStreamHandler();
@@ -384,6 +385,10 @@ export const makeApiRequest = async (
                         if (chunk.usage) {
                             user_tokens = user_tokens + (chunk.usage.prompt_tokens || 0);
                             streamed_tokens = streamed_tokens + (chunk.usage.completion_tokens || 0);
+                            context_tokens =
+                                chunk.usage.context_tokens ??
+                                chunk.usage.total_tokens ??
+                                (chunk.usage.prompt_tokens || 0) + (chunk.usage.completion_tokens || 0);
                         }
 
                         // Check if streaming is complete
@@ -439,12 +444,17 @@ export const makeApiRequest = async (
 
     const finalToolContent = toolStreamHandler.getFormattedContent();
     const finalCombinedContent = textBuffer + finalToolContent;
+    const usageCost = user_tokens * (LLM.input_cost_per_token ?? 0) + streamed_tokens * (LLM.output_cost_per_token ?? 0);
 
     const finalResponse = {
         ...askResponse,
         answer: finalCombinedContent,
         tokens: streamed_tokens,
         user_tokens: user_tokens,
+        context_tokens,
+        usage_cost: usageCost,
+        usage_model: LLM.llm_name,
+        usage_max_input_tokens: LLM.max_input_tokens,
         activeTools: activeToolStatuses
     };
 

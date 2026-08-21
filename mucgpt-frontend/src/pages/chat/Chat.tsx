@@ -779,15 +779,15 @@ const Chat = () => {
     const usageSummary = useMemo(() => {
         let totalCost = 0;
         let lastContextTokens = 0;
+        let maxInputTokens: number | null | undefined;
         for (const answer of answers) {
-            const promptTokens = answer.response.user_tokens ?? 0;
-            const completionTokens = answer.response.tokens ?? 0;
-            totalCost += promptTokens * (LLM.input_cost_per_token ?? 0) + completionTokens * (LLM.output_cost_per_token ?? 0);
-            lastContextTokens = promptTokens + completionTokens;
+            totalCost += answer.response.usage_cost ?? 0;
+            lastContextTokens = answer.response.context_tokens ?? 0;
+            maxInputTokens = answer.response.usage_max_input_tokens;
         }
         if (lastContextTokens === 0 && totalCost === 0) return undefined;
-        return { totalCost, lastContextTokens, maxInputTokens: LLM.max_input_tokens };
-    }, [answers, LLM]);
+        return { totalCost, lastContextTokens, maxInputTokens };
+    }, [answers]);
 
     const starterPromptsComponent = useMemo(
         () => <StarterPromptList starterPrompts={CHAT_STARTER_PROMPTS} onStarterPromptClicked={onStarterPromptClicked} />,

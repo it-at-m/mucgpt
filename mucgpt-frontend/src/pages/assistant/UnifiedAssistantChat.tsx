@@ -1,5 +1,5 @@
 import { useRef, useState, useEffect, useContext, useCallback, useReducer, useMemo } from "react";
-import { AskResponse, Assistant, ChatResponse, CommunityAssistantSnapshot, DataSource } from "../../api";
+import { AskResponse, Assistant, AssistantResponse, ChatResponse, CommunityAssistantSnapshot, DataSource } from "../../api";
 import { Answer } from "../../components/Answer";
 import { QuestionInput } from "../../components/QuestionInput";
 import { useTranslation } from "react-i18next";
@@ -20,7 +20,7 @@ import { ToolStatus } from "../../utils/ToolStreamHandler";
 import { AssistantStrategy, CommunityAssistantStrategy, DeletedCommunityAssistantStrategy, LocalAssistantStrategy } from "./AssistantStrategy";
 import { chatApi } from "../../api/core-client";
 import { useGlobalToastContext } from "../../components/GlobalToastHandler/GlobalToastContext";
-import { getOwnedCommunityAssistants, getUserSubscriptionsApi, subscribeToAssistantApi } from "../../api/assistant-client";
+import { getOwnedCommunityAssistants, getUserSubscriptionsApi, subscribeToAssistantApi, unsubscribeFromAssistantApi } from "../../api/assistant-client";
 import { NotSubscribedDialog } from "../../components/NotSubscribedDialog";
 import { useToolsContext } from "../../components/ToolsProvider";
 import { Button, MessageBar, MessageBarBody, Skeleton, SkeletonItem } from "@fluentui/react-components";
@@ -43,6 +43,7 @@ import { UploadedData } from "../../components/ContextManagerDialog/ContextManag
 import { useToolStatusToasts } from "../../hooks/useToolStatusToasts";
 import styles from "./UnifiedAssistantChat.module.css";
 import { useUnifiedHistory, useUnifiedHistoryRegistration } from "../../components/UnifiedHistory";
+import { downloadAssistantExport, mapAssistantToExportData } from "../../utils/assistant-export";
 
 interface UnifiedAssistantChatProps {
     strategy: AssistantStrategy;
@@ -118,6 +119,8 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
     // Used to hide follow-up actions until the message is completely rendered.
     const [isStreaming, setIsStreaming] = useState<boolean>(false);
     const [isAssistantContentLoading, setIsAssistantContentLoading] = useState<boolean>(true);
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState<boolean>(false);
+    const [showUnsubscribeConfirm, setShowUnsubscribeConfirm] = useState<boolean>(false);
     const isDeletedAssistant = strategy instanceof DeletedCommunityAssistantStrategy;
     const isLocalAssistant = strategy instanceof LocalAssistantStrategy;
     const { assistantToDuplicate, showDuplicateConfirm, isDuplicating, setShowDuplicateConfirm, requestDuplicateAssistant, confirmDuplicateAssistant } =
@@ -369,12 +372,12 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
         setSelectedToolsGuarded(prev => prev);
     }, [lockedToolIds, setSelectedToolsGuarded]);
 
-    // Load info data for non-owner community assistants
+    // Load info data for the assistant details sidebar (shown to owners and non-owners alike)
     useEffect(() => {
         setAssistantInfoData(null);
         setIsInfoDrawerOpen(false);
 
-        if (strategy.canEdit || isDeletedAssistant || !assistant_id || !isOwnershipResolved) {
+        if (isDeletedAssistant || isLegacyAssistant || isLocalAssistant || !assistant_id || !isOwnershipResolved) {
             setIsAssistantInfoLoading(false);
             return;
         }
@@ -397,7 +400,8 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                     subscriptions: response.subscriptions_count || 0,
                     updated: response.updated_at,
                     tags: response.latest_version.tags || [],
-                    rawData: response
+                    rawData: response,
+                    isSubscribedAssistant: strategy instanceof CommunityAssistantStrategy
                 });
                 setIsAssistantInfoLoading(false);
             })
@@ -414,7 +418,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
         return () => {
             isCurrentRequest = false;
         };
-    }, [assistant_id, strategy.canEdit, isDeletedAssistant, isOwnershipResolved]);
+    }, [assistant_id, isDeletedAssistant, isLegacyAssistant, isLocalAssistant, isOwnershipResolved, strategy]);
 
     // get History-Funktion
     const fetchHistory = useCallback(() => {
@@ -551,6 +555,82 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
         },
         [strategy, assistant_id]
     );
+
+    // Export function for the info sidebar
+    const exportAssistant = useCallback(async () => {
+        try {
+            downloadAssistantExport(mapAssistantToExportData(assistantConfig), assistantConfig.title);
+            showSuccess(t("components.assistantsettingsdrawer.export"), `${assistantConfig.title}.json`);
+        } catch (err) {
+            console.error("Failed to export assistant:", err);
+            showError(t("components.assistantsettingsdrawer.export"), err instanceof Error ? err.message : "Export failed");
+        }
+    }, [assistantConfig, showError, showSuccess, t]);
+
+    // Delete function for the info sidebar (owner only)
+    const performDeleteAssistant = useCallback(async () => {
+        try {
+            await strategy.deleteAssistant(assistant_id, assistantStorageService);
+            showSuccess(
+                t("components.assistant_chat.delete_assistant_success"),
+                t("components.assistant_chat.delete_assistant_success_message", { title: assistantConfig.title })
+            );
+            refreshUnifiedHistory();
+            navigate("/discovery");
+        } catch (err) {
+            showError(
+                t("components.assistant_chat.delete_assistant_failed"),
+                err instanceof Error ? err.message : t("components.assistant_chat.delete_assistant_failed_message")
+            );
+        }
+    }, [strategy, assistant_id, assistantStorageService, assistantConfig.title, refreshUnifiedHistory, navigate, showSuccess, showError, t]);
+
+    // Unsubscribe function for the info sidebar (subscribed, non-owned community assistants only)
+    const performUnsubscribeAssistant = useCallback(async () => {
+        try {
+            await unsubscribeFromAssistantApi(assistant_id);
+
+            const [chatsResult, configResult] = await Promise.allSettled([
+                assistantStorageService.deleteChatsForAssistant(assistant_id),
+                communityAssistantStorageService.deleteConfigForAssistant(assistant_id)
+            ]);
+
+            if (chatsResult.status === "rejected" || configResult.status === "rejected") {
+                if (chatsResult.status === "rejected") {
+                    console.error("Failed to delete local chats after unsubscribe:", chatsResult.reason);
+                }
+                if (configResult.status === "rejected") {
+                    console.error("Failed to delete local assistant config after unsubscribe:", configResult.reason);
+                }
+                showError(
+                    t("components.community_assistants.unsubscribe_failed_title"),
+                    t("components.community_assistants.unsubscribe_failed_message")
+                );
+                return;
+            }
+
+            showSuccess(
+                t("components.community_assistants.unsubscribe_success_title"),
+                t("components.community_assistants.unsubscribe_success_message", { title: assistantConfig.title })
+            );
+
+            refreshUnifiedHistory();
+            navigate("/discovery");
+        } catch (err) {
+            console.error("Failed to unsubscribe from assistant:", err);
+            showError(t("components.community_assistants.unsubscribe_failed_title"), t("components.community_assistants.unsubscribe_failed_message"));
+        }
+    }, [
+        assistant_id,
+        assistantConfig.title,
+        assistantStorageService,
+        communityAssistantStorageService,
+        refreshUnifiedHistory,
+        navigate,
+        showSuccess,
+        showError,
+        t
+    ]);
 
     // Regenerate-Funktion
     const onRegenerateResponseClicked = useCallback(async () => {
@@ -848,10 +928,10 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                                         isDeletedAssistant
                                             ? undefined
                                             : prompt => {
-                                                  setLastQuestionValue(prompt);
-                                                  setIsLoadingValue(true);
-                                                  void callApi(prompt);
-                                              }
+                                                setLastQuestionValue(prompt);
+                                                setIsLoadingValue(true);
+                                                void callApi(prompt);
+                                            }
                                     }
                                 />
                             )}
@@ -920,23 +1000,26 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                     defaultLLM={LLM.llm_name}
                     onLLMSelectionChange={onLLMSelectionChange}
                     actions={
-                        strategy?.canEdit && !isLegacyAssistant ? (
-                            <Button
-                                appearance="subtle"
-                                icon={<Settings24Regular />}
-                                onClick={() => navigate("edit")}
-                                aria-label={t("components.assistantsettingsdrawer.show_configurations")}
-                            />
-                        ) : assistantInfoData || isAssistantInfoLoading ? (
-                            <Button
-                                appearance="subtle"
-                                icon={<Info24Regular />}
-                                onClick={() => setIsInfoDrawerOpen(prev => !prev)}
-                                aria-label={t("components.community_assistants.about", "About")}
-                            />
-                        ) : undefined
+                        <>
+                            {strategy?.canEdit && !isLegacyAssistant && (
+                                <Button
+                                    appearance="subtle"
+                                    icon={<Settings24Regular />}
+                                    onClick={() => navigate("edit")}
+                                    aria-label={t("components.assistantsettingsdrawer.show_configurations")}
+                                />
+                            )}
+                            {(assistantInfoData || isAssistantInfoLoading) && (
+                                <Button
+                                    appearance="subtle"
+                                    icon={<Info24Regular />}
+                                    onClick={() => setIsInfoDrawerOpen(prev => !prev)}
+                                    aria-label={t("components.community_assistants.about", "About")}
+                                />
+                            )}
+                        </>
                     }
-                    onHeaderClick={!strategy?.canEdit && (assistantInfoData || isAssistantInfoLoading) ? () => setIsInfoDrawerOpen(prev => !prev) : undefined}
+                    onHeaderClick={assistantInfoData || isAssistantInfoLoading ? () => setIsInfoDrawerOpen(prev => !prev) : undefined}
                     infoDrawerOpen={isInfoDrawerOpen}
                 />
             </>
@@ -1048,15 +1131,49 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                 )}
                 confirmLabel={t("components.community_assistants.duplicate_confirm_action")}
             />
-            {!strategy?.canEdit && (assistantInfoData || isAssistantInfoLoading || isInfoDrawerOpen) && (
+            <CloseConfirmationDialog
+                open={showDeleteConfirm}
+                onOpenChange={setShowDeleteConfirm}
+                onConfirmClose={performDeleteAssistant}
+                title={t("components.assistantsettingsdrawer.deleteDialog.title")}
+                message={t("components.assistantsettingsdrawer.deleteDialog.content")}
+                confirmLabel={t("components.assistantsettingsdrawer.deleteDialog.confirm")}
+                confirmIntent="danger"
+            />
+            <CloseConfirmationDialog
+                open={showUnsubscribeConfirm}
+                onOpenChange={setShowUnsubscribeConfirm}
+                onConfirmClose={performUnsubscribeAssistant}
+                title={t("components.community_assistants.unsubscribe_confirm_title")}
+                message={t("components.community_assistants.unsubscribe_confirm_message", { title: assistantConfig.title })}
+                confirmLabel={t("components.community_assistants.unsubscribe")}
+                confirmIntent="danger"
+            />
+            {(assistantInfoData || isAssistantInfoLoading || isInfoDrawerOpen) && (
                 <div className={styles.infoDrawerContainer} data-open={isInfoDrawerOpen}>
                     <AssistantDetailsSidebar
-                        isOpen={Boolean(assistantInfoData || isAssistantInfoLoading || isInfoDrawerOpen)}
+                        isOpen={isInfoDrawerOpen}
                         onClose={() => setIsInfoDrawerOpen(false)}
                         assistant={assistantInfoData}
                         isLoading={isAssistantInfoLoading}
-                        ownedAssistantIds={new Set()}
-                        hideStartChat={true}
+                        ownedAssistantIds={strategy.isOwned && assistantInfoData ? new Set([assistantInfoData.id]) : new Set()}
+                        onStartChat={() => {
+                            clearRequestedChatId();
+                            clearChat();
+                            setIsInfoDrawerOpen(false);
+                        }}
+                        onEdit={strategy.canEdit ? () => navigate("edit") : undefined}
+                        onDuplicate={() => {
+                            if (!assistantInfoData) return;
+                            requestDuplicateAssistant({
+                                id: assistant_id,
+                                title: assistantInfoData.title,
+                                rawData: assistantInfoData.rawData as AssistantResponse
+                            });
+                        }}
+                        onExport={exportAssistant}
+                        onDelete={strategy.isOwned ? () => setShowDeleteConfirm(true) : undefined}
+                        onUnsubscribe={!strategy.isOwned ? () => setShowUnsubscribeConfirm(true) : undefined}
                     />
                 </div>
             )}

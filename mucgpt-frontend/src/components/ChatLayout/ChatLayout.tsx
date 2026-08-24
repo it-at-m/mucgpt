@@ -10,7 +10,7 @@ import { LLMSelector } from "../LLMSelector/LLMSelector";
 import { Model } from "../../api";
 
 interface Props {
-    starterPrompts: ReactNode;
+    starterPrompts?: ReactNode;
     answers: ReactNode;
     input: ReactNode;
     showStarterPrompts: boolean;

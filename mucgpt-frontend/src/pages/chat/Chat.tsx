@@ -59,10 +59,8 @@ export interface ChatOptions {
     creativity: string;
 }
 
-// Translation keys for the empty-state welcome greeting, shown above the question input.
-// Currently a single phrase (mirrors the home page greeting); add more keys here to have
-// `pickWelcomeMessageKey` rotate between them.
 const WELCOME_MESSAGE_KEYS = ["home.chat_header"];
+const NAMELESS_WELCOME_MESSAGE_KEY = "chat.header";
 
 function pickWelcomeMessageKey(): string {
     return WELCOME_MESSAGE_KEYS[Math.floor(Math.random() * WELCOME_MESSAGE_KEYS.length)];
@@ -132,7 +130,8 @@ const Chat = () => {
     // Picked once per mount so the greeting doesn't change while the empty state is visible.
     const welcomeMessageKeyRef = useRef(pickWelcomeMessageKey());
     const username = user?.given_name || user?.name || "";
-    const welcomeMessage = t(welcomeMessageKeyRef.current, { user: username, defaultValue: "Hallo {{user}}, was hast du heute vor?" });
+    const welcomeMessageKey = username ? welcomeMessageKeyRef.current : NAMELESS_WELCOME_MESSAGE_KEY;
+    const welcomeMessage = t(welcomeMessageKey, { user: username, defaultValue: "Hallo {{user}}, was hast du heute vor?" });
 
     // Refs
     const lastQuestionRef = useRef<string>("");
@@ -587,9 +586,9 @@ const Chat = () => {
                 newChatRequested
                     ? startFreshChat()
                     : (() => {
-                          clearChat();
-                          return fetchHistory();
-                      })()
+                        clearChat();
+                        return fetchHistory();
+                    })()
             )
                 .then(() => {
                     if (newChatRequested && !questionFromUrl) {

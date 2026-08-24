@@ -341,7 +341,7 @@
 
     .container[data-info-open="true"] .headerBar,
     .container[data-info-open="true"] .scrollToBottomWrapper,
-    .container[data-info-open="true"] .chatInput {
+    .container[data-info-open="true"] .bottomBar {
         right: var(--assistantDetailsDrawerCompactWidth);
     }
 
@@ -377,7 +377,7 @@
 @media (max-width: 600px) {
     .container[data-info-open="true"] .headerBar,
     .container[data-info-open="true"] .scrollToBottomWrapper,
-    .container[data-info-open="true"] .chatInput {
+    .container[data-info-open="true"] .bottomBar {
         right: 0;
     }
 

@@ -9,10 +9,6 @@
         border-color 160ms ease;
 }
 
-.icon {
-    flex-shrink: 0;
-}
-
 .label {
     display: block;
     min-width: 0;
@@ -25,18 +21,10 @@
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    justify-content: center;
+    justify-content: flex-start;
     gap: 6px;
     width: 100%;
     margin: 0 0 8px;
-}
-
-.item:hover,
-.item:focus-visible {
-}
-
-.item:hover .icon,
-.item:focus-visible .icon {
 }
 
 .item:focus-visible {

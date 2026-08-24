@@ -779,11 +779,6 @@ const Chat = () => {
         return { totalCost, lastContextTokens, maxInputTokens };
     }, [answers]);
 
-    const starterPromptsComponent = useMemo(
-        () => <StarterPromptList starterPrompts={CHAT_STARTER_PROMPTS} onStarterPromptClicked={onStarterPromptClicked} />,
-        [onStarterPromptClicked]
-    );
-
     const inputComponent = useMemo(() => {
         const { questionFromUrl, newChatRequested } = getNavigationParams();
 

@@ -17,7 +17,11 @@ if os.getenv("TRUSTSTORE_DISABLE", "0") not in {"1", "true", "TRUE", "yes"}:
 
 from langfuse import Evaluation, Langfuse
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, model_validator
-from pydantic_settings import YamlConfigSettingsSource
+from pydantic_settings import (
+    BaseSettings,
+    PydanticBaseSettingsSource,
+    YamlConfigSettingsSource,
+)
 
 from api.api_models import (
     ComplianceCategoryId,
@@ -156,11 +160,6 @@ def _average_score(name: str) -> Callable[..., Evaluation]:
     return evaluate
 
 
-def _failure_count(*, item_results: Sequence[Any], **_: Any) -> Evaluation:
-    failures = sum(1 for item_result in item_results if item_result.error is not None)
-    return Evaluation(name="failure_count", value=float(failures))
-
-
 def _parse_dataset_version(value: str) -> datetime:
     try:
         return datetime.fromisoformat(value.replace("Z", "+00:00"))
@@ -203,8 +202,24 @@ def _load_settings(config_path: Path) -> Settings:
     if not config_path.is_file():
         raise RuntimeError(f"Configuration file not found: {config_path}")
 
-    config_values = YamlConfigSettingsSource(Settings, yaml_file=config_path)()
-    return Settings.model_validate(config_values)
+    class _ScriptSettings(Settings):
+        @classmethod
+        def settings_customise_sources(
+            cls,
+            settings_cls: type[BaseSettings],
+            init_settings: PydanticBaseSettingsSource,
+            env_settings: PydanticBaseSettingsSource,
+            dotenv_settings: PydanticBaseSettingsSource,
+            file_secret_settings: PydanticBaseSettingsSource,
+        ) -> tuple[PydanticBaseSettingsSource, ...]:
+            return (
+                init_settings,
+                env_settings,
+                YamlConfigSettingsSource(settings_cls, yaml_file=config_path),
+                dotenv_settings,
+            )
+
+    return _ScriptSettings()
 
 
 def _initialize_evaluation_context(
@@ -258,8 +273,7 @@ async def _run_experiments(args: argparse.Namespace) -> None:
             all_category_statuses_match,
         ]
         run_evaluators = [
-            *(_average_score(evaluator.__name__) for evaluator in evaluators),
-            _failure_count,
+            _average_score(evaluator.__name__) for evaluator in evaluators
         ]
 
         for model_name in args.models:

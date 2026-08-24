@@ -8,6 +8,7 @@ from api.api_models import (
     ChatCompletionResponse,
 )
 from api.exception import llm_exception_handler
+from config.model_provider import ModelRegistry, ModelsConfigurationException
 from config.settings import get_settings
 from core.auth import authenticate_user
 from core.auth_models import AuthenticationResult
@@ -31,8 +32,9 @@ def get_temperature_from_request(request: ChatCompletionRequest) -> float:
     if request.creativity:
         settings = get_settings()
         # Find the model configuration
+        selected_model_name = request.model or settings.MODELS[0].llm_name
         model_config = next(
-            (m for m in settings.MODELS if m.llm_name == request.model), None
+            (m for m in settings.MODELS if m.llm_name == selected_model_name), None
         )
 
         if model_config:
@@ -84,14 +86,24 @@ async def chat_completions(
     # for every message, even within the same chat. Consider introducing a
     # user-scoped tool/runtime cache while keeping assistant/chat-specific
     # enabled tools, prompts, data sources, and policy state request-scoped.
-    ae = await init_agent(user_info=user_info)
-    if request.conversation_id:
-        logger.debug(
-            "Received conversation_id=%s",
-            request.conversation_id,
-            extra={"conversation_id": request.conversation_id},
-        )
     try:
+        try:
+            ModelRegistry.get_model(request.model)
+        except ModelsConfigurationException as exc:
+            detail = str(exc)
+            status_code = 400
+            if "not initialized" in detail.lower():
+                status_code = 500
+            raise HTTPException(status_code=status_code, detail=detail) from exc
+
+        ae = await init_agent(user_info=user_info, model_name=request.model)
+        if request.conversation_id:
+            logger.debug(
+                "Received conversation_id=%s",
+                request.conversation_id,
+                extra={"conversation_id": request.conversation_id},
+            )
+
         # Convert creativity to temperature
         temperature = get_temperature_from_request(request)
 
@@ -113,7 +125,7 @@ async def chat_completions(
                 enabled_tools=enabled_tools,
                 assistant_id=request.assistant_id,
                 data_sources=data_sources,
-                conversation_id=request.conversation_id
+                conversation_id=request.conversation_id,
             )
 
             async def sse_generator():
@@ -122,7 +134,7 @@ async def chat_completions(
 
             return StreamingResponse(sse_generator(), media_type="text/event-stream")
         else:
-            return ae.run_without_streaming(
+            return await ae.run_without_streaming(
                 messages=request.messages,
                 temperature=temperature,
                 model=request.model,
@@ -130,8 +142,10 @@ async def chat_completions(
                 enabled_tools=enabled_tools,
                 assistant_id=request.assistant_id,
                 data_sources=data_sources,
-                conversation_id=request.conversation_id
+                conversation_id=request.conversation_id,
             )
+    except HTTPException:
+        raise
     except Exception as e:
         logger.exception("Exception in /chat/completions")
         msg = llm_exception_handler(ex=e, logger=logger)

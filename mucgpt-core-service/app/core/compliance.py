@@ -16,7 +16,6 @@ from api.api_models import (
 )
 from core.auth_models import AuthenticationResult
 from core.llm_helpers import (
-    COMPLIANCE_PROMPTS_DIR,
     invoke_internal_structured_generation,
     read_prompt_file,
 )
@@ -53,9 +52,7 @@ async def _check_category(
     model_name: str,
     user_info: AuthenticationResult,
 ) -> ComplianceCategoryResult:
-    system_instruction = read_prompt_file(
-        COMPLIANCE_PROMPTS_DIR, prompt_template_filename
-    )
+    system_instruction = read_prompt_file(prompt_template_filename)
     parsed = await invoke_internal_structured_generation(
         model_name=model_name,
         temperature=0.0,

@@ -59,11 +59,10 @@ async def warmup_app() -> None:
     for model_config in settings.MODELS:
         register_model_harness_profile(model_config)
     # init langfuse
-    lf_client = langfuse_settings = get_langfuse_settings()
-    LangfuseProvider.init(version=settings.VERSION, langfuse_cfg=langfuse_settings)
-
-    if lf_client:
-        PromptPool(lf_client)
+    lf_client = LangfuseProvider.init(
+        version=settings.VERSION, langfuse_cfg=get_langfuse_settings()
+    )
+    PromptPool.init(lf_client)
     # init redis
     await RedisCache.init_redis()
     logger.info("App context warmed up")

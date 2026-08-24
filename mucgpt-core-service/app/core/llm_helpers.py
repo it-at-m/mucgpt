@@ -1,7 +1,6 @@
 import hashlib
 import re
 from collections.abc import Sequence
-from pathlib import Path
 from typing import Any, Protocol
 
 from fastapi import HTTPException
@@ -14,12 +13,10 @@ from config.langfuse_provider import LangfuseProvider
 from config.model_provider import ModelRegistry
 from config.settings import Settings
 from core.auth_models import AuthenticationResult
+from core.lf_prompts import PromptPool
 from core.logtools import getLogger
 
 logger = getLogger()
-PROMPT_POOL_DIR = Path(__file__).resolve().parents[1] / "agent/prompt_pool"
-GENERATION_PROMPTS_DIR = PROMPT_POOL_DIR / "generation_prompts"
-COMPLIANCE_PROMPTS_DIR = PROMPT_POOL_DIR / "compliance_prompts"
 
 
 class MessageLike(Protocol):
@@ -89,14 +86,14 @@ def get_internal_task_model(
     return model.llm_name
 
 
-def read_prompt_file(prompt_directory: Path, filename: str) -> str:
-    """Read a prompt template from a known prompt directory."""
+def read_prompt_file(filename: str) -> str:
+    """Read a default prompt, preferring the Langfuse-backed pool with local fallback."""
 
-    path = prompt_directory / filename
+    name = filename.rsplit(".", 1)[0]
     try:
-        return path.read_text(encoding="utf-8")
-    except FileNotFoundError as exc:  # pragma: no cover - misconfiguration
-        logger.error("Prompt file not found: %s", path)
+        return PromptPool.get_prompt(name)
+    except KeyError as exc:  # pragma: no cover - misconfiguration
+        logger.error("Prompt file not found: %s", filename)
         raise HTTPException(
             status_code=500,
             detail=f"Prompt configuration missing: {filename}",

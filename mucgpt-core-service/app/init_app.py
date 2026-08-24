@@ -14,6 +14,7 @@ from config.settings import (
 )
 from core.auth_models import AuthenticationResult
 from core.cache import RedisCache
+from core.lf_prompts import PromptPool
 from core.logtools import getLogger
 
 logger = getLogger()
@@ -58,8 +59,11 @@ async def warmup_app() -> None:
     for model_config in settings.MODELS:
         register_model_harness_profile(model_config)
     # init langfuse
-    langfuse_settings = get_langfuse_settings()
+    lf_client = langfuse_settings = get_langfuse_settings()
     LangfuseProvider.init(version=settings.VERSION, langfuse_cfg=langfuse_settings)
+
+    if lf_client:
+        PromptPool(lf_client)
     # init redis
     await RedisCache.init_redis()
     logger.info("App context warmed up")

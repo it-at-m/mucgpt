@@ -8,7 +8,7 @@ import { useTranslation } from "react-i18next";
 import styles from "./ChatLayout.module.css";
 
 interface Props {
-    starterPrompts: ReactNode;
+    starterPrompts?: ReactNode;
     answers: ReactNode;
     input: ReactNode;
     showStarterPrompts: boolean;

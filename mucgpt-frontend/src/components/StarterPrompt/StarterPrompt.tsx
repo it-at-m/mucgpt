@@ -1,5 +1,4 @@
-import { Button } from "@fluentui/react-components";
-import { ArrowRight16Regular } from "@fluentui/react-icons";
+import { Button, Tooltip } from "@fluentui/react-components";
 import styles from "./StarterPrompt.module.css";
 
 interface Props {
@@ -11,9 +10,10 @@ interface Props {
 
 export const StarterPrompt = ({ text, value, system, onClick }: Props) => {
     return (
-        <Button type="button" appearance="subtle" className={styles.starterPrompt} onClick={() => onClick(value, system)}>
-            <ArrowRight16Regular className={styles.starterPromptIcon} aria-hidden="true" />
-            <span className={styles.starterPromptText}>{text}</span>
-        </Button>
+        <Tooltip content={value} relationship="description" positioning="above">
+            <Button type="button" appearance="subtle" className={styles.starterPrompt} onClick={() => onClick(value, system)}>
+                <span className={styles.starterPromptText}>{text}</span>
+            </Button>
+        </Tooltip>
     );
 };

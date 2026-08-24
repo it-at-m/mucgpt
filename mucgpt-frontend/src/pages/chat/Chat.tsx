@@ -3,7 +3,6 @@ import { useRef, useState, useEffect, useContext, useCallback, useMemo, useReduc
 import { AskResponse, ChatResponse, DataSource } from "../../api";
 import { Answer } from "../../components/Answer";
 import { QuestionInput } from "../../components/QuestionInput";
-import { StarterPromptList, StarterPromptModel } from "../../components/StarterPrompt";
 import { LanguageContext } from "../../components/LanguageSelector/LanguageContextProvider";
 import { useTranslation } from "react-i18next";
 import { LLMContext } from "../../components/LLMSelector/LLMContextProvider";
@@ -60,30 +59,12 @@ export interface ChatOptions {
     creativity: string;
 }
 
-// Translation keys for the empty-state welcome greeting, shown above the question input.
-// Currently a single phrase (mirrors the home page greeting); add more keys here to have
-// `pickWelcomeMessageKey` rotate between them.
 const WELCOME_MESSAGE_KEYS = ["home.chat_header"];
+const NAMELESS_WELCOME_MESSAGE_KEY = "chat.header";
 
 function pickWelcomeMessageKey(): string {
     return WELCOME_MESSAGE_KEYS[Math.floor(Math.random() * WELCOME_MESSAGE_KEYS.length)];
 }
-
-// Define constants outside the component
-const CHAT_STARTER_PROMPTS: StarterPromptModel[] = [
-    {
-        text: "Du bist König Ludwig II. von Bayern. Schreibe einen Brief an alle Mitarbeiter*innen der Stadtverwaltung München.",
-        value: "Du bist König Ludwig II. von Bayern. Schreibe einen Brief an alle Mitarbeiter*innen der Stadtverwaltung München, indem Du Dich für die tolle Leistung bedankst und den Bau eines neuen Schlosses (noch beeindruckender als Neuschwanstein) in der Stadt München wünschst."
-    },
-    {
-        text: "Stell dir vor, es ist schlechtes Wetter.",
-        value: `Stell dir vor, es ist schlechtes Wetter und du sitzt lustlos im Büro. Alle möglichen Leute wollen etwas von Dir und Du spürst eine Stimmung, als ob irgendeine Kleinigkeit gleich eskalieren wird. Schreibe mir etwas, das dir in dieser Situation gut tut und dich aufmuntert.`
-    },
-    {
-        text: "Motiviere, warum eine öffentliche Verwaltung Robot Process Automation nutzen sollte und warum nicht?",
-        value: "Motiviere, warum eine öffentliche Verwaltung Robot Process Automation nutzen sollte und warum nicht?"
-    }
-];
 
 // Custom hook for storage operations
 function useStorageService(activeChatId: string | undefined) {
@@ -149,7 +130,8 @@ const Chat = () => {
     // Picked once per mount so the greeting doesn't change while the empty state is visible.
     const welcomeMessageKeyRef = useRef(pickWelcomeMessageKey());
     const username = user?.given_name || user?.name || "";
-    const welcomeMessage = t(welcomeMessageKeyRef.current, { user: username, defaultValue: "Hallo {{user}}, was hast du heute vor?" });
+    const welcomeMessageKey = username ? welcomeMessageKeyRef.current : NAMELESS_WELCOME_MESSAGE_KEY;
+    const welcomeMessage = t(welcomeMessageKey, { user: username, defaultValue: "Hallo {{user}}, was hast du heute vor?" });
 
     // Refs
     const lastQuestionRef = useRef<string>("");
@@ -727,15 +709,6 @@ const Chat = () => {
         return () => setFollowUpActions([]);
     }, [language, t, setFollowUpActions]);
 
-    // Click handlers
-    const onStarterPromptClicked = useCallback(
-        (starterPrompt: string, system?: string) => {
-            if (system) onSystemPromptChanged(system);
-            callApi(starterPrompt, system);
-        },
-        [callApi, onSystemPromptChanged]
-    );
-
     // Memo components
     const answerList = useMemo(
         () => (
@@ -868,7 +841,6 @@ const Chat = () => {
                     setSystemPrompt={onSystemPromptChanged}
                 />
                 <ChatLayout
-                    starterPrompts={starterPromptsComponent}
                     answers={answerList}
                     input={inputComponent}
                     showStarterPrompts={!lastQuestionRef.current}
@@ -888,7 +860,6 @@ const Chat = () => {
             </>
         ),
         [
-            starterPromptsComponent,
             answerList,
             inputComponent,
             lastQuestionRef.current,

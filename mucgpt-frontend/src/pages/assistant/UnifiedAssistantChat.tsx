@@ -602,10 +602,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                 if (configResult.status === "rejected") {
                     console.error("Failed to delete local assistant config after unsubscribe:", configResult.reason);
                 }
-                showError(
-                    t("components.community_assistants.unsubscribe_failed_title"),
-                    t("components.community_assistants.unsubscribe_failed_message")
-                );
+                showError(t("components.community_assistants.unsubscribe_failed_title"), t("components.community_assistants.unsubscribe_failed_message"));
                 return;
             }
 
@@ -928,10 +925,10 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                                         isDeletedAssistant
                                             ? undefined
                                             : prompt => {
-                                                setLastQuestionValue(prompt);
-                                                setIsLoadingValue(true);
-                                                void callApi(prompt);
-                                            }
+                                                  setLastQuestionValue(prompt);
+                                                  setIsLoadingValue(true);
+                                                  void callApi(prompt);
+                                              }
                                     }
                                 />
                             )}

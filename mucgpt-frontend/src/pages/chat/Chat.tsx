@@ -586,9 +586,9 @@ const Chat = () => {
                 newChatRequested
                     ? startFreshChat()
                     : (() => {
-                        clearChat();
-                        return fetchHistory();
-                    })()
+                          clearChat();
+                          return fetchHistory();
+                      })()
             )
                 .then(() => {
                     if (newChatRequested && !questionFromUrl) {

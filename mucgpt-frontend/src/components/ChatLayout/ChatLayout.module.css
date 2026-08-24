@@ -51,6 +51,7 @@
 .headerTitle {
     font-size: 1.2rem;
     font-weight: 600;
+    line-height: 1.5;
     margin: 0;
     color: var(--colorNeutralForeground1);
     white-space: nowrap;
@@ -64,7 +65,7 @@
     font-family: inherit;
     font-size: inherit !important;
     font-weight: inherit;
-    line-height: inherit;
+    line-height: inherit !important;
     min-width: 0;
     min-height: 0;
     height: auto;

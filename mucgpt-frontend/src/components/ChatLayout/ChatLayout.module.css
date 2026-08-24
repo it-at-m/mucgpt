@@ -17,9 +17,9 @@
     left: var(--appSidebarWidth, 0);
     right: 0;
     height: 60px;
-    display: flex;
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
     align-items: center;
-    justify-content: space-between;
     padding: 0 16px;
     background: color-mix(in srgb, var(--colorNeutralBackground1) 60%, transparent);
     backdrop-filter: blur(6px);
@@ -41,9 +41,10 @@
 .leftGroup {
     display: flex;
     align-items: center;
+    justify-content: center;
     gap: 0;
     min-width: 0;
-    flex: 1;
+    grid-column: 2;
     overflow: hidden;
 }
 
@@ -55,6 +56,7 @@
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    max-width: 100%;
 }
 
 .headerTitleButton {
@@ -67,8 +69,8 @@
     min-height: 0;
     height: auto;
     max-width: 100%;
-    justify-content: flex-start;
-    text-align: left;
+    justify-content: center;
+    text-align: center;
     padding: 0;
 }
 
@@ -79,11 +81,13 @@
 .controlsContainer {
     display: flex;
     align-items: center;
+    justify-content: flex-end;
     gap: 8px;
     border-radius: 8px;
     padding: 4px 8px;
     background-color: transparent;
     flex-shrink: 0;
+    grid-column: 3;
 }
 
 .chatRoot {

@@ -427,6 +427,14 @@ class ModelsDTO(BaseModel):
     max_input_tokens: PositiveInt | None = Field(
         None, description="Maximum tokens the model can receive as input"
     )
+    context_warning_threshold_percent: int = Field(
+        75,
+        description="Context usage percent at which the frontend shows a soft warning",
+    )
+    context_critical_threshold_percent: int = Field(
+        90,
+        description="Context usage percent at which the frontend shows an explicit nudge",
+    )
     description: str | None = Field(None, description="Human-readable summary")
     input_cost_per_token: Decimal | None = Field(
         None, description="Input pricing information per token"

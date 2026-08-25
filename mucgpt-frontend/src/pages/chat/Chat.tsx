@@ -25,7 +25,7 @@ import { UploadedData, createUploadedDataFromContent } from "../../components/Co
 import { getStoredParsedDocuments } from "../../service/parsedDocumentStorage";
 import { useToolStatusToasts } from "../../hooks/useToolStatusToasts";
 import { useUnifiedHistory, useUnifiedHistoryRegistration } from "../../components/UnifiedHistory";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 
 /**
  * Creates a debounced function that delays invoking the provided function
@@ -96,6 +96,7 @@ const Chat = () => {
     const { LLM, setLLM, availableLLMs } = useContext(LLMContext);
     const { t } = useTranslation();
     const location = useLocation();
+    const navigate = useNavigate();
     const { refreshHistory: refreshUnifiedHistory } = useUnifiedHistory();
     const { setFollowUpActions } = useContext(FollowUpActionContext);
     const { tools } = useToolsContext();
@@ -780,19 +781,31 @@ const Chat = () => {
         let totalCost = 0;
         let lastContextTokens = 0;
         let maxInputTokens: number | null | undefined;
+        let warningThresholdPercent: number | undefined;
+        let criticalThresholdPercent: number | undefined;
         for (const answer of answers) {
             totalCost += answer.response.usage_cost ?? 0;
-            lastContextTokens = answer.response.context_tokens ?? 0;
-            maxInputTokens = answer.response.usage_max_input_tokens;
+            // Skip the still-streaming placeholder answer, which has no context_tokens yet,
+            // so the indicator keeps showing the last known usage instead of resetting to 0.
+            if (typeof answer.response.context_tokens === "number") {
+                lastContextTokens = answer.response.context_tokens;
+                maxInputTokens = answer.response.usage_max_input_tokens;
+                warningThresholdPercent = answer.response.usage_context_warning_threshold_percent;
+                criticalThresholdPercent = answer.response.usage_context_critical_threshold_percent;
+            }
         }
         if (lastContextTokens === 0 && totalCost === 0) return undefined;
-        return { totalCost, lastContextTokens, maxInputTokens };
+        return { totalCost, lastContextTokens, maxInputTokens, warningThresholdPercent, criticalThresholdPercent };
     }, [answers]);
 
     const starterPromptsComponent = useMemo(
         () => <StarterPromptList starterPrompts={CHAT_STARTER_PROMPTS} onStarterPromptClicked={onStarterPromptClicked} />,
         [onStarterPromptClicked]
     );
+
+    const startNewChatFromUsage = useCallback(() => {
+        navigate(`/chat?new=${Date.now()}`);
+    }, [navigate]);
 
     const inputComponent = useMemo(() => {
         const { questionFromUrl, newChatRequested } = getNavigationParams();
@@ -816,9 +829,25 @@ const Chat = () => {
                 setUploadedData={setUploadedData}
                 onTranscription={text => setQuestion(text)}
                 usage={usageSummary}
+                onStartNewChat={startNewChatFromUsage}
+                usageConversationKey={`chat:${active_chat ?? "new"}`}
             />
         );
-    }, [callApi, systemPrompt, question, t, isLoading, selectedTools, tools, uploadedData, uploadedDataToDataSources, getNavigationParams, usageSummary]);
+    }, [
+        active_chat,
+        callApi,
+        systemPrompt,
+        question,
+        t,
+        isLoading,
+        selectedTools,
+        tools,
+        uploadedData,
+        uploadedDataToDataSources,
+        getNavigationParams,
+        startNewChatFromUsage,
+        usageSummary
+    ]);
 
     const layout = useMemo(
         () => (

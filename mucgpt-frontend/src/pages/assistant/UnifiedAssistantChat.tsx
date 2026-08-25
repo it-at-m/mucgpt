@@ -602,10 +602,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                 if (configResult.status === "rejected") {
                     console.error("Failed to delete local assistant config after unsubscribe:", configResult.reason);
                 }
-                showError(
-                    t("components.community_assistants.unsubscribe_failed_title"),
-                    t("components.community_assistants.unsubscribe_failed_message")
-                );
+                showError(t("components.community_assistants.unsubscribe_failed_title"), t("components.community_assistants.unsubscribe_failed_message"));
                 return;
             }
 
@@ -727,14 +724,26 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
         let totalCost = 0;
         let lastContextTokens = 0;
         let maxInputTokens: number | null | undefined;
+        let warningThresholdPercent: number | undefined;
+        let criticalThresholdPercent: number | undefined;
         for (const answer of answers) {
             totalCost += answer.response.usage_cost ?? 0;
-            lastContextTokens = answer.response.context_tokens ?? 0;
-            maxInputTokens = answer.response.usage_max_input_tokens;
+            // Skip the still-streaming placeholder answer, which has no context_tokens yet,
+            // so the indicator keeps showing the last known usage instead of resetting to 0.
+            if (typeof answer.response.context_tokens === "number") {
+                lastContextTokens = answer.response.context_tokens;
+                maxInputTokens = answer.response.usage_max_input_tokens;
+                warningThresholdPercent = answer.response.usage_context_warning_threshold_percent;
+                criticalThresholdPercent = answer.response.usage_context_critical_threshold_percent;
+            }
         }
         if (lastContextTokens === 0 && totalCost === 0) return undefined;
-        return { totalCost, lastContextTokens, maxInputTokens };
+        return { totalCost, lastContextTokens, maxInputTokens, warningThresholdPercent, criticalThresholdPercent };
     }, [answers]);
+
+    const startNewChatFromUsage = useCallback(() => {
+        navigate(`${location.pathname}?new=${Date.now()}`);
+    }, [location.pathname, navigate]);
 
     const starterPromptsComponent = useMemo(() => {
         if (isDeletedAssistant || isLegacyAssistant) {
@@ -860,6 +869,8 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                         uploadedData={uploadedData}
                         setUploadedData={setUploadedData}
                         usage={usageSummary}
+                        onStartNewChat={startNewChatFromUsage}
+                        usageConversationKey={`assistant:${assistant_id}:${active_chat ?? "new"}`}
                     />
                 </>
             );
@@ -898,6 +909,8 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                 uploadedData={uploadedData}
                 setUploadedData={setUploadedData}
                 usage={usageSummary}
+                onStartNewChat={startNewChatFromUsage}
+                usageConversationKey={`assistant:${assistant_id}:${active_chat ?? "new"}`}
             />
         );
     }, [
@@ -919,7 +932,9 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
         lockedToolIds,
         draftCacheKey,
         uploadedData,
-        usageSummary
+        usageSummary,
+        active_chat,
+        startNewChatFromUsage
     ]);
 
     // AnswerList component
@@ -942,10 +957,10 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                                         isDeletedAssistant
                                             ? undefined
                                             : prompt => {
-                                                setLastQuestionValue(prompt);
-                                                setIsLoadingValue(true);
-                                                void callApi(prompt);
-                                            }
+                                                  setLastQuestionValue(prompt);
+                                                  setIsLoadingValue(true);
+                                                  void callApi(prompt);
+                                              }
                                     }
                                 />
                             )}

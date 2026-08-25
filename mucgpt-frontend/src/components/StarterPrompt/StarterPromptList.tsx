@@ -18,16 +18,10 @@ interface Props {
 export const StarterPromptList = ({ starterPrompts, onStarterPromptClicked }: Props) => {
     const { t } = useTranslation();
     return (
-        <ul className={styles.starterPromptNavList} aria-description={t("common.starter_prompts")}>
+        <ul className={styles.starterPromptNavList} aria-label={t("common.starter_prompts")}>
             {starterPrompts.map((starterPrompt, index) => (
-                <li key={starterPrompt.id ?? `${starterPrompt.value}-${index}`} tabIndex={0}>
-                    <StarterPrompt
-                        text={starterPrompt.text}
-                        system={starterPrompt.system}
-                        value={starterPrompt.value}
-                        onClick={onStarterPromptClicked}
-                        ariaLabel={t("components.starter_prompt.label") + " " + (index + 1).toString()}
-                    />
+                <li key={starterPrompt.id ?? `${starterPrompt.value}-${index}`}>
+                    <StarterPrompt text={starterPrompt.text} system={starterPrompt.system} value={starterPrompt.value} onClick={onStarterPromptClicked} />
                 </li>
             ))}
         </ul>

@@ -32,6 +32,7 @@ interface Props {
     draftCacheKey?: string;
     skipDraftRestore?: boolean;
     onTranscription?: (text: string) => void;
+    hideDisclaimer?: boolean;
 }
 
 export const QuestionInput = ({
@@ -52,7 +53,8 @@ export const QuestionInput = ({
     setUploadedData: setExternalUploadedData,
     draftCacheKey,
     skipDraftRestore = false,
-    onTranscription
+    onTranscription,
+    hideDisclaimer = false
 }: Props) => {
     const { t } = useTranslation();
     const config = useConfigContext();
@@ -519,9 +521,11 @@ export const QuestionInput = ({
                     </div>
                 </div>
 
-                <div className={styles.errorhintSection}>
-                    <div className={styles.errorhint}>{t("components.questioninput.errorhint")}</div>
-                </div>
+                {hideDisclaimer ? null : (
+                    <div className={styles.errorhintSection}>
+                        <div className={styles.errorhint}>{t("components.questioninput.errorhint")}</div>
+                    </div>
+                )}
             </div>
 
             {allowFileUpload ? (

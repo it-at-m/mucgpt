@@ -86,6 +86,9 @@ export const ChatUsageIndicator = ({ usage, autoOpenNotice = false, onStartNewCh
         if (autoOpenNotice) {
             setPinned(true);
             setOpen(true);
+        } else {
+            setPinned(false);
+            setOpen(false);
         }
     }, [autoOpenNotice]);
 

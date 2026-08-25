@@ -262,7 +262,7 @@ export const AssistantPreviewChat = ({
     }, [setLastQuestionValue]);
 
     // Selection is driven by the editor form, so the input's tool selector is read-only.
-    const noopSetSelectedTools = useCallback(() => {}, []);
+    const noopSetSelectedTools = useCallback(() => { }, []);
 
     const onStarterPromptClicked = useCallback((value: string) => callApi(value), [callApi]);
 
@@ -290,10 +290,12 @@ export const AssistantPreviewChat = ({
         let criticalThresholdPercent: number | undefined;
         for (const answer of answers) {
             totalCost += answer.response.usage_cost ?? 0;
-            lastContextTokens = answer.response.context_tokens ?? 0;
-            maxInputTokens = answer.response.usage_max_input_tokens;
-            warningThresholdPercent = answer.response.usage_context_warning_threshold_percent;
-            criticalThresholdPercent = answer.response.usage_context_critical_threshold_percent;
+            if (typeof answer.response.context_tokens === "number") {
+                lastContextTokens = answer.response.context_tokens;
+                maxInputTokens = answer.response.usage_max_input_tokens;
+                warningThresholdPercent = answer.response.usage_context_warning_threshold_percent;
+                criticalThresholdPercent = answer.response.usage_context_critical_threshold_percent;
+            }
         }
         if (lastContextTokens === 0 && totalCost === 0) return undefined;
         return { totalCost, lastContextTokens, maxInputTokens, warningThresholdPercent, criticalThresholdPercent };

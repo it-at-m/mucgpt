@@ -788,11 +788,6 @@ const Chat = () => {
         return { totalCost, lastContextTokens, maxInputTokens, warningThresholdPercent, criticalThresholdPercent };
     }, [answers]);
 
-    const starterPromptsComponent = useMemo(
-        () => <StarterPromptList starterPrompts={CHAT_STARTER_PROMPTS} onStarterPromptClicked={onStarterPromptClicked} />,
-        [onStarterPromptClicked]
-    );
-
     const startNewChatFromUsage = useCallback(() => {
         navigate(`/chat?new=${Date.now()}`);
     }, [navigate]);

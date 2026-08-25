@@ -63,7 +63,7 @@ i18n
                         usage_context_summary_no_max: "Auslastung: {{used}} Tokens",
                         usage_cost: "Kosten (geschätzt): {{cost}}",
                         usage_help_context:
-                            "Der Kontextspeicher enthält die letzten Nachrichten. Wenn er voll ist, „vergisst“ MUCGPT ältere Teile des Chatverlaufs.",
+                            "Der Kontextspeicher enthält die letzten Nachrichten. Wenn er voll ist, kann MUCGPT keine Nachrichten mehr Verarbeiten.",
                         usage_help_context_warning_lead: "Der Kontext wird knapp.",
                         usage_help_context_warning_detail: "Wenn er voll ist, fallen ältere Teile des Chatverlaufs weg, damit neue Nachrichten Platz haben.",
                         usage_help_context_critical_lead: "Der Kontext ist fast voll.",
@@ -388,9 +388,6 @@ i18n
                         },
                         example: {
                             label: "Beispiel"
-                        },
-                        starter_prompt: {
-                            label: "Startvorschlag"
                         },
                         deleteMessage: {
                             label: "Nachricht zurückziehen"
@@ -1203,9 +1200,6 @@ i18n
                         example: {
                             label: "Example"
                         },
-                        starter_prompt: {
-                            label: "Starter prompt"
-                        },
                         deleteMessage: {
                             label: "Retract message"
                         },
@@ -1997,9 +1991,6 @@ i18n
                         },
                         example: {
                             label: "Beispui"
-                        },
-                        starter_prompt: {
-                            label: "Startvorschlag"
                         },
                         deleteMessage: {
                             label: "Nachricht zruckziang"
@@ -2800,9 +2791,6 @@ i18n
                         example: {
                             label: "Exemple"
                         },
-                        starter_prompt: {
-                            label: "Suggestion pour débuter"
-                        },
                         deleteMessage: {
                             label: "Retirer le message"
                         },
@@ -3593,9 +3581,6 @@ i18n
                         },
                         example: {
                             label: "Приклад"
-                        },
-                        starter_prompt: {
-                            label: "Початковий запит"
                         },
                         deleteMessage: {
                             label: "Видалити повідомлення"

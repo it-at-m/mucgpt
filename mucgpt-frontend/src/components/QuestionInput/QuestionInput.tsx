@@ -36,6 +36,7 @@ interface Props {
     skipDraftRestore?: boolean;
     onTranscription?: (text: string) => void;
     usage?: ChatUsageSummary;
+    hideDisclaimer?: boolean;
 }
 
 export const QuestionInput = ({
@@ -57,7 +58,8 @@ export const QuestionInput = ({
     draftCacheKey,
     skipDraftRestore = false,
     onTranscription,
-    usage
+    usage,
+    hideDisclaimer = false
 }: Props) => {
     const { t } = useTranslation();
     const config = useConfigContext();
@@ -525,9 +527,11 @@ export const QuestionInput = ({
                     </div>
                 </div>
 
-                <div className={styles.errorhintSection}>
-                    <div className={styles.errorhint}>{t("components.questioninput.errorhint")}</div>
-                </div>
+                {hideDisclaimer ? null : (
+                    <div className={styles.errorhintSection}>
+                        <div className={styles.errorhint}>{t("components.questioninput.errorhint")}</div>
+                    </div>
+                )}
             </div>
 
             {allowFileUpload ? (

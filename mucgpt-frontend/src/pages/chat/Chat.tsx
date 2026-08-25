@@ -3,7 +3,6 @@ import { useRef, useState, useEffect, useContext, useCallback, useMemo, useReduc
 import { AskResponse, ChatResponse, DataSource } from "../../api";
 import { Answer } from "../../components/Answer";
 import { QuestionInput } from "../../components/QuestionInput";
-import { StarterPromptList, StarterPromptModel } from "../../components/StarterPrompt";
 import { LanguageContext } from "../../components/LanguageSelector/LanguageContextProvider";
 import { useTranslation } from "react-i18next";
 import { LLMContext } from "../../components/LLMSelector/LLMContextProvider";
@@ -26,6 +25,7 @@ import { getStoredParsedDocuments } from "../../service/parsedDocumentStorage";
 import { useToolStatusToasts } from "../../hooks/useToolStatusToasts";
 import { useUnifiedHistory, useUnifiedHistoryRegistration } from "../../components/UnifiedHistory";
 import { useLocation } from "react-router-dom";
+import { UserContext } from "../layout/UserContextProvider";
 
 /**
  * Creates a debounced function that delays invoking the provided function
@@ -59,21 +59,12 @@ export interface ChatOptions {
     creativity: string;
 }
 
-// Define constants outside the component
-const CHAT_STARTER_PROMPTS: StarterPromptModel[] = [
-    {
-        text: "Du bist König Ludwig II. von Bayern. Schreibe einen Brief an alle Mitarbeiter*innen der Stadtverwaltung München.",
-        value: "Du bist König Ludwig II. von Bayern. Schreibe einen Brief an alle Mitarbeiter*innen der Stadtverwaltung München, indem Du Dich für die tolle Leistung bedankst und den Bau eines neuen Schlosses (noch beeindruckender als Neuschwanstein) in der Stadt München wünschst."
-    },
-    {
-        text: "Stell dir vor, es ist schlechtes Wetter.",
-        value: `Stell dir vor, es ist schlechtes Wetter und du sitzt lustlos im Büro. Alle möglichen Leute wollen etwas von Dir und Du spürst eine Stimmung, als ob irgendeine Kleinigkeit gleich eskalieren wird. Schreibe mir etwas, das dir in dieser Situation gut tut und dich aufmuntert.`
-    },
-    {
-        text: "Motiviere, warum eine öffentliche Verwaltung Robot Process Automation nutzen sollte und warum nicht?",
-        value: "Motiviere, warum eine öffentliche Verwaltung Robot Process Automation nutzen sollte und warum nicht?"
-    }
-];
+const WELCOME_MESSAGE_KEYS = ["home.chat_header"];
+const NAMELESS_WELCOME_MESSAGE_KEY = "chat.header";
+
+function pickWelcomeMessageKey(): string {
+    return WELCOME_MESSAGE_KEYS[Math.floor(Math.random() * WELCOME_MESSAGE_KEYS.length)];
+}
 
 // Custom hook for storage operations
 function useStorageService(activeChatId: string | undefined) {
@@ -99,6 +90,7 @@ const Chat = () => {
     const { refreshHistory: refreshUnifiedHistory } = useUnifiedHistory();
     const { setFollowUpActions } = useContext(FollowUpActionContext);
     const { tools } = useToolsContext();
+    const { user } = useContext(UserContext);
 
     // Independent states
     const [error, setError] = useState<unknown>();
@@ -134,6 +126,12 @@ const Chat = () => {
     // Destructuring for easier access
     const { answers, creativity, systemPrompt, active_chat, allChats } = chatState;
     const activeChatName = useMemo(() => allChats.find(chat => chat.id === active_chat)?.name, [active_chat, allChats]);
+
+    // Picked once per mount so the greeting doesn't change while the empty state is visible.
+    const welcomeMessageKeyRef = useRef(pickWelcomeMessageKey());
+    const username = user?.given_name || user?.name || "";
+    const welcomeMessageKey = username ? welcomeMessageKeyRef.current : NAMELESS_WELCOME_MESSAGE_KEY;
+    const welcomeMessage = t(welcomeMessageKey, { user: username, defaultValue: "Hallo {{user}}, was hast du heute vor?" });
 
     // Refs
     const lastQuestionRef = useRef<string>("");
@@ -711,14 +709,6 @@ const Chat = () => {
         return () => setFollowUpActions([]);
     }, [language, t, setFollowUpActions]);
 
-    // Click handlers
-    const onStarterPromptClicked = useCallback(
-        (starterPrompt: string, system?: string) => {
-            if (system) onSystemPromptChanged(system);
-            callApi(starterPrompt, system);
-        },
-        [callApi, onSystemPromptChanged]
-    );
     // Memo components
     const answerList = useMemo(
         () => (
@@ -789,10 +779,10 @@ const Chat = () => {
         return { totalCost, lastContextTokens, maxInputTokens };
     }, [answers]);
 
-    const starterPromptsComponent = useMemo(
-        () => <StarterPromptList starterPrompts={CHAT_STARTER_PROMPTS} onStarterPromptClicked={onStarterPromptClicked} />,
-        [onStarterPromptClicked]
-    );
+    // const starterPromptsComponent = useMemo(
+    //     () => <StarterPromptList starterPrompts={CHAT_STARTER_PROMPTS} onStarterPromptClicked={onStarterPromptClicked} />,
+    //     [onStarterPromptClicked]
+    // );
 
     const inputComponent = useMemo(() => {
         const { questionFromUrl, newChatRequested } = getNavigationParams();
@@ -816,6 +806,7 @@ const Chat = () => {
                 setUploadedData={setUploadedData}
                 onTranscription={text => setQuestion(text)}
                 usage={usageSummary}
+                hideDisclaimer
             />
         );
     }, [callApi, systemPrompt, question, t, isLoading, selectedTools, tools, uploadedData, uploadedDataToDataSources, getNavigationParams, usageSummary]);
@@ -832,12 +823,11 @@ const Chat = () => {
                     setSystemPrompt={onSystemPromptChanged}
                 />
                 <ChatLayout
-                    starterPrompts={starterPromptsComponent}
                     answers={answerList}
                     input={inputComponent}
                     showStarterPrompts={!lastQuestionRef.current}
-                    header={activeChatName || t("chat.header")}
-                    welcomeMessage={t("chat.header")}
+                    header={activeChatName ?? ""}
+                    welcomeMessage={welcomeMessage}
                     header_as_markdown={false}
                     messages_description={t("common.messages")}
                     llmOptions={availableLLMs}
@@ -855,11 +845,11 @@ const Chat = () => {
             </>
         ),
         [
-            starterPromptsComponent,
             answerList,
             inputComponent,
             lastQuestionRef.current,
             t,
+            welcomeMessage,
             availableLLMs,
             LLM.llm_name,
             onLLMSelectionChange,

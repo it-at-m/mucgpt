@@ -95,7 +95,7 @@ export const DiscoveryCard = forwardRef<HTMLDivElement, DiscoveryCardProps>((pro
             badges && badges.length > 0
                 ? badges
                 : badge
-                    ? [
+                  ? [
                         {
                             label: badge,
                             className: badgeClassName,
@@ -104,7 +104,7 @@ export const DiscoveryCard = forwardRef<HTMLDivElement, DiscoveryCardProps>((pro
                             size: badgeSize
                         }
                     ]
-                    : [];
+                  : [];
 
         if (title) {
             return (

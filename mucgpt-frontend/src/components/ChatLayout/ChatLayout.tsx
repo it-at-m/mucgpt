@@ -3,18 +3,19 @@ import { Button } from "@fluentui/react-components";
 import { ArrowDown24Regular } from "@fluentui/react-icons";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import { useTranslation } from "react-i18next";
 
 import styles from "./ChatLayout.module.css";
 import { LLMSelector } from "../LLMSelector/LLMSelector";
 import { Model } from "../../api";
 
 interface Props {
-    starterPrompts: ReactNode;
+    starterPrompts?: ReactNode;
     answers: ReactNode;
     input: ReactNode;
     showStarterPrompts: boolean;
     header: string;
-    welcomeMessage: string;
+    welcomeMessage?: string;
     header_as_markdown: boolean;
     messages_description: string;
     onHeaderClick?: () => void;
@@ -41,6 +42,7 @@ export const ChatLayout = ({
     infoDrawerOpen,
     actions
 }: Props) => {
+    const { t } = useTranslation();
     const chatInputRef = useRef<HTMLDivElement | null>(null);
     const chatMessagesRef = useRef<HTMLUListElement | null>(null);
     const [chatInputHeight, setChatInputHeight] = useState(0);
@@ -62,7 +64,10 @@ export const ChatLayout = ({
 
     useEffect(() => {
         const element = chatInputRef.current;
-        if (!element || typeof window === "undefined") return;
+        if (!element || typeof window === "undefined") {
+            setChatInputHeight(0);
+            return;
+        }
 
         const updateInputHeight = () => {
             const nextHeight = Math.ceil(element.getBoundingClientRect().height);
@@ -83,7 +88,7 @@ export const ChatLayout = ({
             window.removeEventListener("resize", updateInputHeight);
             observer.disconnect();
         };
-    }, []);
+    }, [showStarterPrompts]);
 
     const updateScrollToBottomVisibility = useCallback(() => {
         const element = chatMessagesRef.current;
@@ -192,8 +197,8 @@ export const ChatLayout = ({
                 <div className={styles.chatContainer}>
                     {showStarterPrompts ? (
                         <div className={styles.chatEmptyState} tabIndex={0}>
-                            <div className={styles.welcomeMessageContainer}>
-                                {header_as_markdown ? (
+                            {welcomeMessage &&
+                                (header_as_markdown ? (
                                     <div className={styles.chatEmptyStateSubtitleMarkdown}>
                                         <div className={styles.answerText}>
                                             <Markdown remarkPlugins={[remarkGfm]}>{welcomeMessage}</Markdown>
@@ -201,9 +206,9 @@ export const ChatLayout = ({
                                     </div>
                                 ) : (
                                     <h2 className={styles.chatEmptyStateSubtitle}>{welcomeMessage}</h2>
-                                )}
-                            </div>
-                            {starterPrompts}
+                                ))}
+                            <div className={styles.chatEmptyStateInput}>{input}</div>
+                            {starterPrompts && <div className={styles.chatEmptyStateStarterPrompts}>{starterPrompts}</div>}
                         </div>
                     ) : (
                         <ul
@@ -235,8 +240,9 @@ export const ChatLayout = ({
                             />
                         </div>
                     )}
-                    <div className={styles.chatInput} ref={chatInputRef}>
-                        {input}
+                    <div className={styles.bottomBar} ref={chatInputRef}>
+                        {!showStarterPrompts && <div className={styles.chatInput}>{input}</div>}
+                        <div className={styles.disclaimerText}>{t("components.questioninput.errorhint")}</div>
                     </div>
                 </div>
             </div>

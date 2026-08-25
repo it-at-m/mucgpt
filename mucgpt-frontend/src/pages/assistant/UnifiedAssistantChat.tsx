@@ -871,6 +871,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                         usage={usageSummary}
                         onStartNewChat={startNewChatFromUsage}
                         usageConversationKey={`assistant:${assistant_id}:${active_chat ?? "new"}`}
+                        hideDisclaimer
                     />
                 </>
             );
@@ -911,6 +912,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                 usage={usageSummary}
                 onStartNewChat={startNewChatFromUsage}
                 usageConversationKey={`assistant:${assistant_id}:${active_chat ?? "new"}`}
+                hideDisclaimer
             />
         );
     }, [
@@ -957,10 +959,10 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                                         isDeletedAssistant
                                             ? undefined
                                             : prompt => {
-                                                  setLastQuestionValue(prompt);
-                                                  setIsLoadingValue(true);
-                                                  void callApi(prompt);
-                                              }
+                                                setLastQuestionValue(prompt);
+                                                setIsLoadingValue(true);
+                                                void callApi(prompt);
+                                            }
                                     }
                                 />
                             )}

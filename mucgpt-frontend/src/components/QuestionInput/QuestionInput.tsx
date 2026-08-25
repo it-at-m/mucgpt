@@ -262,9 +262,9 @@ export const QuestionInput = ({
             const needsWrappedLine =
                 context && availableLineWidth > 0
                     ? question.split("\n").some(line => {
-                        context.font = computedStyle.font;
-                        return context.measureText(line || " ").width > availableLineWidth;
-                    })
+                          context.font = computedStyle.font;
+                          return context.measureText(line || " ").width > availableLineWidth;
+                      })
                     : false;
             const nextExpandedInput = question.trim().length > 0 && (question.includes("\n") || needsWrappedLine);
 
@@ -384,15 +384,15 @@ export const QuestionInput = ({
                         const nextData = currentData.map(currentItem =>
                             currentItem.id === data.id
                                 ? {
-                                    ...currentItem,
-                                    status: "ready" as const,
-                                    fileContent,
-                                    storedDocumentId: storedDocument?.id,
-                                    parsedAt: storedDocument?.parsedAt,
-                                    fileSignature: storedDocument?.fileSignature,
-                                    mimeType: storedDocument?.mimeType,
-                                    source: "upload" as const
-                                }
+                                      ...currentItem,
+                                      status: "ready" as const,
+                                      fileContent,
+                                      storedDocumentId: storedDocument?.id,
+                                      parsedAt: storedDocument?.parsedAt,
+                                      fileSignature: storedDocument?.fileSignature,
+                                      mimeType: storedDocument?.mimeType,
+                                      source: "upload" as const
+                                  }
                                 : currentItem
                         );
 
@@ -505,8 +505,9 @@ export const QuestionInput = ({
                 )}
 
                 <div
-                    className={`${styles.questionInputContainer} ${!tools?.tools?.length || !setSelectedTools ? styles.noTools : ""
-                        } ${isDragActive ? styles.dragActive : ""} ${isExpandedInput ? styles.expandedInput : ""} ${!allowFileUpload ? styles.noUpload : ""}`}
+                    className={`${styles.questionInputContainer} ${
+                        !tools?.tools?.length || !setSelectedTools ? styles.noTools : ""
+                    } ${isDragActive ? styles.dragActive : ""} ${isExpandedInput ? styles.expandedInput : ""} ${!allowFileUpload ? styles.noUpload : ""}`}
                     onDragEnter={allowFileUpload ? handleDragEnter : undefined}
                     onDragOver={allowFileUpload ? handleDragOver : undefined}
                     onDragLeave={allowFileUpload ? handleDragLeave : undefined}

@@ -95,11 +95,11 @@ export const ChatUsageIndicator = ({ usage, autoOpenNotice = false, onStartNewCh
         () =>
             usage.totalCost > 0
                 ? new Intl.NumberFormat(costLocales[language] ?? "de-DE", {
-                    style: "currency",
-                    currency: "USD",
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 4
-                }).format(usage.totalCost)
+                      style: "currency",
+                      currency: "USD",
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 4
+                  }).format(usage.totalCost)
                 : undefined,
         [language, usage.totalCost]
     );
@@ -109,25 +109,25 @@ export const ChatUsageIndicator = ({ usage, autoOpenNotice = false, onStartNewCh
     const usageSummary =
         typeof maxInputTokens === "number" && maxInputTokens > 0
             ? t("chat.usage_context_summary", {
-                used: tokenFormat.format(usage.lastContextTokens),
-                max: tokenFormat.format(maxInputTokens),
-                percent: contextPercent
-            })
+                  used: tokenFormat.format(usage.lastContextTokens),
+                  max: tokenFormat.format(maxInputTokens),
+                  percent: contextPercent
+              })
             : t("chat.usage_context_summary_no_max", { used: tokenFormat.format(usage.lastContextTokens) });
 
     const explanationLead = isFull
         ? t("chat.usage_full_warning_lead")
         : usageTone === "critical" || usageTone === "warning"
-            ? t(`chat.usage_help_context_${usageTone}_lead`)
-            : undefined;
+          ? t(`chat.usage_help_context_${usageTone}_lead`)
+          : undefined;
     const showsNudgeActions = autoOpenNotice && Boolean(onStartNewChat);
     const explanationDetail = isFull
         ? t("chat.usage_full_warning_detail")
         : showsNudgeActions && usageTone === "warning"
-            ? t("chat.usage_nudge_warning_detail")
-            : usageTone === "critical" || usageTone === "warning"
-                ? t(`chat.usage_help_context_${usageTone}_detail`)
-                : t("chat.usage_help_context");
+          ? t("chat.usage_nudge_warning_detail")
+          : usageTone === "critical" || usageTone === "warning"
+            ? t(`chat.usage_help_context_${usageTone}_detail`)
+            : t("chat.usage_help_context");
 
     const handleStartNewChat = () => {
         setPinned(false);

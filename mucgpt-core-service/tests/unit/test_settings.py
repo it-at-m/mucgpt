@@ -550,6 +550,57 @@ ENV_NAME: "YAML_ENV"
         get_redis_settings.cache_clear()
 
 
+class TestPromptPoolSettings:
+    """Test nested prompt-pool configuration."""
+
+    def test_defaults(self):
+        with patch.dict(os.environ, {}, clear=True):
+            prompts = Settings().PROMPTS
+
+        assert prompts.FOLDERS == []
+
+    def test_environment_configuration(self):
+        prompt_config = json.dumps(
+            {
+                "FOLDERS": [
+                    {
+                        "name": "custom",
+                        "prompts": [{"name": "example", "label": "staging"}],
+                    }
+                ]
+            }
+        )
+        with patch.dict(
+            os.environ,
+            {"MUCGPT_CORE_PROMPTS": prompt_config},
+            clear=True,
+        ):
+            prompts = Settings().PROMPTS
+
+        assert prompts.FOLDERS[0].name == "custom"
+        assert prompts.FOLDERS[0].prompts[0].name == "example"
+        assert prompts.FOLDERS[0].prompts[0].label == "staging"
+
+    def test_yaml_configuration(self, monkeypatch):
+        yaml_content = """
+PROMPTS:
+  FOLDERS:
+    - name: "yaml-folder"
+      prompts:
+        - name: "yaml-prompt"
+          label: "latest"
+"""
+        with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as tmpdir:
+            (Path(tmpdir) / "config.yaml").write_text(yaml_content)
+            monkeypatch.chdir(tmpdir)
+            with patch.dict(os.environ, {}, clear=True):
+                prompts = Settings().PROMPTS
+
+        assert prompts.FOLDERS[0].name == "yaml-folder"
+        assert prompts.FOLDERS[0].prompts[0].name == "yaml-prompt"
+        assert prompts.FOLDERS[0].prompts[0].label == "latest"
+
+
 class TestParserSettings:
     """Test cases for parsing / XBerg configuration."""
 
@@ -584,6 +635,17 @@ class TestComplianceCacheSettings:
         ):
             settings = Settings()
             assert settings.COMPLIANCE_CACHE_TTL_SECONDS == 300
+
+    def test_compliance_prompt_folder_default_and_environment_override(self):
+        with patch.dict(os.environ, {}, clear=True):
+            assert Settings().COMPLIANCE.PROMPT_FOLDER == "compliance"
+
+        with patch.dict(
+            os.environ,
+            {"MUCGPT_CORE_COMPLIANCE__PROMPT_FOLDER": "/annex-three/"},
+            clear=True,
+        ):
+            assert Settings().COMPLIANCE.PROMPT_FOLDER == "annex-three"
 
     def test_compliance_cache_ttl_rejects_zero_and_negative(self):
         """COMPLIANCE_CACHE_TTL_SECONDS must be strictly positive."""

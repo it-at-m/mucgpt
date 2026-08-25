@@ -39,6 +39,41 @@ LANGFUSE:
   SECRET_KEY: "<your-sk>"
   PUBLIC_KEY: "<your-pk>"
 
+# Langfuse/local compliance prompt folder. Prompt names are the fixed compliance category IDs.
+COMPLIANCE:
+  PROMPT_FOLDER: "compliance_prompts"
+
+# Prompt settings (optional - nested under PROMPTS key)
+# Configure prompt names exactly like the local Markdown files in
+# mucgpt-core-service/app/agent/prompt_pool/, without the .md suffix.
+# Langfuse is tried first; local prompt files are the compatibility fallback.
+# PROMPTS:
+#   FOLDERS:
+#     - name: "defaults"
+#       prompts:
+#         - name: "default_instructions"
+#           label: "production"
+#     - name: "generation_prompts"
+#       prompts:
+#         - name: "prompt_for_chat_title"
+#           label: "production"
+#         - name: "prompt_for_title_from_seed"
+#           label: "production"
+#         - name: "prompt_for_description_from_seed"
+#           label: "production"
+#         - name: "prompt_for_systemprompt"
+#           label: "production"
+#     - name: "compliance_prompts"
+#       prompts:
+#         - name: "migration_asylum_border"
+#           label: "production"
+#         - name: "public_services_access"
+#           label: "production"
+#         - name: "hr_employment"
+#           label: "production"
+#         - name: "education"
+#           label: "production"
+
 # MCP Settings (Model Context Protocol)
 # Used by core service for external tool integration
 MCP:

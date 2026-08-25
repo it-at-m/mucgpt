@@ -14,6 +14,7 @@ from api.api_models import (
     ComplianceCheckResponse,
     ComplianceStatus,
 )
+from config.settings import ComplianceConfig
 from core.auth_models import AuthenticationResult
 from core.llm_helpers import (
     invoke_internal_structured_generation,
@@ -31,11 +32,11 @@ class _ComplianceVerdictResponse(BaseModel):
     reasoning: str | None = Field(None, max_length=1000)
 
 
-_CATEGORY_PROMPTS: tuple[tuple[ComplianceCategoryId, str], ...] = (
-    ("migration_asylum_border", "prompt_for_compliance_migration_asylum_border.md"),
-    ("public_services_access", "prompt_for_compliance_public_services_access.md"),
-    ("hr_employment", "prompt_for_compliance_hr_employment.md"),
-    ("education", "prompt_for_compliance_education.md"),
+_COMPLIANCE_CATEGORIES: tuple[ComplianceCategoryId, ...] = (
+    "migration_asylum_border",
+    "public_services_access",
+    "hr_employment",
+    "education",
 )
 
 
@@ -47,12 +48,12 @@ _CATEGORY_PROMPTS: tuple[tuple[ComplianceCategoryId, str], ...] = (
 async def _check_category(
     *,
     category: ComplianceCategoryId,
-    prompt_template_filename: str,
+    prompt_folder: str,
     system_prompt: str,
     model_name: str,
     user_info: AuthenticationResult,
 ) -> ComplianceCategoryResult:
-    system_instruction = read_prompt_file(prompt_template_filename)
+    system_instruction = read_prompt_file(category, prompt_folder)
     parsed = await invoke_internal_structured_generation(
         model_name=model_name,
         temperature=0.0,
@@ -85,6 +86,7 @@ async def evaluate_compliance(
     system_prompt: str,
     model_name: str,
     user_info: AuthenticationResult,
+    config: ComplianceConfig,
 ) -> ComplianceCheckResponse:
     """Evaluate a system prompt independently against every compliance category."""
 
@@ -93,12 +95,12 @@ async def evaluate_compliance(
             *(
                 _check_category(
                     category=category,
-                    prompt_template_filename=prompt_template_filename,
+                    prompt_folder=config.PROMPT_FOLDER,
                     system_prompt=system_prompt,
                     model_name=model_name,
                     user_info=user_info,
                 )
-                for category, prompt_template_filename in _CATEGORY_PROMPTS
+                for category in _COMPLIANCE_CATEGORIES
             )
         )
     except Exception as exc:

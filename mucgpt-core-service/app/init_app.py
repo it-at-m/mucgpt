@@ -62,7 +62,7 @@ async def warmup_app() -> None:
     lf_client = LangfuseProvider.init(
         version=settings.VERSION, langfuse_cfg=get_langfuse_settings()
     )
-    PromptPool.init(lf_client)
+    PromptPool.init(lf_client, settings.PROMPTS)
     # init redis
     await RedisCache.init_redis()
     logger.info("App context warmed up")

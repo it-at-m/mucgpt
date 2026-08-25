@@ -102,9 +102,9 @@ async def generate_assistant_draft(
     try:
         model_name = get_internal_task_model(settings, InternalTaskModelStrength.STRONG)
         logger.info("assistant-draft: reading prompt templates")
-        system_prompt_system = read_prompt_file("prompt_for_systemprompt.md")
-        description_system = read_prompt_file("prompt_for_description_from_seed.md")
-        title_system = read_prompt_file("prompt_for_title_from_seed.md")
+        system_prompt_system = read_prompt_file("assistant_systemprompt.md")
+        description_system = read_prompt_file("assistant_description.md")
+        title_system = read_prompt_file("assistant_name.md")
 
         base_user_content = "Funktion: " + request.prompt_seed
 
@@ -173,7 +173,7 @@ async def generate_chat_title(
     """Generate and normalize a chat title from the last user/assistant turn."""
 
     settings = get_settings()
-    system_prompt = read_prompt_file("prompt_for_chat_title.md")
+    system_prompt = read_prompt_file("chat_title.md")
 
     conversation_parts = []
     if request.system_message:

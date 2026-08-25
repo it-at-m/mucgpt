@@ -34,6 +34,7 @@ from config.model_provider import ModelProvider
 from config.settings import ModelsConfig, Settings
 from core.auth_models import AuthenticationResult
 from core.compliance import evaluate_compliance
+from core.lf_prompts import PromptPool
 
 _EVALUATION_USER = AuthenticationResult(
     token="compliance-experiment",
@@ -245,6 +246,7 @@ def _initialize_evaluation_context(
         host=langfuse_settings.HOST,
         release=settings.VERSION,
     )
+    PromptPool.init(client, settings.PROMPTS)
     return client
 
 
@@ -284,6 +286,7 @@ async def _run_experiments(args: argparse.Namespace) -> None:
                     system_prompt=dataset_input.system_prompt,
                     model_name=model_name,
                     user_info=_EVALUATION_USER,
+                    config=settings.COMPLIANCE,
                 )
                 return response.model_dump(exclude={"prompt_hash"})
 

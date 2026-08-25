@@ -408,6 +408,40 @@ class InternetSearchConfig(BaseModel):
     SAFESEARCH: int = 1
 
 
+class PromptConfig(BaseModel):
+    """A prompt inside a Langfuse folder."""
+
+    name: str
+    label: str = "production"
+
+
+class PromptFolderConfig(BaseModel):
+    """A Langfuse folder and the prompts loaded from it."""
+
+    name: str
+    prompts: list[PromptConfig]
+
+
+class PromptPoolConfig(BaseModel):
+    """Configured Langfuse prompt folders."""
+
+    FOLDERS: list[PromptFolderConfig] = Field(default_factory=list)
+
+
+class ComplianceConfig(BaseModel):
+    """Prompt location used by compliance checks."""
+
+    PROMPT_FOLDER: str = "compliance"
+
+    @field_validator("PROMPT_FOLDER")
+    @classmethod
+    def validate_prompt_folder(cls, value: str) -> str:
+        normalized = value.strip("/")
+        if not normalized:
+            raise ValueError("PROMPT_FOLDER must not be empty")
+        return normalized
+
+
 # Backward-compatible aliases
 SSOSettings = SSOConfig
 LangfuseSettings = LangfuseConfig
@@ -451,6 +485,8 @@ class Settings(BaseSettings):
     UNAUTHORIZED_USER_REDIRECT_URL: str = ""
     MODELS: list[ModelsConfig] = []
     MEMORY_SERVICE_URL: str = ""
+    PROMPTS: PromptPoolConfig = Field(default_factory=PromptPoolConfig)
+    COMPLIANCE: ComplianceConfig = Field(default_factory=ComplianceConfig)
 
     # Parsing
     PARSER_BACKEND: ParserBackendType = ParserBackendType.NONE

@@ -2,6 +2,7 @@ from pathlib import Path
 
 from langfuse import Langfuse
 
+from config.settings import PromptPoolConfig
 from core.logtools import getLogger
 
 logger = getLogger()
@@ -10,42 +11,74 @@ PROMPT_POOL_DIR = Path(__file__).resolve().parents[1] / "agent/prompt_pool"
 
 
 class PromptPool:
-    """Resolves default (non-assistant) prompts, optionally backed by Langfuse.
-
-    Local Markdown files under agent/prompt_pool/ are always loaded as the
-    fallback/default text. When a Langfuse client is configured, `init()`
-    primes Langfuse's own prompt cache once at startup, and `get_prompt()`
-    re-consults that cache on every call - which returns the last-known-good
-    version if a live fetch fails, and the local default if nothing has ever
-    been cached for that name.
-    """
+    """Load configured prompts from Langfuse with local Markdown fallbacks."""
 
     _defaults: dict[str, str] = {
         path.stem: path.read_text(encoding="utf-8")
         for path in PROMPT_POOL_DIR.rglob("*.md")
     }
     _lf_client: Langfuse | None = None
+    _prompts: dict[str, tuple[str, str]] = {}
+    _folder_prompts: dict[tuple[str, str], tuple[str, str]] = {}
 
     @classmethod
-    def init(cls, lf_client: Langfuse | None) -> None:
+    def init(cls, lf_client: Langfuse | None, config: PromptPoolConfig) -> None:
         cls._lf_client = lf_client
-        if not lf_client:
-            return
-        for name in cls._defaults:
-            try:
-                lf_client.get_prompt(name, max_retries=1, fetch_timeout_seconds=2)
-            except Exception as e:
-                logger.warning("Could not prime Langfuse prompt '%s': %s", name, e)
+        cls._prompts = {
+            prompt.name: (f"{folder.name.strip('/')}/{prompt.name}", prompt.label)
+            for folder in config.FOLDERS
+            for prompt in folder.prompts
+        }
+        cls._folder_prompts = {
+            (folder.name.strip("/"), prompt.name): (
+                f"{folder.name.strip('/')}/{prompt.name}",
+                prompt.label,
+            )
+            for folder in config.FOLDERS
+            for prompt in folder.prompts
+        }
 
     @classmethod
-    def get_prompt(cls, name: str) -> str:
-        default = cls._defaults[name]
-        if not cls._lf_client:
-            return default
+    def get_prompt(cls, name: str, folder_name: str | None = None) -> str:
+        normalized_folder = folder_name.strip("/") if folder_name else None
+        local_path = (
+            PROMPT_POOL_DIR / normalized_folder / f"{name}.md"
+            if normalized_folder
+            else None
+        )
+        local_prompt = (
+            local_path.read_text(encoding="utf-8")
+            if local_path is not None and local_path.is_file()
+            else cls._defaults.get(name)
+        )
+        if cls._lf_client is None:
+            if local_prompt is None:
+                raise KeyError(name)
+            return local_prompt
+
+        prompt_config = (
+            cls._folder_prompts.get((normalized_folder, name))
+            if normalized_folder
+            else cls._prompts.get(name)
+        )
+        if prompt_config is None:
+            if local_prompt is None:
+                raise KeyError(name)
+            return local_prompt
+
+        full_name, label = prompt_config
         try:
             return cls._lf_client.get_prompt(
-                name, fallback=default, max_retries=1, fetch_timeout_seconds=2
+                full_name,
+                label=label,
+                fallback=local_prompt,
             ).prompt
-        except Exception as e:
-            logger.warning("Falling back to local prompt for '%s': %s", name, e)
-            return default
+        except Exception as exc:
+            if local_prompt is None:
+                raise
+            logger.warning(
+                "Falling back to local prompt for '%s': %s",
+                name,
+                exc,
+            )
+            return local_prompt

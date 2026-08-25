@@ -63,9 +63,7 @@ def extract_message_content(content: Any) -> str:
     return str(content)
 
 
-def get_internal_task_model(
-    settings: Settings, strength: str
-) -> str:
+def get_internal_task_model(settings: Settings, strength: str) -> str:
     """Return the preferred configured model for an internal LLM task."""
 
     if not settings.MODELS:
@@ -86,12 +84,12 @@ def get_internal_task_model(
     return model.llm_name
 
 
-def read_prompt_file(filename: str) -> str:
+def read_prompt_file(filename: str, folder_name: str | None = None) -> str:
     """Read a default prompt, preferring the Langfuse-backed pool with local fallback."""
 
     name = filename.rsplit(".", 1)[0]
     try:
-        return PromptPool.get_prompt(name)
+        return PromptPool.get_prompt(name, folder_name)
     except KeyError as exc:  # pragma: no cover - misconfiguration
         logger.error("Prompt file not found: %s", filename)
         raise HTTPException(
@@ -156,7 +154,9 @@ async def invoke_internal_generation(
         user_id=hash_user_id(user_info.user_id),
         tags=trace_tags,
     ):
-        ai_message = await llm.ainvoke(to_langchain_messages(messages), config=run_config)
+        ai_message = await llm.ainvoke(
+            to_langchain_messages(messages), config=run_config
+        )
 
     return extract_message_content(ai_message.content)
 
@@ -193,4 +193,4 @@ async def invoke_internal_structured_generation[StructuredOutputT: BaseModel](
         user_id=hash_user_id(user_info.user_id),
         tags=trace_tags,
     ):
-        return await llm.ainvoke(to_langchain_messages(messages), config=run_config) # type: ignore
+        return await llm.ainvoke(to_langchain_messages(messages), config=run_config)  # type: ignore

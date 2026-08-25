@@ -375,10 +375,15 @@ class TestMUCGPTAgentExecutor:
         ):
             chunks.append(chunk)
 
+        # prompt_tokens for each invocation already includes the full
+        # conversation so far (system prompt, history, earlier tool-call
+        # rounds), so the final chunk should report the latest prompt_tokens
+        # (not a sum across invocations) while completion_tokens - newly
+        # generated per invocation - are correctly additive.
         assert chunks[-1]["usage"] == {
-            "prompt_tokens": 30,
+            "prompt_tokens": 20,
             "completion_tokens": 6,
-            "total_tokens": 36,
+            "total_tokens": 26,
             "context_tokens": 24,
         }
 

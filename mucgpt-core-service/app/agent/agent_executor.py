@@ -231,7 +231,7 @@ class MUCGPTAgentExecutor:
             )
             answer_chunks: list[str] = []
             trace_events: list[dict[str, Any]] = []
-            total_prompt_tokens = 0
+            last_prompt_tokens = 0
             total_completion_tokens = 0
             last_context_tokens: int | None = None
             config = merge_configs(
@@ -289,7 +289,7 @@ class MUCGPTAgentExecutor:
                             if chunk_usage:
                                 usage = _usage_from_metadata(chunk_usage)
                                 if usage:
-                                    total_prompt_tokens += usage.prompt_tokens
+                                    last_prompt_tokens = usage.prompt_tokens
                                     total_completion_tokens += usage.completion_tokens
                                     last_context_tokens = usage.total_tokens
                             chunk_content = message_chunk.content
@@ -392,9 +392,9 @@ class MUCGPTAgentExecutor:
                 ],
                 usage=(
                     Usage(
-                        prompt_tokens=total_prompt_tokens,
+                        prompt_tokens=last_prompt_tokens,
                         completion_tokens=total_completion_tokens,
-                        total_tokens=total_prompt_tokens + total_completion_tokens,
+                        total_tokens=last_prompt_tokens + total_completion_tokens,
                         context_tokens=last_context_tokens,
                     )
                     if last_context_tokens is not None

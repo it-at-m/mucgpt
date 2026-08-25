@@ -12,6 +12,8 @@ import { upsertParsedDocumentFromUpload } from "../../service/parsedDocumentStor
 import { ContextManagerDialog, UploadedData, createUploadedData, getDataSignature, getFileSignature } from "../ContextManagerDialog/ContextManagerDialog";
 import { ChatToolSelector } from "../ChatToolSelector/ChatToolSelector";
 import { ChatUsageIndicator, type ChatUsageSummary } from "../ChatUsageIndicator/ChatUsageIndicator";
+import { ChatUsageMessageBar } from "../ChatUsageIndicator/ChatUsageMessageBar";
+import { getContextUsagePercent, getUsageCriticalThreshold, getUsageWarningThreshold } from "../ChatUsageIndicator/chatUsage";
 import { LLMSelector } from "../LLMSelector/LLMSelector";
 import { MicrophoneButton } from "../MicrophoneButton/MicrophoneButton";
 import { useTranscription } from "../TranscriptionSettings/TranscriptionSettingsContext";
@@ -42,6 +44,8 @@ interface Props {
     llmOptions?: Model[];
     defaultLLM?: string;
     onLLMSelectionChange?: (nextLLM: string) => void;
+    onStartNewChat?: () => void;
+    usageConversationKey?: string;
 }
 
 export const QuestionInput = ({
@@ -67,7 +71,9 @@ export const QuestionInput = ({
     hideDisclaimer = false,
     llmOptions,
     defaultLLM,
-    onLLMSelectionChange
+    onLLMSelectionChange,
+    onStartNewChat,
+    usageConversationKey
 }: Props) => {
     const { t } = useTranslation();
     const config = useConfigContext();
@@ -86,10 +92,14 @@ export const QuestionInput = ({
     const uploadedDataRef = useRef<UploadedData[]>([]);
     const [isDragActive, setIsDragActive] = useState(false);
     const [isExpandedInput, setIsExpandedInput] = useState(false);
+    const [hasShownUsagePopover, setHasShownUsagePopover] = useState(false);
+    const [isUsagePopoverOpen, setIsUsagePopoverOpen] = useState(false);
+    const [isUsageMessageBarDismissed, setIsUsageMessageBarDismissed] = useState(false);
     const dragCounterRef = useRef(0);
     const isDraftHydratedRef = useRef(false);
     const isPageUnloadingRef = useRef(false);
     const setQuestionRef = useRef(setQuestion);
+    const previousUsageConversationKeyRef = useRef<string | undefined>(usageConversationKey);
     const recordingBaseRef = useRef("");
     const { isModelReady: transcriptionReady, status: transcriptionStatus } = useTranscription();
     const isTranscriptionActive = transcriptionStatus === "recording" || transcriptionStatus === "transcribing";
@@ -105,6 +115,41 @@ export const QuestionInput = ({
     const showSendButton = hasSendableQuestion && !isTranscriptionActive;
     const hasRightActions = hasModelPicker || showMicrophoneButton || showSendButton || Boolean(usage);
     const sendLabel = t("components.questioninput.send_question", "Frage senden");
+    const contextPercent = getContextUsagePercent(usage);
+    const warningThreshold = getUsageWarningThreshold(usage);
+    const criticalThreshold = getUsageCriticalThreshold(usage);
+    const hasUsageNudges = Boolean(onStartNewChat && usageConversationKey && contextPercent !== undefined);
+    const isUsageMessageBarVisible = hasUsageNudges && contextPercent !== undefined && contextPercent >= criticalThreshold && !isUsageMessageBarDismissed;
+
+    useEffect(() => {
+        const isNewConversation = previousUsageConversationKeyRef.current !== usageConversationKey;
+
+        if (isNewConversation) {
+            previousUsageConversationKeyRef.current = usageConversationKey;
+            setHasShownUsagePopover(false);
+            setIsUsagePopoverOpen(false);
+            setIsUsageMessageBarDismissed(false);
+        }
+
+        if (!hasUsageNudges || contextPercent === undefined) {
+            setIsUsagePopoverOpen(false);
+            return;
+        }
+
+        const isPopoverRange = contextPercent >= warningThreshold && contextPercent < criticalThreshold;
+        const alreadyShownForConversation = isNewConversation ? false : hasShownUsagePopover;
+
+        if (isPopoverRange && !alreadyShownForConversation) {
+            setHasShownUsagePopover(true);
+            setIsUsagePopoverOpen(true);
+        } else if (!isPopoverRange) {
+            setIsUsagePopoverOpen(false);
+        }
+
+        if (contextPercent < criticalThreshold) {
+            setIsUsageMessageBarDismissed(false);
+        }
+    }, [contextPercent, criticalThreshold, hasShownUsagePopover, hasUsageNudges, usageConversationKey, warningThreshold]);
 
     const setUploadedData = useCallback(
         (data: UploadedData[] | ((prev: UploadedData[]) => UploadedData[])) => {
@@ -239,19 +284,19 @@ export const QuestionInput = ({
             const availableLineWidth = Math.max(
                 0,
                 container.clientWidth -
-                containerHorizontalPadding -
-                uploadControlWidth -
-                rightActionsWidth -
-                visibleControlGroups * columnGap -
-                horizontalPadding
+                    containerHorizontalPadding -
+                    uploadControlWidth -
+                    rightActionsWidth -
+                    visibleControlGroups * columnGap -
+                    horizontalPadding
             );
             const hasInsufficientInlineSpace = availableLineWidth < 120;
             const needsWrappedLine =
                 question.trim().length > 0 && context && availableLineWidth > 0
                     ? question.split("\n").some(line => {
-                        context.font = computedStyle.font;
-                        return context.measureText(line || " ").width > availableLineWidth;
-                    })
+                          context.font = computedStyle.font;
+                          return context.measureText(line || " ").width > availableLineWidth;
+                      })
                     : false;
             const nextExpandedInput = question.includes("\n") || hasInsufficientInlineSpace || needsWrappedLine;
 
@@ -388,15 +433,15 @@ export const QuestionInput = ({
                         const nextData = currentData.map(currentItem =>
                             currentItem.id === data.id
                                 ? {
-                                    ...currentItem,
-                                    status: "ready" as const,
-                                    fileContent,
-                                    storedDocumentId: storedDocument?.id,
-                                    parsedAt: storedDocument?.parsedAt,
-                                    fileSignature: storedDocument?.fileSignature,
-                                    mimeType: storedDocument?.mimeType,
-                                    source: "upload" as const
-                                }
+                                      ...currentItem,
+                                      status: "ready" as const,
+                                      fileContent,
+                                      storedDocumentId: storedDocument?.id,
+                                      parsedAt: storedDocument?.parsedAt,
+                                      fileSignature: storedDocument?.fileSignature,
+                                      mimeType: storedDocument?.mimeType,
+                                      source: "upload" as const
+                                  }
                                 : currentItem
                         );
 
@@ -504,11 +549,17 @@ export const QuestionInput = ({
                     />
                 ) : null}
 
+                {isUsageMessageBarVisible && onStartNewChat && (
+                    <ChatUsageMessageBar onDismiss={() => setIsUsageMessageBarDismissed(true)} onStartNewChat={onStartNewChat} />
+                )}
+
                 <div
                     ref={questionInputContainerRef}
-                    className={`${styles.questionInputContainer} ${!tools?.tools?.length || !setSelectedTools ? styles.noTools : ""
-                        } ${isDragActive ? styles.dragActive : ""} ${isExpandedInput ? styles.expandedInput : ""} ${!allowFileUpload ? styles.noUpload : ""} ${!hasRightActions ? styles.noRightActions : ""
-                        }`}
+                    className={`${styles.questionInputContainer} ${
+                        !tools?.tools?.length || !setSelectedTools ? styles.noTools : ""
+                    } ${isDragActive ? styles.dragActive : ""} ${isExpandedInput ? styles.expandedInput : ""} ${!allowFileUpload ? styles.noUpload : ""} ${
+                        !hasRightActions ? styles.noRightActions : ""
+                    }`}
                     onDragEnter={allowFileUpload ? handleDragEnter : undefined}
                     onDragOver={allowFileUpload ? handleDragOver : undefined}
                     onDragLeave={allowFileUpload ? handleDragLeave : undefined}
@@ -550,7 +601,14 @@ export const QuestionInput = ({
                                     <LLMSelector onSelectionChange={onLLMSelectionChange} defaultLLM={defaultLLM} options={llmOptions} />
                                 </div>
                             ) : null}
-                            {usage && <ChatUsageIndicator usage={usage} />}
+                            {usage && (
+                                <ChatUsageIndicator
+                                    usage={usage}
+                                    autoOpenNotice={isUsagePopoverOpen}
+                                    onStartNewChat={onStartNewChat}
+                                    onDismissNotice={() => setIsUsagePopoverOpen(false)}
+                                />
+                            )}
                             {showMicrophoneButton && onTranscription ? (
                                 <MicrophoneButton
                                     onRecordingStart={() => {

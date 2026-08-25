@@ -832,27 +832,23 @@ export const handlers = [
             const stream = new ReadableStream({
                 async start(controller) {
                     let chunks: any[] = [];
+                    const lastUserMessage =
+                        body.messages
+                            ?.slice()
+                            .reverse()
+                            .find(m => m.role === "user")?.content ?? "";
+                    const forcedContextTokens = resolveForcedContextTokens(lastUserMessage, body.model);
                     if (streamType === "mindmap") {
-                        const topic =
-                            body.messages
-                                ?.slice()
-                                .reverse()
-                                .find(m => m.role === "user")?.content || "Künstliche Intelligenz";
-                        chunks = generateMindmapStreamChunks(topic);
+                        const topic = lastUserMessage || "Künstliche Intelligenz";
+                        chunks = generateMindmapStreamChunks(topic, forcedContextTokens);
                     } else if (streamType === "simplify") {
-                        chunks = generateSimplifyStreamChunks();
+                        chunks = generateSimplifyStreamChunks(forcedContextTokens);
                     } else {
                         let reply = buildChatMessage();
                         if (Math.random() > 0.7) {
                             reply +=
                                 "\n\nHier ist eine beispielhafte Tabelle:\n\n| Name | Kategorie | Wert |\n| :--- | :---: | ---: |\n| Element A | Gruppe 1 | 123.45 |\n| Element B | Gruppe 2 | 67.89 |\n| Element C | Gruppe 1 | 99.99 |\n| Element D | Gruppe 3 | 10.00 |\n\n";
                         }
-                        const lastUserMessage =
-                            body.messages
-                                ?.slice()
-                                .reverse()
-                                .find(m => m.role === "user")?.content ?? "";
-                        const forcedContextTokens = resolveForcedContextTokens(lastUserMessage, body.model);
                         chunks = generateChatStreamChunks(reply, forcedContextTokens);
                     }
                     for (const chunk of chunks) {

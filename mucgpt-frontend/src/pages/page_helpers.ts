@@ -455,6 +455,8 @@ export const makeApiRequest = async (
         usage_cost: usageCost,
         usage_model: LLM.llm_name,
         usage_max_input_tokens: LLM.max_input_tokens,
+        usage_context_warning_threshold_percent: LLM.context_warning_threshold_percent,
+        usage_context_critical_threshold_percent: LLM.context_critical_threshold_percent,
         activeTools: activeToolStatuses
     };
 

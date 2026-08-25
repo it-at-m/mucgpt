@@ -65,6 +65,17 @@ class ModelInfo(BaseModel):
     creativity_low_temperature: float | None = None
     creativity_medium_temperature: float | None = None
     creativity_high_temperature: float | None = None
+    context_warning_threshold_percent: int = Field(default=75, ge=1, le=100)
+    context_critical_threshold_percent: int = Field(default=90, ge=1, le=100)
+
+    @model_validator(mode="after")
+    def check_threshold_order(self) -> "ModelInfo":
+        if self.context_warning_threshold_percent >= self.context_critical_threshold_percent:
+            raise ValueError(
+                "context_warning_threshold_percent must be lower than "
+                "context_critical_threshold_percent"
+            )
+        return self
 
 
 DeepAgentBuiltinTool = Literal[
@@ -131,6 +142,8 @@ class ModelsConfig(BaseModel):
             "creativity_low_temperature",
             "creativity_medium_temperature",
             "creativity_high_temperature",
+            "context_warning_threshold_percent",
+            "context_critical_threshold_percent",
         }
 
         existing_info = data.get("model_info")
@@ -191,6 +204,22 @@ class ModelsConfig(BaseModel):
     @max_input_tokens.setter
     def max_input_tokens(self, value: PositiveInt | None) -> None:
         self.model_info.max_input_tokens = value
+
+    @property
+    def context_warning_threshold_percent(self) -> int:
+        return self.model_info.context_warning_threshold_percent
+
+    @context_warning_threshold_percent.setter
+    def context_warning_threshold_percent(self, value: int) -> None:
+        self.model_info.context_warning_threshold_percent = value
+
+    @property
+    def context_critical_threshold_percent(self) -> int:
+        return self.model_info.context_critical_threshold_percent
+
+    @context_critical_threshold_percent.setter
+    def context_critical_threshold_percent(self, value: int) -> None:
+        self.model_info.context_critical_threshold_percent = value
 
     @property
     def description(self) -> str | None:

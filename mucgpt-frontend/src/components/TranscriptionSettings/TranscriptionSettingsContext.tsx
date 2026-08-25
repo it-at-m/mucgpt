@@ -197,6 +197,11 @@ export const TranscriptionSettingsProvider = ({ children, deploymentEnabled = tr
 
     const requestModelLoad = useCallback(
         (modelId: string, fileSizes?: Record<string, number>) => {
+            const pendingReady = pendingReadyRef.current;
+            if (pendingReady) {
+                pendingReady.reject(new Error("Superseded by new model load"));
+                pendingReadyRef.current = null;
+            }
             const modelCfg = TRANSCRIPTION_MODELS.find(m => m.model_id === modelId);
             const requestId = ++loadRequestIdRef.current;
             expectedLoadRef.current = { requestId, modelId };
@@ -236,6 +241,7 @@ export const TranscriptionSettingsProvider = ({ children, deploymentEnabled = tr
             workerRef.current = null;
             setWorkerReady(false);
             setLoadingModelId(null);
+            loadedModelIdRef.current = null;
             setLoadedModelId(null);
             setStatus("idle");
             return;
@@ -343,7 +349,9 @@ export const TranscriptionSettingsProvider = ({ children, deploymentEnabled = tr
         return () => {
             worker.terminate();
             workerRef.current = null;
+            loadedModelIdRef.current = null;
             setWorkerReady(false);
+            setLoadedModelId(null);
         };
     }, [markDownloaded, deploymentEnabled]);
 

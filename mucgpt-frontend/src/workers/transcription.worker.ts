@@ -149,6 +149,7 @@ async function loadModel(request: Extract<WorkerInMessage, { type: "load" }>) {
         if (webgpuOnly && !hasWebGPU) {
             self.postMessage({
                 type: "error",
+                requestId,
                 message: "This model requires WebGPU, which is not available in your browser. Try Chrome/Edge 113+ or select Whisper Small.",
                 messageKey: "transcriptionSettings.webgpu_only_error"
             } satisfies WorkerOutMessage);
@@ -395,6 +396,7 @@ function startRecording(sessionId: number): void {
     cancelAutoStop();
     activeSessionId = sessionId;
     isStopPending = false;
+    hasSpeechOccurred = false;
     failedSessions.delete(sessionId);
     frameQueue = [];
     bufferPointer = 0;

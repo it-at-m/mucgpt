@@ -131,7 +131,7 @@ export interface ChatCompletionChunk {
     object: "chat.completion.chunk";
     created: number;
     choices: ChatCompletionChunkChoice[];
-    usage?: { prompt_tokens?: number; completion_tokens?: number; total_tokens?: number; context_tokens?: number };
+    usage?: { prompt_tokens?: number; completion_tokens?: number; total_tokens?: number; context_tokens?: number | null } | null;
 }
 
 export type CountTokenRequest = {

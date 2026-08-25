@@ -13,6 +13,7 @@
 
 .ring {
     --usage-percent: 0;
+
     position: relative;
     display: grid;
     place-items: center;

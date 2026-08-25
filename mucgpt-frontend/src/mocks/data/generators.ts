@@ -259,7 +259,13 @@ export function generateChatStreamChunks(finalMessage: string, forcedContextToke
         usage: (() => {
             const completion_tokens = Math.round(finalMessage.length / 4);
             const prompt_tokens = forcedContextTokens ?? 400 + Math.floor(Math.random() * 2000);
-            return { prompt_tokens, completion_tokens, total_tokens: prompt_tokens + completion_tokens };
+            const total_tokens = prompt_tokens + completion_tokens;
+            return {
+                prompt_tokens,
+                completion_tokens,
+                total_tokens,
+                ...(forcedContextTokens !== undefined && { context_tokens: forcedContextTokens })
+            };
         })()
     });
     return base;

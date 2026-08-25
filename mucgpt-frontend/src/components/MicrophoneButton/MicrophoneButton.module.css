@@ -5,6 +5,12 @@
     flex-shrink: 0;
 }
 
+.micButton {
+    width: 36px;
+    min-width: 36px !important;
+    height: 36px !important;
+}
+
 .micButton.busy {
     opacity: 0.6;
 }

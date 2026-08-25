@@ -211,7 +211,7 @@ export const LLMSelector = ({ onSelectionChange, defaultLLM, options }: Props) =
         <Dialog modalType="modal">
             <DialogTrigger disableButtonEnhancement>
                 <Tooltip content={title} relationship="description" positioning="above">
-                    <Button appearance="subtle" shape="circular" icon={<ChevronDown20Regular />} iconPosition="after">
+                    <Button appearance="subtle" size="medium" shape="circular" icon={<ChevronDown20Regular />} iconPosition="after">
                         {displayName}
                     </Button>
                 </Tooltip>
@@ -378,7 +378,13 @@ export const LLMSelector = ({ onSelectionChange, defaultLLM, options }: Props) =
 
                     <DialogActions className={styles.dialogActions}>
                         <DialogTrigger disableButtonEnhancement>
-                            <Button appearance="primary" size="medium" onClick={() => handleSelectModel(selectedModel)} className={styles.acceptButton}>
+                            <Button
+                                appearance="primary"
+                                size="medium"
+                                shape="rounded"
+                                onClick={() => handleSelectModel(selectedModel)}
+                                className={styles.acceptButton}
+                            >
                                 <Checkmark24Filled className={styles.checkIcon} />
                                 {t("components.llmSelector.selectButton", { defaultValue: "Auswählen" })}
                             </Button>

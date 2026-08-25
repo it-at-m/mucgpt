@@ -1,5 +1,5 @@
 import { Button, Tooltip } from "@fluentui/react-components";
-import { MicRegular, MicRecordRegular, MicSyncRegular, MicOffRegular } from "@fluentui/react-icons";
+import { MicFilled, MicRecordFilled, MicSyncFilled, MicOffFilled } from "@fluentui/react-icons";
 import { useTranslation } from "react-i18next";
 import { useCallback, useEffect, useRef } from "react";
 import styles from "./MicrophoneButton.module.css";
@@ -62,10 +62,10 @@ export const MicrophoneButton = ({ onTranscription, onLiveTranscription, onRecor
     const isBusy = status === "transcribing" || isModelLoading;
 
     const getIcon = () => {
-        if (disabled) return <MicOffRegular />;
-        if (isModelLoading || isBusy) return <MicSyncRegular />;
-        if (isRecording) return <MicRecordRegular />;
-        return <MicRegular />;
+        if (disabled) return <MicOffFilled />;
+        if (isModelLoading || isBusy) return <MicSyncFilled />;
+        if (isRecording) return <MicRecordFilled />;
+        return <MicFilled />;
     };
 
     const getTooltipContent = () => {
@@ -79,7 +79,7 @@ export const MicrophoneButton = ({ onTranscription, onLiveTranscription, onRecor
         <div className={styles.wrapper}>
             <Tooltip content={getTooltipContent()} relationship="label">
                 <Button
-                    size="large"
+                    size="medium"
                     appearance="subtle"
                     shape="circular"
                     className={`${styles.micButton} ${isBusy ? styles.busy : ""}`}

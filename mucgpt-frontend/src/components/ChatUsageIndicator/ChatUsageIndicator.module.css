@@ -4,11 +4,16 @@
  * while the visible ring is a plain span inside it that no Fluent state class touches.
  */
 .ringButton {
-    min-width: 0;
-    width: 40px;
-    height: 40px;
+    flex: 0 0 auto;
+    box-sizing: border-box;
+    min-width: 36px !important;
+    width: 36px !important;
+    height: 36px !important;
     padding: 0;
     overflow: visible;
+    border-radius: var(--borderRadiusCircular) !important;
+    border: none !important;
+    outline-offset: -1px;
 }
 
 .ring {
@@ -17,9 +22,11 @@
     position: relative;
     display: grid;
     place-items: center;
-    width: 32px;
-    height: 32px;
+    flex: 0 0 28px;
+    width: 28px;
+    height: 28px;
     padding: 3px;
+    box-sizing: border-box;
     border-radius: var(--borderRadiusCircular);
     background: conic-gradient(var(--colorBrandBackground) calc(var(--usage-percent) * 1%), var(--colorNeutralBackground4) 0);
     pointer-events: none;

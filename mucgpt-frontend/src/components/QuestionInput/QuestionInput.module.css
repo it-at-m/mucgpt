@@ -67,20 +67,6 @@
     box-shadow: none;
 }
 
-.questionInputContainer:focus-within {
-    outline: 1px solid var(--colorBrandBackground);
-    outline-offset: 1px;
-    transition:
-        outline 0.15s ease,
-}
-
-.questionInputContainer:hover {
-    outline: 1px solid var(--colorBrandBackground);
-    outline-offset: 1px;
-    transition:
-        outline 0.15s ease,
-}
-
 .noTools {
     margin-top: 0;
 }

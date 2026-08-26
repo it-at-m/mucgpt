@@ -67,6 +67,8 @@ MODELS:
       auto_enrich_from_model_info_endpoint: true
       max_output_tokens: 16384
       max_input_tokens: 128000
+      context_warning_threshold_percent: 75
+      context_critical_threshold_percent: 90
       description: "<description>"
       internal_task_model_strength: null  # Optional: "weak" for chat titles, "strong" for assistant drafts
       input_cost_per_token: 0.00000009

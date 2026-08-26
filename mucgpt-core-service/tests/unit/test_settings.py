@@ -6,6 +6,7 @@ from pathlib import Path
 from unittest.mock import patch
 
 import pytest
+from pydantic import ValidationError
 
 from config.settings import (
     MCPTransport,
@@ -331,6 +332,83 @@ class TestSettings:
                 assert model.description == "Manual"
                 assert model.supports_function_calling is False
         mocked.assert_not_called()
+
+    def test_model_context_usage_thresholds_default(self):
+        """Context usage thresholds default to 75/90 when not configured."""
+        models_json = json.dumps(
+            [
+                {
+                    "type": "OPENAI",
+                    "llm_name": "gpt-4o-mini",
+                    "endpoint": "https://exampleproxy/v1",
+                    "api_key": "proxy-key",
+                    "model_info": {
+                        "auto_enrich_from_model_info_endpoint": False,
+                        "max_output_tokens": 1000,
+                        "max_input_tokens": 2000,
+                        "description": "Manual",
+                    },
+                }
+            ]
+        )
+
+        with patch.dict(os.environ, {"MUCGPT_CORE_MODELS": models_json}):
+            settings = Settings()
+            model = settings.MODELS[0]
+            assert model.context_warning_threshold_percent == 75
+            assert model.context_critical_threshold_percent == 90
+
+    def test_model_context_usage_thresholds_configurable_per_model(self):
+        """Context usage thresholds can be overridden per model."""
+        models_json = json.dumps(
+            [
+                {
+                    "type": "OPENAI",
+                    "llm_name": "gpt-4o-mini",
+                    "endpoint": "https://exampleproxy/v1",
+                    "api_key": "proxy-key",
+                    "model_info": {
+                        "auto_enrich_from_model_info_endpoint": False,
+                        "max_output_tokens": 1000,
+                        "max_input_tokens": 2000,
+                        "description": "Manual",
+                        "context_warning_threshold_percent": 60,
+                        "context_critical_threshold_percent": 80,
+                    },
+                }
+            ]
+        )
+
+        with patch.dict(os.environ, {"MUCGPT_CORE_MODELS": models_json}):
+            settings = Settings()
+            model = settings.MODELS[0]
+            assert model.context_warning_threshold_percent == 60
+            assert model.context_critical_threshold_percent == 80
+
+    def test_model_context_usage_thresholds_reject_warning_above_critical(self):
+        """The warning threshold must stay below the critical threshold."""
+        models_json = json.dumps(
+            [
+                {
+                    "type": "OPENAI",
+                    "llm_name": "gpt-4o-mini",
+                    "endpoint": "https://exampleproxy/v1",
+                    "api_key": "proxy-key",
+                    "model_info": {
+                        "auto_enrich_from_model_info_endpoint": False,
+                        "max_output_tokens": 1000,
+                        "max_input_tokens": 2000,
+                        "description": "Manual",
+                        "context_warning_threshold_percent": 90,
+                        "context_critical_threshold_percent": 75,
+                    },
+                }
+            ]
+        )
+
+        with patch.dict(os.environ, {"MUCGPT_CORE_MODELS": models_json}):
+            with pytest.raises(ValidationError):
+                Settings()
 
     def test_sso_settings(self):
         """Test SSO settings configuration via nested env vars."""

@@ -10,8 +10,13 @@ import { useConfigContext } from "../../context/ConfigContext";
 import { upsertParsedDocumentFromUpload } from "../../service/parsedDocumentStorage";
 import { ContextManagerDialog, UploadedData, createUploadedData, getDataSignature, getFileSignature } from "../ContextManagerDialog/ContextManagerDialog";
 import { ChatToolSelector } from "../ChatToolSelector/ChatToolSelector";
+import { ChatUsageIndicator, type ChatUsageSummary } from "../ChatUsageIndicator/ChatUsageIndicator";
+import { ChatUsageMessageBar } from "../ChatUsageIndicator/ChatUsageMessageBar";
+import { getContextUsagePercent, getUsageCriticalThreshold, getUsageWarningThreshold } from "../ChatUsageIndicator/chatUsage";
 import { MicrophoneButton } from "../MicrophoneButton/MicrophoneButton";
 import { useTranscription } from "../TranscriptionSettings/TranscriptionSettingsContext";
+
+export type { ChatUsageSummary } from "../ChatUsageIndicator/ChatUsageIndicator";
 
 interface Props {
     onSend: (question: string, data: UploadedData[]) => void;
@@ -32,6 +37,9 @@ interface Props {
     draftCacheKey?: string;
     skipDraftRestore?: boolean;
     onTranscription?: (text: string) => void;
+    usage?: ChatUsageSummary;
+    onStartNewChat?: () => void;
+    usageConversationKey?: string;
     hideDisclaimer?: boolean;
 }
 
@@ -54,6 +62,9 @@ export const QuestionInput = ({
     draftCacheKey,
     skipDraftRestore = false,
     onTranscription,
+    usage,
+    onStartNewChat,
+    usageConversationKey,
     hideDisclaimer = false
 }: Props) => {
     const { t } = useTranslation();
@@ -71,10 +82,14 @@ export const QuestionInput = ({
     const uploadedDataRef = useRef<UploadedData[]>([]);
     const [isDragActive, setIsDragActive] = useState(false);
     const [isExpandedInput, setIsExpandedInput] = useState(false);
+    const [hasShownUsagePopover, setHasShownUsagePopover] = useState(false);
+    const [isUsagePopoverOpen, setIsUsagePopoverOpen] = useState(false);
+    const [isUsageMessageBarDismissed, setIsUsageMessageBarDismissed] = useState(false);
     const dragCounterRef = useRef(0);
     const isDraftHydratedRef = useRef(false);
     const isPageUnloadingRef = useRef(false);
     const setQuestionRef = useRef(setQuestion);
+    const previousUsageConversationKeyRef = useRef<string | undefined>(usageConversationKey);
     const recordingBaseRef = useRef("");
     const { isModelReady: transcriptionReady, status: transcriptionStatus } = useTranscription();
     const isTranscriptionActive = transcriptionStatus === "recording" || transcriptionStatus === "transcribing";
@@ -84,6 +99,41 @@ export const QuestionInput = ({
     const uploadedData = externalUploadedData ?? internalUploadedData;
     const activeDocumentCount = uploadedData.filter(data => data.isActive !== false).length;
     const hasSendableQuestion = question.trim().length > 0;
+    const contextPercent = getContextUsagePercent(usage);
+    const warningThreshold = getUsageWarningThreshold(usage);
+    const criticalThreshold = getUsageCriticalThreshold(usage);
+    const hasUsageNudges = Boolean(onStartNewChat && usageConversationKey && contextPercent !== undefined);
+    const isUsageMessageBarVisible = hasUsageNudges && contextPercent !== undefined && contextPercent >= criticalThreshold && !isUsageMessageBarDismissed;
+
+    useEffect(() => {
+        const isNewConversation = previousUsageConversationKeyRef.current !== usageConversationKey;
+
+        if (isNewConversation) {
+            previousUsageConversationKeyRef.current = usageConversationKey;
+            setHasShownUsagePopover(false);
+            setIsUsagePopoverOpen(false);
+            setIsUsageMessageBarDismissed(false);
+        }
+
+        if (!hasUsageNudges || contextPercent === undefined) {
+            setIsUsagePopoverOpen(false);
+            return;
+        }
+
+        const isPopoverRange = contextPercent >= warningThreshold && contextPercent < criticalThreshold;
+        const alreadyShownForConversation = isNewConversation ? false : hasShownUsagePopover;
+
+        if (isPopoverRange && !alreadyShownForConversation) {
+            setHasShownUsagePopover(true);
+            setIsUsagePopoverOpen(true);
+        } else if (!isPopoverRange) {
+            setIsUsagePopoverOpen(false);
+        }
+
+        if (contextPercent < criticalThreshold) {
+            setIsUsageMessageBarDismissed(false);
+        }
+    }, [contextPercent, criticalThreshold, hasShownUsagePopover, hasUsageNudges, usageConversationKey, warningThreshold]);
 
     const setUploadedData = useCallback(
         (data: UploadedData[] | ((prev: UploadedData[]) => UploadedData[])) => {
@@ -450,6 +500,10 @@ export const QuestionInput = ({
                     />
                 ) : null}
 
+                {isUsageMessageBarVisible && onStartNewChat && (
+                    <ChatUsageMessageBar onDismiss={() => setIsUsageMessageBarDismissed(true)} onStartNewChat={onStartNewChat} />
+                )}
+
                 <div
                     className={`${styles.questionInputContainer} ${
                         !tools?.tools?.length || !setSelectedTools ? styles.noTools : ""
@@ -487,6 +541,14 @@ export const QuestionInput = ({
                         disabled={disabled || isTranscriptionActive}
                     />
                     <div className={styles.questionInputButtons}>
+                        {usage && (
+                            <ChatUsageIndicator
+                                usage={usage}
+                                autoOpenNotice={isUsagePopoverOpen}
+                                onStartNewChat={onStartNewChat}
+                                onDismissNotice={() => setIsUsagePopoverOpen(false)}
+                            />
+                        )}
                         {allowTranscription && onTranscription && transcriptionReady && (
                             <MicrophoneButton
                                 onRecordingStart={() => {

@@ -12,6 +12,12 @@ export type ChatResponse = {
     error?: string;
     tokens?: number;
     user_tokens?: number;
+    context_tokens?: number;
+    usage_cost?: number;
+    usage_model?: string;
+    usage_max_input_tokens?: number | null;
+    usage_context_warning_threshold_percent?: number;
+    usage_context_critical_threshold_percent?: number;
     activeTools?: Array<{
         name: string;
         message: string;
@@ -82,6 +88,8 @@ export interface ApplicationConfig {
 export interface Model {
     llm_name: string;
     max_input_tokens?: number | null;
+    context_warning_threshold_percent?: number;
+    context_critical_threshold_percent?: number;
     description?: string | null;
     max_output_tokens?: number | null;
     knowledge_cut_off?: string | null;
@@ -123,6 +131,7 @@ export interface ChatCompletionChunk {
     object: "chat.completion.chunk";
     created: number;
     choices: ChatCompletionChunkChoice[];
+    usage?: { prompt_tokens?: number; completion_tokens?: number; total_tokens?: number; context_tokens?: number | null } | null;
 }
 
 export type CountTokenRequest = {

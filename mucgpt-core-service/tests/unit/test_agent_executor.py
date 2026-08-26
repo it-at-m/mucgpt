@@ -90,9 +90,7 @@ class DummyAgent:
         self.graph = MagicMock()
         self.graph.astream = llm.astream
         self.graph.ainvoke = AsyncMock(
-            side_effect=RuntimeError("Simulated failure")
-            if llm.fail
-            else None,
+            side_effect=RuntimeError("Simulated failure") if llm.fail else None,
             return_value={"messages": [AIMessage(content="Simplified text.")]},
         )
 
@@ -291,6 +289,103 @@ class TestMUCGPTAgentExecutor:
             user_info=None,
         )
         assert response.choices[0].finish_reason == "error"
+
+    @pytest.mark.asyncio
+    async def test_run_with_streaming_attaches_usage_to_final_chunk(self):
+        class UsageGraph:
+            async def astream(self, *_args, **_kwargs):
+                yield (
+                    "messages",
+                    (
+                        AIMessageChunk(
+                            content="hi",
+                            usage_metadata={
+                                "input_tokens": 12,
+                                "output_tokens": 3,
+                                "total_tokens": 15,
+                            },
+                        ),
+                        {"langgraph_node": "model"},
+                    ),
+                )
+
+        class UsageAgent:
+            def __init__(self):
+                self.model = DummyRunnerLLM()
+                self.graph = UsageGraph()
+
+        runner = MUCGPTAgentExecutor(UsageAgent())
+
+        chunks = []
+        async for chunk in runner.run_with_streaming(
+            messages=[InputMessage(role="user", content="hi")],
+            temperature=0.7,
+            model="test",
+            user_info=None,
+        ):
+            chunks.append(chunk)
+
+        stop_chunk = chunks[-1]
+        assert stop_chunk["choices"][0]["finish_reason"] == "stop"
+        assert stop_chunk["usage"] == {
+            "prompt_tokens": 12,
+            "completion_tokens": 3,
+            "total_tokens": 15,
+            "context_tokens": 15,
+        }
+
+    @pytest.mark.asyncio
+    async def test_run_with_streaming_aggregates_cost_usage_and_keeps_last_context(
+        self,
+    ):
+        class UsageGraph:
+            async def astream(self, *_args, **_kwargs):
+                for content, input_tokens, output_tokens in (
+                    ("tool call", 10, 2),
+                    ("final answer", 20, 4),
+                ):
+                    yield (
+                        "messages",
+                        (
+                            AIMessageChunk(
+                                content=content,
+                                usage_metadata={
+                                    "input_tokens": input_tokens,
+                                    "output_tokens": output_tokens,
+                                    "total_tokens": input_tokens + output_tokens,
+                                },
+                            ),
+                            {"langgraph_node": "model"},
+                        ),
+                    )
+
+        class UsageAgent:
+            def __init__(self):
+                self.model = DummyRunnerLLM()
+                self.graph = UsageGraph()
+
+        runner = MUCGPTAgentExecutor(UsageAgent())
+
+        chunks = []
+        async for chunk in runner.run_with_streaming(
+            messages=[InputMessage(role="user", content="hi")],
+            temperature=0.7,
+            model="test",
+            user_info=None,
+        ):
+            chunks.append(chunk)
+
+        # prompt_tokens for each invocation already includes the full
+        # conversation so far (system prompt, history, earlier tool-call
+        # rounds), so the final chunk should report the latest prompt_tokens
+        # (not a sum across invocations) while completion_tokens - newly
+        # generated per invocation - are correctly additive.
+        assert chunks[-1]["usage"] == {
+            "prompt_tokens": 20,
+            "completion_tokens": 6,
+            "total_tokens": 26,
+            "context_tokens": 24,
+        }
 
     @pytest.mark.asyncio
     async def test_run_with_streaming_traces_internal_tool_and_update_events(

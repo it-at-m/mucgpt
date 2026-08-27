@@ -329,7 +329,7 @@ class ContextMiddleware(AgentMiddleware):
         # request = policy.infer_scope(request, callbacks=inference_callbacks)
         request = _filter_request_tools(request)
         request = request.override(tools=policy.select_tools(request))
-        logger.info(f"selected Tools: {len(request.tools or [])}")
+        logger.debug(f"selected Tools: {len(request.tools or [])}")
         _annotate_span_with_policy_state(policy, request.state, self.state_schema)
 
         assistant_id = _get_assistant_id_from_request(request)
@@ -363,7 +363,7 @@ class ContextMiddleware(AgentMiddleware):
         # request = await policy.ainfer_scope(request, callbacks=inference_callbacks)
         request = _filter_request_tools(request)
         request = request.override(tools=policy.select_tools(request))
-        logger.info(f"selected Tools: {len(request.tools or [])}")
+        logger.debug(f"selected Tools: {len(request.tools or [])}")
         _annotate_span_with_policy_state(policy, request.state, self.state_schema)
 
         assistant_id = _get_assistant_id_from_request(request)
@@ -434,7 +434,7 @@ class TokenUsageMiddleware(AgentMiddleware):
             logger.warning("No token usage metadata found in the model response.")
             return
 
-        logger.info("Token usage metadata: %s", usage_metadata)
+        logger.debug("Token usage metadata: %s", usage_metadata)
         runtime_context = _get_request_context(request)
         if runtime_context is None or runtime_context.token_usage is None:
             logger.warning("No request-local token usage collector configured.")

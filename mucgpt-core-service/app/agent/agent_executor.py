@@ -190,7 +190,7 @@ class MUCGPTAgentExecutor:
         data_sources: list[dict[str, Any]] | None = None,
         conversation_id: str | None = None,
     ) -> AsyncGenerator[dict]:
-        logger.info(
+        logger.debug(
             "Chat streaming started with temperature %s, model %s",
             temperature,
             model,
@@ -391,7 +391,7 @@ class MUCGPTAgentExecutor:
         data_sources: list[dict[str, Any]] | None = None,
         conversation_id: str | None = None,
     ) -> ChatCompletionResponse:
-        logger.info(
+        logger.debug(
             "Chat non-streaming started with temperature %s, model %s",
             temperature,
             model,
@@ -445,7 +445,7 @@ class MUCGPTAgentExecutor:
                 )
                 if ai_message is None:
                     raise RuntimeError("Agent completed without an assistant message")
-                logger.info("Non-streaming completed successfully.")
+
                 # capture_input/output are disabled on @observe above to avoid
                 # duplicating the full resent history; set a lightweight
                 # trace-level summary instead so it isn't blank in the UI.

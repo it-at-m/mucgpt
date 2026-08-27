@@ -40,7 +40,6 @@ LANGFUSE:
   PUBLIC_KEY: "<your-pk>"
 
 # Optional: base64-encoded RSA public key for encrypted trace identity.
-# Prefer MUCGPT_CORE_USER_TRACE__PUBLIC_KEY in production.
 USER_TRACE:
   PUBLIC_KEY: null
 

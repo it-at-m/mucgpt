@@ -1,7 +1,6 @@
 import hashlib
 import re
 from collections.abc import Sequence
-from pathlib import Path
 from typing import Any, Protocol
 
 from fastapi import HTTPException
@@ -14,12 +13,10 @@ from config.langfuse_provider import LangfuseProvider
 from config.model_provider import ModelRegistry
 from config.settings import Settings
 from core.auth_models import AuthenticationResult
+from core.lf_prompts import PromptPool
 from core.logtools import getLogger
 
 logger = getLogger()
-PROMPT_POOL_DIR = Path(__file__).resolve().parents[1] / "agent/prompt_pool"
-GENERATION_PROMPTS_DIR = PROMPT_POOL_DIR / "generation_prompts"
-COMPLIANCE_PROMPTS_DIR = PROMPT_POOL_DIR / "compliance_prompts"
 
 
 class MessageLike(Protocol):
@@ -69,9 +66,7 @@ def extract_message_content(content: Any) -> str:
     return str(content)
 
 
-def get_internal_task_model(
-    settings: Settings, strength: str
-) -> str:
+def get_internal_task_model(settings: Settings, strength: str) -> str:
     """Return the preferred configured model for an internal LLM task."""
 
     if not settings.MODELS:
@@ -92,14 +87,14 @@ def get_internal_task_model(
     return model.llm_name
 
 
-def read_prompt_file(prompt_directory: Path, filename: str) -> str:
-    """Read a prompt template from a known prompt directory."""
+def read_prompt_file(filename: str, folder_name: str | None = None) -> str:
+    """Read a default prompt, preferring the Langfuse-backed pool with local fallback."""
 
-    path = prompt_directory / filename
+    name = filename.rsplit(".", 1)[0]
     try:
-        return path.read_text(encoding="utf-8")
-    except FileNotFoundError as exc:  # pragma: no cover - misconfiguration
-        logger.error("Prompt file not found: %s", path)
+        return PromptPool.get_prompt(name, folder_name)
+    except KeyError as exc:  # pragma: no cover - misconfiguration
+        logger.error("Prompt file not found: %s", filename)
         raise HTTPException(
             status_code=500,
             detail=f"Prompt configuration missing: {filename}",
@@ -162,7 +157,9 @@ async def invoke_internal_generation(
         user_id=hash_user_id(user_info.user_id),
         tags=trace_tags,
     ):
-        ai_message = await llm.ainvoke(to_langchain_messages(messages), config=run_config)
+        ai_message = await llm.ainvoke(
+            to_langchain_messages(messages), config=run_config
+        )
 
     return extract_message_content(ai_message.content)
 
@@ -199,4 +196,4 @@ async def invoke_internal_structured_generation[StructuredOutputT: BaseModel](
         user_id=hash_user_id(user_info.user_id),
         tags=trace_tags,
     ):
-        return await llm.ainvoke(to_langchain_messages(messages), config=run_config) # type: ignore
+        return await llm.ainvoke(to_langchain_messages(messages), config=run_config)  # type: ignore

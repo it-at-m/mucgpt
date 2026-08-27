@@ -1,4 +1,3 @@
-import os
 from typing import Any, cast
 
 from deepagents import create_deep_agent
@@ -11,18 +10,11 @@ from agent.middleware import ContextMiddleware, RequestContext, ToolErrorMiddlew
 from agent.state_models.default_state import DefaultAgentState
 from agent.tools.mcp import McpBearerAuthProvider
 from core.auth_models import AuthenticationResult
+from core.lf_prompts import PromptPool
 from core.logtools import getLogger
 
 logger = getLogger(name="mucgpt-core-react-agent")
 
-DEFAULT_INSTRUCTIONS = ""
-with open(
-    os.path.join(os.path.dirname(__file__), "prompt_pool", "default_instructions.md")
-) as fp:
-    DEFAULT_INSTRUCTIONS = fp.read()
-
-# TODO:
-# - consider prompt pool in langfuse
 
 class _ConfiguredLangChainDeepAgentGraph:
     """Simple wrapper around a LangChain agent to configure it with user info and tools on each run."""
@@ -49,7 +41,7 @@ class _ConfiguredLangChainDeepAgentGraph:
                 ContextMiddleware(state_schema=self.state_schema),
                 ToolErrorMiddleware(),
             ], # type: ignore
-            system_prompt=DEFAULT_INSTRUCTIONS,
+            system_prompt=PromptPool.get_prompt("default_instructions"),
             debug=self.debug,
             state_schema=self.state_schema,
             context_schema=RequestContext,

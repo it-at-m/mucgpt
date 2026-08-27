@@ -70,7 +70,10 @@ class ModelInfo(BaseModel):
 
     @model_validator(mode="after")
     def check_threshold_order(self) -> "ModelInfo":
-        if self.context_warning_threshold_percent >= self.context_critical_threshold_percent:
+        if (
+            self.context_warning_threshold_percent
+            >= self.context_critical_threshold_percent
+        ):
             raise ValueError(
                 "context_warning_threshold_percent must be lower than "
                 "context_critical_threshold_percent"
@@ -354,6 +357,12 @@ class LangfuseConfig(BaseModel):
     HOST: str | None = None
 
 
+class UserTraceConfig(BaseModel):
+    """Encrypted user identity configuration for Langfuse traces."""
+
+    PUBLIC_KEY: str | None = None
+
+
 class MCPToolDescription(BaseModel):
     """Configuration for overriding an MCP tool's description."""
 
@@ -495,6 +504,7 @@ class Settings(BaseSettings):
     # Nested sub-configurations
     SSO: SSOConfig = Field(default_factory=SSOConfig)
     LANGFUSE: LangfuseConfig = Field(default_factory=LangfuseConfig)
+    USER_TRACE: UserTraceConfig = Field(default_factory=UserTraceConfig)
     MCP: MCPConfig = Field(default_factory=MCPConfig)
     REDIS: RedisConfig = Field(default_factory=RedisConfig)
     INTERNET_SEARCH: InternetSearchConfig = Field(default_factory=InternetSearchConfig)

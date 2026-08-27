@@ -35,6 +35,7 @@ dependencies = [
     "cloudpickle>=3.1.2",
     "python-multipart>=0.0.5",
     "deepagents>=0.7.6",
+    "cryptography>=50.0.0",
 ]
 
 [dependency-groups]

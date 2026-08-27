@@ -14,6 +14,7 @@ from config.settings import (
 )
 from core.auth_models import AuthenticationResult
 from core.cache import RedisCache
+from core.crypto import validate_user_trace_public_key
 from core.logtools import getLogger
 
 logger = getLogger()
@@ -47,6 +48,7 @@ class ModelOptions:
 async def warmup_app() -> None:
     logger.info("Warming up app context...")
     settings = get_settings()
+    validate_user_trace_public_key()
     # init model metadata
     _initialize_models_metadata(settings)
     # init model

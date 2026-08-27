@@ -28,6 +28,7 @@ from api.api_models import ChatCompletionMessage as InputMessage
 from api.exception import llm_exception_handler
 from config.langfuse_provider import LangfuseProvider
 from core.auth_models import AuthenticationResult
+from core.crypto import encrypted_user_metadata
 from core.llm_helpers import (
     extract_department_prefix,
     hash_user_id,
@@ -213,6 +214,7 @@ class MUCGPTAgentExecutor:
             user_id=hash_user_id(user_info.user_id if user_info else None),
             tags=tags,
             session_id=conversation_id,
+            metadata=encrypted_user_metadata(user_info),
         ):
             # capture_input/output are disabled on @observe above to avoid
             # duplicating the full resent history; set a lightweight
@@ -411,6 +413,7 @@ class MUCGPTAgentExecutor:
             user_id=hash_user_id(user_info.user_id if user_info else None),
             tags=tags,
             session_id=conversation_id,
+            metadata=encrypted_user_metadata(user_info),
         ):
             token_usage = TokenUsage()
             request_config = RunnableConfig(

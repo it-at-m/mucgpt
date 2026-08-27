@@ -14,6 +14,7 @@ from config.langfuse_provider import LangfuseProvider
 from config.model_provider import ModelRegistry
 from config.settings import Settings
 from core.auth_models import AuthenticationResult
+from core.crypto import encrypted_user_metadata
 from core.logtools import getLogger
 
 logger = getLogger()
@@ -69,9 +70,7 @@ def extract_message_content(content: Any) -> str:
     return str(content)
 
 
-def get_internal_task_model(
-    settings: Settings, strength: str
-) -> str:
+def get_internal_task_model(settings: Settings, strength: str) -> str:
     """Return the preferred configured model for an internal LLM task."""
 
     if not settings.MODELS:
@@ -161,8 +160,11 @@ async def invoke_internal_generation(
     with propagate_attributes(
         user_id=hash_user_id(user_info.user_id),
         tags=trace_tags,
+        metadata=encrypted_user_metadata(user_info),
     ):
-        ai_message = await llm.ainvoke(to_langchain_messages(messages), config=run_config)
+        ai_message = await llm.ainvoke(
+            to_langchain_messages(messages), config=run_config
+        )
 
     return extract_message_content(ai_message.content)
 
@@ -198,5 +200,6 @@ async def invoke_internal_structured_generation[StructuredOutputT: BaseModel](
     with propagate_attributes(
         user_id=hash_user_id(user_info.user_id),
         tags=trace_tags,
+        metadata=encrypted_user_metadata(user_info),
     ):
-        return await llm.ainvoke(to_langchain_messages(messages), config=run_config) # type: ignore
+        return await llm.ainvoke(to_langchain_messages(messages), config=run_config)  # type: ignore

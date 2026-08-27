@@ -170,9 +170,6 @@ def authenticate_user(
     try:
         logger.info("Authenticating user")
         user_info = auth_helper.authenticate(authorization)
-        logger.info(
-            f"User authenticated successfully: {user_info.name} from {user_info.department}"
-        )
         return user_info
     except AuthError as e:
         logger.error(f"Authentication failed: {e.error}")

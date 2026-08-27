@@ -13,6 +13,7 @@ from langfuse import get_client, observe, propagate_attributes
 from langfuse.langchain import CallbackHandler
 
 from agent.deep_agent import MUCGPTAgent
+from agent.middleware import TokenUsage
 from agent.tools.tool_chunk import ToolStreamChunk
 from api.api_models import (
     ChatCompletionChoice,
@@ -52,24 +53,14 @@ def _json_safe(value: Any) -> Any:
     return str(value)
 
 
-def _usage_from_metadata(usage_metadata: dict[str, Any] | None) -> Usage | None:
-    """Map LangChain's usage_metadata (input_tokens/output_tokens/total_tokens) to our Usage schema."""
-    if not usage_metadata:
+def _usage_from_token_usage(token_usage: TokenUsage) -> Usage | None:
+    if token_usage.context_tokens is None:
         return None
-    prompt_tokens = usage_metadata.get("input_tokens") or usage_metadata.get(
-        "prompt_tokens", 0
-    )
-    completion_tokens = usage_metadata.get("output_tokens") or usage_metadata.get(
-        "completion_tokens", 0
-    )
-    total_tokens = (
-        usage_metadata.get("total_tokens") or prompt_tokens + completion_tokens
-    )
     return Usage(
-        prompt_tokens=prompt_tokens,
-        completion_tokens=completion_tokens,
-        total_tokens=total_tokens,
-        context_tokens=total_tokens,
+        prompt_tokens=token_usage.prompt_tokens,
+        completion_tokens=token_usage.completion_tokens,
+        total_tokens=token_usage.prompt_tokens + token_usage.completion_tokens,
+        context_tokens=token_usage.context_tokens,
     )
 
 
@@ -199,7 +190,7 @@ class MUCGPTAgentExecutor:
         data_sources: list[dict[str, Any]] | None = None,
         conversation_id: str | None = None,
     ) -> AsyncGenerator[dict]:
-        logger.info(
+        logger.debug(
             "Chat streaming started with temperature %s, model %s",
             temperature,
             model,
@@ -231,9 +222,7 @@ class MUCGPTAgentExecutor:
             )
             answer_chunks: list[str] = []
             trace_events: list[dict[str, Any]] = []
-            last_prompt_tokens = 0
-            total_completion_tokens = 0
-            last_context_tokens: int | None = None
+            token_usage = TokenUsage()
             config = merge_configs(
                 self.base_config,
                 RunnableConfig(
@@ -248,6 +237,7 @@ class MUCGPTAgentExecutor:
                         "llm_extra_body": llm_extra_body,
                         "assistant_id": assistant_id,
                         "data_sources": data_sources,
+                        "token_usage": token_usage,
                     },
                 ),
             )
@@ -285,13 +275,6 @@ class MUCGPTAgentExecutor:
                             "assistant",
                             "model",
                         } and isinstance(message_chunk, AIMessageChunk):
-                            chunk_usage = getattr(message_chunk, "usage_metadata", None)
-                            if chunk_usage:
-                                usage = _usage_from_metadata(chunk_usage)
-                                if usage:
-                                    last_prompt_tokens = usage.prompt_tokens
-                                    total_completion_tokens += usage.completion_tokens
-                                    last_context_tokens = usage.total_tokens
                             chunk_content = message_chunk.content
                             if chunk_content is None:
                                 continue
@@ -379,6 +362,9 @@ class MUCGPTAgentExecutor:
                 return
 
             logger.debug("Sending end-of-stream signal")
+            usage = _usage_from_token_usage(token_usage)
+            if usage is None:
+                logger.warning("Streaming response completed without token usage.")
             yield ChatCompletionChunk(
                 id=id_,
                 object="chat.completion.chunk",
@@ -390,16 +376,7 @@ class MUCGPTAgentExecutor:
                         finish_reason="stop",  # type: ignore
                     )
                 ],
-                usage=(
-                    Usage(
-                        prompt_tokens=last_prompt_tokens,
-                        completion_tokens=total_completion_tokens,
-                        total_tokens=last_prompt_tokens + total_completion_tokens,
-                        context_tokens=last_context_tokens,
-                    )
-                    if last_context_tokens is not None
-                    else None
-                ),
+                usage=usage,
             ).model_dump()
 
     @observe(name="Completion", capture_input=False, capture_output=False)
@@ -414,7 +391,7 @@ class MUCGPTAgentExecutor:
         data_sources: list[dict[str, Any]] | None = None,
         conversation_id: str | None = None,
     ) -> ChatCompletionResponse:
-        logger.info(
+        logger.debug(
             "Chat non-streaming started with temperature %s, model %s",
             temperature,
             model,
@@ -435,6 +412,7 @@ class MUCGPTAgentExecutor:
             tags=tags,
             session_id=conversation_id,
         ):
+            token_usage = TokenUsage()
             request_config = RunnableConfig(
                 configurable={
                     "llm_temperature": temperature,
@@ -447,6 +425,7 @@ class MUCGPTAgentExecutor:
                     "llm_extra_body": llm_extra_body,
                     "assistant_id": assistant_id,
                     "data_sources": data_sources,
+                    "token_usage": token_usage,
                 },
             )
             config = merge_configs(self.base_config, request_config)
@@ -466,7 +445,7 @@ class MUCGPTAgentExecutor:
                 )
                 if ai_message is None:
                     raise RuntimeError("Agent completed without an assistant message")
-                logger.info("Non-streaming completed successfully.")
+
                 # capture_input/output are disabled on @observe above to avoid
                 # duplicating the full resent history; set a lightweight
                 # trace-level summary instead so it isn't blank in the UI.
@@ -474,6 +453,17 @@ class MUCGPTAgentExecutor:
                     input=messages[-1].content if messages else None,
                     output=ai_message.content,
                 )
+                usage = _usage_from_token_usage(token_usage)
+                if usage is None:
+                    logger.warning(
+                        "Non-streaming response completed without token usage."
+                    )
+                    usage = Usage(
+                        prompt_tokens=0,
+                        completion_tokens=0,
+                        total_tokens=0,
+                        context_tokens=None,
+                    )
                 response = ChatCompletionResponse(
                     id=str(uuid.uuid4()),
                     object="chat.completion",
@@ -488,10 +478,7 @@ class MUCGPTAgentExecutor:
                             finish_reason="stop",
                         )
                     ],
-                    usage=_usage_from_metadata(
-                        getattr(ai_message, "usage_metadata", None)
-                    )
-                    or Usage(prompt_tokens=0, completion_tokens=0, total_tokens=0, context_tokens=0),
+                    usage=usage,
                 )
                 return response
             except Exception as ex:

@@ -7,7 +7,13 @@ from langchain_core.runnables import RunnableConfig
 from langchain_core.runnables.config import merge_configs
 from langchain_core.tools.base import BaseTool
 
-from agent.middleware import ContextMiddleware, RequestContext, ToolErrorMiddleware
+from agent.middleware import (
+    ContextMiddleware,
+    RequestContext,
+    TokenUsage,
+    TokenUsageMiddleware,
+    ToolErrorMiddleware,
+)
 from agent.state_models.default_state import DefaultAgentState
 from agent.tools.mcp import McpBearerAuthProvider
 from core.auth_models import AuthenticationResult
@@ -23,6 +29,7 @@ with open(
 
 # TODO:
 # - consider prompt pool in langfuse
+
 
 class _ConfiguredLangChainDeepAgentGraph:
     """Simple wrapper around a LangChain agent to configure it with user info and tools on each run."""
@@ -48,7 +55,8 @@ class _ConfiguredLangChainDeepAgentGraph:
             middleware=[
                 ContextMiddleware(state_schema=self.state_schema),
                 ToolErrorMiddleware(),
-            ], # type: ignore
+                TokenUsageMiddleware(),
+            ],  # type: ignore
             system_prompt=DEFAULT_INSTRUCTIONS,
             debug=self.debug,
             state_schema=self.state_schema,
@@ -73,6 +81,7 @@ class _ConfiguredLangChainDeepAgentGraph:
         enabled_tools = configurable.get("enabled_tools")
         selected_llm = configurable.get("llm")
         assistant_id = configurable.get("assistant_id")
+        token_usage = configurable.get("token_usage")
 
         # Keep MCP auth token map up-to-date for forwarded auth providers.
         McpBearerAuthProvider.set_token(user_info.user_id, user_info.token)
@@ -88,6 +97,7 @@ class _ConfiguredLangChainDeepAgentGraph:
             stream=configurable.get("llm_streaming", False),
             extra_body=extra_body,
             enabled_tools=enabled_tools,
+            token_usage=token_usage if isinstance(token_usage, TokenUsage) else None,
         )
 
         return messages, data_sources, request_context

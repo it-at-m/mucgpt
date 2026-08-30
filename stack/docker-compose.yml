@@ -112,7 +112,7 @@ services:
   # #### Gateway ####
   #
   refarch-gateway:
-    image: ghcr.io/it-at-m/refarch/refarch-gateway:1.7.0@sha256:3f82ab83c212ca53c9c2b606cfe29291f21525eac86fece215d0e1c6ca51273f
+    image: ghcr.io/it-at-m/refarch/refarch-gateway:1.9.0@sha256:688b8cdd91a59fdedc8e7b36d4b8f7740b0a1020eae7a8a49ab0da6eb9f10f1d
     depends_on:
       init-keycloak:
         condition: service_completed_successfully

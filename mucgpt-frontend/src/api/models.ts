@@ -83,6 +83,7 @@ export interface ApplicationConfig {
     feature_request_url?: string;
     contact_mail_url?: string;
     ad2image_url?: string;
+    owner_profile_url_template?: string;
 }
 
 export interface Model {

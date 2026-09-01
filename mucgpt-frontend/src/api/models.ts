@@ -177,7 +177,6 @@ export interface ToolBase {
 export interface OwnerDetailsResponse {
     user_id: string;
     username: string;
-    contact_address?: string | null;
     givenName?: string | null;
     sn?: string | null;
     mail?: string | null;

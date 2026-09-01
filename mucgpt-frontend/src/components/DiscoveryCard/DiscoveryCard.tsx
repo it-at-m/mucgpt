@@ -1,6 +1,6 @@
 import React, { forwardRef, ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
-import { Badge, Card, CardPreview, mergeClasses, CardProps, BadgeProps } from "@fluentui/react-components";
+import { Badge, Card, CardPreview, mergeClasses, Subtitle2, CardProps, BadgeProps } from "@fluentui/react-components";
 import { LockClosed16Regular, People16Regular, Person16Regular } from "@fluentui/react-icons";
 import styles from "./DiscoveryCard.module.css";
 import { MarkdownRenderer } from "../MarkdownRenderer/MarkdownRenderer";
@@ -109,7 +109,9 @@ export const DiscoveryCard = forwardRef<HTMLDivElement, DiscoveryCardProps>((pro
         if (title) {
             return (
                 <div className={styles.headerRow}>
-                    <div className={mergeClasses(styles.headerText, titleClassName)}>{title}</div>
+                    <Subtitle2 as="h3" className={mergeClasses(styles.headerText, titleClassName)}>
+                        {title}
+                    </Subtitle2>
                     {renderedBadges.length > 0 && (
                         <div className={styles.badgeGroup}>
                             {renderedBadges.map(renderedBadge => (
@@ -148,7 +150,6 @@ export const DiscoveryCard = forwardRef<HTMLDivElement, DiscoveryCardProps>((pro
 
         return (
             <div className={styles.metadataBlock}>
-                <div className={styles.metadataDivider} aria-hidden="true" />
                 <div className={styles.metadataRow}>
                     {(metadataStartNode || metadataStartLabel) && (
                         <span className={styles.metadataStart}>
@@ -182,6 +183,7 @@ export const DiscoveryCard = forwardRef<HTMLDivElement, DiscoveryCardProps>((pro
             onClick={handleClick}
             onKeyDown={handleKeyDown}
             tabIndex={onClick || linkTo ? 0 : rest.tabIndex}
+            size="large"
             {...rest}
         >
             {renderHeader()}

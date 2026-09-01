@@ -43,7 +43,7 @@
 }
 
 .headerSection {
-    margin-bottom: 24px;
+    margin-bottom: var(--spacingVerticalXXL);
 }
 
 .titleBlock {
@@ -56,13 +56,13 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 16px;
+    gap: var(--spacingHorizontalL);
     min-width: 0;
 }
 
 .headerActions {
     display: flex;
-    gap: 8px;
+    gap: var(--spacingHorizontalS);
     align-items: center;
     justify-content: flex-end;
     flex: 0 0 auto;
@@ -70,113 +70,75 @@
 }
 
 .header {
-    margin-bottom: 8px;
+    margin-bottom: var(--spacingVerticalXS) !important;
     display: block;
-    font-size: 30px !important;
-    line-height: 36px !important;
-    font-weight: bold !important;
 }
 
 .subtitle {
     color: var(--colorNeutralForeground3);
-    line-height: 30px !important;
     display: block;
     margin-bottom: 0;
-    font-size: 18px !important;
 }
 
 .searchBox {
     display: flex !important;
     width: 100% !important;
     max-width: none !important;
-    min-width: 260px;
-    min-height: 40px;
     box-sizing: border-box;
-    margin-bottom: 16px;
-    margin-bottom: 32px !important;
-    border: 1px solid var(--colorNeutralStroke3) !important;
+    margin-bottom: var(--spacingVerticalXXXL) !important;
+    border: 1px solid var(--colorNeutralStroke2) !important;
     border-radius: var(--borderRadiusMedium);
-    background-color: var(--colorNeutralBackground2) !important;
-}
-
-.searchBox::after,
-.searchBox::before {
-    display: none !important;
+    background-color: var(--colorNeutralBackground1) !important;
+    transition:
+        border-color 0.16s ease,
+        background-color 0.16s ease;
 }
 
 .searchBox:hover {
     border-color: var(--colorNeutralStroke1) !important;
-    background-color: var(--colorNeutralBackground2Hover) !important;
+    background-color: var(--colorSubtleBackgroundHover) !important;
 }
 
 .searchBox:focus-within {
-    border-color: var(--colorBrandBackground) !important;
-    outline: none !important;
+    border-color: var(--colorCompoundBrandStroke) !important;
 }
 
 .sortDropdown {
     width: 172px;
     min-width: 0;
     flex-shrink: 0;
-    border: 1px solid var(--colorNeutralStroke3) !important;
+    border: 1px solid var(--colorNeutralStroke2) !important;
     border-radius: var(--borderRadiusMedium);
-    background-color: var(--colorNeutralBackground2) !important;
-}
-
-.sortDropdown::after,
-.sortDropdown::before {
-    display: none !important;
+    background-color: var(--colorNeutralBackground1) !important;
+    transition:
+        border-color 0.16s ease,
+        background-color 0.16s ease;
 }
 
 .sortDropdown:hover {
     border-color: var(--colorNeutralStroke1) !important;
-    background-color: var(--colorNeutralBackground2Hover) !important;
+    background-color: var(--colorSubtleBackgroundHover) !important;
 }
 
 .sortDropdown:focus-within {
-    border-color: var(--colorBrandBackground) !important;
-    outline: none !important;
+    border-color: var(--colorCompoundBrandStroke) !important;
 }
 
-.sortDropdownListbox {
-    padding: 4px !important;
-    border: 1px solid var(--colorNeutralStroke3) !important;
-    border-radius: var(--borderRadiusLarge) !important;
-    background-color: var(--colorNeutralBackground2) !important;
-    box-shadow: var(--shadow16) !important;
-}
-
-.sortDropdownListbox :global([role="option"]) {
-    border-radius: var(--borderRadiusMedium);
+.sortDropdown :global(.fui-Dropdown__button),
+.sortDropdown :global(.fui-Dropdown__expandIcon) {
     color: var(--colorNeutralForeground2);
-    background-color: transparent;
-}
-
-.sortDropdownListbox :global([role="option"]:hover) {
-    color: var(--colorNeutralForeground1);
-    background-color: var(--colorNeutralBackground3);
-}
-
-.sortDropdownListbox :global([role="option"][aria-selected="true"]) {
-    color: var(--colorBrandForeground2);
-    background-color: var(--colorBrandBackground2);
-    font-weight: var(--fontWeightSemibold);
-}
-
-.sortDropdownListbox :global([role="option"][aria-selected="true"]:hover) {
-    background-color: var(--colorBrandBackground2Hover);
 }
 
 .librarySections {
     display: flex;
     flex-direction: column;
-    gap: 24px;
+    gap: var(--spacingVerticalXXXL);
 }
 
 .assistantSection {
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: var(--spacingVerticalM);
 }
 
 .sectionDivider {
@@ -190,61 +152,59 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 16px;
+    gap: var(--spacingHorizontalL);
 }
 
 .sectionHeadingBlock {
     display: flex;
     flex-direction: column;
-    gap: 6px;
     min-width: 0;
 }
 
 .sectionTitle {
     color: var(--colorNeutralForeground1);
-    font-size: 18px;
-    line-height: 24px;
-    font-weight: var(--fontWeightSemibold);
     margin: 0;
+    margin-right: auto;
 }
 
 .myFilterGroup {
     display: inline-flex;
-    align-items: center;
-    gap: 2px;
+    align-items: stretch;
+    gap: var(--spacingHorizontalXXS);
     width: fit-content;
     max-width: 100%;
-    margin-top: 6px;
+    height: 32px;
     padding: 3px;
-    border: none;
+    border: 1px solid var(--colorNeutralStroke2);
     border-radius: var(--borderRadiusMedium);
-    background-color: var(--colorNeutralBackground2);
+    background-color: var(--colorNeutralBackground1);
+    transition: border-color 0.16s ease;
+}
+
+.myFilterGroup:hover {
+    border-color: var(--colorNeutralStroke1);
 }
 
 .myFilterGroup button {
     min-width: 0;
-    min-height: 28px;
-    padding: 0 12px;
+    min-height: 0;
+    padding: 0 var(--spacingHorizontalM);
     border: none !important;
     border-radius: calc(var(--borderRadiusMedium) - 2px);
-    color: var(--colorNeutralForeground2) !important;
-    background-color: transparent !important;
     font-weight: var(--fontWeightSemibold);
-}
-
-.myFilterGroup button:hover {
-    color: var(--colorNeutralForeground1) !important;
-    background-color: var(--colorSubtleBackgroundHover) !important;
+    transition:
+        color 0.16s ease,
+        background-color 0.16s ease;
 }
 
 .myFilterGroup button[aria-pressed="true"] {
-    color: var(--colorBrandForeground2) !important;
-    background-color: var(--colorBrandBackground2) !important;
+    color: var(--colorNeutralForegroundOnBrand) !important;
+    background-color: var(--colorBrandBackground) !important;
     box-shadow: none;
 }
 
 .myFilterGroup button[aria-pressed="true"]:hover {
-    background-color: var(--colorBrandBackground2Hover) !important;
+    background-color: var(--colorBrandBackgroundHover) !important;
 }
 
 .sectionEmptyState {
@@ -282,15 +242,12 @@
 .emptyTitle {
     margin: 0;
     color: var(--colorNeutralForeground1);
-    font-size: 15px;
-    line-height: 20px;
 }
 
 .emptyDescription {
     max-width: 64ch;
     margin: 0;
     color: var(--colorNeutralForeground2);
-    line-height: 20px;
 }
 
 .emptyActions {
@@ -298,7 +255,7 @@
     display: flex;
     align-items: center;
     justify-content: flex-start;
-    gap: 8px;
+    gap: var(--spacingHorizontalS);
     flex-wrap: wrap;
     margin-top: 2px;
 }
@@ -311,13 +268,13 @@
 .showMoreRow {
     display: flex;
     justify-content: center;
-    padding-top: 0;
+    padding-top: var(--spacingVerticalS);
 }
 
 .assistantsGrid {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 20px;
+    gap: var(--spacingHorizontalXL);
 }
 
 @media (max-width: 1500px) {
@@ -383,12 +340,17 @@
     }
 
     .librarySections {
-        gap: 22px;
+        padding-bottom: 32px !important;
     }
 
     .sectionHeaderRow {
         flex-direction: column;
         align-items: stretch;
+        gap: var(--spacingVerticalM);
+    }
+
+    .sectionTitle {
+        margin-right: 0;
     }
 
     .sectionEmptyState {
@@ -447,13 +409,13 @@
     }
 
     .flexContainer[data-drawer-open="true"] .headerSection {
-        margin-bottom: 24px;
+        margin-bottom: var(--spacingVerticalXXL);
     }
 
     .flexContainer[data-drawer-open="true"] .subtitleRow {
         flex-direction: column;
         align-items: flex-start;
-        gap: 16px;
+        gap: var(--spacingHorizontalL);
     }
 
     .flexContainer[data-drawer-open="true"] .headerActions {
@@ -465,6 +427,11 @@
     .flexContainer[data-drawer-open="true"] .sectionHeaderRow {
         flex-direction: column;
         align-items: stretch;
+        gap: var(--spacingVerticalM);
+    }
+
+    .flexContainer[data-drawer-open="true"] .sectionTitle {
+        margin-right: 0;
     }
 
     .flexContainer[data-drawer-open="true"] .sectionEmptyState {
@@ -490,7 +457,11 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-    .detailsSidebarSlot {
+    .detailsSidebarSlot,
+    .searchBox,
+    .sortDropdown,
+    .myFilterGroup,
+    .myFilterGroup button {
         transition: none;
     }
 }

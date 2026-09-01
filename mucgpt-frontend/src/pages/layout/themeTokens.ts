@@ -5,6 +5,7 @@ export interface AppThemeTokens {
     surfaceBase: string;
     surfaceRaised: string;
     surfaceSubtle: string;
+    surfaceSubtleHover: string;
     primaryBase: string;
     primaryHover: string;
     primaryPressed: string;
@@ -49,9 +50,10 @@ export const lightThemeTokens: AppThemeTokens = {
     primaryActionBackground: "#2563eb",
     primaryActionHover: "#1d4ed8",
     primaryActionPressed: "#1e40af",
-    surfaceBase: "#f8fafc",
-    surfaceRaised: "#f1f5f9",
-    surfaceSubtle: "#FCFDFF",
+    surfaceBase: "#eef2f7",
+    surfaceRaised: "#f6f8fb",
+    surfaceSubtle: "#ffffff",
+    surfaceSubtleHover: "#f4f7fb",
     primaryBase: "#2563eb",
     primaryHover: "#1d4ed8",
     primaryPressed: "#1e40af",
@@ -96,9 +98,10 @@ export const darkThemeTokens: AppThemeTokens = {
     primaryActionBackground: "#2563eb",
     primaryActionHover: "#1d4ed8",
     primaryActionPressed: "#1e40af",
-    surfaceBase: "#0F172D",
-    surfaceRaised: "#020617",
+    surfaceBase: "#0a101d",
+    surfaceRaised: "#131c31",
     surfaceSubtle: "#1e293b",
+    surfaceSubtleHover: "#26334a",
     primaryBase: "#86A4E5",
     primaryHover: "#A0B8ED",
     primaryPressed: "#6F90D8",

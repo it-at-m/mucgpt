@@ -1,5 +1,4 @@
 .card {
-    border-radius: var(--borderRadiusLarge) !important;
     min-height: 136px;
     border: 1px solid var(--colorNeutralStroke3) !important;
     padding: 12px 12px 10px 12px !important;
@@ -10,7 +9,7 @@
         box-shadow 0.16s ease;
     background-color: var(--colorNeutralBackground3) !important;
     color: var(--colorNeutralForeground1);
-    box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05) !important;
+    box-shadow: var(--shadow2) !important;
 }
 
 .cardSelected {
@@ -37,8 +36,7 @@
 }
 
 .headerText {
-    font-weight: var(--fontWeightSemibold);
-    font-size: var(--fontSizeBase400);
+    margin: 0;
     transition-property: color;
     transition-duration: 0.2s;
     flex: 1 1 auto;
@@ -54,7 +52,7 @@
     display: flex;
     align-items: flex-start;
     justify-content: space-between;
-    gap: 8px;
+    gap: var(--spacingHorizontalS);
     width: 100%;
     box-sizing: border-box;
 }
@@ -99,7 +97,7 @@
     display: flex;
     flex-wrap: wrap;
     justify-content: flex-end;
-    gap: 6px;
+    gap: var(--spacingHorizontalSNudge);
     max-width: 45%;
     flex-shrink: 0;
 }
@@ -125,33 +123,28 @@
 
 .metadataBlock {
     margin: auto 0 0;
-    padding-top: 8px;
+    padding-top: var(--spacingVerticalS);
 }
 
 .metadataDivider {
-    width: 100%;
-    height: 1px;
-    background-color: var(--colorNeutralStroke1);
-    opacity: 0.85;
 }
 
 .metadataRow {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 12px;
+    gap: var(--spacingHorizontalM);
     min-height: 0;
-    padding-top: 10px;
+    padding-top: var(--spacingVerticalMNudge);
     color: var(--colorNeutralForeground2);
-    font-size: 11px;
-    font-weight: var(--fontWeightRegular);
-    line-height: 16px;
+    font-size: var(--fontSizeBase200);
+    line-height: var(--lineHeightBase200);
 }
 
 .metadataStart {
     display: inline-flex;
     align-items: center;
-    gap: 4px;
+    gap: var(--spacingHorizontalXS);
     min-width: 0;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -177,7 +170,7 @@
 .metadataEnd {
     display: inline-flex;
     align-items: center;
-    gap: 4px;
+    gap: var(--spacingHorizontalXS);
     flex: 0 0 auto;
     white-space: nowrap;
 }
@@ -185,4 +178,15 @@
 .metadataEnd svg {
     width: 16px;
     height: 16px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .card,
+    .headerText {
+        transition: none;
+    }
+
+    .card:hover {
+        transform: none;
+    }
 }

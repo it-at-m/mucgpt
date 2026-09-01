@@ -1,6 +1,6 @@
 import { type ReactElement, useCallback, useContext, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Title1, Body1, Text, SearchBox, Dropdown, Option, Button } from "@fluentui/react-components";
+import { Title2, Title3, Subtitle2, Body1, Body2, SearchBox, Dropdown, Option, Button } from "@fluentui/react-components";
 import type { SearchBoxChangeEvent, InputOnChangeData, SelectionEvents, OptionOnSelectData } from "@fluentui/react-components";
 import { Add24Regular, DocumentArrowUpRegular, LibraryRegular, PeopleCommunityRegular, SearchRegular } from "@fluentui/react-icons";
 import { useTranslation } from "react-i18next";
@@ -472,12 +472,12 @@ const Discovery = () => {
                 {icon}
             </div>
             <div className={styles.emptyCopy}>
-                <Text as="p" weight="semibold" className={styles.emptyTitle}>
+                <Subtitle2 as="p" className={styles.emptyTitle}>
                     {title}
-                </Text>
-                <Text as="p" size={300} className={styles.emptyDescription}>
+                </Subtitle2>
+                <Body1 as="p" className={styles.emptyDescription}>
                     {description}
-                </Text>
+                </Body1>
             </div>
             {actions && actions.length > 0 && (
                 <div className={styles.emptyActions}>
@@ -555,11 +555,13 @@ const Discovery = () => {
                     <div className={styles.contentWrapper}>
                         <div className={styles.headerSection}>
                             <div className={styles.titleBlock}>
-                                <Title1 className={styles.header}>{t("discovery.title", "Assistenten")}</Title1>
+                                <Title2 as="h1" className={styles.header}>
+                                    {t("discovery.title", "Assistenten")}
+                                </Title2>
                                 <div className={styles.subtitleRow}>
-                                    <Body1 className={styles.subtitle}>
+                                    <Body2 className={styles.subtitle}>
                                         {t("discovery.subtitle", "Nutze deine Assistenten oder entdecke neue für wiederkehrende Aufgaben.")}
-                                    </Body1>
+                                    </Body2>
                                     <div className={styles.headerActions}>
                                         <Button
                                             appearance="transparent"
@@ -581,17 +583,22 @@ const Discovery = () => {
                             onChange={handleSearch}
                             className={styles.searchBox}
                             size="medium"
+                            appearance="outline"
                             aria-label={t("components.community_assistants.search", "Search assistants by title or description.")}
                         />
 
                         {isLoading ? (
                             <div className={styles.librarySections} aria-label={t("components.community_assistants.loading_assistants")}>
                                 <section className={styles.assistantSection}>
-                                    <h2 className={styles.sectionTitle}>{t("components.community_assistants.my_assistants", "Meine Assistenten")}</h2>
+                                    <Title3 as="h2" className={styles.sectionTitle}>
+                                        {t("components.community_assistants.my_assistants", "Meine Assistenten")}
+                                    </Title3>
                                     {renderSkeletonGrid("my")}
                                 </section>
                                 <section className={styles.assistantSection}>
-                                    <h2 className={styles.sectionTitle}>{t("components.community_assistants.discover_community", "Community entdecken")}</h2>
+                                    <Title3 as="h2" className={styles.sectionTitle}>
+                                        {t("components.community_assistants.discover_community", "Community entdecken")}
+                                    </Title3>
                                     {renderSkeletonGrid("community")}
                                 </section>
                             </div>
@@ -599,10 +606,10 @@ const Discovery = () => {
                             <div className={styles.librarySections}>
                                 <section className={styles.assistantSection} aria-labelledby="my-assistants-heading">
                                     <div className={styles.sectionHeadingBlock}>
-                                        <h2 id="my-assistants-heading" className={styles.sectionTitle}>
-                                            {t("components.community_assistants.my_assistants", "Meine Assistenten")}
-                                        </h2>
                                         <div className={styles.sectionHeaderRow}>
+                                            <Title3 as="h2" id="my-assistants-heading" className={styles.sectionTitle}>
+                                                {t("components.community_assistants.my_assistants", "Meine Assistenten")}
+                                            </Title3>
                                             <div className={styles.myFilterGroup} role="group" aria-labelledby="my-assistants-heading">
                                                 <Button
                                                     size="small"
@@ -666,7 +673,7 @@ const Discovery = () => {
                                             {renderAssistantGrid(displayedMyAssistants, t("components.community_assistants.my_assistants"))}
                                             {hasHiddenMyAssistants && (
                                                 <div className={styles.showMoreRow}>
-                                                    <Button appearance="secondary" onClick={() => setShowAllMyAssistants(true)}>
+                                                    <Button appearance="outline" onClick={() => setShowAllMyAssistants(true)}>
                                                         {t(
                                                             "components.community_assistants.show_more_personal_assistants",
                                                             "Mehr persönliche Assistenten anzeigen"
@@ -678,13 +685,11 @@ const Discovery = () => {
                                     )}
                                 </section>
 
-                                <div className={styles.sectionDivider} aria-hidden="true" />
-
                                 <section className={styles.assistantSection} aria-labelledby="community-assistants-heading">
                                     <div className={styles.sectionHeaderRow}>
-                                        <h2 id="community-assistants-heading" className={styles.sectionTitle}>
+                                        <Title3 as="h2" id="community-assistants-heading" className={styles.sectionTitle}>
                                             {t("components.community_assistants.discover_community", "Community entdecken")}
-                                        </h2>
+                                        </Title3>
                                         <Dropdown
                                             id="community-assistant-sort"
                                             value={selectedCommunitySortLabel}

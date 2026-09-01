@@ -2,7 +2,7 @@
     height: 100%;
     display: flex;
     flex-direction: column;
-    box-shadow: none;
+    box-shadow: var(--shadow2);
     border-radius: var(--borderRadiusLarge) !important;
     background-color: var(--colorNeutralCardBackground);
     border: 1px solid var(--colorNeutralStroke1);

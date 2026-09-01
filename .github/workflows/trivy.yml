@@ -7,4 +7,4 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Run Trivy Security check on Repository
-        uses: it-at-m/lhm_actions/action-templates/actions/action-trivy@877aafa9f0732cbc91819b60d237c351ea88f95c # v1.0.34
+        uses: it-at-m/lhm_actions/action-templates/actions/action-trivy@54b32c7d11363cad45838c9a3d8a8560b93f0e8c # v1.5.4

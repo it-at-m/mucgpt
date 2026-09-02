@@ -69,7 +69,6 @@ class AssistantVersion(Base):
     version = Column(Integer, nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow)
 
-    name = Column(String(255), nullable=False)
     description = Column(Text)
     system_prompt = Column(Text, nullable=False)
     temperature = Column(Float, default=0.7)
@@ -90,6 +89,7 @@ class Assistant(Base):
     __tablename__ = "assistants"
 
     id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    name = Column(String(255), nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     hierarchical_access = Column(JSON, default=list)

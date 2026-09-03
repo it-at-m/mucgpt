@@ -13,7 +13,7 @@ from config.settings import get_settings
 from core.auth import authenticate_user
 from core.auth_models import AuthenticationResult
 from core.logtools import getLogger
-from core.persistance_tools import PersistanceTools
+from core.persistance_helpers import PersistanceHelpers
 from init_app import init_agent
 
 logger = getLogger()
@@ -92,7 +92,7 @@ async def chat_endpoint(
 
     try:
         # Verify the conversation belongs to this user (row is created on first use).
-        authorized = await PersistanceTools.verify_user_in_conversation(
+        authorized = await PersistanceHelpers.verify_user_in_conversation(
             user_info.user_id, request.conversation_id
         )
         if not authorized:
@@ -102,11 +102,11 @@ async def chat_endpoint(
             )
 
         # Persist the newest incoming user message in the frontend-style history.
-        # NOTE: creates a user row for every request. 
-        # A retry after a dropped completed response stores the same user message again. 
+        # NOTE: creates a user row for every request.
+        # A retry after a dropped completed response stores the same user message again.
         # The existing checkpoint then causes the agent to append the same latest message as a new turn.
         # worth addressing in future!
-        await PersistanceTools.insert_message(
+        await PersistanceHelpers.insert_message(
             user_info.user_id,
             request.conversation_id,
             request.messages[-1],
@@ -118,7 +118,7 @@ async def chat_endpoint(
         # only append the newest user message to avoid duplicating the history.
         messages_for_agent = (
             [request.messages[-1]]
-            if await PersistanceTools.has_checkpoint(request.conversation_id)
+            if await PersistanceHelpers.has_checkpoint(request.conversation_id)
             else request.messages
         )
 
@@ -154,12 +154,11 @@ async def chat_endpoint(
                     if choice.get("finish_reason") == "stop":
                         completed = True
                     yield f"data: {json.dumps(chunk)}\n\n"
-                
 
                 # Persist the assistant reply only when the stream finished cleanly
                 # (not on client disconnect or an error chunk).
                 if completed and parts:
-                    await PersistanceTools.insert_message(
+                    await PersistanceHelpers.insert_message(
                         user_info.user_id,
                         request.conversation_id,
                         {"role": "assistant", "content": "".join(parts)},
@@ -182,7 +181,7 @@ async def chat_endpoint(
 
         choice = response.choices[0] if response and response.choices else None
         if choice and choice.finish_reason == "stop" and choice.message.content:
-            await PersistanceTools.insert_message(
+            await PersistanceHelpers.insert_message(
                 user_info.user_id,
                 request.conversation_id,
                 choice.message,

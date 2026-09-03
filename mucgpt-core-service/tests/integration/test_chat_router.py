@@ -28,18 +28,18 @@ DUMMY_CONVERSATION_ID = "conv-test-1"
 @pytest.fixture(autouse=True)
 def stub_persistence(monkeypatch: pytest.MonkeyPatch) -> None:
     """Backend chat persistence needs a live Postgres pool; stub it for router tests."""
-    from core.persistance_tools import PersistanceTools
+    from core.persistance_helpers import PersistanceHelpers
 
     monkeypatch.setattr(
-        PersistanceTools,
+        PersistanceHelpers,
         "verify_user_in_conversation",
         AsyncMock(return_value=True),
     )
     monkeypatch.setattr(
-        PersistanceTools, "insert_message", AsyncMock(return_value=None)
+        PersistanceHelpers, "insert_message", AsyncMock(return_value=None)
     )
     monkeypatch.setattr(
-        PersistanceTools, "has_checkpoint", AsyncMock(return_value=False)
+        PersistanceHelpers, "has_checkpoint", AsyncMock(return_value=False)
     )
 
 
@@ -130,9 +130,10 @@ class TestChatRouter:
         assert response.usage.prompt_tokens > 0
         assert response.usage.completion_tokens > 0
         assert response.usage.total_tokens > 0
-        assert mock_agent_executor.run_without_streaming.await_args.kwargs[
-            "messages"
-        ] == payload_model.messages
+        assert (
+            mock_agent_executor.run_without_streaming.await_args.kwargs["messages"]
+            == payload_model.messages
+        )
 
     @patch("api.routers.chat_router.init_agent", new_callable=AsyncMock)
     def test_existing_checkpoint_only_appends_latest_message(
@@ -142,10 +143,10 @@ class TestChatRouter:
         monkeypatch: pytest.MonkeyPatch,
     ) -> None:
         """Existing checkpoints must not receive the full client history again."""
-        from core.persistance_tools import PersistanceTools
+        from core.persistance_helpers import PersistanceHelpers
 
         monkeypatch.setattr(
-            PersistanceTools, "has_checkpoint", AsyncMock(return_value=True)
+            PersistanceHelpers, "has_checkpoint", AsyncMock(return_value=True)
         )
         mock_response = ChatCompletionResponse(
             id="chatcmpl-test123",

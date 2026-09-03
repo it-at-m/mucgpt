@@ -15,7 +15,7 @@ from config.settings import (
 from core.auth_models import AuthenticationResult
 from core.cache import RedisCache
 from core.logtools import getLogger
-from core.persistance_tools import PersistanceTools
+from core.persistance_helpers import PersistanceHelpers
 
 logger = getLogger()
 
@@ -65,7 +65,7 @@ async def warmup_app() -> None:
     await RedisCache.init_redis()
 
     # checkpointer and postgres connection
-    await PersistanceTools.init(settings)
+    await PersistanceHelpers.init(settings)
     logger.info("App context warmed up")
 
 
@@ -80,9 +80,9 @@ async def destroy_app() -> None:
 
     # close postgres connection
     try:
-        await PersistanceTools.close()
+        await PersistanceHelpers.close()
     except Exception:
-        logger.exception("Failed to close PersistanceTools")
+        logger.exception("Failed to close PersistanceHelpers")
 
 
 def _initialize_models_metadata(cfg: Settings) -> None:
@@ -126,7 +126,7 @@ async def init_agent(
             llm=model,
             tools=tools,
             debug=False,
-            checkpointer=PersistanceTools.get_checkpointer_if_ready(),
+            checkpointer=PersistanceHelpers.get_checkpointer_if_ready(),
         )
     except Exception as e:
         logger.error("Failed to initialize MUCGPTAgent: %s", e)

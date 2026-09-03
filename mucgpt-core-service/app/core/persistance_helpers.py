@@ -35,13 +35,13 @@ def _content(message: ChatCompletionMessage | dict[str, Any]) -> str:
     return str(getattr(message, "content", message))
 
 
-class PersistanceTools:
+class PersistanceHelpers:
     _pool: AsyncConnectionPool | None = None
     _checkpointer: AsyncPostgresSaver | None = None
 
     @staticmethod
     async def init(settings: Settings) -> None:
-        if PersistanceTools._pool is not None:
+        if PersistanceHelpers._pool is not None:
             return
         pool = AsyncConnectionPool(
             conninfo="",
@@ -54,11 +54,11 @@ class PersistanceTools:
         await checkpointer.setup()  # creates LangGraph's checkpoint_* tables if missing
 
         # ensure tables for chats and messages exist
-        await PersistanceTools._ensure_tables_exist(pool)
+        await PersistanceHelpers._ensure_tables_exist(pool)
 
-        PersistanceTools._pool = pool
-        PersistanceTools._checkpointer = checkpointer
-        logger.info("PersistanceTools initialized")
+        PersistanceHelpers._pool = pool
+        PersistanceHelpers._checkpointer = checkpointer
+        logger.info("PersistanceHelpers initialized")
 
     @staticmethod
     async def _ensure_tables_exist(pool: AsyncConnectionPool) -> None:
@@ -87,27 +87,27 @@ class PersistanceTools:
 
     @staticmethod
     async def close() -> None:
-        if PersistanceTools._pool is not None:
-            await PersistanceTools._pool.close()
-            PersistanceTools._pool = None
-            PersistanceTools._checkpointer = None
+        if PersistanceHelpers._pool is not None:
+            await PersistanceHelpers._pool.close()
+            PersistanceHelpers._pool = None
+            PersistanceHelpers._checkpointer = None
 
     @staticmethod
     def get_checkpointer() -> AsyncPostgresSaver:
-        if PersistanceTools._checkpointer is None:
-            raise RuntimeError("PersistanceTools not initialized")
-        return PersistanceTools._checkpointer
+        if PersistanceHelpers._checkpointer is None:
+            raise RuntimeError("PersistanceHelpers not initialized")
+        return PersistanceHelpers._checkpointer
 
     @staticmethod
     def get_checkpointer_if_ready() -> AsyncPostgresSaver | None:
         """Return the checkpointer, or ``None`` when persistence has not been
         initialised (e.g. in tests or when the feature is disabled)."""
-        return PersistanceTools._checkpointer
+        return PersistanceHelpers._checkpointer
 
     @staticmethod
     async def has_checkpoint(conversation_id: str) -> bool:
         """Return whether LangGraph already has state for this conversation."""
-        checkpointer = PersistanceTools.get_checkpointer()
+        checkpointer = PersistanceHelpers.get_checkpointer()
         checkpoint = await checkpointer.aget(
             {"configurable": {"thread_id": conversation_id}}
         )
@@ -121,7 +121,7 @@ class PersistanceTools:
         The insert-or-ignore keeps concurrent first requests for the same
         conversation_id from creating duplicate ownership rows.
         """
-        async with PersistanceTools._pool.connection() as conn:
+        async with PersistanceHelpers._pool.connection() as conn:
             await conn.execute(
                 "INSERT INTO chats (conversation_id, user_id) VALUES (%s, %s) "
                 "ON CONFLICT (conversation_id) DO NOTHING",
@@ -141,7 +141,7 @@ class PersistanceTools:
         message: ChatCompletionMessage | dict[str, Any],
         message_type: str = "user",
     ) -> None:
-        async with PersistanceTools._pool.connection() as conn:
+        async with PersistanceHelpers._pool.connection() as conn:
             await conn.execute(
                 "INSERT INTO messages (conversation_id, user_id, role, content) "
                 "VALUES (%s, %s, %s, %s)",

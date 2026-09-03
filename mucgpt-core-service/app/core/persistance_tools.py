@@ -34,9 +34,38 @@ class PersistanceTools:
         await pool.open()
         checkpointer = AsyncPostgresSaver(conn=pool)
         await checkpointer.setup()  # creates LangGraph's checkpoint_* tables if missing
+
+        # ensure tables for chats and messages exist
+        await PersistanceTools._ensure_tables_exist(pool)
+
         PersistanceTools._pool = pool
         PersistanceTools._checkpointer = checkpointer
         logger.info("PersistanceTools initialized")
+
+    @staticmethod
+    async def _ensure_tables_exist(pool: AsyncConnectionPool) -> None:
+        async with pool.connection() as conn:
+            await conn.execute(
+                """
+                CREATE TABLE IF NOT EXISTS chats (
+                    conversation_id TEXT PRIMARY KEY,
+                    user_id         TEXT        NOT NULL,
+                    created_at      TIMESTAMPTZ NOT NULL DEFAULT now()
+                    );
+                """
+            )
+            await conn.execute(
+                """
+                CREATE TABLE IF NOT EXISTS messages (
+                    id              BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+                    conversation_id TEXT        NOT NULL REFERENCES chats(conversation_id),
+                    user_id         TEXT        NOT NULL,
+                    role            TEXT        NOT NULL,   -- "user" | "assistant"
+                    content         TEXT        NOT NULL,
+                    created_at      TIMESTAMPTZ NOT NULL DEFAULT now()
+                    );
+                """
+            )
 
     @staticmethod
     async def close() -> None:

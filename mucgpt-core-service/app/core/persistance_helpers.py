@@ -1,5 +1,6 @@
 from typing import Any
 
+from langchain_core.messages import AIMessage, HumanMessage
 from langgraph.checkpoint.postgres.aio import AsyncPostgresSaver
 from psycopg.rows import dict_row
 from psycopg_pool import AsyncConnectionPool
@@ -28,11 +29,15 @@ def _create_connection_args(settings: Settings) -> dict[str, Any]:
     }
 
 
-def _content(message: ChatCompletionMessage | dict[str, Any]) -> str:
-    """`message` is either a pydantic ChatCompletionMessage or a plain dict."""
-    if isinstance(message, dict):
-        return str(message.get("content", ""))
-    return str(getattr(message, "content", message))
+def _message_content(message: HumanMessage | AIMessage) -> str:
+    """Flatten LangChain text content into the public chat representation."""
+    if isinstance(message.content, str):
+        return message.content
+    return "".join(
+        block if isinstance(block, str) else str(block.get("text", ""))
+        for block in message.content
+        if isinstance(block, str) or block.get("type") == "text"
+    )
 
 
 class PersistanceHelpers:
@@ -53,7 +58,7 @@ class PersistanceHelpers:
         checkpointer = AsyncPostgresSaver(conn=pool)
         await checkpointer.setup()  # creates LangGraph's checkpoint_* tables if missing
 
-        # ensure tables for chats and messages exist
+        # LangGraph owns message storage. This is the only application table.
         await PersistanceHelpers._ensure_tables_exist(pool)
 
         PersistanceHelpers._pool = pool
@@ -68,18 +73,6 @@ class PersistanceHelpers:
                 CREATE TABLE IF NOT EXISTS chats (
                     conversation_id TEXT PRIMARY KEY,
                     user_id         TEXT        NOT NULL,
-                    created_at      TIMESTAMPTZ NOT NULL DEFAULT now()
-                    );
-                """
-            )
-            await conn.execute(
-                """
-                CREATE TABLE IF NOT EXISTS messages (
-                    id              BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-                    conversation_id TEXT        NOT NULL REFERENCES chats(conversation_id),
-                    user_id         TEXT        NOT NULL,
-                    role            TEXT        NOT NULL,   -- "user" | "assistant"
-                    content         TEXT        NOT NULL,
                     created_at      TIMESTAMPTZ NOT NULL DEFAULT now()
                     );
                 """
@@ -107,8 +100,7 @@ class PersistanceHelpers:
     @staticmethod
     async def has_checkpoint(conversation_id: str) -> bool:
         """Return whether LangGraph already has state for this conversation."""
-        checkpointer = PersistanceHelpers.get_checkpointer()
-        checkpoint = await checkpointer.aget(
+        checkpoint = await PersistanceHelpers.get_checkpointer().aget(
             {"configurable": {"thread_id": conversation_id}}
         )
         return checkpoint is not None
@@ -121,7 +113,10 @@ class PersistanceHelpers:
         The insert-or-ignore keeps concurrent first requests for the same
         conversation_id from creating duplicate ownership rows.
         """
-        async with PersistanceHelpers._pool.connection() as conn:
+        pool = PersistanceHelpers._pool
+        if pool is None:
+            raise RuntimeError("PersistanceHelpers not initialized")
+        async with pool.connection() as conn:
             await conn.execute(
                 "INSERT INTO chats (conversation_id, user_id) VALUES (%s, %s) "
                 "ON CONFLICT (conversation_id) DO NOTHING",
@@ -135,15 +130,42 @@ class PersistanceHelpers:
             return row is not None and row["user_id"] == user_id
 
     @staticmethod
-    async def insert_message(
-        user_id: str,
-        conversation_id: str,
-        message: ChatCompletionMessage | dict[str, Any],
-        message_type: str = "user",
-    ) -> None:
-        async with PersistanceHelpers._pool.connection() as conn:
-            await conn.execute(
-                "INSERT INTO messages (conversation_id, user_id, role, content) "
-                "VALUES (%s, %s, %s, %s)",
-                (conversation_id, user_id, message_type, _content(message)),
+    async def is_user_in_conversation(user_id: str, conversation_id: str) -> bool:
+        """Check ownership without creating a conversation."""
+        pool = PersistanceHelpers._pool
+        if pool is None:
+            raise RuntimeError("PersistanceHelpers not initialized")
+        async with pool.connection() as conn:
+            cur = await conn.execute(
+                "SELECT 1 FROM chats WHERE conversation_id = %s AND user_id = %s",
+                (conversation_id, user_id),
             )
+            return await cur.fetchone() is not None
+
+    @staticmethod
+    async def get_conversation_messages(
+        conversation_id: str,
+    ) -> list[ChatCompletionMessage]:
+        """Read the displayable user/assistant chain from LangGraph state."""
+        checkpoint = await PersistanceHelpers.get_checkpointer().aget(
+            {"configurable": {"thread_id": conversation_id}}
+        )
+        if checkpoint is None:
+            return []
+
+        messages = checkpoint.get("channel_values", {}).get("messages", [])
+        result: list[ChatCompletionMessage] = []
+        for message in messages:
+            if isinstance(message, HumanMessage):
+                result.append(
+                    ChatCompletionMessage(
+                        role="user", content=_message_content(message)
+                    )
+                )
+            elif isinstance(message, AIMessage) and not message.tool_calls:
+                content = _message_content(message)
+                if content:
+                    result.append(
+                        ChatCompletionMessage(role="assistant", content=content)
+                    )
+        return result

@@ -90,7 +90,7 @@ class ChatCompletionRequest(BaseModel):
     )
     conversation_id: str | None = Field(
         None,
-        description="Stable client-generated id for this conversation. Accepted but not yet used server-side.",
+        description="Stable client-generated id used as the LangGraph checkpoint thread id.",
     )
     data_sources: list[ChatDataSource] | None = Field(
         None,

@@ -36,10 +36,24 @@ def stub_persistence(monkeypatch: pytest.MonkeyPatch) -> None:
         AsyncMock(return_value=True),
     )
     monkeypatch.setattr(
-        PersistanceHelpers, "insert_message", AsyncMock(return_value=None)
+        PersistanceHelpers,
+        "is_user_in_conversation",
+        AsyncMock(return_value=True),
     )
     monkeypatch.setattr(
-        PersistanceHelpers, "has_checkpoint", AsyncMock(return_value=False)
+        PersistanceHelpers,
+        "has_checkpoint",
+        AsyncMock(return_value=False),
+    )
+    monkeypatch.setattr(
+        PersistanceHelpers,
+        "get_conversation_messages",
+        AsyncMock(
+            return_value=[
+                ChatCompletionMessage(role="user", content="Hello"),
+                ChatCompletionMessage(role="assistant", content="Hi"),
+            ]
+        ),
     )
 
 
@@ -136,13 +150,13 @@ class TestChatRouter:
         )
 
     @patch("api.routers.chat_router.init_agent", new_callable=AsyncMock)
-    def test_existing_checkpoint_only_appends_latest_message(
+    def test_only_appends_latest_user_message(
         self,
         mock_init_agent: AsyncMock,
         test_client: TestClient,
         monkeypatch: pytest.MonkeyPatch,
     ) -> None:
-        """Existing checkpoints must not receive the full client history again."""
+        """The checkpoint owns history, so the request contributes one new turn."""
         from core.persistance_helpers import PersistanceHelpers
 
         monkeypatch.setattr(
@@ -189,6 +203,34 @@ class TestChatRouter:
         assert mock_agent_executor.run_without_streaming.await_args.kwargs[
             "messages"
         ] == [messages[-1]]
+
+    def test_get_conversation_messages(self, test_client: TestClient) -> None:
+        response = test_client.get(
+            f"/v1/conversations/{DUMMY_CONVERSATION_ID}/messages"
+        )
+
+        assert response.status_code == 200
+        assert response.json() == [
+            {"role": "user", "content": "Hello"},
+            {"role": "assistant", "content": "Hi"},
+        ]
+
+    def test_get_conversation_messages_forbidden(
+        self, test_client: TestClient, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        from core.persistance_helpers import PersistanceHelpers
+
+        monkeypatch.setattr(
+            PersistanceHelpers,
+            "is_user_in_conversation",
+            AsyncMock(return_value=False),
+        )
+
+        response = test_client.get(
+            f"/v1/conversations/{DUMMY_CONVERSATION_ID}/messages"
+        )
+
+        assert response.status_code == 403
 
     @patch("api.routers.chat_router.init_agent", new_callable=AsyncMock)
     def test_streaming_completion(self, mock_init_agent, test_client: TestClient):

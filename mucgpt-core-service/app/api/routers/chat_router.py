@@ -1,10 +1,12 @@
 import json
 from collections.abc import AsyncGenerator
+from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import StreamingResponse
 
 from api.api_models import (
+    ChatCompletionMessage,
     ChatCompletionRequest,
     ChatCompletionResponse,
 )
@@ -80,7 +82,7 @@ def get_temperature_from_request(request: ChatCompletionRequest) -> float:
 )
 async def chat_endpoint(
     request: ChatCompletionRequest,
-    user_info: AuthenticationResult = Depends(authenticate_user),
+    user_info: Annotated[AuthenticationResult, Depends(authenticate_user)],
 ) -> StreamingResponse | ChatCompletionResponse:
     """
     OpenAI-compatible chat completion endpoint (streaming or non-streaming)
@@ -89,6 +91,10 @@ async def chat_endpoint(
         raise HTTPException(status_code=400, detail="conversation_id is required")
     if not request.messages:
         raise HTTPException(status_code=400, detail="messages must not be empty")
+    if request.messages[-1].role != "user":
+        raise HTTPException(
+            status_code=400, detail="last message must have role 'user'"
+        )
 
     try:
         # Verify the conversation belongs to this user (row is created on first use).
@@ -100,18 +106,6 @@ async def chat_endpoint(
                 status_code=403,
                 detail=f"User {user_info.user_id} is not authorized to access conversation {request.conversation_id}",
             )
-
-        # Persist the newest incoming user message in the frontend-style history.
-        # NOTE: creates a user row for every request.
-        # A retry after a dropped completed response stores the same user message again.
-        # The existing checkpoint then causes the agent to append the same latest message as a new turn.
-        # worth addressing in future!
-        await PersistanceHelpers.insert_message(
-            user_info.user_id,
-            request.conversation_id,
-            request.messages[-1],
-            message_type="user",
-        )
 
         # Seed a new checkpoint with the complete client history so the system
         # prompt and existing browser-held turns are retained. Once state exists,
@@ -144,26 +138,8 @@ async def chat_endpoint(
             )
 
             async def sse_generator() -> AsyncGenerator[str]:
-                parts: list[str] = []
-                completed = False
                 async for chunk in gen:
-                    choice = (chunk.get("choices") or [{}])[0]
-                    content = choice.get("delta", {}).get("content")
-                    if content:
-                        parts.append(content)
-                    if choice.get("finish_reason") == "stop":
-                        completed = True
                     yield f"data: {json.dumps(chunk)}\n\n"
-
-                # Persist the assistant reply only when the stream finished cleanly
-                # (not on client disconnect or an error chunk).
-                if completed and parts:
-                    await PersistanceHelpers.insert_message(
-                        user_info.user_id,
-                        request.conversation_id,
-                        {"role": "assistant", "content": "".join(parts)},
-                        message_type="assistant",
-                    )
                 yield "data: [DONE]\n\n"
 
             return StreamingResponse(sse_generator(), media_type="text/event-stream")
@@ -179,14 +155,6 @@ async def chat_endpoint(
             conversation_id=request.conversation_id,
         )
 
-        choice = response.choices[0] if response and response.choices else None
-        if choice and choice.finish_reason == "stop" and choice.message.content:
-            await PersistanceHelpers.insert_message(
-                user_info.user_id,
-                request.conversation_id,
-                choice.message,
-                message_type="assistant",
-            )
         return response
     except HTTPException:
         raise
@@ -194,3 +162,25 @@ async def chat_endpoint(
         logger.exception("Exception in /chat/completions")
         msg = llm_exception_handler(ex=e, logger=logger)
         raise HTTPException(status_code=500, detail=msg) from e
+
+
+@router.get(
+    "/conversations/{conversation_id}/messages",
+    summary="Get conversation messages",
+    response_model=list[ChatCompletionMessage],
+    responses={403: {"description": "Forbidden"}, 404: {"description": "Not found"}},
+)
+async def get_conversation_messages(
+    conversation_id: str,
+    user_info: Annotated[AuthenticationResult, Depends(authenticate_user)],
+) -> list[ChatCompletionMessage]:
+    """Return the user/assistant chain from the conversation's latest checkpoint."""
+    if not await PersistanceHelpers.is_user_in_conversation(
+        user_info.user_id, conversation_id
+    ):
+        raise HTTPException(status_code=403, detail="Conversation access denied")
+
+    messages = await PersistanceHelpers.get_conversation_messages(conversation_id)
+    if not messages:
+        raise HTTPException(status_code=404, detail="Conversation not found")
+    return messages

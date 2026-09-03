@@ -102,6 +102,10 @@ async def chat_endpoint(
             )
 
         # Persist the newest incoming user message in the frontend-style history.
+        # NOTE: creates a user row for every request. 
+        # A retry after a dropped completed response stores the same user message again. 
+        # The existing checkpoint then causes the agent to append the same latest message as a new turn.
+        # worth addressing in future!
         await PersistanceTools.insert_message(
             user_info.user_id,
             request.conversation_id,

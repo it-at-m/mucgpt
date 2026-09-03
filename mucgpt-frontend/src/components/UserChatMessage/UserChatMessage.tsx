@@ -1,13 +1,13 @@
 import styles from "./UserChatMessage.module.css";
 import { MarkdownRenderer } from "../MarkdownRenderer/MarkdownRenderer";
-import { RollBackMessage } from "./RollbackMessage";
+// import { RollBackMessage } from "./RollbackMessage";
 
 interface Props {
     message: string;
     onRollbackMessage?: () => void;
 }
 
-export const UserChatMessage = ({ message, onRollbackMessage: onRollbackMessage }: Props) => {
+export const UserChatMessage = ({ message }: Props) => {
     return (
         <div className={styles.messageWrapper}>
             <div className={styles.message}>
@@ -15,11 +15,12 @@ export const UserChatMessage = ({ message, onRollbackMessage: onRollbackMessage 
                     <MarkdownRenderer>{message}</MarkdownRenderer>
                 </div>
             </div>
+            {/* Temporarily disabled until backend checkpoints support message rollback.
             {onRollbackMessage && (
                 <div className={styles.messageActions}>
                     <RollBackMessage onRollback={onRollbackMessage} />
                 </div>
-            )}
+            )} */}
         </div>
     );
 };

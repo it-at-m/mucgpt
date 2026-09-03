@@ -87,6 +87,8 @@ async def chat_endpoint(
     """
     if not request.conversation_id:
         raise HTTPException(status_code=400, detail="conversation_id is required")
+    if not request.messages:
+        raise HTTPException(status_code=400, detail="messages must not be empty")
 
     try:
         # Verify the conversation belongs to this user (row is created on first use).
@@ -148,7 +150,7 @@ async def chat_endpoint(
                     if choice.get("finish_reason") == "stop":
                         completed = True
                     yield f"data: {json.dumps(chunk)}\n\n"
-                yield "data: [DONE]\n\n"
+                
 
                 # Persist the assistant reply only when the stream finished cleanly
                 # (not on client disconnect or an error chunk).
@@ -159,6 +161,7 @@ async def chat_endpoint(
                         {"role": "assistant", "content": "".join(parts)},
                         message_type="assistant",
                     )
+                yield "data: [DONE]\n\n"
 
             return StreamingResponse(sse_generator(), media_type="text/event-stream")
 

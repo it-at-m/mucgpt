@@ -371,7 +371,9 @@ class TestChatRouter:
         )
         payload = payload_model.model_dump()
         resp = test_client.post("/v1/chat/completions", json=payload)
-        assert resp.status_code == 500
+        assert resp.status_code == 400
+        assert resp.json() == {"detail": "messages must not be empty"}
+        mock_init_agent.assert_not_awaited()
 
     @patch("api.routers.chat_router.init_agent", new_callable=AsyncMock)
     def test_chat_completion_high_temperature(

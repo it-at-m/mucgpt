@@ -16,12 +16,10 @@ from core.auth_models import AuthenticationResult
 from core.cache import RedisCache
 from core.logtools import getLogger
 
-from psycopg_pool import AsyncConnectionPool
-from langgraph.checkpoint.postgres.aio import AsyncPostgresSaver
+from core.persistance_tools import PersistanceTools
 
 
 logger = getLogger()
-POSTGRES_CHECKPOINTER: AsyncPostgresSaver | None = None
 
 class ModelOptions:
     """Helper class for model initialization options."""
@@ -67,18 +65,8 @@ async def warmup_app() -> None:
     # init redis
     await RedisCache.init_redis()
 
-    # setup postgres checkpointer for agent state persistence
-    DB_URI = "postgresql://admin:admin@checkpoint-postgres:5432/checkpoints" # TODO move to settings
-    global POSTGRES_CHECKPOINTER
-    pool = AsyncConnectionPool(
-        conninfo=DB_URI,
-        max_size=20,
-        open=False,
-        kwargs={"autocommit": True, "prepare_threshold": 0},
-    )
-    await pool.open()  # Open the connection pool
-    POSTGRES_CHECKPOINTER = AsyncPostgresSaver(conn=pool) 
-    await POSTGRES_CHECKPOINTER.setup()  # Ensure tables exist
+    # checkpointer and postgres connection
+    await PersistanceTools.init()  
     logger.info("App context warmed up")
 
 
@@ -90,6 +78,12 @@ async def destroy_app() -> None:
         await redis.aclose()
     except RuntimeError:
         pass
+
+    # close postgres connection
+    try:
+        await PersistanceTools.close()
+    except Exception as e:
+        logger.error(f"Error closing PersistanceTools: {e}")
 
 
 def _initialize_models_metadata(cfg: Settings) -> None:
@@ -120,7 +114,6 @@ async def init_agent(
     Returns:
         Configured MUCGPTAgentExecutor
     """
-    global POSTGRES_CHECKPOINTER
     try:
         model = ModelRegistry.get_model(model_name)
         tool_collection = ToolCollection(model=model)
@@ -130,7 +123,7 @@ async def init_agent(
         logger.debug(
             f"Initializing MUCGPTAgent with tools: {[tool.name for tool in tools]}"
         )
-        agent = MUCGPTAgent(llm=model, tools=tools, debug=False, checkpointer=POSTGRES_CHECKPOINTER)
+        agent = MUCGPTAgent(llm=model, tools=tools, debug=False, checkpointer=PersistanceTools.get_checkpointer())
     except Exception as e:
         logger.error("Failed to initialize MUCGPTAgent: %s", e)
         raise

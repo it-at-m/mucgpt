@@ -13,6 +13,7 @@ from config.settings import get_settings
 from core.auth import authenticate_user
 from core.auth_models import AuthenticationResult
 from core.logtools import getLogger
+from core.persistance_tools import PersistanceTools
 from init_app import init_agent
 
 logger = getLogger()
@@ -75,78 +76,92 @@ def get_temperature_from_request(request: ChatCompletionRequest) -> float:
         500: {"description": "Internal Server Error"},
     },
 )
-async def chat_completions(
+
+async def chat_endpoint(
     request: ChatCompletionRequest,
     user_info: AuthenticationResult = Depends(authenticate_user),
 ) -> StreamingResponse | ChatCompletionResponse:
     """
     OpenAI-compatible chat completion endpoint (streaming or non-streaming)
     """
-    # TODO: init_agent currently rebuilds the tool collection and LangChain agent
-    # for every message, even within the same chat. Consider introducing a
-    # user-scoped tool/runtime cache while keeping assistant/chat-specific
-    # enabled tools, prompts, data sources, and policy state request-scoped.
-    try:
-        try:
-            ModelRegistry.get_model(request.model)
-        except ModelsConfigurationException as exc:
-            detail = str(exc)
-            status_code = 400
-            if "not initialized" in detail.lower():
-                status_code = 500
-            raise HTTPException(status_code=status_code, detail=detail) from exc
-
-        ae = await init_agent(user_info=user_info, model_name=request.model)
-        if request.conversation_id:
-            logger.debug(
-                "Received conversation_id=%s",
-                request.conversation_id,
-                extra={"conversation_id": request.conversation_id},
-            )
-
-        # Convert creativity to temperature
-        temperature = get_temperature_from_request(request)
-
-        # Use enabled_tools from request if provided, otherwise use no tool
-        enabled_tools = request.enabled_tools or []
-
-        # Structured data sources for request context
-        data_sources = (
-            [source.model_dump() for source in request.data_sources]
-            if request.data_sources
-            else None
+    # 1. verify user and chat 
+    # SELECT user_id FROM chats WHERE chat_id/conversation_id=request.conversation_id 
+    verify_user = await PersistanceTools.verify_user_in_conversation(user_info.user_id, request.conversation_id)
+    if not verify_user:
+        raise HTTPException(
+            status_code=403,
+            detail=f"User {user_info.user_id} is not authorized to access conversation {request.conversation_id}",
         )
-        if request.stream:
-            gen = ae.run_with_streaming(
-                messages=request.messages,
-                temperature=temperature,
-                model=request.model,
-                user_info=user_info,
-                enabled_tools=enabled_tools,
-                assistant_id=request.assistant_id,
-                data_sources=data_sources,
-                conversation_id=request.conversation_id,
-            )
 
-            async def sse_generator():
+    # 2. insert user message into messages table of user in postgres
+    await PersistanceTools.insert_message(
+        user_info.user_id, 
+        request.conversation_id, 
+        {"role": "user", "content": request.messages[-1].content if request.messages else ""},
+        message_type="user",
+        ) # for now whole history is sent but we need to user message
+
+    # 3. initialize and invoke agent
+    agent = await init_agent(user_info=user_info, model_name=request.model)
+
+    assistant_msg: StreamingResponse | ChatCompletionResponse
+    if request.stream:
+        gen = agent.run_with_streaming(
+            messages=[request.messages[-1]],
+            temperature=get_temperature_from_request(request),
+            model=request.model,
+            user_info=user_info,
+            enabled_tools=request.enabled_tools or [],
+            assistant_id=request.assistant_id,
+            data_sources=[source.model_dump() for source in request.data_sources]
+            if request.data_sources else None,
+            conversation_id=request.conversation_id,
+        )
+
+        async def sse_generator():
+            chunks: list[str] = []
+            try:
                 async for chunk in gen:
+                    # adjust this extraction to match your chunk shape
+                    print(f"Received chunk: {chunk}")  # Debugging
+                    delta = chunk.get("choices", [{}])[0].get("delta", {})
+                    content = delta.get("content")
+                    if content:
+                        chunks.append(content)
+
                     yield f"data: {json.dumps(chunk)}\n\n"
 
-            return StreamingResponse(sse_generator(), media_type="text/event-stream")
-        else:
-            return await ae.run_without_streaming(
-                messages=request.messages,
-                temperature=temperature,
-                model=request.model,
-                user_info=user_info,
-                enabled_tools=enabled_tools,
-                assistant_id=request.assistant_id,
-                data_sources=data_sources,
-                conversation_id=request.conversation_id,
+                yield "data: [DONE]\n\n"
+            finally:
+                # runs when the stream completes OR the client disconnects
+                assistant_text = "".join(chunks)
+                if assistant_text:
+                    await PersistanceTools.insert_message(
+                        user_info.user_id,
+                        request.conversation_id,
+                        {"role": "assistant", "content": assistant_text},
+                        message_type="assistant",
+                    )
+
+        return StreamingResponse(sse_generator(), media_type="text/event-stream")
+    else: 
+        assistant_msg = await agent.run_without_streaming(
+            messages=[request.messages[-1]],
+            temperature=get_temperature_from_request(request),
+            model=request.model,
+            user_info=user_info,
+            enabled_tools=request.enabled_tools or [],
+            assistant_id=request.assistant_id,
+            data_sources=[source.model_dump() for source in request.data_sources]
+            if request.data_sources
+            else None,
+            conversation_id=request.conversation_id,
+        )
+        if assistant_msg:
+            await PersistanceTools.insert_message(
+                user_info.user_id,
+                request.conversation_id,
+                {"role": "assistant", "content": assistant_msg},
+                message_type="assistant",
             )
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.exception("Exception in /chat/completions")
-        msg = llm_exception_handler(ex=e, logger=logger)
-        raise HTTPException(status_code=500, detail=msg)
+        return assistant_msg

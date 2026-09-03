@@ -39,6 +39,10 @@ LANGFUSE:
   SECRET_KEY: "<your-sk>"
   PUBLIC_KEY: "<your-pk>"
 
+# Optional: base64-encoded RSA public key for encrypted trace identity.
+USER_TRACE:
+  PUBLIC_KEY: null
+
 # MCP Settings (Model Context Protocol)
 # Used by core service for external tool integration
 MCP:

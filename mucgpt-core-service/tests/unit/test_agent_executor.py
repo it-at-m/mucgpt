@@ -7,6 +7,7 @@ from langchain_core.messages import AIMessage, AIMessageChunk, ToolCall
 from agent.agent_executor import MUCGPTAgentExecutor
 from agent.tools.tool_chunk import ToolStreamChunk, ToolStreamState
 from api.api_models import ChatCompletionMessage as InputMessage
+from core.auth_models import AuthenticationResult
 
 
 class DummyLLM:
@@ -275,6 +276,36 @@ class TestMUCGPTAgentExecutor:
         assert config["llm"] == "test-model"
         assert config["llm_streaming"] is False
         assert config["enabled_tools"] == ["simplify"]
+
+    @pytest.mark.asyncio
+    async def test_run_without_streaming_propagates_encrypted_user_metadata(
+        self, monkeypatch
+    ):
+        propagated = {}
+        monkeypatch.setattr(
+            "agent.agent_executor.encrypted_user_metadata",
+            lambda _user: {"encrypted_user_00": "ciphertext"},
+        )
+        monkeypatch.setattr(
+            "agent.agent_executor.propagate_attributes",
+            lambda **kwargs: propagated.update(kwargs) or nullcontext(),
+        )
+        user = AuthenticationResult(
+            token="secret",
+            user_id="12345",
+            name="Jane Doe",
+            department="ITM-AI",
+        )
+
+        await self.runner.run_without_streaming(
+            messages=[InputMessage(role="user", content="hi")],
+            temperature=0.5,
+            model="test-model",
+            user_info=user,
+        )
+
+        assert propagated["metadata"] == {"encrypted_user_00": "ciphertext"}
+        assert propagated["user_id"] != user.user_id
 
     @pytest.mark.asyncio
     async def test_run_without_streaming_returns_error_on_exception(self):

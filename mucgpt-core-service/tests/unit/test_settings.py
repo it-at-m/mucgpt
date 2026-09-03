@@ -458,6 +458,14 @@ class TestSettings:
             assert langfuse_settings.SECRET_KEY is None
             assert langfuse_settings.HOST is None
 
+    def test_user_trace_public_key(self):
+        with patch.dict(
+            os.environ,
+            {"MUCGPT_CORE_USER_TRACE__PUBLIC_KEY": "encoded-public-key"},
+        ):
+            get_settings.cache_clear()
+            assert get_settings().USER_TRACE.PUBLIC_KEY == "encoded-public-key"
+
     def test_mcp_settings(self):
         """Test MCP settings configuration via nested env vars."""
         mcp_json = json.dumps(

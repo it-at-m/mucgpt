@@ -93,6 +93,11 @@ LANGFUSE:
   SECRET_KEY: "<your-secret-key>"
   HOST: "https://langfuse.example.com"
 
+# Optional RSA public key for recoverable user identity on Langfuse traces.
+# Supply a base64-encoded PEM via MUCGPT_CORE_USER_TRACE__PUBLIC_KEY in production.
+USER_TRACE:
+  PUBLIC_KEY: null
+
 # MCP Settings (optional - nested under MCP key)
 MCP:
   SOURCES:

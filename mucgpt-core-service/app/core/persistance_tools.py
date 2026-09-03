@@ -105,6 +105,15 @@ class PersistanceTools:
         return PersistanceTools._checkpointer
 
     @staticmethod
+    async def has_checkpoint(conversation_id: str) -> bool:
+        """Return whether LangGraph already has state for this conversation."""
+        checkpointer = PersistanceTools.get_checkpointer()
+        checkpoint = await checkpointer.aget(
+            {"configurable": {"thread_id": conversation_id}}
+        )
+        return checkpoint is not None
+
+    @staticmethod
     async def verify_user_in_conversation(user_id: str, conversation_id: str) -> bool:
         """True if the conversation belongs to `user_id`. First time a conversation_id
         is seen, create the chat row and return True (new chat).

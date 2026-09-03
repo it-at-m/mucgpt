@@ -38,6 +38,9 @@ def stub_persistence(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(
         PersistanceTools, "insert_message", AsyncMock(return_value=None)
     )
+    monkeypatch.setattr(
+        PersistanceTools, "has_checkpoint", AsyncMock(return_value=False)
+    )
 
 
 @pytest.fixture(autouse=True)
@@ -127,6 +130,64 @@ class TestChatRouter:
         assert response.usage.prompt_tokens > 0
         assert response.usage.completion_tokens > 0
         assert response.usage.total_tokens > 0
+        assert mock_agent_executor.run_without_streaming.await_args.kwargs[
+            "messages"
+        ] == payload_model.messages
+
+    @patch("api.routers.chat_router.init_agent", new_callable=AsyncMock)
+    def test_existing_checkpoint_only_appends_latest_message(
+        self,
+        mock_init_agent: AsyncMock,
+        test_client: TestClient,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        """Existing checkpoints must not receive the full client history again."""
+        from core.persistance_tools import PersistanceTools
+
+        monkeypatch.setattr(
+            PersistanceTools, "has_checkpoint", AsyncMock(return_value=True)
+        )
+        mock_response = ChatCompletionResponse(
+            id="chatcmpl-test123",
+            object="chat.completion",
+            created=1234567890,
+            choices=[
+                ChatCompletionChoice(
+                    index=0,
+                    message=ChatCompletionMessage(
+                        role="assistant", content="Second response"
+                    ),
+                    finish_reason="stop",
+                )
+            ],
+            usage=Usage(prompt_tokens=10, completion_tokens=2, total_tokens=12),
+        )
+        mock_agent_executor = Mock(MUCGPTAgentExecutor)
+        mock_agent_executor.run_without_streaming = AsyncMock(
+            return_value=mock_response
+        )
+        mock_init_agent.return_value = mock_agent_executor
+        messages = [
+            ChatCompletionMessage(role="system", content="System prompt"),
+            ChatCompletionMessage(role="user", content="First question"),
+            ChatCompletionMessage(role="assistant", content="First response"),
+            ChatCompletionMessage(role="user", content="Second question"),
+        ]
+
+        response = test_client.post(
+            "/v1/chat/completions",
+            json=ChatCompletionRequest(
+                model="gpt-4o-mini",
+                messages=messages,
+                stream=False,
+                conversation_id=DUMMY_CONVERSATION_ID,
+            ).model_dump(),
+        )
+
+        assert response.status_code == 200, response.text
+        assert mock_agent_executor.run_without_streaming.await_args.kwargs[
+            "messages"
+        ] == [messages[-1]]
 
     @patch("api.routers.chat_router.init_agent", new_callable=AsyncMock)
     def test_streaming_completion(self, mock_init_agent, test_client: TestClient):

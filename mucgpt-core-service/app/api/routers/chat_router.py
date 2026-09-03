@@ -99,13 +99,21 @@ async def chat_endpoint(
                 detail=f"User {user_info.user_id} is not authorized to access conversation {request.conversation_id}",
             )
 
-        # Persist the incoming user message. Only the last message is forwarded to
-        # the agent; earlier turns are restored from the checkpointer.
+        # Persist the newest incoming user message in the frontend-style history.
         await PersistanceTools.insert_message(
             user_info.user_id,
             request.conversation_id,
             request.messages[-1],
             message_type="user",
+        )
+
+        # Seed a new checkpoint with the complete client history so the system
+        # prompt and existing browser-held turns are retained. Once state exists,
+        # only append the newest user message to avoid duplicating the history.
+        messages_for_agent = (
+            [request.messages[-1]]
+            if await PersistanceTools.has_checkpoint(request.conversation_id)
+            else request.messages
         )
 
         agent = await init_agent(user_info=user_info, model_name=request.model)
@@ -119,7 +127,7 @@ async def chat_endpoint(
 
         if request.stream:
             gen = agent.run_with_streaming(
-                messages=[request.messages[-1]],
+                messages=messages_for_agent,
                 temperature=temperature,
                 model=request.model,
                 user_info=user_info,
@@ -155,7 +163,7 @@ async def chat_endpoint(
             return StreamingResponse(sse_generator(), media_type="text/event-stream")
 
         response = await agent.run_without_streaming(
-            messages=[request.messages[-1]],
+            messages=messages_for_agent,
             temperature=temperature,
             model=request.model,
             user_info=user_info,

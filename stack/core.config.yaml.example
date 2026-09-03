@@ -20,6 +20,14 @@ ASSISTANT_VERSION: "0.0.3"
 UNAUTHORIZED_USER_REDIRECT_URL: "<your-url>"
 AD2IMAGE_URL: "<your-ad2image-url>"  # Base URL of the ad2image service for avatar images
 
+# PostgreSQL persistence settings
+DB:
+  HOST: "checkpoint-postgres"
+  PORT: 5432
+  NAME: "checkpoints"
+  USER: "admin"
+  PASSWORD: "admin" # Change this for production or use MUCGPT_CORE_DB__PASSWORD
+
 # Compliance cache settings
 # If enabled, compliance check results are cached in Redis and can be verified by the assistant service.
 COMPLIANCE_CACHE_ENABLED: true

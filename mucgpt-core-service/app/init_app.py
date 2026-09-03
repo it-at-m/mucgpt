@@ -66,7 +66,7 @@ async def warmup_app() -> None:
     await RedisCache.init_redis()
 
     # checkpointer and postgres connection
-    await PersistanceTools.init()  
+    await PersistanceTools.init(settings)
     logger.info("App context warmed up")
 
 

@@ -1,13 +1,24 @@
-from psycopg_pool import AsyncConnectionPool
 from langgraph.checkpoint.postgres.aio import AsyncPostgresSaver
+from psycopg_pool import AsyncConnectionPool
 
+from config.settings import Settings
 from core.logtools import getLogger
 
 logger = getLogger()
 
 
-# TODO: move to config/settings.py
-DB_URI = "postgresql://admin:admin@checkpoint-postgres:5432/checkpoints"
+def _create_connection_args(settings: Settings) -> dict:
+    """Create PostgreSQL connection parameters from settings."""
+    db = settings.DB
+    return {
+        "host": db.HOST,
+        "port": db.PORT,
+        "dbname": db.NAME,
+        "user": db.USER,
+        "password": db.PASSWORD.get_secret_value(),
+        "autocommit": True,
+        "prepare_threshold": 0,
+    }
 
 
 def _content(message) -> str:
@@ -22,14 +33,14 @@ class PersistanceTools:
     _checkpointer: AsyncPostgresSaver | None = None
 
     @staticmethod
-    async def init() -> None:
+    async def init(settings: Settings) -> None:
         if PersistanceTools._pool is not None:
             return
         pool = AsyncConnectionPool(
-            conninfo=DB_URI,
+            conninfo="",
             max_size=20,
             open=False,
-            kwargs={"autocommit": True, "prepare_threshold": 0},
+            kwargs=_create_connection_args(settings),
         )
         await pool.open()
         checkpointer = AsyncPostgresSaver(conn=pool)

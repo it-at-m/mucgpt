@@ -427,6 +427,16 @@ class RedisConfig(BaseModel):
     PASSWORD: SecretStr | None = None
 
 
+class DBConfig(BaseModel):
+    """PostgreSQL configuration (nested under DB key in YAML)."""
+
+    HOST: str = "checkpoint-postgres"
+    PORT: int = 5432
+    NAME: str = "checkpoints"
+    USER: str = "admin"
+    PASSWORD: SecretStr = SecretStr("admin")
+
+
 class InternetSearchConfig(BaseModel):
     """Internet search configuration (nested under INTERNET_SEARCH key in YAML)."""
 
@@ -497,6 +507,7 @@ class Settings(BaseSettings):
     LANGFUSE: LangfuseConfig = Field(default_factory=LangfuseConfig)
     MCP: MCPConfig = Field(default_factory=MCPConfig)
     REDIS: RedisConfig = Field(default_factory=RedisConfig)
+    DB: DBConfig = Field(default_factory=DBConfig)
     INTERNET_SEARCH: InternetSearchConfig = Field(default_factory=InternetSearchConfig)
 
     # Customize settings sources to prioritize YAML config

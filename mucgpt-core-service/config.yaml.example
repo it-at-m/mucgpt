@@ -32,6 +32,14 @@ AD2IMAGE_URL: "http://localhost:8084"  # Base URL of the ad2image service
 # Backend settings
 UNAUTHORIZED_USER_REDIRECT_URL: ""
 
+# PostgreSQL persistence settings
+DB:
+  HOST: "checkpoint-postgres"
+  PORT: 5432
+  NAME: "checkpoints"
+  USER: "admin"
+  PASSWORD: "admin"
+
 # Compliance cache settings
 # If enabled, compliance check results are cached in Redis and can be verified by the assistant service.
 COMPLIANCE_CACHE_ENABLED: true

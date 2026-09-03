@@ -15,6 +15,7 @@ from config.settings import (
 from core.auth_models import AuthenticationResult
 from core.cache import RedisCache
 from core.logtools import getLogger
+from core.persistance_helpers import PersistanceHelpers
 
 logger = getLogger()
 
@@ -62,6 +63,9 @@ async def warmup_app() -> None:
     LangfuseProvider.init(version=settings.VERSION, langfuse_cfg=langfuse_settings)
     # init redis
     await RedisCache.init_redis()
+
+    # checkpointer and postgres connection
+    await PersistanceHelpers.init(settings)
     logger.info("App context warmed up")
 
 
@@ -73,6 +77,12 @@ async def destroy_app() -> None:
         await redis.aclose()
     except RuntimeError:
         pass
+
+    # close postgres connection
+    try:
+        await PersistanceHelpers.close()
+    except Exception:
+        logger.exception("Failed to close PersistanceHelpers")
 
 
 def _initialize_models_metadata(cfg: Settings) -> None:
@@ -112,7 +122,12 @@ async def init_agent(
         logger.debug(
             f"Initializing MUCGPTAgent with tools: {[tool.name for tool in tools]}"
         )
-        agent = MUCGPTAgent(llm=model, tools=tools, debug=False)
+        agent = MUCGPTAgent(
+            llm=model,
+            tools=tools,
+            debug=False,
+            checkpointer=PersistanceHelpers.get_checkpointer_if_ready(),
+        )
     except Exception as e:
         logger.error("Failed to initialize MUCGPTAgent: %s", e)
         raise

@@ -6,6 +6,7 @@ from langchain_core.language_models import BaseChatModel
 from langchain_core.runnables import RunnableConfig
 from langchain_core.runnables.config import merge_configs
 from langchain_core.tools.base import BaseTool
+from langgraph.checkpoint.postgres.aio import AsyncPostgresSaver
 
 from agent.middleware import (
     ContextMiddleware,
@@ -27,9 +28,6 @@ with open(
 ) as fp:
     DEFAULT_INSTRUCTIONS = fp.read()
 
-# TODO:
-# - consider prompt pool in langfuse
-
 
 class _ConfiguredLangChainDeepAgentGraph:
     """Simple wrapper around a LangChain agent to configure it with user info and tools on each run."""
@@ -40,6 +38,7 @@ class _ConfiguredLangChainDeepAgentGraph:
         tools: list[BaseTool],
         logger,
         debug: bool = True,
+        checkpointer: AsyncPostgresSaver | None = None,
     ):
         self.model = llm
         self.tools = tools
@@ -61,7 +60,7 @@ class _ConfiguredLangChainDeepAgentGraph:
             debug=self.debug,
             state_schema=self.state_schema,
             context_schema=RequestContext,
-            checkpointer=None,
+            checkpointer=checkpointer,
         )
 
     def _prepare_run(
@@ -165,6 +164,7 @@ class MUCGPTAgent:
         tools: list[BaseTool],
         logger=None,
         debug: bool = True,
+        checkpointer: AsyncPostgresSaver | None = None,
     ):
         self.logger = logger if logger else getLogger(name="mucgpt-core-react-agent")
         self.model = llm  # required for non-streaming calls, e.g. assisted MUCGPT-Assistant generation.
@@ -173,4 +173,5 @@ class MUCGPTAgent:
             tools=tools,
             logger=self.logger,
             debug=debug,
+            checkpointer=checkpointer,
         )

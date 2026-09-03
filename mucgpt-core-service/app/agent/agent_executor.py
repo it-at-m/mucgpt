@@ -238,6 +238,7 @@ class MUCGPTAgentExecutor:
                         "assistant_id": assistant_id,
                         "data_sources": data_sources,
                         "token_usage": token_usage,
+                        "thread_id": conversation_id,
                     },
                 ),
             )
@@ -426,6 +427,7 @@ class MUCGPTAgentExecutor:
                     "assistant_id": assistant_id,
                     "data_sources": data_sources,
                     "token_usage": token_usage,
+                    "thread_id": conversation_id,
                 },
             )
             config = merge_configs(self.base_config, request_config)

@@ -26,6 +26,28 @@ services:
       - postgres-data:/var/lib/postgresql/data
     networks:
       - internal
+
+  checkpoint-postgres:
+    image: postgres:18.1-alpine3.21@sha256:44d837eb4c2ed263474a95f0cc24745413c50924df60dd73ed6c4c3e36b84259
+    environment:
+      - POSTGRES_DB=checkpoints
+      - POSTGRES_USER=admin
+      - POSTGRES_PASSWORD=admin
+      - PGDATA=/var/lib/postgresql/data/pgdata
+    ports:
+      - "5433:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -d checkpoints -U admin"]
+      interval: 30s
+      timeout: 60s
+      retries: 3
+      start_period: 60s
+    security_opt: *security_settings
+    volumes:
+      - checkpoint-postgres-data:/var/lib/postgresql/data
+    networks:
+      - internal
+
   # see https://event-driven.io/en/automatically_connect_pgadmin_to_database/
   pg-admin:
     image: dpage/pgadmin4:9.15.0@sha256:cefc4cc6b7d9d71a9e81e76fb9d7e14038ab5661b539a190eea1b63fa612589a
@@ -88,6 +110,7 @@ services:
       ADMIN_PASSWORD: admin
       BASEURL: http://keycloak:8100/auth
       WAIT_FOR_KEYCLOAK: "true"
+      EXIT_ON_ERROR: "true"
       FAIL_ON_UNDEFINED_VARIABLES: "true"
       KEYCLOAK_CHANGELOG: /migration/keycloak-changelog.yml
     volumes:
@@ -190,6 +213,8 @@ services:
     depends_on:
       xberg-full:
         condition: service_started
+      checkpoint-postgres:
+        condition: service_healthy
     volumes:
       - ${CA_BUNDLE_PATH:-./ca-bundle.crt}:${SSL_MOUNT_PATH:-/etc/pki/ca-trust/extracted/pem/ca-bundle.crt}:ro,Z
       # Mount YAML configuration files (recommended over environment variables)
@@ -323,5 +348,8 @@ networks:
 volumes:
   cache-data:
   postgres-data:
+    driver_opts:
+      o: uid=999
+  checkpoint-postgres-data:
     driver_opts:
       o: uid=999

@@ -50,7 +50,7 @@ services:
 
   # see https://event-driven.io/en/automatically_connect_pgadmin_to_database/
   pg-admin:
-    image: dpage/pgadmin4:9.14.0@sha256:ff557f69d9808085dc3554f56c1b06a36ac8cddabe4485212920b9604261abdb
+    image: dpage/pgadmin4:9.15.0@sha256:cefc4cc6b7d9d71a9e81e76fb9d7e14038ab5661b539a190eea1b63fa612589a
     environment:
       - PGADMIN_DEFAULT_EMAIL=admin@admin.com
       - PGADMIN_DEFAULT_PASSWORD=admin
@@ -123,7 +123,7 @@ services:
   # #### Valkey ####
   #
   valkey:
-    image: valkey/valkey:9.0.4@sha256:bdf93f670fdb026eba9e2cf852c3fa8062f92e850fa181626c3b056e83ef04cf
+    image: valkey/valkey:9.0.6@sha256:28ed08a0039f2f4017686094eeef35ace4326b51cd3d38cc005ffd6c1869b1d7
     ports:
       - "6379:6379"
     command: ["valkey-server", "--requirepass", "password"]
@@ -135,7 +135,7 @@ services:
   # #### Gateway ####
   #
   refarch-gateway:
-    image: ghcr.io/it-at-m/refarch/refarch-gateway:1.7.0@sha256:3f82ab83c212ca53c9c2b606cfe29291f21525eac86fece215d0e1c6ca51273f
+    image: ghcr.io/it-at-m/refarch/refarch-gateway:1.9.0@sha256:688b8cdd91a59fdedc8e7b36d4b8f7740b0a1020eae7a8a49ab0da6eb9f10f1d
     depends_on:
       init-keycloak:
         condition: service_completed_successfully

@@ -1,4 +1,5 @@
 import json
+from collections.abc import AsyncGenerator
 
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import StreamingResponse
@@ -8,7 +9,6 @@ from api.api_models import (
     ChatCompletionResponse,
 )
 from api.exception import llm_exception_handler
-from config.model_provider import ModelRegistry, ModelsConfigurationException
 from config.settings import get_settings
 from core.auth import authenticate_user
 from core.auth_models import AuthenticationResult
@@ -73,10 +73,11 @@ def get_temperature_from_request(request: ChatCompletionRequest) -> float:
     response_model=ChatCompletionResponse,
     responses={
         200: {"description": "Successful Response"},
+        400: {"description": "Bad Request"},
+        403: {"description": "Forbidden"},
         500: {"description": "Internal Server Error"},
     },
 )
-
 async def chat_endpoint(
     request: ChatCompletionRequest,
     user_info: AuthenticationResult = Depends(authenticate_user),
@@ -84,84 +85,98 @@ async def chat_endpoint(
     """
     OpenAI-compatible chat completion endpoint (streaming or non-streaming)
     """
-    # 1. verify user and chat 
-    # SELECT user_id FROM chats WHERE chat_id/conversation_id=request.conversation_id 
-    verify_user = await PersistanceTools.verify_user_in_conversation(user_info.user_id, request.conversation_id)
-    if not verify_user:
-        raise HTTPException(
-            status_code=403,
-            detail=f"User {user_info.user_id} is not authorized to access conversation {request.conversation_id}",
+    if not request.conversation_id:
+        raise HTTPException(status_code=400, detail="conversation_id is required")
+
+    try:
+        # Verify the conversation belongs to this user (row is created on first use).
+        authorized = await PersistanceTools.verify_user_in_conversation(
+            user_info.user_id, request.conversation_id
+        )
+        if not authorized:
+            raise HTTPException(
+                status_code=403,
+                detail=f"User {user_info.user_id} is not authorized to access conversation {request.conversation_id}",
+            )
+
+        # Persist the incoming user message. Only the last message is forwarded to
+        # the agent; earlier turns are restored from the checkpointer.
+        await PersistanceTools.insert_message(
+            user_info.user_id,
+            request.conversation_id,
+            request.messages[-1],
+            message_type="user",
         )
 
-    # 2. insert user message into messages table of user in postgres
-    await PersistanceTools.insert_message(
-        user_info.user_id, 
-        request.conversation_id, 
-        {"role": "user", "content": request.messages[-1].content if request.messages else ""},
-        message_type="user",
-        ) # for now whole history is sent but we need to user message
-
-    # 3. initialize and invoke agent
-    agent = await init_agent(user_info=user_info, model_name=request.model)
-
-    assistant_msg: StreamingResponse | ChatCompletionResponse
-    if request.stream:
-        gen = agent.run_with_streaming(
-            messages=[request.messages[-1]],
-            temperature=get_temperature_from_request(request),
-            model=request.model,
-            user_info=user_info,
-            enabled_tools=request.enabled_tools or [],
-            assistant_id=request.assistant_id,
-            data_sources=[source.model_dump() for source in request.data_sources]
-            if request.data_sources else None,
-            conversation_id=request.conversation_id,
+        agent = await init_agent(user_info=user_info, model_name=request.model)
+        temperature = get_temperature_from_request(request)
+        enabled_tools = request.enabled_tools or []
+        data_sources = (
+            [source.model_dump() for source in request.data_sources]
+            if request.data_sources
+            else None
         )
 
-        async def sse_generator():
-            chunks: list[str] = []
-            try:
+        if request.stream:
+            gen = agent.run_with_streaming(
+                messages=[request.messages[-1]],
+                temperature=temperature,
+                model=request.model,
+                user_info=user_info,
+                enabled_tools=enabled_tools,
+                assistant_id=request.assistant_id,
+                data_sources=data_sources,
+                conversation_id=request.conversation_id,
+            )
+
+            async def sse_generator() -> AsyncGenerator[str]:
+                parts: list[str] = []
+                completed = False
                 async for chunk in gen:
-                    # adjust this extraction to match your chunk shape
-                    print(f"Received chunk: {chunk}")  # Debugging
-                    delta = chunk.get("choices", [{}])[0].get("delta", {})
-                    content = delta.get("content")
+                    choice = (chunk.get("choices") or [{}])[0]
+                    content = choice.get("delta", {}).get("content")
                     if content:
-                        chunks.append(content)
-
+                        parts.append(content)
+                    if choice.get("finish_reason") == "stop":
+                        completed = True
                     yield f"data: {json.dumps(chunk)}\n\n"
-
                 yield "data: [DONE]\n\n"
-            finally:
-                # runs when the stream completes OR the client disconnects
-                assistant_text = "".join(chunks)
-                if assistant_text:
+
+                # Persist the assistant reply only when the stream finished cleanly
+                # (not on client disconnect or an error chunk).
+                if completed and parts:
                     await PersistanceTools.insert_message(
                         user_info.user_id,
                         request.conversation_id,
-                        {"role": "assistant", "content": assistant_text},
+                        {"role": "assistant", "content": "".join(parts)},
                         message_type="assistant",
                     )
 
-        return StreamingResponse(sse_generator(), media_type="text/event-stream")
-    else: 
-        assistant_msg = await agent.run_without_streaming(
+            return StreamingResponse(sse_generator(), media_type="text/event-stream")
+
+        response = await agent.run_without_streaming(
             messages=[request.messages[-1]],
-            temperature=get_temperature_from_request(request),
+            temperature=temperature,
             model=request.model,
             user_info=user_info,
-            enabled_tools=request.enabled_tools or [],
+            enabled_tools=enabled_tools,
             assistant_id=request.assistant_id,
-            data_sources=[source.model_dump() for source in request.data_sources]
-            if request.data_sources
-            else None,
+            data_sources=data_sources,
             conversation_id=request.conversation_id,
         )
-        if assistant_msg:
+
+        choice = response.choices[0] if response and response.choices else None
+        if choice and choice.finish_reason == "stop" and choice.message.content:
             await PersistanceTools.insert_message(
                 user_info.user_id,
                 request.conversation_id,
-                {"role": "assistant", "content": assistant_msg},
+                choice.message,
                 message_type="assistant",
             )
-        return assistant_msg
+        return response
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.exception("Exception in /chat/completions")
+        msg = llm_exception_handler(ex=e, logger=logger)
+        raise HTTPException(status_code=500, detail=msg) from e

@@ -6,6 +6,7 @@ from langchain_core.language_models import BaseChatModel
 from langchain_core.runnables import RunnableConfig
 from langchain_core.runnables.config import merge_configs
 from langchain_core.tools.base import BaseTool
+from langgraph.checkpoint.postgres.aio import AsyncPostgresSaver
 
 from agent.middleware import (
     ContextMiddleware,
@@ -37,7 +38,7 @@ class _ConfiguredLangChainDeepAgentGraph:
         tools: list[BaseTool],
         logger,
         debug: bool = True,
-        checkpointer=None,
+        checkpointer: AsyncPostgresSaver | None = None,
     ):
         self.model = llm
         self.tools = tools
@@ -163,7 +164,7 @@ class MUCGPTAgent:
         tools: list[BaseTool],
         logger=None,
         debug: bool = True,
-        checkpointer=None,
+        checkpointer: AsyncPostgresSaver | None = None,
     ):
         self.logger = logger if logger else getLogger(name="mucgpt-core-react-agent")
         self.model = llm  # required for non-streaming calls, e.g. assisted MUCGPT-Assistant generation.

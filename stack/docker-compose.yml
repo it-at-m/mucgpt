@@ -213,6 +213,8 @@ services:
     depends_on:
       xberg-full:
         condition: service_started
+      checkpoint-postgres:
+        condition: service_healthy
     volumes:
       - ${CA_BUNDLE_PATH:-./ca-bundle.crt}:${SSL_MOUNT_PATH:-/etc/pki/ca-trust/extracted/pem/ca-bundle.crt}:ro,Z
       # Mount YAML configuration files (recommended over environment variables)

@@ -15,11 +15,10 @@ from config.settings import (
 from core.auth_models import AuthenticationResult
 from core.cache import RedisCache
 from core.logtools import getLogger
-
 from core.persistance_tools import PersistanceTools
 
-
 logger = getLogger()
+
 
 class ModelOptions:
     """Helper class for model initialization options."""
@@ -82,8 +81,8 @@ async def destroy_app() -> None:
     # close postgres connection
     try:
         await PersistanceTools.close()
-    except Exception as e:
-        logger.error(f"Error closing PersistanceTools: {e}")
+    except Exception:
+        logger.exception("Failed to close PersistanceTools")
 
 
 def _initialize_models_metadata(cfg: Settings) -> None:
@@ -123,7 +122,12 @@ async def init_agent(
         logger.debug(
             f"Initializing MUCGPTAgent with tools: {[tool.name for tool in tools]}"
         )
-        agent = MUCGPTAgent(llm=model, tools=tools, debug=False, checkpointer=PersistanceTools.get_checkpointer())
+        agent = MUCGPTAgent(
+            llm=model,
+            tools=tools,
+            debug=False,
+            checkpointer=PersistanceTools.get_checkpointer_if_ready(),
+        )
     except Exception as e:
         logger.error("Failed to initialize MUCGPTAgent: %s", e)
         raise

@@ -1,13 +1,17 @@
+from typing import Any
+
 from langgraph.checkpoint.postgres.aio import AsyncPostgresSaver
+from psycopg.rows import dict_row
 from psycopg_pool import AsyncConnectionPool
 
+from api.api_models import ChatCompletionMessage
 from config.settings import Settings
 from core.logtools import getLogger
 
 logger = getLogger()
 
 
-def _create_connection_args(settings: Settings) -> dict:
+def _create_connection_args(settings: Settings) -> dict[str, Any]:
     """Create PostgreSQL connection parameters from settings."""
     db = settings.DB
     return {
@@ -18,10 +22,13 @@ def _create_connection_args(settings: Settings) -> dict:
         "password": db.PASSWORD.get_secret_value(),
         "autocommit": True,
         "prepare_threshold": 0,
+        # Return rows as dicts so queries can read columns by name. The
+        # AsyncPostgresSaver sets this on its own cursors regardless.
+        "row_factory": dict_row,
     }
 
 
-def _content(message) -> str:
+def _content(message: ChatCompletionMessage | dict[str, Any]) -> str:
     """`message` is either a pydantic ChatCompletionMessage or a plain dict."""
     if isinstance(message, dict):
         return str(message.get("content", ""))
@@ -92,28 +99,37 @@ class PersistanceTools:
         return PersistanceTools._checkpointer
 
     @staticmethod
+    def get_checkpointer_if_ready() -> AsyncPostgresSaver | None:
+        """Return the checkpointer, or ``None`` when persistence has not been
+        initialised (e.g. in tests or when the feature is disabled)."""
+        return PersistanceTools._checkpointer
+
+    @staticmethod
     async def verify_user_in_conversation(user_id: str, conversation_id: str) -> bool:
         """True if the conversation belongs to `user_id`. First time a conversation_id
-        is seen, create the chat row and return True (new chat)."""
+        is seen, create the chat row and return True (new chat).
+
+        The insert-or-ignore keeps concurrent first requests for the same
+        conversation_id from creating duplicate ownership rows.
+        """
         async with PersistanceTools._pool.connection() as conn:
+            await conn.execute(
+                "INSERT INTO chats (conversation_id, user_id) VALUES (%s, %s) "
+                "ON CONFLICT (conversation_id) DO NOTHING",
+                (conversation_id, user_id),
+            )
             cur = await conn.execute(
                 "SELECT user_id FROM chats WHERE conversation_id = %s",
                 (conversation_id,),
             )
             row = await cur.fetchone()
-            if row is None:
-                await conn.execute(
-                    "INSERT INTO chats (conversation_id, user_id) VALUES (%s, %s)",
-                    (conversation_id, user_id),
-                )
-                return True
-            return row[0] == user_id
+            return row is not None and row["user_id"] == user_id
 
     @staticmethod
     async def insert_message(
         user_id: str,
         conversation_id: str,
-        message,
+        message: ChatCompletionMessage | dict[str, Any],
         message_type: str = "user",
     ) -> None:
         async with PersistanceTools._pool.connection() as conn:

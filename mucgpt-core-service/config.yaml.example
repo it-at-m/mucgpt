@@ -28,6 +28,8 @@ INCIDENT_REPORT_URL: "https://ki.muenchen.de/"
 FEATURE_REQUEST_URL: "https://ki.muenchen.de/"
 CONTACT_MAIL_URL: "mailto:ki@muenchen.de"
 AD2IMAGE_URL: "http://localhost:8084"  # Base URL of the ad2image service
+OWNER_PROFILE_URL_TEMPLATE: "https://intranet.muenchen.de/person/{uid}"  # Used for providing a link to a external user profile for a given assistant. {uid} is replaced with the owner id
+
 
 # Backend settings
 UNAUTHORIZED_USER_REDIRECT_URL: ""

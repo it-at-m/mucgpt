@@ -15,6 +15,7 @@ AI_ACT_COMPLIANCE_CHECK_ENABLED: true
 APP_VERSION: "2.0"
 FRONTEND_VERSION: "0.0.2"
 ASSISTANT_VERSION: "0.0.3"
+OWNER_PROFILE_URL_TEMPLATE: "https://intranet.muenchen.de/person/{uid}"  #Used for providing a link to a external user profile for a given assistant. {uid} is replaced with the owner id
 
 # Backend settings
 UNAUTHORIZED_USER_REDIRECT_URL: "<your-url>"

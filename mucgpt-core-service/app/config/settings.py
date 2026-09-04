@@ -475,6 +475,7 @@ class Settings(BaseSettings):
     FEATURE_REQUEST_URL: str | None = None
     CONTACT_MAIL_URL: str | None = None
     AD2IMAGE_URL: str | None = None
+    OWNER_PROFILE_URL_TEMPLATE: str | None = None
 
     # Backend settings
     UNAUTHORIZED_USER_REDIRECT_URL: str = ""

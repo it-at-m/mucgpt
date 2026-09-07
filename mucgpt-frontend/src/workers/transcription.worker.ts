@@ -1,4 +1,10 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import type { NemoModelFiles, TranscriptionRuntime } from "../config/transcriptionModels";
+import { createCanaryTranscriber } from "./nemo/canary";
+import { createParakeetTranscriber } from "./nemo/parakeet";
+import { createOrtSessionFromUrl, fetchTextCached } from "./nemo/sessions";
+import { parseNemoVocab } from "./nemo/vocab";
+import type { NemoTranscriber } from "./nemo/types";
 
 export type WorkerInMessage =
     | {
@@ -9,6 +15,8 @@ export type WorkerInMessage =
           dtype?: Record<string, string> | string;
           webgpu_only?: boolean;
           language?: string;
+          runtime?: TranscriptionRuntime;
+          files?: NemoModelFiles;
       }
     | { type: "set-language"; language: string | undefined }
     | { type: "start-recording"; sessionId: number }
@@ -56,7 +64,6 @@ let srTensor: any = null;
 let TensorCtor: any = null;
 
 let loadedModelId: string | null = null;
-let loadingModelId: string | null = null;
 let isLoading = false;
 let queuedLoad: Extract<WorkerInMessage, { type: "load" }> | null = null;
 let hasWebGPU = false;
@@ -102,8 +109,8 @@ function wasmSafeDtype(dtype: Record<string, string> | string): Record<string, s
 }
 
 async function loadModel(request: Extract<WorkerInMessage, { type: "load" }>) {
-    const { requestId, modelId, fileSizes, dtype: modelDtype, webgpu_only: webgpuOnly, language } = request;
-    log("[transcription-worker] loadModel called", { modelId, fileSizes, modelDtype, language });
+    const { requestId, modelId, language } = request;
+    log("[transcription-worker] loadModel called", { modelId, runtime: request.runtime, language });
     if (language !== undefined) currentLanguage = language;
 
     if (!modelId) {
@@ -129,116 +136,26 @@ async function loadModel(request: Extract<WorkerInMessage, { type: "load" }>) {
     transcriber = null;
     vadModel = null;
     loadedModelId = null;
-    loadingModelId = modelId;
     isLoading = true;
 
     try {
-        log("[transcription-worker] importing @huggingface/transformers");
-        const { pipeline, AutoModel, Tensor, env } = await import("@huggingface/transformers");
-        TensorCtor = Tensor;
-        env.allowLocalModels = false;
-        env.useBrowserCache = true;
-        log("[transcription-worker] transformers imported, env configured", {
-            allowLocalModels: env.allowLocalModels,
-            useBrowserCache: env.useBrowserCache
-        });
-
-        hasWebGPU = detectWebGPU();
-        log("[transcription-worker] WebGPU detection result:", hasWebGPU);
-
-        if (webgpuOnly && !hasWebGPU) {
-            self.postMessage({
-                type: "error",
-                requestId,
-                message: "This model requires WebGPU, which is not available in your browser. Try Chrome/Edge 113+ or select Whisper Small.",
-                messageKey: "transcriptionSettings.webgpu_only_error"
-            } satisfies WorkerOutMessage);
-            return;
-        }
-
-        const device = hasWebGPU ? "webgpu" : "wasm";
-        const baseDtype =
-            modelDtype !== undefined
-                ? modelDtype
-                : hasWebGPU
-                  ? { encoder_model: "fp32", decoder_model_merged: "q4" }
-                  : { encoder_model: "fp32", decoder_model_merged: "q8" };
-        const dtype = hasWebGPU ? baseDtype : wasmSafeDtype(baseDtype);
-        log("[transcription-worker] device and dtype resolved", { device, dtype });
-
-        const fileProgress = new Map<string, number>();
-
-        const postCombined = () => {
-            let downloadedBytes = 0;
-            let knownTotalBytes = 0;
-            fileProgress.forEach((percent, file) => {
-                const fileSize = fileSizes?.[file] ?? 0;
-                downloadedBytes += (fileSize * percent) / 100;
-                knownTotalBytes += fileSize;
-            });
-
-            if (knownTotalBytes === 0) {
-                const values = [...fileProgress.values()];
-                const avg = values.length > 0 ? values.reduce((a, b) => a + b, 0) / values.length : -1;
-                self.postMessage({ type: "progress", progress: avg } satisfies WorkerOutMessage);
-            } else {
-                const progress = Math.min(99, Math.round((downloadedBytes / knownTotalBytes) * 100));
+        if (request.runtime === "canary" || request.runtime === "parakeet") {
+            await loadNemoTranscriber(request);
+        } else {
+            hasWebGPU = detectWebGPU();
+            log("[transcription-worker] WebGPU detection result:", hasWebGPU);
+            if (request.webgpu_only && !hasWebGPU) {
                 self.postMessage({
-                    type: "progress",
-                    progress,
-                    downloadedBytes: Math.round(downloadedBytes / 1024 / 1024),
-                    totalBytes: Math.round(knownTotalBytes / 1024 / 1024)
+                    type: "error",
+                    requestId,
+                    message: "This model requires WebGPU, which is not available in your browser. Try Chrome/Edge 113+ or select Whisper Small.",
+                    messageKey: "transcriptionSettings.webgpu_only_error"
                 } satisfies WorkerOutMessage);
+                return;
             }
-        };
-
-        log("[transcription-worker] loading Whisper pipeline", { modelId, device, dtype });
-        transcriber = await (pipeline as any)("automatic-speech-recognition", modelId, {
-            device,
-            dtype,
-            progress_callback: (info: { status: string; file?: string; progress?: number }) => {
-                if (!info.file) return;
-                if (info.status === "initiate" || info.status === "download") {
-                    log(`[transcription-worker] whisper download initiate: ${info.file}`);
-                    fileProgress.set(info.file, 0);
-                    postCombined();
-                } else if (info.status === "progress" && info.progress !== undefined) {
-                    fileProgress.set(info.file, info.progress);
-                    postCombined();
-                } else if (info.status === "done") {
-                    log(`[transcription-worker] whisper file done: ${info.file}`);
-                    fileProgress.set(info.file, 100);
-                    postCombined();
-                } else {
-                    log(`[transcription-worker] whisper progress callback status="${info.status}" file="${info.file}"`);
-                }
-            }
-        });
-        log("[transcription-worker] Whisper pipeline loaded successfully");
-
-        // Warmup: compile shaders / prime WASM JIT with a silent buffer.
-        log("[transcription-worker] running warmup inference");
-        try {
-            await transcriber(new Float32Array(SAMPLE_RATE), { language: currentLanguage ?? "en" });
-            log("[transcription-worker] warmup complete");
-        } catch (warmupErr) {
-            warn("[transcription-worker] warmup failed (non-fatal):", warmupErr);
+            await loadTransformersTranscriber(request);
         }
-
-        // VAD is tiny (~1.5 MB) and always runs on WASM to avoid GPU contention
-        // with small repeated inferences.
-        log("[transcription-worker] loading VAD model", { VAD_MODEL_ID });
-        vadModel = await (AutoModel as any).from_pretrained(VAD_MODEL_ID, {
-            config: { model_type: "custom" },
-            dtype: "fp32",
-            device: "wasm"
-        });
-        log("[transcription-worker] VAD model loaded successfully");
-
-        // onnx-community/silero-vad v5 uses a single combined state tensor [2, 1, 128]
-        vadState = new Tensor("float32", new Float32Array(2 * 1 * 128), [2, 1, 128]);
-        srTensor = new Tensor("int64", BigInt64Array.from([BigInt(SAMPLE_RATE)]), [1]);
-        log("[transcription-worker] VAD tensors initialised", { sampleRate: SAMPLE_RATE });
+        await loadVad();
 
         loadedModelId = modelId;
         log("[transcription-worker] init complete, posting ready", { loadedModelId });
@@ -248,11 +165,169 @@ async function loadModel(request: Extract<WorkerInMessage, { type: "load" }>) {
         self.postMessage({ type: "error", requestId, message: err instanceof Error ? err.message : String(err) } satisfies WorkerOutMessage);
     } finally {
         isLoading = false;
-        loadingModelId = null;
         const nextLoad = queuedLoad;
         queuedLoad = null;
         if (nextLoad && nextLoad.requestId !== requestId) void loadModel(nextLoad);
     }
+}
+
+/** @huggingface/transformers ASR pipeline (Whisper entries). */
+async function loadTransformersTranscriber(request: Extract<WorkerInMessage, { type: "load" }>): Promise<void> {
+    const { modelId, fileSizes, dtype: modelDtype } = request;
+    log("[transcription-worker] importing @huggingface/transformers");
+    const { pipeline, Tensor, env } = await import("@huggingface/transformers");
+    TensorCtor = Tensor;
+    env.allowLocalModels = false;
+    env.useBrowserCache = true;
+    log("[transcription-worker] transformers imported, env configured", {
+        allowLocalModels: env.allowLocalModels,
+        useBrowserCache: env.useBrowserCache
+    });
+
+    const device = hasWebGPU ? "webgpu" : "wasm";
+    const baseDtype =
+        modelDtype !== undefined
+            ? modelDtype
+            : hasWebGPU
+              ? { encoder_model: "fp32", decoder_model_merged: "q4" }
+              : { encoder_model: "fp32", decoder_model_merged: "q8" };
+    const dtype = hasWebGPU ? baseDtype : wasmSafeDtype(baseDtype);
+    log("[transcription-worker] device and dtype resolved", { device, dtype });
+
+    const fileProgress = new Map<string, number>();
+
+    const postCombined = () => {
+        let downloadedBytes = 0;
+        let knownTotalBytes = 0;
+        fileProgress.forEach((percent, file) => {
+            const fileSize = fileSizes?.[file] ?? 0;
+            downloadedBytes += (fileSize * percent) / 100;
+            knownTotalBytes += fileSize;
+        });
+
+        if (knownTotalBytes === 0) {
+            const values = [...fileProgress.values()];
+            const avg = values.length > 0 ? values.reduce((a, b) => a + b, 0) / values.length : -1;
+            self.postMessage({ type: "progress", progress: avg } satisfies WorkerOutMessage);
+        } else {
+            const progress = Math.min(99, Math.round((downloadedBytes / knownTotalBytes) * 100));
+            self.postMessage({
+                type: "progress",
+                progress,
+                downloadedBytes: Math.round(downloadedBytes / 1024 / 1024),
+                totalBytes: Math.round(knownTotalBytes / 1024 / 1024)
+            } satisfies WorkerOutMessage);
+        }
+    };
+
+    log("[transcription-worker] loading Whisper pipeline", { modelId, device, dtype });
+    transcriber = await (pipeline as any)("automatic-speech-recognition", modelId, {
+        device,
+        dtype,
+        progress_callback: (info: { status: string; file?: string; progress?: number }) => {
+            if (!info.file) return;
+            if (info.status === "initiate" || info.status === "download") {
+                log(`[transcription-worker] whisper download initiate: ${info.file}`);
+                fileProgress.set(info.file, 0);
+                postCombined();
+            } else if (info.status === "progress" && info.progress !== undefined) {
+                fileProgress.set(info.file, info.progress);
+                postCombined();
+            } else if (info.status === "done") {
+                log(`[transcription-worker] whisper file done: ${info.file}`);
+                fileProgress.set(info.file, 100);
+                postCombined();
+            } else {
+                log(`[transcription-worker] whisper progress callback status="${info.status}" file="${info.file}"`);
+            }
+        }
+    });
+    log("[transcription-worker] Whisper pipeline loaded successfully");
+
+    // Warmup: compile shaders / prime WASM JIT with a silent buffer.
+    log("[transcription-worker] running warmup inference");
+    try {
+        await transcriber(new Float32Array(SAMPLE_RATE), { language: currentLanguage ?? "en" });
+        log("[transcription-worker] warmup complete");
+    } catch (warmupErr) {
+        warn("[transcription-worker] warmup failed (non-fatal):", warmupErr);
+    }
+}
+
+/** Canary/Parakeet entries: direct ONNX sessions on ort-web, decoded by our NeMo transcribers. */
+async function loadNemoTranscriber(request: Extract<WorkerInMessage, { type: "load" }>): Promise<void> {
+    const { modelId, files, runtime } = request;
+    if (!files) throw new Error(`NeMo model ${modelId} is missing its file list`);
+    const fileProgress = new Map<string, { loaded: number; total: number }>();
+    const postNemoProgress = () => {
+        let loaded = 0;
+        let total = 0;
+        for (const p of fileProgress.values()) {
+            loaded += p.loaded;
+            total += p.total;
+        }
+        if (total > 0) {
+            self.postMessage({
+                type: "progress",
+                progress: Math.min(99, Math.round((loaded / total) * 100)),
+                downloadedBytes: Math.round(loaded / 1048576),
+                totalBytes: Math.round(total / 1048576)
+            } satisfies WorkerOutMessage);
+        } else {
+            self.postMessage({ type: "progress", progress: -1 } satisfies WorkerOutMessage);
+        }
+    };
+    const track = (name: string) => (loaded: number, total: number) => {
+        fileProgress.set(name, { loaded, total });
+        postNemoProgress();
+    };
+
+    log("[transcription-worker] loading NeMo sessions", { modelId, runtime });
+    const [encoderSession, decoderSession, vocabText] = await Promise.all([
+        createOrtSessionFromUrl(files.encoder, track("encoder")),
+        createOrtSessionFromUrl(files.decoder, track("decoder")),
+        fetchTextCached(files.vocab).then(text => {
+            track("vocab")(text.length, text.length);
+            return text;
+        })
+    ]);
+    const vocab = parseNemoVocab(vocabText);
+    const nemo: NemoTranscriber =
+        runtime === "canary"
+            ? createCanaryTranscriber({ encoder: encoderSession, decoder: decoderSession, vocab })
+            : createParakeetTranscriber({ encoder: encoderSession, decoderJoint: decoderSession, vocab });
+    transcriber = wrapNemoTranscriber(nemo);
+    log("[transcription-worker] NeMo sessions loaded", { modelId, runtime });
+}
+
+function wrapNemoTranscriber(nemo: NemoTranscriber): any {
+    return async (audio: Float32Array, opts?: { language?: string }) => ({
+        text: await nemo.transcribe(audio, opts?.language)
+    });
+}
+
+/** Silero VAD is shared by every runtime (tiny, always WASM) and configures the transformers env. */
+async function loadVad(): Promise<void> {
+    const { AutoModel, Tensor, env } = await import("@huggingface/transformers");
+    TensorCtor = Tensor;
+    env.allowLocalModels = false;
+    env.useBrowserCache = true;
+    log("[transcription-worker] importing @huggingface/transformers for VAD done");
+
+    // VAD is tiny (~1.5 MB) and always runs on WASM to avoid GPU contention
+    // with small repeated inferences.
+    log("[transcription-worker] loading VAD model", { VAD_MODEL_ID });
+    vadModel = await (AutoModel as any).from_pretrained(VAD_MODEL_ID, {
+        config: { model_type: "custom" },
+        dtype: "fp32",
+        device: "wasm"
+    });
+    log("[transcription-worker] VAD model loaded successfully");
+
+    // onnx-community/silero-vad v5 uses a single combined state tensor [2, 1, 128]
+    vadState = new Tensor("float32", new Float32Array(2 * 1 * 128), [2, 1, 128]);
+    srTensor = new Tensor("int64", BigInt64Array.from([BigInt(SAMPLE_RATE)]), [1]);
+    log("[transcription-worker] VAD tensors initialised", { sampleRate: SAMPLE_RATE });
 }
 
 async function runVAD(frame: Float32Array): Promise<number> {

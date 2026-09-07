@@ -1,8 +1,9 @@
-export async function fetchModelFileSizes(modelId: string): Promise<Record<string, number>> {
+export async function fetchModelFileSizes(modelId: string, treePath = "onnx"): Promise<Record<string, number>> {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), 5000);
     try {
-        const response = await fetch(`https://huggingface.co/api/models/${modelId}/tree/main/onnx`, {
+        const tree = treePath ? `${treePath}/` : "";
+        const response = await fetch(`https://huggingface.co/api/models/${modelId}/tree/main/${tree}`, {
             headers: { Accept: "application/json" },
             signal: controller.signal
         });

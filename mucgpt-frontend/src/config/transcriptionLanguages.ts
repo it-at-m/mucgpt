@@ -1,13 +1,18 @@
-// Maps the app's i18n locale code to a Whisper language tag.
-// Bavarian (BAY) is a German dialect not supported by Whisper → fall back to "de".
+// Maps the app's i18n locale code (see LanguageSelector.AVAILABLE_LANGUAGES) to a Whisper language tag.
+// Bavarian (BA) is a German dialect not supported by Whisper → fall back to "de".
 const LOCALE_TO_WHISPER: Record<string, string> = {
     DE: "de",
     EN: "en",
+    BA: "de",
     FR: "fr",
-    UK: "uk",
-    BAY: "de"
+    UK: "uk"
 };
 
+/**
+ * Maps an app i18n locale code (e.g. "de-DE", "BA") to the Whisper language
+ * tag for transcription. Returns undefined when the locale has no Whisper
+ * equivalent, letting Whisper auto-detect.
+ */
 export function localeToWhisperLang(locale: string): string | undefined {
     return LOCALE_TO_WHISPER[locale.toUpperCase().split("-")[0]];
 }

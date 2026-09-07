@@ -10,7 +10,7 @@ describe("localeToWhisperLang", () => {
     });
 
     it("falls back from Bavarian to German", () => {
-        expect(localeToWhisperLang("BAY")).toBe("de");
+        expect(localeToWhisperLang("BA")).toBe("de");
     });
 
     it("is case-insensitive and strips regional subtags", () => {

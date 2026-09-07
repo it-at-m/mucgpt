@@ -2,23 +2,10 @@ import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } 
 import { useTranslation } from "react-i18next";
 import { STORAGE_KEYS } from "../../pages/layout/LayoutHelper";
 import { DEFAULT_TRANSCRIPTION_MODEL, TRANSCRIPTION_MODELS } from "../../config/transcriptionModels";
+import { localeToWhisperLang } from "../../config/transcriptionLanguages";
 import type { WorkerInMessage, WorkerOutMessage } from "../../workers/transcription.worker";
 import { useAudioRecorder } from "../../hooks/useAudioRecorder";
 import { fetchModelFileSizes } from "../../utils/modelSizeUtils";
-
-// Maps the app's i18n locale code to a Whisper language tag.
-// Bavarian (BAY) is a German dialect not supported by Whisper → fall back to "de".
-const LOCALE_TO_WHISPER: Record<string, string> = {
-    DE: "de",
-    EN: "en",
-    FR: "fr",
-    UK: "uk",
-    BAY: "de"
-};
-
-function localeToWhisperLang(locale: string): string | undefined {
-    return LOCALE_TO_WHISPER[locale.toUpperCase().split("-")[0]];
-}
 
 export type TranscriptionStatus = "idle" | "warming-up" | "loading-model" | "recording" | "transcribing" | "error";
 export type TranscriptionLanguage = string | undefined;
@@ -213,6 +200,8 @@ export const TranscriptionSettingsProvider = ({ children, deploymentEnabled = tr
                 fileSizes,
                 dtype: modelCfg?.dtype,
                 webgpu_only: modelCfg?.webgpu_only,
+                runtime: modelCfg?.runtime,
+                files: modelCfg?.files,
                 language: languageRef.current
             });
             return requestId;
@@ -405,7 +394,8 @@ export const TranscriptionSettingsProvider = ({ children, deploymentEnabled = tr
             setLoadingModelId(modelId);
             setStatus("loading-model");
             return new Promise<void>((resolve, reject) => {
-                fetchModelFileSizes(modelId)
+                const fileTree = TRANSCRIPTION_MODELS.find(m => m.model_id === modelId)?.file_tree;
+                fetchModelFileSizes(modelId, fileTree)
                     .then(fileSizes => {
                         const requestId = requestModelLoad(modelId, fileSizes);
                         pendingDownloadRef.current = { id: modelId, requestId, resolve, reject };

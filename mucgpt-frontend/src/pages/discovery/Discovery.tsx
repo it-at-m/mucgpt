@@ -1,14 +1,13 @@
 import { type ReactElement, useCallback, useContext, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Title1, Body1, Text, SearchBox, Dropdown, Option, Button } from "@fluentui/react-components";
-import type { SearchBoxChangeEvent, InputOnChangeData, SelectionEvents, OptionOnSelectData } from "@fluentui/react-components";
+import { Title2, Body1, Text, SearchBox, Dropdown, Option, Button, Tab, TabList } from "@fluentui/react-components";
+import type { SearchBoxChangeEvent, InputOnChangeData, SelectionEvents, OptionOnSelectData, SelectTabData, SelectTabEvent } from "@fluentui/react-components";
 import { Add24Regular, DocumentArrowUpRegular, LibraryRegular, PeopleCommunityRegular, SearchRegular } from "@fluentui/react-icons";
 import { useTranslation } from "react-i18next";
 
 import styles from "./Discovery.module.css";
 import { getCommunityAssistantApi, deleteCommunityAssistantApi, createCommunityAssistantApi, unsubscribeFromAssistantApi } from "../../api/assistant-client";
 import { Assistant, AssistantResponse, CommunityAssistantSnapshot } from "../../api/models";
-import { AddAssistantButton } from "../../components/AddAssistantButton/AddAssistantButton";
 import { AssistantStorageService } from "../../service/assistantstorage";
 import { CommunityAssistantStorageService } from "../../service/communityassistantstorage";
 import { ASSISTANT_STORE, COMMUNITY_ASSISTANT_STORE, CREATIVITY_LOW } from "../../constants";
@@ -240,6 +239,12 @@ const Discovery = () => {
         }
     };
 
+    const handleMyAssistantFilterChange = (_event: SelectTabEvent, data: SelectTabData) => {
+        if (data.value === "all" || data.value === "owned" || data.value === "subscribed") {
+            setMyAssistantFilter(data.value);
+        }
+    };
+
     const selectedMyAssistantsSortLabel =
         myAssistantsSortMethod === "lastUsed"
             ? t("components.community_assistants.sort_last_used", "Zuletzt benutzt")
@@ -453,10 +458,11 @@ const Discovery = () => {
             subscriberCount={assistant.subscriptions}
             isPrivate={isAssistantPrivate(assistant)}
             privateLabel={t("components.community_assistants.private_label", "Privat")}
-            onClick={() => handleAssistantClick(assistant)}
+            onActivate={() => handleAssistantClick(assistant)}
             isSelected={selectedAssistant?.id === assistant.id}
+            ariaControls="assistant-details-drawer"
+            activateHintLabel={t("components.community_assistants.show_details", "Details anzeigen")}
             role="listitem"
-            aria-label={assistant.title}
         />
     );
 
@@ -555,7 +561,7 @@ const Discovery = () => {
                     <div className={styles.contentWrapper}>
                         <div className={styles.headerSection}>
                             <div className={styles.titleBlock}>
-                                <Title1 className={styles.header}>{t("discovery.title", "Assistenten")}</Title1>
+                                <Title2 className={styles.header}>{t("discovery.title", "Assistenten")}</Title2>
                                 <div className={styles.subtitleRow}>
                                     <Body1 className={styles.subtitle}>
                                         {t("discovery.subtitle", "Nutze deine Assistenten oder entdecke neue für wiederkehrende Aufgaben.")}
@@ -569,7 +575,14 @@ const Discovery = () => {
                                         >
                                             {t("components.import_assistant.import")}
                                         </Button>
-                                        <AddAssistantButton onClick={() => navigate("/assistant/create")} />
+                                        <Button
+                                            appearance="primary"
+                                            aria-label={t("components.add_assistant_button.add_assistant")}
+                                            icon={<Add24Regular />}
+                                            onClick={() => navigate("/assistant/create")}
+                                        >
+                                            {t("components.add_assistant_button.add_assistant")}
+                                        </Button>
                                     </div>
                                 </div>
                             </div>
@@ -580,7 +593,7 @@ const Discovery = () => {
                             value={searchText}
                             onChange={handleSearch}
                             className={styles.searchBox}
-                            size="medium"
+                            appearance="filled-lighter"
                             aria-label={t("components.community_assistants.search", "Search assistants by title or description.")}
                         />
 
@@ -598,44 +611,28 @@ const Discovery = () => {
                         ) : (
                             <div className={styles.librarySections}>
                                 <section className={styles.assistantSection} aria-labelledby="my-assistants-heading">
-                                    <div className={styles.sectionHeadingBlock}>
+                                    <div className={styles.sectionHeaderRow}>
                                         <h2 id="my-assistants-heading" className={styles.sectionTitle}>
                                             {t("components.community_assistants.my_assistants", "Meine Assistenten")}
                                         </h2>
-                                        <div className={styles.sectionHeaderRow}>
-                                            <div className={styles.myFilterGroup} role="group" aria-labelledby="my-assistants-heading">
-                                                <Button
-                                                    size="small"
-                                                    appearance="subtle"
-                                                    aria-pressed={myAssistantFilter === "all"}
-                                                    onClick={() => setMyAssistantFilter("all")}
-                                                >
-                                                    {t("components.community_assistants.filter_my_all", "Alle")}
-                                                </Button>
-                                                <Button
-                                                    size="small"
-                                                    appearance="subtle"
-                                                    aria-pressed={myAssistantFilter === "owned"}
-                                                    onClick={() => setMyAssistantFilter("owned")}
-                                                >
-                                                    {t("components.community_assistants.filter_created_short", "Erstellt")}
-                                                </Button>
-                                                <Button
-                                                    size="small"
-                                                    appearance="subtle"
-                                                    aria-pressed={myAssistantFilter === "subscribed"}
-                                                    onClick={() => setMyAssistantFilter("subscribed")}
-                                                >
-                                                    {t("components.community_assistants.filter_subscribed", "Abonniert")}
-                                                </Button>
-                                            </div>
+                                        <div className={styles.sectionHeaderControls}>
+                                            <TabList
+                                                className={styles.myFilterGroup}
+                                                size="small"
+                                                selectedValue={myAssistantFilter}
+                                                onTabSelect={handleMyAssistantFilterChange}
+                                                aria-label={t("components.community_assistants.my_assistants", "Meine Assistenten")}
+                                            >
+                                                <Tab value="all">{t("components.community_assistants.filter_my_all", "Alle")}</Tab>
+                                                <Tab value="owned">{t("components.community_assistants.filter_created_short", "Erstellt")}</Tab>
+                                                <Tab value="subscribed">{t("components.community_assistants.filter_subscribed", "Abonniert")}</Tab>
+                                            </TabList>
                                             <Dropdown
                                                 id="my-assistant-sort"
                                                 value={selectedMyAssistantsSortLabel}
                                                 selectedOptions={[myAssistantsSortMethod]}
-                                                appearance="outline"
+                                                appearance="filled-lighter"
                                                 className={styles.sortDropdown}
-                                                listbox={{ className: styles.sortDropdownListbox }}
                                                 onOptionSelect={handleMyAssistantsSortChange}
                                                 aria-label={t("components.community_assistants.sort_by", "Sortieren nach")}
                                             >
@@ -678,8 +675,6 @@ const Discovery = () => {
                                     )}
                                 </section>
 
-                                <div className={styles.sectionDivider} aria-hidden="true" />
-
                                 <section className={styles.assistantSection} aria-labelledby="community-assistants-heading">
                                     <div className={styles.sectionHeaderRow}>
                                         <h2 id="community-assistants-heading" className={styles.sectionTitle}>
@@ -689,9 +684,8 @@ const Discovery = () => {
                                             id="community-assistant-sort"
                                             value={selectedCommunitySortLabel}
                                             selectedOptions={[communitySortMethod]}
-                                            appearance="outline"
+                                            appearance="filled-lighter"
                                             className={styles.sortDropdown}
-                                            listbox={{ className: styles.sortDropdownListbox }}
                                             onOptionSelect={handleCommunitySortChange}
                                             aria-label={t("components.community_assistants.sort_by", "Sortieren nach")}
                                         >

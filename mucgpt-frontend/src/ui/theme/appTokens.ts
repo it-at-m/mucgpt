@@ -38,7 +38,6 @@ const darkAppTokens: AppTokens = {
 export const getAppTokens = (isLight: boolean): AppTokens => (isLight ? lightAppTokens : darkAppTokens);
 
 type AppCssVariableName =
-    | "--app-primary-subtle-foreground"
     | "--app-user-message-background"
     | "--app-assistant-config-surface"
     | "--app-assistant-config-surface-hover"
@@ -52,8 +51,6 @@ type AppCssVariableName =
 export type AppCssVariables = Record<AppCssVariableName, string>;
 
 export const createAppCssVars = (tokens: AppTokens): AppCssVariables => ({
-    // Compatibility for DiscoveryCard until its design-system update lands.
-    "--app-primary-subtle-foreground": "var(--colorBrandForeground2)",
     "--app-user-message-background": tokens.userMessageBackground,
     "--app-assistant-config-surface": tokens.assistantConfigSurface,
     "--app-assistant-config-surface-hover": tokens.assistantConfigSurfaceHover,

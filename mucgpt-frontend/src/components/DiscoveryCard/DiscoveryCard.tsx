@@ -1,6 +1,6 @@
 import React, { forwardRef, ReactNode } from "react";
-import { useNavigate } from "react-router-dom";
-import { Badge, Card, CardPreview, mergeClasses, CardProps, BadgeProps } from "@fluentui/react-components";
+import { Link } from "react-router-dom";
+import { Badge, Card, CardFooter, mergeClasses, CardProps, BadgeProps } from "@fluentui/react-components";
 import { LockClosed16Regular, People16Regular, Person16Regular } from "@fluentui/react-icons";
 import styles from "./DiscoveryCard.module.css";
 import { MarkdownRenderer } from "../MarkdownRenderer/MarkdownRenderer";
@@ -14,11 +14,10 @@ export interface DiscoveryCardBadge {
     tone?: "neutral" | "success" | "warning" | "danger";
 }
 
-export interface DiscoveryCardProps extends CardProps {
+interface DiscoveryCardBaseProps extends Omit<CardProps, "onClick"> {
     id?: string;
     title?: string;
     description?: string;
-    linkTo?: string;
 
     header?: ReactNode;
     badge?: string;
@@ -34,7 +33,23 @@ export interface DiscoveryCardProps extends CardProps {
     subscriberCount?: number;
     isPrivate?: boolean;
     privateLabel?: string;
+    /** id of the element the primary action expands/reveals (e.g. a details drawer). */
+    ariaControls?: string;
+    /** Visually hidden text appended to the title of the primary action button, e.g. "Show details". */
+    activateHintLabel?: string;
 }
+
+// `linkTo` navigates, `onActivate` triggers in-page behavior (e.g. opening a drawer) - a card
+// can't sensibly be both a navigation link and a disclosure button at once.
+export type DiscoveryCardProps =
+    | (DiscoveryCardBaseProps & { linkTo: string; onActivate?: never })
+    | (DiscoveryCardBaseProps & { linkTo?: never; onActivate: () => void })
+    | (DiscoveryCardBaseProps & { linkTo?: never; onActivate?: never });
+
+// The status tones map straight onto Fluent's tint badge colors, which the theme
+// aliases onto the app's --colorStatus* ramps. "neutral" has no Fluent equivalent.
+const toStatusBadgeColor = (tone: DiscoveryCardBadge["tone"]): Extract<BadgeProps["color"], "success" | "warning" | "danger"> | undefined =>
+    tone === "success" || tone === "warning" || tone === "danger" ? tone : undefined;
 
 const formatSubscriberCount = (count: number): string => {
     if (count >= 1000) {
@@ -49,6 +64,9 @@ export const DiscoveryCard = forwardRef<HTMLDivElement, DiscoveryCardProps>((pro
         title,
         description,
         linkTo,
+        onActivate,
+        ariaControls,
+        activateHintLabel,
 
         header,
         badge,
@@ -58,7 +76,6 @@ export const DiscoveryCard = forwardRef<HTMLDivElement, DiscoveryCardProps>((pro
         badgeColor = "danger",
         badgeSize = "small",
         className,
-        onClick,
         titleClassName,
         isSelected,
         metadataStartLabel,
@@ -69,21 +86,28 @@ export const DiscoveryCard = forwardRef<HTMLDivElement, DiscoveryCardProps>((pro
         ...rest
     } = props;
 
-    const navigate = useNavigate();
-
-    const handleClick = (e: React.MouseEvent<HTMLDivElement>) => {
-        if (onClick) {
-            onClick(e);
-        } else if (linkTo) {
-            navigate(linkTo);
+    const renderTitle = () => {
+        if (!title) {
+            return null;
         }
-    };
 
-    const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
-        if ((e.key === "Enter" || e.key === " ") && (onClick || linkTo)) {
-            e.preventDefault();
-            handleClick(e as unknown as React.MouseEvent<HTMLDivElement>);
-        }
+        const staticClass = mergeClasses(styles.headerText, titleClassName);
+        const actionClass = mergeClasses(staticClass, styles.primaryAction);
+
+        const titleElement = linkTo ? (
+            <Link to={linkTo} className={actionClass}>
+                {title}
+            </Link>
+        ) : onActivate ? (
+            <button type="button" className={actionClass} onClick={onActivate} aria-expanded={isSelected} aria-controls={ariaControls}>
+                {title}
+                {activateHintLabel && <span className={styles.visuallyHidden}> {activateHintLabel}</span>}
+            </button>
+        ) : (
+            <span className={staticClass}>{title}</span>
+        );
+
+        return <h3 className={styles.headerTextWrapper}>{titleElement}</h3>;
     };
 
     const renderHeader = () => {
@@ -109,26 +133,27 @@ export const DiscoveryCard = forwardRef<HTMLDivElement, DiscoveryCardProps>((pro
         if (title) {
             return (
                 <div className={styles.headerRow}>
-                    <div className={mergeClasses(styles.headerText, titleClassName)}>{title}</div>
+                    {renderTitle()}
                     {renderedBadges.length > 0 && (
                         <div className={styles.badgeGroup}>
-                            {renderedBadges.map(renderedBadge => (
-                                <Badge
-                                    key={renderedBadge.label}
-                                    className={mergeClasses(
-                                        styles.headerBadge,
-                                        renderedBadge.tone === "success" && styles.headerBadgeSuccess,
-                                        renderedBadge.tone === "warning" && styles.headerBadgeWarning,
-                                        renderedBadge.tone === "danger" && styles.headerBadgeDanger,
-                                        renderedBadge.className
-                                    )}
-                                    appearance={renderedBadge.appearance ?? badgeAppearance}
-                                    color={renderedBadge.color ?? badgeColor}
-                                    size={renderedBadge.size ?? badgeSize}
-                                >
-                                    {renderedBadge.label}
-                                </Badge>
-                            ))}
+                            {renderedBadges.map(renderedBadge => {
+                                const statusColor = toStatusBadgeColor(renderedBadge.tone);
+                                return (
+                                    <Badge
+                                        key={renderedBadge.label}
+                                        className={mergeClasses(
+                                            styles.headerBadge,
+                                            statusColor ? styles.headerBadgeStatus : styles.headerBadgeNeutral,
+                                            renderedBadge.className
+                                        )}
+                                        appearance={statusColor ? "tint" : (renderedBadge.appearance ?? badgeAppearance)}
+                                        color={statusColor ?? renderedBadge.color ?? badgeColor}
+                                        size={renderedBadge.size ?? badgeSize}
+                                    >
+                                        {renderedBadge.label}
+                                    </Badge>
+                                );
+                            })}
                         </div>
                     )}
                 </div>
@@ -146,55 +171,41 @@ export const DiscoveryCard = forwardRef<HTMLDivElement, DiscoveryCardProps>((pro
             return null;
         }
 
+        const endContent = isPrivate ? (
+            <>
+                <LockClosed16Regular aria-hidden="true" />
+                <span>{privateLabel}</span>
+            </>
+        ) : hasSubscriberCount ? (
+            <>
+                <People16Regular aria-hidden="true" />
+                <span>{formatSubscriberCount(subscriberCount)}</span>
+            </>
+        ) : undefined;
+
         return (
-            <div className={styles.metadataBlock}>
-                <div className={styles.metadataDivider} aria-hidden="true" />
-                <div className={styles.metadataRow}>
-                    {(metadataStartNode || metadataStartLabel) && (
-                        <span className={styles.metadataStart}>
-                            <Person16Regular aria-hidden="true" />
-                            <span>{metadataStartNode || metadataStartLabel}</span>
-                        </span>
-                    )}
-                    {isPrivate ? (
-                        <span className={styles.metadataEnd}>
-                            <LockClosed16Regular aria-hidden="true" />
-                            <span>{privateLabel}</span>
-                        </span>
-                    ) : (
-                        hasSubscriberCount && (
-                            <span className={styles.metadataEnd}>
-                                <People16Regular aria-hidden="true" />
-                                <span>{formatSubscriberCount(subscriberCount)}</span>
-                            </span>
-                        )
-                    )}
-                </div>
-            </div>
+            <CardFooter className={styles.metadata} action={endContent && { className: styles.metadataEnd, children: endContent }}>
+                {(metadataStartNode || metadataStartLabel) && (
+                    <span className={styles.metadataStart}>
+                        <Person16Regular aria-hidden="true" />
+                        <span>{metadataStartNode || metadataStartLabel}</span>
+                    </span>
+                )}
+            </CardFooter>
         );
     };
 
-    const cardContent = (
-        <Card
-            id={id}
-            ref={ref}
-            className={mergeClasses(styles.card, isSelected && styles.cardSelected, className)}
-            onClick={handleClick}
-            onKeyDown={handleKeyDown}
-            tabIndex={onClick || linkTo ? 0 : rest.tabIndex}
-            {...rest}
-        >
+    return (
+        <Card id={id} ref={ref} size="large" className={mergeClasses(styles.card, isSelected && styles.cardSelected, className)} {...rest}>
             {renderHeader()}
             {description && (
-                <CardPreview className={styles.description}>
+                <div className={styles.description}>
                     <MarkdownRenderer>{description}</MarkdownRenderer>
-                </CardPreview>
+                </div>
             )}
             {renderMetadata()}
         </Card>
     );
-
-    return cardContent;
 });
 
 DiscoveryCard.displayName = "DiscoveryCard";

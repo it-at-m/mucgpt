@@ -45,8 +45,6 @@ These have no Fluent equivalent and are exposed as `--app-*`:
 - `--app-status-info-border` - info accent (Fluent has no `colorStatusInfo*` family); sourced from `infoRamp`
 - `--app-radius-xsmall` (2px) / `--app-radius-xxlarge` (24px) - asymmetric chat-bubble corner radii, not part of Fluent's radius scale
 
-`--app-primary-subtle-foreground` is a temporary compatibility alias for the existing Discovery Card and resolves to `--colorBrandForeground2`. It can be removed with the Discovery Card design-system update.
-
 ## Fluent Radius Scale
 
 `fluentTheme.ts` sets Fluent's global radius scale app-wide:

@@ -1,5 +1,3 @@
-import { MouseEvent } from "react";
-
 import { OwnerDetailsResponse } from "../../api/models";
 import styles from "./OwnerMetadataLink.module.css";
 
@@ -45,13 +43,9 @@ export function OwnerMetadataLink({ owner, fallbackLabel }: OwnerMetadataLinkPro
     }
 
     const href = `mailto:${mail}`;
-    const onClick = (event: MouseEvent<HTMLAnchorElement>) => {
-        // Keep card click handlers from triggering when user explicitly clicks owner contact.
-        event.stopPropagation();
-    };
 
     return (
-        <a href={href} className={styles.ownerLink} onClick={onClick}>
+        <a href={href} className={styles.ownerLink}>
             {label}
         </a>
     );

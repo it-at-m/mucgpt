@@ -30,7 +30,7 @@
 
 .mainContent {
     flex: 1;
-    padding: 32px 32px 80px 32px;
+    padding: var(--spacingVerticalXXXL) var(--spacingHorizontalXXXL) 80px var(--spacingHorizontalXXXL);
     min-width: 0;
     transition: width 0.3s cubic-bezier(0.33, 1, 0.68, 1);
     overflow-y: auto;
@@ -43,7 +43,7 @@
 }
 
 .headerSection {
-    margin-bottom: 24px;
+    margin-bottom: var(--spacingVerticalXXL);
 }
 
 .titleBlock {
@@ -56,13 +56,13 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 16px;
+    gap: var(--spacingHorizontalL);
     min-width: 0;
 }
 
 .headerActions {
     display: flex;
-    gap: 8px;
+    gap: var(--spacingHorizontalS);
     align-items: center;
     justify-content: flex-end;
     flex: 0 0 auto;
@@ -70,113 +70,45 @@
 }
 
 .header {
-    margin-bottom: 8px;
+    margin-bottom: var(--spacingVerticalS);
     display: block;
-    font-size: 30px !important;
-    line-height: 36px !important;
-    font-weight: bold !important;
 }
 
 .subtitle {
     color: var(--colorNeutralForeground3);
-    line-height: 30px !important;
+    line-height: var(--lineHeightBase400) !important;
     display: block;
     margin-bottom: 0;
-    font-size: 18px !important;
+    font-size: var(--fontSizeBase400) !important;
 }
 
-.searchBox {
-    display: flex !important;
-    width: 100% !important;
-    max-width: none !important;
-    min-width: 260px;
-    min-height: 40px;
-    box-sizing: border-box;
-    margin-bottom: 16px;
-    margin-bottom: 32px !important;
-    border: 1px solid var(--colorNeutralStroke3) !important;
-    border-radius: var(--borderRadiusMedium);
+/* Fluent's Input/Dropdown only expose Background1 ("filled-lighter") or
+   Background3 ("filled-darker") as filled surfaces, both of which collide
+   with something else on this page (the cards, resp. the page canvas).
+   Background2 has no equivalent appearance prop, so it is set directly. */
+.contentWrapper .searchBox {
+    display: flex;
+    width: 100%;
+    max-width: none;
+    margin-bottom: var(--spacingVerticalXXXL);
     background-color: var(--colorNeutralBackground2) !important;
-}
-
-.searchBox::after,
-.searchBox::before {
-    display: none !important;
-}
-
-.searchBox:hover {
-    border-color: var(--colorNeutralStroke1) !important;
-    background-color: var(--colorNeutralBackground2Hover) !important;
-}
-
-.searchBox:focus-within {
-    border-color: var(--colorBrandBackground) !important;
-    outline: none !important;
 }
 
 .sortDropdown {
-    width: 172px;
-    min-width: 0;
     flex-shrink: 0;
-    border: 1px solid var(--colorNeutralStroke3) !important;
-    border-radius: var(--borderRadiusMedium);
     background-color: var(--colorNeutralBackground2) !important;
-}
-
-.sortDropdown::after,
-.sortDropdown::before {
-    display: none !important;
-}
-
-.sortDropdown:hover {
-    border-color: var(--colorNeutralStroke1) !important;
-    background-color: var(--colorNeutralBackground2Hover) !important;
-}
-
-.sortDropdown:focus-within {
-    border-color: var(--colorBrandBackground) !important;
-    outline: none !important;
-}
-
-.sortDropdownListbox {
-    padding: 4px !important;
-    border: 1px solid var(--colorNeutralStroke3) !important;
-    border-radius: var(--borderRadiusLarge) !important;
-    background-color: var(--colorNeutralBackground2) !important;
-    box-shadow: var(--shadow16) !important;
-}
-
-.sortDropdownListbox :global([role="option"]) {
-    border-radius: var(--borderRadiusMedium);
-    color: var(--colorNeutralForeground2);
-    background-color: transparent;
-}
-
-.sortDropdownListbox :global([role="option"]:hover) {
-    color: var(--colorNeutralForeground1);
-    background-color: var(--colorNeutralBackground3);
-}
-
-.sortDropdownListbox :global([role="option"][aria-selected="true"]) {
-    color: var(--colorBrandForeground2);
-    background-color: var(--colorBrandBackground2);
-    font-weight: var(--fontWeightSemibold);
-}
-
-.sortDropdownListbox :global([role="option"][aria-selected="true"]:hover) {
-    background-color: var(--colorBrandBackground2Hover);
 }
 
 .librarySections {
     display: flex;
     flex-direction: column;
-    gap: 24px;
+    gap: var(--spacingVerticalXXL);
 }
 
 .assistantSection {
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: var(--spacingVerticalM);
 }
 
 .sectionDivider {
@@ -190,61 +122,28 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 16px;
+    flex-wrap: wrap;
+    gap: var(--spacingHorizontalL);
 }
 
-.sectionHeadingBlock {
+.sectionHeaderControls {
     display: flex;
-    flex-direction: column;
-    gap: 6px;
-    min-width: 0;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: var(--spacingHorizontalS);
 }
 
 .sectionTitle {
     color: var(--colorNeutralForeground1);
-    font-size: 18px;
-    line-height: 24px;
+    font-size: var(--fontSizeBase500);
+    line-height: var(--lineHeightBase500);
     font-weight: var(--fontWeightSemibold);
     margin: 0;
 }
 
 .myFilterGroup {
-    display: inline-flex;
-    align-items: center;
-    gap: 2px;
     width: fit-content;
     max-width: 100%;
-    margin-top: 6px;
-    padding: 3px;
-    border: none;
-    border-radius: var(--borderRadiusMedium);
-    background-color: var(--colorNeutralBackground2);
-}
-
-.myFilterGroup button {
-    min-width: 0;
-    min-height: 28px;
-    padding: 0 12px;
-    border: none !important;
-    border-radius: calc(var(--borderRadiusMedium) - 2px);
-    color: var(--colorNeutralForeground2) !important;
-    background-color: transparent !important;
-    font-weight: var(--fontWeightSemibold);
-}
-
-.myFilterGroup button:hover {
-    color: var(--colorNeutralForeground1) !important;
-    background-color: var(--colorSubtleBackgroundHover) !important;
-}
-
-.myFilterGroup button[aria-pressed="true"] {
-    color: var(--colorBrandForeground2) !important;
-    background-color: var(--colorBrandBackground2) !important;
-    box-shadow: none;
-}
-
-.myFilterGroup button[aria-pressed="true"]:hover {
-    background-color: var(--colorBrandBackground2Hover) !important;
 }
 
 .sectionEmptyState {
@@ -252,7 +151,7 @@
     grid-template-columns: 36px minmax(0, 1fr);
     align-items: start;
     column-gap: 14px;
-    row-gap: 6px;
+    row-gap: var(--spacingVerticalSNudge);
     max-width: 620px;
     min-height: 88px;
     padding: 22px 24px 18px;
@@ -268,7 +167,7 @@
     color: var(--colorBrandForeground1);
     border-radius: var(--borderRadiusCircular);
     background-color: var(--colorNeutralBackground3);
-    font-size: 20px;
+    font-size: var(--fontSizeBase500);
 }
 
 .emptyCopy {
@@ -282,15 +181,15 @@
 .emptyTitle {
     margin: 0;
     color: var(--colorNeutralForeground1);
-    font-size: 15px;
-    line-height: 20px;
+    font-size: var(--fontSizeBase300);
+    line-height: var(--lineHeightBase300);
 }
 
 .emptyDescription {
     max-width: 64ch;
     margin: 0;
     color: var(--colorNeutralForeground2);
-    line-height: 20px;
+    line-height: var(--lineHeightBase300);
 }
 
 .emptyActions {
@@ -298,7 +197,7 @@
     display: flex;
     align-items: center;
     justify-content: flex-start;
-    gap: 8px;
+    gap: var(--spacingHorizontalS);
     flex-wrap: wrap;
     margin-top: 2px;
 }
@@ -317,7 +216,7 @@
 .assistantsGrid {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 20px;
+    gap: var(--spacingHorizontalXL);
 }
 
 @media (max-width: 1500px) {
@@ -338,7 +237,7 @@
 
 @media (max-width: 1024px) {
     .mainContent {
-        padding: 20px 24px 24px;
+        padding: var(--spacingVerticalXL) var(--spacingHorizontalXXL) var(--spacingVerticalXXL);
     }
 
     .assistantsGrid {
@@ -391,6 +290,11 @@
         align-items: stretch;
     }
 
+    .sectionHeaderControls {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
     .sectionEmptyState {
         grid-template-columns: 32px minmax(0, 1fr);
         align-items: flex-start;
@@ -414,7 +318,7 @@
         overflow-x: auto;
     }
 
-    .myFilterGroup button {
+    .myFilterGroup > * {
         flex: 1 0 auto;
     }
 
@@ -447,13 +351,13 @@
     }
 
     .flexContainer[data-drawer-open="true"] .headerSection {
-        margin-bottom: 24px;
+        margin-bottom: var(--spacingVerticalXXL);
     }
 
     .flexContainer[data-drawer-open="true"] .subtitleRow {
         flex-direction: column;
         align-items: flex-start;
-        gap: 16px;
+        gap: var(--spacingVerticalL);
     }
 
     .flexContainer[data-drawer-open="true"] .headerActions {
@@ -463,6 +367,11 @@
     }
 
     .flexContainer[data-drawer-open="true"] .sectionHeaderRow {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .flexContainer[data-drawer-open="true"] .sectionHeaderControls {
         flex-direction: column;
         align-items: stretch;
     }

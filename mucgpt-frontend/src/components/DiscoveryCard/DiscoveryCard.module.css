@@ -1,62 +1,125 @@
 .card {
-    border-radius: var(--borderRadiusLarge) !important;
-    min-height: 136px;
-    border: 1px solid var(--colorNeutralStroke3) !important;
-    padding: 12px 12px 10px 12px !important;
-    row-gap: 0px !important;
+    position: relative;
+    min-height: 120px;
+    padding: var(--spacingVerticalM) var(--spacingHorizontalM) var(--spacingVerticalMNudge) !important;
+    row-gap: 0 !important;
+    /* Static surfaces are flat by default (see design system); Fluent's filled
+       appearance otherwise always ships a decorative shadow4/shadow8 elevation
+       that has no exposed prop to turn off. The border-color shift and lift on
+       hover already provide the interactive affordance. */
+    box-shadow: none !important;
     transition:
         transform 0.18s cubic-bezier(0.33, 1, 0.68, 1),
-        border-color 0.16s ease,
-        box-shadow 0.16s ease;
-    background-color: var(--colorNeutralBackground3) !important;
-    color: var(--colorNeutralForeground1);
-    box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05) !important;
+        background-color 0.16s ease;
 }
 
-.cardSelected {
-    border: 2px solid var(--colorBrandBackground) !important;
+/* Fluent draws the card border on ::after, so it never affects layout. The card
+   itself no longer receives focus (the primary action inside it does), so the
+   border only ever needs the resting/hover/selected states. */
+.card::after {
+    border-color: var(--colorNeutralStroke3);
+    transition: border-color 0.16s ease;
 }
 
 .card:hover {
     transform: translateY(-1px);
-    border-color: var(--colorBrandBackground) !important;
-    box-shadow: var(--shadow8) !important;
+}
+
+.card:hover::after {
+    border-color: var(--colorBrandBackground);
 }
 
 .card:hover .headerText {
     color: var(--colorBrandBackground);
 }
 
-.card:focus-visible {
-    outline: 2px solid var(--colorBrandBackground);
+/* Card is no longer "interactive" from Fluent's own point of view (that mode only
+   kicks in when Fluent sees onClick/onMouseDown etc. directly on the Card, which
+   now lives on the title button instead) - so its built-in pressed-border feedback
+   is gone. `:active` bubbles up to ancestors while a descendant is pressed, so this
+   restores the same feedback without relying on Fluent's auto-detection. */
+.card:active::after {
+    border-color: var(--colorNeutralStroke1Pressed);
+}
+
+/* Both classes are combined into one selector so this always outranks the hover/
+   active rules above (same specificity tier, defined later) instead of the two
+   fighting over which border color wins while a selected card is also hovered. */
+.card.cardSelected::after {
+    border-width: var(--strokeWidthThick);
+    border-color: var(--colorBrandBackground);
+}
+
+/* The primary action (title link/button) is stretched to cover the whole card via
+   ::after below, so mirror the card's focus ring on the card itself when that
+   action is focused - a plain button-sized outline would otherwise look lost. */
+.card:has(.primaryAction:focus-visible) {
+    outline: var(--strokeWidthThick) solid var(--colorStrokeFocus2);
     outline-offset: 2px;
-}
-
-.card [class*="fui-CardPreview"] {
-    margin: 0 !important;
-}
-
-.headerText {
-    font-weight: var(--fontWeightSemibold);
-    font-size: var(--fontSizeBase400);
-    transition-property: color;
-    transition-duration: 0.2s;
-    flex: 1 1 auto;
-    min-width: 0;
-    overflow: hidden;
-    display: -webkit-box;
-    -webkit-box-orient: vertical;
-    -webkit-line-clamp: 2;
-    overflow-wrap: break-word;
 }
 
 .headerRow {
     display: flex;
     align-items: flex-start;
     justify-content: space-between;
-    gap: 8px;
+    gap: var(--spacingHorizontalS);
+}
+
+.headerTextWrapper {
+    flex: 1 1 auto;
+    min-width: 0;
+    margin: 0;
+    font: inherit;
+}
+
+.headerText {
+    display: -webkit-box;
     width: 100%;
-    box-sizing: border-box;
+    font-size: var(--fontSizeBase400);
+    font-weight: var(--fontWeightSemibold);
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    overflow: hidden;
+    overflow-wrap: break-word;
+    transition: color 0.2s;
+}
+
+/* Resets the native <button>/<a> chrome so the primary action reads as the plain
+   title text; ::after stretches it over the whole card for a large click target. */
+.primaryAction {
+    padding: 0;
+    border: 0;
+    color: inherit;
+    text-align: inherit;
+    background: transparent;
+    cursor: pointer;
+}
+
+.primaryAction::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+}
+
+.visuallyHidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+.badgeGroup {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: var(--spacingHorizontalSNudge);
+    max-width: 45%;
+    flex-shrink: 0;
 }
 
 .headerBadge {
@@ -64,94 +127,47 @@
     min-width: 0;
     min-height: 20px;
     align-self: flex-start;
-    padding: 3px 7px 4px !important;
-    border-radius: var(--borderRadiusMedium);
+    padding: var(--spacingVerticalXXS) var(--spacingHorizontalSNudge) !important;
     font-size: var(--fontSizeBase100) !important;
     font-weight: var(--fontWeightRegular) !important;
-    line-height: 1.2;
+}
+
+/* Fluent has no neutral badge color that matches this palette. */
+.headerBadgeNeutral {
     color: var(--colorNeutralForeground2) !important;
     background-color: var(--colorNeutralBackground2) !important;
     border-color: var(--colorNeutralStroke1) !important;
 }
 
-.headerBadgeWarning {
-    color: var(--colorStatusWarningForeground1) !important;
-    background-color: var(--colorStatusWarningBackground1) !important;
-    border-color: var(--colorStatusWarningBorder1) !important;
+/* Colors come from Fluent's tint appearance; status badges only read heavier. */
+.headerBadgeStatus {
     font-weight: var(--fontWeightSemibold) !important;
-}
-
-.headerBadgeSuccess {
-    color: var(--colorStatusSuccessForeground1) !important;
-    background-color: var(--colorStatusSuccessBackground1) !important;
-    border-color: var(--colorStatusSuccessBorder1) !important;
-    font-weight: var(--fontWeightSemibold) !important;
-}
-
-.headerBadgeDanger {
-    color: var(--colorStatusDangerForeground1) !important;
-    background-color: var(--colorStatusDangerBackground1) !important;
-    border-color: var(--colorStatusDangerBorder1) !important;
-    font-weight: var(--fontWeightSemibold) !important;
-}
-
-.badgeGroup {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: flex-end;
-    gap: 6px;
-    max-width: 45%;
-    flex-shrink: 0;
-}
-
-.headerBadgePrimary {
-    background-color: var(--colorBrandBackground2) !important;
-    border-color: var(--colorNeutralStroke1Hover) !important;
-    color: var(--app-primary-subtle-foreground) !important;
-    box-shadow: none !important;
-    transform: scale(1.1);
 }
 
 .description {
+    margin-top: calc(-1 * var(--spacingVerticalXS));
     font-size: var(--fontSizeBase200);
     color: var(--colorNeutralForeground2);
-    overflow: hidden;
     display: -webkit-box;
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 2;
+    overflow: hidden;
     overflow-wrap: break-word;
-    padding: 0;
 }
 
-.metadataBlock {
-    margin: auto 0 0;
-    padding-top: 8px;
-}
-
-.metadataDivider {
-    width: 100%;
-    height: 1px;
-    background-color: var(--colorNeutralStroke1);
-    opacity: 0.85;
-}
-
-.metadataRow {
-    display: flex;
+.metadata {
+    margin-top: auto;
     align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-    min-height: 0;
-    padding-top: 10px;
+    padding-top: var(--spacingVerticalM);
     color: var(--colorNeutralForeground2);
-    font-size: 11px;
-    font-weight: var(--fontWeightRegular);
-    line-height: 16px;
+    font-size: var(--fontSizeBase200);
+    line-height: var(--lineHeightBase200);
 }
 
 .metadataStart {
     display: inline-flex;
     align-items: center;
-    gap: 4px;
+    gap: var(--spacingHorizontalXS);
     min-width: 0;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -159,9 +175,7 @@
 }
 
 .metadataStart svg {
-    width: 16px;
-    height: 16px;
-    flex: 0 0 auto;
+    flex-shrink: 0;
 }
 
 .metadataStart > span {
@@ -177,12 +191,22 @@
 .metadataEnd {
     display: inline-flex;
     align-items: center;
-    gap: 4px;
-    flex: 0 0 auto;
+    gap: var(--spacingHorizontalXS);
+    flex-shrink: 0;
     white-space: nowrap;
 }
 
-.metadataEnd svg {
-    width: 16px;
-    height: 16px;
+@media (prefers-reduced-motion: reduce) {
+    .card {
+        transition: none;
+    }
+
+    .card:hover {
+        transform: none;
+    }
+
+    .card::after,
+    .headerText {
+        transition: none;
+    }
 }

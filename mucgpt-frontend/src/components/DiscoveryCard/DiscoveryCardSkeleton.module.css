@@ -6,7 +6,7 @@
     border-radius: var(--borderRadiusLarge) !important;
     background-color: var(--colorNeutralCardBackground);
     border: 1px solid var(--colorNeutralStroke1);
-    min-height: 136px;
+    min-height: 116px;
 }
 
 .skeleton {

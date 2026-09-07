@@ -182,7 +182,7 @@ export const AssistantDetailsSidebar = ({
     const isPrivate = isLocalAssistant || !isVisible;
 
     return (
-        <InlineDrawer open={isOpen} position="end" className={styles.inlineDrawer} aria-labelledby="sidebar-title">
+        <InlineDrawer id="assistant-details-drawer" open={isOpen} position="end" className={styles.inlineDrawer} aria-labelledby="sidebar-title">
             <DrawerHeader>
                 <div className={styles.headerContainer}>
                     <Button className={styles.closeButton} appearance="subtle" aria-label={t("common.close")} icon={<Dismiss24Regular />} onClick={onClose} />

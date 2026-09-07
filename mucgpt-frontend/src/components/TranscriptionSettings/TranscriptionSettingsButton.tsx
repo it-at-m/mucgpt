@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 import { TranscriptionSettingsDialog } from "./TranscriptionSettingsDialog";
 import styles from "./TranscriptionSettingsButton.module.css";
 
+/** Gear button in the app sidebar that opens the transcription settings dialog. */
 export const TranscriptionSettingsButton = () => {
     const { t } = useTranslation();
     const [open, setOpen] = useState(false);

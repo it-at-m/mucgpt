@@ -9,6 +9,7 @@ import { nemoDetokenize } from "../vocab";
  * verbatim from `decoder_hidden_states` on every step.
  */
 
+/** ISO-639-1 languages the canary-180m-flash checkpoint was trained to transcribe. */
 export const CANARY_SUPPORTED_LANGUAGES = ["en", "de", "fr", "es"] as const;
 
 const DEFAULT_LANGUAGE = "en";
@@ -30,6 +31,14 @@ function canaryLanguageToken(language: string): string {
     return `<|${language}|>`;
 }
 
+/**
+ * Builds the fixed 10-token decoder prompt for transcribing with (or without)
+ * punctuation and capitalization. Source and target language are both set to
+ * `language` (canary expresses the task purely via these language tags).
+ *
+ * @throws when `language` is not in {@link CANARY_SUPPORTED_LANGUAGES} or a
+ * required task token is missing from the vocabulary.
+ */
 export function canaryPromptIds(vocab: NemoVocab, language: string, pnc = true): number[] {
     const languageId = requiredTokenId(vocab, canaryLanguageToken(language));
     return [
@@ -64,6 +73,13 @@ function argmax(values: Float32Array): number {
     return bestIndex;
 }
 
+/**
+ * Creates a {@link NemoTranscriber} around one canary encoder and one canary
+ * decoder session. Sessions stay owned by the caller; `dispose()` is a no-op.
+ *
+ * @param options.maxSequenceLength hard stop for prompt + generated tokens
+ * (default 1024); generation is additionally capped at ~30 tokens/s of audio.
+ */
 export function createCanaryTranscriber(
     deps: { encoder: OrtSessionLike; decoder: OrtSessionLike; vocab: NemoVocab },
     options?: { maxSequenceLength?: number }

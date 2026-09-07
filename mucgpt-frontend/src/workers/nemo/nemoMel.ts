@@ -116,6 +116,13 @@ function fftPower(real: Float64Array, power: Float64Array): void {
 const frameReal = new Float64Array(FFT_SIZE);
 const framePower = new Float64Array(NUM_FREQ_BINS);
 
+/**
+ * Computes the NeMo 128-mel log-spectrogram for one utterance of 16 kHz mono
+ * PCM. Throws nothing — callers feed the returned `validFrames` to the encoder
+ * and must guard themselves against audio below two valid frames.
+ *
+ * @param pcm exactly the utterance samples at 16 kHz, mono, typically −1..1
+ */
 export function computeNemoMel(pcm: Float32Array): NemoMelResult {
     const samples = pcm.length;
     const totalFrames = Math.floor(samples / HOP_LENGTH) + 1;

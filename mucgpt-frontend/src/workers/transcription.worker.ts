@@ -4,8 +4,9 @@ import { createCanaryTranscriber } from "./nemo/canary";
 import { createParakeetTranscriber } from "./nemo/parakeet";
 import { createOrtSessionFromUrl, fetchTextCached } from "./nemo/sessions";
 import { parseNemoVocab } from "./nemo/vocab";
-import type { NemoTranscriber } from "./nemo/types";
+import type { NemoTranscriber, OrtSessionLike as OrtSessionLikeContent } from "./nemo/types";
 
+/** Messages the UI thread can send to the transcription worker. */
 export type WorkerInMessage =
     | {
           type: "load";
@@ -24,6 +25,10 @@ export type WorkerInMessage =
     | { type: "stop-recording"; sessionId: number }
     | { type: "abort" };
 
+/**
+ * Messages the worker posts back. Every recording-scoped message carries the
+ * `sessionId` it belongs to so late results of a cancelled session are ignored.
+ */
 export type WorkerOutMessage =
     | { type: "progress"; progress: number; downloadedBytes?: number; totalBytes?: number }
     | { type: "ready"; requestId: number; modelId: string }
@@ -283,27 +288,46 @@ async function loadNemoTranscriber(request: Extract<WorkerInMessage, { type: "lo
     };
 
     log("[transcription-worker] loading NeMo sessions", { modelId, runtime });
-    const [encoderSession, decoderSession, vocabText] = await Promise.all([
-        createOrtSessionFromUrl(files.encoder, track("encoder")),
-        createOrtSessionFromUrl(files.decoder, track("decoder")),
-        fetchTextCached(files.vocab).then(text => {
-            track("vocab")(text.length, text.length);
-            return text;
-        })
-    ]);
+    const encoderPromise = createOrtSessionFromUrl(files.encoder, track("encoder"));
+    const decoderPromise = createOrtSessionFromUrl(files.decoder, track("decoder"));
+    let encoderSession: OrtSessionLikeContent | null = null;
+    let decoderSession: OrtSessionLikeContent | null = null;
+    let vocabText: string;
+    try {
+        // Release whichever sessions materialised when a sibling file fails, so a
+        // retry does not accumulate orphaned WASM heaps.
+        [encoderSession, decoderSession, vocabText] = await Promise.all([
+            encoderPromise,
+            decoderPromise,
+            fetchTextCached(files.vocab).then(text => {
+                track("vocab")(text.length, text.length);
+                return text;
+            })
+        ]);
+    } catch (err) {
+        for (const session of [encoderSession, decoderSession]) await session?.dispose?.();
+        for (const promise of [encoderPromise, decoderPromise]) {
+            promise.then(s => s.dispose?.()).catch(() => undefined);
+        }
+        throw err;
+    }
     const vocab = parseNemoVocab(vocabText);
     const nemo: NemoTranscriber =
         runtime === "canary"
             ? createCanaryTranscriber({ encoder: encoderSession, decoder: decoderSession, vocab })
             : createParakeetTranscriber({ encoder: encoderSession, decoderJoint: decoderSession, vocab });
-    transcriber = wrapNemoTranscriber(nemo);
+    transcriber = wrapNemoTranscriber(nemo, [encoderSession, decoderSession]);
     log("[transcription-worker] NeMo sessions loaded", { modelId, runtime });
 }
 
-function wrapNemoTranscriber(nemo: NemoTranscriber): any {
-    return async (audio: Float32Array, opts?: { language?: string }) => ({
+function wrapNemoTranscriber(nemo: NemoTranscriber, sessions: OrtSessionLikeContent[]): any {
+    const pipeline = async (audio: Float32Array, opts?: { language?: string }) => ({
         text: await nemo.transcribe(audio, opts?.language)
     });
+    pipeline.dispose = async () => {
+        await Promise.allSettled(sessions.map(session => session.dispose?.()));
+    };
+    return pipeline;
 }
 
 /** Silero VAD is shared by every runtime (tiny, always WASM) and configures the transformers env. */

@@ -83,10 +83,20 @@ function wrapSession(ort: OrtModule, session: Awaited<ReturnType<OrtModule["Infe
                 outputs[name] = { dims: t.dims, data: t.data };
             }
             return outputs;
+        },
+        async dispose() {
+            const resourceful = session as { dispose?: () => Promise<void> | void };
+            await resourceful.dispose?.();
         }
     };
 }
 
+/**
+ * Creates an onnxruntime-web inference session from a model URL, downloading
+ * through the Cache API-backed loader and wrapping the session in the
+ * runtime-agnostic {@link OrtSessionLike} shape. Runs on the WASM execution
+ * provider. The caller owns the session and should `dispose()` it.
+ */
 export async function createOrtSessionFromUrl(url: string, onProgress?: (loaded: number, total: number) => void): Promise<OrtSessionLike> {
     const ort = await getOrt();
     const bytes = await fetchModelBytes(url, onProgress);

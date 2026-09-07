@@ -20,6 +20,10 @@ import { TRANSCRIPTION_MODELS } from "../../config/transcriptionModels";
 import { supportsWebGPU } from "../../utils/webgpuSupport";
 import styles from "./TranscriptionSettingsDialog.module.css";
 
+function localizedLanguages(t: (key: string) => string, languages: string[]): string {
+    return languages.map(code => t(`components.transcriptionSettings.languages.${code}`)).join(", ");
+}
+
 interface Props {
     open: boolean;
     onOpenChange: (open: boolean) => void;
@@ -124,6 +128,13 @@ export const TranscriptionSettingsDialog = ({ open, onOpenChange }: Props) => {
                                                         <div className={styles.modelMeta}>
                                                             <span className={styles.modelLabel}>{m.label}</span>
                                                             {m.size_hint && <span className={styles.modelHint}>{m.size_hint}</span>}
+                                                            {m.languages && (
+                                                                <span className={styles.modelHint}>
+                                                                    {t("components.transcriptionSettings.model_languages", {
+                                                                        languages: localizedLanguages(t, m.languages)
+                                                                    })}
+                                                                </span>
+                                                            )}
                                                         </div>
                                                     }
                                                 />

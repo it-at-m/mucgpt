@@ -174,25 +174,25 @@ describe("parakeet transcriber (mock sessions)", () => {
 
         const decoderJoint = sessionFromScript([
             feeds => {
-                expect((feeds.targets.data as BigInt64Array)[0]).toBe(BigInt(blank));
-                expect(feeds.encoder_outputs.dims).toEqual([1, 1, 1, hidden]);
+                expect((feeds.targets.data as Int32Array)[0]).toBe(blank);
+                expect(feeds.encoder_outputs.dims).toEqual([1, hidden, 1]);
                 return jointOutput(hallo, 0, 1);
             },
             feeds => {
-                expect((feeds.targets.data as BigInt64Array)[0]).toBe(BigInt(hallo));
+                expect((feeds.targets.data as Int32Array)[0]).toBe(hallo);
                 return jointOutput(comma, 0, 2);
             },
             feeds => {
-                expect((feeds.targets.data as BigInt64Array)[0]).toBe(BigInt(comma));
+                expect((feeds.targets.data as Int32Array)[0]).toBe(comma);
                 // Blank with duration 2 jumps from frame 0 to frame 2.
                 return jointOutput(blank, 2, 3);
             },
             feeds => {
-                expect((feeds.targets.data as BigInt64Array)[0]).toBe(BigInt(comma));
+                expect((feeds.targets.data as Int32Array)[0]).toBe(comma);
                 return jointOutput(welt, 0, 4);
             },
             feeds => {
-                expect((feeds.targets.data as BigInt64Array)[0]).toBe(BigInt(welt));
+                expect((feeds.targets.data as Int32Array)[0]).toBe(welt);
                 // Blank with duration 0 must force a +1 frame advance.
                 return jointOutput(blank, 0, 5);
             }

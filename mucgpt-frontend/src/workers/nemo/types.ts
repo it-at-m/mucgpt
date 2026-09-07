@@ -14,6 +14,8 @@ export interface OrtSessionLike {
     inputNames: readonly string[];
     outputNames: readonly string[];
     run(feeds: Record<string, OrtValue>): Promise<Record<string, OrtValue>>;
+    /** Releases WASM/GPU resources of the underlying session; optional so tests can use plain mocks. */
+    dispose?(): Promise<void>;
 }
 
 export interface NemoVocab {

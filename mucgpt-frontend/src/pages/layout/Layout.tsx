@@ -11,7 +11,9 @@ import logo_black from "../../assets/edelweiss_pride.svg";
 import { DEFAULTLANG, LanguageContext } from "../../components/LanguageSelector/LanguageContextProvider";
 import { TermsOfUseDialog } from "../../components/TermsOfUseDialog";
 import { ApplicationConfig } from "../../api";
-import { STORAGE_KEYS, createAppCssVars, createFluentTheme, createScaledTypographyTheme, getAppTokens } from "./LayoutHelper";
+import { STORAGE_KEYS } from "./LayoutHelper";
+import { createMucgptTheme, createScaledTypographyTheme } from "../../ui/theme/fluentTheme";
+import { createAppCssVars, getAppTokens } from "../../ui/theme/appTokens";
 import { DEFAULTLLM, LLMContext } from "../../components/LLMSelector/LLMContextProvider";
 import { LightContext } from "./LightContext";
 import { DEFAULT_APP_CONFIG } from "../../constants";
@@ -278,7 +280,7 @@ export const Layout = () => {
     const [isLight, setLight] = useState<boolean>(lightThemePreference);
 
     const appTokens = useMemo(() => getAppTokens(isLight), [isLight]);
-    const theme = useMemo(() => createScaledTypographyTheme(createFluentTheme(appTokens, isLight), fontscaling), [appTokens, isLight, fontscaling]);
+    const theme = useMemo(() => createScaledTypographyTheme(createMucgptTheme(isLight), fontscaling), [isLight, fontscaling]);
     const appCssVars = useMemo(() => createAppCssVars(appTokens), [appTokens]);
 
     useEffect(() => {

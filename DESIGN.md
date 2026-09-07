@@ -1,413 +1,492 @@
 ---
 name: MUCGPT
 description: A modern municipal AI assistant platform centered on reusable workflow-specific assistants.
-colors:
-  primary-action: "#2563eb"
-  primary-action-hover: "#1d4ed8"
-  primary-action-pressed: "#1e40af"
-  primary-soft: "#DBEAFE"
-  primary-soft-foreground: "#1E3A8A"
-  primary-strong: "#1A4DBB"
-  light-surface-base: "#f8fafc"
-  light-surface-raised: "#f1f5f9"
-  light-surface-subtle: "#FFFFFF"
-  text-default: "#1E293B"
-  text-secondary: "#334155"
-  text-tertiary: "#526077"
-  outline-base: "#B8C7E6"
-  outline-subtle: "#D7E0F2"
-  dark-surface-base: "#0F172D"
-  dark-surface-raised: "#020617"
-  dark-surface-subtle: "#13203C"
-  dark-text-default: "#F1F5F9"
-  dark-text-secondary: "#94A3B8"
-  dark-text-tertiary: "#64748B"
-  dark-outline-base: "#334155"
-  dark-outline-subtle: "#1E293B"
-  success-bg: "#E7F6EE"
-  success-border: "#8CC9A6"
-  success-fg: "#14532D"
-  warning-bg: "#FFF4DB"
-  warning-border: "#E0A63A"
-  warning-fg: "#744904"
-  error-bg: "#FDECEC"
-  error-border: "#E37D7D"
-  error-fg: "#8A1C1C"
-typography:
-  display:
-    fontFamily: "\"Segoe UI\", -apple-system, BlinkMacSystemFont, \"Roboto\", \"Helvetica Neue\", sans-serif"
-    fontSize: "2.4rem"
-    fontWeight: 700
-    lineHeight: 1.15
-    letterSpacing: "normal"
-  headline:
-    fontFamily: "\"Segoe UI\", -apple-system, BlinkMacSystemFont, \"Roboto\", \"Helvetica Neue\", sans-serif"
-    fontSize: "28px"
-    fontWeight: 700
-    lineHeight: "34px"
-  title:
-    fontFamily: "\"Segoe UI\", -apple-system, BlinkMacSystemFont, \"Roboto\", \"Helvetica Neue\", sans-serif"
-    fontSize: "18px"
-    fontWeight: 600
-    lineHeight: 1.3
-  body:
-    fontFamily: "\"Segoe UI\", -apple-system, BlinkMacSystemFont, \"Roboto\", \"Helvetica Neue\", sans-serif"
-    fontSize: "var(--fontSizeBase400)"
-    fontWeight: 400
-    lineHeight: 1.45
-  label:
-    fontFamily: "\"Segoe UI\", -apple-system, BlinkMacSystemFont, \"Roboto\", \"Helvetica Neue\", sans-serif"
-    fontSize: "14px"
-    fontWeight: 600
-    lineHeight: 1.3
-  brand:
-    fontFamily: "\"Montserrat\", \"Segoe UI\", sans-serif"
-    fontSize: "21px"
-    fontWeight: 700
-    lineHeight: 1.1
-    letterSpacing: "0.01em"
-rounded:
-  sm: "6px"
-  md: "8px"
-  lg: "10px"
-  xl: "12px"
-  card: "14px"
-  pill: "999px"
-spacing:
-  xs: "4px"
-  sm: "8px"
-  md: "12px"
-  lg: "16px"
-  xl: "24px"
-  page: "32px"
-components:
-  button-primary:
-    backgroundColor: "{colors.primary-action}"
-    textColor: "#FFFFFF"
-    rounded: "{rounded.md}"
-    padding: "10px 18px"
-  assistant-card:
-    backgroundColor: "Fluent colorNeutralCardBackground"
-    textColor: "{colors.text-default}"
-    rounded: "{rounded.card}"
-    padding: "16px"
-  chat-input:
-    backgroundColor: "Fluent colorNeutralBackground1"
-    textColor: "{colors.text-default}"
-    rounded: "{rounded.lg}"
-    padding: "10px 8px 10px 16px"
-  trust-chip:
-    backgroundColor: "Fluent colorNeutralBackground2"
-    textColor: "{colors.text-secondary}"
-    rounded: "{rounded.pill}"
-    padding: "4px 8px"
+register: product
 ---
 
-# Design System: MUCGPT
+# MUCGPT Design System
 
-## 1. Overview
+This document is the single source of truth for MUCGPT product design and frontend styling. It defines the intended visual language, interaction principles, reusable product patterns, and the contract between Fluent UI and MUCGPT-specific styling.
 
-**Creative North Star: The Municipal Assistant Workbench**
+MUCGPT uses Fluent UI as its component foundation. The design system extends Fluent only where the product needs a distinct semantic concept.
 
-MUCGPT should feel like a precise, modern workbench for municipal AI work. It is not a decorative AI demo, not a generic chatbot, and not a heavy administration console. The interface should help employees find, understand, create, and use assistants with confidence.
+## 1. Product direction
+
+### Creative north star: The Municipal Assistant Workbench
+
+MUCGPT should feel like a precise, modern workbench for municipal AI work. It is not a decorative AI demo, a generic chatbot, or a heavy administration console. The interface helps employees find, understand, create, and use assistants with confidence.
 
 The product has two visible layers:
 
-- **Assistants as reusable work objects.** Assistants carry purpose, ownership, scope, instructions, tools, and trust signals.
-- **Chat as the execution surface.** Chat is where work happens, but it should not erase the assistant context around it.
+- **Assistants are reusable work objects.** They carry purpose, ownership, scope, instructions, tools, and trust signals.
+- **Chat is the execution surface.** It is where work happens, but it must preserve the context of the active assistant.
 
-The interface should feel calm, capable, and current. It should reduce anxiety for first-time AI users while giving experienced users enough speed, detail, and control to make MUCGPT their preferred tool.
+The interface should feel calm, capable, approachable, and current. It should reduce uncertainty for first-time AI users while giving experienced users sufficient speed, detail, and control.
 
-### Key Characteristics
+### Design principles
 
-- Assistant-first structure: discovery, creation, configuration, sharing, and reuse are first-class workflows.
-- Clear trust signals: ownership, visibility, intended use, tools, and configuration status are visible where they affect user confidence.
-- Modern municipal tone: reliable and accessible, but not bureaucratic or visually dated.
-- Product-native controls: Fluent UI components lead the visual system; MUCGPT app tokens extend Fluent only where the product needs more specific semantics.
-- Restrained visual language: color, motion, shadows, and density communicate state and hierarchy, not decoration.
+1. **Assistants are the product.** Discovery, creation, configuration, sharing, and reuse receive more design emphasis than generic chat chrome.
+2. **Clarity before novelty.** Users should understand the next action without reading long explanations.
+3. **Confidence through transparency.** Show purpose, ownership, visibility, tools, and relevant configuration before asking users to rely on an assistant.
+4. **Workflow before model mechanics.** Describe the user's work before exposing technical AI terminology.
+5. **Progressive detail.** Show the useful summary first and reveal prompts, tools, examples, and advanced settings when needed.
+6. **Human in the loop.** MUCGPT helps people think, write, inspect, and decide. It must not imply unrestricted autonomous execution.
+7. **Earned density.** Dense screens are acceptable when the task requires them, but density must be structured through hierarchy and grouping.
+8. **Municipal clarity, modern quality.** The product should feel dependable and accessible without looking bureaucratic or dated.
+9. **Open-source adaptability.** Core patterns and language should work beyond a single deployment or organization.
 
-## 2. Visual Direction
+### Visual character
 
-MUCGPT should look like a high-quality internal product that municipal employees choose willingly, not a compliance portal they tolerate.
+- Restrained civic blue on cool, tinted neutral surfaces.
+- Flat by default, with elevation reserved for interaction and overlays.
+- Familiar product controls with a consistent Fluent vocabulary.
+- Quiet distinctiveness through assistant objects, trust metadata, and workflow language rather than decorative AI imagery.
+- Light and dark themes with equivalent hierarchy and behavior.
 
-The design should prioritize:
+Avoid ornamental gradients, glassmorphism, decorative blue backgrounds, excessive shadows, novelty controls, and visual effects that compete with the task.
 
-- **Clarity before novelty.** Users should understand what to do without reading long explanations.
-- **Confidence before speed.** Fast flows matter, but users must understand what an assistant is about to do.
-- **Progressive detail.** Show the useful summary first, then reveal prompts, tools, model choices, examples, and advanced settings when needed.
-- **Earned density.** Dense screens are acceptable for power workflows, but density must be structured through spacing, grouping, and hierarchy.
-- **Quiet distinctiveness.** MUCGPT should have its own product identity through assistant objects, trust metadata, and workflow language, not through decorative AI visuals.
+## 2. System architecture
+
+### Fluent first
+
+Use Fluent UI components and their public APIs whenever they can express the intended interface.
+
+Apply styling in this order:
+
+```text
+Fluent component props and appearances
+-> Fluent theme tokens
+-> MUCGPT product pattern or app token
+-> local CSS
+```
+
+Local CSS must not duplicate behavior already provided by Fluent.
+
+### Theme files
+
+The theme implementation lives in:
+
+```text
+mucgpt-frontend/src/ui/theme/
+|-- palette.ts
+|-- fluentTheme.ts
+`-- appTokens.ts
+```
+
+The runtime theme flow is:
+
+```text
+palette.ts
+-> createMucgptTheme(isLight)
+-> createScaledTypographyTheme(theme, scaling)
+-> FluentProvider
+```
+
+`Layout.tsx` installs the Fluent theme and exposes the small set of `--app-*` variables on the document root.
+
+### Token ownership and raw values
+
+The color system has two legitimate sources of raw color values inside the theme layer. They serve different purposes:
+
+1. **`palette.ts` owns reusable primitives.** Brand, neutral, success, warning, danger, and information ramps live here when multiple semantic tokens or components need the same underlying values. `fluentTheme.ts` maps these primitives onto Fluent semantic tokens.
+2. **`appTokens.ts` owns isolated product semantics.** A product-specific token may define its light and dark raw values directly when Fluent has no equivalent and the values do not form a reusable palette. It may instead reference a primitive from `palette.ts` when that color is shared.
+
+This means `palette.ts` is the source of reusable color ramps, not necessarily every color literal in the application. `appTokens.ts` is part of the theme layer and is therefore allowed to own deliberate semantic values.
+
+The hard boundary is feature code:
+
+- Components, pages, and feature CSS must not consume primitive ramps directly.
+- Components, pages, and feature CSS must not introduce raw color literals.
+- Feature code consumes Fluent semantic tokens first and `--app-*` tokens only for documented MUCGPT-specific concepts.
+- A new reusable color family belongs in `palette.ts`.
+- A new isolated product semantic without a Fluent equivalent belongs in `appTokens.ts`.
+- A value that already has an appropriate Fluent semantic must not become an app token.
+
+This separation preserves a small semantic API for feature code without forcing one-off product meanings into Fluent or turning `appTokens.ts` into a parallel design system.
 
 ## 3. Color
 
-The palette is Fluent-first. Fluent UI neutral, foreground, stroke, shadow, spacing, and component state tokens should lead most surfaces and controls. MUCGPT app tokens exist only where the product needs more specific semantics than Fluent provides.
+### Color strategy
 
-The overall effect should still be a restrained civic blue system on calm neutral surfaces. It should avoid both sterile white software and heavy dark-blue dashboard aesthetics.
+MUCGPT uses a restrained color strategy. Neutral surfaces carry the interface. Blue earns attention and is reserved for:
 
-### Primary
+- primary actions;
+- links;
+- focus;
+- selected and active states;
+- assistant identity;
+- high-value product state.
 
-- **Civic Action Blue**: Used for primary actions, selected states, focus, links, and assistant identity.
-- **Civic Action Hover / Pressed**: Used only for interaction states.
-- **Soft Assistant Blue**: Used for low-emphasis assistant identity, selected metadata, and subtle active surfaces.
-- **Deep Assistant Blue**: Used for readable text on soft blue surfaces and strong assistant links.
+Blue is not a decorative background motif.
 
-### Fluent Neutral System
+### Brand
 
-- Use Fluent neutral background tokens for the main app canvas, navigation rail, panels, cards, dialogs, popovers, menus, inputs, and grouped controls.
-- Use Fluent foreground tokens for default, secondary, tertiary, disabled, and inverse text.
-- Use Fluent stroke tokens for borders, separators, hover outlines, and focus-adjacent structure.
-- Use Fluent shadows for overlays and interactive lift.
-- Use `themeTokens.ts` to tune the Fluent theme values, not to create a parallel surface vocabulary.
+| Role            | Light     | Dark      |
+| --------------- | --------- | --------- |
+| Primary action  | `#2563EB` | `#86A4E5` |
+| Primary hover   | `#1D4ED8` | `#A0B8ED` |
+| Primary pressed | `#1E40AF` | `#6F90D8` |
 
-### App-Specific Tokens
+Standard primary actions use Fluent appearances:
 
-MUCGPT app tokens are allowed where Fluent is too generic:
+```tsx
+<Button appearance="primary" />
+```
 
-- Primary action overrides.
-- Assistant configuration surfaces and borders.
-- Assistant metadata or trust states where Fluent state tokens are not specific enough.
-- Status colors where the default Fluent semantic token does not fit the product state.
+Do not manually redefine standard button colors or interaction states.
 
-### Semantic States
+### Neutral surface hierarchy
 
-Success, warning, error, and info colors are functional. They should support state, validation, and operational feedback. They are not decorative palette colors.
+Use the Fluent neutral backgrounds as one shared hierarchy in both themes:
 
-### Named Rules
+| Token                        | Product role                                         |
+| ---------------------------- | ---------------------------------------------------- |
+| `colorNeutralBackground3`    | Deepest application surface and page canvas          |
+| `colorNeutralBackground2`    | Navigation, grouped controls, and secondary surfaces |
+| `colorNeutralBackground1`    | Raised content surface and generic card level        |
+| `colorNeutralCardBackground` | Fluent card surface                                  |
 
-**The Blue Earns Attention Rule.** Blue is reserved for action, selection, focus, links, assistant identity, and high-value state. Do not use blue as a decorative background pattern.
+Do not add a separate generic surface or card palette. Add an app token only when a surface has a stable MUCGPT-specific meaning.
 
-**The Fluent First Rule.** Reach for Fluent UI tokens first: `--colorNeutralBackground*`, `--colorNeutralForeground*`, `--colorNeutralStroke*`, `--shadow*`, `--borderRadius*`, and standard component states.
+### Semantic states
 
-**The App Token Extension Rule.** Use `--app-*` variables only for MUCGPT-specific semantics such as primary actions, assistant configuration rows, status extensions, and assistant metadata. Do not introduce raw hex colors into component CSS.
+Success, warning, danger, and information colors communicate status, validation, and operational feedback. They are not decorative palette colors.
+
+Feature code uses semantic state tokens such as:
+
+```css
+var(--colorStatusSuccessForeground1)
+var(--colorStatusWarningForeground1)
+var(--colorStatusDangerForeground1)
+```
+
+Some Fluent components internally consume `colorPaletteGreen*`, `colorPaletteYellow*`, or `colorPaletteRed*`. The MUCGPT theme aliases these Fluent palette tokens to the corresponding MUCGPT status mappings so Fluent components and custom feature styles render the same status language. Feature code should still use `colorStatus*` tokens for semantic states.
+
+Fluent does not provide an equivalent `colorStatusInfo*` family. The documented information extension is exposed through the relevant `--app-status-info-*` token.
+
+### Borders and contrast
+
+Use semantic stroke tokens according to purpose:
+
+- `colorNeutralStroke2` or `colorNeutralStroke3` for decorative separators that are not required to identify a control.
+- `colorNeutralStroke1` for standard structural borders when it provides sufficient distinction in context.
+- `colorNeutralStrokeAccessible` when a boundary is necessary to identify or operate an interactive component.
+- `colorBrandStroke1` for selected or active borders.
+- Fluent status border tokens for semantic states.
+
+Do not assume that every neutral stroke token meets the WCAG 3:1 non-text contrast requirement on every surface. Test the actual foreground and adjacent background combination whenever the boundary communicates interaction, selection, focus, or status.
+
+Status and selection must never rely on color alone. Pair color with text, an icon, border weight, shape, or an accessible state.
 
 ## 4. Typography
 
-MUCGPT uses a system sans-serif stack for product UI. The type should feel native, readable, and efficient across Windows-first municipal environments.
+MUCGPT uses Fluent typography as its product UI system. The type should feel native, readable, and efficient in Windows-first municipal workplaces.
+
+### Font families
+
+- **Application UI:** Fluent `fontFamilyBase`.
+- **Brand wordmark:** Montserrat 700.
+- **Code and technical content:** Fluent `fontFamilyMonospace`.
+
+Montserrat is reserved for MUCGPT branding. Do not introduce additional font families without an explicit design-system decision.
 
 ### Hierarchy
 
-- **Display**: First-screen product headings only. Do not use inside dialogs, cards, settings, or navigation.
-- **Headline**: Major page titles and assistant discovery pages.
-- **Title**: Assistant card titles, dialog titles, section titles, and compact workspace headers.
-- **Body**: Descriptions, assistant guidance, responses, and explanatory text.
-- **Label**: Form labels, settings labels, metadata labels, and compact UI text.
-- **Micro Label**: Badges, metadata, table captions, and status labels.
+- **Display:** Exceptional first-screen product headings only.
+- **Page title:** `Title1` or `Title2`, selected according to page hierarchy.
+- **Section title:** Fluent title/subtitle role or its corresponding typography tokens.
+- **Body:** Descriptions, guidance, responses, and explanatory content.
+- **Label:** Forms, settings, metadata, and compact controls.
+- **Caption:** Badges, secondary metadata, timestamps, and supporting status text.
 
-### Named Rules
+Prefer Fluent components such as `Title1`, `Title2`, `Title3`, `Subtitle1`, `Body1`, `Body2`, `Caption1`, and `Text`, or their underlying typography tokens.
 
-**The Work Language Rule.** Labels should describe the user's job outcome before exposing technical AI mechanics. Prefer "How should the assistant respond?" over "System prompt" where the context allows.
+Do not use arbitrary `font-size`, `line-height`, or `font-weight` values when a Fluent role fits. Product copy should generally stay within 65 to 75 characters per line. Data-heavy interfaces may be wider where scanning requires it.
 
-**The Compact Confidence Rule.** Text should be concise, but not cryptic. Public-sector users need enough context to trust what will happen.
+User font scaling is applied centrally by `createScaledTypographyTheme`. Feature typography must use the scaled Fluent tokens so this setting remains effective.
 
-**The Product Type Rule.** Do not introduce display fonts into labels, buttons, navigation, data, assistant configuration, or chat controls.
+### Product language
 
-## 5. Layout
+Labels describe the user's job outcome before technical model mechanics. Prefer “How should the assistant respond?” over “System prompt” where context permits.
 
-MUCGPT should use predictable product layouts: persistent navigation, clear page headers, assistant grids or lists, split workspaces, tabs, drawers, and inline editors.
+Copy should be concise but not cryptic. Users need enough context to understand what will happen and whether an assistant is appropriate for their task.
 
-### App Shell
+## 5. Spacing, shape, and elevation
 
-The app shell uses a persistent left rail on desktop and an overlay drawer on mobile. The rail should support quick orientation and assistant access without becoming the visual center.
+### Spacing
 
-Recommended structure:
+Use Fluent spacing tokens for component spacing and common layout rhythm. Values such as 4, 8, 12, 16, 20, 24, and 32 pixels are represented by the Fluent spacing scale.
 
-- Main navigation for product areas.
-- Clear active state with a neutral selected background and a narrow blue indicator.
-- Collapsed mode that preserves icon recognition and tooltips.
-- Mobile drawer with the same vocabulary as desktop navigation.
+```css
+.toolbar {
+  gap: var(--spacingHorizontalM);
+}
+```
 
-### Assistant Workspace
+Dedicated values are appropriate for structural dimensions such as readable widths, responsive breakpoints, navigation width, drawer width, and page gutters. Repeated structural values should become named layout semantics.
 
-Assistant usage should preserve context. A user should always understand which assistant they are using and what it is configured to do.
+### Radius
+
+MUCGPT overrides the Fluent radius scale globally:
+
+| Fluent token           | Value    |
+| ---------------------- | -------- |
+| `borderRadiusSmall`    | `6px`    |
+| `borderRadiusMedium`   | `10px`   |
+| `borderRadiusLarge`    | `12px`   |
+| `borderRadiusXLarge`   | `16px`   |
+| `borderRadiusCircular` | Circular |
+
+Standard Fluent components inherit this scale. Do not override Button, Input, Dialog, or similar component radii locally without a product-specific reason.
+
+Product geometry that Fluent cannot represent may use app tokens. The chat bubble uses `--app-radius-xxlarge` for its 24px body radius and `--app-radius-xsmall` for its 2px tail corners.
+
+### Elevation
+
+Static surfaces are flat. Separate cards, panels, sections, and configuration rows through background, border, spacing, and radius.
+
+Use Fluent shadows only when elevation communicates behavior:
+
+- low lift for a hovered or dragged work object;
+- overlay lift for menus, popovers, dialogs, and drawers;
+- floating controls that genuinely sit above content.
+
+Do not add custom shadows when a Fluent shadow token is sufficient.
+
+## 6. Layout and responsive behavior
+
+MUCGPT uses predictable product layouts: persistent navigation, clear page headers, assistant grids or lists, split workspaces, tabs, drawers, and inline editors.
+
+### App shell
+
+- Desktop uses a persistent left navigation rail.
+- Collapsed navigation preserves recognizable icons and accessible tooltips.
+- Mobile uses an overlay drawer with the same vocabulary and information architecture.
+- Navigation supports clear orientation without becoming the visual center.
+- Page content uses a readable maximum width where the task does not require a full-width workspace.
+
+### Responsive composition
+
+Responsive behavior is structural. Collapse navigation, adapt grids, stack control groups, and change drawer behavior at deliberate breakpoints. Do not use fluid display typography as a substitute for responsive composition.
+
+The assistant discovery grid uses three columns on wide layouts, two columns below 1024px, and one column below 550px. When the details drawer materially reduces the available content width, the grid and section controls adapt to the remaining space rather than only to the viewport.
+
+Touch targets, focus order, labels, and functionality must remain equivalent across layouts.
+
+## 7. Core product patterns
+
+### Assistant discovery page
+
+The discovery page leads users from a work need to an appropriate assistant.
+
+- The page header uses a clear title, a concise purpose statement, a primary create action, and a lower-emphasis import action.
+- Search spans the available content width and uses a grouped neutral surface.
+- “My assistants” and community discovery are separate, clearly titled sections.
+- Ownership filters use a small Fluent `TabList` because they switch between mutually exclusive views of the same collection.
+- Sorting uses Fluent `Dropdown` controls.
+- Empty states offer concrete next actions instead of merely reporting that no content exists.
+- Loading collections use card-shaped skeletons to preserve layout and reduce movement.
+
+### Assistant cards
+
+Assistant cards are a signature MUCGPT product object. They are appropriate in discovery surfaces because each card represents a reusable workflow rather than generic content.
+
+Each card makes the following scannable:
+
+- name and concise purpose;
+- owner or source;
+- visibility or sharing scope;
+- relevant compliance or lifecycle state;
+- tool or capability indicators where useful;
+- popularity or usage metadata where useful;
+- selected state when a related details surface is open.
+
+Card anatomy follows a consistent hierarchy:
+
+1. Title and compact status badges.
+2. A short description, normally clamped to two lines in a grid.
+3. A footer containing owner/source metadata and visibility or subscriber information.
+
+Cards are flat at rest with a full border. Hover may lift by a single pixel and strengthen the border or title color. Selected cards use a full selected border, never a colored side stripe. Focus styling must remain at least as prominent as hover and selection.
+
+Interactive cards must expose their action and current state semantically, not only through click handlers or color. Nested actions such as owner contact links must remain independently operable and must not accidentally trigger the card action.
+
+### Trust and status badges
+
+Badges communicate compact metadata such as private/shared scope, local state, compliance status, publication state, or assistant identity.
+
+- Neutral metadata uses a neutral tinted badge.
+- Success, warning, and danger use Fluent tint appearances backed by the MUCGPT status mappings.
+- Status badges may use stronger type weight than neutral metadata.
+- Blue is reserved for selection or assistant identity, not generic metadata.
+- Badge text must remain understandable without relying on color.
+
+### Assistant workspace
+
+Assistant use must preserve context. Users should always understand which assistant is active and what it is configured to do.
 
 Good workspace patterns include:
 
-- Assistant header with title, scope, owner, and primary action.
-- Compact trust metadata near the assistant title.
-- Chat composer as a stable bottom or local work surface.
-- Optional side panel or disclosure area for tools, examples, model settings, and configuration details.
-- Clear distinction between private assistants, shared assistants, and broadly visible assistants.
+- assistant header with title, scope, owner, and primary action;
+- compact trust metadata near the title;
+- stable chat composer at the bottom or within the local work surface;
+- optional disclosure or side panel for tools, examples, models, and configuration details;
+- visible distinction between private, shared, and broadly visible assistants.
 
-### Configuration
+### Chat composer
 
-Assistant configuration should prefer inline editing and progressive disclosure over large modal flows.
+The composer is a work control, not decorative chatbot chrome.
 
-Use:
+- It remains visually stable while typing.
+- Send, attach, tools, and options appear in predictable locations.
+- Multiline input does not cause disruptive layout jumps.
+- Focus is clear and keyboard operation is complete.
+- Placeholder text is practical and task-oriented.
 
-- Sectioned forms for role, behavior, tools, examples, sharing, and model settings.
-- Plain-language labels with technical details available as secondary text.
-- Preview or test affordances where users can validate assistant behavior.
-- Save states that distinguish draft, saved, shared, and changed configurations.
+### Assistant configuration
 
-## 6. Components
+Configuration favors sectioned pages, inline editing, and progressive disclosure over large modal flows.
 
-### Buttons
+- Organize role, behavior, tools, examples, sharing, and model settings into understandable sections.
+- Lead with plain-language labels and provide technical details as secondary information.
+- Provide preview or test affordances where users need to validate behavior.
+- Distinguish draft, saved, changed, shared, disabled, and error states.
+- Use reorder controls only where order changes behavior.
 
-Buttons should be familiar and restrained.
+Assistant configuration surfaces use the documented `--app-assistant-config-*` tokens because their states are stable MUCGPT product semantics without direct Fluent equivalents.
 
-- Primary buttons use Civic Action Blue and are reserved for starting, saving, publishing, or confirming a core workflow.
-- Secondary buttons use neutral surfaces and clear hover states.
-- Destructive actions use semantic error styling and require clear labels.
-- Icon buttons should use recognizable icons with accessible labels and tooltips where needed.
+### Empty states
 
-### Assistant Cards
+Empty states help users start. They should contain a concise explanation and the smallest useful set of actions, for example:
 
-Assistant cards are the signature product object. They should not look like generic content cards.
+- create an assistant;
+- import an assistant;
+- discover shared assistants;
+- reset a search;
+- test the current assistant.
 
-Each assistant card should make the following scannable:
+Avoid generic “nothing here” messages and long product explanations.
 
-- Name and concise purpose.
-- What kind of work it supports.
-- Owner or source when relevant.
-- Visibility or sharing scope.
-- Tool/capability indicators when relevant.
-- Last changed or trust metadata where useful.
-- Direct start action and secondary details action.
+## 8. Components and CSS
 
-At rest, assistant cards are flat with a clear border. Hover may lift slightly and strengthen the border. Selected cards use a full border or selected surface, not a side stripe.
+### Fluent components
 
-### Trust Chips
+Use Fluent components directly whenever possible, including `Button`, `Input`, `Textarea`, `SearchBox`, `Dropdown`, `TabList`, `Dialog`, `Menu`, `Card`, `Badge`, and `Tooltip`.
 
-Trust chips show metadata that affects confidence: private/shared, department scope, owner, tools, model, draft, published, or changed.
+Do not create wrappers such as `MucButton`, `MucInput`, or `MucDialog` merely to apply visual styling. Shared components are justified when they represent a reusable product pattern, such as `PageHeader`, `AssistantCard`, `EmptyState`, or `Toolbar`.
 
-They should be compact, readable, and neutral by default. Blue is only used when the chip represents selection or assistant identity.
+Every interactive component needs the states relevant to its behavior: default, hover, focus, active, selected, disabled, loading, and error.
 
-### Chat Composer
+### CSS modules
 
-The composer is an important work control, not a decorative chatbot input.
+Use CSS Modules for:
 
-It should:
+- layout and responsive composition;
+- grid and flex behavior;
+- documented product-specific visuals;
+- geometry Fluent cannot express;
+- complex application states that cannot be represented through public Fluent APIs.
 
-- Stay visually stable while typing.
-- Expose send, attach, tool, and option controls predictably.
-- Use a clear focus state.
-- Support multiline input without layout jumps.
-- Keep placeholder text practical and specific.
+CSS should not redefine standard Fluent button colors, standard typography, standard radii, focus behavior, or generic disabled states.
 
-### Configuration Rows
+Avoid:
 
-Prompt starters, tools, examples, and behavior rules should appear as editable work objects.
+- `!important`;
+- `.fui-*` selectors;
+- private Fluent custom properties or data attributes;
+- raw color literals in feature code;
+- arbitrary typography and radii;
+- `transition: all`;
+- unnecessary absolute positioning.
 
-Rows should support:
+Never depend on undocumented Fluent DOM structure when a public component prop, slot, appearance, or theme token is available.
 
-- Clear title and short description.
-- Visible edit and remove affordances.
-- Drag or reorder only where ordering matters.
-- Changed, disabled, error, and active states.
-- Inline editing before modal editing.
+## 9. Motion
 
-### Empty States
+Motion explains state changes and spatial relationships. It is not decoration.
 
-Empty states should help users start, not explain the whole product.
+- Use approximately 120ms to 160ms for color, border, and focus changes.
+- Use approximately 160ms to 220ms for hover lift and compact reveals.
+- Use up to 300ms for drawers and navigation collapse.
+- Prefer transform and opacity over layout properties.
+- Use restrained ease-out curves without bounce or elastic effects.
+- Do not orchestrate page-load animation sequences.
+- Respect `prefers-reduced-motion` for every non-essential transition and animation.
 
-Use concrete actions:
+## 10. Themes
 
-- Create an assistant.
-- Start from a suggested assistant.
-- Search shared assistants.
-- Add a quick starter.
-- Test this assistant.
+Light and dark modes are equal product themes, not independent component variants.
 
-Avoid generic "nothing here" messages.
+- Both themes are created through the central Fluent theme.
+- Components consume Fluent tokens or documented app tokens.
+- App tokens define light and dark behavior where required.
+- Components must not read `prefers-color-scheme` or `localStorage` independently.
+- Theme switching must preserve hierarchy, semantic meaning, contrast, and component state.
 
-## 7. Elevation
-
-MUCGPT is flat by default and uses Fluent tonal layering first. Shadows communicate interaction or overlay state.
-
-### Shadow Vocabulary
-
-- **Flat at rest**: Cards, panels, responses, and configuration rows.
-- **Low lift**: Assistant card hover, focusable work objects, and mobile affordances.
-- **Overlay lift**: Popovers, menus, dialogs, and drawers.
-- **Primary lift**: Rare hover treatment for primary actions.
-
-### Named Rule
-
-**The Flat At Rest Rule.** Cards, panels, and answer containers are flat at rest. Add shadow only when the user is hovering, focusing, dragging, or opening an overlay.
-
-## 8. Motion
-
-Motion should help users understand state changes.
-
-Use short transitions:
-
-- 120ms to 160ms for color, border, and focus changes.
-- 160ms to 220ms for hover lifts, row reveals, and chip affordances.
-- Up to 300ms for drawer open/close or sidebar collapse.
-
-Motion should respect reduced-motion preferences. Do not animate layout-heavy properties where transform or opacity can express the same state.
-
-## 9. Accessibility
+## 11. Accessibility and inclusion
 
 MUCGPT targets WCAG 2.1 AA.
 
 Required behavior:
 
-- Keyboard access for all interactive controls.
-- Visible focus states.
-- Screen-reader labels for icon-only actions.
-- Sufficient color contrast in light and dark themes.
-- Non-color indicators for status and selection.
-- Reduced-motion support.
-- Text that wraps predictably across desktop and mobile.
+- complete keyboard operation and logical focus order;
+- visible focus indicators;
+- correct native or ARIA semantics;
+- accessible names for icon-only controls;
+- sufficient text and non-text contrast in both themes;
+- non-color indicators for state and selection;
+- user font scaling without clipping or loss of content;
+- reduced-motion support;
+- predictable wrapping across desktop and mobile;
+- loading and status feedback that is available to assistive technology.
 
-Accessibility is a product requirement, not a final polish step. The user base includes people with very different AI confidence levels, reading preferences, devices, and workplace environments.
+Prefer Fluent components because they provide accessible behavior, but do not assume that composition remains accessible automatically. Interactive cards, nested actions, custom CSS, responsive reordering, and application-managed selection require explicit verification.
 
-## 10. Do's and Don'ts
+Accessibility is a product requirement, not a final polish step. MUCGPT serves people with different devices, reading preferences, abilities, and levels of confidence with AI.
+
+## 12. Do and do not
 
 ### Do
 
-- Do make assistants visually primary. Discovery, configuration, sharing, and reuse deserve more design attention than generic chat chrome.
-- Do show trust metadata where it affects user confidence.
-- Do use work-oriented language before technical AI language.
-- Do use Fluent UI components where practical and tune them through product tokens.
-- Do keep the blue accent rare and meaningful.
-- Do support both simple first-time use and faster power-user flows.
-- Do prefer inline editing, previews, and progressive disclosure over modal interruption.
-- Do preserve keyboard focus states, reduced-motion friendliness, and WCAG 2.1 AA contrast.
+- Make assistants visually and structurally primary.
+- Show trust metadata where it affects confidence.
+- Use work-oriented language before technical AI language.
+- Prefer Fluent components and public APIs.
+- Keep blue rare and meaningful.
+- Use progressive disclosure for advanced configuration.
+- Preserve equivalent behavior in light, dark, desktop, mobile, keyboard, and scaled-text contexts.
+- Test the actual token combinations used by interactive elements.
 
-### Don't
+### Do not
 
-- Don't make MUCGPT feel like a dense enterprise admin console.
-- Don't make it a direct ChatGPT, Gemini, or generic chatbot clone.
-- Don't make assistant configuration feel like editing a raw prompt file unless the user has chosen an advanced mode.
-- Don't hide tool usage or assistant scope behind friendly chat UI.
-- Don't use startup SaaS decoration, ornamental gradients, glassmorphism, or decorative blue backgrounds.
-- Don't introduce raw hex colors into app CSS or components. Add semantics in `themeTokens.ts` first.
-- Don't use border-left or border-right greater than 1px as a colored accent on cards, callouts, lists, or alerts.
-- Don't add shadows to static surfaces.
-- Don't imply autonomous execution when a human-in-the-loop decision is required.
+- Make MUCGPT resemble a dense enterprise administration console.
+- Copy the visual identity of generic AI chat products.
+- Make assistant configuration resemble raw prompt-file editing unless the user explicitly chooses an advanced mode.
+- Hide tool usage, ownership, or assistant scope behind friendly chat UI.
+- Use ornamental gradients, gradient text, decorative blue surfaces, or default glassmorphism.
+- Add shadows to static surfaces.
+- Use thick colored side borders on cards, callouts, lists, or alerts.
+- Nest cards inside cards.
+- Use a modal as the first solution when inline or progressive interaction is viable.
+- Imply autonomous execution when human review is required.
 
-## 11. Implementation Notes
+## 13. Styling decision guide
 
-The design system should be implemented through Fluent UI theme tokens, `themeTokens.ts`, and CSS modules.
+Before adding styling, ask:
 
-Component CSS should prefer Fluent variables such as:
+```text
+Can Fluent express this through a component prop, slot, or appearance?
+    -> no
 
-- `--colorNeutralBackground1`
-- `--colorNeutralBackground2`
-- `--colorNeutralCardBackground`
-- `--colorNeutralForeground1`
-- `--colorNeutralForeground2`
-- `--colorNeutralStroke1`
-- `--colorBrandBackground`
-- `--shadow4`
-- `--borderRadiusMedium`
+Can the Fluent theme express this globally with an existing semantic token?
+    -> no
 
-Use MUCGPT app variables only for product-specific extensions already exposed by `themeTokens.ts`, such as:
+Is this a stable and repeated MUCGPT product semantic?
+    -> no
 
-- `--app-primary-action-background`
-- `--app-primary-action-hover`
-- `--app-primary-action-pressed`
-- `--app-primary-action-foreground`
-- `--app-status-error-background`
-- `--app-status-info-background`
-- `--app-assistant-config-surface`
-- `--app-assistant-config-surface-hover`
-- `--app-assistant-config-surface-editing`
-- `--app-assistant-config-border`
-- `--app-assistant-config-border-hover`
+Is local CSS genuinely necessary?
+```
 
-When a new visual need appears, first check whether Fluent already has the right token. Add an app token only when the meaning is MUCGPT-specific and likely to be reused.
+If the answer introduces a new token, decide whether it is a reusable primitive for `palette.ts` or an isolated product semantic for `appTokens.ts`. Feature code consumes the resulting semantic token, never the raw value.
 
-The machine-readable design source in `.impeccable/design.json` should mirror these principles and avoid examples that encourage raw hex values or a parallel non-Fluent surface system in component CSS.
+Implementation details and the complete active token inventory are documented in `mucgpt-frontend/docs/theme-tokens.md`.

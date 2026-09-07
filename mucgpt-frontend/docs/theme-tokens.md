@@ -1,166 +1,61 @@
 # Theme Tokens
 
-MUCGPT uses semantic app tokens from `src/pages/layout/themeTokens.ts` as the source of truth.  
-`src/pages/layout/LayoutHelper.tsx` maps those app tokens to Fluent UI v9 theme tokens.
+MUCGPT builds its Fluent UI v9 theme from the MUCGPT color palettes, not from a manually-mapped app token layer.
 
 ## Files
 
-- `src/pages/layout/themeTokens.ts`
-  Defines the semantic light and dark token sets.
-- `src/pages/layout/LayoutHelper.tsx`
-  Creates the Fluent theme and exposes the remaining `--app-*` CSS variables.
+- `src/ui/theme/palette.ts`
+  Reusable primitive color ramps (`mucgptBrandRamp`, `neutralRamp`, `successRamp`, `warningRamp`, `dangerRamp`, `infoRamp`). It is the source of shared palette values, but not necessarily every isolated color literal in the theme layer.
+- `src/ui/theme/fluentTheme.ts`
+  `createMucgptTheme(isLight)` builds the Fluent light/dark theme from the palettes (brand ramp, neutral/status overrides, global radius scale). `createScaledTypographyTheme(theme, scaling)` applies the user's font-scaling setting on top.
+- `src/ui/theme/appTokens.ts`
+  A small set of product-specific semantics Fluent has no equivalent for (see below), exposed as `--app-*` CSS custom properties. An app token may own deliberate light/dark values directly when they are not a reusable palette, or reference `palette.ts` when the value is shared.
 - `src/pages/layout/Layout.tsx`
-  Passes the Fluent theme and `--app-*` vars into `FluentProvider`.
+  Builds the theme and CSS vars and passes them into `FluentProvider` / `document.documentElement`.
 
 ## Mental Model
 
+```
+palette.ts -> fluentTheme.ts -> createMucgptTheme(isLight) -> createScaledTypographyTheme(...) -> FluentProvider
+```
+
 Use this order when styling:
 
-1. Define product semantics in `themeTokens.ts`
-2. Map them to Fluent tokens in `LayoutHelper.tsx`
-3. Use Fluent CSS vars directly in CSS, for example `var(--colorNeutralBackground1)`
-4. Use `--app-*` only where Fluent has no clean equivalent
+1. Use Fluent CSS vars directly, e.g. `var(--colorNeutralBackground1)`, `var(--colorBrandBackground)`.
+2. Only reach for `--app-*` when Fluent has no clean equivalent (see `appTokens.ts`).
+3. If a new product semantic is needed, add it to `appTokens.ts` and keep raw values inside the theme layer. Feature code must not consume palette primitives or introduce raw colors.
 
-## Current App Tokens
+## Neutral Surfaces
 
-### Header
+Use Fluent's neutral backgrounds as one shared elevation hierarchy in both themes:
 
-- `headerBackground`
-- `headerHover`
-- `headerPressed`
+- `Background3`: deepest application surface and page canvas.
+- `Background2`: secondary or grouped neutral surface, such as the sidebar.
+- `Background1`: normal raised surface and generic card level.
 
-### Surfaces
+Generic cards use Fluent neutral backgrounds. Do not add app-specific card or standard-surface colors unless a reusable MUCGPT product semantic requires one.
 
-- `surfaceBase`
-- `surfaceRaised`
-- `surfaceSubtle`
+## Remaining App Tokens
 
-### Primary
+These have no Fluent equivalent and are exposed as `--app-*`:
 
-- `primaryBase`
-- `primaryHover`
-- `primaryPressed`
-- `primarySubtle`
-- `primarySubtleOn`
-- `primaryStrong`
+- `--app-user-message-background` - user chat bubble background
+- `--app-assistant-config-surface` / `-hover` / `-editing` - assistant config field surface states
+- `--app-assistant-config-border` / `-hover` - assistant config field border states
+- `--app-status-info-border` - info accent (Fluent has no `colorStatusInfo*` family); sourced from `infoRamp`
+- `--app-radius-xsmall` (2px) / `--app-radius-xxlarge` (24px) - asymmetric chat-bubble corner radii, not part of Fluent's radius scale
 
-### Text
+`--app-primary-subtle-foreground` is a temporary compatibility alias for the existing Discovery Card and resolves to `--colorBrandForeground2`. It can be removed with the Discovery Card design-system update.
 
-- `textDefault`
-- `textSecondary`
-- `textTertiary`
-- `textOnHeader`
-- `textOnPrimary`
+## Fluent Radius Scale
 
-### Outline / Focus / Disabled
+`fluentTheme.ts` sets Fluent's global radius scale app-wide:
 
-- `outlineSubtle`
-- `outlineBase`
-- `outlineHover`
-- `focusRing`
-- `disabledBackground`
-- `disabledForeground`
-- `disabledBorder`
+- `borderRadiusSmall: 6px`
+- `borderRadiusMedium: 10px`
+- `borderRadiusLarge: 12px`
+- `borderRadiusXLarge: 16px`
 
-### Status
+## Fluent Palette Aliases
 
-- `statusSuccessBackground`
-- `statusSuccessBorder`
-- `statusSuccessForeground`
-- `statusWarningBackground`
-- `statusWarningBorder`
-- `statusWarningForeground`
-- `statusErrorBackground`
-- `statusErrorBorder`
-- `statusErrorForeground`
-- `statusInfoBackground`
-- `statusInfoBorder`
-- `statusInfoForeground`
-
-## Fluent Mapping Reference
-
-This is the current intended mapping from app tokens to Fluent v9 tokens.
-
-### Surfaces
-
-- `surfaceBase -> colorNeutralBackground1`
-- `surfaceRaised -> colorNeutralBackground2`
-- `surfaceSubtle -> colorNeutralBackground3`
-- `surfaceRaised -> colorNeutralCardBackground`
-- `disabledBackground -> colorNeutralBackgroundDisabled`
-
-### Primary / Brand
-
-- `primaryBase -> colorBrandBackground`
-- `primaryHover -> colorBrandBackgroundHover`
-- `primaryPressed -> colorBrandBackgroundPressed`
-- `primarySubtle -> colorBrandBackground2`
-- `primaryStrong -> colorBrandForeground1`
-- `primaryStrong -> colorBrandStroke1`
-- `primaryStrong -> colorBrandForegroundLink`
-- `primarySubtleOn -> colorBrandForeground2`
-- `textOnPrimary -> colorNeutralForegroundOnBrand`
-
-### Text
-
-- `textDefault -> colorNeutralForeground1`
-- `textSecondary -> colorNeutralForeground2`
-- `textTertiary -> colorNeutralForeground3`
-- `disabledForeground -> colorNeutralForegroundDisabled`
-
-### Outline / Focus / Disabled
-
-- `outlineBase -> colorNeutralStroke1`
-- `outlineHover -> colorNeutralStroke1Hover`
-- `outlineSubtle -> colorNeutralStroke2`
-- `disabledBorder -> colorNeutralStrokeDisabled`
-- `focusRing -> colorStrokeFocus2`
-
-### Status
-
-- `statusSuccessBackground -> colorStatusSuccessBackground1`
-- `statusSuccessBorder -> colorStatusSuccessBorder1`
-- `statusSuccessForeground -> colorStatusSuccessForeground1`
-- `statusWarningBackground -> colorStatusWarningBackground1`
-- `statusWarningBorder -> colorStatusWarningBorder1`
-- `statusWarningForeground -> colorStatusWarningForeground1`
-- `statusErrorBackground -> colorStatusDangerBackground1`
-- `statusErrorBorder -> colorStatusDangerBorder1`
-- `statusErrorForeground -> colorStatusDangerForeground1`
-
-## Remaining Custom CSS Variables
-
-These values intentionally remain outside Fluent and are exposed as `--app-*`:
-
-- `headerBackground -> --app-header-background`
-- `headerHover -> --app-header-hover`
-- `headerPressed -> --app-header-pressed`
-- `textOnHeader -> --app-header-foreground`
-- `primarySubtleOn -> --app-primary-subtle-foreground`
-- `statusInfoBackground -> --app-status-info-background`
-- `statusInfoBorder -> --app-status-info-border`
-- `statusInfoForeground -> --app-status-info-foreground`
-
-## CSS Usage
-
-Prefer Fluent CSS variables directly:
-
-- `var(--colorNeutralBackground1)`
-- `var(--colorNeutralBackground2)`
-- `var(--colorNeutralBackground3)`
-- `var(--colorBrandBackground)`
-- `var(--colorBrandBackground2)`
-- `var(--colorNeutralForeground1)`
-- `var(--colorNeutralForeground2)`
-- `var(--colorNeutralStroke1)`
-- `var(--colorStatusSuccessBackground1)`
-
-Use `--app-*` only for the remaining custom semantics listed above.
-
-## Practical Rules
-
-- Do not introduce raw hex colors into app CSS or components.
-- Do not introduce alias layers like `--surface`, `--primary`, or `--theme-*`.
-- If a new product semantic is needed, add it in `themeTokens.ts` first.
-- If Fluent already has a matching token, map to it and consume it directly.
-- Only add a new `--app-*` token when Fluent does not model the semantic cleanly.
+Some Fluent components internally consume `--colorPaletteRed*`, `--colorPaletteGreen*`, and `--colorPaletteYellow*` rather than `--colorStatus*`. `fluentTheme.ts` aliases those Fluent palette tokens to the corresponding MUCGPT status mappings, so Fluent internals and semantic feature styles render the same status palette. Feature code should nevertheless use `--colorStatus*` for success, warning, and danger semantics.

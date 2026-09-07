@@ -91,6 +91,11 @@ async function encode(encoder: OrtSessionLike, features: Float32Array, totalFram
  * prediction-network LSTM state is committed only on token emissions, so blank
  * steps never advance it.
  */
+/**
+ * Creates a {@link NemoTranscriber} around one parakeet encoder and one fused
+ * `decoder_joint` session. Sessions stay owned by the caller; `dispose()` is a
+ * no-op. The transcribed language is detected by the model itself.
+ */
 export function createParakeetTranscriber(
     deps: { encoder: OrtSessionLike; decoderJoint: OrtSessionLike; vocab: NemoVocab },
     options?: ParakeetTranscriberOptions

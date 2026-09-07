@@ -28,6 +28,10 @@ function int64Scalar(value: number): OrtValue {
     return { dims: [1], data: new BigInt64Array([BigInt(value)]) };
 }
 
+function int32Scalar(value: number): OrtValue {
+    return { dims: [1], data: new Int32Array([value]) };
+}
+
 function float32Data(value: OrtValue, name: string): Float32Array {
     if (!(value.data instanceof Float32Array)) throw new Error(`parakeet: output "${name}" is not float32`);
     return value.data;
@@ -83,13 +87,15 @@ async function encode(encoder: OrtSessionLike, features: Float32Array, totalFram
 }
 
 /**
- * Greedy Token-and-Duration Transducer decoding for istupakov-lineage
- * parakeet-tdt-0.6b-v3 ONNX exports: a channels-first encoder ([1, 1024, T']
- * plus `encoded_lengths`) and a fused `decoder_joint` graph whose flat output
- * packs [tokenLogits (vocab incl. trailing <blk>), durationLogits] behind
- * singleton leading dims. The duration argmax index is the frame advance; the
- * prediction-network LSTM state is committed only on token emissions, so blank
- * steps never advance it.
+ * Greedy Token-and-Duration Transducer decoding for the parakeet-tdt-0.6b-v3
+ * ONNX exports used by MUCGPT (efederici/parakeet-tdt-0.6b-v3-onnx-int4): a
+ * channels-first int64-length encoder ([1, 1024, T'] outputs, `encoded_lengths`)
+ * and a fused `decoder_joint` graph with int32 targets/target_length whose flat
+ * output packs [tokenLogits (vocab incl. trailing <blk>), durationLogits]
+ * ([1, 1, 1, vocab+5]) behind singleton leading dims. `encoder_outputs` is fed
+ * per step as [1, hidden, 1] (hidden as the static middle axis). The duration
+ * argmax index is the frame advance; the prediction-network LSTM state is
+ * committed only on token emissions, so blank steps never advance it.
  */
 /**
  * Creates a {@link NemoTranscriber} around one parakeet encoder and one fused
@@ -111,14 +117,14 @@ export function createParakeetTranscriber(
     const blankId = vocabCount - 1;
     const stateDims = [lstmLayers, 1, predictionHidden];
     const zeroState = (): OrtValue => ({ dims: stateDims, data: new Float32Array(lstmLayers * predictionHidden) });
-    const targetLength = int64Scalar(1);
-    const targetsData = new BigInt64Array(1);
+    const targetLength = int32Scalar(1);
+    const targetsData = new Int32Array(1);
 
     const transcribe = async (audio: Float32Array): Promise<string> => {
         const { features, totalFrames, validFrames } = computeNemoMel(audio);
         if (validFrames < 2) return "";
         const encoded = await encode(encoder, features, totalFrames, validFrames);
-        const frameDims = [1, 1, 1, encoded.hidden];
+        const frameDims = [1, encoded.hidden, 1];
 
         const tokens: number[] = [];
         let hState = zeroState();
@@ -130,7 +136,7 @@ export function createParakeetTranscriber(
 
         while (t < encoded.nFrames) {
             if (++steps > maxTotalSteps) break;
-            targetsData[0] = BigInt(prevTokenId);
+            targetsData[0] = prevTokenId;
             const result = await decoderJoint.run({
                 encoder_outputs: { dims: frameDims, data: encoded.frames.subarray(t * encoded.hidden, (t + 1) * encoded.hidden) },
                 targets: { dims: [1, 1], data: targetsData },

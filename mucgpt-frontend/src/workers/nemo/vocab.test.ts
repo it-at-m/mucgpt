@@ -8,11 +8,14 @@ const vocab = parseNemoVocab(readFileSync(new URL("./fixtures/canary-vocab.txt",
 /**
  * (input → output) pairs verified against the Python reference
  * `re.sub(r"\A\s|\s\B|(\s)\b", lambda m: " " if m.group(1) else "", text)`.
+ * Includes non-ASCII cases to pin the Unicode-aware word-boundary port.
  */
 const REGEX_REFERENCE: readonly (readonly [string, string])[] = [
     [" hello world !", "hello world!"],
     ["  double  spaces  here ", " double spaces here"],
     [" Hallo, wie geht's? ", "Hallo, wie geht's?"],
+    [" H über", "H über"],
+    ["München über überall", "München über überall"],
     ["Monaco ( Ville ) ", "Monaco( Ville)"],
     ["e.g. U.S.A. today", "e.g. U.S.A. today"]
 ];
@@ -95,6 +98,11 @@ describe("nemoDetokenize", () => {
 
     it("attaches punctuation to the preceding word and starts the next one spaced", () => {
         expect(detokenize([" H", ",", " w", "?"])).toBe("H, w?");
+    });
+
+    it("keeps separators before non-ASCII word characters (Unicode word boundaries, unlike JS \\b)", () => {
+        expect(detokenize([" H", " ", "über"])).toBe("H über");
+        expect(nemoDetokenize([idOf(" H"), idOf(" "), idOf("über"), idOf("über")], vocab)).toBe("H überüber");
     });
 
     it("drops the space before an opening bracket, as in 'Monaco ( Ville ) ' → 'Monaco( Ville)'", () => {

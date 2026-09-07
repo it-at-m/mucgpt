@@ -29,6 +29,7 @@ interface Props {
     onOpenChange: (open: boolean) => void;
 }
 
+/** Settings dialog: enable transcription, pick a model, download it and inspect load state. */
 export const TranscriptionSettingsDialog = ({ open, onOpenChange }: Props) => {
     const { t } = useTranslation();
     const {

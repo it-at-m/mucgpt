@@ -7,9 +7,12 @@ import type { WorkerInMessage, WorkerOutMessage } from "../../workers/transcript
 import { useAudioRecorder } from "../../hooks/useAudioRecorder";
 import { fetchModelFileSizes } from "../../utils/modelSizeUtils";
 
+/** Lifecycle of the transcription UI, mirrored to the worker status handling. */
 export type TranscriptionStatus = "idle" | "warming-up" | "loading-model" | "recording" | "transcribing" | "error";
+/** Whisper language tag driving the pipeline (undefined lets models auto-detect). */
 export type TranscriptionLanguage = string | undefined;
 
+/** Everything the mic button and the settings dialog need: settings, worker status and transcript, plus the actions driving them. */
 export interface ITranscriptionSettings {
     // Settings
     enabled: boolean;
@@ -87,14 +90,17 @@ const defaultValue: ITranscriptionSettings = {
     stopAndTranscribe: async () => {}
 };
 
+/** React context carrying {@link ITranscriptionSettings}; consume via {@link useTranscription}. */
 export const TranscriptionSettingsContext = React.createContext<ITranscriptionSettings>(defaultValue);
 
+/** Access hook for the transcription settings, status and actions. */
 export const useTranscription = () => useContext(TranscriptionSettingsContext);
 
 interface TranscriptionSettingsProviderProps {
     deploymentEnabled?: boolean;
 }
 
+/** Owns the transcription worker, persists user settings and exposes everything through the context. */
 export const TranscriptionSettingsProvider = ({ children, deploymentEnabled = true }: React.PropsWithChildren<TranscriptionSettingsProviderProps>) => {
     const { t, i18n } = useTranslation();
 

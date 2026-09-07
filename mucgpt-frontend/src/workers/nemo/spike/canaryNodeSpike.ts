@@ -22,6 +22,7 @@ const MEL_CHANNELS = 128;
 const DECODER_LAYERS = 6;
 const DECODER_DIM = 1024;
 
+/** Ships an OrtValue-style feed into an onnxruntime Tensor. */
 function toTensor(value: OrtValue): ort.Tensor {
     const { data } = value;
     if (data instanceof Float32Array) return new ort.Tensor(data, [...value.dims]);
@@ -32,6 +33,7 @@ function toTensor(value: OrtValue): ort.Tensor {
     throw new Error("Unsupported OrtValue data type");
 }
 
+/** Unwraps an onnxruntime output tensor into the structural OrtValue shape. */
 function toOrtValue(tensor: ort.Tensor): OrtValue {
     const { data } = tensor;
     if (
@@ -46,6 +48,7 @@ function toOrtValue(tensor: ort.Tensor): OrtValue {
     throw new Error(`Unsupported tensor output type: ${tensor.type}`);
 }
 
+/** Adapter letting the shared transcriber code run on onnxruntime-node sessions. */
 function toSessionLike(session: ort.InferenceSession): OrtSessionLike {
     return {
         inputNames: session.inputNames,
@@ -70,6 +73,7 @@ interface WavInfo {
     dataLength: number;
 }
 
+/** Minimal RIFF header parser for PCM16 / PCM float32 mono WAV files. */
 function parseWav(buffer: Buffer): WavInfo {
     if (buffer.length < 12 || buffer.toString("ascii", 0, 4) !== "RIFF" || buffer.toString("ascii", 8, 12) !== "WAVE") {
         throw new Error("Not a RIFF/WAVE file");
@@ -97,6 +101,7 @@ function parseWav(buffer: Buffer): WavInfo {
     return { ...fmt, dataOffset: data.offset, dataLength: data.length };
 }
 
+/** Decodes the audio chunk of a parsed WAV into mono float32 samples. */
 function decodeWavMono(buffer: Buffer, wav: WavInfo): Float32Array {
     if (!((wav.audioFormat === 1 && wav.bitsPerSample === 16) || (wav.audioFormat === 3 && wav.bitsPerSample === 32))) {
         throw new Error(`Unsupported WAV encoding: format ${wav.audioFormat}, ${wav.bitsPerSample} bits`);
@@ -120,6 +125,7 @@ function decodeWavMono(buffer: Buffer, wav: WavInfo): Float32Array {
     return mono;
 }
 
+/** Linear-interpolation resampler; only used to normalise SAPI 22 kHz output for tests. */
 function resampleTo16k(pcm: Float32Array, sourceRate: number): Float32Array {
     if (sourceRate === TARGET_SAMPLE_RATE) return pcm;
     const step = sourceRate / TARGET_SAMPLE_RATE;
@@ -135,6 +141,7 @@ function resampleTo16k(pcm: Float32Array, sourceRate: number): Float32Array {
     return out;
 }
 
+/** Loads and normalises any supported WAV file to 16 kHz mono float32. */
 function loadWavAsPcm16k(path: string): { pcm: Float32Array; durationSeconds: number; info: WavInfo } {
     const buffer = readFileSync(path);
     const info = parseWav(buffer);
@@ -142,6 +149,7 @@ function loadWavAsPcm16k(path: string): { pcm: Float32Array; durationSeconds: nu
     return { pcm: resampleTo16k(mono, info.sampleRate), durationSeconds: mono.length / info.sampleRate, info };
 }
 
+/** Index of the highest value in values[offset; offset+length). */
 function argmaxOf(values: Float32Array, offset: number, length: number): number {
     let bestIndex = offset;
     let bestValue = values[offset];
@@ -154,12 +162,14 @@ function argmaxOf(values: Float32Array, offset: number, length: number): number 
     return bestIndex - offset;
 }
 
+/** Builds an int64 OrtValue from plain numbers. */
 function int64Tensor(values: readonly number[], dims: readonly number[]): OrtValue {
     const data = new BigInt64Array(values.length);
     for (let i = 0; i < values.length; i++) data[i] = BigInt(values[i]);
     return { dims, data };
 }
 
+/** Runs one clip through the transcriber and prints transcript/timing for the spike report. */
 async function debugDecode(
     encoder: OrtSessionLike,
     decoder: OrtSessionLike,
@@ -213,6 +223,7 @@ async function debugDecode(
     console.log(`[debug] 30-step greedy transcript: "${nemoDetokenize(tokens.slice(prompt.length), vocab).trim()}"`);
 }
 
+/** CLI entry point: see module doc for usage. */
 async function main(): Promise<void> {
     const args = process.argv.slice(2);
     if (args.length < 4) {

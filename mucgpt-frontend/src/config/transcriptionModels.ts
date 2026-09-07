@@ -8,6 +8,7 @@ export interface NemoModelFiles {
     vocab: string;
 }
 
+/** A transcription model offered to the user, agnostic of the runtime that executes it. */
 export interface TranscriptionModel {
     model_id: string;
     label: string;
@@ -26,6 +27,7 @@ export interface TranscriptionModel {
     file_tree?: string;
 }
 
+/** Model choices offered in the transcription settings dialog, in display order. */
 export const TRANSCRIPTION_MODELS: TranscriptionModel[] = [
     // Disabled: onnxruntime-web >=1.20 removed Module.MountedFiles, which was the WASM API used to
     // mount .onnx_data external-data files. This repo has no quantised encoder variants, so
@@ -111,4 +113,5 @@ export const TRANSCRIPTION_MODELS: TranscriptionModel[] = [
     // }
 ];
 
+/** Model preselected for first-time users (the lightest, most compatible option). */
 export const DEFAULT_TRANSCRIPTION_MODEL = TRANSCRIPTION_MODELS[0].model_id;

@@ -163,6 +163,24 @@ class PersistanceHelpers:
             return await cur.fetchone() is not None
 
     @staticmethod
+    async def get_conversations_for_user(user_id: str) -> list[dict[str, Any]]:
+        """Return the caller's conversations as metadata rows, most recently
+        active first. Messages are not included; fetch those per conversation via
+        the checkpointer.
+        """
+        pool = PersistanceHelpers._pool
+        if pool is None:
+            raise RuntimeError("PersistanceHelpers not initialized")
+        async with pool.connection() as conn:
+            cur = await conn.execute(
+                "SELECT conversation_id, chat_title AS title, created_at, updated_at "
+                "FROM chats WHERE user_id = %s "
+                "ORDER BY updated_at DESC",
+                (user_id,),
+            )
+            return await cur.fetchall()
+
+    @staticmethod
     async def get_conversation_messages(
         conversation_id: str,
     ) -> list[ChatCompletionMessage]:

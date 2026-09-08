@@ -1,3 +1,4 @@
+from datetime import datetime
 from decimal import Decimal
 from typing import Any, Final, Literal
 
@@ -420,6 +421,22 @@ class ChatTitleResult(BaseModel):
     """Result model for chat title generation."""
 
     title: str = Field(..., description="Normalized, human-readable chat title.")
+
+
+class ConversationMetadata(BaseModel):
+    """One row of the caller's conversation list (metadata only, no messages)."""
+
+    conversation_id: str = Field(
+        ..., description="LangGraph checkpoint thread id for the conversation."
+    )
+    title: str = Field(..., description="Human-readable chat title.")
+    created_at: datetime = Field(
+        ..., description="When the conversation row was first created."
+    )
+    updated_at: datetime = Field(
+        ...,
+        description="Last activity on the conversation (new message or title change).",
+    )
 
 
 class ModelsDTO(BaseModel):

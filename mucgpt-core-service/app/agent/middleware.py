@@ -99,6 +99,9 @@ def _annotate_span_with_policy_state(
 
     Silently no-ops when Langfuse is not configured or no span is active.
     """
+    if LangfuseProvider.get_callback_handler() is None:
+        return
+
     try:
         from langfuse import get_client as _lf_get_client
 

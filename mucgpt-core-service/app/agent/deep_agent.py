@@ -91,7 +91,9 @@ class _ConfiguredLangChainDeepAgentGraph:
             extra_body=extra_body,
             enabled_tools=enabled_tools,
             token_usage=token_usage if isinstance(token_usage, TokenUsage) else None,
-            langfuse_prompt=configurable.get("langfuse_prompt"),
+            langfuse_prompt=configurable.get(
+                "langfuse_prompt", self.default_langfuse_prompt
+            ),
         )
 
         return messages, data_sources, request_context

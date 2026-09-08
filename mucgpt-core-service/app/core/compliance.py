@@ -51,7 +51,9 @@ async def _check_category(
     model_name: str,
     user_info: AuthenticationResult,
 ) -> ComplianceCategoryResult:
-    system_instruction = read_prompt_file_with_metadata(category)
+    system_instruction = await asyncio.to_thread(
+        read_prompt_file_with_metadata, category
+    )
     parsed = await invoke_internal_structured_generation(
         model_name=model_name,
         temperature=0.0,

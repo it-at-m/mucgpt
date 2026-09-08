@@ -55,6 +55,16 @@ def stub_persistence(monkeypatch: pytest.MonkeyPatch) -> None:
             ]
         ),
     )
+    monkeypatch.setattr(
+        PersistanceHelpers,
+        "delete_conversation_mapping",
+        AsyncMock(return_value=True),
+    )
+    monkeypatch.setattr(
+        PersistanceHelpers,
+        "get_checkpointer_if_ready",
+        Mock(return_value=Mock(adelete_thread=AsyncMock())),
+    )
 
 
 @pytest.fixture(autouse=True)
@@ -231,6 +241,109 @@ class TestChatRouter:
         )
 
         assert response.status_code == 403
+
+    def test_delete_conversation(
+        self, test_client: TestClient, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        from core.persistance_helpers import PersistanceHelpers
+
+        mapping_mock = AsyncMock(return_value=True)
+        checkpointer = Mock(adelete_thread=AsyncMock())
+        monkeypatch.setattr(
+            PersistanceHelpers, "delete_conversation_mapping", mapping_mock
+        )
+        monkeypatch.setattr(
+            PersistanceHelpers,
+            "get_checkpointer_if_ready",
+            Mock(return_value=checkpointer),
+        )
+
+        response = test_client.delete(
+            f"/v1/conversations/{DUMMY_CONVERSATION_ID}"
+        )
+
+        assert response.status_code == 204, response.text
+        assert response.content == b""
+        mapping_mock.assert_awaited_once_with(DUMMY_CONVERSATION_ID, DUMMY_USER_ID)
+        checkpointer.adelete_thread.assert_awaited_once_with(DUMMY_CONVERSATION_ID)
+
+    def test_delete_conversation_forbidden(
+        self, test_client: TestClient, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        from core.persistance_helpers import PersistanceHelpers
+
+        monkeypatch.setattr(
+            PersistanceHelpers,
+            "is_user_in_conversation",
+            AsyncMock(return_value=False),
+        )
+
+        response = test_client.delete(
+            f"/v1/conversations/{DUMMY_CONVERSATION_ID}"
+        )
+
+        assert response.status_code == 403
+
+    def test_delete_conversation_not_found(
+        self, test_client: TestClient, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        from core.persistance_helpers import PersistanceHelpers
+
+        monkeypatch.setattr(
+            PersistanceHelpers,
+            "delete_conversation_mapping",
+            AsyncMock(return_value=False),
+        )
+
+        response = test_client.delete(
+            f"/v1/conversations/{DUMMY_CONVERSATION_ID}"
+        )
+
+        assert response.status_code == 404
+
+    def test_delete_conversation_persistence_not_ready(
+        self, test_client: TestClient, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        from core.persistance_helpers import PersistanceHelpers
+
+        monkeypatch.setattr(
+            PersistanceHelpers,
+            "get_checkpointer_if_ready",
+            Mock(return_value=None),
+        )
+
+        response = test_client.delete(
+            f"/v1/conversations/{DUMMY_CONVERSATION_ID}"
+        )
+
+        assert response.status_code == 500
+
+    def test_delete_conversation_checkpoint_failure_still_succeeds(
+        self, test_client: TestClient, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """A failed checkpoint delete only orphans rows; the request still succeeds."""
+        from core.persistance_helpers import PersistanceHelpers
+
+        checkpointer = Mock(
+            adelete_thread=AsyncMock(side_effect=RuntimeError("db down"))
+        )
+        monkeypatch.setattr(
+            PersistanceHelpers,
+            "delete_conversation_mapping",
+            AsyncMock(return_value=True),
+        )
+        monkeypatch.setattr(
+            PersistanceHelpers,
+            "get_checkpointer_if_ready",
+            Mock(return_value=checkpointer),
+        )
+
+        response = test_client.delete(
+            f"/v1/conversations/{DUMMY_CONVERSATION_ID}"
+        )
+
+        assert response.status_code == 204, response.text
+        checkpointer.adelete_thread.assert_awaited_once_with(DUMMY_CONVERSATION_ID)
 
     @patch("api.routers.chat_router.init_agent", new_callable=AsyncMock)
     def test_streaming_completion(self, mock_init_agent, test_client: TestClient):

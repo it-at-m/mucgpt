@@ -10,7 +10,6 @@ const MOCK_OWNER_DIRECTORY: Record<string, OwnerDetailsResponse> = {
     "111160470": {
         user_id: "111160470",
         username: "Michael Jaumann",
-        contact_address: "michael.jaumann@muenchen.de",
         givenName: "Michael",
         sn: "Jaumann",
         mail: "michael.jaumann@muenchen.de",
@@ -19,7 +18,6 @@ const MOCK_OWNER_DIRECTORY: Record<string, OwnerDetailsResponse> = {
     "user-mock-001": {
         user_id: "user-mock-001",
         username: "Mia Sommer",
-        contact_address: "mia.sommer@muenchen.de",
         givenName: "Mia",
         sn: "Sommer",
         mail: "mia.sommer@muenchen.de",
@@ -28,7 +26,6 @@ const MOCK_OWNER_DIRECTORY: Record<string, OwnerDetailsResponse> = {
     "user-mock-002": {
         user_id: "user-mock-002",
         username: "Lukas Winter",
-        contact_address: "lukas.winter@muenchen.de",
         givenName: "Lukas",
         sn: "Winter",
         mail: "lukas.winter@muenchen.de",
@@ -37,7 +34,6 @@ const MOCK_OWNER_DIRECTORY: Record<string, OwnerDetailsResponse> = {
     "user-mock-003": {
         user_id: "user-mock-003",
         username: "Sara Neumann",
-        contact_address: "sara.neumann@muenchen.de",
         givenName: "Sara",
         sn: "Neumann",
         mail: "sara.neumann@muenchen.de",
@@ -46,7 +42,6 @@ const MOCK_OWNER_DIRECTORY: Record<string, OwnerDetailsResponse> = {
     "user-mock-123": {
         user_id: "user-mock-123",
         username: "Max Mustermann",
-        contact_address: "max.mustermann@muenchen.de",
         givenName: "Max",
         sn: "Mustermann",
         mail: "max.mustermann@muenchen.de",
@@ -230,30 +225,48 @@ function wordChunksFromMessage(message: string) {
         object: "chat.completion.chunk",
         created: Math.floor(Date.now() / 1000),
         model: "KIESGPT",
-        choices: [{ index: 0, delta: { content: w }, finish_reason: null }]
+        choices: [{ index: 0, delta: { content: w }, finish_reason: null }],
+        usage: undefined as { prompt_tokens: number; completion_tokens: number; total_tokens: number } | undefined
     }));
 }
 
-export function generateChatStreamChunks(finalMessage: string) {
+/**
+ * @param forcedContextTokens - When set, overrides the randomized prompt token count so callers
+ * can pin the resulting context-usage percentage for deterministic visual testing (see the
+ * "#usage<0-100>" control word handled in handlers.ts).
+ */
+export function generateChatStreamChunks(finalMessage: string, forcedContextTokens?: number) {
     const base = wordChunksFromMessage(finalMessage);
     base.push({
         id: `chatcmpl-mock-${Math.random().toString(36).slice(2, 8)}`,
         object: "chat.completion.chunk",
         created: Math.floor(Date.now() / 1000),
         model: "KIESGPT",
-        choices: [{ index: 0, delta: { content: "" }, finish_reason: null }]
+        choices: [{ index: 0, delta: { content: "" }, finish_reason: null }],
+        usage: undefined
     });
     base.push({
         id: `chatcmpl-mock-${Math.random().toString(36).slice(2, 8)}`,
         object: "chat.completion.chunk",
         created: Math.floor(Date.now() / 1000),
         model: "KIESGPT",
-        choices: [{ index: 0, delta: { content: "" }, finish_reason: "stop" as any }]
+        choices: [{ index: 0, delta: { content: "" }, finish_reason: "stop" as any }],
+        usage: (() => {
+            const completion_tokens = Math.round(finalMessage.length / 4);
+            const prompt_tokens = forcedContextTokens ?? 400 + Math.floor(Math.random() * 2000);
+            const total_tokens = prompt_tokens + completion_tokens;
+            return {
+                prompt_tokens,
+                completion_tokens,
+                total_tokens,
+                ...(forcedContextTokens !== undefined && { context_tokens: forcedContextTokens })
+            };
+        })()
     });
     return base;
 }
 
-export function generateMindmapStreamChunks(topic: string) {
+export function generateMindmapStreamChunks(topic: string, forcedContextTokens?: number) {
     const t = topic || "Artificial Intelligence";
     const chunks: any[] = [];
 
@@ -347,12 +360,17 @@ export function generateMindmapStreamChunks(topic: string) {
         object: "chat.completion.chunk",
         created: Math.floor(Date.now() / 1000),
         model: "KIESGPT",
-        choices: [{ index: 0, delta: { content: "" }, finish_reason: "stop" as any }]
+        choices: [{ index: 0, delta: { content: "" }, finish_reason: "stop" as any }],
+        usage: (() => {
+            const completion_tokens = Math.round(consolidated.length / 4);
+            const prompt_tokens = forcedContextTokens ?? 400 + Math.floor(Math.random() * 2000);
+            return { prompt_tokens, completion_tokens, total_tokens: prompt_tokens + completion_tokens };
+        })()
     });
     return chunks;
 }
 
-export function generateSimplifyStreamChunks() {
+export function generateSimplifyStreamChunks(forcedContextTokens?: number) {
     const chunks: any[] = [];
     const push = (state: string, content: string, metadata: any = {}) => {
         chunks.push({
@@ -438,7 +456,12 @@ export function generateSimplifyStreamChunks() {
         object: "chat.completion.chunk",
         created: Math.floor(Date.now() / 1000),
         model: "KIESGPT",
-        choices: [{ index: 0, delta: { content: "" }, finish_reason: "stop" as any }]
+        choices: [{ index: 0, delta: { content: "" }, finish_reason: "stop" as any }],
+        usage: (() => {
+            const completion_tokens = 300;
+            const prompt_tokens = forcedContextTokens ?? 400 + Math.floor(Math.random() * 2000);
+            return { prompt_tokens, completion_tokens, total_tokens: prompt_tokens + completion_tokens };
+        })()
     });
     return chunks;
 }

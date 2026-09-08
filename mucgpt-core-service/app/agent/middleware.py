@@ -30,6 +30,28 @@ logger = getLogger(name="agent-middleware")
 
 
 @dataclass
+class TokenUsage:
+    """Cumulative usage for one agent run and its latest model context."""
+
+    prompt_tokens: int = 0
+    completion_tokens: int = 0
+    context_tokens: int | None = None
+
+    def add(self, usage_metadata: dict[str, Any]) -> None:
+        prompt_tokens = usage_metadata.get("input_tokens") or usage_metadata.get(
+            "prompt_tokens", 0
+        )
+        completion_tokens = usage_metadata.get("output_tokens") or usage_metadata.get(
+            "completion_tokens", 0
+        )
+        self.prompt_tokens += prompt_tokens
+        self.completion_tokens += completion_tokens
+        self.context_tokens = (
+            usage_metadata.get("total_tokens") or prompt_tokens + completion_tokens
+        )
+
+
+@dataclass
 class RequestContext:
     assistant_id: str | None = None
     model_name: str | None = None
@@ -38,6 +60,7 @@ class RequestContext:
     user: str | None = None
     extra_body: dict[str, Any] | None = None
     enabled_tools: list[str] | None = None
+    token_usage: TokenUsage | None = None
 
 
 def _make_scoped_callbacks() -> list:
@@ -268,7 +291,7 @@ def _filter_request_tools(request: ModelRequest) -> ModelRequest:
         tools=[
             tool
             for tool in request.tools or []
-            if tool.name in DEEP_AGENT_BUILTIN_TOOLS or tool.name in enabled_tools # type: ignore
+            if tool.name in DEEP_AGENT_BUILTIN_TOOLS or tool.name in enabled_tools  # type: ignore
         ]
     )
 
@@ -306,7 +329,7 @@ class ContextMiddleware(AgentMiddleware):
         # request = policy.infer_scope(request, callbacks=inference_callbacks)
         request = _filter_request_tools(request)
         request = request.override(tools=policy.select_tools(request))
-        logger.info(f"selected Tools: {len(request.tools or [])}")
+        logger.debug(f"selected Tools: {len(request.tools or [])}")
         _annotate_span_with_policy_state(policy, request.state, self.state_schema)
 
         assistant_id = _get_assistant_id_from_request(request)
@@ -340,7 +363,7 @@ class ContextMiddleware(AgentMiddleware):
         # request = await policy.ainfer_scope(request, callbacks=inference_callbacks)
         request = _filter_request_tools(request)
         request = request.override(tools=policy.select_tools(request))
-        logger.info(f"selected Tools: {len(request.tools or [])}")
+        logger.debug(f"selected Tools: {len(request.tools or [])}")
         _annotate_span_with_policy_state(policy, request.state, self.state_schema)
 
         assistant_id = _get_assistant_id_from_request(request)
@@ -395,3 +418,43 @@ class ToolErrorMiddleware(AgentMiddleware):
                 content=f"Tool execution failed: {exc}",
                 tool_call_id=request.tool_call["id"],
             )
+
+
+class TokenUsageMiddleware(AgentMiddleware):
+    """Extract token usage from model responses and record cumulative usage."""
+
+    @staticmethod
+    def _record_usage(request: ModelRequest, model_response: ModelResponse) -> None:
+        usage_metadata = (
+            getattr(model_response.result[-1], "usage_metadata", None)
+            if model_response.result
+            else None
+        )
+        if usage_metadata is None:
+            logger.warning("No token usage metadata found in the model response.")
+            return
+
+        logger.debug("Token usage metadata: %s", usage_metadata)
+        runtime_context = _get_request_context(request)
+        if runtime_context is None or runtime_context.token_usage is None:
+            logger.warning("No request-local token usage collector configured.")
+            return
+        runtime_context.token_usage.add(usage_metadata)
+
+    def wrap_model_call(
+        self,
+        request: ModelRequest,
+        handler: Callable[[ModelRequest], ModelResponse],
+    ) -> ModelResponse:
+        model_response: ModelResponse = handler(request)
+        self._record_usage(request, model_response)
+        return model_response
+
+    async def awrap_model_call(
+        self,
+        request: ModelRequest,
+        handler: Callable[[ModelRequest], Awaitable[ModelResponse]],
+    ) -> ModelResponse:
+        model_response = await handler(request)
+        self._record_usage(request, model_response)
+        return model_response

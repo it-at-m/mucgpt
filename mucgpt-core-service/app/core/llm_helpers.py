@@ -20,8 +20,11 @@ logger = getLogger()
 
 
 class MessageLike(Protocol):
-    role: str
-    content: str
+    @property
+    def role(self) -> str: ...
+
+    @property
+    def content(self) -> str: ...
 
 
 def to_langchain_messages(messages: Sequence[MessageLike]) -> list[BaseMessage]:

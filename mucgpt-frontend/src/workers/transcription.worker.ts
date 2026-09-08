@@ -1,20 +1,29 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 export type WorkerInMessage =
-    | { type: "load"; modelId: string; fileSizes?: Record<string, number>; dtype?: Record<string, string> | string; webgpu_only?: boolean; language?: string }
+    | {
+          type: "load";
+          requestId: number;
+          modelId: string;
+          fileSizes?: Record<string, number>;
+          dtype?: Record<string, string> | string;
+          webgpu_only?: boolean;
+          language?: string;
+      }
     | { type: "set-language"; language: string | undefined }
-    | { type: "audio-frame"; buffer: Float32Array }
-    | { type: "stop-recording" }
+    | { type: "start-recording"; sessionId: number }
+    | { type: "audio-frame"; sessionId: number; buffer: Float32Array }
+    | { type: "stop-recording"; sessionId: number }
     | { type: "abort" };
 
 export type WorkerOutMessage =
     | { type: "progress"; progress: number; downloadedBytes?: number; totalBytes?: number }
-    | { type: "ready" }
-    | { type: "segment"; text: string }
-    | { type: "recording_start" }
-    | { type: "complete" }
-    | { type: "auto_stop" }
-    | { type: "error"; message: string; messageKey?: string };
+    | { type: "ready"; requestId: number; modelId: string }
+    | { type: "segment"; sessionId: number; text: string }
+    | { type: "recording_start"; sessionId: number }
+    | { type: "complete"; sessionId: number }
+    | { type: "auto_stop"; sessionId: number }
+    | { type: "error"; message: string; messageKey?: string; requestId?: number; sessionId?: number };
 
 const SAMPLE_RATE = 16000;
 const MAX_BUFFER_DURATION = 30;
@@ -49,6 +58,7 @@ let TensorCtor: any = null;
 let loadedModelId: string | null = null;
 let loadingModelId: string | null = null;
 let isLoading = false;
+let queuedLoad: Extract<WorkerInMessage, { type: "load" }> | null = null;
 let hasWebGPU = false;
 let currentLanguage: string | undefined = undefined;
 let inferenceChain: Promise<void> = Promise.resolve();
@@ -58,17 +68,20 @@ let inferenceChain: Promise<void> = Promise.resolve();
 let frameQueue: Float32Array[] = [];
 let isProcessingFrame = false;
 let isStopPending = false;
+let activeSessionId: number | null = null;
+let frameProcessingPromise: Promise<void> = Promise.resolve();
+const failedSessions = new Set<number>();
 
 // Auto-stop: fire after AUTO_STOP_SILENCE_MS of silence following speech.
 let autoStopTimer: ReturnType<typeof setTimeout> | null = null;
 let hasSpeechOccurred = false;
 
-function scheduleAutoStop(): void {
+function scheduleAutoStop(sessionId: number): void {
     if (autoStopTimer !== null) clearTimeout(autoStopTimer);
     if (!hasSpeechOccurred) return;
     autoStopTimer = setTimeout(() => {
         autoStopTimer = null;
-        self.postMessage({ type: "auto_stop" } satisfies WorkerOutMessage);
+        self.postMessage({ type: "auto_stop", sessionId } satisfies WorkerOutMessage);
     }, AUTO_STOP_SILENCE_MS);
 }
 
@@ -88,35 +101,31 @@ function wasmSafeDtype(dtype: Record<string, string> | string): Record<string, s
     return Object.fromEntries(Object.entries(dtype).map(([k, v]) => [k, v === "q4f16" ? "q4" : v]));
 }
 
-async function loadModel(
-    modelId: string,
-    fileSizes?: Record<string, number>,
-    modelDtype?: Record<string, string> | string,
-    webgpuOnly?: boolean,
-    language?: string
-) {
+async function loadModel(request: Extract<WorkerInMessage, { type: "load" }>) {
+    const { requestId, modelId, fileSizes, dtype: modelDtype, webgpu_only: webgpuOnly, language } = request;
     log("[transcription-worker] loadModel called", { modelId, fileSizes, modelDtype, language });
     if (language !== undefined) currentLanguage = language;
 
     if (!modelId) {
         console.error("[transcription-worker] loadModel aborted: missing modelId");
-        self.postMessage({ type: "error", message: "Missing modelId" } satisfies WorkerOutMessage);
+        self.postMessage({ type: "error", requestId, message: "Missing modelId" } satisfies WorkerOutMessage);
         return;
     }
     if (transcriber && vadModel && loadedModelId === modelId) {
         log("[transcription-worker] model already loaded, posting ready", { loadedModelId });
-        self.postMessage({ type: "ready" } satisfies WorkerOutMessage);
+        self.postMessage({ type: "ready", requestId, modelId } satisfies WorkerOutMessage);
         return;
     }
     if (isLoading) {
-        warn("[transcription-worker] loadModel called while already loading — ignoring");
-        if (modelId !== loadingModelId) {
-            self.postMessage({ type: "error", message: "Another model is already loading, please wait" } satisfies WorkerOutMessage);
-        }
+        // Keep only the newest request. Its response must not be confused with
+        // the model currently being loaded.
+        queuedLoad = request;
         return;
     }
 
     log("[transcription-worker] starting model load, clearing previous state");
+    await transcriber?.dispose?.();
+    await vadModel?.dispose?.();
     transcriber = null;
     vadModel = null;
     loadedModelId = null;
@@ -140,6 +149,7 @@ async function loadModel(
         if (webgpuOnly && !hasWebGPU) {
             self.postMessage({
                 type: "error",
+                requestId,
                 message: "This model requires WebGPU, which is not available in your browser. Try Chrome/Edge 113+ or select Whisper Small.",
                 messageKey: "transcriptionSettings.webgpu_only_error"
             } satisfies WorkerOutMessage);
@@ -232,19 +242,16 @@ async function loadModel(
 
         loadedModelId = modelId;
         log("[transcription-worker] init complete, posting ready", { loadedModelId });
-        self.postMessage({ type: "ready" } satisfies WorkerOutMessage);
-
-        // Drain any frames that arrived while the model was loading.
-        if (frameQueue.length > 0 && !isProcessingFrame && !isStopPending) {
-            isProcessingFrame = true;
-            drainFrameQueue();
-        }
+        self.postMessage({ type: "ready", requestId, modelId } satisfies WorkerOutMessage);
     } catch (err) {
         console.error("[transcription-worker] loadModel failed:", err);
-        self.postMessage({ type: "error", message: err instanceof Error ? err.message : String(err) } satisfies WorkerOutMessage);
+        self.postMessage({ type: "error", requestId, message: err instanceof Error ? err.message : String(err) } satisfies WorkerOutMessage);
     } finally {
         isLoading = false;
         loadingModelId = null;
+        const nextLoad = queuedLoad;
+        queuedLoad = null;
+        if (nextLoad && nextLoad.requestId !== requestId) void loadModel(nextLoad);
     }
 }
 
@@ -269,28 +276,31 @@ function buildPaddedBuffer(): Float32Array {
     return paddedBuffer;
 }
 
-function dispatchSegmentToWhisper(audio: Float32Array): void {
+function dispatchSegmentToWhisper(sessionId: number, audio: Float32Array): void {
     const language = currentLanguage;
     inferenceChain = inferenceChain
         .then(async () => {
+            if (activeSessionId !== sessionId) return;
             const result = await transcriber(audio, { language, task: "transcribe" });
+            if (activeSessionId !== sessionId) return;
             const text = (result as { text: string }).text?.trim() ?? "";
             if (text) {
-                self.postMessage({ type: "segment", text } satisfies WorkerOutMessage);
+                self.postMessage({ type: "segment", sessionId, text } satisfies WorkerOutMessage);
             }
         })
         .catch((err: unknown) => {
-            self.postMessage({ type: "error", message: err instanceof Error ? err.message : String(err) } satisfies WorkerOutMessage);
+            failedSessions.add(sessionId);
+            self.postMessage({ type: "error", sessionId, message: err instanceof Error ? err.message : String(err) } satisfies WorkerOutMessage);
         });
 }
 
-async function processAudioFrame(frame: Float32Array): Promise<void> {
-    if (isStopPending || !vadModel || !transcriber) return;
+async function processAudioFrame(sessionId: number, frame: Float32Array): Promise<void> {
+    if (activeSessionId !== sessionId || isStopPending || !vadModel || !transcriber) return;
 
     const prob = await runVAD(frame);
 
     // Double-check after async VAD call — stop may have arrived during inference.
-    if (isStopPending) return;
+    if (activeSessionId !== sessionId || isStopPending) return;
 
     const isSpeech = prob > SPEECH_THRESHOLD || (isRecording && prob >= EXIT_THRESHOLD);
 
@@ -305,7 +315,7 @@ async function processAudioFrame(frame: Float32Array): Promise<void> {
         postSpeechSamples = 0;
         hasSpeechOccurred = true;
         cancelAutoStop();
-        self.postMessage({ type: "recording_start" } satisfies WorkerOutMessage);
+        self.postMessage({ type: "recording_start", sessionId } satisfies WorkerOutMessage);
     }
 
     if (!isSpeech) {
@@ -327,7 +337,7 @@ async function processAudioFrame(frame: Float32Array): Promise<void> {
         // Mid-speech overflow: flush current segment and keep a short tail so the
         // next segment has some context (avoids cut-off words at boundaries).
         if (bufferPointer >= MIN_SPEECH_DURATION_SAMPLES) {
-            dispatchSegmentToWhisper(buildPaddedBuffer());
+            dispatchSegmentToWhisper(sessionId, buildPaddedBuffer());
         }
         const tailSize = SPEECH_PAD_SAMPLES;
         BUFFER.copyWithin(0, BUFFER.length - tailSize);
@@ -336,18 +346,18 @@ async function processAudioFrame(frame: Float32Array): Promise<void> {
         prevBuffers = [];
     } else if (silenceThresholdReached) {
         if (bufferPointer >= MIN_SPEECH_DURATION_SAMPLES) {
-            dispatchSegmentToWhisper(buildPaddedBuffer());
+            dispatchSegmentToWhisper(sessionId, buildPaddedBuffer());
         }
         bufferPointer = 0;
         isRecording = false;
         postSpeechSamples = 0;
         prevBuffers = [];
-        scheduleAutoStop();
+        scheduleAutoStop(sessionId);
     }
 }
 
-async function drainFrameQueue(): Promise<void> {
-    while (frameQueue.length > 0 && !isStopPending) {
+async function drainFrameQueue(sessionId: number): Promise<void> {
+    while (frameQueue.length > 0 && activeSessionId === sessionId && !isStopPending) {
         // Suspend drain until models are ready; frames stay in queue.
         // loadModel() will restart the drain once it posts "ready".
         if (!vadModel || !transcriber) {
@@ -355,32 +365,57 @@ async function drainFrameQueue(): Promise<void> {
             return;
         }
         const frame = frameQueue.shift()!;
-        await processAudioFrame(frame);
+        await processAudioFrame(sessionId, frame);
     }
     isProcessingFrame = false;
 }
 
-function enqueueFrame(frame: Float32Array): void {
-    isStopPending = false;
+function startFrameDrain(sessionId: number): void {
+    if (isProcessingFrame || activeSessionId !== sessionId || isStopPending || frameQueue.length === 0) return;
+    isProcessingFrame = true;
+    frameProcessingPromise = drainFrameQueue(sessionId)
+        .catch((err: unknown) => {
+            failedSessions.add(sessionId);
+            self.postMessage({ type: "error", sessionId, message: err instanceof Error ? err.message : String(err) } satisfies WorkerOutMessage);
+        })
+        .finally(() => {
+            isProcessingFrame = false;
+            if (activeSessionId !== null) startFrameDrain(activeSessionId);
+        });
+}
+
+function enqueueFrame(sessionId: number, frame: Float32Array): void {
+    if (activeSessionId !== sessionId || isStopPending) return;
     frameQueue.push(frame);
     // Evict oldest frames to cap memory at ~30 s while the model is loading.
     while (frameQueue.length > MAX_QUEUE_FRAMES) frameQueue.shift();
-    if (!isProcessingFrame) {
-        isProcessingFrame = true;
-        drainFrameQueue();
-    }
+    startFrameDrain(sessionId);
 }
 
-function handleStopRecording(): void {
+function startRecording(sessionId: number): void {
+    cancelAutoStop();
+    activeSessionId = sessionId;
+    isStopPending = false;
+    hasSpeechOccurred = false;
+    failedSessions.delete(sessionId);
+    frameQueue = [];
+    bufferPointer = 0;
+    isRecording = false;
+    postSpeechSamples = 0;
+    prevBuffers = [];
+    if (vadState) vadState.data.fill(0);
+}
+
+function handleStopRecording(sessionId: number): void {
+    if (activeSessionId !== sessionId) return;
     cancelAutoStop();
     hasSpeechOccurred = false;
     isStopPending = true;
     frameQueue = [];
-    isProcessingFrame = false;
 
     // Flush whatever speech is buffered before the stop signal arrived.
     if (isRecording && bufferPointer >= MIN_SPEECH_DURATION_SAMPLES) {
-        dispatchSegmentToWhisper(buildPaddedBuffer());
+        dispatchSegmentToWhisper(sessionId, buildPaddedBuffer());
     }
 
     bufferPointer = 0;
@@ -391,14 +426,11 @@ function handleStopRecording(): void {
     // Reset VAD LSTM state so the next recording starts clean.
     if (vadState) vadState.data.fill(0);
 
-    // Signal completion only after all queued Whisper calls have resolved.
-    inferenceChain = inferenceChain
-        .then(() => {
-            self.postMessage({ type: "complete" } satisfies WorkerOutMessage);
-        })
-        .catch((err: unknown) => {
-            self.postMessage({ type: "error", message: err instanceof Error ? err.message : String(err) } satisfies WorkerOutMessage);
-        });
+    // Wait for both a VAD call already in flight and all queued Whisper calls.
+    void Promise.all([frameProcessingPromise, inferenceChain]).then(() => {
+        if (activeSessionId !== sessionId) return;
+        if (!failedSessions.has(sessionId)) self.postMessage({ type: "complete", sessionId } satisfies WorkerOutMessage);
+    });
 }
 
 self.addEventListener("message", (event: MessageEvent<WorkerInMessage>) => {
@@ -406,16 +438,19 @@ self.addEventListener("message", (event: MessageEvent<WorkerInMessage>) => {
     log("[transcription-worker] received message type:", msg.type);
     switch (msg.type) {
         case "load":
-            loadModel(msg.modelId, msg.fileSizes, msg.dtype, msg.webgpu_only, msg.language);
+            void loadModel(msg);
             break;
         case "set-language":
             currentLanguage = msg.language;
             break;
+        case "start-recording":
+            startRecording(msg.sessionId);
+            break;
         case "audio-frame":
-            enqueueFrame(msg.buffer);
+            enqueueFrame(msg.sessionId, msg.buffer);
             break;
         case "stop-recording":
-            handleStopRecording();
+            handleStopRecording(msg.sessionId);
             break;
         case "abort":
             break;

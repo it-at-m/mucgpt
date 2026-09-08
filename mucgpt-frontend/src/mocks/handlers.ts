@@ -136,7 +136,8 @@ const CONFIG_RESPONSE: ApplicationConfig = {
     incident_report_url: "https://ki.muenchen.de/",
     feature_request_url: "https://ki.muenchen.de/",
     contact_mail_url: "mailto:ki@muenchen.de",
-    ad2image_url: ""
+    ad2image_url: "",
+    owner_profile_url_template: "https://intranet.muenchen.de/person/{uid}"
 };
 
 const DYNAMIC_ASSISTANTS: AssistantCreateResponse[] = buildAssistantList(6);
@@ -437,6 +438,22 @@ function buildComplianceCheckResponse(systemPrompt: string): ComplianceCheckResp
         overall_status: flagged.size > 0 ? "high_risk_detected" : "passed",
         results
     };
+}
+
+/**
+ * Mock control word to pin the ChatUsageIndicator's context percentage for visual testing:
+ *   - "#usage<0-100>" in the latest user message -> prompt_tokens sized so lastContextTokens / max_input_tokens
+ *     rounds to exactly that percentage of the currently selected model's context window.
+ * Without the control word, token counts stay randomized as before.
+ */
+function resolveForcedContextTokens(userMessage: string, modelName: string | undefined): number | undefined {
+    const forcedUsage = userMessage.match(/#usage(\d{1,3})/i);
+    if (!forcedUsage) return undefined;
+
+    const targetPercent = Math.min(100, Math.max(0, Number(forcedUsage[1])));
+    const model = CONFIG_RESPONSE.models.find(m => m.llm_name === modelName) ?? CONFIG_RESPONSE.models[0];
+    const maxInputTokens = model.max_input_tokens ?? 128000;
+    return Math.round((targetPercent / 100) * maxInputTokens);
 }
 
 async function parseUploadHandler({ request }: { request: Request }) {
@@ -804,29 +821,36 @@ export const handlers = [
         return HttpResponse.json({ tools });
     }),
     http.post("/api/backend/v1/chat/completions", async ({ request }) => {
-        const body = (await request.json()) as { stream?: boolean; messages?: { role: string; content: string }[]; enabled_tools?: string[] };
+        const body = (await request.json()) as {
+            stream?: boolean;
+            messages?: { role: string; content: string }[];
+            enabled_tools?: string[];
+            model?: string;
+        };
         if (body?.stream) {
             const encoder = new TextEncoder();
             const streamType = chooseStreamType(body.enabled_tools);
             const stream = new ReadableStream({
                 async start(controller) {
                     let chunks: any[] = [];
+                    const lastUserMessage =
+                        body.messages
+                            ?.slice()
+                            .reverse()
+                            .find(m => m.role === "user")?.content ?? "";
+                    const forcedContextTokens = resolveForcedContextTokens(lastUserMessage, body.model);
                     if (streamType === "mindmap") {
-                        const topic =
-                            body.messages
-                                ?.slice()
-                                .reverse()
-                                .find(m => m.role === "user")?.content || "Künstliche Intelligenz";
-                        chunks = generateMindmapStreamChunks(topic);
+                        const topic = lastUserMessage || "Künstliche Intelligenz";
+                        chunks = generateMindmapStreamChunks(topic, forcedContextTokens);
                     } else if (streamType === "simplify") {
-                        chunks = generateSimplifyStreamChunks();
+                        chunks = generateSimplifyStreamChunks(forcedContextTokens);
                     } else {
                         let reply = buildChatMessage();
                         if (Math.random() > 0.7) {
                             reply +=
                                 "\n\nHier ist eine beispielhafte Tabelle:\n\n| Name | Kategorie | Wert |\n| :--- | :---: | ---: |\n| Element A | Gruppe 1 | 123.45 |\n| Element B | Gruppe 2 | 67.89 |\n| Element C | Gruppe 1 | 99.99 |\n| Element D | Gruppe 3 | 10.00 |\n\n";
                         }
-                        chunks = generateChatStreamChunks(reply);
+                        chunks = generateChatStreamChunks(reply, forcedContextTokens);
                     }
                     for (const chunk of chunks) {
                         controller.enqueue(encoder.encode(`data: ${JSON.stringify(chunk)}\n\n`));

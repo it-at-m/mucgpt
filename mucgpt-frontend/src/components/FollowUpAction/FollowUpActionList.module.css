@@ -1,14 +1,12 @@
 .item {
-    width: auto;
-    min-width: 120px;
-    padding: 4px 10px !important;
-    color: var(--colorNeutralForeground3) !important;
-    border-color: var(--colorNeutralStroke3) !important;
+    max-width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 6px;
     transition:
-        background-color 0.2s ease,
-        color 0.2s ease,
-        border-color 0.2s ease,
-        transform 0.15s ease;
+        background-color 160ms ease,
+        color 160ms ease,
+        border-color 160ms ease;
 }
 
 .label {
@@ -22,27 +20,13 @@
 .buttons {
     display: flex;
     flex-wrap: wrap;
-    gap: 8px;
+    align-items: center;
     justify-content: flex-start;
-    align-items: flex-start;
-    margin-top: 4px;
-    flex-direction: row;
+    gap: 6px;
+    width: 100%;
+    margin: 0 0 8px;
 }
 
-.item:hover {
-    color: var(--colorNeutralForeground1) !important;
-}
-
-/* On narrow screens the pills wrap into short rows instead of stacking full-width,
-   so the action list costs as little vertical space as possible above the input. */
-@media (max-width: 650px) {
-    .buttons {
-        gap: 6px;
-    }
-
-    .item {
-        min-width: 0;
-        flex: 0 1 auto;
-        max-width: 100%;
-    }
+.item:focus-visible {
+    outline-offset: 2px;
 }

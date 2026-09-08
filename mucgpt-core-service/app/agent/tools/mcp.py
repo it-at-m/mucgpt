@@ -67,7 +67,7 @@ class McpLoader:
         and `user_info` — never from anything that was ever persisted to Redis.
         """
         sources = McpLoader._mcp_settings.SOURCES
-        McpLoader._logger.info(
+        McpLoader._logger.debug(
             f"Configured MCP sources: {list(sources.keys()) if sources else []}"
         )
 
@@ -113,7 +113,7 @@ class McpLoader:
                 # Deliberately omit source_cfg.url: some MCP source conventions put
                 # API keys in the query string, and logging the full URL would open
                 # a second place for that secret to leak besides Redis.
-                McpLoader._logger.info(
+                McpLoader._logger.debug(
                     f"Configuring MCP connection for source '{source_id}' "
                     f"with transport '{source_cfg.transport}'"
                 )
@@ -134,7 +134,7 @@ class McpLoader:
                         raw_tools = await McpLoader._list_all_tools_for_session(session)
 
                     raw_by_source[source_id] = raw_tools
-                    McpLoader._logger.info(
+                    McpLoader._logger.debug(
                         f"Retrieved MCP tools from '{source_id}': {len(raw_tools)}"
                     )
                 except Exception as e:
@@ -152,7 +152,7 @@ class McpLoader:
 
         try:
             async with lock:
-                McpLoader._logger.info("Acquired MCP tools lock")
+                McpLoader._logger.debug("Acquired MCP tools lock")
 
                 # Re-check cache after acquiring the lock unless forced reload
                 if not effective_force:
@@ -304,7 +304,7 @@ class McpLoader:
             )
 
         header_names = sorted(con["headers"].keys())
-        McpLoader._logger.info(
+        McpLoader._logger.debug(
             f"Header names configured for source '{source_id}': {header_names}"
         )
 

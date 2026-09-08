@@ -1,19 +1,18 @@
 .starterPromptNavList {
     list-style: none;
     margin: 0 auto 4px;
-    width: min(100%, 980px);
+    width: 100%;
+    max-width: var(--chatContentWidth, min(60%, 1000px));
     display: flex;
-    flex-wrap: wrap;
-    align-items: flex-start;
-    justify-content: center;
-    gap: 10px;
-    padding: 0 20px;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+    padding: 0;
 }
 
 .starterPromptNavList > li {
     display: flex;
-    flex: 1 1 260px;
-    max-width: 320px;
+    width: 100%;
     min-width: 0;
 }
 
@@ -23,73 +22,84 @@
     text-align: left;
     overflow: hidden;
     height: auto;
-    min-height: 52px;
+    min-height: 36px;
     border-radius: 8px;
-    text-decoration: none;
-    background: var(--colorNeutralBackground2);
-    border: 1px solid var(--colorNeutralStroke1);
+    background: transparent !important;
+    border: none !important;
     display: flex;
-    flex-direction: column;
-    align-items: flex-start;
+    flex-direction: row;
+    align-items: center;
     justify-content: flex-start;
-    padding: 10px 14px;
-    box-shadow: none;
-    transition:
-        background-color 160ms ease,
-        border-color 160ms ease,
-        box-shadow 160ms ease,
-        transform 160ms ease;
+    padding: 8px 12px;
+    box-shadow: none !important;
     cursor: pointer;
 }
 
 .starterPrompt :global(.fui-Button__content) {
-    display: block;
+    display: flex;
+    align-items: center;
     width: 100%;
     min-width: 0;
     text-align: left;
 }
 
-.starterPrompt:hover {
-    background: var(--colorNeutralBackground2Hover);
-    border-color: var(--colorNeutralStroke1Hover);
-    box-shadow: var(--shadow4);
-    transform: translateY(-1px);
+.starterPrompt:focus-visible {
+    outline: 2px solid var(--colorStrokeFocus2);
+    outline-offset: 1px;
 }
 
 .starterPromptText {
-    margin: 0;
-    font-size: var(--fontSizeBase400);
+    position: relative;
+    min-width: 0;
+    max-width: 100%;
+    font-size: var(--fontSizeBase300);
     color: var(--colorNeutralForeground2);
-    line-height: 1.4;
-    white-space: normal;
+    line-height: 1.35;
+    white-space: nowrap;
     overflow: hidden;
-    display: -webkit-box;
-    -webkit-line-clamp: 4;
-    line-clamp: 4;
-    -webkit-box-orient: vertical;
-    overflow-wrap: anywhere;
-    hyphens: auto;
+    text-overflow: ellipsis;
+    display: inline-block;
+    transition: color 160ms ease;
+}
+
+.starterPromptText::after {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    height: 1px;
+    background: currentColor;
+    content: "";
+    transform: scaleX(0);
+    transform-origin: left center;
+    transition: transform 320ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.starterPrompt:hover .starterPromptText,
+.starterPrompt:focus-visible .starterPromptText {
+    color: var(--colorNeutralForeground1);
+}
+
+.starterPrompt:hover .starterPromptText::after,
+.starterPrompt:focus-visible .starterPromptText::after {
+    transform: scaleX(1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .starterPrompt,
+    .starterPromptText,
+    .starterPromptText::after {
+        transition: none;
+    }
 }
 
 @media only screen and (max-height: 780px) {
     .starterPrompt {
-        min-height: 48px;
-        padding-block: 10px;
+        min-height: 32px;
+        padding-block: 6px;
     }
 
     .starterPromptText {
-        font-size: var(--fontSizeBase300);
-        -webkit-line-clamp: 3;
-        line-clamp: 3;
-    }
-}
-
-@media only screen and (max-width: 520px) {
-    .starterPromptNavList {
-        padding-inline: 12px;
-    }
-
-    .starterPromptNavList > li {
-        max-width: none;
+        font-size: var(--fontSizeBase200);
     }
 }

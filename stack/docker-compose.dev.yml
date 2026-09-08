@@ -1,5 +1,5 @@
 services:
   refarch-gateway:
     environment:
-      - SPRING_CLOUD_GATEWAY_ROUTES_1_URI=http://host.docker.internal:8080/
-      - SPRING_CLOUD_GATEWAY_ROUTES_3_URI=http://host.docker.internal:5173/
+      - SPRING_CLOUD_GATEWAY_SERVER_WEBFLUX_ROUTES_1_URI=http://host.docker.internal:8080/
+      - SPRING_CLOUD_GATEWAY_SERVER_WEBFLUX_ROUTES_3_URI=http://host.docker.internal:5173/

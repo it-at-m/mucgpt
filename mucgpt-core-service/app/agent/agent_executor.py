@@ -13,6 +13,7 @@ from langfuse import get_client, observe, propagate_attributes
 from langfuse.langchain import CallbackHandler
 
 from agent.deep_agent import MUCGPTAgent
+from agent.middleware import TokenUsage
 from agent.tools.tool_chunk import ToolStreamChunk
 from api.api_models import (
     ChatCompletionChoice,
@@ -50,6 +51,17 @@ def _json_safe(value: Any) -> Any:
     if hasattr(value, "dict"):
         return _json_safe(value.dict())
     return str(value)
+
+
+def _usage_from_token_usage(token_usage: TokenUsage) -> Usage | None:
+    if token_usage.context_tokens is None:
+        return None
+    return Usage(
+        prompt_tokens=token_usage.prompt_tokens,
+        completion_tokens=token_usage.completion_tokens,
+        total_tokens=token_usage.prompt_tokens + token_usage.completion_tokens,
+        context_tokens=token_usage.context_tokens,
+    )
 
 
 def _message_chunk_trace_event(
@@ -131,7 +143,11 @@ def toolchunk_to_chatcompletionchunk(
     )
     choice = ChatCompletionChunkChoice(delta=delta, index=index, finish_reason=None)
     return ChatCompletionChunk(
-        id=id_, object="chat.completion.chunk", created=created, choices=[choice]
+        id=id_,
+        object="chat.completion.chunk",
+        created=created,
+        choices=[choice],
+        usage=None,
     )
 
 
@@ -174,7 +190,7 @@ class MUCGPTAgentExecutor:
         data_sources: list[dict[str, Any]] | None = None,
         conversation_id: str | None = None,
     ) -> AsyncGenerator[dict]:
-        logger.info(
+        logger.debug(
             "Chat streaming started with temperature %s, model %s",
             temperature,
             model,
@@ -206,6 +222,7 @@ class MUCGPTAgentExecutor:
             )
             answer_chunks: list[str] = []
             trace_events: list[dict[str, Any]] = []
+            token_usage = TokenUsage()
             config = merge_configs(
                 self.base_config,
                 RunnableConfig(
@@ -220,6 +237,7 @@ class MUCGPTAgentExecutor:
                         "llm_extra_body": llm_extra_body,
                         "assistant_id": assistant_id,
                         "data_sources": data_sources,
+                        "token_usage": token_usage,
                     },
                 ),
             )
@@ -344,17 +362,21 @@ class MUCGPTAgentExecutor:
                 return
 
             logger.debug("Sending end-of-stream signal")
+            usage = _usage_from_token_usage(token_usage)
+            if usage is None:
+                logger.warning("Streaming response completed without token usage.")
             yield ChatCompletionChunk(
                 id=id_,
                 object="chat.completion.chunk",
                 created=created,
                 choices=[
                     ChatCompletionChunkChoice(
-                        delta=ChatCompletionDelta(),
+                        delta=ChatCompletionDelta(),  # type: ignore
                         index=0,
                         finish_reason="stop",  # type: ignore
                     )
                 ],
+                usage=usage,
             ).model_dump()
 
     @observe(name="Completion", capture_input=False, capture_output=False)
@@ -369,7 +391,7 @@ class MUCGPTAgentExecutor:
         data_sources: list[dict[str, Any]] | None = None,
         conversation_id: str | None = None,
     ) -> ChatCompletionResponse:
-        logger.info(
+        logger.debug(
             "Chat non-streaming started with temperature %s, model %s",
             temperature,
             model,
@@ -390,6 +412,7 @@ class MUCGPTAgentExecutor:
             tags=tags,
             session_id=conversation_id,
         ):
+            token_usage = TokenUsage()
             request_config = RunnableConfig(
                 configurable={
                     "llm_temperature": temperature,
@@ -402,6 +425,7 @@ class MUCGPTAgentExecutor:
                     "llm_extra_body": llm_extra_body,
                     "assistant_id": assistant_id,
                     "data_sources": data_sources,
+                    "token_usage": token_usage,
                 },
             )
             config = merge_configs(self.base_config, request_config)
@@ -421,7 +445,7 @@ class MUCGPTAgentExecutor:
                 )
                 if ai_message is None:
                     raise RuntimeError("Agent completed without an assistant message")
-                logger.info("Non-streaming completed successfully.")
+
                 # capture_input/output are disabled on @observe above to avoid
                 # duplicating the full resent history; set a lightweight
                 # trace-level summary instead so it isn't blank in the UI.
@@ -429,6 +453,17 @@ class MUCGPTAgentExecutor:
                     input=messages[-1].content if messages else None,
                     output=ai_message.content,
                 )
+                usage = _usage_from_token_usage(token_usage)
+                if usage is None:
+                    logger.warning(
+                        "Non-streaming response completed without token usage."
+                    )
+                    usage = Usage(
+                        prompt_tokens=0,
+                        completion_tokens=0,
+                        total_tokens=0,
+                        context_tokens=None,
+                    )
                 response = ChatCompletionResponse(
                     id=str(uuid.uuid4()),
                     object="chat.completion",
@@ -443,11 +478,7 @@ class MUCGPTAgentExecutor:
                             finish_reason="stop",
                         )
                     ],
-                    usage=Usage(
-                        prompt_tokens=0,
-                        completion_tokens=0,
-                        total_tokens=0,
-                    ),
+                    usage=usage,
                 )
                 return response
             except Exception as ex:
@@ -471,5 +502,6 @@ class MUCGPTAgentExecutor:
                         prompt_tokens=0,
                         completion_tokens=0,
                         total_tokens=0,
+                        context_tokens=None,
                     ),
                 )

@@ -38,7 +38,7 @@ def select_agent_state_schema(tools: list[BaseTool]) -> type[DefaultAgentState]:
             tool_group_details.append(f"{tool.name}:{group} (source={source})")
 
     if not tool_groups:
-        logger.info(
+        logger.debug(
             "Schema decision: DefaultAgentState because no tool groups were found on %d selected tools.",
             len(tools),
         )
@@ -55,14 +55,14 @@ def select_agent_state_schema(tools: list[BaseTool]) -> type[DefaultAgentState]:
     group = list(tool_groups)[0]
     selected_schema = AGENT_STATE_SCHEMA_REGISTRY.get(group)
     if selected_schema is None:
-        logger.info(
+        logger.debug(
             "Schema decision: DefaultAgentState because group '%s' has no registered state schema. Registry keys: %s",
             group,
             sorted(AGENT_STATE_SCHEMA_REGISTRY.keys()),
         )
         return DefaultAgentState
 
-    logger.info(
+    logger.debug(
         "Schema decision: %s because all selected tools resolve to single group '%s'. Tool/group mapping: %s",
         selected_schema.__name__,
         group,

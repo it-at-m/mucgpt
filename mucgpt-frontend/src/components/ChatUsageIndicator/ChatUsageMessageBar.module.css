@@ -1,0 +1,22 @@
+.messageBar {
+    width: 100%;
+    box-sizing: border-box;
+    margin-bottom: 10px;
+    border-radius: var(--borderRadiusXLarge) !important;
+}
+
+.messageContent {
+    display: grid;
+    gap: 2px;
+    max-width: 72ch;
+}
+
+.messageDescription {
+    color: var(--colorNeutralForeground2);
+}
+
+.actions {
+    justify-content: flex-start;
+    padding-inline-start: calc(var(--spacingHorizontalM) + var(--fontSizeBase500) + var(--spacingHorizontalS));
+    padding-inline-end: var(--spacingHorizontalM);
+}

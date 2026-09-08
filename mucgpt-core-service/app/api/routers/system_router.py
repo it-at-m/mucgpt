@@ -36,6 +36,7 @@ async def get_config(user_info=Depends(authenticate_user)) -> ConfigResponse:
         feature_request_url=settings.FEATURE_REQUEST_URL,
         contact_mail_url=settings.CONTACT_MAIL_URL,
         ad2image_url=settings.AD2IMAGE_URL,
+        owner_profile_url_template=settings.OWNER_PROFILE_URL_TEMPLATE,
     )
 
     models = settings.MODELS
@@ -44,6 +45,8 @@ async def get_config(user_info=Depends(authenticate_user)) -> ConfigResponse:
             llm_name=model.llm_name,
             max_output_tokens=model.max_output_tokens,
             max_input_tokens=model.max_input_tokens,
+            context_warning_threshold_percent=model.context_warning_threshold_percent,
+            context_critical_threshold_percent=model.context_critical_threshold_percent,
             description=model.description,
             input_cost_per_token=model.input_cost_per_token,
             output_cost_per_token=model.output_cost_per_token,

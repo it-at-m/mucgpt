@@ -15,7 +15,7 @@ interface Props {
     onFollowUpActionSend?: (prompt: string) => void;
     /** Whether this is the newest answer in the chat. Latest answers keep their actions permanently visible; older ones reveal them on hover. */
     isLatest?: boolean;
-    /** Whether the answer is still being streamed/rendered. Follow-up actions are hidden until this is false. */
+    /** Whether the answer is still being streamed/rendered. Answer actions are hidden until this is false. */
     isStreaming?: boolean;
 }
 
@@ -105,7 +105,7 @@ export const Answer = ({ answer, onRegenerateResponseClicked, onFollowUpActionSe
             )}
             {onRegenerateResponseClicked && onFollowUpActionSend && !isStreaming && (
                 <div className={styles.followUpActionsBelow}>
-                    <FollowUpActionList onSend={prompt => onFollowUpActionSend(prompt)} />
+                    <FollowUpActionList onSend={onFollowUpActionSend} />
                 </div>
             )}
         </div>

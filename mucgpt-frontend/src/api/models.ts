@@ -12,6 +12,12 @@ export type ChatResponse = {
     error?: string;
     tokens?: number;
     user_tokens?: number;
+    context_tokens?: number;
+    usage_cost?: number;
+    usage_model?: string;
+    usage_max_input_tokens?: number | null;
+    usage_context_warning_threshold_percent?: number;
+    usage_context_critical_threshold_percent?: number;
     activeTools?: Array<{
         name: string;
         message: string;
@@ -77,11 +83,14 @@ export interface ApplicationConfig {
     feature_request_url?: string;
     contact_mail_url?: string;
     ad2image_url?: string;
+    owner_profile_url_template?: string;
 }
 
 export interface Model {
     llm_name: string;
     max_input_tokens?: number | null;
+    context_warning_threshold_percent?: number;
+    context_critical_threshold_percent?: number;
     description?: string | null;
     max_output_tokens?: number | null;
     knowledge_cut_off?: string | null;
@@ -123,6 +132,7 @@ export interface ChatCompletionChunk {
     object: "chat.completion.chunk";
     created: number;
     choices: ChatCompletionChunkChoice[];
+    usage?: { prompt_tokens?: number; completion_tokens?: number; total_tokens?: number; context_tokens?: number | null } | null;
 }
 
 export type CountTokenRequest = {
@@ -168,7 +178,6 @@ export interface ToolBase {
 export interface OwnerDetailsResponse {
     user_id: string;
     username: string;
-    contact_address?: string | null;
     givenName?: string | null;
     sn?: string | null;
     mail?: string | null;

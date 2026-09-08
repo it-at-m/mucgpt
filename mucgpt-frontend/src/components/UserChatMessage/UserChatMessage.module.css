@@ -10,15 +10,14 @@
     background: var(--app-user-message-background);
     color: var(--colorNeutralForeground1);
     border-radius: var(--app-radius-xxlarge) var(--app-radius-xxlarge) var(--app-radius-xsmall) var(--app-radius-xxlarge);
-    overflow-x: auto;
     max-width: 100%; /* Ensure it doesn't overflow container */
 }
 
 .answerText {
     white-space: pre-wrap;
+    overflow-wrap: anywhere;
     font-size: var(--fontSizeBase400);
     width: 100%; /* Use full width */
-    overflow-x: auto;
 }
 
 .messageActions {

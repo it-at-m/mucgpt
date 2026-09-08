@@ -3,11 +3,17 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 from langchain.agents.middleware import ModelRequest, ModelResponse
 from langchain_core.language_models.fake_chat_models import FakeListChatModel
+from langchain_core.messages import AIMessage
 from langchain_core.tools import tool
 from langchain_openai import ChatOpenAI
 from langgraph.runtime import Runtime
 
-from agent.middleware import ContextMiddleware, RequestContext
+from agent.middleware import (
+    ContextMiddleware,
+    RequestContext,
+    TokenUsage,
+    TokenUsageMiddleware,
+)
 from config.model_provider import ModelRegistry, ModelsConfigurationException
 from config.settings import ModelsConfig
 
@@ -151,6 +157,35 @@ def test_wrap_model_call_omits_unsupported_temperature(
     configured_request = handler.call_args.args[0]
     assert "temperature" not in configured_request.model_settings
     assert configured_request.model_settings["stream"] is True
+
+
+def test_token_usage_middleware_accumulates_calls_and_keeps_latest_context() -> None:
+    token_usage = TokenUsage()
+    request = _model_request(RequestContext(token_usage=token_usage))
+    middleware = TokenUsageMiddleware()
+
+    for input_tokens, output_tokens in ((10, 2), (20, 4)):
+        middleware.wrap_model_call(
+            request,
+            MagicMock(
+                return_value=ModelResponse(
+                    result=[
+                        AIMessage(
+                            content="response",
+                            usage_metadata={
+                                "input_tokens": input_tokens,
+                                "output_tokens": output_tokens,
+                                "total_tokens": input_tokens + output_tokens,
+                            },
+                        )
+                    ]
+                )
+            ),
+        )
+
+    assert token_usage.prompt_tokens == 30
+    assert token_usage.completion_tokens == 6
+    assert token_usage.context_tokens == 24
 
 
 def test_normalize_model_settings_preserves_unknown_model_temperature() -> None:

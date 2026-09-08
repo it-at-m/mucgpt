@@ -76,10 +76,24 @@ class PersistanceHelpers:
                     conversation_id TEXT PRIMARY KEY,
                     user_id         TEXT        NOT NULL,
                     chat_title      TEXT        NOT NULL DEFAULT 'New Chat',
-                    created_at      TIMESTAMPTZ NOT NULL DEFAULT now()
+                    created_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
+                    updated_at      TIMESTAMPTZ NOT NULL DEFAULT now()
                     );
                 """
             )
+            # CREATE TABLE IF NOT EXISTS is a no-op on databases that already have
+            # the table, so add newer columns explicitly for those. This might be neccessary
+            # for local development but not for production rollout
+            # TODO: ONLY RUN ONCE: remove these ALTER TABLE statements 
+            #       once the tables are in production.
+            # await conn.execute(
+            #     "ALTER TABLE chats ADD COLUMN IF NOT EXISTS "
+            #     "created_at TIMESTAMPTZ NOT NULL DEFAULT now();"
+            # )
+            # await conn.execute(
+            #     "ALTER TABLE chats ADD COLUMN IF NOT EXISTS "
+            #     "updated_at TIMESTAMPTZ NOT NULL DEFAULT now();"
+            # )
 
     @staticmethod
     async def close() -> None:
@@ -111,10 +125,12 @@ class PersistanceHelpers:
     @staticmethod
     async def verify_user_in_conversation(user_id: str, conversation_id: str) -> bool:
         """True if the conversation belongs to `user_id`. First time a conversation_id
-        is seen, create the chat row and return True (new chat).
+        is seen, create the chat row and return True (new chat); on later calls by
+        the owner, bump ``updated_at`` so it tracks last activity.
 
-        The insert-or-ignore keeps concurrent first requests for the same
-        conversation_id from creating duplicate ownership rows.
+        The upsert keeps concurrent first requests for the same conversation_id
+        from creating duplicate ownership rows, and the ``user_id`` guard on the
+        conflict update stops a foreign conversation_id from being touched.
         """
         pool = PersistanceHelpers._pool
         if pool is None:
@@ -122,7 +138,8 @@ class PersistanceHelpers:
         async with pool.connection() as conn:
             await conn.execute(
                 "INSERT INTO chats (conversation_id, user_id) VALUES (%s, %s) "
-                "ON CONFLICT (conversation_id) DO NOTHING",
+                "ON CONFLICT (conversation_id) DO UPDATE SET updated_at = now() "
+                "WHERE chats.user_id = EXCLUDED.user_id",
                 (conversation_id, user_id),
             )
             cur = await conn.execute(
@@ -191,7 +208,8 @@ class PersistanceHelpers:
             cur = await conn.execute(
                 "INSERT INTO chats (conversation_id, user_id, chat_title) "
                 "VALUES (%s, %s, %s) "
-                "ON CONFLICT (conversation_id) DO UPDATE SET chat_title = EXCLUDED.chat_title "
+                "ON CONFLICT (conversation_id) DO UPDATE SET "
+                "chat_title = EXCLUDED.chat_title, updated_at = now() "
                 "WHERE chats.user_id = EXCLUDED.user_id "
                 "RETURNING conversation_id",
                 (conversation_id, user_id, title),

@@ -1,7 +1,20 @@
-import { Button, Card, Dialog, DialogActions, DialogBody, DialogContent, DialogSurface, Tooltip } from "@fluentui/react-components";
 import {
-    Bot24Regular,
-    ChatAdd24Regular,
+    Avatar,
+    Body1,
+    Body1Strong,
+    Button,
+    Card,
+    CardHeader,
+    Dialog,
+    DialogActions,
+    DialogBody,
+    DialogContent,
+    DialogSurface,
+    Tooltip
+} from "@fluentui/react-components";
+import {
+    Bot20Regular,
+    ChatAdd20Regular,
     Chat24Regular,
     ChevronLeft24Regular,
     ChevronRight24Regular,
@@ -9,8 +22,8 @@ import {
     Dismiss24Regular,
     Sparkle24Regular
 } from "@fluentui/react-icons";
-import { Link, useLocation, useNavigate } from "react-router-dom";
-import { useCallback, useEffect, useMemo, useState, type KeyboardEvent, type ReactElement, type ReactNode } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
+import { useCallback, useEffect, useMemo, useRef, useState, type KeyboardEvent, type MouseEvent, type ReactElement, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { useUnifiedHistory, UnifiedHistoryStorage } from "../UnifiedHistory";
 import { AssistantStorageService } from "../../service/assistantstorage";
@@ -18,6 +31,7 @@ import { CommunityAssistantStorageService } from "../../service/communityassista
 import { ASSISTANT_STORE, COMMUNITY_ASSISTANT_STORE } from "../../constants";
 import { UserSidebarProfile } from "../UserSidebarProfile/UserSidebarProfile";
 import styles from "./AppSidebar.module.css";
+import itemStyles from "./SidebarItem.module.css";
 
 interface AppSidebarProps {
     collapsed: boolean;
@@ -61,6 +75,8 @@ const isAssistantRoute = (pathname: string) => {
     );
 };
 
+const isPlainLeftClick = (event: MouseEvent) => event.button === 0 && !event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey;
+
 export const AppSidebar = ({
     collapsed,
     isMobile,
@@ -78,6 +94,10 @@ export const AppSidebar = ({
     const location = useLocation();
     const { pageContext } = useUnifiedHistory();
     const [isNewChatDialogOpen, setIsNewChatDialogOpen] = useState(false);
+    const [visibleTooltip, setVisibleTooltip] = useState<string | null>(null);
+    const handleTooltipVisibility = (id: string, visible: boolean) => {
+        setVisibleTooltip(current => (visible ? id : current === id ? null : current));
+    };
     const [recentAssistant, setRecentAssistant] = useState<RecentAssistant | null>(null);
     const historyStorage = useMemo(() => new UnifiedHistoryStorage(), []);
     const assistantStorageService = useMemo(() => new AssistantStorageService(ASSISTANT_STORE), []);
@@ -96,7 +116,7 @@ export const AppSidebar = ({
                 label: t("app_sidebar.new_chat"),
                 ariaLabel: t("app_sidebar.start_new_chat"),
                 to: "/chat?new=1",
-                icon: <ChatAdd24Regular className={styles.navIcon} />,
+                icon: <ChatAdd20Regular />,
                 isActive: false
             },
             {
@@ -105,7 +125,7 @@ export const AppSidebar = ({
                 label: t("app_sidebar.assistants"),
                 ariaLabel: t("app_sidebar.go_assistants"),
                 to: "/discovery",
-                icon: <Bot24Regular className={styles.navIcon} />,
+                icon: <Bot20Regular />,
                 isActive: isAssistantRoute(location.pathname)
             }
         ],
@@ -116,6 +136,35 @@ export const AppSidebar = ({
         const target = to === "/chat?new=1" ? `/chat?new=${Date.now()}` : to;
         navigate(target);
         onNavigate?.();
+    };
+
+    const handleNavLinkClick = (event: MouseEvent<HTMLAnchorElement>, to: string) => {
+        if (!isPlainLeftClick(event)) {
+            return;
+        }
+        event.preventDefault();
+        handleNavigate(to);
+    };
+
+    const handleHomeClick = (event: MouseEvent<HTMLElement>) => {
+        if (!isPlainLeftClick(event)) {
+            return;
+        }
+        event.preventDefault();
+        navigate("/");
+        onNavigate?.();
+    };
+
+    // Clicking empty space in the collapsed rail also expands it; clicks on
+    // real controls (buttons/links) are left to their own handlers.
+    const handleBodyClick = (event: MouseEvent<HTMLDivElement>) => {
+        if (!useCollapsedLogoToggle) {
+            return;
+        }
+        if ((event.target as HTMLElement).closest("button, a")) {
+            return;
+        }
+        onToggleCollapsed?.();
     };
 
     const handleNewChatOption = (to: string) => {
@@ -199,63 +248,90 @@ export const AppSidebar = ({
         };
     }, [isCurrentAssistantChatRoute, isNewChatDialogOpen, loadRecentAssistant]);
 
-    const desktopToggleEnabled = !isMobile && !!onToggleCollapsed;
-    const toggleLabel = t("app_sidebar.toggle_navigation");
-    const resizeLabel = t("app_sidebar.resize_navigation");
-    const toggleInteractiveClassName = desktopToggleEnabled ? styles.resizeCursor : "";
+    const isCollapsed = collapsed && !isMobile;
+    const brandButtonRef = useRef<HTMLAnchorElement>(null);
+    const restoreToggleFocusRef = useRef(false);
+    const handleToggleCollapsed = () => {
+        restoreToggleFocusRef.current = true;
+        setVisibleTooltip(null);
+        onToggleCollapsed?.();
+    };
+
+    useEffect(() => {
+        if (restoreToggleFocusRef.current) {
+            brandButtonRef.current?.focus();
+            restoreToggleFocusRef.current = false;
+        }
+    }, [isCollapsed]);
+    const toggleLabel = isCollapsed ? t("app_sidebar.open_navigation") : t("app_sidebar.close_navigation");
     const useCollapsedLogoToggle = collapsed && !isMobile && !!onToggleCollapsed;
     return (
-        <div className={styles.root}>
-            <div className={`${styles.body} ${collapsed && !isMobile ? styles.bodyCollapsed : ""}`}>
-                {desktopToggleEnabled && (
-                    <button
-                        type="button"
-                        className={`${styles.edgeHandle} ${toggleInteractiveClassName}`}
-                        onClick={onToggleCollapsed}
-                        aria-label={resizeLabel}
-                        title={resizeLabel}
-                    />
-                )}
-
+        <div className={`${styles.root} ${isMobile ? styles.rootMobile : ""}`}>
+            <div
+                className={`${styles.body} ${useCollapsedLogoToggle ? styles.bodyExpandable : ""}`}
+                onClick={useCollapsedLogoToggle ? handleBodyClick : undefined}
+            >
                 <div className={styles.content}>
-                    <div className={`${styles.brandHeader} ${collapsed && !isMobile ? styles.brandHeaderCollapsed : ""}`}>
-                        <Tooltip content={appTitle} relationship="description" positioning="after">
-                            {useCollapsedLogoToggle ? (
-                                <button
-                                    type="button"
-                                    className={`${styles.brandLink} ${styles.brandLinkCollapsed} ${styles.brandToggleButton}`}
-                                    aria-label={toggleLabel}
-                                    onClick={onToggleCollapsed}
-                                >
-                                    <img src={logoSrc} alt="" className={styles.brandLogo} />
-                                    <span className={styles.brandToggleOverlay} aria-hidden="true">
-                                        <ChevronRight24Regular />
-                                    </span>
-                                </button>
-                            ) : (
-                                <Link
-                                    to="/"
-                                    className={`${styles.brandLink} ${collapsed && !isMobile ? styles.brandLinkCollapsed : ""}`}
-                                    aria-label={t("common.home_link", "Zur Startseite")}
-                                    onClick={() => onNavigate?.()}
-                                >
-                                    <img src={logoSrc} alt="MUCGPT" className={styles.brandLogo} />
-                                    {(!collapsed || isMobile) && (
-                                        <span className={styles.brandTitle} aria-label={appTitleAriaLabel}>
-                                            {appTitle}
+                    <div className={styles.brandHeader}>
+                        <Tooltip
+                            content={toggleLabel}
+                            relationship="description"
+                            positioning="after"
+                            visible={useCollapsedLogoToggle && visibleTooltip === "brand"}
+                            onVisibleChange={(_, data) => handleTooltipVisibility("brand", data.visible)}
+                        >
+                            <Button
+                                ref={brandButtonRef}
+                                as="a"
+                                href={useCollapsedLogoToggle ? undefined : "/"}
+                                appearance={isCollapsed ? "subtle" : "transparent"}
+                                size="large"
+                                className={`${itemStyles.control} ${styles.brandButton} ${isCollapsed ? itemStyles.collapsed : ""}`}
+                                icon={{
+                                    className: itemStyles.icon,
+                                    children: (
+                                        <span className={styles.brandMark} aria-hidden="true">
+                                            <img src={logoSrc} alt="" className={styles.brandLogo} />
+                                            <ChevronRight24Regular className={styles.brandExpandIcon} />
                                         </span>
-                                    )}
-                                </Link>
-                            )}
+                                    )
+                                }}
+                                aria-label={useCollapsedLogoToggle ? toggleLabel : t("common.home_link", "Zur Startseite")}
+                                aria-expanded={useCollapsedLogoToggle ? false : undefined}
+                                onClick={event => {
+                                    if (useCollapsedLogoToggle) {
+                                        event.preventDefault();
+                                        handleToggleCollapsed();
+                                    } else {
+                                        handleHomeClick(event);
+                                    }
+                                }}
+                            >
+                                <span className={itemStyles.label} aria-hidden={isCollapsed}>
+                                    <span className={`${itemStyles.text} ${styles.brandTitle}`} aria-label={appTitleAriaLabel}>
+                                        {appTitle}
+                                    </span>
+                                </span>
+                            </Button>
                         </Tooltip>
-                        {onToggleCollapsed && !useCollapsedLogoToggle && (
-                            <Tooltip content={toggleLabel} relationship="description" positioning="after">
+                        {onToggleCollapsed && (
+                            <Tooltip
+                                content={toggleLabel}
+                                relationship="description"
+                                positioning="after"
+                                visible={!isCollapsed && visibleTooltip === "collapse"}
+                                onVisibleChange={(_, data) => handleTooltipVisibility("collapse", data.visible)}
+                            >
                                 <Button
                                     appearance="subtle"
-                                    className={`${styles.topCollapseButton} ${collapsed && !isMobile ? styles.topCollapseButtonCollapsed : ""}`}
-                                    icon={isMobile ? <Dismiss24Regular /> : collapsed ? <ChevronRight24Regular /> : <ChevronLeft24Regular />}
+                                    size="small"
+                                    className={`${styles.topCollapseButton} ${isCollapsed ? styles.topCollapseButtonHidden : ""}`}
+                                    icon={isMobile ? <Dismiss24Regular /> : <ChevronLeft24Regular />}
                                     aria-label={toggleLabel}
-                                    onClick={onToggleCollapsed}
+                                    aria-expanded={true}
+                                    aria-hidden={isCollapsed}
+                                    tabIndex={isCollapsed ? -1 : undefined}
+                                    onClick={handleToggleCollapsed}
                                 />
                             </Tooltip>
                         )}
@@ -263,66 +339,59 @@ export const AppSidebar = ({
 
                     <nav className={styles.navGroup}>
                         {navigationItems.map(item => {
-                            const navItemClassName = `${styles.navButton} ${collapsed && !isMobile ? styles.navButtonCollapsed : ""} ${
-                                item.isActive ? styles.navButtonActive : ""
-                            }`;
-
+                            const navItemClassName = `${itemStyles.control} ${styles.navButton} ${item.isActive ? styles.navButtonActive : ""} ${isCollapsed ? itemStyles.collapsed : ""}`;
+                            const navLabel = (
+                                <span className={itemStyles.label} aria-hidden={isCollapsed}>
+                                    <span className={itemStyles.text}>{item.label}</span>
+                                </span>
+                            );
+                            const icon = { className: `${itemStyles.icon} ${styles.navIcon}`, children: item.icon };
                             const navItem =
                                 item.kind === "link" && item.to ? (
-                                    <Link
-                                        key={item.id}
-                                        to={item.to}
+                                    <Button
+                                        as="a"
+                                        href={item.to}
+                                        appearance="subtle"
+                                        icon={icon}
                                         className={navItemClassName}
                                         aria-label={item.ariaLabel}
                                         aria-current={item.isActive ? "page" : undefined}
-                                        onClick={() => onNavigate?.()}
+                                        onClick={event => handleNavLinkClick(event, item.to!)}
                                     >
-                                        {item.icon}
-                                        {(!collapsed || isMobile) && item.label}
-                                    </Link>
+                                        {navLabel}
+                                    </Button>
                                 ) : (
                                     <Button
-                                        key={item.id}
                                         appearance="subtle"
-                                        icon={item.icon}
+                                        icon={icon}
                                         className={navItemClassName}
                                         aria-label={item.ariaLabel}
-                                        aria-current={item.isActive ? "page" : undefined}
                                         onClick={() => (item.id === "new-chat" ? setIsNewChatDialogOpen(true) : item.to && handleNavigate(item.to))}
                                     >
-                                        {(!collapsed || isMobile) && item.label}
+                                        {navLabel}
                                     </Button>
                                 );
 
-                            return collapsed && !isMobile ? (
-                                <Tooltip key={item.id} content={item.label} relationship="description" positioning="after">
+                            return (
+                                <Tooltip
+                                    key={item.id}
+                                    content={item.label}
+                                    relationship="description"
+                                    positioning="after"
+                                    visible={isCollapsed && visibleTooltip === item.id}
+                                    onVisibleChange={(_, data) => handleTooltipVisibility(item.id, data.visible)}
+                                >
                                     {navItem}
                                 </Tooltip>
-                            ) : (
-                                navItem
                             );
                         })}
                     </nav>
 
-                    {secondaryContent && secondaryTitle && (!collapsed || isMobile) && (
-                        <div className={styles.secondaryGroup}>
-                            <div className={styles.sectionDivider} aria-hidden="true" />
+                    {secondaryContent && secondaryTitle && (
+                        <div className={styles.secondaryGroup} hidden={collapsed && !isMobile}>
                             <section className={styles.secondarySection} aria-label={secondaryTitle}>
                                 <div className={styles.secondaryPanelContent}>{secondaryContent}</div>
                             </section>
-                        </div>
-                    )}
-
-                    {secondaryContent && secondaryTitle && collapsed && !isMobile && onToggleCollapsed && (
-                        <div className={styles.collapsedSecondaryGroup}>
-                            <div className={styles.sectionDivider} aria-hidden="true" />
-                            <button
-                                type="button"
-                                className={`${styles.collapsedSecondaryArea} ${styles.resizeCursor}`}
-                                aria-label={toggleLabel}
-                                title={toggleLabel}
-                                onClick={onToggleCollapsed}
-                            />
                         </div>
                     )}
                 </div>
@@ -330,23 +399,21 @@ export const AppSidebar = ({
                 <div className={styles.footer}>
                     {utilitiesContent && (
                         <div className={styles.footerSection}>
-                            <div className={styles.sectionDivider} aria-hidden="true" />
                             <UserSidebarProfile
                                 collapsed={collapsed}
                                 isMobile={isMobile}
                                 utilitiesContent={utilitiesContent}
                                 popoverClassName={styles.settingsPopover}
-                                utilitiesContentClassName={styles.utilitiesContent}
                             />
                         </div>
                     )}
                 </div>
             </div>
             <Dialog open={isNewChatDialogOpen} onOpenChange={(_event, data) => setIsNewChatDialogOpen(data.open)}>
-                <DialogSurface className={styles.newChatDialogSurface} aria-label={t("app_sidebar.start_new_chat")}>
+                <DialogSurface aria-label={t("app_sidebar.start_new_chat")}>
                     <DialogBody>
                         <DialogContent className={styles.newChatDialogContent}>
-                            <p className={styles.newChatDialogSubtitle}>{t("app_sidebar.new_chat_dialog_subtitle")}</p>
+                            <Body1 className={styles.newChatDialogSubtitle}>{t("app_sidebar.new_chat_dialog_subtitle")}</Body1>
                             <div className={styles.newChatCards}>
                                 {isCurrentAssistantChatRoute ? (
                                     <Card
@@ -357,19 +424,19 @@ export const AppSidebar = ({
                                         onKeyDown={event => handleCardKeyDown(event, handleCurrentAssistantChat)}
                                         role="button"
                                     >
-                                        <span className={styles.newChatCardIcon}>
-                                            <Sparkle24Regular />
-                                        </span>
-                                        <span className={styles.newChatCardBody}>
-                                            <span className={styles.newChatCardTitle}>
-                                                {t("app_sidebar.new_chat_recent_assistant_title", {
-                                                    assistantName:
-                                                        pageContext?.kind === "assistant"
-                                                            ? (pageContext.assistantTitle ?? t("app_sidebar.new_chat_recent_assistant_fallback"))
-                                                            : t("app_sidebar.new_chat_recent_assistant_fallback")
-                                                })}
-                                            </span>
-                                        </span>
+                                        <CardHeader
+                                            image={<Avatar shape="square" size={48} color="brand" icon={<Sparkle24Regular />} />}
+                                            header={
+                                                <Body1Strong>
+                                                    {t("app_sidebar.new_chat_recent_assistant_title", {
+                                                        assistantName:
+                                                            pageContext?.kind === "assistant"
+                                                                ? (pageContext.assistantTitle ?? t("app_sidebar.new_chat_recent_assistant_fallback"))
+                                                                : t("app_sidebar.new_chat_recent_assistant_fallback")
+                                                    })}
+                                                </Body1Strong>
+                                            }
+                                        />
                                     </Card>
                                 ) : (
                                     <Card
@@ -380,12 +447,10 @@ export const AppSidebar = ({
                                         onKeyDown={event => handleCardKeyDown(event, handlePlainChat)}
                                         role="button"
                                     >
-                                        <span className={styles.newChatCardIcon}>
-                                            <Chat24Regular />
-                                        </span>
-                                        <span className={styles.newChatCardBody}>
-                                            <span className={styles.newChatCardTitle}>{t("app_sidebar.new_chat_default_primary")}</span>
-                                        </span>
+                                        <CardHeader
+                                            image={<Avatar shape="square" size={48} color="brand" icon={<Chat24Regular />} />}
+                                            header={<Body1Strong>{t("app_sidebar.new_chat_default_primary")}</Body1Strong>}
+                                        />
                                     </Card>
                                 )}
 
@@ -398,12 +463,10 @@ export const AppSidebar = ({
                                         onKeyDown={event => handleCardKeyDown(event, handlePlainChat)}
                                         role="button"
                                     >
-                                        <span className={styles.newChatCardIcon}>
-                                            <Chat24Regular />
-                                        </span>
-                                        <span className={styles.newChatCardBody}>
-                                            <span className={styles.newChatCardTitle}>{t("app_sidebar.new_chat_plain_title")}</span>
-                                        </span>
+                                        <CardHeader
+                                            image={<Avatar shape="square" size={48} color="brand" icon={<Chat24Regular />} />}
+                                            header={<Body1Strong>{t("app_sidebar.new_chat_plain_title")}</Body1Strong>}
+                                        />
                                     </Card>
                                 ) : recentAssistant ? (
                                     <Card
@@ -414,14 +477,14 @@ export const AppSidebar = ({
                                         onKeyDown={event => handleCardKeyDown(event, handleRecentAssistantChat)}
                                         role="button"
                                     >
-                                        <span className={styles.newChatCardIcon}>
-                                            <Sparkle24Regular />
-                                        </span>
-                                        <span className={styles.newChatCardBody}>
-                                            <span className={styles.newChatCardTitle}>
-                                                {t("app_sidebar.new_chat_recent_assistant_title", { assistantName: recentAssistant.title })}
-                                            </span>
-                                        </span>
+                                        <CardHeader
+                                            image={<Avatar shape="square" size={48} color="brand" icon={<Sparkle24Regular />} />}
+                                            header={
+                                                <Body1Strong>
+                                                    {t("app_sidebar.new_chat_recent_assistant_title", { assistantName: recentAssistant.title })}
+                                                </Body1Strong>
+                                            }
+                                        />
                                     </Card>
                                 ) : (
                                     <Card
@@ -432,22 +495,15 @@ export const AppSidebar = ({
                                         onKeyDown={event => handleCardKeyDown(event, handleDiscoverAssistants)}
                                         role="button"
                                     >
-                                        <span className={styles.newChatCardIcon}>
-                                            <CompassNorthwest24Regular />
-                                        </span>
-                                        <span className={styles.newChatCardBody}>
-                                            <span className={styles.newChatCardTitle}>{t("app_sidebar.new_chat_discovery_card_title")}</span>
-                                        </span>
+                                        <CardHeader
+                                            image={<Avatar shape="square" size={48} color="brand" icon={<CompassNorthwest24Regular />} />}
+                                            header={<Body1Strong>{t("app_sidebar.new_chat_discovery_card_title")}</Body1Strong>}
+                                        />
                                     </Card>
                                 )}
                             </div>
                             {(isCurrentAssistantChatRoute || recentAssistant) && (
-                                <Button
-                                    appearance="subtle"
-                                    className={styles.newChatSecondaryAction}
-                                    icon={<CompassNorthwest24Regular />}
-                                    onClick={handleDiscoverAssistants}
-                                >
+                                <Button appearance="subtle" icon={<CompassNorthwest24Regular />} onClick={handleDiscoverAssistants}>
                                     {t("app_sidebar.new_chat_discovery_title")}
                                 </Button>
                             )}

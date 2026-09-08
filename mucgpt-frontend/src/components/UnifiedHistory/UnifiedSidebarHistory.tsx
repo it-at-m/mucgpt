@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
     Button,
+    Caption1Strong,
     Dialog,
     DialogActions,
     DialogBody,
@@ -22,7 +23,7 @@ import {
     Delete20Regular,
     Edit20Regular,
     MoreHorizontal20Regular,
-    Pin20Filled,
+    Pin16Regular,
     Pin20Regular,
     PinOff20Regular,
     Globe20Regular,
@@ -58,6 +59,7 @@ export const UnifiedSidebarHistory = ({ requestClose }: UnifiedSidebarHistoryPro
     const [hasLoaded, setHasLoaded] = useState(false);
     const hasLoadedRef = useRef(false);
     const [entryToDelete, setEntryToDelete] = useState<UnifiedHistoryEntry | null>(null);
+    const [openMenuEntryKey, setOpenMenuEntryKey] = useState<string | null>(null);
     const [renameDialogOpen, setRenameDialogOpen] = useState(false);
     const [renameCandidate, setRenameCandidate] = useState("");
     const [renameTargetId, setRenameTargetId] = useState<string | null>(null);
@@ -204,7 +206,9 @@ export const UnifiedSidebarHistory = ({ requestClose }: UnifiedSidebarHistoryPro
 
     return (
         <div className={styles.root}>
-            <div className={styles.historyLabel}>{t("components.history.recents_label")}</div>
+            <Caption1Strong as="span" className={styles.historyLabel}>
+                {t("components.history.recents_label")}
+            </Caption1Strong>
             {isAssistantContext && (
                 <TabList selectedValue={tab} onTabSelect={handleTabChange} className={styles.tabs} size="small">
                     <Tab value="all" icon={<Globe20Regular />}>
@@ -223,31 +227,32 @@ export const UnifiedSidebarHistory = ({ requestClose }: UnifiedSidebarHistoryPro
                     {visibleEntries.map(entry => {
                         const isActive = activeChatId === entry.id;
                         const title = entry.name || t("components.history.unnamed_chat");
+                        const entryKey = `${entry.kind}-${entry.id}`;
+                        const isMenuOpen = openMenuEntryKey === entryKey;
 
                         return (
-                            <div key={`${entry.kind}-${entry.id}`} className={`${styles.row} ${isActive ? styles.rowActive : ""}`} role="listitem">
+                            <div key={entryKey} className={`${styles.row} ${isMenuOpen ? styles.rowMenuOpen : ""}`} role="listitem">
                                 <Tooltip content={title} relationship="description" positioning={{ position: "after", offset: 40 }} showDelay={400}>
                                     <Button
                                         appearance="subtle"
-                                        className={styles.chatButton}
+                                        className={`${styles.chatButton} ${isActive ? styles.chatButtonActive : ""}`}
                                         onClick={() => void navigateToEntry(entry)}
                                         aria-current={isActive ? "page" : undefined}
                                     >
                                         <span className={styles.chatButtonContent}>
-                                            {entry.favorite && <Pin20Filled className={styles.pinnedIcon} />}
+                                            {entry.favorite && <Pin16Regular className={styles.pinnedIcon} />}
                                             <span className={styles.chatName}>{title}</span>
                                         </span>
                                     </Button>
                                 </Tooltip>
 
                                 <div className={styles.optionsSlot}>
-                                    <Menu>
+                                    <Menu onOpenChange={(_event, data) => setOpenMenuEntryKey(data.open ? entryKey : null)}>
                                         <MenuTrigger disableButtonEnhancement>
                                             <Button
                                                 icon={<MoreHorizontal20Regular />}
                                                 appearance="subtle"
                                                 size="small"
-                                                className={styles.optionsButton}
                                                 aria-label={t("components.history.options")}
                                             />
                                         </MenuTrigger>

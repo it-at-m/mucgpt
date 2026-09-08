@@ -2,6 +2,18 @@ import { createDarkTheme, createLightTheme, type Theme } from "@fluentui/react-c
 
 import { dangerRamp, mucgptBrandRamp, neutralRamp, successRamp, warningRamp } from "./palette";
 
+// Derives a translucent tint from a palette primitive. Subtle/transparent Buttons and
+// MenuItems render on every neutral surface tier (Background1/2/3), so their hover/pressed
+// fill can't be a fixed opaque ramp step without risking an exact match with the surface it
+// sits on. A translucent tint instead darkens/lightens whatever is underneath, staying
+// visible and on-brand on any surface.
+const withAlpha = (hex: string, alpha: number) => {
+    const r = parseInt(hex.slice(1, 3), 16);
+    const g = parseInt(hex.slice(3, 5), 16);
+    const b = parseInt(hex.slice(5, 7), 16);
+    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+};
+
 const shapeOverrides = {
     borderRadiusSmall: "6px",
     borderRadiusMedium: "10px",
@@ -44,6 +56,12 @@ const lightNeutralOverrides = {
     colorNeutralForeground2Pressed: neutralRamp[50],
     colorNeutralForeground2Selected: neutralRamp[50],
 
+    // Fluent's subtle/transparent Button tints its icon with these "Brand" hover/pressed
+    // tokens while the label uses the plain Foreground2 tokens above. Aliasing them to the
+    // same value keeps icon and label color in sync instead of the icon jumping to brand blue.
+    colorNeutralForeground2BrandHover: neutralRamp[50],
+    colorNeutralForeground2BrandPressed: neutralRamp[50],
+
     colorNeutralForeground3: neutralRamp[70],
     colorNeutralForeground3Hover: neutralRamp[60],
     colorNeutralForeground3Pressed: neutralRamp[60],
@@ -66,6 +84,13 @@ const lightNeutralOverrides = {
     colorNeutralStroke3: neutralRamp[120],
     colorNeutralStrokeSubtle: neutralRamp[120],
     colorNeutralStrokeAccessible: neutralRamp[70],
+
+    // Subtle/transparent Button and MenuItem hover/pressed backgrounds. Left unset, these
+    // fall back to Fluent's stock neutral ramp instead of this app's cooler-tinted one, so the
+    // hover reads as an unrelated flat gray. See `withAlpha` above for why this is a tint
+    // rather than a fixed ramp step.
+    colorSubtleBackgroundHover: withAlpha(neutralRamp[40], 0.06),
+    colorSubtleBackgroundPressed: withAlpha(neutralRamp[40], 0.1),
 
     // Text on brand surfaces
     colorNeutralForegroundOnBrand: neutralRamp[160],
@@ -109,6 +134,10 @@ const darkNeutralOverrides = {
     colorNeutralForeground2Pressed: neutralRamp[120],
     colorNeutralForeground2Selected: neutralRamp[120],
 
+    // Keep the subtle/transparent Button icon color in sync with its label (see light theme).
+    colorNeutralForeground2BrandHover: neutralRamp[120],
+    colorNeutralForeground2BrandPressed: neutralRamp[120],
+
     colorNeutralForeground3: neutralRamp[100],
     colorNeutralForeground3Hover: neutralRamp[110],
     colorNeutralForeground3Pressed: neutralRamp[110],
@@ -131,6 +160,10 @@ const darkNeutralOverrides = {
     colorNeutralStroke3: neutralRamp[50],
     colorNeutralStrokeSubtle: neutralRamp[50],
     colorNeutralStrokeAccessible: neutralRamp[100],
+
+    // See withAlpha and the light theme override above.
+    colorSubtleBackgroundHover: withAlpha(neutralRamp[150], 0.08),
+    colorSubtleBackgroundPressed: withAlpha(neutralRamp[150], 0.14),
 
     // Dark primary surfaces use a light brand color,
     // therefore foreground-on-brand needs to be dark.

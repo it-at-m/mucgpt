@@ -1,18 +1,17 @@
-import { Avatar, Popover, PopoverSurface, PopoverTrigger, Tooltip } from "@fluentui/react-components";
-import { MoreHorizontal20Regular } from "@fluentui/react-icons";
-import { ReactNode, useContext, useEffect, useMemo, useRef, useState } from "react";
+import { Avatar, Body1Strong, Button, Menu, MenuList, MenuPopover, MenuTrigger } from "@fluentui/react-components";
+import { ReactNode, useContext, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { User } from "../../api/models";
 import { useConfigContext } from "../../context/ConfigContext";
 import { UserContext } from "../../pages/layout/UserContextProvider";
 import styles from "./UserSidebarProfile.module.css";
+import itemStyles from "../AppSidebar/SidebarItem.module.css";
 
 interface UserSidebarProfileProps {
     collapsed: boolean;
     isMobile: boolean;
     utilitiesContent: ReactNode;
     popoverClassName: string;
-    utilitiesContentClassName: string;
 }
 
 interface DerivedUserProfile {
@@ -33,20 +32,6 @@ const getInitialsFromName = (name: string) => {
 
     const singleName = parts[0] ?? "";
     return singleName.slice(0, 2).toUpperCase() || "??";
-};
-
-const getPreferredNameSource = (user: User | null) => {
-    const name = normalizeValue(user?.name);
-    if (name) {
-        return name;
-    }
-
-    const givenName = normalizeValue(user?.given_name);
-    if (givenName) {
-        return givenName;
-    }
-
-    return "";
 };
 
 const getPreferredAvatarUid = (user: User | null) => {
@@ -122,79 +107,53 @@ const deriveUserProfile = (user: User | null, fallbackName: string): DerivedUser
     };
 };
 
-export const UserSidebarProfile = ({ collapsed, isMobile, utilitiesContent, popoverClassName, utilitiesContentClassName }: UserSidebarProfileProps) => {
+export const UserSidebarProfile = ({ collapsed, isMobile, utilitiesContent, popoverClassName }: UserSidebarProfileProps) => {
     const { t } = useTranslation();
     const { user } = useContext(UserContext);
     const config = useConfigContext();
     const fallbackName = t("common.my_profile", "My Profile");
 
     const userProfile = useMemo(() => deriveUserProfile(user, fallbackName), [user, fallbackName]);
-    const tooltipLabel = useMemo(() => getPreferredNameSource(user) || userProfile.displayName, [user, userProfile.displayName]);
     const avatarUid = useMemo(() => getPreferredAvatarUid(user), [user]);
     const avatarImageUrl = useMemo(() => buildAvatarUrl(config.ad2image_url ?? "", avatarUid), [config.ad2image_url, avatarUid]);
     const isCollapsed = collapsed && !isMobile;
-    const triggerClassName = `${styles.triggerButton} ${isCollapsed ? styles.triggerButtonCollapsed : ""}`;
+    const triggerClassName = `${itemStyles.control} ${isCollapsed ? itemStyles.collapsed : ""}`;
 
-    const [isPopoverOpen, setIsPopoverOpen] = useState(false);
-    const triggerButtonRef = useRef<HTMLButtonElement | null>(null);
-    const popoverSurfaceRef = useRef<HTMLDivElement | null>(null);
-    const wasPopoverOpenRef = useRef(false);
-
-    useEffect(() => {
-        if (isPopoverOpen) {
-            popoverSurfaceRef.current?.focus();
-        } else if (wasPopoverOpenRef.current) {
-            triggerButtonRef.current?.focus();
-        }
-
-        wasPopoverOpenRef.current = isPopoverOpen;
-    }, [isPopoverOpen]);
+    const [isMenuOpen, setIsMenuOpen] = useState(false);
 
     const avatar = (
         <Avatar
-            className={styles.avatarFallback}
+            color="brand"
+            size={32}
             name={userProfile.displayName}
+            initials={{ className: styles.avatarInitials }}
             image={avatarImageUrl ? { src: avatarImageUrl, alt: userProfile.displayName } : undefined}
             aria-hidden="true"
         />
     );
 
     const trigger = (
-        <button ref={triggerButtonRef} type="button" className={triggerClassName} aria-label={t("common.settings")}>
-            {avatar}
-            {!isCollapsed && (
-                <>
-                    <span className={styles.textBlock}>
-                        <span className={styles.name}>{userProfile.firstName}</span>
-                    </span>
-                    <span className={styles.moreIcon} aria-hidden="true">
-                        <MoreHorizontal20Regular />
-                    </span>
-                </>
-            )}
-        </button>
+        <Button
+            appearance="subtle"
+            className={triggerClassName}
+            aria-label={t("common.settings")}
+            icon={{ className: itemStyles.icon, children: avatar }}
+        >
+            <span className={itemStyles.label} aria-hidden={isCollapsed}>
+                <Body1Strong block className={itemStyles.text}>
+                    {userProfile.firstName}
+                </Body1Strong>
+            </span>
+        </Button>
     );
 
     return (
-        <Popover
-            open={isPopoverOpen}
-            onOpenChange={(_, data) => setIsPopoverOpen(data.open)}
-            positioning={{ position: "above", align: "start", offset: { mainAxis: 4, crossAxis: -9 } }}
-            trapFocus={false}
-        >
-            <PopoverTrigger disableButtonEnhancement>
-                {isCollapsed ? (
-                    <Tooltip content={tooltipLabel} relationship="description" positioning="after">
-                        {trigger}
-                    </Tooltip>
-                ) : (
-                    trigger
-                )}
-            </PopoverTrigger>
-            <PopoverSurface ref={popoverSurfaceRef} className={popoverClassName} tabIndex={-1}>
-                <div className={utilitiesContentClassName}>{utilitiesContent}</div>
-            </PopoverSurface>
-        </Popover>
+        <Menu open={isMenuOpen} onOpenChange={(_, data) => setIsMenuOpen(data.open)} positioning={{ position: "above", align: "start" }}>
+            <MenuTrigger disableButtonEnhancement>{trigger}</MenuTrigger>
+            <MenuPopover className={popoverClassName}>
+                <MenuList>{utilitiesContent}</MenuList>
+            </MenuPopover>
+        </Menu>
     );
 };
 

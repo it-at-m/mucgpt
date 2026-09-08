@@ -1,14 +1,11 @@
-import { Button, Menu, MenuItem, MenuPopover, MenuTrigger } from "@fluentui/react-components";
+import { Menu, MenuItem, MenuPopover, MenuTrigger } from "@fluentui/react-components";
 import { useState, useEffect, useCallback, useMemo } from "react";
-import { ChevronRight16Regular } from "@fluentui/react-icons";
 import { useTranslation } from "react-i18next";
 import styles from "./LanguageSelector.module.css";
 
 interface LanguageSelectorProps {
     onSelectionChange: (newSelection: string) => void;
     defaultlang: string;
-    label?: string;
-    layout?: "default" | "row";
 }
 
 interface Language {
@@ -25,7 +22,7 @@ const AVAILABLE_LANGUAGES: Language[] = [
     { code: "UK", flagClassName: styles.languageFlagUK }
 ];
 
-export const LanguageSelector = ({ onSelectionChange, defaultlang, layout = "default" }: LanguageSelectorProps) => {
+export const LanguageSelector = ({ onSelectionChange, defaultlang }: LanguageSelectorProps) => {
     const [selectedLang, setSelectedLang] = useState(defaultlang);
     const { t } = useTranslation();
     // Handle button click - cycle through languages with useCallback for stability
@@ -57,41 +54,14 @@ export const LanguageSelector = ({ onSelectionChange, defaultlang, layout = "def
     );
     const currentLanguageName = t(`common.language_names.${currentLanguage.code}`, currentLanguage.code);
 
-    // Memoize the keyboard handler
-    const handleKeyDown = useCallback(
-        (e: React.KeyboardEvent, language: Language) => {
-            if (e.key === "Enter" || e.key === " ") {
-                handleButtonClick(language);
-                e.preventDefault();
-            }
-        },
-        [handleButtonClick]
-    );
-
     const currentFlagClassName = `${styles.languageFlag} ${currentLanguage.flagClassName}`;
 
     return (
         <Menu positioning={{ position: "after", align: "start", offset: { mainAxis: 8 } }}>
             <MenuTrigger disableButtonEnhancement>
-                <Button
-                    appearance={"subtle"}
-                    aria-label={currentLanguageName}
-                    className={`${styles.languageButton} ${layout === "row" ? styles.languageButtonRow : ""}`}
-                >
-                    {layout === "row" ? (
-                        <span className={styles.rowContent}>
-                            <span className={currentFlagClassName} title={currentLanguage.code} aria-hidden="true" />
-                            <span className={styles.rowLabel}>{currentLanguageName}</span>
-                            <span className={styles.fallbackCode}>{currentLanguage.code}</span>
-                            <ChevronRight16Regular className={styles.chevronIcon} aria-hidden="true" />
-                        </span>
-                    ) : (
-                        <span className={styles.compactContent} aria-label={`${currentLanguageName} ${currentLanguage.code}`}>
-                            <span className={currentFlagClassName} title={currentLanguage.code} aria-hidden="true" />
-                            <span className={styles.fallbackCode}>{currentLanguage.code}</span>
-                        </span>
-                    )}
-                </Button>
+                <MenuItem hasSubmenu icon={<span className={currentFlagClassName} title={currentLanguage.code} aria-hidden="true" />}>
+                    {currentLanguageName}
+                </MenuItem>
             </MenuTrigger>
             <MenuPopover className={styles.languagePopover}>
                 {languageOptions.map(language => (
@@ -99,12 +69,9 @@ export const LanguageSelector = ({ onSelectionChange, defaultlang, layout = "def
                         key={language.code}
                         icon={<span className={`${styles.languageFlag} ${language.flagClassName}`} title={language.code} aria-hidden="true" />}
                         onClick={() => handleButtonClick(language)}
-                        onKeyDown={event => handleKeyDown(event, language)}
                     >
-                        <span className={styles.menuItemContent}>
-                            <span>{language.name}</span>
-                            <span className={styles.fallbackCode}>{language.code}</span>
-                        </span>
+                        {language.name}
+                        <span className={styles.fallbackCode}>{language.code}</span>
                     </MenuItem>
                 ))}
             </MenuPopover>

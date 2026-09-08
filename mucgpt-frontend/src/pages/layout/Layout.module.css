@@ -42,14 +42,15 @@
 }
 
 .shellBody {
-    --appSidebarWidth: 256px;
+    --appSidebarExpandedWidth: 220px;
+    --appSidebarWidth: var(--appSidebarExpandedWidth);
 
     display: grid;
-    grid-template-columns: 256px minmax(0, 1fr);
+    grid-template-columns: var(--appSidebarExpandedWidth) minmax(0, 1fr);
     height: 100%;
     min-height: 0;
     overflow: hidden;
-    transition: grid-template-columns 0.3s cubic-bezier(0.33, 1, 0.68, 1);
+    transition: grid-template-columns var(--durationSlow) var(--curveDecelerateMid);
 }
 
 .shellBodyCollapsed {
@@ -70,19 +71,21 @@
     top: 0;
     align-self: start;
     height: 100vh;
-    border-right: 1px solid var(--colorNeutralStroke1);
+    min-width: 0;
     background-color: var(--colorNeutralBackground2);
-    overflow: hidden;
+    /* Clip text inside its own slot, never the rail or its overlay boundary. */
+    overflow: visible;
 }
 
-.desktopSidebarDrawer {
+.sidebarColumn .desktopSidebarDrawer {
     display: flex;
     flex: 1;
     flex-direction: column;
     height: 100%;
-    width: 100% !important;
-    max-width: 100% !important;
-    min-width: 0 !important;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    overflow: visible;
     background-color: var(--colorNeutralBackground2);
 }
 
@@ -97,143 +100,20 @@
     background-color: var(--colorNeutralBackground3);
 }
 
-.mobileSidebarSurface {
+.mobileSidebarSurface[class] {
     width: min(420px, 100vw);
     max-width: 100vw;
-    height: 100vh;
-    margin-left: 0;
-    margin-right: auto;
-    border-radius: 0;
-    padding: 0;
     background-color: var(--colorNeutralBackground2);
-    box-shadow: none;
 }
 
-.mobileSidebarSurface:global(.fui-OverlayDrawer) {
-    background-color: var(--colorNeutralBackground2);
-    box-shadow: none;
-}
-
-.mobileSidebarBody {
+.mobileSidebarBody[class] {
     padding: 0;
     height: 100%;
 }
 
-.mobileSidebarBody:global(.fui-DrawerBody) {
+.mobileSidebarBody[class]:first-child,
+.mobileSidebarBody[class]:last-child {
     padding: 0;
-}
-
-.mobileSidebarBody:global(.fui-DrawerBody):first-child,
-.mobileSidebarBody:global(.fui-DrawerBody):last-child {
-    padding-top: 0;
-    padding-bottom: 0;
-}
-
-.mobileUtilities {
-    display: flex;
-    flex-direction: column;
-    width: 100%;
-}
-
-.mobileUtilities :global(.fui-Button),
-.mobileUtilities :global(.fui-MenuButton) {
-    color: var(--colorNeutralForeground1) !important;
-}
-
-.mobileUtilities :global(.fui-Button:hover),
-.mobileUtilities :global(.fui-MenuButton:hover) {
-    background-color: var(--colorNeutralStroke2) !important;
-}
-
-.mobileUtilities :global(svg) {
-    color: var(--colorNeutralForeground1) !important;
-    fill: currentColor;
-}
-
-.mobileUtilityGroup {
-    display: flex;
-    flex-direction: column;
-    gap: 0;
-    padding: 2px 0;
-    overflow: hidden;
-    border-radius: 8px;
-}
-
-.mobileUtilityGroupLabel {
-    padding: 8px 8px 4px;
-    color: var(--colorNeutralForeground3);
-    font-size: 11px;
-    font-weight: 700;
-    line-height: 1.3;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-}
-
-.mobileUtilityRow {
-    width: 100%;
-}
-
-.mobileUtilityRow > div {
-    width: 100%;
-}
-
-.mobileUtilityRow > div:not([class*="container"]) {
-    width: 100%;
-}
-
-.mobileUtilityRow :global(.fui-Button),
-.mobileUtilityRow :global(.fui-MenuButton) {
-    width: 100%;
-    justify-content: flex-start !important;
-    text-align: left;
-    border-radius: 0 !important;
-    min-height: 34px;
-    padding-left: 14px !important;
-    padding-right: 14px !important;
-    transition:
-        background-color 120ms ease,
-        color 120ms ease;
-}
-
-.mobileUtilityRow :global(.fui-Button:hover),
-.mobileUtilityRow :global(.fui-MenuButton:hover) {
-    color: var(--colorNeutralForeground1) !important;
-}
-
-.mobileUtilityTrigger {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    width: 100%;
-    min-height: 34px;
-    box-sizing: border-box;
-    padding: 0 14px;
-    border-radius: 0;
-    color: var(--colorNeutralForeground1);
-    font-weight: 600;
-    transition:
-        background-color 120ms ease,
-        color 120ms ease;
-}
-
-.mobileUtilityTrigger[class] {
-    padding-left: 14px;
-    padding-right: 14px;
-    border-radius: 0 !important;
-}
-
-.mobileUtilityTrigger[class]:hover {
-    color: var(--colorNeutralForeground1);
-    background-color: var(--colorNeutralStroke2) !important;
-    box-shadow: none !important;
-}
-
-.mobileUtilityTrigger :global(svg) {
-    color: var(--colorNeutralForeground1);
-}
-
-.settingsDivider {
-    margin: 0;
 }
 
 .skipLink {
@@ -257,5 +137,11 @@
 @media screen and (max-width: 640px) {
     .shellBody {
         grid-template-columns: minmax(0, 1fr);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .shellBody {
+        transition: none;
     }
 }

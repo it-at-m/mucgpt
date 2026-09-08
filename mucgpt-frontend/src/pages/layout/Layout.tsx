@@ -1,7 +1,15 @@
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
-import { Button, Divider, DrawerBody, OverlayDrawer, FluentProvider, InlineDrawer } from "@fluentui/react-components";
-import { CalendarNote24Regular, Navigation24Regular } from "@fluentui/react-icons";
+import { Button, MenuDivider, MenuItem, DrawerBody, OverlayDrawer, FluentProvider, InlineDrawer } from "@fluentui/react-components";
+import {
+    Book24Regular,
+    CalendarNote24Regular,
+    Lightbulb24Regular,
+    Mail24Regular,
+    Navigation24Regular,
+    QuestionCircle24Regular,
+    Warning24Regular
+} from "@fluentui/react-icons";
 import { useTranslation } from "react-i18next";
 
 import styles from "./Layout.module.css";
@@ -20,15 +28,11 @@ import { DEFAULT_APP_CONFIG } from "../../constants";
 import { UserContextProvider } from "./UserContextProvider";
 import { LanguageSelector } from "../../components/LanguageSelector";
 import { ThemeSelector } from "../../components/ThemeSelector";
-import { FeedbackButton } from "../../components/FeedbackButton";
-import { FaqButton } from "../../components/FaqButton";
-import { IncidentReportButton } from "../../components/IncidentReportButton";
-import { FeatureRequestButton } from "../../components/FeatureRequestButton";
+import { ExternalLinkMenuItem } from "../../components/ExternalLinkMenuItem";
 import { configApi } from "../../api/core-client";
 import { ApiError } from "../../api/fetch-utils";
 import { useGlobalToastContext } from "../../components/GlobalToastHandler/GlobalToastContext";
 import GlobalToastHandler from "../../components/GlobalToastHandler/GlobalToastHandler";
-import TutorialsButton from "../../components/TutorialsButton";
 import { TranscriptionSettingsButton } from "../../components/TranscriptionSettings/TranscriptionSettingsButton";
 import { TranscriptionSettingsProvider } from "../../components/TranscriptionSettings/TranscriptionSettingsContext";
 import { ToolsProvider } from "../../components/ToolsProvider";
@@ -46,6 +50,9 @@ const formatDate = (date: Date) => {
     const formatted_date = date.getDate() + "-" + (date.getMonth() + 1) + "-" + date.getFullYear();
     return formatted_date;
 };
+
+const buildMailtoLink = (mailUrl: string, subject: string) =>
+    mailUrl.includes("subject=") ? mailUrl : `${mailUrl}${mailUrl.includes("?") ? "&" : "?"}subject=${encodeURIComponent(subject)}`;
 
 interface AppShellProps {
     config: ApplicationConfig;
@@ -103,74 +110,59 @@ const AppShell = ({ config, isLight, languagePreference, onLanguageSelectionChan
     }, [navigate]);
 
     const utilitiesContent = (
-        <div className={styles.mobileUtilities}>
-            <div className={styles.mobileUtilityGroup}>
-                <div className={styles.mobileUtilityRow}>
-                    <LanguageSelector
-                        defaultlang={languagePreference}
-                        onSelectionChange={onLanguageSelectionChanged}
-                        layout="row"
-                        label={t("common.language")}
-                    />
-                </div>
-                <div className={styles.mobileUtilityRow}>{config.transcription_enabled ? <TranscriptionSettingsButton /> : null}</div>
-                <div className={styles.mobileUtilityRow}>
-                    <ThemeSelector isLight={isLight} onThemeChange={onThemeChange} layout="row" label={t("common.theme")} />
-                </div>
-            </div>
-            <Divider className={styles.settingsDivider} />
-            <div className={styles.mobileUtilityGroup}>
-                <div className={styles.mobileUtilityRow}>
-                    <TutorialsButton />
-                </div>
-                {faqUrl && (
-                    <div className={styles.mobileUtilityRow}>
-                        <FaqButton url={faqUrl} label={t("components.faqbutton.label")} />
-                    </div>
-                )}
-                {incidentReportUrl && (
-                    <div className={styles.mobileUtilityRow}>
-                        <IncidentReportButton url={incidentReportUrl} />
-                    </div>
-                )}
-                {featureRequestUrl && (
-                    <div className={styles.mobileUtilityRow}>
-                        <FeatureRequestButton url={featureRequestUrl} />
-                    </div>
-                )}
-                {contactMailUrl && (
-                    <div className={styles.mobileUtilityRow}>
-                        <FeedbackButton contactMailUrl={contactMailUrl} />
-                    </div>
-                )}
-            </div>
-            <Divider className={styles.settingsDivider} />
-            <div className={styles.mobileUtilityGroup}>
-                <div className={styles.mobileUtilityRow}>
-                    <TermsOfUseDialog
-                        defaultOpen={false}
-                        onAccept={onAcceptTermsOfUse}
-                        showTrigger
-                        requireAcceptance={false}
-                        triggerClassName={styles.mobileUtilityTrigger}
-                    />
-                </div>
-                <div className={styles.mobileUtilityRow}>
-                    <Button appearance="subtle" icon={<CalendarNote24Regular />} onClick={handleOpenVersionNotes}>
-                        {t("components.versioninfo.whats_new", "Was gibt's neues?")}
-                    </Button>
-                </div>
-                <div className={styles.mobileUtilityRow}>
-                    <VersionInfo
-                        app_version={config.app_version}
-                        core_version={config.core_version}
-                        frontend_version={config.frontend_version}
-                        assistant_version={config.assistant_version}
-                        layout="menu"
-                    />
-                </div>
-            </div>
-        </div>
+        <>
+            <LanguageSelector defaultlang={languagePreference} onSelectionChange={onLanguageSelectionChanged} />
+            {config.transcription_enabled && <TranscriptionSettingsButton />}
+            <ThemeSelector isLight={isLight} onThemeChange={onThemeChange} />
+            <MenuDivider />
+            <MenuItem icon={<Book24Regular />} onClick={() => navigate("/tutorials")}>
+                {t("header.go_to_tutorials", { defaultValue: "Tutorials" })}
+            </MenuItem>
+            {faqUrl && (
+                <ExternalLinkMenuItem
+                    href={faqUrl}
+                    icon={<QuestionCircle24Regular />}
+                    label={t("components.faqbutton.label", "Fragen & Antworten")}
+                    ariaLabel={t("components.faqbutton.aria_label", "Fragen und Antworten öffnen")}
+                />
+            )}
+            {incidentReportUrl && (
+                <ExternalLinkMenuItem
+                    href={incidentReportUrl}
+                    icon={<Warning24Regular />}
+                    label={t("components.incident_report_button.label", "Störung melden")}
+                    ariaLabel={t("components.incident_report_button.aria_label", "Störung melden")}
+                />
+            )}
+            {featureRequestUrl && (
+                <ExternalLinkMenuItem
+                    href={featureRequestUrl}
+                    icon={<Lightbulb24Regular />}
+                    label={t("components.feature_request_button.label", "Verbesserungswunsch vorschlagen")}
+                    ariaLabel={t("components.feature_request_button.aria_label", "Verbesserungswunsch vorschlagen")}
+                />
+            )}
+            {contactMailUrl && (
+                <ExternalLinkMenuItem
+                    href={buildMailtoLink(contactMailUrl, "Feedback")}
+                    icon={<Mail24Regular />}
+                    label={t("components.feedback.label", "Feedback")}
+                    ariaLabel={t("components.feedback.aria_label", "Send feedback via email")}
+                    external={false}
+                />
+            )}
+            <MenuDivider />
+            <TermsOfUseDialog defaultOpen={false} onAccept={onAcceptTermsOfUse} showTrigger requireAcceptance={false} />
+            <MenuItem icon={<CalendarNote24Regular />} onClick={handleOpenVersionNotes}>
+                {t("components.versioninfo.whats_new", "Was gibt's neues?")}
+            </MenuItem>
+            <VersionInfo
+                app_version={config.app_version}
+                core_version={config.core_version}
+                frontend_version={config.frontend_version}
+                assistant_version={config.assistant_version}
+            />
+        </>
     );
     const logoSrc = config.alternative_logo ? alternative_logo : isLight ? logo_black : logo;
     const appTitleAriaLabel = t("common.environment_label", "Umgebung: {{env}}", { env: config.env_name });
@@ -216,7 +208,7 @@ const AppShell = ({ config, isLight, languagePreference, onLanguageSelectionChan
                     className={styles.mobileMenuButton}
                     icon={<Navigation24Regular className={styles.iconSize24} />}
                     onClick={() => setMobileSidebarOpen(true)}
-                    aria-label={t("app_sidebar.toggle_navigation")}
+                    aria-label={t("app_sidebar.open_navigation")}
                     aria-expanded={false}
                     size="medium"
                 />

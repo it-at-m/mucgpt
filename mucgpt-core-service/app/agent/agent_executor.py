@@ -238,6 +238,9 @@ class MUCGPTAgentExecutor:
                         "assistant_id": assistant_id,
                         "data_sources": data_sources,
                         "token_usage": token_usage,
+                        "langfuse_prompt": getattr(
+                            self.agent, "default_langfuse_prompt", None
+                        ),
                     },
                 ),
             )
@@ -426,6 +429,9 @@ class MUCGPTAgentExecutor:
                     "assistant_id": assistant_id,
                     "data_sources": data_sources,
                     "token_usage": token_usage,
+                    "langfuse_prompt": getattr(
+                        self.agent, "default_langfuse_prompt", None
+                    ),
                 },
             )
             config = merge_configs(self.base_config, request_config)

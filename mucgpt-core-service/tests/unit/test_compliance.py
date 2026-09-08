@@ -5,21 +5,23 @@ import pytest
 
 from core.auth_models import AuthenticationResult
 from core.compliance import _check_category
+from core.lf_prompts import ResolvedPrompt
 
 
 @pytest.mark.unit
 @pytest.mark.asyncio
 async def test_category_check_resolves_prompt_by_category_name() -> None:
     parsed = SimpleNamespace(verdict="passed", reasoning=None)
+    prompt = ResolvedPrompt(content="instruction", langfuse_prompt=object())
 
     with (
         patch(
-            "core.compliance.read_prompt_file", return_value="instruction"
+            "core.compliance.read_prompt_file_with_metadata", return_value=prompt
         ) as read_prompt,
         patch(
             "core.compliance.invoke_internal_structured_generation",
             AsyncMock(return_value=parsed),
-        ),
+        ) as invoke_internal,
     ):
         await _check_category(
             category="education",
@@ -31,3 +33,6 @@ async def test_category_check_resolves_prompt_by_category_name() -> None:
         )
 
     read_prompt.assert_called_once_with("education")
+    assert (
+        invoke_internal.await_args.kwargs["langfuse_prompt"] is prompt.langfuse_prompt
+    )

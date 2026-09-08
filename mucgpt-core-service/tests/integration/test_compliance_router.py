@@ -7,6 +7,8 @@ import pytest
 from fastapi.testclient import TestClient
 from langchain_core.messages import AIMessage
 
+from core.lf_prompts import ResolvedPrompt
+
 
 class _FakeConfiguredModel:
     def __init__(self, response_by_run_name: dict[str, str]) -> None:
@@ -35,7 +37,10 @@ class _FakeConfiguredModel:
 
 @pytest.mark.integration
 @patch("core.llm_helpers.ModelRegistry.get_model")
-@patch("core.compliance.read_prompt_file", return_value="compliance instruction")
+@patch(
+    "core.compliance.read_prompt_file_with_metadata",
+    return_value=ResolvedPrompt("compliance instruction"),
+)
 def test_check_assistant_compliance_aggregates_category_results(
     _mock_read_prompt, mock_get_model, test_client: TestClient
 ) -> None:
@@ -80,7 +85,10 @@ def test_check_assistant_compliance_aggregates_category_results(
 
 @pytest.mark.integration
 @patch("core.llm_helpers.ModelRegistry.get_model")
-@patch("core.compliance.read_prompt_file", return_value="compliance instruction")
+@patch(
+    "core.compliance.read_prompt_file_with_metadata",
+    return_value=ResolvedPrompt("compliance instruction"),
+)
 def test_check_assistant_compliance_returns_error_for_malformed_verdict(
     _mock_read_prompt, mock_get_model, test_client: TestClient
 ) -> None:

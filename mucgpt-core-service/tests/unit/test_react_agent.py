@@ -6,6 +6,7 @@ from langchain_core.language_models.fake_chat_models import FakeListChatModel
 from agent.deep_agent import _ConfiguredLangChainDeepAgentGraph
 from agent.state_models.default_state import DefaultAgentState
 from core.auth_models import AuthenticationResult
+from core.lf_prompts import ResolvedPrompt
 
 
 @pytest.fixture
@@ -14,6 +15,14 @@ def user_info() -> AuthenticationResult:
         token="token",
         user_id="user-id",
         department="department",
+    )
+
+
+@pytest.fixture(autouse=True)
+def default_prompt(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(
+        "agent.deep_agent.PromptPool.get_resolved_prompt",
+        lambda _name: ResolvedPrompt(content="default instruction"),
     )
 
 

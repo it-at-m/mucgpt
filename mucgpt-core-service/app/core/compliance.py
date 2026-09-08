@@ -17,7 +17,7 @@ from api.api_models import (
 from core.auth_models import AuthenticationResult
 from core.llm_helpers import (
     invoke_internal_structured_generation,
-    read_prompt_file,
+    read_prompt_file_with_metadata,
 )
 from core.logtools import getLogger
 
@@ -51,12 +51,12 @@ async def _check_category(
     model_name: str,
     user_info: AuthenticationResult,
 ) -> ComplianceCategoryResult:
-    system_instruction = read_prompt_file(category)
+    system_instruction = read_prompt_file_with_metadata(category)
     parsed = await invoke_internal_structured_generation(
         model_name=model_name,
         temperature=0.0,
         messages=[
-            ChatCompletionMessage(role="system", content=system_instruction),
+            ChatCompletionMessage(role="system", content=system_instruction.content),
             ChatCompletionMessage(
                 role="user",
                 content=f"<assistant_system_prompt>\n{system_prompt}\n</assistant_system_prompt>",
@@ -66,6 +66,7 @@ async def _check_category(
         trace_tags=["assistant-compliance", category],
         run_name=f"assistant-compliance-{category}",
         schema=_ComplianceVerdictResponse,
+        langfuse_prompt=system_instruction.langfuse_prompt,
     )
 
     return ComplianceCategoryResult(

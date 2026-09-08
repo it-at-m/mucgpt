@@ -1,4 +1,6 @@
+from dataclasses import dataclass
 from pathlib import Path
+from typing import Any
 
 from langfuse import Langfuse
 
@@ -8,6 +10,14 @@ from core.logtools import getLogger
 logger = getLogger()
 
 PROMPT_POOL_DIR = Path(__file__).resolve().parents[1] / "agent/prompt_pool"
+
+
+@dataclass(frozen=True)
+class ResolvedPrompt:
+    """Prompt text together with its optional Langfuse version metadata."""
+
+    content: str
+    langfuse_prompt: Any | None = None
 
 
 class PromptPool:
@@ -40,6 +50,12 @@ class PromptPool:
 
     @classmethod
     def get_prompt(cls, name: str, folder_name: str | None = None) -> str:
+        return cls.get_resolved_prompt(name, folder_name).content
+
+    @classmethod
+    def get_resolved_prompt(
+        cls, name: str, folder_name: str | None = None
+    ) -> ResolvedPrompt:
         normalized_folder = folder_name.strip("/") if folder_name else None
         local_path = (
             PROMPT_POOL_DIR / normalized_folder / f"{name}.md"
@@ -54,7 +70,7 @@ class PromptPool:
         if cls._lf_client is None:
             if local_prompt is None:
                 raise KeyError(name)
-            return local_prompt
+            return ResolvedPrompt(local_prompt)
 
         prompt_config = (
             cls._folder_prompts.get((normalized_folder, name))
@@ -64,15 +80,21 @@ class PromptPool:
         if prompt_config is None:
             if local_prompt is None:
                 raise KeyError(name)
-            return local_prompt
+            return ResolvedPrompt(local_prompt)
 
         full_name, label = prompt_config
         try:
-            return cls._lf_client.get_prompt(
+            prompt = cls._lf_client.get_prompt(
                 full_name,
                 label=label,
                 fallback=local_prompt,
-            ).prompt
+            )
+            return ResolvedPrompt(
+                content=prompt.prompt,
+                langfuse_prompt=None
+                if getattr(prompt, "is_fallback", False)
+                else prompt,
+            )
         except Exception as exc:
             if local_prompt is None:
                 raise
@@ -81,4 +103,4 @@ class PromptPool:
                 name,
                 exc,
             )
-            return local_prompt
+            return ResolvedPrompt(local_prompt)

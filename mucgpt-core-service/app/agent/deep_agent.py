@@ -36,6 +36,8 @@ class _ConfiguredLangChainDeepAgentGraph:
         self.tools = tools
         self.logger = logger
         self.debug = debug
+        default_prompt = PromptPool.get_resolved_prompt("default_instructions")
+        self.default_langfuse_prompt = default_prompt.langfuse_prompt
 
         # After PR #1177 the agent graph is not compiled per request anymore.
         # dynamically selecting the state schema based on the tools is not supported anymore --> defautling to DefaultAgentState for now.
@@ -48,7 +50,7 @@ class _ConfiguredLangChainDeepAgentGraph:
                 ToolErrorMiddleware(),
                 TokenUsageMiddleware(),
             ],  # type: ignore
-            system_prompt=PromptPool.get_prompt("default_instructions"),
+            system_prompt=default_prompt.content,
             debug=self.debug,
             state_schema=self.state_schema,
             context_schema=RequestContext,
@@ -89,6 +91,7 @@ class _ConfiguredLangChainDeepAgentGraph:
             extra_body=extra_body,
             enabled_tools=enabled_tools,
             token_usage=token_usage if isinstance(token_usage, TokenUsage) else None,
+            langfuse_prompt=configurable.get("langfuse_prompt"),
         )
 
         return messages, data_sources, request_context

@@ -13,7 +13,7 @@ from config.langfuse_provider import LangfuseProvider
 from config.model_provider import ModelRegistry
 from config.settings import Settings
 from core.auth_models import AuthenticationResult
-from core.lf_prompts import PromptPool
+from core.lf_prompts import PromptPool, ResolvedPrompt
 from core.logtools import getLogger
 
 logger = getLogger()
@@ -90,9 +90,17 @@ def get_internal_task_model(settings: Settings, strength: str) -> str:
 def read_prompt_file(filename: str, folder_name: str | None = None) -> str:
     """Read a default prompt, preferring the Langfuse-backed pool with local fallback."""
 
+    return read_prompt_file_with_metadata(filename, folder_name).content
+
+
+def read_prompt_file_with_metadata(
+    filename: str, folder_name: str | None = None
+) -> ResolvedPrompt:
+    """Read a prompt and retain Langfuse metadata for generation trace linking."""
+
     name = filename.rsplit(".", 1)[0]
     try:
-        return PromptPool.get_prompt(name, folder_name)
+        return PromptPool.get_resolved_prompt(name, folder_name)
     except KeyError as exc:  # pragma: no cover - misconfiguration
         logger.error("Prompt file not found: %s", filename)
         raise HTTPException(
@@ -134,6 +142,7 @@ async def invoke_internal_generation(
     user_info: AuthenticationResult,
     trace_tags: list[str],
     run_name: str,
+    langfuse_prompt: Any | None = None,
 ) -> str:
     """Invoke an internal model for text generation with tracing metadata."""
 
@@ -156,6 +165,7 @@ async def invoke_internal_generation(
     with propagate_attributes(
         user_id=hash_user_id(user_info.user_id),
         tags=trace_tags,
+        prompt=langfuse_prompt,
     ):
         ai_message = await llm.ainvoke(
             to_langchain_messages(messages), config=run_config
@@ -173,6 +183,7 @@ async def invoke_internal_structured_generation[StructuredOutputT: BaseModel](
     trace_tags: list[str],
     run_name: str,
     schema: type[StructuredOutputT],
+    langfuse_prompt: Any | None = None,
 ) -> StructuredOutputT:
     """Invoke an internal model and validate its response against a Pydantic schema."""
 
@@ -195,5 +206,6 @@ async def invoke_internal_structured_generation[StructuredOutputT: BaseModel](
     with propagate_attributes(
         user_id=hash_user_id(user_info.user_id),
         tags=trace_tags,
+        prompt=langfuse_prompt,
     ):
         return await llm.ainvoke(to_langchain_messages(messages), config=run_config)  # type: ignore

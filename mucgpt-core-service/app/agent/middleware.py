@@ -15,6 +15,7 @@ from langchain_core.messages import (
     SystemMessage,
     ToolMessage,
 )
+from langfuse import propagate_attributes
 from langfuse.langchain import CallbackHandler as LFCallbackHandler
 from langgraph.config import get_config as get_runtime_config
 from langgraph.types import Command
@@ -61,6 +62,7 @@ class RequestContext:
     extra_body: dict[str, Any] | None = None
     enabled_tools: list[str] | None = None
     token_usage: TokenUsage | None = None
+    langfuse_prompt: Any | None = None
 
 
 def _make_scoped_callbacks() -> list:
@@ -347,7 +349,11 @@ class ContextMiddleware(AgentMiddleware):
             request = request.override(messages=new_messages)
 
         request = _configure_model_request(request)
-        return handler(request)
+        runtime_context = _get_request_context(request)
+        if runtime_context is None or runtime_context.langfuse_prompt is None:
+            return handler(request)
+        with propagate_attributes(prompt=runtime_context.langfuse_prompt):
+            return handler(request)
 
     async def awrap_model_call(
         self,
@@ -381,7 +387,11 @@ class ContextMiddleware(AgentMiddleware):
             request = request.override(messages=new_messages)
 
         request = _configure_model_request(request)
-        return await handler(request)
+        runtime_context = _get_request_context(request)
+        if runtime_context is None or runtime_context.langfuse_prompt is None:
+            return await handler(request)
+        with propagate_attributes(prompt=runtime_context.langfuse_prompt):
+            return await handler(request)
 
 
 class ToolErrorMiddleware(AgentMiddleware):

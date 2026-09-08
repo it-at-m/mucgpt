@@ -1,4 +1,5 @@
 import asyncio
+from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException
 from langfuse import observe
@@ -17,7 +18,7 @@ from core.auth_models import AuthenticationResult
 from core.llm_helpers import (
     get_internal_task_model,
     invoke_internal_generation,
-    read_prompt_file,
+    read_prompt_file_with_metadata,
 )
 from core.logtools import getLogger
 
@@ -38,6 +39,7 @@ async def _invoke_assistant_draft_part(
     user_info: AuthenticationResult,
     trace_tags: list[str],
     run_name: str,
+    langfuse_prompt: Any | None = None,
 ) -> str:
     """Trace wrapper for assistant-draft sub-generations.
 
@@ -51,6 +53,7 @@ async def _invoke_assistant_draft_part(
         user_info=user_info,
         trace_tags=trace_tags,
         run_name=run_name,
+        langfuse_prompt=langfuse_prompt,
     )
 
 
@@ -102,9 +105,11 @@ async def generate_assistant_draft(
     try:
         model_name = get_internal_task_model(settings, InternalTaskModelStrength.STRONG)
         logger.info("assistant-draft: reading prompt templates")
-        system_prompt_system = read_prompt_file("assistant_systemprompt.md")
-        description_system = read_prompt_file("assistant_description.md")
-        title_system = read_prompt_file("assistant_name.md")
+        system_prompt_system = read_prompt_file_with_metadata(
+            "assistant_systemprompt.md"
+        )
+        description_system = read_prompt_file_with_metadata("assistant_description.md")
+        title_system = read_prompt_file_with_metadata("assistant_name.md")
 
         base_user_content = "Funktion: " + request.prompt_seed
 
@@ -114,34 +119,41 @@ async def generate_assistant_draft(
                 model_name=model_name,
                 temperature=1.0,
                 messages=[
-                    ChatCompletionMessage(role="system", content=system_prompt_system),
+                    ChatCompletionMessage(
+                        role="system", content=system_prompt_system.content
+                    ),
                     ChatCompletionMessage(role="user", content=base_user_content),
                 ],
                 user_info=user_info,
                 trace_tags=["assistant-draft", "system-prompt"],
                 run_name="assistant-draft-system-prompt",
+                langfuse_prompt=system_prompt_system.langfuse_prompt,
             ),
             _invoke_assistant_draft_part(
                 model_name=model_name,
                 temperature=1.0,
                 messages=[
-                    ChatCompletionMessage(role="system", content=description_system),
+                    ChatCompletionMessage(
+                        role="system", content=description_system.content
+                    ),
                     ChatCompletionMessage(role="user", content=base_user_content),
                 ],
                 user_info=user_info,
                 trace_tags=["assistant-draft", "description"],
                 run_name="assistant-draft-description",
+                langfuse_prompt=description_system.langfuse_prompt,
             ),
             _invoke_assistant_draft_part(
                 model_name=model_name,
                 temperature=1.0,
                 messages=[
-                    ChatCompletionMessage(role="system", content=title_system),
+                    ChatCompletionMessage(role="system", content=title_system.content),
                     ChatCompletionMessage(role="user", content=base_user_content),
                 ],
                 user_info=user_info,
                 trace_tags=["assistant-draft", "title"],
                 run_name="assistant-draft-title",
+                langfuse_prompt=title_system.langfuse_prompt,
             ),
         )
 
@@ -173,7 +185,7 @@ async def generate_chat_title(
     """Generate and normalize a chat title from the last user/assistant turn."""
 
     settings = get_settings()
-    system_prompt = read_prompt_file("chat_title.md")
+    system_prompt = read_prompt_file_with_metadata("chat_title.md")
 
     conversation_parts = []
     if request.system_message:
@@ -185,7 +197,7 @@ async def generate_chat_title(
         ]
     )
     messages: list[ChatCompletionMessage] = [
-        ChatCompletionMessage(role="system", content=system_prompt),
+        ChatCompletionMessage(role="system", content=system_prompt.content),
         ChatCompletionMessage(role="user", content="\n\n".join(conversation_parts)),
     ]
 
@@ -199,6 +211,7 @@ async def generate_chat_title(
             user_info=user_info,
             trace_tags=["chat-title"],
             run_name="chat-title-generation",
+            langfuse_prompt=system_prompt.langfuse_prompt,
         )
         normalized = _normalize_chat_title(raw_title)
         if not normalized:

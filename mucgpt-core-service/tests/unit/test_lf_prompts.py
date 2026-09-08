@@ -97,6 +97,26 @@ def test_compliance_prompt_uses_category_as_langfuse_prompt_name() -> None:
     )
 
 
+def test_resolved_prompt_retains_remote_prompt_metadata() -> None:
+    lf_client = MagicMock()
+    remote_prompt = SimpleNamespace(prompt="remote prompt", is_fallback=False)
+    lf_client.get_prompt.return_value = remote_prompt
+    config = PromptPoolConfig(
+        FOLDERS=[
+            PromptFolderConfig(
+                name="generation_prompts",
+                prompts=[PromptConfig(name="assistant_name")],
+            )
+        ]
+    )
+    PromptPool.init(lf_client, config)
+
+    resolved = PromptPool.get_resolved_prompt("assistant_name")
+
+    assert resolved.content == "remote prompt"
+    assert resolved.langfuse_prompt is remote_prompt
+
+
 @pytest.mark.skip(reason="Local prompt-pool Markdown fallbacks are no longer shipped")
 def test_langfuse_error_uses_matching_local_prompt() -> None:
     lf_client = MagicMock()

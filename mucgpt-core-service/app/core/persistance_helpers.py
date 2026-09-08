@@ -169,3 +169,16 @@ class PersistanceHelpers:
                         ChatCompletionMessage(role="assistant", content=content)
                     )
         return result
+
+    @staticmethod
+    async def delete_conversation_mapping(conversation_id: str, user_id: str) -> bool:
+        """Delete the conversation mapping row. Returns True if a row was deleted."""
+        pool = PersistanceHelpers._pool
+        if pool is None:
+            raise RuntimeError("PersistanceHelpers not initialized")
+        async with pool.connection() as conn:
+            cur = await conn.execute(
+                "DELETE FROM chats WHERE conversation_id = %s AND user_id = %s RETURNING 1",
+                (conversation_id, user_id),
+            )
+            return await cur.fetchone() is not None

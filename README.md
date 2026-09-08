@@ -212,7 +212,7 @@ The API Gateway is developed in Java based on the [Spring Cloud Gateway](https:/
 Authentication is managed using [Keycloak](https://www.keycloak.org/), a robust open-source identity and access management solution. Keycloak handles user authentication, authorization, and user management for the MUCGPT platform, enabling secure Single Sign-On (SSO) across all services.
 For more details on customizing authentication or extending user management, refer to the [Keycloak Migration Framework documentation](https://mayope.github.io/keycloakmigration/).
 
-[Langfuse](https://langfuse.com/) is an open-source LLM observability platform that supports agent tracing and prompt management. It is optional in MUCGPT. Internal prompts can also retrieved through `PROMPTS` in `core.config.yaml` from langfuse; see the [Getting Started guide](docs/GETTING_STARTED.md#prompt-pool-configuration).
+[Langfuse](https://langfuse.com/) is an open-source LLM observability platform that supports agent tracing and prompt management. It is optional in MUCGPT. Internal prompts can also be retrieved from Langfuse through `PROMPTS` in `core.config.yaml`; see the [Getting Started guide](docs/GETTING_STARTED.md#prompt-configuration).
 
 For more information, see the [MUCGPT Features documentation](/docs/FEATURES.md).
 

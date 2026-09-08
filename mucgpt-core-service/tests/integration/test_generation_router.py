@@ -1,6 +1,6 @@
 from collections.abc import Sequence
 from typing import Any
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 from fastapi.testclient import TestClient
@@ -58,18 +58,24 @@ def test_generate_assistant_draft_direct_and_parallel(
 
 
 @pytest.mark.integration
+@patch(
+    "api.routers.generation_router.PersistanceHelpers.set_chat_title_for_conversation",
+    new_callable=AsyncMock,
+)
 @patch("core.llm_helpers.ModelRegistry.get_model")
 def test_generate_chat_title_direct_model(
-    mock_get_model, test_client: TestClient
+    mock_get_model, mock_set_title, test_client: TestClient
 ) -> None:
     responses = {
         "chat-title-generation": "E-Mail Hilfe",
     }
     mock_get_model.return_value = _FakeConfiguredModel(response_by_run_name=responses)
+    mock_set_title.return_value = True
 
     resp = test_client.post(
         "/v1/generations/chat-title",
         json={
+            "conversation_id": "conv-1",
             "query": "Wie schreibe ich eine Antwort?",
             "answer": "Hier ist eine Struktur...",
         },
@@ -79,6 +85,9 @@ def test_generate_chat_title_direct_model(
     body = resp.json()
     assert body["title"] == "E-Mail Hilfe"
     assert mock_get_model.call_count == 1
+    mock_set_title.assert_awaited_once_with(
+        conversation_id="conv-1", user_id="test_user_123", title="E-Mail Hilfe"
+    )
     messages = mock_get_model.return_value.messages
     assert len(messages) == 2
     assert messages[0].type == "system"
@@ -90,18 +99,24 @@ def test_generate_chat_title_direct_model(
 
 
 @pytest.mark.integration
+@patch(
+    "api.routers.generation_router.PersistanceHelpers.set_chat_title_for_conversation",
+    new_callable=AsyncMock,
+)
 @patch("core.llm_helpers.ModelRegistry.get_model")
 def test_generate_chat_title_fallback_when_empty(
-    mock_get_model, test_client: TestClient
+    mock_get_model, mock_set_title, test_client: TestClient
 ) -> None:
     responses = {
         "chat-title-generation": "",
     }
     mock_get_model.return_value = _FakeConfiguredModel(response_by_run_name=responses)
+    mock_set_title.return_value = True
 
     resp = test_client.post(
         "/v1/generations/chat-title",
         json={
+            "conversation_id": "conv-2",
             "query": "Bitte um Statusupdate zum Projekt",
             "answer": "Der Status ist gruen.",
         },
@@ -110,6 +125,33 @@ def test_generate_chat_title_fallback_when_empty(
     assert resp.status_code == 200, resp.text
     body = resp.json()
     assert body["title"] == "Bitte um Statusupdate zum"
+
+
+@pytest.mark.integration
+@patch(
+    "api.routers.generation_router.PersistanceHelpers.set_chat_title_for_conversation",
+    new_callable=AsyncMock,
+)
+@patch("core.llm_helpers.ModelRegistry.get_model")
+def test_generate_chat_title_forbidden_for_foreign_conversation(
+    mock_get_model, mock_set_title, test_client: TestClient
+) -> None:
+    responses = {
+        "chat-title-generation": "E-Mail Hilfe",
+    }
+    mock_get_model.return_value = _FakeConfiguredModel(response_by_run_name=responses)
+    mock_set_title.return_value = False
+
+    resp = test_client.post(
+        "/v1/generations/chat-title",
+        json={
+            "conversation_id": "someone-elses-conv",
+            "query": "Wie schreibe ich eine Antwort?",
+            "answer": "Hier ist eine Struktur...",
+        },
+    )
+
+    assert resp.status_code == 403, resp.text
 
 
 @pytest.mark.integration

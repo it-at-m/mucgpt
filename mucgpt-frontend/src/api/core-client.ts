@@ -96,9 +96,10 @@ export async function checkAssistantComplianceApi(input: ComplianceCheckRequest)
     return handleApiRequest(() => fetch(API_BASE + "v1/compliance/check", postConfig(input)), "Failed to run compliance check");
 }
 
-export async function createChatName(query: string, answer: string, system_message: string) {
+export async function createChatName(conversationId: string, query: string, answer: string, system_message: string) {
     const url = API_BASE + "v1/generations/chat-title";
     const body = {
+        conversation_id: conversationId,
         query,
         answer,
         system_message

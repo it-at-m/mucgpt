@@ -69,10 +69,13 @@ class PersistanceHelpers:
     async def _ensure_tables_exist(pool: AsyncConnectionPool) -> None:
         async with pool.connection() as conn:
             await conn.execute(
+                # setting a default for chat_title for now
+                # can be discussed if we want to make it required in the future
                 """
                 CREATE TABLE IF NOT EXISTS chats (
                     conversation_id TEXT PRIMARY KEY,
                     user_id         TEXT        NOT NULL,
+                    chat_title      TEXT        NOT NULL DEFAULT 'New Chat',
                     created_at      TIMESTAMPTZ NOT NULL DEFAULT now()
                     );
                 """
@@ -169,3 +172,28 @@ class PersistanceHelpers:
                         ChatCompletionMessage(role="assistant", content=content)
                     )
         return result
+
+    @staticmethod
+    async def set_chat_title_for_conversation(
+        conversation_id: str, user_id: str, title: str
+    ) -> bool:
+        """Set the chat title for a conversation, creating the chat row if it does
+        not exist yet.
+
+        The ``ON CONFLICT`` update is scoped to the owning ``user_id`` so a caller
+        cannot rename a conversation that belongs to someone else (the
+        ``conversation_id`` is client-generated and therefore guessable).
+        """
+        pool = PersistanceHelpers._pool
+        if pool is None:
+            raise RuntimeError("PersistanceHelpers not initialized")
+        async with pool.connection() as conn:
+            cur = await conn.execute(
+                "INSERT INTO chats (conversation_id, user_id, chat_title) "
+                "VALUES (%s, %s, %s) "
+                "ON CONFLICT (conversation_id) DO UPDATE SET chat_title = EXCLUDED.chat_title "
+                "WHERE chats.user_id = EXCLUDED.user_id "
+                "RETURNING conversation_id",
+                (conversation_id, user_id, title),
+            )
+            return await cur.fetchone() is not None

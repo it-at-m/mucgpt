@@ -21,6 +21,7 @@ from core.llm_helpers import (
     read_prompt_file,
 )
 from core.logtools import getLogger
+from core.persistance_helpers import PersistanceHelpers
 
 logger = getLogger()
 router = APIRouter(prefix="/v1")
@@ -211,7 +212,26 @@ async def generate_chat_title(
         if not normalized:
             normalized = _normalize_chat_title(request.query) or "New Chat"
 
+        # Persist the title, scoped to the requesting user. A False result means
+        # the conversation already exists and belongs to someone else.
+        title_persisted = await PersistanceHelpers.set_chat_title_for_conversation(
+            conversation_id=request.conversation_id,
+            user_id=user_info.user_id,
+            title=normalized,
+        )
+        if not title_persisted:
+            logger.warning(
+                "chat-title: user %s may not set the title for conversation %s",
+                user_info.user_id,
+                request.conversation_id,
+            )
+            raise HTTPException(
+                status_code=403, detail="Not allowed to modify this conversation"
+            )
+
         return ChatTitleResult(title=normalized)
+    except HTTPException:
+        raise
     except Exception as e:  # pragma: no cover - integration
         logger.exception("Exception in /generations/chat-title")
         msg = llm_exception_handler(ex=e, logger=logger)

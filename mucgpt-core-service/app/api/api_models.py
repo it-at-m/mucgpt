@@ -403,6 +403,9 @@ class ComplianceCheckResponse(BaseModel):
 class ChatTitleRequest(BaseModel):
     """Request model for generating a chat title based on the last turn."""
 
+    conversation_id: str = Field(
+        ..., description="Stable client-generated id used as the LangGraph checkpoint thread id."
+        )
     query: str = Field(
         ..., description="The user's last question or message in the chat."
     )

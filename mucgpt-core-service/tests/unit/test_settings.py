@@ -714,17 +714,6 @@ class TestComplianceCacheSettings:
             settings = Settings()
             assert settings.COMPLIANCE_CACHE_TTL_SECONDS == 300
 
-    def test_compliance_prompt_folder_default_and_environment_override(self):
-        with patch.dict(os.environ, {}, clear=True):
-            assert Settings().COMPLIANCE.PROMPT_FOLDER == "compliance"
-
-        with patch.dict(
-            os.environ,
-            {"MUCGPT_CORE_COMPLIANCE__PROMPT_FOLDER": "/annex-three/"},
-            clear=True,
-        ):
-            assert Settings().COMPLIANCE.PROMPT_FOLDER == "annex-three"
-
     def test_compliance_cache_ttl_rejects_zero_and_negative(self):
         """COMPLIANCE_CACHE_TTL_SECONDS must be strictly positive."""
         for invalid_ttl in ("0", "-1"):

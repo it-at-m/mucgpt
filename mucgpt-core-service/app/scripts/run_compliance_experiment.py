@@ -286,7 +286,6 @@ async def _run_experiments(args: argparse.Namespace) -> None:
                     system_prompt=dataset_input.system_prompt,
                     model_name=model_name,
                     user_info=_EVALUATION_USER,
-                    config=settings.COMPLIANCE,
                 )
                 return response.model_dump(exclude={"prompt_hash"})
 

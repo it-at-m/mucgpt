@@ -460,20 +460,6 @@ class PromptPoolConfig(BaseModel):
     FOLDERS: list[PromptFolderConfig] = Field(default_factory=list)
 
 
-class ComplianceConfig(BaseModel):
-    """Prompt location used by compliance checks."""
-
-    PROMPT_FOLDER: str = "compliance"
-
-    @field_validator("PROMPT_FOLDER")
-    @classmethod
-    def validate_prompt_folder(cls, value: str) -> str:
-        normalized = value.strip("/")
-        if not normalized:
-            raise ValueError("PROMPT_FOLDER must not be empty")
-        return normalized
-
-
 # Backward-compatible aliases
 SSOSettings = SSOConfig
 LangfuseSettings = LangfuseConfig
@@ -519,7 +505,6 @@ class Settings(BaseSettings):
     MODELS: list[ModelsConfig] = []
     MEMORY_SERVICE_URL: str = ""
     PROMPTS: PromptPoolConfig = Field(default_factory=PromptPoolConfig)
-    COMPLIANCE: ComplianceConfig = Field(default_factory=ComplianceConfig)
 
     # Parsing
     PARSER_BACKEND: ParserBackendType = ParserBackendType.NONE

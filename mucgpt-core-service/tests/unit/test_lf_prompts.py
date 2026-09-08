@@ -14,6 +14,7 @@ def reset_prompt_pool() -> None:
     PromptPool.init(None, PromptPoolConfig())
 
 
+@pytest.mark.skip(reason="Local prompt-pool Markdown fallbacks are no longer shipped")
 def test_local_prompts_are_used_without_langfuse() -> None:
     assert (
         PromptPool.get_prompt("default_instructions")
@@ -25,6 +26,7 @@ def test_local_prompts_are_used_without_langfuse() -> None:
     )
 
 
+@pytest.mark.skip(reason="Local prompt-pool Markdown fallbacks are no longer shipped")
 def test_get_prompt_uses_configured_folder_name_label_and_local_fallback() -> None:
     lf_client = MagicMock()
     lf_client.get_prompt.return_value = SimpleNamespace(prompt="from langfuse")
@@ -50,6 +52,7 @@ def test_get_prompt_uses_configured_folder_name_label_and_local_fallback() -> No
     )
 
 
+@pytest.mark.skip(reason="Local prompt-pool Markdown fallbacks are no longer shipped")
 def test_configured_prompt_name_is_used_for_langfuse_and_local_fallback() -> None:
     lf_client = MagicMock()
     lf_client.get_prompt.return_value = SimpleNamespace(prompt="remote prompt")
@@ -86,14 +89,15 @@ def test_compliance_prompt_uses_category_as_langfuse_prompt_name() -> None:
     )
     PromptPool.init(lf_client, config)
 
-    assert PromptPool.get_prompt("education", "compliance") == "remote compliance"
+    assert PromptPool.get_prompt("education") == "remote compliance"
     lf_client.get_prompt.assert_called_once_with(
         "compliance/education",
         label="production",
-        fallback=PromptPool._defaults["education"],
+        fallback=None,
     )
 
 
+@pytest.mark.skip(reason="Local prompt-pool Markdown fallbacks are no longer shipped")
 def test_langfuse_error_uses_matching_local_prompt() -> None:
     lf_client = MagicMock()
     lf_client.get_prompt.side_effect = RuntimeError("unreachable")
@@ -113,6 +117,7 @@ def test_langfuse_error_uses_matching_local_prompt() -> None:
     )
 
 
+@pytest.mark.skip(reason="Local prompt-pool Markdown fallbacks are no longer shipped")
 def test_unconfigured_prompt_uses_local_fallback_even_with_langfuse() -> None:
     lf_client = MagicMock()
     PromptPool.init(lf_client, PromptPoolConfig())

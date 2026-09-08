@@ -40,10 +40,6 @@ COMPLIANCE_CACHE_ENABLED: true
 # Time-to-live for compliance cache entries in seconds (default: 30 minutes)
 COMPLIANCE_CACHE_TTL_SECONDS: 1800
 
-# Langfuse/local compliance prompt folder. Prompt names are the fixed compliance category IDs.
-COMPLIANCE:
-  PROMPT_FOLDER: "compliance_prompts"
-
 # Models configuration
 # Instead of base64 encoded JSON in environment variables, you can configure models here
 MODELS:

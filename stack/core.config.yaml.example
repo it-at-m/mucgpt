@@ -40,10 +40,6 @@ LANGFUSE:
   SECRET_KEY: "<your-sk>"
   PUBLIC_KEY: "<your-pk>"
 
-# Langfuse/local compliance prompt folder. Prompt names are the fixed compliance category IDs.
-COMPLIANCE:
-  PROMPT_FOLDER: "compliance_prompts"
-
 # Prompt settings (optional - nested under PROMPTS key)
 # Configure prompt names exactly like the local Markdown files in
 # mucgpt-core-service/app/agent/prompt_pool/, without the .md suffix.

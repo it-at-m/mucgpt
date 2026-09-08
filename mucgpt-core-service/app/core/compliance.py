@@ -14,7 +14,6 @@ from api.api_models import (
     ComplianceCheckResponse,
     ComplianceStatus,
 )
-from config.settings import ComplianceConfig
 from core.auth_models import AuthenticationResult
 from core.llm_helpers import (
     invoke_internal_structured_generation,
@@ -48,12 +47,11 @@ _COMPLIANCE_CATEGORIES: tuple[ComplianceCategoryId, ...] = (
 async def _check_category(
     *,
     category: ComplianceCategoryId,
-    prompt_folder: str,
     system_prompt: str,
     model_name: str,
     user_info: AuthenticationResult,
 ) -> ComplianceCategoryResult:
-    system_instruction = read_prompt_file(category, prompt_folder)
+    system_instruction = read_prompt_file(category)
     parsed = await invoke_internal_structured_generation(
         model_name=model_name,
         temperature=0.0,
@@ -86,7 +84,6 @@ async def evaluate_compliance(
     system_prompt: str,
     model_name: str,
     user_info: AuthenticationResult,
-    config: ComplianceConfig,
 ) -> ComplianceCheckResponse:
     """Evaluate a system prompt independently against every compliance category."""
 
@@ -95,7 +92,6 @@ async def evaluate_compliance(
             *(
                 _check_category(
                     category=category,
-                    prompt_folder=config.PROMPT_FOLDER,
                     system_prompt=system_prompt,
                     model_name=model_name,
                     user_info=user_info,

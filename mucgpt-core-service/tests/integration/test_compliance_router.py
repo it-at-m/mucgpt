@@ -35,8 +35,9 @@ class _FakeConfiguredModel:
 
 @pytest.mark.integration
 @patch("core.llm_helpers.ModelRegistry.get_model")
+@patch("core.compliance.read_prompt_file", return_value="compliance instruction")
 def test_check_assistant_compliance_aggregates_category_results(
-    mock_get_model, test_client: TestClient
+    _mock_read_prompt, mock_get_model, test_client: TestClient
 ) -> None:
     system_prompt = "Bewerte Bewerbungen und erstelle eine Rangliste."
     mock_get_model.return_value = _FakeConfiguredModel(
@@ -79,8 +80,9 @@ def test_check_assistant_compliance_aggregates_category_results(
 
 @pytest.mark.integration
 @patch("core.llm_helpers.ModelRegistry.get_model")
+@patch("core.compliance.read_prompt_file", return_value="compliance instruction")
 def test_check_assistant_compliance_returns_error_for_malformed_verdict(
-    mock_get_model, test_client: TestClient
+    _mock_read_prompt, mock_get_model, test_client: TestClient
 ) -> None:
     system_prompt = "Hilf beim Formulieren einer Stellenanzeige."
     mock_get_model.return_value = _FakeConfiguredModel(

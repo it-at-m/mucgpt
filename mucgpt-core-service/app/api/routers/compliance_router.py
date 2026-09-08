@@ -66,7 +66,6 @@ async def check_assistant_compliance(
         system_prompt=request.system_prompt,
         model_name=model_name,
         user_info=user_info,
-        config=settings.COMPLIANCE,
     )
     response.prompt_hash = prompt_hash
     await _cache_compliance_result(response)

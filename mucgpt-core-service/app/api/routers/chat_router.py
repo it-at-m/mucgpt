@@ -184,3 +184,43 @@ async def get_conversation_messages(
     if not messages:
         raise HTTPException(status_code=404, detail="Conversation not found")
     return messages
+
+
+@router.delete(
+    "/conversations/{conversation_id}",
+    summary="Delete conversation",
+    status_code=204,
+    responses={
+        403: {"description": "Forbidden"},
+        404: {"description": "Not found"},
+        500: {"description": "Internal Server Error"},
+    },
+)
+async def delete_conversation(
+    conversation_id: str,
+    user_info: Annotated[AuthenticationResult, Depends(authenticate_user)],
+) -> None:
+    """Delete the conversation: its ownership row and all LangGraph checkpoint state."""
+    if not await PersistanceHelpers.is_user_in_conversation(
+        user_info.user_id, conversation_id
+    ):
+        raise HTTPException(status_code=403, detail="Conversation access denied")
+
+    checkpointer = PersistanceHelpers.get_checkpointer_if_ready()
+    if checkpointer is None:
+        raise HTTPException(status_code=500, detail="Persistence not initialized")
+
+    deleted = await PersistanceHelpers.delete_conversation_mapping(
+        conversation_id, user_info.user_id
+    )
+    if not deleted:
+        raise HTTPException(status_code=404, detail="Conversation not found")
+
+    # Ownership row is already gone;
+    # attempt to delete the checkpoint state, but don't fail if it fails.
+    try:
+        await checkpointer.adelete_thread(conversation_id)
+    except Exception:
+        logger.exception(
+            "Failed to delete checkpoint state for conversation %s", conversation_id
+        )

@@ -21,25 +21,32 @@ declare global {
         EXPORT_URL?: string;
         VSS_CONVERT_URL?: string;
         DRAWIO_LOG_URL?: string;
+        mxBasePath?: string;
+        mxImageBasePath?: string;
     }
 }
 
 const VIEWER_SCRIPT_PATH = "vendor/drawio/viewer-static.min.js";
 
+/** Must be truthy: the viewer does `x = x || remoteDefault`, and "" would restore diagrams.net. */
+const DISABLED_ENDPOINT = "disabled";
+
 let loadPromise: Promise<DrawioGraphViewer> | null = null;
 
-/** Blank out defaults that would otherwise point at viewer.diagrams.net. */
+/** Override defaults that would otherwise point at viewer.diagrams.net. */
 function disableRemoteDrawioEndpoints(): void {
-    window.PROXY_URL = "";
-    window.STYLE_PATH = "";
-    window.STENCIL_PATH = "";
-    window.SHAPES_PATH = "";
-    window.GRAPH_IMAGE_PATH = "";
-    window.DRAW_MATH_URL = "";
-    window.DRAWIO_LIGHTBOX_URL = "";
-    window.EXPORT_URL = "";
-    window.VSS_CONVERT_URL = "";
-    window.DRAWIO_LOG_URL = "";
+    window.PROXY_URL = DISABLED_ENDPOINT;
+    window.STYLE_PATH = DISABLED_ENDPOINT;
+    window.STENCIL_PATH = DISABLED_ENDPOINT;
+    window.SHAPES_PATH = DISABLED_ENDPOINT;
+    window.GRAPH_IMAGE_PATH = DISABLED_ENDPOINT;
+    window.DRAW_MATH_URL = DISABLED_ENDPOINT;
+    window.DRAWIO_LIGHTBOX_URL = DISABLED_ENDPOINT;
+    window.EXPORT_URL = DISABLED_ENDPOINT;
+    window.VSS_CONVERT_URL = DISABLED_ENDPOINT;
+    window.DRAWIO_LOG_URL = DISABLED_ENDPOINT;
+    window.mxBasePath = DISABLED_ENDPOINT;
+    window.mxImageBasePath = DISABLED_ENDPOINT;
 }
 
 function viewerScriptUrl(): string {

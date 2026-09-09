@@ -36,6 +36,8 @@ class TokenUsage:
     prompt_tokens: int = 0
     completion_tokens: int = 0
     context_tokens: int | None = None
+    cache_read_tokens: int = 0
+    reasoning_tokens: int = 0
 
     def add(self, usage_metadata: dict[str, Any]) -> None:
         prompt_tokens = usage_metadata.get("input_tokens") or usage_metadata.get(
@@ -44,6 +46,12 @@ class TokenUsage:
         completion_tokens = usage_metadata.get("output_tokens") or usage_metadata.get(
             "completion_tokens", 0
         )
+        input_token_details = usage_metadata.get("input_token_details") or {}
+        output_token_details = usage_metadata.get("output_token_details") or {}
+        # Details are subsets of the input/output totals, not additional tokens.
+        self.cache_read_tokens += input_token_details.get("cache_read", 0)
+        self.reasoning_tokens += output_token_details.get("reasoning", 0)
+
         self.prompt_tokens += prompt_tokens
         self.completion_tokens += completion_tokens
         self.context_tokens = (

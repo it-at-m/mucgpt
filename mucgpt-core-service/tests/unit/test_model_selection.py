@@ -159,6 +159,30 @@ def test_wrap_model_call_omits_unsupported_temperature(
     assert configured_request.model_settings["stream"] is True
 
 
+@pytest.mark.parametrize("include_total", [True, False])
+def test_token_usage_details_do_not_change_totals(include_total: bool) -> None:
+    usage = TokenUsage()
+    metadata = {
+        "input_tokens": 17763,
+        "output_tokens": 1875,
+        "input_token_details": {"cache_read": 2845},
+        "output_token_details": {"reasoning": 137},
+    }
+    if include_total:
+        metadata["total_tokens"] = 19638
+    usage.add(metadata)
+    assert usage.prompt_tokens == 17763
+    assert usage.completion_tokens == 1875
+    assert usage.context_tokens == 19638
+    assert usage.cache_read_tokens == 2845
+    assert usage.reasoning_tokens == 137
+    usage.add({"input_tokens": 10, "output_tokens": 2})
+    assert usage.prompt_tokens == 17773
+    assert usage.completion_tokens == 1877
+    assert usage.context_tokens == 12
+    assert usage.cache_read_tokens == 2845
+
+
 def test_token_usage_middleware_accumulates_calls_and_keeps_latest_context() -> None:
     token_usage = TokenUsage()
     request = _model_request(RequestContext(token_usage=token_usage))

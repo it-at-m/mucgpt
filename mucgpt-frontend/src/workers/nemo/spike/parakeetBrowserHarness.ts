@@ -103,7 +103,13 @@ export async function loadSessions(
     console.log(`[harness] creating encoder session (WASM, int4 MatMulNBits, optimize=${level})…`);
     const encoder = await ort.InferenceSession.create(await fetchBuffer(encoderUrl), sessionOptions(level));
     console.log(`[harness] encoder ready (${encoder.inputNames.length} inputs); creating decoder_joint session…`);
-    const decoderJoint = await ort.InferenceSession.create(await fetchBuffer(decoderUrl), sessionOptions(level));
+    let decoderJoint: ort.InferenceSession;
+    try {
+        decoderJoint = await ort.InferenceSession.create(await fetchBuffer(decoderUrl), sessionOptions(level));
+    } catch (err) {
+        await encoder.release();
+        throw err;
+    }
     console.log(`[harness] decoder_joint ready; sessions up`);
     return { encoder, decoderJoint };
 }
@@ -121,20 +127,24 @@ export async function runTranscription(input: ParakeetQaInput, level: Optimizati
     console.log(`[harness] vocab: ${vocab.idToToken.length} tokens, blank="${vocab.idToToken[vocab.idToToken.length - 1]}"`);
 
     const pcm = new Float32Array(input.pcm);
-    const transcriber = createParakeetTranscriber({
-        encoder: toSessionLike(encoder),
-        decoderJoint: toSessionLike(decoderJoint),
-        vocab
-    });
-    const decodeStartedAt = performance.now();
-    const transcript = await transcriber.transcribe(pcm);
-    const decodeSeconds = (performance.now() - decodeStartedAt) / 1000;
-    await transcriber.dispose();
-    await encoder.release();
-    await decoderJoint.release();
-    console.log(`[harness] decode ${decodeSeconds.toFixed(2)}s, transcript="${transcript}"`);
-    const memory = (performance as Performance & { memory?: { usedJSHeapSize: number } }).memory;
-    return { transcript, decodeSeconds, heapUsedMb: memory ? memory.usedJSHeapSize / (1024 * 1024) : undefined };
+    let transcriber: ReturnType<typeof createParakeetTranscriber> | null = null;
+    try {
+        transcriber = createParakeetTranscriber({
+            encoder: toSessionLike(encoder),
+            decoderJoint: toSessionLike(decoderJoint),
+            vocab
+        });
+        const decodeStartedAt = performance.now();
+        const transcript = await transcriber.transcribe(pcm);
+        const decodeSeconds = (performance.now() - decodeStartedAt) / 1000;
+        console.log(`[harness] decode ${decodeSeconds.toFixed(2)}s, transcript="${transcript}"`);
+        const memory = (performance as Performance & { memory?: { usedJSHeapSize: number } }).memory;
+        return { transcript, decodeSeconds, heapUsedMb: memory ? memory.usedJSHeapSize / (1024 * 1024) : undefined };
+    } finally {
+        await transcriber?.dispose();
+        await encoder.release();
+        await decoderJoint.release();
+    }
 }
 
 /** Configure ort-web like the production worker does (bundled binaries, single thread without COOP headers). */

@@ -140,6 +140,10 @@ export const AssistantDetailsSidebar = ({
     const rawData = assistant?.rawData;
     const isVisible = (rawData && "is_visible" in rawData ? rawData.is_visible : undefined) ?? latestVersion?.is_visible ?? snapshot?.is_visible ?? true;
     const version = latestVersion?.version ?? snapshot?.version;
+    const assistantState = latestVersion?.state ?? snapshot?.state;
+    const isPendingLegalReview = assistantState === "pending_legal_review";
+    const isInactive = assistantState === "inactive";
+    const isUnavailable = isPendingLegalReview || isInactive;
     const configurationDate = formatConfigurationDate(latestVersion?.created_at, i18n.resolvedLanguage || i18n.language);
     const systemPromptCopyLabel = systemPromptCopied
         ? t("components.community_assistants.system_prompt_copied", "Copied")
@@ -180,6 +184,7 @@ export const AssistantDetailsSidebar = ({
     const canUnsubscribe = Boolean(assistant?.isSubscribedAssistant && !isOwned && !isDeletedSnapshot && !isLocalAssistant && !isLegacyAssistant);
     const creatorFallbackLabel = t("components.community_assistants.filter_all", "Community");
     const isPrivate = isLocalAssistant || !isVisible;
+    const canEdit = isOwned && !isInactive;
 
     return (
         <InlineDrawer open={isOpen} position="end" className={styles.inlineDrawer} aria-labelledby="sidebar-title">
@@ -226,6 +231,16 @@ export const AssistantDetailsSidebar = ({
                                             count: formatSubscriberCount(assistant.subscriptions)
                                         })}
                                     </Text>
+                                )}
+                                {isPendingLegalReview && (
+                                    <Badge appearance="tint" color="warning" className={styles.reviewBadge}>
+                                        {t("components.community_assistants.pending_review_title")}
+                                    </Badge>
+                                )}
+                                {isInactive && (
+                                    <Badge appearance="tint" color="danger" className={styles.reviewBadge}>
+                                        {t("components.community_assistants.inactive_title")}
+                                    </Badge>
                                 )}
                             </div>
                         )}
@@ -297,7 +312,29 @@ export const AssistantDetailsSidebar = ({
                             </div>
                         )}
 
-                        {assistant && !hideStartChat && !isDeletedSnapshot && !isLocalAssistant && !isLegacyAssistant && (
+                        {assistant && isUnavailable && !hideStartChat && !isDeletedSnapshot && !isLocalAssistant && !isLegacyAssistant && (
+                            <div className={isPendingLegalReview ? styles.pendingReviewCallout : styles.deletedCallout} role="status">
+                                <Text className={styles.calloutTitle}>
+                                    {isPendingLegalReview
+                                        ? t("components.community_assistants.pending_review_title")
+                                        : t("components.community_assistants.inactive_title")}
+                                </Text>
+                                <Text>
+                                    {isPendingLegalReview
+                                        ? t("components.community_assistants.pending_review_hint")
+                                        : t("components.community_assistants.inactive_hint")}
+                                </Text>
+                                {canEdit && onEdit && (
+                                    <div className={styles.deletedActionRow}>
+                                        <Button appearance="secondary" icon={<Edit24Regular />} onClick={onEdit}>
+                                            {t("common.edit")}
+                                        </Button>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
+                        {assistant && !isUnavailable && !hideStartChat && !isDeletedSnapshot && !isLocalAssistant && !isLegacyAssistant && (
                             <div className={styles.startButtonRow}>
                                 <Button
                                     appearance="primary"
@@ -320,7 +357,7 @@ export const AssistantDetailsSidebar = ({
                                     </MenuTrigger>
                                     <MenuPopover>
                                         <MenuList>
-                                            {isOwned && (
+                                            {canEdit && (
                                                 <MenuItem icon={<Edit24Regular />} onClick={onEdit}>
                                                     {t("common.edit")}
                                                 </MenuItem>

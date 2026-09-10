@@ -158,6 +158,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
         version: "0",
         is_visible: true
     });
+    const isAssistantUnavailable = assistantConfig.state === "pending_legal_review" || assistantConfig.state === "inactive";
     const lockedToolIds = useMemo(() => assistantConfig.tools?.map(tool => tool.id) ?? [], [assistantConfig.tools]);
     const mergeLockedToolIds = useCallback((toolIds: string[]) => Array.from(new Set([...lockedToolIds, ...toolIds])), [lockedToolIds]);
     const setLastQuestionValue = useCallback((value: string) => {
@@ -431,7 +432,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
     // callApi-Funktion
     const callApi = useCallback(
         async (question: string, systemOverride?: string, dataSources?: DataSource[]) => {
-            if (isLegacyAssistant) {
+            if (isLegacyAssistant || isAssistantUnavailable) {
                 console.warn("Interaction blocked: Assistant is in legacy state and read-only.");
                 return;
             }
@@ -484,7 +485,8 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
             selectedTools,
             setIsLoadingValue,
             setLastQuestionValue,
-            isLegacyAssistant
+            isLegacyAssistant,
+            isAssistantUnavailable
         ]
     );
 
@@ -822,6 +824,20 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
             );
         }
 
+        if (isAssistantUnavailable) {
+            return (
+                <div className={styles.deletedChatWarningWrapper}>
+                    <MessageBar intent={assistantConfig.state === "pending_legal_review" ? "warning" : "error"} className={styles.chatWarningBar}>
+                        <MessageBarBody>
+                            {assistantConfig.state === "pending_legal_review"
+                                ? t("components.community_assistants.pending_review_hint")
+                                : t("components.community_assistants.inactive_hint")}
+                        </MessageBarBody>
+                    </MessageBar>
+                </div>
+            );
+        }
+
         if (isLocalAssistant) {
             return (
                 <>
@@ -882,7 +898,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
         return (
             <QuestionInput
                 clearOnSend
-                disabled={isLoading || error !== undefined || strategy instanceof DeletedCommunityAssistantStrategy}
+                disabled={isLoading || error !== undefined || isAssistantUnavailable || strategy instanceof DeletedCommunityAssistantStrategy}
                 draftCacheKey={draftCacheKey}
                 onSend={(question, datas) => {
                     const dataSources = datas
@@ -921,6 +937,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
         isLegacyAssistant,
         isDeletedAssistant,
         isLocalAssistant,
+        isAssistantUnavailable,
         deletedAssistantSnapshot,
         t,
         requestDuplicateAssistant,
@@ -961,10 +978,10 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                                         isDeletedAssistant
                                             ? undefined
                                             : prompt => {
-                                                setLastQuestionValue(prompt);
-                                                setIsLoadingValue(true);
-                                                void callApi(prompt);
-                                            }
+                                                  setLastQuestionValue(prompt);
+                                                  setIsLoadingValue(true);
+                                                  void callApi(prompt);
+                                              }
                                     }
                                 />
                             )}

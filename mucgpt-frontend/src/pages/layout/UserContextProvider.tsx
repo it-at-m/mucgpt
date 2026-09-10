@@ -4,12 +4,14 @@ import { getUser } from "../../api/user-client";
 
 interface UserContextType {
     user: User | null;
+    isAdmin: boolean;
     isLoading: boolean;
     error: Error | null;
 }
 
 export const UserContext = createContext<UserContextType>({
     user: null,
+    isAdmin: false,
     isLoading: true,
     error: null
 });
@@ -22,6 +24,7 @@ export const UserContextProvider: React.FC<UserContextProviderProps> = ({ childr
     const [user, setUser] = useState<User | null>(null);
     const [isLoading, setIsLoading] = useState<boolean>(true);
     const [error, setError] = useState<Error | null>(null);
+    const adminRole = import.meta.env.VITE_ADMIN_ROLE || "lhm-ab-mucgpt-admin";
 
     useEffect(() => {
         const fetchUser = async () => {
@@ -39,7 +42,9 @@ export const UserContextProvider: React.FC<UserContextProviderProps> = ({ childr
         fetchUser();
     }, []);
 
-    return <UserContext.Provider value={{ user, isLoading, error }}>{children}</UserContext.Provider>;
+    const isAdmin = user?.roles?.includes(adminRole) ?? false;
+
+    return <UserContext.Provider value={{ user, isAdmin, isLoading, error }}>{children}</UserContext.Provider>;
 };
 
 export default UserContextProvider;

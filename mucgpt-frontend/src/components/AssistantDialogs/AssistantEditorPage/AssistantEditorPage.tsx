@@ -2,7 +2,19 @@ import type { CSSProperties, FormEvent, ReactNode } from "react";
 import { useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
-import { Accordion, AccordionHeader, AccordionItem, AccordionPanel, Button, Field, Text, Textarea, TextareaOnChangeData } from "@fluentui/react-components";
+import {
+    Accordion,
+    AccordionHeader,
+    AccordionItem,
+    AccordionPanel,
+    Button,
+    Field,
+    MessageBar,
+    MessageBarBody,
+    Text,
+    Textarea,
+    TextareaOnChangeData
+} from "@fluentui/react-components";
 import {
     Bot24Regular,
     Chat24Regular,
@@ -19,7 +31,7 @@ import {
 
 import styles from "./AssistantEditorPage.module.css";
 import { AssistantCreateFlow } from "./AssistantCreateFlow";
-import { Assistant, ComplianceCheckResponse, ToolBase, ToolInfo } from "../../../api";
+import { Assistant, AssistantState, ComplianceCheckResponse, ToolBase, ToolInfo } from "../../../api";
 import { createCommunityAssistantApi } from "../../../api/assistant-client";
 import { checkAssistantComplianceApi, generateAssistantDraftApi } from "../../../api/core-client";
 import { ApiError } from "../../../api/fetch-utils";
@@ -57,7 +69,7 @@ interface AssistantEditorPageEditProps {
     assistant: Assistant;
     isOwner: boolean;
     strategy: AssistantStrategy;
-    onSave: (assistant: Assistant) => Promise<{ persistedComplianceCheckResult?: ComplianceCheckResponse | null } | void>;
+    onSave: (assistant: Assistant) => Promise<{ persistedComplianceCheckResult?: ComplianceCheckResponse | null; state?: AssistantState } | void>;
 }
 
 type AssistantEditorPageProps = AssistantEditorPageCreateProps | AssistantEditorPageEditProps;
@@ -464,7 +476,11 @@ export const AssistantEditorPage = (props: AssistantEditorPageProps) => {
                     t("components.assistant_editor.saved_successfully"),
                     t("components.assistant_editor.assistant_saved_description", { assistantName: updatedAssistant.title || "" })
                 );
-                navigate(-1);
+                if (saveResult?.state === "pending_legal_review" && editProps.assistant.id) {
+                    navigate(`/discovery?openAssistant=${encodeURIComponent(editProps.assistant.id)}`);
+                } else {
+                    navigate(-1);
+                }
             }
         } catch (error) {
             let errorMessage = error instanceof Error ? error.message : t("components.assistant_editor.save_config_failed");
@@ -617,6 +633,17 @@ export const AssistantEditorPage = (props: AssistantEditorPageProps) => {
                     )}
                 </div>
             </div>
+
+            {!isCreate && isComplianceCheckEnabled && editAssistant?.state === "pending_legal_review" && (
+                <MessageBar intent="warning" role="status">
+                    <MessageBarBody>{t("components.assistant_editor.pending_review_notice")}</MessageBarBody>
+                </MessageBar>
+            )}
+            {!isCreate && isComplianceCheckEnabled && editAssistant?.state === "inactive" && (
+                <MessageBar intent="error" role="status">
+                    <MessageBarBody>{t("components.assistant_editor.inactive_notice")}</MessageBarBody>
+                </MessageBar>
+            )}
 
             <div className={[styles.body, showSettingsForm ? styles.bodyWithActions : ""].filter(Boolean).join(" ")}>
                 {isCreate && createView !== "settings" && (

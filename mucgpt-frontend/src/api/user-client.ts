@@ -11,9 +11,22 @@ interface RawUserInfo {
     preferred_username?: string;
     department?: string;
     lhmObjectID?: string;
+    resource_access?: unknown;
 }
 
 const toStringValue = (value: unknown): string => (typeof value === "string" ? value : "");
+
+const toStringArray = (value: unknown): string[] => (Array.isArray(value) ? value.filter((item): item is string => typeof item === "string") : []);
+
+const getRoles = (userinfo: RawUserInfo): string[] => {
+    const resourceAccess = userinfo.resource_access;
+    const mucgptRoles =
+        resourceAccess && typeof resourceAccess === "object" && "mucgpt" in resourceAccess
+            ? toStringArray((resourceAccess.mucgpt as { roles?: unknown }).roles)
+            : [];
+
+    return [...new Set(mucgptRoles)];
+};
 
 export async function getUser(): Promise<User> {
     const json: RawUserInfo = await handleApiRequest(() => fetch("/api/sso/userinfo", getConfig()), "Failed to get user information");
@@ -27,6 +40,7 @@ export async function getUser(): Promise<User> {
         email: toStringValue(json.email),
         preferred_username: toStringValue(json.preferred_username),
         department: toStringValue(json.department),
-        lhmObjectID: toStringValue(json.lhmObjectID)
+        lhmObjectID: toStringValue(json.lhmObjectID),
+        roles: getRoles(json)
     };
 }

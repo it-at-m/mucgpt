@@ -39,7 +39,25 @@ i18n
                         new_chat_discovery_title: "Anderen Assistenten auswählen",
                         new_chat_discovery_card_title: "Assistent auswählen",
                         new_chat_recent_assistant_title: "Mit {{assistantName}} starten",
-                        new_chat_recent_assistant_fallback: "Assistent"
+                        new_chat_recent_assistant_fallback: "Assistent",
+                        legal_review: "Rechtliche Prüfung",
+                        go_legal_review: "Rechtliche Prüfungen öffnen"
+                    },
+                    admin: {
+                        legal_review: {
+                            title: "Rechtliche Prüfungen",
+                            subtitle: "Prüfen Sie Assistenten, die gegen den EU-AI-ACT verstoßen.",
+                            pending: "Prüfung ausstehend",
+                            version: "Version {{version}}",
+                            reason_label: "Entscheidungsnotiz",
+                            reason_hint: "Dokumentieren Sie kurz die Grundlage Ihrer Entscheidung.",
+                            approve: "Freigeben",
+                            deactivate: "Deaktivieren",
+                            empty: "Alle Assistenten sind geprüft.",
+                            load_failed: "Die Prüfwarteschlange konnte nicht geladen werden.",
+                            update_failed: "Die Prüfentscheidung konnte nicht gespeichert werden.",
+                            conflict: "Der Assistent wurde inzwischen geändert. Die Warteschlange wurde aktualisiert."
+                        }
                     },
                     home: {
                         assistants: "Assistenten",
@@ -466,7 +484,9 @@ i18n
                             action_status_ready_create: "Bereit zum Erstellen",
                             action_status_ready_save: "Bereit zum Speichern",
                             action_status_read_only: "Nur lesbar",
-
+                            pending_review_notice:
+                                "Dieser Assistent wird derzeit gemäß EU-AI-ACT rechtlich geprüft. Er kann weiterhin vom Ersteller oder der Erstellerin bearbeitet werden, steht jedoch bis zum Abschluss der Prüfung nicht zum Chatten zur Verfügung.",
+                            inactive_notice: "Dieser Assistent wurde von Administratoren deaktiviert und kann momentan nicht zum Chatten verwendet werden.",
                             // Create-only: Mode selector
                             subtitle_mode_select: "Wähle, wie du starten möchtest",
                             create_manually: "Manuell erstellen",
@@ -678,6 +698,12 @@ i18n
                             filter_created_short: "Erstellt",
                             metadata_you: "Du",
                             owner_details: "Besitzer",
+                            pending_review_badge: "Rechtliche Prüfung ausstehend",
+                            inactive_badge: "Deaktiviert",
+                            pending_review_title: "Rechtliche Prüfung ausstehend",
+                            pending_review_hint: "Dieser Assistent ist bis zum Abschluss der rechtlichen Prüfung für Chats deaktiviert.",
+                            inactive_title: "Assistent deaktiviert",
+                            inactive_hint: "Dieser Assistent ist derzeit für Chats deaktiviert.",
                             private_label: "Privat",
                             show_more_personal_assistants: "Mehr persönliche Assistenten anzeigen",
                             empty_search_title: "Keine passenden Assistenten gefunden",
@@ -862,7 +888,25 @@ i18n
                         new_chat_discovery_title: "Choose another assistant",
                         new_chat_discovery_card_title: "Choose assistant",
                         new_chat_recent_assistant_title: "Start with {{assistantName}}",
-                        new_chat_recent_assistant_fallback: "Assistant"
+                        new_chat_recent_assistant_fallback: "Assistant",
+                        legal_review: "Legal Review",
+                        go_legal_review: "Open Legal Reviews"
+                    },
+                    admin: {
+                        legal_review: {
+                            title: "Legal Reviews",
+                            subtitle: "Review assistants that violate the EU AI Act.",
+                            pending: "Review Pending",
+                            version: "Version {{version}}",
+                            reason_label: "Decision Note",
+                            reason_hint: "Briefly document the basis of your decision.",
+                            approve: "Approve",
+                            deactivate: "Deactivate",
+                            empty: "All assistants have been reviewed.",
+                            load_failed: "The review queue could not be loaded.",
+                            update_failed: "The review decision could not be saved.",
+                            conflict: "The assistant has been changed in the meantime. The queue has been updated."
+                        }
                     },
                     home: {
                         assistants: "Assistants",
@@ -1286,6 +1330,9 @@ i18n
                             action_status_ready_create: "Ready to create",
                             action_status_ready_save: "Ready to save",
                             action_status_read_only: "Read only",
+                            pending_review_notice:
+                                "This assistant is currently undergoing a legal review in accordance with the EU AI Act. The creator can continue to edit it, but it cannot be used for chatting until the review is complete.",
+                            inactive_notice: "This assistant has been deactivated by administrators and is currently unavailable for chatting.",
 
                             // Create-only: Mode selector
                             subtitle_mode_select: "Choose how you want to start",
@@ -1492,6 +1539,12 @@ i18n
                             filter_my_all: "All",
                             filter_created_short: "Created",
                             metadata_you: "You",
+                            pending_review_badge: "Legal review pending",
+                            inactive_badge: "Inactive",
+                            pending_review_title: "Legal review pending",
+                            pending_review_hint: "This assistant is unavailable for chat until legal review is complete.",
+                            inactive_title: "Assistant inactive",
+                            inactive_hint: "This assistant is currently unavailable for chat.",
                             owner_details: "Owners",
                             private_label: "Private",
                             show_more_personal_assistants: "Show more personal assistants",
@@ -1675,7 +1728,25 @@ i18n
                         new_chat_discovery_title: "Andern Assistentn auswaehln",
                         new_chat_discovery_card_title: "Assistentn auswaehln",
                         new_chat_recent_assistant_title: "Mitm {{assistantName}} startn",
-                        new_chat_recent_assistant_fallback: "Assistent"
+                        new_chat_recent_assistant_fallback: "Assistent",
+                        legal_review: "Rechtliche Obacht",
+                        go_legal_review: "Rechtliche Obacht aufmacha"
+                    },
+                    admin: {
+                        legal_review: {
+                            title: "Rechtliche Obacht’n",
+                            subtitle: "Schau da d’Assistenten o, de wo gegen’n EU-AI-ACT verstoßen.",
+                            pending: "Obacht steht no aus",
+                            version: "Version {{version}}",
+                            reason_label: "Entscheidungs-Notiz",
+                            reason_hint: "Schreib kurz hi, warumst des so entschieden host.",
+                            approve: "Freigeben",
+                            deactivate: "Deaktiviern",
+                            empty: "All Assistenten san scho obacht word’n.",
+                            load_failed: "D’Obacht-Warteschlang konnt ned g’lad’n werd’n.",
+                            update_failed: "D’Obacht-Entscheidung konnt ned g’speichert werd’n.",
+                            conflict: "Da Assistent is zwischendrin g’ändert word’n. D’Warteschlang is jetzt aktuell."
+                        }
                     },
                     home: {
                         assistants: "Assistentn",
@@ -2089,6 +2160,9 @@ i18n
                             action_status_ready_create: "Bereit zum Erstellen",
                             action_status_ready_save: "Bereit zum Speichern",
                             action_status_read_only: "Nur lesbar",
+                            pending_review_notice:
+                                "Da Assistent werd grad rechtlich obacht, wia’s da EU-AI-ACT vorgibt. Da Ersteller oder d’Erstellerin derf no weiter dran basteln, aber g’chatten derfst erst wieder, wenn d’Obacht vorbei is.",
+                            inactive_notice: "Da Assistent is vo de Admins deaktiviert word’n und kann grad ned zum Ratschn verwendet werd’n.",
 
                             // Create-only: Mode selector
                             subtitle_mode_select: "Wia möchst da starten?",
@@ -2481,7 +2555,25 @@ i18n
                         new_chat_discovery_title: "Choisir un autre assistant",
                         new_chat_discovery_card_title: "Choisir un assistant",
                         new_chat_recent_assistant_title: "Démarrer avec {{assistantName}}",
-                        new_chat_recent_assistant_fallback: "Assistant"
+                        new_chat_recent_assistant_fallback: "Assistant",
+                        legal_review: "Revue juridique",
+                        go_legal_review: "Ouvrir les revues juridiques"
+                    },
+                    admin: {
+                        legal_review: {
+                            title: "Revues juridiques",
+                            subtitle: "Examinez les assistants qui enfreignent le règlement européen sur l’IA.",
+                            pending: "Revue en attente",
+                            version: "Version {{version}}",
+                            reason_label: "Note de décision",
+                            reason_hint: "Documentez brièvement la base de votre décision.",
+                            approve: "Approuver",
+                            deactivate: "Désactiver",
+                            empty: "Tous les assistants ont été examinés.",
+                            load_failed: "La file d’attente des revues n’a pas pu être chargée.",
+                            update_failed: "La décision de revue n’a pas pu être enregistrée.",
+                            conflict: "L’assistant a été modifié entre-temps. La file d’attente a été mise à jour."
+                        }
                     },
                     home: {
                         assistants: "Assistants",
@@ -2899,6 +2991,9 @@ i18n
                             action_status_ready_create: "Prêt à créer",
                             action_status_ready_save: "Prêt à enregistrer",
                             action_status_read_only: "Lecture seule",
+                            pending_review_notice:
+                                "Cet assistant fait actuellement l’objet d’un examen juridique conformément au règlement européen sur l’IA. Le créateur ou la créatrice peut continuer à le modifier, mais il ne sera pas disponible pour discuter tant que la révision n’est pas terminée.",
+                            inactive_notice: "Cet assistant a été désactivé par les administrateurs et n’est actuellement pas disponible pour discuter.",
 
                             // Create-only: Mode selector
                             subtitle_mode_select: "Choisissez comment vous souhaitez commencer",
@@ -3285,7 +3380,25 @@ i18n
                         new_chat_discovery_title: "Обрати іншого асистента",
                         new_chat_discovery_card_title: "Обрати асистента",
                         new_chat_recent_assistant_title: "Почати з {{assistantName}}",
-                        new_chat_recent_assistant_fallback: "Асистент"
+                        new_chat_recent_assistant_fallback: "Асистент",
+                        legal_review: "Юридична перевірка",
+                        go_legal_review: "Відкрити юридичні перевірки"
+                    },
+                    admin: {
+                        legal_review: {
+                            title: "Юридичні перевірки",
+                            subtitle: "Перевірте асистентів, які порушують ЄС AI ACT.",
+                            pending: "Перевірка очікує",
+                            version: "Версія {{version}}",
+                            reason_label: "Примітка до рішення",
+                            reason_hint: "Коротко опишіть підставу вашого рішення.",
+                            approve: "Схвалити",
+                            deactivate: "Деактивувати",
+                            empty: "Усі асистенти перевірені.",
+                            load_failed: "Не вдалося завантажити чергу перевірки.",
+                            update_failed: "Не вдалося зберегти рішення щодо перевірки.",
+                            conflict: "Асистента було змінено. Чергу оновлено."
+                        }
                     },
                     home: {
                         assistants: "Асистенти",
@@ -3699,6 +3812,9 @@ i18n
                             action_status_ready_create: "Готово до створення",
                             action_status_ready_save: "Готово до збереження",
                             action_status_read_only: "Лише читання",
+                            pending_review_notice:
+                                "Цей асистент наразі проходить юридичну перевірку відповідно до ЄС AI ACT. Автор може й надалі його редагувати, але спілкуватися з асистентом можна буде лише після завершення перевірки.",
+                            inactive_notice: "Цей асистент був деактивований адміністраторами і наразі недоступний для спілкування.",
 
                             // Create-only: Mode selector
                             subtitle_mode_select: "Оберіть, як ви хочете почати",

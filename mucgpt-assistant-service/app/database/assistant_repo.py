@@ -85,6 +85,9 @@ class AssistantRepository(Repository[Assistant]):
         tags: list[str] | None = None,
         compliance_check_result: dict[str, Any] | None = None,
         compliance_confirmation: bool = False,
+        state: str = "active",
+        state_changed_by: str | None = None,
+        state_change_reason: str | None = None,
     ) -> AssistantVersion:
         """Creates a new version for an assistant with explicit parameters."""
         logger.info(f"Creating new version for assistant {assistant.id}")
@@ -113,6 +116,9 @@ class AssistantRepository(Repository[Assistant]):
                 tags=tags or [],
                 compliance_check_result=compliance_check_result,
                 compliance_confirmation=compliance_confirmation,
+                state=state,
+                state_changed_by=state_changed_by,
+                state_change_reason=state_change_reason,
             )
 
             self.session.add(new_version)
@@ -126,6 +132,57 @@ class AssistantRepository(Repository[Assistant]):
             logger.error(f"Error creating assistant version for {assistant.id}: {e}")
             await self.session.rollback()
             raise
+
+    async def get_assistants_by_latest_state(
+        self,
+        state: str,
+        search: str | None = None,
+        sort_by: str = "updated",
+        sort_order: str = "asc",
+        offset: int = 0,
+        limit: int | None = None,
+    ) -> list[Assistant]:
+        """Return assistants whose current immutable version has the requested state."""
+        latest_version_subquery = (
+            select(
+                AssistantVersion.assistant_id.label("assistant_id"),
+                func.max(AssistantVersion.version).label("max_version"),
+            )
+            .group_by(AssistantVersion.assistant_id)
+            .subquery()
+        )
+        latest_version_alias = aliased(AssistantVersion)
+        stmt = (
+            select(Assistant)
+            .options(
+                selectinload(Assistant.owners),
+                selectinload(Assistant.versions).selectinload(
+                    AssistantVersion.tool_associations
+                ),
+            )
+            .join(
+                latest_version_subquery,
+                latest_version_subquery.c.assistant_id == Assistant.id,
+            )
+            .join(
+                latest_version_alias,
+                (latest_version_alias.assistant_id == Assistant.id)
+                & (
+                    latest_version_alias.version
+                    == latest_version_subquery.c.max_version
+                ),
+            )
+            .where(latest_version_alias.state == state)
+        )
+        stmt = self._apply_search_filters_sql(stmt, latest_version_alias, search)
+        stmt = self._apply_sort_sql(stmt, latest_version_alias, sort_by, sort_order)
+        if offset > 0:
+            stmt = stmt.offset(offset)
+        if limit is not None:
+            stmt = stmt.limit(limit)
+
+        result = await self.session.execute(stmt)
+        return list(result.scalars().unique().all())
 
     async def get_all_possible_assistants_for_user_with_department(
         self,
@@ -440,7 +497,12 @@ class AssistantRepository(Repository[Assistant]):
         """Get assistant with eagerly loaded owners."""
         result = await self.session.execute(
             select(Assistant)
-            .options(selectinload(Assistant.owners))
+            .options(
+                selectinload(Assistant.owners),
+                selectinload(Assistant.versions).selectinload(
+                    AssistantVersion.tool_associations
+                ),
+            )
             .filter(Assistant.id == assistant_id)
         )
         return result.scalars().first()

@@ -72,7 +72,7 @@ Where:
 
 ### Transcription Configuration (YAML)
 
-MUCGPT offers browser-based speech-to-text (beta): users can dictate into the chat input, and the audio is transcribed entirely inside their browser. The backend only gates the feature — no audio or transcript is ever sent to a server. It is disabled by default (`TRANSCRIPTION_ENABLED: false`).
+MUCGPT offers browser-based speech-to-text (beta): users can dictate into the chat input, and the audio is transcribed entirely inside their browser. The backend only gates the feature — no audio ever leaves the user's browser; the resulting transcript is placed in the chat input and can be submitted through the normal chat request. It is disabled by default (`TRANSCRIPTION_ENABLED: false`).
 
 To enable it, set the flag in `core.config.yaml`:
 
@@ -93,7 +93,7 @@ The id must match an entry of the frontend's model list (`mucgpt-frontend/src/co
 Notes for operators:
 
 - All transcription models (Whisper, NVIDIA Canary/Parakeet) run client-side on WebGPU or WASM; the browser downloads them directly from their model registry (Hugging Face) and caches them locally.
-- Model choice, language support, and hardware requirements are managed in the frontend (`mucgpt-frontend/src/config/transcriptionModels.ts`); there is no backend-side model configuration.
+- Model choice, language support, and hardware requirements are managed in the frontend (`mucgpt-frontend/src/config/transcriptionModels.ts`); the backend cannot define the model inventory or runtime, but it can preselect the default model ID through `TRANSCRIPTION_DEFAULT_MODEL` (applied on first use before the user picks a model).
 - Users on hardware without WebGPU see a reduced model selection (CPU-based WASM models).
 
 ### Models Configuration (Environment Variable)

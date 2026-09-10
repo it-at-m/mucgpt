@@ -20,11 +20,17 @@ import { TRANSCRIPTION_MODELS } from "../../config/transcriptionModels";
 import { supportsWebGPU } from "../../utils/webgpuSupport";
 import styles from "./TranscriptionSettingsDialog.module.css";
 
+/** Maps ISO codes to localized language names for the per-model hint. */
+function localizedLanguages(t: (key: string) => string, languages: string[]): string {
+    return languages.map(code => t(`components.transcriptionSettings.languages.${code}`)).join(", ");
+}
+
 interface Props {
     open: boolean;
     onOpenChange: (open: boolean) => void;
 }
 
+/** Settings dialog: enable transcription, pick a model, download it and inspect load state. */
 export const TranscriptionSettingsDialog = ({ open, onOpenChange }: Props) => {
     const { t } = useTranslation();
     const {
@@ -46,6 +52,7 @@ export const TranscriptionSettingsDialog = ({ open, onOpenChange }: Props) => {
     const isLoading = status === "loading-model";
     const webgpuAvailable = useMemo(() => supportsWebGPU(), []);
 
+    /** Localized status line for the download row (loading percentage, ready or idle). */
     const statusLabel = (() => {
         if (isLoading && loadingModelId === selectedModelId) {
             if (modelProgress > 0) {
@@ -64,6 +71,7 @@ export const TranscriptionSettingsDialog = ({ open, onOpenChange }: Props) => {
         return t("components.transcriptionSettings.status_idle");
     })();
 
+    /** Starts the download/load of the selected model; failures surface via the context. */
     const onDownload = () => {
         downloadModel(selectedModelId).catch(() => {
             // error already surfaced via context
@@ -124,6 +132,13 @@ export const TranscriptionSettingsDialog = ({ open, onOpenChange }: Props) => {
                                                         <div className={styles.modelMeta}>
                                                             <span className={styles.modelLabel}>{m.label}</span>
                                                             {m.size_hint && <span className={styles.modelHint}>{m.size_hint}</span>}
+                                                            {m.languages && (
+                                                                <span className={styles.modelHint}>
+                                                                    {t("components.transcriptionSettings.model_languages", {
+                                                                        languages: localizedLanguages(t, m.languages)
+                                                                    })}
+                                                                </span>
+                                                            )}
                                                         </div>
                                                     }
                                                 />

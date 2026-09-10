@@ -38,6 +38,7 @@ interface AssistantPreviewChatProps {
     collapseIcon?: ReactElement;
 }
 
+/** Self-contained throwaway chat used in assistant previews (no history persistence). */
 export const AssistantPreviewChat = ({
     systemPrompt,
     creativity,
@@ -119,6 +120,7 @@ export const AssistantPreviewChat = ({
         const element = previewInputRef.current;
         if (!element || typeof window === "undefined") return;
 
+        /** Publishes the input's current height so the transcript pane can pad accordingly. */
         const updateInputHeight = () => {
             const nextHeight = Math.ceil(element.getBoundingClientRect().height);
             setPreviewInputHeight(previousHeight => (previousHeight === nextHeight ? previousHeight : nextHeight));
@@ -151,6 +153,7 @@ export const AssistantPreviewChat = ({
         }
 
         updateScrollToBottomVisibility();
+        /** Debounces scroll-visibility updates to the next animation frame. */
         const updateOnNextFrame = () => requestAnimationFrame(updateScrollToBottomVisibility);
 
         element.addEventListener("scroll", updateScrollToBottomVisibility, { passive: true });
@@ -262,7 +265,7 @@ export const AssistantPreviewChat = ({
     }, [setLastQuestionValue]);
 
     // Selection is driven by the editor form, so the input's tool selector is read-only.
-    const noopSetSelectedTools = useCallback(() => { }, []);
+    const noopSetSelectedTools = useCallback(() => {}, []);
 
     const onStarterPromptClicked = useCallback((value: string) => callApi(value), [callApi]);
 

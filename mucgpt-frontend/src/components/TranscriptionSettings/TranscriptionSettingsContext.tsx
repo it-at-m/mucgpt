@@ -2,27 +2,17 @@ import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } 
 import { useTranslation } from "react-i18next";
 import { STORAGE_KEYS } from "../../pages/layout/LayoutHelper";
 import { DEFAULT_TRANSCRIPTION_MODEL, TRANSCRIPTION_MODELS } from "../../config/transcriptionModels";
+import { localeToWhisperLang } from "../../config/transcriptionLanguages";
 import type { WorkerInMessage, WorkerOutMessage } from "../../workers/transcription.worker";
 import { useAudioRecorder } from "../../hooks/useAudioRecorder";
 import { fetchModelFileSizes } from "../../utils/modelSizeUtils";
 
-// Maps the app's i18n locale code to a Whisper language tag.
-// Bavarian (BAY) is a German dialect not supported by Whisper → fall back to "de".
-const LOCALE_TO_WHISPER: Record<string, string> = {
-    DE: "de",
-    EN: "en",
-    FR: "fr",
-    UK: "uk",
-    BAY: "de"
-};
-
-function localeToWhisperLang(locale: string): string | undefined {
-    return LOCALE_TO_WHISPER[locale.toUpperCase().split("-")[0]];
-}
-
+/** Lifecycle of the transcription UI, mirrored to the worker status handling. */
 export type TranscriptionStatus = "idle" | "warming-up" | "loading-model" | "recording" | "transcribing" | "error";
+/** Whisper language tag driving the pipeline (undefined lets models auto-detect). */
 export type TranscriptionLanguage = string | undefined;
 
+/** Everything the mic button and the settings dialog need: settings, worker status and transcript, plus the actions driving them. */
 export interface ITranscriptionSettings {
     // Settings
     enabled: boolean;
@@ -49,6 +39,7 @@ export interface ITranscriptionSettings {
 
 const KNOWN_MODEL_IDS = new Set(TRANSCRIPTION_MODELS.map(m => m.model_id));
 
+/** Reads the persisted enabled flag from localStorage (default: disabled). */
 const readEnabled = (): boolean => {
     try {
         return localStorage.getItem(STORAGE_KEYS.SETTINGS_TRANSCRIPTION_ENABLED) === "true";
@@ -57,16 +48,20 @@ const readEnabled = (): boolean => {
     }
 };
 
-const readSelected = (): string => {
+/** Resolves the initial model selection: stored choice → deployment default → built-in default. */
+const readSelected = (defaultModelId?: string | null): string => {
     try {
         const v = localStorage.getItem(STORAGE_KEYS.SETTINGS_TRANSCRIPTION_MODEL_ID);
         if (v && KNOWN_MODEL_IDS.has(v)) return v;
     } catch {
         // ignore
     }
+    // First-time users: honor the deployment's default model when it is a known entry.
+    if (defaultModelId && KNOWN_MODEL_IDS.has(defaultModelId)) return defaultModelId;
     return DEFAULT_TRANSCRIPTION_MODEL;
 };
 
+/** Reads the persisted downloaded-model ids from localStorage. */
 const readDownloaded = (): string[] => {
     try {
         const raw = localStorage.getItem(STORAGE_KEYS.SETTINGS_TRANSCRIPTION_DOWNLOADED_MODELS);
@@ -100,21 +95,30 @@ const defaultValue: ITranscriptionSettings = {
     stopAndTranscribe: async () => {}
 };
 
+/** React context carrying {@link ITranscriptionSettings}; consume via {@link useTranscription}. */
 export const TranscriptionSettingsContext = React.createContext<ITranscriptionSettings>(defaultValue);
 
+/** Access hook for the transcription settings, status and actions. */
 export const useTranscription = () => useContext(TranscriptionSettingsContext);
 
 interface TranscriptionSettingsProviderProps {
     deploymentEnabled?: boolean;
+    /** Deployment-configured model preselected for first-time users; unknown ids fall back to the built-in default. */
+    defaultModelId?: string | null;
 }
 
-export const TranscriptionSettingsProvider = ({ children, deploymentEnabled = true }: React.PropsWithChildren<TranscriptionSettingsProviderProps>) => {
+/** Owns the transcription worker, persists user settings and exposes everything through the context. */
+export const TranscriptionSettingsProvider = ({
+    children,
+    deploymentEnabled = true,
+    defaultModelId = null
+}: React.PropsWithChildren<TranscriptionSettingsProviderProps>) => {
     const { t, i18n } = useTranslation();
 
     // Persisted settings
     const [enabled, setEnabledState] = useState<boolean>(() => readEnabled());
     const effectiveEnabled = deploymentEnabled && enabled;
-    const [selectedModelId, setSelectedModelIdState] = useState<string>(() => readSelected());
+    const [selectedModelId, setSelectedModelIdState] = useState<string>(() => readSelected(defaultModelId));
     const [downloadedModels, setDownloadedModels] = useState<string[]>(() => readDownloaded());
 
     // Worker state
@@ -213,6 +217,8 @@ export const TranscriptionSettingsProvider = ({ children, deploymentEnabled = tr
                 fileSizes,
                 dtype: modelCfg?.dtype,
                 webgpu_only: modelCfg?.webgpu_only,
+                runtime: modelCfg?.runtime,
+                files: modelCfg?.files,
                 language: languageRef.current
             });
             return requestId;
@@ -405,7 +411,8 @@ export const TranscriptionSettingsProvider = ({ children, deploymentEnabled = tr
             setLoadingModelId(modelId);
             setStatus("loading-model");
             return new Promise<void>((resolve, reject) => {
-                fetchModelFileSizes(modelId)
+                const fileTree = TRANSCRIPTION_MODELS.find(m => m.model_id === modelId)?.file_tree;
+                fetchModelFileSizes(modelId, fileTree)
                     .then(fileSizes => {
                         const requestId = requestModelLoad(modelId, fileSizes);
                         pendingDownloadRef.current = { id: modelId, requestId, resolve, reject };

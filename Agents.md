@@ -78,6 +78,7 @@ Standard FastAPI + SQLAlchemy (async) + Postgres. Routers in `api/routers/` (`as
 
 ## Conventions
 
+- run python tooling with uv or uvx (e.g. `uvx --from onnx python -c ...` for one-off scripts or `uv run pytest` for project tests) and never pip install into a system python.
 - Ruff selects `E,F,I,UP`, ignores `E501,E701`. Python target 3.13 (services), formatted/linted via pre-commit.
 - Commits use **gitmoji** (e.g. `✨`, see recent history); branches `feat/...`, PRs against `main`.
 - Frontend API clients are in `src/api/` (`core-client`, `assistant-client`, `conversations-client`, `user-client`); MSW handlers in `src/mocks/` back the mocked dev mode. Pages in `src/pages/`, shared UI in `src/components/`.

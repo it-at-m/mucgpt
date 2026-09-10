@@ -40,6 +40,7 @@ import { VersionInfo } from "../../components/VersionInfo";
 const APP_NAV_COLLAPSED_KEY = "APP_NAV_COLLAPSED";
 const MOBILE_LAYOUT_BREAKPOINT = 640;
 
+/** Formats a date as d-m-yyyy for the display version string. */
 const formatDate = (date: Date) => {
     const formatted_date = date.getDate() + "-" + (date.getMonth() + 1) + "-" + date.getFullYear();
     return formatted_date;
@@ -55,6 +56,7 @@ interface AppShellProps {
     termsOfUseRead: boolean;
 }
 
+/** Responsive application frame: navigation, routing, mobile handling and the utility menus. */
 const AppShell = ({ config, isLight, languagePreference, onLanguageSelectionChanged, onThemeChange, onAcceptTermsOfUse, termsOfUseRead }: AppShellProps) => {
     const { t } = useTranslation();
     const location = useLocation();
@@ -68,6 +70,7 @@ const AppShell = ({ config, isLight, languagePreference, onLanguageSelectionChan
     const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(() => localStorage.getItem(APP_NAV_COLLAPSED_KEY) === "true");
 
     useEffect(() => {
+        /** Tracks the viewport against the mobile breakpoint and closes mobile chrome on desktop. */
         const handleResize = () => {
             const nextIsMobile = window.innerWidth <= MOBILE_LAYOUT_BREAKPOINT;
             setIsMobile(nextIsMobile);
@@ -249,6 +252,7 @@ const AppShell = ({ config, isLight, languagePreference, onLanguageSelectionChan
     );
 };
 
+/** Top-level page shell: loads the deployment config, wires providers and renders the AppShell. */
 export const Layout = () => {
     const navigate = useNavigate();
 
@@ -361,7 +365,7 @@ export const Layout = () => {
                         <Unauthorized redirectUrl={unauthorizedRedirectUrl} />
                     ) : (
                         <ConfigContext.Provider value={config}>
-                            <TranscriptionSettingsProvider deploymentEnabled={config.transcription_enabled}>
+                            <TranscriptionSettingsProvider deploymentEnabled={config.transcription_enabled} defaultModelId={config.transcription_default_model}>
                                 <ToolsProvider>
                                     <UnifiedHistoryProvider>
                                         <AppShell

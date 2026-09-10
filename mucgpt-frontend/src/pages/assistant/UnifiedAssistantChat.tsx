@@ -49,6 +49,7 @@ interface UnifiedAssistantChatProps {
     strategy: AssistantStrategy;
 }
 
+/** Strategy-driven chat page shared by the personal and community assistant views. */
 const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
     // useReducer für den Chat-Status
     const chatReducer = getChatReducer<Assistant>();
@@ -233,6 +234,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
         const tokenToClaim = getNewChatToken();
         if (tokenToClaim !== null) handledNewChatTokenRef.current = tokenToClaim;
 
+        /** Loads or initializes the chat and assistant data for the current route. */
         const loadData = async () => {
             if (assistant_id) {
                 setDeletedAssistantSnapshot(null);
@@ -430,6 +432,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
 
     // callApi-Funktion
     const callApi = useCallback(
+        /** Sends one question through the strategy (streaming) and dispatches the answers. */
         async (question: string, systemOverride?: string, dataSources?: DataSource[]) => {
             if (isLegacyAssistant) {
                 console.warn("Interaction blocked: Assistant is in legacy state and read-only.");
@@ -499,6 +502,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
     }, []);
 
     const loadAssistantChat = useCallback(
+        /** Restores a previously generated assistant chat by its storage id. */
         async (id: string) => {
             if (!id.startsWith(AssistantStorageService.GENERATE_BOT_CHAT_PREFIX(assistant_id))) {
                 return false;
@@ -547,6 +551,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
 
     // onAssistantChanged-Funktion
     const onAssistantChanged = useCallback(
+        /** Persists assistant edits and refreshes the strategy-driven view. */
         async (newAssistant: Assistant) => {
             if (!strategy.canEdit) return;
 
@@ -668,6 +673,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
 
     // Rollback-Funktion
     const onRollbackMessage = useCallback(
+        /** Rolls the conversation back to before the message at index. */
         async (index: number) => {
             if (!activeChatRef.current || isLoading) return;
             const activeChat = activeChatRef.current;

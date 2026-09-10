@@ -19,6 +19,7 @@ settings = get_settings()
     },
 )
 async def get_config(user_info=Depends(authenticate_user)) -> ConfigResponse:
+    """Builds the application config response (feature flags, versions, links and model list)."""
     response = ConfigResponse(
         env_name=settings.ENV_NAME,
         alternative_logo=settings.ALTERNATIVE_LOGO,
@@ -71,4 +72,5 @@ async def get_config(user_info=Depends(authenticate_user)) -> ConfigResponse:
     },
 )
 def health_check() -> str:
+    """Returns "OK" to signal the service is up."""
     return "OK"

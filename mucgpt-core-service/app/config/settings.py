@@ -70,7 +70,11 @@ class ModelInfo(BaseModel):
 
     @model_validator(mode="after")
     def check_threshold_order(self) -> "ModelInfo":
-        if self.context_warning_threshold_percent >= self.context_critical_threshold_percent:
+        """Enforces warning < critical context thresholds."""
+        if (
+            self.context_warning_threshold_percent
+            >= self.context_critical_threshold_percent
+        ):
             raise ValueError(
                 "context_warning_threshold_percent must be lower than "
                 "context_critical_threshold_percent"
@@ -114,6 +118,7 @@ class ModelsConfig(BaseModel):
     @field_validator("api_key", mode="before")
     @staticmethod
     def parse_secret(value):
+        """Coerces plain strings into SecretStr for the api_key field."""
         if isinstance(value, str):
             return SecretStr(value)
         return value
@@ -121,6 +126,7 @@ class ModelsConfig(BaseModel):
     @model_validator(mode="before")
     @staticmethod
     def bundle_model_info(data):
+        """Normalizes flat model entries into the nested model_info payload before validation."""
         if not isinstance(data, dict):
             return data
 
@@ -191,106 +197,132 @@ class ModelsConfig(BaseModel):
 
     @property
     def max_output_tokens(self) -> PositiveInt | None:
+        """Delegates max output tokens to the nested model info."""
         return self.model_info.max_output_tokens
 
     @max_output_tokens.setter
     def max_output_tokens(self, value: PositiveInt | None) -> None:
+        """Stores the value in the nested model info."""
         self.model_info.max_output_tokens = value
 
     @property
     def max_input_tokens(self) -> PositiveInt | None:
+        """Delegates max context tokens to the nested model info."""
         return self.model_info.max_input_tokens
 
     @max_input_tokens.setter
     def max_input_tokens(self, value: PositiveInt | None) -> None:
+        """Stores the value in the nested model info."""
         self.model_info.max_input_tokens = value
 
     @property
     def context_warning_threshold_percent(self) -> int:
+        """Delegates the context-window warning threshold to the model info."""
         return self.model_info.context_warning_threshold_percent
 
     @context_warning_threshold_percent.setter
     def context_warning_threshold_percent(self, value: int) -> None:
+        """Stores the value in the nested model info."""
         self.model_info.context_warning_threshold_percent = value
 
     @property
     def context_critical_threshold_percent(self) -> int:
+        """Delegates the context-window critical threshold to the model info."""
         return self.model_info.context_critical_threshold_percent
 
     @context_critical_threshold_percent.setter
     def context_critical_threshold_percent(self, value: int) -> None:
+        """Stores the value in the nested model info."""
         self.model_info.context_critical_threshold_percent = value
 
     @property
     def description(self) -> str | None:
+        """Delegates the model description to the nested model info."""
         return self.model_info.description
 
     @description.setter
     def description(self, value: str | None) -> None:
+        """Stores the value in the nested model info."""
         self.model_info.description = (value or "").strip() or None
 
     @property
     def input_cost_per_token(self) -> Decimal | None:
+        """Delegates input token cost to the nested model info."""
         return self.model_info.input_cost_per_token
 
     @input_cost_per_token.setter
     def input_cost_per_token(self, value: Decimal | None) -> None:
+        """Stores the value in the nested model info."""
         self.model_info.input_cost_per_token = value
 
     @property
     def output_cost_per_token(self) -> Decimal | None:
+        """Delegates output token cost to the nested model info."""
         return self.model_info.output_cost_per_token
 
     @output_cost_per_token.setter
     def output_cost_per_token(self, value: Decimal | None) -> None:
+        """Stores the value in the nested model info."""
         self.model_info.output_cost_per_token = value
 
     @property
     def supports_function_calling(self) -> bool | None:
+        """Delegates the function-calling capability flag to the model info."""
         return self.model_info.supports_function_calling
 
     @supports_function_calling.setter
     def supports_function_calling(self, value: bool | None) -> None:
+        """Stores the value in the nested model info."""
         self.model_info.supports_function_calling = value
 
     @property
     def supports_reasoning(self) -> bool | None:
+        """Delegates the reasoning capability flag to the nested model info."""
         return self.model_info.supports_reasoning
 
     @supports_reasoning.setter
     def supports_reasoning(self, value: bool | None) -> None:
+        """Stores the value in the nested model info."""
         self.model_info.supports_reasoning = value
 
     @property
     def supports_vision(self) -> bool | None:
+        """Delegates the vision capability flag to the nested model info."""
         return self.model_info.supports_vision
 
     @supports_vision.setter
     def supports_vision(self, value: bool | None) -> None:
+        """Stores the value in the nested model info."""
         self.model_info.supports_vision = value
 
     @property
     def litellm_provider(self) -> str | None:
+        """Delegates the LiteLLM provider name to the nested model info."""
         return self.model_info.litellm_provider
 
     @litellm_provider.setter
     def litellm_provider(self, value: str | None) -> None:
+        """Stores the value in the nested model info."""
         self.model_info.litellm_provider = value
 
     @property
     def inference_location(self) -> str | None:
+        """Delegates the inference location to the nested model info."""
         return self.model_info.inference_location
 
     @inference_location.setter
     def inference_location(self, value: str | None) -> None:
+        """Stores the value in the nested model info."""
         self.model_info.inference_location = value
 
     @property
     def knowledge_cut_off(self) -> str | None:
+        """Delegates the knowledge cutoff date to the nested model info."""
         return self.model_info.knowledge_cut_off
 
     @knowledge_cut_off.setter
     def knowledge_cut_off(self, value: str | None) -> None:
+        """Stores the value in the nested model info."""
         cleaned = (value or "").strip() or None
         self.model_info.knowledge_cut_off = cleaned
 
@@ -376,6 +408,7 @@ class MCPSourceConfig(BaseModel):
     @field_validator("forward_auth_override", mode="before")
     @staticmethod
     def parse_forward_auth_override(value):
+        """Coerces plain strings into SecretStr for forward auth overrides."""
         if isinstance(value, str):
             return SecretStr(value)
         return value
@@ -383,6 +416,7 @@ class MCPSourceConfig(BaseModel):
     @field_validator("headers", mode="before")
     @staticmethod
     def parse_secret_headers(value):
+        """Coerces every header value into SecretStr."""
         if value is None:
             return None
         if not isinstance(value, dict):
@@ -401,6 +435,7 @@ class MCPSourceConfig(BaseModel):
     @model_validator(mode="after")
     @staticmethod
     def validate_forward_auth_config(source: "MCPSourceConfig") -> "MCPSourceConfig":
+        """Rejects auth overrides that would silently do nothing (forward_token off)."""
         if source.forward_auth_override is not None and not source.forward_token:
             raise ValueError(
                 "forward_auth_override requires forward_token=true to avoid no-op auth configuration"
@@ -518,6 +553,7 @@ class Settings(BaseSettings):
         dotenv_settings: PydanticBaseSettingsSource,
         file_secret_settings: PydanticBaseSettingsSource,
     ) -> tuple[PydanticBaseSettingsSource, ...]:
+        """Prioritizes init values, then env vars, then the YAML file, then .env."""
         return (
             init_settings,
             env_settings,
@@ -584,6 +620,7 @@ def enrich_model_metadata(model: ModelsConfig) -> None:
 
 
 def _has_complete_metadata(model_info: ModelInfo) -> bool:
+    """True when token limits and a non-empty description are all present."""
     return (
         model_info.max_output_tokens is not None
         and model_info.max_input_tokens is not None
@@ -592,6 +629,7 @@ def _has_complete_metadata(model_info: ModelInfo) -> bool:
 
 
 def _missing_metadata_fields(model_info: ModelInfo) -> list[str]:
+    """Lists the required metadata fields that are still unset."""
     missing = []
     if model_info.max_output_tokens is None:
         missing.append("max_output_tokens")
@@ -603,6 +641,7 @@ def _missing_metadata_fields(model_info: ModelInfo) -> list[str]:
 
 
 def _apply_model_info(model: ModelsConfig, entry: dict[str, Any]) -> None:
+    """Fills unset ModelInfo fields from a (LiteLLM-style) info entry without overwriting YAML."""
     model_info = entry.get("model_info") or {}
     litellm_params = entry.get("litellm_params") or {}
     info = model.model_info
@@ -666,6 +705,7 @@ def _apply_model_info(model: ModelsConfig, entry: dict[str, Any]) -> None:
 
 
 def _coerce_positive_int(value: Any) -> PositiveInt | None:
+    """Best-effort positive-int coercion; invalid input yields None (logged)."""
     if value is None:
         return None
     try:
@@ -676,6 +716,7 @@ def _coerce_positive_int(value: Any) -> PositiveInt | None:
 
 
 def _coerce_decimal(value: Any) -> Decimal | None:
+    """Best-effort decimal coercion; invalid input yields None (logged)."""
     if value is None:
         return None
     try:
@@ -686,6 +727,7 @@ def _coerce_decimal(value: Any) -> Decimal | None:
 
 
 def _coerce_bool(value: Any) -> bool | None:
+    """Parses bools/numbers/yes-no strings; unknown shapes yield None."""
     if value is None:
         return None
     if isinstance(value, bool):
@@ -703,6 +745,7 @@ def _coerce_bool(value: Any) -> bool | None:
 
 
 def _coerce_str(value: Any) -> str | None:
+    """Strips and returns strings; other values stringified, empties yield None."""
     if value is None:
         return None
     if isinstance(value, str):
@@ -711,6 +754,7 @@ def _coerce_str(value: Any) -> str | None:
 
 
 def _first_non_null(*values: Any) -> Any:
+    """First non-null argument, else None."""
     for value in values:
         if value is not None:
             return value
@@ -718,6 +762,7 @@ def _first_non_null(*values: Any) -> Any:
 
 
 def _build_description(entry: dict[str, Any], fallback_name: str) -> str:
+    """Composes a description from available metadata, falling back to the model name."""
     model_info = entry.get("model_info") or {}
 
     description = (
@@ -746,6 +791,7 @@ def _build_description(entry: dict[str, Any], fallback_name: str) -> str:
 
 
 def _fetch_remote_model_entry(model: ModelsConfig) -> dict[str, Any] | None:
+    """Fetches the model-info endpoint and returns the entry matching this model."""
     info_payload = _load_model_info(model.endpoint, model.api_key)
     return _match_model_entry(info_payload, model)
 
@@ -753,6 +799,7 @@ def _fetch_remote_model_entry(model: ModelsConfig) -> dict[str, Any] | None:
 def _load_model_info(
     endpoint: HttpUrl, api_key: SecretStr | None
 ) -> list[dict[str, Any]]:
+    """Calls the LiteLLM model/info endpoint and returns its data list."""
     info_url = urljoin(endpoint.unicode_string(), "model/info")
 
     headers = {}
@@ -781,6 +828,7 @@ def _load_model_info(
 def _match_model_entry(
     payload: list[dict[str, Any]], model: ModelsConfig
 ) -> dict[str, Any] | None:
+    """Picks the payload entry matching llm_name/deployment (exact, then substring)."""
     desired_names = {
         name.lower()
         for name in [model.llm_name, model.deployment]
@@ -788,6 +836,7 @@ def _match_model_entry(
     }
 
     def _candidates(entry: dict[str, Any]) -> list[str]:
+        """Collects every usable lowercase name of one payload entry."""
         model_info = entry.get("model_info") or {}
         litellm_params = entry.get("litellm_params") or {}
         names = [

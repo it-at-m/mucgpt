@@ -37,6 +37,7 @@ export interface ParakeetQaInput {
 }
 
 /** Adapts structural OrtValue feeds into ort-web Tensors for session.run. */
+/** Adapts structural OrtValue feeds into ort-web Tensors for session.run. */
 function toTensors(feeds: Record<string, OrtValue>): Record<string, ort.Tensor> {
     const tensors: Record<string, ort.Tensor> = {};
     for (const [name, value] of Object.entries(feeds)) {
@@ -46,6 +47,7 @@ function toTensors(feeds: Record<string, OrtValue>): Record<string, ort.Tensor> 
     return tensors;
 }
 
+/** Wraps one ort-web session into the structural OrtSessionLike contract. */
 /** Wraps one ort-web session into the structural OrtSessionLike contract. */
 function toSessionLike(session: ort.InferenceSession): OrtSessionLike {
     return {
@@ -79,6 +81,7 @@ async function fetchBuffer(url: string): Promise<Uint8Array> {
 /** Graph optimization levels ort-web accepts; "disabled" isolates optimizer-time stalls. */
 export type OptimizationLevel = "disabled" | "basic" | "all";
 
+/** Session-create options for the WASM execution provider at the given optimization level. */
 const sessionOptions = (level: OptimizationLevel) => ({
     executionProviders: ["wasm"] as const,
     graphOptimizationLevel: level

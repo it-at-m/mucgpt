@@ -18,12 +18,14 @@ const DECODER_LAYERS = 6;
 const DECODER_DIM = 1024;
 const MEL_CHANNELS = 128;
 
+/** Resolves a mandatory task token id, throwing when the vocabulary lacks it. */
 function requiredTokenId(vocab: NemoVocab, token: string): number {
     const id = vocab.tokenToId.get(token);
     if (id === undefined) throw new Error(`Canary vocabulary is missing required token "${token}"`);
     return id;
 }
 
+/** Maps an ISO language to Canary's `<|lang|>` control token, validating support. */
 function canaryLanguageToken(language: string): string {
     if (!(CANARY_SUPPORTED_LANGUAGES as readonly string[]).includes(language)) {
         throw new Error(`Language "${language}" is not supported by Canary (${CANARY_SUPPORTED_LANGUAGES.join(", ")})`);
@@ -55,12 +57,14 @@ export function canaryPromptIds(vocab: NemoVocab, language: string, pnc = true):
     ];
 }
 
+/** Builds an int64 OrtValue from plain numbers (decoder `input_ids` feed). */
 function int64Tensor(values: readonly number[], dims: readonly number[]): OrtValue {
     const data = new BigInt64Array(values.length);
     for (let i = 0; i < values.length; i++) data[i] = BigInt(values[i]);
     return { dims, data };
 }
 
+/** Index of the highest value in the flat logits vector. */
 function argmax(values: Float32Array): number {
     let bestIndex = 0;
     let bestValue = values[0];

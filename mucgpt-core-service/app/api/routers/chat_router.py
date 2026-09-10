@@ -201,6 +201,9 @@ async def delete_conversation(
     user_info: Annotated[AuthenticationResult, Depends(authenticate_user)],
 ) -> None:
     """Delete the conversation: its ownership row and all LangGraph checkpoint state."""
+    if not await PersistanceHelpers.conversation_exists(conversation_id):
+        raise HTTPException(status_code=404, detail="Conversation not found")
+
     if not await PersistanceHelpers.is_user_in_conversation(
         user_info.user_id, conversation_id
     ):

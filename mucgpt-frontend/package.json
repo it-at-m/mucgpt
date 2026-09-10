@@ -16,7 +16,7 @@
         "markmap-view": "0.18.12",
         "mermaid": "11.16.1",
         "ndjson-readablestream": "1.4.0",
-        "onnxruntime-web": "^1.26.0-dev.20260416-b7804b056c",
+        "onnxruntime-web": "1.26.0-dev.20260416-b7804b056c",
         "prismjs": ">=1.30.0",
         "react": "19.2.6",
         "react-dom": "19.2.6",

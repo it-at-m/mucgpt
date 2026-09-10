@@ -129,6 +129,7 @@ const CONFIG_RESPONSE: ApplicationConfig = {
     assistant_version: "0.0.1",
     document_processing_enabled: true,
     transcription_enabled: true,
+    transcription_default_model: "onnx-community/whisper-small",
     ai_act_compliance_check_enabled: true,
     footer_link_url: "https://ki.muenchen.de",
     footer_label: "DAICE",

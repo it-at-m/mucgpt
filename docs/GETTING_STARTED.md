@@ -70,6 +70,32 @@ Where:
 - `XBERG_URL`: Points to your Xberg parsing service.
 - `XBERG_TIMEOUT`: Execution timeout in seconds.
 
+### Transcription Configuration (YAML)
+
+MUCGPT offers browser-based speech-to-text (beta): users can dictate into the chat input, and the audio is transcribed entirely inside their browser. The backend only gates the feature — no audio or transcript is ever sent to a server. It is disabled by default (`TRANSCRIPTION_ENABLED: false`).
+
+To enable it, set the flag in `core.config.yaml`:
+
+```yaml
+TRANSCRIPTION_ENABLED: true # Default is false
+```
+
+Or via environment variable: `MUCGPT_CORE_TRANSCRIPTION_ENABLED=true`
+
+Optionally, preselect a default model for first-time users:
+
+```yaml
+TRANSCRIPTION_DEFAULT_MODEL: "onnx-community/whisper-small" # Default is null (frontend built-in default)
+```
+
+The id must match an entry of the frontend's model list (`mucgpt-frontend/src/config/transcriptionModels.ts`); unknown ids are ignored. The choice applies once — as soon as a user picks a model themselves, it is stored in their browser and later changes to the default do not affect them.
+
+Notes for operators:
+
+- All transcription models (Whisper, NVIDIA Canary/Parakeet) run client-side on WebGPU or WASM; the browser downloads them directly from their model registry (Hugging Face) and caches them locally.
+- Model choice, language support, and hardware requirements are managed in the frontend (`mucgpt-frontend/src/config/transcriptionModels.ts`); there is no backend-side model configuration.
+- Users on hardware without WebGPU see a reduced model selection (CPU-based WASM models).
+
 ### Models Configuration (Environment Variable)
 
 Alternatively, models can be configured via the `MUCGPT_CORE_MODELS` environment variable as a JSON array:
@@ -133,6 +159,10 @@ In addition to backend storage, the frontend uses browser storage for UX state a
 - localStorage:
   - UI/user preferences (for example language, theme, selected tools, selected model)
   - Parsed document history/content cache (`MUCGPT_PARSED_DOCUMENTS_V1`)
+  - Transcription settings: enabled flag, selected model, downloaded model list (`SETTINGS_TRANSCRIPTION_*`)
+- Cache API (browser):
+  - NeMo transcription model files (Canary/Parakeet encoder/decoder/vocab, cache name `mucgpt-nemo-models-v1`)
+  - Whisper transcription model files (cached by transformers.js)
 - sessionStorage:
   - Route-local draft text in the question input
 - Cookies:

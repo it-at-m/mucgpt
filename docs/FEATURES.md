@@ -41,6 +41,28 @@ A focused entry point to discover assistants, jump back into recent work, and ac
 ![Models](/docs/models.png)
 Choose from available models and adjust creativity to fit the task. Model choices are transparent to the user.
 
+## Speech-to-Text (Beta)
+
+Dictate directly into the chat input: a microphone button appears next to the input field once speech-to-text is enabled. Transcribed text is appended to what you have already typed, so typing and dictation can be freely combined.
+
+- **Runs entirely on your device.** Audio is transcribed locally in your browser — nothing is uploaded, and no microphone input leaves your device.
+- **Model choice with language hints.** The settings dialog lists every model with its download size and supported languages, so you can pick the right one at a glance. Models download once and are cached in the browser.
+- **Language follows the interface language.** German interface → German transcription, with automatic language detection where the model supports it.
+- **Voice activity detection.** Recording stops automatically after a pause; segments are transcribed live while you speak.
+
+Available models (lineup grows over time):
+
+| Model | Languages | Requirements |
+|---|---|---|
+| Whisper Small | Multilingual (incl. German) | None (runs on CPU/WASM) |
+| Whisper Large v3 Turbo | Multilingual (incl. German) | WebGPU |
+| Whisper Large v3 Turbo German | German | WebGPU |
+| Distil-Whisper Large v3 German | German | None (runs on CPU/WASM) |
+| NVIDIA Canary 180M Flash | English, German, French, Spanish | None (runs on CPU/WASM) |
+| NVIDIA Parakeet TDT 0.6B v3 | 25 languages, automatic detection (incl. Ukrainian) | None (runs on CPU/WASM) |
+
+The feature must be enabled per deployment; if the microphone button is missing, your administrator has not activated it yet.
+
 ## Tutorials
 
 ![Tutorials](/docs/tutorials.png)

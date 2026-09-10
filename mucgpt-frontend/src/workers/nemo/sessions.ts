@@ -69,6 +69,7 @@ export async function fetchTextCached(url: string): Promise<string> {
     return new TextDecoder().decode(bytes);
 }
 
+/** Adapts a raw ort-web session to the structural OrtSessionLike contract, disposing via release(). */
 function wrapSession(ort: OrtModule, session: Awaited<ReturnType<OrtModule["InferenceSession"]["create"]>>): OrtSessionLike {
     return {
         inputNames: session.inputNames,

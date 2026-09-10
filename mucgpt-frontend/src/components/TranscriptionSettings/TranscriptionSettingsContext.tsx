@@ -39,6 +39,7 @@ export interface ITranscriptionSettings {
 
 const KNOWN_MODEL_IDS = new Set(TRANSCRIPTION_MODELS.map(m => m.model_id));
 
+/** Reads the persisted enabled flag from localStorage (default: disabled). */
 const readEnabled = (): boolean => {
     try {
         return localStorage.getItem(STORAGE_KEYS.SETTINGS_TRANSCRIPTION_ENABLED) === "true";
@@ -47,6 +48,7 @@ const readEnabled = (): boolean => {
     }
 };
 
+/** Resolves the initial model selection: stored choice → deployment default → built-in default. */
 const readSelected = (defaultModelId?: string | null): string => {
     try {
         const v = localStorage.getItem(STORAGE_KEYS.SETTINGS_TRANSCRIPTION_MODEL_ID);
@@ -59,6 +61,7 @@ const readSelected = (defaultModelId?: string | null): string => {
     return DEFAULT_TRANSCRIPTION_MODEL;
 };
 
+/** Reads the persisted downloaded-model ids from localStorage. */
 const readDownloaded = (): string[] => {
     try {
         const raw = localStorage.getItem(STORAGE_KEYS.SETTINGS_TRANSCRIPTION_DOWNLOADED_MODELS);

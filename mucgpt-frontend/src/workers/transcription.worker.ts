@@ -88,6 +88,7 @@ const failedSessions = new Set<number>();
 let autoStopTimer: ReturnType<typeof setTimeout> | null = null;
 let hasSpeechOccurred = false;
 
+/** (Re)arms the VAD auto-stop timer that fires after sustained silence following speech. */
 function scheduleAutoStop(sessionId: number): void {
     if (autoStopTimer !== null) clearTimeout(autoStopTimer);
     if (!hasSpeechOccurred) return;
@@ -97,6 +98,7 @@ function scheduleAutoStop(sessionId: number): void {
     }, AUTO_STOP_SILENCE_MS);
 }
 
+/** Clears any pending auto-stop timer (new speech arrived or recording ended). */
 function cancelAutoStop(): void {
     if (autoStopTimer !== null) {
         clearTimeout(autoStopTimer);
@@ -104,15 +106,18 @@ function cancelAutoStop(): void {
     }
 }
 
+/** True when the WebGPU API is exposed (gates webgpu_only models). */
 function detectWebGPU(): boolean {
     return typeof navigator !== "undefined" && "gpu" in navigator;
 }
 
+/** Maps q4f16 to q4 for WASM loads (fp16 is a WebGPU-only dtype in transformers.js). */
 function wasmSafeDtype(dtype: Record<string, string> | string): Record<string, string> | string {
     if (typeof dtype === "string") return dtype === "q4f16" ? "q4" : dtype;
     return Object.fromEntries(Object.entries(dtype).map(([k, v]) => [k, v === "q4f16" ? "q4" : v]));
 }
 
+/** Loads the requested transcription model per its runtime discriminator and posts ready/error. */
 async function loadModel(request: Extract<WorkerInMessage, { type: "load" }>) {
     const { requestId, modelId, language } = request;
     log("[transcription-worker] loadModel called", { modelId, runtime: request.runtime, language });
@@ -201,6 +206,7 @@ async function loadTransformersTranscriber(request: Extract<WorkerInMessage, { t
 
     const fileProgress = new Map<string, number>();
 
+    /** Aggregates per-file download percentages into one worker progress message. */
     const postCombined = () => {
         let downloadedBytes = 0;
         let knownTotalBytes = 0;
@@ -264,6 +270,7 @@ async function loadNemoTranscriber(request: Extract<WorkerInMessage, { type: "lo
     const { modelId, files, runtime } = request;
     if (!files) throw new Error(`NeMo model ${modelId} is missing its file list`);
     const fileProgress = new Map<string, { loaded: number; total: number }>();
+    /** Aggregates per-file byte counters into one worker progress message. */
     const postNemoProgress = () => {
         let loaded = 0;
         let total = 0;
@@ -282,6 +289,7 @@ async function loadNemoTranscriber(request: Extract<WorkerInMessage, { type: "lo
             self.postMessage({ type: "progress", progress: -1 } satisfies WorkerOutMessage);
         }
     };
+    /** Progress-adapter factory: records byte counters per file and posts the aggregate. */
     const track = (name: string) => (loaded: number, total: number) => {
         fileProgress.set(name, { loaded, total });
         postNemoProgress();
@@ -331,7 +339,9 @@ async function loadNemoTranscriber(request: Extract<WorkerInMessage, { type: "lo
     log("[transcription-worker] NeMo sessions loaded", { modelId, runtime });
 }
 
+/** Wraps a NeMo transcriber into the worker's pipeline shape, releasing the sessions on dispose. */
 function wrapNemoTranscriber(nemo: NemoTranscriber, sessions: OrtSessionLikeContent[]): any {
+    /** Pipeline-compatible transcription call delegating to the NeMo transcriber. */
     const pipeline = async (audio: Float32Array, opts?: { language?: string }) => ({
         text: await nemo.transcribe(audio, opts?.language)
     });
@@ -365,6 +375,7 @@ async function loadVad(): Promise<void> {
     log("[transcription-worker] VAD tensors initialised", { sampleRate: SAMPLE_RATE });
 }
 
+/** Runs Silero VAD on one frame, updating the rolling state; returns speech probability. */
 async function runVAD(frame: Float32Array): Promise<number> {
     const input = new TensorCtor("float32", frame, [1, frame.length]);
     const result = await vadModel({ input, sr: srTensor, state: vadState });
@@ -372,6 +383,7 @@ async function runVAD(frame: Float32Array): Promise<number> {
     return result.output.data[0] as number;
 }
 
+/** Assembles the segment audio: pre-speech lookback buffers plus buffer with tail padding. */
 function buildPaddedBuffer(): Float32Array {
     const padEnd = Math.min(bufferPointer + SPEECH_PAD_SAMPLES, BUFFER.length);
     const speechData = BUFFER.slice(0, padEnd);
@@ -386,6 +398,7 @@ function buildPaddedBuffer(): Float32Array {
     return paddedBuffer;
 }
 
+/** Queues one segment for transcription on the serial inference chain and posts its text. */
 function dispatchSegmentToWhisper(sessionId: number, audio: Float32Array): void {
     const language = currentLanguage;
     inferenceChain = inferenceChain
@@ -404,6 +417,7 @@ function dispatchSegmentToWhisper(sessionId: number, audio: Float32Array): void 
         });
 }
 
+/** VAD core: classifies one audio frame, manages speech/silence segmentation and auto-stop. */
 async function processAudioFrame(sessionId: number, frame: Float32Array): Promise<void> {
     if (activeSessionId !== sessionId || isStopPending || !vadModel || !transcriber) return;
 
@@ -466,6 +480,7 @@ async function processAudioFrame(sessionId: number, frame: Float32Array): Promis
     }
 }
 
+/** Processes queued frames sequentially until the queue empties or models are missing. */
 async function drainFrameQueue(sessionId: number): Promise<void> {
     while (frameQueue.length > 0 && activeSessionId === sessionId && !isStopPending) {
         // Suspend drain until models are ready; frames stay in queue.
@@ -480,6 +495,7 @@ async function drainFrameQueue(sessionId: number): Promise<void> {
     isProcessingFrame = false;
 }
 
+/** Kicks off the frame drain loop if it is not already running for this session. */
 function startFrameDrain(sessionId: number): void {
     if (isProcessingFrame || activeSessionId !== sessionId || isStopPending || frameQueue.length === 0) return;
     isProcessingFrame = true;
@@ -494,6 +510,7 @@ function startFrameDrain(sessionId: number): void {
         });
 }
 
+/** Accepts one transferred audio frame into the bounded queue and starts draining it. */
 function enqueueFrame(sessionId: number, frame: Float32Array): void {
     if (activeSessionId !== sessionId || isStopPending) return;
     frameQueue.push(frame);
@@ -502,6 +519,7 @@ function enqueueFrame(sessionId: number, frame: Float32Array): void {
     startFrameDrain(sessionId);
 }
 
+/** Resets all VAD/segmentation state for a fresh recording session. */
 function startRecording(sessionId: number): void {
     cancelAutoStop();
     activeSessionId = sessionId;
@@ -516,6 +534,7 @@ function startRecording(sessionId: number): void {
     if (vadState) vadState.data.fill(0);
 }
 
+/** Stops capture, flushes the buffered segment and posts complete once inference settles. */
 function handleStopRecording(sessionId: number): void {
     if (activeSessionId !== sessionId) return;
     cancelAutoStop();

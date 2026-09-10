@@ -24,19 +24,23 @@ interface EncodedFrames {
     nFrames: number;
 }
 
+/** Builds a 1-element int64 OrtValue (encoder `length` input). */
 function int64Scalar(value: number): OrtValue {
     return { dims: [1], data: new BigInt64Array([BigInt(value)]) };
 }
 
+/** Builds a 1-element int32 OrtValue (decoder_joint `target_length` input). */
 function int32Scalar(value: number): OrtValue {
     return { dims: [1], data: new Int32Array([value]) };
 }
 
+/** Unwraps a float32 output or throws with the offending output name. */
 function float32Data(value: OrtValue, name: string): Float32Array {
     if (!(value.data instanceof Float32Array)) throw new Error(`parakeet: output "${name}" is not float32`);
     return value.data;
 }
 
+/** Unwraps an int64 output or throws with the offending output name. */
 function int64Data(value: OrtValue, name: string): BigInt64Array {
     if (!(value.data instanceof BigInt64Array)) throw new Error(`parakeet: output "${name}" is not int64`);
     return value.data;
@@ -50,12 +54,14 @@ function squeezedFloat32(value: OrtValue, name: string): Float32Array {
     return data;
 }
 
+/** Picks a named output, falling back to positional lookup for exports with renamed outputs. */
 function pickOutput(result: Record<string, OrtValue>, outputNames: readonly string[], name: string, index: number): OrtValue {
     const value = result[name] ?? (index < outputNames.length ? result[outputNames[index]] : undefined);
     if (!value) throw new Error(`parakeet: ONNX output "${name}" missing`);
     return value;
 }
 
+/** Index of the highest value in data[start, end). */
 function argmax(data: Float32Array, start: number, end: number): number {
     let best = start;
     for (let i = start + 1; i < end; i++) {
@@ -64,6 +70,7 @@ function argmax(data: Float32Array, start: number, end: number): number {
     return best;
 }
 
+/** Runs the encoder and returns frames transposed to [frame, hidden] with the valid frame count. */
 async function encode(encoder: OrtSessionLike, features: Float32Array, totalFrames: number, validFrames: number): Promise<EncodedFrames> {
     const result = await encoder.run({
         audio_signal: { dims: [1, 128, totalFrames], data: features },
@@ -116,10 +123,12 @@ export function createParakeetTranscriber(
     if (vocabCount === 0) throw new Error("parakeet: vocabulary is empty");
     const blankId = vocabCount - 1;
     const stateDims = [lstmLayers, 1, predictionHidden];
+    /** Fresh all-zero LSTM [h, c] state for decode start and reset after frame advances. */
     const zeroState = (): OrtValue => ({ dims: stateDims, data: new Float32Array(lstmLayers * predictionHidden) });
     const targetLength = int32Scalar(1);
     const targetsData = new Int32Array(1);
 
+    /** Greedy TDT decode: mel → encoder → per-frame joint steps with duration advances. */
     const transcribe = async (audio: Float32Array): Promise<string> => {
         const { features, totalFrames, validFrames } = computeNemoMel(audio);
         if (validFrames < 2) return "";

@@ -135,7 +135,7 @@ services:
       - SPRING_CLOUD_GATEWAY_SERVER_WEBFLUX_ROUTES_1_FILTERS_0=RewritePath=/api/backend/(?<urlsegments>.*), /api/$\{urlsegments}
       - SPRING_CLOUD_GATEWAY_SERVER_WEBFLUX_ROUTES_2_ID=assistant
       - SPRING_CLOUD_GATEWAY_SERVER_WEBFLUX_ROUTES_2_URI=http://assistant-service:8084/
-      - SPRING_CLOUD_GATEWAY_SERVER_WEBFLUX_ROUTES_2_PREDICATES_0=Path=/api/assistant/**, /api/user/**, /api/directory/**
+      - SPRING_CLOUD_GATEWAY_SERVER_WEBFLUX_ROUTES_2_PREDICATES_0=Path=/api/assistant/**, /api/user/**, /api/directory/**, /api/admin/**
       - SPRING_CLOUD_GATEWAY_SERVER_WEBFLUX_ROUTES_3_ID=frontend
       - SPRING_CLOUD_GATEWAY_SERVER_WEBFLUX_ROUTES_3_URI=http://frontend:8080/
       - SPRING_CLOUD_GATEWAY_SERVER_WEBFLUX_ROUTES_3_PREDICATES_0=Path=/**
@@ -229,18 +229,18 @@ services:
     networks:
       - internal
     environment:
-      - LOG_LEVEL_ROOT=INFO
-      - LOG_LEVEL_DEV=INFO
+      - LOG_LEVEL_ROOT=DEBUG
+      - LOG_LEVEL_DEV=DEBUG
       - LOG_LEVEL_HTTPX=INFO
-      - LOG_LEVEL_HTTPCORE=INFO
-      - LOG_LEVEL_UVICORN_ERROR=INFO
+      - LOG_LEVEL_HTTPCORE=DEBUG
+      - LOG_LEVEL_UVICORN_ERROR=DEBUG
       - LOG_LEVEL_UVICORN_ACCESS=INFO
       - LOG_LEVEL_SYSTEM_ROUTER=INFO
-      - LOG_LEVEL_USERS_ROUTER=INFO
-      - LOG_LEVEL_ASSISTANTS_ROUTER=INFO
-      - LOG_LEVEL_ASSISTANT_REPO=INFO
-      - LOG_LEVEL_MUCGPT_ASSISTANT_SERVICE=INFO
-      - LOG_LEVEL_AUTH=INFO
+      - LOG_LEVEL_USERS_ROUTER=DEBUG
+      - LOG_LEVEL_ASSISTANTS_ROUTER=DEBUG
+      - LOG_LEVEL_ASSISTANT_REPO=DEBUG
+      - LOG_LEVEL_MUCGPT_ASSISTANT_SERVICE=DEBUG
+      - LOG_LEVEL_AUTH=DEBUG
     healthcheck:
       <<: *healthcheck
       test: ["CMD-SHELL", "curl http://localhost:8084/api/health"]

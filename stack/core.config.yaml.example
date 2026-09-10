@@ -119,8 +119,9 @@ MODELS:
 
 # SSO Settings (Keycloak)
 # Used by both core and assistant services for authentication
-# ROLE: "lhm-ab-mucgpt-user"
-# ROLE: "lhm-ab-mucgpt-user" is default, can be overridden here
+SSO:
+  ROLE: "lhm-ab-mucgpt-user"
+  ADMIN_ROLE: "lhm-ab-mucgpt-admin"
 
 # Redis Settings (Valkey in docker-compose)
 # Used by both core and assistant services for caching

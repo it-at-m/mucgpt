@@ -1,6 +1,7 @@
 from unittest.mock import patch
 
 import pytest
+from fastapi.testclient import TestClient
 
 from config.settings import ParserBackendType, Settings
 
@@ -97,17 +98,22 @@ def test_ai_act_compliance_check_disabled_reflects_settings(test_client):
 
 
 @pytest.mark.integration
-def test_transcription_default_model_reflects_settings(test_client):
+def test_transcription_default_model_reflects_settings(test_client: TestClient):
     """transcription_default_model follows the TRANSCRIPTION_DEFAULT_MODEL setting."""
-    mock_settings = Settings(TRANSCRIPTION_DEFAULT_MODEL="efederici/parakeet-tdt-0.6b-v3-onnx-int4")
+    mock_settings = Settings(
+        TRANSCRIPTION_DEFAULT_MODEL="efederici/parakeet-tdt-0.6b-v3-onnx-int4"
+    )
     with patch("api.routers.system_router.settings", mock_settings):
         response = test_client.get("/config", headers=headers)
     assert response.status_code == 200
-    assert response.json()["transcription_default_model"] == "efederici/parakeet-tdt-0.6b-v3-onnx-int4"
+    assert (
+        response.json()["transcription_default_model"]
+        == "efederici/parakeet-tdt-0.6b-v3-onnx-int4"
+    )
 
 
 @pytest.mark.integration
-def test_transcription_default_model_none_by_default(test_client):
+def test_transcription_default_model_none_by_default(test_client: TestClient):
     """transcription_default_model is None by default."""
     mock_settings = Settings()
     with patch("api.routers.system_router.settings", mock_settings):

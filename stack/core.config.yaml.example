@@ -10,7 +10,13 @@ LOG_CONFIG: "logconf.yaml"
 # Frontend settings
 ENV_NAME: "MUCGPT🦜"
 ALTERNATIVE_LOGO: false
+# Enables the browser-based speech-to-text feature. Transcription itself runs fully
+# client-side (models are downloaded and cached by the browser; no audio reaches the backend).
 TRANSCRIPTION_ENABLED: false
+# Model id preselected in the transcription settings for first-time users (must match an
+# entry of the frontend's TRANSCRIPTION_MODELS list, e.g. "onnx-community/whisper-small").
+# Unknown ids are ignored; leave unset for the frontend's built-in default.
+TRANSCRIPTION_DEFAULT_MODEL: null
 AI_ACT_COMPLIANCE_CHECK_ENABLED: true
 APP_VERSION: "2.0"
 FRONTEND_VERSION: "0.0.2"

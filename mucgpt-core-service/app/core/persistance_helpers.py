@@ -143,6 +143,19 @@ class PersistanceHelpers:
             return await cur.fetchone() is not None
 
     @staticmethod
+    async def conversation_exists(conversation_id: str) -> bool:
+        """Check whether a conversation exists without checking its owner."""
+        pool = PersistanceHelpers._pool
+        if pool is None:
+            raise RuntimeError("PersistanceHelpers not initialized")
+        async with pool.connection() as conn:
+            cur = await conn.execute(
+                "SELECT 1 FROM chats WHERE conversation_id = %s",
+                (conversation_id,),
+            )
+            return await cur.fetchone() is not None
+
+    @staticmethod
     async def get_conversation_messages(
         conversation_id: str,
     ) -> list[ChatCompletionMessage]:

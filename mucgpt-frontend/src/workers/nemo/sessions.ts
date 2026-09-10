@@ -12,6 +12,8 @@ type OrtModule = {
             inputNames: readonly string[];
             outputNames: readonly string[];
             run(feeds: Record<string, unknown>): Promise<Record<string, unknown>>;
+            /** ort-web >= 1.22 API: frees the WASM-side session resources. */
+            release(): Promise<void>;
         }>;
     };
     env: {
@@ -85,8 +87,8 @@ function wrapSession(ort: OrtModule, session: Awaited<ReturnType<OrtModule["Infe
             return outputs;
         },
         async dispose() {
-            const resourceful = session as { dispose?: () => Promise<void> | void };
-            await resourceful.dispose?.();
+            // The pinned ort-web build exposes release(), not dispose().
+            await session.release();
         }
     };
 }

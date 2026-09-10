@@ -295,7 +295,9 @@ async function loadNemoTranscriber(request: Extract<WorkerInMessage, { type: "lo
     let vocabText: string;
     try {
         // Release whichever sessions materialised when a sibling file fails, so a
-        // retry does not accumulate orphaned WASM heaps.
+        // retry does not accumulate orphaned WASM heaps. Cleanup spans parsing
+        // and transcriber construction too: until wrapNemoTranscriber hands the
+        // sessions over, they are still ours to release.
         [encoderSession, decoderSession, vocabText] = await Promise.all([
             encoderPromise,
             decoderPromise,
@@ -304,19 +306,28 @@ async function loadNemoTranscriber(request: Extract<WorkerInMessage, { type: "lo
                 return text;
             })
         ]);
+        const vocab = parseNemoVocab(vocabText);
+        const nemo: NemoTranscriber =
+            runtime === "canary"
+                ? createCanaryTranscriber({ encoder: encoderSession, decoder: decoderSession, vocab })
+                : createParakeetTranscriber({ encoder: encoderSession, decoderJoint: decoderSession, vocab });
+        transcriber = wrapNemoTranscriber(nemo, [encoderSession, decoderSession]);
     } catch (err) {
-        for (const session of [encoderSession, decoderSession]) await session?.dispose?.();
-        for (const promise of [encoderPromise, decoderPromise]) {
-            promise.then(s => s.dispose?.()).catch(() => undefined);
+        if (encoderSession || decoderSession) {
+            // Promise.all resolved but construction failed: the local variables
+            // own the sessions — release them directly (the sibling promises
+            // would hit the same objects).
+            await encoderSession?.dispose?.();
+            await decoderSession?.dispose?.();
+        } else {
+            // Promise.all rejected before assignment: dispose whichever sibling
+            // promises still resolve later.
+            for (const promise of [encoderPromise, decoderPromise]) {
+                promise.then(s => s.dispose?.()).catch(() => undefined);
+            }
         }
         throw err;
     }
-    const vocab = parseNemoVocab(vocabText);
-    const nemo: NemoTranscriber =
-        runtime === "canary"
-            ? createCanaryTranscriber({ encoder: encoderSession, decoder: decoderSession, vocab })
-            : createParakeetTranscriber({ encoder: encoderSession, decoderJoint: decoderSession, vocab });
-    transcriber = wrapNemoTranscriber(nemo, [encoderSession, decoderSession]);
     log("[transcription-worker] NeMo sessions loaded", { modelId, runtime });
 }
 

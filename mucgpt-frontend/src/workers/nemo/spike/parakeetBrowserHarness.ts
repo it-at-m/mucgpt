@@ -124,14 +124,13 @@ export async function runTranscription(input: ParakeetQaInput, level: Optimizati
     const sessionSeconds = (performance.now() - sessionStartedAt) / 1000;
     console.log(`[harness] sessions created in ${sessionSeconds.toFixed(2)}s`);
 
-    const vocabResponse = await fetch(input.vocabUrl);
-    if (!vocabResponse.ok) throw new Error(`vocab fetch failed: ${vocabResponse.status}`);
-    const vocab: NemoVocab = parseNemoVocab(await vocabResponse.text());
-    console.log(`[harness] vocab: ${vocab.idToToken.length} tokens, blank="${vocab.idToToken[vocab.idToToken.length - 1]}"`);
-
     const pcm = new Float32Array(input.pcm);
     let transcriber: ReturnType<typeof createParakeetTranscriber> | null = null;
     try {
+        const vocabResponse = await fetch(input.vocabUrl);
+        if (!vocabResponse.ok) throw new Error(`vocab fetch failed: ${vocabResponse.status}`);
+        const vocab: NemoVocab = parseNemoVocab(await vocabResponse.text());
+        console.log(`[harness] vocab: ${vocab.idToToken.length} tokens, blank="${vocab.idToToken[vocab.idToToken.length - 1]}"`);
         transcriber = createParakeetTranscriber({
             encoder: toSessionLike(encoder),
             decoderJoint: toSessionLike(decoderJoint),

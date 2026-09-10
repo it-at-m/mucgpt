@@ -65,16 +65,19 @@ const DIRECTORY_TREE = [
     }
 ];
 
+/** Lower-cases and trims a node segment for tolerant matching. */
 function normalize(value: string | null) {
     return value?.trim().toLowerCase() || null;
 }
 
+/** True when a URL segment matches a tree node by shortname or name. */
 function matchNode(segment: string, node: any) {
     const target = normalize(segment);
     if (!target) return false;
     return target === normalize(node.shortname) || target === normalize(node.name);
 }
 
+/** Resolves a chain of URL segments to a mock tree node. */
 function findNode(pathSegments: string[]) {
     let currentList: any[] = DIRECTORY_TREE;
     let current: any | null = null;
@@ -157,6 +160,7 @@ if (pendingAssistant) pendingAssistant.latest_version.state = "pending_legal_rev
 
 const MOCK_SUBSCRIPTION_COUNTS = [10350, 2500, 1400, 980, 620, 410, 275, 190, 135, 88, 42, 17];
 
+/** Deterministic pseudo-random subscription count for an assistant id. */
 function getMockSubscriptionCount(assistantId: string): number {
     const exists = DYNAMIC_ASSISTANTS.some(assistant => assistant.id === assistantId);
     if (!exists) return 0;
@@ -165,6 +169,7 @@ function getMockSubscriptionCount(assistantId: string): number {
     return MOCK_SUBSCRIPTION_COUNTS[stableIndex];
 }
 
+/** Copies an assistant DTO enriched with a mock subscription count. */
 function withMockSubscriptionCount(assistant: AssistantCreateResponse) {
     return {
         ...assistant,
@@ -395,6 +400,7 @@ You are a **structured assistant**.
 );
 
 // Helper to choose stream type basierend auf enabled_tools
+/** Picks the SSE stream type mocking tool-less vs tool-enabled chats. */
 function chooseStreamType(enabledTools?: string[]) {
     const options: Array<"mindmap" | "simplify"> = [];
     if (enabledTools?.includes("Brainstorming")) options.push("mindmap");
@@ -470,6 +476,7 @@ function resolveForcedContextTokens(userMessage: string, modelName: string | und
     return Math.round((targetPercent / 100) * maxInputTokens);
 }
 
+/** Mocked document-upload handler returning parsed text sections. */
 async function parseUploadHandler({ request }: { request: Request }) {
     // Simulate network delay for file upload and parsing
     await delay(8000 + Math.random() * 4000); // 8-12 seconds delay

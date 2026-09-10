@@ -94,23 +94,24 @@ export const TRANSCRIPTION_MODELS: TranscriptionModel[] = [
             vocab: "https://huggingface.co/istupakov/canary-180m-flash-onnx/resolve/main/vocab.txt"
         },
         file_tree: "main"
+    },
+    // NVIDIA Parakeet TDT 0.6B v3: 25 languages with automatic language detection
+    // (covers all MUCGPT locales incl. Ukrainian). int4 encoder (MatMulNBits) +
+    // int8 fused decoder_joint via our TDT decoder (src/workers/nemo/parakeet).
+    // Browser-validated on ort-web WASM: session create ~1.3 s, ~0.63 RTF single-threaded,
+    // dispose/reload clean (see src/workers/nemo/spike/parakeetBrowserHarness.ts).
+    {
+        model_id: "efederici/parakeet-tdt-0.6b-v3-onnx-int4",
+        label: "NVIDIA Parakeet TDT 0.6B v3",
+        size_hint: "~390 MB",
+        runtime: "parakeet",
+        files: {
+            encoder: "https://huggingface.co/efederici/parakeet-tdt-0.6b-v3-onnx-int4/resolve/main/encoder-model.int4.onnx",
+            decoder: "https://huggingface.co/efederici/parakeet-tdt-0.6b-v3-onnx-int4/resolve/main/decoder_joint-model.int8.onnx",
+            vocab: "https://huggingface.co/efederici/parakeet-tdt-0.6b-v3-onnx-int4/resolve/main/vocab.txt"
+        },
+        file_tree: "main"
     }
-    // Disabled until browser-validated: NVIDIA Parakeet TDT 0.6B v3 (multilingual, 25 languages,
-    // automatic language detection, covers all MUCGPT locales incl. Ukrainian). int4 encoder
-    // (MatMulNBits) + int8 fused decoder_joint via our TDT decoder (src/workers/nemo/parakeet).
-    // Uncomment after the browser QA pass on ort-web wasm.
-    // {
-    //     model_id: "efederici/parakeet-tdt-0.6b-v3-onnx-int4",
-    //     label: "NVIDIA Parakeet TDT 0.6B v3",
-    //     size_hint: "~390 MB",
-    //     runtime: "parakeet",
-    //     files: {
-    //         encoder: "https://huggingface.co/efederici/parakeet-tdt-0.6b-v3-onnx-int4/resolve/main/encoder-model.int4.onnx",
-    //         decoder: "https://huggingface.co/efederici/parakeet-tdt-0.6b-v3-onnx-int4/resolve/main/decoder_joint-model.int8.onnx",
-    //         vocab: "https://huggingface.co/efederici/parakeet-tdt-0.6b-v3-onnx-int4/resolve/main/vocab.txt"
-    //     },
-    //     file_tree: "main"
-    // }
 ];
 
 /** Model preselected for first-time users (the lightest, most compatible option). */

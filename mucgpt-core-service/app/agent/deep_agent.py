@@ -39,7 +39,6 @@ class _ConfiguredLangChainDeepAgentGraph:
         default_prompt = PromptPool.get_resolved_prompt("default_instructions")
         self.default_langfuse_prompt = default_prompt.langfuse_prompt
 
-        # After PR #1177 the agent graph is not compiled per request anymore.
         # dynamically selecting the state schema based on the tools is not supported anymore --> defautling to DefaultAgentState for now.
         self.state_schema = DefaultAgentState
         self.agent = create_deep_agent(

@@ -47,13 +47,15 @@ const readEnabled = (): boolean => {
     }
 };
 
-const readSelected = (): string => {
+const readSelected = (defaultModelId?: string | null): string => {
     try {
         const v = localStorage.getItem(STORAGE_KEYS.SETTINGS_TRANSCRIPTION_MODEL_ID);
         if (v && KNOWN_MODEL_IDS.has(v)) return v;
     } catch {
         // ignore
     }
+    // First-time users: honor the deployment's default model when it is a known entry.
+    if (defaultModelId && KNOWN_MODEL_IDS.has(defaultModelId)) return defaultModelId;
     return DEFAULT_TRANSCRIPTION_MODEL;
 };
 
@@ -98,16 +100,22 @@ export const useTranscription = () => useContext(TranscriptionSettingsContext);
 
 interface TranscriptionSettingsProviderProps {
     deploymentEnabled?: boolean;
+    /** Deployment-configured model preselected for first-time users; unknown ids fall back to the built-in default. */
+    defaultModelId?: string | null;
 }
 
 /** Owns the transcription worker, persists user settings and exposes everything through the context. */
-export const TranscriptionSettingsProvider = ({ children, deploymentEnabled = true }: React.PropsWithChildren<TranscriptionSettingsProviderProps>) => {
+export const TranscriptionSettingsProvider = ({
+    children,
+    deploymentEnabled = true,
+    defaultModelId = null
+}: React.PropsWithChildren<TranscriptionSettingsProviderProps>) => {
     const { t, i18n } = useTranslation();
 
     // Persisted settings
     const [enabled, setEnabledState] = useState<boolean>(() => readEnabled());
     const effectiveEnabled = deploymentEnabled && enabled;
-    const [selectedModelId, setSelectedModelIdState] = useState<string>(() => readSelected());
+    const [selectedModelId, setSelectedModelIdState] = useState<string>(() => readSelected(defaultModelId));
     const [downloadedModels, setDownloadedModels] = useState<string[]>(() => readDownloaded());
 
     // Worker state

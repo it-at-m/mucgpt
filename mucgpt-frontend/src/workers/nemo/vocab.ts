@@ -31,6 +31,7 @@ export function parseNemoVocab(text: string): NemoVocab {
     return { idToToken, tokenToId };
 }
 
+/** True for control/padding tokens that never appear in decoded text. */
 function isSpecialToken(token: string): boolean {
     return token.startsWith("<|") || token === "<unk>" || token === "<pad>" || token === "<blk>";
 }

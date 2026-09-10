@@ -25,14 +25,17 @@ export interface NemoMelResult {
     validFrames: number;
 }
 
+/** HTK-style Hz→mel warp (NeMo slaney variant, smooth at 1 kHz). */
 function hzToMel(freq: number): number {
     return freq < 1000 ? (3 * freq) / 200 : 15 + (27 * Math.log(freq / 1000 + MEL_HZ_TO_MEL_EPS)) / Math.log(6.4);
 }
 
+/** Inverse of {@link hzToMel}. */
 function melToHz(mel: number): number {
     return mel < 15 ? (200 * mel) / 3 : 1000 * Math.pow(6.4, (mel - 15) / 27);
 }
 
+/** Precomputes the 257×128 slaney fbank matrix shared by every invocation. */
 function buildSlaneyFbank(): Float64Array {
     const allFreqs = new Float64Array(NUM_FREQ_BINS);
     for (let i = 0; i < NUM_FREQ_BINS; i++) allFreqs[i] = (8000 * i) / (NUM_FREQ_BINS - 1);

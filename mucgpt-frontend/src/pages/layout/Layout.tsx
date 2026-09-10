@@ -361,7 +361,7 @@ export const Layout = () => {
                         <Unauthorized redirectUrl={unauthorizedRedirectUrl} />
                     ) : (
                         <ConfigContext.Provider value={config}>
-                            <TranscriptionSettingsProvider deploymentEnabled={config.transcription_enabled}>
+                            <TranscriptionSettingsProvider deploymentEnabled={config.transcription_enabled} defaultModelId={config.transcription_default_model}>
                                 <ToolsProvider>
                                     <UnifiedHistoryProvider>
                                         <AppShell

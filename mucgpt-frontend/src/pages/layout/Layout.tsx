@@ -13,9 +13,9 @@ import {
 import { useTranslation } from "react-i18next";
 
 import styles from "./Layout.module.css";
-import logo from "../../assets/edelweiss_pride.svg";
+import logo from "../../assets/edelweiss_white.svg";
 import alternative_logo from "../../assets/mugg_tschibidi.png";
-import logo_black from "../../assets/edelweiss_pride.svg";
+import logo_black from "../../assets/edelweiss.svg";
 import { DEFAULTLANG, LanguageContext } from "../../components/LanguageSelector/LanguageContextProvider";
 import { TermsOfUseDialog } from "../../components/TermsOfUseDialog";
 import { ApplicationConfig } from "../../api";
@@ -175,9 +175,8 @@ const AppShell = ({ config, isLight, languagePreference, onLanguageSelectionChan
                 </a>
 
                 <div
-                    className={`${styles.shellBody} ${!isMobile && isSidebarCollapsed ? styles.shellBodyCollapsed : ""} ${
-                        isMobile ? styles.shellBodyMobile : ""
-                    }`}
+                    className={`${styles.shellBody} ${!isMobile && isSidebarCollapsed ? styles.shellBodyCollapsed : ""} ${isMobile ? styles.shellBodyMobile : ""
+                        }`}
                 >
                     {!isMobile && (
                         <aside className={styles.sidebarColumn}>

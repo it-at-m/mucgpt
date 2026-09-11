@@ -6,6 +6,16 @@ import pytest
 from fastapi.testclient import TestClient
 from langchain_core.messages import AIMessage
 
+from core.lf_prompts import ResolvedPrompt
+
+
+@pytest.fixture(autouse=True)
+def generation_prompts(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(
+        "api.routers.generation_router.read_prompt_file_with_metadata",
+        lambda filename: ResolvedPrompt(content=f"{filename} instruction"),
+    )
+
 
 class _FakeConfiguredModel:
     def __init__(
@@ -22,9 +32,7 @@ class _FakeConfiguredModel:
     def bind(self, **_kwargs: Any) -> "_FakeConfiguredModel":
         return self
 
-    async def ainvoke(
-        self, messages: Sequence[Any], config: Any = None
-    ) -> AIMessage:
+    async def ainvoke(self, messages: Sequence[Any], config: Any = None) -> AIMessage:
         run_name = (config or {}).get("run_name") or ""
         self._capture_owner.messages = list(messages)
         if self._fail_run_name and run_name == self._fail_run_name:

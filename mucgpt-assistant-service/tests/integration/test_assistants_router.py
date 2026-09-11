@@ -860,7 +860,6 @@ def test_get_assistant_includes_owners_detailed(test_client, monkeypatch):
             {
                 "user_id": owner_id,
                 "username": f"User {owner_id}",
-                "contact_address": f"{owner_id}@example.org",
                 "givenName": "Test",
                 "sn": "User",
                 "mail": f"{owner_id}@example.org",
@@ -896,7 +895,7 @@ def test_get_assistant_includes_owners_detailed(test_client, monkeypatch):
     assert "owners_detailed" in response_data
     assert len(response_data["owners_detailed"]) >= 1
     assert "username" in response_data["owners_detailed"][0]
-    assert "contact_address" in response_data["owners_detailed"][0]
+    assert "mail" in response_data["owners_detailed"][0]
 
 
 @pytest.fixture

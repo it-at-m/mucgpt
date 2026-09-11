@@ -87,7 +87,7 @@ async def test_build_owner_details_returns_resolved_owner(
     assert len(result) == 1
     assert result[0]["user_id"] == "111160470"
     assert result[0]["username"] == "Michael Jaumann"
-    assert result[0]["contact_address"] == "michael.jaumann@muenchen.de"
+    assert result[0]["mail"] == "michael.jaumann@muenchen.de"
 
 
 @pytest.mark.asyncio

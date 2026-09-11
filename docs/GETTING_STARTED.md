@@ -52,6 +52,17 @@ MODELS:
 
 See `mucgpt-core-service/config.yaml.example` and `mucgpt-assistant-service/config.yaml.example` for complete examples.
 
+### Prompt Configuration
+
+The optional `PROMPTS` section maps prompt names used by the core service to prompts stored in [langfuse](https://langfuse.com/docs/prompt-management/overview). Configure each prompt under its Langfuse folder with the label to use; folder and prompt names must match Langfuse exactly. See `mucgpt-core-service/config.yaml.example` for the complete YAML structure.
+
+- `defaults/default_instructions`: general system instructions for regular chat.
+- `generation_prompts/chat_title`: generates concise chat titles.
+- `generation_prompts/assistant_name`: generates assistant names from prompt seeds.
+- `generation_prompts/assistant_description`: generates assistant descriptions from prompt seeds.
+- `generation_prompts/assistant_systemprompt`: generates assistant system prompts from prompt seeds.
+- `compliance_prompts/*`: screens assistant prompts for high-risk use cases (eu-ai-act) in migration/asylum/border control, public services, employment, and education.
+
 ### Document Parsing Configuration (YAML)
 
 The core service supports extracting text and structure from uploaded documents using an optional parser. Configure the document parser in `core.config.yaml`. By default, document parsing is disabled (`PARSER_BACKEND: "none"`).

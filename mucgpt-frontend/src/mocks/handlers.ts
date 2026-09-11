@@ -136,7 +136,8 @@ const CONFIG_RESPONSE: ApplicationConfig = {
     incident_report_url: "https://ki.muenchen.de/",
     feature_request_url: "https://ki.muenchen.de/",
     contact_mail_url: "mailto:ki@muenchen.de",
-    ad2image_url: ""
+    ad2image_url: "",
+    owner_profile_url_template: "https://intranet.muenchen.de/person/{uid}"
 };
 
 const DYNAMIC_ASSISTANTS: AssistantCreateResponse[] = buildAssistantList(6);

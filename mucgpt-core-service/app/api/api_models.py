@@ -405,8 +405,9 @@ class ChatTitleRequest(BaseModel):
     """Request model for generating a chat title based on the last turn."""
 
     conversation_id: str = Field(
-        ..., description="Stable client-generated id used as the LangGraph checkpoint thread id."
-        )
+        ...,
+        description="Stable client-generated id used as the LangGraph checkpoint thread id.",
+    )
     query: str = Field(
         ..., description="The user's last question or message in the chat."
     )
@@ -532,4 +533,8 @@ class ConfigResponse(BaseModel):
     ad2image_url: str | None = Field(
         None,
         description="Base URL of the ad2image service for Gravatar-compatible avatar images.",
+    )
+    owner_profile_url_template: str | None = Field(
+        None,
+        description="Template for assistant owner profile links. The '{uid}' placeholder is replaced with the owner lhmObjectID.",
     )

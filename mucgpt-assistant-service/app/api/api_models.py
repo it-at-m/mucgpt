@@ -119,11 +119,6 @@ class OwnerDetailsResponse(BaseModel):
     username: str = Field(
         ..., description="Display-friendly owner name", example="Max Mustermann"
     )
-    contact_address: str | None = Field(
-        None,
-        description="Primary contact address of the owner",
-        example="max.mustermann@muenchen.de",
-    )
     givenName: str | None = Field(
         None, description="Owner given name from LDAP", example="Max"
     )

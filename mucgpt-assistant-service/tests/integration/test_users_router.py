@@ -108,7 +108,6 @@ def test_get_user_assistants_includes_owners_detailed(test_client, monkeypatch):
             {
                 "user_id": owner_id,
                 "username": f"User {owner_id}",
-                "contact_address": f"{owner_id}@example.org",
                 "givenName": "Test",
                 "sn": "User",
                 "mail": f"{owner_id}@example.org",
@@ -142,7 +141,7 @@ def test_get_user_assistants_includes_owners_detailed(test_client, monkeypatch):
     assert "owners_detailed" in assistants[0]
     assert len(assistants[0]["owners_detailed"]) >= 1
     assert "username" in assistants[0]["owners_detailed"][0]
-    assert "contact_address" in assistants[0]["owners_detailed"][0]
+    assert "mail" in assistants[0]["owners_detailed"][0]
 
 
 # Helper function to create a new database session

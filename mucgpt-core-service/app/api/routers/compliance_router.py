@@ -60,9 +60,8 @@ async def check_assistant_compliance(
 
     prompt_hash = hashlib.sha256(request.system_prompt.encode("utf-8")).hexdigest()
 
-    model_name = get_internal_task_model(
-        get_settings(), InternalTaskModelStrength.STRONG
-    )
+    settings = get_settings()
+    model_name = get_internal_task_model(settings, InternalTaskModelStrength.STRONG)
     response = await evaluate_compliance(
         system_prompt=request.system_prompt,
         model_name=model_name,

@@ -70,7 +70,10 @@ class ModelInfo(BaseModel):
 
     @model_validator(mode="after")
     def check_threshold_order(self) -> "ModelInfo":
-        if self.context_warning_threshold_percent >= self.context_critical_threshold_percent:
+        if (
+            self.context_warning_threshold_percent
+            >= self.context_critical_threshold_percent
+        ):
             raise ValueError(
                 "context_warning_threshold_percent must be lower than "
                 "context_critical_threshold_percent"
@@ -447,6 +450,26 @@ class InternetSearchConfig(BaseModel):
     SAFESEARCH: int = 1
 
 
+class PromptConfig(BaseModel):
+    """A prompt inside a Langfuse folder."""
+
+    name: str
+    label: str = "production"
+
+
+class PromptFolderConfig(BaseModel):
+    """A Langfuse folder and the prompts loaded from it."""
+
+    name: str
+    prompts: list[PromptConfig]
+
+
+class PromptPoolConfig(BaseModel):
+    """Configured Langfuse prompt folders."""
+
+    FOLDERS: list[PromptFolderConfig] = Field(default_factory=list)
+
+
 # Backward-compatible aliases
 SSOSettings = SSOConfig
 LangfuseSettings = LangfuseConfig
@@ -485,11 +508,13 @@ class Settings(BaseSettings):
     FEATURE_REQUEST_URL: str | None = None
     CONTACT_MAIL_URL: str | None = None
     AD2IMAGE_URL: str | None = None
+    OWNER_PROFILE_URL_TEMPLATE: str | None = None
 
     # Backend settings
     UNAUTHORIZED_USER_REDIRECT_URL: str = ""
     MODELS: list[ModelsConfig] = []
     MEMORY_SERVICE_URL: str = ""
+    PROMPTS: PromptPoolConfig = Field(default_factory=PromptPoolConfig)
 
     # Parsing
     PARSER_BACKEND: ParserBackendType = ParserBackendType.NONE

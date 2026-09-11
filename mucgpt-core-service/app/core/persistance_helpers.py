@@ -84,7 +84,7 @@ class PersistanceHelpers:
             # CREATE TABLE IF NOT EXISTS is a no-op on databases that already have
             # the table, so add newer columns explicitly for those. This might be neccessary
             # for local development but not for production rollout
-            # TODO: ONLY RUN ONCE: remove these ALTER TABLE statements 
+            # TODO: ONLY RUN ONCE: remove these ALTER TABLE statements
             #       once the tables are in production.
             # await conn.execute(
             #     "ALTER TABLE chats ADD COLUMN IF NOT EXISTS "
@@ -181,6 +181,19 @@ class PersistanceHelpers:
             return await cur.fetchall()
 
     @staticmethod
+    async def conversation_exists(conversation_id: str) -> bool:
+        """Check whether a conversation exists without checking its owner."""
+        pool = PersistanceHelpers._pool
+        if pool is None:
+            raise RuntimeError("PersistanceHelpers not initialized")
+        async with pool.connection() as conn:
+            cur = await conn.execute(
+                "SELECT 1 FROM chats WHERE conversation_id = %s",
+                (conversation_id,),
+            )
+            return await cur.fetchone() is not None
+
+    @staticmethod
     async def get_conversation_messages(
         conversation_id: str,
     ) -> list[ChatCompletionMessage]:
@@ -231,5 +244,18 @@ class PersistanceHelpers:
                 "WHERE chats.user_id = EXCLUDED.user_id "
                 "RETURNING conversation_id",
                 (conversation_id, user_id, title),
+            )
+            return await cur.fetchone() is not None
+
+    @staticmethod
+    async def delete_conversation_mapping(conversation_id: str, user_id: str) -> bool:
+        """Delete the conversation mapping row. Returns True if a row was deleted."""
+        pool = PersistanceHelpers._pool
+        if pool is None:
+            raise RuntimeError("PersistanceHelpers not initialized")
+        async with pool.connection() as conn:
+            cur = await conn.execute(
+                "DELETE FROM chats WHERE conversation_id = %s AND user_id = %s RETURNING 1",
+                (conversation_id, user_id),
             )
             return await cur.fetchone() is not None

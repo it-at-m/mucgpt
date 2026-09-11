@@ -1,13 +1,19 @@
+from __future__ import annotations
+
 from typing import Any
 
 from langchain_core.messages import AIMessage, HumanMessage
 from langgraph.checkpoint.postgres.aio import AsyncPostgresSaver
 from psycopg.rows import dict_row
 from psycopg_pool import AsyncConnectionPool
+from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker
 
 from api.api_models import ChatCompletionMessage
 from config.settings import Settings
 from core.logtools import getLogger
+from database.conversation_repo import ConversationRepository
+from database.database_models import Base
+from database.session import create_engine_and_session_factory
 
 logger = getLogger()
 
@@ -43,6 +49,8 @@ def _message_content(message: HumanMessage | AIMessage) -> str:
 class PersistanceHelpers:
     _pool: AsyncConnectionPool | None = None
     _checkpointer: AsyncPostgresSaver | None = None
+    _engine: AsyncEngine | None = None
+    _session_factory: async_sessionmaker[AsyncSession] | None = None
 
     @staticmethod
     async def init(settings: Settings) -> None:
@@ -58,25 +66,16 @@ class PersistanceHelpers:
         checkpointer = AsyncPostgresSaver(conn=pool)
         await checkpointer.setup()  # creates LangGraph's checkpoint_* tables if missing
 
-        # LangGraph owns message storage. This is the only application table.
-        await PersistanceHelpers._ensure_tables_exist(pool)
+        # LangGraph owns message storage. SQLAlchemy owns the application table.
+        engine, session_factory = create_engine_and_session_factory(settings)
+        async with engine.begin() as connection:
+            await connection.run_sync(Base.metadata.create_all)
 
         PersistanceHelpers._pool = pool
         PersistanceHelpers._checkpointer = checkpointer
+        PersistanceHelpers._engine = engine
+        PersistanceHelpers._session_factory = session_factory
         logger.info("PersistanceHelpers initialized")
-
-    @staticmethod
-    async def _ensure_tables_exist(pool: AsyncConnectionPool) -> None:
-        async with pool.connection() as conn:
-            await conn.execute(
-                """
-                CREATE TABLE IF NOT EXISTS chats (
-                    conversation_id TEXT PRIMARY KEY,
-                    user_id         TEXT        NOT NULL,
-                    created_at      TIMESTAMPTZ NOT NULL DEFAULT now()
-                    );
-                """
-            )
 
     @staticmethod
     async def close() -> None:
@@ -84,6 +83,10 @@ class PersistanceHelpers:
             await PersistanceHelpers._pool.close()
             PersistanceHelpers._pool = None
             PersistanceHelpers._checkpointer = None
+        if PersistanceHelpers._engine is not None:
+            await PersistanceHelpers._engine.dispose()
+            PersistanceHelpers._engine = None
+            PersistanceHelpers._session_factory = None
 
     @staticmethod
     def get_checkpointer() -> AsyncPostgresSaver:
@@ -108,52 +111,48 @@ class PersistanceHelpers:
     @staticmethod
     async def verify_user_in_conversation(user_id: str, conversation_id: str) -> bool:
         """True if the conversation belongs to `user_id`. First time a conversation_id
-        is seen, create the chat row and return True (new chat).
+        is seen, create the chat row and return True (new chat); on later calls by
+        the owner, bump ``updated_at`` so it tracks last activity.
 
-        The insert-or-ignore keeps concurrent first requests for the same
-        conversation_id from creating duplicate ownership rows.
+        The upsert keeps concurrent first requests for the same conversation_id
+        from creating duplicate ownership rows, and the ``user_id`` guard on the
+        conflict update stops a foreign conversation_id from being touched.
         """
-        pool = PersistanceHelpers._pool
-        if pool is None:
-            raise RuntimeError("PersistanceHelpers not initialized")
-        async with pool.connection() as conn:
-            await conn.execute(
-                "INSERT INTO chats (conversation_id, user_id) VALUES (%s, %s) "
-                "ON CONFLICT (conversation_id) DO NOTHING",
-                (conversation_id, user_id),
+        factory = PersistanceHelpers._get_session_factory()
+        async with factory.begin() as session:
+            return await ConversationRepository(session).verify_user_in_conversation(
+                user_id, conversation_id
             )
-            cur = await conn.execute(
-                "SELECT user_id FROM chats WHERE conversation_id = %s",
-                (conversation_id,),
-            )
-            row = await cur.fetchone()
-            return row is not None and row["user_id"] == user_id
 
     @staticmethod
     async def is_user_in_conversation(user_id: str, conversation_id: str) -> bool:
         """Check ownership without creating a conversation."""
-        pool = PersistanceHelpers._pool
-        if pool is None:
-            raise RuntimeError("PersistanceHelpers not initialized")
-        async with pool.connection() as conn:
-            cur = await conn.execute(
-                "SELECT 1 FROM chats WHERE conversation_id = %s AND user_id = %s",
-                (conversation_id, user_id),
+        factory = PersistanceHelpers._get_session_factory()
+        async with factory() as session:
+            return await ConversationRepository(session).is_user_in_conversation(
+                user_id, conversation_id
             )
-            return await cur.fetchone() is not None
+
+    @staticmethod
+    async def get_conversations_for_user(user_id: str) -> list[dict[str, Any]]:
+        """Return the caller's conversations as metadata rows, most recently
+        active first. Messages are not included; fetch those per conversation via
+        the checkpointer.
+        """
+        factory = PersistanceHelpers._get_session_factory()
+        async with factory() as session:
+            return await ConversationRepository(session).get_conversations_for_user(
+                user_id
+            )
 
     @staticmethod
     async def conversation_exists(conversation_id: str) -> bool:
         """Check whether a conversation exists without checking its owner."""
-        pool = PersistanceHelpers._pool
-        if pool is None:
-            raise RuntimeError("PersistanceHelpers not initialized")
-        async with pool.connection() as conn:
-            cur = await conn.execute(
-                "SELECT 1 FROM chats WHERE conversation_id = %s",
-                (conversation_id,),
+        factory = PersistanceHelpers._get_session_factory()
+        async with factory() as session:
+            return await ConversationRepository(session).conversation_exists(
+                conversation_id
             )
-            return await cur.fetchone() is not None
 
     @staticmethod
     async def get_conversation_messages(
@@ -184,14 +183,33 @@ class PersistanceHelpers:
         return result
 
     @staticmethod
+    async def set_chat_title_for_conversation(
+        conversation_id: str, user_id: str, title: str
+    ) -> bool:
+        """Set the chat title for a conversation, creating the chat row if it does
+        not exist yet.
+
+        The ``ON CONFLICT`` update is scoped to the owning ``user_id`` so a caller
+        cannot rename a conversation that belongs to someone else (the
+        ``conversation_id`` is client-generated and therefore guessable).
+        """
+        factory = PersistanceHelpers._get_session_factory()
+        async with factory.begin() as session:
+            return await ConversationRepository(
+                session
+            ).set_chat_title_for_conversation(conversation_id, user_id, title)
+
+    @staticmethod
     async def delete_conversation_mapping(conversation_id: str, user_id: str) -> bool:
         """Delete the conversation mapping row. Returns True if a row was deleted."""
-        pool = PersistanceHelpers._pool
-        if pool is None:
-            raise RuntimeError("PersistanceHelpers not initialized")
-        async with pool.connection() as conn:
-            cur = await conn.execute(
-                "DELETE FROM chats WHERE conversation_id = %s AND user_id = %s RETURNING 1",
-                (conversation_id, user_id),
+        factory = PersistanceHelpers._get_session_factory()
+        async with factory.begin() as session:
+            return await ConversationRepository(session).delete_conversation_mapping(
+                conversation_id, user_id
             )
-            return await cur.fetchone() is not None
+
+    @staticmethod
+    def _get_session_factory() -> async_sessionmaker[AsyncSession]:
+        if PersistanceHelpers._session_factory is None:
+            raise RuntimeError("PersistanceHelpers not initialized")
+        return PersistanceHelpers._session_factory

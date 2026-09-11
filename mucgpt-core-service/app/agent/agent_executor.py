@@ -227,6 +227,7 @@ class MUCGPTAgentExecutor:
                 self.base_config,
                 RunnableConfig(
                     configurable={
+                        "thread_id": conversation_id,
                         "llm_temperature": temperature,
                         "llm": model,
                         "llm_streaming": True,
@@ -418,6 +419,7 @@ class MUCGPTAgentExecutor:
             token_usage = TokenUsage()
             request_config = RunnableConfig(
                 configurable={
+                    "thread_id": conversation_id,
                     "llm_temperature": temperature,
                     "llm": model,
                     "llm_streaming": False,

@@ -490,7 +490,7 @@ export const makeApiRequest = async (
         if (fetchHistory) fetchHistory();
     } else {
         // Create a new chat with generated name
-        const chatname = await createChatName(question, finalResponse.answer, options.system ?? "");
+        const chatname = await createChatName(conversationId, question, finalResponse.answer, options.system ?? "");
 
         // For assistant chats, keep the assistant-prefixed local storage key while
         // reusing the same canonical conversation id sent to the backend.

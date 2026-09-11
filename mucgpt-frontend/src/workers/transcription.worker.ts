@@ -56,7 +56,6 @@ let srTensor: any = null;
 let TensorCtor: any = null;
 
 let loadedModelId: string | null = null;
-let loadingModelId: string | null = null;
 let isLoading = false;
 let queuedLoad: Extract<WorkerInMessage, { type: "load" }> | null = null;
 let hasWebGPU = false;
@@ -129,7 +128,6 @@ async function loadModel(request: Extract<WorkerInMessage, { type: "load" }>) {
     transcriber = null;
     vadModel = null;
     loadedModelId = null;
-    loadingModelId = modelId;
     isLoading = true;
 
     try {
@@ -248,7 +246,6 @@ async function loadModel(request: Extract<WorkerInMessage, { type: "load" }>) {
         self.postMessage({ type: "error", requestId, message: err instanceof Error ? err.message : String(err) } satisfies WorkerOutMessage);
     } finally {
         isLoading = false;
-        loadingModelId = null;
         const nextLoad = queuedLoad;
         queuedLoad = null;
         if (nextLoad && nextLoad.requestId !== requestId) void loadModel(nextLoad);

@@ -628,6 +628,57 @@ ENV_NAME: "YAML_ENV"
         get_redis_settings.cache_clear()
 
 
+class TestPromptPoolSettings:
+    """Test nested prompt-pool configuration."""
+
+    def test_defaults(self):
+        with patch.dict(os.environ, {}, clear=True):
+            prompts = Settings().PROMPTS
+
+        assert prompts.FOLDERS == []
+
+    def test_environment_configuration(self):
+        prompt_config = json.dumps(
+            {
+                "FOLDERS": [
+                    {
+                        "name": "custom",
+                        "prompts": [{"name": "example", "label": "staging"}],
+                    }
+                ]
+            }
+        )
+        with patch.dict(
+            os.environ,
+            {"MUCGPT_CORE_PROMPTS": prompt_config},
+            clear=True,
+        ):
+            prompts = Settings().PROMPTS
+
+        assert prompts.FOLDERS[0].name == "custom"
+        assert prompts.FOLDERS[0].prompts[0].name == "example"
+        assert prompts.FOLDERS[0].prompts[0].label == "staging"
+
+    def test_yaml_configuration(self, monkeypatch):
+        yaml_content = """
+PROMPTS:
+  FOLDERS:
+    - name: "yaml-folder"
+      prompts:
+        - name: "yaml-prompt"
+          label: "latest"
+"""
+        with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as tmpdir:
+            (Path(tmpdir) / "config.yaml").write_text(yaml_content)
+            monkeypatch.chdir(tmpdir)
+            with patch.dict(os.environ, {}, clear=True):
+                prompts = Settings().PROMPTS
+
+        assert prompts.FOLDERS[0].name == "yaml-folder"
+        assert prompts.FOLDERS[0].prompts[0].name == "yaml-prompt"
+        assert prompts.FOLDERS[0].prompts[0].label == "latest"
+
+
 class TestParserSettings:
     """Test cases for parsing / XBerg configuration."""
 

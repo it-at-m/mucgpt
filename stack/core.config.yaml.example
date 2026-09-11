@@ -15,6 +15,7 @@ AI_ACT_COMPLIANCE_CHECK_ENABLED: true
 APP_VERSION: "2.0"
 FRONTEND_VERSION: "0.0.2"
 ASSISTANT_VERSION: "0.0.3"
+OWNER_PROFILE_URL_TEMPLATE: "https://intranet.muenchen.de/person/{uid}"  #Used for providing a link to a external user profile for a given assistant. {uid} is replaced with the owner id
 
 # Backend settings
 UNAUTHORIZED_USER_REDIRECT_URL: "<your-url>"
@@ -46,6 +47,46 @@ LANGFUSE:
   HOST: "<your-url>"
   SECRET_KEY: "<your-sk>"
   PUBLIC_KEY: "<your-pk>"
+
+# Prompt settings (optional - nested under PROMPTS key)
+# Configure prompt names exactly like the local Markdown files in
+# mucgpt-core-service/app/agent/prompt_pool/, without the .md suffix.
+# Langfuse is tried first; local prompt files are the compatibility fallback.
+# PROMPTS:
+#   FOLDERS:
+#     - name: "defaults"
+#       prompts:
+#         # General system instructions used for regular chat.
+#         - name: "default_instructions"
+#           label: "production"
+#     - name: "generation_prompts"
+#       prompts:
+#         # Generates a concise title for a chat conversation.
+#         - name: "chat_title"
+#           label: "production"
+#         # Generates a name for an assistant created from a prompt seed.
+#         - name: "assistant_name"
+#           label: "production"
+#         # Generates an assistant description from a prompt seed.
+#         - name: "assistant_description"
+#           label: "production"
+#         # Generates an assistant system prompt from a prompt seed.
+#         - name: "assistant_systemprompt"
+#           label: "production"
+#     - name: "compliance_prompts"
+#       prompts:
+#         # Screens for high-risk migration, asylum, and border-control use cases.
+#         - name: "migration_asylum_border"
+#           label: "production"
+#         # Screens for high-risk public-service access and benefit decisions.
+#         - name: "public_services_access"
+#           label: "production"
+#         # Screens for high-risk employment and worker-management use cases.
+#         - name: "hr_employment"
+#           label: "production"
+#         # Screens for high-risk education and vocational-training use cases.
+#         - name: "education"
+#           label: "production"
 
 # MCP Settings (Model Context Protocol)
 # Used by core service for external tool integration

@@ -14,6 +14,7 @@ from config.settings import (
 )
 from core.auth_models import AuthenticationResult
 from core.cache import RedisCache
+from core.lf_prompts import PromptPool
 from core.logtools import getLogger
 from core.persistance_helpers import PersistanceHelpers
 
@@ -59,8 +60,10 @@ async def warmup_app() -> None:
     for model_config in settings.MODELS:
         register_model_harness_profile(model_config)
     # init langfuse
-    langfuse_settings = get_langfuse_settings()
-    LangfuseProvider.init(version=settings.VERSION, langfuse_cfg=langfuse_settings)
+    lf_client = LangfuseProvider.init(
+        version=settings.VERSION, langfuse_cfg=get_langfuse_settings()
+    )
+    PromptPool.init(lf_client, settings.PROMPTS)
     # init redis
     await RedisCache.init_redis()
 

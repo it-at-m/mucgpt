@@ -90,6 +90,7 @@ services:
       WAIT_FOR_KEYCLOAK: "true"
       FAIL_ON_UNDEFINED_VARIABLES: "true"
       KEYCLOAK_CHANGELOG: /migration/keycloak-changelog.yml
+      EXIT_ON_ERROR: true
     volumes:
       - "./keycloak/migration:/migration"
     networks:

@@ -7,6 +7,7 @@ from agent.agent_executor import MUCGPTAgentExecutor
 from agent.deep_agent import MUCGPTAgent
 from agent.tools.tools import ToolCollection
 from core.auth_models import AuthenticationResult
+from core.lf_prompts import ResolvedPrompt
 from init_app import ModelOptions, init_agent
 
 
@@ -32,10 +33,15 @@ class TestInitApp:
         self,
         mock_get_tools,
         mock_get_model,
+        monkeypatch: pytest.MonkeyPatch,
     ):
         # Arrange
         mock_get_model.return_value = self.mock_model
         mock_get_tools.return_value = []
+        monkeypatch.setattr(
+            "agent.deep_agent.PromptPool.get_resolved_prompt",
+            lambda _name: ResolvedPrompt(content="default instruction"),
+        )
 
         # Act
         result = await init_agent(self.mock_user)

@@ -118,7 +118,11 @@ class FakeLangfuseClient:
 
 
 class StreamingGraph:
+    def __init__(self):
+        self.config = None
+
     async def astream(self, *_args, **_kwargs):
+        self.config = _kwargs["config"]
         yield (
             "messages",
             (
@@ -266,6 +270,7 @@ class TestMUCGPTAgentExecutor:
             model="test-model",
             user_info=None,
             enabled_tools=["simplify"],
+            conversation_id="conversation-1",
         )
 
         assert response.choices[0].message.content == "Simplified text."
@@ -275,6 +280,7 @@ class TestMUCGPTAgentExecutor:
         assert config["llm"] == "test-model"
         assert config["llm_streaming"] is False
         assert config["enabled_tools"] == ["simplify"]
+        assert config["thread_id"] == "conversation-1"
 
     @pytest.mark.asyncio
     async def test_run_without_streaming_returns_error_on_exception(self):
@@ -448,7 +454,8 @@ class TestMUCGPTAgentExecutor:
             "agent.agent_executor.propagate_attributes",
             lambda **_kwargs: nullcontext(),
         )
-        runner = MUCGPTAgentExecutor(StreamingAgent())
+        agent = StreamingAgent()
+        runner = MUCGPTAgentExecutor(agent)
 
         chunks = []
         async for chunk in runner.run_with_streaming(
@@ -467,6 +474,7 @@ class TestMUCGPTAgentExecutor:
         )
         assert "visible" in streamed_content
         assert "hidden" not in streamed_content
+        assert agent.graph.config["configurable"]["thread_id"] == "chat-123"
 
         trace_span = langfuse_client.spans[0]
         trace_output = trace_span.updates[0]["output"]

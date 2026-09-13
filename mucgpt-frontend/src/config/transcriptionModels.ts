@@ -92,8 +92,7 @@ export const TRANSCRIPTION_MODELS: TranscriptionModel[] = [
             encoder: "https://huggingface.co/istupakov/canary-180m-flash-onnx/resolve/main/encoder-model.int8.onnx",
             decoder: "https://huggingface.co/istupakov/canary-180m-flash-onnx/resolve/main/decoder-model.int8.onnx",
             vocab: "https://huggingface.co/istupakov/canary-180m-flash-onnx/resolve/main/vocab.txt"
-        },
-        file_tree: "main"
+        }
     },
     // NVIDIA Parakeet TDT 0.6B v3: 25 languages with automatic language detection
     // (covers all MUCGPT locales incl. Ukrainian). int4 encoder (MatMulNBits) +
@@ -109,8 +108,7 @@ export const TRANSCRIPTION_MODELS: TranscriptionModel[] = [
             encoder: "https://huggingface.co/efederici/parakeet-tdt-0.6b-v3-onnx-int4/resolve/main/encoder-model.int4.onnx",
             decoder: "https://huggingface.co/efederici/parakeet-tdt-0.6b-v3-onnx-int4/resolve/main/decoder_joint-model.int8.onnx",
             vocab: "https://huggingface.co/efederici/parakeet-tdt-0.6b-v3-onnx-int4/resolve/main/vocab.txt"
-        },
-        file_tree: "main"
+        }
     }
 ];
 

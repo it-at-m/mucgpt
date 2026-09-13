@@ -10,13 +10,14 @@ import {
     Radio,
     RadioGroup,
     ProgressBar,
-    Label
+    Label,
+    Tooltip
 } from "@fluentui/react-components";
-import { CheckmarkCircle20Filled, Warning20Filled, Dismiss24Regular } from "@fluentui/react-icons";
-import { useContext, useMemo } from "react";
+import { CheckmarkCircle20Filled, Warning20Filled, Dismiss24Regular, Delete20Regular, ArrowDownloadRegular } from "@fluentui/react-icons";
+import { useContext, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { TranscriptionSettingsContext } from "./TranscriptionSettingsContext";
-import { TRANSCRIPTION_MODELS } from "../../config/transcriptionModels";
+import { TRANSCRIPTION_MODELS, orderModelsWithDefaultFirst } from "../../config/transcriptionModels";
 import { supportsWebGPU } from "../../utils/webgpuSupport";
 import styles from "./TranscriptionSettingsDialog.module.css";
 
@@ -38,42 +39,27 @@ export const TranscriptionSettingsDialog = ({ open, onOpenChange }: Props) => {
         setEnabled,
         selectedModelId,
         setSelectedModelId,
+        defaultModelId,
         downloadedModels,
         status,
         modelProgress,
-        downloadedBytes,
-        totalBytes,
         loadingModelId,
         downloadModel,
+        deleteModel,
+        clearModels,
         error
     } = useContext(TranscriptionSettingsContext);
 
-    const selectedIsDownloaded = downloadedModels.includes(selectedModelId);
+    const [confirmClearOpen, setConfirmClearOpen] = useState(false);
     const isLoading = status === "loading-model";
+    const isBusy = isLoading || status === "warming-up" || status === "recording" || status === "transcribing";
     const webgpuAvailable = useMemo(() => supportsWebGPU(), []);
+    const orderedModels = useMemo(() => orderModelsWithDefaultFirst(TRANSCRIPTION_MODELS, defaultModelId), [defaultModelId]);
 
-    /** Localized status line for the download row (loading percentage, ready or idle). */
-    const statusLabel = (() => {
-        if (isLoading && loadingModelId === selectedModelId) {
-            if (modelProgress > 0) {
-                if (totalBytes > 0) {
-                    return t("components.transcriptionSettings.status_loading_mb", {
-                        progress: modelProgress,
-                        downloaded_mb: downloadedBytes,
-                        total_mb: totalBytes
-                    });
-                }
-                return t("components.transcriptionSettings.status_loading", { progress: modelProgress });
-            }
-            return t("components.transcriptionSettings.status_loading_indeterminate");
-        }
-        if (selectedIsDownloaded) return t("components.transcriptionSettings.status_ready");
-        return t("components.transcriptionSettings.status_idle");
-    })();
-
-    /** Starts the download/load of the selected model; failures surface via the context. */
-    const onDownload = () => {
-        downloadModel(selectedModelId).catch(() => {
+    /** Starts downloading (or re-downloading) the given model and selects it. Failures surface via the context. */
+    const onDownloadModel = (modelId: string) => {
+        setSelectedModelId(modelId);
+        downloadModel(modelId).catch(() => {
             // error already surfaced via context
         });
     };
@@ -122,8 +108,9 @@ export const TranscriptionSettingsDialog = ({ open, onOpenChange }: Props) => {
                             <Label>{t("components.transcriptionSettings.model_label")}</Label>
                             <div className={styles.modelList}>
                                 <RadioGroup value={selectedModelId} onChange={(_, data) => setSelectedModelId(data.value)} disabled={!enabled}>
-                                    {TRANSCRIPTION_MODELS.map(m => {
+                                    {orderedModels.map(m => {
                                         const isDownloaded = downloadedModels.includes(m.model_id);
+                                        const isRecommended = m.model_id === defaultModelId;
                                         return (
                                             <div key={m.model_id} className={styles.modelRow} onClick={() => enabled && setSelectedModelId(m.model_id)}>
                                                 <Radio
@@ -142,36 +129,95 @@ export const TranscriptionSettingsDialog = ({ open, onOpenChange }: Props) => {
                                                         </div>
                                                     }
                                                 />
-                                                {isDownloaded && (
-                                                    <Badge appearance="tint" color="success" icon={<CheckmarkCircle20Filled />}>
-                                                        {t("components.transcriptionSettings.model_ready")}
-                                                    </Badge>
-                                                )}
+                                                <div className={styles.modelActions}>
+                                                    {isRecommended && (
+                                                        <Badge appearance="tint" color="brand">
+                                                            {t("components.transcriptionSettings.recommended")}
+                                                        </Badge>
+                                                    )}
+                                                    {isDownloaded && (
+                                                        <Tooltip content={t("components.transcriptionSettings.model_ready")} relationship="label">
+                                                            <Badge
+                                                                appearance="tint"
+                                                                color="success"
+                                                                icon={<CheckmarkCircle20Filled />}
+                                                                aria-label={t("components.transcriptionSettings.model_ready")}
+                                                            />
+                                                        </Tooltip>
+                                                    )}
+                                                    {isDownloaded ? (
+                                                        <Tooltip content={t("components.transcriptionSettings.delete_model")} relationship="label">
+                                                            <Button
+                                                                appearance="subtle"
+                                                                size="small"
+                                                                icon={<Delete20Regular />}
+                                                                aria-label={t("components.transcriptionSettings.delete_model")}
+                                                                disabled={isBusy}
+                                                                onClick={event => {
+                                                                    event.stopPropagation();
+                                                                    void deleteModel(m.model_id);
+                                                                }}
+                                                            />
+                                                        </Tooltip>
+                                                    ) : (
+                                                        <Tooltip content={t("components.transcriptionSettings.download")} relationship="label">
+                                                            <Button
+                                                                appearance="subtle"
+                                                                size="small"
+                                                                icon={<ArrowDownloadRegular />}
+                                                                aria-label={t("components.transcriptionSettings.download")}
+                                                                disabled={!enabled || isBusy}
+                                                                onClick={event => {
+                                                                    event.stopPropagation();
+                                                                    onDownloadModel(m.model_id);
+                                                                }}
+                                                            />
+                                                        </Tooltip>
+                                                    )}
+                                                </div>
                                             </div>
                                         );
                                     })}
                                 </RadioGroup>
                             </div>
+                            {downloadedModels.length > 0 &&
+                                (confirmClearOpen ? (
+                                    <div className={styles.confirmRow} role="alertdialog">
+                                        <div className={styles.confirmText}>
+                                            <span className={styles.confirmTitle}>{t("components.transcriptionSettings.clear_models_confirm_title")}</span>
+                                            <span className={styles.modelHint}>{t("components.transcriptionSettings.clear_models_confirm_message")}</span>
+                                        </div>
+                                        <div className={styles.confirmActions}>
+                                            <Button size="small" appearance="secondary" onClick={() => setConfirmClearOpen(false)}>
+                                                {t("components.transcriptionSettings.cancel")}
+                                            </Button>
+                                            <Button
+                                                size="small"
+                                                appearance="primary"
+                                                onClick={() => {
+                                                    setConfirmClearOpen(false);
+                                                    void clearModels();
+                                                }}
+                                            >
+                                                {t("components.transcriptionSettings.confirm")}
+                                            </Button>
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <Button appearance="subtle" icon={<Delete20Regular />} disabled={isBusy} onClick={() => setConfirmClearOpen(true)}>
+                                        {t("components.transcriptionSettings.clear_models")}
+                                    </Button>
+                                ))}
                         </div>
 
-                        <div className={styles.section}>
-                            <div className={styles.downloadRow}>
-                                <Button appearance="secondary" disabled={!enabled || isLoading} onClick={onDownload}>
-                                    {selectedIsDownloaded ? t("components.transcriptionSettings.redownload") : t("components.transcriptionSettings.download")}
-                                </Button>
-                                {(!selectedIsDownloaded || isLoading) && <span className={styles.statusRow}>{statusLabel}</span>}
-                                {!error && selectedIsDownloaded && !isLoading && (
-                                    <span className={styles.statusRow}>
-                                        {statusLabel}
-                                        <CheckmarkCircle20Filled style={{ marginLeft: "6px", fontSize: "16px" }} />
-                                    </span>
+                        {((isLoading && loadingModelId === selectedModelId) || (error && status === "error")) && (
+                            <div className={styles.section}>
+                                {isLoading && loadingModelId === selectedModelId && (
+                                    <ProgressBar className={styles.progress} value={modelProgress > 0 ? modelProgress / 100 : undefined} thickness="medium" />
                                 )}
+                                {error && status === "error" && <span className={styles.statusRow}>{error}</span>}
                             </div>
-                            {isLoading && loadingModelId === selectedModelId && (
-                                <ProgressBar className={styles.progress} value={modelProgress > 0 ? modelProgress / 100 : undefined} thickness="medium" />
-                            )}
-                            {error && status === "error" && <span className={styles.statusRow}>{error}</span>}
-                        </div>
+                        )}
                     </DialogContent>
                 </DialogBody>
             </DialogSurface>

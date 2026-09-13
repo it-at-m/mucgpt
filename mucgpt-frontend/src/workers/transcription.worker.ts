@@ -23,6 +23,7 @@ export type WorkerInMessage =
     | { type: "start-recording"; sessionId: number }
     | { type: "audio-frame"; sessionId: number; buffer: Float32Array }
     | { type: "stop-recording"; sessionId: number }
+    | { type: "unload" }
     | { type: "abort" };
 
 /**
@@ -179,6 +180,21 @@ async function loadModel(request: Extract<WorkerInMessage, { type: "load" }>) {
         queuedLoad = null;
         if (nextLoad && nextLoad.requestId !== requestId) void loadModel(nextLoad);
     }
+}
+
+/** Disposes the loaded transcription + VAD sessions and resets load bookkeeping. */
+async function unloadModel(): Promise<void> {
+    log("[transcription-worker] unloading model", { loadedModelId });
+    await transcriber?.dispose?.();
+    await vadModel?.dispose?.();
+    transcriber = null;
+    vadModel = null;
+    loadedModelId = null;
+    queuedLoad = null;
+    frameQueue = [];
+    activeSessionId = null;
+    isStopPending = false;
+    cancelAutoStop();
 }
 
 /** @huggingface/transformers ASR pipeline (Whisper entries). */
@@ -580,6 +596,9 @@ self.addEventListener("message", (event: MessageEvent<WorkerInMessage>) => {
             break;
         case "stop-recording":
             handleStopRecording(msg.sessionId);
+            break;
+        case "unload":
+            void unloadModel();
             break;
         case "abort":
             break;

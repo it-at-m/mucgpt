@@ -89,6 +89,39 @@
     font-weight: 500;
 }
 
+.modelActions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+}
+
+.confirmRow {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 10px 12px;
+    border: 1px solid var(--colorStatusWarningBorder1);
+    border-radius: 6px;
+    background: var(--colorStatusWarningBackground1);
+}
+
+.confirmText {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.confirmTitle {
+    font-weight: 600;
+}
+
+.confirmActions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+}
+
 .modelHint {
     font-size: var(--fontSizeBase200);
     color: var(--colorNeutralForeground3);
@@ -100,14 +133,6 @@
     gap: 8px;
     font-size: var(--fontSizeBase200);
     color: var(--colorNeutralForeground2);
-}
-
-.downloadRow {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-    width: 100%;
 }
 
 .progress {

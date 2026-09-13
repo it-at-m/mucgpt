@@ -411,8 +411,17 @@ export const TranscriptionSettingsProvider = ({
             setLoadingModelId(modelId);
             setStatus("loading-model");
             return new Promise<void>((resolve, reject) => {
-                const fileTree = TRANSCRIPTION_MODELS.find(m => m.model_id === modelId)?.file_tree;
-                fetchModelFileSizes(modelId, fileTree)
+                const modelCfg = TRANSCRIPTION_MODELS.find(m => m.model_id === modelId);
+                // NeMo runtimes report real byte counters while downloading, so the
+                // HuggingFace tree lookup (used only for Whisper's combined progress)
+                // is skipped to avoid an unnecessary request with an incompatible URL.
+                const isNemo = modelCfg?.runtime === "canary" || modelCfg?.runtime === "parakeet";
+                if (isNemo) {
+                    const requestId = requestModelLoad(modelId);
+                    pendingDownloadRef.current = { id: modelId, requestId, resolve, reject };
+                    return;
+                }
+                fetchModelFileSizes(modelId, modelCfg?.file_tree)
                     .then(fileSizes => {
                         const requestId = requestModelLoad(modelId, fileSizes);
                         pendingDownloadRef.current = { id: modelId, requestId, resolve, reject };

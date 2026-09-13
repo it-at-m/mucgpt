@@ -46,7 +46,6 @@ describe("TRANSCRIPTION_MODELS", () => {
         expect(canary?.files?.encoder).toMatch(/^https:\/\/huggingface\.co\/.+\.onnx$/);
         expect(canary?.files?.decoder).toMatch(/^https:\/\/huggingface\.co\/.+\.onnx$/);
         expect(canary?.files?.vocab).toMatch(/^https:\/\/huggingface\.co\/.+vocab\.txt$/);
-        expect(canary?.file_tree).toBe("main");
         expect(canary?.languages).toEqual(["en", "de", "fr", "es"]);
     });
 

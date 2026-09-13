@@ -1,6 +1,6 @@
 import type { OrtSessionLike, OrtValue } from "./types";
 
-const MODEL_CACHE_NAME = "mucgpt-nemo-models-v1";
+export const MODEL_CACHE_NAME = "mucgpt-nemo-models-v1";
 
 type OrtModule = {
     Tensor: new (data: Float32Array | BigInt64Array | Int32Array | Uint8Array | Int8Array, dims?: readonly number[]) => unknown;

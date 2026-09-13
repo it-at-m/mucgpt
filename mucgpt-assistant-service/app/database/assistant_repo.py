@@ -75,7 +75,6 @@ class AssistantRepository(Repository[Assistant]):
     async def create_assistant_version(
         self,
         assistant: Assistant,
-        name: str,
         system_prompt: str,
         description: str,
         creativity: str,
@@ -103,7 +102,6 @@ class AssistantRepository(Repository[Assistant]):
             new_version = AssistantVersion(
                 assistant=assistant,
                 version=new_version_number,
-                name=name,
                 description=description,
                 system_prompt=system_prompt,
                 creativity=creativity,
@@ -126,6 +124,20 @@ class AssistantRepository(Repository[Assistant]):
             logger.error(f"Error creating assistant version for {assistant.id}: {e}")
             await self.session.rollback()
             raise
+
+    async def name_exists(
+        self, name: str, exclude_assistant_id: str | None = None
+    ) -> bool:
+        """Check whether another assistant already uses this name.
+        """
+        normalized = name.strip().lower()
+        stmt = select(Assistant.id).where(
+            func.lower(func.trim(Assistant.name)) == normalized
+        )
+        if exclude_assistant_id is not None:
+            stmt = stmt.where(Assistant.id != exclude_assistant_id)
+        result = await self.session.execute(stmt.limit(1))
+        return result.first() is not None
 
     async def get_all_possible_assistants_for_user_with_department(
         self,
@@ -319,6 +331,7 @@ class AssistantRepository(Repository[Assistant]):
 
     async def create(
         self,
+        name: str,
         hierarchical_access: list[str] | None = None,
         owner_ids: list[str] | None = None,
         is_visible: bool = True,
@@ -339,6 +352,7 @@ class AssistantRepository(Repository[Assistant]):
 
             assistant = Assistant(
                 id=assistant_id,
+                name=name,
                 hierarchical_access=cleaned_hierarchical_access,
                 is_visible=is_visible,
             )
@@ -377,6 +391,7 @@ class AssistantRepository(Repository[Assistant]):
     async def update(
         self,
         assistant_id: str,
+        name: str | None = None,
         hierarchical_access: list[str] | None = None,
         owner_ids: list[str] | None = None,
         is_visible: bool = None,
@@ -386,6 +401,9 @@ class AssistantRepository(Repository[Assistant]):
         try:
             assistant = await self.get(assistant_id)
             if assistant:
+                if name is not None:
+                    assistant.name = name
+
                 if hierarchical_access is not None:
                     # Clean hierarchical_access: remove empty strings, None values, and whitespace-only strings
                     cleaned_hierarchical_access = [
@@ -658,10 +676,7 @@ class AssistantRepository(Repository[Assistant]):
         return assistant.versions[0]
 
     def _assistant_title(self, assistant: Assistant) -> str:
-        latest_version = self._assistant_latest_version(assistant)
-        return (
-            latest_version.name if latest_version and latest_version.name else ""
-        ).lower()
+        return (assistant.name or "").lower()
 
     def _assistant_description(self, assistant: Assistant) -> str:
         latest_version = self._assistant_latest_version(assistant)
@@ -742,7 +757,7 @@ class AssistantRepository(Repository[Assistant]):
         pattern = f"%{normalized_search}%"
         return stmt.where(
             or_(
-                latest_version_alias.name.ilike(pattern),
+                Assistant.name.ilike(pattern),
                 latest_version_alias.description.ilike(pattern),
                 func.lower(
                     func.coalesce(latest_version_alias.tags.cast(String), "")
@@ -757,7 +772,7 @@ class AssistantRepository(Repository[Assistant]):
         order_desc = (sort_order or "desc").lower() != "asc"
 
         if normalized_sort_by == "title":
-            title_order = func.lower(func.coalesce(latest_version_alias.name, ""))
+            title_order = func.lower(func.coalesce(Assistant.name, ""))
             return stmt.order_by(
                 title_order.desc() if order_desc else title_order.asc()
             )
@@ -778,7 +793,7 @@ class AssistantRepository(Repository[Assistant]):
         primary = (
             Assistant.updated_at.desc() if order_desc else Assistant.updated_at.asc()
         )
-        secondary = func.lower(func.coalesce(latest_version_alias.name, ""))
+        secondary = func.lower(func.coalesce(Assistant.name, ""))
         return stmt.order_by(
             primary, secondary.desc() if order_desc else secondary.asc()
         )

@@ -14,7 +14,7 @@ class AssistantNotFoundException(HTTPException):
 
 
 class NotOwnerException(HTTPException):
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__(
             status_code=403,
             detail="Access denied: You must be an owner of this assistant to perform this action",
@@ -80,4 +80,11 @@ class SubscriptionNotFoundException(HTTPException):
         super().__init__(
             status_code=404,
             detail=f"Subscription not found for assistant with ID {assistant_id}",
+        )
+
+class AssistantNameAlreadyExistsException(HTTPException):
+    def __init__(self):
+        super().__init__(
+            status_code=409,
+            detail="An assistant with this name already exists. Please choose a different name.",
         )

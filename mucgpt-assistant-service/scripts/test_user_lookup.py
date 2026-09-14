@@ -1,19 +1,19 @@
 #!/usr/bin/env python3
-"""Backend smoke test for /user/lookup/{lhmobjectid}.
+"""Backend smoke test for /user/lookup/{user_id}.
 
 This script helps verify that assistant-service returns person data when a valid
-lhmobjectid is provided.
+user ID is provided.
 
 Usage examples:
 
 1) Use a pre-existing access token:
-   uv run python scripts/test_user_lookup.py --lhmobjectid 111160470 --access-token "<JWT>"
+   uv run python scripts/test_user_lookup.py --user-id demo-user-1 --access-token "<JWT>"
 
 2) Fetch token from local Keycloak (resource owner password grant):
-   uv run python scripts/test_user_lookup.py --lhmobjectid 111160470
+   uv run python scripts/test_user_lookup.py --user-id demo-user-1
 
 3) Require non-empty profile fields:
-   uv run python scripts/test_user_lookup.py --lhmobjectid 111160470 --require-person-fields
+   uv run python scripts/test_user_lookup.py --user-id demo-user-1 --require-person-fields
 """
 
 from __future__ import annotations
@@ -28,12 +28,12 @@ import requests
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Test assistant-service user lookup endpoint by lhmobjectid"
+        description="Test assistant-service user lookup endpoint by user ID"
     )
     parser.add_argument(
-        "--lhmobjectid",
+        "--user-id",
         required=True,
-        help="LHM object id to look up (for example 111160470)",
+        help="User ID to look up (for example demo-user-1)",
     )
     parser.add_argument(
         "--assistant-base-url",
@@ -67,8 +67,8 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "--username",
-        default="mucgpt-user",
-        help="Username for password grant (default: mucgpt-user)",
+        default="demo-user",
+        help="Username for password grant (default: demo-user)",
     )
     parser.add_argument(
         "--password",
@@ -139,10 +139,10 @@ def get_access_token(args: argparse.Namespace) -> str:
 
 def call_lookup(args: argparse.Namespace, access_token: str) -> dict[str, Any]:
     base = args.assistant_base_url.rstrip("/")
-    object_id = args.lhmobjectid.strip()
+    user_id = args.user_id.strip()
     candidate_urls = [
-        f"{base}/user/lookup/{object_id}",
-        f"{base}/api/user/lookup/{object_id}",
+        f"{base}/user/lookup/{user_id}",
+        f"{base}/api/user/lookup/{user_id}",
     ]
     headers = {
         "Authorization": f"Bearer {access_token}",
@@ -161,11 +161,11 @@ def call_lookup(args: argparse.Namespace, access_token: str) -> dict[str, Any]:
 
 def assert_lookup_payload(
     payload: dict[str, Any],
-    expected_lhmobjectid: str,
+    expected_user_id: str,
     require_person_fields: bool,
 ) -> None:
     required_keys = {
-        "lhmobjectid",
+        "user_id",
         "givenName",
         "sn",
         "mail",
@@ -175,11 +175,11 @@ def assert_lookup_payload(
     if missing:
         raise AssertionError(f"Missing expected keys in payload: {missing}")
 
-    actual_id = str(payload.get("lhmobjectid") or "").strip()
-    if actual_id != expected_lhmobjectid:
+    actual_id = str(payload.get("user_id") or "").strip()
+    if actual_id != expected_user_id:
         raise AssertionError(
-            "Response lhmobjectid does not match request. "
-            f"Expected '{expected_lhmobjectid}', got '{actual_id}'"
+            "Response user_id does not match request. "
+            f"Expected '{expected_user_id}', got '{actual_id}'"
         )
 
     if require_person_fields:
@@ -193,7 +193,7 @@ def assert_lookup_payload(
 
 def main() -> int:
     args = parse_args()
-    requested_id = args.lhmobjectid.strip()
+    requested_id = args.user_id.strip()
 
     try:
         token = get_access_token(args)

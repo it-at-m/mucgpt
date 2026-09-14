@@ -3,15 +3,15 @@ author: Default
 realm: local_realm
 changes:
   - assignRole:
-      user: mucgpt-user
-      role: lhm-ab-mucgpt-user
+      user: demo-user
+      role: mucgpt-user
       clientId: mucgpt
   - assignRole:
-      user: mucgpt-kicc-user
-      role: lhm-ab-mucgpt-user
+      user: demo-team-a-user
+      role: mucgpt-user
       clientId: mucgpt
   - assignRole:
-      user: mucgpt-hr-user
-      role: lhm-ab-mucgpt-user
+      user: demo-team-b-user
+      role: mucgpt-user
       clientId: mucgpt
-  # mucgpt-not-allowed-user intentionally has no role assigned
+  # demo-no-access-user intentionally has no role assigned

@@ -48,7 +48,7 @@ def hash_user_id(user_id: str | None) -> str | None:
 
 
 def extract_department_prefix(department: str | None) -> str | None:
-    """Return leading alphabetic prefix of department (e.g., POR from POR/3)."""
+    """Return leading alphabetic prefix of an organization unit (e.g., TEAM from TEAM/3)."""
     if not department:
         return None
     match = re.match(r"[A-Za-z]+", department)

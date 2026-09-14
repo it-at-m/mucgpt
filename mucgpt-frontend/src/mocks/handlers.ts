@@ -15,41 +15,41 @@ import { CREATIVITY_HIGH } from "../constants";
 const DIRECTORY_TREE = [
     {
         shortname: null,
-        name: "Landeshauptstadt München",
+        name: "Example Organization",
         children: [
             {
-                shortname: "BAU",
-                name: "Baureferat",
+                shortname: "TEAM-A",
+                name: "Demo Team A",
                 children: [
                     {
-                        shortname: "BAU-BEURL",
-                        name: "Beurlaubte des Baureferates",
+                        shortname: "TEAM-A-1",
+                        name: "Demo Team A.1",
                         children: [
-                            { shortname: "BAU-BEURL-TECH", name: "Technik", children: [] },
-                            { shortname: null, name: "Allgemein", children: [] }
+                            { shortname: "TEAM-A-1-TECH", name: "Technical Team", children: [] },
+                            { shortname: null, name: "General", children: [] }
                         ]
                     },
-                    { shortname: "BAU-G", name: "HA Gartenbau", children: [] }
+                    { shortname: "TEAM-A-2", name: "Demo Team A.2", children: [] }
                 ]
             },
             {
-                shortname: "RIT",
-                name: "IT-Referat",
+                shortname: "TEAM-B",
+                name: "Demo Team B",
                 children: [
-                    { shortname: "RIT-AI", name: "Ur future AI Overlords ", children: [] },
+                    { shortname: "TEAM-B-AI", name: "AI Team", children: [] },
                     {
-                        shortname: "ITM",
-                        name: "IT@M",
-                        children: [{ shortname: "ITM-KM-DI", name: "Data & Innovation", children: [] }]
+                        shortname: "TEAM-B-DATA",
+                        name: "Data Team",
+                        children: [{ shortname: "TEAM-B-DATA-1", name: "Data Operations", children: [] }]
                     }
                 ]
             },
             {
-                shortname: "POR",
-                name: "Personal- und Organisationsreferat",
+                shortname: "TEAM-C",
+                name: "Demo Team C",
                 children: [
-                    { shortname: "POR-P", name: "Personalbereich", children: [] },
-                    { shortname: "POR-O", name: "Organisationsbereich", children: [] }
+                    { shortname: "TEAM-C-1", name: "People Operations", children: [] },
+                    { shortname: "TEAM-C-2", name: "Organization Operations", children: [] }
                 ]
             }
         ]
@@ -130,14 +130,14 @@ const CONFIG_RESPONSE: ApplicationConfig = {
     document_processing_enabled: true,
     transcription_enabled: true,
     ai_act_compliance_check_enabled: true,
-    footer_link_url: "https://ki.muenchen.de",
-    footer_label: "DAICE",
-    faq_url: "https://ki.muenchen.de/",
-    incident_report_url: "https://ki.muenchen.de/",
-    feature_request_url: "https://ki.muenchen.de/",
-    contact_mail_url: "mailto:ki@muenchen.de",
+    footer_link_url: "https://intranet.example.org",
+    footer_label: "Example Organization",
+    faq_url: "https://intranet.example.org/help",
+    incident_report_url: "https://intranet.example.org/incidents",
+    feature_request_url: "https://intranet.example.org/feedback",
+    contact_mail_url: "mailto:support@example.org",
     ad2image_url: "",
-    owner_profile_url_template: "https://intranet.muenchen.de/person/{uid}"
+    owner_profile_url_template: "https://intranet.example.org/person/{uid}"
 };
 
 const DYNAMIC_ASSISTANTS: AssistantCreateResponse[] = buildAssistantList(6);
@@ -168,12 +168,12 @@ DYNAMIC_ASSISTANTS.push(
             id: "version-default-model-1",
             version: 1,
             created_at: new Date().toISOString(),
-            name: "KIES Research Assistant",
-            description: "A specialized research assistant that always uses the KIESGPT model for consistent, high-quality responses.",
-            system_prompt: "You are the KIES Research Assistant. Provide detailed, well-researched answers with citations when possible.",
-            hierarchical_access: ["RIT-AI", "ITM-KM-DI"],
+            name: "Research Assistant",
+            description: "A specialized research assistant that uses a selected model for consistent, high-quality responses.",
+            system_prompt: "You are a research assistant. Provide detailed, well-researched answers with citations when possible.",
+            hierarchical_access: ["TEAM-B-AI", "TEAM-B-DATA-1"],
             creativity: "low",
-            default_model: "KIESGPT",
+            default_model: "example-model",
             is_visible: true,
             tools: [
                 { id: "Brainstorming", config: { enabled: true } },
@@ -190,7 +190,7 @@ DYNAMIC_ASSISTANTS.push(
                 { label: "Research Topic", prompt: "Please research this topic in detail:" },
                 { label: "Summarize Paper", prompt: "Summarize this research paper:" }
             ],
-            tags: ["research", "academic", "kiesgpt"]
+            tags: ["research", "academic"]
         }
     })
 );
@@ -206,7 +206,7 @@ DYNAMIC_ASSISTANTS.push(
             name: "Legacy Document Assistant",
             description: "An older assistant configured to use GPT-3.5-Turbo, which has been deprecated and is no longer available in the system.",
             system_prompt: "You are a document processing assistant. Help users analyze, summarize, and extract information from documents.",
-            hierarchical_access: ["BAU", "POR"],
+            hierarchical_access: ["TEAM-A", "TEAM-C"],
             creativity: CREATIVITY_HIGH,
             default_model: "gpt-3.5-turbo",
             is_visible: true,
@@ -242,8 +242,8 @@ DYNAMIC_ASSISTANTS.push(
             description:
                 "This assistant helps you compose clear, professional e-mails for a variety of workplace scenarios. Whether you need to write a follow-up to a meeting, respond to a client inquiry, or draft an internal announcement, it adapts tone and structure to your audience. It also suggests subject lines and can rewrite existing drafts to improve clarity and politeness.",
             system_prompt:
-                "You are a professional e-mail drafting assistant for employees of the City of Munich. Your task is to help users compose, edit, and improve e-mails. Always match the formality level to the intended audience — formal for external partners, semi-formal for cross-department communication, and friendly-professional for team-internal messages. Offer alternative phrasings when the user's draft could be misunderstood. Include a clear subject-line suggestion with every draft. Avoid jargon unless the user explicitly requests it. If the user provides bullet points, convert them into well-structured paragraphs. Always end with an appropriate closing.",
-            hierarchical_access: ["ITM-KM-DI"],
+                "You are a professional e-mail drafting assistant. Help users compose, edit, and improve e-mails. Match the formality level to the intended audience and provide a clear subject-line suggestion with every draft.",
+            hierarchical_access: ["TEAM-B-DATA-1"],
             creativity: "medium",
             is_visible: true,
             tools: [
@@ -978,10 +978,10 @@ export const handlers = [
             family_name: "Maskottchen",
             given_name: "Max",
             middle_name: "Theo",
-            email: "mucgpt@user.com",
-            preferred_username: "mucgpt-user",
-            department: "IT-KI",
-            lhmObjectID: "2232324224"
+            email: "demo-user@example.org",
+            preferred_username: "demo-user",
+            organization_unit: "demo-team-a",
+            user_id: "demo-user-1"
         });
     }),
 

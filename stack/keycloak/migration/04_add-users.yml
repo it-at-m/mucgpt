@@ -3,78 +3,70 @@ author: Default
 realm: local_realm
 changes:
   - addUser:
-      name: mucgpt-user
-      lastName: gpt
-      firstName: muc
+      name: demo-user
+      lastName: User
+      firstName: Demo
       enabled: true
       emailVerified: true
-      email: mucgpt@user.com
+      email: demo-user@example.org
       attributes:
         user_name:
-          - mucgpt-user
-        lhmObjectID:
-          - 111160470
-        telephoneNumber:
-          - "089-99998000"
-        department:
-          - "ITM"
+          - demo-user
+        user_id:
+          - demo-user-1
+        organization_unit:
+          - demo-team-a
   - updateUserPassword:
-      name: mucgpt-user
+      name: demo-user
       password: "mucgpt"
   - addUser:
-      name: mucgpt-kicc-user
-      lastName: KICC
-      firstName: MUCCI
+      name: demo-team-a-user
+      lastName: Team
+      firstName: Alpha
       enabled: true
       emailVerified: true
-      email: mucci@kicc.com
+      email: demo-team-a@example.org
       attributes:
         user_name:
-          - mucci
-        lhmObjectID:
-          - 112081510
-        telephoneNumber:
-          - "089-99998000"
-        department:
-          - "ITM-KM-DI"
+          - demo-team-a-user
+        user_id:
+          - demo-user-2
+        organization_unit:
+          - demo-team-a
   - updateUserPassword:
-      name: mucgpt-kicc-user
+      name: demo-team-a-user
       password: "mucgpt"
   - addUser:
-      name: mucgpt-hr-user
-      lastName: Human
-      firstName: Herbert
+      name: demo-team-b-user
+      lastName: Team
+      firstName: Beta
       enabled: true
       emailVerified: true
-      email: herbert@hr.com
+      email: demo-team-b@example.org
       attributes:
         user_name:
-          - herbert.hr
-        lhmObjectID:
-          - 111194933
-        telephoneNumber:
-          - "089-99998000"
-        department:
-          - "POR"
+          - demo-team-b-user
+        user_id:
+          - demo-user-3
+        organization_unit:
+          - demo-team-b
   - updateUserPassword:
-      name: mucgpt-hr-user
+      name: demo-team-b-user
       password: "mucgpt"
   - addUser:
-      name: mucgpt-not-allowed-user
-      lastName: Bond
-      firstName: James
+      name: demo-no-access-user
+      lastName: Access
+      firstName: No
       enabled: true
       emailVerified: true
-      email: bond@007.com
+      email: demo-no-access@example.org
       attributes:
         user_name:
-          - james.bond
-        lhmObjectID:
-          - 112068756
-        telephoneNumber:
-          - "089-99998000"
-        department:
-          - "MI7"
+          - demo-no-access-user
+        user_id:
+          - demo-user-4
+        organization_unit:
+          - demo-team-b
   - updateUserPassword:
-      name: mucgpt-not-allowed-user
+      name: demo-no-access-user
       password: "mucgpt"

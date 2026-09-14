@@ -9,27 +9,27 @@ from core.organization.directory import OrganizationNode
 
 def test_simplify_node_uses_shortname_and_children() -> None:
     child = OrganizationNode(
-        id="ou=beurlaubte des baureferates,ou=baureferat,o=landeshauptstadt münchen,c=de",
-        name="Beurlaubte des Baureferates",
-        dn="ou=Beurlaubte des Baureferates,ou=Baureferat,o=Landeshauptstadt München,c=de",
-        parent_id="ou=baureferat,o=landeshauptstadt münchen,c=de",
+        id="ou=leave-team,ou=dept,o=example",
+        name="Leave Team",
+        dn="ou=Leave Team,ou=Department,o=example",
+        parent_id="ou=dept,o=example",
         attributes={
-            "lhmOULongname": ["Beurlaubte des Baureferates"],
-            "lhmOUShortname": ["BAU-BEURL"],
-            "ou": ["Beurlaubte des Baureferates"],
+            "departmentName": ["Leave Team"],
+            "departmentCode": ["DEPT-LEAVE"],
+            "ou": ["Leave Team"],
             "distinguishedName": [],
         },
     )
 
     parent = OrganizationNode(
-        id="ou=baureferat,o=landeshauptstadt münchen,c=de",
-        name="Baureferat",
-        dn="ou=Baureferat,o=Landeshauptstadt München,c=de",
-        parent_id="o=landeshauptstadt münchen,c=de",
+        id="ou=dept,o=example",
+        name="Department",
+        dn="ou=Department,o=example",
+        parent_id="o=example",
         attributes={
-            "lhmOULongname": ["Baureferat"],
-            "lhmOUShortname": ["BAU"],
-            "ou": ["Baureferat"],
+            "departmentName": ["Department"],
+            "departmentCode": ["DEPT"],
+            "ou": ["Department"],
             "distinguishedName": [],
         },
         children=[child],
@@ -38,24 +38,24 @@ def test_simplify_node_uses_shortname_and_children() -> None:
     simplified = _simplify_node(parent)
 
     assert simplified == {
-        "shortname": "BAU",
-        "name": "Baureferat",
+        "shortname": "DEPT",
+        "name": "Department",
         "children": [
             {
-                "shortname": "BAU-BEURL",
-                "name": "Beurlaubte des Baureferates",
+                "shortname": "DEPT-LEAVE",
+                "name": "Leave Team",
                 "children": [],
             }
         ],
     }
 
 
-def test_simplify_node_accepts_shortname_variants() -> None:
+def test_simplify_node_uses_configured_shortname_attribute() -> None:
     node = OrganizationNode(
         id="ou=example,o=test",
         name="Example",
         dn="ou=Example,o=Test",
-        attributes={"lhmOUShortName": "EX"},
+        attributes={"departmentCode": "EX"},
     )
 
     simplified = _simplify_node(node)
@@ -68,12 +68,12 @@ def test_simplify_node_accepts_shortname_variants() -> None:
 async def _fake_tree():
     return [
         {
-            "shortname": "BAU",
-            "name": "Baureferat",
+            "shortname": "DEPT",
+            "name": "Department",
             "children": [
                 {
-                    "shortname": "BAU-BEURL",
-                    "name": "Beurlaubte des Baureferates",
+                    "shortname": "DEPT-LEAVE",
+                    "name": "Leave Team",
                     "children": [{"shortname": None, "name": "Leaf", "children": []}],
                 },
                 {"shortname": None, "name": "NoShort", "children": []},
@@ -91,7 +91,7 @@ async def test_get_directory_children_root(monkeypatch) -> None:
     children = await get_directory_children_by_path([])
 
     assert len(children) == 1
-    assert children[0]["shortname"] == "BAU"
+    assert children[0]["shortname"] == "DEPT"
 
 
 @pytest.mark.asyncio
@@ -100,11 +100,11 @@ async def test_get_directory_children_by_shortname(monkeypatch) -> None:
         "core.directory_cache.get_simplified_directory_tree", lambda: _fake_tree()
     )
 
-    children = await get_directory_children_by_path(["BAU"])
+    children = await get_directory_children_by_path(["DEPT"])
 
     assert len(children) == 2
     assert {child["name"] for child in children} == {
-        "Beurlaubte des Baureferates",
+        "Leave Team",
         "NoShort",
     }
 
@@ -115,9 +115,7 @@ async def test_get_directory_children_by_name(monkeypatch) -> None:
         "core.directory_cache.get_simplified_directory_tree", lambda: _fake_tree()
     )
 
-    children = await get_directory_children_by_path(
-        ["BAU", "Beurlaubte des Baureferates"]
-    )
+    children = await get_directory_children_by_path(["DEPT", "Leave Team"])
 
     assert len(children) == 1
     assert children[0]["name"] == "Leaf"
@@ -130,6 +128,6 @@ async def test_get_directory_children_not_found(monkeypatch) -> None:
     )
 
     with pytest.raises(HTTPException) as exc:
-        await get_directory_children_by_path(["BAU", "MISSING"])
+        await get_directory_children_by_path(["DEPT", "MISSING"])
 
     assert exc.value.status_code == 404

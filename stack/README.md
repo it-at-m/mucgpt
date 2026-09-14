@@ -31,7 +31,7 @@ This directory contains the Docker Compose configuration for running the complet
    ```
 
 3. Access the services:
-   - Frontend: <http://localhost:8083> (user: `mucgpt-user`, password: `mucgpt`)
+- Frontend: <http://localhost:8083> (user: `demo-user`, password: `mucgpt`)
    - Keycloak Admin: <http://localhost:8100> (admin/admin)
    - PGAdmin: <http://localhost:5050> (admin/admin)
 

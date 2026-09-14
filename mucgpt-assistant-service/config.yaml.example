@@ -31,10 +31,12 @@ COMPLIANCE_REQUIRE_VERIFICATION: false
 
 # SSO Settings (nested under SSO key)
 SSO:
-  ROLE: "lhm-ab-mucgpt-user"
+  ROLE: "mucgpt-user"
+  USER_ID_CLAIM: "user_id"
+  ORGANIZATION_UNIT_CLAIM: "organization_unit"
   # ADMIN_ROLE / USE_ROLE_RESTRICTION are reserved for future admin
   # functionality and don't affect basic access today.
-  # ADMIN_ROLE: "lhm-ab-mucgpt-admin"
+  # ADMIN_ROLE: "mucgpt-admin"
 
 # Redis Settings (nested under REDIS key)
 REDIS:
@@ -45,33 +47,36 @@ REDIS:
 
 # LDAP Settings (nested under LDAP key)
 LDAP:
-  ENABLED: true
-  HOST: "<ldap-host>"
+  ENABLED: false
+  HOST: "ldaps://ldap.example.org"
   PORT: 636
   USE_SSL: true
   START_TLS: false
   VERIFY_SSL: true
   CA_CERT_FILE: null
-  BIND_DN: "<bind-dn>"
+  BIND_DN: "cn=mucgpt,ou=service-accounts,dc=example,dc=org"
   BIND_PASSWORD: "<bind-password>"
-  SEARCH_BASE: "o=Landeshauptstadt München,c=de"
+  SEARCH_BASE: "dc=example,dc=org"
   SEARCH_FILTER: "(objectClass=organizationalUnit)"
   DISPLAY_ATTRIBUTE: "ou"
+  SHORTNAME_ATTRIBUTE: "departmentCode"
   PARENT_ATTRIBUTE: null
+  ADDITIONAL_ATTRIBUTES: ["departmentName", "departmentCode"]
+  REQUIRED_ATTRIBUTES: ["departmentName", "departmentCode"]
   IGNORED_OU_PREFIXES: ["_"]
   IGNORED_OU_SUFFIXES: ["-xxx"]
   # Keep specific OUs even when they match IGNORED_OU_PREFIXES / IGNORED_OU_SUFFIXES.
-  # Matching is done against lhmOUShortname (case-insensitive).
-  # Example: keep OU "_Hidden" if its lhmOUShortname is "FBM".
-  IGNORED_OU_SHORTNAME_EXCEPTIONS: ["FBM", "KVR-IT"]
+  # Matching is done against the configured short-name attribute (case-insensitive).
+  # Example: keep OU "_Hidden" if its departmentCode is "DEPT-EXAMPLE".
+  IGNORED_OU_SHORTNAME_EXCEPTIONS: ["DEPT-EXAMPLE"]
   CACHE_TTL: 1209600 # 14 days in seconds
   PAGE_SIZE: 500
   # Dedicated user/person lookup settings (independent from OU filtering/required-attributes)
-  USER_SEARCH_BASE: "o=Landeshauptstadt München,c=de"
+  USER_SEARCH_BASE: "dc=example,dc=org"
   USER_SEARCH_FILTER: "(objectClass=person)"
-  USER_SEARCH_ATTRIBUTES: ["givenName", "sn", "mail", "lhmobjectid", "organizationalunit"]
-  USER_ID_ATTRIBUTE: "lhmobjectid"
+  USER_SEARCH_ATTRIBUTES: ["givenName", "sn", "mail", "userId", "organizationUnit"]
+  USER_ID_ATTRIBUTE: "userId"
   USER_GIVEN_NAME_ATTRIBUTE: "givenName"
   USER_SURNAME_ATTRIBUTE: "sn"
   USER_MAIL_ATTRIBUTE: "mail"
-  USER_ORGANIZATIONAL_UNIT_ATTRIBUTE: "organizationalunit"
+  USER_ORGANIZATIONAL_UNIT_ATTRIBUTE: "organizationUnit"

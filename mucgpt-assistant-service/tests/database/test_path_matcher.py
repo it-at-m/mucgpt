@@ -6,54 +6,58 @@ from database.path_matcher import path_matches_department
 
 TEST_TREE = [
     {
-        "shortname": "RIT",
-        "name": "IT-Referat",
+        "shortname": "ORG",
+        "name": "Organization",
         "children": [
             {
-                "shortname": "ITM",
-                "name": "ITM",
+                "shortname": "DEPT",
+                "name": "DEPT",
                 "children": [
                     {
-                        "shortname": "ITM-KM",
-                        "name": "ITM-KM",
+                        "shortname": "DEPT-TEAM",
+                        "name": "DEPT-TEAM",
                         "children": [
                             {
-                                "shortname": "ITM-KM-DI",
-                                "name": "ITM-KM-DI",
+                                "shortname": "DEPT-TEAM-UNIT",
+                                "name": "DEPT-TEAM-UNIT",
                                 "children": [],
                             }
                         ],
                     },
-                    {"shortname": "ITM-AB", "name": "ITM-AB", "children": []},
+                    {"shortname": "DEPT-OTHER", "name": "DEPT-OTHER", "children": []},
                 ],
             }
         ],
     },
     {
-        "shortname": "POR",
-        "name": "Personal- und Organisationsreferat",
+        "shortname": "DIVISION",
+        "name": "Division",
         "children": [
             {
-                "shortname": "POR-5",
-                "name": "POR-5",
+                "shortname": "DIVISION-5",
+                "name": "DIVISION-5",
                 "children": [
                     {
-                        "shortname": "POR-5/1",
-                        "name": "POR-5/1",
+                        "shortname": "DIVISION-5/1",
+                        "name": "DIVISION-5/1",
                         "children": [
                             {
-                                "shortname": "POR-5/12",
-                                "name": "POR-5/12",
+                                "shortname": "DIVISION-5/12",
+                                "name": "DIVISION-5/12",
                                 "children": [],
                             },
                             {
-                                "shortname": "POR-5/14",
-                                "name": "POR-5/14",
+                                "shortname": "DIVISION-5/14",
+                                "name": "DIVISION-5/14",
                                 "children": [],
                             },
                         ],
                     },
-                    {"shortname": "POR-5-AB", "name": "POR-5-AB", "children": []},
+                    {
+                        "shortname": "DIVISION-5-OTHER",
+                        "name": "DIVISION-5-OTHER",
+                        "children": [],
+                    },
                 ],
             }
         ],
@@ -62,24 +66,24 @@ TEST_TREE = [
 
 FALLBACK_TREE = [
     {
-        "shortname": "KR",
-        "name": "Kommunalreferat",
+        "shortname": "SERVICES",
+        "name": "Services",
         "children": [
             {
-                "shortname": "KR-BB",
-                "name": "Betriebsbereich",
+                "shortname": "SERVICES-OPERATIONS",
+                "name": "Operations",
                 "children": [
                     {
                         "shortname": None,
-                        "name": "Abfallwirtschaftsbetrieb München (AWM)",
+                        "name": "Operations Unit (OPS)",
                         "children": [
                             {
-                                "shortname": "AWM-PI",
-                                "name": "Abteilung Personal, Organisation und IT (PI)",
+                                "shortname": "OPS-PEOPLE",
+                                "name": "People Operations (PEOPLE)",
                                 "children": [
                                     {
-                                        "shortname": "PI-IT",
-                                        "name": "Unterabteilung IT-Service (PI-IT)",
+                                        "shortname": "PEOPLE-SUPPORT",
+                                        "name": "Support Team (PEOPLE-SUPPORT)",
                                         "children": [],
                                     }
                                 ],
@@ -92,15 +96,15 @@ FALLBACK_TREE = [
     },
     {
         "shortname": None,
-        "name": "Kulturreferat",
+        "name": "Knowledge Services",
         "children": [
             {
-                "shortname": "KULT-BIB",
-                "name": "Münchner Stadtbibliothek",
+                "shortname": "GROUP-LIBRARY",
+                "name": "Library Services",
                 "children": [
                     {
-                        "shortname": "KULT-BIB-ZB",
-                        "name": "Zentralbibliothek",
+                        "shortname": "GROUP-LIBRARY-CENTRAL",
+                        "name": "Central Library",
                         "children": [],
                     }
                 ],
@@ -112,39 +116,45 @@ FALLBACK_TREE = [
 
 @pytest.mark.asyncio
 async def test_tree_exact_and_ancestor_match():
-    assert await path_matches_department("ITM-KM", "ITM-KM", directory_tree=TEST_TREE)
     assert await path_matches_department(
-        "RIT", "ITM-KM-DI", directory_tree=TEST_TREE
+        "DEPT-TEAM", "DEPT-TEAM", directory_tree=TEST_TREE
+    )
+    assert await path_matches_department(
+        "ORG", "DEPT-TEAM-UNIT", directory_tree=TEST_TREE
     )  # ancestor
     assert await path_matches_department(
-        "ITM-KM", "ITM-KM-DI", directory_tree=TEST_TREE
+        "DEPT-TEAM", "DEPT-TEAM-UNIT", directory_tree=TEST_TREE
     )
 
 
 @pytest.mark.asyncio
 async def test_tree_sibling_mismatch():
     assert not await path_matches_department(
-        "ITM-KM", "ITM-AB", directory_tree=TEST_TREE
+        "DEPT-TEAM", "DEPT-OTHER", directory_tree=TEST_TREE
     )
     assert not await path_matches_department(
-        "POR-5/1", "POR-5-AB", directory_tree=TEST_TREE
+        "DIVISION-5/1", "DIVISION-5-OTHER", directory_tree=TEST_TREE
     )
 
 
 @pytest.mark.asyncio
 async def test_tree_numeric_branches():
     assert await path_matches_department(
-        "POR-5/1", "POR-5/12", directory_tree=TEST_TREE
+        "DIVISION-5/1", "DIVISION-5/12", directory_tree=TEST_TREE
     )
-    assert await path_matches_department("POR-5", "POR-5/12", directory_tree=TEST_TREE)
+    assert await path_matches_department(
+        "DIVISION-5", "DIVISION-5/12", directory_tree=TEST_TREE
+    )
     assert not await path_matches_department(
-        "POR-5/2", "POR-5/12", directory_tree=TEST_TREE
+        "DIVISION-5/2", "DIVISION-5/12", directory_tree=TEST_TREE
     )
 
 
 @pytest.mark.asyncio
 async def test_case_insensitive_tree_match():
-    assert await path_matches_department("rit", "itm-km-di", directory_tree=TEST_TREE)
+    assert await path_matches_department(
+        "org", "dept-team-unit", directory_tree=TEST_TREE
+    )
 
 
 @pytest.mark.asyncio
@@ -156,12 +166,12 @@ async def test_empty_access_path_allows_all():
 @pytest.mark.asyncio
 async def test_access_alias_and_department_suffix_fallback():
     assert await path_matches_department(
-        "AWM", "AWM-PI-IT", directory_tree=FALLBACK_TREE
+        "OPS", "OPS-PEOPLE-SUPPORT", directory_tree=FALLBACK_TREE
     )
 
 
 @pytest.mark.asyncio
 async def test_access_family_fallback_for_null_shortname_parent():
     assert await path_matches_department(
-        "KULT", "KULT-BIB-ZB", directory_tree=FALLBACK_TREE
+        "GROUP", "GROUP-LIBRARY-CENTRAL", directory_tree=FALLBACK_TREE
     )

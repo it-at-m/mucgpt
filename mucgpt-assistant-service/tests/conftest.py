@@ -30,7 +30,7 @@ async def db_session(async_engine):
 @pytest.fixture
 def sample_assistant_data():
     """Sample data for creating assistants."""
-    return {"hierarchical_access": "ITM-KM", "owner_ids": ["user1", "user2"]}
+    return {"hierarchical_access": "DEPT-TEAM", "owner_ids": ["user1", "user2"]}
 
 
 @pytest.fixture

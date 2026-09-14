@@ -48,7 +48,7 @@ def test_internet_search_placeholder_is_not_configured() -> None:
 
 def test_internet_search_returns_sourced_results(monkeypatch: Any) -> None:
     settings = InternetSearchConfig(
-        SEARXNG_URL="https://searxng-test.muenchen.de/",
+        SEARXNG_URL="https://searxng-test.example.org/",
         MAX_RESULTS=3,
         LANGUAGE="de",
     )
@@ -66,7 +66,7 @@ def test_internet_search_returns_sourced_results(monkeypatch: Any) -> None:
     assert "Internet search results for 'test query'" in result
     assert "Result title" in result
     assert "https://example.com/result" in result
-    assert FakeClient.last_url == "https://searxng-test.muenchen.de/search"
+    assert FakeClient.last_url == "https://searxng-test.example.org/search"
     assert FakeClient.last_params == {
         "q": "test query",
         "format": "json",

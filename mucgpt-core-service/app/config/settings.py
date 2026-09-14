@@ -347,6 +347,8 @@ class SSOConfig(BaseModel):
 
     ROLE: str | None = None
     ADMIN_ROLE: str | None = None
+    USER_ID_CLAIM: str = "user_id"
+    ORGANIZATION_UNIT_CLAIM: str = "organization_unit"
 
 
 class LangfuseConfig(BaseModel):

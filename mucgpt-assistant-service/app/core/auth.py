@@ -10,7 +10,7 @@ from core.logtools import getLogger
 logger = getLogger("mucgpt-assistant-service")
 
 
-ACCESS_DENIED_MESSAGE = "Sie haben noch keinen Zugang zu MUCGPT freigeschaltet. Wie das geht, erfahren Sie im folgenden WILMA-Artikel: https://wilma.muenchen.de/pages/it-steuerung-management/apps/wiki/kuenstliche-intelligenz/list/view/91f43afa-3315-478f-a9a4-7f50ae2a32f2."
+ACCESS_DENIED_MESSAGE = "Sie haben noch keinen Zugang zu MUCGPT freigeschaltet. Bitte wenden Sie sich an die zuständige Stelle in Ihrer Organisation."
 ROLE_PREFIX = "ROLE_"
 
 
@@ -21,9 +21,13 @@ class AuthenticationHelper:
         self,
         role: str | None,
         admin_role: str | None = None,
+        user_id_claim: str = "user_id",
+        organization_unit_claim: str = "organization_unit",
     ):
         self.role = role
         self.admin_role = admin_role
+        self.user_id_claim = user_id_claim
+        self.organization_unit_claim = organization_unit_claim
 
     def _configured_roles(self) -> set[str]:
         return {
@@ -101,7 +105,7 @@ class AuthenticationHelper:
             )
 
         return AuthenticationResult(
-            user_id=self.getLHMObjectID(token_payload),
+            user_id=self.get_user_id(token_payload),
             department=self.getDepartment(token_payload),
             name=self.getName(token_payload),
             roles=roles,
@@ -138,8 +142,8 @@ class AuthenticationHelper:
         ).strip()
 
     def getDepartment(self, token_payload: dict) -> str:
-        logger.debug("Extracting department from token payload")
-        return str(token_payload.get("department", ""))
+        logger.debug("Extracting organization unit from token payload")
+        return str(token_payload.get(self.organization_unit_claim, ""))
 
     def getEmail(self, token_payload: dict) -> str:
         logger.debug("Extracting email from token payload")
@@ -149,10 +153,12 @@ class AuthenticationHelper:
         logger.debug("Extracting username from token payload")
         return str(token_payload.get("username", ""))
 
-    def getLHMObjectID(self, token_payload: dict) -> str:
-        """Get the LHM Object ID from the token payload."""
-        logger.debug("Extracting LHM Object ID from token payload")
-        return str(token_payload.get("lhmObjectID", "") or token_payload.get("sub", ""))
+    def get_user_id(self, token_payload: dict) -> str:
+        """Get the configured user ID claim from the token payload."""
+        logger.debug("Extracting user ID from token payload")
+        return str(
+            token_payload.get(self.user_id_claim, "") or token_payload.get("sub", "")
+        )
 
 
 # Authentication dependency for FastAPI
@@ -165,6 +171,8 @@ def authenticate_user(
     auth_helper = AuthenticationHelper(
         role=sso_settings.ROLE,
         admin_role=sso_settings.ADMIN_ROLE,
+        user_id_claim=sso_settings.USER_ID_CLAIM,
+        organization_unit_claim=sso_settings.ORGANIZATION_UNIT_CLAIM,
     )
 
     try:

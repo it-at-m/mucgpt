@@ -6,6 +6,7 @@ import { localeToWhisperLang } from "../../config/transcriptionLanguages";
 import type { WorkerInMessage, WorkerOutMessage } from "../../workers/transcription.worker";
 import { useAudioRecorder } from "../../hooks/useAudioRecorder";
 import { fetchModelFileSizes } from "../../utils/modelSizeUtils";
+import { clearModelCaches, deleteModelFromCache } from "../../utils/transcriptionModelCache";
 
 /** Lifecycle of the transcription UI, mirrored to the worker status handling. */
 export type TranscriptionStatus = "idle" | "warming-up" | "loading-model" | "recording" | "transcribing" | "error";
@@ -19,6 +20,8 @@ export interface ITranscriptionSettings {
     setEnabled: (v: boolean) => void;
     selectedModelId: string;
     setSelectedModelId: (id: string) => void;
+    /** Effective default model (deployment-configured when known, else built-in). */
+    defaultModelId: string;
     downloadedModels: string[];
     isModelReady: boolean;
     // Worker state
@@ -33,6 +36,8 @@ export interface ITranscriptionSettings {
     setLanguage: (lang: TranscriptionLanguage) => void;
     // Actions
     downloadModel: (modelId: string) => Promise<void>;
+    deleteModel: (modelId: string) => Promise<void>;
+    clearModels: () => Promise<void>;
     startRecording: () => Promise<void>;
     stopAndTranscribe: () => Promise<void>;
 }
@@ -79,6 +84,7 @@ const defaultValue: ITranscriptionSettings = {
     setEnabled: () => {},
     selectedModelId: DEFAULT_TRANSCRIPTION_MODEL,
     setSelectedModelId: () => {},
+    defaultModelId: DEFAULT_TRANSCRIPTION_MODEL,
     downloadedModels: [],
     isModelReady: false,
     status: "idle",
@@ -91,6 +97,8 @@ const defaultValue: ITranscriptionSettings = {
     language: undefined,
     setLanguage: () => {},
     downloadModel: async () => {},
+    deleteModel: async () => {},
+    clearModels: async () => {},
     startRecording: async () => {},
     stopAndTranscribe: async () => {}
 };
@@ -120,6 +128,10 @@ export const TranscriptionSettingsProvider = ({
     const effectiveEnabled = deploymentEnabled && enabled;
     const [selectedModelId, setSelectedModelIdState] = useState<string>(() => readSelected(defaultModelId));
     const [downloadedModels, setDownloadedModels] = useState<string[]>(() => readDownloaded());
+
+    // Effective default: the deployment-configured model when it is a known entry,
+    // otherwise the built-in fallback. Drives list ordering and the "recommended" badge.
+    const effectiveDefaultModelId = defaultModelId && KNOWN_MODEL_IDS.has(defaultModelId) ? defaultModelId : DEFAULT_TRANSCRIPTION_MODEL;
 
     // Worker state
     const [status, setStatus] = useState<TranscriptionStatus>("idle");
@@ -436,6 +448,38 @@ export const TranscriptionSettingsProvider = ({
         [deploymentEnabled, requestModelLoad]
     );
 
+    /**
+     * Deletes one model's cached files, drops it from the downloaded set and, when
+     * it is the currently loaded model, unloads the worker sessions first.
+     */
+    const deleteModel = useCallback(
+        async (modelId: string): Promise<void> => {
+            const model = TRANSCRIPTION_MODELS.find(m => m.model_id === modelId);
+            if (!model) return;
+            if (loadedModelIdRef.current === modelId) {
+                sendToWorker({ type: "unload" });
+                loadedModelIdRef.current = null;
+                setLoadedModelId(null);
+                setStatus("idle");
+            }
+            // Drop from the downloaded set first so the pre-warm effect does not
+            // immediately reload the model we are about to evict from the cache.
+            setDownloadedModels(prev => prev.filter(id => id !== modelId));
+            await deleteModelFromCache(model);
+        },
+        [sendToWorker]
+    );
+
+    /** Unloads the worker and removes the cached files of every known model, clearing the downloaded set. */
+    const clearModels = useCallback(async (): Promise<void> => {
+        sendToWorker({ type: "unload" });
+        loadedModelIdRef.current = null;
+        setLoadedModelId(null);
+        setStatus("idle");
+        setDownloadedModels([]);
+        await clearModelCaches(TRANSCRIPTION_MODELS);
+    }, [sendToWorker]);
+
     const startRecording = useCallback(async () => {
         if (status === "recording" || recordingState === "recording") return;
         if (!effectiveEnabled || !downloadedModels.includes(selectedModelId)) {
@@ -480,6 +524,7 @@ export const TranscriptionSettingsProvider = ({
             setEnabled,
             selectedModelId,
             setSelectedModelId,
+            defaultModelId: effectiveDefaultModelId,
             downloadedModels,
             isModelReady: effectiveEnabled && loadedModelId === selectedModelId,
             status,
@@ -492,6 +537,8 @@ export const TranscriptionSettingsProvider = ({
             language,
             setLanguage,
             downloadModel,
+            deleteModel,
+            clearModels,
             startRecording,
             stopAndTranscribe
         }),
@@ -501,6 +548,7 @@ export const TranscriptionSettingsProvider = ({
             setEnabled,
             selectedModelId,
             setSelectedModelId,
+            effectiveDefaultModelId,
             downloadedModels,
             loadedModelId,
             status,
@@ -513,6 +561,8 @@ export const TranscriptionSettingsProvider = ({
             language,
             setLanguage,
             downloadModel,
+            deleteModel,
+            clearModels,
             startRecording,
             stopAndTranscribe
         ]

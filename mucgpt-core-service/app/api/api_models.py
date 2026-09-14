@@ -479,7 +479,11 @@ class ConfigResponse(BaseModel):
     )
     transcription_enabled: bool = Field(
         False,
-        description="Whether browser-based audio transcription is enabled in the frontend.",
+        description="Whether browser-based audio transcription is enabled in the frontend. Transcription itself runs fully client-side; no audio is sent to the backend.",
+    )
+    transcription_default_model: str | None = Field(
+        None,
+        description="Model id preselected in the transcription settings for users who have not picked a model yet. Unknown ids are ignored; null uses the frontend's built-in default.",
     )
     ai_act_compliance_check_enabled: bool = Field(
         True,

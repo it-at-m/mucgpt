@@ -349,6 +349,14 @@ i18n
                             enable_label: "Transkription aktivieren",
                             enable_hint: "Ist diese Option aktiv und ein Modell heruntergeladen, erscheint im Chat ein Mikrofon-Button.",
                             model_label: "Modell",
+                            model_languages: "Sprachen: {{languages}}",
+                            languages: {
+                                de: "Deutsch",
+                                en: "Englisch",
+                                fr: "Französisch",
+                                es: "Spanisch",
+                                uk: "Ukrainisch"
+                            },
                             model_ready: "bereit",
                             download: "Modell herunterladen",
                             redownload: "Erneut herunterladen",
@@ -1170,6 +1178,14 @@ i18n
                             enable_label: "Enable transcription",
                             enable_hint: "When enabled and a model is downloaded, a microphone button appears in the chat.",
                             model_label: "Model",
+                            model_languages: "Languages: {{languages}}",
+                            languages: {
+                                de: "German",
+                                en: "English",
+                                fr: "French",
+                                es: "Spanish",
+                                uk: "Ukrainian"
+                            },
                             model_ready: "ready",
                             download: "Download model",
                             redownload: "Re-download",
@@ -1973,6 +1989,14 @@ i18n
                             enable_label: "Transkription aktivieren",
                             enable_hint: "Is des aktiv und a Modell obagladn, erscheint im Ratsch a Mikrofon-Knopf.",
                             model_label: "Modell",
+                            model_languages: "Sprachen: {{languages}}",
+                            languages: {
+                                de: "Deutsch",
+                                en: "Englisch",
+                                fr: "Französisch",
+                                es: "Spanisch",
+                                uk: "Ukrainisch"
+                            },
                             model_ready: "bereit",
                             download: "Modell obaladn",
                             redownload: "Nei obaladn",
@@ -2783,6 +2807,14 @@ i18n
                             enable_hint: "Lorsque l'option est activée et qu'un modèle est téléchargé, un bouton microphone apparaît dans le chat.",
                             model_label: "Modèle",
                             model_ready: "prêt",
+                            model_languages: "Langues : {{languages}}",
+                            languages: {
+                                de: "Allemand",
+                                en: "Anglais",
+                                fr: "Français",
+                                es: "Espagnol",
+                                uk: "Ukrainien"
+                            },
                             download: "Télécharger le modèle",
                             redownload: "Re-télécharger",
                             status_idle: "Non chargé",
@@ -3591,6 +3623,14 @@ i18n
                             status_loading_mb: "Завантаження … {{downloaded_mb}} MB / {{total_mb}} MB ({{progress}} %)",
                             status_loading_indeterminate: "Завантаження …",
                             status_ready: "Готова",
+                            model_languages: "Мови: {{languages}}",
+                            languages: {
+                                de: "Німецька",
+                                en: "Англійська",
+                                fr: "Французька",
+                                es: "Іспанська",
+                                uk: "Українська"
+                            },
                             close: "Закрити"
                         },
                         suminput: {

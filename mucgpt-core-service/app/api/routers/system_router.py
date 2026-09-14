@@ -19,6 +19,7 @@ settings = get_settings()
     },
 )
 async def get_config(user_info=Depends(authenticate_user)) -> ConfigResponse:
+    """Builds the application config response (feature flags, versions, links and model list)."""
     response = ConfigResponse(
         env_name=settings.ENV_NAME,
         alternative_logo=settings.ALTERNATIVE_LOGO,
@@ -28,6 +29,7 @@ async def get_config(user_info=Depends(authenticate_user)) -> ConfigResponse:
         assistant_version=settings.ASSISTANT_VERSION,
         document_processing_enabled=settings.PARSER_BACKEND != ParserBackendType.NONE,
         transcription_enabled=settings.TRANSCRIPTION_ENABLED,
+        transcription_default_model=settings.TRANSCRIPTION_DEFAULT_MODEL,
         ai_act_compliance_check_enabled=settings.AI_ACT_COMPLIANCE_CHECK_ENABLED,
         footer_link_url=settings.FOOTER_LINK_URL,
         footer_label=settings.FOOTER_LABEL,
@@ -70,4 +72,5 @@ async def get_config(user_info=Depends(authenticate_user)) -> ConfigResponse:
     },
 )
 def health_check() -> str:
+    """Returns "OK" to signal the service is up."""
     return "OK"

@@ -46,7 +46,7 @@ i18n
                     admin: {
                         legal_review: {
                             title: "Rechtliche Prüfungen",
-                            subtitle: "Prüfen Sie Assistenten, die gegen den EU-AI-ACT verstoßen.",
+                            subtitle: "Prüfen Sie Assistenten mit möglichen Hochrisiko-Anwendungsfällen.",
                             pending: "Prüfung ausstehend",
                             version: "Version {{version}}",
                             reason_label: "Entscheidungsnotiz",
@@ -895,7 +895,7 @@ i18n
                     admin: {
                         legal_review: {
                             title: "Legal Reviews",
-                            subtitle: "Review assistants that violate the EU AI Act.",
+                            subtitle: "Review assistants with possible high-risk use cases.",
                             pending: "Review Pending",
                             version: "Version {{version}}",
                             reason_label: "Decision Note",
@@ -1735,7 +1735,7 @@ i18n
                     admin: {
                         legal_review: {
                             title: "Rechtliche Obacht’n",
-                            subtitle: "Schau da d’Assistenten o, de wo gegen’n EU-AI-ACT verstoßen.",
+                            subtitle: "Schau da Assistenten o, bei denen a möglicher Hochrisiko-Anwendungsfall vorliegen könnt.",
                             pending: "Obacht steht no aus",
                             version: "Version {{version}}",
                             reason_label: "Entscheidungs-Notiz",
@@ -2562,7 +2562,7 @@ i18n
                     admin: {
                         legal_review: {
                             title: "Revues juridiques",
-                            subtitle: "Examinez les assistants qui enfreignent le règlement européen sur l’IA.",
+                            subtitle: "Examinez les assistants présentant de possibles cas d’usage à haut risque.",
                             pending: "Revue en attente",
                             version: "Version {{version}}",
                             reason_label: "Note de décision",
@@ -3387,7 +3387,7 @@ i18n
                     admin: {
                         legal_review: {
                             title: "Юридичні перевірки",
-                            subtitle: "Перевірте асистентів, які порушують ЄС AI ACT.",
+                            subtitle: "Перевірте асистентів із можливими випадками використання високого ризику.",
                             pending: "Перевірка очікує",
                             version: "Версія {{version}}",
                             reason_label: "Примітка до рішення",

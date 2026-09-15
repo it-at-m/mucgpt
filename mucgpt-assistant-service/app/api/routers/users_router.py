@@ -188,7 +188,9 @@ async def subscribe_to_assistant(
     )
 
     assistant_repo = AssistantRepository(db)
-    assistant = await assistant_repo.get(assistant_id)
+    # Lifecycle changes lock this row before appending a new version. Acquire the
+    # same lock before validating so the check and subscription commit serialize.
+    assistant = await assistant_repo.get_for_update(assistant_id)
     if not assistant:
         raise AssistantNotFoundException(assistant_id)
     if not await assistant.is_allowed_for_user(user_info.department):

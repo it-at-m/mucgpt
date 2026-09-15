@@ -5,6 +5,7 @@ Tests for subscription functionality in the AssistantRepository.
 import pytest
 from sqlalchemy import select
 
+from api.exceptions import AssistantUnavailableForUseException
 from database.assistant_repo import AssistantRepository
 from database.database_models import Subscription
 
@@ -34,6 +35,50 @@ async def test_create_subscription(test_db_session):
     )
     db_subscription = result.scalars().first()
     assert db_subscription is not None
+
+
+@pytest.mark.asyncio
+async def test_subscription_race_rechecks_latest_lifecycle_state(
+    test_db_session, test_db_engine
+):
+    """A stale active check in one session cannot bypass a lifecycle update."""
+    setup_repo = AssistantRepository(test_db_session)
+    assistant = await setup_repo.create(hierarchical_access=[], owner_ids=["owner1"])
+    await setup_repo.create_assistant_version(
+        assistant,
+        name="Race assistant",
+        description="",
+        system_prompt="Be helpful.",
+        creativity="medium",
+        state="active",
+    )
+    await test_db_session.commit()
+
+    # Use a second session to model the subscriber's request transaction.
+    from sqlalchemy.ext.asyncio import async_sessionmaker
+
+    session_factory = async_sessionmaker(test_db_engine, expire_on_commit=False)
+    async with session_factory() as subscriber_session:
+        subscriber_repo = AssistantRepository(subscriber_session)
+        stale_check = await subscriber_repo.get_latest_version(assistant.id)
+        assert stale_check is not None
+        assert stale_check.state == "active"
+
+        await setup_repo.create_assistant_version(
+            assistant,
+            name="Race assistant",
+            description="",
+            system_prompt="Be helpful.",
+            creativity="medium",
+            state="pending_legal_review",
+        )
+        await test_db_session.commit()
+
+        with pytest.raises(AssistantUnavailableForUseException) as error:
+            await subscriber_repo.create_subscription(assistant.id, "user1")
+
+        assert error.value.status_code == 451
+        await subscriber_session.rollback()
 
 
 @pytest.mark.asyncio

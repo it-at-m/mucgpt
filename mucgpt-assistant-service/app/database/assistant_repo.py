@@ -8,6 +8,7 @@ from sqlalchemy import String, delete, func, insert, or_, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import aliased, attributes, selectinload
 
+from api.exceptions import AssistantUnavailableForUseException
 from core.logtools import getLogger
 from utils import serialize_list
 
@@ -568,6 +569,24 @@ class AssistantRepository(Repository[Assistant]):
         )
 
         try:
+            # Serialize with lifecycle updates and re-check immediately before
+            # writing. The route performs the same check for its response, but
+            # this keeps repository callers from subscribing to a stale version.
+            await self.session.execute(
+                select(Assistant).where(Assistant.id == assistant_id).with_for_update()
+            )
+            latest_version = await self.session.execute(
+                select(AssistantVersion)
+                .where(AssistantVersion.assistant_id == assistant_id)
+                .order_by(AssistantVersion.version.desc())
+                .limit(1)
+            )
+            latest_version = latest_version.scalars().first()
+            if latest_version is not None and latest_version.state != "active":
+                raise AssistantUnavailableForUseException(
+                    assistant_id, latest_version.state
+                )
+
             subscription = Subscription(assistant_id=assistant_id, user_id=user_id)
             self.session.add(subscription)
             await self.session.flush()

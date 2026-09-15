@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, Query
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.api_models import (
@@ -61,7 +62,7 @@ async def update_assistant_state(
 ) -> AssistantResponse:
     """Append a reviewed immutable version without mutating the reviewed version."""
     assistant_repo = AssistantRepository(db)
-    assistant = await assistant_repo.get(assistant_id)
+    assistant = await assistant_repo.get_for_update(assistant_id)
     if assistant is None:
         raise AssistantNotFoundException(assistant_id)
 
@@ -74,31 +75,39 @@ async def update_assistant_state(
     if latest_version.state != state_update.expected_state:
         raise VersionConflictException(state_update.version, latest_version.version)
 
-    review_version = await assistant_repo.create_assistant_version(
-        assistant=assistant,
-        name=latest_version.name,
-        description=latest_version.description or "",
-        system_prompt=latest_version.system_prompt,
-        creativity=latest_version.creativity,
-        default_model=latest_version.default_model,
-        examples=latest_version.examples or [],
-        quick_prompts=latest_version.quick_prompts or [],
-        tags=latest_version.tags or [],
-        compliance_check_result=latest_version.compliance_check_result,
-        compliance_confirmation=latest_version.compliance_confirmation,
-        state=state_update.state,
-        state_changed_by=admin.user_id,
-        state_change_reason=state_update.reason,
-    )
-    for tool in latest_version.tool_associations:
-        db.add(
-            AssistantTool(
-                assistant_version=review_version,
-                tool_id=tool.tool_id,
-                config=tool.config,
-            )
+    try:
+        review_version = await assistant_repo.create_assistant_version(
+            assistant=assistant,
+            name=latest_version.name,
+            description=latest_version.description or "",
+            system_prompt=latest_version.system_prompt,
+            creativity=latest_version.creativity,
+            default_model=latest_version.default_model,
+            examples=latest_version.examples or [],
+            quick_prompts=latest_version.quick_prompts or [],
+            tags=latest_version.tags or [],
+            compliance_check_result=latest_version.compliance_check_result,
+            compliance_confirmation=latest_version.compliance_confirmation,
+            state=state_update.state,
+            state_changed_by=admin.user_id,
+            state_change_reason=state_update.reason,
         )
-    await db.commit()
+        for tool in latest_version.tool_associations:
+            db.add(
+                AssistantTool(
+                    assistant_version=review_version,
+                    tool_id=tool.tool_id,
+                    config=tool.config,
+                )
+            )
+        await db.commit()
+    except IntegrityError:
+        await db.rollback()
+        current_version = await assistant_repo.get_latest_version(assistant_id)
+        raise VersionConflictException(
+            state_update.version,
+            current_version.version if current_version is not None else "none",
+        ) from None
 
     refreshed_assistant = await assistant_repo.get_with_owners(assistant_id)
     return (

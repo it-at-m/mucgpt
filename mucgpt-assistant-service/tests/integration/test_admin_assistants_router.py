@@ -1,15 +1,23 @@
+import asyncio
+
 import pytest
 from fastapi.testclient import TestClient
+from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
 from api.api_models import (
     AssistantCreate,
     AssistantResponse,
+    AssistantStateUpdate,
     AssistantUpdate,
     ComplianceCheckResult,
 )
+from api.exceptions import VersionConflictException
+from api.routers.admin_assistants_router import update_assistant_state
 from backend import api_app
 from core.auth import require_admin
 from core.auth_models import AuthenticationResult
+from database.assistant_repo import AssistantRepository
+from database.database_models import Base
 
 headers = {"Authorization": "Bearer test-token"}
 
@@ -82,6 +90,63 @@ def test_high_risk_assistant_is_pending_legal_review(admin_client: TestClient) -
     assert inactive_subscription_response.json()["detail"] == (
         f"Assistant with ID {assistant.id} is unavailable for use"
     )
+
+
+@pytest.mark.integration
+@pytest.mark.asyncio
+async def test_concurrent_admin_state_updates_return_one_conflict(tmp_path) -> None:
+    engine = create_async_engine(
+        f"sqlite+aiosqlite:///{tmp_path / 'concurrent-state-update.db'}",
+        connect_args={"timeout": 5},
+    )
+    try:
+        async with engine.begin() as connection:
+            await connection.run_sync(Base.metadata.create_all)
+
+        session_factory = async_sessionmaker(engine, expire_on_commit=False)
+        async with session_factory() as session:
+            repository = AssistantRepository(session)
+            assistant = await repository.create(owner_ids=["owner"])
+            await repository.create_assistant_version(
+                assistant=assistant,
+                name="Concurrent review assistant",
+                description="",
+                system_prompt="Review this.",
+                creativity="medium",
+            )
+            await session.commit()
+
+        admin = AuthenticationResult(
+            user_id="legal_admin_123",
+            name="Legal Admin",
+            department="Legal",
+            is_admin=True,
+        )
+
+        async def update_state() -> int:
+            async with session_factory() as session:
+                try:
+                    await update_assistant_state(
+                        assistant_id=assistant.id,
+                        state_update=AssistantStateUpdate(
+                            state="pending_legal_review",
+                            expected_state="active",
+                            version=1,
+                        ),
+                        db=session,
+                        admin=admin,
+                    )
+                except VersionConflictException as error:
+                    return error.status_code
+                return 200
+
+        results = await asyncio.gather(update_state(), update_state())
+
+        assert sorted(results) == [200, 409]
+    finally:
+        async with engine.begin() as connection:
+            await connection.run_sync(Base.metadata.drop_all)
+        await engine.dispose()
 
 
 @pytest.mark.integration

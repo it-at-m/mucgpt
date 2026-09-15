@@ -72,6 +72,13 @@ class AssistantRepository(Repository[Assistant]):
         )
         return result.scalars().first()
 
+    async def get_for_update(self, assistant_id: str) -> Assistant | None:
+        """Fetch an assistant while locking its row for the current transaction."""
+        result = await self.session.execute(
+            select(Assistant).filter(Assistant.id == assistant_id).with_for_update()
+        )
+        return result.scalars().first()
+
     async def create_assistant_version(
         self,
         assistant: Assistant,
@@ -90,12 +97,13 @@ class AssistantRepository(Repository[Assistant]):
         state_change_reason: str | None = None,
     ) -> AssistantVersion:
         """Creates a new version for an assistant with explicit parameters."""
-        logger.info(f"Creating new version for assistant {assistant.id}")
+        assistant_id = assistant.id
+        logger.info(f"Creating new version for assistant {assistant_id}")
         try:
             # Query for the latest version directly to avoid lazy loading
             result = await self.session.execute(
                 select(AssistantVersion)
-                .filter(AssistantVersion.assistant_id == assistant.id)
+                .filter(AssistantVersion.assistant_id == assistant_id)
                 .order_by(AssistantVersion.version.desc())
                 .limit(1)
             )
@@ -129,7 +137,7 @@ class AssistantRepository(Repository[Assistant]):
             )
             return new_version
         except Exception as e:
-            logger.error(f"Error creating assistant version for {assistant.id}: {e}")
+            logger.error(f"Error creating assistant version for {assistant_id}: {e}")
             await self.session.rollback()
             raise
 

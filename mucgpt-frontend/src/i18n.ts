@@ -2444,6 +2444,8 @@ i18n
                             duplicate_failed_forbidden: "Du host koa Berechtigung, den Assistentn zum Dupliziern.",
                             duplicate_failed_not_found: "Da Assistent is ned gfundn worn und ko ned dupliziert wern.",
                             local_badge: "Lokal",
+                            pending_review_badge: "Ausstehend",
+                            inactive_badge: "Deaktiviert",
                             accepted_badge: "Konform",
                             local_state_title: "Der lokale Assistent is veraltet",
                             discovery_local_hint:
@@ -3267,6 +3269,8 @@ i18n
                             duplicate_failed_forbidden: "Vous n'avez pas la permission de dupliquer cet assistant.",
                             duplicate_failed_not_found: "L'assistant n'a pas été trouvé et ne peut pas être dupliqué.",
                             local_badge: "Local",
+                            pending_review_badge: "En attente",
+                            inactive_badge: "Inactif",
                             accepted_badge: "Conforme",
                             local_state_title: "Cet assistant local est obsolète",
                             discovery_local_hint:
@@ -4091,6 +4095,8 @@ i18n
                             duplicate_failed_forbidden: "У вас немає дозволу на дублювання цього асистента.",
                             duplicate_failed_not_found: "Асистента не знайдено, дублювання неможливе.",
                             local_badge: "Локальний",
+                            pending_review_badge: "Очікує перевірки",
+                            inactive_badge: "Неактивний",
                             accepted_badge: "Відповідає вимогам",
                             local_state_title: "Цей локальний асистент застарів",
                             discovery_local_hint:

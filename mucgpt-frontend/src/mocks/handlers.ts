@@ -149,6 +149,8 @@ const CONFIG_RESPONSE: ApplicationConfig = {
 };
 
 const DYNAMIC_ASSISTANTS: AssistantCreateResponse[] = buildAssistantList(6);
+const pendingAssistant = DYNAMIC_ASSISTANTS[0];
+if (pendingAssistant) pendingAssistant.latest_version.state = "pending_legal_review";
 
 const MOCK_SUBSCRIPTION_COUNTS = [10350, 2500, 1400, 980, 620, 410, 275, 190, 135, 88, 42, 17];
 
@@ -920,21 +922,16 @@ export const handlers = [
     }),
 
     http.get("/api/admin/assistant/review", () => {
-        const pending = DYNAMIC_ASSISTANTS[0];
-        if (!pending) return HttpResponse.json([]);
-        return HttpResponse.json([
-            withMockSubscriptionCount({
-                ...pending,
-                latest_version: { ...pending.latest_version, state: "pending_legal_review" }
-            })
-        ]);
+        return HttpResponse.json(
+            DYNAMIC_ASSISTANTS.filter(assistant => assistant.latest_version.state === "pending_legal_review").map(withMockSubscriptionCount)
+        );
     }),
 
     http.patch("/api/admin/assistant/:id/state", async ({ params, request }) => {
         const body = (await request.json()) as AssistantStateUpdateInput;
         const assistant = DYNAMIC_ASSISTANTS.find(item => item.id === params.id);
         if (!assistant) return new HttpResponse(null, { status: 404 });
-        if (body.version !== assistant.latest_version.version || body.expected_state !== "pending_legal_review") {
+        if (body.version !== assistant.latest_version.version || body.expected_state !== assistant.latest_version.state) {
             return HttpResponse.json({ detail: "Assistant changed" }, { status: 409 });
         }
         const updated = {

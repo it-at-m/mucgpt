@@ -73,7 +73,7 @@ class ComplianceVerificationFailedException(HTTPException):
 
 class AssistantUnavailableForUseException(HTTPException):
     def __init__(self, assistant_id: str, state: AssistantState | None = None):
-        if state == "pending_legal_review":
+        if state == AssistantState.PENDING_LEGAL_REVIEW:
             status_code = 451
             detail = (
                 f"Assistant with ID {assistant_id} is unavailable for use "

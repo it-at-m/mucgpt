@@ -10,6 +10,7 @@ from api.api_models import (
     AssistantListSortBy,
     AssistantListSortOrder,
     AssistantResponse,
+    AssistantState,
     AssistantUpdate,
     AssistantVersionResponse,
     ComplianceCheckResult,
@@ -66,8 +67,8 @@ def _state_from_compliance_result(
         compliance_result
         and compliance_result.get("overall_status") == "high_risk_detected"
     ):
-        return "pending_legal_review"
-    return "active"
+        return AssistantState.PENDING_LEGAL_REVIEW
+    return AssistantState.ACTIVE
 
 
 async def _get_verified_compliance_result(
@@ -402,6 +403,8 @@ async def updateAssistant(
     latest_version = await assistant_repo.get_latest_version(id)
     if not latest_version:
         raise NoVersionException()
+    if latest_version.state == AssistantState.INACTIVE:
+        raise AssistantUnavailableForUseException(id, latest_version.state)
 
     if assistant_update.version != latest_version.version:
         raise VersionConflictException(
@@ -619,7 +622,7 @@ async def get_assistant_configuration_for_use(
         raise NotAllowedToAccessException(id)
 
     latest_version = await assistant_repo.get_latest_version(id)
-    if latest_version is None or latest_version.state != "active":
+    if latest_version is None or latest_version.state != AssistantState.ACTIVE:
         raise AssistantUnavailableForUseException(
             id,
             latest_version.state if latest_version is not None else None,

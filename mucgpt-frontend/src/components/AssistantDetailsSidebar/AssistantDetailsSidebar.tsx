@@ -184,7 +184,7 @@ export const AssistantDetailsSidebar = ({
     const canUnsubscribe = Boolean(assistant?.isSubscribedAssistant && !isOwned && !isDeletedSnapshot && !isLocalAssistant && !isLegacyAssistant);
     const creatorFallbackLabel = t("components.community_assistants.filter_all", "Community");
     const isPrivate = isLocalAssistant || !isVisible;
-    const canEdit = isOwned && !isInactive;
+    const canEdit = isOwned && (isLocalAssistant || assistantState === "active" || assistantState === "pending_legal_review");
 
     return (
         <InlineDrawer open={isOpen} position="end" className={styles.inlineDrawer} aria-labelledby="sidebar-title">

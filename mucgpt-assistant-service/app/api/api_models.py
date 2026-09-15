@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from datetime import datetime
+from enum import Enum
 from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field  # added ConfigDict
@@ -19,7 +20,12 @@ ComplianceCategoryId = Literal[
     "education",
 ]
 ComplianceStatus = Literal["passed", "high_risk_detected", "error"]
-AssistantState = Literal["active", "inactive", "pending_legal_review"]
+
+
+class AssistantState(str, Enum):  # noqa: UP042
+    ACTIVE = "active"
+    INACTIVE = "inactive"
+    PENDING_LEGAL_REVIEW = "pending_legal_review"
 
 
 class ComplianceCategoryResult(BaseModel):
@@ -511,7 +517,8 @@ class AssistantVersionResponse(AssistantBase):
         description="Whether the owner confirmed the compliance review for this assistant version.",
     )
     state: AssistantState = Field(
-        "active", description="Lifecycle state assigned to this immutable version."
+        AssistantState.ACTIVE,
+        description="Lifecycle state assigned to this immutable version.",
     )
     state_changed_by: str | None = Field(
         None, description="User ID that assigned this version's lifecycle state."
@@ -682,7 +689,7 @@ class SubscriptionResponse(BaseModel):
         example=True,
     )
     state: AssistantState = Field(
-        "active",
+        AssistantState.ACTIVE,
         description="Lifecycle state of the subscribed assistant's latest version.",
     )
     owners_detailed: list[OwnerDetailsResponse] | None = Field(

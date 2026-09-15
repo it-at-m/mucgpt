@@ -8,6 +8,7 @@ from sqlalchemy import String, delete, func, insert, or_, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import aliased, attributes, selectinload
 
+from api.api_models import AssistantState
 from api.exceptions import AssistantUnavailableForUseException
 from core.logtools import getLogger
 from utils import serialize_list
@@ -93,7 +94,7 @@ class AssistantRepository(Repository[Assistant]):
         tags: list[str] | None = None,
         compliance_check_result: dict[str, Any] | None = None,
         compliance_confirmation: bool = False,
-        state: str = "active",
+        state: AssistantState = AssistantState.ACTIVE,
         state_changed_by: str | None = None,
         state_change_reason: str | None = None,
     ) -> AssistantVersion:
@@ -582,7 +583,10 @@ class AssistantRepository(Repository[Assistant]):
                 .limit(1)
             )
             latest_version = latest_version.scalars().first()
-            if latest_version is not None and latest_version.state != "active":
+            if (
+                latest_version is not None
+                and latest_version.state != AssistantState.ACTIVE
+            ):
                 raise AssistantUnavailableForUseException(
                     assistant_id, latest_version.state
                 )

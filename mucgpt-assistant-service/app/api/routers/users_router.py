@@ -9,6 +9,7 @@ from api.api_models import (
     AssistantListSortBy,
     AssistantListSortOrder,
     AssistantResponse,
+    AssistantState,
     AssistantVersionResponse,
     StatusResponse,
     SubscriptionResponse,
@@ -83,7 +84,7 @@ async def _build_assistant_response_list(
                 compliance_confirmation=bool(
                     getattr(latest_version, "compliance_confirmation", False)
                 ),
-                state=getattr(latest_version, "state", "active"),
+                state=getattr(latest_version, "state", AssistantState.ACTIVE),
                 state_changed_by=getattr(latest_version, "state_changed_by", None),
                 state_change_reason=getattr(
                     latest_version, "state_change_reason", None
@@ -196,7 +197,7 @@ async def subscribe_to_assistant(
     if not await assistant.is_allowed_for_user(user_info.department):
         raise NotAllowedToAccessException(assistant_id)
     latest_version = await assistant_repo.get_latest_version(assistant_id)
-    if latest_version is None or latest_version.state != "active":
+    if latest_version is None or latest_version.state != AssistantState.ACTIVE:
         raise AssistantUnavailableForUseException(
             assistant_id,
             latest_version.state if latest_version is not None else None,
@@ -322,7 +323,7 @@ async def get_user_subscriptions(
                 subscriptions_count=getattr(assistant, "subscriptions_count", 0) or 0,
                 tags=latest_version.tags or [],
                 is_visible=bool(getattr(assistant, "is_visible", True)),
-                state=getattr(latest_version, "state", "active"),
+                state=getattr(latest_version, "state", AssistantState.ACTIVE),
                 owners_detailed=owners_detailed,
             )
             response_list.append(response)

@@ -27,7 +27,7 @@ router = APIRouter()
     tags=["Admin"],
 )
 async def get_review_queue(
-    state: AssistantState = Query("pending_legal_review"),
+    state: AssistantState = Query(AssistantState.PENDING_LEGAL_REVIEW),
     search: str | None = Query(None),
     sort_by: AssistantListSortBy = Query("updated"),
     sort_order: AssistantListSortOrder = Query("asc"),
@@ -74,12 +74,12 @@ async def update_assistant_state(
         )
     if latest_version.state != state_update.expected_state:
         raise VersionConflictException(state_update.version, latest_version.version)
-    if latest_version.state != "pending_legal_review":
+    if latest_version.state != AssistantState.PENDING_LEGAL_REVIEW:
         raise HTTPException(
             status_code=409,
             detail="Only assistants pending legal review can receive an admin state update",
         )
-    if state_update.state not in ("active", "inactive"):
+    if state_update.state not in (AssistantState.ACTIVE, AssistantState.INACTIVE):
         raise HTTPException(
             status_code=422,
             detail="Admin state updates must target active or inactive",

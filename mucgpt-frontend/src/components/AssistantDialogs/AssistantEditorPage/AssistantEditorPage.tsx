@@ -634,11 +634,6 @@ export const AssistantEditorPage = (props: AssistantEditorPageProps) => {
                 </div>
             </div>
 
-            {!isCreate && isComplianceCheckEnabled && editAssistant?.state === "pending_legal_review" && (
-                <MessageBar intent="warning" role="status">
-                    <MessageBarBody>{t("components.assistant_editor.pending_review_notice")}</MessageBarBody>
-                </MessageBar>
-            )}
             {!isCreate && isComplianceCheckEnabled && editAssistant?.state === "inactive" && (
                 <MessageBar intent="error" role="status">
                     <MessageBarBody>{t("components.assistant_editor.inactive_notice")}</MessageBarBody>
@@ -700,9 +695,15 @@ export const AssistantEditorPage = (props: AssistantEditorPageProps) => {
             {showSettingsForm && (
                 <div className={styles.stickyActionBar}>
                     <div className={styles.actionBarContent}>
-                        <div className={styles.actionStatus} data-tone={actionStatusTone} role="status" aria-live="polite">
-                            {actionStatusLabel}
-                        </div>
+                        {!isCreate && isComplianceCheckEnabled && editAssistant?.state === "pending_legal_review" ? (
+                            <MessageBar className={styles.pendingReviewAction} intent="warning" role="status">
+                                <MessageBarBody>{t("components.assistant_editor.pending_review_notice")}</MessageBarBody>
+                            </MessageBar>
+                        ) : (
+                            <div className={styles.actionStatus} data-tone={actionStatusTone} role="status" aria-live="polite">
+                                {actionStatusLabel}
+                            </div>
+                        )}
                         <div className={styles.actionButtonGroup}>
                             <Button appearance="subtle" onClick={handleCancel} disabled={loading}>
                                 {t("common.cancel")}

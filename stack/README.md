@@ -172,7 +172,7 @@ The stack uses **YAML configuration files** as the primary configuration source,
 
 | File | Mounted to | Used by | Purpose |
 |------|-----------|---------|---------|
-| `core.config.yaml` | `/app/config.yaml` | core-service | Models, Langfuse, MCP, Redis, SSO |
+| `core.config.yaml` | `/app/config.yaml` | core-service | Models, Langfuse prompts, MCP, Redis, SSO |
 | `assistant.config.yaml` | `/app/config.yaml` | assistant-service, assistant-migrations | Database, Redis, LDAP, SSO |
 | `.env` | env vars | all services | Proxies, SSL, infrastructure overrides |
 
@@ -257,6 +257,15 @@ Selection behavior:
 - If no matching model is configured for a task, the first model in `MODELS` is used as a fallback
 
 This setting is internal to the core service and is not exposed to the frontend config API.
+
+### Prompt Pool Configuration
+
+The optional `PROMPTS` section in `core.config.yaml` maps core-service prompt names to Langfuse folders and labels. Configure a mapping only when the matching prompt exists in Langfuse. The full commented example is in `core.config.yaml.example`.
+
+- `defaults/default_instructions` provides general chat instructions.
+- `generation_prompts/chat_title` generates conversation titles.
+- `generation_prompts/assistant_name`, `assistant_description`, and `assistant_systemprompt` generate the corresponding assistant draft fields.
+- `compliance_prompts/*` classifies assistant prompts for high-risk use cases in migration/asylum/border control, public services, employment, and education.
 
 3. Edit `assistant.config.yaml` – configure database and optional LDAP:
 

@@ -129,7 +129,7 @@
 }
 
 .footerSection {
-    gap: var(--spacingVerticalXS);
+    gap: var(--spacingVerticalM);
 }
 
 .secondarySection {

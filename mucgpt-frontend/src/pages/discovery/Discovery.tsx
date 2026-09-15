@@ -2,7 +2,16 @@ import { type ReactElement, useCallback, useContext, useEffect, useRef, useState
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Title1, Body1, Text, SearchBox, Dropdown, Option, Button } from "@fluentui/react-components";
 import type { SearchBoxChangeEvent, InputOnChangeData, SelectionEvents, OptionOnSelectData } from "@fluentui/react-components";
-import { Add24Regular, DocumentArrowUpRegular, LibraryRegular, PeopleCommunityRegular, SearchRegular } from "@fluentui/react-icons";
+import {
+    Add24Regular,
+    CheckmarkCircle16Regular,
+    CircleOff16Regular,
+    Clock16Regular,
+    DocumentArrowUpRegular,
+    LibraryRegular,
+    PeopleCommunityRegular,
+    SearchRegular
+} from "@fluentui/react-icons";
 import { useTranslation } from "react-i18next";
 
 import styles from "./Discovery.module.css";
@@ -273,30 +282,31 @@ const Discovery = () => {
         if (isComplianceCheckEnabled && assistantState === "pending_legal_review") {
             badges.push({
                 label: t("components.community_assistants.pending_review_badge"),
+                icon: <Clock16Regular aria-hidden="true" />,
                 color: "warning",
                 tone: "warning"
             });
         } else if (isComplianceCheckEnabled && assistantState === "inactive") {
             badges.push({
                 label: t("components.community_assistants.inactive_badge"),
+                icon: <CircleOff16Regular aria-hidden="true" />,
                 color: "danger",
                 tone: "danger"
             });
         }
 
-        if (isComplianceCheckEnabled && assistantState === "active" && complianceCheckResult?.overall_status === "passed") {
+        // The lifecycle state is authoritative after legal review. An active assistant
+        // may retain a high-risk automated result that was accepted by a reviewer.
+        if (
+            isComplianceCheckEnabled &&
+            assistantState === "active" &&
+            (complianceCheckResult?.overall_status === "passed" || complianceCheckResult?.overall_status === "high_risk_detected")
+        ) {
             badges.push({
-                label: t("components.community_assistants.compliance_passed_badge"),
+                label: t("components.community_assistants.accepted_badge"),
+                icon: <CheckmarkCircle16Regular aria-hidden="true" />,
                 color: "success",
                 tone: "success"
-            });
-        }
-
-        if (isComplianceCheckEnabled && assistantState === "active" && complianceCheckResult?.overall_status === "high_risk_detected") {
-            badges.push({
-                label: t("components.community_assistants.compliance_high_risk_badge"),
-                color: "danger",
-                tone: "danger"
             });
         }
 

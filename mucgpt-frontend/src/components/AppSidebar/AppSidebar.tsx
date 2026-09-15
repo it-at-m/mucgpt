@@ -10,6 +10,7 @@ import {
     DialogBody,
     DialogContent,
     DialogSurface,
+    Divider,
     Tooltip
 } from "@fluentui/react-components";
 import {
@@ -158,7 +159,7 @@ export const AppSidebar = ({
     // Clicking empty space in the collapsed rail also expands it; clicks on
     // real controls (buttons/links) are left to their own handlers.
     const handleBodyClick = (event: MouseEvent<HTMLDivElement>) => {
-        if (!useCollapsedLogoToggle) {
+        if (!isExpandableRail) {
             return;
         }
         if ((event.target as HTMLElement).closest("button, a")) {
@@ -249,7 +250,8 @@ export const AppSidebar = ({
     }, [isCurrentAssistantChatRoute, isNewChatDialogOpen, loadRecentAssistant]);
 
     const isCollapsed = collapsed && !isMobile;
-    const brandButtonRef = useRef<HTMLAnchorElement>(null);
+    const collapseButtonRef = useRef<HTMLButtonElement>(null);
+    const expandButtonRef = useRef<HTMLButtonElement>(null);
     const restoreToggleFocusRef = useRef(false);
     const handleToggleCollapsed = () => {
         restoreToggleFocusRef.current = true;
@@ -259,61 +261,33 @@ export const AppSidebar = ({
 
     useEffect(() => {
         if (restoreToggleFocusRef.current) {
-            brandButtonRef.current?.focus();
+            (isCollapsed ? expandButtonRef : collapseButtonRef).current?.focus();
             restoreToggleFocusRef.current = false;
         }
     }, [isCollapsed]);
     const toggleLabel = isCollapsed ? t("app_sidebar.open_navigation") : t("app_sidebar.close_navigation");
-    const useCollapsedLogoToggle = collapsed && !isMobile && !!onToggleCollapsed;
+    const isExpandableRail = isCollapsed && !!onToggleCollapsed;
     return (
         <div className={`${styles.root} ${isMobile ? styles.rootMobile : ""}`}>
-            <div
-                className={`${styles.body} ${useCollapsedLogoToggle ? styles.bodyExpandable : ""}`}
-                onClick={useCollapsedLogoToggle ? handleBodyClick : undefined}
-            >
+            <div className={`${styles.body} ${isExpandableRail ? styles.bodyExpandable : ""}`} onClick={isExpandableRail ? handleBodyClick : undefined}>
                 <div className={styles.content}>
                     <div className={styles.brandHeader}>
-                        <Tooltip
-                            content={toggleLabel}
-                            relationship="description"
-                            positioning="after"
-                            visible={useCollapsedLogoToggle && visibleTooltip === "brand"}
-                            onVisibleChange={(_, data) => handleTooltipVisibility("brand", data.visible)}
+                        <Button
+                            as="a"
+                            href="/"
+                            appearance="transparent"
+                            size="large"
+                            className={`${itemStyles.control} ${styles.brandButton} ${isCollapsed ? itemStyles.collapsed : ""}`}
+                            icon={{ className: itemStyles.icon, children: <img src={logoSrc} alt="" className={styles.brandLogo} /> }}
+                            aria-label={t("common.home_link", "Zur Startseite")}
+                            onClick={handleHomeClick}
                         >
-                            <Button
-                                ref={brandButtonRef}
-                                as="a"
-                                href={useCollapsedLogoToggle ? undefined : "/"}
-                                appearance={isCollapsed ? "subtle" : "transparent"}
-                                size="large"
-                                className={`${itemStyles.control} ${styles.brandButton} ${isCollapsed ? itemStyles.collapsed : ""}`}
-                                icon={{
-                                    className: itemStyles.icon,
-                                    children: (
-                                        <span className={styles.brandMark} aria-hidden="true">
-                                            <img src={logoSrc} alt="" className={styles.brandLogo} />
-                                            <ChevronRight24Regular className={styles.brandExpandIcon} />
-                                        </span>
-                                    )
-                                }}
-                                aria-label={useCollapsedLogoToggle ? toggleLabel : t("common.home_link", "Zur Startseite")}
-                                aria-expanded={useCollapsedLogoToggle ? false : undefined}
-                                onClick={event => {
-                                    if (useCollapsedLogoToggle) {
-                                        event.preventDefault();
-                                        handleToggleCollapsed();
-                                    } else {
-                                        handleHomeClick(event);
-                                    }
-                                }}
-                            >
-                                <span className={itemStyles.label} aria-hidden={isCollapsed}>
-                                    <span className={`${itemStyles.text} ${styles.brandTitle}`} aria-label={appTitleAriaLabel}>
-                                        {appTitle}
-                                    </span>
+                            <span className={itemStyles.label} aria-hidden={isCollapsed}>
+                                <span className={`${itemStyles.text} ${styles.brandTitle}`} aria-label={appTitleAriaLabel}>
+                                    {appTitle}
                                 </span>
-                            </Button>
-                        </Tooltip>
+                            </span>
+                        </Button>
                         {onToggleCollapsed && (
                             <Tooltip
                                 content={toggleLabel}
@@ -323,6 +297,7 @@ export const AppSidebar = ({
                                 onVisibleChange={(_, data) => handleTooltipVisibility("collapse", data.visible)}
                             >
                                 <Button
+                                    ref={collapseButtonRef}
                                     appearance="subtle"
                                     size="small"
                                     className={`${styles.topCollapseButton} ${isCollapsed ? styles.topCollapseButtonHidden : ""}`}
@@ -336,6 +311,8 @@ export const AppSidebar = ({
                             </Tooltip>
                         )}
                     </div>
+
+                    <Divider className={styles.headerDivider} />
 
                     <nav className={styles.navGroup}>
                         {navigationItems.map(item => {
@@ -396,9 +373,31 @@ export const AppSidebar = ({
                     )}
                 </div>
 
+                {isExpandableRail && (
+                    <Tooltip
+                        content={toggleLabel}
+                        relationship="description"
+                        positioning="after"
+                        visible={visibleTooltip === "expand"}
+                        onVisibleChange={(_, data) => handleTooltipVisibility("expand", data.visible)}
+                    >
+                        <Button
+                            ref={expandButtonRef}
+                            appearance="subtle"
+                            size="small"
+                            className={styles.expandButton}
+                            icon={<ChevronRight24Regular />}
+                            aria-label={toggleLabel}
+                            aria-expanded={false}
+                            onClick={handleToggleCollapsed}
+                        />
+                    </Tooltip>
+                )}
+
                 <div className={styles.footer}>
                     {utilitiesContent && (
                         <div className={styles.footerSection}>
+                            <Divider />
                             <UserSidebarProfile
                                 collapsed={collapsed}
                                 isMobile={isMobile}

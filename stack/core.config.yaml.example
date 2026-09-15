@@ -15,7 +15,7 @@ AI_ACT_COMPLIANCE_CHECK_ENABLED: true
 APP_VERSION: "2.0"
 FRONTEND_VERSION: "0.0.2"
 ASSISTANT_VERSION: "0.0.3"
-OWNER_PROFILE_URL_TEMPLATE: "https://intranet.muenchen.de/person/{uid}"  #Used for providing a link to a external user profile for a given assistant. {uid} is replaced with the owner id
+OWNER_PROFILE_URL_TEMPLATE: "https://intranet.example.org/person/{uid}"  # {uid} is replaced with the owner ID
 
 # Backend settings
 UNAUTHORIZED_USER_REDIRECT_URL: "<your-url>"
@@ -84,16 +84,16 @@ LANGFUSE:
 # Used by core service for external tool integration
 MCP:
   SOURCES:
-    "ki-muenchen":
+    "organization-docs":
       url: "http://mcpdoc-server:8088/sse"
       transport: "sse"
       forward_token: false
-      group: "ki-münchen"
+      group: "organization-docs"
       descriptions:
         - name: "fetch_docs"
-          description: "Loads information from a specific URL about ai in munich. Always provide the whole url. Not only the relative path."
+          description: "Loads information from a specific documentation URL. Always provide the complete URL."
         - name: "list_doc_sources"
-          description: "Lists information sources about ai in munich. Provides a list of relevant URLs. Use fetch-docs then to retrieve relevant data from the relevant urls. "
+          description: "Lists available documentation sources. Use fetch_docs to retrieve relevant content."
       # ...
 
     # Example for custom headers to authenticate with MCP server via litellm proxy
@@ -159,8 +159,9 @@ MODELS:
 
 # SSO Settings (Keycloak)
 # Used by both core and assistant services for authentication
-# ROLE: "lhm-ab-mucgpt-user"
-# ROLE: "lhm-ab-mucgpt-user" is default, can be overridden here
+# ROLE: "mucgpt-user" is the local demo role
+# USER_ID_CLAIM: "user_id"
+# ORGANIZATION_UNIT_CLAIM: "organization_unit"
 
 # Redis Settings (Valkey in docker-compose)
 # Used by both core and assistant services for caching

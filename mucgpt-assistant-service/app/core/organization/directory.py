@@ -90,6 +90,7 @@ class OrganizationTreeBuilder:
         self,
         *,
         display_attribute: str = "ou",
+        shortname_attribute: str = "departmentCode",
         parent_attribute: str | None = None,
         search_base: str | None = None,
         ignored_prefixes: Sequence[str] | None = None,
@@ -98,6 +99,7 @@ class OrganizationTreeBuilder:
         required_attributes: Sequence[str] | None = None,
     ) -> None:
         self.display_attribute = display_attribute
+        self.shortname_attribute = shortname_attribute.lower()
         self.parent_attribute = parent_attribute
         self.search_base = search_base.lower() if search_base else None
         self.ignored_prefixes = self._normalize_patterns(ignored_prefixes)
@@ -240,7 +242,7 @@ class OrganizationTreeBuilder:
 
     def _extract_shortname(self, attributes: dict[str, Any]) -> str | None:
         normalized_keys = {key.strip().lower(): key for key in attributes.keys() if key}
-        shortname_key = normalized_keys.get("lhmoushortname")
+        shortname_key = normalized_keys.get(self.shortname_attribute)
         shortname = attributes.get(shortname_key) if shortname_key else None
         if isinstance(shortname, list | tuple | set):
             shortname = next((value for value in shortname if value is not None), None)

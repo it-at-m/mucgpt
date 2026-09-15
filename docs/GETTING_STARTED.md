@@ -1,5 +1,7 @@
 # Getting Started
 
+> **Local development and demo only:** The Docker Compose instructions in this guide are intended exclusively for isolated local development and demonstrations. Do not use this setup unchanged for production or test systems; those systems require a separate, non-public and appropriately secured deployment procedure.
+
 - Install uv: <https://docs.astral.sh/uv/getting-started/installation/>
   - [Using UV during development](./DEVELOPMENT.md)
 - Install [Node.js 22+](https://nodejs.org/en/download/package-manager)
@@ -27,7 +29,7 @@ cp assistant.config.yaml.example assistant.config.yaml
 
 ### Models Configuration (YAML)
 
-Configure your LLM models in `core.config.yaml`:
+Configure your LLM models in `core.config.yaml`. The placeholder values in this example, as well as any local demo values, must not be used unchanged in production or test environments:
 
 ```yaml
 MODELS:
@@ -200,23 +202,24 @@ Assistants can be published to specific departments. MUCGPT reads the organizati
 ```yaml
 LDAP:
   ENABLED: true
-  HOST: "ldaps://ldap.example.de"
+  HOST: "ldaps://ldap.example.org"
   PORT: 636
   USE_SSL: true
   START_TLS: false
   VERIFY_SSL: true
   CA_CERT_FILE: "/path/to/ca-bundle.pem"
-  BIND_DN: "cn=mucgpt,ou=Service Accounts,o=Example Org,c=de"
+  BIND_DN: "cn=mucgpt,ou=service-accounts,dc=example,dc=org"
   BIND_PASSWORD: "<secret>"
-  SEARCH_BASE: "o=Example Org,c=de"
+  SEARCH_BASE: "dc=example,dc=org"
   SEARCH_FILTER: "(objectClass=organizationalUnit)"
   DISPLAY_ATTRIBUTE: "ou"
-  PARENT_ATTRIBUTE: "lhmParentOu" # optional
-  ADDITIONAL_ATTRIBUTES: ["lhmOULongname", "lhmOUShortname"]
-  REQUIRED_ATTRIBUTES: ["lhmOULongname", "lhmOUShortname"]
+  SHORTNAME_ATTRIBUTE: "departmentCode"
+  PARENT_ATTRIBUTE: "parentDepartment" # optional
+  ADDITIONAL_ATTRIBUTES: ["departmentName", "departmentCode"]
+  REQUIRED_ATTRIBUTES: ["departmentName", "departmentCode"]
   IGNORED_OU_PREFIXES: ["_"]
   IGNORED_OU_SUFFIXES: ["-xxx"]
-  IGNORED_OU_SHORTNAME_EXCEPTIONS: ["FBM", "KVR-IT"]
+  IGNORED_OU_SHORTNAME_EXCEPTIONS: ["DEPT-EXAMPLE"]
   PAGE_SIZE: 500
   CONNECT_TIMEOUT: 5.0
   READ_TIMEOUT: 10.0
@@ -227,41 +230,43 @@ Individual fields can be overridden via environment variables using the `MUCGPT_
 ```bash
 MUCGPT_ASSISTANT_LDAP__ENABLED=true
 MUCGPT_ASSISTANT_LDAP__BIND_PASSWORD=<secret>
-MUCGPT_ASSISTANT_LDAP__IGNORED_OU_SHORTNAME_EXCEPTIONS=["FBM","KVR-IT"]
+MUCGPT_ASSISTANT_LDAP__IGNORED_OU_SHORTNAME_EXCEPTIONS=["DEPT-EXAMPLE"]
 ```
 
 - `SEARCH_BASE` defines the root of the organization tree.
 - Toggle `USE_SSL` / `START_TLS` / `VERIFY_SSL` depending on your directory security requirements; set `CA_CERT_FILE` if your LDAP server uses a custom CA.
-- `DISPLAY_ATTRIBUTE` (default `ou`) controls the label shown for each organizational unit; `PARENT_ATTRIBUTE` can be set if your LDAP schema exposes a parent reference.
-- `ADDITIONAL_ATTRIBUTES` fetches extra attributes for display; `REQUIRED_ATTRIBUTES` are enforced and default to `lhmOULongname` and `lhmOUShortname`.
+- `DISPLAY_ATTRIBUTE` (default `ou`) controls the label shown for each organizational unit; `SHORTNAME_ATTRIBUTE` selects its stable identifier; `PARENT_ATTRIBUTE` can be set if your LDAP schema exposes a parent reference.
+- `ADDITIONAL_ATTRIBUTES` fetches extra attributes for display; `REQUIRED_ATTRIBUTES` are enforced during loading. Adapt all attribute names to your LDAP schema.
 - `IGNORED_OU_PREFIXES` / `_SUFFIXES` let you skip placeholder OUs (by default everything starting with `_` or ending with `-xxx`).
-- `IGNORED_OU_SHORTNAME_EXCEPTIONS` allows specific OUs to bypass ignore rules when their `lhmOUShortname` matches one of the listed values (case-insensitive).
-- Typical use case: keep a business-relevant OU like `_Hidden` by adding its shortname (for example `FBM`) to `IGNORED_OU_SHORTNAME_EXCEPTIONS`.
+- `IGNORED_OU_SHORTNAME_EXCEPTIONS` allows specific OUs to bypass ignore rules when their configured short-name attribute matches one of the listed values (case-insensitive).
+- Typical use case: keep a business-relevant OU like `_Hidden` by adding its shortname (for example `DEPT-EXAMPLE`) to `IGNORED_OU_SHORTNAME_EXCEPTIONS`.
 - Pagination and robustness: `PAGE_SIZE` (default 500), `CONNECT_TIMEOUT` (default 5s), and `READ_TIMEOUT` (default 10s).
 
 ### SSO integration
 
-Authentication is performed in front of the services via the [refarch API Gateway](https://refarch.oss.muenchen.de/gateway.html). MUCGPT only accepts access tokens that contain a specific role and forwards the department claim for authorization checks.
+Authentication is performed in front of the services through an OpenID Connect-compatible API gateway. MUCGPT only accepts access tokens that contain a configured authorization role and uses a configurable organization claim for authorization checks.
 
 The SSO role is configured in each service's `config.yaml` under the `SSO` section:
 
 ```yaml
 SSO:
-  ROLE: "lhm-ab-mucgpt-user"
+  ROLE: "mucgpt-user"
+  USER_ID_CLAIM: "user_id"
+  ORGANIZATION_UNIT_CLAIM: "organization_unit"
 ```
 
 Or via environment variable:
 
 ```bash
 # Core service
-MUCGPT_CORE_SSO__ROLE=lhm-ab-mucgpt-user
+MUCGPT_CORE_SSO__ROLE=mucgpt-user
 # Assistant service
-MUCGPT_ASSISTANT_SSO__ROLE=lhm-ab-mucgpt-user
+MUCGPT_ASSISTANT_SSO__ROLE=mucgpt-user
 ```
 
-- The role defaults to `lhm-ab-mucgpt-user`.
+- Configure a role that is emitted by your identity provider, such as `mucgpt-user`.
 - The API Gateway handles OpenID Connect login, token issuance, and validation; services receive a validated access token.
-- The access token includes the user's `department` claim, which is combined with the LDAP organization tree to scope assistant publishing and access.
+- The access token includes a configured user-ID claim and a configurable organization claim. The latter is combined with the LDAP organization tree to scope assistant publishing and access.
 
 ### MCP (optional)
 
@@ -295,9 +300,11 @@ MUCGPT_CORE_MCP__CACHE_TTL=43200
 
 ## 🐋 Run with Docker
 
-See the [stack README](../stack/README.md) for complete Docker Compose setup instructions, including:
+The Docker Compose setup is for isolated local development and demos only. Do not expose it as a production or test deployment and do not reuse its demo credentials or other local defaults. Production and test systems must use a separate, non-public and appropriately secured deployment procedure.
+
+See the [stack README](../stack/README.md) for the local Docker Compose setup instructions, including:
 
 - Quick start guide
 - Service architecture and ports
-- Production and development modes
+- Local Compose and local development modes
 - Common commands and troubleshooting

@@ -515,5 +515,5 @@ class ConfigResponse(BaseModel):
     )
     owner_profile_url_template: str | None = Field(
         None,
-        description="Template for assistant owner profile links. The '{uid}' placeholder is replaced with the owner lhmObjectID.",
+        description="Template for assistant owner profile links. The '{uid}' placeholder is replaced with the owner user ID.",
     )

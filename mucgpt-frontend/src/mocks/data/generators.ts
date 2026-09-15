@@ -7,45 +7,45 @@ const domains = ["Docs", "Mail", "Code", "Policy", "Legal", "Finance", "HR", "Su
 const roles = ["Assistant", "Agent", "Bot", "Helper", "Advisor", "Companion"];
 
 const MOCK_OWNER_DIRECTORY: Record<string, OwnerDetailsResponse> = {
-    "111160470": {
-        user_id: "111160470",
-        username: "Michael Jaumann",
-        givenName: "Michael",
-        sn: "Jaumann",
-        mail: "michael.jaumann@muenchen.de",
-        organizationalunit: "ITM-SLP43"
+    "demo-user-1": {
+        user_id: "demo-user-1",
+        username: "Demo User",
+        givenName: "Demo",
+        sn: "User",
+        mail: "demo.user@example.org",
+        organizationalunit: "demo-team-a"
     },
     "user-mock-001": {
         user_id: "user-mock-001",
         username: "Mia Sommer",
         givenName: "Mia",
         sn: "Sommer",
-        mail: "mia.sommer@muenchen.de",
-        organizationalunit: "ITM-KM-DI"
+        mail: "mia.sommer@example.org",
+        organizationalunit: "TEAM-B-DATA-1"
     },
     "user-mock-002": {
         user_id: "user-mock-002",
         username: "Lukas Winter",
         givenName: "Lukas",
         sn: "Winter",
-        mail: "lukas.winter@muenchen.de",
-        organizationalunit: "POR-O"
+        mail: "lukas.winter@example.org",
+        organizationalunit: "TEAM-C-2"
     },
     "user-mock-003": {
         user_id: "user-mock-003",
         username: "Sara Neumann",
         givenName: "Sara",
         sn: "Neumann",
-        mail: "sara.neumann@muenchen.de",
-        organizationalunit: "POR-P"
+        mail: "sara.neumann@example.org",
+        organizationalunit: "TEAM-C-1"
     },
     "user-mock-123": {
         user_id: "user-mock-123",
         username: "Max Mustermann",
         givenName: "Max",
         sn: "Mustermann",
-        mail: "max.mustermann@muenchen.de",
-        organizationalunit: "RIT-AI"
+        mail: "max.mustermann@example.org",
+        organizationalunit: "TEAM-B-AI"
     }
 };
 
@@ -175,7 +175,7 @@ export function buildAssistantCreateResponse(overrides: Partial<AssistantCreateR
         id: overrides.id || `assistant-mock-${Math.random().toString(36).slice(2, 10)}`,
         created_at: overrides.created_at || new Date().toISOString(),
         updated_at: overrides.updated_at || new Date().toISOString(),
-        hierarchical_access: overrides.hierarchical_access || ["BAU", randomOf(["ITM-KM", "ITM-KM-DI", "RIT"])],
+        hierarchical_access: overrides.hierarchical_access || ["TEAM-A", randomOf(["TEAM-B", "TEAM-B-DATA-1", "TEAM-C"])],
         owner_ids: ownerIds,
         owners_detailed: overrides.owners_detailed || buildOwnersDetailedFromOwnerIds(ownerIds),
         latest_version: {
@@ -185,7 +185,7 @@ export function buildAssistantCreateResponse(overrides: Partial<AssistantCreateR
             name,
             description,
             system_prompt: overrides.latest_version?.system_prompt || `You are the ${name}. Provide excellent, clear, and structured assistance.`,
-            hierarchical_access: overrides.latest_version?.hierarchical_access || ["ITM"],
+            hierarchical_access: overrides.latest_version?.hierarchical_access || ["TEAM-A"],
             creativity: overrides.latest_version?.creativity ?? randomOf([CREATIVITY_LOW, CREATIVITY_MEDIUM, CREATIVITY_HIGH]),
             default_model: overrides.latest_version?.default_model,
             is_visible: overrides.latest_version?.is_visible !== undefined ? overrides.latest_version.is_visible : true,

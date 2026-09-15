@@ -3,23 +3,23 @@ author: Default
 realm: local_realm
 changes:
   - addRole:
-      name: lhm-ab-mucgpt-user
+      name: mucgpt-user
       description: Example role with read access to application data
       clientRole: true
       clientId: mucgpt
       composite: false
 
   - assignRole:
-      user: mucgpt-user
-      role: lhm-ab-mucgpt-user
+      user: demo-user
+      role: mucgpt-user
       clientId: mucgpt
 
   - assignRole:
-      user: mucgpt-kicc-user
-      role: lhm-ab-mucgpt-user
+      user: demo-team-a-user
+      role: mucgpt-user
       clientId: mucgpt
 
   - assignRole:
-      user: mucgpt-hr-user
-      role: lhm-ab-mucgpt-user
+      user: demo-team-b-user
+      role: mucgpt-user
       clientId: mucgpt

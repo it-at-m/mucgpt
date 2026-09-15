@@ -3,7 +3,7 @@ author: Default
 realm: local_realm
 changes:
   - addRole:
-      name: lhm-ab-mucgpt-user
+      name: mucgpt-user
       description: Example role with read access to application data
       clientRole: true
       clientId: mucgpt

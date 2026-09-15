@@ -13,7 +13,7 @@ from database.assistant_repo import AssistantRepository
 def sample_assistant_data():
     """Sample data for assistant creation and updates."""
     return {
-        "hierarchical_access": ["ITM-KM"],
+        "hierarchical_access": ["DEPT-TEAM"],
         "owner_ids": ["user1", "user2"],
         "is_visible": True,
     }
@@ -29,10 +29,14 @@ def directory_index_multiple_paths(monkeypatch):
 
     tree = [
         {
-            "shortname": "itm-km",
-            "name": "ITM-KM",
+            "shortname": "dept-team",
+            "name": "DEPT-TEAM",
             "children": [
-                {"shortname": "itm-km-team1", "name": "ITM-KM-TEAM1", "children": []}
+                {
+                    "shortname": "dept-team-alpha",
+                    "name": "DEPT-TEAM-ALPHA",
+                    "children": [],
+                }
             ],
         },
         {"shortname": "HR-DEPT", "name": "HR-DEPT", "children": []},
@@ -221,39 +225,43 @@ def default_directory_tree(monkeypatch):
     """Default directory tree for all tests to prevent Redis calls."""
     tree = [
         {
-            "shortname": "itm",
-            "name": "ITM",
+            "shortname": "dept",
+            "name": "DEPT",
             "children": [
                 {
-                    "shortname": "itm-km",
-                    "name": "ITM-KM",
+                    "shortname": "dept-team",
+                    "name": "DEPT-TEAM",
                     "children": [
                         {
-                            "shortname": "itm-km-di",
-                            "name": "ITM-KM-DI",
+                            "shortname": "dept-team-unit",
+                            "name": "DEPT-TEAM-UNIT",
                             "children": [],
                         },
                         {
-                            "shortname": "itm-km-team1",
-                            "name": "ITM-KM-TEAM1",
+                            "shortname": "dept-team-alpha",
+                            "name": "DEPT-TEAM-ALPHA",
                             "children": [],
                         },
                     ],
                 },
                 {
-                    "shortname": "itm-ab",
-                    "name": "ITM-AB",
+                    "shortname": "dept-other",
+                    "name": "DEPT-OTHER",
                     "children": [
-                        {"shortname": "itm-ab-di", "name": "ITM-AB-DI", "children": []}
+                        {
+                            "shortname": "dept-other-unit",
+                            "name": "DEPT-OTHER-UNIT",
+                            "children": [],
+                        }
                     ],
                 },
-                {"shortname": "itm-test", "name": "ITM-TEST", "children": []},
-                {"shortname": "itm-test1", "name": "ITM-TEST1", "children": []},
-                {"shortname": "itm-test2", "name": "ITM-TEST2", "children": []},
-                {"shortname": "itm-test3", "name": "ITM-TEST3", "children": []},
-                {"shortname": "itm-temp", "name": "ITM-TEMP", "children": []},
-                {"shortname": "itm-new", "name": "ITM-NEW", "children": []},
-                {"shortname": "itm-old", "name": "ITM-OLD", "children": []},
+                {"shortname": "dept-test", "name": "DEPT-TEST", "children": []},
+                {"shortname": "dept-test1", "name": "DEPT-TEST1", "children": []},
+                {"shortname": "dept-test2", "name": "DEPT-TEST2", "children": []},
+                {"shortname": "dept-test3", "name": "DEPT-TEST3", "children": []},
+                {"shortname": "dept-temp", "name": "DEPT-TEMP", "children": []},
+                {"shortname": "dept-new", "name": "DEPT-NEW", "children": []},
+                {"shortname": "dept-old", "name": "DEPT-OLD", "children": []},
             ],
         }
     ]
@@ -280,13 +288,13 @@ class TestAssistantRepository:
         assistant_repo = AssistantRepository(db_session)
 
         # Act
-        assistant = await assistant_repo.create(hierarchical_access=["ITM-TEST"])
+        assistant = await assistant_repo.create(hierarchical_access=["DEPT-TEST"])
         await db_session.commit()
 
         # Assert
         assert assistant.id is not None
         assert assistant.hierarchical_access == [
-            "ITM-TEST"
+            "DEPT-TEST"
         ]  # Use the safe method to check owners count
         owners_count = await assistant_repo.get_owners_count(assistant.id)
         assert owners_count == 0
@@ -319,13 +327,13 @@ class TestAssistantRepository:
         """Test creating an assistant with mix of new and existing owners."""  # Arrange
         assistant_repo = AssistantRepository(db_session)
         await assistant_repo.create(
-            hierarchical_access=["ITM-TEMP"], owner_ids=["existing_user"]
+            hierarchical_access=["DEPT-TEMP"], owner_ids=["existing_user"]
         )
         await db_session.commit()
 
         # Act
         assistant = await assistant_repo.create(
-            hierarchical_access=["ITM-TEST"], owner_ids=["existing_user", "new_user"]
+            hierarchical_access=["DEPT-TEST"], owner_ids=["existing_user", "new_user"]
         )
         await db_session.commit()  # Assert
         result = await assistant_repo.get_with_owners(assistant.id)
@@ -346,13 +354,13 @@ class TestAssistantRepository:
         )
         await db_session.commit()  # Act
         updated = await assistant_repo.update(
-            assistant.id, hierarchical_access=["ITM-NEW"]
+            assistant.id, hierarchical_access=["DEPT-NEW"]
         )
         await db_session.commit()
 
         # Assert
         assert updated is not None
-        assert updated.hierarchical_access == ["ITM-NEW"]
+        assert updated.hierarchical_access == ["DEPT-NEW"]
 
     async def test_update_assistant_owners(self, db_session, sample_assistant_data):
         """Test updating assistant's owners."""
@@ -602,13 +610,13 @@ class TestAssistantRepository:
         """Test getting assistants by owner."""  # Arrange
         assistant_repo = AssistantRepository(db_session)
         assistant1 = await assistant_repo.create(
-            hierarchical_access=["ITM-TEST1"], owner_ids=["owner1", "owner2"]
+            hierarchical_access=["DEPT-TEST1"], owner_ids=["owner1", "owner2"]
         )
         assistant2 = await assistant_repo.create(
-            hierarchical_access=["ITM-TEST2"], owner_ids=["owner1"]
+            hierarchical_access=["DEPT-TEST2"], owner_ids=["owner1"]
         )
         assistant3 = await assistant_repo.create(
-            hierarchical_access=["ITM-TEST3"], owner_ids=["owner3"]
+            hierarchical_access=["DEPT-TEST3"], owner_ids=["owner3"]
         )
         await db_session.commit()
 
@@ -628,10 +636,10 @@ class TestAssistantRepository:
         assistant_repo = AssistantRepository(db_session)
         # Create some assistants to ensure the database isn't empty
         await assistant_repo.create(
-            hierarchical_access=["ITM-TEST1"], owner_ids=["owner1"]
+            hierarchical_access=["DEPT-TEST1"], owner_ids=["owner1"]
         )
         await assistant_repo.create(
-            hierarchical_access=["ITM-TEST2"], owner_ids=["owner2"]
+            hierarchical_access=["DEPT-TEST2"], owner_ids=["owner2"]
         )
         await db_session.commit()
 
@@ -647,18 +655,18 @@ class TestAssistantRepository:
         """Test getting assistants for exact department match."""
         # Arrange
         assistant_repo = AssistantRepository(db_session)
-        assistant1 = await assistant_repo.create(hierarchical_access=["ITM-KM"])
-        assistant2 = await assistant_repo.create(hierarchical_access=["ITM-AB"])
+        assistant1 = await assistant_repo.create(hierarchical_access=["DEPT-TEAM"])
+        assistant2 = await assistant_repo.create(hierarchical_access=["DEPT-OTHER"])
         assistant3 = await assistant_repo.create(hierarchical_access=[])
         await db_session.commit()
 
         # Act
         result = (
             await assistant_repo.get_all_possible_assistants_for_user_with_department(
-                "ITM-KM"
+                "DEPT-TEAM"
             )
         )  # Assert
-        assert len(result) == 2  # ITM-KM and empty access
+        assert len(result) == 2  # DEPT-TEAM and empty access
         assistant_ids = [a.id for a in result]
 
         assert assistant1.id in assistant_ids
@@ -671,18 +679,18 @@ class TestAssistantRepository:
         """Test getting assistants for hierarchical department access."""
         # Arrange
         assistant_repo = AssistantRepository(db_session)
-        assistant1 = await assistant_repo.create(hierarchical_access=["ITM"])
-        assistant2 = await assistant_repo.create(hierarchical_access=["ITM-KM"])
-        assistant3 = await assistant_repo.create(hierarchical_access=["ITM-AB"])
+        assistant1 = await assistant_repo.create(hierarchical_access=["DEPT"])
+        assistant2 = await assistant_repo.create(hierarchical_access=["DEPT-TEAM"])
+        assistant3 = await assistant_repo.create(hierarchical_access=["DEPT-OTHER"])
         await db_session.commit()
 
         # Act
         result = (
             await assistant_repo.get_all_possible_assistants_for_user_with_department(
-                "ITM-KM-DI"
+                "DEPT-TEAM-UNIT"
             )
         )  # Assert
-        assert len(result) == 2  # ITM and ITM-KM
+        assert len(result) == 2  # DEPT and DEPT-TEAM
         assistant_ids = [a.id for a in result]
 
         assert assistant1.id in assistant_ids
@@ -695,8 +703,8 @@ class TestAssistantRepository:
         """Test getting assistants when user has no access."""
         # Arrange
         assistant_repo = AssistantRepository(db_session)
-        _assistant1 = await assistant_repo.create(hierarchical_access=["ITM-KM"])
-        _assistant2 = await assistant_repo.create(hierarchical_access=["ITM-AB"])
+        _assistant1 = await assistant_repo.create(hierarchical_access=["DEPT-TEAM"])
+        _assistant2 = await assistant_repo.create(hierarchical_access=["DEPT-OTHER"])
         await db_session.commit()
 
         # Act
@@ -715,7 +723,7 @@ class TestAssistantRepository:
         assistant_repo = AssistantRepository(db_session)
         assistant1 = await assistant_repo.create(hierarchical_access=[])
         assistant2 = await assistant_repo.create(hierarchical_access=None)
-        assistant3 = await assistant_repo.create(hierarchical_access=["ITM-SPECIFIC"])
+        assistant3 = await assistant_repo.create(hierarchical_access=["DEPT-SPECIFIC"])
         await db_session.commit()
 
         # Act
@@ -740,7 +748,7 @@ class TestAssistantRepository:
         assistant_repo = AssistantRepository(db_session)
         # Assistant with multiple access paths
         assistant1 = await assistant_repo.create(
-            hierarchical_access=["ITM-KM", "HR-DEPT", "FINANCE"]
+            hierarchical_access=["DEPT-TEAM", "HR-DEPT", "FINANCE"]
         )
         # Assistant with single access path for comparison
         assistant2 = await assistant_repo.create(hierarchical_access=["MARKETING"])
@@ -749,7 +757,7 @@ class TestAssistantRepository:
         # Act - Test exact match on first path
         result1 = (
             await assistant_repo.get_all_possible_assistants_for_user_with_department(
-                "ITM-KM"
+                "DEPT-TEAM"
             )
         )
         # Act - Test exact match on second path
@@ -761,7 +769,7 @@ class TestAssistantRepository:
         # Act - Test hierarchical match on first path
         result3 = (
             await assistant_repo.get_all_possible_assistants_for_user_with_department(
-                "ITM-KM-TEAM1"
+                "DEPT-TEAM-ALPHA"
             )
         )
         # Act - Test no match
@@ -902,7 +910,7 @@ class TestAssistantRepository:
         """Test creating a subscription for a user to an assistant."""
         # Arrange
         assistant_repo = AssistantRepository(db_session)
-        assistant = await assistant_repo.create(hierarchical_access=["ITM-TEST"])
+        assistant = await assistant_repo.create(hierarchical_access=["DEPT-TEST"])
         await db_session.commit()
 
         user_id = "test_user"
@@ -924,7 +932,7 @@ class TestAssistantRepository:
         """Test that is_user_subscribed returns False when user is not subscribed."""
         # Arrange
         assistant_repo = AssistantRepository(db_session)
-        assistant = await assistant_repo.create(hierarchical_access=["ITM-TEST"])
+        assistant = await assistant_repo.create(hierarchical_access=["DEPT-TEST"])
         await db_session.commit()
 
         user_id = "nonsubscribed_user"
@@ -939,7 +947,7 @@ class TestAssistantRepository:
         """Test removing a subscription."""
         # Arrange
         assistant_repo = AssistantRepository(db_session)
-        assistant = await assistant_repo.create(hierarchical_access=["ITM-TEST"])
+        assistant = await assistant_repo.create(hierarchical_access=["DEPT-TEST"])
         await db_session.commit()
 
         user_id = "test_user"
@@ -969,7 +977,7 @@ class TestAssistantRepository:
         """Test removing a subscription that doesn't exist."""
         # Arrange
         assistant_repo = AssistantRepository(db_session)
-        assistant = await assistant_repo.create(hierarchical_access=["ITM-TEST"])
+        assistant = await assistant_repo.create(hierarchical_access=["DEPT-TEST"])
         await db_session.commit()
 
         user_id = "nonexistent_user"
@@ -985,9 +993,9 @@ class TestAssistantRepository:
         """Test getting all assistants a user has subscribed to."""
         # Arrange
         assistant_repo = AssistantRepository(db_session)
-        assistant1 = await assistant_repo.create(hierarchical_access=["ITM-TEST1"])
-        assistant2 = await assistant_repo.create(hierarchical_access=["ITM-TEST2"])
-        assistant3 = await assistant_repo.create(hierarchical_access=["ITM-TEST3"])
+        assistant1 = await assistant_repo.create(hierarchical_access=["DEPT-TEST1"])
+        assistant2 = await assistant_repo.create(hierarchical_access=["DEPT-TEST2"])
+        assistant3 = await assistant_repo.create(hierarchical_access=["DEPT-TEST3"])
         await db_session.commit()
 
         user_id = "test_user"
@@ -1012,7 +1020,7 @@ class TestAssistantRepository:
         """Test getting subscriptions for a user with no subscriptions."""
         # Arrange
         assistant_repo = AssistantRepository(db_session)
-        await assistant_repo.create(hierarchical_access=["ITM-TEST1"])
+        await assistant_repo.create(hierarchical_access=["DEPT-TEST1"])
         await db_session.commit()
 
         user_id = "user_with_no_subscriptions"
@@ -1027,7 +1035,7 @@ class TestAssistantRepository:
         """Test multiple users subscribing to the same assistant."""
         # Arrange
         assistant_repo = AssistantRepository(db_session)
-        assistant = await assistant_repo.create(hierarchical_access=["ITM-TEST"])
+        assistant = await assistant_repo.create(hierarchical_access=["DEPT-TEST"])
         await db_session.commit()
 
         user_id1 = "user1"
@@ -1065,7 +1073,7 @@ class TestAssistantRepository:
 
         # Act - Create assistant with is_visible=False
         assistant = await assistant_repo.create(
-            hierarchical_access=["ITM-TEST"], is_visible=False
+            hierarchical_access=["DEPT-TEST"], is_visible=False
         )
         await db_session.commit()
 
@@ -1075,7 +1083,7 @@ class TestAssistantRepository:
 
         # Act - Create another assistant with default visibility (True)
         assistant_default = await assistant_repo.create(
-            hierarchical_access=["ITM-TEST2"]
+            hierarchical_access=["DEPT-TEST2"]
         )
         await db_session.commit()
 
@@ -1088,7 +1096,7 @@ class TestAssistantRepository:
         # Arrange
         assistant_repo = AssistantRepository(db_session)
         assistant = await assistant_repo.create(
-            hierarchical_access=["ITM-TEST"], is_visible=True
+            hierarchical_access=["DEPT-TEST"], is_visible=True
         )
         await db_session.commit()
         assert assistant.is_visible is True
@@ -1116,7 +1124,7 @@ class TestAssistantRepository:
 
         # Create visible assistants
         visible_assistant1 = await assistant_repo.create(
-            hierarchical_access=["ITM-KM"], is_visible=True
+            hierarchical_access=["DEPT-TEAM"], is_visible=True
         )
         visible_assistant2 = await assistant_repo.create(
             hierarchical_access=[],  # Empty access = available to all departments
@@ -1125,7 +1133,7 @@ class TestAssistantRepository:
 
         # Create hidden assistants
         hidden_assistant1 = await assistant_repo.create(
-            hierarchical_access=["ITM-KM"], is_visible=False
+            hierarchical_access=["DEPT-TEAM"], is_visible=False
         )
         hidden_assistant2 = await assistant_repo.create(
             hierarchical_access=[],  # Empty access but hidden
@@ -1137,7 +1145,7 @@ class TestAssistantRepository:
         # Act - Test with department that matches all access patterns
         result = (
             await assistant_repo.get_all_possible_assistants_for_user_with_department(
-                "ITM-KM"
+                "DEPT-TEAM"
             )
         )
 
@@ -1160,14 +1168,14 @@ class TestAssistantRepository:
         # Arrange
         assistant_repo = AssistantRepository(db_session)
         assistant = await assistant_repo.create(
-            hierarchical_access=["ITM-OLD"], owner_ids=["owner1"], is_visible=True
+            hierarchical_access=["DEPT-OLD"], owner_ids=["owner1"], is_visible=True
         )
         await db_session.commit()
 
         # Act - Update multiple properties
         updated = await assistant_repo.update(
             assistant_id=assistant.id,
-            hierarchical_access=["ITM-NEW"],
+            hierarchical_access=["DEPT-NEW"],
             owner_ids=["owner2", "owner3"],
             is_visible=False,
         )
@@ -1175,7 +1183,7 @@ class TestAssistantRepository:
 
         # Assert - All properties should be updated
         assert updated is not None
-        assert updated.hierarchical_access == ["ITM-NEW"]
+        assert updated.hierarchical_access == ["DEPT-NEW"]
         assert updated.is_visible is False
 
         # Check owners were updated too
@@ -1226,7 +1234,7 @@ class TestAssistantRepository:
         # Arrange
         assistant_repo = AssistantRepository(db_session)
         hidden_assistant = await assistant_repo.create(
-            hierarchical_access=["ITM-KM"], is_visible=False
+            hierarchical_access=["DEPT-TEAM"], is_visible=False
         )
         await db_session.commit()
 
@@ -1236,7 +1244,7 @@ class TestAssistantRepository:
         # Act - Access through filtering (should be filtered out)
         filtered_results = (
             await assistant_repo.get_all_possible_assistants_for_user_with_department(
-                "ITM-KM"
+                "DEPT-TEAM"
             )
         )
 
@@ -1254,7 +1262,7 @@ class TestAssistantRepository:
         """Test creating a subscription increments the subscription count."""
         # Arrange
         assistant_repo = AssistantRepository(db_session)
-        assistant = await assistant_repo.create(hierarchical_access=["ITM-TEST"])
+        assistant = await assistant_repo.create(hierarchical_access=["DEPT-TEST"])
         await db_session.commit()
 
         user_id = "test_user"
@@ -1276,7 +1284,7 @@ class TestAssistantRepository:
         """Test removing a subscription decrements the subscription count."""
         # Arrange
         assistant_repo = AssistantRepository(db_session)
-        assistant = await assistant_repo.create(hierarchical_access=["ITM-TEST"])
+        assistant = await assistant_repo.create(hierarchical_access=["DEPT-TEST"])
         await db_session.commit()
 
         user_id = "test_user"
@@ -1300,7 +1308,7 @@ class TestAssistantRepository:
         """Test that multiple subscriptions are counted correctly."""
         # Arrange
         assistant_repo = AssistantRepository(db_session)
-        assistant = await assistant_repo.create(hierarchical_access=["ITM-TEST"])
+        assistant = await assistant_repo.create(hierarchical_access=["DEPT-TEST"])
         await db_session.commit()
 
         # Act - Add multiple subscriptions
@@ -1324,7 +1332,7 @@ class TestAssistantRepository:
         """Test that attempting to create duplicate subscription doesn't affect count."""
         # Arrange
         assistant_repo = AssistantRepository(db_session)
-        assistant = await assistant_repo.create(hierarchical_access=["ITM-TEST"])
+        assistant = await assistant_repo.create(hierarchical_access=["DEPT-TEST"])
         await db_session.commit()
 
         user_id = "test_user"
@@ -1351,7 +1359,7 @@ class TestAssistantRepository:
         """Test scenario that simulates what happens after migration backfill."""
         # Arrange
         assistant_repo = AssistantRepository(db_session)
-        assistant = await assistant_repo.create(hierarchical_access=["ITM-TEST"])
+        assistant = await assistant_repo.create(hierarchical_access=["DEPT-TEST"])
         await db_session.commit()
 
         # Simulate existing subscriptions (like after migration backfill)

@@ -289,8 +289,8 @@ export interface User {
     middle_name?: string;
     email?: string;
     preferred_username?: string;
-    department?: string;
-    lhmObjectID?: string;
+    organization_unit?: string;
+    user_id?: string;
 }
 
 export type CommunityAssistant = {

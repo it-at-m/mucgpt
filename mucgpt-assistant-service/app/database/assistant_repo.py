@@ -142,10 +142,10 @@ class AssistantRepository(Repository[Assistant]):
         """Get all assistants that are allowed for a specific department.
 
         For example an assistant has the path:
-        ITM-KM
+        TEAM-A
 
-        This means that a user from the department ITM-KM-DI is allowed to use this assistant.
-        But a user from the department ITM-AB-DI is not allowed to use this assistant.
+        This means that a user from the organization unit TEAM-A-1 is allowed to use this assistant.
+        But a user from the organization unit TEAM-B-1 is not allowed to use this assistant.
         """  # Since SQLite doesn't support ANY(), we need to implement this logic differently
         # We'll get all assistants and filter them in Python
         latest_version_subquery = (

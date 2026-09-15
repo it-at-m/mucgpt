@@ -319,10 +319,10 @@ async def get_user_subscriptions(
 
 
 @router.get(
-    "/user/lookup/{lhmobjectid}",
+    "/user/lookup/{user_id}",
     response_model=UserLookupResponse,
-    summary="Lookup user in LDAP by lhmobjectid",
-    description="Retrieve contact details and names for a user from LDAP based on lhmobjectid.",
+    summary="Lookup user in LDAP by user ID",
+    description="Retrieve contact details and names for a user from LDAP based on user ID.",
     responses={
         200: {"description": "User found"},
         401: {"description": "Unauthorized"},
@@ -332,29 +332,29 @@ async def get_user_subscriptions(
     },
     tags=["Users", "Directory"],
 )
-async def lookup_user_by_lhmobjectid(
-    lhmobjectid: str,
+async def lookup_user_by_user_id(
+    user_id: str,
     user_info: AuthenticationResult = Depends(authenticate_user),
-):
+) -> UserLookupResponse:
     logger.info(
-        "User %s requested LDAP lookup for lhmobjectid=%s",
+        "User %s requested LDAP lookup for user_id=%s",
         user_info.user_id,
-        lhmobjectid,
+        user_id,
     )
 
     loader = LDAPPersonLookupLoader(get_ldap_settings())
     try:
-        payload = await asyncio.to_thread(loader.lookup_by_lhmobjectid, lhmobjectid)
+        payload = await asyncio.to_thread(loader.lookup_by_user_id, user_id)
     except LDAPPersonLookupError as exc:
         raise HTTPException(status_code=503, detail=str(exc)) from exc
 
     if payload is None:
         raise HTTPException(status_code=404, detail="User not found")
 
-    if not payload.get("lhmobjectid"):
+    if not payload.get("user_id"):
         raise HTTPException(
             status_code=502,
-            detail="LDAP response did not include required lhmobjectid attribute",
+            detail="LDAP response did not include required user_id attribute",
         )
 
     return UserLookupResponse(**payload)

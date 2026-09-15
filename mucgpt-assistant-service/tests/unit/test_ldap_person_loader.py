@@ -41,25 +41,31 @@ def test_lookup_maps_and_sanitizes_attributes(monkeypatch: pytest.MonkeyPatch) -
         lambda **kwargs: [
             {
                 "attributes": {
-                    "lhmobjectid": ["12345"],
+                    "userId": ["demo-user-1"],
                     "givenName": ["Max"],
                     "sn": ["Mustermann"],
-                    "mail": [b"max.mustermann@muenchen.de"],
-                    "organizationalunit": ["RIT-GL5"],
+                    "mail": [b"demo.user@example.org"],
+                    "organizationUnit": ["demo-team-a"],
                 }
             }
         ],
     )
 
-    payload = loader.lookup_by_lhmobjectid("12345")
+    payload = loader.lookup_by_user_id("demo-user-1")
 
     assert payload == {
-        "lhmobjectid": "12345",
+        "user_id": "demo-user-1",
         "givenName": "Max",
         "sn": "Mustermann",
-        "mail": "max.mustermann@muenchen.de",
-        "organizationalunit": "RIT-GL5",
+        "mail": "demo.user@example.org",
+        "organizationalunit": "demo-team-a",
     }
+
+
+def test_default_directory_attributes_do_not_assume_a_schema() -> None:
+    settings = _build_settings()
+
+    assert settings.REQUIRED_ATTRIBUTES == []
 
 
 def test_lookup_returns_none_when_not_found(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -70,7 +76,7 @@ def test_lookup_returns_none_when_not_found(monkeypatch: pytest.MonkeyPatch) -> 
     monkeypatch.setattr(loader, "_build_connection", lambda _server: _DummyConnection())
     monkeypatch.setattr(loader, "_search", lambda **kwargs: [])
 
-    assert loader.lookup_by_lhmobjectid("no-such-id") is None
+    assert loader.lookup_by_user_id("no-such-id") is None
 
 
 def test_lookup_raises_when_ldap_disabled() -> None:
@@ -78,7 +84,7 @@ def test_lookup_raises_when_ldap_disabled() -> None:
     loader = LDAPPersonLookupLoader(settings)
 
     with pytest.raises(LDAPPersonLookupError, match="disabled"):
-        loader.lookup_by_lhmobjectid("123")
+        loader.lookup_by_user_id("demo-user-1")
 
 
 def test_escape_filter_value_special_characters() -> None:

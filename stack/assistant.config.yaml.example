@@ -16,7 +16,7 @@ DB:
   # SCHEMA: "myschema"  # Optional: restrict to a specific PostgreSQL schema (sets search_path)
 
 # Backend settings
-UNAUTHORIZED_USER_REDIRECT_URL: "https://it-services.muenchen.de/sp?id=sc_cat_item&sys_id=ee55a6911b40ce90757797539b4bcb1f&table=sc_cat_item&searchTerm=mucgpt"
+UNAUTHORIZED_USER_REDIRECT_URL: "https://support.example.org/access-request"
 LOG_CONFIG: "logconf.yaml"
 # Optional: if true, assistant read endpoints repopulate missing owner cache fields from LDAP
 OWNER_CACHE_REFRESH_ON_READ: false
@@ -27,7 +27,9 @@ COMPLIANCE_REQUIRE_VERIFICATION: false
 
 # SSO Settings (Keycloak)
 # Used by both core and assistant services for authentication
-# ROLE: "lhm-ab-mucgpt-user" is default
+# ROLE: "mucgpt-user" is the local demo role
+# USER_ID_CLAIM: "user_id"
+# ORGANIZATION_UNIT_CLAIM: "organization_unit"
 
 # Redis Settings (Valkey in docker-compose)
 # Used by both core and assistant services for caching
@@ -38,30 +40,34 @@ REDIS:
   PASSWORD: "password"
 
 # LDAP Settings (Optional - for organizational directory)
-# Used by assistant service for department/OU management
+# LDAP remains disabled by default. Configure it in a local, untracked configuration.
 LDAP:
-  ENABLED: true
-  HOST: "ldap.muenchen.de"
+  ENABLED: false
+  HOST: "ldaps://ldap.example.org"
   PORT: 636
   USE_SSL: true
   START_TLS: false
-  VERIFY_SSL: false
+  VERIFY_SSL: true
   CA_CERT_FILE: null
   BIND_DN: ""
   BIND_PASSWORD: ""
-  SEARCH_BASE: "o=Landeshauptstadt München,c=de"
+  SEARCH_BASE: "dc=example,dc=org"
   SEARCH_FILTER: "(objectClass=organizationalUnit)"
-  USER_SEARCH_BASE: "c=de"
+  USER_SEARCH_BASE: "dc=example,dc=org"
   USER_SEARCH_FILTER: "(objectClass=person)"
-  USER_SEARCH_ATTRIBUTES: ["givenName", "sn", "mail", "lhmobjectid", "ou"]
-  USER_ORGANIZATIONAL_UNIT_ATTRIBUTE: "ou"
+  USER_SEARCH_ATTRIBUTES: ["givenName", "sn", "mail", "userId", "organizationUnit"]
+  USER_ID_ATTRIBUTE: "userId"
+  USER_ORGANIZATIONAL_UNIT_ATTRIBUTE: "organizationUnit"
   DISPLAY_ATTRIBUTE: "ou"
+  SHORTNAME_ATTRIBUTE: "departmentCode"
   PARENT_ATTRIBUTE: null
+  ADDITIONAL_ATTRIBUTES: ["departmentName", "departmentCode"]
+  REQUIRED_ATTRIBUTES: ["departmentName", "departmentCode"]
   IGNORED_OU_PREFIXES: ["_"]
   IGNORED_OU_SUFFIXES: ["-xxx"]
   # Keep specific OUs even when they match IGNORED_OU_PREFIXES / IGNORED_OU_SUFFIXES.
-  # Matching is done against lhmOUShortname (case-insensitive).
-  # Example: keep OU "_Hidden" if its lhmOUShortname is "FBM".
-  IGNORED_OU_SHORTNAME_EXCEPTIONS: ["FBM", "KVR-IT"]
+  # Matching is done against the configured short-name attribute (case-insensitive).
+  # Example: keep OU "_Hidden" if its departmentCode is "DEPT-EXAMPLE".
+  IGNORED_OU_SHORTNAME_EXCEPTIONS: ["DEPT-EXAMPLE"]
   CACHE_TTL: 1800 # 30 minutes
   PAGE_SIZE: 500

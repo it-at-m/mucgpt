@@ -93,9 +93,7 @@ async def build_owner_details(
         payload: dict[str, str | None] | None = None
         if loader is not None:
             try:
-                payload = await asyncio.to_thread(
-                    loader.lookup_by_lhmobjectid, owner_id
-                )
+                payload = await asyncio.to_thread(loader.lookup_by_user_id, owner_id)
             except LDAPPersonLookupError as exc:
                 logger.warning(
                     "LDAP lookup failed for owner_id=%s: %s",
@@ -233,7 +231,7 @@ async def refresh_owner_details(
     for owner_id in deduped_owner_ids:
         owner = existing_owners[owner_id]
         try:
-            payload = await asyncio.to_thread(loader.lookup_by_lhmobjectid, owner_id)
+            payload = await asyncio.to_thread(loader.lookup_by_user_id, owner_id)
         except LDAPPersonLookupError as exc:
             logger.warning("LDAP lookup failed for owner_id=%s: %s", owner_id, exc)
             continue

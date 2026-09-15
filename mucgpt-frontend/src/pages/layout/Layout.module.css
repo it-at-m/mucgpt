@@ -42,7 +42,7 @@
 }
 
 .shellBody {
-    --appSidebarExpandedWidth: 220px;
+    --appSidebarExpandedWidth: 260px;
     --appSidebarWidth: var(--appSidebarExpandedWidth);
 
     display: grid;

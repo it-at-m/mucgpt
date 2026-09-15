@@ -281,7 +281,7 @@ services:
     command:
       - mcpdoc
       - --urls
-      - "Organization documentation:https://docs.example.org/llms.txt"
+      - "KI in München:https://ki.muenchen.de/llms.txt"
       - --transport
       - sse
       - --port

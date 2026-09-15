@@ -1,6 +1,7 @@
 import importlib
 
 import pytest
+from fastapi.testclient import TestClient
 from sqlalchemy import select
 
 from api.api_models import (
@@ -25,7 +26,9 @@ headers = {
 
 
 @pytest.mark.integration
-def test_lookup_user_by_user_id_success(test_client, monkeypatch):
+def test_lookup_user_by_user_id_success(
+    test_client: TestClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
     def _lookup(_self, user_id: str):
         assert user_id == "demo-user-1"
         return {
@@ -54,7 +57,9 @@ def test_lookup_user_by_user_id_success(test_client, monkeypatch):
 
 
 @pytest.mark.integration
-def test_lookup_user_by_user_id_not_found(test_client, monkeypatch):
+def test_lookup_user_by_user_id_not_found(
+    test_client: TestClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
     monkeypatch.setattr(
         users_router_module.LDAPPersonLookupLoader,
         "lookup_by_user_id",
@@ -67,7 +72,9 @@ def test_lookup_user_by_user_id_not_found(test_client, monkeypatch):
 
 
 @pytest.mark.integration
-def test_lookup_user_by_user_id_ldap_unavailable(test_client, monkeypatch):
+def test_lookup_user_by_user_id_ldap_unavailable(
+    test_client: TestClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
     def _raise_error(_self, _user_id: str):
         raise LDAPPersonLookupError("LDAP lookup is disabled")
 
@@ -83,7 +90,9 @@ def test_lookup_user_by_user_id_ldap_unavailable(test_client, monkeypatch):
 
 
 @pytest.mark.integration
-def test_lookup_user_by_user_id_missing_required_id(test_client, monkeypatch):
+def test_lookup_user_by_user_id_missing_required_id(
+    test_client: TestClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
     monkeypatch.setattr(
         users_router_module.LDAPPersonLookupLoader,
         "lookup_by_user_id",

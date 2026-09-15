@@ -980,7 +980,7 @@ export const handlers = [
             middle_name: "Theo",
             email: "demo-user@example.org",
             preferred_username: "demo-user",
-            organization_unit: "demo-team-a",
+            organization_unit: "TEAM-A",
             user_id: "demo-user-1"
         });
     }),

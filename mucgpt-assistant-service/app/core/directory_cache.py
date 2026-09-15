@@ -76,7 +76,9 @@ def _simplify_node(
 ) -> DirectoryTreeNode:
     attrs = node.attributes or {}
     shortname = None
-    shortnames = attrs.get(shortname_attribute)
+    normalized_keys = {key.strip().lower(): key for key in attrs if key}
+    shortname_key = normalized_keys.get(shortname_attribute.strip().lower())
+    shortnames = attrs.get(shortname_key) if shortname_key else None
     if isinstance(shortnames, list) and shortnames:
         shortname = shortnames[0]
     elif isinstance(shortnames, str):

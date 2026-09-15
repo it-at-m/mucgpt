@@ -335,7 +335,7 @@ async def get_user_subscriptions(
 async def lookup_user_by_user_id(
     user_id: str,
     user_info: AuthenticationResult = Depends(authenticate_user),
-):
+) -> UserLookupResponse:
     logger.info(
         "User %s requested LDAP lookup for user_id=%s",
         user_info.user_id,

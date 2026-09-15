@@ -65,6 +65,19 @@ def test_simplify_node_uses_configured_shortname_attribute() -> None:
     assert simplified["children"] == []
 
 
+def test_simplify_node_matches_shortname_attribute_case_insensitively() -> None:
+    node = OrganizationNode(
+        id="ou=example,o=test",
+        name="Example",
+        dn="ou=Example,o=Test",
+        attributes={"directoryCode": "EX"},
+    )
+
+    simplified = _simplify_node(node, shortname_attribute="directorycode")
+
+    assert simplified["shortname"] == "EX"
+
+
 async def _fake_tree():
     return [
         {

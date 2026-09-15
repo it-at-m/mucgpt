@@ -159,7 +159,7 @@ TEST_TREE = [
         ],
     },
     {
-        "shortname": "ORG",
+        "shortname": "ORG-SECOND",
         "name": "ORG",
         "children": [
             {

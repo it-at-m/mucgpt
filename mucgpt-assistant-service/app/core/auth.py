@@ -23,7 +23,7 @@ class AuthenticationHelper:
         admin_role: str | None = None,
         user_id_claim: str = "user_id",
         organization_unit_claim: str = "organization_unit",
-    ):
+    ) -> None:
         self.role = role
         self.admin_role = admin_role
         self.user_id_claim = user_id_claim

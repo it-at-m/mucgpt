@@ -71,6 +71,9 @@ const LegalReview = () => {
 
     const updateState = async (assistant: AssistantResponse, state: AssistantState) => {
         const version = assistant.latest_version;
+        const trimmedReason = reason[assistant.id]?.trim() || "";
+        if (!trimmedReason) return;
+
         setSavingId(assistant.id);
         setError(null);
         try {
@@ -78,7 +81,7 @@ const LegalReview = () => {
                 state,
                 expected_state: "pending_legal_review",
                 version: version.version,
-                reason: reason[assistant.id]?.trim() || undefined
+                reason: trimmedReason
             });
             setAssistants(current => current.filter(item => item.id !== assistant.id));
             setSelectedAssistant(current => (current?.id === assistant.id ? null : current));
@@ -159,7 +162,7 @@ const LegalReview = () => {
                                     <Button
                                         appearance="primary"
                                         icon={<Checkmark24Regular />}
-                                        disabled={savingId !== null}
+                                        disabled={savingId !== null || !reason[assistant.id]?.trim()}
                                         onClick={() => void updateState(assistant, "active")}
                                     >
                                         {t("admin.legal_review.approve")}
@@ -167,7 +170,7 @@ const LegalReview = () => {
                                     <Button
                                         appearance="secondary"
                                         icon={<Dismiss24Regular />}
-                                        disabled={savingId !== null}
+                                        disabled={savingId !== null || !reason[assistant.id]?.trim()}
                                         onClick={() => void updateState(assistant, "inactive")}
                                     >
                                         {t("admin.legal_review.deactivate")}

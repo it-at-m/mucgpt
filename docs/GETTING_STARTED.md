@@ -1,5 +1,7 @@
 # Getting Started
 
+> **Local development and demo only:** The Docker Compose instructions in this guide are intended exclusively for isolated local development and demonstrations. Do not use this setup unchanged for production or test systems; those systems require a separate, non-public and appropriately secured deployment procedure.
+
 - Install uv: <https://docs.astral.sh/uv/getting-started/installation/>
   - [Using UV during development](./DEVELOPMENT.md)
 - Install [Node.js 22+](https://nodejs.org/en/download/package-manager)
@@ -27,7 +29,7 @@ cp assistant.config.yaml.example assistant.config.yaml
 
 ### Models Configuration (YAML)
 
-Configure your LLM models in `core.config.yaml`:
+Configure your LLM models in `core.config.yaml`. The placeholder values in this example, as well as any local demo values, must not be used unchanged in production or test environments:
 
 ```yaml
 MODELS:
@@ -298,9 +300,11 @@ MUCGPT_CORE_MCP__CACHE_TTL=43200
 
 ## 🐋 Run with Docker
 
-See the [stack README](../stack/README.md) for complete Docker Compose setup instructions, including:
+The Docker Compose setup is for isolated local development and demos only. Do not expose it as a production or test deployment and do not reuse its demo credentials or other local defaults. Production and test systems must use a separate, non-public and appropriately secured deployment procedure.
+
+See the [stack README](../stack/README.md) for the local Docker Compose setup instructions, including:
 
 - Quick start guide
 - Service architecture and ports
-- Production and development modes
+- Local Compose and local development modes
 - Common commands and troubleshooting

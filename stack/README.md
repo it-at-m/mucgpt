@@ -2,6 +2,8 @@
 
 This directory contains the Docker Compose configuration for running the complete MUCGPT stack locally.
 
+> **Local development and demo only:** This Compose stack is intended exclusively for isolated local development and demonstrations. Do not use it unchanged in production or test environments. Those environments require a separate, appropriately secured deployment procedure.
+
 > 📚 For complete project documentation, see the [main README](../README.md) and [development guide](../docs/DEVELOPMENT.md).
 
 ## Quick Start
@@ -31,9 +33,11 @@ This directory contains the Docker Compose configuration for running the complet
    ```
 
 3. Access the services:
-- Frontend: <http://localhost:8083> (user: `demo-user`, password: `mucgpt`)
+   - Frontend: <http://localhost:8083> (user: `demo-user`, password: `mucgpt`)
    - Keycloak Admin: <http://localhost:8100> (admin/admin)
    - PGAdmin: <http://localhost:5050> (admin/admin)
+
+The demo credentials above are intentionally provided only for the isolated local environment. They are public example credentials and must not be used as production credentials or reused in test environments.
 
 ## Architecture Overview
 
@@ -121,12 +125,12 @@ The `mcpdoc-server` image installs `mcpdoc` through the local `mcpdoc-server/pyp
 
 ## Docker Compose Files
 
-- **docker-compose.yml** - Main production configuration
+- **docker-compose.yml** - Local development/demo stack
 - **docker-compose.dev.yml** - Development overrides (routes to local running services)
 
 ## Common Commands
 
-### Production Mode
+### Local Compose Mode
 
 ```powershell
 # Start all services
@@ -186,7 +190,7 @@ The stack uses **YAML configuration files** as the primary configuration source,
    cp assistant.config.yaml.example assistant.config.yaml
    ```
 
-2. Edit `core.config.yaml` – configure your LLM models and optional features:
+2. Edit `core.config.yaml` – configure your LLM models and optional features. The placeholder values and any local demo values in these examples are for local use only and must not be carried over to production or test environments:
 
    ```yaml
    MODELS:
@@ -267,7 +271,7 @@ The optional `PROMPTS` section in `core.config.yaml` maps core-service prompt na
 - `generation_prompts/assistant_name`, `assistant_description`, and `assistant_systemprompt` generate the corresponding assistant draft fields.
 - `compliance_prompts/*` classifies assistant prompts for high-risk use cases in migration/asylum/border control, public services, employment, and education.
 
-3. Edit `assistant.config.yaml` – configure database and optional LDAP:
+3. Edit `assistant.config.yaml` – configure database and optional LDAP. The example credentials and other local values are intended for this isolated Compose stack only and must not be used in production or test environments:
 
    ```yaml
    DB:

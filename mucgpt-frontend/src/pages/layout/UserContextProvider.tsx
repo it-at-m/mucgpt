@@ -1,6 +1,7 @@
-import { createContext, useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useState } from "react";
 import { User } from "../../api/models";
 import { getUser } from "../../api/user-client";
+import { ConfigContext } from "../../context/ConfigContext";
 
 interface UserContextType {
     user: User | null;
@@ -24,7 +25,8 @@ export const UserContextProvider: React.FC<UserContextProviderProps> = ({ childr
     const [user, setUser] = useState<User | null>(null);
     const [isLoading, setIsLoading] = useState<boolean>(true);
     const [error, setError] = useState<Error | null>(null);
-    const adminRole = import.meta.env.VITE_ADMIN_ROLE || "lhm-ab-mucgpt-admin";
+    const { admin_role: configuredAdminRole } = useContext(ConfigContext);
+    const adminRole = configuredAdminRole || import.meta.env.VITE_ADMIN_ROLE || "lhm-ab-mucgpt-admin";
 
     useEffect(() => {
         const fetchUser = async () => {

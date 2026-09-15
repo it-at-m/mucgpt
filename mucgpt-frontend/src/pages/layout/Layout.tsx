@@ -352,15 +352,15 @@ export const Layout = () => {
     return (
         <FluentProvider theme={theme}>
             <LightContext.Provider value={isLight}>
-                <UserContextProvider>
-                    {isLoadingConfig ? (
-                        <div className={styles.loadingContainer}>
-                            <EdelweissSpinner size="large" label={t("common.loading", "Lade Konfiguration...")} />
-                        </div>
-                    ) : isUnauthorized ? (
-                        <Unauthorized redirectUrl={unauthorizedRedirectUrl} />
-                    ) : (
-                        <ConfigContext.Provider value={config}>
+                <ConfigContext.Provider value={config}>
+                    <UserContextProvider>
+                        {isLoadingConfig ? (
+                            <div className={styles.loadingContainer}>
+                                <EdelweissSpinner size="large" label={t("common.loading", "Lade Konfiguration...")} />
+                            </div>
+                        ) : isUnauthorized ? (
+                            <Unauthorized redirectUrl={unauthorizedRedirectUrl} />
+                        ) : (
                             <TranscriptionSettingsProvider deploymentEnabled={config.transcription_enabled}>
                                 <ToolsProvider>
                                     <UnifiedHistoryProvider>
@@ -376,10 +376,10 @@ export const Layout = () => {
                                     </UnifiedHistoryProvider>
                                 </ToolsProvider>
                             </TranscriptionSettingsProvider>
-                        </ConfigContext.Provider>
-                    )}
-                    <GlobalToastHandler />
-                </UserContextProvider>
+                        )}
+                        <GlobalToastHandler />
+                    </UserContextProvider>
+                </ConfigContext.Provider>
             </LightContext.Provider>
         </FluentProvider>
     );

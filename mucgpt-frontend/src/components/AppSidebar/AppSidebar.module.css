@@ -105,11 +105,6 @@
     position: relative;
 }
 
-.navGroup :is(a, button).navButton[class],
-.navGroup .navButton span.navIcon {
-    color: var(--colorNeutralForeground1);
-}
-
 .secondaryGroup,
 .footerSection {
     display: flex;

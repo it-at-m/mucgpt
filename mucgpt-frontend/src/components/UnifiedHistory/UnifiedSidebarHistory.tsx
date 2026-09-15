@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
-    Button,
     Caption1Strong,
     Dialog,
     DialogActions,
@@ -37,6 +36,7 @@ import { CloseConfirmationDialog } from "../AssistantDialogs/shared/CloseConfirm
 import { useGlobalToastContext } from "../GlobalToastHandler/GlobalToastContext";
 import styles from "./UnifiedSidebarHistory.module.css";
 import { EdelweissSpinner } from "../EdelweissSpinner";
+import { Button } from "../../ui/Button";
 
 const HISTORY_TAB_STORAGE_KEY = "UNIFIED_HISTORY_ASSISTANT_TAB";
 const DELETE_DIALOG_TITLE_MAX_LENGTH = 80;

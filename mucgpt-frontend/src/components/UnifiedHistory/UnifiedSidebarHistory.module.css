@@ -67,12 +67,9 @@
 }
 
 /* Fluent's Button root resets justify-content to center at equal specificity;
-   the extra ancestor class is needed to reliably win the cascade. Color needs
-   !important because subtle's hover/pressed states set color at equal specificity
-   too (see AppSidebar's .navButton for the same pattern). */
+   the extra ancestor class is needed to reliably win the cascade. */
 .row .chatButton {
     justify-content: flex-start;
-    color: var(--colorNeutralForeground1) !important;
 }
 
 .chatButtonActive {

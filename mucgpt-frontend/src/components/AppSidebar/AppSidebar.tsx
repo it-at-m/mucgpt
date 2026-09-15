@@ -2,7 +2,6 @@ import {
     Avatar,
     Body1,
     Body1Strong,
-    Button,
     Card,
     CardHeader,
     Dialog,
@@ -31,6 +30,7 @@ import { AssistantStorageService } from "../../service/assistantstorage";
 import { CommunityAssistantStorageService } from "../../service/communityassistantstorage";
 import { ASSISTANT_STORE, COMMUNITY_ASSISTANT_STORE } from "../../constants";
 import { UserSidebarProfile } from "../UserSidebarProfile/UserSidebarProfile";
+import { Button } from "../../ui/Button";
 import styles from "./AppSidebar.module.css";
 import itemStyles from "./SidebarItem.module.css";
 

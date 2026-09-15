@@ -1,9 +1,10 @@
-import { Avatar, Body1Strong, Button, Menu, MenuList, MenuPopover, MenuTrigger } from "@fluentui/react-components";
+import { Avatar, Body1Strong, Menu, MenuList, MenuPopover, MenuTrigger } from "@fluentui/react-components";
 import { ReactNode, useContext, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { User } from "../../api/models";
 import { useConfigContext } from "../../context/ConfigContext";
 import { UserContext } from "../../pages/layout/UserContextProvider";
+import { Button } from "../../ui/Button";
 import styles from "./UserSidebarProfile.module.css";
 import itemStyles from "../AppSidebar/SidebarItem.module.css";
 

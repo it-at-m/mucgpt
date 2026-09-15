@@ -55,8 +55,8 @@
 }
 
 .brandLogo {
-    width: calc(var(--spacingHorizontalXXL) + var(--spacingHorizontalXS));
-    height: calc(var(--spacingVerticalXXL) + var(--spacingVerticalXS));
+    width: var(--spacingHorizontalXXL);
+    height: var(--spacingVerticalXXL);
     object-fit: contain;
 }
 
@@ -125,7 +125,7 @@
     flex: 1;
     min-height: 0;
     gap: var(--spacingVerticalSNudge);
-    padding-top: var(--spacingVerticalM);
+    padding-top: var(--spacingVerticalS);
 }
 
 .footerSection {

@@ -113,6 +113,7 @@ async def test_concurrent_admin_state_updates_return_one_conflict(tmp_path) -> N
                 description="",
                 system_prompt="Review this.",
                 creativity="medium",
+                state="pending_legal_review",
             )
             await session.commit()
 
@@ -129,8 +130,8 @@ async def test_concurrent_admin_state_updates_return_one_conflict(tmp_path) -> N
                     await update_assistant_state(
                         assistant_id=assistant.id,
                         state_update=AssistantStateUpdate(
-                            state="pending_legal_review",
-                            expected_state="active",
+                            state="active",
+                            expected_state="pending_legal_review",
                             version=1,
                         ),
                         db=session,

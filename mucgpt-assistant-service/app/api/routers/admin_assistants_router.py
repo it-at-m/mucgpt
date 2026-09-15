@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -74,6 +74,16 @@ async def update_assistant_state(
         )
     if latest_version.state != state_update.expected_state:
         raise VersionConflictException(state_update.version, latest_version.version)
+    if latest_version.state != "pending_legal_review":
+        raise HTTPException(
+            status_code=409,
+            detail="Only assistants pending legal review can receive an admin state update",
+        )
+    if state_update.state not in ("active", "inactive"):
+        raise HTTPException(
+            status_code=422,
+            detail="Admin state updates must target active or inactive",
+        )
 
     try:
         review_version = await assistant_repo.create_assistant_version(

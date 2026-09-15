@@ -57,7 +57,7 @@ export const LanguageSelector = ({ onSelectionChange, defaultlang }: LanguageSel
     const currentFlagClassName = `${styles.languageFlag} ${currentLanguage.flagClassName}`;
 
     return (
-        <Menu positioning={{ position: "after", align: "start", offset: { mainAxis: 8 } }}>
+        <Menu openOnHover={false} positioning={{ position: "after", align: "start", offset: { mainAxis: 8 } }} >
             <MenuTrigger disableButtonEnhancement>
                 <MenuItem hasSubmenu icon={<span className={currentFlagClassName} title={currentLanguage.code} aria-hidden="true" />}>
                     {currentLanguageName}

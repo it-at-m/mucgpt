@@ -437,7 +437,40 @@ async def updateAssistant(
                 exc_info=True,
             )
 
-    if assistant_update.compliance_check_result is not None:
+    approved_version = latest_version
+    if latest_version.state != AssistantState.ACTIVE or not existing_compliance_result:
+        approved_version = await assistant_repo.get_active_version_for_prompt(
+            id, effective_system_prompt
+        )
+        if approved_version is not None and approved_version.compliance_check_result:
+            try:
+                existing_compliance_result = ComplianceCheckResult.model_validate(
+                    approved_version.compliance_check_result
+                )
+            except Exception:
+                logger.warning(
+                    "Discarding malformed historical compliance result for assistant %s version %s",
+                    id,
+                    approved_version.version,
+                    exc_info=True,
+                )
+                approved_version = latest_version
+
+    inherited_active_approval = (
+        not system_prompt_changed
+        and approved_version is not None
+        and approved_version.state == AssistantState.ACTIVE
+        and existing_compliance_result is not None
+        and existing_compliance_result.prompt_hash
+        == _hash_prompt(effective_system_prompt)
+    )
+
+    if inherited_active_approval:
+        # An active version already represents an approved decision for this
+        # exact prompt. Do not make unchanged metadata updates depend on the
+        # short-lived Redis verification cache.
+        compliance_check_result = existing_compliance_result.model_dump()
+    elif assistant_update.compliance_check_result is not None:
         compliance_check_result = await _require_verified_compliance_result(
             system_prompt=effective_system_prompt,
             candidate=assistant_update.compliance_check_result,
@@ -466,7 +499,10 @@ async def updateAssistant(
             getattr(latest_version, "compliance_confirmation", False)
         )
 
-    if system_prompt_changed or assistant_update.compliance_check_result is not None:
+    if system_prompt_changed or (
+        assistant_update.compliance_check_result is not None
+        and not inherited_active_approval
+    ):
         state = _state_from_compliance_result(compliance_check_result)
     else:
         state = latest_version.state

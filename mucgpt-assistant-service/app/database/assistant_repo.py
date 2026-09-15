@@ -548,6 +548,22 @@ class AssistantRepository(Repository[Assistant]):
             await self.session.rollback()
             raise
 
+    async def get_active_version_for_prompt(
+        self, assistant_id: str, system_prompt: str
+    ) -> AssistantVersion | None:
+        """Get the newest active version using the exact system prompt."""
+        result = await self.session.execute(
+            select(AssistantVersion)
+            .where(
+                AssistantVersion.assistant_id == assistant_id,
+                AssistantVersion.system_prompt == system_prompt,
+                AssistantVersion.state == AssistantState.ACTIVE,
+            )
+            .order_by(AssistantVersion.version.desc())
+            .limit(1)
+        )
+        return result.scalars().first()
+
     async def is_user_subscribed(self, assistant_id: str, user_id: str) -> bool:
         """Check if a user is subscribed to an assistant."""
         logger.debug(

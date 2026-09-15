@@ -447,11 +447,13 @@ class AssistantRepository(Repository[Assistant]):
         hierarchical_access: list[str] | None = None,
         owner_ids: list[str] | None = None,
         is_visible: bool = None,
+        assistant: Assistant | None = None,
     ) -> Assistant | None:
         logger.info(f"Updating assistant {assistant_id}")
         """Update an assistant with explicit parameters."""
         try:
-            assistant = await self.get(assistant_id)
+            if assistant is None:
+                assistant = await self.get(assistant_id)
             if assistant:
                 if hierarchical_access is not None:
                     # Clean hierarchical_access: remove empty strings, None values, and whitespace-only strings

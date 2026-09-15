@@ -388,7 +388,9 @@ async def updateAssistant(
     logger.info(f"Updating assistant with ID: {id} by user {user_info.user_id}")
     owner_lookup_cache: dict[str, dict[str, object]] = {}
     assistant_repo = AssistantRepository(db)
-    assistant = await assistant_repo.get(id)
+    # Lock the parent row before reading the latest version so owner updates
+    # serialize with administrative state changes.
+    assistant = await assistant_repo.get_for_update(id)
 
     if not assistant:
         raise AssistantNotFoundException(id)
@@ -487,12 +489,13 @@ async def updateAssistant(
         hierarchical_access=assistant_update.hierarchical_access,
         owner_ids=assistant_update.owner_ids,
         is_visible=is_visible,
+        assistant=assistant,
     )
 
     # Create a new version with updated data
     # Using the latest_version already retrieved above
     new_version = await assistant_repo.create_assistant_version(
-        assistant,
+        assistant=assistant,
         name=assistant_update.name
         if assistant_update.name is not None
         else previous_version["name"],

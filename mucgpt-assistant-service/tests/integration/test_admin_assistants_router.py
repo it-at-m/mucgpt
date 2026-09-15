@@ -30,7 +30,7 @@ def admin_client(test_client: TestClient):
 
 
 @pytest.mark.integration
-def test_high_risk_assistant_is_pending_legal_review(test_client: TestClient) -> None:
+def test_high_risk_assistant_is_pending_legal_review(admin_client: TestClient) -> None:
     result = ComplianceCheckResult(
         overall_status="high_risk_detected",
         results=[
@@ -41,7 +41,7 @@ def test_high_risk_assistant_is_pending_legal_review(test_client: TestClient) ->
             }
         ],
     )
-    response = test_client.post(
+    response = admin_client.post(
         "assistant/create",
         json=AssistantCreate(
             name="High risk assistant",
@@ -55,14 +55,33 @@ def test_high_risk_assistant_is_pending_legal_review(test_client: TestClient) ->
     assistant = AssistantResponse.model_validate(response.json())
     assert assistant.latest_version.state == "pending_legal_review"
 
-    configuration_response = test_client.get(
+    configuration_response = admin_client.get(
         f"assistant/{assistant.id}/configuration", headers=headers
     )
-    subscription_response = test_client.post(
+    subscription_response = admin_client.post(
         f"user/subscriptions/{assistant.id}", headers=headers
     )
     assert configuration_response.status_code == 451
     assert subscription_response.status_code == 451
+
+    inactive_response = admin_client.patch(
+        f"/admin/assistant/{assistant.id}/state",
+        json={
+            "state": "inactive",
+            "expected_state": "pending_legal_review",
+            "version": assistant.latest_version.version,
+        },
+        headers=headers,
+    )
+    assert inactive_response.status_code == 200
+
+    inactive_subscription_response = admin_client.post(
+        f"user/subscriptions/{assistant.id}", headers=headers
+    )
+    assert inactive_subscription_response.status_code == 403
+    assert inactive_subscription_response.json()["detail"] == (
+        f"Assistant with ID {assistant.id} is unavailable for use"
+    )
 
 
 @pytest.mark.integration

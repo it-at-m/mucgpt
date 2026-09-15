@@ -598,7 +598,10 @@ async def updateAssistant(
     response_model=AssistantResponse,
     summary="Resolve an assistant configuration for use",
     tags=["Assistants"],
-    responses={451: {"description": "Assistant is not active"}},
+    responses={
+        403: {"description": "Assistant is inactive"},
+        451: {"description": "Assistant is pending lifecycle review"},
+    },
 )
 async def get_assistant_configuration_for_use(
     id: str,
@@ -617,7 +620,10 @@ async def get_assistant_configuration_for_use(
 
     latest_version = await assistant_repo.get_latest_version(id)
     if latest_version is None or latest_version.state != "active":
-        raise AssistantUnavailableForUseException(id)
+        raise AssistantUnavailableForUseException(
+            id,
+            latest_version.state if latest_version is not None else None,
+        )
     return await getAssistant(id=id, db=db, user_info=user_info)
 
 

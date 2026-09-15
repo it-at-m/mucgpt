@@ -195,7 +195,10 @@ async def subscribe_to_assistant(
         raise NotAllowedToAccessException(assistant_id)
     latest_version = await assistant_repo.get_latest_version(assistant_id)
     if latest_version is None or latest_version.state != "active":
-        raise AssistantUnavailableForUseException(assistant_id)
+        raise AssistantUnavailableForUseException(
+            assistant_id,
+            latest_version.state if latest_version is not None else None,
+        )
 
     is_subscribed = await assistant_repo.is_user_subscribed(
         assistant_id, user_info.user_id

@@ -1,8 +1,8 @@
-import { MenuItem } from "@fluentui/react-components";
 import { Mic24Regular } from "@fluentui/react-icons";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { TranscriptionSettingsDialog } from "./TranscriptionSettingsDialog";
+import { MenuItem } from "../../ui/MenuItem";
 
 export const TranscriptionSettingsButton = () => {
     const { t } = useTranslation();

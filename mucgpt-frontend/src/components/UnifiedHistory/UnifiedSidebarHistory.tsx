@@ -10,7 +10,6 @@ import {
     Field,
     Input,
     Menu,
-    MenuItem,
     MenuList,
     MenuPopover,
     MenuTrigger,
@@ -33,6 +32,7 @@ import { useNavigate } from "react-router-dom";
 import { useUnifiedHistory } from "./UnifiedHistoryContext";
 import { UnifiedHistoryEntry, UnifiedHistoryStorage } from "./unifiedHistoryStorage";
 import { CloseConfirmationDialog } from "../AssistantDialogs/shared/CloseConfirmationDialog";
+import { MenuItem } from "../../ui/MenuItem";
 import { useGlobalToastContext } from "../GlobalToastHandler/GlobalToastContext";
 import styles from "./UnifiedSidebarHistory.module.css";
 import { EdelweissSpinner } from "../EdelweissSpinner";

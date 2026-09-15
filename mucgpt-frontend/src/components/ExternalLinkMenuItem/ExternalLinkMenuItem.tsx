@@ -1,5 +1,5 @@
-import { MenuItemLink } from "@fluentui/react-components";
 import type { ReactElement } from "react";
+import { MenuItemLink } from "../../ui/MenuItem";
 
 interface ExternalLinkMenuItemProps {
     href: string;

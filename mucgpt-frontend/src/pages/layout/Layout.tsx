@@ -1,6 +1,6 @@
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
-import { MenuDivider, MenuItem, DrawerBody, OverlayDrawer, FluentProvider, InlineDrawer } from "@fluentui/react-components";
+import { MenuDivider, DrawerBody, OverlayDrawer, FluentProvider, InlineDrawer } from "@fluentui/react-components";
 import {
     Book24Regular,
     CalendarNote24Regular,
@@ -43,6 +43,7 @@ import { UnifiedHistoryProvider, UnifiedSidebarHistory } from "../../components/
 import { EdelweissSpinner } from "../../components/EdelweissSpinner";
 import { VersionInfo } from "../../components/VersionInfo";
 import { Button } from "../../ui/Button";
+import { MenuItem } from "../../ui/MenuItem";
 
 const APP_NAV_COLLAPSED_KEY = "APP_NAV_COLLAPSED";
 const MOBILE_LAYOUT_BREAKPOINT = 640;

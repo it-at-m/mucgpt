@@ -1,7 +1,8 @@
-import { Caption1, Caption1Strong, Menu, MenuItem, MenuPopover, MenuTrigger } from "@fluentui/react-components";
+import { Caption1, Caption1Strong, Menu, MenuPopover, MenuTrigger } from "@fluentui/react-components";
 import { Info24Regular } from "@fluentui/react-icons";
 import styles from "./VersionInfo.module.css";
 import { useTranslation } from "react-i18next";
+import { MenuItem } from "../../ui/MenuItem";
 
 interface VersionInfoProps {
     app_version?: string;

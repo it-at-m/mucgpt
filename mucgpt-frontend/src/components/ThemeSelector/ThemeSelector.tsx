@@ -1,6 +1,6 @@
-import { MenuItem } from "@fluentui/react-components";
 import { WeatherSunny20Regular, WeatherMoon20Regular } from "@fluentui/react-icons";
 import { useTranslation } from "react-i18next";
+import { MenuItem } from "../../ui/MenuItem";
 
 interface ThemeSelectorProps {
     isLight: boolean;

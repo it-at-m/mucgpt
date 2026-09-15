@@ -235,7 +235,7 @@ export const UnifiedSidebarHistory = ({ requestClose }: UnifiedSidebarHistoryPro
                                 <Tooltip content={title} relationship="description" positioning={{ position: "after", offset: 40 }} showDelay={400}>
                                     <Button
                                         appearance="subtle"
-                                        className={`${styles.chatButton} ${isActive ? styles.chatButtonActive : ""}`}
+                                        className={styles.chatButton}
                                         onClick={() => void navigateToEntry(entry)}
                                         aria-current={isActive ? "page" : undefined}
                                     >
@@ -267,7 +267,7 @@ export const UnifiedSidebarHistory = ({ requestClose }: UnifiedSidebarHistoryPro
                                                 <MenuItem icon={<Edit20Regular />} onClick={() => renameEntry(entry)}>
                                                     {t("components.history.rename")}
                                                 </MenuItem>
-                                                <MenuItem icon={<Delete20Regular />} onClick={() => setEntryToDelete(entry)} className={styles.deleteMenuItem}>
+                                                <MenuItem tone="danger" icon={<Delete20Regular />} onClick={() => setEntryToDelete(entry)}>
                                                     {t("components.history.delete")}
                                                 </MenuItem>
                                             </MenuList>

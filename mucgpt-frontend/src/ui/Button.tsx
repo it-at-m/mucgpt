@@ -1,7 +1,7 @@
 import { forwardRef, useContext } from "react";
 import { Button as FluentButton, buttonClassNames, type ButtonProps, makeStyles, mergeClasses, tokens } from "@fluentui/react-components";
 
-import { LightContext } from "../pages/layout/LightContext";
+import { AppThemeContext } from "./theme/AppThemeContext";
 
 const useStyles = makeStyles({
     darkSubtle: {
@@ -22,7 +22,7 @@ const useStyles = makeStyles({
 });
 
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(({ appearance, className, disabled, disabledFocusable, ...props }, ref) => {
-    const isLight = useContext(LightContext);
+    const { isLight } = useContext(AppThemeContext);
     const styles = useStyles();
     const useDarkSubtleForeground = !isLight && appearance === "subtle" && !disabled && !disabledFocusable;
 

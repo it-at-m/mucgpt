@@ -10,7 +10,11 @@ import {
     tokens
 } from "@fluentui/react-components";
 
-import { LightContext } from "../pages/layout/LightContext";
+import { AppThemeContext } from "./theme/AppThemeContext";
+
+type MenuItemTone = "danger";
+type MucgptMenuItemProps = MenuItemProps & { tone?: MenuItemTone };
+type MucgptMenuItemLinkProps = MenuItemLinkProps & { tone?: MenuItemTone };
 
 const useStyles = makeStyles({
     subtle: {
@@ -39,11 +43,23 @@ const useStyles = makeStyles({
                 color: tokens.colorNeutralForeground1
             }
         }
+    },
+    danger: {
+        color: tokens.colorStatusDangerForeground1,
+        [`& .${menuItemClassNames.icon}`]: {
+            color: tokens.colorStatusDangerForeground1
+        },
+        ":hover, :hover:active": {
+            color: tokens.colorStatusDangerForeground1,
+            [`& .${menuItemClassNames.icon}`]: {
+                color: tokens.colorStatusDangerForeground1
+            }
+        }
     }
 });
 
-export const MenuItem = forwardRef<HTMLDivElement, MenuItemProps>(({ className, disabled, ...props }, ref) => {
-    const isLight = useContext(LightContext);
+export const MenuItem = forwardRef<HTMLDivElement, MucgptMenuItemProps>(({ className, disabled, tone, ...props }, ref) => {
+    const { isLight } = useContext(AppThemeContext);
     const styles = useStyles();
 
     return (
@@ -51,13 +67,18 @@ export const MenuItem = forwardRef<HTMLDivElement, MenuItemProps>(({ className, 
             {...props}
             ref={ref}
             disabled={disabled}
-            className={mergeClasses(!disabled && styles.subtle, !isLight && !disabled && styles.darkForeground, className)}
+            className={mergeClasses(
+                !disabled && styles.subtle,
+                !isLight && !disabled && styles.darkForeground,
+                !disabled && tone === "danger" && styles.danger,
+                className
+            )}
         />
     );
 });
 
-export const MenuItemLink = forwardRef<HTMLAnchorElement, MenuItemLinkProps>(({ className, disabled, ...props }, ref) => {
-    const isLight = useContext(LightContext);
+export const MenuItemLink = forwardRef<HTMLAnchorElement, MucgptMenuItemLinkProps>(({ className, disabled, tone, ...props }, ref) => {
+    const { isLight } = useContext(AppThemeContext);
     const styles = useStyles();
 
     return (
@@ -65,7 +86,12 @@ export const MenuItemLink = forwardRef<HTMLAnchorElement, MenuItemLinkProps>(({ 
             {...props}
             ref={ref}
             disabled={disabled}
-            className={mergeClasses(!disabled && styles.subtle, !isLight && !disabled && styles.darkForeground, className)}
+            className={mergeClasses(
+                !disabled && styles.subtle,
+                !isLight && !disabled && styles.darkForeground,
+                !disabled && tone === "danger" && styles.danger,
+                className
+            )}
         />
     );
 });

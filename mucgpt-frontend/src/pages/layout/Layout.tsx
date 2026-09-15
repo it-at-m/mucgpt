@@ -23,7 +23,7 @@ import { STORAGE_KEYS } from "./LayoutHelper";
 import { createMucgptTheme, createScaledTypographyTheme } from "../../ui/theme/fluentTheme";
 import { createAppCssVars, getAppTokens } from "../../ui/theme/appTokens";
 import { DEFAULTLLM, LLMContext } from "../../components/LLMSelector/LLMContextProvider";
-import { LightContext } from "./LightContext";
+import { AppThemeContext } from "../../ui/theme/AppThemeContext";
 import { DEFAULT_APP_CONFIG } from "../../constants";
 import { UserContextProvider } from "./UserContextProvider";
 import { LanguageSelector } from "../../components/LanguageSelector";
@@ -177,8 +177,9 @@ const AppShell = ({ config, isLight, languagePreference, onLanguageSelectionChan
                 </a>
 
                 <div
-                    className={`${styles.shellBody} ${!isMobile && isSidebarCollapsed ? styles.shellBodyCollapsed : ""} ${isMobile ? styles.shellBodyMobile : ""
-                        }`}
+                    className={`${styles.shellBody} ${!isMobile && isSidebarCollapsed ? styles.shellBodyCollapsed : ""} ${
+                        isMobile ? styles.shellBodyMobile : ""
+                    }`}
                 >
                     {!isMobile && (
                         <aside className={styles.sidebarColumn}>
@@ -346,7 +347,7 @@ export const Layout = () => {
 
     return (
         <FluentProvider theme={theme}>
-            <LightContext.Provider value={isLight}>
+            <AppThemeContext.Provider value={{ isLight }}>
                 <UserContextProvider>
                     {isLoadingConfig ? (
                         <div className={styles.loadingContainer}>
@@ -375,7 +376,7 @@ export const Layout = () => {
                     )}
                     <GlobalToastHandler />
                 </UserContextProvider>
-            </LightContext.Provider>
+            </AppThemeContext.Provider>
         </FluentProvider>
     );
 };

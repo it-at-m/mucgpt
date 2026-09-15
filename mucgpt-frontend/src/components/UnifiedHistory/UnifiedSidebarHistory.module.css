@@ -4,12 +4,12 @@
     flex: 1;
     min-height: 0;
     width: 100%;
-    gap: 8px;
+    gap: var(--spacingVerticalS);
 }
 
 .historyLabel {
     flex: 0 0 auto;
-    padding: 2px 4px 0;
+    padding: var(--spacingVerticalXXS) var(--spacingHorizontalXS) 0;
     color: var(--colorNeutralForeground2);
 }
 
@@ -36,7 +36,7 @@
 }
 
 .list::-webkit-scrollbar {
-    width: 8px;
+    width: var(--spacingHorizontalS);
 }
 
 .list::-webkit-scrollbar-track {
@@ -45,7 +45,7 @@
 
 .list::-webkit-scrollbar-thumb {
     background-color: transparent;
-    border-radius: 999px;
+    border-radius: var(--borderRadiusCircular);
 }
 
 .list:hover::-webkit-scrollbar-thumb {
@@ -72,7 +72,7 @@
     justify-content: flex-start;
 }
 
-.chatButtonActive {
+.chatButton[aria-current="page"] {
     background-color: var(--colorSubtleBackgroundPressed);
 }
 
@@ -83,7 +83,7 @@
     width: 100%;
     /* Reserved space for the overlaid options button so text never renders under it,
        whether or not the options button is currently visible. */
-    padding-right: 28px;
+    padding-right: calc(var(--spacingHorizontalXXXL) + var(--spacingHorizontalS));
 }
 
 .chatName {
@@ -94,7 +94,7 @@
 
 .pinnedIcon {
     flex: 0 0 auto;
-    margin-right: 6px;
+    margin-right: var(--spacingHorizontalSNudge);
 }
 
 /* The options button lives inside the chat row's clickable area instead of taking up
@@ -104,11 +104,11 @@
 .optionsSlot {
     position: absolute;
     top: 50%;
-    right: 4px;
+    right: var(--spacingHorizontalXS);
     transform: translateY(-50%);
     opacity: 0;
     pointer-events: none;
-    transition: opacity 120ms ease;
+    transition: opacity var(--durationFast) var(--curveDecelerateMid);
 }
 
 .row:hover .optionsSlot,
@@ -126,11 +126,7 @@
 }
 
 .menuList {
-    padding: 4px;
-}
-
-.deleteMenuItem {
-    color: var(--colorStatusDangerForeground1) !important;
+    padding: var(--spacingVerticalXS);
 }
 
 .centerState,

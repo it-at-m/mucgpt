@@ -316,13 +316,13 @@ export const AppSidebar = ({
 
                     <nav className={styles.navGroup}>
                         {navigationItems.map(item => {
-                            const navItemClassName = `${itemStyles.control} ${styles.navButton} ${item.isActive ? styles.navButtonActive : ""} ${isCollapsed ? itemStyles.collapsed : ""}`;
+                            const navItemClassName = `${itemStyles.control} ${styles.navButton} ${isCollapsed ? itemStyles.collapsed : ""}`;
                             const navLabel = (
                                 <span className={itemStyles.label} aria-hidden={isCollapsed}>
                                     <span className={itemStyles.text}>{item.label}</span>
                                 </span>
                             );
-                            const icon = { className: `${itemStyles.icon} ${styles.navIcon}`, children: item.icon };
+                            const icon = { className: itemStyles.icon, children: item.icon };
                             const navItem =
                                 item.kind === "link" && item.to ? (
                                     <Button
@@ -398,12 +398,7 @@ export const AppSidebar = ({
                     {utilitiesContent && (
                         <div className={styles.footerSection}>
                             <Divider />
-                            <UserSidebarProfile
-                                collapsed={collapsed}
-                                isMobile={isMobile}
-                                utilitiesContent={utilitiesContent}
-                                popoverClassName={styles.settingsPopover}
-                            />
+                            <UserSidebarProfile collapsed={collapsed} isMobile={isMobile} utilitiesContent={utilitiesContent} />
                         </div>
                     )}
                 </div>

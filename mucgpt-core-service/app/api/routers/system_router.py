@@ -36,6 +36,7 @@ async def get_config(user_info=Depends(authenticate_user)) -> ConfigResponse:
         feature_request_url=settings.FEATURE_REQUEST_URL,
         contact_mail_url=settings.CONTACT_MAIL_URL,
         ad2image_url=settings.AD2IMAGE_URL,
+        owner_profile_url_template=settings.OWNER_PROFILE_URL_TEMPLATE,
     )
 
     models = settings.MODELS

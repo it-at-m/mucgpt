@@ -1,3 +1,5 @@
+import { MouseEvent } from "react";
+
 import { OwnerDetailsResponse } from "../../api/models";
 import { useConfigContext } from "../../context/ConfigContext";
 import styles from "./OwnerMetadataLink.module.css";
@@ -59,10 +61,12 @@ export function OwnerMetadataLink({ owner, fallbackLabel }: OwnerMetadataLinkPro
         return <>{label}</>;
     }
 
-    const href = `mailto:${mail}`;
+    const onClick = (event: MouseEvent<HTMLAnchorElement>) => {
+        event.stopPropagation();
+    };
 
     return (
-        <a href={href} className={styles.ownerLink}>
+        <a href={href} className={styles.ownerLink} target="_blank" rel="noopener noreferrer" onClick={onClick}>
             {label}
         </a>
     );

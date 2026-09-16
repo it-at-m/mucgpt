@@ -120,7 +120,6 @@ async def build_owner_details(
         enriched = {
             "user_id": owner_id,
             "username": _compose_username(given_name, surname, mail),
-            "contact_address": mail,
             "givenName": given_name,
             "sn": surname,
             "mail": mail,
@@ -152,7 +151,6 @@ def _owner_row_to_enriched_payload(
     return {
         "user_id": owner_id,
         "username": username,
-        "contact_address": mail,
         "givenName": given_name,
         "sn": surname,
         "mail": mail,

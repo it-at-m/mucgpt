@@ -10,7 +10,6 @@ const MOCK_OWNER_DIRECTORY: Record<string, OwnerDetailsResponse> = {
     "111160470": {
         user_id: "111160470",
         username: "Michael Jaumann",
-        contact_address: "michael.jaumann@muenchen.de",
         givenName: "Michael",
         sn: "Jaumann",
         mail: "michael.jaumann@muenchen.de",
@@ -19,7 +18,6 @@ const MOCK_OWNER_DIRECTORY: Record<string, OwnerDetailsResponse> = {
     "user-mock-001": {
         user_id: "user-mock-001",
         username: "Mia Sommer",
-        contact_address: "mia.sommer@muenchen.de",
         givenName: "Mia",
         sn: "Sommer",
         mail: "mia.sommer@muenchen.de",
@@ -28,7 +26,6 @@ const MOCK_OWNER_DIRECTORY: Record<string, OwnerDetailsResponse> = {
     "user-mock-002": {
         user_id: "user-mock-002",
         username: "Lukas Winter",
-        contact_address: "lukas.winter@muenchen.de",
         givenName: "Lukas",
         sn: "Winter",
         mail: "lukas.winter@muenchen.de",
@@ -37,7 +34,6 @@ const MOCK_OWNER_DIRECTORY: Record<string, OwnerDetailsResponse> = {
     "user-mock-003": {
         user_id: "user-mock-003",
         username: "Sara Neumann",
-        contact_address: "sara.neumann@muenchen.de",
         givenName: "Sara",
         sn: "Neumann",
         mail: "sara.neumann@muenchen.de",
@@ -46,7 +42,6 @@ const MOCK_OWNER_DIRECTORY: Record<string, OwnerDetailsResponse> = {
     "user-mock-123": {
         user_id: "user-mock-123",
         username: "Max Mustermann",
-        contact_address: "max.mustermann@muenchen.de",
         givenName: "Max",
         sn: "Mustermann",
         mail: "max.mustermann@muenchen.de",

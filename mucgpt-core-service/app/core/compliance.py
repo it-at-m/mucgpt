@@ -16,9 +16,8 @@ from api.api_models import (
 )
 from core.auth_models import AuthenticationResult
 from core.llm_helpers import (
-    COMPLIANCE_PROMPTS_DIR,
     invoke_internal_structured_generation,
-    read_prompt_file,
+    read_prompt_file_with_metadata,
 )
 from core.logtools import getLogger
 
@@ -32,11 +31,11 @@ class _ComplianceVerdictResponse(BaseModel):
     reasoning: str | None = Field(None, max_length=1000)
 
 
-_CATEGORY_PROMPTS: tuple[tuple[ComplianceCategoryId, str], ...] = (
-    ("migration_asylum_border", "prompt_for_compliance_migration_asylum_border.md"),
-    ("public_services_access", "prompt_for_compliance_public_services_access.md"),
-    ("hr_employment", "prompt_for_compliance_hr_employment.md"),
-    ("education", "prompt_for_compliance_education.md"),
+_COMPLIANCE_CATEGORIES: tuple[ComplianceCategoryId, ...] = (
+    "migration_asylum_border",
+    "public_services_access",
+    "hr_employment",
+    "education",
 )
 
 
@@ -48,19 +47,18 @@ _CATEGORY_PROMPTS: tuple[tuple[ComplianceCategoryId, str], ...] = (
 async def _check_category(
     *,
     category: ComplianceCategoryId,
-    prompt_template_filename: str,
     system_prompt: str,
     model_name: str,
     user_info: AuthenticationResult,
 ) -> ComplianceCategoryResult:
-    system_instruction = read_prompt_file(
-        COMPLIANCE_PROMPTS_DIR, prompt_template_filename
+    system_instruction = await asyncio.to_thread(
+        read_prompt_file_with_metadata, category
     )
     parsed = await invoke_internal_structured_generation(
         model_name=model_name,
         temperature=0.0,
         messages=[
-            ChatCompletionMessage(role="system", content=system_instruction),
+            ChatCompletionMessage(role="system", content=system_instruction.content),
             ChatCompletionMessage(
                 role="user",
                 content=f"<assistant_system_prompt>\n{system_prompt}\n</assistant_system_prompt>",
@@ -70,6 +68,7 @@ async def _check_category(
         trace_tags=["assistant-compliance", category],
         run_name=f"assistant-compliance-{category}",
         schema=_ComplianceVerdictResponse,
+        langfuse_prompt=system_instruction.langfuse_prompt,
     )
 
     return ComplianceCategoryResult(
@@ -96,12 +95,11 @@ async def evaluate_compliance(
             *(
                 _check_category(
                     category=category,
-                    prompt_template_filename=prompt_template_filename,
                     system_prompt=system_prompt,
                     model_name=model_name,
                     user_info=user_info,
                 )
-                for category, prompt_template_filename in _CATEGORY_PROMPTS
+                for category in _COMPLIANCE_CATEGORIES
             )
         )
     except Exception as exc:

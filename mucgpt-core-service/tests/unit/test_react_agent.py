@@ -6,6 +6,7 @@ from langchain_core.language_models.fake_chat_models import FakeListChatModel
 from agent.deep_agent import _ConfiguredLangChainDeepAgentGraph
 from agent.state_models.default_state import DefaultAgentState
 from core.auth_models import AuthenticationResult
+from core.lf_prompts import ResolvedPrompt
 
 
 @pytest.fixture
@@ -15,6 +16,41 @@ def user_info() -> AuthenticationResult:
         user_id="user-id",
         department="department",
     )
+
+
+@pytest.fixture(autouse=True)
+def default_prompt(monkeypatch: pytest.MonkeyPatch) -> ResolvedPrompt:
+    prompt = ResolvedPrompt(content="default instruction", langfuse_prompt=object())
+    monkeypatch.setattr(
+        "agent.deep_agent.PromptPool.get_resolved_prompt",
+        lambda _name: prompt,
+    )
+    return prompt
+
+
+def test_prepare_run_uses_default_langfuse_prompt_unless_overridden(
+    monkeypatch: pytest.MonkeyPatch,
+    user_info: AuthenticationResult,
+    default_prompt: ResolvedPrompt,
+) -> None:
+    monkeypatch.setattr("agent.deep_agent.create_deep_agent", MagicMock())
+    graph = _ConfiguredLangChainDeepAgentGraph(
+        llm=FakeListChatModel(responses=["response"]),
+        tools=[],
+        logger=MagicMock(),
+    )
+
+    _, _, default_context = graph._prepare_run(
+        {"messages": []}, config={"configurable": {"user_info": user_info}}
+    )
+    override = object()
+    _, _, override_context = graph._prepare_run(
+        {"messages": []},
+        config={"configurable": {"user_info": user_info, "langfuse_prompt": override}},
+    )
+
+    assert default_context.langfuse_prompt is default_prompt.langfuse_prompt
+    assert override_context.langfuse_prompt is override
 
 
 @pytest.mark.asyncio

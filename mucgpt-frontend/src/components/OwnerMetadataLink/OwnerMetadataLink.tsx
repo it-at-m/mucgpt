@@ -1,4 +1,5 @@
 import { OwnerDetailsResponse } from "../../api/models";
+import { useConfigContext } from "../../context/ConfigContext";
 import styles from "./OwnerMetadataLink.module.css";
 
 type OwnerSource = {
@@ -31,14 +32,30 @@ export function getPrimaryOwnerDetails(source: OwnerSource | object | null | und
     return undefined;
 }
 
+export function buildOwnerProfileUrl(template: string | undefined, userId: string | null | undefined) {
+    const normalizedTemplate = template?.trim();
+    const normalizedUserId = userId?.trim();
+    if (!normalizedTemplate || !normalizedUserId) {
+        return "";
+    }
+
+    const encodedUserId = encodeURIComponent(normalizedUserId);
+    if (normalizedTemplate.includes("{uid}")) {
+        return normalizedTemplate.replace(/\{uid\}/g, encodedUserId);
+    }
+
+    return `${normalizedTemplate.replace(/\/$/, "")}/${encodedUserId}`;
+}
+
 export function OwnerMetadataLink({ owner, fallbackLabel }: OwnerMetadataLinkProps) {
+    const config = useConfigContext();
     const label = owner?.username?.trim() || fallbackLabel;
     if (!label) {
         return null;
     }
 
-    const mail = owner?.mail?.trim();
-    if (!mail) {
+    const href = buildOwnerProfileUrl(config.owner_profile_url_template, owner?.user_id);
+    if (!href) {
         return <>{label}</>;
     }
 

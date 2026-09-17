@@ -30,7 +30,7 @@
 
 .mainContent {
     flex: 1;
-    padding: var(--spacingVerticalXXXL) var(--spacingHorizontalXXXL) 80px var(--spacingHorizontalXXXL);
+    padding: var(--spacingVerticalXXL) var(--spacingHorizontalXXXL) 80px var(--spacingHorizontalXXXL);
     min-width: 0;
     transition: width 0.3s cubic-bezier(0.33, 1, 0.68, 1);
     overflow-y: auto;
@@ -70,7 +70,7 @@
 }
 
 .header {
-    margin-bottom: var(--spacingVerticalS);
+    margin-bottom: var(--spacingVerticalXXS);
     display: block;
 }
 
@@ -90,7 +90,7 @@
     display: flex;
     width: 100%;
     max-width: none;
-    margin-bottom: var(--spacingVerticalXXXL);
+    margin-bottom: var(--spacingVerticalXL);
     background-color: var(--colorNeutralBackground2) !important;
 }
 
@@ -102,7 +102,7 @@
 .librarySections {
     display: flex;
     flex-direction: column;
-    gap: var(--spacingVerticalXXL);
+    gap: var(--spacingVerticalXL);
 }
 
 .assistantSection {
@@ -268,7 +268,7 @@
     }
 
     .librarySections {
-        gap: 22px;
+        gap: var(--spacingVerticalXL);
     }
 
     .sectionHeaderRow {

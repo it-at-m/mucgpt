@@ -27,7 +27,16 @@ interface CreateAssistantDraft {
 const loadDraft = (): CreateAssistantDraft | null => {
     try {
         const stored = sessionStorage.getItem(STORAGE_KEYS.CREATE_ASSISTANT_DRAFT);
-        return stored ? (JSON.parse(stored) as CreateAssistantDraft) : null;
+        if (!stored) {
+            return null;
+        }
+
+        const draft = JSON.parse(stored) as CreateAssistantDraft;
+        return {
+            ...draft,
+            followUpActions: Array.isArray(draft.followUpActions) ? draft.followUpActions : [],
+            starterPrompts: Array.isArray(draft.starterPrompts) ? draft.starterPrompts : []
+        };
     } catch {
         return null;
     }

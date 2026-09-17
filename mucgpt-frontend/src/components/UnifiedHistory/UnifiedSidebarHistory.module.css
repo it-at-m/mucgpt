@@ -31,6 +31,39 @@
     scrollbar-color: transparent transparent;
 }
 
+.loadingList {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    gap: var(--spacingVerticalXXS);
+    min-height: 0;
+    overflow: hidden;
+}
+
+.loadingRow {
+    display: flex;
+    align-items: center;
+    gap: var(--spacingHorizontalS);
+    height: var(--spacingVerticalXXXL);
+    min-width: 0;
+    padding: 0 var(--spacingHorizontalXS);
+    box-sizing: border-box;
+}
+
+.loadingName,
+.loadingNameShort {
+    height: var(--spacingVerticalS);
+}
+
+.loadingName {
+    width: min(100%, 12rem);
+    flex: 1 1 auto;
+}
+
+.loadingNameShort {
+    width: min(68%, 8rem);
+}
+
 .list:hover {
     scrollbar-color: var(--colorNeutralStroke1) transparent;
 }
@@ -129,7 +162,6 @@
     padding: var(--spacingVerticalXS);
 }
 
-.centerState,
 .emptyState {
     display: flex;
     align-items: center;

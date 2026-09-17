@@ -1,16 +1,20 @@
-import { Card, Skeleton, SkeletonItem } from "@fluentui/react-components";
+import { Card, Skeleton, SkeletonItem, mergeClasses } from "@fluentui/react-components";
+import cardStyles from "./DiscoveryCard.module.css";
 import styles from "./DiscoveryCardSkeleton.module.css";
 
 export const DiscoveryCardSkeleton = () => {
     return (
-        <Card className={styles.card}>
+        <Card size="large" className={mergeClasses(cardStyles.card, styles.card)}>
             <Skeleton className={styles.skeleton}>
-                <SkeletonItem shape="rectangle" className={styles.title} />
-                <div className={styles.spacer} />
-                <SkeletonItem shape="rectangle" className={styles.line1} />
-                <SkeletonItem shape="rectangle" className={styles.line2} />
-                <div className={styles.metadataSpacer} />
-                <SkeletonItem shape="rectangle" className={styles.metadata} />
+                <SkeletonItem shape="rectangle" style={{ width: "58%", height: "var(--lineHeightBase300)" }} />
+                <div className={styles.description}>
+                    <SkeletonItem shape="rectangle" style={{ width: "100%", height: "var(--lineHeightBase200)" }} />
+                    <SkeletonItem shape="rectangle" style={{ width: "68%", height: "var(--lineHeightBase200)" }} />
+                </div>
+                <div className={styles.metadata}>
+                    <SkeletonItem shape="rectangle" style={{ width: "30%", height: "var(--lineHeightBase200)" }} />
+                    <SkeletonItem shape="rectangle" style={{ width: "14%", height: "var(--lineHeightBase200)" }} />
+                </div>
             </Skeleton>
         </Card>
     );

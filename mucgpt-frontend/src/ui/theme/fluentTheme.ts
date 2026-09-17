@@ -165,6 +165,9 @@ const darkNeutralOverrides = {
     colorSubtleBackgroundHover: withAlpha(neutralRamp[150], 0.08),
     colorSubtleBackgroundPressed: withAlpha(neutralRamp[150], 0.14),
 
+    colorNeutralStencil1: neutralRamp[70],
+    colorNeutralStencil2: neutralRamp[60],
+
     // Dark primary surfaces use a light brand color,
     // therefore foreground-on-brand needs to be dark.
     colorNeutralForegroundOnBrand: neutralRamp[10],

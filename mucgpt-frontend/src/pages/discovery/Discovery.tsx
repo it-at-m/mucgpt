@@ -2,7 +2,7 @@ import { type ReactElement, useCallback, useContext, useEffect, useRef, useState
 import { useNavigate } from "react-router-dom";
 import { Title1, Body1, Text, SearchBox, Dropdown, Option, Button } from "@fluentui/react-components";
 import type { SearchBoxChangeEvent, InputOnChangeData, SelectionEvents, OptionOnSelectData } from "@fluentui/react-components";
-import { Add24Regular, DocumentArrowUpRegular, LibraryRegular, PeopleCommunityRegular, SearchRegular } from "@fluentui/react-icons";
+import { Add24Regular, ArrowResetRegular, DocumentArrowUpRegular, LibraryRegular, PeopleCommunityRegular, SearchRegular } from "@fluentui/react-icons";
 import { useTranslation } from "react-i18next";
 
 import styles from "./Discovery.module.css";
@@ -27,11 +27,14 @@ import { downloadAssistantExport, mapAssistantToExportData, mapVersionToExportDa
 import { isCompleteCommunityAssistantSnapshot, mapCommunitySnapshotToAssistant } from "../../utils/community-assistant-snapshots";
 import { ApiError } from "../../api/fetch-utils";
 import { ConfigContext } from "../../context/ConfigContext";
+import { resetMockScenarios } from "../../mocks/data/browser-scenario-seed";
 
 const communityAssistantStorageService = new CommunityAssistantStorageService(COMMUNITY_ASSISTANT_STORE);
 const assistantStorageService = new AssistantStorageService(ASSISTANT_STORE);
 const isAssistantResponse = (data: AssistantResponse | CommunityAssistantSnapshot): data is AssistantResponse =>
     "latest_version" in data && data.latest_version != null && typeof data.latest_version.name === "string";
+
+const isMockMode = import.meta.env.MODE === "development";
 
 type EmptyStateAction = {
     label: string;
@@ -98,6 +101,12 @@ const Discovery = () => {
 
     const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const latestRequestRef = useRef(0);
+
+    const resetMockData = async () => {
+        await resetMockScenarios();
+        window.location.reload();
+    };
+
     useEffect(
         () => () => {
             if (closeTimerRef.current !== null) clearTimeout(closeTimerRef.current);
@@ -231,8 +240,8 @@ const Discovery = () => {
         communitySortMethod === "subscriptions"
             ? t("components.community_assistants.sort_popular", "Beliebteste")
             : communitySortMethod === "updated"
-              ? t("components.community_assistants.sort_updated", "Zuletzt aktualisiert")
-              : t("components.community_assistants.sort_title", "Name");
+                ? t("components.community_assistants.sort_updated", "Zuletzt aktualisiert")
+                : t("components.community_assistants.sort_title", "Name");
 
     const handleMyAssistantsSortChange = (_event: SelectionEvents, data: OptionOnSelectData) => {
         if (data.optionValue === "subscriptions" || data.optionValue === "updated" || data.optionValue === "title" || data.optionValue === "lastUsed") {
@@ -244,10 +253,10 @@ const Discovery = () => {
         myAssistantsSortMethod === "lastUsed"
             ? t("components.community_assistants.sort_last_used", "Zuletzt benutzt")
             : myAssistantsSortMethod === "subscriptions"
-              ? t("components.community_assistants.sort_popular", "Beliebteste")
-              : myAssistantsSortMethod === "updated"
-                ? t("components.community_assistants.sort_updated", "Zuletzt aktualisiert")
-                : t("components.community_assistants.sort_title", "Name");
+                ? t("components.community_assistants.sort_popular", "Beliebteste")
+                : myAssistantsSortMethod === "updated"
+                    ? t("components.community_assistants.sort_updated", "Zuletzt aktualisiert")
+                    : t("components.community_assistants.sort_title", "Name");
 
     const getAssistantBadges = (assistant: AssistantCardData): DiscoveryCardBadge[] => {
         const badges: DiscoveryCardBadge[] = [];
@@ -255,8 +264,8 @@ const Discovery = () => {
             "latest_version" in assistant.rawData
                 ? assistant.rawData.latest_version.compliance_check_result
                 : "compliance_check_result" in assistant.rawData
-                  ? assistant.rawData.compliance_check_result
-                  : undefined;
+                    ? assistant.rawData.compliance_check_result
+                    : undefined;
 
         if (isComplianceCheckEnabled && complianceCheckResult?.overall_status === "passed") {
             badges.push({
@@ -561,6 +570,11 @@ const Discovery = () => {
                                         {t("discovery.subtitle", "Nutze deine Assistenten oder entdecke neue für wiederkehrende Aufgaben.")}
                                     </Body1>
                                     <div className={styles.headerActions}>
+                                        {isMockMode && (
+                                            <Button appearance="subtle" icon={<ArrowResetRegular />} onClick={resetMockData}>
+                                                Mock-Daten zurücksetzen
+                                            </Button>
+                                        )}
                                         <Button
                                             appearance="transparent"
                                             icon={<DocumentArrowUpRegular />}

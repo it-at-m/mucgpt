@@ -513,3 +513,7 @@ class ConfigResponse(BaseModel):
         None,
         description="Base URL of the ad2image service for Gravatar-compatible avatar images.",
     )
+    owner_profile_url_template: str | None = Field(
+        None,
+        description="Template for assistant owner profile links. The '{uid}' placeholder is replaced with the owner lhmObjectID.",
+    )

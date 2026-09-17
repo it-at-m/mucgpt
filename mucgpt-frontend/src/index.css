@@ -7,17 +7,7 @@
 :root {
     --assistantDetailsDrawerWidth: 400px;
     --assistantDetailsDrawerCompactWidth: 320px;
-}
-
-html,
-body {
-    height: 100%;
-    margin: 0;
-    padding: 0;
-}
-
-html {
-    font-family:
+    --fontFamilyBase:
         "Segoe UI",
         -apple-system,
         BlinkMacSystemFont,
@@ -29,6 +19,17 @@ html {
         "Droid Sans",
         "Helvetica Neue",
         sans-serif;
+}
+
+html,
+body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+}
+
+html {
+    font-family: var(--fontFamilyBase);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
 }

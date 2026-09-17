@@ -83,6 +83,7 @@ export interface ApplicationConfig {
     feature_request_url?: string;
     contact_mail_url?: string;
     ad2image_url?: string;
+    owner_profile_url_template?: string;
 }
 
 export interface Model {
@@ -177,7 +178,6 @@ export interface ToolBase {
 export interface OwnerDetailsResponse {
     user_id: string;
     username: string;
-    contact_address?: string | null;
     givenName?: string | null;
     sn?: string | null;
     mail?: string | null;

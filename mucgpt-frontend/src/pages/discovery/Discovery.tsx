@@ -1,6 +1,6 @@
 import { type ReactElement, useCallback, useContext, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Title2, Body1, Text, SearchBox, Dropdown, Option, Button, Tab, TabList } from "@fluentui/react-components";
+import { Title2, Body1, Text, SearchBox, Dropdown, Button, Tab, TabList } from "@fluentui/react-components";
 import type { SearchBoxChangeEvent, InputOnChangeData, SelectionEvents, OptionOnSelectData, SelectTabData, SelectTabEvent } from "@fluentui/react-components";
 import { Add24Regular, DocumentArrowUpRegular, LibraryRegular, PeopleCommunityRegular, SearchRegular } from "@fluentui/react-icons";
 import { useTranslation } from "react-i18next";
@@ -13,7 +13,6 @@ import { CommunityAssistantStorageService } from "../../service/communityassista
 import { ASSISTANT_STORE, COMMUNITY_ASSISTANT_STORE, CREATIVITY_LOW } from "../../constants";
 import { useGlobalToastContext } from "../../components/GlobalToastHandler/GlobalToastContext";
 import { DiscoveryCard } from "../../components/DiscoveryCard/DiscoveryCard";
-import type { DiscoveryCardBadge } from "../../components/DiscoveryCard/DiscoveryCard";
 import { DiscoveryCardSkeleton } from "../../components/DiscoveryCard/DiscoveryCardSkeleton";
 import { OwnerMetadataLink, getPrimaryOwnerDetails } from "../../components/OwnerMetadataLink/OwnerMetadataLink";
 import { AssistantDetailsSidebar, AssistantCardData } from "../../components/AssistantDetailsSidebar/AssistantDetailsSidebar";
@@ -24,8 +23,10 @@ import { useDiscoveryAssistantLists } from "./hooks/useDiscoveryAssistantLists";
 import { useMigrateLocalAssistant } from "../../hooks/useMigrateLocalAssistant";
 import { downloadAssistantExport, mapAssistantToExportData, mapVersionToExportData } from "../../utils/assistant-export";
 import { isCompleteCommunityAssistantSnapshot, mapCommunitySnapshotToAssistant } from "../../utils/community-assistant-snapshots";
+import { getAssistantBadges, isAssistantPrivate } from "../../utils/assistantCardDisplay";
 import { ApiError } from "../../api/fetch-utils";
 import { ConfigContext } from "../../context/ConfigContext";
+import { SubtleOption } from "../../ui/SubtleOption";
 
 const communityAssistantStorageService = new CommunityAssistantStorageService(COMMUNITY_ASSISTANT_STORE);
 const assistantStorageService = new AssistantStorageService(ASSISTANT_STORE);
@@ -254,62 +255,6 @@ const Discovery = () => {
                 ? t("components.community_assistants.sort_updated", "Zuletzt aktualisiert")
                 : t("components.community_assistants.sort_title", "Name");
 
-    const getAssistantBadges = (assistant: AssistantCardData): DiscoveryCardBadge[] => {
-        const badges: DiscoveryCardBadge[] = [];
-        const complianceCheckResult =
-            "latest_version" in assistant.rawData
-                ? assistant.rawData.latest_version.compliance_check_result
-                : "compliance_check_result" in assistant.rawData
-                  ? assistant.rawData.compliance_check_result
-                  : undefined;
-
-        if (isComplianceCheckEnabled && complianceCheckResult?.overall_status === "passed") {
-            badges.push({
-                label: t("components.community_assistants.compliance_passed_badge"),
-                color: "success",
-                tone: "success"
-            });
-        }
-
-        if (isComplianceCheckEnabled && complianceCheckResult?.overall_status === "high_risk_detected") {
-            badges.push({
-                label: t("components.community_assistants.compliance_high_risk_badge"),
-                color: "danger",
-                tone: "danger"
-            });
-        }
-
-        if (assistant.isLocalAssistant) {
-            badges.push({
-                label: t("components.community_assistants.local_badge", "Lokal"),
-                color: "warning",
-                tone: "warning"
-            });
-        }
-
-        if (assistant.isDeletedSnapshot) {
-            badges.push({
-                label: t("components.community_assistants.deleted_badge", "Gelöscht"),
-                color: "danger",
-                tone: "danger"
-            });
-        }
-
-        return badges;
-    };
-
-    const isAssistantPrivate = (assistant: AssistantCardData): boolean => {
-        if (assistant.isLocalAssistant) {
-            return true;
-        }
-
-        if ("is_visible" in assistant.rawData) {
-            return assistant.rawData.is_visible === false;
-        }
-
-        return false;
-    };
-
     const getMetadataFallbackLabel = (assistant: AssistantCardData): string =>
         assistant.isOwnedAssistant ? t("components.community_assistants.metadata_you", "Du") : t("components.community_assistants.filter_all", "Community");
 
@@ -453,7 +398,7 @@ const Discovery = () => {
             id={assistant.id}
             title={assistant.title}
             description={assistant.description}
-            badges={getAssistantBadges(assistant)}
+            badges={getAssistantBadges(assistant, t, isComplianceCheckEnabled)}
             metadataStartNode={<OwnerMetadataLink owner={getPrimaryOwnerDetails(assistant.rawData)} fallbackLabel={getMetadataFallbackLabel(assistant)} />}
             subscriberCount={assistant.subscriptions}
             isPrivate={isAssistantPrivate(assistant)}
@@ -478,22 +423,22 @@ const Discovery = () => {
                 {icon}
             </div>
             <div className={styles.emptyCopy}>
-                <Text as="p" weight="semibold" className={styles.emptyTitle}>
+                <Text as="p" size={400} weight="semibold" className={styles.emptyTitle}>
                     {title}
                 </Text>
                 <Text as="p" size={300} className={styles.emptyDescription}>
                     {description}
                 </Text>
+                {actions && actions.length > 0 && (
+                    <div className={styles.emptyActions}>
+                        {actions.map(action => (
+                            <Button key={action.label} appearance={action.appearance ?? "secondary"} icon={action.icon} onClick={action.onClick}>
+                                {action.label}
+                            </Button>
+                        ))}
+                    </div>
+                )}
             </div>
-            {actions && actions.length > 0 && (
-                <div className={styles.emptyActions}>
-                    {actions.map(action => (
-                        <Button key={action.label} appearance={action.appearance ?? "secondary"} icon={action.icon} onClick={action.onClick}>
-                            {action.label}
-                        </Button>
-                    ))}
-                </div>
-            )}
         </div>
     );
 
@@ -523,11 +468,6 @@ const Discovery = () => {
                     appearance: "primary",
                     icon: <Add24Regular />,
                     onClick: () => navigate("/assistant/create")
-                },
-                {
-                    label: t("components.import_assistant.import"),
-                    icon: <DocumentArrowUpRegular />,
-                    onClick: importAssistant
                 }
             ]
         });
@@ -636,18 +576,18 @@ const Discovery = () => {
                                                 onOptionSelect={handleMyAssistantsSortChange}
                                                 aria-label={t("components.community_assistants.sort_by", "Sortieren nach")}
                                             >
-                                                <Option value="lastUsed" text={t("components.community_assistants.sort_last_used", "Zuletzt benutzt")}>
+                                                <SubtleOption value="lastUsed" text={t("components.community_assistants.sort_last_used", "Zuletzt benutzt")}>
                                                     {t("components.community_assistants.sort_last_used", "Zuletzt benutzt")}
-                                                </Option>
-                                                <Option value="subscriptions" text={t("components.community_assistants.sort_popular", "Beliebteste")}>
+                                                </SubtleOption>
+                                                <SubtleOption value="subscriptions" text={t("components.community_assistants.sort_popular", "Beliebteste")}>
                                                     {t("components.community_assistants.sort_popular", "Beliebteste")}
-                                                </Option>
-                                                <Option value="updated" text={t("components.community_assistants.sort_updated", "Zuletzt aktualisiert")}>
+                                                </SubtleOption>
+                                                <SubtleOption value="updated" text={t("components.community_assistants.sort_updated", "Zuletzt aktualisiert")}>
                                                     {t("components.community_assistants.sort_updated", "Zuletzt aktualisiert")}
-                                                </Option>
-                                                <Option value="title" text={t("components.community_assistants.sort_title", "Name")}>
+                                                </SubtleOption>
+                                                <SubtleOption value="title" text={t("components.community_assistants.sort_title", "Name")}>
                                                     {t("components.community_assistants.sort_title", "Name")}
-                                                </Option>
+                                                </SubtleOption>
                                             </Dropdown>
                                         </div>
                                     </div>
@@ -689,15 +629,15 @@ const Discovery = () => {
                                             onOptionSelect={handleCommunitySortChange}
                                             aria-label={t("components.community_assistants.sort_by", "Sortieren nach")}
                                         >
-                                            <Option value="subscriptions" text={t("components.community_assistants.sort_popular", "Beliebteste")}>
+                                            <SubtleOption value="subscriptions" text={t("components.community_assistants.sort_popular", "Beliebteste")}>
                                                 {t("components.community_assistants.sort_popular", "Beliebteste")}
-                                            </Option>
-                                            <Option value="updated" text={t("components.community_assistants.sort_updated", "Zuletzt aktualisiert")}>
+                                            </SubtleOption>
+                                            <SubtleOption value="updated" text={t("components.community_assistants.sort_updated", "Zuletzt aktualisiert")}>
                                                 {t("components.community_assistants.sort_updated", "Zuletzt aktualisiert")}
-                                            </Option>
-                                            <Option value="title" text={t("components.community_assistants.sort_title", "Name")}>
+                                            </SubtleOption>
+                                            <SubtleOption value="title" text={t("components.community_assistants.sort_title", "Name")}>
                                                 {t("components.community_assistants.sort_title", "Name")}
-                                            </Option>
+                                            </SubtleOption>
                                         </Dropdown>
                                     </div>
 

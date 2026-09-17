@@ -2,11 +2,9 @@ import { createDarkTheme, createLightTheme, type Theme } from "@fluentui/react-c
 
 import { dangerRamp, mucgptBrandRamp, neutralRamp, successRamp, warningRamp } from "./palette";
 
-// Derives a translucent tint from a palette primitive. Subtle/transparent Buttons and
-// MenuItems render on every neutral surface tier (Background1/2/3), so their hover/pressed
-// fill can't be a fixed opaque ramp step without risking an exact match with the surface it
-// sits on. A translucent tint instead darkens/lightens whatever is underneath, staying
-// visible and on-brand on any surface.
+// Subtle controls can render on every neutral surface tier. A translucent tint
+// keeps their hover and pressed feedback visible without looking like a new
+// surface level.
 const withAlpha = (hex: string, alpha: number) => {
     const r = parseInt(hex.slice(1, 3), 16);
     const g = parseInt(hex.slice(3, 5), 16);
@@ -56,9 +54,8 @@ const lightNeutralOverrides = {
     colorNeutralForeground2Pressed: neutralRamp[50],
     colorNeutralForeground2Selected: neutralRamp[50],
 
-    // Fluent's subtle/transparent Button tints its icon with these "Brand" hover/pressed
-    // tokens while the label uses the plain Foreground2 tokens above. Aliasing them to the
-    // same value keeps icon and label color in sync instead of the icon jumping to brand blue.
+    // Keep subtle control icons aligned with their labels instead of changing
+    // to the brand color while hovered or pressed.
     colorNeutralForeground2BrandHover: neutralRamp[50],
     colorNeutralForeground2BrandPressed: neutralRamp[50],
 
@@ -85,10 +82,6 @@ const lightNeutralOverrides = {
     colorNeutralStrokeSubtle: neutralRamp[120],
     colorNeutralStrokeAccessible: neutralRamp[70],
 
-    // Subtle/transparent Button and MenuItem hover/pressed backgrounds. Left unset, these
-    // fall back to Fluent's stock neutral ramp instead of this app's cooler-tinted one, so the
-    // hover reads as an unrelated flat gray. See `withAlpha` above for why this is a tint
-    // rather than a fixed ramp step.
     colorSubtleBackgroundHover: withAlpha(neutralRamp[40], 0.06),
     colorSubtleBackgroundPressed: withAlpha(neutralRamp[40], 0.1),
 
@@ -161,7 +154,6 @@ const darkNeutralOverrides = {
     colorNeutralStrokeSubtle: neutralRamp[50],
     colorNeutralStrokeAccessible: neutralRamp[100],
 
-    // See withAlpha and the light theme override above.
     colorSubtleBackgroundHover: withAlpha(neutralRamp[150], 0.08),
     colorSubtleBackgroundPressed: withAlpha(neutralRamp[150], 0.14),
 

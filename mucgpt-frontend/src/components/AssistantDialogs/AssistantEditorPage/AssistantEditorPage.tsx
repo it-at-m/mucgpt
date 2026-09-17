@@ -46,7 +46,6 @@ import { EdelweissSpinner } from "../../EdelweissSpinner";
 import { AssistantPreviewChat } from "../AssistantPreviewChat/AssistantPreviewChat";
 import { useResizablePreview } from "./useResizablePreview";
 
-type CreateView = "mode_select" | "ai_input" | "settings";
 type DiscardTarget = "back" | "discovery";
 interface AssistantEditorPageCreateProps {
     mode: "create";
@@ -302,8 +301,9 @@ export const AssistantEditorPage = (props: AssistantEditorPageProps) => {
     const isCreate = props.mode === "create";
     const isOwner = isCreate ? true : (props as AssistantEditorPageEditProps).isOwner;
 
-    const [createView, setCreateView] = useState<CreateView>("mode_select");
     const createState = useCreateAssistantState();
+    const createView = createState.view;
+    const setCreateView = createState.setView;
 
     const editAssistant = isCreate ? null : (props as AssistantEditorPageEditProps).assistant;
     const emptyAssistant: Assistant = useMemo(
@@ -370,18 +370,20 @@ export const AssistantEditorPage = (props: AssistantEditorPageProps) => {
             setDiscardTarget("back");
             setDiscardOpen(true);
         } else {
+            if (isCreate) createState.resetAll();
             navigate(-1);
         }
-    }, [isCreate, createState.hasChanges, editState.hasChanged, navigate]);
+    }, [isCreate, createState.hasChanges, createState.resetAll, editState.hasChanged, navigate]);
 
     const handleDiscardConfirm = useCallback(() => {
         setDiscardOpen(false);
+        if (isCreate) createState.resetAll();
         if (discardTarget === "discovery") {
             navigate("/discovery");
             return;
         }
         navigate(-1);
-    }, [discardTarget, navigate]);
+    }, [discardTarget, isCreate, createState.resetAll, navigate]);
 
     const handleSave = useCallback(async () => {
         if (loading) return;
@@ -447,6 +449,7 @@ export const AssistantEditorPage = (props: AssistantEditorPageProps) => {
                         t("components.assistant_editor.assistant_saved_success"),
                         t("components.assistant_editor.assistant_saved_message", { title: assistantTitle })
                     );
+                    createState.resetAll();
                     navigate(`/owned/communityassistant/${response.id}`);
                 } else {
                     showError(t("components.assistant_editor.assistant_creation_failed"), t("components.assistant_editor.save_config_failed"));

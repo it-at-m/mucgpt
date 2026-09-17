@@ -1,6 +1,6 @@
 import { type ReactElement, useCallback, useContext, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Title2, Body1, Text, SearchBox, Dropdown, Option, Button, Tab, TabList } from "@fluentui/react-components";
+import { Title2, Body1, Text, SearchBox, Dropdown, Button, Tab, TabList } from "@fluentui/react-components";
 import type { SearchBoxChangeEvent, InputOnChangeData, SelectionEvents, OptionOnSelectData, SelectTabData, SelectTabEvent } from "@fluentui/react-components";
 import { Add24Regular, DocumentArrowUpRegular, LibraryRegular, PeopleCommunityRegular, SearchRegular } from "@fluentui/react-icons";
 import { useTranslation } from "react-i18next";
@@ -26,6 +26,7 @@ import { isCompleteCommunityAssistantSnapshot, mapCommunitySnapshotToAssistant }
 import { getAssistantBadges, isAssistantPrivate } from "../../utils/assistantCardDisplay";
 import { ApiError } from "../../api/fetch-utils";
 import { ConfigContext } from "../../context/ConfigContext";
+import { SubtleOption } from "../../ui/SubtleOption";
 
 const communityAssistantStorageService = new CommunityAssistantStorageService(COMMUNITY_ASSISTANT_STORE);
 const assistantStorageService = new AssistantStorageService(ASSISTANT_STORE);
@@ -580,18 +581,18 @@ const Discovery = () => {
                                                 onOptionSelect={handleMyAssistantsSortChange}
                                                 aria-label={t("components.community_assistants.sort_by", "Sortieren nach")}
                                             >
-                                                <Option value="lastUsed" text={t("components.community_assistants.sort_last_used", "Zuletzt benutzt")}>
+                                                <SubtleOption value="lastUsed" text={t("components.community_assistants.sort_last_used", "Zuletzt benutzt")}>
                                                     {t("components.community_assistants.sort_last_used", "Zuletzt benutzt")}
-                                                </Option>
-                                                <Option value="subscriptions" text={t("components.community_assistants.sort_popular", "Beliebteste")}>
+                                                </SubtleOption>
+                                                <SubtleOption value="subscriptions" text={t("components.community_assistants.sort_popular", "Beliebteste")}>
                                                     {t("components.community_assistants.sort_popular", "Beliebteste")}
-                                                </Option>
-                                                <Option value="updated" text={t("components.community_assistants.sort_updated", "Zuletzt aktualisiert")}>
+                                                </SubtleOption>
+                                                <SubtleOption value="updated" text={t("components.community_assistants.sort_updated", "Zuletzt aktualisiert")}>
                                                     {t("components.community_assistants.sort_updated", "Zuletzt aktualisiert")}
-                                                </Option>
-                                                <Option value="title" text={t("components.community_assistants.sort_title", "Name")}>
+                                                </SubtleOption>
+                                                <SubtleOption value="title" text={t("components.community_assistants.sort_title", "Name")}>
                                                     {t("components.community_assistants.sort_title", "Name")}
-                                                </Option>
+                                                </SubtleOption>
                                             </Dropdown>
                                         </div>
                                     </div>
@@ -633,15 +634,15 @@ const Discovery = () => {
                                             onOptionSelect={handleCommunitySortChange}
                                             aria-label={t("components.community_assistants.sort_by", "Sortieren nach")}
                                         >
-                                            <Option value="subscriptions" text={t("components.community_assistants.sort_popular", "Beliebteste")}>
+                                            <SubtleOption value="subscriptions" text={t("components.community_assistants.sort_popular", "Beliebteste")}>
                                                 {t("components.community_assistants.sort_popular", "Beliebteste")}
-                                            </Option>
-                                            <Option value="updated" text={t("components.community_assistants.sort_updated", "Zuletzt aktualisiert")}>
+                                            </SubtleOption>
+                                            <SubtleOption value="updated" text={t("components.community_assistants.sort_updated", "Zuletzt aktualisiert")}>
                                                 {t("components.community_assistants.sort_updated", "Zuletzt aktualisiert")}
-                                            </Option>
-                                            <Option value="title" text={t("components.community_assistants.sort_title", "Name")}>
+                                            </SubtleOption>
+                                            <SubtleOption value="title" text={t("components.community_assistants.sort_title", "Name")}>
                                                 {t("components.community_assistants.sort_title", "Name")}
-                                            </Option>
+                                            </SubtleOption>
                                         </Dropdown>
                                     </div>
 

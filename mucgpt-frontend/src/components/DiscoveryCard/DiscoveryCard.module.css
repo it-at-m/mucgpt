@@ -75,8 +75,6 @@
 .headerText {
     display: -webkit-box;
     width: 100%;
-    font-size: var(--fontSizeBase300);
-    font-weight: var(--fontWeightSemibold);
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 2;
     overflow: hidden;
@@ -89,6 +87,7 @@
 .primaryAction {
     padding: 0;
     border: 0;
+    font: inherit;
     color: inherit;
     text-align: inherit;
     text-decoration: none;

@@ -1,6 +1,6 @@
 import React, { forwardRef, ReactNode } from "react";
 import { Link } from "react-router-dom";
-import { Badge, Card, CardFooter, mergeClasses, CardProps, BadgeProps } from "@fluentui/react-components";
+import { Badge, Card, CardFooter, mergeClasses, CardProps, BadgeProps, Text } from "@fluentui/react-components";
 import { LockClosed16Regular, People16Regular, Person16Regular } from "@fluentui/react-icons";
 import styles from "./DiscoveryCard.module.css";
 import { MarkdownRenderer } from "../MarkdownRenderer/MarkdownRenderer";
@@ -107,7 +107,11 @@ export const DiscoveryCard = forwardRef<HTMLDivElement, DiscoveryCardProps>((pro
             <span className={staticClass}>{title}</span>
         );
 
-        return <h3 className={styles.headerTextWrapper}>{titleElement}</h3>;
+        return (
+            <Text as="h3" size={300} weight="semibold" className={styles.headerTextWrapper}>
+                {titleElement}
+            </Text>
+        );
     };
 
     const renderHeader = () => {
@@ -119,7 +123,7 @@ export const DiscoveryCard = forwardRef<HTMLDivElement, DiscoveryCardProps>((pro
             badges && badges.length > 0
                 ? badges
                 : badge
-                  ? [
+                    ? [
                         {
                             label: badge,
                             className: badgeClassName,
@@ -128,7 +132,7 @@ export const DiscoveryCard = forwardRef<HTMLDivElement, DiscoveryCardProps>((pro
                             size: badgeSize
                         }
                     ]
-                  : [];
+                    : [];
 
         if (title) {
             return (

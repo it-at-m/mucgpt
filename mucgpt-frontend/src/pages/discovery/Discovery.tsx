@@ -504,7 +504,7 @@ const Discovery = () => {
                                 <Title2 className={styles.header}>{t("discovery.title", "Assistenten")}</Title2>
                                 <div className={styles.subtitleRow}>
                                     <Body1 className={styles.subtitle}>
-                                        {t("discovery.subtitle", "Nutze deine Assistenten oder entdecke neue für wiederkehrende Aufgaben.")}
+                                        {t("discovery.subtitle", "Finde und verwalte Assistenten für deine wiederkehrenden Aufgaben.")}
                                     </Body1>
                                     <div className={styles.headerActions}>
                                         <Button

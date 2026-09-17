@@ -833,7 +833,7 @@ i18n
                     },
                     discovery: {
                         title: "Assistenten",
-                        subtitle: "Nutze deine Assistenten oder entdecke neue für wiederkehrende Aufgaben."
+                        subtitle: "Finde und verwalte Assistenten für deine wiederkehrenden Aufgaben."
                     },
                     ...tutorialsTranslations.DE,
                     ...versionTranslations.DE
@@ -1647,7 +1647,7 @@ i18n
                     },
                     discovery: {
                         title: "Assistants",
-                        subtitle: "Use your assistants or discover new ones for recurring tasks."
+                        subtitle: "Find and manage assistants for your recurring tasks."
                     },
                     ...tutorialsTranslations.EN,
                     ...versionTranslations.EN
@@ -2454,7 +2454,7 @@ i18n
                     },
                     discovery: {
                         title: "Assistentn",
-                        subtitle: "Nutze deine Assistenten oder entdecke neue für wiederkehrende Aufgaben."
+                        subtitle: "Find und verwalt Assistentn für deine wiederkehrenden Aufgabn."
                     },
                     ...tutorialsTranslations.BA,
                     ...versionTranslations.BA
@@ -3259,7 +3259,7 @@ i18n
                     },
                     discovery: {
                         title: "Assistants",
-                        subtitle: "Utilisez vos assistants ou découvrez-en de nouveaux pour les tâches récurrentes."
+                        subtitle: "Trouvez et gérez des assistants pour vos tâches récurrentes."
                     },
                     ...tutorialsTranslations.FR,
                     ...versionTranslations.FR
@@ -4063,7 +4063,7 @@ i18n
                     },
                     discovery: {
                         title: "Асистенти",
-                        subtitle: "Використовуйте своїх асистентів або відкривайте нових для повторюваних завдань."
+                        subtitle: "Знаходьте та керуйте асистентами для своїх повторюваних завдань."
                     },
                     ...tutorialsTranslations.UK,
                     ...versionTranslations.UK

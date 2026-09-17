@@ -13,7 +13,6 @@ import { CommunityAssistantStorageService } from "../../service/communityassista
 import { ASSISTANT_STORE, COMMUNITY_ASSISTANT_STORE, CREATIVITY_LOW } from "../../constants";
 import { useGlobalToastContext } from "../../components/GlobalToastHandler/GlobalToastContext";
 import { DiscoveryCard } from "../../components/DiscoveryCard/DiscoveryCard";
-import type { DiscoveryCardBadge } from "../../components/DiscoveryCard/DiscoveryCard";
 import { DiscoveryCardSkeleton } from "../../components/DiscoveryCard/DiscoveryCardSkeleton";
 import { OwnerMetadataLink, getPrimaryOwnerDetails } from "../../components/OwnerMetadataLink/OwnerMetadataLink";
 import { AssistantDetailsSidebar, AssistantCardData } from "../../components/AssistantDetailsSidebar/AssistantDetailsSidebar";
@@ -24,6 +23,7 @@ import { useDiscoveryAssistantLists } from "./hooks/useDiscoveryAssistantLists";
 import { useMigrateLocalAssistant } from "../../hooks/useMigrateLocalAssistant";
 import { downloadAssistantExport, mapAssistantToExportData, mapVersionToExportData } from "../../utils/assistant-export";
 import { isCompleteCommunityAssistantSnapshot, mapCommunitySnapshotToAssistant } from "../../utils/community-assistant-snapshots";
+import { getAssistantBadges, isAssistantPrivate } from "../../utils/assistantCardDisplay";
 import { ApiError } from "../../api/fetch-utils";
 import { ConfigContext } from "../../context/ConfigContext";
 
@@ -254,62 +254,6 @@ const Discovery = () => {
                 ? t("components.community_assistants.sort_updated", "Zuletzt aktualisiert")
                 : t("components.community_assistants.sort_title", "Name");
 
-    const getAssistantBadges = (assistant: AssistantCardData): DiscoveryCardBadge[] => {
-        const badges: DiscoveryCardBadge[] = [];
-        const complianceCheckResult =
-            "latest_version" in assistant.rawData
-                ? assistant.rawData.latest_version.compliance_check_result
-                : "compliance_check_result" in assistant.rawData
-                  ? assistant.rawData.compliance_check_result
-                  : undefined;
-
-        if (isComplianceCheckEnabled && complianceCheckResult?.overall_status === "passed") {
-            badges.push({
-                label: t("components.community_assistants.compliance_passed_badge"),
-                color: "success",
-                tone: "success"
-            });
-        }
-
-        if (isComplianceCheckEnabled && complianceCheckResult?.overall_status === "high_risk_detected") {
-            badges.push({
-                label: t("components.community_assistants.compliance_high_risk_badge"),
-                color: "danger",
-                tone: "danger"
-            });
-        }
-
-        if (assistant.isLocalAssistant) {
-            badges.push({
-                label: t("components.community_assistants.local_badge", "Lokal"),
-                color: "warning",
-                tone: "warning"
-            });
-        }
-
-        if (assistant.isDeletedSnapshot) {
-            badges.push({
-                label: t("components.community_assistants.deleted_badge", "Gelöscht"),
-                color: "danger",
-                tone: "danger"
-            });
-        }
-
-        return badges;
-    };
-
-    const isAssistantPrivate = (assistant: AssistantCardData): boolean => {
-        if (assistant.isLocalAssistant) {
-            return true;
-        }
-
-        if ("is_visible" in assistant.rawData) {
-            return assistant.rawData.is_visible === false;
-        }
-
-        return false;
-    };
-
     const getMetadataFallbackLabel = (assistant: AssistantCardData): string =>
         assistant.isOwnedAssistant ? t("components.community_assistants.metadata_you", "Du") : t("components.community_assistants.filter_all", "Community");
 
@@ -453,7 +397,7 @@ const Discovery = () => {
             id={assistant.id}
             title={assistant.title}
             description={assistant.description}
-            badges={getAssistantBadges(assistant)}
+            badges={getAssistantBadges(assistant, t, isComplianceCheckEnabled)}
             metadataStartNode={<OwnerMetadataLink owner={getPrimaryOwnerDetails(assistant.rawData)} fallbackLabel={getMetadataFallbackLabel(assistant)} />}
             subscriberCount={assistant.subscriptions}
             isPrivate={isAssistantPrivate(assistant)}

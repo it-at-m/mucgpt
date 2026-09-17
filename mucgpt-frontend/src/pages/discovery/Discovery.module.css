@@ -150,11 +150,9 @@
     display: grid;
     grid-template-columns: 36px minmax(0, 1fr);
     align-items: start;
-    column-gap: 14px;
-    row-gap: var(--spacingVerticalSNudge);
-    max-width: 620px;
-    min-height: 88px;
-    padding: 22px 24px 18px;
+    column-gap: var(--spacingHorizontalM);
+    width: 100%;
+    padding: var(--spacingVerticalL) 0;
 }
 
 .emptyIcon {
@@ -165,46 +163,34 @@
     height: 36px;
     flex: 0 0 auto;
     color: var(--colorBrandForeground1);
-    border-radius: var(--borderRadiusCircular);
-    background-color: var(--colorNeutralBackground3);
     font-size: var(--fontSizeBase500);
 }
 
 .emptyCopy {
     display: flex;
     flex-direction: column;
-    gap: 3px;
+    gap: var(--spacingVerticalSNudge);
     min-width: 0;
-    padding-top: 1px;
 }
 
 .emptyTitle {
     margin: 0;
     color: var(--colorNeutralForeground1);
-    font-size: var(--fontSizeBase300);
-    line-height: var(--lineHeightBase300);
 }
 
 .emptyDescription {
-    max-width: 64ch;
+    max-width: 65ch;
     margin: 0;
     color: var(--colorNeutralForeground2);
-    line-height: var(--lineHeightBase300);
 }
 
 .emptyActions {
-    grid-column: 2;
     display: flex;
     align-items: center;
     justify-content: flex-start;
-    gap: var(--spacingHorizontalS);
+    gap: var(--spacingHorizontalM);
     flex-wrap: wrap;
-    margin-top: 2px;
-}
-
-.emptyActions button {
-    min-width: 0;
-    padding-left: 0;
+    margin-top: var(--spacingVerticalS);
 }
 
 .showMoreRow {
@@ -298,18 +284,12 @@
     .sectionEmptyState {
         grid-template-columns: 32px minmax(0, 1fr);
         align-items: flex-start;
-        padding-right: 0;
-        padding-left: 0;
+        padding: var(--spacingVerticalL) 0;
     }
 
-    .emptyActions {
-        grid-column: 1 / -1;
-        padding-left: 46px;
-        justify-content: flex-start;
-    }
-
-    .emptyActions button {
-        max-width: 100%;
+    .emptyIcon {
+        width: 32px;
+        height: 32px;
     }
 
     .myFilterGroup {
@@ -379,12 +359,6 @@
     .flexContainer[data-drawer-open="true"] .sectionEmptyState {
         grid-template-columns: 32px minmax(0, 1fr);
         align-items: flex-start;
-    }
-
-    .flexContainer[data-drawer-open="true"] .emptyActions {
-        grid-column: 1 / -1;
-        padding-left: 46px;
-        justify-content: flex-start;
     }
 }
 

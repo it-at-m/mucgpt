@@ -423,22 +423,22 @@ const Discovery = () => {
                 {icon}
             </div>
             <div className={styles.emptyCopy}>
-                <Text as="p" weight="semibold" className={styles.emptyTitle}>
+                <Text as="p" size={400} weight="semibold" className={styles.emptyTitle}>
                     {title}
                 </Text>
                 <Text as="p" size={300} className={styles.emptyDescription}>
                     {description}
                 </Text>
+                {actions && actions.length > 0 && (
+                    <div className={styles.emptyActions}>
+                        {actions.map(action => (
+                            <Button key={action.label} appearance={action.appearance ?? "secondary"} icon={action.icon} onClick={action.onClick}>
+                                {action.label}
+                            </Button>
+                        ))}
+                    </div>
+                )}
             </div>
-            {actions && actions.length > 0 && (
-                <div className={styles.emptyActions}>
-                    {actions.map(action => (
-                        <Button key={action.label} appearance={action.appearance ?? "secondary"} icon={action.icon} onClick={action.onClick}>
-                            {action.label}
-                        </Button>
-                    ))}
-                </div>
-            )}
         </div>
     );
 
@@ -468,11 +468,6 @@ const Discovery = () => {
                     appearance: "primary",
                     icon: <Add24Regular />,
                     onClick: () => navigate("/assistant/create")
-                },
-                {
-                    label: t("components.import_assistant.import"),
-                    icon: <DocumentArrowUpRegular />,
-                    onClick: importAssistant
                 }
             ]
         });

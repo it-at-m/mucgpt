@@ -1,34 +1,74 @@
-import { Dispatch, SetStateAction, useState, useEffect, useCallback } from "react";
+import { Dispatch, SetStateAction, useState, useEffect, useCallback, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { Assistant, ToolBase } from "../../../../api";
 import { FollowUpActionModel } from "../../../FollowUpAction";
 import { StarterPromptModel } from "../../../StarterPrompt";
 import { ensurePromptIds } from "../promptIds";
+import { STORAGE_KEYS } from "../../../../pages/layout/LayoutHelper";
+import { clearSessionDraft, loadSessionDraft, saveSessionDraft } from "../sessionStorageDraft";
+
+interface EditAssistantDraft {
+    version: string;
+    title: string;
+    description: string;
+    systemPrompt: string;
+    creativity: string;
+    defaultModel: string | undefined;
+    defaultModelCleared: boolean;
+    tools: ToolBase[];
+    hierarchicalAccess: string[];
+    isVisible: boolean;
+    followUpActions: FollowUpActionModel[];
+    starterPrompts: StarterPromptModel[];
+}
+
+const getDraftKey = (assistantId: string | undefined): string | null => (assistantId ? `${STORAGE_KEYS.EDIT_ASSISTANT_DRAFT}_${assistantId}` : null);
 
 export const useAssistantState = (initialAssistant: Assistant) => {
     const { t } = useTranslation();
 
+    const draftKey = getDraftKey(initialAssistant.id);
+    const [initialDraft] = useState<EditAssistantDraft | null>(() => {
+        if (!draftKey) return null;
+        const draft = loadSessionDraft<EditAssistantDraft>(draftKey);
+        return draft && draft.version === (initialAssistant.version || "0") ? draft : null;
+    });
+
     // All state variables
     const [assistantId, setAssistantId] = useState<string | undefined>(initialAssistant.id);
-    const [title, setTitle] = useState<string>(initialAssistant.title);
-    const [description, setDescription] = useState<string>(initialAssistant.description);
-    const [systemPrompt, setSystemPrompt] = useState<string>(initialAssistant.system_message);
-    const [followUpActions, setFollowUpActionsState] = useState<FollowUpActionModel[]>(() => ensurePromptIds(initialAssistant.quick_prompts));
-    const [starterPrompts, setStarterPromptsState] = useState<StarterPromptModel[]>(() => ensurePromptIds(initialAssistant.examples));
-    const [creativity, setCreativity] = useState<string>(initialAssistant.creativity);
-    const [defaultModel, setDefaultModel] = useState<string | undefined>(initialAssistant.default_model);
-    const [defaultModelCleared, setDefaultModelCleared] = useState<boolean>(false);
+    const [title, setTitle] = useState<string>(() => initialDraft?.title ?? initialAssistant.title);
+    const [description, setDescription] = useState<string>(() => initialDraft?.description ?? initialAssistant.description);
+    const [systemPrompt, setSystemPrompt] = useState<string>(() => initialDraft?.systemPrompt ?? initialAssistant.system_message);
+    const [followUpActions, setFollowUpActionsState] = useState<FollowUpActionModel[]>(() =>
+        ensurePromptIds(initialDraft?.followUpActions ?? initialAssistant.quick_prompts)
+    );
+    const [starterPrompts, setStarterPromptsState] = useState<StarterPromptModel[]>(() =>
+        ensurePromptIds(initialDraft?.starterPrompts ?? initialAssistant.examples)
+    );
+    const [creativity, setCreativity] = useState<string>(() => initialDraft?.creativity ?? initialAssistant.creativity);
+    const [defaultModel, setDefaultModel] = useState<string | undefined>(() => initialDraft?.defaultModel ?? initialAssistant.default_model);
+    const [defaultModelCleared, setDefaultModelCleared] = useState<boolean>(() => initialDraft?.defaultModelCleared ?? false);
     const [version, setVersion] = useState<string>(initialAssistant.version || "0");
-    const [tools, setTools] = useState<ToolBase[]>(initialAssistant.tools || []);
+    const [tools, setTools] = useState<ToolBase[]>(() => initialDraft?.tools ?? initialAssistant.tools ?? []);
     const [publish, setPublish] = useState<boolean>(initialAssistant.publish || false);
     const [ownerIds, setOwnerIds] = useState<string[]>(initialAssistant.owner_ids || []);
-    const [hierarchicalAccess, setHierarchicalAccess] = useState<string[]>(initialAssistant.hierarchical_access || []);
+    const [hierarchicalAccess, setHierarchicalAccess] = useState<string[]>(
+        () => initialDraft?.hierarchicalAccess ?? initialAssistant.hierarchical_access ?? []
+    );
     const [tags, setTags] = useState<string[]>(initialAssistant.tags || []);
-    const [hasChanged, setHasChanged] = useState<boolean>(false);
-    const [isVisible, setIsVisible] = useState<boolean>(initialAssistant.is_visible !== undefined ? initialAssistant.is_visible : true);
+    const [hasChanged, setHasChanged] = useState<boolean>(() => initialDraft !== null);
+    const [isVisible, setIsVisible] = useState<boolean>(
+        () => initialDraft?.isVisible ?? (initialAssistant.is_visible !== undefined ? initialAssistant.is_visible : true)
+    );
+    const previousAssistantRef = useRef(initialAssistant);
 
     // Update state when assistant prop changes
     useEffect(() => {
+        if (previousAssistantRef.current === initialAssistant) {
+            return;
+        }
+        previousAssistantRef.current = initialAssistant;
+
         const followUpActionsWithIds = ensurePromptIds(initialAssistant.quick_prompts);
         const starterPromptsWithIds = ensurePromptIds(initialAssistant.examples);
 
@@ -50,6 +90,47 @@ export const useAssistantState = (initialAssistant: Assistant) => {
         setIsVisible(initialAssistant.is_visible !== undefined ? initialAssistant.is_visible : true);
         setDefaultModelCleared(false);
     }, [initialAssistant]);
+
+
+    useEffect(() => {
+        if (!draftKey) return;
+
+        if (!hasChanged) {
+            clearSessionDraft(draftKey);
+            return;
+        }
+
+        const draft: EditAssistantDraft = {
+            version,
+            title,
+            description,
+            systemPrompt,
+            creativity,
+            defaultModel,
+            defaultModelCleared,
+            tools,
+            hierarchicalAccess,
+            isVisible,
+            followUpActions,
+            starterPrompts
+        };
+        saveSessionDraft(draftKey, draft);
+    }, [
+        draftKey,
+        hasChanged,
+        version,
+        title,
+        description,
+        systemPrompt,
+        creativity,
+        defaultModel,
+        defaultModelCleared,
+        tools,
+        hierarchicalAccess,
+        isVisible,
+        followUpActions,
+        starterPrompts
+    ]);
 
     // Change handlers
     const updateTitle = useCallback((newTitle: string) => {
@@ -100,6 +181,10 @@ export const useAssistantState = (initialAssistant: Assistant) => {
         setStarterPromptsState(current => ensurePromptIds(typeof value === "function" ? value(current) : value));
     }, []);
 
+    const clearDraft = useCallback(() => {
+        if (draftKey) clearSessionDraft(draftKey);
+    }, [draftKey]);
+
     // Reset to original values
     const resetToOriginal = useCallback(() => {
         const followUpActionsWithIds = ensurePromptIds(initialAssistant.quick_prompts);
@@ -122,7 +207,8 @@ export const useAssistantState = (initialAssistant: Assistant) => {
         setHasChanged(false);
         setIsVisible(initialAssistant.is_visible !== undefined ? initialAssistant.is_visible : true);
         setDefaultModelCleared(false);
-    }, [initialAssistant]);
+        if (draftKey) clearSessionDraft(draftKey);
+    }, [initialAssistant, draftKey]);
 
     // Create assistant object for saving
     const createAssistantForSaving = useCallback((): Assistant => {
@@ -208,6 +294,7 @@ export const useAssistantState = (initialAssistant: Assistant) => {
 
         // Utility functions
         resetToOriginal,
+        clearDraft,
         createAssistantForSaving
     };
 };

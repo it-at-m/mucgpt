@@ -22,6 +22,44 @@ interface EditAssistantDraft {
     starterPrompts: StarterPromptModel[];
 }
 
+const isRecord = (value: unknown): value is Record<string, unknown> => typeof value === "object" && value !== null && !Array.isArray(value);
+
+const isEditAssistantDraft = (draft: unknown): draft is EditAssistantDraft => {
+    if (!isRecord(draft)) return false;
+
+    return (
+        typeof draft.version === "string" &&
+        typeof draft.title === "string" &&
+        typeof draft.description === "string" &&
+        typeof draft.systemPrompt === "string" &&
+        typeof draft.creativity === "string" &&
+        (draft.defaultModel === undefined || typeof draft.defaultModel === "string") &&
+        typeof draft.defaultModelCleared === "boolean" &&
+        typeof draft.isVisible === "boolean" &&
+        Array.isArray(draft.tools) &&
+        draft.tools.every(tool => isRecord(tool) && typeof tool.id === "string" && (tool.config === undefined || isRecord(tool.config))) &&
+        Array.isArray(draft.hierarchicalAccess) &&
+        draft.hierarchicalAccess.every(access => typeof access === "string") &&
+        Array.isArray(draft.followUpActions) &&
+        draft.followUpActions.every(
+            action =>
+                isRecord(action) &&
+                typeof action.label === "string" &&
+                typeof action.prompt === "string" &&
+                (action.id === undefined || typeof action.id === "string")
+        ) &&
+        Array.isArray(draft.starterPrompts) &&
+        draft.starterPrompts.every(
+            prompt =>
+                isRecord(prompt) &&
+                typeof prompt.text === "string" &&
+                typeof prompt.value === "string" &&
+                (prompt.id === undefined || typeof prompt.id === "string") &&
+                (prompt.system === undefined || typeof prompt.system === "string")
+        )
+    );
+};
+
 const getDraftKey = (assistantId: string | undefined): string | null => (assistantId ? `${STORAGE_KEYS.EDIT_ASSISTANT_DRAFT}_${assistantId}` : null);
 
 export const useAssistantState = (initialAssistant: Assistant) => {
@@ -30,8 +68,8 @@ export const useAssistantState = (initialAssistant: Assistant) => {
     const draftKey = getDraftKey(initialAssistant.id);
     const [initialDraft] = useState<EditAssistantDraft | null>(() => {
         if (!draftKey) return null;
-        const draft = loadSessionDraft<EditAssistantDraft>(draftKey);
-        return draft && draft.version === (initialAssistant.version || "0") ? draft : null;
+        const draft = loadSessionDraft<unknown>(draftKey);
+        return isEditAssistantDraft(draft) && draft.version === (initialAssistant.version || "0") ? draft : null;
     });
 
     // All state variables
@@ -90,7 +128,6 @@ export const useAssistantState = (initialAssistant: Assistant) => {
         setIsVisible(initialAssistant.is_visible !== undefined ? initialAssistant.is_visible : true);
         setDefaultModelCleared(false);
     }, [initialAssistant]);
-
 
     useEffect(() => {
         if (!draftKey) return;

@@ -1,6 +1,13 @@
 // mocks/handlers.js
 import { http, HttpResponse, delay, passthrough } from "msw";
-import { ApplicationConfig, AssistantCreateResponse, AssistantUpdateInput, ComplianceCategoryResult, ComplianceCheckResponse } from "../api";
+import {
+    ApplicationConfig,
+    AssistantCreateResponse,
+    AssistantStateUpdateInput,
+    AssistantUpdateInput,
+    ComplianceCategoryResult,
+    ComplianceCheckResponse
+} from "../api";
 import {
     buildAssistantCreateResponse,
     buildAssistantList,
@@ -137,10 +144,13 @@ const CONFIG_RESPONSE: ApplicationConfig = {
     feature_request_url: "https://ki.muenchen.de/",
     contact_mail_url: "mailto:ki@muenchen.de",
     ad2image_url: "",
-    owner_profile_url_template: "https://intranet.muenchen.de/person/{uid}"
+    owner_profile_url_template: "https://intranet.muenchen.de/person/{uid}",
+    admin_role: "lhm-ab-mucgpt-admin"
 };
 
 const DYNAMIC_ASSISTANTS: AssistantCreateResponse[] = buildAssistantList(6);
+const pendingAssistant = DYNAMIC_ASSISTANTS[0];
+if (pendingAssistant) pendingAssistant.latest_version.state = "pending_legal_review";
 
 const MOCK_SUBSCRIPTION_COUNTS = [10350, 2500, 1400, 980, 620, 410, 275, 190, 135, 88, 42, 17];
 
@@ -156,6 +166,7 @@ function withMockSubscriptionCount(assistant: AssistantCreateResponse) {
     return {
         ...assistant,
         is_visible: assistant.latest_version.is_visible ?? true,
+        latest_version: { state: "active", ...assistant.latest_version },
         subscriptions_count: getMockSubscriptionCount(assistant.id)
     };
 }
@@ -910,6 +921,29 @@ export const handlers = [
         return HttpResponse.json(DYNAMIC_ASSISTANTS.map(withMockSubscriptionCount));
     }),
 
+    http.get("/api/admin/assistant/review", () => {
+        return HttpResponse.json(
+            DYNAMIC_ASSISTANTS.filter(assistant => assistant.latest_version.state === "pending_legal_review").map(withMockSubscriptionCount)
+        );
+    }),
+
+    http.patch("/api/admin/assistant/:id/state", async ({ params, request }) => {
+        const body = (await request.json()) as AssistantStateUpdateInput;
+        const assistant = DYNAMIC_ASSISTANTS.find(item => item.id === params.id);
+        if (!assistant) return new HttpResponse(null, { status: 404 });
+        if (body.version !== assistant.latest_version.version || body.expected_state !== assistant.latest_version.state) {
+            return HttpResponse.json({ detail: "Assistant changed" }, { status: 409 });
+        }
+        const updated = {
+            ...assistant,
+            updated_at: new Date().toISOString(),
+            latest_version: { ...assistant.latest_version, state: body.state, state_change_reason: body.reason }
+        };
+        const index = DYNAMIC_ASSISTANTS.indexOf(assistant);
+        DYNAMIC_ASSISTANTS[index] = updated;
+        return HttpResponse.json(withMockSubscriptionCount(updated));
+    }),
+
     http.get("/api/assistant/:id", ({ params }) => {
         const a = DYNAMIC_ASSISTANTS.find(x => x.id === params.id);
         if (!a) return new HttpResponse(null, { status: 404 });
@@ -981,7 +1015,12 @@ export const handlers = [
             email: "mucgpt@user.com",
             preferred_username: "mucgpt-user",
             department: "IT-KI",
-            lhmObjectID: "2232324224"
+            lhmObjectID: "2232324224",
+            resource_access: {
+                mucgpt: {
+                    roles: ["lhm-ab-mucgpt-user", "lhm-ab-mucgpt-admin"]
+                }
+            }
         });
     }),
 

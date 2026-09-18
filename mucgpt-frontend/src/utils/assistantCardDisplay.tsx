@@ -1,4 +1,5 @@
 import type { TFunction } from "i18next";
+import { CheckmarkCircle16Regular, CircleOff16Regular, Clock16Regular } from "@fluentui/react-icons";
 import type { AssistantCardData } from "../components/AssistantDetailsSidebar/AssistantDetailsSidebar";
 import type { DiscoveryCardBadge } from "../components/DiscoveryCard/DiscoveryCard";
 
@@ -14,27 +15,40 @@ export const getAssistantBadges = (
             : "compliance_check_result" in assistant.rawData
               ? assistant.rawData.compliance_check_result
               : undefined;
+    const assistantState =
+        "latest_version" in assistant.rawData ? assistant.rawData.latest_version.state : "state" in assistant.rawData ? assistant.rawData.state : undefined;
 
-    if (isComplianceCheckEnabled && complianceCheckResult?.overall_status === "passed") {
+    if (isComplianceCheckEnabled && assistantState === "pending_legal_review") {
         badges.push({
-            label: t("components.community_assistants.compliance_passed_badge"),
-            color: "success",
-            tone: "success"
+            label: t("components.community_assistants.pending_review_badge"),
+            icon: <Clock16Regular aria-hidden="true" />,
+            tone: "warning"
+        });
+    } else if (isComplianceCheckEnabled && assistantState === "inactive") {
+        badges.push({
+            label: t("components.community_assistants.inactive_badge"),
+            icon: <CircleOff16Regular aria-hidden="true" />,
+            tone: "danger"
         });
     }
 
-    if (isComplianceCheckEnabled && complianceCheckResult?.overall_status === "high_risk_detected") {
+    // The lifecycle state is authoritative after legal review. An active assistant
+    // may retain a high-risk automated result that was accepted by a reviewer.
+    if (
+        isComplianceCheckEnabled &&
+        assistantState === "active" &&
+        (complianceCheckResult?.overall_status === "passed" || complianceCheckResult?.overall_status === "high_risk_detected")
+    ) {
         badges.push({
-            label: t("components.community_assistants.compliance_high_risk_badge"),
-            color: "danger",
-            tone: "danger"
+            label: t("components.community_assistants.accepted_badge"),
+            icon: <CheckmarkCircle16Regular aria-hidden="true" />,
+            tone: "success"
         });
     }
 
     if (assistant.isLocalAssistant) {
         badges.push({
             label: t("components.community_assistants.local_badge", "Lokal"),
-            color: "warning",
             tone: "warning"
         });
     }
@@ -42,7 +56,6 @@ export const getAssistantBadges = (
     if (assistant.isDeletedSnapshot) {
         badges.push({
             label: t("components.community_assistants.deleted_badge", "Gelöscht"),
-            color: "danger",
             tone: "danger"
         });
     }

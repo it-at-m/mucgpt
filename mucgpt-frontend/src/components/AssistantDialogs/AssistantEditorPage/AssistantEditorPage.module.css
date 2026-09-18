@@ -264,6 +264,15 @@
     color: var(--colorStatusSuccessForeground1);
 }
 
+.pendingReviewAction {
+    min-width: 0;
+    margin: 0;
+}
+
+.pendingReviewAction :global(.fui-MessageBarBody) {
+    line-height: 1.35;
+}
+
 .actionButtonGroup {
     display: flex;
     align-items: center;
@@ -470,6 +479,10 @@
     .actionBarContent {
         grid-template-columns: 1fr;
         gap: 10px;
+    }
+
+    .pendingReviewAction {
+        width: 100%;
     }
 
     .actionStatus {

@@ -89,11 +89,6 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
     const navigate = useNavigate();
     const isEditMode = location.pathname.endsWith("/edit");
 
-    useEffect(() => {
-        if (!isEditMode || (strategy.canEdit && !isLegacyAssistant)) return;
-        navigate(location.pathname.replace(/\/edit$/, ""), { replace: true });
-    }, [isEditMode, strategy.canEdit, isLegacyAssistant, navigate, location.pathname]);
-
     // Context
     const { LLM, setLLM, availableLLMs } = useContext(LLMContext);
     const { t } = useTranslation();
@@ -158,7 +153,16 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
         version: "0",
         is_visible: true
     });
+    const isAssistantUnavailable = assistantConfig.state === "pending_legal_review" || assistantConfig.state === "inactive";
+    const canEdit =
+        strategy.canEdit &&
+        (strategy instanceof LocalAssistantStrategy || assistantConfig.state === "active" || assistantConfig.state === "pending_legal_review");
     const lockedToolIds = useMemo(() => assistantConfig.tools?.map(tool => tool.id) ?? [], [assistantConfig.tools]);
+
+    useEffect(() => {
+        if (!isEditMode || isAssistantContentLoading || (canEdit && !isLegacyAssistant)) return;
+        navigate(location.pathname.replace(/\/edit$/, ""), { replace: true });
+    }, [isEditMode, isAssistantContentLoading, canEdit, isLegacyAssistant, navigate, location.pathname]);
     const mergeLockedToolIds = useCallback((toolIds: string[]) => Array.from(new Set([...lockedToolIds, ...toolIds])), [lockedToolIds]);
     const setLastQuestionValue = useCallback((value: string) => {
         lastQuestionRef.current = value;
@@ -431,7 +435,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
     // callApi-Funktion
     const callApi = useCallback(
         async (question: string, systemOverride?: string, dataSources?: DataSource[]) => {
-            if (isLegacyAssistant) {
+            if (isLegacyAssistant || isAssistantUnavailable) {
                 console.warn("Interaction blocked: Assistant is in legacy state and read-only.");
                 return;
             }
@@ -484,7 +488,8 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
             selectedTools,
             setIsLoadingValue,
             setLastQuestionValue,
-            isLegacyAssistant
+            isLegacyAssistant,
+            isAssistantUnavailable
         ]
     );
 
@@ -548,12 +553,12 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
     // onAssistantChanged-Funktion
     const onAssistantChanged = useCallback(
         async (newAssistant: Assistant) => {
-            if (!strategy.canEdit) return;
+            if (!canEdit) return;
 
             setError(undefined);
             return await strategy.updateAssistant?.(assistant_id, newAssistant);
         },
-        [strategy, assistant_id]
+        [canEdit, strategy, assistant_id]
     );
 
     // Export function for the info sidebar
@@ -822,6 +827,20 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
             );
         }
 
+        if (isAssistantUnavailable) {
+            return (
+                <div className={styles.deletedChatWarningWrapper}>
+                    <MessageBar intent={assistantConfig.state === "pending_legal_review" ? "warning" : "error"} className={styles.chatWarningBar}>
+                        <MessageBarBody>
+                            {assistantConfig.state === "pending_legal_review"
+                                ? t("components.community_assistants.pending_review_hint")
+                                : t("components.community_assistants.inactive_hint")}
+                        </MessageBarBody>
+                    </MessageBar>
+                </div>
+            );
+        }
+
         if (isLocalAssistant) {
             return (
                 <>
@@ -882,7 +901,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
         return (
             <QuestionInput
                 clearOnSend
-                disabled={isLoading || error !== undefined || strategy instanceof DeletedCommunityAssistantStrategy}
+                disabled={isLoading || error !== undefined || isAssistantUnavailable || strategy instanceof DeletedCommunityAssistantStrategy}
                 draftCacheKey={draftCacheKey}
                 onSend={(question, datas) => {
                     const dataSources = datas
@@ -921,6 +940,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
         isLegacyAssistant,
         isDeletedAssistant,
         isLocalAssistant,
+        isAssistantUnavailable,
         deletedAssistantSnapshot,
         t,
         requestDuplicateAssistant,
@@ -961,10 +981,10 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                                         isDeletedAssistant
                                             ? undefined
                                             : prompt => {
-                                                setLastQuestionValue(prompt);
-                                                setIsLoadingValue(true);
-                                                void callApi(prompt);
-                                            }
+                                                  setLastQuestionValue(prompt);
+                                                  setIsLoadingValue(true);
+                                                  void callApi(prompt);
+                                              }
                                     }
                                 />
                             )}
@@ -1034,7 +1054,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                     onLLMSelectionChange={onLLMSelectionChange}
                     actions={
                         <>
-                            {strategy?.canEdit && !isLegacyAssistant && (
+                            {canEdit && !isLegacyAssistant && (
                                 <Button
                                     appearance="subtle"
                                     icon={<Settings24Regular />}
@@ -1069,7 +1089,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
         assistantConfig.default_model,
         LLM.llm_name,
         onLLMSelectionChange,
-        strategy,
+        canEdit,
         assistantInfoData,
         isAssistantInfoLoading,
         isInfoDrawerOpen
@@ -1078,7 +1098,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
     const isRequestedChatLoading = Boolean(requestedChatId && requestedChatId !== active_chat);
     const showAssistantLoadingState = !isEditMode && (isAssistantContentLoading || isRequestedChatLoading);
 
-    if (isEditMode && (!strategy.canEdit || isLegacyAssistant)) {
+    if (isEditMode && (!canEdit || isLegacyAssistant)) {
         return null;
     }
 
@@ -1103,7 +1123,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
         <AssistantEditorPage
             mode="edit"
             assistant={assistantConfig}
-            isOwner={strategy.canEdit || strategy.isOwned}
+            isOwner={canEdit || strategy.isOwned}
             strategy={strategy}
             onSave={async assistant => {
                 return await onAssistantChanged(assistant);
@@ -1195,7 +1215,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                             clearChat();
                             setIsInfoDrawerOpen(false);
                         }}
-                        onEdit={strategy.canEdit ? () => navigate("edit") : undefined}
+                        onEdit={canEdit ? () => navigate("edit") : undefined}
                         onDuplicate={() => {
                             if (!assistantInfoData) return;
                             requestDuplicateAssistant({

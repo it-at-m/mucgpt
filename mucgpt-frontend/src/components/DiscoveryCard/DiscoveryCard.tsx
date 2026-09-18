@@ -7,6 +7,7 @@ import { MarkdownRenderer } from "../MarkdownRenderer/MarkdownRenderer";
 
 export interface DiscoveryCardBadge {
     label: string;
+    icon?: BadgeProps["icon"];
     className?: string;
     appearance?: BadgeProps["appearance"];
     color?: BadgeProps["color"];
@@ -154,6 +155,7 @@ export const DiscoveryCard = forwardRef<HTMLDivElement, DiscoveryCardProps>((pro
                                         appearance={statusColor ? "tint" : (renderedBadge.appearance ?? badgeAppearance)}
                                         color={statusColor ?? renderedBadge.color ?? badgeColor}
                                         size={renderedBadge.size ?? badgeSize}
+                                        icon={renderedBadge.icon}
                                     >
                                         {renderedBadge.label}
                                     </Badge>

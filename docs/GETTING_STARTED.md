@@ -54,6 +54,10 @@ See `mucgpt-core-service/config.yaml.example` and `mucgpt-assistant-service/conf
 
 ### Prompt Configuration
 
+See the [AI governance and compliance checks guide](AI_GOVERNANCE.md) for the
+end-to-end screening flow, version lifecycle, review queue, and operational
+responsibilities.
+
 The optional `PROMPTS` section maps prompt names used by the core service to prompts stored in [langfuse](https://langfuse.com/docs/prompt-management/overview). Configure each prompt under its Langfuse folder with the label to use; folder and prompt names must match Langfuse exactly. See `mucgpt-core-service/config.yaml.example` for the complete YAML structure.
 
 - `defaults/default_instructions`: general system instructions for regular chat.

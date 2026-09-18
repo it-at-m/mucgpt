@@ -180,3 +180,12 @@ def authenticate_user(
     except Exception as e:
         logger.error("Authentication failed", exc_info=e)
         raise HTTPException(status_code=401, detail="Authentication failed")
+
+
+def require_admin(
+    user_info: AuthenticationResult = Depends(authenticate_user),
+) -> AuthenticationResult:
+    """Require the separately configured administrator role."""
+    if not user_info.is_admin:
+        raise HTTPException(status_code=403, detail="Administrator role required")
+    return user_info

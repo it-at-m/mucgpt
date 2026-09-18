@@ -1,5 +1,5 @@
 import { type ReactElement, useCallback, useContext, useEffect, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Title2, Body1, Text, SearchBox, Dropdown, Button, Tab, TabList } from "@fluentui/react-components";
 import type { SearchBoxChangeEvent, InputOnChangeData, SelectionEvents, OptionOnSelectData, SelectTabData, SelectTabEvent } from "@fluentui/react-components";
 import { Add24Regular, DocumentArrowUpRegular, LibraryRegular, PeopleCommunityRegular, SearchRegular } from "@fluentui/react-icons";
@@ -50,6 +50,7 @@ type SectionEmptyStateProps = {
 const Discovery = () => {
     const { t } = useTranslation();
     const navigate = useNavigate();
+    const [searchParams, setSearchParams] = useSearchParams();
     const appConfig = useContext(ConfigContext);
     const { showError, showSuccess } = useGlobalToastContext();
     const { refreshHistory: refreshUnifiedHistory } = useUnifiedHistory();
@@ -59,6 +60,7 @@ const Discovery = () => {
     const [selectedAssistant, setSelectedAssistant] = useState<AssistantCardData | null>(null);
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
     const [showUnsubscribeConfirm, setShowUnsubscribeConfirm] = useState(false);
+    const assistantToOpenId = searchParams.get("openAssistant");
     const {
         isLoading,
         searchText,
@@ -95,6 +97,14 @@ const Discovery = () => {
         setShowMigrateConfirm: setShowLocalMigrateConfirm,
         performMigration
     } = useMigrateLocalAssistant(assistantStorageService);
+
+    useEffect(() => {
+        if (!assistantToOpenId) return;
+
+        setSearchText("");
+        setMyAssistantFilter("owned");
+        setShowAllMyAssistants(true);
+    }, [assistantToOpenId, setMyAssistantFilter, setSearchText, setShowAllMyAssistants]);
 
     const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const latestRequestRef = useRef(0);
@@ -299,6 +309,18 @@ const Discovery = () => {
             }
         }
     };
+
+    useEffect(() => {
+        if (!assistantToOpenId || isLoading) return;
+
+        const assistant = filteredMyAssistants.find(item => item.id === assistantToOpenId);
+        if (!assistant) return;
+
+        void handleAssistantClick(assistant);
+        const nextSearchParams = new URLSearchParams(searchParams);
+        nextSearchParams.delete("openAssistant");
+        setSearchParams(nextSearchParams, { replace: true });
+    }, [assistantToOpenId, filteredMyAssistants, handleAssistantClick, isLoading, searchParams, setSearchParams]);
 
     const startConversation = () => {
         if (selectedAssistant) {

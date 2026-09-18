@@ -5,6 +5,7 @@ import { StarterPromptModel } from "../../../StarterPrompt";
 import { CREATIVITY_LOW } from "../../../../constants";
 import { ensurePromptIds } from "../promptIds";
 import { STORAGE_KEYS } from "../../../../pages/layout/LayoutHelper";
+import { clearSessionDraft, loadSessionDraft, saveSessionDraft } from "../sessionStorageDraft";
 
 export type CreateView = "mode_select" | "ai_input" | "settings";
 
@@ -24,26 +25,21 @@ interface CreateAssistantDraft {
     defaultModel: string | undefined;
 }
 
-const loadDraft = (): CreateAssistantDraft | null => {
-    try {
-        const stored = sessionStorage.getItem(STORAGE_KEYS.CREATE_ASSISTANT_DRAFT);
-        if (!stored) {
-            return null;
-        }
+interface CreateAssistantStateOptions {
+    enabled: boolean;
+}
 
-        const draft = JSON.parse(stored) as CreateAssistantDraft;
+export const useCreateAssistantState = ({ enabled }: CreateAssistantStateOptions) => {
+    const [initialDraft] = useState<CreateAssistantDraft | null>(() => {
+        const draft = enabled ? loadSessionDraft<CreateAssistantDraft>(STORAGE_KEYS.CREATE_ASSISTANT_DRAFT) : null;
+        if (!draft) return null;
+
         return {
             ...draft,
             followUpActions: Array.isArray(draft.followUpActions) ? draft.followUpActions : [],
             starterPrompts: Array.isArray(draft.starterPrompts) ? draft.starterPrompts : []
         };
-    } catch {
-        return null;
-    }
-};
-
-export const useCreateAssistantState = () => {
-    const [initialDraft] = useState<CreateAssistantDraft | null>(() => loadDraft());
+    });
 
     // All state variables
     const [view, setView] = useState<CreateView>(() => initialDraft?.view ?? "mode_select");
@@ -80,31 +76,30 @@ export const useCreateAssistantState = () => {
     // Persist the in-progress draft so it survives a page refresh, and drop it once the flow is back at its
     // starting point (nothing left worth restoring).
     useEffect(() => {
-        try {
-            if (hasChanges || view !== "mode_select") {
-                const draft: CreateAssistantDraft = {
-                    view,
-                    input,
-                    title,
-                    description,
-                    systemPrompt,
-                    selectedTemplate,
-                    tools,
-                    followUpActions,
-                    starterPrompts,
-                    hierarchicalAccess,
-                    isVisible,
-                    creativity,
-                    defaultModel
-                };
-                sessionStorage.setItem(STORAGE_KEYS.CREATE_ASSISTANT_DRAFT, JSON.stringify(draft));
-            } else {
-                sessionStorage.removeItem(STORAGE_KEYS.CREATE_ASSISTANT_DRAFT);
-            }
-        } catch {
-            // Ignore sessionStorage errors and continue without draft persistence.
+        if (!enabled) return;
+
+        if (hasChanges || view !== "mode_select") {
+            const draft: CreateAssistantDraft = {
+                view,
+                input,
+                title,
+                description,
+                systemPrompt,
+                selectedTemplate,
+                tools,
+                followUpActions,
+                starterPrompts,
+                hierarchicalAccess,
+                isVisible,
+                creativity,
+                defaultModel
+            };
+            saveSessionDraft(STORAGE_KEYS.CREATE_ASSISTANT_DRAFT, draft);
+        } else {
+            clearSessionDraft(STORAGE_KEYS.CREATE_ASSISTANT_DRAFT);
         }
     }, [
+        enabled,
         view,
         input,
         title,
@@ -205,12 +200,8 @@ export const useCreateAssistantState = () => {
         setIsVisible(false);
         setCreativity(CREATIVITY_LOW);
         setDefaultModel(undefined);
-        try {
-            sessionStorage.removeItem(STORAGE_KEYS.CREATE_ASSISTANT_DRAFT);
-        } catch {
-            // Ignore sessionStorage errors.
-        }
-    }, []);
+        if (enabled) clearSessionDraft(STORAGE_KEYS.CREATE_ASSISTANT_DRAFT);
+    }, [enabled]);
 
     return {
         // State

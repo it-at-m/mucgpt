@@ -1,9 +1,15 @@
 // mocks/handlers.js
 import { http, HttpResponse, delay, passthrough } from "msw";
-import { ApplicationConfig, AssistantCreateResponse, AssistantUpdateInput, ComplianceCategoryResult, ComplianceCheckResponse } from "../api";
+import {
+    ApplicationConfig,
+    AssistantCreateInput,
+    AssistantCreateResponse,
+    AssistantUpdateInput,
+    ComplianceCategoryResult,
+    ComplianceCheckResponse
+} from "../api";
 import {
     buildAssistantCreateResponse,
-    buildAssistantList,
     buildOwnersDetailedFromOwnerIds,
     buildChatMessage,
     generateChatStreamChunks,
@@ -11,6 +17,8 @@ import {
     generateSimplifyStreamChunks
 } from "./data/generators";
 import { CREATIVITY_HIGH } from "../constants";
+import { loadMockAssistants, loadMockSubscriptions, saveMockAssistants, saveMockSubscriptions } from "./data/assistant-store";
+import { MOCK_DELETED_SUBSCRIBED_SNAPSHOT, MOCK_SUBSCRIPTION_SEED } from "./data/browser-scenario-seed";
 
 const DIRECTORY_TREE = [
     {
@@ -140,7 +148,26 @@ const CONFIG_RESPONSE: ApplicationConfig = {
     owner_profile_url_template: "https://intranet.muenchen.de/person/{uid}"
 };
 
-const DYNAMIC_ASSISTANTS: AssistantCreateResponse[] = buildAssistantList(6);
+const MOCK_SEED_TIMESTAMP = "2026-01-01T09:00:00.000Z";
+const MOCK_CURRENT_OWNER_ID = "user-mock-123";
+const MOCK_ASSISTANT_SEED: AssistantCreateResponse[] = [];
+
+function buildSeedAssistant(overrides: Partial<AssistantCreateResponse>): AssistantCreateResponse {
+    const assistant = buildAssistantCreateResponse(overrides);
+
+    return {
+        ...assistant,
+        created_at: MOCK_SEED_TIMESTAMP,
+        updated_at: MOCK_SEED_TIMESTAMP,
+        hierarchical_access: assistant.latest_version.hierarchical_access,
+        owner_ids: assistant.latest_version.owner_ids,
+        owners_detailed: assistant.latest_version.owners_detailed,
+        latest_version: {
+            ...assistant.latest_version,
+            created_at: MOCK_SEED_TIMESTAMP
+        }
+    };
+}
 
 const MOCK_SUBSCRIPTION_COUNTS = [10350, 2500, 1400, 980, 620, 410, 275, 190, 135, 88, 42, 17];
 
@@ -161,8 +188,8 @@ function withMockSubscriptionCount(assistant: AssistantCreateResponse) {
 }
 
 // Add a specific assistant with a default model
-DYNAMIC_ASSISTANTS.push(
-    buildAssistantCreateResponse({
+MOCK_ASSISTANT_SEED.push(
+    buildSeedAssistant({
         id: "assistant-with-default-model",
         latest_version: {
             id: "version-default-model-1",
@@ -174,7 +201,7 @@ DYNAMIC_ASSISTANTS.push(
             hierarchical_access: ["RIT-AI", "ITM-KM-DI"],
             creativity: "low",
             default_model: "KIESGPT",
-            is_visible: true,
+            is_visible: false,
             tools: [
                 { id: "Brainstorming", config: { enabled: true } },
                 { id: "Vereinfachen", config: { enabled: false } }
@@ -190,14 +217,14 @@ DYNAMIC_ASSISTANTS.push(
                 { label: "Research Topic", prompt: "Please research this topic in detail:" },
                 { label: "Summarize Paper", prompt: "Summarize this research paper:" }
             ],
-            tags: ["research", "academic", "kiesgpt"]
+            tags: []
         }
     })
 );
 
 // Add an assistant with a deprecated/unavailable default model
-DYNAMIC_ASSISTANTS.push(
-    buildAssistantCreateResponse({
+MOCK_ASSISTANT_SEED.push(
+    buildSeedAssistant({
         id: "assistant-with-deprecated-model",
         latest_version: {
             id: "version-deprecated-model-1",
@@ -225,20 +252,20 @@ DYNAMIC_ASSISTANTS.push(
                 { label: "Summarize", prompt: "Please summarize this document:" },
                 { label: "Key Points", prompt: "Extract the key points from this text:" }
             ],
-            tags: ["documents", "legacy", "deprecated"]
+            tags: []
         }
     })
 );
 
 // Add assistants with longer names, descriptions, and system prompts
-DYNAMIC_ASSISTANTS.push(
-    buildAssistantCreateResponse({
+MOCK_ASSISTANT_SEED.push(
+    buildSeedAssistant({
         id: "assistant-email-composer",
         latest_version: {
             id: "v-email-1",
             version: 1,
             created_at: new Date().toISOString(),
-            name: "Professional E-Mail Drafting Assistant",
+            name: "Kommunikationsassistent für verständliche, freundliche und rechtssichere interne E-Mail-Entwürfe",
             description:
                 "This assistant helps you compose clear, professional e-mails for a variety of workplace scenarios. Whether you need to write a follow-up to a meeting, respond to a client inquiry, or draft an internal announcement, it adapts tone and structure to your audience. It also suggests subject lines and can rewrite existing drafts to improve clarity and politeness.",
             system_prompt:
@@ -250,7 +277,7 @@ DYNAMIC_ASSISTANTS.push(
                 { id: "Brainstorming", config: { enabled: false } },
                 { id: "Vereinfachen", config: { enabled: true } }
             ],
-            owner_ids: ["user-mock-001"],
+            owner_ids: [MOCK_CURRENT_OWNER_ID],
             examples: [
                 {
                     text: "Draft a follow-up e-mail after a project kickoff meeting",
@@ -265,14 +292,14 @@ DYNAMIC_ASSISTANTS.push(
                 { label: "Follow-up", prompt: "Draft a follow-up e-mail for a meeting that took place yesterday." },
                 { label: "Apology", prompt: "Write a professional apology e-mail for a delayed response." }
             ],
-            tags: ["e-mail", "communication", "writing"]
+            tags: []
         }
     })
 );
 
-DYNAMIC_ASSISTANTS.push(
-    buildAssistantCreateResponse({
-        id: "assistant-meeting-minutes",
+MOCK_ASSISTANT_SEED.push(
+    buildSeedAssistant({
+        id: "foreign-subscribed-active",
         latest_version: {
             id: "v-meeting-1",
             version: 2,
@@ -295,13 +322,13 @@ DYNAMIC_ASSISTANTS.push(
                 { label: "Format Notes", prompt: "Please format the following rough meeting notes into structured minutes:" },
                 { label: "Extract Actions", prompt: "Extract all action items from the following meeting transcript:" }
             ],
-            tags: ["meetings", "productivity", "documentation"]
+            tags: []
         }
     })
 );
 
-DYNAMIC_ASSISTANTS.push(
-    buildAssistantCreateResponse({
+MOCK_ASSISTANT_SEED.push(
+    buildSeedAssistant({
         id: "assistant-policy-explainer",
         latest_version: {
             id: "v-policy-1",
@@ -331,13 +358,13 @@ DYNAMIC_ASSISTANTS.push(
                 { label: "Summarize Policy", prompt: "Summarize the following policy document in plain language:" },
                 { label: "Compare Versions", prompt: "Compare these two versions of the regulation and highlight what changed:" }
             ],
-            tags: ["policy", "legal", "compliance", "onboarding"]
+            tags: []
         }
     })
 );
 
-DYNAMIC_ASSISTANTS.push(
-    buildAssistantCreateResponse({
+MOCK_ASSISTANT_SEED.push(
+    buildSeedAssistant({
         id: "assistant-markdown-playground",
         latest_version: {
             id: "v-markdown-1",
@@ -375,10 +402,112 @@ You are a **structured assistant**.
                 { id: "Vereinfachen", config: { enabled: false } }
             ],
             owner_ids: ["user-mock-777"],
-            tags: ["markdown", "demo", "discovery"]
+            tags: []
         }
     })
 );
+
+type UnsubscribedAssistantScenario = {
+    id: string;
+    name: string;
+    description: string;
+    ownerId: string;
+};
+
+const buildUnsubscribedAssistant = ({ id, name, description, ownerId }: UnsubscribedAssistantScenario): AssistantCreateResponse => {
+    const assistant = buildSeedAssistant({});
+    const ownerIds = [ownerId];
+    const ownersDetailed = buildOwnersDetailedFromOwnerIds(ownerIds);
+
+    return {
+        ...assistant,
+        id,
+        hierarchical_access: ["ITM"],
+        owner_ids: ownerIds,
+        owners_detailed: ownersDetailed,
+        latest_version: {
+            ...assistant.latest_version,
+            id: `version-${id}`,
+            created_at: MOCK_SEED_TIMESTAMP,
+            name,
+            description,
+            system_prompt: `Du bist ${name}. Unterstütze Mitarbeitende bei wiederkehrenden Aufgaben klar, strukturiert und nachvollziehbar.`,
+            hierarchical_access: ["ITM"],
+            creativity: CREATIVITY_HIGH,
+            default_model: undefined,
+            is_visible: true,
+            tools: [],
+            owner_ids: ownerIds,
+            owners_detailed: ownersDetailed,
+            examples: [],
+            quick_prompts: [],
+            tags: [],
+            compliance_confirmation: false
+        }
+    };
+};
+
+const UNSUBSCRIBED_ASSISTANT_SCENARIOS: UnsubscribedAssistantScenario[] = [
+    {
+        id: "foreign-unsubscribed-protocol",
+        name: "Protokoll-Assistent",
+        description: "Strukturiert Besprechungsnotizen und bereitet Entscheidungen sowie offene Punkte auf.",
+        ownerId: "user-mock-001"
+    },
+    {
+        id: "foreign-unsubscribed-plain-language",
+        name: "Leichte-Sprache-Prüfung",
+        description: "Überarbeitet Texte für eine verständliche und zugängliche Kommunikation.",
+        ownerId: "user-mock-002"
+    },
+    {
+        id: "foreign-unsubscribed-project-update",
+        name: "Projektstatus-Update",
+        description: "Erstellt kompakte Statusberichte für Projekte und Vorhaben.",
+        ownerId: "user-mock-003"
+    },
+    {
+        id: "foreign-unsubscribed-citizen-letter",
+        name: "Bürgeranschreiben",
+        description: "Entwirft klare und wertschätzende Schreiben für Bürgerinnen und Bürger.",
+        ownerId: "user-mock-456"
+    },
+    {
+        id: "foreign-unsubscribed-research",
+        name: "Recherche-Notizen",
+        description: "Fasst Rechercheergebnisse zusammen und trennt Fakten von offenen Fragen.",
+        ownerId: "user-mock-777"
+    },
+    {
+        id: "foreign-unsubscribed-agenda",
+        name: "Agenda-Planer",
+        description: "Bereitet nachvollziehbare Tagesordnungen für Workshops und Sitzungen vor.",
+        ownerId: "user-mock-001"
+    },
+    {
+        id: "foreign-unsubscribed-data-protection",
+        name: "Datenschutz-Checkliste",
+        description: "Hilft beim Formulieren einer ersten Checkliste für datenschutzrelevante Vorhaben.",
+        ownerId: "user-mock-002"
+    },
+    {
+        id: "foreign-unsubscribed-event",
+        name: "Veranstaltungsankündigung",
+        description: "Formuliert Einladungen, Ablaufhinweise und Nachfasskommunikation für Veranstaltungen.",
+        ownerId: "user-mock-003"
+    },
+    {
+        id: "foreign-unsubscribed-onboarding",
+        name: "Onboarding-Begleitung",
+        description: "Erstellt verständliche Einstiegsinformationen für neue Kolleginnen und Kollegen.",
+        ownerId: "user-mock-456"
+    }
+];
+
+MOCK_ASSISTANT_SEED.push(...UNSUBSCRIBED_ASSISTANT_SCENARIOS.map(buildUnsubscribedAssistant));
+
+const DYNAMIC_ASSISTANTS = loadMockAssistants(MOCK_ASSISTANT_SEED);
+const MOCK_SUBSCRIPTIONS = new Set(loadMockSubscriptions(MOCK_SUBSCRIPTION_SEED));
 
 // Helper to choose stream type basierend auf enabled_tools
 function chooseStreamType(enabledTools?: string[]) {
@@ -916,6 +1045,43 @@ export const handlers = [
         return HttpResponse.json(withMockSubscriptionCount(a));
     }),
 
+    http.post("/api/assistant/create", async ({ request }) => {
+        await delay(300);
+        const body = (await request.json()) as AssistantCreateInput;
+        const now = new Date().toISOString();
+        const ownerIds = body.owner_ids?.length ? body.owner_ids : [MOCK_CURRENT_OWNER_ID];
+        const ownersDetailed = buildOwnersDetailedFromOwnerIds(ownerIds);
+        const created = buildAssistantCreateResponse();
+
+        created.created_at = now;
+        created.updated_at = now;
+        created.owner_ids = ownerIds;
+        created.owners_detailed = ownersDetailed;
+        created.latest_version = {
+            ...created.latest_version,
+            created_at: now,
+            name: body.name,
+            description: body.description,
+            system_prompt: body.system_prompt,
+            hierarchical_access: body.hierarchical_access,
+            creativity: body.creativity ?? created.latest_version.creativity,
+            default_model: body.default_model,
+            tools: body.tools ?? [],
+            owner_ids: ownerIds,
+            owners_detailed: ownersDetailed,
+            examples: body.examples ?? [],
+            quick_prompts: body.quick_prompts ?? [],
+            tags: [],
+            is_visible: body.is_visible,
+            compliance_check_result: body.compliance_check_result,
+            compliance_confirmation: body.compliance_confirmation ?? false
+        };
+
+        DYNAMIC_ASSISTANTS.push(created);
+        saveMockAssistants(DYNAMIC_ASSISTANTS);
+        return HttpResponse.json(withMockSubscriptionCount(created));
+    }),
+
     http.post("/api/assistant/:id/update", async ({ params, request }) => {
         await delay(300);
         const body = (await request.json()) as AssistantUpdateInput;
@@ -944,12 +1110,15 @@ export const handlers = [
                 owners_detailed: updatedOwnersDetailed,
                 examples: body.examples || current.latest_version.examples,
                 quick_prompts: body.quick_prompts || current.latest_version.quick_prompts,
-                tags: body.tags || current.latest_version.tags,
+                tags: [],
+                is_visible: body.is_visible,
+                compliance_check_result: body.compliance_check_result,
                 compliance_confirmation: body.compliance_confirmation ?? current.latest_version.compliance_confirmation ?? false,
                 created_at: new Date().toISOString()
             }
         };
         DYNAMIC_ASSISTANTS[idx] = updated;
+        saveMockAssistants(DYNAMIC_ASSISTANTS);
         return HttpResponse.json(updated);
     }),
 
@@ -958,6 +1127,7 @@ export const handlers = [
         const idx = DYNAMIC_ASSISTANTS.findIndex(a => a.id === params.id);
         if (idx === -1) return new HttpResponse(null, { status: 404 });
         DYNAMIC_ASSISTANTS.splice(idx, 1);
+        saveMockAssistants(DYNAMIC_ASSISTANTS);
         return HttpResponse.json({ message: "Assistant deleted successfully" });
     }),
 
@@ -968,7 +1138,7 @@ export const handlers = [
     }),
 
     http.get("/api/user/assistants", () => {
-        return HttpResponse.json(DYNAMIC_ASSISTANTS.slice(0, 3).map(withMockSubscriptionCount));
+        return HttpResponse.json(DYNAMIC_ASSISTANTS.filter(assistant => assistant.owner_ids?.includes(MOCK_CURRENT_OWNER_ID)).map(withMockSubscriptionCount));
     }),
 
     http.get("/api/sso/userinfo", () => {
@@ -987,14 +1157,34 @@ export const handlers = [
 
     http.get("/api/user/subscriptions", async () => {
         await delay(300);
-        // Return a subset of assistants as subscriptions with simplified information
-        // as defined in the SubscriptionResponse model
-        const subscriptions = DYNAMIC_ASSISTANTS.slice(0, 2).map(assistant => ({
-            id: assistant.id,
-            title: assistant.latest_version.name,
-            description: assistant.latest_version.description,
-            subscriptions_count: getMockSubscriptionCount(assistant.id)
-        }));
+        const subscriptions = [...MOCK_SUBSCRIPTIONS]
+            .map(assistantId => {
+                const assistant = DYNAMIC_ASSISTANTS.find(item => item.id === assistantId);
+                if (assistant) {
+                    return {
+                        id: assistant.id,
+                        title: assistant.latest_version.name,
+                        description: assistant.latest_version.description,
+                        subscriptions_count: getMockSubscriptionCount(assistant.id),
+                        is_visible: assistant.latest_version.is_visible,
+                        owners_detailed: assistant.owners_detailed
+                    };
+                }
+
+                if (assistantId === MOCK_DELETED_SUBSCRIBED_SNAPSHOT.id) {
+                    return {
+                        id: MOCK_DELETED_SUBSCRIBED_SNAPSHOT.id,
+                        title: MOCK_DELETED_SUBSCRIBED_SNAPSHOT.title,
+                        description: MOCK_DELETED_SUBSCRIBED_SNAPSHOT.description,
+                        subscriptions_count: 0,
+                        is_visible: MOCK_DELETED_SUBSCRIBED_SNAPSHOT.is_visible,
+                        is_deleted: true
+                    };
+                }
+
+                return undefined;
+            })
+            .filter(subscription => subscription !== undefined);
         return HttpResponse.json(subscriptions);
     }),
 
@@ -1004,14 +1194,25 @@ export const handlers = [
         if (!assistant) {
             return new HttpResponse(null, { status: 404 });
         }
-        // In a real implementation, this would add the subscription to a database
-        // For the mock, we just return success
+        MOCK_SUBSCRIPTIONS.add(assistant.id);
+        saveMockSubscriptions(MOCK_SUBSCRIPTIONS);
         return HttpResponse.json({
             id: assistant.id,
             title: assistant.latest_version.name,
             description: assistant.latest_version.description,
             subscriptions_count: getMockSubscriptionCount(assistant.id)
         });
+    }),
+
+    http.delete("/api/user/subscriptions/:assistantId", async ({ params }) => {
+        await delay(300);
+        if (typeof params.assistantId !== "string" || !MOCK_SUBSCRIPTIONS.has(params.assistantId)) {
+            return new HttpResponse(null, { status: 404 });
+        }
+
+        MOCK_SUBSCRIPTIONS.delete(params.assistantId);
+        saveMockSubscriptions(MOCK_SUBSCRIPTIONS);
+        return HttpResponse.json({ message: "Subscription removed successfully" });
     }),
 
     http.post("/api/backend/v1/compliance/check", async ({ request }) => {

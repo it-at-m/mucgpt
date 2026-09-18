@@ -99,6 +99,13 @@
     background-color: var(--colorNeutralBackground2) !important;
 }
 
+.sortDropdownValue {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
 .librarySections {
     display: flex;
     flex-direction: column;
@@ -257,12 +264,6 @@
         max-width: none;
     }
 
-    .sortDropdown span {
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-    }
-
     .assistantsGrid {
         grid-template-columns: 1fr;
     }
@@ -322,12 +323,6 @@
         min-width: 0 !important;
         width: 100%;
         max-width: 100%;
-    }
-
-    .flexContainer[data-drawer-open="true"] .sortDropdown span {
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
     }
 
     .flexContainer[data-drawer-open="true"] .headerSection {

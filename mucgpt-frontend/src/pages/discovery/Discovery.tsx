@@ -572,7 +572,8 @@ const Discovery = () => {
                                                 value={selectedMyAssistantsSortLabel}
                                                 selectedOptions={[myAssistantsSortMethod]}
                                                 appearance="filled-lighter"
-                                                className={styles.sortDropdown}
+                                                root={{ className: styles.sortDropdown }}
+                                                button={{ children: <span className={styles.sortDropdownValue}>{selectedMyAssistantsSortLabel}</span> }}
                                                 onOptionSelect={handleMyAssistantsSortChange}
                                                 aria-label={t("components.community_assistants.sort_by", "Sortieren nach")}
                                             >
@@ -625,7 +626,8 @@ const Discovery = () => {
                                             value={selectedCommunitySortLabel}
                                             selectedOptions={[communitySortMethod]}
                                             appearance="filled-lighter"
-                                            className={styles.sortDropdown}
+                                            root={{ className: styles.sortDropdown }}
+                                            button={{ children: <span className={styles.sortDropdownValue}>{selectedCommunitySortLabel}</span> }}
                                             onOptionSelect={handleCommunitySortChange}
                                             aria-label={t("components.community_assistants.sort_by", "Sortieren nach")}
                                         >

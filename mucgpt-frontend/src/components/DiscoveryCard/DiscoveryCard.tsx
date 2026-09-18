@@ -1,6 +1,6 @@
 import React, { forwardRef, ReactNode } from "react";
 import { Link } from "react-router-dom";
-import { Badge, Card, CardFooter, mergeClasses, CardProps, BadgeProps, Text } from "@fluentui/react-components";
+import { Badge, Card, CardFooter, mergeClasses, CardProps, BadgeProps, Text, tokens } from "@fluentui/react-components";
 import { LockClosed16Regular, People16Regular, Person16Regular } from "@fluentui/react-icons";
 import styles from "./DiscoveryCard.module.css";
 import { MarkdownRenderer } from "../MarkdownRenderer/MarkdownRenderer";
@@ -14,7 +14,7 @@ export interface DiscoveryCardBadge {
     tone?: "neutral" | "success" | "warning" | "danger";
 }
 
-interface DiscoveryCardBaseProps extends Omit<CardProps, "onClick"> {
+interface DiscoveryCardBaseProps extends Omit<CardProps, "onClick" | "appearance"> {
     id?: string;
     title?: string;
     description?: string;
@@ -76,6 +76,7 @@ export const DiscoveryCard = forwardRef<HTMLDivElement, DiscoveryCardProps>((pro
         badgeColor = "danger",
         badgeSize = "small",
         className,
+        style,
         titleClassName,
         isSelected,
         metadataStartLabel,
@@ -123,7 +124,7 @@ export const DiscoveryCard = forwardRef<HTMLDivElement, DiscoveryCardProps>((pro
             badges && badges.length > 0
                 ? badges
                 : badge
-                    ? [
+                  ? [
                         {
                             label: badge,
                             className: badgeClassName,
@@ -132,7 +133,7 @@ export const DiscoveryCard = forwardRef<HTMLDivElement, DiscoveryCardProps>((pro
                             size: badgeSize
                         }
                     ]
-                    : [];
+                  : [];
 
         if (title) {
             return (
@@ -200,7 +201,16 @@ export const DiscoveryCard = forwardRef<HTMLDivElement, DiscoveryCardProps>((pro
     };
 
     return (
-        <Card id={id} ref={ref} size="large" className={mergeClasses(styles.card, isSelected && styles.cardSelected, className)} {...rest}>
+        <Card
+            id={id}
+            ref={ref}
+            size="large"
+            appearance="subtle"
+            data-selected={isSelected || undefined}
+            className={mergeClasses(styles.card, className)}
+            style={{ backgroundColor: tokens.colorNeutralCardBackground, ...style }}
+            {...rest}
+        >
             {renderHeader()}
             {description && (
                 <div className={styles.description}>

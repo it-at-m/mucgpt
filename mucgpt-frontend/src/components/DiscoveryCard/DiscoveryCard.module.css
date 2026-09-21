@@ -8,7 +8,6 @@
         transform 0.18s cubic-bezier(0.33, 1, 0.68, 1),
         border-color 0.16s ease,
         box-shadow 0.16s ease;
-    background-color: var(--colorNeutralBackground3) !important;
     color: var(--colorNeutralForeground1);
     box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05) !important;
 }

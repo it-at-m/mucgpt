@@ -45,7 +45,7 @@
     flex: 1;
     min-height: 100vh;
     flex-direction: column;
-    background: var(--colorNeutralBackground1);
+    background: var(--colorNeutralBackground3);
 }
 
 .loadingHeader {

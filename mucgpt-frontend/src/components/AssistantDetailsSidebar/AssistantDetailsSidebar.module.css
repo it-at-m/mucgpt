@@ -26,18 +26,18 @@
 
 .sidebarTitle {
     width: 100%;
-    margin: 14px 0 6px;
+    margin: 10px 0 6px;
     font-weight: 700;
-    text-align: center;
-    font-size: 22px;
-    line-height: 1.25;
+    color: var(--colorNeutralForeground1);
+    font-size: 20px;
+    line-height: 1.3;
     overflow-wrap: anywhere;
 }
 
 .assistantMetadata {
     display: flex;
     align-items: center;
-    justify-content: center;
+    justify-content: flex-start;
     flex-wrap: wrap;
     gap: 5px;
     min-height: 20px;
@@ -81,6 +81,11 @@
     white-space: nowrap;
 }
 
+.reviewBadge {
+    flex: 0 0 auto;
+    font-size: var(--fontSizeBase100) !important;
+}
+
 .startButtonRow {
     display: flex;
     align-items: stretch;
@@ -109,6 +114,18 @@
     padding: 16px;
     border-radius: 12px;
     border: 1px solid var(--colorStatusWarningBorder1);
+    background: var(--colorStatusWarningBackground1);
+    color: var(--colorStatusWarningForeground1);
+}
+
+.pendingReviewCallout {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 24px;
+    padding: 16px;
+    border: 1px solid var(--colorStatusWarningBorder1);
+    border-radius: var(--borderRadiusLarge);
     background: var(--colorStatusWarningBackground1);
     color: var(--colorStatusWarningForeground1);
 }

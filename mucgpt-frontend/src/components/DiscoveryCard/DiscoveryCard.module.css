@@ -101,13 +101,8 @@
 }
 
 .headerBadge {
-    max-width: 100%;
-    min-width: 0;
     min-height: 20px;
     align-self: flex-start;
-    padding: var(--spacingVerticalXXS) var(--spacingHorizontalSNudge) !important;
-    font-size: var(--fontSizeBase100) !important;
-    font-weight: var(--fontWeightRegular) !important;
 }
 
 /* Fluent has no neutral badge color that matches this palette. */

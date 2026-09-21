@@ -23,7 +23,7 @@ export const MOCK_DELETED_SUBSCRIBED_SNAPSHOT: CommunityAssistantSnapshot = {
     examples: [{ text: "Welche Angaben brauche ich?", value: "Ich zeige dir die üblichen Angaben für einen Reiseantrag." }],
     quick_prompts: [{ label: "Antrag vorbereiten", prompt: "Welche Angaben brauche ich für meinen Reiseantrag?" }],
     tags: [],
-    hierarchical_access: ["POR"],
+    hierarchical_access: ["TEAM-C"],
     tools: [],
     is_visible: true
 };
@@ -41,7 +41,7 @@ const MOCK_LOCAL_ASSISTANTS: Array<{ id: string; assistant: Assistant }> = [
             version: "1",
             owner_ids: ["user-mock-123"],
             tags: [],
-            hierarchical_access: ["ITM"],
+            hierarchical_access: ["TEAM-A"],
             tools: [{ id: "Vereinfachen", config: { enabled: true } }],
             examples: [],
             quick_prompts: [{ label: "Text vereinfachen", prompt: "Vereinfache diesen Text:" }],

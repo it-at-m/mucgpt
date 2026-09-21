@@ -422,7 +422,7 @@ const buildUnsubscribedAssistant = ({ id, name, description, ownerId }: Unsubscr
     return {
         ...assistant,
         id,
-        hierarchical_access: ["ITM"],
+        hierarchical_access: ["TEAM-A"],
         owner_ids: ownerIds,
         owners_detailed: ownersDetailed,
         latest_version: {
@@ -432,7 +432,7 @@ const buildUnsubscribedAssistant = ({ id, name, description, ownerId }: Unsubscr
             name,
             description,
             system_prompt: `Du bist ${name}. Unterstütze Mitarbeitende bei wiederkehrenden Aufgaben klar, strukturiert und nachvollziehbar.`,
-            hierarchical_access: ["ITM"],
+            hierarchical_access: ["TEAM-A"],
             creativity: CREATIVITY_HIGH,
             default_model: undefined,
             is_visible: true,

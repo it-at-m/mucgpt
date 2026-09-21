@@ -27,7 +27,9 @@ COMPLIANCE_REQUIRE_VERIFICATION: false
 
 # SSO Settings (Keycloak)
 # Used by both core and assistant services for authentication
-# ROLE: "lhm-ab-mucgpt-user" is default
+SSO:
+  ROLE: "lhm-ab-mucgpt-user"
+  ADMIN_ROLE: "lhm-ab-mucgpt-admin"
 
 # Redis Settings (Valkey in docker-compose)
 # Used by both core and assistant services for caching

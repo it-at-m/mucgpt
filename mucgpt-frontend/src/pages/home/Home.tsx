@@ -20,6 +20,7 @@ import { useToolsContext } from "../../components/ToolsProvider";
 import { ConfigContext } from "../../context/ConfigContext";
 import { UploadedData } from "../../components/ContextManagerDialog/ContextManagerDialog";
 import { STORAGE_KEYS } from "../layout/LayoutHelper";
+import { getAssistantBadges, isAssistantPrivate } from "../../utils/assistantCardDisplay";
 
 interface HomeAssistant {
     id: string;
@@ -29,6 +30,9 @@ interface HomeAssistant {
     linkTo: string;
     metadataOwner?: OwnerDetailsResponse;
     metadataFallbackLabel?: string;
+    rawData: AssistantResponse;
+    isOwnedAssistant?: boolean;
+    subscriberCount: number;
 }
 
 type HomeMode = "recommended" | "recent";
@@ -160,7 +164,10 @@ const Home = () => {
                             lastUsed,
                             linkTo: `/owned/communityassistant/${assistantId}`,
                             metadataOwner: getPrimaryOwnerDetails(own),
-                            metadataFallbackLabel: t("components.community_assistants.metadata_you", "Du")
+                            metadataFallbackLabel: t("components.community_assistants.metadata_you", "Du"),
+                            rawData: own,
+                            isOwnedAssistant: true,
+                            subscriberCount: own.subscriptions_count || 0
                         });
                         continue;
                     }
@@ -178,7 +185,9 @@ const Home = () => {
                             lastUsed,
                             linkTo: `/communityassistant/${assistantId}`,
                             metadataOwner: getPrimaryOwnerDetails(community),
-                            metadataFallbackLabel: t("components.community_assistants.filter_all", "Community")
+                            metadataFallbackLabel: t("components.community_assistants.filter_all", "Community"),
+                            rawData: community,
+                            subscriberCount: community.subscriptions_count || 0
                         });
                     }
                 }
@@ -201,7 +210,9 @@ const Home = () => {
                         lastUsed: 0,
                         linkTo: `/communityassistant/${a.id}`,
                         metadataOwner: getPrimaryOwnerDetails(a),
-                        metadataFallbackLabel: t("components.community_assistants.filter_all", "Community")
+                        metadataFallbackLabel: t("components.community_assistants.filter_all", "Community"),
+                        rawData: a,
+                        subscriberCount: a.subscriptions_count || 0
                     }));
                 if (!mounted) {
                     return;
@@ -353,7 +364,11 @@ const Home = () => {
                                     id={assistant.id}
                                     title={assistant.title}
                                     description={assistant.description}
+                                    badges={getAssistantBadges(assistant, t, config?.ai_act_compliance_check_enabled)}
                                     metadataStartNode={<OwnerMetadataLink owner={assistant.metadataOwner} fallbackLabel={assistant.metadataFallbackLabel} />}
+                                    subscriberCount={assistant.subscriberCount}
+                                    isPrivate={isAssistantPrivate(assistant)}
+                                    privateLabel={t("components.community_assistants.private_label", "Privat")}
                                     linkTo={assistant.linkTo}
                                     role="listitem"
                                 />
@@ -363,11 +378,7 @@ const Home = () => {
                                 title={t("home.discover_all")}
                                 description={t("home.discover_all_description")}
                                 linkTo="/discovery"
-                                badge={t("home.explore_badge")}
-                                badgeClassName={styles.exploreBadge}
-                                badgeAppearance="tint"
-                                badgeColor="brand"
-                                badgeSize="large"
+                                badges={[{ label: t("home.explore_badge"), tone: "brand" }]}
                                 role="listitem"
                             />
                         </div>

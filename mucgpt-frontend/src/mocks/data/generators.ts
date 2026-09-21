@@ -10,7 +10,6 @@ const MOCK_OWNER_DIRECTORY: Record<string, OwnerDetailsResponse> = {
     "111160470": {
         user_id: "111160470",
         username: "Michael Jaumann",
-        contact_address: "michael.jaumann@muenchen.de",
         givenName: "Michael",
         sn: "Jaumann",
         mail: "michael.jaumann@muenchen.de",
@@ -19,7 +18,6 @@ const MOCK_OWNER_DIRECTORY: Record<string, OwnerDetailsResponse> = {
     "user-mock-001": {
         user_id: "user-mock-001",
         username: "Mia Sommer",
-        contact_address: "mia.sommer@muenchen.de",
         givenName: "Mia",
         sn: "Sommer",
         mail: "mia.sommer@muenchen.de",
@@ -28,7 +26,6 @@ const MOCK_OWNER_DIRECTORY: Record<string, OwnerDetailsResponse> = {
     "user-mock-002": {
         user_id: "user-mock-002",
         username: "Lukas Winter",
-        contact_address: "lukas.winter@muenchen.de",
         givenName: "Lukas",
         sn: "Winter",
         mail: "lukas.winter@muenchen.de",
@@ -37,7 +34,6 @@ const MOCK_OWNER_DIRECTORY: Record<string, OwnerDetailsResponse> = {
     "user-mock-003": {
         user_id: "user-mock-003",
         username: "Sara Neumann",
-        contact_address: "sara.neumann@muenchen.de",
         givenName: "Sara",
         sn: "Neumann",
         mail: "sara.neumann@muenchen.de",
@@ -46,7 +42,6 @@ const MOCK_OWNER_DIRECTORY: Record<string, OwnerDetailsResponse> = {
     "user-mock-123": {
         user_id: "user-mock-123",
         username: "Max Mustermann",
-        contact_address: "max.mustermann@muenchen.de",
         givenName: "Max",
         sn: "Mustermann",
         mail: "max.mustermann@muenchen.de",
@@ -169,6 +164,42 @@ export function buildChatMessage() {
         "Boot sequence complete. Jokes module: experimental. Ask away!"
     ];
     return randomOf(messages);
+}
+
+/** Complete draw.io fence — happy-path E2E (trigger: `valid-drawio`). */
+export function buildDrawioChatMessage() {
+    return [
+        "Hier ist ein Beispiel-Flowchart als draw.io-Diagramm (Mock):",
+        "",
+        "```drawio",
+        '<mxGraphModel><root><mxCell id="0"/><mxCell id="1" parent="0"/><mxCell id="2" value="Start" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1"><mxGeometry x="120" y="40" width="120" height="40" as="geometry"/></mxCell><mxCell id="3" value="Decision?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1"><mxGeometry x="120" y="120" width="120" height="80" as="geometry"/></mxCell><mxCell id="4" value="Yes" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1"><mxGeometry x="40" y="240" width="100" height="40" as="geometry"/></mxCell><mxCell id="5" value="No" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1"><mxGeometry x="220" y="240" width="100" height="40" as="geometry"/></mxCell><mxCell id="6" edge="1" parent="1" source="2" target="3"><mxGeometry relative="1" as="geometry"/></mxCell><mxCell id="7" value="Yes" edge="1" parent="1" source="3" target="4"><mxGeometry relative="1" as="geometry"/></mxCell><mxCell id="8" value="No" edge="1" parent="1" source="3" target="5"><mxGeometry relative="1" as="geometry"/></mxCell></root></mxGraphModel>',
+        "```"
+    ].join("\n");
+}
+
+/** Truncated draw.io fence — incomplete XML for error-fallback E2E (trigger: `invalid-drawio`). */
+export function buildInvalidDrawioChatMessage() {
+    return [
+        "Hier ist ein absichtlich unvollständiges draw.io-Diagramm (Mock).",
+        "Die XML-Struktur wird gestreamt und bricht vor dem schließenden Tag ab:",
+        "",
+        "```drawio",
+        "<mxGraphModel>",
+        "  <root>",
+        '    <mxCell id="0"/>',
+        '    <mxCell id="1" parent="0"/>',
+        '    <mxCell id="2" value="Start" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">',
+        '      <mxGeometry x="120" y="40" width="120" height="40" as="geometry"/>',
+        "    </mxCell>",
+        '    <mxCell id="3" value="Decision?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">',
+        '      <mxGeometry x="120" y="120" width="120" height="80" as="geometry"/>',
+        "    </mxCell>",
+        '    <mxCell id="4" value="Yes" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">',
+        '      <mxGeometry x="40" y="240" width="100" height="40" as="geometry"/>',
+        "    </mxCell>",
+        // Intentionally incomplete: no closing </root></mxGraphModel>
+        "```"
+    ].join("\n");
 }
 
 export function buildAssistantCreateResponse(overrides: Partial<AssistantCreateResponse> = {}): AssistantCreateResponse {

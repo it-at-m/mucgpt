@@ -82,7 +82,9 @@ export interface ApplicationConfig {
     incident_report_url?: string;
     feature_request_url?: string;
     contact_mail_url?: string;
+    admin_role?: string;
     ad2image_url?: string;
+    owner_profile_url_template?: string;
 }
 
 export interface Model {
@@ -167,7 +169,12 @@ export type Assistant = {
     is_visible: boolean;
     compliance_check_result?: ComplianceCheckResponse;
     compliance_confirmation?: boolean;
+    state?: AssistantState;
+    state_changed_by?: string | null;
+    state_change_reason?: string | null;
 };
+
+export type AssistantState = "active" | "pending_legal_review" | "inactive";
 
 export interface ToolBase {
     id: string;
@@ -177,7 +184,6 @@ export interface ToolBase {
 export interface OwnerDetailsResponse {
     user_id: string;
     username: string;
-    contact_address?: string | null;
     givenName?: string | null;
     sn?: string | null;
     mail?: string | null;
@@ -225,6 +231,9 @@ export interface AssistantVersionResponse {
     is_visible: boolean;
     compliance_check_result?: ComplianceCheckResponse;
     compliance_confirmation?: boolean;
+    state?: AssistantState;
+    state_changed_by?: string | null;
+    state_change_reason?: string | null;
 }
 
 export interface AssistantCreateResponse {
@@ -291,6 +300,14 @@ export interface User {
     preferred_username?: string;
     department?: string;
     lhmObjectID?: string;
+    roles?: string[];
+}
+
+export interface AssistantStateUpdateInput {
+    state: AssistantState;
+    expected_state: AssistantState;
+    version: number;
+    reason?: string;
 }
 
 export type CommunityAssistant = {
@@ -351,4 +368,5 @@ export type CommunityAssistantSnapshot = {
     is_visible: boolean;
     compliance_check_result?: ComplianceCheckResponse;
     compliance_confirmation?: boolean;
+    state?: AssistantState;
 };

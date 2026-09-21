@@ -1,11 +1,20 @@
 // mocks/handlers.js
 import { http, HttpResponse, delay, passthrough } from "msw";
-import { ApplicationConfig, AssistantCreateResponse, AssistantUpdateInput, ComplianceCategoryResult, ComplianceCheckResponse } from "../api";
+import {
+    ApplicationConfig,
+    AssistantCreateResponse,
+    AssistantStateUpdateInput,
+    AssistantUpdateInput,
+    ComplianceCategoryResult,
+    ComplianceCheckResponse
+} from "../api";
 import {
     buildAssistantCreateResponse,
     buildAssistantList,
     buildOwnersDetailedFromOwnerIds,
     buildChatMessage,
+    buildDrawioChatMessage,
+    buildInvalidDrawioChatMessage,
     generateChatStreamChunks,
     generateMindmapStreamChunks,
     generateSimplifyStreamChunks
@@ -136,10 +145,14 @@ const CONFIG_RESPONSE: ApplicationConfig = {
     incident_report_url: "https://ki.muenchen.de/",
     feature_request_url: "https://ki.muenchen.de/",
     contact_mail_url: "mailto:ki@muenchen.de",
-    ad2image_url: ""
+    ad2image_url: "",
+    owner_profile_url_template: "https://intranet.muenchen.de/person/{uid}",
+    admin_role: "lhm-ab-mucgpt-admin"
 };
 
 const DYNAMIC_ASSISTANTS: AssistantCreateResponse[] = buildAssistantList(6);
+const pendingAssistant = DYNAMIC_ASSISTANTS[0];
+if (pendingAssistant) pendingAssistant.latest_version.state = "pending_legal_review";
 
 const MOCK_SUBSCRIPTION_COUNTS = [10350, 2500, 1400, 980, 620, 410, 275, 190, 135, 88, 42, 17];
 
@@ -155,6 +168,7 @@ function withMockSubscriptionCount(assistant: AssistantCreateResponse) {
     return {
         ...assistant,
         is_visible: assistant.latest_version.is_visible ?? true,
+        latest_version: { state: "active", ...assistant.latest_version },
         subscriptions_count: getMockSubscriptionCount(assistant.id)
     };
 }
@@ -826,23 +840,31 @@ export const handlers = [
             enabled_tools?: string[];
             model?: string;
         };
+        const latestUserMessage =
+            body.messages
+                ?.slice()
+                .reverse()
+                .find(m => m.role === "user")?.content || "";
+        // E2E demos (tools off): exact phrases only. A ```drawio fence must NOT trigger this.
+        const wantsValidDrawioMock = /^\s*valid-drawio\s*$/i.test(latestUserMessage);
+        const wantsInvalidDrawioMock = /^\s*invalid-drawio\s*$/i.test(latestUserMessage);
+
         if (body?.stream) {
             const encoder = new TextEncoder();
             const streamType = chooseStreamType(body.enabled_tools);
             const stream = new ReadableStream({
                 async start(controller) {
                     let chunks: any[] = [];
-                    const lastUserMessage =
-                        body.messages
-                            ?.slice()
-                            .reverse()
-                            .find(m => m.role === "user")?.content ?? "";
-                    const forcedContextTokens = resolveForcedContextTokens(lastUserMessage, body.model);
+                    const forcedContextTokens = resolveForcedContextTokens(latestUserMessage, body.model);
                     if (streamType === "mindmap") {
-                        const topic = lastUserMessage || "Künstliche Intelligenz";
+                        const topic = latestUserMessage || "Künstliche Intelligenz";
                         chunks = generateMindmapStreamChunks(topic, forcedContextTokens);
                     } else if (streamType === "simplify") {
                         chunks = generateSimplifyStreamChunks(forcedContextTokens);
+                    } else if (wantsValidDrawioMock) {
+                        chunks = generateChatStreamChunks(buildDrawioChatMessage(), forcedContextTokens);
+                    } else if (wantsInvalidDrawioMock) {
+                        chunks = generateChatStreamChunks(buildInvalidDrawioChatMessage(), forcedContextTokens);
                     } else {
                         let reply = buildChatMessage();
                         if (Math.random() > 0.7) {
@@ -874,7 +896,16 @@ export const handlers = [
             object: "chat.completion",
             created: Math.floor(Date.now() / 1000),
             model: "KIESGPT",
-            choices: [{ index: 0, message: { role: "assistant", content: buildChatMessage() }, finish_reason: "stop" }],
+            choices: [
+                {
+                    index: 0,
+                    message: {
+                        role: "assistant",
+                        content: wantsValidDrawioMock ? buildDrawioChatMessage() : wantsInvalidDrawioMock ? buildInvalidDrawioChatMessage() : buildChatMessage()
+                    },
+                    finish_reason: "stop"
+                }
+            ],
             usage: { prompt_tokens: 12, completion_tokens: 28, total_tokens: 40 }
         });
     }),
@@ -907,6 +938,29 @@ export const handlers = [
 
     http.get("/api/assistant", () => {
         return HttpResponse.json(DYNAMIC_ASSISTANTS.map(withMockSubscriptionCount));
+    }),
+
+    http.get("/api/admin/assistant/review", () => {
+        return HttpResponse.json(
+            DYNAMIC_ASSISTANTS.filter(assistant => assistant.latest_version.state === "pending_legal_review").map(withMockSubscriptionCount)
+        );
+    }),
+
+    http.patch("/api/admin/assistant/:id/state", async ({ params, request }) => {
+        const body = (await request.json()) as AssistantStateUpdateInput;
+        const assistant = DYNAMIC_ASSISTANTS.find(item => item.id === params.id);
+        if (!assistant) return new HttpResponse(null, { status: 404 });
+        if (body.version !== assistant.latest_version.version || body.expected_state !== assistant.latest_version.state) {
+            return HttpResponse.json({ detail: "Assistant changed" }, { status: 409 });
+        }
+        const updated = {
+            ...assistant,
+            updated_at: new Date().toISOString(),
+            latest_version: { ...assistant.latest_version, state: body.state, state_change_reason: body.reason }
+        };
+        const index = DYNAMIC_ASSISTANTS.indexOf(assistant);
+        DYNAMIC_ASSISTANTS[index] = updated;
+        return HttpResponse.json(withMockSubscriptionCount(updated));
     }),
 
     http.get("/api/assistant/:id", ({ params }) => {
@@ -980,7 +1034,12 @@ export const handlers = [
             email: "mucgpt@user.com",
             preferred_username: "mucgpt-user",
             department: "IT-KI",
-            lhmObjectID: "2232324224"
+            lhmObjectID: "2232324224",
+            resource_access: {
+                mucgpt: {
+                    roles: ["lhm-ab-mucgpt-user", "lhm-ab-mucgpt-admin"]
+                }
+            }
         });
     }),
 

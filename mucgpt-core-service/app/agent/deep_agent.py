@@ -1,4 +1,3 @@
-import os
 from typing import Any, cast
 
 from deepagents import create_deep_agent
@@ -7,22 +6,21 @@ from langchain_core.runnables import RunnableConfig
 from langchain_core.runnables.config import merge_configs
 from langchain_core.tools.base import BaseTool
 
-from agent.middleware import ContextMiddleware, RequestContext, ToolErrorMiddleware
+from agent.middleware import (
+    ContextMiddleware,
+    RequestContext,
+    TokenUsage,
+    TokenUsageMiddleware,
+    ToolErrorMiddleware,
+)
 from agent.state_models.default_state import DefaultAgentState
 from agent.tools.mcp import McpBearerAuthProvider
 from core.auth_models import AuthenticationResult
+from core.lf_prompts import PromptPool
 from core.logtools import getLogger
 
 logger = getLogger(name="mucgpt-core-react-agent")
 
-DEFAULT_INSTRUCTIONS = ""
-with open(
-    os.path.join(os.path.dirname(__file__), "prompt_pool", "default_instructions.md")
-) as fp:
-    DEFAULT_INSTRUCTIONS = fp.read()
-
-# TODO:
-# - consider prompt pool in langfuse
 
 class _ConfiguredLangChainDeepAgentGraph:
     """Simple wrapper around a LangChain agent to configure it with user info and tools on each run."""
@@ -38,9 +36,9 @@ class _ConfiguredLangChainDeepAgentGraph:
         self.tools = tools
         self.logger = logger
         self.debug = debug
+        default_prompt = PromptPool.get_resolved_prompt("default_instructions")
+        self.default_langfuse_prompt = default_prompt.langfuse_prompt
 
-        # After PR #1177 the agent graph is not compiled per request anymore.
-        # dynamically selecting the state schema based on the tools is not supported anymore --> defautling to DefaultAgentState for now.
         self.state_schema = DefaultAgentState
         self.agent = create_deep_agent(
             model=cast(Any, self.model),
@@ -48,8 +46,9 @@ class _ConfiguredLangChainDeepAgentGraph:
             middleware=[
                 ContextMiddleware(state_schema=self.state_schema),
                 ToolErrorMiddleware(),
-            ], # type: ignore
-            system_prompt=DEFAULT_INSTRUCTIONS,
+                TokenUsageMiddleware(),
+            ],  # type: ignore
+            system_prompt=default_prompt.content,
             debug=self.debug,
             state_schema=self.state_schema,
             context_schema=RequestContext,
@@ -73,6 +72,7 @@ class _ConfiguredLangChainDeepAgentGraph:
         enabled_tools = configurable.get("enabled_tools")
         selected_llm = configurable.get("llm")
         assistant_id = configurable.get("assistant_id")
+        token_usage = configurable.get("token_usage")
 
         # Keep MCP auth token map up-to-date for forwarded auth providers.
         McpBearerAuthProvider.set_token(user_info.user_id, user_info.token)
@@ -88,6 +88,10 @@ class _ConfiguredLangChainDeepAgentGraph:
             stream=configurable.get("llm_streaming", False),
             extra_body=extra_body,
             enabled_tools=enabled_tools,
+            token_usage=token_usage if isinstance(token_usage, TokenUsage) else None,
+            langfuse_prompt=configurable.get(
+                "langfuse_prompt", self.default_langfuse_prompt
+            ),
         )
 
         return messages, data_sources, request_context

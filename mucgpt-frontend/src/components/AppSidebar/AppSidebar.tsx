@@ -7,16 +7,18 @@ import {
     ChevronRight24Regular,
     CompassNorthwest24Regular,
     Dismiss24Regular,
-    Sparkle24Regular
+    Sparkle24Regular,
+    Shield24Regular
 } from "@fluentui/react-icons";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { useCallback, useEffect, useMemo, useState, type KeyboardEvent, type ReactElement, type ReactNode } from "react";
+import { useCallback, useContext, useEffect, useMemo, useState, type KeyboardEvent, type ReactElement, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { useUnifiedHistory, UnifiedHistoryStorage } from "../UnifiedHistory";
 import { AssistantStorageService } from "../../service/assistantstorage";
 import { CommunityAssistantStorageService } from "../../service/communityassistantstorage";
 import { ASSISTANT_STORE, COMMUNITY_ASSISTANT_STORE } from "../../constants";
 import { UserSidebarProfile } from "../UserSidebarProfile/UserSidebarProfile";
+import { UserContext } from "../../pages/layout/UserContextProvider";
 import styles from "./AppSidebar.module.css";
 
 interface AppSidebarProps {
@@ -77,6 +79,7 @@ export const AppSidebar = ({
     const navigate = useNavigate();
     const location = useLocation();
     const { pageContext } = useUnifiedHistory();
+    const { isAdmin } = useContext(UserContext);
     const [isNewChatDialogOpen, setIsNewChatDialogOpen] = useState(false);
     const [recentAssistant, setRecentAssistant] = useState<RecentAssistant | null>(null);
     const historyStorage = useMemo(() => new UnifiedHistoryStorage(), []);
@@ -107,9 +110,22 @@ export const AppSidebar = ({
                 to: "/discovery",
                 icon: <Bot24Regular className={styles.navIcon} />,
                 isActive: isAssistantRoute(location.pathname)
-            }
+            },
+            ...(isAdmin
+                ? [
+                      {
+                          id: "legal-review",
+                          kind: "link" as const,
+                          label: t("app_sidebar.legal_review", "Legal review"),
+                          ariaLabel: t("app_sidebar.go_legal_review", "Open legal review"),
+                          to: "/admin/legal-review",
+                          icon: <Shield24Regular className={styles.navIcon} />,
+                          isActive: location.pathname.startsWith("/admin/legal-review")
+                      }
+                  ]
+                : [])
         ],
-        [location.pathname, t]
+        [isAdmin, location.pathname, t]
     );
 
     const handleNavigate = (to: string) => {

@@ -293,7 +293,14 @@ class TestMUCGPTAgentExecutor:
     @pytest.mark.asyncio
     async def test_run_with_streaming_attaches_usage_to_final_chunk(self):
         class UsageGraph:
-            async def astream(self, *_args, **_kwargs):
+            async def astream(self, *_args, **kwargs):
+                kwargs["config"]["configurable"]["token_usage"].add(
+                    {
+                        "input_tokens": 12,
+                        "output_tokens": 3,
+                        "total_tokens": 15,
+                    }
+                )
                 yield (
                     "messages",
                     (
@@ -339,11 +346,18 @@ class TestMUCGPTAgentExecutor:
         self,
     ):
         class UsageGraph:
-            async def astream(self, *_args, **_kwargs):
+            async def astream(self, *_args, **kwargs):
                 for content, input_tokens, output_tokens in (
                     ("tool call", 10, 2),
                     ("final answer", 20, 4),
                 ):
+                    kwargs["config"]["configurable"]["token_usage"].add(
+                        {
+                            "input_tokens": input_tokens,
+                            "output_tokens": output_tokens,
+                            "total_tokens": input_tokens + output_tokens,
+                        }
+                    )
                     yield (
                         "messages",
                         (
@@ -375,15 +389,52 @@ class TestMUCGPTAgentExecutor:
         ):
             chunks.append(chunk)
 
-        # prompt_tokens for each invocation already includes the full
-        # conversation so far (system prompt, history, earlier tool-call
-        # rounds), so the final chunk should report the latest prompt_tokens
-        # (not a sum across invocations) while completion_tokens - newly
-        # generated per invocation - are correctly additive.
+        # Cost usage includes every model invocation in this request, while
+        # context_tokens describes only the latest invocation.
         assert chunks[-1]["usage"] == {
-            "prompt_tokens": 20,
+            "prompt_tokens": 30,
             "completion_tokens": 6,
-            "total_tokens": 26,
+            "total_tokens": 36,
+            "context_tokens": 24,
+        }
+
+    @pytest.mark.asyncio
+    async def test_run_without_streaming_uses_request_token_usage(self):
+        class UsageGraph:
+            async def ainvoke(self, *_args, **kwargs):
+                token_usage = kwargs["config"]["configurable"]["token_usage"]
+                token_usage.add(
+                    {
+                        "input_tokens": 10,
+                        "output_tokens": 2,
+                        "total_tokens": 12,
+                    }
+                )
+                token_usage.add(
+                    {
+                        "input_tokens": 20,
+                        "output_tokens": 4,
+                        "total_tokens": 24,
+                    }
+                )
+                return {"messages": [AIMessage(content="done")]}
+
+        class UsageAgent:
+            def __init__(self):
+                self.model = DummyRunnerLLM()
+                self.graph = UsageGraph()
+
+        response = await MUCGPTAgentExecutor(UsageAgent()).run_without_streaming(
+            messages=[InputMessage(role="user", content="hi")],
+            temperature=0.7,
+            model="test",
+            user_info=None,
+        )
+
+        assert response.usage.model_dump() == {
+            "prompt_tokens": 30,
+            "completion_tokens": 6,
+            "total_tokens": 36,
             "context_tokens": 24,
         }
 

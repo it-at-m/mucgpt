@@ -509,7 +509,15 @@ class ConfigResponse(BaseModel):
         None,
         description="URL for the contact mail link.",
     )
+    admin_role: str | None = Field(
+        None,
+        description="SSO role that grants administrator access in the frontend.",
+    )
     ad2image_url: str | None = Field(
         None,
         description="Base URL of the ad2image service for Gravatar-compatible avatar images.",
+    )
+    owner_profile_url_template: str | None = Field(
+        None,
+        description="Template for assistant owner profile links. The '{uid}' placeholder is replaced with the owner lhmObjectID.",
     )

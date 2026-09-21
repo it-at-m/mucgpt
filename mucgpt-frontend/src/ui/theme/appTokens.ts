@@ -1,4 +1,4 @@
-import { infoRamp, mucgptBrandRamp, neutralRamp } from "./palette";
+import { infoRamp, neutralRamp } from "./palette";
 
 /**
  * Product-specific semantics that Fluent's theme does not model.
@@ -27,9 +27,9 @@ const lightAppTokens: AppTokens = {
 
 const darkAppTokens: AppTokens = {
     userMessageBackground: "#1E293B",
-    assistantConfigSurface: neutralRamp[160],
+    assistantConfigSurface: neutralRamp[50],
     assistantConfigSurfaceHover: neutralRamp[30],
-    assistantConfigSurfaceEditing: mucgptBrandRamp[160],
+    assistantConfigSurfaceEditing: neutralRamp[60],
     assistantConfigBorder: "#263653",
     assistantConfigBorderHover: "#3A4D73",
     statusInfoBorder: infoRamp.medium

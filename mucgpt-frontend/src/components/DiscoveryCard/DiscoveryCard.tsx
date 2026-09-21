@@ -1,34 +1,23 @@
 import React, { forwardRef, ReactNode } from "react";
 import { Link } from "react-router-dom";
-import { Badge, Card, CardFooter, mergeClasses, CardProps, BadgeProps } from "@fluentui/react-components";
+import { Badge, Card, CardFooter, makeStyles, mergeClasses, shorthands, CardProps, BadgeProps, Text, tokens } from "@fluentui/react-components";
 import { LockClosed16Regular, People16Regular, Person16Regular } from "@fluentui/react-icons";
 import styles from "./DiscoveryCard.module.css";
 import { MarkdownRenderer } from "../MarkdownRenderer/MarkdownRenderer";
 
 export interface DiscoveryCardBadge {
     label: string;
-    className?: string;
-    appearance?: BadgeProps["appearance"];
-    color?: BadgeProps["color"];
-    size?: BadgeProps["size"];
-    tone?: "neutral" | "success" | "warning" | "danger";
+    icon?: BadgeProps["icon"];
+    tone?: "neutral" | "brand" | "success" | "warning" | "danger";
 }
 
-interface DiscoveryCardBaseProps extends Omit<CardProps, "onClick"> {
+interface DiscoveryCardBaseProps extends Omit<CardProps, "onClick" | "appearance"> {
     id?: string;
     title?: string;
     description?: string;
 
-    header?: ReactNode;
-    badge?: string;
     badges?: DiscoveryCardBadge[];
-    badgeClassName?: string;
-    badgeAppearance?: BadgeProps["appearance"];
-    badgeColor?: BadgeProps["color"];
-    badgeSize?: BadgeProps["size"];
-    titleClassName?: string;
     isSelected?: boolean;
-    metadataStartLabel?: string;
     metadataStartNode?: ReactNode;
     subscriberCount?: number;
     isPrivate?: boolean;
@@ -46,10 +35,27 @@ export type DiscoveryCardProps =
     | (DiscoveryCardBaseProps & { linkTo?: never; onActivate: () => void })
     | (DiscoveryCardBaseProps & { linkTo?: never; onActivate?: never });
 
-// The status tones map straight onto Fluent's tint badge colors, which the theme
-// aliases onto the app's --colorStatus* ramps. "neutral" has no Fluent equivalent.
-const toStatusBadgeColor = (tone: DiscoveryCardBadge["tone"]): Extract<BadgeProps["color"], "success" | "warning" | "danger"> | undefined =>
-    tone === "success" || tone === "warning" || tone === "danger" ? tone : undefined;
+// Colored tones map straight onto Fluent's tint badge colors, which the theme aliases
+// onto the app's brand and --colorStatus* ramps. "neutral" has no Fluent equivalent.
+const toTintBadgeColor = (tone: DiscoveryCardBadge["tone"]): Extract<BadgeProps["color"], "brand" | "success" | "warning" | "danger"> | undefined =>
+    tone === "neutral" ? undefined : tone;
+
+const useStyles = makeStyles({
+    card: {
+        padding: `${tokens.spacingVerticalM} ${tokens.spacingHorizontalM} ${tokens.spacingVerticalMNudge}`,
+        rowGap: 0
+    },
+    // Fluent has no neutral badge color that matches this palette.
+    badgeNeutral: {
+        color: tokens.colorNeutralForeground2,
+        backgroundColor: tokens.colorNeutralBackground2,
+        ...shorthands.borderColor(tokens.colorNeutralStroke1)
+    },
+    // Colors come from Fluent's tint appearance; colored badges only read heavier.
+    badgeTinted: {
+        fontWeight: tokens.fontWeightSemibold
+    }
+});
 
 const formatSubscriberCount = (count: number): string => {
     if (count >= 1000) {
@@ -68,31 +74,24 @@ export const DiscoveryCard = forwardRef<HTMLDivElement, DiscoveryCardProps>((pro
         ariaControls,
         activateHintLabel,
 
-        header,
-        badge,
         badges,
-        badgeClassName,
-        badgeAppearance = "tint",
-        badgeColor = "danger",
-        badgeSize = "small",
         className,
-        titleClassName,
+        style,
         isSelected,
-        metadataStartLabel,
         metadataStartNode,
         subscriberCount,
         isPrivate,
         privateLabel = "Private",
         ...rest
     } = props;
+    const classes = useStyles();
 
     const renderTitle = () => {
         if (!title) {
             return null;
         }
 
-        const staticClass = mergeClasses(styles.headerText, titleClassName);
-        const actionClass = mergeClasses(staticClass, styles.primaryAction);
+        const actionClass = mergeClasses(styles.headerText, styles.primaryAction);
 
         const titleElement = linkTo ? (
             <Link to={linkTo} className={actionClass}>
@@ -104,51 +103,33 @@ export const DiscoveryCard = forwardRef<HTMLDivElement, DiscoveryCardProps>((pro
                 {activateHintLabel && <span className={styles.visuallyHidden}> {activateHintLabel}</span>}
             </button>
         ) : (
-            <span className={staticClass}>{title}</span>
+            <span className={styles.headerText}>{title}</span>
         );
 
-        return <h3 className={styles.headerTextWrapper}>{titleElement}</h3>;
+        return (
+            <Text as="h3" size={300} weight="semibold" className={styles.headerTextWrapper}>
+                {titleElement}
+            </Text>
+        );
     };
 
     const renderHeader = () => {
-        if (header !== undefined) {
-            return header;
-        }
-
-        const renderedBadges: DiscoveryCardBadge[] =
-            badges && badges.length > 0
-                ? badges
-                : badge
-                  ? [
-                        {
-                            label: badge,
-                            className: badgeClassName,
-                            appearance: badgeAppearance,
-                            color: badgeColor,
-                            size: badgeSize
-                        }
-                    ]
-                  : [];
-
         if (title) {
             return (
                 <div className={styles.headerRow}>
                     {renderTitle()}
-                    {renderedBadges.length > 0 && (
+                    {badges && badges.length > 0 && (
                         <div className={styles.badgeGroup}>
-                            {renderedBadges.map(renderedBadge => {
-                                const statusColor = toStatusBadgeColor(renderedBadge.tone);
+                            {badges.map(renderedBadge => {
+                                const tintColor = toTintBadgeColor(renderedBadge.tone);
                                 return (
                                     <Badge
                                         key={renderedBadge.label}
-                                        className={mergeClasses(
-                                            styles.headerBadge,
-                                            statusColor ? styles.headerBadgeStatus : styles.headerBadgeNeutral,
-                                            renderedBadge.className
-                                        )}
-                                        appearance={statusColor ? "tint" : (renderedBadge.appearance ?? badgeAppearance)}
-                                        color={statusColor ?? renderedBadge.color ?? badgeColor}
-                                        size={renderedBadge.size ?? badgeSize}
+                                        className={mergeClasses(styles.headerBadge, tintColor ? classes.badgeTinted : classes.badgeNeutral)}
+                                        appearance="tint"
+                                        color={tintColor}
+                                        size="small"
+                                        icon={renderedBadge.icon}
                                     >
                                         {renderedBadge.label}
                                     </Badge>
@@ -165,7 +146,7 @@ export const DiscoveryCard = forwardRef<HTMLDivElement, DiscoveryCardProps>((pro
 
     const renderMetadata = () => {
         const hasSubscriberCount = typeof subscriberCount === "number";
-        const hasMetadata = Boolean(metadataStartNode) || Boolean(metadataStartLabel) || isPrivate || hasSubscriberCount;
+        const hasMetadata = Boolean(metadataStartNode) || isPrivate || hasSubscriberCount;
 
         if (!hasMetadata) {
             return null;
@@ -185,10 +166,10 @@ export const DiscoveryCard = forwardRef<HTMLDivElement, DiscoveryCardProps>((pro
 
         return (
             <CardFooter className={styles.metadata} action={endContent && { className: styles.metadataEnd, children: endContent }}>
-                {(metadataStartNode || metadataStartLabel) && (
+                {metadataStartNode && (
                     <span className={styles.metadataStart}>
                         <Person16Regular aria-hidden="true" />
-                        <span>{metadataStartNode || metadataStartLabel}</span>
+                        <span>{metadataStartNode}</span>
                     </span>
                 )}
             </CardFooter>
@@ -196,7 +177,16 @@ export const DiscoveryCard = forwardRef<HTMLDivElement, DiscoveryCardProps>((pro
     };
 
     return (
-        <Card id={id} ref={ref} size="large" className={mergeClasses(styles.card, isSelected && styles.cardSelected, className)} {...rest}>
+        <Card
+            id={id}
+            ref={ref}
+            size="large"
+            appearance="subtle"
+            data-selected={isSelected || undefined}
+            className={mergeClasses(styles.card, classes.card, className)}
+            style={{ backgroundColor: tokens.colorNeutralCardBackground, ...style }}
+            {...rest}
+        >
             {renderHeader()}
             {description && (
                 <div className={styles.description}>

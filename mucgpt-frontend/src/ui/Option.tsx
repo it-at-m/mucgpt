@@ -14,10 +14,10 @@ const useStyles = makeStyles({
 });
 
 /** A Fluent dropdown option with the product's subtle interaction treatment. */
-export const SubtleOption = forwardRef<HTMLDivElement, OptionProps>(({ className, disabled, ...props }, ref) => {
+export const Option = forwardRef<HTMLDivElement, OptionProps>(({ className, disabled, ...props }, ref) => {
     const styles = useStyles();
 
     return <FluentOption {...props} ref={ref} disabled={disabled} className={mergeClasses(!disabled && styles.subtle, className)} />;
 });
 
-SubtleOption.displayName = "SubtleOption";
+Option.displayName = "Option";

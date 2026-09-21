@@ -7,18 +7,9 @@
 :root {
     --assistantDetailsDrawerWidth: 400px;
     --assistantDetailsDrawerCompactWidth: 320px;
+    --pageContentMaxWidth: 1180px;
     --fontFamilyBase:
-        "Segoe UI",
-        -apple-system,
-        BlinkMacSystemFont,
-        "Roboto",
-        "Oxygen",
-        "Ubuntu",
-        "Cantarell",
-        "Fira Sans",
-        "Droid Sans",
-        "Helvetica Neue",
-        sans-serif;
+        "Segoe UI", -apple-system, BlinkMacSystemFont, "Roboto", "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif;
 }
 
 html,

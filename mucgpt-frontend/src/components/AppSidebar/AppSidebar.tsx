@@ -20,10 +20,11 @@ import {
     ChevronRight24Regular,
     CompassNorthwest24Regular,
     Dismiss24Regular,
+    Shield20Regular,
     Sparkle24Regular
 } from "@fluentui/react-icons";
 import { useLocation, useNavigate } from "react-router-dom";
-import { useCallback, useEffect, useMemo, useRef, useState, type KeyboardEvent, type MouseEvent, type ReactElement, type ReactNode } from "react";
+import { useCallback, useContext, useEffect, useMemo, useRef, useState, type KeyboardEvent, type MouseEvent, type ReactElement, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { useUnifiedHistory, UnifiedHistoryStorage } from "../UnifiedHistory";
 import { AssistantStorageService } from "../../service/assistantstorage";
@@ -31,6 +32,7 @@ import { CommunityAssistantStorageService } from "../../service/communityassista
 import { ASSISTANT_STORE, COMMUNITY_ASSISTANT_STORE } from "../../constants";
 import { UserSidebarProfile } from "../UserSidebarProfile/UserSidebarProfile";
 import { Button } from "../../ui/Button";
+import { UserContext } from "../../pages/layout/UserContextProvider";
 import styles from "./AppSidebar.module.css";
 import itemStyles from "./SidebarItem.module.css";
 
@@ -94,6 +96,7 @@ export const AppSidebar = ({
     const navigate = useNavigate();
     const location = useLocation();
     const { pageContext } = useUnifiedHistory();
+    const { isAdmin } = useContext(UserContext);
     const [isNewChatDialogOpen, setIsNewChatDialogOpen] = useState(false);
     const [visibleTooltip, setVisibleTooltip] = useState<string | null>(null);
     const handleTooltipVisibility = (id: string, visible: boolean) => {
@@ -128,9 +131,22 @@ export const AppSidebar = ({
                 to: "/discovery",
                 icon: <Bot20Regular />,
                 isActive: isAssistantRoute(location.pathname)
-            }
+            },
+            ...(isAdmin
+                ? [
+                      {
+                          id: "legal-review",
+                          kind: "link" as const,
+                          label: t("app_sidebar.legal_review", "Legal review"),
+                          ariaLabel: t("app_sidebar.go_legal_review", "Open legal review"),
+                          to: "/admin/legal-review",
+                          icon: <Shield20Regular />,
+                          isActive: location.pathname.startsWith("/admin/legal-review")
+                      }
+                  ]
+                : [])
         ],
-        [location.pathname, t]
+        [isAdmin, location.pathname, t]
     );
 
     const handleNavigate = (to: string) => {

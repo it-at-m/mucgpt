@@ -40,7 +40,25 @@ i18n
                         new_chat_discovery_title: "Anderen Assistenten auswählen",
                         new_chat_discovery_card_title: "Assistent auswählen",
                         new_chat_recent_assistant_title: "Mit {{assistantName}} starten",
-                        new_chat_recent_assistant_fallback: "Assistent"
+                        new_chat_recent_assistant_fallback: "Assistent",
+                        legal_review: "Rechtliche Prüfung",
+                        go_legal_review: "Rechtliche Prüfungen öffnen"
+                    },
+                    admin: {
+                        legal_review: {
+                            title: "Rechtliche Prüfungen",
+                            subtitle: "Prüfen Sie Assistenten mit möglichen Hochrisiko-Anwendungsfällen.",
+                            pending: "Prüfung ausstehend",
+                            version: "Version {{version}}",
+                            reason_label: "Entscheidungsnotiz",
+                            reason_hint: "Dokumentieren Sie kurz die Grundlage Ihrer Entscheidung.",
+                            approve: "Freigeben",
+                            deactivate: "Deaktivieren",
+                            empty: "Alle Assistenten sind geprüft.",
+                            load_failed: "Die Prüfwarteschlange konnte nicht geladen werden.",
+                            update_failed: "Die Prüfentscheidung konnte nicht gespeichert werden.",
+                            conflict: "Der Assistent wurde inzwischen geändert. Die Warteschlange wurde aktualisiert."
+                        }
                     },
                     home: {
                         assistants: "Assistenten",
@@ -265,6 +283,12 @@ i18n
                             panHint: "Ziehen zum Verschieben • Strg/Cmd+Mausrad zum Zoomen • Doppelklick zum Zurücksetzen",
                             zoomHint: "Strg+Mausrad zum Zoomen • Doppelklick zum Anpassen"
                         },
+                        drawio: {
+                            download: "Diagramm herunterladen",
+                            render: "Zeichne Diagramm...",
+                            error: "Das draw.io-Diagramm kann leider nicht dargestellt werden, da es Fehler enthält.",
+                            charactersWritten: "Zeichen geschrieben"
+                        },
                         mindmap: {
                             download: "Herunterladen",
                             reset: "Ansicht zurücksetzen",
@@ -467,7 +491,9 @@ i18n
                             action_status_ready_create: "Bereit zum Erstellen",
                             action_status_ready_save: "Bereit zum Speichern",
                             action_status_read_only: "Nur lesbar",
-
+                            pending_review_notice:
+                                "Dieser Assistent wird derzeit gemäß EU-AI-ACT rechtlich geprüft. Er kann weiterhin vom Ersteller oder der Erstellerin bearbeitet werden, steht jedoch bis zum Abschluss der Prüfung nicht zum Chatten zur Verfügung.",
+                            inactive_notice: "Dieser Assistent wurde von Administratoren deaktiviert und kann momentan nicht zum Chatten verwendet werden.",
                             // Create-only: Mode selector
                             subtitle_mode_select: "Wähle, wie du starten möchtest",
                             create_manually: "Manuell erstellen",
@@ -679,6 +705,12 @@ i18n
                             filter_created_short: "Erstellt",
                             metadata_you: "Du",
                             owner_details: "Besitzer",
+                            pending_review_badge: "Ausstehend",
+                            inactive_badge: "Deaktiviert",
+                            pending_review_title: "Rechtliche Prüfung ausstehend",
+                            pending_review_hint: "Dieser Assistent ist bis zum Abschluss der rechtlichen Prüfung für Chats deaktiviert.",
+                            inactive_title: "Assistent deaktiviert",
+                            inactive_hint: "Dieser Assistent ist derzeit für Chats deaktiviert.",
                             private_label: "Privat",
                             show_details: "Details anzeigen",
                             show_more_personal_assistants: "Mehr persönliche Assistenten anzeigen",
@@ -717,7 +749,6 @@ i18n
                             tools: "Werkzeuge",
                             tool_single: "Werkzeug",
                             tools_plural: "Werkzeuge",
-                            loading_assistants: "Lade Assistenten...",
                             no_assistants_found: "Keine Assistenten gefunden, die Ihren Kriterien entsprechen.",
                             back_to_search: "Zurück zur Suche",
                             already_saved: "Bereits gespeichert",
@@ -754,8 +785,7 @@ i18n
                             duplicate_failed_forbidden: "Sie haben keine Berechtigung, diesen Assistenten zu duplizieren.",
                             duplicate_failed_not_found: "Der Assistent wurde nicht gefunden und kann nicht dupliziert werden.",
                             local_badge: "Lokal",
-                            compliance_passed_badge: "AI Act: Konform",
-                            compliance_high_risk_badge: "AI Act: Unzulässig",
+                            accepted_badge: "Konform",
                             local_state_title: "Dieser lokale Assistent ist veraltet",
                             discovery_local_hint:
                                 "Dieser Assistent ist nur lokal in Ihrem Browser gesichert und geht verloren, falls Sie das Gerät wechseln. Sichern Sie ihn jetzt, damit er dauerhaft erhalten bleibt.",
@@ -834,7 +864,7 @@ i18n
                     },
                     discovery: {
                         title: "Assistenten",
-                        subtitle: "Nutze deine Assistenten oder entdecke neue für wiederkehrende Aufgaben."
+                        subtitle: "Finde und verwalte Assistenten für deine wiederkehrenden Aufgaben."
                     },
                     ...tutorialsTranslations.DE,
                     ...versionTranslations.DE
@@ -865,7 +895,25 @@ i18n
                         new_chat_discovery_title: "Choose another assistant",
                         new_chat_discovery_card_title: "Choose assistant",
                         new_chat_recent_assistant_title: "Start with {{assistantName}}",
-                        new_chat_recent_assistant_fallback: "Assistant"
+                        new_chat_recent_assistant_fallback: "Assistant",
+                        legal_review: "Legal Review",
+                        go_legal_review: "Open Legal Reviews"
+                    },
+                    admin: {
+                        legal_review: {
+                            title: "Legal Reviews",
+                            subtitle: "Review assistants with possible high-risk use cases.",
+                            pending: "Review Pending",
+                            version: "Version {{version}}",
+                            reason_label: "Decision Note",
+                            reason_hint: "Briefly document the basis of your decision.",
+                            approve: "Approve",
+                            deactivate: "Deactivate",
+                            empty: "All assistants have been reviewed.",
+                            load_failed: "The review queue could not be loaded.",
+                            update_failed: "The review decision could not be saved.",
+                            conflict: "The assistant has been changed in the meantime. The queue has been updated."
+                        }
                     },
                     home: {
                         assistants: "Assistants",
@@ -1101,6 +1149,12 @@ i18n
                             panHint: "Drag to pan • Ctrl+Scroll to zoom • Double-click to reset",
                             zoomHint: "Ctrl+Scroll to zoom • Double-click to fit"
                         },
+                        drawio: {
+                            download: "Download diagram",
+                            render: "Draw diagram...",
+                            error: "Unfortunately, the draw.io diagram cannot be displayed as it contains errors.",
+                            charactersWritten: "Characters written"
+                        },
                         sumanswer: {
                             header: "Unique entities/aspects:",
                             alternative: "Summary ",
@@ -1289,6 +1343,9 @@ i18n
                             action_status_ready_create: "Ready to create",
                             action_status_ready_save: "Ready to save",
                             action_status_read_only: "Read only",
+                            pending_review_notice:
+                                "This assistant is currently undergoing a legal review in accordance with the EU AI Act. The creator can continue to edit it, but it cannot be used for chatting until the review is complete.",
+                            inactive_notice: "This assistant has been deactivated by administrators and is currently unavailable for chatting.",
 
                             // Create-only: Mode selector
                             subtitle_mode_select: "Choose how you want to start",
@@ -1495,6 +1552,12 @@ i18n
                             filter_my_all: "All",
                             filter_created_short: "Created",
                             metadata_you: "You",
+                            pending_review_badge: "Pending",
+                            inactive_badge: "Inactive",
+                            pending_review_title: "Legal review pending",
+                            pending_review_hint: "This assistant is unavailable for chat until legal review is complete.",
+                            inactive_title: "Assistant inactive",
+                            inactive_hint: "This assistant is currently unavailable for chat.",
                             owner_details: "Owners",
                             private_label: "Private",
                             show_details: "Show details",
@@ -1534,7 +1597,6 @@ i18n
                             tools: "Tools",
                             tool_single: "Tool",
                             tools_plural: "Tools",
-                            loading_assistants: "Loading assistants...",
                             no_assistants_found: "No assistants found matching your criteria.",
                             back_to_search: "Back to Search",
                             already_saved: "Already Saved",
@@ -1571,8 +1633,7 @@ i18n
                             duplicate_failed_forbidden: "You do not have permission to duplicate this assistant.",
                             duplicate_failed_not_found: "The assistant was not found and cannot be duplicated.",
                             local_badge: "Local",
-                            compliance_passed_badge: "AI Act: Compliant",
-                            compliance_high_risk_badge: "AI Act: Not permitted",
+                            accepted_badge: "Compliant",
                             local_state_title: "This local assistant is deprecated",
                             discovery_local_hint:
                                 "This assistant is only saved locally in your browser and will be lost if you switch devices. Save it now so it remains available.",
@@ -1649,7 +1710,7 @@ i18n
                     },
                     discovery: {
                         title: "Assistants",
-                        subtitle: "Use your assistants or discover new ones for recurring tasks."
+                        subtitle: "Find and manage assistants for your recurring tasks."
                     },
                     ...tutorialsTranslations.EN,
                     ...versionTranslations.EN
@@ -1680,7 +1741,25 @@ i18n
                         new_chat_discovery_title: "Andern Assistentn auswaehln",
                         new_chat_discovery_card_title: "Assistentn auswaehln",
                         new_chat_recent_assistant_title: "Mitm {{assistantName}} startn",
-                        new_chat_recent_assistant_fallback: "Assistent"
+                        new_chat_recent_assistant_fallback: "Assistent",
+                        legal_review: "Rechtliche Obacht",
+                        go_legal_review: "Rechtliche Obacht aufmacha"
+                    },
+                    admin: {
+                        legal_review: {
+                            title: "Rechtliche Obacht’n",
+                            subtitle: "Schau da Assistenten o, bei denen a möglicher Hochrisiko-Anwendungsfall vorliegen könnt.",
+                            pending: "Obacht steht no aus",
+                            version: "Version {{version}}",
+                            reason_label: "Entscheidungs-Notiz",
+                            reason_hint: "Schreib kurz hi, warumst des so entschieden host.",
+                            approve: "Freigeben",
+                            deactivate: "Deaktiviern",
+                            empty: "All Assistenten san scho obacht word’n.",
+                            load_failed: "D’Obacht-Warteschlang konnt ned g’lad’n werd’n.",
+                            update_failed: "D’Obacht-Entscheidung konnt ned g’speichert werd’n.",
+                            conflict: "Da Assistent is zwischendrin g’ändert word’n. D’Warteschlang is jetzt aktuell."
+                        }
                     },
                     home: {
                         assistants: "Assistentn",
@@ -1915,6 +1994,12 @@ i18n
                             panHint: "Ziahn zum Veschibn • Strg+Mausradl zum Zoomen • Doppelklick zum Zrucksetzn",
                             zoomHint: "Strg+Mausradl zum Zoomen • Doppelklick zum Anpassn"
                         },
+                        drawio: {
+                            download: "Schau-Buidl obalada",
+                            render: "Zeichne Schau-Buidl...",
+                            error: "Des draw.io-Schau-Buidl ko leiwa net duagstellt wern, wei's Fehla håd.",
+                            charactersWritten: "Zeichn gschriebn"
+                        },
                         sumanswer: {
                             header: "Einzigartige Schwerpunkte:",
                             alternative: "Zsammanfassung ",
@@ -2094,6 +2179,9 @@ i18n
                             action_status_ready_create: "Bereit zum Erstellen",
                             action_status_ready_save: "Bereit zum Speichern",
                             action_status_read_only: "Nur lesbar",
+                            pending_review_notice:
+                                "Da Assistent werd grad rechtlich obacht, wia’s da EU-AI-ACT vorgibt. Da Ersteller oder d’Erstellerin derf no weiter dran basteln, aber g’chatten derfst erst wieder, wenn d’Obacht vorbei is.",
+                            inactive_notice: "Da Assistent is vo de Admins deaktiviert word’n und kann grad ned zum Ratschn verwendet werd’n.",
 
                             // Create-only: Mode selector
                             subtitle_mode_select: "Wia möchst da starten?",
@@ -2342,7 +2430,6 @@ i18n
                             tools: "Werkzeig",
                             tool_single: "Werkzeig",
                             tools_plural: "Werkzeig",
-                            loading_assistants: "Load Assistentn...",
                             no_assistants_found: "Koane Assistentn gfundn, de zu deine Kriterien passn.",
                             back_to_search: "Zruck zur Such",
                             already_saved: "Scho gspeichert",
@@ -2378,8 +2465,9 @@ i18n
                             duplicate_failed_forbidden: "Du host koa Berechtigung, den Assistentn zum Dupliziern.",
                             duplicate_failed_not_found: "Da Assistent is ned gfundn worn und ko ned dupliziert wern.",
                             local_badge: "Lokal",
-                            compliance_passed_badge: "AI Act: Konform",
-                            compliance_high_risk_badge: "AI Act: Ned erlaubt",
+                            pending_review_badge: "Ausstehend",
+                            inactive_badge: "Deaktiviert",
+                            accepted_badge: "Konform",
                             local_state_title: "Der lokale Assistent is veraltet",
                             discovery_local_hint:
                                 "Der Assistent is bloß lokal in deim Browser gesichert und geht verloren, wennst des Gerät wechselst. Sicher eam jetzt, damit a dauerhaft erhalten bleibt.",
@@ -2457,7 +2545,7 @@ i18n
                     },
                     discovery: {
                         title: "Assistentn",
-                        subtitle: "Nutze deine Assistenten oder entdecke neue für wiederkehrende Aufgaben."
+                        subtitle: "Find und verwalt Assistentn für deine wiederkehrenden Aufgabn."
                     },
                     ...tutorialsTranslations.BA,
                     ...versionTranslations.BA
@@ -2488,7 +2576,25 @@ i18n
                         new_chat_discovery_title: "Choisir un autre assistant",
                         new_chat_discovery_card_title: "Choisir un assistant",
                         new_chat_recent_assistant_title: "Démarrer avec {{assistantName}}",
-                        new_chat_recent_assistant_fallback: "Assistant"
+                        new_chat_recent_assistant_fallback: "Assistant",
+                        legal_review: "Revue juridique",
+                        go_legal_review: "Ouvrir les revues juridiques"
+                    },
+                    admin: {
+                        legal_review: {
+                            title: "Revues juridiques",
+                            subtitle: "Examinez les assistants présentant de possibles cas d’usage à haut risque.",
+                            pending: "Revue en attente",
+                            version: "Version {{version}}",
+                            reason_label: "Note de décision",
+                            reason_hint: "Documentez brièvement la base de votre décision.",
+                            approve: "Approuver",
+                            deactivate: "Désactiver",
+                            empty: "Tous les assistants ont été examinés.",
+                            load_failed: "La file d’attente des revues n’a pas pu être chargée.",
+                            update_failed: "La décision de revue n’a pas pu être enregistrée.",
+                            conflict: "L’assistant a été modifié entre-temps. La file d’attente a été mise à jour."
+                        }
                     },
                     home: {
                         assistants: "Assistants",
@@ -2713,6 +2819,12 @@ i18n
                             panHint: "Glisser pour déplacer • Ctrl+Molette pour zoomer • Double-clic pour réinitialiser",
                             zoomHint: "Ctrl+Molette pour zoomer • Double-clic pour ajuster"
                         },
+                        drawio: {
+                            download: "Télécharger le diagramme",
+                            render: "Dessiner le diagramme...",
+                            error: "Le diagramme draw.io ne peut malheureusement pas être affiché en raison d'erreurs.",
+                            charactersWritten: "Caractères écrits"
+                        },
                         mindmap: {
                             download: "Télécharger",
                             reset: "Réinitialiser la vue",
@@ -2906,6 +3018,9 @@ i18n
                             action_status_ready_create: "Prêt à créer",
                             action_status_ready_save: "Prêt à enregistrer",
                             action_status_read_only: "Lecture seule",
+                            pending_review_notice:
+                                "Cet assistant fait actuellement l’objet d’un examen juridique conformément au règlement européen sur l’IA. Le créateur ou la créatrice peut continuer à le modifier, mais il ne sera pas disponible pour discuter tant que la révision n’est pas terminée.",
+                            inactive_notice: "Cet assistant a été désactivé par les administrateurs et n’est actuellement pas disponible pour discuter.",
 
                             // Create-only: Mode selector
                             subtitle_mode_select: "Choisissez comment vous souhaitez commencer",
@@ -3148,7 +3263,6 @@ i18n
                             tools: "Outils",
                             tool_single: "Outil",
                             tools_plural: "Outils",
-                            loading_assistants: "Chargement des assistants...",
                             no_assistants_found: "Aucun assistant trouvé correspondant à vos critères.",
                             back_to_search: "Retour à la recherche",
                             already_saved: "Déjà enregistré",
@@ -3183,8 +3297,9 @@ i18n
                             duplicate_failed_forbidden: "Vous n'avez pas la permission de dupliquer cet assistant.",
                             duplicate_failed_not_found: "L'assistant n'a pas été trouvé et ne peut pas être dupliqué.",
                             local_badge: "Local",
-                            compliance_passed_badge: "AI Act: Conforme",
-                            compliance_high_risk_badge: "AI Act: Non autorisé",
+                            pending_review_badge: "En attente",
+                            inactive_badge: "Inactif",
+                            accepted_badge: "Conforme",
                             local_state_title: "Cet assistant local est obsolète",
                             discovery_local_hint:
                                 "Cet assistant est uniquement enregistré localement dans votre navigateur et sera perdu si vous changez d'appareil. Enregistrez-le maintenant pour le conserver durablement.",
@@ -3263,7 +3378,7 @@ i18n
                     },
                     discovery: {
                         title: "Assistants",
-                        subtitle: "Utilisez vos assistants ou découvrez-en de nouveaux pour les tâches récurrentes."
+                        subtitle: "Trouvez et gérez des assistants pour vos tâches récurrentes."
                     },
                     ...tutorialsTranslations.FR,
                     ...versionTranslations.FR
@@ -3294,7 +3409,25 @@ i18n
                         new_chat_discovery_title: "Обрати іншого асистента",
                         new_chat_discovery_card_title: "Обрати асистента",
                         new_chat_recent_assistant_title: "Почати з {{assistantName}}",
-                        new_chat_recent_assistant_fallback: "Асистент"
+                        new_chat_recent_assistant_fallback: "Асистент",
+                        legal_review: "Юридична перевірка",
+                        go_legal_review: "Відкрити юридичні перевірки"
+                    },
+                    admin: {
+                        legal_review: {
+                            title: "Юридичні перевірки",
+                            subtitle: "Перевірте асистентів із можливими випадками використання високого ризику.",
+                            pending: "Перевірка очікує",
+                            version: "Версія {{version}}",
+                            reason_label: "Примітка до рішення",
+                            reason_hint: "Коротко опишіть підставу вашого рішення.",
+                            approve: "Схвалити",
+                            deactivate: "Деактивувати",
+                            empty: "Усі асистенти перевірені.",
+                            load_failed: "Не вдалося завантажити чергу перевірки.",
+                            update_failed: "Не вдалося зберегти рішення щодо перевірки.",
+                            conflict: "Асистента було змінено. Чергу оновлено."
+                        }
                     },
                     home: {
                         assistants: "Асистенти",
@@ -3516,6 +3649,12 @@ i18n
                             panHint: "Перетягніть для переміщення • Ctrl+прокрутка для масштабування • Подвійний клік для скидання",
                             zoomHint: "Ctrl+прокрутка для масштабування • Подвійний клік для підгонки"
                         },
+                        drawio: {
+                            download: "Завантажити діаграму",
+                            render: "Малювати діаграму...",
+                            error: "На жаль, діаграму draw.io не можна відобразити через помилки.",
+                            charactersWritten: "Написано символів"
+                        },
                         mindmap: {
                             download: "Завантажити",
                             reset: "Скинути вигляд",
@@ -3708,6 +3847,9 @@ i18n
                             action_status_ready_create: "Готово до створення",
                             action_status_ready_save: "Готово до збереження",
                             action_status_read_only: "Лише читання",
+                            pending_review_notice:
+                                "Цей асистент наразі проходить юридичну перевірку відповідно до ЄС AI ACT. Автор може й надалі його редагувати, але спілкуватися з асистентом можна буде лише після завершення перевірки.",
+                            inactive_notice: "Цей асистент був деактивований адміністраторами і наразі недоступний для спілкування.",
 
                             // Create-only: Mode selector
                             subtitle_mode_select: "Оберіть, як ви хочете почати",
@@ -3953,7 +4095,6 @@ i18n
                             tools: "Інструменти",
                             tool_single: "Інструмент",
                             tools_plural: "Інструменти",
-                            loading_assistants: "Завантаження асистентів...",
                             no_assistants_found: "Не знайдено асистентів, що відповідають вашим критеріям.",
                             back_to_search: "Повернутися до пошуку",
                             already_saved: "Вже збережено",
@@ -3989,8 +4130,9 @@ i18n
                             duplicate_failed_forbidden: "У вас немає дозволу на дублювання цього асистента.",
                             duplicate_failed_not_found: "Асистента не знайдено, дублювання неможливе.",
                             local_badge: "Локальний",
-                            compliance_passed_badge: "AI Act: Відповідає вимогам",
-                            compliance_high_risk_badge: "AI Act: Недопустимо",
+                            pending_review_badge: "Очікує перевірки",
+                            inactive_badge: "Неактивний",
+                            accepted_badge: "Відповідає вимогам",
                             local_state_title: "Цей локальний асистент застарів",
                             discovery_local_hint:
                                 "Цей асистент збережено лише локально у вашому браузері, і він буде втрачений, якщо ви зміните пристрій. Збережіть його зараз, щоб він залишався доступним.",
@@ -4068,7 +4210,7 @@ i18n
                     },
                     discovery: {
                         title: "Асистенти",
-                        subtitle: "Використовуйте своїх асистентів або відкривайте нових для повторюваних завдань."
+                        subtitle: "Знаходьте та керуйте асистентами для своїх повторюваних завдань."
                     },
                     ...tutorialsTranslations.UK,
                     ...versionTranslations.UK

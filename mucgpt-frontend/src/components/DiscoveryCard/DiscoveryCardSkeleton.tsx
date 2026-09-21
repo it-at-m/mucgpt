@@ -1,10 +1,15 @@
-import { Card, Skeleton, SkeletonItem, mergeClasses } from "@fluentui/react-components";
+import { Card, Skeleton, SkeletonItem, mergeClasses, tokens } from "@fluentui/react-components";
 import cardStyles from "./DiscoveryCard.module.css";
 import styles from "./DiscoveryCardSkeleton.module.css";
 
 export const DiscoveryCardSkeleton = () => {
     return (
-        <Card size="large" className={mergeClasses(cardStyles.card, styles.card)}>
+        <Card
+            size="large"
+            appearance="subtle"
+            className={mergeClasses(cardStyles.card, styles.card)}
+            style={{ backgroundColor: tokens.colorNeutralCardBackground }}
+        >
             <Skeleton className={styles.skeleton}>
                 <SkeletonItem shape="rectangle" style={{ width: "58%", height: "var(--lineHeightBase300)" }} />
                 <div className={styles.description}>

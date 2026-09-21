@@ -1,4 +1,4 @@
-import { infoRamp, mucgptBrandRamp, neutralRamp } from "./palette";
+import { infoRamp, neutralRamp } from "./palette";
 
 /**
  * Product-specific semantics that Fluent's theme does not model.

@@ -1,5 +1,5 @@
-import { Button, Textarea, type TextareaOnChangeData, Tooltip } from "@fluentui/react-components";
-import { Send28Filled, DocumentAdd24Regular } from "@fluentui/react-icons";
+import { Button, Caption1, CounterBadge, Tooltip } from "@fluentui/react-components";
+import { Send24Filled, DocumentAdd24Regular } from "@fluentui/react-icons";
 import { useCallback, useEffect, useRef, useState, type Dispatch, type SetStateAction } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -115,6 +115,11 @@ export const QuestionInput = ({
     const showSendButton = hasSendableQuestion && !isTranscriptionActive;
     const hasRightActions = hasModelPicker || showMicrophoneButton || showSendButton || Boolean(usage);
     const sendLabel = t("components.questioninput.send_question", "Frage senden");
+    const uploadLabel = t("components.questioninput.upload_data", "Dokument hochladen");
+    const uploadButtonLabel =
+        activeDocumentCount > 0
+            ? t("components.questioninput.upload_data_count", { count: activeDocumentCount, defaultValue: "Dokument hochladen ({{count}} aktiv)" })
+            : uploadLabel;
     const contextPercent = getContextUsagePercent(usage);
     const warningThreshold = getUsageWarningThreshold(usage);
     const criticalThreshold = getUsageCriticalThreshold(usage);
@@ -389,8 +394,8 @@ export const QuestionInput = ({
     );
 
     const onQuestionChange = useCallback(
-        (_event: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>, data: TextareaOnChangeData) => {
-            setQuestion(data.value || "");
+        (event: React.ChangeEvent<HTMLTextAreaElement>) => {
+            setQuestion(event.target.value);
         },
         [setQuestion]
     );
@@ -555,40 +560,39 @@ export const QuestionInput = ({
 
                 <div
                     ref={questionInputContainerRef}
-                    className={`${styles.questionInputContainer} ${
-                        !tools?.tools?.length || !setSelectedTools ? styles.noTools : ""
-                    } ${isDragActive ? styles.dragActive : ""} ${isExpandedInput ? styles.expandedInput : ""} ${!allowFileUpload ? styles.noUpload : ""} ${
-                        !hasRightActions ? styles.noRightActions : ""
-                    }`}
+                    className={`${styles.questionInputContainer} ${isDragActive ? styles.dragActive : ""} ${isExpandedInput ? styles.expandedInput : ""} ${
+                        !allowFileUpload ? styles.noUpload : ""
+                    } ${!hasRightActions ? styles.noRightActions : ""}`}
                     onDragEnter={allowFileUpload ? handleDragEnter : undefined}
                     onDragOver={allowFileUpload ? handleDragOver : undefined}
                     onDragLeave={allowFileUpload ? handleDragLeave : undefined}
                     onDrop={allowFileUpload ? handleDrop : undefined}
                 >
                     {allowFileUpload ? (
-                        <Tooltip content={t("components.questioninput.upload_data", "Dokument hochladen")} relationship="label">
-                            <div className={styles.uploadButtonWrapper}>
+                        <div className={styles.uploadButtonWrapper}>
+                            <Tooltip content={uploadButtonLabel} relationship="label">
                                 <Button
                                     ref={uploadButtonRef}
                                     size="large"
                                     shape="circular"
                                     appearance="subtle"
                                     icon={<DocumentAdd24Regular />}
-                                    aria-label={t("components.questioninput.upload_data", "Dokument hochladen")}
+                                    aria-label={uploadButtonLabel}
                                     onClick={handleUploadButtonClick}
                                     disabled={disabled}
                                 />
-                                {activeDocumentCount > 0 ? <span className={styles.uploadCountBadge}>{activeDocumentCount}</span> : null}
-                            </div>
-                        </Tooltip>
+                            </Tooltip>
+                            {activeDocumentCount > 0 ? (
+                                <CounterBadge className={styles.uploadCountBadge} count={activeDocumentCount} size="small" color="brand" aria-hidden />
+                            ) : null}
+                        </div>
                     ) : null}
-                    <Textarea
+                    <textarea
                         className={styles.questionInputTextArea}
                         placeholder={resolvedPlaceholder}
-                        resize="none"
+                        aria-label={resolvedPlaceholder}
                         rows={1}
                         value={question}
-                        size="large"
                         onChange={onQuestionChange}
                         onKeyDown={onEnterPress}
                         ref={textareaRef}
@@ -632,8 +636,9 @@ export const QuestionInput = ({
                                     <Button
                                         ref={sendButtonRef}
                                         size="large"
-                                        appearance="transparent"
-                                        icon={<Send28Filled />}
+                                        shape="circular"
+                                        appearance="primary"
+                                        icon={<Send24Filled />}
                                         aria-label={sendLabel}
                                         disabled={disabled}
                                         onClick={sendQuestion}
@@ -644,11 +649,7 @@ export const QuestionInput = ({
                     ) : null}
                 </div>
 
-                {hideDisclaimer ? null : (
-                    <div className={styles.errorhintSection}>
-                        <div className={styles.errorhint}>{t("components.questioninput.errorhint")}</div>
-                    </div>
-                )}
+                {hideDisclaimer ? null : <Caption1 className={styles.errorhint}>{t("components.questioninput.errorhint")}</Caption1>}
             </div>
 
             {allowFileUpload ? (

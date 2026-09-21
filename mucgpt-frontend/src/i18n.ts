@@ -326,6 +326,7 @@ i18n
                             assistant_tools_section: "Vom Assistenten vorgegeben",
                             optional_tools_section: "Weitere Werkzeuge",
                             upload_data: "Dokument hochladen",
+                            upload_data_count: "Dokument hochladen ({{count}} aktiv)",
                             uploaded_data_label: "Hinzugefügte Dokumente",
                             remove_data: "Dokument entfernen",
                             uploading: "Wird hochgeladen..."
@@ -1178,6 +1179,7 @@ i18n
                             assistant_tools_section: "Provided by the assistant",
                             optional_tools_section: "Additional tools",
                             upload_data: "Upload document",
+                            upload_data_count: "Upload document ({{count}} active)",
                             uploaded_data_label: "Attached documents",
                             remove_data: "Remove document",
                             uploading: "Uploading..."
@@ -2022,6 +2024,7 @@ i18n
                             assistant_tools_section: "Vom Assistentn vorgem",
                             optional_tools_section: "Weiterne Werkzeig",
                             upload_data: "Dokument hochladn",
+                            upload_data_count: "Dokument hochladn ({{count}} aktiv)",
                             uploaded_data_label: "Dazua gladne Dokumente",
                             remove_data: "Dokument wegdoa",
                             uploading: "Wird grod hochglodn..."
@@ -2859,6 +2862,7 @@ i18n
                             assistant_tools_section: "Fourni par l'assistant",
                             optional_tools_section: "Outils supplémentaires",
                             upload_data: "Télécharger un document",
+                            upload_data_count: "Télécharger un document ({{count}} actifs)",
                             uploaded_data_label: "Documents ajoutés",
                             remove_data: "Supprimer le document",
                             uploading: "Téléchargement..."
@@ -3688,6 +3692,7 @@ i18n
                             assistant_tools_section: "Надані асистентом",
                             optional_tools_section: "Додаткові інструменти",
                             upload_data: "Завантажити документ",
+                            upload_data_count: "Завантажити документ ({{count}} активних)",
                             uploaded_data_label: "Додані документи",
                             remove_data: "Видалити документ",
                             uploading: "Завантаження..."

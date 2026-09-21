@@ -30,9 +30,16 @@ interface CreateAssistantStateOptions {
 }
 
 export const useCreateAssistantState = ({ enabled }: CreateAssistantStateOptions) => {
-    const [initialDraft] = useState<CreateAssistantDraft | null>(() =>
-        enabled ? loadSessionDraft<CreateAssistantDraft>(STORAGE_KEYS.CREATE_ASSISTANT_DRAFT) : null
-    );
+    const [initialDraft] = useState<CreateAssistantDraft | null>(() => {
+        const draft = enabled ? loadSessionDraft<CreateAssistantDraft>(STORAGE_KEYS.CREATE_ASSISTANT_DRAFT) : null;
+        if (!draft) return null;
+
+        return {
+            ...draft,
+            followUpActions: Array.isArray(draft.followUpActions) ? draft.followUpActions : [],
+            starterPrompts: Array.isArray(draft.starterPrompts) ? draft.starterPrompts : []
+        };
+    });
 
     // All state variables
     const [view, setView] = useState<CreateView>(() => initialDraft?.view ?? "mode_select");

@@ -251,8 +251,8 @@ const Discovery = () => {
         communitySortMethod === "subscriptions"
             ? t("components.community_assistants.sort_popular", "Beliebteste")
             : communitySortMethod === "updated"
-                ? t("components.community_assistants.sort_updated", "Zuletzt aktualisiert")
-                : t("components.community_assistants.sort_title", "Name");
+              ? t("components.community_assistants.sort_updated", "Zuletzt aktualisiert")
+              : t("components.community_assistants.sort_title", "Name");
 
     const handleMyAssistantsSortChange = (_event: SelectionEvents, data: OptionOnSelectData) => {
         if (data.optionValue === "subscriptions" || data.optionValue === "updated" || data.optionValue === "title" || data.optionValue === "lastUsed") {
@@ -270,10 +270,10 @@ const Discovery = () => {
         myAssistantsSortMethod === "lastUsed"
             ? t("components.community_assistants.sort_last_used", "Zuletzt benutzt")
             : myAssistantsSortMethod === "subscriptions"
-                ? t("components.community_assistants.sort_popular", "Beliebteste")
-                : myAssistantsSortMethod === "updated"
-                    ? t("components.community_assistants.sort_updated", "Zuletzt aktualisiert")
-                    : t("components.community_assistants.sort_title", "Name");
+              ? t("components.community_assistants.sort_popular", "Beliebteste")
+              : myAssistantsSortMethod === "updated"
+                ? t("components.community_assistants.sort_updated", "Zuletzt aktualisiert")
+                : t("components.community_assistants.sort_title", "Name");
 
     const getMetadataFallbackLabel = (assistant: AssistantCardData): string =>
         assistant.isOwnedAssistant ? t("components.community_assistants.metadata_you", "Du") : t("components.community_assistants.filter_all", "Community");

@@ -62,14 +62,14 @@ Do not target Fluent implementation details.
 
 Forbidden:
 
-* `.fui-*` selectors
-* private Fluent custom properties or data attributes
-* selectors depending on Fluent's internal DOM
-* overriding Fluent internal pseudo-elements
-* specificity hacks such as `.card.card`
-* `!important`
-* `transition: all`
-* locally recreating standard Fluent interaction behavior when it can be expressed centrally
+- `.fui-*` selectors
+- private Fluent custom properties or data attributes
+- selectors depending on Fluent's internal DOM
+- overriding Fluent internal pseudo-elements
+- specificity hacks such as `.card.card`
+- `!important`
+- `transition: all`
+- locally recreating standard Fluent interaction behavior when it can be expressed centrally
 
 If Fluent requires a specificity hack to achieve the desired result,
 reconsider the implementation before adding the override.
@@ -85,10 +85,10 @@ Tokens MUST be used according to their semantic purpose.
 
 Do not:
 
-* introduce raw color values in feature code
-* use arbitrary typography or radii when a Fluent token fits
-* use unrelated tokens merely because their current value looks correct
-* create an app token for a one-off feature requirement
+- introduce raw color values in feature code
+- use arbitrary typography or radii when a Fluent token fits
+- use unrelated tokens merely because their current value looks correct
+- create an app token for a one-off feature requirement
 
 Follow the token ownership rules in `DESIGN.md` and
 `docs/theme-tokens.md`.
@@ -149,13 +149,13 @@ Interactive UI must remain keyboard accessible and semantically correct.
 
 Preserve:
 
-* keyboard operation
-* logical focus order
-* visible focus indicators
-* correct native or ARIA semantics
-* accessible names
-* disabled behavior
-* reduced-motion behavior where applicable
+- keyboard operation
+- logical focus order
+- visible focus indicators
+- correct native or ARIA semantics
+- accessible names
+- disabled behavior
+- reduced-motion behavior where applicable
 
 Do not turn non-interactive elements into controls through styling alone.
 
@@ -163,11 +163,11 @@ Do not turn non-interactive elements into controls through styling alone.
 
 For frontend changes:
 
-* run `npm run lint`
-* run relevant tests when available
-* verify that existing Fluent/MUCGPT patterns were reused where appropriate
-* verify that no forbidden Fluent overrides or specificity hacks were added
-* verify light and dark themes for visual changes
-* verify keyboard and focus behavior for interactive changes
+- run `npm run lint`
+- run relevant tests when available
+- verify that existing Fluent/MUCGPT patterns were reused where appropriate
+- verify that no forbidden Fluent overrides or specificity hacks were added
+- verify light and dark themes for visual changes
+- verify keyboard and focus behavior for interactive changes
 
 If one of these checks fails, reconsider the implementation before finishing.

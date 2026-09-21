@@ -42,12 +42,7 @@ export function sanitizeDrawioViewerHost(host: HTMLElement): boolean {
             // Browsers ignore C0 controls / space in URL schemes, so
             // `java\nscript:` still executes as javascript: — strip them first.
             const normalizedValue = attr.value.replace(/[\x00-\x20]/g, "");
-            if (
-                /^on/i.test(name) ||
-                /javascript:/i.test(normalizedValue) ||
-                /data:text\/html/i.test(normalizedValue) ||
-                /vbscript:/i.test(normalizedValue)
-            ) {
+            if (/^on/i.test(name) || /javascript:/i.test(normalizedValue) || /data:text\/html/i.test(normalizedValue) || /vbscript:/i.test(normalizedValue)) {
                 element.removeAttribute(name);
             }
         }

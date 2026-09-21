@@ -152,7 +152,7 @@
 }
 
 .footerContent {
-    width: min(1180px, 100%);
+    width: min(var(--pageContentMaxWidth), 100%);
     margin: 0 auto;
 }
 

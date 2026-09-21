@@ -124,7 +124,10 @@ const Discovery = () => {
 
     const latestRequestRef = useRef(0);
 
-    const closeDrawer = useCallback(() => setIsDrawerOpen(false), []);
+    const closeDrawer = useCallback(() => {
+        latestRequestRef.current++;
+        setIsDrawerOpen(false);
+    }, []);
 
     // The selection is kept until the slot has finished collapsing so the drawer
     // content stays visible during the close animation.

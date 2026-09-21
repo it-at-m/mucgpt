@@ -117,6 +117,11 @@
     overflow-wrap: break-word;
 }
 
+.description a {
+    position: relative;
+    z-index: 1;
+}
+
 .metadata {
     margin-top: auto;
     align-items: center;

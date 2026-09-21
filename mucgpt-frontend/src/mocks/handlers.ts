@@ -855,7 +855,7 @@ export const handlers = [
             const stream = new ReadableStream({
                 async start(controller) {
                     let chunks: any[] = [];
-                    const forcedContextTokens = resolveForcedContextTokens(lastUserMessage, body.model);
+                    const forcedContextTokens = resolveForcedContextTokens(latestUserMessage, body.model);
                     if (streamType === "mindmap") {
                         const topic = latestUserMessage || "Künstliche Intelligenz";
                         chunks = generateMindmapStreamChunks(topic, forcedContextTokens);

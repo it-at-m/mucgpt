@@ -1121,6 +1121,9 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
 
     return isEditMode ? (
         <AssistantEditorPage
+            // A draft is tied to one assistant ID. Remount when the asynchronously loaded assistant changes,
+            // so its draft is read on initialization instead of persisting the previous editor state under its key.
+            key={assistantConfig.id}
             mode="edit"
             assistant={assistantConfig}
             isOwner={canEdit || strategy.isOwned}

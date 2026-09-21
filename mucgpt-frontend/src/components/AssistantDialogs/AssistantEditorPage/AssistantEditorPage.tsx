@@ -58,8 +58,11 @@ import { EdelweissSpinner } from "../../EdelweissSpinner";
 import { AssistantPreviewChat } from "../AssistantPreviewChat/AssistantPreviewChat";
 import { useResizablePreview } from "./useResizablePreview";
 
-type CreateView = "mode_select" | "ai_input" | "settings";
 type DiscardTarget = "back" | "discovery";
+
+// A compliance review only applies to the exact prompt it was run against, so every gate compares the same way.
+const hasSystemPromptChanged = (systemPrompt: string, savedSystemPrompt: string | undefined) => systemPrompt !== (savedSystemPrompt ?? "");
+
 interface AssistantEditorPageCreateProps {
     mode: "create";
 }
@@ -275,7 +278,7 @@ function SettingsForm(props: SettingsFormProps) {
                         publishDepartments={props.publishDepartments}
                         invisibleChecked={!props.isVisible}
                         setPublishDepartments={props.setPublishDepartments}
-                        onHasChanged={props.onHasChanged ?? (() => {})}
+                        onHasChanged={props.onHasChanged ?? (() => { })}
                         setInvisibleChecked={invisible => props.setInvisibleChecked(invisible)}
                     />
                 </SectionCard>
@@ -314,8 +317,9 @@ export const AssistantEditorPage = (props: AssistantEditorPageProps) => {
     const isCreate = props.mode === "create";
     const isOwner = isCreate ? true : (props as AssistantEditorPageEditProps).isOwner;
 
-    const [createView, setCreateView] = useState<CreateView>("mode_select");
-    const createState = useCreateAssistantState();
+    const createState = useCreateAssistantState({ enabled: isCreate });
+    const createView = createState.view;
+    const setCreateView = createState.setView;
 
     const editAssistant = isCreate ? null : (props as AssistantEditorPageEditProps).assistant;
     const emptyAssistant: Assistant = useMemo(
@@ -346,12 +350,16 @@ export const AssistantEditorPage = (props: AssistantEditorPageProps) => {
     const [loading, setLoading] = useState(false);
     const [discardOpen, setDiscardOpen] = useState(false);
     const [discardTarget, setDiscardTarget] = useState<DiscardTarget>("back");
+    // A restored edit draft can already carry an unsaved system prompt change. It never passed through the
+    // change handler, so the review has to start out invalidated just like after a live edit. Only the value
+    // at mount matters here.
+    const [draftHasUnreviewedPrompt] = useState(() => !isCreate && hasSystemPromptChanged(editState.systemPrompt, editAssistant?.system_message));
     // Compliance confirmation is displayed independently from the optional screening result.
-    const [reviewConfirmed, setReviewConfirmed] = useState<boolean>(editAssistant?.compliance_confirmation ?? false);
+    const [reviewConfirmed, setReviewConfirmed] = useState<boolean>(draftHasUnreviewedPrompt ? false : (editAssistant?.compliance_confirmation ?? false));
     // On failure this holds a synthetic result with overall_status "error".
     const [reviewCheckResult, setReviewCheckResult] = useState<ComplianceCheckResponse | null>(editAssistant?.compliance_check_result ?? null);
     const [reviewCheckLoading, setReviewCheckLoading] = useState(false);
-    const [reviewCheckOutdated, setReviewCheckOutdated] = useState(false);
+    const [reviewCheckOutdated, setReviewCheckOutdated] = useState(draftHasUnreviewedPrompt);
     // Bumped whenever the confirmation is reset so the checkbox remounts and reliably reflects the cleared state.
     const [reviewResetKey, setReviewResetKey] = useState(0);
 
@@ -382,32 +390,40 @@ export const AssistantEditorPage = (props: AssistantEditorPageProps) => {
             setDiscardTarget("back");
             setDiscardOpen(true);
         } else {
+            if (isCreate) createState.resetAll();
             navigate(-1);
         }
-    }, [isCreate, createState.hasChanges, editState.hasChanged, navigate]);
+    }, [isCreate, createState.hasChanges, createState.resetAll, editState.hasChanged, navigate]);
 
     const handleDiscardConfirm = useCallback(() => {
         setDiscardOpen(false);
+        if (isCreate) {
+            createState.resetAll();
+        } else {
+            editState.resetToOriginal();
+        }
         if (discardTarget === "discovery") {
             navigate("/discovery");
             return;
         }
         navigate(-1);
-    }, [discardTarget, navigate]);
+    }, [discardTarget, isCreate, createState.resetAll, editState.resetToOriginal, navigate]);
 
     const handleSave = useCallback(async () => {
         if (loading) return;
 
         const s = state as typeof createState & typeof editState;
         const assistantTitle = s.title.trim();
-        const systemPrompt = s.systemPrompt.trim();
-        const systemPromptChanged = !isCreate && systemPrompt !== editAssistant?.system_message.trim();
+        // Keep the prompt byte-for-byte intact for both the compliance result and the saved assistant.
+        // Trimming is only suitable for the separate required-field check below.
+        const systemPrompt = s.systemPrompt;
+        const systemPromptChanged = !isCreate && hasSystemPromptChanged(systemPrompt, editAssistant?.system_message);
         const requiresComplianceReview = isComplianceCheckEnabled && (isCreate || systemPromptChanged);
 
         const complianceCheckFailed = reviewCheckResult?.overall_status === "error";
         if (
             assistantTitle === "" ||
-            systemPrompt === "" ||
+            systemPrompt.trim() === "" ||
             (requiresComplianceReview && (!reviewCheckResult || reviewCheckOutdated || complianceCheckFailed || !reviewConfirmed))
         ) {
             showError(t("components.assistant_editor.assistant_save_failed"), t("components.assistant_editor.save_config_failed"));
@@ -459,6 +475,7 @@ export const AssistantEditorPage = (props: AssistantEditorPageProps) => {
                         t("components.assistant_editor.assistant_saved_success"),
                         t("components.assistant_editor.assistant_saved_message", { title: assistantTitle })
                     );
+                    createState.resetAll();
                     navigate(`/owned/communityassistant/${response.id}`);
                 } else {
                     showError(t("components.assistant_editor.assistant_creation_failed"), t("components.assistant_editor.save_config_failed"));
@@ -476,6 +493,7 @@ export const AssistantEditorPage = (props: AssistantEditorPageProps) => {
                     t("components.assistant_editor.saved_successfully"),
                     t("components.assistant_editor.assistant_saved_description", { assistantName: updatedAssistant.title || "" })
                 );
+                editState.clearDraft();
                 if (saveResult?.state === "pending_legal_review" && editProps.assistant.id) {
                     navigate(`/discovery?openAssistant=${encodeURIComponent(editProps.assistant.id)}`);
                 } else {
@@ -588,7 +606,7 @@ export const AssistantEditorPage = (props: AssistantEditorPageProps) => {
     const pageHelper = isCreate ? t("components.assistant_editor.page_helper_create") : t("components.assistant_editor.page_helper_edit");
     const settingsState = isCreate ? createState : editState;
     const previewToolIds = useMemo(() => (settingsState.tools ?? []).map(tool => tool.id), [settingsState.tools]);
-    const systemPromptChanged = !isCreate && settingsState.systemPrompt.trim() !== editAssistant?.system_message.trim();
+    const systemPromptChanged = !isCreate && hasSystemPromptChanged(settingsState.systemPrompt, editAssistant?.system_message);
     const requiresComplianceReview = isComplianceCheckEnabled && (isCreate || systemPromptChanged);
     const isSettingsValid =
         settingsState.title.trim() !== "" &&
@@ -599,8 +617,8 @@ export const AssistantEditorPage = (props: AssistantEditorPageProps) => {
     const actionStatusLabel = !isOwner
         ? t("components.assistant_editor.action_status_read_only")
         : isSettingsValid
-          ? t(isCreate ? "components.assistant_editor.action_status_ready_create" : "components.assistant_editor.action_status_ready_save")
-          : t("components.assistant_editor.action_status_required_open");
+            ? t(isCreate ? "components.assistant_editor.action_status_ready_create" : "components.assistant_editor.action_status_ready_save")
+            : t("components.assistant_editor.action_status_required_open");
     const actionStatusTone = !isOwner ? "subtle" : isSettingsValid ? "success" : "warning";
 
     useEffect(() => {

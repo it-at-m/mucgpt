@@ -10,7 +10,7 @@ import { resetMockAssistants } from "./assistant-store";
 // such as local assistants and snapshots of deleted subscribed assistants.
 const SCENARIO_INITIALIZED_STORAGE_KEY = "mucgpt.dev-mocks.scenarios.v3";
 
-export const MOCK_SUBSCRIPTION_SEED = ["foreign-subscribed-active", "foreign-subscribed-deleted"];
+export const MOCK_SUBSCRIPTION_SEED = ["foreign-subscribed-active", "foreign-subscribed-pending-review", "foreign-subscribed-deleted"];
 
 export const MOCK_DELETED_SUBSCRIBED_SNAPSHOT: CommunityAssistantSnapshot = {
     snapshot_version: COMMUNITY_ASSISTANT_SNAPSHOT_VERSION,

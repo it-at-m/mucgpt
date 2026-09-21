@@ -190,6 +190,68 @@ function withMockSubscriptionCount(assistant: AssistantCreateResponse) {
     };
 }
 
+type LifecycleAssistantScenario = {
+    id: string;
+    name: string;
+    description: string;
+    ownerId: string;
+    state: NonNullable<AssistantCreateResponse["latest_version"]["state"]>;
+    stateChangeReason?: string;
+};
+
+const buildLifecycleAssistant = ({ id, name, description, ownerId, state, stateChangeReason }: LifecycleAssistantScenario): AssistantCreateResponse => {
+    const assistant = buildSeedAssistant({});
+    const ownerIds = [ownerId];
+    const ownersDetailed = buildOwnersDetailedFromOwnerIds(ownerIds);
+
+    return {
+        ...assistant,
+        id,
+        hierarchical_access: ["TEAM-A"],
+        owner_ids: ownerIds,
+        owners_detailed: ownersDetailed,
+        latest_version: {
+            ...assistant.latest_version,
+            id: `version-${id}`,
+            name,
+            description,
+            system_prompt: `Du bist ${name}. Unterstütze Menschen mit klaren, nachvollziehbaren Antworten.`,
+            hierarchical_access: ["TEAM-A"],
+            owner_ids: ownerIds,
+            owners_detailed: ownersDetailed,
+            state,
+            state_changed_by: state === "inactive" ? "admin-mock-001" : null,
+            state_change_reason: stateChangeReason ?? null
+        }
+    };
+};
+
+// Lifecycle scenarios make pending and rejected assistants visible in both personal and subscribed views.
+MOCK_ASSISTANT_SEED.push(
+    buildLifecycleAssistant({
+        id: "own-pending-legal-review",
+        name: "Eigener Textassistent (in Prüfung)",
+        description: "Ein eigener Assistent, dessen Veröffentlichung noch auf die Prüfung wartet.",
+        ownerId: MOCK_CURRENT_OWNER_ID,
+        state: "pending_legal_review"
+    }),
+    buildLifecycleAssistant({
+        id: "own-rejected-legal-review",
+        name: "Eigener Auswahlhelfer (abgelehnt)",
+        description: "Ein eigener Assistent, der nach der Prüfung abgelehnt und deaktiviert wurde.",
+        ownerId: MOCK_CURRENT_OWNER_ID,
+        state: "inactive",
+        stateChangeReason: "Abgelehnt: Der Assistent darf keine Personen bewerten oder priorisieren."
+    }),
+    buildLifecycleAssistant({
+        id: "foreign-subscribed-pending-review",
+        name: "Abonnierter Zusammenfassungsassistent (in Prüfung)",
+        description: "Ein abonnierter Assistent einer anderen Person, dessen Prüfung noch aussteht.",
+        ownerId: "user-mock-001",
+        state: "pending_legal_review"
+    })
+);
+
 // Add a specific assistant with a default model
 MOCK_ASSISTANT_SEED.push(
     buildSeedAssistant({
@@ -508,9 +570,6 @@ const UNSUBSCRIBED_ASSISTANT_SCENARIOS: UnsubscribedAssistantScenario[] = [
 ];
 
 MOCK_ASSISTANT_SEED.push(...UNSUBSCRIBED_ASSISTANT_SCENARIOS.map(buildUnsubscribedAssistant));
-
-const pendingAssistant = MOCK_ASSISTANT_SEED[0];
-if (pendingAssistant) pendingAssistant.latest_version.state = "pending_legal_review";
 
 const DYNAMIC_ASSISTANTS = loadMockAssistants(MOCK_ASSISTANT_SEED);
 const MOCK_SUBSCRIPTIONS = new Set(loadMockSubscriptions(MOCK_SUBSCRIPTION_SEED));

@@ -21,8 +21,19 @@ def test_config_endpoint(test_client):
     assert "assistant_version" in data
     assert "env_name" in data
     assert "alternative_logo" in data
+    assert "admin_role" in data
     assert "models" in data
     assert isinstance(data["models"], list)
+
+
+@pytest.mark.integration
+def test_config_endpoint_includes_admin_role(test_client):
+    """admin_role is sourced from the configured SSO admin role."""
+    mock_settings = Settings(SSO={"ADMIN_ROLE": "custom-admin-role"})
+    with patch("api.routers.system_router.settings", mock_settings):
+        response = test_client.get("/config", headers=headers)
+    assert response.status_code == 200
+    assert response.json()["admin_role"] == "custom-admin-role"
 
 
 @pytest.mark.integration
@@ -74,3 +85,23 @@ def test_transcription_disabled_by_default(test_client):
         response = test_client.get("/config", headers=headers)
     assert response.status_code == 200
     assert response.json()["transcription_enabled"] is False
+
+
+@pytest.mark.integration
+def test_ai_act_compliance_check_enabled_reflects_settings(test_client):
+    """ai_act_compliance_check_enabled follows the AI_ACT_COMPLIANCE_CHECK_ENABLED setting."""
+    mock_settings = Settings(AI_ACT_COMPLIANCE_CHECK_ENABLED=True)
+    with patch("api.routers.system_router.settings", mock_settings):
+        response = test_client.get("/config", headers=headers)
+    assert response.status_code == 200
+    assert response.json()["ai_act_compliance_check_enabled"] is True
+
+
+@pytest.mark.integration
+def test_ai_act_compliance_check_disabled_reflects_settings(test_client):
+    """ai_act_compliance_check_enabled is False when the setting is disabled."""
+    mock_settings = Settings(AI_ACT_COMPLIANCE_CHECK_ENABLED=False)
+    with patch("api.routers.system_router.settings", mock_settings):
+        response = test_client.get("/config", headers=headers)
+    assert response.status_code == 200
+    assert response.json()["ai_act_compliance_check_enabled"] is False

@@ -8,6 +8,7 @@ from fastapi.testclient import TestClient
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
 from backend import api_app
+from config.settings import get_settings
 from core import directory_cache
 from core.auth import authenticate_user
 from core.auth_models import AuthenticationResult
@@ -145,6 +146,14 @@ def test_client(override_get_db_session, override_authenticate_user):
 
     # Clear overrides after test
     api_app.dependency_overrides.clear()
+
+
+@pytest.fixture(autouse=True)
+def disable_compliance_verification_by_default(monkeypatch: pytest.MonkeyPatch):
+    """Keep existing integration tests stable unless a test explicitly enables strict compliance verification."""
+
+    settings = get_settings()
+    monkeypatch.setattr(settings, "COMPLIANCE_REQUIRE_VERIFICATION", False)
 
 
 @pytest.fixture(scope="session", autouse=True)

@@ -19,7 +19,8 @@ from pydantic_settings import (
 class SSOConfig(BaseModel):
     """SSO configuration (nested under SSO key in YAML)."""
 
-    ROLE: str = "lhm-ab-mucgpt-user"
+    ROLE: str | None = None
+    ADMIN_ROLE: str | None = None
 
 
 class DBConfig(BaseModel):
@@ -114,6 +115,7 @@ class Settings(BaseSettings):
     UNAUTHORIZED_USER_REDIRECT_URL: str = ""
     LOG_CONFIG: str = str(Path(__file__).resolve().parent.parent / "logconf.yaml")
     OWNER_CACHE_REFRESH_ON_READ: bool = False
+    COMPLIANCE_REQUIRE_VERIFICATION: bool = True
 
     # Nested sub-configurations
     DB: DBConfig

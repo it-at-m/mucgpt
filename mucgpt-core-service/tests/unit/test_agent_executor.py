@@ -1,9 +1,11 @@
-from unittest.mock import MagicMock
+from contextlib import nullcontext
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
-from langchain_core.messages import AIMessage, ToolCall
+from langchain_core.messages import AIMessage, AIMessageChunk, ToolCall
 
 from agent.agent_executor import MUCGPTAgentExecutor
+from agent.tools.tool_chunk import ToolStreamChunk, ToolStreamState
 from api.api_models import ChatCompletionMessage as InputMessage
 
 
@@ -87,6 +89,62 @@ class DummyAgent:
         self.model = llm
         self.graph = MagicMock()
         self.graph.astream = llm.astream
+        self.graph.ainvoke = AsyncMock(
+            side_effect=RuntimeError("Simulated failure") if llm.fail else None,
+            return_value={"messages": [AIMessage(content="Simplified text.")]},
+        )
+
+
+class FakeLangfuseSpan:
+    def __init__(self):
+        self.updates = []
+
+    def update(self, **kwargs):
+        self.updates.append(kwargs)
+
+
+class FakeLangfuseClient:
+    def __init__(self):
+        self.current_span_updates = []
+        self.spans = []
+
+    def update_current_span(self, **kwargs):
+        self.current_span_updates.append(kwargs)
+
+    def start_as_current_observation(self, **_kwargs):
+        span = FakeLangfuseSpan()
+        self.spans.append(span)
+        return nullcontext(span)
+
+
+class StreamingGraph:
+    async def astream(self, *_args, **_kwargs):
+        yield (
+            "messages",
+            (
+                AIMessageChunk(content="hidden"),
+                {"langgraph_node": "model", "run_name": "internal_scope_router"},
+            ),
+        )
+        yield (
+            "messages",
+            (AIMessageChunk(content="visible"), {"langgraph_node": "model"}),
+        )
+        yield (
+            "custom",
+            ToolStreamChunk(
+                state=ToolStreamState.STARTED,
+                content="started",
+                tool_name="example_tool",
+            ).model_dump_json(),
+        )
+        yield ("updates", {"agent": {"messages": [AIMessage(content="done")]}})
+
+
+class StreamingAgent:
+    def __init__(self):
+        self.model = DummyRunnerLLM()
+        self.graph = StreamingGraph()
 
 
 class TestMUCGPTAgentExecutor:
@@ -151,12 +209,13 @@ class TestMUCGPTAgentExecutor:
         # The last chunk should have finish_reason "stop"
         assert chunks[-1]["choices"][0]["finish_reason"] == "stop"
 
-    def test_run_without_streaming_returns_error_message_on_exception(self):
+    @pytest.mark.asyncio
+    async def test_run_without_streaming_returns_error_message_on_exception(self):
         llm = DummyRunnerLLM(fail=True)
         agent = DummyAgent(llm)
         runner = MUCGPTAgentExecutor(agent)
         messages = [InputMessage(role="user", content="fail")]
-        response = runner.run_without_streaming(
+        response = await runner.run_without_streaming(
             messages=messages,
             temperature=0.7,
             model="test",
@@ -197,15 +256,228 @@ class TestMUCGPTAgentExecutor:
         assert llm.config["llm"] == "test-model"
         assert llm.config["llm_streaming"] is False
 
-    def test_run_without_streaming_returns_error_on_exception(self):
+    @pytest.mark.asyncio
+    async def test_run_without_streaming_invokes_agent_graph(self):
+        messages = [InputMessage(role="user", content="hi")]
+
+        response = await self.runner.run_without_streaming(
+            messages=messages,
+            temperature=0.5,
+            model="test-model",
+            user_info=None,
+            enabled_tools=["simplify"],
+        )
+
+        assert response.choices[0].message.content == "Simplified text."
+        call = self.agent.graph.ainvoke.await_args
+        config = call.kwargs["config"]["configurable"]
+        assert config["llm_temperature"] == 0.5
+        assert config["llm"] == "test-model"
+        assert config["llm_streaming"] is False
+        assert config["enabled_tools"] == ["simplify"]
+
+    @pytest.mark.asyncio
+    async def test_run_without_streaming_returns_error_on_exception(self):
         llm = DummyRunnerLLM(fail=True)
         agent = DummyAgent(llm)
         runner = MUCGPTAgentExecutor(agent)
         messages = [InputMessage(role="user", content="fail")]
-        response = runner.run_without_streaming(
+        response = await runner.run_without_streaming(
             messages=messages,
             temperature=0.7,
             model="test",
             user_info=None,
         )
         assert response.choices[0].finish_reason == "error"
+
+    @pytest.mark.asyncio
+    async def test_run_with_streaming_attaches_usage_to_final_chunk(self):
+        class UsageGraph:
+            async def astream(self, *_args, **kwargs):
+                kwargs["config"]["configurable"]["token_usage"].add(
+                    {
+                        "input_tokens": 12,
+                        "output_tokens": 3,
+                        "total_tokens": 15,
+                    }
+                )
+                yield (
+                    "messages",
+                    (
+                        AIMessageChunk(
+                            content="hi",
+                            usage_metadata={
+                                "input_tokens": 12,
+                                "output_tokens": 3,
+                                "total_tokens": 15,
+                            },
+                        ),
+                        {"langgraph_node": "model"},
+                    ),
+                )
+
+        class UsageAgent:
+            def __init__(self):
+                self.model = DummyRunnerLLM()
+                self.graph = UsageGraph()
+
+        runner = MUCGPTAgentExecutor(UsageAgent())
+
+        chunks = []
+        async for chunk in runner.run_with_streaming(
+            messages=[InputMessage(role="user", content="hi")],
+            temperature=0.7,
+            model="test",
+            user_info=None,
+        ):
+            chunks.append(chunk)
+
+        stop_chunk = chunks[-1]
+        assert stop_chunk["choices"][0]["finish_reason"] == "stop"
+        assert stop_chunk["usage"] == {
+            "prompt_tokens": 12,
+            "completion_tokens": 3,
+            "total_tokens": 15,
+            "context_tokens": 15,
+        }
+
+    @pytest.mark.asyncio
+    async def test_run_with_streaming_aggregates_cost_usage_and_keeps_last_context(
+        self,
+    ):
+        class UsageGraph:
+            async def astream(self, *_args, **kwargs):
+                for content, input_tokens, output_tokens in (
+                    ("tool call", 10, 2),
+                    ("final answer", 20, 4),
+                ):
+                    kwargs["config"]["configurable"]["token_usage"].add(
+                        {
+                            "input_tokens": input_tokens,
+                            "output_tokens": output_tokens,
+                            "total_tokens": input_tokens + output_tokens,
+                        }
+                    )
+                    yield (
+                        "messages",
+                        (
+                            AIMessageChunk(
+                                content=content,
+                                usage_metadata={
+                                    "input_tokens": input_tokens,
+                                    "output_tokens": output_tokens,
+                                    "total_tokens": input_tokens + output_tokens,
+                                },
+                            ),
+                            {"langgraph_node": "model"},
+                        ),
+                    )
+
+        class UsageAgent:
+            def __init__(self):
+                self.model = DummyRunnerLLM()
+                self.graph = UsageGraph()
+
+        runner = MUCGPTAgentExecutor(UsageAgent())
+
+        chunks = []
+        async for chunk in runner.run_with_streaming(
+            messages=[InputMessage(role="user", content="hi")],
+            temperature=0.7,
+            model="test",
+            user_info=None,
+        ):
+            chunks.append(chunk)
+
+        # Cost usage includes every model invocation in this request, while
+        # context_tokens describes only the latest invocation.
+        assert chunks[-1]["usage"] == {
+            "prompt_tokens": 30,
+            "completion_tokens": 6,
+            "total_tokens": 36,
+            "context_tokens": 24,
+        }
+
+    @pytest.mark.asyncio
+    async def test_run_without_streaming_uses_request_token_usage(self):
+        class UsageGraph:
+            async def ainvoke(self, *_args, **kwargs):
+                token_usage = kwargs["config"]["configurable"]["token_usage"]
+                token_usage.add(
+                    {
+                        "input_tokens": 10,
+                        "output_tokens": 2,
+                        "total_tokens": 12,
+                    }
+                )
+                token_usage.add(
+                    {
+                        "input_tokens": 20,
+                        "output_tokens": 4,
+                        "total_tokens": 24,
+                    }
+                )
+                return {"messages": [AIMessage(content="done")]}
+
+        class UsageAgent:
+            def __init__(self):
+                self.model = DummyRunnerLLM()
+                self.graph = UsageGraph()
+
+        response = await MUCGPTAgentExecutor(UsageAgent()).run_without_streaming(
+            messages=[InputMessage(role="user", content="hi")],
+            temperature=0.7,
+            model="test",
+            user_info=None,
+        )
+
+        assert response.usage.model_dump() == {
+            "prompt_tokens": 30,
+            "completion_tokens": 6,
+            "total_tokens": 36,
+            "context_tokens": 24,
+        }
+
+    @pytest.mark.asyncio
+    async def test_run_with_streaming_traces_internal_tool_and_update_events(
+        self, monkeypatch
+    ):
+        langfuse_client = FakeLangfuseClient()
+        monkeypatch.setattr("agent.agent_executor.get_client", lambda: langfuse_client)
+        monkeypatch.setattr(
+            "agent.agent_executor.propagate_attributes",
+            lambda **_kwargs: nullcontext(),
+        )
+        runner = MUCGPTAgentExecutor(StreamingAgent())
+
+        chunks = []
+        async for chunk in runner.run_with_streaming(
+            messages=[InputMessage(role="user", content="hi")],
+            temperature=0.7,
+            model="test",
+            user_info=None,
+            conversation_id="chat-123",
+        ):
+            chunks.append(chunk)
+
+        streamed_content = "".join(
+            choice["delta"].get("content") or ""
+            for chunk in chunks
+            for choice in chunk["choices"]
+        )
+        assert "visible" in streamed_content
+        assert "hidden" not in streamed_content
+
+        trace_span = langfuse_client.spans[0]
+        trace_output = trace_span.updates[0]["output"]
+        events = trace_output["events"]
+        assert [event["stream"] for event in events] == [
+            "messages",
+            "messages",
+            "custom",
+            "updates",
+        ]
+        assert events[0]["internal"] is True
+        assert events[0]["content"] == "hidden"
+        assert events[2]["content"]["tool_name"] == "example_tool"
+        assert events[3]["content"]["agent"]["messages"][0]["content"] == "done"

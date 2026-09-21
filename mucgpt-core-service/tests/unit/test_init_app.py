@@ -1,11 +1,13 @@
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from langchain_core.language_models.fake_chat_models import FakeListChatModel
 
 from agent.agent_executor import MUCGPTAgentExecutor
-from agent.react_agent import MUCGPTReActAgent
+from agent.deep_agent import MUCGPTAgent
 from agent.tools.tools import ToolCollection
 from core.auth_models import AuthenticationResult
+from core.lf_prompts import ResolvedPrompt
 from init_app import ModelOptions, init_agent
 
 
@@ -15,8 +17,8 @@ class TestInitApp:
     def setup_method(self):
         """Set up test fixtures before each test method."""
         # mock model
-        self.mock_model = MagicMock()
-        self.mock_agent = MagicMock(spec=MUCGPTReActAgent)
+        self.mock_model = FakeListChatModel(responses=["response"])
+        self.mock_agent = MagicMock(spec=MUCGPTAgent)
 
         # mock user
         self.mock_user = MagicMock(spec=AuthenticationResult)
@@ -25,16 +27,21 @@ class TestInitApp:
         self.tool_collection = MagicMock(spec=ToolCollection)
 
     @pytest.mark.asyncio
-    @patch("config.model_provider.ModelProvider.get_model")
+    @patch("config.model_provider.ModelRegistry.get_model")
     @patch("agent.tools.tools.ToolCollection.get_tools", new_callable=AsyncMock)
     async def test_init_agent_calls_correct_components(
         self,
         mock_get_tools,
         mock_get_model,
+        monkeypatch: pytest.MonkeyPatch,
     ):
         # Arrange
         mock_get_model.return_value = self.mock_model
         mock_get_tools.return_value = []
+        monkeypatch.setattr(
+            "agent.deep_agent.PromptPool.get_resolved_prompt",
+            lambda _name: ResolvedPrompt(content="default instruction"),
+        )
 
         # Act
         result = await init_agent(self.mock_user)

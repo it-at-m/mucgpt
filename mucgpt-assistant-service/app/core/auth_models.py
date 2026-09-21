@@ -10,12 +10,14 @@ class AuthenticationResult(BaseModel):
         department: The department the user belongs to
         name: The full name of the authenticated user
         roles: List of roles assigned to the user
+        is_admin: Whether the user holds the configured admin role
     """
 
     user_id: str
     department: str
     name: str | None = None
     roles: list[str] | None = None
+    is_admin: bool = False
 
     class Config:
         json_schema_extra = {
@@ -24,6 +26,7 @@ class AuthenticationResult(BaseModel):
                 "department": "IT Department",
                 "name": "John Doe",
                 "roles": ["mucgpt-user"],
+                "is_admin": False,
             }
         }
 

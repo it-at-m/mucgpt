@@ -15,21 +15,54 @@ from langchain_core.messages import (
     SystemMessage,
     ToolMessage,
 )
+from langfuse import propagate_attributes
 from langfuse.langchain import CallbackHandler as LFCallbackHandler
 from langgraph.config import get_config as get_runtime_config
 from langgraph.types import Command
 
 from agent.state_models.default_state import DefaultAgentState
 from agent.tools.policies import get_policy_for_state
+from config.harness_profiles import DEEP_AGENT_BUILTIN_TOOLS
 from config.langfuse_provider import LangfuseProvider
+from config.model_provider import ModelRegistry
 from core.logtools import getLogger
 
 logger = getLogger(name="agent-middleware")
 
 
 @dataclass
+class TokenUsage:
+    """Cumulative usage for one agent run and its latest model context."""
+
+    prompt_tokens: int = 0
+    completion_tokens: int = 0
+    context_tokens: int | None = None
+
+    def add(self, usage_metadata: dict[str, Any]) -> None:
+        prompt_tokens = usage_metadata.get("input_tokens") or usage_metadata.get(
+            "prompt_tokens", 0
+        )
+        completion_tokens = usage_metadata.get("output_tokens") or usage_metadata.get(
+            "completion_tokens", 0
+        )
+        self.prompt_tokens += prompt_tokens
+        self.completion_tokens += completion_tokens
+        self.context_tokens = (
+            usage_metadata.get("total_tokens") or prompt_tokens + completion_tokens
+        )
+
+
+@dataclass
 class RequestContext:
     assistant_id: str | None = None
+    model_name: str | None = None
+    temperature: float = 0.5
+    stream: bool = False
+    user: str | None = None
+    extra_body: dict[str, Any] | None = None
+    enabled_tools: list[str] | None = None
+    token_usage: TokenUsage | None = None
+    langfuse_prompt: Any | None = None
 
 
 def _make_scoped_callbacks() -> list:
@@ -66,6 +99,9 @@ def _annotate_span_with_policy_state(
 
     Silently no-ops when Langfuse is not configured or no span is active.
     """
+    if LangfuseProvider.get_callback_handler() is None:
+        return
+
     try:
         from langfuse import get_client as _lf_get_client
 
@@ -195,15 +231,28 @@ def _inject_data_sources(
     return messages_copy
 
 
-def _get_assistant_id_from_request(request: ModelRequest) -> str | None:
-    """Return the assistant id from runtime context or active config."""
+def _get_request_context(request: ModelRequest) -> RequestContext | None:
+    """Return the runtime context as a ``RequestContext``, coercing a dict if needed."""
     runtime_context = getattr(getattr(request, "runtime", None), "context", None)
     if isinstance(runtime_context, RequestContext):
-        return runtime_context.assistant_id
+        return runtime_context
     if isinstance(runtime_context, dict):
-        assistant_id = runtime_context.get("assistant_id")
-        if assistant_id:
-            return str(assistant_id)
+        known_fields = RequestContext.__dataclass_fields__
+        return RequestContext(
+            **{
+                key: value
+                for key, value in runtime_context.items()
+                if key in known_fields
+            }
+        )
+    return None
+
+
+def _get_assistant_id_from_request(request: ModelRequest) -> str | None:
+    """Return the assistant id from runtime context or active config."""
+    runtime_context = _get_request_context(request)
+    if runtime_context is not None and runtime_context.assistant_id:
+        return str(runtime_context.assistant_id)
 
     try:
         config = get_runtime_config() or {}
@@ -215,14 +264,48 @@ def _get_assistant_id_from_request(request: ModelRequest) -> str | None:
     return str(assistant_id) if assistant_id else None
 
 
-# TODO:
-# - Ensure the frontend is stateful and can send the current scope in the request
+def _configure_model_request(request: ModelRequest) -> ModelRequest:
+    """Select a concrete model and apply request-scoped invocation settings."""
+    runtime_context = _get_request_context(request)
+    if runtime_context is None:
+        return request.override(model=ModelRegistry.get_model())
+
+    model_settings = {
+        **request.model_settings,
+        "temperature": runtime_context.temperature,
+        "stream": runtime_context.stream,
+    }
+    if runtime_context.user is not None:
+        model_settings["user"] = runtime_context.user
+    if runtime_context.extra_body is not None:
+        model_settings["extra_body"] = runtime_context.extra_body
+
+    model = ModelRegistry.get_model(runtime_context.model_name)
+    model_settings = ModelRegistry.normalize_model_settings(model, model_settings)
+    return request.override(model=model, model_settings=model_settings)
+
+
+def _filter_request_tools(request: ModelRequest) -> ModelRequest:
+    """Restrict registered tools to the request-scoped allowlist."""
+    runtime_context = _get_request_context(request)
+    if runtime_context is None or runtime_context.enabled_tools is None:
+        return request
+
+    enabled_tools = set(runtime_context.enabled_tools)
+    return request.override(
+        tools=[
+            tool
+            for tool in request.tools or []
+            if tool.name in DEEP_AGENT_BUILTIN_TOOLS or tool.name in enabled_tools  # type: ignore
+        ]
+    )
+
+
 class ContextMiddleware(AgentMiddleware):
     """Adjust model calls based on agent state and its associated policy.
 
     The policy is resolved from the state type via the policy registry:
     - ``DefaultAgentState``   → ``DefaultScopePolicy`` (no-op, all tools forwarded)
-    - ``AtlassianAgentState`` → ``AtlassianScopePolicy`` (scope-aware tool filtering)
 
     Additional state types can be registered in ``agent.tools.policies``.
     """
@@ -247,10 +330,11 @@ class ContextMiddleware(AgentMiddleware):
 
         # Fresh CallbackHandler inherits the current OTel context (active agent trace),
         # so any LLM calls inside infer_scope are nested under the parent trace.
-        #inference_callbacks = _make_scoped_callbacks()
-        #request = policy.infer_scope(request, callbacks=inference_callbacks)
+        # inference_callbacks = _make_scoped_callbacks()
+        # request = policy.infer_scope(request, callbacks=inference_callbacks)
+        request = _filter_request_tools(request)
         request = request.override(tools=policy.select_tools(request))
-        logger.info(f"selected Tools: {len(request.tools or [])}")
+        logger.debug(f"selected Tools: {len(request.tools or [])}")
         _annotate_span_with_policy_state(policy, request.state, self.state_schema)
 
         assistant_id = _get_assistant_id_from_request(request)
@@ -267,7 +351,12 @@ class ContextMiddleware(AgentMiddleware):
             new_messages = _inject_data_sources(request.messages, all_data_sources)
             request = request.override(messages=new_messages)
 
-        return handler(request)
+        request = _configure_model_request(request)
+        runtime_context = _get_request_context(request)
+        if runtime_context is None or runtime_context.langfuse_prompt is None:
+            return handler(request)
+        with propagate_attributes(prompt=runtime_context.langfuse_prompt):
+            return handler(request)
 
     async def awrap_model_call(
         self,
@@ -279,12 +368,11 @@ class ContextMiddleware(AgentMiddleware):
 
         # Fresh CallbackHandler inherits the current OTel context (active agent trace),
         # so any LLM calls inside ainfer_scope are nested under the parent trace.
-        #inference_callbacks = _make_scoped_callbacks()
-        #request = await policy.ainfer_scope(request, callbacks=inference_callbacks)
-        request = request.override(
-            tools=policy.select_tools(request),
-        )
-        logger.info(f"selected Tools: {len(request.tools or [])}")
+        # inference_callbacks = _make_scoped_callbacks()
+        # request = await policy.ainfer_scope(request, callbacks=inference_callbacks)
+        request = _filter_request_tools(request)
+        request = request.override(tools=policy.select_tools(request))
+        logger.debug(f"selected Tools: {len(request.tools or [])}")
         _annotate_span_with_policy_state(policy, request.state, self.state_schema)
 
         assistant_id = _get_assistant_id_from_request(request)
@@ -301,7 +389,12 @@ class ContextMiddleware(AgentMiddleware):
             new_messages = _inject_data_sources(request.messages, all_data_sources)
             request = request.override(messages=new_messages)
 
-        return await handler(request)
+        request = _configure_model_request(request)
+        runtime_context = _get_request_context(request)
+        if runtime_context is None or runtime_context.langfuse_prompt is None:
+            return await handler(request)
+        with propagate_attributes(prompt=runtime_context.langfuse_prompt):
+            return await handler(request)
 
 
 class ToolErrorMiddleware(AgentMiddleware):
@@ -338,3 +431,43 @@ class ToolErrorMiddleware(AgentMiddleware):
                 content=f"Tool execution failed: {exc}",
                 tool_call_id=request.tool_call["id"],
             )
+
+
+class TokenUsageMiddleware(AgentMiddleware):
+    """Extract token usage from model responses and record cumulative usage."""
+
+    @staticmethod
+    def _record_usage(request: ModelRequest, model_response: ModelResponse) -> None:
+        usage_metadata = (
+            getattr(model_response.result[-1], "usage_metadata", None)
+            if model_response.result
+            else None
+        )
+        if usage_metadata is None:
+            logger.warning("No token usage metadata found in the model response.")
+            return
+
+        logger.debug("Token usage metadata: %s", usage_metadata)
+        runtime_context = _get_request_context(request)
+        if runtime_context is None or runtime_context.token_usage is None:
+            logger.warning("No request-local token usage collector configured.")
+            return
+        runtime_context.token_usage.add(usage_metadata)
+
+    def wrap_model_call(
+        self,
+        request: ModelRequest,
+        handler: Callable[[ModelRequest], ModelResponse],
+    ) -> ModelResponse:
+        model_response: ModelResponse = handler(request)
+        self._record_usage(request, model_response)
+        return model_response
+
+    async def awrap_model_call(
+        self,
+        request: ModelRequest,
+        handler: Callable[[ModelRequest], Awaitable[ModelResponse]],
+    ) -> ModelResponse:
+        model_response = await handler(request)
+        self._record_usage(request, model_response)
+        return model_response

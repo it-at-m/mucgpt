@@ -2,7 +2,7 @@ import logging
 from decimal import Decimal
 from enum import StrEnum
 from functools import lru_cache
-from typing import Any
+from typing import Any, Literal
 from urllib.parse import urljoin
 
 import httpx
@@ -65,9 +65,46 @@ class ModelInfo(BaseModel):
     creativity_low_temperature: float | None = None
     creativity_medium_temperature: float | None = None
     creativity_high_temperature: float | None = None
+    context_warning_threshold_percent: int = Field(default=75, ge=1, le=100)
+    context_critical_threshold_percent: int = Field(default=90, ge=1, le=100)
+
+    @model_validator(mode="after")
+    def check_threshold_order(self) -> "ModelInfo":
+        if (
+            self.context_warning_threshold_percent
+            >= self.context_critical_threshold_percent
+        ):
+            raise ValueError(
+                "context_warning_threshold_percent must be lower than "
+                "context_critical_threshold_percent"
+            )
+        return self
+
+
+DeepAgentBuiltinTool = Literal[
+    "write_todos",
+    "ls",
+    "read_file",
+    "write_file",
+    "edit_file",
+    "delete",
+    "glob",
+    "grep",
+    "execute",
+    "task",
+]
+
+
+class DeepAgentModelConfig(BaseModel):
+    """Model-specific Deep Agents harness configuration."""
+
+    enabled_builtin_tools: set[DeepAgentBuiltinTool] = Field(default_factory=set)
+    enable_subagents: bool = False
+    enable_summarization: bool | None = False
 
 
 class ModelsConfig(BaseModel):
+    deep_agent: DeepAgentModelConfig = Field(default_factory=DeepAgentModelConfig)
     type: str = Field(..., min_length=1)
     llm_name: str = Field(..., min_length=1)
     deployment: str = ""
@@ -108,6 +145,8 @@ class ModelsConfig(BaseModel):
             "creativity_low_temperature",
             "creativity_medium_temperature",
             "creativity_high_temperature",
+            "context_warning_threshold_percent",
+            "context_critical_threshold_percent",
         }
 
         existing_info = data.get("model_info")
@@ -168,6 +207,22 @@ class ModelsConfig(BaseModel):
     @max_input_tokens.setter
     def max_input_tokens(self, value: PositiveInt | None) -> None:
         self.model_info.max_input_tokens = value
+
+    @property
+    def context_warning_threshold_percent(self) -> int:
+        return self.model_info.context_warning_threshold_percent
+
+    @context_warning_threshold_percent.setter
+    def context_warning_threshold_percent(self, value: int) -> None:
+        self.model_info.context_warning_threshold_percent = value
+
+    @property
+    def context_critical_threshold_percent(self) -> int:
+        return self.model_info.context_critical_threshold_percent
+
+    @context_critical_threshold_percent.setter
+    def context_critical_threshold_percent(self, value: int) -> None:
+        self.model_info.context_critical_threshold_percent = value
 
     @property
     def description(self) -> str | None:
@@ -290,7 +345,8 @@ class ModelsConfig(BaseModel):
 class SSOConfig(BaseModel):
     """SSO configuration (nested under SSO key in YAML)."""
 
-    ROLE: str = "lhm-ab-mucgpt-user"
+    ROLE: str | None = None
+    ADMIN_ROLE: str | None = None
 
 
 class LangfuseConfig(BaseModel):
@@ -384,6 +440,26 @@ class InternetSearchConfig(BaseModel):
     SAFESEARCH: int = 1
 
 
+class PromptConfig(BaseModel):
+    """A prompt inside a Langfuse folder."""
+
+    name: str
+    label: str = "production"
+
+
+class PromptFolderConfig(BaseModel):
+    """A Langfuse folder and the prompts loaded from it."""
+
+    name: str
+    prompts: list[PromptConfig]
+
+
+class PromptPoolConfig(BaseModel):
+    """Configured Langfuse prompt folders."""
+
+    FOLDERS: list[PromptFolderConfig] = Field(default_factory=list)
+
+
 # Backward-compatible aliases
 SSOSettings = SSOConfig
 LangfuseSettings = LangfuseConfig
@@ -422,11 +498,13 @@ class Settings(BaseSettings):
     FEATURE_REQUEST_URL: str | None = None
     CONTACT_MAIL_URL: str | None = None
     AD2IMAGE_URL: str | None = None
+    OWNER_PROFILE_URL_TEMPLATE: str | None = None
 
     # Backend settings
     UNAUTHORIZED_USER_REDIRECT_URL: str = ""
     MODELS: list[ModelsConfig] = []
     MEMORY_SERVICE_URL: str = ""
+    PROMPTS: PromptPoolConfig = Field(default_factory=PromptPoolConfig)
 
     # Parsing
     PARSER_BACKEND: ParserBackendType = ParserBackendType.NONE
@@ -435,6 +513,9 @@ class Settings(BaseSettings):
 
     # Frontend feature flags
     TRANSCRIPTION_ENABLED: bool = False
+    AI_ACT_COMPLIANCE_CHECK_ENABLED: bool = True
+    COMPLIANCE_CACHE_ENABLED: bool = True
+    COMPLIANCE_CACHE_TTL_SECONDS: PositiveInt = 30 * 60
 
     # Nested sub-configurations
     SSO: SSOConfig = Field(default_factory=SSOConfig)

@@ -3,7 +3,6 @@ import { useRef, useState, useEffect, useContext, useCallback, useMemo, useReduc
 import { AskResponse, ChatResponse, DataSource } from "../../api";
 import { Answer } from "../../components/Answer";
 import { QuestionInput } from "../../components/QuestionInput";
-import { StarterPromptList, StarterPromptModel } from "../../components/StarterPrompt";
 import { LanguageContext } from "../../components/LanguageSelector/LanguageContextProvider";
 import { useTranslation } from "react-i18next";
 import { LLMContext } from "../../components/LLMSelector/LLMContextProvider";
@@ -25,7 +24,8 @@ import { UploadedData, createUploadedDataFromContent } from "../../components/Co
 import { getStoredParsedDocuments } from "../../service/parsedDocumentStorage";
 import { useToolStatusToasts } from "../../hooks/useToolStatusToasts";
 import { useUnifiedHistory, useUnifiedHistoryRegistration } from "../../components/UnifiedHistory";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
+import { UserContext } from "../layout/UserContextProvider";
 
 /**
  * Creates a debounced function that delays invoking the provided function
@@ -59,21 +59,12 @@ export interface ChatOptions {
     creativity: string;
 }
 
-// Define constants outside the component
-const CHAT_STARTER_PROMPTS: StarterPromptModel[] = [
-    {
-        text: "Du bist König Ludwig II. von Bayern. Schreibe einen Brief an alle Mitarbeiter*innen der Stadtverwaltung München.",
-        value: "Du bist König Ludwig II. von Bayern. Schreibe einen Brief an alle Mitarbeiter*innen der Stadtverwaltung München, indem Du Dich für die tolle Leistung bedankst und den Bau eines neuen Schlosses (noch beeindruckender als Neuschwanstein) in der Stadt München wünschst."
-    },
-    {
-        text: "Stell dir vor, es ist schlechtes Wetter.",
-        value: `Stell dir vor, es ist schlechtes Wetter und du sitzt lustlos im Büro. Alle möglichen Leute wollen etwas von Dir und Du spürst eine Stimmung, als ob irgendeine Kleinigkeit gleich eskalieren wird. Schreibe mir etwas, das dir in dieser Situation gut tut und dich aufmuntert.`
-    },
-    {
-        text: "Motiviere, warum eine öffentliche Verwaltung Robot Process Automation nutzen sollte und warum nicht?",
-        value: "Motiviere, warum eine öffentliche Verwaltung Robot Process Automation nutzen sollte und warum nicht?"
-    }
-];
+const WELCOME_MESSAGE_KEYS = ["home.chat_header"];
+const NAMELESS_WELCOME_MESSAGE_KEY = "chat.header";
+
+function pickWelcomeMessageKey(): string {
+    return WELCOME_MESSAGE_KEYS[Math.floor(Math.random() * WELCOME_MESSAGE_KEYS.length)];
+}
 
 // Custom hook for storage operations
 function useStorageService(activeChatId: string | undefined) {
@@ -96,9 +87,11 @@ const Chat = () => {
     const { LLM, setLLM, availableLLMs } = useContext(LLMContext);
     const { t } = useTranslation();
     const location = useLocation();
+    const navigate = useNavigate();
     const { refreshHistory: refreshUnifiedHistory } = useUnifiedHistory();
     const { setFollowUpActions } = useContext(FollowUpActionContext);
     const { tools } = useToolsContext();
+    const { user } = useContext(UserContext);
 
     // Independent states
     const [error, setError] = useState<unknown>();
@@ -115,8 +108,10 @@ const Chat = () => {
     const [isSettingsOpen, setIsSettingsOpen] = useState<boolean>(false);
     const [uploadedData, setUploadedData] = useState<UploadedData[]>([]);
     const [isLoading, setIsLoading] = useState<boolean>(false);
-    /** True for the full chat request lifetime (SSE included). Unlike isLoading, stays true after the answer placeholder is added. */
-    const [isStreamingAnswer, setIsStreamingAnswer] = useState<boolean>(false);
+    // True from the moment a request is sent until the answer has fully finished streaming.
+    // Unlike `isLoading` (which only covers the wait for the first token), this stays true for the
+    // whole generation, so follow-up actions can be hidden until the message is completely rendered.
+    const [isStreaming, setIsStreaming] = useState<boolean>(false);
 
     useToolStatusToasts(toolStatuses);
 
@@ -132,6 +127,12 @@ const Chat = () => {
     // Destructuring for easier access
     const { answers, creativity, systemPrompt, active_chat, allChats } = chatState;
     const activeChatName = useMemo(() => allChats.find(chat => chat.id === active_chat)?.name, [active_chat, allChats]);
+
+    // Picked once per mount so the greeting doesn't change while the empty state is visible.
+    const welcomeMessageKeyRef = useRef(pickWelcomeMessageKey());
+    const username = user?.given_name || user?.name || "";
+    const welcomeMessageKey = username ? welcomeMessageKeyRef.current : NAMELESS_WELCOME_MESSAGE_KEY;
+    const welcomeMessage = t(welcomeMessageKey, { user: username, defaultValue: "Hallo {{user}}, was hast du heute vor?" });
 
     // Refs
     const lastQuestionRef = useRef<string>("");
@@ -253,7 +254,7 @@ const Chat = () => {
             lastQuestionRef.current = question;
             setError(undefined);
             setLoadingState(true);
-            setIsStreamingAnswer(true);
+            setIsStreaming(true);
 
             const askResponse: ChatResponse = { answer: "", tokens: 0, user_tokens: 0 } as AskResponse;
             const options: ChatOptions = {
@@ -285,7 +286,7 @@ const Chat = () => {
                 setError(e);
             } finally {
                 setLoadingState(false);
-                setIsStreamingAnswer(false);
+                setIsStreaming(false);
             }
         },
         [answers, creativity, LLM, storageService, fetchHistory, selectedTools, setToolStatuses, setLoadingState]
@@ -690,37 +691,25 @@ const Chat = () => {
         setFollowUpActions([
             {
                 label: t("chat.follow_up_actions.shorter", { lng: language }),
-                prompt: t("chat.follow_up_actions.shorter_prompt", { lng: language }),
-                tooltip: t("chat.follow_up_actions.shorter_tooltip", { lng: language })
+                prompt: t("chat.follow_up_actions.shorter_prompt", { lng: language })
             },
             {
                 label: t("chat.follow_up_actions.formal", { lng: language }),
-                prompt: t("chat.follow_up_actions.formal_prompt", { lng: language }),
-                tooltip: t("chat.follow_up_actions.formal_tooltip", { lng: language })
+                prompt: t("chat.follow_up_actions.formal_prompt", { lng: language })
             },
             {
                 label: t("chat.follow_up_actions.informal", { lng: language }),
-                prompt: t("chat.follow_up_actions.informal_prompt", { lng: language }),
-                tooltip: t("chat.follow_up_actions.informal_tooltip", { lng: language })
+                prompt: t("chat.follow_up_actions.informal_prompt", { lng: language })
             },
             {
                 label: t("chat.follow_up_actions.longer", { lng: language }),
-                prompt: t("chat.follow_up_actions.longer_prompt", { lng: language }),
-                tooltip: t("chat.follow_up_actions.longer_tooltip", { lng: language })
+                prompt: t("chat.follow_up_actions.longer_prompt", { lng: language })
             }
         ]);
 
         return () => setFollowUpActions([]);
     }, [language, t, setFollowUpActions]);
 
-    // Click handlers
-    const onStarterPromptClicked = useCallback(
-        (starterPrompt: string, system?: string) => {
-            if (system) onSystemPromptChanged(system);
-            callApi(starterPrompt, system);
-        },
-        [callApi, onSystemPromptChanged]
-    );
     // Memo components
     const answerList = useMemo(
         () => (
@@ -733,7 +722,8 @@ const Chat = () => {
                                 <Answer
                                     key={`answer-${index}`}
                                     answer={answer.response}
-                                    isStreaming={isStreamingAnswer}
+                                    isLatest
+                                    isStreaming={isStreaming}
                                     onRegenerateResponseClicked={onRegenerateResponseClicked}
                                     onFollowUpActionSend={prompt => callApi(prompt, systemPrompt)}
                                 />
@@ -760,13 +750,47 @@ const Chat = () => {
                 lastAnswerRef={lastAnswerRef}
             />
         ),
-        [answers, onRegenerateResponseClicked, onRollbackMessage, error, callApi, systemPrompt, isLoading, isStreamingAnswer, lastQuestionRef, chatMessageStreamEnd, lastAnswerRef]
+        [
+            answers,
+            onRegenerateResponseClicked,
+            onRollbackMessage,
+            error,
+            callApi,
+            systemPrompt,
+            isLoading,
+            isStreaming,
+            lastQuestionRef,
+            chatMessageStreamEnd,
+            lastAnswerRef
+        ]
     );
 
-    const starterPromptsComponent = useMemo(
-        () => <StarterPromptList starterPrompts={CHAT_STARTER_PROMPTS} onStarterPromptClicked={onStarterPromptClicked} />,
-        [onStarterPromptClicked]
-    );
+    // Running token/cost usage for this chat, derived from the usage data the backend
+    // attaches to the final chunk of each streamed response (see page_helpers.ts).
+    const usageSummary = useMemo(() => {
+        let totalCost = 0;
+        let lastContextTokens = 0;
+        let maxInputTokens: number | null | undefined;
+        let warningThresholdPercent: number | undefined;
+        let criticalThresholdPercent: number | undefined;
+        for (const answer of answers) {
+            totalCost += answer.response.usage_cost ?? 0;
+            // Skip the still-streaming placeholder answer, which has no context_tokens yet,
+            // so the indicator keeps showing the last known usage instead of resetting to 0.
+            if (typeof answer.response.context_tokens === "number") {
+                lastContextTokens = answer.response.context_tokens;
+                maxInputTokens = answer.response.usage_max_input_tokens;
+                warningThresholdPercent = answer.response.usage_context_warning_threshold_percent;
+                criticalThresholdPercent = answer.response.usage_context_critical_threshold_percent;
+            }
+        }
+        if (lastContextTokens === 0 && totalCost === 0) return undefined;
+        return { totalCost, lastContextTokens, maxInputTokens, warningThresholdPercent, criticalThresholdPercent };
+    }, [answers]);
+
+    const startNewChatFromUsage = useCallback(() => {
+        navigate(`/chat?new=${Date.now()}`);
+    }, [navigate]);
 
     const inputComponent = useMemo(() => {
         const { questionFromUrl, newChatRequested } = getNavigationParams();
@@ -789,9 +813,27 @@ const Chat = () => {
                 uploadedData={uploadedData}
                 setUploadedData={setUploadedData}
                 onTranscription={text => setQuestion(text)}
+                usage={usageSummary}
+                onStartNewChat={startNewChatFromUsage}
+                usageConversationKey={`chat:${active_chat ?? "new"}`}
+                hideDisclaimer
             />
         );
-    }, [callApi, systemPrompt, question, t, isLoading, selectedTools, tools, uploadedData, uploadedDataToDataSources, getNavigationParams]);
+    }, [
+        active_chat,
+        callApi,
+        systemPrompt,
+        question,
+        t,
+        isLoading,
+        selectedTools,
+        tools,
+        uploadedData,
+        uploadedDataToDataSources,
+        getNavigationParams,
+        startNewChatFromUsage,
+        usageSummary
+    ]);
 
     const layout = useMemo(
         () => (
@@ -805,12 +847,11 @@ const Chat = () => {
                     setSystemPrompt={onSystemPromptChanged}
                 />
                 <ChatLayout
-                    starterPrompts={starterPromptsComponent}
                     answers={answerList}
                     input={inputComponent}
                     showStarterPrompts={!lastQuestionRef.current}
-                    header={activeChatName || t("chat.header")}
-                    welcomeMessage={t("chat.header")}
+                    header={activeChatName ?? ""}
+                    welcomeMessage={welcomeMessage}
                     header_as_markdown={false}
                     messages_description={t("common.messages")}
                     llmOptions={availableLLMs}
@@ -828,11 +869,11 @@ const Chat = () => {
             </>
         ),
         [
-            starterPromptsComponent,
             answerList,
             inputComponent,
             lastQuestionRef.current,
             t,
+            welcomeMessage,
             availableLLMs,
             LLM.llm_name,
             onLLMSelectionChange,

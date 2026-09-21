@@ -240,11 +240,14 @@ export const makeApiRequest = async (
     // Create conversation history for the API request
     const history: ChatTurn[] = answers.map((a: { user: any; response: { answer: any } }) => ({ user: a.user, assistant: a.response.answer }));
 
-    // Normal-chat conversation id: reuse the active local chat id when continuing
-    // an existing chat, otherwise generate one now so it can be sent with the
-    // first request too (instead of only after the first response). Assistant
-    // chats are out of scope for now.
-    const conversationId = assistant_id ? undefined : (activeChatRef.current ?? uuid());
+    // Reuse the active chat id when continuing. For assistant chats, the local
+    // storage key includes the assistant prefix, but the backend conversation id
+    // should stay stable as the plain chat UUID portion.
+    const conversationId = activeChatRef.current
+        ? assistant_id
+            ? activeChatRef.current.slice(AssistantStorageService.GENERATE_BOT_CHAT_PREFIX(assistant_id).length)
+            : activeChatRef.current
+        : uuid();
 
     // Build the API request object
     const request: ChatRequest = {
@@ -270,6 +273,7 @@ export const makeApiRequest = async (
     } // Initialize token counters for usage tracking
     let user_tokens = 0;
     let streamed_tokens = 0;
+    let context_tokens = 0;
 
     // Initialize tool stream handler for processing tool calls
     const toolStreamHandler = new ToolStreamHandler();
@@ -374,19 +378,23 @@ export const makeApiRequest = async (
                         // Parse the SSE chunk data
                         const chunk = JSON.parse(data) as ChatCompletionChunk;
                         const choice: ChatCompletionChunkChoice | undefined = chunk.choices?.[0];
-                        if (!choice) continue; // Check if streaming is complete
+                        if (!choice) continue;
+
+                        // Handle token usage information if available. This is sent on the final
+                        // (finish_reason: "stop") chunk, so it must be read before that check below.
+                        if (chunk.usage) {
+                            user_tokens = user_tokens + (chunk.usage.prompt_tokens || 0);
+                            streamed_tokens = streamed_tokens + (chunk.usage.completion_tokens || 0);
+                            context_tokens =
+                                chunk.usage.context_tokens ??
+                                chunk.usage.total_tokens ??
+                                (chunk.usage.prompt_tokens || 0) + (chunk.usage.completion_tokens || 0);
+                        }
+
+                        // Check if streaming is complete
                         if (choice.finish_reason === "stop") {
                             streamDone = true;
                             break;
-                        }
-
-                        // Handle token usage information if available
-                        const chunkWithUsage = chunk as ChatCompletionChunk & {
-                            usage?: { prompt_tokens?: number; completion_tokens?: number; total_tokens?: number };
-                        };
-                        if (chunkWithUsage.usage) {
-                            user_tokens = user_tokens + (chunkWithUsage.usage.prompt_tokens || 0);
-                            streamed_tokens = streamed_tokens + (chunkWithUsage.usage.completion_tokens || 0);
                         }
 
                         // Handle tool calls if present in the response
@@ -436,12 +444,19 @@ export const makeApiRequest = async (
 
     const finalToolContent = toolStreamHandler.getFormattedContent();
     const finalCombinedContent = textBuffer + finalToolContent;
+    const usageCost = user_tokens * (LLM.input_cost_per_token ?? 0) + streamed_tokens * (LLM.output_cost_per_token ?? 0);
 
     const finalResponse = {
         ...askResponse,
         answer: finalCombinedContent,
         tokens: streamed_tokens,
         user_tokens: user_tokens,
+        context_tokens,
+        usage_cost: usageCost,
+        usage_model: LLM.llm_name,
+        usage_max_input_tokens: LLM.max_input_tokens,
+        usage_context_warning_threshold_percent: LLM.context_warning_threshold_percent,
+        usage_context_critical_threshold_percent: LLM.context_critical_threshold_percent,
         activeTools: activeToolStatuses
     };
 
@@ -477,11 +492,10 @@ export const makeApiRequest = async (
         // Create a new chat with generated name
         const chatname = await createChatName(question, finalResponse.answer, options.system ?? "");
 
-        // Create chat with assistant-specific ID if assistant_id is provided, otherwise
-        // reuse the id already generated above (and sent as conversation_id) for a
-        // regular chat, so the local id matches what the backend was sent.
+        // For assistant chats, keep the assistant-prefixed local storage key while
+        // reusing the same canonical conversation id sent to the backend.
         const id = assistant_id
-            ? await storageService.create([finalMessage], options, AssistantStorageService.GENERATE_BOT_CHAT_ID(assistant_id, uuid()), chatname, false)
+            ? await storageService.create([finalMessage], options, AssistantStorageService.GENERATE_BOT_CHAT_ID(assistant_id, conversationId), chatname, false)
             : await storageService.create([finalMessage], options, conversationId ?? uuid(), chatname, false);
 
         // Set the new chat as active and refresh history

@@ -478,6 +478,32 @@ class TestAssistantRepository:
         assert version.system_prompt == sample_assistant_version_data.system_prompt
         assert version.creativity == sample_assistant_version_data.creativity
 
+    async def test_create_assistant_version_persists_compliance_confirmation(
+        self, db_session, sample_assistant_data, sample_assistant_version_data
+    ):
+        """Test creating a new assistant version persists compliance_confirmation."""
+        assistant_repo = AssistantRepository(db_session)
+        assistant = await assistant_repo.create(
+            hierarchical_access=sample_assistant_data["hierarchical_access"],
+            owner_ids=sample_assistant_data["owner_ids"],
+        )
+        await db_session.commit()
+
+        version = await assistant_repo.create_assistant_version(
+            assistant=assistant,
+            name=sample_assistant_version_data.name,
+            system_prompt=sample_assistant_version_data.system_prompt,
+            description=sample_assistant_version_data.description,
+            creativity=sample_assistant_version_data.creativity,
+            examples=sample_assistant_version_data.examples,
+            quick_prompts=sample_assistant_version_data.quick_prompts,
+            tags=sample_assistant_version_data.tags,
+            compliance_confirmation=True,
+        )
+        await db_session.commit()
+
+        assert version.compliance_confirmation is True
+
     async def test_create_multiple_assistant_versions(
         self, db_session, sample_assistant_data, sample_assistant_version_data
     ):

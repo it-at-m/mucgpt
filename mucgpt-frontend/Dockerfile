@@ -1,4 +1,4 @@
-FROM node:24.18.0-alpine@sha256:a0b9bf06e4e6193cf7a0f58816cc935ff8c2a908f81e6f1a95432d679c54fbfd AS builder
+FROM node:24.21.0-alpine@sha256:ebfe2f90462722a7a4de65e91990e97fe0d401c70e0e762c5b53302f905ec1c1 AS builder
 
 ARG HTTP_PROXY
 ARG HTTPS_PROXY
@@ -19,8 +19,7 @@ ENV GLOBAL_AGENT_HTTPS_PROXY=${HTTPS_PROXY}
 
 WORKDIR /build
 
-# Keep npm's lockfile resolver aligned with the supported local development version.
-RUN npm install --global npm@11.6.2
+# Use the npm version bundled with Node 24 for consistency with local and CI environments
 
 # Copy only dependency files first for better caching
 COPY package*.json .npmrc ./
@@ -42,7 +41,7 @@ COPY src/ ./src/
 RUN --mount=type=cache,target=/build/node_modules/.vite \
     npm run build
 
-FROM registry.access.redhat.com/ubi9/nginx-124:9.8-1781729662@sha256:fc282f9fc249d9b9606d1d93769e1b6e1c042221fdae285b53032b59ba9690d0
+FROM registry.access.redhat.com/ubi9/nginx-124:9.8-1789637096@sha256:85a20c56e46659c9c658a86c19156fbf460f9245c8fee1df72baf0c2092b6a9c
 
 # Copy built web application
 COPY --from=builder /build/dist ./

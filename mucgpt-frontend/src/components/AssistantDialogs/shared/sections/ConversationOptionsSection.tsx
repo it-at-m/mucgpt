@@ -515,15 +515,14 @@ export const ConversationOptionsSection = ({
         getPrompt: item => item.prompt,
         getTitle: item => item.label,
         itemType: "quick-prompt",
-        newItem: () => ({ id: generatePromptId(), label: "", prompt: "", tooltip: "" }),
+        newItem: () => ({ id: generatePromptId(), label: "", prompt: "" }),
         promptLabel: t("components.assistant_editor.follow_up_action_prompt"),
         promptPlaceholder: t("components.assistant_editor.follow_up_action_text_placeholder"),
         sectionTitle: t("components.assistant_editor.follow_up_actions"),
         titlePlaceholder: t("components.assistant_editor.follow_up_action_label_placeholder"),
         untitledLabel: t("components.assistant_editor.follow_up_action_untitled"),
         updatePrompt: (item, value) => ({ ...item, prompt: value }),
-        updateTitle: (item, value) => ({ ...item, label: value }),
-        updateTitleOnBlur: (item, value) => ({ ...item, tooltip: value })
+        updateTitle: (item, value) => ({ ...item, label: value })
     };
 
     const starterPromptsConfig: EditablePromptListConfig<StarterPromptModel> = {

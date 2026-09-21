@@ -52,6 +52,21 @@ MODELS:
 
 See `mucgpt-core-service/config.yaml.example` and `mucgpt-assistant-service/config.yaml.example` for complete examples.
 
+### Prompt Configuration
+
+See the [AI governance and compliance checks guide](AI_GOVERNANCE.md) for the
+end-to-end screening flow, version lifecycle, review queue, and operational
+responsibilities.
+
+The optional `PROMPTS` section maps prompt names used by the core service to prompts stored in [langfuse](https://langfuse.com/docs/prompt-management/overview). Configure each prompt under its Langfuse folder with the label to use; folder and prompt names must match Langfuse exactly. See `mucgpt-core-service/config.yaml.example` for the complete YAML structure.
+
+- `defaults/default_instructions`: general system instructions for regular chat.
+- `generation_prompts/chat_title`: generates concise chat titles.
+- `generation_prompts/assistant_name`: generates assistant names from prompt seeds.
+- `generation_prompts/assistant_description`: generates assistant descriptions from prompt seeds.
+- `generation_prompts/assistant_systemprompt`: generates assistant system prompts from prompt seeds.
+- `compliance_prompts/*`: screens assistant prompts for high-risk use cases (eu-ai-act) in migration/asylum/border control, public services, employment, and education.
+
 ### Document Parsing Configuration (YAML)
 
 The core service supports extracting text and structure from uploaded documents using an optional parser. Configure the document parser in `core.config.yaml`. By default, document parsing is disabled (`PARSER_BACKEND: "none"`).
@@ -102,6 +117,44 @@ Settings are loaded in this order (highest priority wins):
 
 This means environment variables always override YAML values, which is useful for injecting secrets in CI/CD.
 
+### Data storage overview
+
+MUCGPT stores data in two layers:
+
+- PostgreSQL (persistent):
+  - Assistants and their versions
+  - Assistant subscriptions
+- Redis/Valkey (temporary cache):
+  - MCP tool metadata cache (core service, key prefix: `mcp_tools_raw:`)
+  - LDAP/Active Directory data cache (assistant service, key: `mucgpt:directory-tree:v1`)
+  - Assistant compliance verification cache (key prefix: `mucgpt:assistant-compliance:v1:`)
+
+Notes:
+
+- PostgreSQL is the source of truth for assistant and subscription data.
+- Redis/Valkey entries are TTL-based and can expire:
+  - MCP tools: configured via `MCP.CACHE_TTL` (default: 12h)
+  - LDAP directory cache: configured via `LDAP.CACHE_TTL` (default: 14d)
+  - Compliance verification cache: configured via `COMPLIANCE_CACHE_TTL_SECONDS` (default: 30m)
+
+### Browser storage (frontend)
+
+In addition to backend storage, the frontend uses browser storage for UX state and local history:
+
+- IndexedDB:
+  - `MUCGPT-ASSISTANTS` (assistant data)
+  - `MUCGPT-CHAT` (chat data)
+  - `MUCGPT-COMMUNITY-ASSISTANTS` (community assistant data)
+- localStorage:
+  - UI/user preferences (for example language, theme, selected tools, selected model)
+  - Parsed document history/content cache (`MUCGPT_PARSED_DOCUMENTS_V1`)
+- sessionStorage:
+  - Route-local draft text in the question input
+- Cookies:
+  - `XSRF-TOKEN` is read by the frontend and sent as `X-XSRF-TOKEN` request header
+
+Note: Browser storage is client-local and can be cleared by the user/browser.
+
 ### Environment Variable Override Examples
 
 Any YAML setting can be overridden. Nested sections use `__` (double underscore):
@@ -109,6 +162,7 @@ Any YAML setting can be overridden. Nested sections use `__` (double underscore)
 ```bash
 # Top-level field
 MUCGPT_CORE_VERSION=1.0.0              # → VERSION: "1.0.0"
+MUCGPT_CORE_AI_ACT_COMPLIANCE_CHECK_ENABLED=false  # → AI_ACT_COMPLIANCE_CHECK_ENABLED: false
 
 # Nested field (DB section in assistant service)
 MUCGPT_ASSISTANT_DB__HOST=postgres      # → DB: { HOST: "postgres" }

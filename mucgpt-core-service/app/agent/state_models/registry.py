@@ -1,5 +1,5 @@
-from .atlassian_state import AtlassianAgentState
+from .default_state import DefaultAgentState
 
 registry = {
-    "atlassian": AtlassianAgentState,
+    "default": DefaultAgentState,
 }

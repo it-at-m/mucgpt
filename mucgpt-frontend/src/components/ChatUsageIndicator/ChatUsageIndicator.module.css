@@ -1,0 +1,160 @@
+/*
+ * The Button itself stays a plain, invisible interaction surface (no background/size
+ * opinions of its own) - Fluent's hover/pressed/focus handling lives entirely on it,
+ * while the visible ring is a plain span inside it that no Fluent state class touches.
+ */
+.ringButton {
+    min-width: 0;
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    overflow: visible;
+}
+
+.ring {
+    --usage-percent: 0;
+
+    position: relative;
+    display: grid;
+    place-items: center;
+    width: 32px;
+    height: 32px;
+    padding: 3px;
+    border-radius: var(--borderRadiusCircular);
+    background: conic-gradient(var(--colorBrandBackground) calc(var(--usage-percent) * 1%), var(--colorNeutralBackground4) 0);
+    pointer-events: none;
+}
+
+.ring[data-tone="warning"] {
+    background: conic-gradient(var(--colorStatusWarningBorder1) calc(var(--usage-percent) * 1%), var(--colorNeutralBackground4) 0);
+}
+
+.ring[data-tone="critical"] {
+    background: conic-gradient(var(--colorStatusDangerBorder1) calc(var(--usage-percent) * 1%), var(--colorNeutralBackground4) 0);
+}
+
+.ring[data-full="true"] {
+    animation: usage-pulse 1.5s linear infinite;
+}
+
+/*
+ * Keyframe offsets and opacities follow sin(x) over one full period (10 samples),
+ * so the glow eases in and out like a wave instead of ping-ponging between two states.
+ */
+@keyframes usage-pulse {
+    0% {
+        box-shadow: 0 0 0 0 color-mix(in srgb, var(--colorStatusDangerBorder1) 0%, transparent);
+        transform: scale(1);
+    }
+    10% {
+        box-shadow: 0 0 0 0.9px color-mix(in srgb, var(--colorStatusDangerBorder1) 27%, transparent);
+        transform: scale(1.006);
+    }
+    20% {
+        box-shadow: 0 0 0 1.8px color-mix(in srgb, var(--colorStatusDangerBorder1) 48%, transparent);
+        transform: scale(1.011);
+    }
+    30% {
+        box-shadow: 0 0 0 2.5px color-mix(in srgb, var(--colorStatusDangerBorder1) 59%, transparent);
+        transform: scale(1.015);
+    }
+    40% {
+        box-shadow: 0 0 0 3px color-mix(in srgb, var(--colorStatusDangerBorder1) 60%, transparent);
+        transform: scale(1.017);
+    }
+    50% {
+        box-shadow: 0 0 0 3px color-mix(in srgb, var(--colorStatusDangerBorder1) 50%, transparent);
+        transform: scale(1.017);
+    }
+    60% {
+        box-shadow: 0 0 0 3.3px color-mix(in srgb, var(--colorStatusDangerBorder1) 31%, transparent);
+        transform: scale(1.014);
+    }
+    70% {
+        box-shadow: 0 0 0 3.6px color-mix(in srgb, var(--colorStatusDangerBorder1) 12%, transparent);
+        transform: scale(1.009);
+    }
+    80% {
+        box-shadow: 0 0 0 3.8px color-mix(in srgb, var(--colorStatusDangerBorder1) 2%, transparent);
+        transform: scale(1.003);
+    }
+    100% {
+        box-shadow: 0 0 0 4px color-mix(in srgb, var(--colorStatusDangerBorder1) 0%, transparent);
+        transform: scale(1);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .ring[data-full="true"] {
+        animation: none;
+        box-shadow: 0 0 0 2px color-mix(in srgb, var(--colorStatusDangerBorder1) 55%, transparent);
+    }
+}
+
+.ring::before {
+    content: "";
+    position: absolute;
+    inset: 3px;
+    border-radius: inherit;
+    background: var(--colorNeutralBackground3);
+}
+
+.ringValue {
+    position: relative;
+    color: var(--colorNeutralForeground1);
+    font-size: 9px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+}
+
+.helpSurface {
+    width: max-content;
+    min-width: 240px;
+    max-width: min(320px, calc(100vw - 32px));
+    box-sizing: border-box;
+    background: var(--colorNeutralBackground2) !important;
+}
+
+.helpContent {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.helpPrimary {
+    color: var(--colorNeutralForeground1);
+    white-space: nowrap;
+}
+
+.helpSecondary {
+    color: var(--colorNeutralForeground3);
+    display: block;
+}
+
+.helpExplanation {
+    display: block;
+    color: var(--colorNeutralForeground3);
+}
+
+.helpExplanationLead {
+    font-weight: 600;
+}
+
+.helpExplanationLead[data-tone="warning"] {
+    color: var(--colorStatusWarningForeground1);
+}
+
+.helpExplanationLead[data-tone="critical"] {
+    color: var(--colorStatusDangerForeground1);
+}
+
+.nudgeTitle {
+    color: var(--colorNeutralForeground1);
+}
+
+.nudgeActions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    align-items: center;
+}

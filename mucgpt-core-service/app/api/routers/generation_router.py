@@ -1,9 +1,8 @@
 import asyncio
-from pathlib import Path
+from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException
-from langchain_core.runnables import RunnableConfig
-from langfuse import observe, propagate_attributes
+from langfuse import observe
 
 from api.api_models import (
     AssistantDraftRequest,
@@ -13,62 +12,18 @@ from api.api_models import (
     ChatTitleResult,
 )
 from api.exception import llm_exception_handler
-from config.langfuse_provider import LangfuseProvider
-from config.model_provider import ModelProvider
-from config.settings import InternalTaskModelStrength, Settings, get_settings
+from config.settings import InternalTaskModelStrength, get_settings
 from core.auth import authenticate_user
 from core.auth_models import AuthenticationResult
 from core.llm_helpers import (
-    extract_department_prefix,
-    extract_message_content,
-    hash_user_id,
-    to_langchain_messages,
+    get_internal_task_model,
+    invoke_internal_generation,
+    read_prompt_file_with_metadata,
 )
 from core.logtools import getLogger
 
 logger = getLogger()
 router = APIRouter(prefix="/v1")
-
-
-PROMPTS_DIR = (
-    Path(__file__).resolve().parents[2] / "agent/prompt_pool/generation_prompts"
-)
-
-
-async def _invoke_internal_generation(
-    *,
-    model_name: str,
-    temperature: float,
-    messages: list[ChatCompletionMessage],
-    user_info: AuthenticationResult,
-    trace_tags: list[str],
-    run_name: str,
-) -> str:
-    callbacks = []
-    langfuse_handler = LangfuseProvider.get_callback_handler()
-    if langfuse_handler:
-        callbacks.append(langfuse_handler)
-
-    request_config = RunnableConfig(
-        run_name=run_name,
-        callbacks=callbacks if callbacks else None,  # type: ignore[arg-type]
-        configurable={
-            "llm": model_name,
-            "llm_temperature": temperature,
-            "llm_streaming": False,
-            "user_info": user_info,
-            "llm_user": extract_department_prefix(user_info.department),
-        },
-    )
-
-    llm = ModelProvider.get_model().with_config(request_config)
-    with propagate_attributes(
-        user_id=hash_user_id(user_info.user_id if user_info else None),
-        tags=trace_tags,
-    ):
-        ai_message = await llm.ainvoke(to_langchain_messages(messages))
-
-    return extract_message_content(ai_message.content)
 
 
 @observe(
@@ -84,60 +39,22 @@ async def _invoke_assistant_draft_part(
     user_info: AuthenticationResult,
     trace_tags: list[str],
     run_name: str,
+    langfuse_prompt: Any | None = None,
 ) -> str:
     """Trace wrapper for assistant-draft sub-generations.
 
     Keeps the three parallel draft calls grouped under one parent endpoint trace.
     """
 
-    return await _invoke_internal_generation(
+    return await invoke_internal_generation(
         model_name=model_name,
         temperature=temperature,
         messages=messages,
         user_info=user_info,
         trace_tags=trace_tags,
         run_name=run_name,
+        langfuse_prompt=langfuse_prompt,
     )
-
-
-def _get_internal_task_model(
-    settings: Settings, strength: InternalTaskModelStrength
-) -> str:
-    """Return the preferred model for an internal generation task."""
-
-    if not settings.MODELS:
-        logger.error("No models configured for internal generation tasks")
-        raise HTTPException(
-            status_code=500,
-            detail="No models configured for internal generation tasks",
-        )
-
-    model = next(
-        (
-            configured_model
-            for configured_model in settings.MODELS
-            if configured_model.model_info.internal_task_model_strength == strength
-        ),
-        settings.MODELS[0],
-    )
-    return model.llm_name
-
-
-def _read_prompt_file(filename: str) -> str:
-    """Read a prompt template from the prompts directory.
-
-    Kept small and synchronous because files are local and tiny.
-    """
-
-    path = PROMPTS_DIR / filename
-    try:
-        return path.read_text(encoding="utf-8")
-    except FileNotFoundError as exc:  # pragma: no cover - misconfiguration
-        logger.error("Prompt file not found: %s", path)
-        raise HTTPException(
-            status_code=500,
-            detail=f"Prompt configuration missing: {filename}",
-        ) from exc
 
 
 def _normalize_chat_title(value: str) -> str:
@@ -186,13 +103,13 @@ async def generate_assistant_draft(
     settings = get_settings()
 
     try:
-        model_name = _get_internal_task_model(
-            settings, InternalTaskModelStrength.STRONG
-        )
+        model_name = get_internal_task_model(settings, InternalTaskModelStrength.STRONG)
         logger.info("assistant-draft: reading prompt templates")
-        system_prompt_system = _read_prompt_file("prompt_for_systemprompt.md")
-        description_system = _read_prompt_file("prompt_for_description_from_seed.md")
-        title_system = _read_prompt_file("prompt_for_title_from_seed.md")
+        system_prompt_system = read_prompt_file_with_metadata(
+            "assistant_systemprompt.md"
+        )
+        description_system = read_prompt_file_with_metadata("assistant_description.md")
+        title_system = read_prompt_file_with_metadata("assistant_name.md")
 
         base_user_content = "Funktion: " + request.prompt_seed
 
@@ -202,34 +119,41 @@ async def generate_assistant_draft(
                 model_name=model_name,
                 temperature=1.0,
                 messages=[
-                    ChatCompletionMessage(role="system", content=system_prompt_system),
+                    ChatCompletionMessage(
+                        role="system", content=system_prompt_system.content
+                    ),
                     ChatCompletionMessage(role="user", content=base_user_content),
                 ],
                 user_info=user_info,
                 trace_tags=["assistant-draft", "system-prompt"],
                 run_name="assistant-draft-system-prompt",
+                langfuse_prompt=system_prompt_system.langfuse_prompt,
             ),
             _invoke_assistant_draft_part(
                 model_name=model_name,
                 temperature=1.0,
                 messages=[
-                    ChatCompletionMessage(role="system", content=description_system),
+                    ChatCompletionMessage(
+                        role="system", content=description_system.content
+                    ),
                     ChatCompletionMessage(role="user", content=base_user_content),
                 ],
                 user_info=user_info,
                 trace_tags=["assistant-draft", "description"],
                 run_name="assistant-draft-description",
+                langfuse_prompt=description_system.langfuse_prompt,
             ),
             _invoke_assistant_draft_part(
                 model_name=model_name,
                 temperature=1.0,
                 messages=[
-                    ChatCompletionMessage(role="system", content=title_system),
+                    ChatCompletionMessage(role="system", content=title_system.content),
                     ChatCompletionMessage(role="user", content=base_user_content),
                 ],
                 user_info=user_info,
                 trace_tags=["assistant-draft", "title"],
                 run_name="assistant-draft-title",
+                langfuse_prompt=title_system.langfuse_prompt,
             ),
         )
 
@@ -261,7 +185,7 @@ async def generate_chat_title(
     """Generate and normalize a chat title from the last user/assistant turn."""
 
     settings = get_settings()
-    system_prompt = _read_prompt_file("prompt_for_chat_title.md")
+    system_prompt = read_prompt_file_with_metadata("chat_title.md")
 
     conversation_parts = []
     if request.system_message:
@@ -273,20 +197,21 @@ async def generate_chat_title(
         ]
     )
     messages: list[ChatCompletionMessage] = [
-        ChatCompletionMessage(role="system", content=system_prompt),
+        ChatCompletionMessage(role="system", content=system_prompt.content),
         ChatCompletionMessage(role="user", content="\n\n".join(conversation_parts)),
     ]
 
     try:
-        model_name = _get_internal_task_model(settings, InternalTaskModelStrength.WEAK)
+        model_name = get_internal_task_model(settings, InternalTaskModelStrength.WEAK)
         logger.info("chat-title: generating title")
-        raw_title = await _invoke_internal_generation(
+        raw_title = await invoke_internal_generation(
             model_name=model_name,
             temperature=0.0,
             messages=messages,
             user_info=user_info,
             trace_tags=["chat-title"],
             run_name="chat-title-generation",
+            langfuse_prompt=system_prompt.langfuse_prompt,
         )
         normalized = _normalize_chat_title(raw_title)
         if not normalized:

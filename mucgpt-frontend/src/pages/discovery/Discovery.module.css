@@ -75,27 +75,19 @@
 
 .subtitle {
     color: var(--colorNeutralForeground3);
-    line-height: var(--lineHeightBase400) !important;
     display: block;
     margin-bottom: 0;
-    font-size: var(--fontSizeBase400) !important;
 }
 
-/* Fluent's Input/Dropdown only expose Background1 ("filled-lighter") or
-   Background3 ("filled-darker") as filled surfaces, both of which collide
-   with something else on this page (the cards, resp. the page canvas).
-   Background2 has no equivalent appearance prop, so it is set directly. */
 .contentWrapper .searchBox {
     display: flex;
     width: 100%;
     max-width: none;
     margin-bottom: var(--spacingVerticalXL);
-    background-color: var(--colorNeutralBackground2) !important;
 }
 
 .sortDropdown {
     flex-shrink: 0;
-    background-color: var(--colorNeutralBackground2) !important;
 }
 
 .sortDropdownValue {
@@ -224,7 +216,7 @@
     .subtitleRow {
         flex-direction: column;
         align-items: flex-start;
-        gap: 14px;
+        gap: var(--spacingVerticalL);
     }
 
     .headerActions {
@@ -242,7 +234,6 @@
 
     .sortDropdown {
         width: 100%;
-        min-width: 0 !important;
         max-width: none;
     }
 
@@ -302,7 +293,6 @@
     }
 
     .flexContainer[data-drawer-open="true"] .sortDropdown {
-        min-width: 0 !important;
         width: 100%;
         max-width: 100%;
     }

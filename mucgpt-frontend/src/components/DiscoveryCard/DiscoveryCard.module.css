@@ -1,13 +1,12 @@
 .card {
     position: relative;
     min-height: 120px;
-    padding: var(--spacingVerticalM) var(--spacingHorizontalM) var(--spacingVerticalMNudge) !important;
-    row-gap: 0 !important;
     border: var(--strokeWidthThin) solid var(--colorNeutralStroke3);
     transition:
         transform 0.18s cubic-bezier(0.33, 1, 0.68, 1),
         background-color 0.16s ease,
-        border-color 0.16s ease;
+        border-color 0.16s ease,
+        box-shadow 0.16s ease;
 }
 
 .card:hover {
@@ -23,9 +22,11 @@
     border-color: var(--colorNeutralStroke1Pressed);
 }
 
+/* An inset ring thickens the border visually without changing the box size,
+   so selecting a card does not shift its content. */
 .card[data-selected="true"] {
-    border-width: var(--strokeWidthThick);
     border-color: var(--colorBrandBackground);
+    box-shadow: inset 0 0 0 calc(var(--strokeWidthThick) - var(--strokeWidthThin)) var(--colorBrandBackground);
 }
 
 /* The primary action (title link/button) is stretched to cover the whole card via
@@ -103,18 +104,6 @@
 .headerBadge {
     min-height: 20px;
     align-self: flex-start;
-}
-
-/* Fluent has no neutral badge color that matches this palette. */
-.headerBadgeNeutral {
-    color: var(--colorNeutralForeground2) !important;
-    background-color: var(--colorNeutralBackground2) !important;
-    border-color: var(--colorNeutralStroke1) !important;
-}
-
-/* Colors come from Fluent's tint appearance; colored badges only read heavier. */
-.headerBadgeTinted {
-    font-weight: var(--fontWeightSemibold) !important;
 }
 
 .description {

@@ -1,6 +1,6 @@
-import { type ReactElement, useCallback, useContext, useEffect, useRef, useState } from "react";
+import { type ReactElement, type TransitionEvent, useCallback, useContext, useEffect, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { Title2, Body1, Text, SearchBox, Dropdown, Button, Tab, TabList } from "@fluentui/react-components";
+import { Title2, Text, Button, Tab, TabList, makeStyles, mergeClasses } from "@fluentui/react-components";
 import type { SearchBoxChangeEvent, InputOnChangeData, SelectionEvents, OptionOnSelectData, SelectTabData, SelectTabEvent } from "@fluentui/react-components";
 import { Add24Regular, DocumentArrowUpRegular, LibraryRegular, PeopleCommunityRegular, SearchRegular } from "@fluentui/react-icons";
 import { useTranslation } from "react-i18next";
@@ -12,8 +12,7 @@ import { AssistantStorageService } from "../../service/assistantstorage";
 import { CommunityAssistantStorageService } from "../../service/communityassistantstorage";
 import { ASSISTANT_STORE, COMMUNITY_ASSISTANT_STORE, CREATIVITY_LOW } from "../../constants";
 import { useGlobalToastContext } from "../../components/GlobalToastHandler/GlobalToastContext";
-import { DiscoveryCard } from "../../components/DiscoveryCard/DiscoveryCard";
-import { DiscoveryCardSkeleton } from "../../components/DiscoveryCard/DiscoveryCardSkeleton";
+import { DiscoveryCard, DiscoveryCardSkeleton } from "../../components/DiscoveryCard";
 import { OwnerMetadataLink, getPrimaryOwnerDetails } from "../../components/OwnerMetadataLink/OwnerMetadataLink";
 import { AssistantDetailsSidebar, AssistantCardData } from "../../components/AssistantDetailsSidebar/AssistantDetailsSidebar";
 import { CloseConfirmationDialog } from "../../components/AssistantDialogs/shared/CloseConfirmationDialog";
@@ -26,7 +25,9 @@ import { isCompleteCommunityAssistantSnapshot, mapCommunitySnapshotToAssistant }
 import { getAssistantBadges, isAssistantPrivate } from "../../utils/assistantCardDisplay";
 import { ApiError } from "../../api/fetch-utils";
 import { ConfigContext } from "../../context/ConfigContext";
-import { SubtleOption } from "../../ui/SubtleOption";
+import { Dropdown } from "../../ui/Dropdown";
+import { Option } from "../../ui/Option";
+import { SearchBox } from "../../ui/SearchBox";
 
 const communityAssistantStorageService = new CommunityAssistantStorageService(COMMUNITY_ASSISTANT_STORE);
 const assistantStorageService = new AssistantStorageService(ASSISTANT_STORE);
@@ -47,7 +48,21 @@ type SectionEmptyStateProps = {
     actions?: EmptyStateAction[];
 };
 
+const useStyles = makeStyles({
+    sortDropdown: {
+        "@media (max-width: 550px)": {
+            minWidth: 0
+        }
+    },
+    sortDropdownDrawerOpen: {
+        "@media (max-width: 1100px)": {
+            minWidth: 0
+        }
+    }
+});
+
 const Discovery = () => {
+    const classes = useStyles();
     const { t } = useTranslation();
     const navigate = useNavigate();
     const [searchParams, setSearchParams] = useSearchParams();
@@ -57,6 +72,7 @@ const Discovery = () => {
     const isComplianceCheckEnabled = appConfig.ai_act_compliance_check_enabled;
 
     const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+    const sortDropdownClassName = mergeClasses(styles.sortDropdown, classes.sortDropdown, isDrawerOpen && classes.sortDropdownDrawerOpen);
     const [selectedAssistant, setSelectedAssistant] = useState<AssistantCardData | null>(null);
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
     const [showUnsubscribeConfirm, setShowUnsubscribeConfirm] = useState(false);
@@ -106,22 +122,16 @@ const Discovery = () => {
         setShowAllMyAssistants(true);
     }, [assistantToOpenId, setMyAssistantFilter, setSearchText, setShowAllMyAssistants]);
 
-    const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const latestRequestRef = useRef(0);
-    useEffect(
-        () => () => {
-            if (closeTimerRef.current !== null) clearTimeout(closeTimerRef.current);
-        },
-        []
-    );
 
-    const closeDrawerAndClearSelection = useCallback(() => {
-        if (closeTimerRef.current !== null) {
-            clearTimeout(closeTimerRef.current);
-        }
-        setIsDrawerOpen(false);
-        closeTimerRef.current = setTimeout(() => setSelectedAssistant(null), 300);
-    }, []);
+    const closeDrawer = useCallback(() => setIsDrawerOpen(false), []);
+
+    // The selection is kept until the slot has finished collapsing so the drawer
+    // content stays visible during the close animation.
+    const handleDetailsSidebarSlotTransitionEnd = (event: TransitionEvent<HTMLDivElement>) => {
+        if (event.target !== event.currentTarget || event.propertyName !== "flex-basis" || isDrawerOpen) return;
+        setSelectedAssistant(null);
+    };
 
     const exportAssistant = useCallback(async () => {
         if (!selectedAssistant || selectedAssistant.isLocalAssistant) return;
@@ -241,8 +251,8 @@ const Discovery = () => {
         communitySortMethod === "subscriptions"
             ? t("components.community_assistants.sort_popular", "Beliebteste")
             : communitySortMethod === "updated"
-              ? t("components.community_assistants.sort_updated", "Zuletzt aktualisiert")
-              : t("components.community_assistants.sort_title", "Name");
+                ? t("components.community_assistants.sort_updated", "Zuletzt aktualisiert")
+                : t("components.community_assistants.sort_title", "Name");
 
     const handleMyAssistantsSortChange = (_event: SelectionEvents, data: OptionOnSelectData) => {
         if (data.optionValue === "subscriptions" || data.optionValue === "updated" || data.optionValue === "title" || data.optionValue === "lastUsed") {
@@ -260,22 +270,17 @@ const Discovery = () => {
         myAssistantsSortMethod === "lastUsed"
             ? t("components.community_assistants.sort_last_used", "Zuletzt benutzt")
             : myAssistantsSortMethod === "subscriptions"
-              ? t("components.community_assistants.sort_popular", "Beliebteste")
-              : myAssistantsSortMethod === "updated"
-                ? t("components.community_assistants.sort_updated", "Zuletzt aktualisiert")
-                : t("components.community_assistants.sort_title", "Name");
+                ? t("components.community_assistants.sort_popular", "Beliebteste")
+                : myAssistantsSortMethod === "updated"
+                    ? t("components.community_assistants.sort_updated", "Zuletzt aktualisiert")
+                    : t("components.community_assistants.sort_title", "Name");
 
     const getMetadataFallbackLabel = (assistant: AssistantCardData): string =>
         assistant.isOwnedAssistant ? t("components.community_assistants.metadata_you", "Du") : t("components.community_assistants.filter_all", "Community");
 
     const handleAssistantClick = async (assistant: AssistantCardData) => {
-        if (closeTimerRef.current !== null) {
-            clearTimeout(closeTimerRef.current);
-            closeTimerRef.current = null;
-        }
-
         if (selectedAssistant?.id === assistant.id) {
-            closeDrawerAndClearSelection();
+            closeDrawer();
         } else {
             const requestId = ++latestRequestRef.current;
             try {
@@ -358,7 +363,7 @@ const Discovery = () => {
         if (!selectedAssistant?.isLocalAssistant) return;
         await performMigration(selectedAssistant.rawData as Assistant, selectedAssistant.id, selectedAssistant.title, () => {
             removeYoursAssistant(selectedAssistant.id);
-            closeDrawerAndClearSelection();
+            closeDrawer();
         });
     };
 
@@ -379,7 +384,7 @@ const Discovery = () => {
             );
             removeAssistantFromLists(selectedAssistant.id);
             refreshUnifiedHistory();
-            closeDrawerAndClearSelection();
+            closeDrawer();
         } catch (err) {
             showError(
                 t("components.assistant_chat.delete_assistant_failed"),
@@ -400,7 +405,7 @@ const Discovery = () => {
             );
             removeSubscribedAssistant(selectedAssistant.id);
             refreshUnifiedHistory();
-            closeDrawerAndClearSelection();
+            closeDrawer();
 
             try {
                 await assistantStorageService.deleteChatsForAssistant(selectedAssistant.id);
@@ -525,9 +530,9 @@ const Discovery = () => {
                             <div className={styles.titleBlock}>
                                 <Title2 className={styles.header}>{t("discovery.title", "Assistenten")}</Title2>
                                 <div className={styles.subtitleRow}>
-                                    <Body1 className={styles.subtitle}>
+                                    <Text size={400} className={styles.subtitle}>
                                         {t("discovery.subtitle", "Finde und verwalte Assistenten für deine wiederkehrenden Aufgaben.")}
-                                    </Body1>
+                                    </Text>
                                     <div className={styles.headerActions}>
                                         <Button
                                             appearance="transparent"
@@ -551,11 +556,11 @@ const Discovery = () => {
                         </div>
 
                         <SearchBox
+                            appearance="subtle"
                             placeholder={t("components.community_assistants.search", "Search assistants by title or description.")}
                             value={searchText}
                             onChange={handleSearch}
                             className={styles.searchBox}
-                            appearance="filled-lighter"
                             aria-label={t("components.community_assistants.search", "Search assistants by title or description.")}
                         />
 
@@ -593,24 +598,24 @@ const Discovery = () => {
                                                 id="my-assistant-sort"
                                                 value={selectedMyAssistantsSortLabel}
                                                 selectedOptions={[myAssistantsSortMethod]}
-                                                appearance="filled-lighter"
-                                                root={{ className: styles.sortDropdown }}
+                                                appearance="subtle"
+                                                className={sortDropdownClassName}
                                                 button={{ children: <span className={styles.sortDropdownValue}>{selectedMyAssistantsSortLabel}</span> }}
                                                 onOptionSelect={handleMyAssistantsSortChange}
                                                 aria-label={t("components.community_assistants.sort_by", "Sortieren nach")}
                                             >
-                                                <SubtleOption value="lastUsed" text={t("components.community_assistants.sort_last_used", "Zuletzt benutzt")}>
+                                                <Option value="lastUsed" text={t("components.community_assistants.sort_last_used", "Zuletzt benutzt")}>
                                                     {t("components.community_assistants.sort_last_used", "Zuletzt benutzt")}
-                                                </SubtleOption>
-                                                <SubtleOption value="subscriptions" text={t("components.community_assistants.sort_popular", "Beliebteste")}>
+                                                </Option>
+                                                <Option value="subscriptions" text={t("components.community_assistants.sort_popular", "Beliebteste")}>
                                                     {t("components.community_assistants.sort_popular", "Beliebteste")}
-                                                </SubtleOption>
-                                                <SubtleOption value="updated" text={t("components.community_assistants.sort_updated", "Zuletzt aktualisiert")}>
+                                                </Option>
+                                                <Option value="updated" text={t("components.community_assistants.sort_updated", "Zuletzt aktualisiert")}>
                                                     {t("components.community_assistants.sort_updated", "Zuletzt aktualisiert")}
-                                                </SubtleOption>
-                                                <SubtleOption value="title" text={t("components.community_assistants.sort_title", "Name")}>
+                                                </Option>
+                                                <Option value="title" text={t("components.community_assistants.sort_title", "Name")}>
                                                     {t("components.community_assistants.sort_title", "Name")}
-                                                </SubtleOption>
+                                                </Option>
                                             </Dropdown>
                                         </div>
                                     </div>
@@ -647,21 +652,21 @@ const Discovery = () => {
                                             id="community-assistant-sort"
                                             value={selectedCommunitySortLabel}
                                             selectedOptions={[communitySortMethod]}
-                                            appearance="filled-lighter"
-                                            root={{ className: styles.sortDropdown }}
+                                            appearance="subtle"
+                                            className={sortDropdownClassName}
                                             button={{ children: <span className={styles.sortDropdownValue}>{selectedCommunitySortLabel}</span> }}
                                             onOptionSelect={handleCommunitySortChange}
                                             aria-label={t("components.community_assistants.sort_by", "Sortieren nach")}
                                         >
-                                            <SubtleOption value="subscriptions" text={t("components.community_assistants.sort_popular", "Beliebteste")}>
+                                            <Option value="subscriptions" text={t("components.community_assistants.sort_popular", "Beliebteste")}>
                                                 {t("components.community_assistants.sort_popular", "Beliebteste")}
-                                            </SubtleOption>
-                                            <SubtleOption value="updated" text={t("components.community_assistants.sort_updated", "Zuletzt aktualisiert")}>
+                                            </Option>
+                                            <Option value="updated" text={t("components.community_assistants.sort_updated", "Zuletzt aktualisiert")}>
                                                 {t("components.community_assistants.sort_updated", "Zuletzt aktualisiert")}
-                                            </SubtleOption>
-                                            <SubtleOption value="title" text={t("components.community_assistants.sort_title", "Name")}>
+                                            </Option>
+                                            <Option value="title" text={t("components.community_assistants.sort_title", "Name")}>
                                                 {t("components.community_assistants.sort_title", "Name")}
-                                            </SubtleOption>
+                                            </Option>
                                         </Dropdown>
                                     </div>
 
@@ -676,10 +681,10 @@ const Discovery = () => {
                     </div>
                 </div>
 
-                <div className={styles.detailsSidebarSlot} data-open={isDrawerOpen}>
+                <div className={styles.detailsSidebarSlot} data-open={isDrawerOpen} onTransitionEnd={handleDetailsSidebarSlotTransitionEnd}>
                     <AssistantDetailsSidebar
                         isOpen={isDrawerOpen}
-                        onClose={closeDrawerAndClearSelection}
+                        onClose={closeDrawer}
                         assistant={selectedAssistant}
                         ownedAssistantIds={ownedAssistantIds}
                         onStartChat={startConversation}

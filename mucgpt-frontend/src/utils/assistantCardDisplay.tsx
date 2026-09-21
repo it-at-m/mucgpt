@@ -1,7 +1,7 @@
 import type { TFunction } from "i18next";
 import { CheckmarkCircle16Regular, CircleOff16Regular, Clock16Regular } from "@fluentui/react-icons";
 import type { AssistantCardData } from "../components/AssistantDetailsSidebar/AssistantDetailsSidebar";
-import type { DiscoveryCardBadge } from "../components/DiscoveryCard/DiscoveryCard";
+import type { DiscoveryCardBadge } from "../components/DiscoveryCard";
 
 export const getAssistantBadges = (
     assistant: Pick<AssistantCardData, "rawData" | "isLocalAssistant" | "isDeletedSnapshot">,

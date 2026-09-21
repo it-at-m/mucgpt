@@ -13,8 +13,7 @@ interface EditAssistantDraft {
     description: string;
     systemPrompt: string;
     creativity: string;
-    defaultModel: string | undefined;
-    defaultModelCleared: boolean;
+    defaultModel: string;
     tools: ToolBase[];
     hierarchicalAccess: string[];
     isVisible: boolean;
@@ -33,8 +32,7 @@ const isEditAssistantDraft = (draft: unknown): draft is EditAssistantDraft => {
         typeof draft.description === "string" &&
         typeof draft.systemPrompt === "string" &&
         typeof draft.creativity === "string" &&
-        (draft.defaultModel === undefined || typeof draft.defaultModel === "string") &&
-        typeof draft.defaultModelCleared === "boolean" &&
+        typeof draft.defaultModel === "string" &&
         typeof draft.isVisible === "boolean" &&
         Array.isArray(draft.tools) &&
         draft.tools.every(tool => isRecord(tool) && typeof tool.id === "string" && (tool.config === undefined || isRecord(tool.config))) &&
@@ -84,8 +82,7 @@ export const useAssistantState = (initialAssistant: Assistant) => {
         ensurePromptIds(initialDraft?.starterPrompts ?? initialAssistant.examples)
     );
     const [creativity, setCreativity] = useState<string>(() => initialDraft?.creativity ?? initialAssistant.creativity);
-    const [defaultModel, setDefaultModel] = useState<string | undefined>(() => initialDraft?.defaultModel ?? initialAssistant.default_model);
-    const [defaultModelCleared, setDefaultModelCleared] = useState<boolean>(() => initialDraft?.defaultModelCleared ?? false);
+    const [defaultModel, setDefaultModel] = useState<string>(() => initialDraft?.defaultModel ?? initialAssistant.default_model ?? "");
     const [version, setVersion] = useState<string>(initialAssistant.version || "0");
     const [tools, setTools] = useState<ToolBase[]>(() => initialDraft?.tools ?? initialAssistant.tools ?? []);
     const [publish, setPublish] = useState<boolean>(initialAssistant.publish || false);
@@ -117,7 +114,7 @@ export const useAssistantState = (initialAssistant: Assistant) => {
         setFollowUpActionsState(followUpActionsWithIds);
         setStarterPromptsState(starterPromptsWithIds);
         setCreativity(initialAssistant.creativity);
-        setDefaultModel(initialAssistant.default_model);
+        setDefaultModel(initialAssistant.default_model ?? "");
         setVersion(initialAssistant.version || "0");
         setTools(initialAssistant.tools || []);
         setPublish(initialAssistant.publish || false);
@@ -126,7 +123,6 @@ export const useAssistantState = (initialAssistant: Assistant) => {
         setTags(initialAssistant.tags || []);
         setHasChanged(false);
         setIsVisible(initialAssistant.is_visible !== undefined ? initialAssistant.is_visible : true);
-        setDefaultModelCleared(false);
     }, [initialAssistant]);
 
     useEffect(() => {
@@ -144,7 +140,6 @@ export const useAssistantState = (initialAssistant: Assistant) => {
             systemPrompt,
             creativity,
             defaultModel,
-            defaultModelCleared,
             tools,
             hierarchicalAccess,
             isVisible,
@@ -161,7 +156,6 @@ export const useAssistantState = (initialAssistant: Assistant) => {
         systemPrompt,
         creativity,
         defaultModel,
-        defaultModelCleared,
         tools,
         hierarchicalAccess,
         isVisible,
@@ -190,8 +184,7 @@ export const useAssistantState = (initialAssistant: Assistant) => {
         setHasChanged(true);
     }, []);
     const updateDefaultModel = useCallback((model: string | undefined) => {
-        setDefaultModel(model);
-        setDefaultModelCleared(model === undefined);
+        setDefaultModel(model ?? "");
         setHasChanged(true);
     }, []);
 
@@ -234,7 +227,7 @@ export const useAssistantState = (initialAssistant: Assistant) => {
         setFollowUpActionsState(followUpActionsWithIds);
         setStarterPromptsState(starterPromptsWithIds);
         setCreativity(initialAssistant.creativity);
-        setDefaultModel(initialAssistant.default_model);
+        setDefaultModel(initialAssistant.default_model ?? "");
         setVersion(initialAssistant.version);
         setTools(initialAssistant.tools || []);
         setPublish(initialAssistant.publish || false);
@@ -243,7 +236,6 @@ export const useAssistantState = (initialAssistant: Assistant) => {
         setTags(initialAssistant.tags || []);
         setHasChanged(false);
         setIsVisible(initialAssistant.is_visible !== undefined ? initialAssistant.is_visible : true);
-        setDefaultModelCleared(false);
         if (draftKey) clearSessionDraft(draftKey);
     }, [initialAssistant, draftKey]);
 
@@ -260,7 +252,7 @@ export const useAssistantState = (initialAssistant: Assistant) => {
             publish: publish,
             owner_ids: ownerIds,
             creativity: creativity,
-            default_model: defaultModelCleared ? "" : defaultModel,
+            default_model: defaultModel,
             quick_prompts: validFollowUpActions.map(({ id: _omitId, ...rest }) => {
                 void _omitId;
                 return rest;
@@ -283,7 +275,6 @@ export const useAssistantState = (initialAssistant: Assistant) => {
         ownerIds,
         creativity,
         defaultModel,
-        defaultModelCleared,
         followUpActions,
         starterPrompts,
         version,

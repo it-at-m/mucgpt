@@ -54,7 +54,7 @@
     },
     "overrides": {
         "@babel/core": "7.29.6",
-        "adm-zip": "0.6.0",
+        "adm-zip": "0.6.1",
         "brace-expansion@^1.1.7": "1.1.18",
         "brace-expansion@^2.0.1": "2.1.4",
         "brace-expansion@^4.0.0": "4.0.1",
@@ -89,5 +89,5 @@
         "watch": "tsc && vite build --watch"
     },
     "type": "module",
-    "version": "0.29.1"
+    "version": "0.30.0"
 }

@@ -117,8 +117,8 @@
     border-color: var(--colorNeutralStroke1) !important;
 }
 
-/* Colors come from Fluent's tint appearance; status badges only read heavier. */
-.headerBadgeStatus {
+/* Colors come from Fluent's tint appearance; colored badges only read heavier. */
+.headerBadgeTinted {
     font-weight: var(--fontWeightSemibold) !important;
 }
 

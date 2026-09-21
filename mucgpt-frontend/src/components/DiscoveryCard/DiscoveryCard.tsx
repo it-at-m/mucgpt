@@ -8,11 +8,7 @@ import { MarkdownRenderer } from "../MarkdownRenderer/MarkdownRenderer";
 export interface DiscoveryCardBadge {
     label: string;
     icon?: BadgeProps["icon"];
-    className?: string;
-    appearance?: BadgeProps["appearance"];
-    color?: BadgeProps["color"];
-    size?: BadgeProps["size"];
-    tone?: "neutral" | "success" | "warning" | "danger";
+    tone?: "neutral" | "brand" | "success" | "warning" | "danger";
 }
 
 interface DiscoveryCardBaseProps extends Omit<CardProps, "onClick" | "appearance"> {
@@ -21,12 +17,7 @@ interface DiscoveryCardBaseProps extends Omit<CardProps, "onClick" | "appearance
     description?: string;
 
     header?: ReactNode;
-    badge?: string;
     badges?: DiscoveryCardBadge[];
-    badgeClassName?: string;
-    badgeAppearance?: BadgeProps["appearance"];
-    badgeColor?: BadgeProps["color"];
-    badgeSize?: BadgeProps["size"];
     titleClassName?: string;
     isSelected?: boolean;
     metadataStartLabel?: string;
@@ -47,10 +38,10 @@ export type DiscoveryCardProps =
     | (DiscoveryCardBaseProps & { linkTo?: never; onActivate: () => void })
     | (DiscoveryCardBaseProps & { linkTo?: never; onActivate?: never });
 
-// The status tones map straight onto Fluent's tint badge colors, which the theme
-// aliases onto the app's --colorStatus* ramps. "neutral" has no Fluent equivalent.
-const toStatusBadgeColor = (tone: DiscoveryCardBadge["tone"]): Extract<BadgeProps["color"], "success" | "warning" | "danger"> | undefined =>
-    tone === "success" || tone === "warning" || tone === "danger" ? tone : undefined;
+// Colored tones map straight onto Fluent's tint badge colors, which the theme aliases
+// onto the app's brand and --colorStatus* ramps. "neutral" has no Fluent equivalent.
+const toTintBadgeColor = (tone: DiscoveryCardBadge["tone"]): Extract<BadgeProps["color"], "brand" | "success" | "warning" | "danger"> | undefined =>
+    tone === "neutral" ? undefined : tone;
 
 const formatSubscriberCount = (count: number): string => {
     if (count >= 1000) {
@@ -70,12 +61,7 @@ export const DiscoveryCard = forwardRef<HTMLDivElement, DiscoveryCardProps>((pro
         activateHintLabel,
 
         header,
-        badge,
         badges,
-        badgeClassName,
-        badgeAppearance = "tint",
-        badgeColor = "danger",
-        badgeSize = "small",
         className,
         style,
         titleClassName,
@@ -121,40 +107,21 @@ export const DiscoveryCard = forwardRef<HTMLDivElement, DiscoveryCardProps>((pro
             return header;
         }
 
-        const renderedBadges: DiscoveryCardBadge[] =
-            badges && badges.length > 0
-                ? badges
-                : badge
-                  ? [
-                        {
-                            label: badge,
-                            className: badgeClassName,
-                            appearance: badgeAppearance,
-                            color: badgeColor,
-                            size: badgeSize
-                        }
-                    ]
-                  : [];
-
         if (title) {
             return (
                 <div className={styles.headerRow}>
                     {renderTitle()}
-                    {renderedBadges.length > 0 && (
+                    {badges && badges.length > 0 && (
                         <div className={styles.badgeGroup}>
-                            {renderedBadges.map(renderedBadge => {
-                                const statusColor = toStatusBadgeColor(renderedBadge.tone);
+                            {badges.map(renderedBadge => {
+                                const tintColor = toTintBadgeColor(renderedBadge.tone);
                                 return (
                                     <Badge
                                         key={renderedBadge.label}
-                                        className={mergeClasses(
-                                            styles.headerBadge,
-                                            statusColor ? styles.headerBadgeStatus : styles.headerBadgeNeutral,
-                                            renderedBadge.className
-                                        )}
-                                        appearance={statusColor ? "tint" : (renderedBadge.appearance ?? badgeAppearance)}
-                                        color={statusColor ?? renderedBadge.color ?? badgeColor}
-                                        size={renderedBadge.size ?? badgeSize}
+                                        className={mergeClasses(styles.headerBadge, tintColor ? styles.headerBadgeTinted : styles.headerBadgeNeutral)}
+                                        appearance="tint"
+                                        color={tintColor}
+                                        size="small"
                                         icon={renderedBadge.icon}
                                     >
                                         {renderedBadge.label}

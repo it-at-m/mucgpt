@@ -356,11 +356,7 @@ const Home = () => {
                                 title={t("home.discover_all")}
                                 description={t("home.discover_all_description")}
                                 linkTo="/discovery"
-                                badge={t("home.explore_badge")}
-                                badgeClassName={styles.exploreBadge}
-                                badgeAppearance="tint"
-                                badgeColor="brand"
-                                badgeSize="large"
+                                badges={[{ label: t("home.explore_badge"), tone: "brand" }]}
                                 role="listitem"
                             />
                         </div>

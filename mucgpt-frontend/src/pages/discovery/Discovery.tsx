@@ -509,7 +509,7 @@ const Discovery = () => {
         });
 
     const renderSkeletonGrid = (keyPrefix: string) => (
-        <div className={styles.assistantsGrid} role="list">
+        <div className={styles.assistantsGrid}>
             {Array.from({ length: 4 }).map((_, index) => (
                 <DiscoveryCardSkeleton key={`${keyPrefix}-skeleton-${index}`} />
             ))}
@@ -560,7 +560,7 @@ const Discovery = () => {
                         />
 
                         {isLoading ? (
-                            <div className={styles.librarySections} aria-label={t("components.community_assistants.loading_assistants")}>
+                            <div className={styles.librarySections} aria-busy="true">
                                 <section className={styles.assistantSection}>
                                     <h2 className={styles.sectionTitle}>{t("components.community_assistants.my_assistants", "Meine Assistenten")}</h2>
                                     {renderSkeletonGrid("my")}

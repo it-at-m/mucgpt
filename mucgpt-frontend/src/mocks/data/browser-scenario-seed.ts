@@ -71,20 +71,25 @@ const clearScenarioIndexedDb = async (): Promise<void> => {
     await Promise.all([clearObjectStore(ASSISTANT_STORE), clearObjectStore(COMMUNITY_ASSISTANT_STORE)]);
 };
 
-/** Seeds local-only and deleted-assistant scenarios once, without overwriting active mock work. */
+/** Seeds missing local-only and deleted-assistant scenarios once, without touching other stored records. */
 export const initializeMockScenarios = async (): Promise<void> => {
     const storage = getStorage();
-    if (storage?.getItem(SCENARIO_INITIALIZED_STORAGE_KEY)) return;
 
     try {
-        await clearScenarioIndexedDb();
+        if (storage?.getItem(SCENARIO_INITIALIZED_STORAGE_KEY)) return;
 
         const assistantStorageService = new AssistantStorageService(ASSISTANT_STORE);
         const communityAssistantStorageService = new CommunityAssistantStorageService(COMMUNITY_ASSISTANT_STORE);
 
         await Promise.all([
-            ...MOCK_LOCAL_ASSISTANTS.map(({ assistant, id }) => assistantStorageService.createAssistantConfig(assistant, id)),
-            communityAssistantStorageService.createAssistantConfig(MOCK_DELETED_SUBSCRIBED_SNAPSHOT)
+            ...MOCK_LOCAL_ASSISTANTS.map(async ({ assistant, id }) => {
+                if (await assistantStorageService.getAssistantConfig(id)) return;
+                await assistantStorageService.createAssistantConfig(assistant, id);
+            }),
+            (async () => {
+                if (await communityAssistantStorageService.getAssistantConfig(MOCK_DELETED_SUBSCRIBED_SNAPSHOT.id)) return;
+                await communityAssistantStorageService.createAssistantConfig(MOCK_DELETED_SUBSCRIBED_SNAPSHOT);
+            })()
         ]);
 
         storage?.setItem(SCENARIO_INITIALIZED_STORAGE_KEY, "true");
@@ -96,7 +101,12 @@ export const initializeMockScenarios = async (): Promise<void> => {
 /** Clears all browser-side mock data so the next load receives a pristine scenario catalog. */
 export const resetMockScenarios = async (): Promise<void> => {
     resetMockAssistants();
-    getStorage()?.removeItem(SCENARIO_INITIALIZED_STORAGE_KEY);
+
+    try {
+        getStorage()?.removeItem(SCENARIO_INITIALIZED_STORAGE_KEY);
+    } catch (error) {
+        console.warn("Could not clear mock scenario marker:", error);
+    }
 
     try {
         await clearScenarioIndexedDb();

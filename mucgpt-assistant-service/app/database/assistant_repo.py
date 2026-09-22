@@ -2,11 +2,14 @@ from __future__ import annotations  # Enable forward references in annotations
 
 import uuid
 from datetime import datetime
+from typing import Any
 
 from sqlalchemy import String, delete, func, insert, or_, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import aliased, attributes, selectinload
 
+from api.api_models import AssistantState
+from api.exceptions import AssistantUnavailableForUseException
 from core.logtools import getLogger
 from utils import serialize_list
 
@@ -71,6 +74,13 @@ class AssistantRepository(Repository[Assistant]):
         )
         return result.scalars().first()
 
+    async def get_for_update(self, assistant_id: str) -> Assistant | None:
+        """Fetch an assistant while locking its row for the current transaction."""
+        result = await self.session.execute(
+            select(Assistant).filter(Assistant.id == assistant_id).with_for_update()
+        )
+        return result.scalars().first()
+
     async def create_assistant_version(
         self,
         assistant: Assistant,
@@ -81,14 +91,20 @@ class AssistantRepository(Repository[Assistant]):
         examples: list[Example] | None = None,
         quick_prompts: list[QuickPrompt] | None = None,
         tags: list[str] | None = None,
+        compliance_check_result: dict[str, Any] | None = None,
+        compliance_confirmation: bool = False,
+        state: AssistantState = AssistantState.ACTIVE,
+        state_changed_by: str | None = None,
+        state_change_reason: str | None = None,
     ) -> AssistantVersion:
         """Creates a new version for an assistant with explicit parameters."""
-        logger.info(f"Creating new version for assistant {assistant.id}")
+        assistant_id = assistant.id
+        logger.info(f"Creating new version for assistant {assistant_id}")
         try:
             # Query for the latest version directly to avoid lazy loading
             result = await self.session.execute(
                 select(AssistantVersion)
-                .filter(AssistantVersion.assistant_id == assistant.id)
+                .filter(AssistantVersion.assistant_id == assistant_id)
                 .order_by(AssistantVersion.version.desc())
                 .limit(1)
             )
@@ -106,6 +122,11 @@ class AssistantRepository(Repository[Assistant]):
                 examples=serialized_examples,
                 quick_prompts=serialized_quick_prompts,
                 tags=tags or [],
+                compliance_check_result=compliance_check_result,
+                compliance_confirmation=compliance_confirmation,
+                state=state,
+                state_changed_by=state_changed_by,
+                state_change_reason=state_change_reason,
             )
 
             self.session.add(new_version)
@@ -116,9 +137,60 @@ class AssistantRepository(Repository[Assistant]):
             )
             return new_version
         except Exception as e:
-            logger.error(f"Error creating assistant version for {assistant.id}: {e}")
+            logger.error(f"Error creating assistant version for {assistant_id}: {e}")
             await self.session.rollback()
             raise
+
+    async def get_assistants_by_latest_state(
+        self,
+        state: str,
+        search: str | None = None,
+        sort_by: str = "updated",
+        sort_order: str = "asc",
+        offset: int = 0,
+        limit: int | None = None,
+    ) -> list[Assistant]:
+        """Return assistants whose current immutable version has the requested state."""
+        latest_version_subquery = (
+            select(
+                AssistantVersion.assistant_id.label("assistant_id"),
+                func.max(AssistantVersion.version).label("max_version"),
+            )
+            .group_by(AssistantVersion.assistant_id)
+            .subquery()
+        )
+        latest_version_alias = aliased(AssistantVersion)
+        stmt = (
+            select(Assistant)
+            .options(
+                selectinload(Assistant.owners),
+                selectinload(Assistant.versions).selectinload(
+                    AssistantVersion.tool_associations
+                ),
+            )
+            .join(
+                latest_version_subquery,
+                latest_version_subquery.c.assistant_id == Assistant.id,
+            )
+            .join(
+                latest_version_alias,
+                (latest_version_alias.assistant_id == Assistant.id)
+                & (
+                    latest_version_alias.version
+                    == latest_version_subquery.c.max_version
+                ),
+            )
+            .where(latest_version_alias.state == state)
+        )
+        stmt = self._apply_search_filters_sql(stmt, latest_version_alias, search)
+        stmt = self._apply_sort_sql(stmt, latest_version_alias, sort_by, sort_order)
+        if offset > 0:
+            stmt = stmt.offset(offset)
+        if limit is not None:
+            stmt = stmt.limit(limit)
+
+        result = await self.session.execute(stmt)
+        return list(result.scalars().unique().all())
 
     async def name_exists(
         self, name: str, exclude_assistant_id: str | None = None
@@ -390,11 +462,13 @@ class AssistantRepository(Repository[Assistant]):
         hierarchical_access: list[str] | None = None,
         owner_ids: list[str] | None = None,
         is_visible: bool = None,
+        assistant: Assistant | None = None,
     ) -> Assistant | None:
         logger.info(f"Updating assistant {assistant_id}")
         """Update an assistant with explicit parameters."""
         try:
-            assistant = await self.get(assistant_id)
+            if assistant is None:
+                assistant = await self.get(assistant_id)
             if assistant:
                 if name is not None:
                     assistant.name = name
@@ -453,7 +527,12 @@ class AssistantRepository(Repository[Assistant]):
         """Get assistant with eagerly loaded owners."""
         result = await self.session.execute(
             select(Assistant)
-            .options(selectinload(Assistant.owners))
+            .options(
+                selectinload(Assistant.owners),
+                selectinload(Assistant.versions).selectinload(
+                    AssistantVersion.tool_associations
+                ),
+            )
             .filter(Assistant.id == assistant_id)
         )
         return result.scalars().first()
@@ -487,6 +566,22 @@ class AssistantRepository(Repository[Assistant]):
             await self.session.rollback()
             raise
 
+    async def get_active_version_for_prompt(
+        self, assistant_id: str, system_prompt: str
+    ) -> AssistantVersion | None:
+        """Get the newest active version using the exact system prompt."""
+        result = await self.session.execute(
+            select(AssistantVersion)
+            .where(
+                AssistantVersion.assistant_id == assistant_id,
+                AssistantVersion.system_prompt == system_prompt,
+                AssistantVersion.state == AssistantState.ACTIVE,
+            )
+            .order_by(AssistantVersion.version.desc())
+            .limit(1)
+        )
+        return result.scalars().first()
+
     async def is_user_subscribed(self, assistant_id: str, user_id: str) -> bool:
         """Check if a user is subscribed to an assistant."""
         logger.debug(
@@ -511,6 +606,27 @@ class AssistantRepository(Repository[Assistant]):
         )
 
         try:
+            # Serialize with lifecycle updates and re-check immediately before
+            # writing. The route performs the same check for its response, but
+            # this keeps repository callers from subscribing to a stale version.
+            await self.session.execute(
+                select(Assistant).where(Assistant.id == assistant_id).with_for_update()
+            )
+            latest_version = await self.session.execute(
+                select(AssistantVersion)
+                .where(AssistantVersion.assistant_id == assistant_id)
+                .order_by(AssistantVersion.version.desc())
+                .limit(1)
+            )
+            latest_version = latest_version.scalars().first()
+            if (
+                latest_version is not None
+                and latest_version.state != AssistantState.ACTIVE
+            ):
+                raise AssistantUnavailableForUseException(
+                    assistant_id, latest_version.state
+                )
+
             subscription = Subscription(assistant_id=assistant_id, user_id=user_id)
             self.session.add(subscription)
             await self.session.flush()

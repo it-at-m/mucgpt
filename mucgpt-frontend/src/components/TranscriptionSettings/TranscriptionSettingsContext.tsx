@@ -125,6 +125,7 @@ export const TranscriptionSettingsProvider = ({ children, deploymentEnabled = tr
     const [transcript, setTranscript] = useState<string>("");
     const [error, setError] = useState<string | null>(null);
     const [loadingModelId, setLoadingModelId] = useState<string | null>(null);
+    const [loadedModelId, setLoadedModelId] = useState<string | null>(null);
     const [workerReady, setWorkerReady] = useState(false);
     const [language, setLanguageState] = useState<TranscriptionLanguage>(() => localeToWhisperLang(i18n.language));
 
@@ -133,8 +134,12 @@ export const TranscriptionSettingsProvider = ({ children, deploymentEnabled = tr
     const loadedModelIdRef = useRef<string | null>(null);
     const loadingModelIdRef = useRef<string | null>(null);
     const selectedModelIdRef = useRef<string>(selectedModelId);
-    const pendingDownloadRef = useRef<{ id: string; resolve: () => void; reject: (err: Error) => void } | null>(null);
-    const pendingReadyRef = useRef<{ id: string; promise: Promise<void>; resolve: () => void; reject: (err: Error) => void } | null>(null);
+    const loadRequestIdRef = useRef(0);
+    const expectedLoadRef = useRef<{ requestId: number; modelId: string } | null>(null);
+    const recordingSessionIdRef = useRef(0);
+    const activeRecordingSessionIdRef = useRef<number | null>(null);
+    const pendingDownloadRef = useRef<{ id: string; requestId: number; resolve: () => void; reject: (err: Error) => void } | null>(null);
+    const pendingReadyRef = useRef<{ id: string; requestId: number; promise: Promise<void>; resolve: () => void; reject: (err: Error) => void } | null>(null);
 
     const { recordingState, startRecording: startAudioRecording, stopRecording } = useAudioRecorder();
 
@@ -190,6 +195,31 @@ export const TranscriptionSettingsProvider = ({ children, deploymentEnabled = tr
         }
     }, []);
 
+    const requestModelLoad = useCallback(
+        (modelId: string, fileSizes?: Record<string, number>) => {
+            const pendingReady = pendingReadyRef.current;
+            if (pendingReady) {
+                pendingReady.reject(new Error("Superseded by new model load"));
+                pendingReadyRef.current = null;
+            }
+            const modelCfg = TRANSCRIPTION_MODELS.find(m => m.model_id === modelId);
+            const requestId = ++loadRequestIdRef.current;
+            expectedLoadRef.current = { requestId, modelId };
+            loadingModelIdRef.current = modelId;
+            sendToWorker({
+                type: "load",
+                requestId,
+                modelId,
+                fileSizes,
+                dtype: modelCfg?.dtype,
+                webgpu_only: modelCfg?.webgpu_only,
+                language: languageRef.current
+            });
+            return requestId;
+        },
+        [sendToWorker]
+    );
+
     // Pre-warm: when transcription is enabled and the selected model is already
     // cached, load it immediately so the ONNX sessions are hot before the user
     // clicks the mic. Shows "warming-up" (progress bar, button still enabled)
@@ -200,11 +230,9 @@ export const TranscriptionSettingsProvider = ({ children, deploymentEnabled = tr
         if (!effectiveEnabled) return;
         if (!downloadedModels.includes(selectedModelId)) return;
         if (loadedModelIdRef.current === selectedModelId) return;
-        const modelCfg = TRANSCRIPTION_MODELS.find(m => m.model_id === selectedModelId);
         setStatus("warming-up");
-        loadingModelIdRef.current = selectedModelId;
-        sendToWorker({ type: "load", modelId: selectedModelId, dtype: modelCfg?.dtype, webgpu_only: modelCfg?.webgpu_only, language: languageRef.current });
-    }, [workerReady, effectiveEnabled, selectedModelId, downloadedModels, sendToWorker]);
+        requestModelLoad(selectedModelId);
+    }, [workerReady, effectiveEnabled, selectedModelId, downloadedModels, requestModelLoad]);
 
     // Create worker lazily; terminate on unmount
     useEffect(() => {
@@ -213,6 +241,8 @@ export const TranscriptionSettingsProvider = ({ children, deploymentEnabled = tr
             workerRef.current = null;
             setWorkerReady(false);
             setLoadingModelId(null);
+            loadedModelIdRef.current = null;
+            setLoadedModelId(null);
             setStatus("idle");
             return;
         }
@@ -228,24 +258,22 @@ export const TranscriptionSettingsProvider = ({ children, deploymentEnabled = tr
                     if (msg.totalBytes !== undefined) setTotalBytes(msg.totalBytes);
                     break;
                 case "ready": {
+                    if (expectedLoadRef.current?.requestId !== msg.requestId || expectedLoadRef.current.modelId !== msg.modelId) break;
                     const pending = pendingDownloadRef.current;
                     const pendingReady = pendingReadyRef.current;
-                    if (pending) {
-                        loadedModelIdRef.current = pending.id;
-                        markDownloaded(pending.id);
+                    loadedModelIdRef.current = msg.modelId;
+                    setLoadedModelId(msg.modelId);
+                    expectedLoadRef.current = null;
+                    if (pending?.requestId === msg.requestId) {
+                        markDownloaded(msg.modelId);
                         pending.resolve();
                         pendingDownloadRef.current = null;
-                        loadingModelIdRef.current = null;
-                    } else {
-                        // Pre-warm or startRecording load completed — record which
-                        // model is live so startRecording skips the redundant load.
-                        loadedModelIdRef.current = pendingReady?.id ?? loadingModelIdRef.current ?? selectedModelIdRef.current;
-                        loadingModelIdRef.current = null;
                     }
-                    if (pendingReady && pendingReady.id === loadedModelIdRef.current) {
+                    if (pendingReady && pendingReady.requestId === msg.requestId) {
                         pendingReady.resolve();
                         pendingReadyRef.current = null;
                     }
+                    loadingModelIdRef.current = null;
                     setModelProgress(100);
                     setLoadingModelId(null);
                     setStatus(prev => (prev === "loading-model" || prev === "warming-up" ? "idle" : prev));
@@ -255,28 +283,41 @@ export const TranscriptionSettingsProvider = ({ children, deploymentEnabled = tr
                     // VAD detected onset of speech — status stays "recording"
                     break;
                 case "segment":
+                    if (msg.sessionId !== activeRecordingSessionIdRef.current) break;
                     // Append each VAD segment to the live transcript
                     setTranscript(prev => (prev ? prev + " " + msg.text : msg.text));
                     break;
                 case "auto_stop":
+                    if (msg.sessionId !== activeRecordingSessionIdRef.current) break;
                     // VAD detected 2 s of silence after speech — stop audio capture
                     // and let the worker flush remaining inference as normal.
                     stopRecording();
                     setStatus("transcribing");
-                    sendToWorker({ type: "stop-recording" });
+                    if (activeRecordingSessionIdRef.current !== null) sendToWorker({ type: "stop-recording", sessionId: activeRecordingSessionIdRef.current });
                     break;
                 case "complete":
+                    if (msg.sessionId !== activeRecordingSessionIdRef.current) break;
+                    activeRecordingSessionIdRef.current = null;
                     setStatus("idle");
                     break;
                 case "error": {
+                    if (msg.requestId !== undefined && expectedLoadRef.current?.requestId !== msg.requestId) break;
+                    if (msg.sessionId !== undefined && activeRecordingSessionIdRef.current !== msg.sessionId) break;
                     const pending = pendingDownloadRef.current;
-                    if (pending) {
+                    if (pending && pending.requestId === msg.requestId) {
                         pending.reject(new Error(msg.message));
                         pendingDownloadRef.current = null;
                     }
-                    if (pendingReadyRef.current) {
-                        pendingReadyRef.current.reject(new Error(msg.message));
+                    const pendingReady = pendingReadyRef.current;
+                    if (pendingReady !== null && msg.requestId !== undefined && pendingReady.requestId === msg.requestId) {
+                        pendingReady.reject(new Error(msg.message));
                         pendingReadyRef.current = null;
+                    }
+                    if (msg.requestId !== undefined) expectedLoadRef.current = null;
+                    if (msg.sessionId !== undefined) activeRecordingSessionIdRef.current = null;
+                    if (msg.requestId !== undefined) {
+                        loadedModelIdRef.current = null;
+                        setLoadedModelId(null);
                     }
                     loadingModelIdRef.current = null;
                     setError(msg.messageKey ? t(msg.messageKey) : msg.message);
@@ -308,7 +349,9 @@ export const TranscriptionSettingsProvider = ({ children, deploymentEnabled = tr
         return () => {
             worker.terminate();
             workerRef.current = null;
+            loadedModelIdRef.current = null;
             setWorkerReady(false);
+            setLoadedModelId(null);
         };
     }, [markDownloaded, deploymentEnabled]);
 
@@ -333,8 +376,6 @@ export const TranscriptionSettingsProvider = ({ children, deploymentEnabled = tr
             return;
         }
 
-        const modelCfg = TRANSCRIPTION_MODELS.find(m => m.model_id === selectedModelId);
-        loadingModelIdRef.current = selectedModelId;
         setStatus("warming-up");
 
         let resolveReady!: () => void;
@@ -343,11 +384,10 @@ export const TranscriptionSettingsProvider = ({ children, deploymentEnabled = tr
             resolveReady = resolve;
             rejectReady = reject;
         });
-        pendingReadyRef.current = { id: selectedModelId, promise, resolve: resolveReady, reject: rejectReady };
-
-        sendToWorker({ type: "load", modelId: selectedModelId, dtype: modelCfg?.dtype, webgpu_only: modelCfg?.webgpu_only, language: languageRef.current });
+        const requestId = requestModelLoad(selectedModelId);
+        pendingReadyRef.current = { id: selectedModelId, requestId, promise, resolve: resolveReady, reject: rejectReady };
         await promise;
-    }, [selectedModelId, sendToWorker]);
+    }, [selectedModelId, requestModelLoad]);
 
     const downloadModel = useCallback(
         (modelId: string): Promise<void> => {
@@ -363,24 +403,21 @@ export const TranscriptionSettingsProvider = ({ children, deploymentEnabled = tr
             setDownloadedBytes(0);
             setTotalBytes(0);
             setLoadingModelId(modelId);
-            loadingModelIdRef.current = modelId;
             setStatus("loading-model");
             return new Promise<void>((resolve, reject) => {
-                pendingDownloadRef.current = { id: modelId, resolve, reject };
-                const modelCfg = TRANSCRIPTION_MODELS.find(m => m.model_id === modelId);
-                const modelDtype = modelCfg?.dtype;
-                const webgpu_only = modelCfg?.webgpu_only;
                 fetchModelFileSizes(modelId)
                     .then(fileSizes => {
-                        sendToWorker({ type: "load", modelId, fileSizes, dtype: modelDtype, webgpu_only, language: languageRef.current });
+                        const requestId = requestModelLoad(modelId, fileSizes);
+                        pendingDownloadRef.current = { id: modelId, requestId, resolve, reject };
                     })
                     .catch(err => {
                         console.error("Failed to fetch file sizes, continuing without size info:", err);
-                        sendToWorker({ type: "load", modelId, dtype: modelDtype, webgpu_only, language: languageRef.current });
+                        const requestId = requestModelLoad(modelId);
+                        pendingDownloadRef.current = { id: modelId, requestId, resolve, reject };
                     });
             });
         },
-        [deploymentEnabled, sendToWorker]
+        [deploymentEnabled, requestModelLoad]
     );
 
     const startRecording = useCallback(async () => {
@@ -399,10 +436,13 @@ export const TranscriptionSettingsProvider = ({ children, deploymentEnabled = tr
 
             // Sync language before frames start arriving
             sendToWorker({ type: "set-language", language: languageRef.current });
+            const sessionId = ++recordingSessionIdRef.current;
+            activeRecordingSessionIdRef.current = sessionId;
+            sendToWorker({ type: "start-recording", sessionId });
 
             await startAudioRecording((frame: Float32Array) => {
                 // Transfer ownership of the buffer to avoid a copy on every frame.
-                sendToWorker({ type: "audio-frame", buffer: frame }, [frame.buffer]);
+                sendToWorker({ type: "audio-frame", sessionId, buffer: frame }, [frame.buffer]);
             });
             setStatus("recording");
         } catch (err) {
@@ -415,7 +455,7 @@ export const TranscriptionSettingsProvider = ({ children, deploymentEnabled = tr
         if (recordingState !== "recording") return;
         stopRecording();
         setStatus("transcribing");
-        sendToWorker({ type: "stop-recording" });
+        if (activeRecordingSessionIdRef.current !== null) sendToWorker({ type: "stop-recording", sessionId: activeRecordingSessionIdRef.current });
     }, [recordingState, stopRecording, sendToWorker]);
 
     const value = useMemo<ITranscriptionSettings>(
@@ -425,7 +465,7 @@ export const TranscriptionSettingsProvider = ({ children, deploymentEnabled = tr
             selectedModelId,
             setSelectedModelId,
             downloadedModels,
-            isModelReady: effectiveEnabled && downloadedModels.includes(selectedModelId),
+            isModelReady: effectiveEnabled && loadedModelId === selectedModelId,
             status,
             modelProgress,
             downloadedBytes,
@@ -446,6 +486,7 @@ export const TranscriptionSettingsProvider = ({ children, deploymentEnabled = tr
             selectedModelId,
             setSelectedModelId,
             downloadedModels,
+            loadedModelId,
             status,
             modelProgress,
             downloadedBytes,

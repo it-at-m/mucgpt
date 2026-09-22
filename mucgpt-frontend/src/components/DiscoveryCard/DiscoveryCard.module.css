@@ -8,7 +8,6 @@
         transform 0.18s cubic-bezier(0.33, 1, 0.68, 1),
         border-color 0.16s ease,
         box-shadow 0.16s ease;
-    background-color: var(--colorNeutralBackground3) !important;
     color: var(--colorNeutralForeground1);
     box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05) !important;
 }
@@ -18,8 +17,9 @@
 }
 
 .card:hover {
-    transform: translateY(-2px);
-    box-shadow: var(--shadow4) !important;
+    transform: translateY(-1px);
+    border-color: var(--colorBrandBackground) !important;
+    box-shadow: var(--shadow8) !important;
 }
 
 .card:hover .headerText {
@@ -77,6 +77,13 @@
     color: var(--colorStatusWarningForeground1) !important;
     background-color: var(--colorStatusWarningBackground1) !important;
     border-color: var(--colorStatusWarningBorder1) !important;
+    font-weight: var(--fontWeightSemibold) !important;
+}
+
+.headerBadgeSuccess {
+    color: var(--colorStatusSuccessForeground1) !important;
+    background-color: var(--colorStatusSuccessBackground1) !important;
+    border-color: var(--colorStatusSuccessBorder1) !important;
     font-weight: var(--fontWeightSemibold) !important;
 }
 
@@ -141,10 +148,29 @@
 }
 
 .metadataStart {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
     min-width: 0;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+}
+
+.metadataStart svg {
+    width: 16px;
+    height: 16px;
+    flex: 0 0 auto;
+}
+
+.metadataStart > span {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.metadataStart a {
+    color: inherit;
 }
 
 .metadataEnd {

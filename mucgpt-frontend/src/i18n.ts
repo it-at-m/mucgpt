@@ -39,7 +39,25 @@ i18n
                         new_chat_discovery_title: "Anderen Assistenten auswählen",
                         new_chat_discovery_card_title: "Assistent auswählen",
                         new_chat_recent_assistant_title: "Mit {{assistantName}} starten",
-                        new_chat_recent_assistant_fallback: "Assistent"
+                        new_chat_recent_assistant_fallback: "Assistent",
+                        legal_review: "Rechtliche Prüfung",
+                        go_legal_review: "Rechtliche Prüfungen öffnen"
+                    },
+                    admin: {
+                        legal_review: {
+                            title: "Rechtliche Prüfungen",
+                            subtitle: "Prüfen Sie Assistenten mit möglichen Hochrisiko-Anwendungsfällen.",
+                            pending: "Prüfung ausstehend",
+                            version: "Version {{version}}",
+                            reason_label: "Entscheidungsnotiz",
+                            reason_hint: "Dokumentieren Sie kurz die Grundlage Ihrer Entscheidung.",
+                            approve: "Freigeben",
+                            deactivate: "Deaktivieren",
+                            empty: "Alle Assistenten sind geprüft.",
+                            load_failed: "Die Prüfwarteschlange konnte nicht geladen werden.",
+                            update_failed: "Die Prüfentscheidung konnte nicht gespeichert werden.",
+                            conflict: "Der Assistent wurde inzwischen geändert. Die Warteschlange wurde aktualisiert."
+                        }
                     },
                     home: {
                         assistants: "Assistenten",
@@ -58,15 +76,34 @@ i18n
                         prompt: "Stelle eine Frage oder lade ein Dokument hoch",
                         prompt_no_upload: "Stelle eine Frage",
                         answer_loading: "Erstelle Antwort",
+                        usage_context: "Auslastung",
+                        usage_context_summary: "Auslastung: {{used}} / {{max}} Tokens ({{percent}}%)",
+                        usage_context_summary_no_max: "Auslastung: {{used}} Tokens",
+                        usage_cost: "Kosten (geschätzt): {{cost}}",
+                        usage_help_context:
+                            "Der Kontextspeicher enthält die letzten Nachrichten. Wenn er voll ist, kann MUCGPT keine neuen Nachrichten mehr annehmen, bis du einen neuen Chat startest.",
+                        usage_help_context_warning_lead: "Der Kontext wird knapp.",
+                        usage_help_context_warning_detail:
+                            "Wenn er voll ist, kann MUCGPT keine neuen Nachrichten mehr annehmen, bis du einen neuen Chat startest.",
+                        usage_nudge_warning_detail:
+                            "Ein neuer Chat übernimmt den bisherigen Verlauf nicht. Du kannst auch einfach weiterschreiben, bis der Kontext voll ist. Danach kann MUCGPT keine neuen Nachrichten mehr annehmen.",
+                        usage_help_context_critical_lead: "Der Kontext ist fast voll.",
+                        usage_help_context_critical_detail: "Bald kann MUCGPT keine neuen Nachrichten mehr annehmen. Überlege, einen neuen Chat zu starten.",
+                        usage_full_warning_lead: "Der Kontext ist voll.",
+                        usage_full_warning_detail: "MUCGPT kann keine neuen Nachrichten mehr annehmen. Starte einen neuen Chat, um weiterzuschreiben.",
+                        usage_nudge_title: "Dieser Chat wird sehr lang.",
+                        usage_nudge_description: "MUCGPT kann frühere Inhalte bald nicht mehr berücksichtigen.",
+                        usage_nudge_later: "Später",
+                        usage_warning_title: "Dieser Chat ist sehr lang.",
+                        usage_warning_description:
+                            "Ein neuer Chat übernimmt den bisherigen Verlauf nicht, gibt MUCGPT aber wieder vollen Kontext für neue Nachrichten.",
+                        usage_start_new_chat: "Neuen Chat starten",
+                        usage_dismiss_warning: "Hinweis schließen",
                         follow_up_actions: {
-                            shorter_tooltip: "Schreibe eine kürzere Antwort",
-                            longer_tooltip: "Schreibe eine längere Antwort",
-                            formal_tooltip: "Schreibe eine förmlichere Antwort",
-                            informal_tooltip: "Schreibe eine informellere Antwort",
-                            shorter: "➖ Kürzer",
-                            longer: "➕ Länger",
-                            formal: "👔 Förmlicher",
-                            informal: "👕 Informeller",
+                            shorter: "Kürzer",
+                            longer: "Länger",
+                            formal: "Förmlicher",
+                            informal: "Informeller",
                             shorter_prompt:
                                 "Formuliere deine letzte Nachricht zu einem neuen kürzeren Text, der den ursprünglichen Inhalt in einer kürzeren und prägnanteren Form wiedergibt. Dieser Text sollte die wichtigsten Informationen enthalten und das Verständnis des Lesers verbessern.",
                             longer_prompt:
@@ -245,6 +282,12 @@ i18n
                             panHint: "Ziehen zum Verschieben • Strg/Cmd+Mausrad zum Zoomen • Doppelklick zum Zurücksetzen",
                             zoomHint: "Strg+Mausrad zum Zoomen • Doppelklick zum Anpassen"
                         },
+                        drawio: {
+                            download: "Diagramm herunterladen",
+                            render: "Zeichne Diagramm...",
+                            error: "Das draw.io-Diagramm kann leider nicht dargestellt werden, da es Fehler enthält.",
+                            charactersWritten: "Zeichen geschrieben"
+                        },
                         mindmap: {
                             download: "Herunterladen",
                             reset: "Ansicht zurücksetzen",
@@ -381,9 +424,6 @@ i18n
                         example: {
                             label: "Beispiel"
                         },
-                        starter_prompt: {
-                            label: "Startvorschlag"
-                        },
                         deleteMessage: {
                             label: "Nachricht zurückziehen"
                         },
@@ -450,7 +490,9 @@ i18n
                             action_status_ready_create: "Bereit zum Erstellen",
                             action_status_ready_save: "Bereit zum Speichern",
                             action_status_read_only: "Nur lesbar",
-
+                            pending_review_notice:
+                                "Dieser Assistent wird derzeit gemäß EU-AI-ACT rechtlich geprüft. Er kann weiterhin vom Ersteller oder der Erstellerin bearbeitet werden, steht jedoch bis zum Abschluss der Prüfung nicht zum Chatten zur Verfügung.",
+                            inactive_notice: "Dieser Assistent wurde von Administratoren deaktiviert und kann momentan nicht zum Chatten verwendet werden.",
                             // Create-only: Mode selector
                             subtitle_mode_select: "Wähle, wie du starten möchtest",
                             create_manually: "Manuell erstellen",
@@ -489,6 +531,7 @@ i18n
                             system_prompt: "System-Prompt",
                             system_prompt_description:
                                 "Die Grundanweisung für den Assistenten. Sie legt seine Rolle, Aufgaben und Verhaltensregeln für Antworten fest.",
+                            system_prompt_locked_during_check: "Der System-Prompt ist gesperrt, solange die Prüfung läuft.",
                             prompt_placeholder:
                                 "Du bist ein Assistent für E-Mails.\n\nAufgabe:\nSchreibe kurze und höfliche Entwürfe.\n\nRegeln:\n- Verwende die Höflichkeitsform (Sie).\n- Fasse dich kurz.",
 
@@ -499,6 +542,39 @@ i18n
                             section_tools: "Werkzeuge",
                             section_conversation_options: "Unterhaltungsoptionen",
                             section_access: "Zugriff & Sichtbarkeit",
+                            section_review: "Prüfung",
+
+                            // Review section
+                            review_confirmation_label:
+                                "Ich bestätige, dass dieser Assistent nicht für einen in MUCGPT unzulässigen Hochrisiko-Anwendungsfall eingesetzt werden soll.",
+                            review_required_hint: "Diese Bestätigung ist erforderlich, um den Assistenten zu erstellen oder zu speichern.",
+                            review_intro_title: "Was sind Hochrisiko-Anwendungsfälle?",
+                            review_intro_description:
+                                "Hochrisiko-Anwendungsfälle sind KI-Einsätze, bei denen Entscheidungen oder Bewertungen über Menschen besonders folgenreich sein können, etwa in Personal, Bildung, öffentlichen Leistungen oder Migration.",
+                            review_check_title: "Anweisungen prüfen",
+                            review_check_description: "Prüfen Sie die Assistentenanweisungen auf Hinweise auf mögliche Hochrisiko-Anwendungsfälle.",
+                            review_check_learn_more: "Mehr über Hochrisiko-Anwendungsfälle erfahren",
+                            review_check_start: "Prüfung starten",
+                            review_check_recheck: "Erneut prüfen",
+                            review_check_running: "Prüfung läuft...",
+                            review_result_passed_title: "Alle Prüfungen bestanden",
+                            review_result_passed_description:
+                                "Es wurden keine Hinweise auf ein Hochrisikosystem gefunden. Die Prüfung dient nur zur Orientierung. Bitte bestätigen Sie abschließend, dass der Assistent für keinen unzulässigen Hochrisiko-Anwendungsfall eingesetzt wird.",
+                            review_result_warning_title: "Hinweis auf ein mögliches Hochrisikosystem",
+                            review_result_warning_guidance:
+                                "Bitte prüfen Sie die folgenden Stellen in den Anweisungen und ändern Sie diese gegebenenfalls, damit kein Hochrisiko-Anwendungsfall entsteht. Die Prüfung dient nur zur Orientierung.",
+                            review_result_error_title: "Prüfung fehlgeschlagen",
+                            review_result_error_description:
+                                "Die Prüfung konnte nicht durchgeführt werden. Speichern ist erst nach einer erfolgreichen erneuten Prüfung möglich.",
+                            review_result_outdated_title: "Ergebnis nicht mehr aktuell",
+                            review_result_outdated_description:
+                                "Der System-Prompt wurde nach dieser Prüfung geändert. Die Hinweise beziehen sich auf die vorherige Fassung. Starten Sie die Prüfung erneut, um ein aktuelles Ergebnis zu erhalten.",
+                            review_confirmation_label_high_risk:
+                                "Ich habe die Hinweise geprüft und bestätige, dass dieser Assistent nicht für einen in MUCGPT unzulässigen Hochrisiko-Anwendungsfall eingesetzt werden soll.",
+                            review_category_migration_asylum_border: "Migration, Asyl und Grenzkontrolle",
+                            review_category_public_services_access: "Zugang zu grundlegenden öffentlichen Diensten",
+                            review_category_hr_employment: "Beschäftigung und Personalmanagement",
+                            review_category_education: "Allgemeine und berufliche Bildung",
 
                             // Advanced settings fields
                             creativity: "Antwortstil",
@@ -514,7 +590,7 @@ i18n
                             default_model: "Festgelegtes Modell",
                             default_model_description: "Dieses Modell wird für alle Unterhaltungen verwendet. Nutzer können kein anderes Modell auswählen.",
                             default_model_placeholder: "Wählen Sie ein Modell aus...",
-                            no_default_model: "Kein festes Modell (Nutzer wählt)",
+                            no_default_model: "Im Chat wählbar",
                             departments: "Abteilungen",
                             departments_info:
                                 "Dies sind die Abteilungen, die Zugriff auf den Assistenten haben. Alle Abteilungen in der Hierarchie unter den ausgewählten Abteilungen haben ebenfalls Zugriff.",
@@ -565,6 +641,11 @@ i18n
                             assistant_creation_failed: "Assistent konnte nicht erstellt werden",
                             save_config_failed: "Speichern der Assistenten-Konfiguration fehlgeschlagen",
                             assistant_save_failed: "Speichern des Assistenten fehlgeschlagen",
+                            compliance_not_persisted_title: "Assistent gespeichert, Prüfungsergebnis nicht gespeichert",
+                            compliance_not_persisted_message:
+                                "Das letzte Prüfergebnis konnte serverseitig nicht verifiziert werden und wurde daher nicht mitgespeichert. Der Assistent wurde trotzdem gespeichert.",
+                            compliance_verification_failed_actionable:
+                                "Die Compliance-Prüfung konnte nicht serverseitig verifiziert werden. Bitte starten Sie die Prüfung erneut und speichern Sie erst nach erfolgreicher Prüfung. Wenn das Problem bestehen bleibt, kontaktieren Sie die Administration.",
                             assistant_generated_success: "Assistent erfolgreich generiert!",
                             assistant_generated_message: "Die Konfiguration Ihres Assistenten wurde generiert. Sie können sie jetzt überprüfen und anpassen.",
                             assistant_generation_failed: "Generierung der Assistenten-Konfiguration fehlgeschlagen",
@@ -624,6 +705,12 @@ i18n
                             filter_created_short: "Erstellt",
                             metadata_you: "Du",
                             owner_details: "Besitzer",
+                            pending_review_badge: "Ausstehend",
+                            inactive_badge: "Deaktiviert",
+                            pending_review_title: "Rechtliche Prüfung ausstehend",
+                            pending_review_hint: "Dieser Assistent ist bis zum Abschluss der rechtlichen Prüfung für Chats deaktiviert.",
+                            inactive_title: "Assistent deaktiviert",
+                            inactive_hint: "Dieser Assistent ist derzeit für Chats deaktiviert.",
                             private_label: "Privat",
                             show_more_personal_assistants: "Mehr persönliche Assistenten anzeigen",
                             empty_search_title: "Keine passenden Assistenten gefunden",
@@ -634,11 +721,15 @@ i18n
                             empty_community_title: "Noch keine Community-Assistenten verfügbar",
                             empty_community_description: "Veröffentlichte Assistenten erscheinen hier, sobald sie mit der Organisation geteilt wurden.",
                             empty_create_own: "Eigenen Assistenten erstellen",
-                            system_prompt: "System-Prompt",
-                            enabled_tools: "Aktivierte Werkzeuge",
-                            start_chat: "Chat starten",
+                            start_chat: "Neuen Chat starten",
                             system_prompt_copy: "System-Prompt kopieren",
                             system_prompt_copied: "Kopiert",
+                            created_by: "Von",
+                            created_by_you: "Von dir",
+                            subscriber_count: "{{count}} Abonnent:innen",
+                            responsible: "Verantwortliche",
+                            version: "Version {{version}}",
+                            configuration_updated: "Konfiguration geändert am {{date}}",
                             sort_by: "Sortieren nach",
                             sort_title: "Name",
                             sort_last_used: "Zuletzt benutzt",
@@ -694,6 +785,7 @@ i18n
                             duplicate_failed_forbidden: "Sie haben keine Berechtigung, diesen Assistenten zu duplizieren.",
                             duplicate_failed_not_found: "Der Assistent wurde nicht gefunden und kann nicht dupliziert werden.",
                             local_badge: "Lokal",
+                            accepted_badge: "Konform",
                             local_state_title: "Dieser lokale Assistent ist veraltet",
                             discovery_local_hint:
                                 "Dieser Assistent ist nur lokal in Ihrem Browser gesichert und geht verloren, falls Sie das Gerät wechseln. Sichern Sie ihn jetzt, damit er dauerhaft erhalten bleibt.",
@@ -802,7 +894,25 @@ i18n
                         new_chat_discovery_title: "Choose another assistant",
                         new_chat_discovery_card_title: "Choose assistant",
                         new_chat_recent_assistant_title: "Start with {{assistantName}}",
-                        new_chat_recent_assistant_fallback: "Assistant"
+                        new_chat_recent_assistant_fallback: "Assistant",
+                        legal_review: "Legal Review",
+                        go_legal_review: "Open Legal Reviews"
+                    },
+                    admin: {
+                        legal_review: {
+                            title: "Legal Reviews",
+                            subtitle: "Review assistants with possible high-risk use cases.",
+                            pending: "Review Pending",
+                            version: "Version {{version}}",
+                            reason_label: "Decision Note",
+                            reason_hint: "Briefly document the basis of your decision.",
+                            approve: "Approve",
+                            deactivate: "Deactivate",
+                            empty: "All assistants have been reviewed.",
+                            load_failed: "The review queue could not be loaded.",
+                            update_failed: "The review decision could not be saved.",
+                            conflict: "The assistant has been changed in the meantime. The queue has been updated."
+                        }
                     },
                     home: {
                         assistants: "Assistants",
@@ -821,15 +931,33 @@ i18n
                         prompt: "Ask a question or upload a document",
                         prompt_no_upload: "Ask a question",
                         answer_loading: "Generating answer",
+                        usage_context: "Usage",
+                        usage_context_summary: "Usage: {{used}} / {{max}} tokens ({{percent}}%)",
+                        usage_context_summary_no_max: "Usage: {{used}} tokens",
+                        usage_cost: "Cost (estimated): {{cost}}",
+                        usage_help_context:
+                            "The context window holds the most recent messages. Once it's full, MUCGPT can't accept new messages until you start a new chat.",
+                        usage_help_context_warning_lead: "The context is getting tight.",
+                        usage_help_context_warning_detail: "Once it's full, MUCGPT can't accept new messages until you start a new chat.",
+                        usage_nudge_warning_detail:
+                            "Starting a new chat won't carry over this history. You can also just keep writing until the context is full, after that MUCGPT can't accept new messages.",
+                        usage_help_context_critical_lead: "The context is nearly full.",
+                        usage_help_context_critical_detail: "Soon MUCGPT won't be able to accept new messages. Consider starting a new chat.",
+                        usage_full_warning_lead: "The context is full.",
+                        usage_full_warning_detail: "MUCGPT can't accept new messages. Start a new chat to keep going.",
+                        usage_nudge_title: "This chat is getting very long.",
+                        usage_nudge_description: "MUCGPT may soon be unable to take earlier content into account.",
+                        usage_nudge_later: "Later",
+                        usage_warning_title: "This chat is very long.",
+                        usage_warning_description:
+                            "Starting a new chat won't carry over this history, but it gives MUCGPT full context for new messages again.",
+                        usage_start_new_chat: "Start a new chat",
+                        usage_dismiss_warning: "Dismiss notice",
                         follow_up_actions: {
-                            shorter_tooltip: "Shorten your answer",
-                            longer_tooltip: "Write a longer response",
-                            formal_tooltip: "Write your answer more formal",
-                            informal_tooltip: "Write your answer more informal",
-                            shorter: "➖ less detail",
-                            longer: "➕  more detail",
-                            formal: "👔 more formal",
-                            informal: "👕 more informal",
+                            shorter: "Less detail",
+                            longer: "More detail",
+                            formal: "More formal",
+                            informal: "More informal",
                             shorter_prompt:
                                 "Rewrite your last message into a new, shorter text that conveys the original content in a more concise and impactful way. This text should include the most important information and improve the reader's understanding.",
                             longer_prompt:
@@ -1020,6 +1148,12 @@ i18n
                             panHint: "Drag to pan • Ctrl+Scroll to zoom • Double-click to reset",
                             zoomHint: "Ctrl+Scroll to zoom • Double-click to fit"
                         },
+                        drawio: {
+                            download: "Download diagram",
+                            render: "Draw diagram...",
+                            error: "Unfortunately, the draw.io diagram cannot be displayed as it contains errors.",
+                            charactersWritten: "Characters written"
+                        },
                         sumanswer: {
                             header: "Unique entities/aspects:",
                             alternative: "Summary ",
@@ -1143,9 +1277,6 @@ i18n
                         example: {
                             label: "Example"
                         },
-                        starter_prompt: {
-                            label: "Starter prompt"
-                        },
                         deleteMessage: {
                             label: "Retract message"
                         },
@@ -1211,6 +1342,9 @@ i18n
                             action_status_ready_create: "Ready to create",
                             action_status_ready_save: "Ready to save",
                             action_status_read_only: "Read only",
+                            pending_review_notice:
+                                "This assistant is currently undergoing a legal review in accordance with the EU AI Act. The creator can continue to edit it, but it cannot be used for chatting until the review is complete.",
+                            inactive_notice: "This assistant has been deactivated by administrators and is currently unavailable for chatting.",
 
                             // Create-only: Mode selector
                             subtitle_mode_select: "Choose how you want to start",
@@ -1248,6 +1382,7 @@ i18n
                             system_prompt: "System Prompt",
                             system_prompt_description:
                                 "The basic instruction for the assistant. It defines its role, tasks, and rules of behavior for responses.",
+                            system_prompt_locked_during_check: "The system prompt is locked while the check is running.",
                             prompt_placeholder:
                                 "You are an email assistant.\n\nTask:\nWrite short and polite drafts.\n\nRules:\n- Use formal language (you/your).\n- Keep it concise.",
 
@@ -1258,6 +1393,38 @@ i18n
                             section_tools: "Tools",
                             section_conversation_options: "Conversation Options",
                             section_access: "Access & Visibility",
+                            section_review: "Review",
+
+                            // Review section
+                            review_confirmation_label:
+                                "I confirm that this assistant is not intended to be used for a high-risk use case that is not permitted in MUCGPT.",
+                            review_required_hint: "This confirmation is required in order to create or save the assistant.",
+                            review_intro_title: "What are high-risk use cases?",
+                            review_intro_description:
+                                "High-risk use cases are AI applications in which decisions or assessments about people can be especially consequential, for example in human resources, education, public services or migration.",
+                            review_check_title: "Check instructions",
+                            review_check_description: "Check the assistant instructions for indications of possible high-risk use cases.",
+                            review_check_learn_more: "Learn more about high-risk use cases",
+                            review_check_start: "Start check",
+                            review_check_recheck: "Check again",
+                            review_check_running: "Check in progress...",
+                            review_result_passed_title: "All checks passed",
+                            review_result_passed_description:
+                                "No indications of a high-risk system were found. The check is for guidance only. Please confirm below that the assistant is not used for any impermissible high-risk use case.",
+                            review_result_warning_title: "Indication of a possible high-risk system",
+                            review_result_warning_guidance:
+                                "Please review the following parts of the instructions and change them if necessary so that no high-risk use case remains. The check is for guidance only.",
+                            review_result_error_title: "Check failed",
+                            review_result_error_description: "The check could not be performed. Saving is blocked until a successful re-check is available.",
+                            review_result_outdated_title: "Result no longer up to date",
+                            review_result_outdated_description:
+                                "The system prompt was changed after this check. The findings refer to the previous version. Run the check again to get an up-to-date result.",
+                            review_confirmation_label_high_risk:
+                                "I have reviewed the findings and confirm that this assistant is not intended for a high-risk use case that is not permitted in MUCGPT.",
+                            review_category_migration_asylum_border: "Migration, asylum and border control",
+                            review_category_public_services_access: "Access to essential public services",
+                            review_category_hr_employment: "Employment and personnel management",
+                            review_category_education: "General and vocational education",
 
                             // Advanced settings fields
                             creativity: "Answer style",
@@ -1273,7 +1440,7 @@ i18n
                             default_model: "Fixed Model",
                             default_model_description: "This model is used for all conversations. Users cannot choose a different model.",
                             default_model_placeholder: "Select a model...",
-                            no_default_model: "No fixed model (default)",
+                            no_default_model: "Selectable in chat",
                             departments: "Departments",
                             departments_info:
                                 "These are the departments that have access to the assistant. All departments in the hierarchy below the selected departments also have access.",
@@ -1323,6 +1490,11 @@ i18n
                             assistant_creation_failed: "Assistant could not be created",
                             save_config_failed: "Failed to save assistant configuration",
                             assistant_save_failed: "Failed to save assistant",
+                            compliance_not_persisted_title: "Assistant saved, compliance result not saved",
+                            compliance_not_persisted_message:
+                                "The latest compliance check result could not be verified by the server and was not persisted. The assistant was saved successfully.",
+                            compliance_verification_failed_actionable:
+                                "The compliance check could not be verified by the server. Please run the check again and save only after a successful check. If the problem persists, contact an administrator.",
                             assistant_generated_success: "Assistant generated successfully!",
                             assistant_generated_message: "Your assistant configuration has been generated. You can now review and customize it.",
                             assistant_generation_failed: "Failed to generate assistant configuration",
@@ -1380,6 +1552,12 @@ i18n
                             filter_my_all: "All",
                             filter_created_short: "Created",
                             metadata_you: "You",
+                            pending_review_badge: "Pending",
+                            inactive_badge: "Inactive",
+                            pending_review_title: "Legal review pending",
+                            pending_review_hint: "This assistant is unavailable for chat until legal review is complete.",
+                            inactive_title: "Assistant inactive",
+                            inactive_hint: "This assistant is currently unavailable for chat.",
                             owner_details: "Owners",
                             private_label: "Private",
                             show_more_personal_assistants: "Show more personal assistants",
@@ -1391,11 +1569,15 @@ i18n
                             empty_community_title: "No community assistants available yet",
                             empty_community_description: "Published assistants appear here as soon as they are shared with the organization.",
                             empty_create_own: "Create your own assistant",
-                            system_prompt: "System prompt",
-                            enabled_tools: "Enabled tools",
-                            start_chat: "Start conversation",
+                            start_chat: "Start new chat",
                             system_prompt_copy: "Copy system prompt",
                             system_prompt_copied: "Copied",
+                            created_by: "By",
+                            created_by_you: "By you",
+                            subscriber_count: "{{count}} subscribers",
+                            responsible: "Responsible",
+                            version: "Version {{version}}",
+                            configuration_updated: "Configuration changed on {{date}}",
                             sort_by: "Sort by",
                             sort_title: "Name",
                             sort_last_used: "Last used",
@@ -1451,6 +1633,7 @@ i18n
                             duplicate_failed_forbidden: "You do not have permission to duplicate this assistant.",
                             duplicate_failed_not_found: "The assistant was not found and cannot be duplicated.",
                             local_badge: "Local",
+                            accepted_badge: "Compliant",
                             local_state_title: "This local assistant is deprecated",
                             discovery_local_hint:
                                 "This assistant is only saved locally in your browser and will be lost if you switch devices. Save it now so it remains available.",
@@ -1557,7 +1740,25 @@ i18n
                         new_chat_discovery_title: "Andern Assistentn auswaehln",
                         new_chat_discovery_card_title: "Assistentn auswaehln",
                         new_chat_recent_assistant_title: "Mitm {{assistantName}} startn",
-                        new_chat_recent_assistant_fallback: "Assistent"
+                        new_chat_recent_assistant_fallback: "Assistent",
+                        legal_review: "Rechtliche Obacht",
+                        go_legal_review: "Rechtliche Obacht aufmacha"
+                    },
+                    admin: {
+                        legal_review: {
+                            title: "Rechtliche Obacht’n",
+                            subtitle: "Schau da Assistenten o, bei denen a möglicher Hochrisiko-Anwendungsfall vorliegen könnt.",
+                            pending: "Obacht steht no aus",
+                            version: "Version {{version}}",
+                            reason_label: "Entscheidungs-Notiz",
+                            reason_hint: "Schreib kurz hi, warumst des so entschieden host.",
+                            approve: "Freigeben",
+                            deactivate: "Deaktiviern",
+                            empty: "All Assistenten san scho obacht word’n.",
+                            load_failed: "D’Obacht-Warteschlang konnt ned g’lad’n werd’n.",
+                            update_failed: "D’Obacht-Entscheidung konnt ned g’speichert werd’n.",
+                            conflict: "Da Assistent is zwischendrin g’ändert word’n. D’Warteschlang is jetzt aktuell."
+                        }
                     },
                     home: {
                         assistants: "Assistentn",
@@ -1576,15 +1777,33 @@ i18n
                         prompt: "Stell a Froog oder lad a Dokument hoch",
                         prompt_no_upload: "Stell a Froog",
                         answer_loading: "I bearbeit grad de Frog",
+                        usage_context: "Auslastung",
+                        usage_context_summary: "Auslastung: {{used}} / {{max}} Tokens ({{percent}}%)",
+                        usage_context_summary_no_max: "Auslastung: {{used}} Tokens",
+                        usage_cost: "Kosten (geschätzt): {{cost}}",
+                        usage_help_context:
+                            "Im Kontextspeicher steckn de letzten Nachrichten. Wenn er vui is, ko MUCGPT koa neuchn Nachrichten mehr annehma, bis du an neuen Chat startest.",
+                        usage_help_context_warning_lead: "Da Kontext wird knapp.",
+                        usage_help_context_warning_detail: "Wenn er vui is, ko MUCGPT koa neuchn Nachrichten mehr annehma, bis du an neuen Chat startest.",
+                        usage_nudge_warning_detail:
+                            "An neuer Chat übernimmt den bisherigen Verlauf ned. Du kannst aa oafach weiterschreim, bis da Kontext vui is. Danach ko MUCGPT koa neuchn Nachrichten mehr annehma.",
+                        usage_help_context_critical_lead: "Da Kontext is fast vui.",
+                        usage_help_context_critical_detail: "Bald ko MUCGPT koa neuchn Nachrichten mehr annehma. Überleg dir, an neuen Chat zu starten.",
+                        usage_full_warning_lead: "Da Kontext is vui.",
+                        usage_full_warning_detail: "MUCGPT ko koa neuchn Nachrichten mehr annehma. Start an neuen Chat, wennst weiterschreim wuist.",
+                        usage_nudge_title: "Der Chat werd scho recht lang.",
+                        usage_nudge_description: "MUCGPT ko frühere Inhalte bald nimmer berücksichtigen.",
+                        usage_nudge_later: "Später",
+                        usage_warning_title: "Der Chat is sehr lang.",
+                        usage_warning_description:
+                            "An neuer Chat übernimmt den bisherigen Verlauf ned, gibt MUCGPT aber wieder vollen Kontext für neue Nachrichten.",
+                        usage_start_new_chat: "Neian Chat startn",
+                        usage_dismiss_warning: "Hinweis zumacha",
                         follow_up_actions: {
-                            shorter_tooltip: "Schreib a kürzere Antwort",
-                            longer_tooltip: "Schreib a längere Antwort",
-                            formal_tooltip: "Schreib a förmlichere Antwort",
-                            informal_tooltip: "Schreib a informellere Antwort",
-                            shorter: "➖ Kürzer",
-                            longer: "➕ Länger",
-                            formal: "👔 Förmlicher",
-                            informal: "👕 Informeller",
+                            shorter: "Kürzer",
+                            longer: "Länger",
+                            formal: "Förmlicher",
+                            informal: "Informeller",
                             shorter_prompt:
                                 "Formulier dei letzte Nachricht zu am neuen kürzeren Text, der an ursprünglichen Inhalt in a kürzere und prägnantere Form wiedagibt. Der Text soidad die wichtigsten Informationen enthalten und as Verständnis des Lesers verbessern.",
                             longer_prompt:
@@ -1774,6 +1993,12 @@ i18n
                             panHint: "Ziahn zum Veschibn • Strg+Mausradl zum Zoomen • Doppelklick zum Zrucksetzn",
                             zoomHint: "Strg+Mausradl zum Zoomen • Doppelklick zum Anpassn"
                         },
+                        drawio: {
+                            download: "Schau-Buidl obalada",
+                            render: "Zeichne Schau-Buidl...",
+                            error: "Des draw.io-Schau-Buidl ko leiwa net duagstellt wern, wei's Fehla håd.",
+                            charactersWritten: "Zeichn gschriebn"
+                        },
                         sumanswer: {
                             header: "Einzigartige Schwerpunkte:",
                             alternative: "Zsammanfassung ",
@@ -1888,9 +2113,6 @@ i18n
                         example: {
                             label: "Beispui"
                         },
-                        starter_prompt: {
-                            label: "Startvorschlag"
-                        },
                         deleteMessage: {
                             label: "Nachricht zruckziang"
                         },
@@ -1956,6 +2178,9 @@ i18n
                             action_status_ready_create: "Bereit zum Erstellen",
                             action_status_ready_save: "Bereit zum Speichern",
                             action_status_read_only: "Nur lesbar",
+                            pending_review_notice:
+                                "Da Assistent werd grad rechtlich obacht, wia’s da EU-AI-ACT vorgibt. Da Ersteller oder d’Erstellerin derf no weiter dran basteln, aber g’chatten derfst erst wieder, wenn d’Obacht vorbei is.",
+                            inactive_notice: "Da Assistent is vo de Admins deaktiviert word’n und kann grad ned zum Ratschn verwendet werd’n.",
 
                             // Create-only: Mode selector
                             subtitle_mode_select: "Wia möchst da starten?",
@@ -1994,6 +2219,7 @@ i18n
                             system_prompt: "System-Prompt",
                             system_prompt_description:
                                 "De Grundanweisung fürn Assistentn. Sie legt sei Rolle, Aufgabn und Verhoitensregeln für Antworten fest.",
+                            system_prompt_locked_during_check: "Da System-Prompt is gsperrt, solang de Prüfung lafft.",
                             prompt_placeholder:
                                 "Du bist a Assistent für E-Mails.\n\nAufgabe:\nSchreib kurze und feine Entwürfe.\n\nRegeln:\n- Verwende de Höflichkeitsform (Sie).\n- Fass di kurz.",
 
@@ -2004,6 +2230,38 @@ i18n
                             section_tools: "Werkzeig",
                             section_conversation_options: "Unterhaltungsoptionen",
                             section_access: "Zugriff & Sichtbarkeit",
+                            section_review: "Prüfung",
+
+                            // Review section
+                            review_confirmation_label:
+                                "I bstätig, dass der Assistent net für an in MUCGPT unzulässign Hochrisiko-Anwendungsfall herghalten soi.",
+                            review_required_hint: "De Bstätigung braucht ma, damit ma an Assistenten erstelln oda speichern ko.",
+                            review_intro_title: "Wos san Hochrisiko-Anwendungsfäi?",
+                            review_intro_description:
+                                "Hochrisiko-Anwendungsfäi san KI-Eisätz, wo Entscheidunga oda Bewertunga über Menschn bsonders folgnreich sei kennan, zum Beispui in Personoi, Buidung, öffentliche Leistunga oda Migration.",
+                            review_check_title: "Anweisungen prüfa",
+                            review_check_description: "Prüf de Assistentenanweisungen auf Hinweis auf möglche Hochrisiko-Anwendungsfäi.",
+                            review_check_learn_more: "Mehr über Hochrisiko-Anwendungsfäi erfahrn",
+                            review_check_start: "Prüfung starten",
+                            review_check_recheck: "Nochamoi prüfa",
+                            review_check_running: "Prüfung lafft...",
+                            review_result_passed_title: "Olle Prüfungen bestandn",
+                            review_result_passed_description:
+                                "Es gibt koane Hinweis auf a Hochrisikosystem. De Prüfung is bloß a Orientierung. Bitte bestätig no, dass da Assistent für koan unzulässigen Hochrisiko-Anwendungsfoi eigsetzt wird.",
+                            review_result_warning_title: "Hinweis auf a möglichs Hochrisikosystem",
+                            review_result_warning_guidance:
+                                "Bitte schau da de foigenden Stelln in de Anweisungen o und änder's wenn nötig, dass koa Hochrisiko-Anwendungsfoi entsteht. De Prüfung is bloß a Orientierung.",
+                            review_result_error_title: "Prüfung fehlgschlogn",
+                            review_result_error_description: "De Prüfung hod net klappt. Speichern geht erst noch ana erfolgreichen erneuten Prüfung.",
+                            review_result_outdated_title: "Ergebnis nimma aktuell",
+                            review_result_outdated_description:
+                                "Da System-Prompt is noch der Prüfung gändert worn. De Hinweis ghean zua vorherign Fassung. Stort de Prüfung nochamoi, damitst a aktuells Ergebnis kriagst.",
+                            review_confirmation_label_high_risk:
+                                "I hob ma de Hinweis oogschaut und bestätig, dass der Assistent net für an in MUCGPT unzulässigen Hochrisiko-Anwendungsfoi eigsetzt wern soi.",
+                            review_category_migration_asylum_border: "Migration, Asyl und Grenzkontrolle",
+                            review_category_public_services_access: "Zugang zu grundlegende öffentliche Dienste",
+                            review_category_hr_employment: "Beschäftigung und Personalmanagement",
+                            review_category_education: "Allgemeine und berufliche Bildung",
 
                             // Advanced settings fields
                             creativity: "Antwortstil",
@@ -2019,7 +2277,7 @@ i18n
                             default_model: "Festglegts Modell",
                             default_model_description: "Dieses Modell wird für alle Unterhaltungen verwendet. Nutzer können kein anderes Modell auswählen.",
                             default_model_placeholder: "Such da a Modell aus...",
-                            no_default_model: "Koa fixes Modell (da Nutzer entscheidet)",
+                            no_default_model: "Im Chat wählbar",
                             departments: "Abteilungen",
                             departments_info:
                                 "Des san de Abteilungen, de Zugriff auf den Assistenten ham. Olle Abteilungen in da Hierarchie unter de ausgsuachten Abteilungen ham a Zugriff.",
@@ -2070,6 +2328,11 @@ i18n
                             assistant_creation_failed: "Assistent konnt ned erstellt werdn",
                             save_config_failed: "Speichern vo da Assistenten-Konfiguration is fehlgschlogn",
                             assistant_save_failed: "Speichern vom Assistenten is fehlgschlogn",
+                            compliance_not_persisted_title: "Assistent gspeichert, Prüfergebnis ned gspeichert",
+                            compliance_not_persisted_message:
+                                "Des letzde Prüfergebnis hod da Server ned verifiziern kenna und hods drum ned mitgspreichert. Da Assistent is trotzdem gspeichert worn.",
+                            compliance_verification_failed_actionable:
+                                "De Compliance-Prüfung hod da Server ned verifiziern kenna. Bitte stoat de Prüfung noamoi und speicher erst noch ana erfolgreichen Prüfung. Wenn's Problem bleibt, meld di bei da Administration.",
                             assistant_generated_success: "Assistent erfolgreich generiert!",
                             assistant_generated_message: "Dei Assistent-Konfiguration is generiert wordn. Du kannst sie jetzt überprüfn und anpassn.",
                             assistant_generation_failed: "Generierung vo da Assistenten-Konfiguration is fehlgschlogn",
@@ -2139,11 +2402,15 @@ i18n
                             empty_community_title: "No koane Community-Assistentn verfügbar",
                             empty_community_description: "Veröffentlichte Assistentn erscheina do, sobald's mit da Organisation teilt worn san.",
                             empty_create_own: "Eignen Assistentn erstellen",
-                            system_prompt: "System-Prompt",
-                            enabled_tools: "Aktivierte Werkzeig",
-                            start_chat: "Ratsch o'fanga",
+                            start_chat: "Neia Ratsch o'fanga",
                             system_prompt_copy: "System-Prompt kopiern",
                             system_prompt_copied: "Kopiert",
+                            created_by: "Von",
+                            created_by_you: "Von dir",
+                            subscriber_count: "{{count}} Abonnent:innen",
+                            responsible: "Verantwortliche",
+                            version: "Version {{version}}",
+                            configuration_updated: "Konfiguration geändert am {{date}}",
                             sort_by: "Sortieren noch",
                             sort_title: "Name",
                             sort_last_used: "Zuletzt benutzt",
@@ -2198,6 +2465,9 @@ i18n
                             duplicate_failed_forbidden: "Du host koa Berechtigung, den Assistentn zum Dupliziern.",
                             duplicate_failed_not_found: "Da Assistent is ned gfundn worn und ko ned dupliziert wern.",
                             local_badge: "Lokal",
+                            pending_review_badge: "Ausstehend",
+                            inactive_badge: "Deaktiviert",
+                            accepted_badge: "Konform",
                             local_state_title: "Der lokale Assistent is veraltet",
                             discovery_local_hint:
                                 "Der Assistent is bloß lokal in deim Browser gesichert und geht verloren, wennst des Gerät wechselst. Sicher eam jetzt, damit a dauerhaft erhalten bleibt.",
@@ -2305,7 +2575,25 @@ i18n
                         new_chat_discovery_title: "Choisir un autre assistant",
                         new_chat_discovery_card_title: "Choisir un assistant",
                         new_chat_recent_assistant_title: "Démarrer avec {{assistantName}}",
-                        new_chat_recent_assistant_fallback: "Assistant"
+                        new_chat_recent_assistant_fallback: "Assistant",
+                        legal_review: "Revue juridique",
+                        go_legal_review: "Ouvrir les revues juridiques"
+                    },
+                    admin: {
+                        legal_review: {
+                            title: "Revues juridiques",
+                            subtitle: "Examinez les assistants présentant de possibles cas d’usage à haut risque.",
+                            pending: "Revue en attente",
+                            version: "Version {{version}}",
+                            reason_label: "Note de décision",
+                            reason_hint: "Documentez brièvement la base de votre décision.",
+                            approve: "Approuver",
+                            deactivate: "Désactiver",
+                            empty: "Tous les assistants ont été examinés.",
+                            load_failed: "La file d’attente des revues n’a pas pu être chargée.",
+                            update_failed: "La décision de revue n’a pas pu être enregistrée.",
+                            conflict: "L’assistant a été modifié entre-temps. La file d’attente a été mise à jour."
+                        }
                     },
                     home: {
                         assistants: "Assistants",
@@ -2324,15 +2612,35 @@ i18n
                         prompt: "Posez une question ou téléchargez un document",
                         prompt_no_upload: "Posez une question",
                         answer_loading: "Créer une réponse",
+                        usage_context: "Utilisation",
+                        usage_context_summary: "Utilisation : {{used}} / {{max}} jetons ({{percent}}%)",
+                        usage_context_summary_no_max: "Utilisation : {{used}} jetons",
+                        usage_cost: "Coût (estimé) : {{cost}}",
+                        usage_help_context:
+                            "La fenêtre de contexte contient les derniers messages. Une fois pleine, MUCGPT ne peut plus accepter de nouveaux messages tant que vous ne démarrez pas une nouvelle conversation.",
+                        usage_help_context_warning_lead: "Le contexte commence à se remplir.",
+                        usage_help_context_warning_detail:
+                            "Une fois plein, MUCGPT ne peut plus accepter de nouveaux messages tant que vous ne démarrez pas une nouvelle conversation.",
+                        usage_nudge_warning_detail:
+                            "Démarrer une nouvelle conversation ne conserve pas l'historique actuel. Vous pouvez aussi continuer à écrire jusqu'à ce que le contexte soit plein, ensuite MUCGPT ne pourra plus accepter de nouveaux messages.",
+                        usage_help_context_critical_lead: "Le contexte est presque plein.",
+                        usage_help_context_critical_detail:
+                            "Bientôt, MUCGPT ne pourra plus accepter de nouveaux messages. Pensez à démarrer une nouvelle conversation.",
+                        usage_full_warning_lead: "Le contexte est plein.",
+                        usage_full_warning_detail: "MUCGPT ne peut plus accepter de nouveaux messages. Démarrez une nouvelle conversation pour continuer.",
+                        usage_nudge_title: "Cette conversation devient très longue.",
+                        usage_nudge_description: "MUCGPT risque bientôt de ne plus pouvoir prendre en compte les contenus antérieurs.",
+                        usage_nudge_later: "Plus tard",
+                        usage_warning_title: "Cette conversation est très longue.",
+                        usage_warning_description:
+                            "Démarrer une nouvelle conversation ne conserve pas l'historique actuel, mais redonne à MUCGPT tout le contexte pour les nouveaux messages.",
+                        usage_start_new_chat: "Démarrer une nouvelle conversation",
+                        usage_dismiss_warning: "Fermer l'avis",
                         follow_up_actions: {
-                            shorter_tooltip: "Écrire une réponse plus courte",
-                            longer_tooltip: "Écrire une réponse plus longue",
-                            formal_tooltip: "Écrire une réponse plus formelle",
-                            informal_tooltip: "Écrire une réponse plus informelle",
-                            shorter: "➖ Plus court",
-                            longer: "➕ Plus long",
-                            formal: "👔 Plus formel",
-                            informal: "👕 Plus informel",
+                            shorter: "Plus court",
+                            longer: "Plus long",
+                            formal: "Plus formel",
+                            informal: "Plus informel",
                             shorter_prompt:
                                 "Formulez votre dernier message en un nouveau texte plus court qui reflète le contenu original sous une forme plus courte et plus concise. Ce texte doit contenir les informations les plus importantes et améliorer la compréhension du lecteur.",
                             longer_prompt:
@@ -2510,6 +2818,12 @@ i18n
                             panHint: "Glisser pour déplacer • Ctrl+Molette pour zoomer • Double-clic pour réinitialiser",
                             zoomHint: "Ctrl+Molette pour zoomer • Double-clic pour ajuster"
                         },
+                        drawio: {
+                            download: "Télécharger le diagramme",
+                            render: "Dessiner le diagramme...",
+                            error: "Le diagramme draw.io ne peut malheureusement pas être affiché en raison d'erreurs.",
+                            charactersWritten: "Caractères écrits"
+                        },
                         mindmap: {
                             download: "Télécharger",
                             reset: "Réinitialiser la vue",
@@ -2637,9 +2951,6 @@ i18n
                         example: {
                             label: "Exemple"
                         },
-                        starter_prompt: {
-                            label: "Suggestion pour débuter"
-                        },
                         deleteMessage: {
                             label: "Retirer le message"
                         },
@@ -2706,6 +3017,9 @@ i18n
                             action_status_ready_create: "Prêt à créer",
                             action_status_ready_save: "Prêt à enregistrer",
                             action_status_read_only: "Lecture seule",
+                            pending_review_notice:
+                                "Cet assistant fait actuellement l’objet d’un examen juridique conformément au règlement européen sur l’IA. Le créateur ou la créatrice peut continuer à le modifier, mais il ne sera pas disponible pour discuter tant que la révision n’est pas terminée.",
+                            inactive_notice: "Cet assistant a été désactivé par les administrateurs et n’est actuellement pas disponible pour discuter.",
 
                             // Create-only: Mode selector
                             subtitle_mode_select: "Choisissez comment vous souhaitez commencer",
@@ -2744,6 +3058,7 @@ i18n
                             system_prompt: "Prompt système",
                             system_prompt_description:
                                 "L'instruction de base pour l'assistant. Elle définit son rôle, ses tâches et ses règles de comportement pour les réponses.",
+                            system_prompt_locked_during_check: "Le prompt système est verrouillé pendant la vérification.",
                             prompt_placeholder:
                                 "Vous êtes un assistant pour les e-mails.\n\nMission :\nRédigez des brouillons courts et polis.\n\nRègles :\n- Utilisez le vouvoiement.\n- Soyez concis.",
 
@@ -2754,6 +3069,39 @@ i18n
                             section_tools: "Outils",
                             section_conversation_options: "Options de conversation",
                             section_access: "Accès et visibilité",
+                            section_review: "Vérification",
+
+                            // Review section
+                            review_confirmation_label:
+                                "Je confirme que cet assistant n'est pas destiné à être utilisé pour un cas d'usage à haut risque non autorisé dans MUCGPT.",
+                            review_required_hint: "Cette confirmation est requise pour créer ou enregistrer l'assistant.",
+                            review_intro_title: "Que sont les cas d'usage à haut risque ?",
+                            review_intro_description:
+                                "Les cas d'usage à haut risque sont des utilisations de l'IA dans lesquelles les décisions ou les évaluations concernant des personnes peuvent avoir des conséquences particulièrement lourdes, par exemple dans les ressources humaines, l'éducation, les services publics ou la migration.",
+                            review_check_title: "Vérifier les instructions",
+                            review_check_description: "Vérifiez les instructions de l'assistant pour détecter d'éventuels cas d'usage à haut risque.",
+                            review_check_learn_more: "En savoir plus sur les cas d'usage à haut risque",
+                            review_check_start: "Lancer la vérification",
+                            review_check_recheck: "Vérifier à nouveau",
+                            review_check_running: "Vérification en cours...",
+                            review_result_passed_title: "Toutes les vérifications réussies",
+                            review_result_passed_description:
+                                "Aucun indice de système à haut risque n'a été trouvé. La vérification sert uniquement d'orientation. Veuillez confirmer ci-dessous que l'assistant n'est pas utilisé pour un cas d'usage à haut risque non autorisé.",
+                            review_result_warning_title: "Indice d'un possible système à haut risque",
+                            review_result_warning_guidance:
+                                "Veuillez examiner les passages suivants des instructions et les modifier si nécessaire afin qu'aucun cas d'usage à haut risque ne subsiste. La vérification sert uniquement d'orientation.",
+                            review_result_error_title: "Échec de la vérification",
+                            review_result_error_description:
+                                "La vérification n'a pas pu être effectuée. L'enregistrement reste bloqué jusqu'à une nouvelle vérification réussie.",
+                            review_result_outdated_title: "Résultat n'est plus à jour",
+                            review_result_outdated_description:
+                                "Le prompt système a été modifié après cette vérification. Les indices se rapportent à la version précédente. Relancez la vérification pour obtenir un résultat à jour.",
+                            review_confirmation_label_high_risk:
+                                "J'ai examiné les indices et je confirme que cet assistant n'est pas destiné à un cas d'usage à haut risque non autorisé dans MUCGPT.",
+                            review_category_migration_asylum_border: "Migration, asile et contrôle des frontières",
+                            review_category_public_services_access: "Accès aux services publics essentiels",
+                            review_category_hr_employment: "Emploi et gestion du personnel",
+                            review_category_education: "Éducation générale et formation professionnelle",
 
                             // Advanced settings fields
                             creativity: "Style de réponse",
@@ -2770,7 +3118,7 @@ i18n
                             default_model_description:
                                 "Ce modèle est utilisé pour toutes les conversations. Les utilisateurs ne peuvent pas choisir un autre modèle.",
                             default_model_placeholder: "Sélectionnez un modèle...",
-                            no_default_model: "Aucun modèle imposé (l'utilisateur choisit)",
+                            no_default_model: "Sélectionnable dans le chat",
                             departments: "Départements",
                             departments_info:
                                 "Ce sont les départements qui ont accès à l'assistant. Tous les départements situés en dessous dans la hiérarchie y ont également accès.",
@@ -2820,6 +3168,11 @@ i18n
                             assistant_creation_failed: "Impossible de créer l'assistant",
                             save_config_failed: "Échec de l'enregistrement de la configuration de l'assistant",
                             assistant_save_failed: "Échec de l'enregistrement de l'assistant",
+                            compliance_not_persisted_title: "Assistant enregistré, résultat de conformité non enregistré",
+                            compliance_not_persisted_message:
+                                "Le dernier résultat de contrôle de conformité n'a pas pu être vérifié par le serveur et n'a donc pas été conservé. L'assistant a néanmoins été enregistré.",
+                            compliance_verification_failed_actionable:
+                                "La vérification de conformité n'a pas pu être validée par le serveur. Veuillez relancer la vérification et n'enregistrer qu'après une vérification réussie. Si le problème persiste, contactez l'administration.",
                             assistant_generated_success: "Assistant généré avec succès !",
                             assistant_generated_message:
                                 "La configuration de votre assistant a été générée. Vous pouvez maintenant la vérifier et la personnaliser.",
@@ -2882,11 +3235,15 @@ i18n
                             owner_details: "Propriétaires",
                             private_label: "Privé",
                             show_more_personal_assistants: "Afficher plus d'assistants personnels",
-                            system_prompt: "Prompt système",
-                            enabled_tools: "Outils activés",
-                            start_chat: "Démarrer la conversation",
+                            start_chat: "Démarrer une nouvelle conversation",
                             system_prompt_copy: "Copier le prompt système",
                             system_prompt_copied: "Copié",
+                            created_by: "Par",
+                            created_by_you: "Par vous",
+                            subscriber_count: "{{count}} abonnés",
+                            responsible: "Responsables",
+                            version: "Version {{version}}",
+                            configuration_updated: "Configuration modifiée le {{date}}",
                             sort_by: "Trier par",
                             sort_title: "Nom",
                             sort_last_used: "Dernière utilisation",
@@ -2940,6 +3297,9 @@ i18n
                             duplicate_failed_forbidden: "Vous n'avez pas la permission de dupliquer cet assistant.",
                             duplicate_failed_not_found: "L'assistant n'a pas été trouvé et ne peut pas être dupliqué.",
                             local_badge: "Local",
+                            pending_review_badge: "En attente",
+                            inactive_badge: "Inactif",
+                            accepted_badge: "Conforme",
                             local_state_title: "Cet assistant local est obsolète",
                             discovery_local_hint:
                                 "Cet assistant est uniquement enregistré localement dans votre navigateur et sera perdu si vous changez d'appareil. Enregistrez-le maintenant pour le conserver durablement.",
@@ -3048,7 +3408,25 @@ i18n
                         new_chat_discovery_title: "Обрати іншого асистента",
                         new_chat_discovery_card_title: "Обрати асистента",
                         new_chat_recent_assistant_title: "Почати з {{assistantName}}",
-                        new_chat_recent_assistant_fallback: "Асистент"
+                        new_chat_recent_assistant_fallback: "Асистент",
+                        legal_review: "Юридична перевірка",
+                        go_legal_review: "Відкрити юридичні перевірки"
+                    },
+                    admin: {
+                        legal_review: {
+                            title: "Юридичні перевірки",
+                            subtitle: "Перевірте асистентів із можливими випадками використання високого ризику.",
+                            pending: "Перевірка очікує",
+                            version: "Версія {{version}}",
+                            reason_label: "Примітка до рішення",
+                            reason_hint: "Коротко опишіть підставу вашого рішення.",
+                            approve: "Схвалити",
+                            deactivate: "Деактивувати",
+                            empty: "Усі асистенти перевірені.",
+                            load_failed: "Не вдалося завантажити чергу перевірки.",
+                            update_failed: "Не вдалося зберегти рішення щодо перевірки.",
+                            conflict: "Асистента було змінено. Чергу оновлено."
+                        }
                     },
                     home: {
                         assistants: "Асистенти",
@@ -3067,15 +3445,32 @@ i18n
                         prompt: "Задайте питання або завантажте документ",
                         prompt_no_upload: "Задайте питання",
                         answer_loading: "Створення відповіді",
+                        usage_context: "Використання",
+                        usage_context_summary: "Використання: {{used}} / {{max}} токенів ({{percent}}%)",
+                        usage_context_summary_no_max: "Використання: {{used}} токенів",
+                        usage_cost: "Вартість (орієнтовно): {{cost}}",
+                        usage_help_context:
+                            "Контекстне вікно містить останні повідомлення. Коли воно заповниться, MUCGPT не зможе приймати нові повідомлення, поки ви не почнете новий чат.",
+                        usage_help_context_warning_lead: "Контекст заповнюється.",
+                        usage_help_context_warning_detail: "Коли він заповниться, MUCGPT не зможе приймати нові повідомлення, поки ви не почнете новий чат.",
+                        usage_nudge_warning_detail:
+                            "Новий чат не перенесе поточну історію. Ви також можете просто продовжити писати, доки контекст не заповниться, після цього MUCGPT не зможе приймати нові повідомлення.",
+                        usage_help_context_critical_lead: "Контекст майже повний.",
+                        usage_help_context_critical_detail: "Незабаром MUCGPT не зможе приймати нові повідомлення. Варто почати новий чат.",
+                        usage_full_warning_lead: "Контекст заповнений.",
+                        usage_full_warning_detail: "MUCGPT не може приймати нові повідомлення. Почніть новий чат, щоб продовжити.",
+                        usage_nudge_title: "Цей чат стає дуже довгим.",
+                        usage_nudge_description: "Незабаром MUCGPT може не враховувати ранніший вміст.",
+                        usage_nudge_later: "Пізніше",
+                        usage_warning_title: "Цей чат дуже довгий.",
+                        usage_warning_description: "Новий чат не перенесе поточну історію, але поверне MUCGPT повний контекст для нових повідомлень.",
+                        usage_start_new_chat: "Розпочати новий чат",
+                        usage_dismiss_warning: "Закрити підказку",
                         follow_up_actions: {
-                            shorter_tooltip: "Написати коротшу відповідь",
-                            longer_tooltip: "Написати довшу відповідь",
-                            formal_tooltip: "Написати офіційнішу відповідь",
-                            informal_tooltip: "Написати неофіційнішу відповідь",
-                            shorter: "➖ Коротше",
-                            longer: "➕ Довше",
-                            formal: "👔 Офіційніше",
-                            informal: "👕 Неофіційніше",
+                            shorter: "Коротше",
+                            longer: "Довше",
+                            formal: "Офіційніше",
+                            informal: "Неофіційніше",
                             shorter_prompt:
                                 "Сформулюйте ваше останнє повідомлення в новий коротший текст, який відображає оригінальний зміст у скороченому та стислому вигляді. Цей текст має містити найважливішу інформацію та покращити розуміння читача.",
                             longer_prompt:
@@ -3253,6 +3648,12 @@ i18n
                             panHint: "Перетягніть для переміщення • Ctrl+прокрутка для масштабування • Подвійний клік для скидання",
                             zoomHint: "Ctrl+прокрутка для масштабування • Подвійний клік для підгонки"
                         },
+                        drawio: {
+                            download: "Завантажити діаграму",
+                            render: "Малювати діаграму...",
+                            error: "На жаль, діаграму draw.io не можна відобразити через помилки.",
+                            charactersWritten: "Написано символів"
+                        },
                         mindmap: {
                             download: "Завантажити",
                             reset: "Скинути вигляд",
@@ -3380,9 +3781,6 @@ i18n
                         example: {
                             label: "Приклад"
                         },
-                        starter_prompt: {
-                            label: "Початковий запит"
-                        },
                         deleteMessage: {
                             label: "Видалити повідомлення"
                         },
@@ -3448,6 +3846,9 @@ i18n
                             action_status_ready_create: "Готово до створення",
                             action_status_ready_save: "Готово до збереження",
                             action_status_read_only: "Лише читання",
+                            pending_review_notice:
+                                "Цей асистент наразі проходить юридичну перевірку відповідно до ЄС AI ACT. Автор може й надалі його редагувати, але спілкуватися з асистентом можна буде лише після завершення перевірки.",
+                            inactive_notice: "Цей асистент був деактивований адміністраторами і наразі недоступний для спілкування.",
 
                             // Create-only: Mode selector
                             subtitle_mode_select: "Оберіть, як ви хочете почати",
@@ -3485,6 +3886,7 @@ i18n
                             system_prompt: "Системний промпт",
                             system_prompt_description:
                                 "Базова інструкція для асистента. Вона визначає його роль, завдання та правила поведінки при відповідях.",
+                            system_prompt_locked_during_check: "Системний промпт заблоковано, поки триває перевірка.",
                             prompt_placeholder:
                                 "Ти асистент для електронних листів.\n\nЗавдання:\nПиши короткі та ввічливі чернетки.\n\nПравила:\n- Використовуй ввічливе звернення (Ви).\n- Пиши лаконічно.",
 
@@ -3495,6 +3897,39 @@ i18n
                             section_tools: "Інструменти",
                             section_conversation_options: "Опції розмови",
                             section_access: "Доступ і видимість",
+                            section_review: "Перевірка",
+
+                            // Review section
+                            review_confirmation_label:
+                                "Я підтверджую, що цей асистент не призначений для використання у високоризиковому сценарії, недозволеному в MUCGPT.",
+                            review_required_hint: "Це підтвердження необхідне для створення або збереження асистента.",
+                            review_intro_title: "Що таке сценарії використання з високим ризиком?",
+                            review_intro_description:
+                                "Сценарії використання з високим ризиком — це застосування ШІ, у яких рішення або оцінки щодо людей можуть мати особливо серйозні наслідки, наприклад у сфері персоналу, освіти, державних послуг або міграції.",
+                            review_check_title: "Перевірити інструкції",
+                            review_check_description: "Перевірте інструкції асистента на ознаки можливих сценаріїв використання з високим ризиком.",
+                            review_check_learn_more: "Дізнатися більше про сценарії використання з високим ризиком",
+                            review_check_start: "Почати перевірку",
+                            review_check_recheck: "Перевірити знову",
+                            review_check_running: "Перевірка триває...",
+                            review_result_passed_title: "Усі перевірки пройдено",
+                            review_result_passed_description:
+                                "Ознак системи з високим ризиком не виявлено. Перевірка слугує лише орієнтиром. Будь ласка, підтвердьте нижче, що асистент не використовується для недопустимого сценарію використання з високим ризиком.",
+                            review_result_warning_title: "Ознака можливої системи з високим ризиком",
+                            review_result_warning_guidance:
+                                "Будь ласка, перегляньте наведені нижче місця в інструкціях і за потреби змініть їх, щоб не залишалося сценарію використання з високим ризиком. Перевірка слугує лише орієнтиром.",
+                            review_result_error_title: "Помилка перевірки",
+                            review_result_error_description:
+                                "Перевірку не вдалося виконати. Збереження заблоковано, доки повторна перевірка не завершиться успішно.",
+                            review_result_outdated_title: "Результат більше не актуальний",
+                            review_result_outdated_description:
+                                "Системний промпт було змінено після цієї перевірки. Виявлені ознаки стосуються попередньої версії. Запустіть перевірку ще раз, щоб отримати актуальний результат.",
+                            review_confirmation_label_high_risk:
+                                "Я переглянув(-ла) виявлені ознаки та підтверджую, що цей асистент не призначений для недопустимого в MUCGPT сценарію використання з високим ризиком.",
+                            review_category_migration_asylum_border: "Міграція, притулок та прикордонний контроль",
+                            review_category_public_services_access: "Доступ до основних державних послуг",
+                            review_category_hr_employment: "Зайнятість та управління персоналом",
+                            review_category_education: "Загальна та професійна освіта",
 
                             // Advanced settings fields
                             creativity: "Стиль відповіді",
@@ -3510,7 +3945,7 @@ i18n
                             default_model: "Фіксована модель",
                             default_model_description: "Ця модель використовується для всіх розмов. Користувачі не можуть вибрати іншу модель.",
                             default_model_placeholder: "Оберіть модель...",
-                            no_default_model: "Без фіксованої моделі (обирає користувач)",
+                            no_default_model: "Можна вибрати в чаті",
                             departments: "Підрозділи",
                             departments_info: "Це підрозділи, які мають доступ до асистента. Усі підрозділи нижче у вибраній ієрархії також матимуть доступ.",
 
@@ -3559,6 +3994,11 @@ i18n
                             assistant_creation_failed: "Не вдалося створити асистента",
                             save_config_failed: "Не вдалося зберегти конфігурацію асистента",
                             assistant_save_failed: "Не вдалося зберегти асистента",
+                            compliance_not_persisted_title: "Асистента збережено, результат перевірки не збережено",
+                            compliance_not_persisted_message:
+                                "Останній результат перевірки відповідності не вдалося підтвердити на сервері, тому його не було збережено. Асистента все одно збережено.",
+                            compliance_verification_failed_actionable:
+                                "Сервер не зміг підтвердити перевірку відповідності. Будь ласка, запустіть перевірку ще раз і зберігайте лише після успішної перевірки. Якщо проблема не зникне, зверніться до адміністратора.",
                             assistant_generated_success: "Асистента успішно згенеровано!",
                             assistant_generated_message: "Конфігурацію вашого асистента згенеровано. Тепер ви можете переглянути та налаштувати її.",
                             assistant_generation_failed: "Не вдалося згенерувати конфігурацію асистента",
@@ -3627,11 +4067,15 @@ i18n
                             empty_community_title: "Громадські асистенти ще недоступні",
                             empty_community_description: "Опубліковані асистенти з'являться тут, щойно їх буде поширено в організації.",
                             empty_create_own: "Створити власного асистента",
-                            system_prompt: "Системний запит",
-                            enabled_tools: "Увімкнені інструменти",
-                            start_chat: "Розпочати розмову",
+                            start_chat: "Розпочати новий чат",
                             system_prompt_copy: "Копіювати системний промпт",
                             system_prompt_copied: "Скопійовано",
+                            created_by: "Автор:",
+                            created_by_you: "Ви автор",
+                            subscriber_count: "{{count}} підписників",
+                            responsible: "Відповідальні",
+                            version: "Версія {{version}}",
+                            configuration_updated: "Конфігурацію змінено {{date}}",
                             sort_by: "Сортувати за",
                             sort_title: "Назва",
                             sort_last_used: "Останнє використання",
@@ -3686,6 +4130,9 @@ i18n
                             duplicate_failed_forbidden: "У вас немає дозволу на дублювання цього асистента.",
                             duplicate_failed_not_found: "Асистента не знайдено, дублювання неможливе.",
                             local_badge: "Локальний",
+                            pending_review_badge: "Очікує перевірки",
+                            inactive_badge: "Неактивний",
+                            accepted_badge: "Відповідає вимогам",
                             local_state_title: "Цей локальний асистент застарів",
                             discovery_local_hint:
                                 "Цей асистент збережено лише локально у вашому браузері, і він буде втрачений, якщо ви зміните пристрій. Збережіть його зараз, щоб він залишався доступним.",

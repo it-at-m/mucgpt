@@ -22,6 +22,7 @@ import Unauthorized from "./pages/Unauthorized";
 import Discovery from "./pages/discovery/Discovery";
 import Home from "./pages/home/Home";
 import { AssistantEditorPage } from "./components/AssistantDialogs/AssistantEditorPage/AssistantEditorPage";
+import LegalReview from "./pages/admin/LegalReview";
 
 async function cleanupServiceWorkerForGatewayBuild() {
     const pwaEnabled = import.meta.env.VITE_DISABLE_PWA !== "true";
@@ -79,7 +80,17 @@ const router = createHashRouter([
                 errorElement: <div>Fehler</div>
             },
             {
+                path: "admin/legal-review",
+                element: <LegalReview />,
+                errorElement: <div>Fehler</div>
+            },
+            {
                 path: "tutorials/ki-basics",
+                element: <Tutorials />,
+                errorElement: <div>Fehler</div>
+            },
+            {
+                path: "tutorials/high-risk",
                 element: <Tutorials />,
                 errorElement: <div>Fehler</div>
             },

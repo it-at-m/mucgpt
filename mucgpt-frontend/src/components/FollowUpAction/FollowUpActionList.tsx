@@ -9,17 +9,16 @@ interface Props {
 
 export const FollowUpActionList = ({ onSend }: Props) => {
     const { followUpActions } = useContext(FollowUpActionContext);
+
     return followUpActions.length > 0 ? (
         <div className={styles.buttons}>
             {followUpActions.map((followUpAction, index) => (
-                <Tooltip content={followUpAction.tooltip} relationship="description" positioning="above" key={followUpAction.id || index}>
-                    <Button onClick={() => onSend(followUpAction.prompt)} appearance="secondary" className={styles.item}>
-                        {followUpAction.label}
+                <Tooltip key={followUpAction.id || index} content={followUpAction.prompt} relationship="description" positioning="above">
+                    <Button onClick={() => onSend(followUpAction.prompt)} shape="rounded" appearance="outline" className={styles.item}>
+                        <span className={styles.label}>{followUpAction.label}</span>
                     </Button>
                 </Tooltip>
             ))}
         </div>
-    ) : (
-        <></>
-    );
+    ) : null;
 };

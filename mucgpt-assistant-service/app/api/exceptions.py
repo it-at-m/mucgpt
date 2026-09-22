@@ -1,4 +1,8 @@
+from __future__ import annotations
+
 from fastapi import HTTPException
+
+from api.api_models import AssistantState
 
 
 class AuthenticationException(HTTPException):
@@ -56,6 +60,31 @@ class NotAllowedToAccessException(HTTPException):
         super().__init__(
             status_code=403,
             detail=f"You are not allowed to access assistant with ID {assistant_id}",
+        )
+
+
+class ComplianceVerificationFailedException(HTTPException):
+    def __init__(self, detail: str = "Compliance result could not be verified"):
+        super().__init__(
+            status_code=422,
+            detail=detail,
+        )
+
+
+class AssistantUnavailableForUseException(HTTPException):
+    def __init__(self, assistant_id: str, state: AssistantState | None = None):
+        if state == AssistantState.PENDING_LEGAL_REVIEW:
+            status_code = 451
+            detail = (
+                f"Assistant with ID {assistant_id} is unavailable for use "
+                "pending lifecycle review"
+            )
+        else:
+            status_code = 403
+            detail = f"Assistant with ID {assistant_id} is unavailable for use"
+        super().__init__(
+            status_code=status_code,
+            detail=detail,
         )
 
 

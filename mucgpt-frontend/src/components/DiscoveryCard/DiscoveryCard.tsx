@@ -1,17 +1,18 @@
 import React, { forwardRef, ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
 import { Badge, Card, CardPreview, mergeClasses, CardProps, BadgeProps } from "@fluentui/react-components";
-import { LockClosed16Regular, People16Regular } from "@fluentui/react-icons";
+import { LockClosed16Regular, People16Regular, Person16Regular } from "@fluentui/react-icons";
 import styles from "./DiscoveryCard.module.css";
 import { MarkdownRenderer } from "../MarkdownRenderer/MarkdownRenderer";
 
 export interface DiscoveryCardBadge {
     label: string;
+    icon?: BadgeProps["icon"];
     className?: string;
     appearance?: BadgeProps["appearance"];
     color?: BadgeProps["color"];
     size?: BadgeProps["size"];
-    tone?: "neutral" | "warning" | "danger";
+    tone?: "neutral" | "success" | "warning" | "danger";
 }
 
 export interface DiscoveryCardProps extends CardProps {
@@ -117,6 +118,7 @@ export const DiscoveryCard = forwardRef<HTMLDivElement, DiscoveryCardProps>((pro
                                     key={renderedBadge.label}
                                     className={mergeClasses(
                                         styles.headerBadge,
+                                        renderedBadge.tone === "success" && styles.headerBadgeSuccess,
                                         renderedBadge.tone === "warning" && styles.headerBadgeWarning,
                                         renderedBadge.tone === "danger" && styles.headerBadgeDanger,
                                         renderedBadge.className
@@ -124,6 +126,7 @@ export const DiscoveryCard = forwardRef<HTMLDivElement, DiscoveryCardProps>((pro
                                     appearance={renderedBadge.appearance ?? badgeAppearance}
                                     color={renderedBadge.color ?? badgeColor}
                                     size={renderedBadge.size ?? badgeSize}
+                                    icon={renderedBadge.icon}
                                 >
                                     {renderedBadge.label}
                                 </Badge>
@@ -149,7 +152,12 @@ export const DiscoveryCard = forwardRef<HTMLDivElement, DiscoveryCardProps>((pro
             <div className={styles.metadataBlock}>
                 <div className={styles.metadataDivider} aria-hidden="true" />
                 <div className={styles.metadataRow}>
-                    <span className={styles.metadataStart}>{metadataStartNode || metadataStartLabel}</span>
+                    {(metadataStartNode || metadataStartLabel) && (
+                        <span className={styles.metadataStart}>
+                            <Person16Regular aria-hidden="true" />
+                            <span>{metadataStartNode || metadataStartLabel}</span>
+                        </span>
+                    )}
                     {isPrivate ? (
                         <span className={styles.metadataEnd}>
                             <LockClosed16Regular aria-hidden="true" />

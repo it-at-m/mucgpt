@@ -6,6 +6,7 @@ from pathlib import Path
 from unittest.mock import patch
 
 import pytest
+from pydantic import ValidationError
 
 from config.settings import (
     MCPTransport,
@@ -332,6 +333,83 @@ class TestSettings:
                 assert model.supports_function_calling is False
         mocked.assert_not_called()
 
+    def test_model_context_usage_thresholds_default(self):
+        """Context usage thresholds default to 75/90 when not configured."""
+        models_json = json.dumps(
+            [
+                {
+                    "type": "OPENAI",
+                    "llm_name": "gpt-4o-mini",
+                    "endpoint": "https://exampleproxy/v1",
+                    "api_key": "proxy-key",
+                    "model_info": {
+                        "auto_enrich_from_model_info_endpoint": False,
+                        "max_output_tokens": 1000,
+                        "max_input_tokens": 2000,
+                        "description": "Manual",
+                    },
+                }
+            ]
+        )
+
+        with patch.dict(os.environ, {"MUCGPT_CORE_MODELS": models_json}):
+            settings = Settings()
+            model = settings.MODELS[0]
+            assert model.context_warning_threshold_percent == 75
+            assert model.context_critical_threshold_percent == 90
+
+    def test_model_context_usage_thresholds_configurable_per_model(self):
+        """Context usage thresholds can be overridden per model."""
+        models_json = json.dumps(
+            [
+                {
+                    "type": "OPENAI",
+                    "llm_name": "gpt-4o-mini",
+                    "endpoint": "https://exampleproxy/v1",
+                    "api_key": "proxy-key",
+                    "model_info": {
+                        "auto_enrich_from_model_info_endpoint": False,
+                        "max_output_tokens": 1000,
+                        "max_input_tokens": 2000,
+                        "description": "Manual",
+                        "context_warning_threshold_percent": 60,
+                        "context_critical_threshold_percent": 80,
+                    },
+                }
+            ]
+        )
+
+        with patch.dict(os.environ, {"MUCGPT_CORE_MODELS": models_json}):
+            settings = Settings()
+            model = settings.MODELS[0]
+            assert model.context_warning_threshold_percent == 60
+            assert model.context_critical_threshold_percent == 80
+
+    def test_model_context_usage_thresholds_reject_warning_above_critical(self):
+        """The warning threshold must stay below the critical threshold."""
+        models_json = json.dumps(
+            [
+                {
+                    "type": "OPENAI",
+                    "llm_name": "gpt-4o-mini",
+                    "endpoint": "https://exampleproxy/v1",
+                    "api_key": "proxy-key",
+                    "model_info": {
+                        "auto_enrich_from_model_info_endpoint": False,
+                        "max_output_tokens": 1000,
+                        "max_input_tokens": 2000,
+                        "description": "Manual",
+                        "context_warning_threshold_percent": 90,
+                        "context_critical_threshold_percent": 75,
+                    },
+                }
+            ]
+        )
+
+        with patch.dict(os.environ, {"MUCGPT_CORE_MODELS": models_json}):
+            with pytest.raises(ValidationError):
+                Settings()
+
     def test_sso_settings(self):
         """Test SSO settings configuration via nested env vars."""
         with patch.dict(
@@ -550,6 +628,57 @@ ENV_NAME: "YAML_ENV"
         get_redis_settings.cache_clear()
 
 
+class TestPromptPoolSettings:
+    """Test nested prompt-pool configuration."""
+
+    def test_defaults(self):
+        with patch.dict(os.environ, {}, clear=True):
+            prompts = Settings().PROMPTS
+
+        assert prompts.FOLDERS == []
+
+    def test_environment_configuration(self):
+        prompt_config = json.dumps(
+            {
+                "FOLDERS": [
+                    {
+                        "name": "custom",
+                        "prompts": [{"name": "example", "label": "staging"}],
+                    }
+                ]
+            }
+        )
+        with patch.dict(
+            os.environ,
+            {"MUCGPT_CORE_PROMPTS": prompt_config},
+            clear=True,
+        ):
+            prompts = Settings().PROMPTS
+
+        assert prompts.FOLDERS[0].name == "custom"
+        assert prompts.FOLDERS[0].prompts[0].name == "example"
+        assert prompts.FOLDERS[0].prompts[0].label == "staging"
+
+    def test_yaml_configuration(self, monkeypatch):
+        yaml_content = """
+PROMPTS:
+  FOLDERS:
+    - name: "yaml-folder"
+      prompts:
+        - name: "yaml-prompt"
+          label: "latest"
+"""
+        with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as tmpdir:
+            (Path(tmpdir) / "config.yaml").write_text(yaml_content)
+            monkeypatch.chdir(tmpdir)
+            with patch.dict(os.environ, {}, clear=True):
+                prompts = Settings().PROMPTS
+
+        assert prompts.FOLDERS[0].name == "yaml-folder"
+        assert prompts.FOLDERS[0].prompts[0].name == "yaml-prompt"
+        assert prompts.FOLDERS[0].prompts[0].label == "latest"
+
+
 class TestParserSettings:
     """Test cases for parsing / XBerg configuration."""
 
@@ -565,6 +694,37 @@ class TestParserSettings:
             settings = Settings()
             assert settings.XBERG_URL == ""
             assert settings.XBERG_TIMEOUT == 120.0
+
+
+class TestComplianceCacheSettings:
+    """Test cases for compliance cache configuration."""
+
+    def test_compliance_cache_ttl_default_and_positive_value(self):
+        """COMPLIANCE_CACHE_TTL_SECONDS defaults correctly and allows positive values."""
+        with patch.dict(os.environ, {}, clear=True):
+            settings = Settings()
+            assert settings.COMPLIANCE_CACHE_TTL_SECONDS == 1800
+
+        with patch.dict(
+            os.environ,
+            {
+                "MUCGPT_CORE_COMPLIANCE_CACHE_TTL_SECONDS": "300",
+            },
+        ):
+            settings = Settings()
+            assert settings.COMPLIANCE_CACHE_TTL_SECONDS == 300
+
+    def test_compliance_cache_ttl_rejects_zero_and_negative(self):
+        """COMPLIANCE_CACHE_TTL_SECONDS must be strictly positive."""
+        for invalid_ttl in ("0", "-1"):
+            with patch.dict(
+                os.environ,
+                {
+                    "MUCGPT_CORE_COMPLIANCE_CACHE_TTL_SECONDS": invalid_ttl,
+                },
+            ):
+                with pytest.raises(ValueError):
+                    Settings()
 
     def test_parser_backend_xberg_via_env(self):
         """PARSER_BACKEND can be set to 'xberg' via environment variable."""
@@ -670,6 +830,30 @@ class TestTranscriptionSettings:
         ):
             settings = Settings()
             assert settings.TRANSCRIPTION_ENABLED is True
+
+    def teardown_method(self):
+        get_settings.cache_clear()
+
+
+class TestAiActComplianceCheckSettings:
+    """Test cases for AI Act compliance check frontend feature flag configuration."""
+
+    def test_ai_act_compliance_check_enabled_default(self):
+        """AI_ACT_COMPLIANCE_CHECK_ENABLED defaults to True."""
+        with patch.dict(os.environ, {}, clear=True):
+            settings = Settings()
+            assert settings.AI_ACT_COMPLIANCE_CHECK_ENABLED is True
+
+    def test_ai_act_compliance_check_enabled_via_env(self):
+        """AI_ACT_COMPLIANCE_CHECK_ENABLED can be disabled via environment variable."""
+        with patch.dict(
+            os.environ,
+            {
+                "MUCGPT_CORE_AI_ACT_COMPLIANCE_CHECK_ENABLED": "false",
+            },
+        ):
+            settings = Settings()
+            assert settings.AI_ACT_COMPLIANCE_CHECK_ENABLED is False
 
     def teardown_method(self):
         get_settings.cache_clear()

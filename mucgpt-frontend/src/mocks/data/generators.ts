@@ -10,7 +10,6 @@ const MOCK_OWNER_DIRECTORY: Record<string, OwnerDetailsResponse> = {
     "111160470": {
         user_id: "111160470",
         username: "Michael Jaumann",
-        contact_address: "michael.jaumann@muenchen.de",
         givenName: "Michael",
         sn: "Jaumann",
         mail: "michael.jaumann@muenchen.de",
@@ -19,7 +18,6 @@ const MOCK_OWNER_DIRECTORY: Record<string, OwnerDetailsResponse> = {
     "user-mock-001": {
         user_id: "user-mock-001",
         username: "Mia Sommer",
-        contact_address: "mia.sommer@muenchen.de",
         givenName: "Mia",
         sn: "Sommer",
         mail: "mia.sommer@muenchen.de",
@@ -28,7 +26,6 @@ const MOCK_OWNER_DIRECTORY: Record<string, OwnerDetailsResponse> = {
     "user-mock-002": {
         user_id: "user-mock-002",
         username: "Lukas Winter",
-        contact_address: "lukas.winter@muenchen.de",
         givenName: "Lukas",
         sn: "Winter",
         mail: "lukas.winter@muenchen.de",
@@ -37,7 +34,6 @@ const MOCK_OWNER_DIRECTORY: Record<string, OwnerDetailsResponse> = {
     "user-mock-003": {
         user_id: "user-mock-003",
         username: "Sara Neumann",
-        contact_address: "sara.neumann@muenchen.de",
         givenName: "Sara",
         sn: "Neumann",
         mail: "sara.neumann@muenchen.de",
@@ -46,7 +42,6 @@ const MOCK_OWNER_DIRECTORY: Record<string, OwnerDetailsResponse> = {
     "user-mock-123": {
         user_id: "user-mock-123",
         username: "Max Mustermann",
-        contact_address: "max.mustermann@muenchen.de",
         givenName: "Max",
         sn: "Mustermann",
         mail: "max.mustermann@muenchen.de",
@@ -135,10 +130,11 @@ export function buildAssistant(): AssistantCreateResponse {
                 { text: "Fasse ein Dokument zusammen", value: randomSentence() }
             ],
             quick_prompts: [
-                { label: "Begrüßung", prompt: "Hallo! Wie kann ich helfen?", tooltip: "Standard Begrüßung" },
-                { label: "Zusammenfassen", prompt: "Bitte fasse den Text oben in 3 Sätzen zusammen.", tooltip: "TL;DR" }
+                { label: "Begrüßung", prompt: "Hallo! Wie kann ich helfen?" },
+                { label: "Zusammenfassen", prompt: "Bitte fasse den Text oben in 3 Sätzen zusammen." }
             ],
-            tags: ["mock", "dynamic", randomOf(["beta", "prod", "lab"])]
+            tags: ["mock", "dynamic", randomOf(["beta", "prod", "lab"])],
+            compliance_confirmation: false
         }
     };
 }
@@ -168,6 +164,42 @@ export function buildChatMessage() {
         "Boot sequence complete. Jokes module: experimental. Ask away!"
     ];
     return randomOf(messages);
+}
+
+/** Complete draw.io fence — happy-path E2E (trigger: `valid-drawio`). */
+export function buildDrawioChatMessage() {
+    return [
+        "Hier ist ein Beispiel-Flowchart als draw.io-Diagramm (Mock):",
+        "",
+        "```drawio",
+        '<mxGraphModel><root><mxCell id="0"/><mxCell id="1" parent="0"/><mxCell id="2" value="Start" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1"><mxGeometry x="120" y="40" width="120" height="40" as="geometry"/></mxCell><mxCell id="3" value="Decision?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1"><mxGeometry x="120" y="120" width="120" height="80" as="geometry"/></mxCell><mxCell id="4" value="Yes" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1"><mxGeometry x="40" y="240" width="100" height="40" as="geometry"/></mxCell><mxCell id="5" value="No" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1"><mxGeometry x="220" y="240" width="100" height="40" as="geometry"/></mxCell><mxCell id="6" edge="1" parent="1" source="2" target="3"><mxGeometry relative="1" as="geometry"/></mxCell><mxCell id="7" value="Yes" edge="1" parent="1" source="3" target="4"><mxGeometry relative="1" as="geometry"/></mxCell><mxCell id="8" value="No" edge="1" parent="1" source="3" target="5"><mxGeometry relative="1" as="geometry"/></mxCell></root></mxGraphModel>',
+        "```"
+    ].join("\n");
+}
+
+/** Truncated draw.io fence — incomplete XML for error-fallback E2E (trigger: `invalid-drawio`). */
+export function buildInvalidDrawioChatMessage() {
+    return [
+        "Hier ist ein absichtlich unvollständiges draw.io-Diagramm (Mock).",
+        "Die XML-Struktur wird gestreamt und bricht vor dem schließenden Tag ab:",
+        "",
+        "```drawio",
+        "<mxGraphModel>",
+        "  <root>",
+        '    <mxCell id="0"/>',
+        '    <mxCell id="1" parent="0"/>',
+        '    <mxCell id="2" value="Start" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">',
+        '      <mxGeometry x="120" y="40" width="120" height="40" as="geometry"/>',
+        "    </mxCell>",
+        '    <mxCell id="3" value="Decision?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">',
+        '      <mxGeometry x="120" y="120" width="120" height="80" as="geometry"/>',
+        "    </mxCell>",
+        '    <mxCell id="4" value="Yes" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">',
+        '      <mxGeometry x="40" y="240" width="100" height="40" as="geometry"/>',
+        "    </mxCell>",
+        // Intentionally incomplete: no closing </root></mxGraphModel>
+        "```"
+    ].join("\n");
 }
 
 export function buildAssistantCreateResponse(overrides: Partial<AssistantCreateResponse> = {}): AssistantCreateResponse {
@@ -206,10 +238,11 @@ export function buildAssistantCreateResponse(overrides: Partial<AssistantCreateR
                 }
             ],
             quick_prompts: overrides.latest_version?.quick_prompts || [
-                { label: "Begrüßung", prompt: "Hallo! Wobei kann ich heute unterstützen?", tooltip: "Freundliche Begrüßung" },
-                { label: "Zusammenfassen", prompt: "Fasse den Text bitte kurz und verständlich zusammen.", tooltip: "Kurze Zusammenfassung" }
+                { label: "Begrüßung", prompt: "Hallo! Wobei kann ich heute unterstützen?" },
+                { label: "Zusammenfassen", prompt: "Fasse den Text bitte kurz und verständlich zusammen." }
             ],
-            tags: overrides.latest_version?.tags || ["mock", "assistant", randomOf(["docs", "email", "workflow", "research"])]
+            tags: overrides.latest_version?.tags || ["mock", "assistant", randomOf(["docs", "email", "workflow", "research"])],
+            compliance_confirmation: overrides.latest_version?.compliance_confirmation ?? false
         }
     };
     return base;
@@ -228,30 +261,48 @@ function wordChunksFromMessage(message: string) {
         object: "chat.completion.chunk",
         created: Math.floor(Date.now() / 1000),
         model: "KIESGPT",
-        choices: [{ index: 0, delta: { content: w }, finish_reason: null }]
+        choices: [{ index: 0, delta: { content: w }, finish_reason: null }],
+        usage: undefined as { prompt_tokens: number; completion_tokens: number; total_tokens: number } | undefined
     }));
 }
 
-export function generateChatStreamChunks(finalMessage: string) {
+/**
+ * @param forcedContextTokens - When set, overrides the randomized prompt token count so callers
+ * can pin the resulting context-usage percentage for deterministic visual testing (see the
+ * "#usage<0-100>" control word handled in handlers.ts).
+ */
+export function generateChatStreamChunks(finalMessage: string, forcedContextTokens?: number) {
     const base = wordChunksFromMessage(finalMessage);
     base.push({
         id: `chatcmpl-mock-${Math.random().toString(36).slice(2, 8)}`,
         object: "chat.completion.chunk",
         created: Math.floor(Date.now() / 1000),
         model: "KIESGPT",
-        choices: [{ index: 0, delta: { content: "" }, finish_reason: null }]
+        choices: [{ index: 0, delta: { content: "" }, finish_reason: null }],
+        usage: undefined
     });
     base.push({
         id: `chatcmpl-mock-${Math.random().toString(36).slice(2, 8)}`,
         object: "chat.completion.chunk",
         created: Math.floor(Date.now() / 1000),
         model: "KIESGPT",
-        choices: [{ index: 0, delta: { content: "" }, finish_reason: "stop" as any }]
+        choices: [{ index: 0, delta: { content: "" }, finish_reason: "stop" as any }],
+        usage: (() => {
+            const completion_tokens = Math.round(finalMessage.length / 4);
+            const prompt_tokens = forcedContextTokens ?? 400 + Math.floor(Math.random() * 2000);
+            const total_tokens = prompt_tokens + completion_tokens;
+            return {
+                prompt_tokens,
+                completion_tokens,
+                total_tokens,
+                ...(forcedContextTokens !== undefined && { context_tokens: forcedContextTokens })
+            };
+        })()
     });
     return base;
 }
 
-export function generateMindmapStreamChunks(topic: string) {
+export function generateMindmapStreamChunks(topic: string, forcedContextTokens?: number) {
     const t = topic || "Artificial Intelligence";
     const chunks: any[] = [];
 
@@ -345,12 +396,17 @@ export function generateMindmapStreamChunks(topic: string) {
         object: "chat.completion.chunk",
         created: Math.floor(Date.now() / 1000),
         model: "KIESGPT",
-        choices: [{ index: 0, delta: { content: "" }, finish_reason: "stop" as any }]
+        choices: [{ index: 0, delta: { content: "" }, finish_reason: "stop" as any }],
+        usage: (() => {
+            const completion_tokens = Math.round(consolidated.length / 4);
+            const prompt_tokens = forcedContextTokens ?? 400 + Math.floor(Math.random() * 2000);
+            return { prompt_tokens, completion_tokens, total_tokens: prompt_tokens + completion_tokens };
+        })()
     });
     return chunks;
 }
 
-export function generateSimplifyStreamChunks() {
+export function generateSimplifyStreamChunks(forcedContextTokens?: number) {
     const chunks: any[] = [];
     const push = (state: string, content: string, metadata: any = {}) => {
         chunks.push({
@@ -436,7 +492,12 @@ export function generateSimplifyStreamChunks() {
         object: "chat.completion.chunk",
         created: Math.floor(Date.now() / 1000),
         model: "KIESGPT",
-        choices: [{ index: 0, delta: { content: "" }, finish_reason: "stop" as any }]
+        choices: [{ index: 0, delta: { content: "" }, finish_reason: "stop" as any }],
+        usage: (() => {
+            const completion_tokens = 300;
+            const prompt_tokens = forcedContextTokens ?? 400 + Math.floor(Math.random() * 2000);
+            return { prompt_tokens, completion_tokens, total_tokens: prompt_tokens + completion_tokens };
+        })()
     });
     return chunks;
 }

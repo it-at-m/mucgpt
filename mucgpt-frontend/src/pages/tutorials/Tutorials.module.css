@@ -12,6 +12,10 @@
     box-sizing: border-box;
 }
 
+.container.containerDetail {
+    margin-top: 24px;
+}
+
 .headerContainer {
     display: flex;
     justify-content: space-between;
@@ -130,29 +134,44 @@
 
 /* Selected Tutorial Content */
 .tutorialBreadcrumb {
-    margin-bottom: 24px;
+    margin-bottom: 8px;
 }
 
 .tutorialTitleContainer {
     display: flex;
-    align-items: flex-start;
+    align-items: center;
     gap: 16px;
 }
 
+.tutorialTitleContainer .tutorialIcon {
+    margin-bottom: 0;
+}
+
+.tutorialTitleRow {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.tutorialTitleRow h2 {
+    margin: 0;
+}
+
+.tutorialContent .tutorialHeader {
+    margin-bottom: 12px;
+}
+
 .tutorialSubtitle {
+    display: block;
     color: var(--colorNeutralForeground2);
-    margin-top: 8px;
-    margin-left: 6px;
+    margin: 2px 0 0 0;
     font-size: 16px;
-    line-height: 1.6;
+    line-height: 1.5;
 }
 
 .tutorialBody {
-    margin-top: 24px;
-    padding: 16px;
-    background: var(--colorNeutralBackground1);
-    border-radius: 6px;
-    border: 1px solid var(--colorNeutralStroke2);
+    margin-top: 12px;
 }
 
 /* Responsive Design */
@@ -196,7 +215,6 @@
     }
 
     .tutorialBody {
-        padding: 20px;
         margin-top: 24px;
     }
 
@@ -235,10 +253,6 @@
         width: 40px;
         height: 40px;
         padding: 8px;
-    }
-
-    .tutorialBody {
-        padding: 16px;
     }
 
     .tutorialSections {

@@ -53,7 +53,7 @@
 [github-release-shield]: https://img.shields.io/github/v/release/it-at-m/mucgpt?style=for-the-badge&color=blue
 [python-versions-shield]: https://img.shields.io/badge/python-3.13-blue?style=for-the-badge
 [gitmoij-shield]: https://img.shields.io/badge/gitmoij-😜😍-blue?style=for-the-badge
-[npm-versions-shield]: https://img.shields.io/badge/node-22+-blue?style=for-the-badge
+[npm-versions-shield]: https://img.shields.io/badge/node-24+-blue?style=for-the-badge
 [uv-shield]: https://img.shields.io/badge/⚡-uv-blue?style=for-the-badge
 [fastapi-shield]: https://img.shields.io/badge/fastapi-blue?style=for-the-badge&logo=fastapi&logoColor=white
 [react-shield]: https://shields.io/badge/react-blue?logo=react&style=for-the-badge&logoColor=white
@@ -118,7 +118,7 @@ See the [open issues](https://github.com/it-at-m/mucgpt/issues) for a full list 
 
 ### Deployment
 
-- [Node.js 22+](https://nodejs.org/en/download/package-manager)
+- [Node.js 24+](https://nodejs.org/en/download/package-manager)
 - [Git](https://git-scm.com/downloads)
 - Python 3.13
 - [uv](https://github.com/astral-sh/uv)
@@ -212,7 +212,7 @@ The API Gateway is developed in Java based on the [Spring Cloud Gateway](https:/
 Authentication is managed using [Keycloak](https://www.keycloak.org/), a robust open-source identity and access management solution. Keycloak handles user authentication, authorization, and user management for the MUCGPT platform, enabling secure Single Sign-On (SSO) across all services.
 For more details on customizing authentication or extending user management, refer to the [Keycloak Migration Framework documentation](https://mayope.github.io/keycloakmigration/).
 
-[Langfuse](https://langfuse.com/) is an open-source LLM observability platform that supports agent tracing and prompt management. It is optional in MUCGPT.
+[Langfuse](https://langfuse.com/) is an open-source LLM observability platform that supports agent tracing and prompt management. It is optional in MUCGPT. Internal prompts can also be retrieved from Langfuse through `PROMPTS` in `core.config.yaml`; see the [Getting Started guide](docs/GETTING_STARTED.md#prompt-configuration).
 
 For more information, see the [MUCGPT Features documentation](/docs/FEATURES.md).
 

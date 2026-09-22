@@ -67,6 +67,9 @@ export const AssistantPreviewChat = ({
     const [lastQuestion, setLastQuestion] = useState<string>("");
     const showStarterPrompts = !lastQuestion && answers.length === 0;
     const [isLoading, setIsLoading] = useState<boolean>(false);
+    // True from request start until the answer has fully finished streaming (see the same flag in Chat.tsx).
+    // Used to hide follow-up actions until the message is completely rendered.
+    const [isStreaming, setIsStreaming] = useState<boolean>(false);
     const [error, setError] = useState<unknown>();
     const [toolStatuses, setToolStatuses] = useState<ToolStatus[]>([]);
     const [showScrollToBottom, setShowScrollToBottom] = useState(false);
@@ -207,6 +210,7 @@ export const AssistantPreviewChat = ({
             setLastQuestionValue(nextQuestion);
             if (error) setError(undefined);
             setIsLoadingValue(true);
+            setIsStreaming(true);
 
             const askResponse: ChatResponse = { answer: "", tokens: 0, user_tokens: 0 };
             const { systemPrompt: system, creativity: temp, selectedToolIds: toolIds } = configRef.current;
@@ -236,6 +240,7 @@ export const AssistantPreviewChat = ({
                 setError(e);
             }
             setIsLoadingValue(false);
+            setIsStreaming(false);
         },
         [answers, error, LLM, setIsLoadingValue, setLastQuestionValue]
     );
@@ -277,6 +282,25 @@ export const AssistantPreviewChat = ({
         return availableLLMs;
     }, [availableLLMs, defaultModel]);
 
+    const usageSummary = useMemo(() => {
+        let totalCost = 0;
+        let lastContextTokens = 0;
+        let maxInputTokens: number | null | undefined;
+        let warningThresholdPercent: number | undefined;
+        let criticalThresholdPercent: number | undefined;
+        for (const answer of answers) {
+            totalCost += answer.response.usage_cost ?? 0;
+            if (typeof answer.response.context_tokens === "number") {
+                lastContextTokens = answer.response.context_tokens;
+                maxInputTokens = answer.response.usage_max_input_tokens;
+                warningThresholdPercent = answer.response.usage_context_warning_threshold_percent;
+                criticalThresholdPercent = answer.response.usage_context_critical_threshold_percent;
+            }
+        }
+        if (lastContextTokens === 0 && totalCost === 0) return undefined;
+        return { totalCost, lastContextTokens, maxInputTokens, warningThresholdPercent, criticalThresholdPercent };
+    }, [answers]);
+
     const answerList = useMemo(
         () => (
             <AnswerList
@@ -287,6 +311,8 @@ export const AssistantPreviewChat = ({
                             <Answer
                                 key={index}
                                 answer={answer.response}
+                                isLatest
+                                isStreaming={isStreaming}
                                 onRegenerateResponseClicked={onRegenerate}
                                 onFollowUpActionSend={prompt => void callApi(prompt)}
                             />
@@ -312,7 +338,7 @@ export const AssistantPreviewChat = ({
                 lastAnswerRef={lastAnswerRef}
             />
         ),
-        [answers, isLoading, error, callApi, lastQuestion, onRegenerate]
+        [answers, isLoading, isStreaming, error, callApi, lastQuestion, onRegenerate]
     );
 
     const containerStyle = { "--previewInputHeight": `${previewInputHeight}px` } as CSSProperties;
@@ -387,6 +413,7 @@ export const AssistantPreviewChat = ({
                     tools={tools}
                     allowToolSelection={false}
                     allowFileUpload={false}
+                    usage={usageSummary}
                 />
             </div>
         </div>

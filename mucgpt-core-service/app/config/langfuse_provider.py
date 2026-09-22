@@ -11,7 +11,7 @@ class LangfuseProvider:
     _langfuse_callback: CallbackHandler | None = None
 
     @staticmethod
-    def init(version: str, langfuse_cfg: LangfuseConfig):
+    def init(version: str, langfuse_cfg: LangfuseConfig) -> Langfuse | None:
         if langfuse_cfg is not None:
             if (
                 langfuse_cfg.HOST
@@ -19,16 +19,17 @@ class LangfuseProvider:
                 and langfuse_cfg.PUBLIC_KEY
             ):
                 try:
-                    langfuse = Langfuse(
+                    lf_client = Langfuse(
                         public_key=langfuse_cfg.PUBLIC_KEY,
                         host=langfuse_cfg.HOST,
                         secret_key=langfuse_cfg.SECRET_KEY.get_secret_value(),
                         release=version,
                     )
-                    langfuse.auth_check()
+                    lf_client.auth_check()
                     LangfuseProvider._langfuse_callback = CallbackHandler(
                         public_key=langfuse_cfg.PUBLIC_KEY,
                     )
+                    return lf_client
                 except Exception as e:
                     logger.error(f"Error initializing Langfuse: {e}")
 

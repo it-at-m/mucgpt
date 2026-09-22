@@ -12,6 +12,12 @@ export type ChatResponse = {
     error?: string;
     tokens?: number;
     user_tokens?: number;
+    context_tokens?: number;
+    usage_cost?: number;
+    usage_model?: string;
+    usage_max_input_tokens?: number | null;
+    usage_context_warning_threshold_percent?: number;
+    usage_context_critical_threshold_percent?: number;
     activeTools?: Array<{
         name: string;
         message: string;
@@ -69,18 +75,23 @@ export interface ApplicationConfig {
     assistant_version: string;
     document_processing_enabled: boolean;
     transcription_enabled: boolean;
+    ai_act_compliance_check_enabled: boolean;
     footer_link_url?: string;
     footer_label?: string;
     faq_url?: string;
     incident_report_url?: string;
     feature_request_url?: string;
     contact_mail_url?: string;
+    admin_role?: string;
     ad2image_url?: string;
+    owner_profile_url_template?: string;
 }
 
 export interface Model {
     llm_name: string;
     max_input_tokens?: number | null;
+    context_warning_threshold_percent?: number;
+    context_critical_threshold_percent?: number;
     description?: string | null;
     max_output_tokens?: number | null;
     knowledge_cut_off?: string | null;
@@ -122,6 +133,7 @@ export interface ChatCompletionChunk {
     object: "chat.completion.chunk";
     created: number;
     choices: ChatCompletionChunkChoice[];
+    usage?: { prompt_tokens?: number; completion_tokens?: number; total_tokens?: number; context_tokens?: number | null } | null;
 }
 
 export type CountTokenRequest = {
@@ -155,7 +167,14 @@ export type Assistant = {
     hierarchical_access?: string[];
     tools?: ToolBase[];
     is_visible: boolean;
+    compliance_check_result?: ComplianceCheckResponse;
+    compliance_confirmation?: boolean;
+    state?: AssistantState;
+    state_changed_by?: string | null;
+    state_change_reason?: string | null;
 };
+
+export type AssistantState = "active" | "pending_legal_review" | "inactive";
 
 export interface ToolBase {
     id: string;
@@ -165,7 +184,6 @@ export interface ToolBase {
 export interface OwnerDetailsResponse {
     user_id: string;
     username: string;
-    contact_address?: string | null;
     givenName?: string | null;
     sn?: string | null;
     mail?: string | null;
@@ -190,6 +208,8 @@ export interface AssistantCreateInput {
     quick_prompts?: FollowUpActionModel[];
     tags?: string[];
     is_visible: boolean;
+    compliance_check_result?: ComplianceCheckResponse;
+    compliance_confirmation?: boolean;
 }
 export interface AssistantVersionResponse {
     id: string;
@@ -209,6 +229,11 @@ export interface AssistantVersionResponse {
     quick_prompts?: FollowUpActionModel[];
     tags?: string[];
     is_visible: boolean;
+    compliance_check_result?: ComplianceCheckResponse;
+    compliance_confirmation?: boolean;
+    state?: AssistantState;
+    state_changed_by?: string | null;
+    state_change_reason?: string | null;
 }
 
 export interface AssistantCreateResponse {
@@ -235,6 +260,8 @@ export interface AssistantUpdateInput {
     tags?: string[];
     is_visible: boolean;
     version: number;
+    compliance_check_result?: ComplianceCheckResponse;
+    compliance_confirmation?: boolean;
 }
 
 export interface AssistantResponse {
@@ -273,6 +300,14 @@ export interface User {
     preferred_username?: string;
     department?: string;
     lhmObjectID?: string;
+    roles?: string[];
+}
+
+export interface AssistantStateUpdateInput {
+    state: AssistantState;
+    expected_state: AssistantState;
+    version: number;
+    reason?: string;
 }
 
 export type CommunityAssistant = {
@@ -285,6 +320,36 @@ export type CommunityAssistant = {
     is_visible?: boolean;
     owners_detailed?: OwnerDetailsResponse[];
 };
+
+// Compliance check (EU AI Act high-risk screening) -------------------------
+
+// Stable category ids, mapped to Annex III of the EU AI Act.
+export type ComplianceCategoryId =
+    | "migration_asylum_border" // Annex III No. 7
+    | "public_services_access" // Annex III No. 5
+    | "hr_employment" // Annex III No. 4
+    | "education"; // Annex III No. 3
+
+export type ComplianceStatus = "passed" | "high_risk_detected" | "error";
+
+export interface ComplianceCategoryResult {
+    category: ComplianceCategoryId;
+    status: ComplianceStatus;
+    reasoning?: string; // Only present when status is "high_risk_detected".
+}
+
+export interface ComplianceCheckRequest {
+    system_prompt: string;
+}
+
+export interface ComplianceCheckResponse {
+    overall_status: ComplianceStatus;
+    // One entry per checked category; may be empty when overall_status is "error".
+    results: ComplianceCategoryResult[];
+    // Hash of the checked system prompt. Sent back to the backend on create/update to link the confirmed
+    // compliance result to the saved assistant (the backend assigns the assistant id itself).
+    prompt_hash?: string;
+}
 
 export type CommunityAssistantSnapshot = {
     snapshot_version: number;
@@ -301,4 +366,7 @@ export type CommunityAssistantSnapshot = {
     hierarchical_access?: string[];
     tools?: ToolBase[];
     is_visible: boolean;
+    compliance_check_result?: ComplianceCheckResponse;
+    compliance_confirmation?: boolean;
+    state?: AssistantState;
 };

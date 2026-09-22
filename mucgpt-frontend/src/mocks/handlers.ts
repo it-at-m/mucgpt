@@ -1,11 +1,20 @@
 // mocks/handlers.js
 import { http, HttpResponse, delay, passthrough } from "msw";
-import { ApplicationConfig, AssistantCreateResponse, AssistantUpdateInput } from "../api";
+import {
+    ApplicationConfig,
+    AssistantCreateResponse,
+    AssistantStateUpdateInput,
+    AssistantUpdateInput,
+    ComplianceCategoryResult,
+    ComplianceCheckResponse
+} from "../api";
 import {
     buildAssistantCreateResponse,
     buildAssistantList,
     buildOwnersDetailedFromOwnerIds,
     buildChatMessage,
+    buildDrawioChatMessage,
+    buildInvalidDrawioChatMessage,
     generateChatStreamChunks,
     generateMindmapStreamChunks,
     generateSimplifyStreamChunks
@@ -129,16 +138,21 @@ const CONFIG_RESPONSE: ApplicationConfig = {
     assistant_version: "0.0.1",
     document_processing_enabled: true,
     transcription_enabled: true,
+    ai_act_compliance_check_enabled: true,
     footer_link_url: "https://ki.muenchen.de",
     footer_label: "DAICE",
     faq_url: "https://ki.muenchen.de/",
     incident_report_url: "https://ki.muenchen.de/",
     feature_request_url: "https://ki.muenchen.de/",
     contact_mail_url: "mailto:ki@muenchen.de",
-    ad2image_url: ""
+    ad2image_url: "",
+    owner_profile_url_template: "https://intranet.muenchen.de/person/{uid}",
+    admin_role: "lhm-ab-mucgpt-admin"
 };
 
 const DYNAMIC_ASSISTANTS: AssistantCreateResponse[] = buildAssistantList(6);
+const pendingAssistant = DYNAMIC_ASSISTANTS[0];
+if (pendingAssistant) pendingAssistant.latest_version.state = "pending_legal_review";
 
 const MOCK_SUBSCRIPTION_COUNTS = [10350, 2500, 1400, 980, 620, 410, 275, 190, 135, 88, 42, 17];
 
@@ -154,6 +168,7 @@ function withMockSubscriptionCount(assistant: AssistantCreateResponse) {
     return {
         ...assistant,
         is_visible: assistant.latest_version.is_visible ?? true,
+        latest_version: { state: "active", ...assistant.latest_version },
         subscriptions_count: getMockSubscriptionCount(assistant.id)
     };
 }
@@ -185,8 +200,8 @@ DYNAMIC_ASSISTANTS.push(
                 }
             ],
             quick_prompts: [
-                { label: "Research Topic", prompt: "Please research this topic in detail:", tooltip: "Deep research" },
-                { label: "Summarize Paper", prompt: "Summarize this research paper:", tooltip: "Academic summary" }
+                { label: "Research Topic", prompt: "Please research this topic in detail:" },
+                { label: "Summarize Paper", prompt: "Summarize this research paper:" }
             ],
             tags: ["research", "academic", "kiesgpt"]
         }
@@ -220,8 +235,8 @@ DYNAMIC_ASSISTANTS.push(
                 }
             ],
             quick_prompts: [
-                { label: "Summarize", prompt: "Please summarize this document:", tooltip: "Quick summary" },
-                { label: "Key Points", prompt: "Extract the key points from this text:", tooltip: "Main ideas" }
+                { label: "Summarize", prompt: "Please summarize this document:" },
+                { label: "Key Points", prompt: "Extract the key points from this text:" }
             ],
             tags: ["documents", "legacy", "deprecated"]
         }
@@ -260,8 +275,8 @@ DYNAMIC_ASSISTANTS.push(
                 }
             ],
             quick_prompts: [
-                { label: "Follow-up", prompt: "Draft a follow-up e-mail for a meeting that took place yesterday.", tooltip: "Post-meeting follow-up" },
-                { label: "Apology", prompt: "Write a professional apology e-mail for a delayed response.", tooltip: "Apologize for delay" }
+                { label: "Follow-up", prompt: "Draft a follow-up e-mail for a meeting that took place yesterday." },
+                { label: "Apology", prompt: "Write a professional apology e-mail for a delayed response." }
             ],
             tags: ["e-mail", "communication", "writing"]
         }
@@ -290,8 +305,8 @@ DYNAMIC_ASSISTANTS.push(
             owner_ids: ["user-mock-002"],
             examples: [{ text: "Here are my rough notes from today's standup…", value: "I'll organize these into clean meeting minutes with action items." }],
             quick_prompts: [
-                { label: "Format Notes", prompt: "Please format the following rough meeting notes into structured minutes:", tooltip: "Structure raw notes" },
-                { label: "Extract Actions", prompt: "Extract all action items from the following meeting transcript:", tooltip: "Find action items" }
+                { label: "Format Notes", prompt: "Please format the following rough meeting notes into structured minutes:" },
+                { label: "Extract Actions", prompt: "Extract all action items from the following meeting transcript:" }
             ],
             tags: ["meetings", "productivity", "documentation"]
         }
@@ -326,8 +341,8 @@ DYNAMIC_ASSISTANTS.push(
                 }
             ],
             quick_prompts: [
-                { label: "Summarize Policy", prompt: "Summarize the following policy document in plain language:", tooltip: "Plain-language summary" },
-                { label: "Compare Versions", prompt: "Compare these two versions of the regulation and highlight what changed:", tooltip: "Version comparison" }
+                { label: "Summarize Policy", prompt: "Summarize the following policy document in plain language:" },
+                { label: "Compare Versions", prompt: "Compare these two versions of the regulation and highlight what changed:" }
             ],
             tags: ["policy", "legal", "compliance", "onboarding"]
         }
@@ -385,6 +400,73 @@ function chooseStreamType(enabledTools?: string[]) {
     if (enabledTools?.includes("Vereinfachen")) options.push("simplify");
     if (options.length === 0) return "chat" as const; // Kein Tool aktiv => normaler Chat
     return options[Math.floor(Math.random() * options.length)];
+}
+
+// Mock reasonings for high-risk findings of the EU AI Act compliance check, per category.
+// Written to read like an LLM that analysed a concrete system prompt, not like an abstract rule description.
+const COMPLIANCE_HIGH_RISK_REASONINGS: Record<string, string> = {
+    migration_asylum_border:
+        "Der Prompt weist den Assistenten an, die Identität von Personen im Kontext von Asyl oder Grenzkontrolle festzustellen (Anhang III Nr. 7). Beschränken Sie ihn darauf, allgemein über Abläufe zu informieren.",
+    public_services_access:
+        "Der Prompt weist den Assistenten an, über den Anspruch auf Leistungen wie Bürgergeld oder Wohngeld zu entscheiden (Anhang III Nr. 5). Beschränken Sie ihn darauf, Voraussetzungen und Antragsweg zu erklären.",
+    hr_employment:
+        "Der Prompt weist den Assistenten an, Bewerbungen zu bewerten und in eine Rangfolge zu bringen (Anhang III Nr. 4). Beschränken Sie ihn auf unterstützende Aufgaben wie das Formulieren einer Stellenausschreibung.",
+    education:
+        "Der Prompt weist den Assistenten an, Leistungen final zu benoten oder das Bildungsniveau einzustufen (Anhang III Nr. 3). Beschränken Sie ihn auf Lernhilfe wie das Erklären von Fehlern."
+};
+
+const COMPLIANCE_CATEGORIES = ["migration_asylum_border", "public_services_access", "hr_employment", "education"] as const;
+
+/**
+ * Mock for the compliance check. The outcome can be forced via control words in the system prompt
+ * for deterministic visual testing:
+ *   - "#error"          -> backend error (HTTP 500)
+ *   - "#pass"           -> all categories passed
+ *   - "#risk1".."#risk4" -> exactly that many categories flagged ("#risk" = 1)
+ * Without a control word the check always passes, so tests can assert on a stable result.
+ */
+function buildComplianceCheckResponse(systemPrompt: string): ComplianceCheckResponse | null {
+    const forcedRisk = systemPrompt.match(/#risk([1-4])?/i);
+
+    let flaggedCount: number;
+    if (/#error/i.test(systemPrompt)) {
+        return null; // caller translates this into a 500
+    } else if (forcedRisk) {
+        flaggedCount = forcedRisk[1] ? Number(forcedRisk[1]) : 1;
+    } else {
+        // Default (including the explicit "#pass" control word): everything passes.
+        flaggedCount = 0;
+    }
+
+    // Flag the first n categories so the same prompt always yields the same findings.
+    const flagged = new Set<string>(COMPLIANCE_CATEGORIES.slice(0, flaggedCount));
+
+    const results: ComplianceCategoryResult[] = COMPLIANCE_CATEGORIES.map(category =>
+        flagged.has(category)
+            ? { category, status: "high_risk_detected", reasoning: COMPLIANCE_HIGH_RISK_REASONINGS[category] }
+            : { category, status: "passed" }
+    );
+
+    return {
+        overall_status: flagged.size > 0 ? "high_risk_detected" : "passed",
+        results
+    };
+}
+
+/**
+ * Mock control word to pin the ChatUsageIndicator's context percentage for visual testing:
+ *   - "#usage<0-100>" in the latest user message -> prompt_tokens sized so lastContextTokens / max_input_tokens
+ *     rounds to exactly that percentage of the currently selected model's context window.
+ * Without the control word, token counts stay randomized as before.
+ */
+function resolveForcedContextTokens(userMessage: string, modelName: string | undefined): number | undefined {
+    const forcedUsage = userMessage.match(/#usage(\d{1,3})/i);
+    if (!forcedUsage) return undefined;
+
+    const targetPercent = Math.min(100, Math.max(0, Number(forcedUsage[1])));
+    const model = CONFIG_RESPONSE.models.find(m => m.llm_name === modelName) ?? CONFIG_RESPONSE.models[0];
+    const maxInputTokens = model.max_input_tokens ?? 128000;
+    return Math.round((targetPercent / 100) * maxInputTokens);
 }
 
 async function parseUploadHandler({ request }: { request: Request }) {
@@ -752,33 +834,48 @@ export const handlers = [
         return HttpResponse.json({ tools });
     }),
     http.post("/api/backend/v1/chat/completions", async ({ request }) => {
-        const body = (await request.json()) as { stream?: boolean; messages?: { role: string; content: string }[]; enabled_tools?: string[] };
+        const body = (await request.json()) as {
+            stream?: boolean;
+            messages?: { role: string; content: string }[];
+            enabled_tools?: string[];
+            model?: string;
+        };
+        const latestUserMessage =
+            body.messages
+                ?.slice()
+                .reverse()
+                .find(m => m.role === "user")?.content || "";
+        // E2E demos (tools off): exact phrases only. A ```drawio fence must NOT trigger this.
+        const wantsValidDrawioMock = /^\s*valid-drawio\s*$/i.test(latestUserMessage);
+        const wantsInvalidDrawioMock = /^\s*invalid-drawio\s*$/i.test(latestUserMessage);
+      
         if (body?.stream) {
             const encoder = new TextEncoder();
             const streamType = chooseStreamType(body.enabled_tools);
             const stream = new ReadableStream({
                 async start(controller) {
                     let chunks: any[] = [];
+                    const forcedContextTokens = resolveForcedContextTokens(latestUserMessage, body.model);
                     if (streamType === "mindmap") {
-                        const topic =
-                            body.messages
-                                ?.slice()
-                                .reverse()
-                                .find(m => m.role === "user")?.content || "Künstliche Intelligenz";
-                        chunks = generateMindmapStreamChunks(topic);
+                        const topic = latestUserMessage || "Künstliche Intelligenz";
+                        chunks = generateMindmapStreamChunks(topic, forcedContextTokens);
                     } else if (streamType === "simplify") {
-                        chunks = generateSimplifyStreamChunks();
+                        chunks = generateSimplifyStreamChunks(forcedContextTokens);
+                    } else if (wantsValidDrawioMock) {
+                        chunks = generateChatStreamChunks(buildDrawioChatMessage(), forcedContextTokens);
+                    } else if (wantsInvalidDrawioMock) {
+                        chunks = generateChatStreamChunks(buildInvalidDrawioChatMessage(), forcedContextTokens);
                     } else {
                         let reply = buildChatMessage();
                         if (Math.random() > 0.7) {
                             reply +=
                                 "\n\nHier ist eine beispielhafte Tabelle:\n\n| Name | Kategorie | Wert |\n| :--- | :---: | ---: |\n| Element A | Gruppe 1 | 123.45 |\n| Element B | Gruppe 2 | 67.89 |\n| Element C | Gruppe 1 | 99.99 |\n| Element D | Gruppe 3 | 10.00 |\n\n";
                         }
-                        chunks = generateChatStreamChunks(reply);
+                        chunks = generateChatStreamChunks(reply, forcedContextTokens);
                     }
                     for (const chunk of chunks) {
                         controller.enqueue(encoder.encode(`data: ${JSON.stringify(chunk)}\n\n`));
-                        await delay(200);
+                        await delay(50);
                     }
                     controller.enqueue(encoder.encode("data: [DONE]\n\n"));
                     controller.close();
@@ -799,7 +896,20 @@ export const handlers = [
             object: "chat.completion",
             created: Math.floor(Date.now() / 1000),
             model: "KIESGPT",
-            choices: [{ index: 0, message: { role: "assistant", content: buildChatMessage() }, finish_reason: "stop" }],
+            choices: [
+                {
+                    index: 0,
+                    message: {
+                        role: "assistant",
+                        content: wantsValidDrawioMock
+                            ? buildDrawioChatMessage()
+                            : wantsInvalidDrawioMock
+                              ? buildInvalidDrawioChatMessage()
+                              : buildChatMessage()
+                    },
+                    finish_reason: "stop"
+                }
+            ],
             usage: { prompt_tokens: 12, completion_tokens: 28, total_tokens: 40 }
         });
     }),
@@ -832,6 +942,29 @@ export const handlers = [
 
     http.get("/api/assistant", () => {
         return HttpResponse.json(DYNAMIC_ASSISTANTS.map(withMockSubscriptionCount));
+    }),
+
+    http.get("/api/admin/assistant/review", () => {
+        return HttpResponse.json(
+            DYNAMIC_ASSISTANTS.filter(assistant => assistant.latest_version.state === "pending_legal_review").map(withMockSubscriptionCount)
+        );
+    }),
+
+    http.patch("/api/admin/assistant/:id/state", async ({ params, request }) => {
+        const body = (await request.json()) as AssistantStateUpdateInput;
+        const assistant = DYNAMIC_ASSISTANTS.find(item => item.id === params.id);
+        if (!assistant) return new HttpResponse(null, { status: 404 });
+        if (body.version !== assistant.latest_version.version || body.expected_state !== assistant.latest_version.state) {
+            return HttpResponse.json({ detail: "Assistant changed" }, { status: 409 });
+        }
+        const updated = {
+            ...assistant,
+            updated_at: new Date().toISOString(),
+            latest_version: { ...assistant.latest_version, state: body.state, state_change_reason: body.reason }
+        };
+        const index = DYNAMIC_ASSISTANTS.indexOf(assistant);
+        DYNAMIC_ASSISTANTS[index] = updated;
+        return HttpResponse.json(withMockSubscriptionCount(updated));
     }),
 
     http.get("/api/assistant/:id", ({ params }) => {
@@ -869,6 +1002,7 @@ export const handlers = [
                 examples: body.examples || current.latest_version.examples,
                 quick_prompts: body.quick_prompts || current.latest_version.quick_prompts,
                 tags: body.tags || current.latest_version.tags,
+                compliance_confirmation: body.compliance_confirmation ?? current.latest_version.compliance_confirmation ?? false,
                 created_at: new Date().toISOString()
             }
         };
@@ -904,7 +1038,12 @@ export const handlers = [
             email: "mucgpt@user.com",
             preferred_username: "mucgpt-user",
             department: "IT-KI",
-            lhmObjectID: "2232324224"
+            lhmObjectID: "2232324224",
+            resource_access: {
+                mucgpt: {
+                    roles: ["lhm-ab-mucgpt-user", "lhm-ab-mucgpt-admin"]
+                }
+            }
         });
     }),
 
@@ -935,6 +1074,16 @@ export const handlers = [
             description: assistant.latest_version.description,
             subscriptions_count: getMockSubscriptionCount(assistant.id)
         });
+    }),
+
+    http.post("/api/backend/v1/compliance/check", async ({ request }) => {
+        const body = (await request.json().catch(() => ({}))) as { system_prompt?: string };
+        await delay(1500);
+        const response = buildComplianceCheckResponse(body.system_prompt ?? "");
+        if (!response) {
+            return HttpResponse.json({ message: "Compliance check failed" }, { status: 500 });
+        }
+        return HttpResponse.json(response);
     }),
 
     // Parse API handlers (core-service route + legacy compatibility)

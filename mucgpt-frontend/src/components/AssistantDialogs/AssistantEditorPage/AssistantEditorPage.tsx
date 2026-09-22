@@ -2,10 +2,23 @@ import type { CSSProperties, FormEvent, ReactNode } from "react";
 import { useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
-import { Accordion, AccordionHeader, AccordionItem, AccordionPanel, Button, Field, Text, Textarea, TextareaOnChangeData } from "@fluentui/react-components";
+import {
+    Accordion,
+    AccordionHeader,
+    AccordionItem,
+    AccordionPanel,
+    Button,
+    Field,
+    MessageBar,
+    MessageBarBody,
+    Text,
+    Textarea,
+    TextareaOnChangeData
+} from "@fluentui/react-components";
 import {
     Bot24Regular,
     Chat24Regular,
+    ClipboardCheckmark24Regular,
     DocumentText24Regular,
     Info24Regular,
     PanelRightContract24Regular,
@@ -18,25 +31,38 @@ import {
 
 import styles from "./AssistantEditorPage.module.css";
 import { AssistantCreateFlow } from "./AssistantCreateFlow";
-import { Assistant, ToolBase, ToolInfo } from "../../../api";
+import { Assistant, AssistantState, ComplianceCheckResponse, ToolBase, ToolInfo } from "../../../api";
 import { createCommunityAssistantApi } from "../../../api/assistant-client";
-import { generateAssistantDraftApi } from "../../../api/core-client";
+import { checkAssistantComplianceApi, generateAssistantDraftApi } from "../../../api/core-client";
+import { ApiError } from "../../../api/fetch-utils";
 import { useGlobalToastContext } from "../../GlobalToastHandler/GlobalToastContext";
 import { StarterPromptModel } from "../../StarterPrompt";
 import { LLMContext } from "../../LLMSelector/LLMContextProvider";
+import { ConfigContext } from "../../../context/ConfigContext";
 import { FollowUpActionModel } from "../../FollowUpAction";
 import { useToolsContext } from "../../ToolsProvider";
 import { useAssistantState } from "../shared/hooks/useAssistantState";
 import { useCreateAssistantState } from "../shared/hooks/useCreateAssistantState";
-import { ToolsSection, ConversationOptionsSection, AdvancedSettingsSection, VisibilitySection, ExpandableTextarea, CloseConfirmationDialog } from "../shared";
+import {
+    ToolsSection,
+    ConversationOptionsSection,
+    AdvancedSettingsSection,
+    VisibilitySection,
+    ReviewSection,
+    ExpandableTextarea,
+    CloseConfirmationDialog
+} from "../shared";
 import { AssistantStrategy } from "../../../pages/assistant/AssistantStrategy";
 import { CREATIVITY_LOW } from "../../../constants";
 import { EdelweissSpinner } from "../../EdelweissSpinner";
 import { AssistantPreviewChat } from "../AssistantPreviewChat/AssistantPreviewChat";
 import { useResizablePreview } from "./useResizablePreview";
 
-type CreateView = "mode_select" | "ai_input" | "settings";
 type DiscardTarget = "back" | "discovery";
+
+// A compliance review only applies to the exact prompt it was run against, so every gate compares the same way.
+const hasSystemPromptChanged = (systemPrompt: string, savedSystemPrompt: string | undefined) => systemPrompt !== (savedSystemPrompt ?? "");
+
 interface AssistantEditorPageCreateProps {
     mode: "create";
 }
@@ -46,7 +72,7 @@ interface AssistantEditorPageEditProps {
     assistant: Assistant;
     isOwner: boolean;
     strategy: AssistantStrategy;
-    onSave: (assistant: Assistant) => void;
+    onSave: (assistant: Assistant) => Promise<{ persistedComplianceCheckResult?: ComplianceCheckResponse | null; state?: AssistantState } | void>;
 }
 
 type AssistantEditorPageProps = AssistantEditorPageCreateProps | AssistantEditorPageEditProps;
@@ -119,6 +145,16 @@ interface SettingsFormProps {
     setPublishDepartments: (departments: string[]) => void;
     setInvisibleChecked: (invisible: boolean) => void;
     onHasChanged?: (changed: boolean) => void;
+    // Fired only when the system prompt changes, so the compliance review can be invalidated selectively.
+    onSystemPromptChanged?: () => void;
+    confirmed: boolean;
+    confirmationResetKey: number;
+    checkResult: ComplianceCheckResponse | null;
+    checkLoading: boolean;
+    checkOutdated: boolean;
+    complianceCheckEnabled: boolean;
+    onConfirmedChange: (confirmed: boolean) => void;
+    onStartCheck: () => void;
 }
 
 function SettingsForm(props: SettingsFormProps) {
@@ -181,10 +217,18 @@ function SettingsForm(props: SettingsFormProps) {
                             onChange={v => {
                                 props.onSystemPromptChange(v);
                                 props.onHasChanged?.(true);
+                                props.onSystemPromptChanged?.();
                             }}
-                            disabled={!props.isOwner}
+                            // Locked while the compliance check runs so its result cannot end up attached to a
+                            // prompt that changed in the meantime.
+                            disabled={!props.isOwner || props.checkLoading}
                             dialogTitle={t("components.assistant_editor.system_prompt")}
                         />
+                        {props.checkLoading && (
+                            <Text as="p" size={200} className={styles.fieldDescription} role="status" aria-live="polite">
+                                {t("components.assistant_editor.system_prompt_locked_during_check")}
+                            </Text>
+                        )}
                     </Field>
                 </SectionCard>
 
@@ -238,6 +282,25 @@ function SettingsForm(props: SettingsFormProps) {
                         setInvisibleChecked={invisible => props.setInvisibleChecked(invisible)}
                     />
                 </SectionCard>
+
+                {props.complianceCheckEnabled && (
+                    <SectionCard
+                        title={t("components.assistant_editor.section_review")}
+                        icon={<ClipboardCheckmark24Regular />}
+                        className={styles.sectionReview}
+                    >
+                        <ReviewSection
+                            confirmed={props.confirmed}
+                            confirmationResetKey={props.confirmationResetKey}
+                            checkResult={props.checkResult}
+                            checkLoading={props.checkLoading}
+                            checkOutdated={props.checkOutdated}
+                            isOwner={props.isOwner}
+                            onConfirmedChange={props.onConfirmedChange}
+                            onStartCheck={props.onStartCheck}
+                        />
+                    </SectionCard>
+                )}
             </main>
         </div>
     );
@@ -247,14 +310,16 @@ export const AssistantEditorPage = (props: AssistantEditorPageProps) => {
     const { t } = useTranslation();
     const navigate = useNavigate();
     const { LLM } = useContext(LLMContext);
+    const appConfig = useContext(ConfigContext);
     const { showError, showSuccess } = useGlobalToastContext();
     const { tools: availableTools } = useToolsContext();
 
     const isCreate = props.mode === "create";
     const isOwner = isCreate ? true : (props as AssistantEditorPageEditProps).isOwner;
 
-    const [createView, setCreateView] = useState<CreateView>("mode_select");
-    const createState = useCreateAssistantState();
+    const createState = useCreateAssistantState({ enabled: isCreate });
+    const createView = createState.view;
+    const setCreateView = createState.setView;
 
     const editAssistant = isCreate ? null : (props as AssistantEditorPageEditProps).assistant;
     const emptyAssistant: Assistant = useMemo(
@@ -280,10 +345,38 @@ export const AssistantEditorPage = (props: AssistantEditorPageProps) => {
     const editState = useAssistantState(editAssistant ?? emptyAssistant);
 
     const state = isCreate ? createState : editState;
+    const isComplianceCheckEnabled = appConfig.ai_act_compliance_check_enabled;
 
     const [loading, setLoading] = useState(false);
     const [discardOpen, setDiscardOpen] = useState(false);
     const [discardTarget, setDiscardTarget] = useState<DiscardTarget>("back");
+    // A restored edit draft can already carry an unsaved system prompt change. It never passed through the
+    // change handler, so the review has to start out invalidated just like after a live edit. Only the value
+    // at mount matters here.
+    const [draftHasUnreviewedPrompt] = useState(() => !isCreate && hasSystemPromptChanged(editState.systemPrompt, editAssistant?.system_message));
+    // Compliance confirmation is displayed independently from the optional screening result.
+    const [reviewConfirmed, setReviewConfirmed] = useState<boolean>(draftHasUnreviewedPrompt ? false : (editAssistant?.compliance_confirmation ?? false));
+    // On failure this holds a synthetic result with overall_status "error".
+    const [reviewCheckResult, setReviewCheckResult] = useState<ComplianceCheckResponse | null>(editAssistant?.compliance_check_result ?? null);
+    const [reviewCheckLoading, setReviewCheckLoading] = useState(false);
+    const [reviewCheckOutdated, setReviewCheckOutdated] = useState(draftHasUnreviewedPrompt);
+    // Bumped whenever the confirmation is reset so the checkbox remounts and reliably reflects the cleared state.
+    const [reviewResetKey, setReviewResetKey] = useState(0);
+
+    useEffect(() => {
+        if (!isCreate && !editState.hasChanged) {
+            setReviewCheckResult(editAssistant?.compliance_check_result ?? null);
+            setReviewCheckOutdated(false);
+            setReviewConfirmed(editAssistant?.compliance_confirmation ?? false);
+        }
+    }, [
+        isCreate,
+        editAssistant?.id,
+        editAssistant?.version,
+        editAssistant?.compliance_check_result,
+        editAssistant?.compliance_confirmation,
+        editState.hasChanged
+    ]);
 
     const selectedTools = useMemo(() => {
         if (!availableTools) return [] as ToolInfo[];
@@ -297,32 +390,50 @@ export const AssistantEditorPage = (props: AssistantEditorPageProps) => {
             setDiscardTarget("back");
             setDiscardOpen(true);
         } else {
+            if (isCreate) createState.resetAll();
             navigate(-1);
         }
-    }, [isCreate, createState.hasChanges, editState.hasChanged, navigate]);
+    }, [isCreate, createState.hasChanges, createState.resetAll, editState.hasChanged, navigate]);
 
     const handleDiscardConfirm = useCallback(() => {
         setDiscardOpen(false);
+        if (isCreate) {
+            createState.resetAll();
+        } else {
+            editState.resetToOriginal();
+        }
         if (discardTarget === "discovery") {
             navigate("/discovery");
             return;
         }
         navigate(-1);
-    }, [discardTarget, navigate]);
+    }, [discardTarget, isCreate, createState.resetAll, editState.resetToOriginal, navigate]);
 
     const handleSave = useCallback(async () => {
         if (loading) return;
 
         const s = state as typeof createState & typeof editState;
         const assistantTitle = s.title.trim();
-        const systemPrompt = s.systemPrompt.trim();
+        // Keep the prompt byte-for-byte intact for both the compliance result and the saved assistant.
+        // Trimming is only suitable for the separate required-field check below.
+        const systemPrompt = s.systemPrompt;
+        const systemPromptChanged = !isCreate && hasSystemPromptChanged(systemPrompt, editAssistant?.system_message);
+        const requiresComplianceReview = isComplianceCheckEnabled && (isCreate || systemPromptChanged);
 
-        if (assistantTitle === "" || systemPrompt === "") {
+        const complianceCheckFailed = reviewCheckResult?.overall_status === "error";
+        if (
+            assistantTitle === "" ||
+            systemPrompt.trim() === "" ||
+            (requiresComplianceReview && (!reviewCheckResult || reviewCheckOutdated || complianceCheckFailed || !reviewConfirmed))
+        ) {
             showError(t("components.assistant_editor.assistant_save_failed"), t("components.assistant_editor.save_config_failed"));
             return;
         }
 
         setLoading(true);
+
+        const complianceResultToSave = isComplianceCheckEnabled ? (reviewCheckOutdated ? undefined : (reviewCheckResult ?? undefined)) : undefined;
+        const complianceConfirmationToSave = isComplianceCheckEnabled ? reviewConfirmed : false;
 
         const validFollowUpActions = (s.followUpActions ?? []).filter(
             (followUpAction: FollowUpActionModel) => followUpAction.label?.trim() && followUpAction.prompt?.trim()
@@ -345,19 +456,26 @@ export const AssistantEditorPage = (props: AssistantEditorPageProps) => {
                     examples: validStarterPrompts.map(starterPrompt => ({ text: starterPrompt.text, value: starterPrompt.value })),
                     quick_prompts: validFollowUpActions.map(followUpAction => ({
                         label: followUpAction.label,
-                        prompt: followUpAction.prompt,
-                        tooltip: followUpAction.tooltip
+                        prompt: followUpAction.prompt
                     })),
                     tags: [],
                     hierarchical_access: createState.hierarchicalAccess ?? [],
-                    is_visible: createState.isVisible
+                    is_visible: createState.isVisible,
+                    compliance_check_result: complianceResultToSave,
+                    compliance_confirmation: complianceConfirmationToSave
                 });
+
+                const persistedComplianceResult = response?.latest_version?.compliance_check_result;
+                if (complianceResultToSave && !persistedComplianceResult) {
+                    throw new Error(t("components.assistant_editor.compliance_not_persisted_message"));
+                }
 
                 if (response?.id) {
                     showSuccess(
                         t("components.assistant_editor.assistant_saved_success"),
                         t("components.assistant_editor.assistant_saved_message", { title: assistantTitle })
                     );
+                    createState.resetAll();
                     navigate(`/owned/communityassistant/${response.id}`);
                 } else {
                     showError(t("components.assistant_editor.assistant_creation_failed"), t("components.assistant_editor.save_config_failed"));
@@ -365,20 +483,49 @@ export const AssistantEditorPage = (props: AssistantEditorPageProps) => {
             } else {
                 const editProps = props as AssistantEditorPageEditProps;
                 const updatedAssistant = editState.createAssistantForSaving();
-                await editProps.onSave(updatedAssistant);
+                updatedAssistant.compliance_check_result = complianceResultToSave;
+                updatedAssistant.compliance_confirmation = complianceConfirmationToSave;
+                const saveResult = await editProps.onSave(updatedAssistant);
+                if (complianceResultToSave && !saveResult?.persistedComplianceCheckResult) {
+                    throw new Error(t("components.assistant_editor.compliance_not_persisted_message"));
+                }
                 showSuccess(
                     t("components.assistant_editor.saved_successfully"),
                     t("components.assistant_editor.assistant_saved_description", { assistantName: updatedAssistant.title || "" })
                 );
-                navigate(-1);
+                editState.clearDraft();
+                if (saveResult?.state === "pending_legal_review" && editProps.assistant.id) {
+                    navigate(`/discovery?openAssistant=${encodeURIComponent(editProps.assistant.id)}`);
+                } else {
+                    navigate(-1);
+                }
             }
         } catch (error) {
-            const errorMessage = error instanceof Error ? error.message : t("components.assistant_editor.save_config_failed");
+            let errorMessage = error instanceof Error ? error.message : t("components.assistant_editor.save_config_failed");
+            if (error instanceof ApiError && error.status === 422 && error.message.toLowerCase().includes("compliance")) {
+                errorMessage = t("components.assistant_editor.compliance_verification_failed_actionable");
+            }
             showError(t("components.assistant_editor.assistant_save_failed"), errorMessage);
         } finally {
             setLoading(false);
         }
-    }, [loading, state, isCreate, createState, editState, t, showError, showSuccess, navigate, props]);
+    }, [
+        loading,
+        state,
+        isCreate,
+        createState,
+        editState,
+        editAssistant,
+        reviewCheckResult,
+        reviewCheckOutdated,
+        reviewConfirmed,
+        t,
+        showError,
+        showSuccess,
+        navigate,
+        props,
+        isComplianceCheckEnabled
+    ]);
 
     const handleGenerate = useCallback(async () => {
         if (!createState.input.trim() || loading) return;
@@ -404,6 +551,54 @@ export const AssistantEditorPage = (props: AssistantEditorPageProps) => {
         }
     }, [createState, loading, showError, showSuccess, t]);
 
+    // Any change to the assistant marks the edit "hasChanged" flag (used for discard detection).
+    const handleHasChanged = useCallback(
+        (changed: boolean) => {
+            if (!changed) return;
+            if (!isCreate) {
+                editState.setHasChanged?.(true);
+            }
+        },
+        [isCreate, editState]
+    );
+
+    // Only changes to the system prompt invalidate the optional compliance review.
+    const handleSystemPromptChanged = useCallback(() => {
+        setReviewCheckOutdated(true);
+        setReviewConfirmed(prev => {
+            if (prev) setReviewResetKey(key => key + 1);
+            return false;
+        });
+    }, []);
+
+    // Runs the EU AI Act high-risk compliance check on the current system prompt.
+    const handleStartComplianceCheck = useCallback(async () => {
+        if (reviewCheckLoading) return;
+
+        const s = state as typeof createState & typeof editState;
+        setReviewCheckLoading(true);
+        // A re-check invalidates the previous confirmation. The previous result stays on screen until the new one
+        // arrives, so the user keeps the findings in view while the check runs.
+        setReviewConfirmed(prev => {
+            if (prev) setReviewResetKey(key => key + 1);
+            return false;
+        });
+
+        try {
+            const result = await checkAssistantComplianceApi({
+                system_prompt: s.systemPrompt
+            });
+            setReviewCheckResult(result);
+            setReviewCheckOutdated(false);
+        } catch {
+            // A failed check blocks saving until a successful re-check exists.
+            setReviewCheckResult({ overall_status: "error", results: [] });
+            setReviewCheckOutdated(false);
+        } finally {
+            setReviewCheckLoading(false);
+        }
+    }, [reviewCheckLoading, state]);
+
     const splitContainerRef = useRef<HTMLDivElement | null>(null);
     const { previewPercent, isCollapsed, collapsePreview, expandPreview, onDividerMouseDown, onDividerKeyDown } = useResizablePreview(splitContainerRef);
 
@@ -411,7 +606,12 @@ export const AssistantEditorPage = (props: AssistantEditorPageProps) => {
     const pageHelper = isCreate ? t("components.assistant_editor.page_helper_create") : t("components.assistant_editor.page_helper_edit");
     const settingsState = isCreate ? createState : editState;
     const previewToolIds = useMemo(() => (settingsState.tools ?? []).map(tool => tool.id), [settingsState.tools]);
-    const isSettingsValid = settingsState.title.trim() !== "" && settingsState.systemPrompt.trim() !== "";
+    const systemPromptChanged = !isCreate && hasSystemPromptChanged(settingsState.systemPrompt, editAssistant?.system_message);
+    const requiresComplianceReview = isComplianceCheckEnabled && (isCreate || systemPromptChanged);
+    const isSettingsValid =
+        settingsState.title.trim() !== "" &&
+        settingsState.systemPrompt.trim() !== "" &&
+        (!requiresComplianceReview || (reviewCheckResult !== null && reviewCheckResult.overall_status !== "error" && !reviewCheckOutdated && reviewConfirmed));
     const showSettingsForm = !isCreate || createView === "settings";
     const showCreateModeSelector = isCreate && createView === "mode_select";
     const actionStatusLabel = !isOwner
@@ -452,6 +652,12 @@ export const AssistantEditorPage = (props: AssistantEditorPageProps) => {
                 </div>
             </div>
 
+            {!isCreate && isComplianceCheckEnabled && editAssistant?.state === "inactive" && (
+                <MessageBar intent="error" role="status">
+                    <MessageBarBody>{t("components.assistant_editor.inactive_notice")}</MessageBarBody>
+                </MessageBar>
+            )}
+
             <div className={[styles.body, showSettingsForm ? styles.bodyWithActions : ""].filter(Boolean).join(" ")}>
                 {isCreate && createView !== "settings" && (
                     <AssistantCreateFlow
@@ -490,7 +696,16 @@ export const AssistantEditorPage = (props: AssistantEditorPageProps) => {
                         isVisible={settingsState.isVisible ?? false}
                         setPublishDepartments={settingsState.updateHierarchicalAccess}
                         setInvisibleChecked={invisible => settingsState.updateIsVisible(!invisible)}
-                        onHasChanged={isCreate ? undefined : value => value && editState.setHasChanged?.(true)}
+                        onHasChanged={handleHasChanged}
+                        onSystemPromptChanged={handleSystemPromptChanged}
+                        confirmed={reviewConfirmed}
+                        confirmationResetKey={reviewResetKey}
+                        checkResult={reviewCheckResult}
+                        checkLoading={reviewCheckLoading}
+                        checkOutdated={reviewCheckOutdated}
+                        complianceCheckEnabled={isComplianceCheckEnabled}
+                        onConfirmedChange={setReviewConfirmed}
+                        onStartCheck={handleStartComplianceCheck}
                     />
                 )}
             </div>
@@ -498,9 +713,15 @@ export const AssistantEditorPage = (props: AssistantEditorPageProps) => {
             {showSettingsForm && (
                 <div className={styles.stickyActionBar}>
                     <div className={styles.actionBarContent}>
-                        <div className={styles.actionStatus} data-tone={actionStatusTone} role="status" aria-live="polite">
-                            {actionStatusLabel}
-                        </div>
+                        {!isCreate && isComplianceCheckEnabled && editAssistant?.state === "pending_legal_review" ? (
+                            <MessageBar className={styles.pendingReviewAction} intent="warning" role="status">
+                                <MessageBarBody>{t("components.assistant_editor.pending_review_notice")}</MessageBarBody>
+                            </MessageBar>
+                        ) : (
+                            <div className={styles.actionStatus} data-tone={actionStatusTone} role="status" aria-live="polite">
+                                {actionStatusLabel}
+                            </div>
+                        )}
                         <div className={styles.actionButtonGroup}>
                             <Button appearance="subtle" onClick={handleCancel} disabled={loading}>
                                 {t("common.cancel")}

@@ -75,7 +75,7 @@ pick it up automatically.
 - **`ToolCollection.add_instructions`** - injected a system message describing
   enabled tools. Deleted: it had zero callers anywhere in the service.
 - **`tool_collection` field on `_ConfiguredLangChainAgentGraph`/
-  `MUCGPTReActAgent`** (`react_agent.py`) - stored on `self`, never read
+  `MUCGPTAgent`** (`deep_agent.py`) - stored on `self`, never read
   again. Deleted; only the resolved `tools: list[BaseTool]` is threaded
   through.
 - **`llm_user`/`assistant_id` params on `get_tools`/`_bind_model`** - meant to

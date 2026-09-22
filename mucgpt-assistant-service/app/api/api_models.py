@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from datetime import datetime
+from enum import Enum
 from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field  # added ConfigDict
@@ -12,6 +13,35 @@ CREATIVITY_HIGH = "high"
 
 AssistantListSortBy = Literal["title", "updated", "subscriptions"]
 AssistantListSortOrder = Literal["asc", "desc"]
+ComplianceCategoryId = Literal[
+    "migration_asylum_border",
+    "public_services_access",
+    "hr_employment",
+    "education",
+]
+ComplianceStatus = Literal["passed", "high_risk_detected", "error"]
+
+
+class AssistantState(str, Enum):  # noqa: UP042
+    ACTIVE = "active"
+    INACTIVE = "inactive"
+    PENDING_LEGAL_REVIEW = "pending_legal_review"
+
+
+class ComplianceCategoryResult(BaseModel):
+    """Result for one EU AI Act high-risk category."""
+
+    category: ComplianceCategoryId
+    status: ComplianceStatus
+    reasoning: str | None = None
+
+
+class ComplianceCheckResult(BaseModel):
+    """EU AI Act high-risk screening result for an assistant system prompt."""
+
+    overall_status: ComplianceStatus
+    results: list[ComplianceCategoryResult]
+    prompt_hash: str | None = None
 
 
 class ExampleModel(BaseModel):
@@ -95,11 +125,6 @@ class OwnerDetailsResponse(BaseModel):
     )
     username: str = Field(
         ..., description="Display-friendly owner name", example="Max Mustermann"
-    )
-    contact_address: str | None = Field(
-        None,
-        description="Primary contact address of the owner",
-        example="max.mustermann@muenchen.de",
     )
     givenName: str | None = Field(
         None, description="Owner given name from LDAP", example="Max"
@@ -309,6 +334,16 @@ class AssistantCreate(AssistantBase):
     during assistant creation.
     """
 
+    compliance_check_result: ComplianceCheckResult | None = Field(
+        None,
+        description="Optional EU AI Act screening result for this assistant version.",
+    )
+    compliance_confirmation: bool | None = Field(
+        None,
+        description="Whether the owner confirmed the compliance review for this assistant version.",
+        example=False,
+    )
+
     # replaced inner Config with model_config
     model_config = ConfigDict(
         json_schema_extra={
@@ -437,6 +472,15 @@ class AssistantUpdate(BaseModel):
         description="List of ids who will own this assistant",
         example=["12345", "67890"],
     )
+    compliance_check_result: ComplianceCheckResult | None = Field(
+        None,
+        description="Optional EU AI Act screening result for the new assistant version.",
+    )
+    compliance_confirmation: bool | None = Field(
+        None,
+        description="Whether the owner confirmed the compliance review for the new assistant version.",
+        example=False,
+    )
 
 
 class AssistantVersionResponse(AssistantBase):
@@ -464,6 +508,33 @@ class AssistantVersionResponse(AssistantBase):
         None,
         description="Owner details enriched from LDAP",
     )
+    compliance_check_result: ComplianceCheckResult | None = Field(
+        None,
+        description="EU AI Act screening result stored for this assistant version.",
+    )
+    compliance_confirmation: bool = Field(
+        False,
+        description="Whether the owner confirmed the compliance review for this assistant version.",
+    )
+    state: AssistantState = Field(
+        AssistantState.ACTIVE,
+        description="Lifecycle state assigned to this immutable version.",
+    )
+    state_changed_by: str | None = Field(
+        None, description="User ID that assigned this version's lifecycle state."
+    )
+    state_change_reason: str | None = Field(
+        None, description="Reason recorded for this version's lifecycle state."
+    )
+
+
+class AssistantStateUpdate(BaseModel):
+    """Administrative lifecycle-state transition for the current assistant version."""
+
+    state: AssistantState
+    expected_state: AssistantState
+    version: int = Field(ge=1)
+    reason: str | None = Field(None, max_length=2000)
 
 
 class AssistantResponse(BaseModel):
@@ -616,6 +687,10 @@ class SubscriptionResponse(BaseModel):
         True,
         description="Whether this assistant is publicly listed in the UI",
         example=True,
+    )
+    state: AssistantState = Field(
+        AssistantState.ACTIVE,
+        description="Lifecycle state of the subscribed assistant's latest version.",
     )
     owners_detailed: list[OwnerDetailsResponse] | None = Field(
         None,

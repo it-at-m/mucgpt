@@ -1,8 +1,17 @@
-import { type ReactElement, useCallback, useEffect, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { type ReactElement, useCallback, useContext, useEffect, useRef, useState } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Title1, Body1, Text, SearchBox, Dropdown, Option, Button } from "@fluentui/react-components";
 import type { SearchBoxChangeEvent, InputOnChangeData, SelectionEvents, OptionOnSelectData } from "@fluentui/react-components";
-import { Add24Regular, DocumentArrowUpRegular, LibraryRegular, PeopleCommunityRegular, SearchRegular } from "@fluentui/react-icons";
+import {
+    Add24Regular,
+    CheckmarkCircle16Regular,
+    CircleOff16Regular,
+    Clock16Regular,
+    DocumentArrowUpRegular,
+    LibraryRegular,
+    PeopleCommunityRegular,
+    SearchRegular
+} from "@fluentui/react-icons";
 import { useTranslation } from "react-i18next";
 
 import styles from "./Discovery.module.css";
@@ -26,6 +35,7 @@ import { useMigrateLocalAssistant } from "../../hooks/useMigrateLocalAssistant";
 import { downloadAssistantExport, mapAssistantToExportData, mapVersionToExportData } from "../../utils/assistant-export";
 import { isCompleteCommunityAssistantSnapshot, mapCommunitySnapshotToAssistant } from "../../utils/community-assistant-snapshots";
 import { ApiError } from "../../api/fetch-utils";
+import { ConfigContext } from "../../context/ConfigContext";
 
 const communityAssistantStorageService = new CommunityAssistantStorageService(COMMUNITY_ASSISTANT_STORE);
 const assistantStorageService = new AssistantStorageService(ASSISTANT_STORE);
@@ -49,13 +59,17 @@ type SectionEmptyStateProps = {
 const Discovery = () => {
     const { t } = useTranslation();
     const navigate = useNavigate();
+    const [searchParams, setSearchParams] = useSearchParams();
+    const appConfig = useContext(ConfigContext);
     const { showError, showSuccess } = useGlobalToastContext();
     const { refreshHistory: refreshUnifiedHistory } = useUnifiedHistory();
+    const isComplianceCheckEnabled = appConfig.ai_act_compliance_check_enabled;
 
     const [isDrawerOpen, setIsDrawerOpen] = useState(false);
     const [selectedAssistant, setSelectedAssistant] = useState<AssistantCardData | null>(null);
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
     const [showUnsubscribeConfirm, setShowUnsubscribeConfirm] = useState(false);
+    const assistantToOpenId = searchParams.get("openAssistant");
     const {
         isLoading,
         searchText,
@@ -92,6 +106,14 @@ const Discovery = () => {
         setShowMigrateConfirm: setShowLocalMigrateConfirm,
         performMigration
     } = useMigrateLocalAssistant(assistantStorageService);
+
+    useEffect(() => {
+        if (!assistantToOpenId) return;
+
+        setSearchText("");
+        setMyAssistantFilter("owned");
+        setShowAllMyAssistants(true);
+    }, [assistantToOpenId, setMyAssistantFilter, setSearchText, setShowAllMyAssistants]);
 
     const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const latestRequestRef = useRef(0);
@@ -248,6 +270,45 @@ const Discovery = () => {
 
     const getAssistantBadges = (assistant: AssistantCardData): DiscoveryCardBadge[] => {
         const badges: DiscoveryCardBadge[] = [];
+        const complianceCheckResult =
+            "latest_version" in assistant.rawData
+                ? assistant.rawData.latest_version.compliance_check_result
+                : "compliance_check_result" in assistant.rawData
+                  ? assistant.rawData.compliance_check_result
+                  : undefined;
+        const assistantState =
+            "latest_version" in assistant.rawData ? assistant.rawData.latest_version.state : "state" in assistant.rawData ? assistant.rawData.state : undefined;
+
+        if (isComplianceCheckEnabled && assistantState === "pending_legal_review") {
+            badges.push({
+                label: t("components.community_assistants.pending_review_badge"),
+                icon: <Clock16Regular aria-hidden="true" />,
+                color: "warning",
+                tone: "warning"
+            });
+        } else if (isComplianceCheckEnabled && assistantState === "inactive") {
+            badges.push({
+                label: t("components.community_assistants.inactive_badge"),
+                icon: <CircleOff16Regular aria-hidden="true" />,
+                color: "danger",
+                tone: "danger"
+            });
+        }
+
+        // The lifecycle state is authoritative after legal review. An active assistant
+        // may retain a high-risk automated result that was accepted by a reviewer.
+        if (
+            isComplianceCheckEnabled &&
+            assistantState === "active" &&
+            (complianceCheckResult?.overall_status === "passed" || complianceCheckResult?.overall_status === "high_risk_detected")
+        ) {
+            badges.push({
+                label: t("components.community_assistants.accepted_badge"),
+                icon: <CheckmarkCircle16Regular aria-hidden="true" />,
+                color: "success",
+                tone: "success"
+            });
+        }
 
         if (assistant.isLocalAssistant) {
             badges.push({
@@ -305,12 +366,15 @@ const Discovery = () => {
                 const resolvedTitle = isAssistantResponse(resolvedData) ? resolvedData.latest_version.name : resolvedData.title;
                 const resolvedDescription = isAssistantResponse(resolvedData) ? resolvedData.latest_version.description || "" : resolvedData.description || "";
                 const resolvedTags = isAssistantResponse(resolvedData) ? resolvedData.latest_version.tags || [] : resolvedData.tags || [];
+                const fallbackOwner = getPrimaryOwnerDetails(assistant.rawData);
+                const resolvedDataWithOwner =
+                    !getPrimaryOwnerDetails(resolvedData) && fallbackOwner ? { ...resolvedData, owners_detailed: [fallbackOwner] } : resolvedData;
                 setSelectedAssistant({
                     ...assistant,
                     title: resolvedTitle,
                     description: resolvedDescription,
                     tags: resolvedTags,
-                    rawData: resolvedData
+                    rawData: resolvedDataWithOwner
                 });
                 setIsDrawerOpen(true);
             } catch (error) {
@@ -321,6 +385,18 @@ const Discovery = () => {
             }
         }
     };
+
+    useEffect(() => {
+        if (!assistantToOpenId || isLoading) return;
+
+        const assistant = filteredMyAssistants.find(item => item.id === assistantToOpenId);
+        if (!assistant) return;
+
+        void handleAssistantClick(assistant);
+        const nextSearchParams = new URLSearchParams(searchParams);
+        nextSearchParams.delete("openAssistant");
+        setSearchParams(nextSearchParams, { replace: true });
+    }, [assistantToOpenId, filteredMyAssistants, handleAssistantClick, isLoading, searchParams, setSearchParams]);
 
     const startConversation = () => {
         if (selectedAssistant) {

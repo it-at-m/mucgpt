@@ -28,13 +28,16 @@ async def get_config(user_info=Depends(authenticate_user)) -> ConfigResponse:
         assistant_version=settings.ASSISTANT_VERSION,
         document_processing_enabled=settings.PARSER_BACKEND != ParserBackendType.NONE,
         transcription_enabled=settings.TRANSCRIPTION_ENABLED,
+        ai_act_compliance_check_enabled=settings.AI_ACT_COMPLIANCE_CHECK_ENABLED,
         footer_link_url=settings.FOOTER_LINK_URL,
         footer_label=settings.FOOTER_LABEL,
         faq_url=settings.FAQ_URL,
         incident_report_url=settings.INCIDENT_REPORT_URL,
         feature_request_url=settings.FEATURE_REQUEST_URL,
         contact_mail_url=settings.CONTACT_MAIL_URL,
+        admin_role=settings.SSO.ADMIN_ROLE,
         ad2image_url=settings.AD2IMAGE_URL,
+        owner_profile_url_template=settings.OWNER_PROFILE_URL_TEMPLATE,
     )
 
     models = settings.MODELS
@@ -43,6 +46,8 @@ async def get_config(user_info=Depends(authenticate_user)) -> ConfigResponse:
             llm_name=model.llm_name,
             max_output_tokens=model.max_output_tokens,
             max_input_tokens=model.max_input_tokens,
+            context_warning_threshold_percent=model.context_warning_threshold_percent,
+            context_critical_threshold_percent=model.context_critical_threshold_percent,
             description=model.description,
             input_cost_per_token=model.input_cost_per_token,
             output_cost_per_token=model.output_cost_per_token,

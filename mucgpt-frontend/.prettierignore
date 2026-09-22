@@ -2,3 +2,6 @@ dist
 target
 node_modules
 processes/post-build.js
+
+# Vendored third-party (minified; do not reformat)
+public/vendor/drawio/

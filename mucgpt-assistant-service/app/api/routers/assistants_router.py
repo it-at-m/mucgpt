@@ -380,8 +380,9 @@ async def duplicateAssistant(
                 )
             )
 
-        await db.commit()
+        await db.flush()
         await refresh_owner_details([user_info.user_id], db)
+        response = await getAssistant(id=new_assistant_id, db=db, user_info=user_info)
         await db.commit()
     except Exception as e:
         logger.error(f"Error duplicating assistant {id}: {e}")
@@ -389,7 +390,7 @@ async def duplicateAssistant(
         raise
 
     logger.info(f"Assistant {id} duplicated as {new_assistant_id}")
-    return await getAssistant(id=new_assistant_id, db=db, user_info=user_info)
+    return response
 
 
 @router.post(

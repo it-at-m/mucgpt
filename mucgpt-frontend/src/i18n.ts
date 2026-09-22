@@ -775,7 +775,6 @@ i18n
                             duplicate_confirm_message_deleted:
                                 'Der ursprüngliche Assistent "{{title}}" ist nicht mehr verfügbar. Wenn du weiter damit arbeiten möchtest, kannst du jetzt eine eigene Kopie aus der zuletzt gespeicherten Version erstellen.',
                             duplicate_confirm_action: "Kopie erstellen",
-                            duplicate_title_suffix: "[Kopie]",
                             duplicate_success_title: "Assistent dupliziert",
                             duplicate_success_message: 'Der Assistent "{{title}}" wurde erfolgreich dupliziert.',
                             duplicate_failed_title: "Assistent konnte nicht dupliziert werden",
@@ -1622,7 +1621,6 @@ i18n
                             duplicate_confirm_message_deleted:
                                 'The original assistant "{{title}}" is no longer available. If you want to keep using it, you can create your own copy now from the last cached version.',
                             duplicate_confirm_action: "Create copy",
-                            duplicate_title_suffix: "[Copy]",
                             duplicate_success_title: "Assistant duplicated",
                             duplicate_success_message: 'The assistant "{{title}}" was duplicated successfully.',
                             duplicate_failed_title: "Assistant could not be duplicated",
@@ -2453,7 +2451,6 @@ i18n
                             duplicate_confirm_message_deleted:
                                 'Da ursprüngliche Assistent "{{title}}" is nimmer verfuegbar. Wennst weitermacha mogst, koanst jetz a eigene Kopie aus da zletzt gspeicherten Version erstoin.',
                             duplicate_confirm_action: "Kopie erstoin",
-                            duplicate_title_suffix: "[Kopie]",
                             duplicate_success_title: "Assistent dupliziert",
                             duplicate_success_message: 'Da Assistent "{{title}}" is erfolgreich dupliziert worn.',
                             duplicate_failed_title: "Assistent hod ned dupliziert wern kina",
@@ -3284,7 +3281,6 @@ i18n
                             duplicate_confirm_message: `Vous pouvez continuer à utiliser "{{title}}" sans créer votre propre copie. Voulez-vous quand même en créer une ? Les modifications futures de l'assistant d'origine ne seront pas appliquées à votre copie.`,
                             duplicate_confirm_message_deleted: `L'assistant d'origine "{{title}}" n'est plus disponible. Si vous voulez continuer à l'utiliser, vous pouvez créer maintenant votre propre copie à partir de la dernière version en cache.`,
                             duplicate_confirm_action: "Créer la copie",
-                            duplicate_title_suffix: "[Copie]",
                             duplicate_success_title: "Assistant dupliqué",
                             duplicate_success_message: `L'assistant "{{title}}" a été dupliqué avec succès.`,
                             duplicate_failed_title: "L'assistant n'a pas pu être dupliqué",
@@ -4116,7 +4112,6 @@ i18n
                             duplicate_confirm_message_deleted:
                                 'Оригінальний асистент "{{title}}" більше недоступний. Якщо ви хочете й далі ним користуватися, зараз можна створити власну копію з останньої кешованої версії.',
                             duplicate_confirm_action: "Створити копію",
-                            duplicate_title_suffix: "[Копія]",
                             duplicate_success_title: "Асистента дубльовано",
                             duplicate_success_message: 'Асистента "{{title}}" успішно дубльовано.',
                             duplicate_failed_title: "Не вдалося дублювати асистента",

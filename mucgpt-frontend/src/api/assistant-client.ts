@@ -75,6 +75,10 @@ export async function createCommunityAssistantApi(input: AssistantCreateInput): 
     return handleApiRequest(() => fetch("/api/assistant/create", postConfig(input)), "Failed to create community assistant");
 }
 
+export async function duplicateCommunityAssistantApi(id: string): Promise<AssistantResponse> {
+    return handleApiRequest(() => fetch(`/api/assistant/${id}/duplicate`, postConfig()), "Failed to duplicate community assistant");
+}
+
 export async function getAllCommunityAssistantsApi(params?: AssistantListQueryParams, options?: AssistantRequestOptions): Promise<AssistantResponse[]> {
     return handleApiRequest(
         () => fetch(`/api/assistant${buildQueryString(params)}`, { ...getConfig(), signal: options?.signal }),

@@ -15,7 +15,7 @@ import {
 import { useTranslation } from "react-i18next";
 
 import styles from "./Discovery.module.css";
-import { getCommunityAssistantApi, deleteCommunityAssistantApi, createCommunityAssistantApi, unsubscribeFromAssistantApi } from "../../api/assistant-client";
+import { getCommunityAssistantApi, deleteCommunityAssistantApi, unsubscribeFromAssistantApi } from "../../api/assistant-client";
 import { Assistant, AssistantResponse, CommunityAssistantSnapshot } from "../../api/models";
 import { AddAssistantButton } from "../../components/AddAssistantButton/AddAssistantButton";
 import { AssistantStorageService } from "../../service/assistantstorage";
@@ -36,9 +36,11 @@ import { downloadAssistantExport, mapAssistantToExportData, mapVersionToExportDa
 import { isCompleteCommunityAssistantSnapshot, mapCommunitySnapshotToAssistant } from "../../utils/community-assistant-snapshots";
 import { ApiError } from "../../api/fetch-utils";
 import { ConfigContext } from "../../context/ConfigContext";
+import { saveCreateAssistantDraft } from "../../components/AssistantDialogs/shared/hooks/useCreateAssistantState";
 
 const communityAssistantStorageService = new CommunityAssistantStorageService(COMMUNITY_ASSISTANT_STORE);
 const assistantStorageService = new AssistantStorageService(ASSISTANT_STORE);
+const asArray = <T,>(value: unknown): T[] => (Array.isArray(value) ? value : []);
 const isAssistantResponse = (data: AssistantResponse | CommunityAssistantSnapshot): data is AssistantResponse =>
     "latest_version" in data && data.latest_version != null && typeof data.latest_version.name === "string";
 
@@ -197,35 +199,29 @@ const Discovery = () => {
                 const content = await file.text();
                 const importedData = JSON.parse(content);
 
-                if (!importedData.title || !importedData.system_message) {
+                if (
+                    typeof importedData?.title !== "string" ||
+                    typeof importedData.system_message !== "string" ||
+                    !importedData.title ||
+                    !importedData.system_message
+                ) {
                     throw new Error(t("components.import_assistant.import_invalid_format"));
                 }
 
-                const createdAssistant = await createCommunityAssistantApi({
-                    name: importedData.title,
-                    description: importedData.description || "",
-                    system_prompt: importedData.system_message,
-                    creativity: importedData.creativity || CREATIVITY_LOW,
-                    default_model: importedData.default_model,
-                    quick_prompts: importedData.quick_prompts || [],
-                    examples: importedData.examples || [],
-                    owner_ids: [],
-                    tags: importedData.tags || [],
-                    hierarchical_access: importedData.hierarchical_access || [],
-                    tools: importedData.tools || [],
-                    is_visible: importedData.is_visible || false
+                saveCreateAssistantDraft({
+                    title: importedData.title,
+                    description: typeof importedData.description === "string" ? importedData.description : "",
+                    systemPrompt: importedData.system_message,
+                    creativity: typeof importedData.creativity === "string" ? importedData.creativity : CREATIVITY_LOW,
+                    defaultModel: typeof importedData.default_model === "string" ? importedData.default_model : undefined,
+                    tools: asArray(importedData.tools),
+                    followUpActions: asArray(importedData.quick_prompts),
+                    starterPrompts: asArray(importedData.examples),
+                    hierarchicalAccess: asArray(importedData.hierarchical_access),
+                    isVisible: importedData.is_visible === true
                 });
 
-                if (createdAssistant?.id) {
-                    showSuccess(
-                        t("components.import_assistant.import_success"),
-                        t("components.import_assistant.import_success_message", { title: importedData.title })
-                    );
-
-                    navigate(`/owned/communityassistant/${createdAssistant.id}`);
-                } else {
-                    throw new Error(t("components.import_assistant.import_save_failed"));
-                }
+                navigate(isComplianceCheckEnabled ? "/assistant/create#compliance-review" : "/assistant/create");
             } catch (error) {
                 console.error("Failed to import assistant", error);
                 const errorMessage = error instanceof Error ? error.message : t("components.import_assistant.import_failed");
@@ -234,7 +230,7 @@ const Discovery = () => {
         };
 
         fileInput.click();
-    }, [t, showSuccess, showError, navigate]);
+    }, [t, showError, navigate, isComplianceCheckEnabled]);
 
     const handleSearch = (_event: SearchBoxChangeEvent | null, data: InputOnChangeData) => {
         setSearchText(data.value || "");

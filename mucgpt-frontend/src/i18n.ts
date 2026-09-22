@@ -462,12 +462,9 @@ i18n
                         },
                         import_assistant: {
                             import: "Importieren",
-                            import_success: "Import erfolgreich",
-                            import_success_message: 'Der Assistent "{{title}}" wurde importiert und kann nun verwendet werden.',
                             import_error: "Import fehlgeschlagen",
                             import_failed: "Die Datei konnte nicht importiert werden",
-                            import_invalid_format: "Ungültiges Dateiformat. Die Datei muss einen Titel und System-Prompt enthalten.",
-                            import_save_failed: "Fehler beim Speichern des importierten Assistenten"
+                            import_invalid_format: "Ungültiges Dateiformat. Die Datei muss einen Titel und System-Prompt enthalten."
                         },
                         assistant_preview: {
                             title: "Vorschau-Chat",
@@ -1314,12 +1311,9 @@ i18n
                         },
                         import_assistant: {
                             import: "Import",
-                            import_success: "Import successful",
-                            import_success_message: 'The assistant "{{title}}" has been imported and is ready to use.',
                             import_error: "Import failed",
                             import_failed: "The file could not be imported",
-                            import_invalid_format: "Invalid file format. The file must contain a title and system prompt.",
-                            import_save_failed: "Error saving imported assistant"
+                            import_invalid_format: "Invalid file format. The file must contain a title and system prompt."
                         },
                         assistant_preview: {
                             title: "Preview Chat",
@@ -2149,12 +2143,9 @@ i18n
                         },
                         import_assistant: {
                             import: "Importiern",
-                            import_success: "Import erfolgreich",
-                            import_success_message: 'Dea Assistent "{{title}}" is importiert wordn und ko jetzt verwendet werdn.',
                             import_error: "Import fehlgschlogn",
                             import_failed: "De Datei konnt ned importiert werdn",
-                            import_invalid_format: "Ungültigs Dateiformat. De Datei muass an Titel und System-Prompt enthoidn.",
-                            import_save_failed: "Fehler beim Speichern vom importierten Assistentn"
+                            import_invalid_format: "Ungültigs Dateiformat. De Datei muass an Titel und System-Prompt enthoidn."
                         },
                         assistant_preview: {
                             title: "Vorschau-Chat",
@@ -2986,12 +2977,9 @@ i18n
                         },
                         import_assistant: {
                             import: "Importer",
-                            import_success: "Importation réussie",
-                            import_success_message: 'L\'assistant "{{title}}" a été importé et est prêt à être utilisé.',
                             import_error: "Échec de l'importation",
                             import_failed: "Le fichier n'a pas pu être importé",
-                            import_invalid_format: "Format de fichier invalide. Le fichier doit contenir un titre et un prompt système.",
-                            import_save_failed: "Erreur lors de l'enregistrement de l'assistant importé"
+                            import_invalid_format: "Format de fichier invalide. Le fichier doit contenir un titre et un prompt système."
                         },
                         assistant_preview: {
                             title: "Chat d'aperçu",
@@ -3815,12 +3803,9 @@ i18n
                         },
                         import_assistant: {
                             import: "Імпортувати",
-                            import_success: "Імпорт успішний",
-                            import_success_message: 'Асистент "{{title}}" було імпортовано і готовий до використання.',
                             import_error: "Помилка імпорту",
                             import_failed: "Не вдалося імпортувати файл",
-                            import_invalid_format: "Недійсний формат файлу. Файл повинен містити назву та системний запит.",
-                            import_save_failed: "Помилка збереження імпортованого асистента"
+                            import_invalid_format: "Недійсний формат файлу. Файл повинен містити назву та системний запит."
                         },
                         assistant_preview: {
                             title: "Чат попереднього перегляду",

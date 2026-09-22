@@ -48,7 +48,7 @@
     padding: 12px;
     border: 1px solid var(--app-assistant-config-border);
     border-radius: 10px;
-    background-color: var(--app-assistant-config-surface);
+    background-color: var(--colorNeutralBackground1);
     box-shadow: none;
     box-sizing: border-box;
     transition:

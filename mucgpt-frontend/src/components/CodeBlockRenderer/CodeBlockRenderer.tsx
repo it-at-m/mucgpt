@@ -6,8 +6,10 @@ import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { dark, duotoneLight } from "react-syntax-highlighter/dist/esm/styles/prism";
 import styles from "./CodeBlockRenderer.module.css";
 import { Mermaid, MermaidProps } from "./Mermaid";
-import { LightContext } from "../../pages/layout/LightContext";
+import { DrawIO, DrawIOProps } from "./DrawIO";
+import { AppThemeContext } from "../../ui/theme/AppThemeContext";
 import { FragmentManager } from "../Fragments/FragmentManager/FragmentManager";
+import { useAllowDrawioRender } from "./drawioRenderContext";
 
 // Constants
 const LANGUAGE_PATTERN = /language-(\w+)/;
@@ -26,8 +28,8 @@ const getLanguageFromClassName = (className?: string): string => {
     return match ? match[1] : "";
 };
 
-const isFragmentLanguage = (language: string): boolean => {
-    const normalizedLanguage = language.toLowerCase();
+const isFragmentLanguage = (language?: string): boolean => {
+    const normalizedLanguage = language?.toLowerCase();
     return FRAGMENT_LANGUAGES.some(lang => normalizedLanguage === lang);
 };
 
@@ -37,12 +39,17 @@ const isMermaidDiagram = (language: string, text: string): boolean => {
     return language === "" && text.length > MERMAID_MIN_TEXT_LENGTH && MERMAID_DIAGRAM_TYPES.some(type => text.indexOf(type) !== -1);
 };
 
+const isDrawioDiagram = (language: string): boolean => {
+    return language.toLowerCase() === "drawio";
+};
+
 export default function CodeBlockRenderer(props: CodeBlockRendererProps) {
     const { children, className, ...rest } = props;
     const [copied, setCopied] = useState<boolean>(false);
     const language = getLanguageFromClassName(className);
     const text = String(children);
-    const isLight = useContext(LightContext);
+    const { isLight } = useContext(AppThemeContext);
+    const allowDrawioRender = useAllowDrawioRender();
 
     // Debug logging
     if (language && (language.toLowerCase().includes("mucgpt") || language.toLowerCase().includes("brainstorm"))) {
@@ -70,6 +77,15 @@ export default function CodeBlockRenderer(props: CodeBlockRendererProps) {
             darkTheme: !isLight
         };
         return <Mermaid {...mermaidProps} />;
+    }
+
+    // draw.io diagrams only in assistant answers (allowDrawio on MarkdownRenderer)
+    if (isDrawioDiagram(language) && allowDrawioRender) {
+        const drawioProps: DrawIOProps = {
+            text: text,
+            darkTheme: !isLight
+        };
+        return <DrawIO {...drawioProps} />;
     }
 
     // Render code block with syntax highlighting

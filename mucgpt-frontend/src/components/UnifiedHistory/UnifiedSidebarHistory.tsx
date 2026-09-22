@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
-    Button,
     Caption1Strong,
     Dialog,
     DialogActions,
@@ -11,10 +10,11 @@ import {
     Field,
     Input,
     Menu,
-    MenuItem,
     MenuList,
     MenuPopover,
     MenuTrigger,
+    Skeleton,
+    SkeletonItem,
     Tab,
     TabList,
     Tooltip
@@ -34,9 +34,10 @@ import { useNavigate } from "react-router-dom";
 import { useUnifiedHistory } from "./UnifiedHistoryContext";
 import { UnifiedHistoryEntry, UnifiedHistoryStorage } from "./unifiedHistoryStorage";
 import { CloseConfirmationDialog } from "../AssistantDialogs/shared/CloseConfirmationDialog";
+import { MenuItem } from "../../ui/MenuItem";
 import { useGlobalToastContext } from "../GlobalToastHandler/GlobalToastContext";
 import styles from "./UnifiedSidebarHistory.module.css";
-import { EdelweissSpinner } from "../EdelweissSpinner";
+import { Button } from "../../ui/Button";
 
 const HISTORY_TAB_STORAGE_KEY = "UNIFIED_HISTORY_ASSISTANT_TAB";
 const DELETE_DIALOG_TITLE_MAX_LENGTH = 80;
@@ -48,6 +49,16 @@ const storage = new UnifiedHistoryStorage();
 interface UnifiedSidebarHistoryProps {
     requestClose?: () => void;
 }
+
+const HistoryListSkeleton = ({ label }: { label: string }) => (
+    <Skeleton aria-label={label} className={styles.loadingList}>
+        {Array.from({ length: 6 }, (_, index) => (
+            <div key={index} className={styles.loadingRow}>
+                <SkeletonItem shape="rectangle" className={index === 1 || index === 4 ? styles.loadingNameShort : styles.loadingName} />
+            </div>
+        ))}
+    </Skeleton>
+);
 
 export const UnifiedSidebarHistory = ({ requestClose }: UnifiedSidebarHistoryProps) => {
     const { t } = useTranslation();
@@ -196,16 +207,10 @@ export const UnifiedSidebarHistory = ({ requestClose }: UnifiedSidebarHistoryPro
         }
     };
 
-    if (isLoading && !hasLoaded) {
-        return (
-            <div className={styles.centerState}>
-                <EdelweissSpinner size="tiny" label={t("components.history.loading")} />
-            </div>
-        );
-    }
+    const isInitialLoading = isLoading && !hasLoaded;
 
     return (
-        <div className={styles.root}>
+        <div className={styles.root} aria-busy={isInitialLoading}>
             <Caption1Strong as="span" className={styles.historyLabel}>
                 {t("components.history.recents_label")}
             </Caption1Strong>
@@ -220,7 +225,9 @@ export const UnifiedSidebarHistory = ({ requestClose }: UnifiedSidebarHistoryPro
                 </TabList>
             )}
 
-            {visibleEntries.length === 0 ? (
+            {isInitialLoading ? (
+                <HistoryListSkeleton label={t("components.history.loading")} />
+            ) : visibleEntries.length === 0 ? (
                 <div className={styles.emptyState}>{t(effectiveTab === "assistant" ? "components.history.empty_assistant" : "components.history.empty")}</div>
             ) : (
                 <div className={styles.list} role="list" aria-label={t("components.history.history")}>
@@ -235,7 +242,7 @@ export const UnifiedSidebarHistory = ({ requestClose }: UnifiedSidebarHistoryPro
                                 <Tooltip content={title} relationship="description" positioning={{ position: "after", offset: 40 }} showDelay={400}>
                                     <Button
                                         appearance="subtle"
-                                        className={`${styles.chatButton} ${isActive ? styles.chatButtonActive : ""}`}
+                                        className={styles.chatButton}
                                         onClick={() => void navigateToEntry(entry)}
                                         aria-current={isActive ? "page" : undefined}
                                     >
@@ -267,7 +274,7 @@ export const UnifiedSidebarHistory = ({ requestClose }: UnifiedSidebarHistoryPro
                                                 <MenuItem icon={<Edit20Regular />} onClick={() => renameEntry(entry)}>
                                                     {t("components.history.rename")}
                                                 </MenuItem>
-                                                <MenuItem icon={<Delete20Regular />} onClick={() => setEntryToDelete(entry)} className={styles.deleteMenuItem}>
+                                                <MenuItem tone="danger" icon={<Delete20Regular />} onClick={() => setEntryToDelete(entry)}>
                                                     {t("components.history.delete")}
                                                 </MenuItem>
                                             </MenuList>

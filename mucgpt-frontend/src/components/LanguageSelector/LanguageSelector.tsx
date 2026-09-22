@@ -1,7 +1,8 @@
-import { Menu, MenuItem, MenuPopover, MenuTrigger } from "@fluentui/react-components";
+import { Menu, MenuPopover, MenuTrigger } from "@fluentui/react-components";
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import styles from "./LanguageSelector.module.css";
+import { MenuItem } from "../../ui/MenuItem";
 
 interface LanguageSelectorProps {
     onSelectionChange: (newSelection: string) => void;

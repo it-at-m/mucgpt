@@ -1,9 +1,10 @@
-import { Avatar, Body1Strong, Button, Menu, MenuList, MenuPopover, MenuTrigger } from "@fluentui/react-components";
+import { Avatar, Body1Strong, Menu, MenuList, MenuPopover, MenuTrigger } from "@fluentui/react-components";
 import { ReactNode, useContext, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { User } from "../../api/models";
 import { useConfigContext } from "../../context/ConfigContext";
 import { UserContext } from "../../pages/layout/UserContextProvider";
+import { Button } from "../../ui/Button";
 import styles from "./UserSidebarProfile.module.css";
 import itemStyles from "../AppSidebar/SidebarItem.module.css";
 
@@ -11,7 +12,6 @@ interface UserSidebarProfileProps {
     collapsed: boolean;
     isMobile: boolean;
     utilitiesContent: ReactNode;
-    popoverClassName: string;
 }
 
 interface DerivedUserProfile {
@@ -107,7 +107,7 @@ const deriveUserProfile = (user: User | null, fallbackName: string): DerivedUser
     };
 };
 
-export const UserSidebarProfile = ({ collapsed, isMobile, utilitiesContent, popoverClassName }: UserSidebarProfileProps) => {
+export const UserSidebarProfile = ({ collapsed, isMobile, utilitiesContent }: UserSidebarProfileProps) => {
     const { t } = useTranslation();
     const { user } = useContext(UserContext);
     const config = useConfigContext();
@@ -133,12 +133,7 @@ export const UserSidebarProfile = ({ collapsed, isMobile, utilitiesContent, popo
     );
 
     const trigger = (
-        <Button
-            appearance="subtle"
-            className={triggerClassName}
-            aria-label={t("common.settings")}
-            icon={{ className: itemStyles.icon, children: avatar }}
-        >
+        <Button appearance="subtle" className={triggerClassName} aria-label={t("common.settings")} icon={{ className: itemStyles.icon, children: avatar }}>
             <span className={itemStyles.label} aria-hidden={isCollapsed}>
                 <Body1Strong block className={itemStyles.text}>
                     {userProfile.firstName}
@@ -150,7 +145,7 @@ export const UserSidebarProfile = ({ collapsed, isMobile, utilitiesContent, popo
     return (
         <Menu open={isMenuOpen} onOpenChange={(_, data) => setIsMenuOpen(data.open)} positioning={{ position: "above", align: "start" }}>
             <MenuTrigger disableButtonEnhancement>{trigger}</MenuTrigger>
-            <MenuPopover className={popoverClassName}>
+            <MenuPopover className={styles.popover}>
                 <MenuList>{utilitiesContent}</MenuList>
             </MenuPopover>
         </Menu>

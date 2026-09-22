@@ -1,8 +1,9 @@
-import { Menu, MenuItem, MenuItemRadio, MenuList, MenuPopover, MenuTrigger } from "@fluentui/react-components";
+import { Menu, MenuItemRadio, MenuList, MenuPopover, MenuTrigger } from "@fluentui/react-components";
 import { DarkTheme20Regular, Desktop20Regular, WeatherMoon20Regular, WeatherSunny20Regular } from "@fluentui/react-icons";
 import { ReactElement } from "react";
 import { useTranslation } from "react-i18next";
 import { THEME_PREFERENCES, ThemePreference } from "../../hooks/useThemePreference";
+import { MenuItem } from "../../ui/MenuItem";
 import styles from "./ThemeSelector.module.css";
 
 interface ThemeSelectorProps {

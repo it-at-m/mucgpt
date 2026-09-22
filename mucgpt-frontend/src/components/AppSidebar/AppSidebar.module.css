@@ -15,7 +15,7 @@
 }
 
 .rootMobile {
-    --sidebar-content-width: calc(min(420px, 100vw) - 2 * var(--spacingHorizontalM));
+    --sidebar-content-width: calc(min(var(--appSidebarMobileMaxWidth), 100vw) - 2 * var(--spacingHorizontalM));
 }
 
 .body {
@@ -105,9 +105,8 @@
     position: relative;
 }
 
-.navGroup :is(a, button).navButton[class],
-.navGroup .navButton span.navIcon {
-    color: var(--colorNeutralForeground1);
+.navButton[aria-current="page"] {
+    background-color: var(--colorSubtleBackgroundPressed);
 }
 
 .secondaryGroup,
@@ -129,7 +128,7 @@
 }
 
 .footerSection {
-    gap: var(--spacingVerticalXS);
+    gap: var(--spacingVerticalM);
 }
 
 .secondarySection {
@@ -163,11 +162,6 @@
     gap: var(--spacingVerticalS);
     flex-shrink: 0;
     width: 100%;
-}
-
-.settingsPopover {
-    width: 248px;
-    max-width: calc(100vw - 2 * var(--spacingHorizontalM));
 }
 
 .newChatDialogContent {

@@ -1,6 +1,7 @@
-import { Dialog, DialogTrigger, DialogSurface, DialogTitle, DialogBody, DialogActions, DialogContent, Button, Link, MenuItem } from "@fluentui/react-components";
+import { Dialog, DialogTrigger, DialogSurface, DialogTitle, DialogBody, DialogActions, DialogContent, Button, Link } from "@fluentui/react-components";
 import { Checkmark24Filled, DocumentBulletListMultiple24Regular } from "@fluentui/react-icons";
 import { useTranslation } from "react-i18next";
+import { MenuItem } from "../../ui/MenuItem";
 import { useState } from "react";
 
 import styles from "./TermsOfUseDialog.module.css";

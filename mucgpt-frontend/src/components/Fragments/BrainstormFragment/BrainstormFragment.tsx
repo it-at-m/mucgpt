@@ -6,7 +6,7 @@ import { useTranslation } from "react-i18next";
 import { Button, Tooltip, MessageBar } from "@fluentui/react-components";
 import { ArrowDownload24Regular, ContentView24Regular, ScaleFill24Regular, ArrowExpand24Regular } from "@fluentui/react-icons";
 import { IPureNode } from "markmap-common";
-import { LightContext } from "../../../pages/layout/LightContext";
+import { AppThemeContext } from "../../../ui/theme/AppThemeContext";
 import { BaseFragment } from "../BaseFragment/BaseFragment";
 import { BaseFragmentProps } from "../types";
 import { EdelweissSpinner } from "../../EdelweissSpinner";
@@ -48,7 +48,7 @@ export const BrainstormFragment = ({ content, markdown, showLineNumbers = true }
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [isFullscreen, setIsFullscreen] = useState(false);
-    const isLight = useContext(LightContext);
+    const { isLight } = useContext(AppThemeContext);
 
     // Debounce markdown changes - to prevent frequent updates
     useEffect(() => {

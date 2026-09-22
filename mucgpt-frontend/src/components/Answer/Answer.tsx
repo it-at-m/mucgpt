@@ -55,7 +55,9 @@ export const Answer = ({ answer, onRegenerateResponseClicked, onFollowUpActionSe
                 <div className={styles.growItem}>
                     {formatted && (
                         <div className={styles.answerText}>
-                            <MarkdownRenderer>{processedText}</MarkdownRenderer>
+                            <MarkdownRenderer allowDrawio isStreaming={isStreaming}>
+                                {processedText}
+                            </MarkdownRenderer>
                         </div>
                     )}
                     {!formatted && (

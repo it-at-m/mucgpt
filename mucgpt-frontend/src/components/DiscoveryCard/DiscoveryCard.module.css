@@ -1,53 +1,32 @@
 .card {
     position: relative;
     min-height: 120px;
-    padding: var(--spacingVerticalM) var(--spacingHorizontalM) var(--spacingVerticalMNudge) !important;
-    row-gap: 0 !important;
-    /* Static surfaces are flat by default (see design system); Fluent's filled
-       appearance otherwise always ships a decorative shadow4/shadow8 elevation
-       that has no exposed prop to turn off. The border-color shift and lift on
-       hover already provide the interactive affordance. */
-    box-shadow: none !important;
+    border: var(--strokeWidthThin) solid var(--colorNeutralStroke3);
     transition:
         transform 0.18s cubic-bezier(0.33, 1, 0.68, 1),
-        background-color 0.16s ease;
-}
-
-/* Fluent draws the card border on ::after, so it never affects layout. The card
-   itself no longer receives focus (the primary action inside it does), so the
-   border only ever needs the resting/hover/selected states. */
-.card::after {
-    border-color: var(--colorNeutralStroke3);
-    transition: border-color 0.16s ease;
+        background-color 0.16s ease,
+        border-color 0.16s ease,
+        box-shadow 0.16s ease;
 }
 
 .card:hover {
-    transform: translateY(-1px);
-}
-
-.card:hover::after {
     border-color: var(--colorBrandBackground);
+    transform: translateY(-1px);
 }
 
 .card:hover .headerText {
     color: var(--colorBrandBackground);
 }
 
-/* Card is no longer "interactive" from Fluent's own point of view (that mode only
-   kicks in when Fluent sees onClick/onMouseDown etc. directly on the Card, which
-   now lives on the title button instead) - so its built-in pressed-border feedback
-   is gone. `:active` bubbles up to ancestors while a descendant is pressed, so this
-   restores the same feedback without relying on Fluent's auto-detection. */
-.card:active::after {
+.card:active {
     border-color: var(--colorNeutralStroke1Pressed);
 }
 
-/* Both classes are combined into one selector so this always outranks the hover/
-   active rules above (same specificity tier, defined later) instead of the two
-   fighting over which border color wins while a selected card is also hovered. */
-.card.cardSelected::after {
-    border-width: var(--strokeWidthThick);
+/* An inset ring thickens the border visually without changing the box size,
+   so selecting a card does not shift its content. */
+.card[data-selected="true"] {
     border-color: var(--colorBrandBackground);
+    box-shadow: inset 0 0 0 calc(var(--strokeWidthThick) - var(--strokeWidthThin)) var(--colorBrandBackground);
 }
 
 /* The primary action (title link/button) is stretched to cover the whole card via
@@ -75,8 +54,6 @@
 .headerText {
     display: -webkit-box;
     width: 100%;
-    font-size: var(--fontSizeBase400);
-    font-weight: var(--fontWeightSemibold);
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 2;
     overflow: hidden;
@@ -89,8 +66,10 @@
 .primaryAction {
     padding: 0;
     border: 0;
+    font: inherit;
     color: inherit;
     text-align: inherit;
+    text-decoration: none;
     background: transparent;
     cursor: pointer;
 }
@@ -123,25 +102,8 @@
 }
 
 .headerBadge {
-    max-width: 100%;
-    min-width: 0;
     min-height: 20px;
     align-self: flex-start;
-    padding: var(--spacingVerticalXXS) var(--spacingHorizontalSNudge) !important;
-    font-size: var(--fontSizeBase100) !important;
-    font-weight: var(--fontWeightRegular) !important;
-}
-
-/* Fluent has no neutral badge color that matches this palette. */
-.headerBadgeNeutral {
-    color: var(--colorNeutralForeground2) !important;
-    background-color: var(--colorNeutralBackground2) !important;
-    border-color: var(--colorNeutralStroke1) !important;
-}
-
-/* Colors come from Fluent's tint appearance; status badges only read heavier. */
-.headerBadgeStatus {
-    font-weight: var(--fontWeightSemibold) !important;
 }
 
 .description {
@@ -153,6 +115,11 @@
     -webkit-line-clamp: 2;
     overflow: hidden;
     overflow-wrap: break-word;
+}
+
+.description a {
+    position: relative;
+    z-index: 1;
 }
 
 .metadata {
@@ -197,15 +164,11 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-    .card {
-        transition: none;
-    }
-
     .card:hover {
         transform: none;
     }
 
-    .card::after,
+    .card,
     .headerText {
         transition: none;
     }

@@ -1,6 +1,6 @@
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
-import { Button, MenuDivider, MenuItem, DrawerBody, OverlayDrawer, FluentProvider, InlineDrawer } from "@fluentui/react-components";
+import { MenuDivider, DrawerBody, OverlayDrawer, FluentProvider, InlineDrawer } from "@fluentui/react-components";
 import {
     Book24Regular,
     CalendarNote24Regular,
@@ -23,7 +23,7 @@ import { STORAGE_KEYS } from "./LayoutHelper";
 import { createMucgptTheme, createScaledTypographyTheme } from "../../ui/theme/fluentTheme";
 import { createAppCssVars, getAppTokens } from "../../ui/theme/appTokens";
 import { DEFAULTLLM, LLMContext } from "../../components/LLMSelector/LLMContextProvider";
-import { LightContext } from "./LightContext";
+import { AppThemeContext } from "../../ui/theme/AppThemeContext";
 import { DEFAULT_APP_CONFIG } from "../../constants";
 import { UserContextProvider } from "./UserContextProvider";
 import { LanguageSelector } from "../../components/LanguageSelector";
@@ -43,6 +43,8 @@ import { AppSidebar } from "../../components/AppSidebar";
 import { UnifiedHistoryProvider, UnifiedSidebarHistory } from "../../components/UnifiedHistory";
 import { EdelweissSpinner } from "../../components/EdelweissSpinner";
 import { VersionInfo } from "../../components/VersionInfo";
+import { Button } from "../../ui/Button";
+import { MenuItem } from "../../ui/MenuItem";
 
 const APP_NAV_COLLAPSED_KEY = "APP_NAV_COLLAPSED";
 const MOBILE_LAYOUT_BREAKPOINT = 640;
@@ -186,8 +188,9 @@ const AppShell = ({
                 </a>
 
                 <div
-                    className={`${styles.shellBody} ${!isMobile && isSidebarCollapsed ? styles.shellBodyCollapsed : ""} ${isMobile ? styles.shellBodyMobile : ""
-                        }`}
+                    className={`${styles.shellBody} ${!isMobile && isSidebarCollapsed ? styles.shellBodyCollapsed : ""} ${
+                        isMobile ? styles.shellBodyMobile : ""
+                    }`}
                 >
                     {!isMobile && (
                         <aside className={styles.sidebarColumn}>
@@ -345,16 +348,16 @@ export const Layout = () => {
 
     return (
         <FluentProvider theme={theme}>
-            <LightContext.Provider value={isLight}>
-                <UserContextProvider>
-                    {isLoadingConfig ? (
-                        <div className={styles.loadingContainer}>
-                            <EdelweissSpinner size="large" label={t("common.loading", "Lade Konfiguration...")} />
-                        </div>
-                    ) : isUnauthorized ? (
-                        <Unauthorized redirectUrl={unauthorizedRedirectUrl} />
-                    ) : (
-                        <ConfigContext.Provider value={config}>
+            <AppThemeContext.Provider value={{ isLight }}>
+                <ConfigContext.Provider value={config}>
+                    <UserContextProvider>
+                        {isLoadingConfig ? (
+                            <div className={styles.loadingContainer}>
+                                <EdelweissSpinner size="large" label={t("common.loading", "Lade Konfiguration...")} />
+                            </div>
+                        ) : isUnauthorized ? (
+                            <Unauthorized redirectUrl={unauthorizedRedirectUrl} />
+                        ) : (
                             <TranscriptionSettingsProvider deploymentEnabled={config.transcription_enabled}>
                                 <ToolsProvider>
                                     <UnifiedHistoryProvider>
@@ -371,11 +374,11 @@ export const Layout = () => {
                                     </UnifiedHistoryProvider>
                                 </ToolsProvider>
                             </TranscriptionSettingsProvider>
-                        </ConfigContext.Provider>
-                    )}
-                    <GlobalToastHandler />
-                </UserContextProvider>
-            </LightContext.Provider>
+                        )}
+                        <GlobalToastHandler />
+                    </UserContextProvider>
+                </ConfigContext.Provider>
+            </AppThemeContext.Provider>
         </FluentProvider>
     );
 };

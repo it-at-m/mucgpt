@@ -4,12 +4,12 @@
     flex: 1;
     min-height: 0;
     width: 100%;
-    gap: 8px;
+    gap: var(--spacingVerticalS);
 }
 
 .historyLabel {
     flex: 0 0 auto;
-    padding: 2px 4px 0;
+    padding: var(--spacingVerticalXXS) var(--spacingHorizontalXS) 0;
     color: var(--colorNeutralForeground2);
 }
 
@@ -31,12 +31,45 @@
     scrollbar-color: transparent transparent;
 }
 
+.loadingList {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    gap: var(--spacingVerticalXXS);
+    min-height: 0;
+    overflow: hidden;
+}
+
+.loadingRow {
+    display: flex;
+    align-items: center;
+    gap: var(--spacingHorizontalS);
+    height: var(--spacingVerticalXXXL);
+    min-width: 0;
+    padding: 0 var(--spacingHorizontalXS);
+    box-sizing: border-box;
+}
+
+.loadingName,
+.loadingNameShort {
+    height: var(--spacingVerticalS);
+}
+
+.loadingName {
+    width: min(100%, 12rem);
+    flex: 1 1 auto;
+}
+
+.loadingNameShort {
+    width: min(68%, 8rem);
+}
+
 .list:hover {
     scrollbar-color: var(--colorNeutralStroke1) transparent;
 }
 
 .list::-webkit-scrollbar {
-    width: 8px;
+    width: var(--spacingHorizontalS);
 }
 
 .list::-webkit-scrollbar-track {
@@ -45,7 +78,7 @@
 
 .list::-webkit-scrollbar-thumb {
     background-color: transparent;
-    border-radius: 999px;
+    border-radius: var(--borderRadiusCircular);
 }
 
 .list:hover::-webkit-scrollbar-thumb {
@@ -67,15 +100,12 @@
 }
 
 /* Fluent's Button root resets justify-content to center at equal specificity;
-   the extra ancestor class is needed to reliably win the cascade. Color needs
-   !important because subtle's hover/pressed states set color at equal specificity
-   too (see AppSidebar's .navButton for the same pattern). */
+   the extra ancestor class is needed to reliably win the cascade. */
 .row .chatButton {
     justify-content: flex-start;
-    color: var(--colorNeutralForeground1) !important;
 }
 
-.chatButtonActive {
+.chatButton[aria-current="page"] {
     background-color: var(--colorSubtleBackgroundPressed);
 }
 
@@ -86,7 +116,7 @@
     width: 100%;
     /* Reserved space for the overlaid options button so text never renders under it,
        whether or not the options button is currently visible. */
-    padding-right: 28px;
+    padding-right: calc(var(--spacingHorizontalXXXL) + var(--spacingHorizontalS));
 }
 
 .chatName {
@@ -97,7 +127,7 @@
 
 .pinnedIcon {
     flex: 0 0 auto;
-    margin-right: 6px;
+    margin-right: var(--spacingHorizontalSNudge);
 }
 
 /* The options button lives inside the chat row's clickable area instead of taking up
@@ -107,11 +137,11 @@
 .optionsSlot {
     position: absolute;
     top: 50%;
-    right: 4px;
+    right: var(--spacingHorizontalXS);
     transform: translateY(-50%);
     opacity: 0;
     pointer-events: none;
-    transition: opacity 120ms ease;
+    transition: opacity var(--durationFast) var(--curveDecelerateMid);
 }
 
 .row:hover .optionsSlot,
@@ -129,14 +159,9 @@
 }
 
 .menuList {
-    padding: 4px;
+    padding: var(--spacingVerticalXS);
 }
 
-.deleteMenuItem {
-    color: var(--colorStatusDangerForeground1) !important;
-}
-
-.centerState,
 .emptyState {
     display: flex;
     align-items: center;

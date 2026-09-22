@@ -1,4 +1,9 @@
 .avatarInitials[class] {
     /* The avatar remains an icon at every text scale; keep both initials inside it. */
-    font-size: min(var(--fontSizeBase300), var(--spacingHorizontalL));
+    font-size: var(--fontSizeBase300);
+}
+
+.popover[class] {
+    width: 248px;
+    max-width: calc(100vw - 2 * var(--spacingHorizontalM));
 }

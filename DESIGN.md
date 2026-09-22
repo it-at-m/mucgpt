@@ -6,7 +6,9 @@ register: product
 
 # MUCGPT Design System
 
-This document is the single source of truth for MUCGPT product design and frontend styling. It defines the intended visual language, interaction principles, reusable product patterns, and the contract between Fluent UI and MUCGPT-specific styling.
+This document is the source of truth for MUCGPT product design principles, visual semantics, interaction principles, and reusable product patterns. It defines the intended visual language and the contract between Fluent UI and MUCGPT-specific styling.
+
+Technical theme architecture and the active token inventory are documented in [the frontend theme-token reference](mucgpt-frontend/docs/theme-tokens.md). The implementation files in `mucgpt-frontend/src/ui/theme/` remain authoritative for active token values. These documents complement this one; they must not become competing sources of truth.
 
 MUCGPT uses Fluent UI as its component foundation. The design system extends Fluent only where the product needs a distinct semantic concept.
 
@@ -64,45 +66,35 @@ Local CSS must not duplicate behavior already provided by Fluent.
 
 ### Theme files
 
-The theme implementation lives in:
+The theme layer has distinct responsibilities:
+
+- `palette.ts` owns reusable color primitives.
+- `fluentTheme.ts` maps those primitives to Fluent semantic tokens and applies MUCGPT-wide Fluent theme decisions, including shape and typography behavior.
+- `appTokens.ts` owns the small set of stable MUCGPT product semantics Fluent cannot express; these are exposed as `--app-*` variables.
+
+Components and feature CSS consume Fluent semantic tokens first, then documented `--app-*` tokens. They do not consume palette primitives or introduce raw color values. A reusable color family belongs in `palette.ts`; an isolated, stable product semantic without a Fluent equivalent belongs in `appTokens.ts`. Do not add an app token for a value Fluent already models.
+
+For the active inventory, runtime flow, and implementation details, consult [the frontend theme-token reference](mucgpt-frontend/docs/theme-tokens.md).
+
+### Styling decision guide
+
+Before adding styling, ask:
 
 ```text
-mucgpt-frontend/src/ui/theme/
-|-- palette.ts
-|-- fluentTheme.ts
-`-- appTokens.ts
+Can Fluent express this through a component prop, slot, or appearance?
+    -> use Fluent
+
+Can the Fluent theme express this globally with an existing semantic token?
+    -> use the theme token
+
+Is this a stable and repeated MUCGPT product semantic?
+    -> use or define a documented MUCGPT pattern or app token
+
+Is local CSS genuinely necessary?
+    -> use it only for the local requirement
 ```
 
-The runtime theme flow is:
-
-```text
-palette.ts
--> createMucgptTheme(isLight)
--> createScaledTypographyTheme(theme, scaling)
--> FluentProvider
-```
-
-`Layout.tsx` installs the Fluent theme and exposes the small set of `--app-*` variables on the document root.
-
-### Token ownership and raw values
-
-The color system has two legitimate sources of raw color values inside the theme layer. They serve different purposes:
-
-1. **`palette.ts` owns reusable primitives.** Brand, neutral, success, warning, danger, and information ramps live here when multiple semantic tokens or components need the same underlying values. `fluentTheme.ts` maps these primitives onto Fluent semantic tokens.
-2. **`appTokens.ts` owns isolated product semantics.** A product-specific token may define its light and dark raw values directly when Fluent has no equivalent and the values do not form a reusable palette. It may instead reference a primitive from `palette.ts` when that color is shared.
-
-This means `palette.ts` is the source of reusable color ramps, not necessarily every color literal in the application. `appTokens.ts` is part of the theme layer and is therefore allowed to own deliberate semantic values.
-
-The hard boundary is feature code:
-
-- Components, pages, and feature CSS must not consume primitive ramps directly.
-- Components, pages, and feature CSS must not introduce raw color literals.
-- Feature code consumes Fluent semantic tokens first and `--app-*` tokens only for documented MUCGPT-specific concepts.
-- A new reusable color family belongs in `palette.ts`.
-- A new isolated product semantic without a Fluent equivalent belongs in `appTokens.ts`.
-- A value that already has an appropriate Fluent semantic must not become an app token.
-
-This separation preserves a small semantic API for feature code without forcing one-off product meanings into Fluent or turning `appTokens.ts` into a parallel design system.
+Local CSS is the last option. It must not recreate standard Fluent behavior or introduce a local exception to a reusable product rule.
 
 ## 3. Color
 
@@ -119,13 +111,9 @@ MUCGPT uses a restrained color strategy. Neutral surfaces carry the interface. B
 
 Blue is not a decorative background motif.
 
-### Brand
+### Brand roles
 
-| Role            | Light     | Dark      |
-| --------------- | --------- | --------- |
-| Primary action  | `#2563EB` | `#86A4E5` |
-| Primary hover   | `#1D4ED8` | `#A0B8ED` |
-| Primary pressed | `#1E40AF` | `#6F90D8` |
+The active brand palette is defined in the theme layer. Its semantic roles are primary actions, links, focus, selected states, and assistant identity. Consult [the frontend theme-token reference](mucgpt-frontend/docs/theme-tokens.md) for active values and mappings.
 
 Standard primary actions use Fluent appearances:
 
@@ -159,8 +147,6 @@ var(--colorStatusSuccessForeground1)
 var(--colorStatusWarningForeground1)
 var(--colorStatusDangerForeground1)
 ```
-
-Some Fluent components internally consume `colorPaletteGreen*`, `colorPaletteYellow*`, or `colorPaletteRed*`. The MUCGPT theme aliases these Fluent palette tokens to the corresponding MUCGPT status mappings so Fluent components and custom feature styles render the same status language. Feature code should still use `colorStatus*` tokens for semantic states.
 
 Fluent does not provide an equivalent `colorStatusInfo*` family. The documented information extension is exposed through the relevant `--app-status-info-*` token.
 
@@ -201,7 +187,7 @@ Montserrat is reserved for MUCGPT branding. Do not introduce additional font fam
 
 Prefer Fluent components such as `Title1`, `Title2`, `Title3`, `Subtitle1`, `Body1`, `Body2`, `Caption1`, and `Text`, or their underlying typography tokens.
 
-Do not use arbitrary `font-size`, `line-height`, or `font-weight` values when a Fluent role fits. Product copy should generally stay within 65 to 75 characters per line. Data-heavy interfaces may be wider where scanning requires it.
+Do not use arbitrary `font-size`, `line-height`, or `font-weight` values when a Fluent role fits. Long-form explanatory or reading-oriented text should generally stay within a comfortable measure of roughly 65 to 75 characters per line. Do not impose that constraint on UI labels, forms, metadata, chat surfaces, or data-dense screens.
 
 User font scaling is applied centrally by `createScaledTypographyTheme`. Feature typography must use the scaled Fluent tokens so this setting remains effective.
 
@@ -215,31 +201,15 @@ Copy should be concise but not cryptic. Users need enough context to understand 
 
 ### Spacing
 
-Use Fluent spacing tokens for component spacing and common layout rhythm. Values such as 4, 8, 12, 16, 20, 24, and 32 pixels are represented by the Fluent spacing scale.
-
-```css
-.toolbar {
-  gap: var(--spacingHorizontalM);
-}
-```
+Use Fluent spacing tokens for component spacing and common layout rhythm.
 
 Dedicated values are appropriate for structural dimensions such as readable widths, responsive breakpoints, navigation width, drawer width, and page gutters. Repeated structural values should become named layout semantics.
 
 ### Radius
 
-MUCGPT overrides the Fluent radius scale globally:
+MUCGPT customizes the Fluent radius scale globally. Standard Fluent components inherit that scale; do not override Button, Input, Dialog, or similar component radii locally without a product-specific reason. See [the frontend theme-token reference](mucgpt-frontend/docs/theme-tokens.md) for active values.
 
-| Fluent token           | Value    |
-| ---------------------- | -------- |
-| `borderRadiusSmall`    | `6px`    |
-| `borderRadiusMedium`   | `10px`   |
-| `borderRadiusLarge`    | `12px`   |
-| `borderRadiusXLarge`   | `16px`   |
-| `borderRadiusCircular` | Circular |
-
-Standard Fluent components inherit this scale. Do not override Button, Input, Dialog, or similar component radii locally without a product-specific reason.
-
-Product geometry that Fluent cannot represent may use app tokens. The chat bubble uses `--app-radius-xxlarge` for its 24px body radius and `--app-radius-xsmall` for its 2px tail corners.
+Product geometry that Fluent cannot represent may use documented app tokens. The chat bubble uses its dedicated tokens to preserve the distinct body and tail geometry.
 
 ### Elevation
 
@@ -269,7 +239,7 @@ MUCGPT uses predictable product layouts: persistent navigation, clear page heade
 
 Responsive behavior is structural. Collapse navigation, adapt grids, stack control groups, and change drawer behavior at deliberate breakpoints. Do not use fluid display typography as a substitute for responsive composition.
 
-The assistant discovery grid uses three columns on wide layouts, two columns below 1024px, and one column below 550px. When the details drawer materially reduces the available content width, the grid and section controls adapt to the remaining space rather than only to the viewport.
+Grids respond to available content width: cards retain a useful readable minimum width, columns reduce when the content area becomes too narrow, and drawers or other layout constraints count alongside viewport width.
 
 Touch targets, focus order, labels, and functionality must remain equivalent across layouts.
 
@@ -282,7 +252,7 @@ The discovery page leads users from a work need to an appropriate assistant.
 - The page header uses a clear title, a concise purpose statement, a primary create action, and a lower-emphasis import action.
 - Search spans the available content width and uses a grouped neutral surface.
 - “My assistants” and community discovery are separate, clearly titled sections.
-- Ownership filters use a small Fluent `TabList` because they switch between mutually exclusive views of the same collection.
+- Ownership filters use a Fluent `TabList` because they switch between mutually exclusive views of the same collection.
 - Sorting uses Fluent `Dropdown` controls.
 - Empty states offer concrete next actions instead of merely reporting that no content exists.
 - Loading collections use card-shaped skeletons to preserve layout and reduce movement.
@@ -307,7 +277,7 @@ Card anatomy follows a consistent hierarchy:
 2. A short description, normally clamped to two lines in a grid.
 3. A footer containing owner/source metadata and visibility or subscriber information.
 
-Cards are flat at rest with a full border. Hover may lift by a single pixel and strengthen the border or title color. Selected cards use a full selected border, never a colored side stripe. Focus styling must remain at least as prominent as hover and selection.
+Cards are flat at rest with a full border. Hover may subtly lift and strengthen the border or title color. Selected cards use a full selected border, never a colored side stripe. Focus styling must remain at least as prominent as hover and selection.
 
 Interactive cards must expose their action and current state semantically, not only through click handlers or color. Nested actions such as owner contact links must remain independently operable and must not accidentally trigger the card action.
 
@@ -373,7 +343,7 @@ Avoid generic “nothing here” messages and long product explanations.
 
 Use Fluent components directly whenever possible, including `Button`, `Input`, `Textarea`, `SearchBox`, `Dropdown`, `TabList`, `Dialog`, `Menu`, `Card`, `Badge`, and `Tooltip`.
 
-Do not create wrappers such as `MucButton`, `MucInput`, or `MucDialog` merely to apply visual styling. Shared components are justified when they represent a reusable product pattern, such as `PageHeader`, `AssistantCard`, `EmptyState`, or `Toolbar`.
+Do not wrap Fluent components merely to rename them or apply one-off feature styling. A shared primitive wrapper is justified when MUCGPT needs consistent application-wide semantics or behavior that Fluent's public API and theme cannot express cleanly. Product-level reusable components such as `PageHeader`, `AssistantCard`, `EmptyState`, and `Toolbar` are valid abstractions. Do not create wrappers around every Fluent component.
 
 Every interactive component needs the states relevant to its behavior: default, hover, focus, active, selected, disabled, loading, and error.
 
@@ -405,13 +375,13 @@ Never depend on undocumented Fluent DOM structure when a public component prop, 
 
 Motion explains state changes and spatial relationships. It is not decoration.
 
-- Use approximately 120ms to 160ms for color, border, and focus changes.
-- Use approximately 160ms to 220ms for hover lift and compact reveals.
-- Use up to 300ms for drawers and navigation collapse.
-- Prefer transform and opacity over layout properties.
-- Use restrained ease-out curves without bounce or elastic effects.
-- Do not orchestrate page-load animation sequences.
+- Prefer Fluent motion duration and easing tokens.
+- Do not introduce arbitrary per-component duration or easing values. When MUCGPT needs reusable behavior Fluent does not represent, define a shared semantic rather than repeating raw values.
+- Prefer transform and opacity over expensive layout transitions where appropriate.
+- Never use `transition: all`.
 - Respect `prefers-reduced-motion` for every non-essential transition and animation.
+- Use motion to communicate state or spatial relationships, not decoration.
+- Do not orchestrate page-load animation sequences.
 
 ## 10. Themes
 
@@ -469,24 +439,3 @@ Accessibility is a product requirement, not a final polish step. MUCGPT serves p
 - Nest cards inside cards.
 - Use a modal as the first solution when inline or progressive interaction is viable.
 - Imply autonomous execution when human review is required.
-
-## 13. Styling decision guide
-
-Before adding styling, ask:
-
-```text
-Can Fluent express this through a component prop, slot, or appearance?
-    -> no
-
-Can the Fluent theme express this globally with an existing semantic token?
-    -> no
-
-Is this a stable and repeated MUCGPT product semantic?
-    -> no
-
-Is local CSS genuinely necessary?
-```
-
-If the answer introduces a new token, decide whether it is a reusable primitive for `palette.ts` or an isolated product semantic for `appTokens.ts`. Feature code consumes the resulting semantic token, never the raw value.
-
-Implementation details and the complete active token inventory are documented in `mucgpt-frontend/docs/theme-tokens.md`.

@@ -504,13 +504,13 @@ async def test_get_user_assistants_access_control_repo(test_client, test_db_sess
 
     # Create assistant owned by test_user_123 (should be returned)
     assistant_owned = await assistant_repo.create(
+        name="My Owned Assistant",
         hierarchical_access=["IT-Test-Department"],
         owner_ids=["test_user_123"],
     )
 
     await assistant_repo.create_assistant_version(
         assistant=assistant_owned,
-        name="My Owned Assistant",
         system_prompt="You are my owned assistant.",
         description="This assistant is owned by test_user_123",
         creativity="medium",
@@ -521,13 +521,13 @@ async def test_get_user_assistants_access_control_repo(test_client, test_db_sess
 
     # Create assistant owned by different user (should NOT be returned)
     assistant_not_owned = await assistant_repo.create(
+        name="Not My Assistant",
         hierarchical_access=["IT-Test-Department"],  # Same department access
         owner_ids=["other_user_456"],  # Different owner
     )
 
     await assistant_repo.create_assistant_version(
         assistant=assistant_not_owned,
-        name="Not My Assistant",
         system_prompt="You are not my assistant.",
         description="This assistant is owned by other_user_456",
         creativity="high",
@@ -538,13 +538,13 @@ async def test_get_user_assistants_access_control_repo(test_client, test_db_sess
 
     # Create assistant with multiple owners including test_user_123 (should be returned)
     assistant_co_owned = await assistant_repo.create(
+        name="Co-Owned Assistant",
         hierarchical_access=["IT-Test-Department"],
         owner_ids=["test_user_123", "other_user_456", "third_user_789"],
     )
 
     await assistant_repo.create_assistant_version(
         assistant=assistant_co_owned,
-        name="Co-Owned Assistant",
         system_prompt="You are a co-owned assistant.",
         description="This assistant has multiple owners including test_user_123",
         creativity="low",
@@ -555,13 +555,13 @@ async def test_get_user_assistants_access_control_repo(test_client, test_db_sess
 
     # Create assistant with no owners (should NOT be returned)
     assistant_no_owners = await assistant_repo.create(
+        name="Orphaned Assistant",
         hierarchical_access=["IT-Test-Department"],
         owner_ids=[],
     )
 
     await assistant_repo.create_assistant_version(
         assistant=assistant_no_owners,
-        name="Orphaned Assistant",
         system_prompt="You are an orphaned assistant.",
         description="This assistant has no owners",
         creativity="medium",
@@ -1204,13 +1204,13 @@ async def test_hierarchical_access_subscription_vs_ownership(
 
     # Create assistant with HR access (user cannot access) and no test_user_123 as owner
     assistant_hr = await assistant_repo.create(
+        name="HR Only Assistant",
         hierarchical_access=["HR"],
         owner_ids=["other_user_only"],  # Only other user as owner
     )
 
     await assistant_repo.create_assistant_version(
         assistant=assistant_hr,
-        name="HR Only Assistant",
         system_prompt="Assistant only for HR.",
         description="This assistant is only for HR department",
         creativity="medium",
@@ -1221,13 +1221,13 @@ async def test_hierarchical_access_subscription_vs_ownership(
 
     # Create assistant with IT access (user can access) and no test_user_123 as owner
     assistant_it = await assistant_repo.create(
+        name="IT Accessible Assistant",
         hierarchical_access=["IT"],
         owner_ids=["other_user_only"],  # Only other user as owner
     )
 
     await assistant_repo.create_assistant_version(
         assistant=assistant_it,
-        name="IT Accessible Assistant",
         system_prompt="Assistant accessible to IT.",
         description="This assistant is accessible to IT department",
         creativity="medium",
@@ -1491,13 +1491,13 @@ async def test_subscription_count_with_repository_operations(
     assistant_repo = AssistantRepository(test_db_session)
 
     assistant = await assistant_repo.create(
+        name="Repository Test Assistant",
         hierarchical_access=["IT-Test-Department"],
         owner_ids=["test_user_123"],
     )
 
     await assistant_repo.create_assistant_version(
         assistant=assistant,
-        name="Repository Test Assistant",
         system_prompt="Testing with repository operations.",
         description="Assistant for testing subscription count with repository",
         creativity="medium",

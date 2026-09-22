@@ -4,10 +4,12 @@
 export class ApiError extends Error {
     status: number;
     redirectUrl?: string;
-    constructor(message: string, status: number, redirectUrl?: string) {
+    code?: string;
+    constructor(message: string, status: number, redirectUrl?: string, code?: string) {
         super(message);
         this.status = status;
         this.redirectUrl = redirectUrl;
+        this.code = code;
         this.name = "ApiError";
     }
 }
@@ -183,6 +185,7 @@ export async function handleApiRequest<T>(request: () => Promise<Response>, defa
             const errorData = await response.json().catch(() => ({}));
             let message = errorData.message || `${defaultErrorMessage}: ${response.statusText}`;
             let redirectUrl = errorData.redirect_url;
+            let code: string | undefined;
 
             if (errorData.detail) {
                 if (typeof errorData.detail === "string") {
@@ -190,10 +193,11 @@ export async function handleApiRequest<T>(request: () => Promise<Response>, defa
                 } else if (typeof errorData.detail === "object") {
                     message = errorData.detail.message || message;
                     redirectUrl = errorData.detail.redirect_url || redirectUrl;
+                    code = errorData.detail.code;
                 }
             }
 
-            throw new ApiError(message, response.status, redirectUrl);
+            throw new ApiError(message, response.status, redirectUrl, code);
         }
 
         const parsedResponse = await handleResponse(response);

@@ -168,6 +168,9 @@ async def _require_verified_compliance_result(
     responses={
         200: {"description": "The created assistant with all associated data"},
         401: {"description": "Unauthorized"},
+        409: {
+            "description": "The assistant name is already taken (detail.code 'assistant_name_taken')"
+        },
     },
     tags=["Assistants"],
 )
@@ -378,7 +381,9 @@ async def deleteAssistant(
         401: {"description": "Unauthorized"},
         403: {"description": "User is not an owner of the assistant"},
         404: {"description": "Assistant not found"},
-        409: {"description": "Version conflict detected"},
+        409: {
+            "description": "Version conflict detected, or the assistant name is already taken (detail.code 'assistant_name_taken')"
+        },
         500: {"description": "Assistant has no versions and cannot be updated"},
     },
 )
@@ -518,7 +523,6 @@ async def updateAssistant(
     # Owner updates may refresh the parent ORM row and expire related instances.
     # Keep the immutable version values before changing parent-level properties.
     previous_version = {
-        "name": latest_version.name,
         "description": latest_version.description,
         "system_prompt": latest_version.system_prompt,
         "creativity": latest_version.creativity,
@@ -541,9 +545,6 @@ async def updateAssistant(
     # Using the latest_version already retrieved above
     new_version = await assistant_repo.create_assistant_version(
         assistant=assistant,
-        name=assistant_update.name
-        if assistant_update.name is not None
-        else previous_version["name"],
         description=assistant_update.description
         if assistant_update.description is not None
         else previous_version["description"],

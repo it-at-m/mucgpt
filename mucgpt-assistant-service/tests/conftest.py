@@ -37,7 +37,6 @@ def sample_assistant_data():
 def sample_assistant_version_data():
     """Sample AssistantVersion instance with proper type safety."""
     return AssistantVersion(
-        name="Test Assistant",
         system_prompt="You are a helpful assistant",
         description="A test assistant for unit testing",
         creativity="medium",

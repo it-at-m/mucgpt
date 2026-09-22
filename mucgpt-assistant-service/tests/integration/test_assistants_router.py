@@ -510,6 +510,67 @@ def test_update_assistant_prompt_changed_defaults_confirmation_to_false(
     assert updated.latest_version.compliance_confirmation is False
 
 
+def _create_named_assistant(test_client, name: str) -> AssistantResponse:
+    response = test_client.post(
+        "assistant/create",
+        json=AssistantCreate(name=name, system_prompt="Prompt.").model_dump(),
+        headers=headers,
+    )
+    assert response.status_code == 200
+    return AssistantResponse.model_validate(response.json())
+
+
+@pytest.mark.integration
+def test_create_assistant_rejects_taken_name_with_error_code(test_client):
+    """A normalized duplicate name is rejected with a code clients can map to the name field."""
+    _create_named_assistant(test_client, "Translator")
+
+    response = test_client.post(
+        "assistant/create",
+        json=AssistantCreate(
+            name="  translator ", system_prompt="Prompt."
+        ).model_dump(),
+        headers=headers,
+    )
+
+    assert response.status_code == 409
+    assert response.json()["detail"]["code"] == "assistant_name_taken"
+
+
+@pytest.mark.integration
+def test_update_assistant_rejects_name_taken_by_other_assistant(test_client):
+    """Renaming to another assistant's name is rejected with the name error code."""
+    _create_named_assistant(test_client, "Translator")
+    other = _create_named_assistant(test_client, "Summarizer")
+
+    response = test_client.post(
+        f"assistant/{other.id}/update",
+        json=AssistantUpdate(
+            version=other.latest_version.version, name="Translator"
+        ).model_dump(),
+        headers=headers,
+    )
+
+    assert response.status_code == 409
+    assert response.json()["detail"]["code"] == "assistant_name_taken"
+
+
+@pytest.mark.integration
+def test_update_assistant_keeps_own_name(test_client):
+    """Saving an assistant under its current name is not a conflict."""
+    assistant = _create_named_assistant(test_client, "Translator")
+
+    response = test_client.post(
+        f"assistant/{assistant.id}/update",
+        json=AssistantUpdate(
+            version=assistant.latest_version.version, name="Translator"
+        ).model_dump(),
+        headers=headers,
+    )
+
+    assert response.status_code == 200
+
+
 @pytest.mark.integration
 def test_create_assistant_minimal_data(test_client):
     """Test creating assistant with minimal required data."""
@@ -1726,12 +1787,12 @@ async def test_get_all_assistants_query_params_contract(test_client, test_db_ses
     assistant_repo = AssistantRepository(test_db_session)
 
     not_owned_alpha = await assistant_repo.create(
+        name="Alpha Match",
         hierarchical_access=["IT-Test-Department"],
         owner_ids=["other_owner_1"],
     )
     await assistant_repo.create_assistant_version(
         assistant=not_owned_alpha,
-        name="Alpha Match",
         system_prompt="alpha",
         description="searchable description",
         creativity="medium",
@@ -1741,12 +1802,12 @@ async def test_get_all_assistants_query_params_contract(test_client, test_db_ses
     )
 
     not_owned_beta = await assistant_repo.create(
+        name="Beta Match",
         hierarchical_access=["IT-Test-Department"],
         owner_ids=["other_owner_2"],
     )
     await assistant_repo.create_assistant_version(
         assistant=not_owned_beta,
-        name="Beta Match",
         system_prompt="beta",
         description="searchable description",
         creativity="medium",
@@ -1828,12 +1889,12 @@ async def test_get_all_assistants_pagination_after_access_filter(
     assistant_repo = AssistantRepository(test_db_session)
 
     inaccessible_alpha = await assistant_repo.create(
+        name="Alpha Inaccessible",
         hierarchical_access=["HR"],
         owner_ids=["other_owner_1"],
     )
     await assistant_repo.create_assistant_version(
         assistant=inaccessible_alpha,
-        name="Alpha Inaccessible",
         system_prompt="a",
         description="",
         creativity="medium",
@@ -1843,12 +1904,12 @@ async def test_get_all_assistants_pagination_after_access_filter(
     )
 
     accessible_beta = await assistant_repo.create(
+        name="Beta Accessible",
         hierarchical_access=["IT-Test-Department"],
         owner_ids=["other_owner_2"],
     )
     await assistant_repo.create_assistant_version(
         assistant=accessible_beta,
-        name="Beta Accessible",
         system_prompt="b",
         description="",
         creativity="medium",
@@ -1858,12 +1919,12 @@ async def test_get_all_assistants_pagination_after_access_filter(
     )
 
     accessible_charlie = await assistant_repo.create(
+        name="Charlie Accessible",
         hierarchical_access=["IT-Test-Department"],
         owner_ids=["other_owner_3"],
     )
     await assistant_repo.create_assistant_version(
         assistant=accessible_charlie,
-        name="Charlie Accessible",
         system_prompt="c",
         description="",
         creativity="medium",
@@ -1977,6 +2038,7 @@ async def test_update_assistant_not_owner_exception(test_client, test_db_session
 
     # Create assistant with specific owner
     assistant = await assistant_repo.create(
+        name="Test Assistant",
         hierarchical_access=["IT"],
         owner_ids=["other_test_user"],  # This matches the test_client_different_user
     )
@@ -1984,7 +2046,6 @@ async def test_update_assistant_not_owner_exception(test_client, test_db_session
     # Create first version
     version = await assistant_repo.create_assistant_version(
         assistant=assistant,
-        name="Test Assistant",
         system_prompt="You are a helpful test assistant.",
         description="A test AI assistant",
         creativity="medium",
@@ -2022,6 +2083,7 @@ async def test_update_assistant_modify_owners(test_client, test_db_session):
 
     # Create assistant with initial owners
     assistant = await assistant_repo.create(
+        name="Test Assistant",
         hierarchical_access=["IT"],
         owner_ids=["test_user_123", "initial_owner_1", "initial_owner_2"],
     )
@@ -2029,7 +2091,6 @@ async def test_update_assistant_modify_owners(test_client, test_db_session):
     # Create first version
     version = await assistant_repo.create_assistant_version(
         assistant=assistant,
-        name="Test Assistant",
         system_prompt="You are a helpful test assistant.",
         description="A test AI assistant",
         creativity="medium",
@@ -2089,13 +2150,14 @@ async def test_update_assistant_multiple_owners_can_update(
 
     # Create assistant with multiple owners including test_user_123
     assistant = await assistant_repo.create(
-        hierarchical_access=["IT"], owner_ids=["test_user_123", "owner_2", "owner_3"]
+        name="Multi-Owner Assistant",
+        hierarchical_access=["IT"],
+        owner_ids=["test_user_123", "owner_2", "owner_3"],
     )
 
     # Create first version
     version = await assistant_repo.create_assistant_version(
         assistant=assistant,
-        name="Multi-Owner Assistant",
         system_prompt="You are a helpful test assistant.",
         description="A test AI assistant with multiple owners",
         creativity="medium",
@@ -2190,6 +2252,7 @@ async def test_get_all_assistants_single_assistant(test_client, test_db_session)
     assistant_repo = AssistantRepository(test_db_session)
 
     assistant = await assistant_repo.create(
+        name="Single Test Assistant",
         hierarchical_access=[
             "IT-Test-Department"
         ],  # Matches the test user's department
@@ -2199,7 +2262,6 @@ async def test_get_all_assistants_single_assistant(test_client, test_db_session)
     # Create first version
     await assistant_repo.create_assistant_version(
         assistant=assistant,
-        name="Single Test Assistant",
         system_prompt="You are a single test assistant.",
         description="A single test AI assistant",
         creativity="medium",
@@ -2233,16 +2295,19 @@ async def test_get_all_assistants_multiple_assistants(test_client, test_db_sessi
 
     # Create multiple assistants
     assistant1 = await assistant_repo.create(
+        name="First Assistant",
         hierarchical_access=["IT-Test-Department"],
         owner_ids=["test_user_123"],
     )
 
     assistant2 = await assistant_repo.create(
+        name="Second Assistant",
         hierarchical_access=["IT-Test-Department"],
         owner_ids=["test_user_123", "other_user"],
     )
 
     assistant3 = await assistant_repo.create(
+        name="Third Assistant",
         hierarchical_access=[],  # Empty access - should be visible to all
         owner_ids=["different_user"],
     )
@@ -2250,7 +2315,6 @@ async def test_get_all_assistants_multiple_assistants(test_client, test_db_sessi
     # Create versions for all assistants
     await assistant_repo.create_assistant_version(
         assistant=assistant1,
-        name="First Assistant",
         system_prompt="You are the first assistant.",
         description="First assistant description",
         creativity="medium",
@@ -2261,7 +2325,6 @@ async def test_get_all_assistants_multiple_assistants(test_client, test_db_sessi
 
     await assistant_repo.create_assistant_version(
         assistant=assistant2,
-        name="Second Assistant",
         system_prompt="You are the second assistant.",
         description="Second assistant description",
         creativity="high",
@@ -2272,7 +2335,6 @@ async def test_get_all_assistants_multiple_assistants(test_client, test_db_sessi
 
     await assistant_repo.create_assistant_version(
         assistant=assistant3,
-        name="Third Assistant",
         system_prompt="You are the third assistant.",
         description="Third assistant description",
         creativity="low",
@@ -2313,24 +2375,28 @@ async def test_get_all_assistants_hierarchical_access_filtering(
 
     # Should be accessible - exact match
     assistant1 = await assistant_repo.create(
+        name="Exact Match Assistant",
         hierarchical_access=["IT-Test-Department"],
         owner_ids=["other_user"],
     )
 
     # Should be accessible - parent department
     assistant2 = await assistant_repo.create(
+        name="Parent Department Assistant",
         hierarchical_access=["IT"],  # Parent of IT-Test-Department
         owner_ids=["other_user"],
     )
 
     # Should NOT be accessible - different department
     assistant3 = await assistant_repo.create(
+        name="Different Department Assistant",
         hierarchical_access=["HR-Department"],
         owner_ids=["other_user"],
     )
 
     # Should be accessible - empty access (available to all)
     assistant4 = await assistant_repo.create(
+        name="Public Assistant",
         hierarchical_access=[],
         owner_ids=["other_user"],
     )
@@ -2338,7 +2404,6 @@ async def test_get_all_assistants_hierarchical_access_filtering(
     # Create versions
     await assistant_repo.create_assistant_version(
         assistant=assistant1,
-        name="Exact Match Assistant",
         system_prompt="Exact match",
         description="",
         creativity="medium",
@@ -2349,7 +2414,6 @@ async def test_get_all_assistants_hierarchical_access_filtering(
 
     await assistant_repo.create_assistant_version(
         assistant=assistant2,
-        name="Parent Department Assistant",
         system_prompt="Parent department",
         description="",
         creativity="medium",
@@ -2360,7 +2424,6 @@ async def test_get_all_assistants_hierarchical_access_filtering(
 
     await assistant_repo.create_assistant_version(
         assistant=assistant3,
-        name="Different Department Assistant",
         system_prompt="Different department",
         description="",
         creativity="medium",
@@ -2371,7 +2434,6 @@ async def test_get_all_assistants_hierarchical_access_filtering(
 
     await assistant_repo.create_assistant_version(
         assistant=assistant4,
-        name="Public Assistant",
         system_prompt="Public access",
         description="",
         creativity="medium",
@@ -2408,6 +2470,7 @@ async def test_get_all_assistants_with_complex_data(test_client, test_db_session
 
     # Create assistant with complex data
     assistant = await assistant_repo.create(
+        name="Complex Assistant",
         hierarchical_access=["IT-Test-Department"],
         owner_ids=["test_user_123", "co_owner"],
     )
@@ -2415,7 +2478,6 @@ async def test_get_all_assistants_with_complex_data(test_client, test_db_session
     # Create version with complex data
     version = await assistant_repo.create_assistant_version(
         assistant=assistant,
-        name="Complex Assistant",
         system_prompt="You are a complex assistant with many features.",
         description="A very detailed assistant with lots of features",
         creativity="high",
@@ -2507,12 +2569,12 @@ async def test_get_all_assistants_with_multiple_versions(test_client, test_db_se
 
     # Create assistant
     assistant = await assistant_repo.create(
+        name="Multi Version Assistant",
         hierarchical_access=["IT-Test-Department"],
         owner_ids=["test_user_123"],
     )  # Create multiple versions
     await assistant_repo.create_assistant_version(
         assistant=assistant,
-        name="Version 1 Name",
         system_prompt="Version 1 prompt",
         description="Version 1 description",
         creativity="medium",
@@ -2522,7 +2584,6 @@ async def test_get_all_assistants_with_multiple_versions(test_client, test_db_se
     )
     await assistant_repo.create_assistant_version(
         assistant=assistant,
-        name="Version 2 Name",
         system_prompt="Version 2 prompt",
         description="Version 2 description",
         creativity="high",
@@ -2532,7 +2593,6 @@ async def test_get_all_assistants_with_multiple_versions(test_client, test_db_se
     )
     await assistant_repo.create_assistant_version(
         assistant=assistant,
-        name="Latest Version Name",
         system_prompt="Latest version prompt",
         description="Latest version description",
         creativity="high",
@@ -2552,7 +2612,7 @@ async def test_get_all_assistants_with_multiple_versions(test_client, test_db_se
 
     # Should return only the latest version
     assistant_response = AssistantResponse.model_validate(response_data[0])
-    assert assistant_response.latest_version.name == "Latest Version Name"
+    assert assistant_response.latest_version.name == "Multi Version Assistant"
     assert assistant_response.latest_version.version == 3
     assert assistant_response.latest_version.creativity == "high"
     assert assistant_response.latest_version.tags == ["latest"]
@@ -2585,13 +2645,13 @@ async def test_get_all_assistants_performance_with_many_assistants(
     num_assistants = 50
     for i in range(num_assistants):
         assistant = await assistant_repo.create(
+            name=f"Assistant {i}",
             hierarchical_access=["IT-Test-Department"] if i % 2 == 0 else [],
             owner_ids=[f"owner_{i}", "test_user_123"],
         )
 
         await assistant_repo.create_assistant_version(
             assistant=assistant,
-            name=f"Assistant {i}",
             system_prompt=f"You are assistant number {i}.",
             description=f"Description for assistant {i}",
             creativity="high" if i % 2 == 0 else "medium",  # Vary creativity
@@ -2968,7 +3028,8 @@ def test_get_assistant_version_success(assistant_with_multiple_versions, test_cl
         response_data
     )  # Verify it's version 1 with original data
     assert version_response.version == 1
-    assert version_response.name == "Version Test Assistant"
+    # The name is assistant-wide, so every version reports the current one.
+    assert version_response.name == "Version Test Assistant V3"
     assert version_response.description == "Original description"
     assert version_response.system_prompt == "You are version 1 assistant."
     assert version_response.creativity == "medium"
@@ -2994,7 +3055,7 @@ def test_get_assistant_version_specific_versions(
     version_v2 = AssistantVersionResponse.model_validate(response_v2.json())
 
     assert version_v2.version == 2
-    assert version_v2.name == "Version Test Assistant V2"
+    assert version_v2.name == "Version Test Assistant V3"
     assert version_v2.description == "Updated description for version 2"
     assert version_v2.system_prompt == "You are version 2 assistant."
     assert version_v2.creativity == "high"
@@ -3088,6 +3149,7 @@ async def test_get_assistant_version_access_control(test_client, test_db_session
 
     # Create assistant with restricted hierarchical access
     restricted_assistant = await assistant_repo.create(
+        name="Restricted Version Assistant",
         hierarchical_access=[
             "HR-Department"
         ],  # Different from user's IT-Test-Department
@@ -3097,7 +3159,6 @@ async def test_get_assistant_version_access_control(test_client, test_db_session
     # Create a version for the restricted assistant
     await assistant_repo.create_assistant_version(
         assistant=restricted_assistant,
-        name="Restricted Version Assistant",
         system_prompt="You are restricted.",
         description="This should not be accessible",
         creativity="medium",
@@ -3221,6 +3282,7 @@ async def test_get_assistant_version_with_empty_fields(test_client, test_db_sess
 
     # Create assistant with minimal data
     minimal_assistant = await assistant_repo.create(
+        name="Minimal Assistant",
         hierarchical_access=["IT-Test-Department"],
         owner_ids=["test_user"],
     )
@@ -3228,7 +3290,6 @@ async def test_get_assistant_version_with_empty_fields(test_client, test_db_sess
     # Create version with minimal data
     await assistant_repo.create_assistant_version(
         assistant=minimal_assistant,
-        name="Minimal Assistant",
         system_prompt="You are minimal.",
         description="",  # Empty description
         creativity="medium",
@@ -3275,7 +3336,7 @@ def test_get_assistant_version_concurrent_access(
         assert response.status_code == 200
         version_response = AssistantVersionResponse.model_validate(response.json())
         assert version_response.version == 1
-        assert version_response.name == "Version Test Assistant"
+        assert version_response.name == "Version Test Assistant V3"
 
 
 @pytest.mark.integration
@@ -3300,7 +3361,8 @@ def test_get_assistant_version_versus_latest(
     # Verify they are different
     assert version_1.version == 1
     assert latest_assistant.latest_version.version == 3  # Should be the latest version
-    assert version_1.name != latest_assistant.latest_version.name
+    # The name is assistant-wide, so it is the same for every version.
+    assert version_1.name == latest_assistant.latest_version.name
     assert version_1.creativity != latest_assistant.latest_version.creativity
 
 
@@ -3433,7 +3495,7 @@ def test_get_assistant_version_owner_access_without_hierarchical_permission(
 
     # Verify we got version 1
     assert version_response_model.version == 1
-    assert version_response_model.name == "Version Owner Access Assistant"
+    assert version_response_model.name == "Version Owner Access Assistant V2"
     assert (
         version_response_model.system_prompt
         == "You are version 1 of an owner-only assistant."

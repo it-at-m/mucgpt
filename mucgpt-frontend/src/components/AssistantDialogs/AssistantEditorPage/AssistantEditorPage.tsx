@@ -1,4 +1,4 @@
-import type { CSSProperties, FormEvent, ReactNode } from "react";
+import type { CSSProperties, FormEvent, ReactNode, RefObject } from "react";
 import { useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
@@ -32,7 +32,7 @@ import {
 import styles from "./AssistantEditorPage.module.css";
 import { AssistantCreateFlow } from "./AssistantCreateFlow";
 import { Assistant, AssistantState, ComplianceCheckResponse, ToolBase, ToolInfo } from "../../../api";
-import { createCommunityAssistantApi } from "../../../api/assistant-client";
+import { ASSISTANT_NAME_TAKEN_ERROR_CODE, createCommunityAssistantApi } from "../../../api/assistant-client";
 import { checkAssistantComplianceApi, generateAssistantDraftApi } from "../../../api/core-client";
 import { ApiError } from "../../../api/fetch-utils";
 import { useGlobalToastContext } from "../../GlobalToastHandler/GlobalToastContext";
@@ -124,6 +124,8 @@ function SectionCard({
 
 interface SettingsFormProps {
     title: string;
+    titleError: string | null;
+    titleInputRef: RefObject<HTMLTextAreaElement | null>;
     description: string;
     systemPrompt: string;
     onTitleChange: (value: string) => void;
@@ -170,8 +172,16 @@ function SettingsForm(props: SettingsFormProps) {
         <div className={styles.builderLayout}>
             <main className={styles.builderMain} aria-label={t("components.assistant_editor.builder_main_label")}>
                 <SectionCard title={t("components.assistant_editor.section_basic")} icon={<Info24Regular />} className={styles.sectionBasic}>
-                    <Field size="large" className={styles.formField} label={{ children: t("components.assistant_editor.title") }} required>
+                    <Field
+                        size="large"
+                        className={styles.formField}
+                        label={{ children: t("components.assistant_editor.title") }}
+                        required
+                        validationState={props.titleError ? "error" : "none"}
+                        validationMessage={props.titleError ?? undefined}
+                    >
                         <Textarea
+                            ref={props.titleInputRef}
                             placeholder={t("components.assistant_editor.title_placeholder")}
                             value={props.title}
                             rows={1}
@@ -278,7 +288,7 @@ function SettingsForm(props: SettingsFormProps) {
                         publishDepartments={props.publishDepartments}
                         invisibleChecked={!props.isVisible}
                         setPublishDepartments={props.setPublishDepartments}
-                        onHasChanged={props.onHasChanged ?? (() => { })}
+                        onHasChanged={props.onHasChanged ?? (() => {})}
                         setInvisibleChecked={invisible => props.setInvisibleChecked(invisible)}
                     />
                 </SectionCard>
@@ -348,6 +358,8 @@ export const AssistantEditorPage = (props: AssistantEditorPageProps) => {
     const isComplianceCheckEnabled = appConfig.ai_act_compliance_check_enabled;
 
     const [loading, setLoading] = useState(false);
+    const [titleError, setTitleError] = useState<string | null>(null);
+    const titleInputRef = useRef<HTMLTextAreaElement>(null);
     const [discardOpen, setDiscardOpen] = useState(false);
     const [discardTarget, setDiscardTarget] = useState<DiscardTarget>("back");
     // A restored edit draft can already carry an unsaved system prompt change. It never passed through the
@@ -501,6 +513,11 @@ export const AssistantEditorPage = (props: AssistantEditorPageProps) => {
                 }
             }
         } catch (error) {
+            if (error instanceof ApiError && error.code === ASSISTANT_NAME_TAKEN_ERROR_CODE) {
+                setTitleError(t("components.assistant_editor.name_taken"));
+                titleInputRef.current?.focus();
+                return;
+            }
             let errorMessage = error instanceof Error ? error.message : t("components.assistant_editor.save_config_failed");
             if (error instanceof ApiError && error.status === 422 && error.message.toLowerCase().includes("compliance")) {
                 errorMessage = t("components.assistant_editor.compliance_verification_failed_actionable");
@@ -562,6 +579,15 @@ export const AssistantEditorPage = (props: AssistantEditorPageProps) => {
         [isCreate, editState]
     );
 
+    const updateTitle = state.updateTitle;
+    const handleTitleChange = useCallback(
+        (value: string) => {
+            updateTitle(value);
+            setTitleError(null);
+        },
+        [updateTitle]
+    );
+
     // Only changes to the system prompt invalidate the optional compliance review.
     const handleSystemPromptChanged = useCallback(() => {
         setReviewCheckOutdated(true);
@@ -610,6 +636,7 @@ export const AssistantEditorPage = (props: AssistantEditorPageProps) => {
     const requiresComplianceReview = isComplianceCheckEnabled && (isCreate || systemPromptChanged);
     const isSettingsValid =
         settingsState.title.trim() !== "" &&
+        titleError === null &&
         settingsState.systemPrompt.trim() !== "" &&
         (!requiresComplianceReview || (reviewCheckResult !== null && reviewCheckResult.overall_status !== "error" && !reviewCheckOutdated && reviewConfirmed));
     const showSettingsForm = !isCreate || createView === "settings";
@@ -617,7 +644,9 @@ export const AssistantEditorPage = (props: AssistantEditorPageProps) => {
     const actionStatusLabel = !isOwner
         ? t("components.assistant_editor.action_status_read_only")
         : isSettingsValid
-            ? t(isCreate ? "components.assistant_editor.action_status_ready_create" : "components.assistant_editor.action_status_ready_save")
+          ? t(isCreate ? "components.assistant_editor.action_status_ready_create" : "components.assistant_editor.action_status_ready_save")
+          : titleError !== null
+            ? t("components.assistant_editor.action_status_check_input")
             : t("components.assistant_editor.action_status_required_open");
     const actionStatusTone = !isOwner ? "subtle" : isSettingsValid ? "success" : "warning";
 
@@ -676,9 +705,11 @@ export const AssistantEditorPage = (props: AssistantEditorPageProps) => {
                 {showSettingsForm && (
                     <SettingsForm
                         title={settingsState.title}
+                        titleError={titleError}
+                        titleInputRef={titleInputRef}
                         description={settingsState.description}
                         systemPrompt={settingsState.systemPrompt}
-                        onTitleChange={settingsState.updateTitle}
+                        onTitleChange={handleTitleChange}
                         onDescriptionChange={settingsState.updateDescription}
                         onSystemPromptChange={settingsState.updateSystemPrompt}
                         creativity={settingsState.creativity}

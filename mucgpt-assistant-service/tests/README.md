@@ -32,7 +32,6 @@ def test_example(sample_assistant_version_data):
 
     # Create new instances for modified copies
     modified_data = AssistantVersion(
-        name="New Name",
         system_prompt=sample_assistant_version_data.system_prompt,
         # ... other fields
     )

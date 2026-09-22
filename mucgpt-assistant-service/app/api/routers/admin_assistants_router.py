@@ -88,7 +88,6 @@ async def update_assistant_state(
     try:
         review_version = await assistant_repo.create_assistant_version(
             assistant=assistant,
-            name=latest_version.name,
             description=latest_version.description or "",
             system_prompt=latest_version.system_prompt,
             creativity=latest_version.creativity,

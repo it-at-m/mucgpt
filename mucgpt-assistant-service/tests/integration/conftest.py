@@ -22,6 +22,7 @@ def mock_assistant():
     """Mock assistant database model."""
     assistant = MagicMock()
     assistant.id = 1
+    assistant.name = "Test Assistant"
     assistant.created_at = "2025-06-23T10:00:00Z"
     assistant.updated_at = "2025-06-23T10:00:00Z"
     assistant.hierarchical_access = "IT"
@@ -43,7 +44,6 @@ def mock_assistant_version():
     version.id = 1
     version.version = 1
     version.created_at = "2025-06-23T10:00:00Z"
-    version.name = "Test Assistant"
     version.description = "A test AI assistant"
     version.system_prompt = "You are a helpful test assistant."
     version.temperature = 0.7

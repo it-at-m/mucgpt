@@ -10,6 +10,8 @@ import {
     DirectoryNode
 } from "./models";
 
+export const ASSISTANT_NAME_TAKEN_ERROR_CODE = "assistant_name_taken";
+
 export type AssistantListSortBy = "title" | "updated" | "subscriptions";
 export type AssistantListSortOrder = "asc" | "desc";
 

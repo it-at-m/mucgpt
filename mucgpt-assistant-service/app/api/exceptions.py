@@ -103,9 +103,16 @@ class SubscriptionNotFoundException(HTTPException):
             detail=f"Subscription not found for assistant with ID {assistant_id}",
         )
 
+
 class AssistantNameAlreadyExistsException(HTTPException):
+    # The code lets clients tell this apart from other 409s such as version conflicts.
+    CODE = "assistant_name_taken"
+
     def __init__(self):
         super().__init__(
             status_code=409,
-            detail="An assistant with this name already exists. Please choose a different name.",
+            detail={
+                "code": self.CODE,
+                "message": "An assistant with this name already exists. Please choose a different name.",
+            },
         )

@@ -20,6 +20,7 @@ import {
     generateSimplifyStreamChunks
 } from "./data/generators";
 import { CREATIVITY_HIGH } from "../constants";
+import { ASSISTANT_NAME_TAKEN_ERROR_CODE } from "../api/assistant-client";
 
 const DIRECTORY_TREE = [
     {
@@ -978,6 +979,13 @@ export const handlers = [
         const body = (await request.json()) as AssistantUpdateInput;
         const idx = DYNAMIC_ASSISTANTS.findIndex(a => a.id === params.id);
         if (idx === -1) return new HttpResponse(null, { status: 404 });
+        const normalizedName = body.name?.trim().toLowerCase();
+        if (normalizedName && DYNAMIC_ASSISTANTS.some(a => a.id !== params.id && a.latest_version.name.trim().toLowerCase() === normalizedName)) {
+            return HttpResponse.json(
+                { detail: { code: ASSISTANT_NAME_TAKEN_ERROR_CODE, message: "An assistant with this name already exists. Please choose a different name." } },
+                { status: 409 }
+            );
+        }
         const current = DYNAMIC_ASSISTANTS[idx];
         const updatedOwnerIds = body.owner_ids || current.latest_version.owner_ids;
         const updatedOwnersDetailed = buildOwnersDetailedFromOwnerIds(updatedOwnerIds);

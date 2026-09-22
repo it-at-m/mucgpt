@@ -16,7 +16,9 @@ async def test_create_subscription(test_db_session):
     """Test creating a subscription."""
     # Arrange
     repo = AssistantRepository(test_db_session)
-    assistant = await repo.create(hierarchical_access=[], owner_ids=["owner1"])
+    assistant = await repo.create(
+        name="Test Assistant", hierarchical_access=[], owner_ids=["owner1"]
+    )
     user_id = "user1"
 
     # Act
@@ -44,10 +46,11 @@ async def test_subscription_race_rechecks_latest_lifecycle_state(
 ) -> None:
     """A stale active check in one session cannot bypass a lifecycle update."""
     setup_repo = AssistantRepository(test_db_session)
-    assistant = await setup_repo.create(hierarchical_access=[], owner_ids=["owner1"])
+    assistant = await setup_repo.create(
+        name="Race assistant", hierarchical_access=[], owner_ids=["owner1"]
+    )
     await setup_repo.create_assistant_version(
         assistant,
-        name="Race assistant",
         description="",
         system_prompt="Be helpful.",
         creativity="medium",
@@ -67,7 +70,6 @@ async def test_subscription_race_rechecks_latest_lifecycle_state(
 
         await setup_repo.create_assistant_version(
             assistant,
-            name="Race assistant",
             description="",
             system_prompt="Be helpful.",
             creativity="medium",
@@ -87,7 +89,9 @@ async def test_is_user_subscribed(test_db_session):
     """Test checking if a user is subscribed to an assistant."""
     # Arrange
     repo = AssistantRepository(test_db_session)
-    assistant = await repo.create(hierarchical_access=[], owner_ids=["owner1"])
+    assistant = await repo.create(
+        name="Test Assistant", hierarchical_access=[], owner_ids=["owner1"]
+    )
     user_id = "user1"
     await repo.create_subscription(assistant.id, user_id)
 
@@ -105,7 +109,9 @@ async def test_remove_subscription(test_db_session):
     """Test removing a subscription."""
     # Arrange
     repo = AssistantRepository(test_db_session)
-    assistant = await repo.create(hierarchical_access=[], owner_ids=["owner1"])
+    assistant = await repo.create(
+        name="Test Assistant", hierarchical_access=[], owner_ids=["owner1"]
+    )
     user_id = "user1"
     await repo.create_subscription(assistant.id, user_id)
 
@@ -123,8 +129,12 @@ async def test_get_user_subscriptions(test_db_session):
     """Test getting all assistants a user has subscribed to."""
     # Arrange
     repo = AssistantRepository(test_db_session)
-    assistant1 = await repo.create(hierarchical_access=[], owner_ids=["owner1"])
-    assistant2 = await repo.create(hierarchical_access=[], owner_ids=["owner2"])
+    assistant1 = await repo.create(
+        name="Assistant 1", hierarchical_access=[], owner_ids=["owner1"]
+    )
+    assistant2 = await repo.create(
+        name="Assistant 2", hierarchical_access=[], owner_ids=["owner2"]
+    )
     user_id = "user1"
 
     await repo.create_subscription(assistant1.id, user_id)

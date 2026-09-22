@@ -106,10 +106,11 @@ async def test_concurrent_admin_state_updates_return_one_conflict(tmp_path) -> N
         session_factory = async_sessionmaker(engine, expire_on_commit=False)
         async with session_factory() as session:
             repository = AssistantRepository(session)
-            assistant = await repository.create(owner_ids=["owner"])
+            assistant = await repository.create(
+                name="Concurrent review assistant", owner_ids=["owner"]
+            )
             await repository.create_assistant_version(
                 assistant=assistant,
-                name="Concurrent review assistant",
                 description="",
                 system_prompt="Review this.",
                 creativity="medium",

@@ -21,7 +21,7 @@ export const ThemeSelector = ({ themePreference, onThemePreferenceChange }: Them
     const { t } = useTranslation();
 
     return (
-        <Menu openOnHover={false} positioning={{ position: "after", align: "start", offset: { mainAxis: 8 } }}>
+        <Menu openOnHover={false} persistOnItemClick positioning={{ position: "after", align: "start", offset: { mainAxis: 8 } }}>
             <MenuTrigger disableButtonEnhancement>
                 <MenuItem hasSubmenu icon={<DarkTheme20Regular />}>
                     {t("components.theme_selector.label")}

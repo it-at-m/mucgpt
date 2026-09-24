@@ -2,7 +2,7 @@ import { type ReactElement, type TransitionEvent, useCallback, useContext, useEf
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Title2, Text, Button, Tab, TabList, makeStyles, mergeClasses } from "@fluentui/react-components";
 import type { SearchBoxChangeEvent, InputOnChangeData, SelectionEvents, OptionOnSelectData, SelectTabData, SelectTabEvent } from "@fluentui/react-components";
-import { Add24Regular, ArrowResetRegular, gular, LibraryRegular, PeopleCommunityRegular, SearchRegular } from "@fluentui/react-icons";
+import { Add24Regular, ArrowResetRegular, DocumentArrowUpRegular, LibraryRegular, PeopleCommunityRegular, SearchRegular } from "@fluentui/react-icons";
 import { useTranslation } from "react-i18next";
 
 import styles from "./Discovery.module.css";
@@ -131,7 +131,6 @@ const Discovery = () => {
         await resetMockScenarios();
         window.location.reload();
     };
-
 
     const closeDrawer = useCallback(() => {
         latestRequestRef.current++;
@@ -263,8 +262,8 @@ const Discovery = () => {
         communitySortMethod === "subscriptions"
             ? t("components.community_assistants.sort_popular", "Beliebteste")
             : communitySortMethod === "updated"
-                ? t("components.community_assistants.sort_updated", "Zuletzt aktualisiert")
-                : t("components.community_assistants.sort_title", "Name");
+              ? t("components.community_assistants.sort_updated", "Zuletzt aktualisiert")
+              : t("components.community_assistants.sort_title", "Name");
 
     const handleMyAssistantsSortChange = (_event: SelectionEvents, data: OptionOnSelectData) => {
         if (data.optionValue === "subscriptions" || data.optionValue === "updated" || data.optionValue === "title" || data.optionValue === "lastUsed") {
@@ -282,10 +281,10 @@ const Discovery = () => {
         myAssistantsSortMethod === "lastUsed"
             ? t("components.community_assistants.sort_last_used", "Zuletzt benutzt")
             : myAssistantsSortMethod === "subscriptions"
-                ? t("components.community_assistants.sort_popular", "Beliebteste")
-                : myAssistantsSortMethod === "updated"
-                    ? t("components.community_assistants.sort_updated", "Zuletzt aktualisiert")
-                    : t("components.community_assistants.sort_title", "Name");
+              ? t("components.community_assistants.sort_popular", "Beliebteste")
+              : myAssistantsSortMethod === "updated"
+                ? t("components.community_assistants.sort_updated", "Zuletzt aktualisiert")
+                : t("components.community_assistants.sort_title", "Name");
 
     const getMetadataFallbackLabel = (assistant: AssistantCardData): string =>
         assistant.isOwnedAssistant ? t("components.community_assistants.metadata_you", "Du") : t("components.community_assistants.filter_all", "Community");
@@ -547,7 +546,7 @@ const Discovery = () => {
                                     </Text>
                                     <div className={styles.headerActions}>
                                         {isMockMode && (
-                                            <Button appearance="subtle" icon={<ArrowResetRegular />} onClick={resetMockData}>
+                                            <Button appearance="transparent" icon={<ArrowResetRegular />} onClick={resetMockData}>
                                                 {t("discovery.reset_mock_data")}
                                             </Button>
                                         )}

@@ -473,9 +473,10 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                 );
             } catch (e) {
                 setError(e);
+            } finally {
+                setIsLoadingValue(false);
+                setIsStreaming(false);
             }
-            setIsLoadingValue(false);
-            setIsStreaming(false);
         },
         [
             error,

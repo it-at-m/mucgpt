@@ -13,6 +13,8 @@ import {
     buildAssistantCreateResponse,
     buildOwnersDetailedFromOwnerIds,
     buildChatMessage,
+    buildDrawioChatMessage,
+    buildInvalidDrawioChatMessage,
     generateChatStreamChunks,
     generateMindmapStreamChunks,
     generateSimplifyStreamChunks
@@ -132,7 +134,7 @@ const CONFIG_RESPONSE: ApplicationConfig = {
     ],
     env_name: "MUCGPT",
     alternative_logo: false,
-    app_version: "2.0",
+    app_version: "2.0.1",
     core_version: "0.0.1",
     frontend_version: "0.0.1",
     assistant_version: "0.0.1",
@@ -1026,23 +1028,31 @@ export const handlers = [
             enabled_tools?: string[];
             model?: string;
         };
+        const latestUserMessage =
+            body.messages
+                ?.slice()
+                .reverse()
+                .find(m => m.role === "user")?.content || "";
+        // E2E demos (tools off): exact phrases only. A ```drawio fence must NOT trigger this.
+        const wantsValidDrawioMock = /^\s*valid-drawio\s*$/i.test(latestUserMessage);
+        const wantsInvalidDrawioMock = /^\s*invalid-drawio\s*$/i.test(latestUserMessage);
+
         if (body?.stream) {
             const encoder = new TextEncoder();
             const streamType = chooseStreamType(body.enabled_tools);
             const stream = new ReadableStream({
                 async start(controller) {
                     let chunks: any[] = [];
-                    const lastUserMessage =
-                        body.messages
-                            ?.slice()
-                            .reverse()
-                            .find(m => m.role === "user")?.content ?? "";
-                    const forcedContextTokens = resolveForcedContextTokens(lastUserMessage, body.model);
+                    const forcedContextTokens = resolveForcedContextTokens(latestUserMessage, body.model);
                     if (streamType === "mindmap") {
-                        const topic = lastUserMessage || "Künstliche Intelligenz";
+                        const topic = latestUserMessage || "Künstliche Intelligenz";
                         chunks = generateMindmapStreamChunks(topic, forcedContextTokens);
                     } else if (streamType === "simplify") {
                         chunks = generateSimplifyStreamChunks(forcedContextTokens);
+                    } else if (wantsValidDrawioMock) {
+                        chunks = generateChatStreamChunks(buildDrawioChatMessage(), forcedContextTokens);
+                    } else if (wantsInvalidDrawioMock) {
+                        chunks = generateChatStreamChunks(buildInvalidDrawioChatMessage(), forcedContextTokens);
                     } else {
                         let reply = buildChatMessage();
                         if (Math.random() > 0.7) {
@@ -1074,7 +1084,16 @@ export const handlers = [
             object: "chat.completion",
             created: Math.floor(Date.now() / 1000),
             model: "KIESGPT",
-            choices: [{ index: 0, message: { role: "assistant", content: buildChatMessage() }, finish_reason: "stop" }],
+            choices: [
+                {
+                    index: 0,
+                    message: {
+                        role: "assistant",
+                        content: wantsValidDrawioMock ? buildDrawioChatMessage() : wantsInvalidDrawioMock ? buildInvalidDrawioChatMessage() : buildChatMessage()
+                    },
+                    finish_reason: "stop"
+                }
+            ],
             usage: { prompt_tokens: 12, completion_tokens: 28, total_tokens: 40 }
         });
     }),

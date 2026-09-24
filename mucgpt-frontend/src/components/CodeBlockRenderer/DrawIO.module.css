@@ -1,0 +1,94 @@
+.diagramContainer {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    max-width: 100%;
+    position: relative;
+    border: 1px solid var(--colorNeutralStroke2);
+    border-radius: 8px;
+    background: var(--colorNeutralBackground1);
+    overflow: hidden;
+}
+
+.diagramWrapper {
+    flex: 1;
+    overflow: auto;
+    min-height: 200px;
+    min-width: 200px;
+    max-height: 80vh;
+    padding: 16px;
+    background: var(--colorNeutralBackground1);
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+}
+
+.diagramWrapper :global(.mxgraph),
+.diagramWrapper :global(.geDiagramContainer) {
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.diagramWrapper svg {
+    shape-rendering: geometricPrecision;
+    text-rendering: geometricPrecision;
+    max-width: 100%;
+    height: auto;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+.footer {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    padding: 8px 16px;
+    background: var(--colorNeutralBackground2);
+    border-top: 1px solid var(--colorNeutralStroke2);
+}
+
+.downloadContainer {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.drawioLabel {
+    font-size: 12px;
+    color: var(--colorNeutralForeground2);
+    font-weight: 500;
+    text-transform: lowercase;
+}
+
+.diagramContainer.dark {
+    border-color: var(--colorNeutralStroke1);
+}
+
+.diagramContainer.dark .footer {
+    background: var(--colorNeutralBackground3);
+    border-top-color: var(--colorNeutralStroke1);
+}
+
+.status {
+    margin: 0.5rem 0;
+    color: var(--colorNeutralForeground2);
+}
+
+.errorFallback {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    width: 100%;
+}
+
+@media print {
+    .footer {
+        display: none;
+    }
+
+    .diagramWrapper {
+        max-height: none;
+        overflow: visible;
+    }
+}

@@ -30,20 +30,19 @@
 
 .mainContent {
     flex: 1;
-    padding: 32px 32px 80px 32px;
+    padding: var(--spacingVerticalXXL) var(--spacingHorizontalXXXL) 80px var(--spacingHorizontalXXXL);
     min-width: 0;
-    transition: width 0.3s cubic-bezier(0.33, 1, 0.68, 1);
     overflow-y: auto;
     height: 100%;
 }
 
 .contentWrapper {
-    max-width: 1180px;
+    max-width: var(--pageContentMaxWidth);
     margin: 0 auto;
 }
 
 .headerSection {
-    margin-bottom: 24px;
+    margin-bottom: var(--spacingVerticalL);
 }
 
 .titleBlock {
@@ -56,13 +55,13 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 16px;
+    gap: var(--spacingHorizontalL);
     min-width: 0;
 }
 
 .headerActions {
     display: flex;
-    gap: 8px;
+    gap: var(--spacingHorizontalS);
     align-items: center;
     justify-content: flex-end;
     flex: 0 0 auto;
@@ -70,192 +69,81 @@
 }
 
 .header {
-    margin-bottom: 8px;
+    margin-bottom: var(--spacingVerticalXXS);
     display: block;
-    font-size: 30px !important;
-    line-height: 36px !important;
-    font-weight: bold !important;
 }
 
 .subtitle {
     color: var(--colorNeutralForeground3);
-    line-height: 30px !important;
     display: block;
     margin-bottom: 0;
-    font-size: 18px !important;
 }
 
-.searchBox {
-    display: flex !important;
-    width: 100% !important;
-    max-width: none !important;
-    min-width: 260px;
-    min-height: 40px;
-    box-sizing: border-box;
-    margin-bottom: 16px;
-    margin-bottom: 32px !important;
-    border: 1px solid var(--colorNeutralStroke3) !important;
-    border-radius: var(--borderRadiusMedium);
-    background-color: var(--colorNeutralBackground2) !important;
-}
-
-.searchBox::after,
-.searchBox::before {
-    display: none !important;
-}
-
-.searchBox:hover {
-    border-color: var(--colorNeutralStroke1) !important;
-    background-color: var(--colorNeutralBackground2Hover) !important;
-}
-
-.searchBox:focus-within {
-    border-color: var(--colorBrandBackground) !important;
-    outline: none !important;
+.contentWrapper .searchBox {
+    display: flex;
+    width: 100%;
+    max-width: none;
+    margin-bottom: var(--spacingVerticalXL);
 }
 
 .sortDropdown {
-    width: 172px;
-    min-width: 0;
     flex-shrink: 0;
-    border: 1px solid var(--colorNeutralStroke3) !important;
-    border-radius: var(--borderRadiusMedium);
-    background-color: var(--colorNeutralBackground2) !important;
 }
 
-.sortDropdown::after,
-.sortDropdown::before {
-    display: none !important;
-}
-
-.sortDropdown:hover {
-    border-color: var(--colorNeutralStroke1) !important;
-    background-color: var(--colorNeutralBackground2Hover) !important;
-}
-
-.sortDropdown:focus-within {
-    border-color: var(--colorBrandBackground) !important;
-    outline: none !important;
-}
-
-.sortDropdownListbox {
-    padding: 4px !important;
-    border: 1px solid var(--colorNeutralStroke3) !important;
-    border-radius: var(--borderRadiusLarge) !important;
-    background-color: var(--colorNeutralBackground2) !important;
-    box-shadow: var(--shadow16) !important;
-}
-
-.sortDropdownListbox :global([role="option"]) {
-    border-radius: var(--borderRadiusMedium);
-    color: var(--colorNeutralForeground2);
-    background-color: transparent;
-}
-
-.sortDropdownListbox :global([role="option"]:hover) {
-    color: var(--colorNeutralForeground1);
-    background-color: var(--colorNeutralBackground3);
-}
-
-.sortDropdownListbox :global([role="option"][aria-selected="true"]) {
-    color: var(--colorBrandForeground2);
-    background-color: var(--colorBrandBackground2);
-    font-weight: var(--fontWeightSemibold);
-}
-
-.sortDropdownListbox :global([role="option"][aria-selected="true"]:hover) {
-    background-color: var(--colorBrandBackground2Hover);
+.sortDropdownValue {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .librarySections {
     display: flex;
     flex-direction: column;
-    gap: 24px;
+    gap: var(--spacingVerticalXL);
 }
 
 .assistantSection {
     display: flex;
     flex-direction: column;
-    gap: 12px;
-}
-
-.sectionDivider {
-    width: 100%;
-    height: 1px;
-    background-color: var(--colorNeutralStroke1);
-    flex: 0 0 auto;
+    gap: var(--spacingVerticalM);
 }
 
 .sectionHeaderRow {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 16px;
+    flex-wrap: wrap;
+    gap: var(--spacingHorizontalL);
 }
 
-.sectionHeadingBlock {
+.sectionHeaderControls {
     display: flex;
-    flex-direction: column;
-    gap: 6px;
-    min-width: 0;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: var(--spacingHorizontalS);
 }
 
 .sectionTitle {
     color: var(--colorNeutralForeground1);
-    font-size: 18px;
-    line-height: 24px;
+    font-size: var(--fontSizeBase500);
+    line-height: var(--lineHeightBase500);
     font-weight: var(--fontWeightSemibold);
     margin: 0;
 }
 
 .myFilterGroup {
-    display: inline-flex;
-    align-items: center;
-    gap: 2px;
     width: fit-content;
     max-width: 100%;
-    margin-top: 6px;
-    padding: 3px;
-    border: none;
-    border-radius: var(--borderRadiusMedium);
-    background-color: var(--colorNeutralBackground2);
-}
-
-.myFilterGroup button {
-    min-width: 0;
-    min-height: 28px;
-    padding: 0 12px;
-    border: none !important;
-    border-radius: calc(var(--borderRadiusMedium) - 2px);
-    color: var(--colorNeutralForeground2) !important;
-    background-color: transparent !important;
-    font-weight: var(--fontWeightSemibold);
-}
-
-.myFilterGroup button:hover {
-    color: var(--colorNeutralForeground1) !important;
-    background-color: var(--colorSubtleBackgroundHover) !important;
-}
-
-.myFilterGroup button[aria-pressed="true"] {
-    color: var(--colorBrandForeground2) !important;
-    background-color: var(--colorBrandBackground2) !important;
-    box-shadow: none;
-}
-
-.myFilterGroup button[aria-pressed="true"]:hover {
-    background-color: var(--colorBrandBackground2Hover) !important;
 }
 
 .sectionEmptyState {
     display: grid;
     grid-template-columns: 36px minmax(0, 1fr);
     align-items: start;
-    column-gap: 14px;
-    row-gap: 6px;
-    max-width: 620px;
-    min-height: 88px;
-    padding: 22px 24px 18px;
+    column-gap: var(--spacingHorizontalM);
+    width: 100%;
+    padding: var(--spacingVerticalL) 0;
 }
 
 .emptyIcon {
@@ -266,46 +154,34 @@
     height: 36px;
     flex: 0 0 auto;
     color: var(--colorBrandForeground1);
-    border-radius: var(--borderRadiusCircular);
-    background-color: var(--colorNeutralBackground3);
-    font-size: 20px;
+    font-size: var(--fontSizeBase500);
 }
 
 .emptyCopy {
     display: flex;
     flex-direction: column;
-    gap: 3px;
+    gap: var(--spacingVerticalSNudge);
     min-width: 0;
-    padding-top: 1px;
 }
 
 .emptyTitle {
     margin: 0;
     color: var(--colorNeutralForeground1);
-    font-size: 15px;
-    line-height: 20px;
 }
 
 .emptyDescription {
-    max-width: 64ch;
+    max-width: 65ch;
     margin: 0;
     color: var(--colorNeutralForeground2);
-    line-height: 20px;
 }
 
 .emptyActions {
-    grid-column: 2;
     display: flex;
     align-items: center;
     justify-content: flex-start;
-    gap: 8px;
+    gap: var(--spacingHorizontalM);
     flex-wrap: wrap;
-    margin-top: 2px;
-}
-
-.emptyActions button {
-    min-width: 0;
-    padding-left: 0;
+    margin-top: var(--spacingVerticalS);
 }
 
 .showMoreRow {
@@ -317,17 +193,7 @@
 .assistantsGrid {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 20px;
-}
-
-@media (max-width: 1500px) {
-    .contentWrapper {
-        max-width: 1080px;
-    }
-
-    .assistantsGrid {
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-    }
+    gap: var(--spacingHorizontalXL);
 }
 
 @media (max-width: 1200px) {
@@ -338,7 +204,7 @@
 
 @media (max-width: 1024px) {
     .mainContent {
-        padding: 20px 24px 24px;
+        padding: var(--spacingVerticalXL) var(--spacingHorizontalXXL) var(--spacingVerticalXXL);
     }
 
     .assistantsGrid {
@@ -350,7 +216,7 @@
     .subtitleRow {
         flex-direction: column;
         align-items: flex-start;
-        gap: 14px;
+        gap: var(--spacingVerticalL);
     }
 
     .headerActions {
@@ -368,14 +234,7 @@
 
     .sortDropdown {
         width: 100%;
-        min-width: 0 !important;
         max-width: none;
-    }
-
-    .sortDropdown span {
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
     }
 
     .assistantsGrid {
@@ -383,7 +242,7 @@
     }
 
     .librarySections {
-        gap: 22px;
+        gap: var(--spacingVerticalXL);
     }
 
     .sectionHeaderRow {
@@ -391,21 +250,20 @@
         align-items: stretch;
     }
 
+    .sectionHeaderControls {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
     .sectionEmptyState {
         grid-template-columns: 32px minmax(0, 1fr);
         align-items: flex-start;
-        padding-right: 0;
-        padding-left: 0;
+        padding: var(--spacingVerticalL) 0;
     }
 
-    .emptyActions {
-        grid-column: 1 / -1;
-        padding-left: 46px;
-        justify-content: flex-start;
-    }
-
-    .emptyActions button {
-        max-width: 100%;
+    .emptyIcon {
+        width: 32px;
+        height: 32px;
     }
 
     .myFilterGroup {
@@ -414,7 +272,7 @@
         overflow-x: auto;
     }
 
-    .myFilterGroup button {
+    .myFilterGroup > * {
         flex: 1 0 auto;
     }
 
@@ -435,25 +293,18 @@
     }
 
     .flexContainer[data-drawer-open="true"] .sortDropdown {
-        min-width: 0 !important;
         width: 100%;
         max-width: 100%;
     }
 
-    .flexContainer[data-drawer-open="true"] .sortDropdown span {
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-    }
-
     .flexContainer[data-drawer-open="true"] .headerSection {
-        margin-bottom: 24px;
+        margin-bottom: var(--spacingVerticalXXL);
     }
 
     .flexContainer[data-drawer-open="true"] .subtitleRow {
         flex-direction: column;
         align-items: flex-start;
-        gap: 16px;
+        gap: var(--spacingVerticalL);
     }
 
     .flexContainer[data-drawer-open="true"] .headerActions {
@@ -467,15 +318,14 @@
         align-items: stretch;
     }
 
+    .flexContainer[data-drawer-open="true"] .sectionHeaderControls {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
     .flexContainer[data-drawer-open="true"] .sectionEmptyState {
         grid-template-columns: 32px minmax(0, 1fr);
         align-items: flex-start;
-    }
-
-    .flexContainer[data-drawer-open="true"] .emptyActions {
-        grid-column: 1 / -1;
-        padding-left: 46px;
-        justify-content: flex-start;
     }
 }
 

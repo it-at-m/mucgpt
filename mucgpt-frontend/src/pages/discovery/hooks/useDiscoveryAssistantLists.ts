@@ -282,12 +282,12 @@ export const useDiscoveryAssistantLists = ({
                                 return null;
                             }
 
-                            // The chosen source (e.g. a locally cached snapshot) may not carry owner
-                            // details, while the subscription payload does. Preserve the subscription's
-                            // owner details so the card can still render the creator.
                             const cardData = toCardData(assistantData, {
+                                title: sub.title,
+                                description: sub.description || "",
+                                ...(sub.tags ? { tags: sub.tags } : {}),
                                 subscriptions: fullData?.subscriptions_count ?? sub.subscriptions_count ?? 0,
-                                updated: fullData?.updated_at ?? (localData ? getSnapshotUpdatedAt(localData) : undefined) ?? sub.updated_at,
+                                updated: fullData?.updated_at ?? sub.updated_at ?? (localData ? getSnapshotUpdatedAt(localData) : undefined),
                                 isSubscribedAssistant: true,
                                 isDeletedSnapshot: sub.is_deleted === true
                             });

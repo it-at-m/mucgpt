@@ -62,7 +62,6 @@ export function OwnerMetadataLink({ owner, fallbackLabel }: OwnerMetadataLinkPro
     }
 
     const onClick = (event: MouseEvent<HTMLAnchorElement>) => {
-        // Keep card click handlers from triggering when user explicitly clicks owner contact.
         event.stopPropagation();
     };
 

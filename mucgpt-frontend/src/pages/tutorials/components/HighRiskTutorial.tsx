@@ -24,22 +24,30 @@ export const HighRiskTutorial = () => {
 
     const relevantAreas = [
         {
-            id: "migration",
-            emoji: "🛂",
-            title: t("tutorials.high_risk.relevant.migration.title", "Migration, Asyl und Grenzkontrolle"),
+            id: "education",
+            emoji: "🎓",
+            title: t("tutorials.high_risk.relevant.education.title", "Bildung und Berufsbildung"),
             description: t(
-                "tutorials.high_risk.relevant.migration.description",
-                "Assistenten dürfen nicht dazu dienen, Personen im Zusammenhang mit Flucht, Asyl oder Grenzkontrolle zu identifizieren, zu bewerten oder zu überwachen. Auch die Prüfung von Asyl- oder Visumanträgen ist tabu."
+                "tutorials.high_risk.relevant.education.description",
+                "Assistenten dürfen nicht über Zulassungen entscheiden, keine finalen Noten vergeben und das Bildungsniveau einer Person nicht einstufen."
             ),
             notAllowed: t(
-                "tutorials.high_risk.relevant.migration.not_allowed",
-                "Ein Assistent, der Angaben aus einem Asylverfahren auf Glaubwürdigkeit prüft oder Personen an der Grenze identifizieren soll."
-            ),
-            allowed: t(
-                "tutorials.high_risk.relevant.migration.allowed",
-                "Ein Assistent, der Textdaten aus gültigen Reisedokumenten strukturiert ausliest, ohne eine Bewertung der Person vorzunehmen."
+                "tutorials.high_risk.relevant.education.not_allowed",
+                "Ein Assistent, der Prüfungen abschließend benotet oder entscheidet, ob ein Kind für das Gymnasium geeignet ist."
             )
         },
+
+        {
+            id: "hr",
+            emoji: "👥",
+            title: t("tutorials.high_risk.relevant.hr.title", "Beschäftigung und Personal"),
+            description: t(
+                "tutorials.high_risk.relevant.hr.description",
+                "Assistenten dürfen Bewerbende oder Beschäftigte nicht automatisiert bewerten, sortieren oder überwachen. Dazu gehören auch Vorschläge für Kündigungen oder Beförderungen."
+            ),
+            notAllowed: t("tutorials.high_risk.relevant.hr.not_allowed", "Ein Assistent, der Lebensläufe filtert und eine Rangliste der Bewerbenden erstellt.")
+        },
+
         {
             id: "services",
             emoji: "🏛️",
@@ -51,41 +59,19 @@ export const HighRiskTutorial = () => {
             notAllowed: t(
                 "tutorials.high_risk.relevant.services.not_allowed",
                 "Ein Assistent, der anhand von Falldaten bewertet, ob ein Wohngeldantrag bewilligt oder abgelehnt werden soll."
-            ),
-            allowed: t(
-                "tutorials.high_risk.relevant.services.allowed",
-                "Ein Assistent, der allgemein erklärt, welche Voraussetzungen für Wohngeld gelten und welche Unterlagen benötigt werden."
             )
         },
         {
-            id: "hr",
-            emoji: "👥",
-            title: t("tutorials.high_risk.relevant.hr.title", "Beschäftigung und Personal"),
+            id: "migration",
+            emoji: "🛂",
+            title: t("tutorials.high_risk.relevant.migration.title", "Migration, Asyl und Grenzkontrolle"),
             description: t(
-                "tutorials.high_risk.relevant.hr.description",
-                "Assistenten dürfen Bewerbende oder Beschäftigte nicht automatisiert bewerten, sortieren oder überwachen. Dazu gehören auch Vorschläge für Kündigungen oder Beförderungen."
-            ),
-            notAllowed: t("tutorials.high_risk.relevant.hr.not_allowed", "Ein Assistent, der Lebensläufe filtert und eine Rangliste der Bewerbenden erstellt."),
-            allowed: t(
-                "tutorials.high_risk.relevant.hr.allowed",
-                "Ein Assistent, der beim Formulieren einer Stellenanzeige oder von Interviewfragen unterstützt."
-            )
-        },
-        {
-            id: "education",
-            emoji: "🎓",
-            title: t("tutorials.high_risk.relevant.education.title", "Bildung und Berufsbildung"),
-            description: t(
-                "tutorials.high_risk.relevant.education.description",
-                "Assistenten dürfen nicht über Zulassungen entscheiden, keine finalen Noten vergeben und das Bildungsniveau einer Person nicht einstufen."
+                "tutorials.high_risk.relevant.migration.description",
+                "Assistenten dürfen nicht dazu dienen, Personen im Zusammenhang mit Flucht, Asyl oder Grenzkontrolle zu identifizieren, zu bewerten oder zu überwachen. Auch die Prüfung von Asyl- oder Visumanträgen ist tabu."
             ),
             notAllowed: t(
-                "tutorials.high_risk.relevant.education.not_allowed",
-                "Ein Assistent, der Prüfungen abschließend benotet oder entscheidet, ob ein Kind für das Gymnasium geeignet ist."
-            ),
-            allowed: t(
-                "tutorials.high_risk.relevant.education.allowed",
-                "Ein Assistent, der als Lernhilfe Fehler markiert und Verbesserungsvorschläge macht, ohne verbindlich zu bewerten."
+                "tutorials.high_risk.relevant.migration.not_allowed",
+                "Ein Assistent, der Angaben aus einem Asylverfahren auf Glaubwürdigkeit prüft oder Personen an der Grenze identifizieren soll."
             )
         }
     ];
@@ -125,15 +111,6 @@ export const HighRiskTutorial = () => {
             description: t(
                 "tutorials.high_risk.other.justice.description",
                 "Unterstützung von Gerichten bei der Auslegung und Anwendung von Recht sowie die Beeinflussung von Wahlen."
-            )
-        },
-        {
-            id: "essential_services",
-            emoji: "💳",
-            title: t("tutorials.high_risk.other.essential_services.title", "Private Basisleistungen und Notdienste"),
-            description: t(
-                "tutorials.high_risk.other.essential_services.description",
-                "Kreditwürdigkeitsprüfung, Risikobewertung bei Lebens- und Krankenversicherungen sowie die Klassifizierung und Priorisierung von Notrufen."
             )
         }
     ];
@@ -219,12 +196,7 @@ export const HighRiskTutorial = () => {
                             <p className={styles.paragraph}>{area.description}</p>
                             <div className={`${styles.exampleRow} ${styles.exampleNotAllowed}`}>
                                 <p className={styles.exampleText}>
-                                    <strong>{t("tutorials.high_risk.relevant.not_allowed_label", "Nicht erlaubt:")}</strong> {area.notAllowed}
-                                </p>
-                            </div>
-                            <div className={`${styles.exampleRow} ${styles.exampleAllowed}`}>
-                                <p className={styles.exampleText}>
-                                    <strong>{t("tutorials.high_risk.relevant.allowed_label", "Erlaubt:")}</strong> {area.allowed}
+                                    <strong>{t("tutorials.high_risk.relevant.not_allowed_label", "Nicht erlaubt beispielsweise:")}</strong> {area.notAllowed}
                                 </p>
                             </div>
                         </div>

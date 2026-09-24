@@ -41,13 +41,10 @@ export function sanitizeDrawioViewerHost(host: HTMLElement): boolean {
             const name = attr.name;
             // Browsers ignore C0 controls / space in URL schemes, so
             // `java\nscript:` still executes as javascript: — strip them first.
-            const normalizedValue = attr.value.replace(/[\x00-\x20]/g, "");
-            if (
-                /^on/i.test(name) ||
-                /javascript:/i.test(normalizedValue) ||
-                /data:text\/html/i.test(normalizedValue) ||
-                /vbscript:/i.test(normalizedValue)
-            ) {
+            const normalizedValue = Array.from(attr.value)
+                .filter(character => character.charCodeAt(0) > 0x20)
+                .join("");
+            if (/^on/i.test(name) || /javascript:/i.test(normalizedValue) || /data:text\/html/i.test(normalizedValue) || /vbscript:/i.test(normalizedValue)) {
                 element.removeAttribute(name);
             }
         }

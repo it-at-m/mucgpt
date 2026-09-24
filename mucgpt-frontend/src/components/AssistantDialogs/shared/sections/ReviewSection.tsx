@@ -96,6 +96,7 @@ export const ReviewSection = ({
                                       : "components.assistant_editor.review_check_start"
                             )}
                         </Button>
+                        <Text className={styles.columnText}>{t("components.assistant_editor.review_check_supplement")}</Text>
                     </div>
                 </div>
 

@@ -541,18 +541,20 @@ i18n
                             section_tools: "Werkzeuge",
                             section_conversation_options: "Unterhaltungsoptionen",
                             section_access: "Zugriff & Sichtbarkeit",
-                            section_review: "Prüfung",
+                            section_review: "Einhaltung des Hochrisiko-Verbots",
 
                             // Review section
                             review_confirmation_label:
                                 "Ich bestätige, dass dieser Assistent nicht für einen in MUCGPT unzulässigen Hochrisiko-Anwendungsfall eingesetzt werden soll.",
                             review_required_hint: "Diese Bestätigung ist erforderlich, um den Assistenten zu erstellen oder zu speichern.",
-                            review_intro_title: "Was sind Hochrisiko-Anwendungsfälle?",
+                            review_intro_title: "Was sind Hochrisiko-Zwecke?",
                             review_intro_description:
-                                "Hochrisiko-Anwendungsfälle sind KI-Einsätze, bei denen Entscheidungen oder Bewertungen über Menschen besonders folgenreich sein können, etwa in Personal, Bildung, öffentlichen Leistungen oder Migration.",
+                                " Hochrisiko-KI-Systeme sind nach der Verordnung über künstliche Intelligenz (KI-Verordnung) der Europäischen Union zwar nicht verboten, aber streng reguliert. Die Einhaltung der entsprechenden gesetzlichen Verpflichtungen ist in MUCGPT nicht umsetzbar. Daher ist es nach den Nutzungsbedingungen für MUCGPT [bitte verlinken] nicht erlaubt, MUCGPT für Hochrisiko-Zwecke zu verwenden. Dieses Verbot bezieht sich auf diejenigen Verwendungszwecke, die nach der KI-Verordnung dazu führen, dass KI-Systeme als Hochrisiko-KI-Systeme einzustufen sind. Die KI-Verordnung stuft KI-Systeme unter anderem dann als Hochrisiko-KI-Systeme ein, wenn sie bestimmungsgemäß einem der in Anhang III KI-Verordnung aufgeführten Verwendungszwecke dienen sollen und ein erhebliches Risiko der Beeinträchtigung der Gesundheit, Sicherheit oder Grundrechte natürlicher Personen bergen. Die in Anhang III der KI-Verordnung aufgeführten Verwendungszwecke unterfallen unter anderem Bereichen wie Bildung, Personal, öffentliche Leistungen sowie Migration.",
                             review_check_title: "Anweisungen prüfen",
-                            review_check_description: "Prüfen Sie die Assistentenanweisungen auf Hinweise auf mögliche Hochrisiko-Anwendungsfälle.",
-                            review_check_learn_more: "Mehr über Hochrisiko-Anwendungsfälle erfahren",
+                            review_check_description: "Prüfen Sie die Prompt- bzw. Assistentenanweisungen auf Hinweise auf mögliche Hochrisiko-Zwecke.",
+                            review_check_learn_more: "Mehr über Hochrisiko-Zwecke erfahren",
+                            review_check_supplement:
+                                "Die Prüfung dient nur einer ersten ungefähren Orientierung, kann aber nicht die menschliche juristische Prüfung ersetzen. Bitte wenden Sie sich im Zweifelsfall an die für Ihren Bereich zuständige Rechtsabteilung oder sehen von dem Absenden des Prompts bzw. der Erstellung des Assistenten ab.",
                             review_check_start: "Prüfung starten",
                             review_check_recheck: "Erneut prüfen",
                             review_check_running: "Prüfung läuft...",
@@ -1391,18 +1393,20 @@ i18n
                             section_tools: "Tools",
                             section_conversation_options: "Conversation Options",
                             section_access: "Access & Visibility",
-                            section_review: "Review",
+                            section_review: "Compliance with the high-risk ban",
 
                             // Review section
                             review_confirmation_label:
                                 "I confirm that this assistant is not intended to be used for a high-risk use case that is not permitted in MUCGPT.",
                             review_required_hint: "This confirmation is required in order to create or save the assistant.",
-                            review_intro_title: "What are high-risk use cases?",
+                            review_intro_title: "What are high-risk purposes?",
                             review_intro_description:
-                                "High-risk use cases are AI applications in which decisions or assessments about people can be especially consequential, for example in human resources, education, public services or migration.",
+                                "High-risk AI systems are not prohibited under the European Union's Artificial Intelligence Act, but they are strictly regulated. MUCGPT cannot implement the corresponding legal obligations. Therefore, the MUCGPT terms of use [link to be added] do not permit using MUCGPT for high-risk purposes. This prohibition applies to purposes that cause AI systems to be classified as high-risk AI systems under the AI Act. Among other things, the AI Act classifies AI systems as high-risk when they are intended to serve one of the purposes listed in Annex III and pose a significant risk of harm to the health, safety or fundamental rights of natural persons. The purposes listed in Annex III include areas such as education, employment, public services and migration.",
                             review_check_title: "Check instructions",
-                            review_check_description: "Check the assistant instructions for indications of possible high-risk use cases.",
-                            review_check_learn_more: "Learn more about high-risk use cases",
+                            review_check_description: "Check the prompt or assistant instructions for indications of possible high-risk purposes.",
+                            review_check_learn_more: "Learn more about high-risk purposes",
+                            review_check_supplement:
+                                "The check is only a first, approximate guide and cannot replace a human legal review. If in doubt, contact the legal department responsible for your area or refrain from submitting the prompt or creating the assistant.",
                             review_check_start: "Start check",
                             review_check_recheck: "Check again",
                             review_check_running: "Check in progress...",
@@ -2227,18 +2231,20 @@ i18n
                             section_tools: "Werkzeig",
                             section_conversation_options: "Unterhaltungsoptionen",
                             section_access: "Zugriff & Sichtbarkeit",
-                            section_review: "Prüfung",
+                            section_review: "Einhaltung vom Hochrisiko-Verbot",
 
                             // Review section
                             review_confirmation_label:
                                 "I bstätig, dass der Assistent net für an in MUCGPT unzulässign Hochrisiko-Anwendungsfall herghalten soi.",
                             review_required_hint: "De Bstätigung braucht ma, damit ma an Assistenten erstelln oda speichern ko.",
-                            review_intro_title: "Wos san Hochrisiko-Anwendungsfäi?",
+                            review_intro_title: "Wos san Hochrisiko-Zweck?",
                             review_intro_description:
-                                "Hochrisiko-Anwendungsfäi san KI-Eisätz, wo Entscheidunga oda Bewertunga über Menschn bsonders folgnreich sei kennan, zum Beispui in Personoi, Buidung, öffentliche Leistunga oda Migration.",
+                                "Hochrisiko-KI-Systeme san nach da Verordnung über künstliche Intelligenz (KI-Verordnung) vo da Europäischen Union zwar ned verboten, oba streng geregelt. De Einhaltung vo de entsprechenden gesetzlichen Pflichten is in MUCGPT ned umsetzbar. Drum is es nach de Nutzungsbedingungen für MUCGPT [Link no ergänzn] ned erlaubt, MUCGPT für Hochrisiko-Zweck herzunehmen. Des Verbot bezieht si auf de Verwendungszweck, durch de KI-Systeme nach da KI-Verordnung ois Hochrisiko-KI-Systeme eingestuft wern. De KI-Verordnung stuft KI-Systeme unter anderem dann ois Hochrisiko-KI-Systeme ei, wenn's bestimmungsgemäß oan vo de in Anhang III aufgeführten Verwendungszweck dienen soi und a erhebliches Risiko für de Gesundheit, Sicherheit oder Grundrechte natürlicher Personen besteht. De in Anhang III aufgeführten Verwendungszweck betreffen unter anderem Bereiche wia Buidung, Personal, öffentliche Leistunga und Migration.",
                             review_check_title: "Anweisungen prüfa",
-                            review_check_description: "Prüf de Assistentenanweisungen auf Hinweis auf möglche Hochrisiko-Anwendungsfäi.",
-                            review_check_learn_more: "Mehr über Hochrisiko-Anwendungsfäi erfahrn",
+                            review_check_description: "Prüf de Prompt- bzw. Assistentenanweisungen auf Hinweis auf möglche Hochrisiko-Zweck.",
+                            review_check_learn_more: "Mehr über Hochrisiko-Zweck erfahrn",
+                            review_check_supplement:
+                                "De Prüfung is bloß a erste, grobe Orientierung und koane menschliche juristische Prüfung ersetzen. Wennst da unsicher bist, wend di an de für dein Bereich zuständige Rechtsabteilung oder schick den Prompt ned o bzw. erstell den Assistenten ned.",
                             review_check_start: "Prüfung starten",
                             review_check_recheck: "Nochamoi prüfa",
                             review_check_running: "Prüfung lafft...",
@@ -3065,18 +3071,21 @@ i18n
                             section_tools: "Outils",
                             section_conversation_options: "Options de conversation",
                             section_access: "Accès et visibilité",
-                            section_review: "Vérification",
+                            section_review: "Respect de l'interdiction des usages à haut risque",
 
                             // Review section
                             review_confirmation_label:
                                 "Je confirme que cet assistant n'est pas destiné à être utilisé pour un cas d'usage à haut risque non autorisé dans MUCGPT.",
                             review_required_hint: "Cette confirmation est requise pour créer ou enregistrer l'assistant.",
-                            review_intro_title: "Que sont les cas d'usage à haut risque ?",
+                            review_intro_title: "Que sont les finalités à haut risque ?",
                             review_intro_description:
-                                "Les cas d'usage à haut risque sont des utilisations de l'IA dans lesquelles les décisions ou les évaluations concernant des personnes peuvent avoir des conséquences particulièrement lourdes, par exemple dans les ressources humaines, l'éducation, les services publics ou la migration.",
+                                "Les systèmes d'IA à haut risque ne sont pas interdits par le règlement de l'Union européenne sur l'intelligence artificielle, mais ils sont strictement réglementés. MUCGPT ne peut pas mettre en œuvre les obligations légales correspondantes. C'est pourquoi les conditions d'utilisation de MUCGPT [lien à ajouter] n'autorisent pas l'utilisation de MUCGPT à des fins à haut risque. Cette interdiction s'applique aux finalités qui entraînent la classification des systèmes d'IA comme systèmes d'IA à haut risque au sens du règlement sur l'IA. Celui-ci classe notamment comme systèmes à haut risque les systèmes destinés à l'une des finalités énumérées à l'annexe III et présentant un risque important d'atteinte à la santé, à la sécurité ou aux droits fondamentaux des personnes physiques. Les finalités énumérées à l'annexe III concernent notamment des domaines tels que l'éducation, l'emploi, les services publics et la migration.",
                             review_check_title: "Vérifier les instructions",
-                            review_check_description: "Vérifiez les instructions de l'assistant pour détecter d'éventuels cas d'usage à haut risque.",
-                            review_check_learn_more: "En savoir plus sur les cas d'usage à haut risque",
+                            review_check_description:
+                                "Vérifiez le prompt ou les instructions de l'assistant pour détecter d'éventuelles finalités à haut risque.",
+                            review_check_learn_more: "En savoir plus sur les finalités à haut risque",
+                            review_check_supplement:
+                                "La vérification ne constitue qu'une première orientation approximative et ne peut pas remplacer un contrôle juridique humain. En cas de doute, adressez-vous au service juridique compétent pour votre domaine ou renoncez à envoyer le prompt ou à créer l'assistant.",
                             review_check_start: "Lancer la vérification",
                             review_check_recheck: "Vérifier à nouveau",
                             review_check_running: "Vérification en cours...",
@@ -3892,18 +3901,20 @@ i18n
                             section_tools: "Інструменти",
                             section_conversation_options: "Опції розмови",
                             section_access: "Доступ і видимість",
-                            section_review: "Перевірка",
+                            section_review: "Дотримання заборони використання з високим ризиком",
 
                             // Review section
                             review_confirmation_label:
                                 "Я підтверджую, що цей асистент не призначений для використання у високоризиковому сценарії, недозволеному в MUCGPT.",
                             review_required_hint: "Це підтвердження необхідне для створення або збереження асистента.",
-                            review_intro_title: "Що таке сценарії використання з високим ризиком?",
+                            review_intro_title: "Що таке цілі використання з високим ризиком?",
                             review_intro_description:
-                                "Сценарії використання з високим ризиком — це застосування ШІ, у яких рішення або оцінки щодо людей можуть мати особливо серйозні наслідки, наприклад у сфері персоналу, освіти, державних послуг або міграції.",
+                                "Системи ШІ з високим ризиком не заборонені Регламентом Європейського Союзу про штучний інтелект, але суворо регулюються. MUCGPT не може забезпечити виконання відповідних юридичних зобов'язань. Тому умови використання MUCGPT [додати посилання] не дозволяють використовувати MUCGPT для цілей із високим ризиком. Ця заборона стосується цілей, через які системи ШІ класифікуються як системи ШІ з високим ризиком відповідно до Регламенту про ШІ. Зокрема, Регламент класифікує системи ШІ як високоризикові, якщо вони призначені для однієї з цілей, перелічених у Додатку III, і становлять значний ризик шкоди для здоров'я, безпеки або основоположних прав фізичних осіб. Цілі, перелічені в Додатку III, охоплюють, зокрема, такі сфери, як освіта, зайнятість, державні послуги та міграція.",
                             review_check_title: "Перевірити інструкції",
-                            review_check_description: "Перевірте інструкції асистента на ознаки можливих сценаріїв використання з високим ризиком.",
-                            review_check_learn_more: "Дізнатися більше про сценарії використання з високим ризиком",
+                            review_check_description: "Перевірте промпт або інструкції асистента на ознаки можливих цілей використання з високим ризиком.",
+                            review_check_learn_more: "Дізнатися більше про цілі використання з високим ризиком",
+                            review_check_supplement:
+                                "Перевірка є лише первинним приблизним орієнтиром і не може замінити юридичну перевірку людиною. У разі сумнівів зверніться до юридичного відділу, відповідального за вашу сферу, або не надсилайте промпт і не створюйте асистента.",
                             review_check_start: "Почати перевірку",
                             review_check_recheck: "Перевірити знову",
                             review_check_running: "Перевірка триває...",

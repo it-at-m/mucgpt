@@ -71,6 +71,12 @@ const clearScenarioIndexedDb = async (): Promise<void> => {
     await Promise.all([clearObjectStore(ASSISTANT_STORE), clearObjectStore(COMMUNITY_ASSISTANT_STORE)]);
 };
 
+const seedIfMissing = async (id: string, read: () => Promise<unknown>, write: () => Promise<unknown>): Promise<void> => {
+    if (await read()) return;
+    await write();
+    if (!(await read())) throw new Error(`Could not persist mock scenario record "${id}"`);
+};
+
 /** Seeds missing local-only and deleted-assistant scenarios once, without touching other stored records. */
 export const initializeMockScenarios = async (): Promise<void> => {
     const storage = getStorage();
@@ -82,14 +88,18 @@ export const initializeMockScenarios = async (): Promise<void> => {
         const communityAssistantStorageService = new CommunityAssistantStorageService(COMMUNITY_ASSISTANT_STORE);
 
         await Promise.all([
-            ...MOCK_LOCAL_ASSISTANTS.map(async ({ assistant, id }) => {
-                if (await assistantStorageService.getAssistantConfig(id)) return;
-                await assistantStorageService.createAssistantConfig(assistant, id);
-            }),
-            (async () => {
-                if (await communityAssistantStorageService.getAssistantConfig(MOCK_DELETED_SUBSCRIBED_SNAPSHOT.id)) return;
-                await communityAssistantStorageService.createAssistantConfig(MOCK_DELETED_SUBSCRIBED_SNAPSHOT);
-            })()
+            ...MOCK_LOCAL_ASSISTANTS.map(({ assistant, id }) =>
+                seedIfMissing(
+                    id,
+                    () => assistantStorageService.getAssistantConfig(id),
+                    () => assistantStorageService.createAssistantConfig(assistant, id)
+                )
+            ),
+            seedIfMissing(
+                MOCK_DELETED_SUBSCRIBED_SNAPSHOT.id,
+                () => communityAssistantStorageService.getAssistantConfig(MOCK_DELETED_SUBSCRIBED_SNAPSHOT.id),
+                () => communityAssistantStorageService.createAssistantConfig(MOCK_DELETED_SUBSCRIBED_SNAPSHOT)
+            )
         ]);
 
         storage?.setItem(SCENARIO_INITIALIZED_STORAGE_KEY, "true");

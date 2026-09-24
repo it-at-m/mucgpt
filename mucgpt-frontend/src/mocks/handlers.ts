@@ -17,7 +17,7 @@ import {
     generateMindmapStreamChunks,
     generateSimplifyStreamChunks
 } from "./data/generators";
-import { CREATIVITY_HIGH } from "../constants";
+import { CREATIVITY_HIGH, CREATIVITY_MEDIUM } from "../constants";
 import { loadMockAssistants, loadMockSubscriptions, saveMockAssistants, saveMockSubscriptions } from "./data/assistant-store";
 import { MOCK_DELETED_SUBSCRIBED_SNAPSHOT, MOCK_SUBSCRIPTION_SEED } from "./data/browser-scenario-seed";
 
@@ -217,6 +217,11 @@ const buildLifecycleAssistant = ({ id, name, description, ownerId, state, stateC
             description,
             system_prompt: `Du bist ${name}. Unterstütze Menschen mit klaren, nachvollziehbaren Antworten.`,
             hierarchical_access: ["TEAM-A"],
+            creativity: CREATIVITY_MEDIUM,
+            tools: [
+                { id: "Brainstorming", config: { enabled: true } },
+                { id: "Vereinfachen", config: { enabled: false } }
+            ],
             owner_ids: ownerIds,
             owners_detailed: ownersDetailed,
             state,

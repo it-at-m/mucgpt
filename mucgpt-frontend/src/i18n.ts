@@ -857,7 +857,8 @@ i18n
                     },
                     discovery: {
                         title: "Assistenten",
-                        subtitle: "Nutze deine Assistenten oder entdecke neue für wiederkehrende Aufgaben."
+                        subtitle: "Nutze deine Assistenten oder entdecke neue für wiederkehrende Aufgaben.",
+                        reset_mock_data: "Mock-Daten zurücksetzen"
                     },
                     ...tutorialsTranslations.DE,
                     ...versionTranslations.DE
@@ -1696,7 +1697,8 @@ i18n
                     },
                     discovery: {
                         title: "Assistants",
-                        subtitle: "Use your assistants or discover new ones for recurring tasks."
+                        subtitle: "Use your assistants or discover new ones for recurring tasks.",
+                        reset_mock_data: "Reset mock data"
                     },
                     ...tutorialsTranslations.EN,
                     ...versionTranslations.EN
@@ -2524,7 +2526,8 @@ i18n
                     },
                     discovery: {
                         title: "Assistentn",
-                        subtitle: "Nutze deine Assistenten oder entdecke neue für wiederkehrende Aufgaben."
+                        subtitle: "Nutze deine Assistenten oder entdecke neue für wiederkehrende Aufgaben.",
+                        reset_mock_data: "Mock-Datn zrucksetzn"
                     },
                     ...tutorialsTranslations.BA,
                     ...versionTranslations.BA
@@ -3350,7 +3353,8 @@ i18n
                     },
                     discovery: {
                         title: "Assistants",
-                        subtitle: "Utilisez vos assistants ou découvrez-en de nouveaux pour les tâches récurrentes."
+                        subtitle: "Utilisez vos assistants ou découvrez-en de nouveaux pour les tâches récurrentes.",
+                        reset_mock_data: "Réinitialiser les données fictives"
                     },
                     ...tutorialsTranslations.FR,
                     ...versionTranslations.FR
@@ -4175,7 +4179,8 @@ i18n
                     },
                     discovery: {
                         title: "Асистенти",
-                        subtitle: "Використовуйте своїх асистентів або відкривайте нових для повторюваних завдань."
+                        subtitle: "Використовуйте своїх асистентів або відкривайте нових для повторюваних завдань.",
+                        reset_mock_data: "Скинути тестові дані"
                     },
                     ...tutorialsTranslations.UK,
                     ...versionTranslations.UK

@@ -621,7 +621,7 @@ const Discovery = () => {
                                     <div className={styles.headerActions}>
                                         {isMockMode && (
                                             <Button appearance="subtle" icon={<ArrowResetRegular />} onClick={resetMockData}>
-                                                Mock-Daten zurücksetzen
+                                                {t("discovery.reset_mock_data")}
                                             </Button>
                                         )}
                                         <Button

@@ -1,157 +1,140 @@
 .card {
-    border-radius: var(--borderRadiusLarge) !important;
-    min-height: 136px;
-    border: 1px solid var(--colorNeutralStroke3) !important;
-    padding: 12px 12px 10px 12px !important;
-    row-gap: 0px !important;
+    position: relative;
+    min-height: 120px;
+    border: var(--strokeWidthThin) solid var(--colorNeutralStroke3);
     transition:
         transform 0.18s cubic-bezier(0.33, 1, 0.68, 1),
+        background-color 0.16s ease,
         border-color 0.16s ease,
         box-shadow 0.16s ease;
-    background-color: var(--colorNeutralBackground3) !important;
-    color: var(--colorNeutralForeground1);
-    box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05) !important;
-}
-
-.cardSelected {
-    border: 2px solid var(--colorBrandBackground) !important;
 }
 
 .card:hover {
+    border-color: var(--colorBrandBackground);
     transform: translateY(-1px);
-    border-color: var(--colorBrandBackground) !important;
-    box-shadow: var(--shadow8) !important;
 }
 
 .card:hover .headerText {
     color: var(--colorBrandBackground);
 }
 
-.card:focus-visible {
-    outline: 2px solid var(--colorBrandBackground);
+.card:active {
+    border-color: var(--colorNeutralStroke1Pressed);
+}
+
+/* An inset ring thickens the border visually without changing the box size,
+   so selecting a card does not shift its content. */
+.card[data-selected="true"] {
+    border-color: var(--colorBrandBackground);
+    box-shadow: inset 0 0 0 calc(var(--strokeWidthThick) - var(--strokeWidthThin)) var(--colorBrandBackground);
+}
+
+/* The primary action (title link/button) is stretched to cover the whole card via
+   ::after below, so mirror the card's focus ring on the card itself when that
+   action is focused - a plain button-sized outline would otherwise look lost. */
+.card:has(.primaryAction:focus-visible) {
+    outline: var(--strokeWidthThick) solid var(--colorStrokeFocus2);
     outline-offset: 2px;
-}
-
-.card [class*="fui-CardPreview"] {
-    margin: 0 !important;
-}
-
-.headerText {
-    font-weight: var(--fontWeightSemibold);
-    font-size: var(--fontSizeBase400);
-    transition-property: color;
-    transition-duration: 0.2s;
-    flex: 1 1 auto;
-    min-width: 0;
-    overflow: hidden;
-    display: -webkit-box;
-    -webkit-box-orient: vertical;
-    -webkit-line-clamp: 2;
-    overflow-wrap: break-word;
 }
 
 .headerRow {
     display: flex;
     align-items: flex-start;
     justify-content: space-between;
-    gap: 8px;
-    width: 100%;
-    box-sizing: border-box;
+    gap: var(--spacingHorizontalS);
 }
 
-.headerBadge {
-    max-width: 100%;
+.headerTextWrapper {
+    flex: 1 1 auto;
     min-width: 0;
-    min-height: 20px;
-    align-self: flex-start;
-    padding: 3px 7px 4px !important;
-    border-radius: var(--borderRadiusMedium);
-    font-size: var(--fontSizeBase100) !important;
-    font-weight: var(--fontWeightRegular) !important;
-    line-height: 1.2;
-    color: var(--colorNeutralForeground2) !important;
-    background-color: var(--colorNeutralBackground2) !important;
-    border-color: var(--colorNeutralStroke1) !important;
+    margin: 0;
+    font: inherit;
 }
 
-.headerBadgeWarning {
-    color: var(--colorStatusWarningForeground1) !important;
-    background-color: var(--colorStatusWarningBackground1) !important;
-    border-color: var(--colorStatusWarningBorder1) !important;
-    font-weight: var(--fontWeightSemibold) !important;
+.headerText {
+    display: -webkit-box;
+    width: 100%;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    overflow: hidden;
+    overflow-wrap: break-word;
+    transition: color 0.2s;
 }
 
-.headerBadgeSuccess {
-    color: var(--colorStatusSuccessForeground1) !important;
-    background-color: var(--colorStatusSuccessBackground1) !important;
-    border-color: var(--colorStatusSuccessBorder1) !important;
-    font-weight: var(--fontWeightSemibold) !important;
+/* Resets the native <button>/<a> chrome so the primary action reads as the plain
+   title text; ::after stretches it over the whole card for a large click target. */
+.primaryAction {
+    padding: 0;
+    border: 0;
+    font: inherit;
+    color: inherit;
+    text-align: inherit;
+    text-decoration: none;
+    background: transparent;
+    cursor: pointer;
 }
 
-.headerBadgeDanger {
-    color: var(--colorStatusDangerForeground1) !important;
-    background-color: var(--colorStatusDangerBackground1) !important;
-    border-color: var(--colorStatusDangerBorder1) !important;
-    font-weight: var(--fontWeightSemibold) !important;
+.primaryAction::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+}
+
+.visuallyHidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
 }
 
 .badgeGroup {
     display: flex;
     flex-wrap: wrap;
     justify-content: flex-end;
-    gap: 6px;
+    gap: var(--spacingHorizontalSNudge);
     max-width: 45%;
     flex-shrink: 0;
 }
 
-.headerBadgePrimary {
-    background-color: var(--colorBrandBackground2) !important;
-    border-color: var(--colorNeutralStroke1Hover) !important;
-    color: var(--app-primary-subtle-foreground) !important;
-    box-shadow: none !important;
-    transform: scale(1.1);
+.headerBadge {
+    min-height: 20px;
+    align-self: flex-start;
 }
 
 .description {
+    margin-top: calc(-1 * var(--spacingVerticalXS));
     font-size: var(--fontSizeBase200);
     color: var(--colorNeutralForeground2);
-    overflow: hidden;
     display: -webkit-box;
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 2;
+    overflow: hidden;
     overflow-wrap: break-word;
-    padding: 0;
 }
 
-.metadataBlock {
-    margin: auto 0 0;
-    padding-top: 8px;
+.description a {
+    position: relative;
+    z-index: 1;
 }
 
-.metadataDivider {
-    width: 100%;
-    height: 1px;
-    background-color: var(--colorNeutralStroke1);
-    opacity: 0.85;
-}
-
-.metadataRow {
-    display: flex;
+.metadata {
+    margin-top: auto;
     align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-    min-height: 0;
-    padding-top: 10px;
+    padding-top: var(--spacingVerticalM);
     color: var(--colorNeutralForeground2);
-    font-size: 11px;
-    font-weight: var(--fontWeightRegular);
-    line-height: 16px;
+    font-size: var(--fontSizeBase200);
+    line-height: var(--lineHeightBase200);
 }
 
 .metadataStart {
     display: inline-flex;
     align-items: center;
-    gap: 4px;
+    gap: var(--spacingHorizontalXS);
     min-width: 0;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -159,9 +142,7 @@
 }
 
 .metadataStart svg {
-    width: 16px;
-    height: 16px;
-    flex: 0 0 auto;
+    flex-shrink: 0;
 }
 
 .metadataStart > span {
@@ -177,12 +158,18 @@
 .metadataEnd {
     display: inline-flex;
     align-items: center;
-    gap: 4px;
-    flex: 0 0 auto;
+    gap: var(--spacingHorizontalXS);
+    flex-shrink: 0;
     white-space: nowrap;
 }
 
-.metadataEnd svg {
-    width: 16px;
-    height: 16px;
+@media (prefers-reduced-motion: reduce) {
+    .card:hover {
+        transform: none;
+    }
+
+    .card,
+    .headerText {
+        transition: none;
+    }
 }

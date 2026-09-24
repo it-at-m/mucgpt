@@ -1,6 +1,17 @@
-# CLAUDE.md
+# MUCGPT Repository Instructions
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+These instructions apply to all coding agents and automated development tools
+working in this repository.
+
+## Scoped instructions
+
+When working inside mucgpt-frontend, also follow:
+
+mucgpt-frontend/AGENTS.md
+
+Frontend-specific architecture, Fluent UI, styling, accessibility and design-system rules are defined there and are mandatory for frontend changes.
+
+For UI and styling decisions, DESIGN.md is the source of truth for the MUCGPT design system.
 
 ## What this is
 

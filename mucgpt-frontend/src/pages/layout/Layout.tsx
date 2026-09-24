@@ -11,7 +11,9 @@ import logo_black from "../../assets/edelweiss_pride.svg";
 import { DEFAULTLANG, LanguageContext } from "../../components/LanguageSelector/LanguageContextProvider";
 import { TermsOfUseDialog } from "../../components/TermsOfUseDialog";
 import { ApplicationConfig } from "../../api";
-import { STORAGE_KEYS, createAppCssVars, createFluentTheme, createScaledTypographyTheme, getAppTokens } from "./LayoutHelper";
+import { STORAGE_KEYS } from "./LayoutHelper";
+import { createMucgptTheme, createScaledTypographyTheme } from "../../ui/theme/fluentTheme";
+import { createAppCssVars, getAppTokens } from "../../ui/theme/appTokens";
 import { DEFAULTLLM, LLMContext } from "../../components/LLMSelector/LLMContextProvider";
 import { LightContext } from "./LightContext";
 import { DEFAULT_APP_CONFIG } from "../../constants";
@@ -278,7 +280,7 @@ export const Layout = () => {
     const [isLight, setLight] = useState<boolean>(lightThemePreference);
 
     const appTokens = useMemo(() => getAppTokens(isLight), [isLight]);
-    const theme = useMemo(() => createScaledTypographyTheme(createFluentTheme(appTokens, isLight), fontscaling), [appTokens, isLight, fontscaling]);
+    const theme = useMemo(() => createScaledTypographyTheme(createMucgptTheme(isLight), fontscaling), [isLight, fontscaling]);
     const appCssVars = useMemo(() => createAppCssVars(appTokens), [appTokens]);
 
     useEffect(() => {
@@ -352,15 +354,15 @@ export const Layout = () => {
     return (
         <FluentProvider theme={theme}>
             <LightContext.Provider value={isLight}>
-                <UserContextProvider>
-                    {isLoadingConfig ? (
-                        <div className={styles.loadingContainer}>
-                            <EdelweissSpinner size="large" label={t("common.loading", "Lade Konfiguration...")} />
-                        </div>
-                    ) : isUnauthorized ? (
-                        <Unauthorized redirectUrl={unauthorizedRedirectUrl} />
-                    ) : (
-                        <ConfigContext.Provider value={config}>
+                <ConfigContext.Provider value={config}>
+                    <UserContextProvider>
+                        {isLoadingConfig ? (
+                            <div className={styles.loadingContainer}>
+                                <EdelweissSpinner size="large" label={t("common.loading", "Lade Konfiguration...")} />
+                            </div>
+                        ) : isUnauthorized ? (
+                            <Unauthorized redirectUrl={unauthorizedRedirectUrl} />
+                        ) : (
                             <TranscriptionSettingsProvider deploymentEnabled={config.transcription_enabled}>
                                 <ToolsProvider>
                                     <UnifiedHistoryProvider>
@@ -376,10 +378,10 @@ export const Layout = () => {
                                     </UnifiedHistoryProvider>
                                 </ToolsProvider>
                             </TranscriptionSettingsProvider>
-                        </ConfigContext.Provider>
-                    )}
-                    <GlobalToastHandler />
-                </UserContextProvider>
+                        )}
+                        <GlobalToastHandler />
+                    </UserContextProvider>
+                </ConfigContext.Provider>
             </LightContext.Provider>
         </FluentProvider>
     );

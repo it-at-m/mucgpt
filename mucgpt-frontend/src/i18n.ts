@@ -711,12 +711,13 @@ i18n
                             inactive_title: "Assistent deaktiviert",
                             inactive_hint: "Dieser Assistent ist derzeit für Chats deaktiviert.",
                             private_label: "Privat",
+                            show_details: "Details anzeigen",
                             show_more_personal_assistants: "Mehr persönliche Assistenten anzeigen",
                             empty_search_title: "Keine passenden Assistenten gefunden",
                             empty_search_description: "Prüfen Sie den Suchbegriff oder setzen Sie die Suche zurück.",
                             empty_search_reset: "Suche zurücksetzen",
                             empty_my_title: "Ihre Bibliothek ist noch leer",
-                            empty_my_description: "Erstellen oder importieren Sie einen Assistenten für Aufgaben, die regelmäßig wiederkommen.",
+                            empty_my_description: "Erstellen Sie einen Assistenten für Aufgaben, die regelmäßig wiederkommen.",
                             empty_community_title: "Noch keine Community-Assistenten verfügbar",
                             empty_community_description: "Veröffentlichte Assistenten erscheinen hier, sobald sie mit der Organisation geteilt wurden.",
                             empty_create_own: "Eigenen Assistenten erstellen",
@@ -747,7 +748,6 @@ i18n
                             tools: "Werkzeuge",
                             tool_single: "Werkzeug",
                             tools_plural: "Werkzeuge",
-                            loading_assistants: "Lade Assistenten...",
                             no_assistants_found: "Keine Assistenten gefunden, die Ihren Kriterien entsprechen.",
                             back_to_search: "Zurück zur Suche",
                             already_saved: "Bereits gespeichert",
@@ -863,7 +863,7 @@ i18n
                     },
                     discovery: {
                         title: "Assistenten",
-                        subtitle: "Nutze deine Assistenten oder entdecke neue für wiederkehrende Aufgaben."
+                        subtitle: "Finde und verwalte Assistenten für deine wiederkehrenden Aufgaben."
                     },
                     ...tutorialsTranslations.DE,
                     ...versionTranslations.DE
@@ -1558,12 +1558,13 @@ i18n
                             inactive_hint: "This assistant is currently unavailable for chat.",
                             owner_details: "Owners",
                             private_label: "Private",
+                            show_details: "Show details",
                             show_more_personal_assistants: "Show more personal assistants",
                             empty_search_title: "No matching assistants found",
                             empty_search_description: "Check your search term or reset the search.",
                             empty_search_reset: "Reset search",
                             empty_my_title: "Your library is empty",
-                            empty_my_description: "Create or import an assistant for tasks that come up regularly.",
+                            empty_my_description: "Create an assistant for tasks that come up regularly.",
                             empty_community_title: "No community assistants available yet",
                             empty_community_description: "Published assistants appear here as soon as they are shared with the organization.",
                             empty_create_own: "Create your own assistant",
@@ -1594,7 +1595,6 @@ i18n
                             tools: "Tools",
                             tool_single: "Tool",
                             tools_plural: "Tools",
-                            loading_assistants: "Loading assistants...",
                             no_assistants_found: "No assistants found matching your criteria.",
                             back_to_search: "Back to Search",
                             already_saved: "Already Saved",
@@ -1708,7 +1708,7 @@ i18n
                     },
                     discovery: {
                         title: "Assistants",
-                        subtitle: "Use your assistants or discover new ones for recurring tasks."
+                        subtitle: "Find and manage assistants for your recurring tasks."
                     },
                     ...tutorialsTranslations.EN,
                     ...versionTranslations.EN
@@ -2390,12 +2390,13 @@ i18n
                             metadata_you: "Du",
                             owner_details: "Besitzer",
                             private_label: "Privat",
+                            show_details: "Details anzeigen",
                             show_more_personal_assistants: "Mehr persönliche Assistentn anzeigen",
                             empty_search_title: "Koane passenden Assistentn gfundn",
                             empty_search_description: "Prüf dein Suchbegriff oder setz de Such zruck.",
                             empty_search_reset: "Such zrucksetzn",
                             empty_my_title: "Dei Bibliothek is no leer",
-                            empty_my_description: "Erstell oder importier an Assistentn für Aufgaben, de regelmäßig wiederkemma.",
+                            empty_my_description: "Erstell an Assistentn für Aufgaben, de regelmäßig wiederkemma.",
                             empty_community_title: "No koane Community-Assistentn verfügbar",
                             empty_community_description: "Veröffentlichte Assistentn erscheina do, sobald's mit da Organisation teilt worn san.",
                             empty_create_own: "Eignen Assistentn erstellen",
@@ -2426,7 +2427,6 @@ i18n
                             tools: "Werkzeig",
                             tool_single: "Werkzeig",
                             tools_plural: "Werkzeig",
-                            loading_assistants: "Load Assistentn...",
                             no_assistants_found: "Koane Assistentn gfundn, de zu deine Kriterien passn.",
                             back_to_search: "Zruck zur Such",
                             already_saved: "Scho gspeichert",
@@ -2542,7 +2542,7 @@ i18n
                     },
                     discovery: {
                         title: "Assistentn",
-                        subtitle: "Nutze deine Assistenten oder entdecke neue für wiederkehrende Aufgaben."
+                        subtitle: "Find und verwalt Assistentn für deine wiederkehrenden Aufgabn."
                     },
                     ...tutorialsTranslations.BA,
                     ...versionTranslations.BA
@@ -3230,6 +3230,7 @@ i18n
                             metadata_you: "Vous",
                             owner_details: "Propriétaires",
                             private_label: "Privé",
+                            show_details: "Afficher les détails",
                             show_more_personal_assistants: "Afficher plus d'assistants personnels",
                             start_chat: "Démarrer une nouvelle conversation",
                             system_prompt_copy: "Copier le prompt système",
@@ -3258,7 +3259,6 @@ i18n
                             tools: "Outils",
                             tool_single: "Outil",
                             tools_plural: "Outils",
-                            loading_assistants: "Chargement des assistants...",
                             no_assistants_found: "Aucun assistant trouvé correspondant à vos critères.",
                             back_to_search: "Retour à la recherche",
                             already_saved: "Déjà enregistré",
@@ -3374,7 +3374,7 @@ i18n
                     },
                     discovery: {
                         title: "Assistants",
-                        subtitle: "Utilisez vos assistants ou découvrez-en de nouveaux pour les tâches récurrentes."
+                        subtitle: "Trouvez et gérez des assistants pour vos tâches récurrentes."
                     },
                     ...tutorialsTranslations.FR,
                     ...versionTranslations.FR
@@ -4053,12 +4053,13 @@ i18n
                             metadata_you: "Ви",
                             owner_details: "Власники",
                             private_label: "Приватний",
+                            show_details: "Показати деталі",
                             show_more_personal_assistants: "Показати більше особистих асистентів",
                             empty_search_title: "Відповідних асистентів не знайдено",
                             empty_search_description: "Перевірте пошуковий запит або скиньте пошук.",
                             empty_search_reset: "Скинути пошук",
                             empty_my_title: "Ваша бібліотека порожня",
-                            empty_my_description: "Створіть або імпортуйте асистента для завдань, які регулярно повторюються.",
+                            empty_my_description: "Створіть асистента для завдань, які регулярно повторюються.",
                             empty_community_title: "Громадські асистенти ще недоступні",
                             empty_community_description: "Опубліковані асистенти з'являться тут, щойно їх буде поширено в організації.",
                             empty_create_own: "Створити власного асистента",
@@ -4089,7 +4090,6 @@ i18n
                             tools: "Інструменти",
                             tool_single: "Інструмент",
                             tools_plural: "Інструменти",
-                            loading_assistants: "Завантаження асистентів...",
                             no_assistants_found: "Не знайдено асистентів, що відповідають вашим критеріям.",
                             back_to_search: "Повернутися до пошуку",
                             already_saved: "Вже збережено",
@@ -4205,7 +4205,7 @@ i18n
                     },
                     discovery: {
                         title: "Асистенти",
-                        subtitle: "Використовуйте своїх асистентів або відкривайте нових для повторюваних завдань."
+                        subtitle: "Знаходьте та керуйте асистентами для своїх повторюваних завдань."
                     },
                     ...tutorialsTranslations.UK,
                     ...versionTranslations.UK

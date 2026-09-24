@@ -848,7 +848,7 @@ export const handlers = [
         // E2E demos (tools off): exact phrases only. A ```drawio fence must NOT trigger this.
         const wantsValidDrawioMock = /^\s*valid-drawio\s*$/i.test(latestUserMessage);
         const wantsInvalidDrawioMock = /^\s*invalid-drawio\s*$/i.test(latestUserMessage);
-      
+
         if (body?.stream) {
             const encoder = new TextEncoder();
             const streamType = chooseStreamType(body.enabled_tools);
@@ -901,11 +901,7 @@ export const handlers = [
                     index: 0,
                     message: {
                         role: "assistant",
-                        content: wantsValidDrawioMock
-                            ? buildDrawioChatMessage()
-                            : wantsInvalidDrawioMock
-                              ? buildInvalidDrawioChatMessage()
-                              : buildChatMessage()
+                        content: wantsValidDrawioMock ? buildDrawioChatMessage() : wantsInvalidDrawioMock ? buildInvalidDrawioChatMessage() : buildChatMessage()
                     },
                     finish_reason: "stop"
                 }

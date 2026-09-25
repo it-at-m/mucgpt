@@ -60,6 +60,7 @@ def _usage_from_token_usage(token_usage: TokenUsage) -> Usage | None:
         prompt_tokens=token_usage.prompt_tokens,
         completion_tokens=token_usage.completion_tokens,
         total_tokens=token_usage.prompt_tokens + token_usage.completion_tokens,
+        cache_read_tokens=token_usage.cache_read_tokens,
         context_tokens=token_usage.context_tokens,
     )
 

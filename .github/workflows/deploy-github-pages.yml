@@ -4,7 +4,7 @@ on:
   push:
     tags:
       - "mucgpt-frontend-*" # Triggers only on mucgpt-frontend tags
-  workflow_dispatch:  # Allows manual triggering
+  workflow_dispatch: # Allows manual triggering
     inputs:
       tag:
         description: "Frontend tag to deploy (e.g., mucgpt-frontend-1.0.0)"
@@ -12,7 +12,7 @@ on:
         default: "mucgpt-frontend-latest"
 
 permissions:
-  contents: write  # Changed from read to write for gh-pages deployment
+  contents: read
   pages: write
   id-token: write
 
@@ -62,8 +62,8 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
         with:
-          node-version: '24.21.0'
-          cache: 'npm'
+          node-version: "24.21.0"
+          cache: "npm"
           cache-dependency-path: mucgpt-frontend/package-lock.json
 
       - name: Install dependencies
@@ -82,7 +82,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-pages-artifact@7b1f4a764d45c48632c6b24a0339c27f5614fb0b # v4.0.0
         with:
-          path: './mucgpt-frontend/dist'
+          path: "./mucgpt-frontend/dist"
 
   deploy:
     environment:

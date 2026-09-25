@@ -545,7 +545,7 @@ i18n
 
                             // Review section
                             review_confirmation_label:
-                                "Ich bestätige, dass dieser Assistent nicht für einen in MUCGPT unzulässigen Hochrisiko-Anwendungsfall eingesetzt werden soll.",
+                                "Ich bestätige, dass dieser Assistent nicht für einen in MUCGPT unzulässigen Hochrisiko-Zweck eingesetzt werden soll.",
                             review_required_hint: "Diese Bestätigung ist erforderlich, um den Assistenten zu erstellen oder zu speichern.",
                             review_intro_title: "Was sind Hochrisiko-Zwecke?",
                             review_intro_description:
@@ -560,10 +560,10 @@ i18n
                             review_check_running: "Prüfung läuft...",
                             review_result_passed_title: "Alle Prüfungen bestanden",
                             review_result_passed_description:
-                                "Es wurden keine Hinweise auf ein Hochrisikosystem gefunden. Die Prüfung dient nur zur Orientierung. Bitte bestätigen Sie abschließend, dass der Assistent für keinen unzulässigen Hochrisiko-Anwendungsfall eingesetzt wird.",
+                                "Es wurden keine Hinweise auf ein Hochrisikosystem gefunden. Die Prüfung dient nur zur Orientierung. Bitte bestätigen Sie abschließend, dass der Assistent für keinen unzulässigen Hochrisiko-Zweck eingesetzt wird.",
                             review_result_warning_title: "Hinweis auf ein mögliches Hochrisikosystem",
                             review_result_warning_guidance:
-                                "Bitte prüfen Sie die folgenden Stellen in den Anweisungen und ändern Sie diese gegebenenfalls, damit kein Hochrisiko-Anwendungsfall entsteht. Die Prüfung dient nur zur Orientierung.",
+                                "Bitte prüfen Sie die folgenden Stellen in den Anweisungen und ändern Sie diese gegebenenfalls, damit kein unzulässiger Hochrisiko-Zweck entsteht. Die Prüfung dient nur zur Orientierung.",
                             review_result_error_title: "Prüfung fehlgeschlagen",
                             review_result_error_description:
                                 "Die Prüfung konnte nicht durchgeführt werden. Speichern ist erst nach einer erfolgreichen erneuten Prüfung möglich.",
@@ -571,10 +571,11 @@ i18n
                             review_result_outdated_description:
                                 "Der System-Prompt wurde nach dieser Prüfung geändert. Die Hinweise beziehen sich auf die vorherige Fassung. Starten Sie die Prüfung erneut, um ein aktuelles Ergebnis zu erhalten.",
                             review_confirmation_label_high_risk:
-                                "Ich habe die Hinweise geprüft und bestätige, dass dieser Assistent nicht für einen in MUCGPT unzulässigen Hochrisiko-Anwendungsfall eingesetzt werden soll.",
+                                "Ich habe die Hinweise geprüft und bestätige, dass dieser Assistent nicht für einen in MUCGPT unzulässigen Hochrisiko-Zweck eingesetzt werden soll.",
                             review_category_migration_asylum_border: "Migration, Asyl und Grenzkontrolle",
-                            review_category_public_services_access: "Zugang zu grundlegenden öffentlichen Diensten",
-                            review_category_hr_employment: "Beschäftigung und Personalmanagement",
+                            review_category_public_services_access:
+                                "Zugänglichkeit und Inanspruchnahme (grundlegender privater - nachfolgend ausgeklammert - und) grundlegender öffentlicher Dienste und Leistungen",
+                            review_category_hr_employment: "Beschäftigung, Personalmanagement und Zugang zur Selbständigkeit",
                             review_category_education: "Allgemeine und berufliche Bildung",
 
                             // Advanced settings fields
@@ -1397,7 +1398,7 @@ i18n
 
                             // Review section
                             review_confirmation_label:
-                                "I confirm that this assistant is not intended to be used for a high-risk use case that is not permitted in MUCGPT.",
+                                "I confirm that this assistant is not intended to be used for a high-risk purpose that is not permitted in MUCGPT.",
                             review_required_hint: "This confirmation is required in order to create or save the assistant.",
                             review_intro_title: "What are high-risk purposes?",
                             review_intro_description:
@@ -1412,21 +1413,21 @@ i18n
                             review_check_running: "Check in progress...",
                             review_result_passed_title: "All checks passed",
                             review_result_passed_description:
-                                "No indications of a high-risk system were found. The check is for guidance only. Please confirm below that the assistant is not used for any impermissible high-risk use case.",
+                                "No indications of a high-risk system were found. The check is for guidance only. Please confirm below that the assistant is not used for any impermissible high-risk purpose.",
                             review_result_warning_title: "Indication of a possible high-risk system",
                             review_result_warning_guidance:
-                                "Please review the following parts of the instructions and change them if necessary so that no high-risk use case remains. The check is for guidance only.",
+                                "Please review the following parts of the instructions and change them if necessary so that no impermissible high-risk purpose remains. The check is for guidance only.",
                             review_result_error_title: "Check failed",
                             review_result_error_description: "The check could not be performed. Saving is blocked until a successful re-check is available.",
                             review_result_outdated_title: "Result no longer up to date",
                             review_result_outdated_description:
                                 "The system prompt was changed after this check. The findings refer to the previous version. Run the check again to get an up-to-date result.",
                             review_confirmation_label_high_risk:
-                                "I have reviewed the findings and confirm that this assistant is not intended for a high-risk use case that is not permitted in MUCGPT.",
+                                "I have reviewed the findings and confirm that this assistant is not intended for a high-risk purpose that is not permitted in MUCGPT.",
                             review_category_migration_asylum_border: "Migration, asylum and border control",
-                            review_category_public_services_access: "Access to essential public services",
-                            review_category_hr_employment: "Employment and personnel management",
-                            review_category_education: "General and vocational education",
+                            review_category_public_services_access: "Access to public services",
+                            review_category_hr_employment: "Employment and personnel",
+                            review_category_education: "Education and vocational training",
 
                             // Advanced settings fields
                             creativity: "Answer style",
@@ -2234,8 +2235,7 @@ i18n
                             section_review: "Einhaltung vom Hochrisiko-Verbot",
 
                             // Review section
-                            review_confirmation_label:
-                                "I bstätig, dass der Assistent net für an in MUCGPT unzulässign Hochrisiko-Anwendungsfall herghalten soi.",
+                            review_confirmation_label: "I bstätig, dass der Assistent net für an in MUCGPT unzulässign Hochrisiko-Zweck herghalten soi.",
                             review_required_hint: "De Bstätigung braucht ma, damit ma an Assistenten erstelln oda speichern ko.",
                             review_intro_title: "Wos san Hochrisiko-Zweck?",
                             review_intro_description:
@@ -2250,21 +2250,21 @@ i18n
                             review_check_running: "Prüfung lafft...",
                             review_result_passed_title: "Olle Prüfungen bestandn",
                             review_result_passed_description:
-                                "Es gibt koane Hinweis auf a Hochrisikosystem. De Prüfung is bloß a Orientierung. Bitte bestätig no, dass da Assistent für koan unzulässigen Hochrisiko-Anwendungsfoi eigsetzt wird.",
+                                "Es gibt koane Hinweis auf a Hochrisikosystem. De Prüfung is bloß a Orientierung. Bitte bestätig no, dass da Assistent für koan unzulässigen Hochrisiko-Zweck eigsetzt wird.",
                             review_result_warning_title: "Hinweis auf a möglichs Hochrisikosystem",
                             review_result_warning_guidance:
-                                "Bitte schau da de foigenden Stelln in de Anweisungen o und änder's wenn nötig, dass koa Hochrisiko-Anwendungsfoi entsteht. De Prüfung is bloß a Orientierung.",
+                                "Bitte schau da de foigenden Stelln in de Anweisungen o und änder's wenn nötig, dass koa unzulässiger Hochrisiko-Zweck entsteht. De Prüfung is bloß a Orientierung.",
                             review_result_error_title: "Prüfung fehlgschlogn",
                             review_result_error_description: "De Prüfung hod net klappt. Speichern geht erst noch ana erfolgreichen erneuten Prüfung.",
                             review_result_outdated_title: "Ergebnis nimma aktuell",
                             review_result_outdated_description:
                                 "Da System-Prompt is noch der Prüfung gändert worn. De Hinweis ghean zua vorherign Fassung. Stort de Prüfung nochamoi, damitst a aktuells Ergebnis kriagst.",
                             review_confirmation_label_high_risk:
-                                "I hob ma de Hinweis oogschaut und bestätig, dass der Assistent net für an in MUCGPT unzulässigen Hochrisiko-Anwendungsfoi eigsetzt wern soi.",
+                                "I hob ma de Hinweis oogschaut und bestätig, dass der Assistent net für an in MUCGPT unzulässigen Hochrisiko-Zweck eigsetzt wern soi.",
                             review_category_migration_asylum_border: "Migration, Asyl und Grenzkontrolle",
-                            review_category_public_services_access: "Zugang zu grundlegende öffentliche Dienste",
-                            review_category_hr_employment: "Beschäftigung und Personalmanagement",
-                            review_category_education: "Allgemeine und berufliche Bildung",
+                            review_category_public_services_access: "Zuagang zu öffentliche Leistunga",
+                            review_category_hr_employment: "Beschäftigung und Personal",
+                            review_category_education: "Buidung und Berufsbuidung",
 
                             // Advanced settings fields
                             creativity: "Antwortstil",
@@ -3075,7 +3075,7 @@ i18n
 
                             // Review section
                             review_confirmation_label:
-                                "Je confirme que cet assistant n'est pas destiné à être utilisé pour un cas d'usage à haut risque non autorisé dans MUCGPT.",
+                                "Je confirme que cet assistant n'est pas destiné à être utilisé pour une finalité à haut risque non autorisée dans MUCGPT.",
                             review_required_hint: "Cette confirmation est requise pour créer ou enregistrer l'assistant.",
                             review_intro_title: "Que sont les finalités à haut risque ?",
                             review_intro_description:
@@ -3091,10 +3091,10 @@ i18n
                             review_check_running: "Vérification en cours...",
                             review_result_passed_title: "Toutes les vérifications réussies",
                             review_result_passed_description:
-                                "Aucun indice de système à haut risque n'a été trouvé. La vérification sert uniquement d'orientation. Veuillez confirmer ci-dessous que l'assistant n'est pas utilisé pour un cas d'usage à haut risque non autorisé.",
+                                "Aucun indice de système à haut risque n'a été trouvé. La vérification sert uniquement d'orientation. Veuillez confirmer ci-dessous que l'assistant n'est pas utilisé pour une finalité à haut risque non autorisée.",
                             review_result_warning_title: "Indice d'un possible système à haut risque",
                             review_result_warning_guidance:
-                                "Veuillez examiner les passages suivants des instructions et les modifier si nécessaire afin qu'aucun cas d'usage à haut risque ne subsiste. La vérification sert uniquement d'orientation.",
+                                "Veuillez examiner les passages suivants des instructions et les modifier si nécessaire afin qu'aucune finalité à haut risque non autorisée ne subsiste. La vérification sert uniquement d'orientation.",
                             review_result_error_title: "Échec de la vérification",
                             review_result_error_description:
                                 "La vérification n'a pas pu être effectuée. L'enregistrement reste bloqué jusqu'à une nouvelle vérification réussie.",
@@ -3102,11 +3102,11 @@ i18n
                             review_result_outdated_description:
                                 "Le prompt système a été modifié après cette vérification. Les indices se rapportent à la version précédente. Relancez la vérification pour obtenir un résultat à jour.",
                             review_confirmation_label_high_risk:
-                                "J'ai examiné les indices et je confirme que cet assistant n'est pas destiné à un cas d'usage à haut risque non autorisé dans MUCGPT.",
+                                "J'ai examiné les indices et je confirme que cet assistant n'est pas destiné à une finalité à haut risque non autorisée dans MUCGPT.",
                             review_category_migration_asylum_border: "Migration, asile et contrôle des frontières",
-                            review_category_public_services_access: "Accès aux services publics essentiels",
-                            review_category_hr_employment: "Emploi et gestion du personnel",
-                            review_category_education: "Éducation générale et formation professionnelle",
+                            review_category_public_services_access: "Accès aux prestations publiques",
+                            review_category_hr_employment: "Emploi et personnel",
+                            review_category_education: "Éducation et formation professionnelle",
 
                             // Advanced settings fields
                             creativity: "Style de réponse",
@@ -3905,7 +3905,7 @@ i18n
 
                             // Review section
                             review_confirmation_label:
-                                "Я підтверджую, що цей асистент не призначений для використання у високоризиковому сценарії, недозволеному в MUCGPT.",
+                                "Я підтверджую, що цей асистент не призначений для використання з недозволеною в MUCGPT ціллю з високим ризиком.",
                             review_required_hint: "Це підтвердження необхідне для створення або збереження асистента.",
                             review_intro_title: "Що таке цілі використання з високим ризиком?",
                             review_intro_description:
@@ -3920,10 +3920,10 @@ i18n
                             review_check_running: "Перевірка триває...",
                             review_result_passed_title: "Усі перевірки пройдено",
                             review_result_passed_description:
-                                "Ознак системи з високим ризиком не виявлено. Перевірка слугує лише орієнтиром. Будь ласка, підтвердьте нижче, що асистент не використовується для недопустимого сценарію використання з високим ризиком.",
+                                "Ознак системи з високим ризиком не виявлено. Перевірка слугує лише орієнтиром. Будь ласка, підтвердьте нижче, що асистент не використовується для недопустимої цілі з високим ризиком.",
                             review_result_warning_title: "Ознака можливої системи з високим ризиком",
                             review_result_warning_guidance:
-                                "Будь ласка, перегляньте наведені нижче місця в інструкціях і за потреби змініть їх, щоб не залишалося сценарію використання з високим ризиком. Перевірка слугує лише орієнтиром.",
+                                "Будь ласка, перегляньте наведені нижче місця в інструкціях і за потреби змініть їх, щоб не залишалося недопустимої цілі з високим ризиком. Перевірка слугує лише орієнтиром.",
                             review_result_error_title: "Помилка перевірки",
                             review_result_error_description:
                                 "Перевірку не вдалося виконати. Збереження заблоковано, доки повторна перевірка не завершиться успішно.",
@@ -3931,11 +3931,11 @@ i18n
                             review_result_outdated_description:
                                 "Системний промпт було змінено після цієї перевірки. Виявлені ознаки стосуються попередньої версії. Запустіть перевірку ще раз, щоб отримати актуальний результат.",
                             review_confirmation_label_high_risk:
-                                "Я переглянув(-ла) виявлені ознаки та підтверджую, що цей асистент не призначений для недопустимого в MUCGPT сценарію використання з високим ризиком.",
+                                "Я переглянув(-ла) виявлені ознаки та підтверджую, що цей асистент не призначений для недопустимої в MUCGPT цілі з високим ризиком.",
                             review_category_migration_asylum_border: "Міграція, притулок та прикордонний контроль",
-                            review_category_public_services_access: "Доступ до основних державних послуг",
-                            review_category_hr_employment: "Зайнятість та управління персоналом",
-                            review_category_education: "Загальна та професійна освіта",
+                            review_category_public_services_access: "Доступ до державних послуг",
+                            review_category_hr_employment: "Зайнятість і персонал",
+                            review_category_education: "Освіта та професійне навчання",
 
                             // Advanced settings fields
                             creativity: "Стиль відповіді",

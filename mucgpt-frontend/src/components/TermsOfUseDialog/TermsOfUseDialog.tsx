@@ -76,6 +76,11 @@ export const TermsOfUseDialog = ({
                                     kommerzieller KI-Produkte (z.B. ChatGPT, Gemini etc.) ist nur mit öffentlichen Daten erlaubt.{" "}
                                 </li>
                                 <li>
+                                    <strong>Nicht erlaubte Nutzung:</strong> MUCGPT darf nicht zu Hochrisiko-Zwecken im Sinne der Verordnung über künstliche
+                                    Intelligenz (KI-Verordnung/ AI Act, VO [EU] 2024/1689) genutzt werden. Nähere Hinweise hierzu finden Sie in MUCGPT im
+                                    Eingabebereich für Prompts bzw. Assistenten
+                                </li>
+                                <li>
                                     <strong>Informationssicherheit und Datenschutz</strong> Bei der Nutzung von MUCGPT dürfen keine personenbezogenen Daten
                                     (z.B. Name, Anschrift, E-Mail-Adressen etc.) oder als vertraulich klassifizierte Daten (siehe{" "}
                                     <Link

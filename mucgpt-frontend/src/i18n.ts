@@ -398,6 +398,8 @@ i18n
                                 uk: "Ukrainisch"
                             },
                             model_ready: "bereit",
+                            downloading: "Modell wird heruntergeladen",
+                            cancel_download: "Download abbrechen",
                             download: "Modell herunterladen",
                             recommended: "empfohlen",
                             delete_model: "Modell löschen",
@@ -1287,6 +1289,8 @@ i18n
                                 uk: "Ukrainian"
                             },
                             model_ready: "ready",
+                            downloading: "Model is downloading",
+                            cancel_download: "Cancel download",
                             download: "Download model",
                             recommended: "Recommended",
                             delete_model: "Delete model",
@@ -2157,6 +2161,8 @@ i18n
                                 uk: "Ukrainisch"
                             },
                             model_ready: "bereit",
+                            downloading: "Modell wird heruntergeladen",
+                            cancel_download: "Download abbrecha",
                             download: "Modell obaladn",
                             recommended: "Empfohln",
                             delete_model: "Modell wegdoa",
@@ -3020,6 +3026,8 @@ i18n
                             enable_hint: "Lorsque l'option est activée et qu'un modèle est téléchargé, un bouton microphone apparaît dans le chat.",
                             model_label: "Modèle",
                             model_ready: "prêt",
+                            downloading: "Téléchargement du modèle",
+                            cancel_download: "Annuler le téléchargement",
                             model_languages: "Langues : {{languages}}",
                             languages: {
                                 de: "Allemand",
@@ -3885,6 +3893,8 @@ i18n
                             enable_hint: "Якщо увімкнено й модель завантажено, у чаті з'явиться кнопка мікрофона.",
                             model_label: "Модель",
                             model_ready: "готова",
+                            downloading: "Модель завантажується",
+                            cancel_download: "Скасувати завантаження",
                             download: "Завантажити модель",
                             recommended: "Рекомендовано",
                             delete_model: "Видалити модель",

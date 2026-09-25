@@ -36,6 +36,7 @@ export interface ITranscriptionSettings {
     setLanguage: (lang: TranscriptionLanguage) => void;
     // Actions
     downloadModel: (modelId: string) => Promise<void>;
+    cancelDownload: () => void;
     deleteModel: (modelId: string) => Promise<void>;
     clearModels: () => Promise<void>;
     startRecording: () => Promise<void>;
@@ -97,6 +98,7 @@ const defaultValue: ITranscriptionSettings = {
     language: undefined,
     setLanguage: () => {},
     downloadModel: async () => {},
+    cancelDownload: () => {},
     deleteModel: async () => {},
     clearModels: async () => {},
     startRecording: async () => {},
@@ -151,6 +153,7 @@ export const TranscriptionSettingsProvider = ({
     const loadingModelIdRef = useRef<string | null>(null);
     const selectedModelIdRef = useRef<string>(selectedModelId);
     const loadRequestIdRef = useRef(0);
+    const downloadGenerationRef = useRef(0);
     const expectedLoadRef = useRef<{ requestId: number; modelId: string } | null>(null);
     const recordingSessionIdRef = useRef(0);
     const activeRecordingSessionIdRef = useRef<number | null>(null);
@@ -422,6 +425,7 @@ export const TranscriptionSettingsProvider = ({
             setTotalBytes(0);
             setLoadingModelId(modelId);
             setStatus("loading-model");
+            const downloadGeneration = ++downloadGenerationRef.current;
             return new Promise<void>((resolve, reject) => {
                 const modelCfg = TRANSCRIPTION_MODELS.find(m => m.model_id === modelId);
                 // NeMo runtimes report real byte counters while downloading, so the
@@ -435,10 +439,12 @@ export const TranscriptionSettingsProvider = ({
                 }
                 fetchModelFileSizes(modelId, modelCfg?.file_tree)
                     .then(fileSizes => {
+                        if (downloadGeneration !== downloadGenerationRef.current) return;
                         const requestId = requestModelLoad(modelId, fileSizes);
                         pendingDownloadRef.current = { id: modelId, requestId, resolve, reject };
                     })
                     .catch(err => {
+                        if (downloadGeneration !== downloadGenerationRef.current) return;
                         console.error("Failed to fetch file sizes, continuing without size info:", err);
                         const requestId = requestModelLoad(modelId);
                         pendingDownloadRef.current = { id: modelId, requestId, resolve, reject };
@@ -447,6 +453,25 @@ export const TranscriptionSettingsProvider = ({
         },
         [deploymentEnabled, requestModelLoad]
     );
+
+    const cancelDownload = useCallback(() => {
+        if (status !== "loading-model") return;
+        downloadGenerationRef.current += 1;
+        const pending = pendingDownloadRef.current;
+        const requestId = pending?.requestId ?? expectedLoadRef.current?.requestId;
+        if (pending) {
+            pending.reject(new Error("Model download canceled"));
+            pendingDownloadRef.current = null;
+        }
+        if (requestId !== undefined) sendToWorker({ type: "abort", requestId });
+        expectedLoadRef.current = null;
+        loadingModelIdRef.current = null;
+        setLoadingModelId(null);
+        setModelProgress(0);
+        setDownloadedBytes(0);
+        setTotalBytes(0);
+        setStatus("idle");
+    }, [sendToWorker, status]);
 
     /**
      * Deletes one model's cached files, drops it from the downloaded set and, when
@@ -537,6 +562,7 @@ export const TranscriptionSettingsProvider = ({
             language,
             setLanguage,
             downloadModel,
+            cancelDownload,
             deleteModel,
             clearModels,
             startRecording,
@@ -561,6 +587,7 @@ export const TranscriptionSettingsProvider = ({
             language,
             setLanguage,
             downloadModel,
+            cancelDownload,
             deleteModel,
             clearModels,
             startRecording,

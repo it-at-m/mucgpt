@@ -13,12 +13,13 @@ import {
     Label,
     Tooltip
 } from "@fluentui/react-components";
-import { CheckmarkCircle20Filled, Warning20Filled, Dismiss24Regular, Delete20Regular, ArrowDownloadRegular } from "@fluentui/react-icons";
+import { CheckmarkCircle20Filled, Warning20Filled, Dismiss24Regular, Dismiss16Regular, Delete20Regular, ArrowDownloadRegular } from "@fluentui/react-icons";
 import { useContext, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { TranscriptionSettingsContext } from "./TranscriptionSettingsContext";
 import { TRANSCRIPTION_MODELS, orderModelsWithDefaultFirst } from "../../config/transcriptionModels";
 import { supportsWebGPU } from "../../utils/webgpuSupport";
+import { EdelweissSpinner } from "../EdelweissSpinner";
 import styles from "./TranscriptionSettingsDialog.module.css";
 
 /** Maps ISO codes to localized language names for the per-model hint. */
@@ -45,6 +46,7 @@ export const TranscriptionSettingsDialog = ({ open, onOpenChange }: Props) => {
         modelProgress,
         loadingModelId,
         downloadModel,
+        cancelDownload,
         deleteModel,
         clearModels,
         error
@@ -111,6 +113,7 @@ export const TranscriptionSettingsDialog = ({ open, onOpenChange }: Props) => {
                                     {orderedModels.map(m => {
                                         const isDownloaded = downloadedModels.includes(m.model_id);
                                         const isRecommended = m.model_id === defaultModelId;
+                                        const isDownloading = isLoading && loadingModelId === m.model_id;
                                         return (
                                             <div key={m.model_id} className={styles.modelRow} onClick={() => enabled && setSelectedModelId(m.model_id)}>
                                                 <Radio
@@ -145,7 +148,23 @@ export const TranscriptionSettingsDialog = ({ open, onOpenChange }: Props) => {
                                                             />
                                                         </Tooltip>
                                                     )}
-                                                    {isDownloaded ? (
+                                                    {isDownloading ? (
+                                                        <>
+                                                            <EdelweissSpinner size="tiny" />
+                                                            <Tooltip content={t("components.transcriptionSettings.cancel_download")} relationship="label">
+                                                                <Button
+                                                                    appearance="subtle"
+                                                                    size="small"
+                                                                    icon={<Dismiss16Regular />}
+                                                                    aria-label={t("components.transcriptionSettings.cancel_download")}
+                                                                    onClick={event => {
+                                                                        event.stopPropagation();
+                                                                        cancelDownload();
+                                                                    }}
+                                                                />
+                                                            </Tooltip>
+                                                        </>
+                                                    ) : isDownloaded ? (
                                                         <Tooltip content={t("components.transcriptionSettings.delete_model")} relationship="label">
                                                             <Button
                                                                 appearance="subtle"

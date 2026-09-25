@@ -317,15 +317,9 @@
     min-width: 0;
 }
 
-.disclaimerText {
+.disclaimer {
     width: 100%;
     max-width: var(--chatContentWidth, min(60%, 1000px));
-    min-height: 20px;
-    font-style: italic;
-    font-size: 0.75rem;
-    letter-spacing: 0.01em;
-    text-align: center;
-    color: var(--colorNeutralForeground1);
 }
 
 .container[data-info-open="true"] .scrollToBottomWrapper,

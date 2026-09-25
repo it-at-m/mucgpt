@@ -9,19 +9,36 @@ import { useConfigContext } from "../../context/ConfigContext";
 
 interface TermsOfUseDialogProps {
     defaultOpen: boolean;
-    onAccept: () => void;
+    onAccept?: () => void;
     showTrigger?: boolean;
     triggerClassName?: string;
     requireAcceptance?: boolean;
+    open?: boolean;
+    onOpenChange?: (open: boolean) => void;
 }
 
-export const TermsOfUseDialog = ({ defaultOpen, onAccept, showTrigger = true, triggerClassName, requireAcceptance = true }: TermsOfUseDialogProps) => {
+export const TermsOfUseDialog = ({
+    defaultOpen,
+    onAccept,
+    showTrigger = true,
+    triggerClassName,
+    requireAcceptance = true,
+    open: controlledOpen,
+    onOpenChange
+}: TermsOfUseDialogProps) => {
     const { t } = useTranslation();
     const config = useConfigContext();
     const faqUrl = config.faq_url;
     const contactMailUrl = config.contact_mail_url;
     const contactMailLabel = contactMailUrl?.replace(/^mailto:/, "").split("?")[0];
-    const [open, setOpen] = useState<boolean>(defaultOpen);
+    const [internalOpen, setInternalOpen] = useState<boolean>(defaultOpen);
+    const open = controlledOpen ?? internalOpen;
+    const setOpen = (nextOpen: boolean) => {
+        if (controlledOpen === undefined) {
+            setInternalOpen(nextOpen);
+        }
+        onOpenChange?.(nextOpen);
+    };
     const trigger = showTrigger ? (
         <DialogTrigger disableButtonEnhancement>
             <Button
@@ -57,6 +74,11 @@ export const TermsOfUseDialog = ({ defaultOpen, onAccept, showTrigger = true, tr
                                 <li>
                                     <strong>Erlaubte Nutzung:</strong> MUCGPT darf nur im dienstlichen Kontext genutzt werden. Die Nutzung vergleichbarer
                                     kommerzieller KI-Produkte (z.B. ChatGPT, Gemini etc.) ist nur mit öffentlichen Daten erlaubt.{" "}
+                                </li>
+                                <li>
+                                    <strong>Nicht erlaubte Nutzung:</strong> MUCGPT darf nicht zu Hochrisiko-Zwecken im Sinne der Verordnung über künstliche
+                                    Intelligenz (KI-Verordnung/ AI Act, VO [EU] 2024/1689) genutzt werden. Nähere Hinweise hierzu finden Sie in MUCGPT im
+                                    Eingabebereich für Prompts bzw. Assistenten
                                 </li>
                                 <li>
                                     <strong>Informationssicherheit und Datenschutz</strong> Bei der Nutzung von MUCGPT dürfen keine personenbezogenen Daten
@@ -149,7 +171,7 @@ export const TermsOfUseDialog = ({ defaultOpen, onAccept, showTrigger = true, tr
                                     size="medium"
                                     onClick={() => {
                                         if (requireAcceptance) {
-                                            onAccept();
+                                            onAccept?.();
                                         }
                                         setOpen(false);
                                     }}

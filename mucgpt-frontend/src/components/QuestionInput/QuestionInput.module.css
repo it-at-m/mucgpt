@@ -189,21 +189,8 @@
     padding: 0 16px 8px 16px;
 }
 
-.errorhintSection {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
+.disclaimer {
     padding: 0 4px;
-    min-height: 20px;
-    text-align: center;
-}
-
-.errorhint {
-    font-style: italic;
-    font-size: 0.75rem;
-    margin: 0;
-    letter-spacing: 0.01em;
 }
 
 .toolButton {
@@ -269,9 +256,5 @@
 
     .toolButton {
         font-size: 0.75rem;
-    }
-
-    .errorhint {
-        font-size: 0.7rem;
     }
 }

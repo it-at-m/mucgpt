@@ -367,10 +367,7 @@ export const Layout = () => {
                         ) : isUnauthorized ? (
                             <Unauthorized redirectUrl={unauthorizedRedirectUrl} />
                         ) : (
-                            <TranscriptionSettingsProvider
-                                deploymentEnabled={config.transcription_enabled}
-                                defaultModelId={config.transcription_default_model}
-                            >
+                            <TranscriptionSettingsProvider deploymentEnabled={config.transcription_enabled} defaultModelId={config.transcription_default_model}>
                                 <ToolsProvider>
                                     <UnifiedHistoryProvider>
                                         <AppShell

@@ -24,7 +24,7 @@ export type WorkerInMessage =
     | { type: "audio-frame"; sessionId: number; buffer: Float32Array }
     | { type: "stop-recording"; sessionId: number }
     | { type: "unload" }
-    | { type: "abort" };
+    | { type: "abort"; requestId: number };
 
 /**
  * Messages the worker posts back. Every recording-scoped message carries the
@@ -72,6 +72,7 @@ let TensorCtor: any = null;
 let loadedModelId: string | null = null;
 let isLoading = false;
 let queuedLoad: Extract<WorkerInMessage, { type: "load" }> | null = null;
+const canceledLoadRequestIds = new Set<number>();
 let hasWebGPU = false;
 let currentLanguage: string | undefined = undefined;
 let inferenceChain: Promise<void> = Promise.resolve();
@@ -167,6 +168,11 @@ async function loadModel(request: Extract<WorkerInMessage, { type: "load" }>) {
             await loadTransformersTranscriber(request);
         }
         await loadVad();
+
+        if (canceledLoadRequestIds.delete(requestId)) {
+            await unloadModel();
+            return;
+        }
 
         loadedModelId = modelId;
         log("[transcription-worker] init complete, posting ready", { loadedModelId });
@@ -601,6 +607,8 @@ self.addEventListener("message", (event: MessageEvent<WorkerInMessage>) => {
             void unloadModel();
             break;
         case "abort":
+            canceledLoadRequestIds.add(msg.requestId);
+            if (queuedLoad?.requestId === msg.requestId) queuedLoad = null;
             break;
     }
 });

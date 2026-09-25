@@ -9,19 +9,36 @@ import { useConfigContext } from "../../context/ConfigContext";
 
 interface TermsOfUseDialogProps {
     defaultOpen: boolean;
-    onAccept: () => void;
+    onAccept?: () => void;
     showTrigger?: boolean;
     triggerClassName?: string;
     requireAcceptance?: boolean;
+    open?: boolean;
+    onOpenChange?: (open: boolean) => void;
 }
 
-export const TermsOfUseDialog = ({ defaultOpen, onAccept, showTrigger = true, triggerClassName, requireAcceptance = true }: TermsOfUseDialogProps) => {
+export const TermsOfUseDialog = ({
+    defaultOpen,
+    onAccept,
+    showTrigger = true,
+    triggerClassName,
+    requireAcceptance = true,
+    open: controlledOpen,
+    onOpenChange
+}: TermsOfUseDialogProps) => {
     const { t } = useTranslation();
     const config = useConfigContext();
     const faqUrl = config.faq_url;
     const contactMailUrl = config.contact_mail_url;
     const contactMailLabel = contactMailUrl?.replace(/^mailto:/, "").split("?")[0];
-    const [open, setOpen] = useState<boolean>(defaultOpen);
+    const [internalOpen, setInternalOpen] = useState<boolean>(defaultOpen);
+    const open = controlledOpen ?? internalOpen;
+    const setOpen = (nextOpen: boolean) => {
+        if (controlledOpen === undefined) {
+            setInternalOpen(nextOpen);
+        }
+        onOpenChange?.(nextOpen);
+    };
     const trigger = showTrigger ? (
         <DialogTrigger disableButtonEnhancement>
             <Button
@@ -149,7 +166,7 @@ export const TermsOfUseDialog = ({ defaultOpen, onAccept, showTrigger = true, tr
                                     size="medium"
                                     onClick={() => {
                                         if (requireAcceptance) {
-                                            onAccept();
+                                            onAccept?.();
                                         }
                                         setOpen(false);
                                     }}

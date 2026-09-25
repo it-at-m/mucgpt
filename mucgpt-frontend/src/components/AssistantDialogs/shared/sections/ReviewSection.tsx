@@ -5,6 +5,7 @@ import { ShieldTask24Regular } from "@fluentui/react-icons";
 
 import styles from "./ReviewSection.module.css";
 import { ComplianceCheckResponse } from "../../../../api";
+import { TermsOfUseDialog } from "../../../TermsOfUseDialog";
 
 interface ReviewSectionProps {
     confirmed: boolean;
@@ -33,6 +34,7 @@ export const ReviewSection = ({
 
     const confirmationRef = useRef<HTMLDivElement>(null);
     const [highlightConfirmation, setHighlightConfirmation] = useState(false);
+    const [termsOpen, setTermsOpen] = useState(false);
 
     const onCheckboxChange = (_event: ChangeEvent<HTMLInputElement>, data: CheckboxOnChangeData) => {
         onConfirmedChange(data.checked === true);
@@ -47,6 +49,8 @@ export const ReviewSection = ({
     const checkCompleted = checkResult !== null && !checkOutdated;
     // Only a usable (non-error) result for the current prompt guides the user to the confirmation.
     const hasUsableResult = (passed || hasHighRisk) && !checkOutdated;
+    const introDescription = t("components.assistant_editor.review_intro_description");
+    const [introBeforeTerms, introAfterTerms] = introDescription.split("{{termsLink}}");
 
     // After a completed check, guide the user to the now-enabled confirmation: scroll it into view and highlight it briefly.
     useEffect(() => {
@@ -69,7 +73,24 @@ export const ReviewSection = ({
                         <Text as="h4" weight="semibold" className={styles.columnTitle}>
                             {t("components.assistant_editor.review_intro_title")}
                         </Text>
-                        <Text className={styles.columnText}>{t("components.assistant_editor.review_intro_description")}</Text>
+                        <Text className={styles.columnText}>
+                            {introBeforeTerms}
+                            {introAfterTerms !== undefined && (
+                                <Link
+                                    inline
+                                    href="#terms-of-use"
+                                    onClick={event => {
+                                        event.preventDefault();
+                                        setTermsOpen(true);
+                                    }}
+                                >
+                                    {t("components.assistant_editor.review_terms_link", "Nutzungsbedingungen")}
+                                </Link>
+                            )}
+                            {introAfterTerms}
+                        </Text>
+                        <TermsOfUseDialog defaultOpen={false} showTrigger={false} requireAcceptance={false} open={termsOpen} onOpenChange={setTermsOpen} />
+                        <Text className={styles.columnText}>{t("components.assistant_editor.review_intro_description_2")}</Text>
                         <Link href="#/tutorials/high-risk" target="_blank" rel="noopener noreferrer" className={styles.learnMoreLink}>
                             {t("components.assistant_editor.review_check_learn_more")}
                         </Link>

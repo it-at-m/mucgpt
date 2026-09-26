@@ -171,7 +171,8 @@ async function enableMocking() {
     if (import.meta.env?.MODE !== "development" && import.meta.env?.MODE !== "ghpages") {
         return;
     }
-    const { worker } = await import("./mocks/browser.js");
+    const [{ worker }, { initializeMockScenarios }] = await Promise.all([import("./mocks/browser.js"), import("./mocks/data/browser-scenario-seed.js")]);
+    await initializeMockScenarios();
 
     // `worker.start()` returns a Promise that resolves
     // once the Service Worker is up and ready to intercept requests.

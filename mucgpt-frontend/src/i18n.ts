@@ -863,7 +863,8 @@ i18n
                     },
                     discovery: {
                         title: "Assistenten",
-                        subtitle: "Finde und verwalte Assistenten für deine wiederkehrenden Aufgaben."
+                        subtitle: "Finde und verwalte Assistenten für deine wiederkehrenden Aufgaben.",
+                        reset_mock_data: "Mock-Daten zurücksetzen"
                     },
                     ...tutorialsTranslations.DE,
                     ...versionTranslations.DE
@@ -1708,7 +1709,8 @@ i18n
                     },
                     discovery: {
                         title: "Assistants",
-                        subtitle: "Find and manage assistants for your recurring tasks."
+                        subtitle: "Find and manage assistants for your recurring tasks.",
+                        reset_mock_data: "Reset mock data"
                     },
                     ...tutorialsTranslations.EN,
                     ...versionTranslations.EN
@@ -2542,7 +2544,8 @@ i18n
                     },
                     discovery: {
                         title: "Assistentn",
-                        subtitle: "Find und verwalt Assistentn für deine wiederkehrenden Aufgabn."
+                        subtitle: "Find und verwalt Assistentn für deine wiederkehrenden Aufgabn.",
+                        reset_mock_data: "Mock-Datn zrucksetzn"
                     },
                     ...tutorialsTranslations.BA,
                     ...versionTranslations.BA
@@ -3374,7 +3377,8 @@ i18n
                     },
                     discovery: {
                         title: "Assistants",
-                        subtitle: "Trouvez et gérez des assistants pour vos tâches récurrentes."
+                        subtitle: "Trouvez et gérez des assistants pour vos tâches récurrentes.",
+                        reset_mock_data: "Réinitialiser les données fictives"
                     },
                     ...tutorialsTranslations.FR,
                     ...versionTranslations.FR
@@ -4205,7 +4209,8 @@ i18n
                     },
                     discovery: {
                         title: "Асистенти",
-                        subtitle: "Знаходьте та керуйте асистентами для своїх повторюваних завдань."
+                        subtitle: "Знаходьте та керуйте асистентами для своїх повторюваних завдань.",
+                        reset_mock_data: "Скинути тестові дані"
                     },
                     ...tutorialsTranslations.UK,
                     ...versionTranslations.UK

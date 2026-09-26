@@ -318,6 +318,7 @@ export type CommunityAssistant = {
     subscriptions_count?: number;
     tags?: string[];
     is_visible?: boolean;
+    is_deleted?: boolean;
     owners_detailed?: OwnerDetailsResponse[];
 };
 

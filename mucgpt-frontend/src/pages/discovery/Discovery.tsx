@@ -2,7 +2,7 @@ import { type ReactElement, type TransitionEvent, useCallback, useContext, useEf
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Title2, Text, Button, Tab, TabList, makeStyles, mergeClasses } from "@fluentui/react-components";
 import type { SearchBoxChangeEvent, InputOnChangeData, SelectionEvents, OptionOnSelectData, SelectTabData, SelectTabEvent } from "@fluentui/react-components";
-import { Add24Regular, DocumentArrowUpRegular, LibraryRegular, PeopleCommunityRegular, SearchRegular } from "@fluentui/react-icons";
+import { Add24Regular, ArrowResetRegular, DocumentArrowUpRegular, LibraryRegular, PeopleCommunityRegular, SearchRegular } from "@fluentui/react-icons";
 import { useTranslation } from "react-i18next";
 
 import styles from "./Discovery.module.css";
@@ -28,11 +28,14 @@ import { ConfigContext } from "../../context/ConfigContext";
 import { Dropdown } from "../../ui/Dropdown";
 import { Option } from "../../ui/Option";
 import { SearchBox } from "../../ui/SearchBox";
+import { resetMockScenarios } from "../../mocks/data/browser-scenario-seed";
 
 const communityAssistantStorageService = new CommunityAssistantStorageService(COMMUNITY_ASSISTANT_STORE);
 const assistantStorageService = new AssistantStorageService(ASSISTANT_STORE);
 const isAssistantResponse = (data: AssistantResponse | CommunityAssistantSnapshot): data is AssistantResponse =>
     "latest_version" in data && data.latest_version != null && typeof data.latest_version.name === "string";
+
+const isMockMode = import.meta.env.MODE === "development";
 
 type EmptyStateAction = {
     label: string;
@@ -123,6 +126,11 @@ const Discovery = () => {
     }, [assistantToOpenId, setMyAssistantFilter, setSearchText, setShowAllMyAssistants]);
 
     const latestRequestRef = useRef(0);
+
+    const resetMockData = async () => {
+        await resetMockScenarios();
+        window.location.reload();
+    };
 
     const closeDrawer = useCallback(() => {
         latestRequestRef.current++;
@@ -537,6 +545,11 @@ const Discovery = () => {
                                         {t("discovery.subtitle", "Finde und verwalte Assistenten für deine wiederkehrenden Aufgaben.")}
                                     </Text>
                                     <div className={styles.headerActions}>
+                                        {isMockMode && (
+                                            <Button appearance="transparent" icon={<ArrowResetRegular />} onClick={resetMockData}>
+                                                {t("discovery.reset_mock_data")}
+                                            </Button>
+                                        )}
                                         <Button
                                             appearance="transparent"
                                             icon={<DocumentArrowUpRegular />}

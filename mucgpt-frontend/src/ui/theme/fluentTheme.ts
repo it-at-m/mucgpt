@@ -127,6 +127,7 @@ const darkNeutralOverrides = {
     colorNeutralForeground2Pressed: neutralRamp[120],
     colorNeutralForeground2Selected: neutralRamp[120],
 
+    // Keep the subtle/transparent Button icon color in sync with its label (see light theme).
     colorNeutralForeground2BrandHover: neutralRamp[120],
     colorNeutralForeground2BrandPressed: neutralRamp[120],
 

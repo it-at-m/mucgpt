@@ -8,7 +8,6 @@ import {
     MenuTrigger,
     MenuPopover,
     MenuList,
-    MenuItem,
     Text,
     mergeClasses
 } from "@fluentui/react-components";
@@ -35,6 +34,7 @@ import { ExpandableTextarea } from "../ExpandableTextarea";
 import { StarterPromptModel } from "../../../StarterPrompt";
 import { FollowUpActionModel } from "../../../FollowUpAction";
 import { generatePromptId } from "../promptIds";
+import { MenuItem } from "../../../../ui/MenuItem";
 
 interface ConversationOptionsSectionProps {
     followUpActions: FollowUpActionModel[];

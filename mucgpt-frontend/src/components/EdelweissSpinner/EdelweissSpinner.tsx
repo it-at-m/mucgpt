@@ -3,7 +3,7 @@ import { useContext } from "react";
 
 import edelweissBlack from "../../assets/edelweiss.svg";
 import edelweissWhite from "../../assets/edelweiss_white.svg";
-import { LightContext } from "../../pages/layout/LightContext";
+import { AppThemeContext } from "../../ui/theme/AppThemeContext";
 import styles from "./EdelweissSpinner.module.css";
 
 type EdelweissSpinnerSize = "extra-small" | "tiny" | "small" | "medium" | "large" | "extra-large" | number;
@@ -30,7 +30,7 @@ const SIZE_MAP: Record<Exclude<EdelweissSpinnerSize, number>, number> = {
 const getSizeValue = (size: EdelweissSpinnerSize) => (typeof size === "number" ? size : SIZE_MAP[size]);
 
 export const EdelweissSpinner = ({ size = "medium", variant = "auto", label, labelPosition = "below", className }: EdelweissSpinnerProps) => {
-    const isLight = useContext(LightContext);
+    const { isLight } = useContext(AppThemeContext);
     const resolvedVariant = variant === "auto" ? (isLight ? "black" : "white") : variant;
     const mark = resolvedVariant === "white" ? edelweissWhite : edelweissBlack;
     const spinnerSize = getSizeValue(size);

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
-    Button,
+    Caption1Strong,
     Dialog,
     DialogActions,
     DialogBody,
@@ -10,10 +10,11 @@ import {
     Field,
     Input,
     Menu,
-    MenuItem,
     MenuList,
     MenuPopover,
     MenuTrigger,
+    Skeleton,
+    SkeletonItem,
     Tab,
     TabList,
     Tooltip
@@ -22,7 +23,7 @@ import {
     Delete20Regular,
     Edit20Regular,
     MoreHorizontal20Regular,
-    Pin20Filled,
+    Pin16Regular,
     Pin20Regular,
     PinOff20Regular,
     Globe20Regular,
@@ -33,9 +34,10 @@ import { useNavigate } from "react-router-dom";
 import { useUnifiedHistory } from "./UnifiedHistoryContext";
 import { UnifiedHistoryEntry, UnifiedHistoryStorage } from "./unifiedHistoryStorage";
 import { CloseConfirmationDialog } from "../AssistantDialogs/shared/CloseConfirmationDialog";
+import { MenuItem } from "../../ui/MenuItem";
 import { useGlobalToastContext } from "../GlobalToastHandler/GlobalToastContext";
 import styles from "./UnifiedSidebarHistory.module.css";
-import { EdelweissSpinner } from "../EdelweissSpinner";
+import { Button } from "../../ui/Button";
 
 const HISTORY_TAB_STORAGE_KEY = "UNIFIED_HISTORY_ASSISTANT_TAB";
 const DELETE_DIALOG_TITLE_MAX_LENGTH = 80;
@@ -48,6 +50,16 @@ interface UnifiedSidebarHistoryProps {
     requestClose?: () => void;
 }
 
+const HistoryListSkeleton = ({ label }: { label: string }) => (
+    <Skeleton aria-label={label} className={styles.loadingList}>
+        {Array.from({ length: 6 }, (_, index) => (
+            <div key={index} className={styles.loadingRow}>
+                <SkeletonItem shape="rectangle" className={index === 1 || index === 4 ? styles.loadingNameShort : styles.loadingName} />
+            </div>
+        ))}
+    </Skeleton>
+);
+
 export const UnifiedSidebarHistory = ({ requestClose }: UnifiedSidebarHistoryProps) => {
     const { t } = useTranslation();
     const navigate = useNavigate();
@@ -58,6 +70,7 @@ export const UnifiedSidebarHistory = ({ requestClose }: UnifiedSidebarHistoryPro
     const [hasLoaded, setHasLoaded] = useState(false);
     const hasLoadedRef = useRef(false);
     const [entryToDelete, setEntryToDelete] = useState<UnifiedHistoryEntry | null>(null);
+    const [openMenuEntryKey, setOpenMenuEntryKey] = useState<string | null>(null);
     const [renameDialogOpen, setRenameDialogOpen] = useState(false);
     const [renameCandidate, setRenameCandidate] = useState("");
     const [renameTargetId, setRenameTargetId] = useState<string | null>(null);
@@ -194,17 +207,13 @@ export const UnifiedSidebarHistory = ({ requestClose }: UnifiedSidebarHistoryPro
         }
     };
 
-    if (isLoading && !hasLoaded) {
-        return (
-            <div className={styles.centerState}>
-                <EdelweissSpinner size="tiny" label={t("components.history.loading")} />
-            </div>
-        );
-    }
+    const isInitialLoading = isLoading && !hasLoaded;
 
     return (
-        <div className={styles.root}>
-            <div className={styles.historyLabel}>{t("components.history.recents_label")}</div>
+        <div className={styles.root} aria-busy={isInitialLoading}>
+            <Caption1Strong as="span" className={styles.historyLabel}>
+                {t("components.history.recents_label")}
+            </Caption1Strong>
             {isAssistantContext && (
                 <TabList selectedValue={tab} onTabSelect={handleTabChange} className={styles.tabs} size="small">
                     <Tab value="all" icon={<Globe20Regular />}>
@@ -216,16 +225,20 @@ export const UnifiedSidebarHistory = ({ requestClose }: UnifiedSidebarHistoryPro
                 </TabList>
             )}
 
-            {visibleEntries.length === 0 ? (
+            {isInitialLoading ? (
+                <HistoryListSkeleton label={t("components.history.loading")} />
+            ) : visibleEntries.length === 0 ? (
                 <div className={styles.emptyState}>{t(effectiveTab === "assistant" ? "components.history.empty_assistant" : "components.history.empty")}</div>
             ) : (
                 <div className={styles.list} role="list" aria-label={t("components.history.history")}>
                     {visibleEntries.map(entry => {
                         const isActive = activeChatId === entry.id;
                         const title = entry.name || t("components.history.unnamed_chat");
+                        const entryKey = `${entry.kind}-${entry.id}`;
+                        const isMenuOpen = openMenuEntryKey === entryKey;
 
                         return (
-                            <div key={`${entry.kind}-${entry.id}`} className={`${styles.row} ${isActive ? styles.rowActive : ""}`} role="listitem">
+                            <div key={entryKey} className={`${styles.row} ${isMenuOpen ? styles.rowMenuOpen : ""}`} role="listitem">
                                 <Tooltip content={title} relationship="description" positioning={{ position: "after", offset: 40 }} showDelay={400}>
                                     <Button
                                         appearance="subtle"
@@ -234,20 +247,19 @@ export const UnifiedSidebarHistory = ({ requestClose }: UnifiedSidebarHistoryPro
                                         aria-current={isActive ? "page" : undefined}
                                     >
                                         <span className={styles.chatButtonContent}>
-                                            {entry.favorite && <Pin20Filled className={styles.pinnedIcon} />}
+                                            {entry.favorite && <Pin16Regular className={styles.pinnedIcon} />}
                                             <span className={styles.chatName}>{title}</span>
                                         </span>
                                     </Button>
                                 </Tooltip>
 
                                 <div className={styles.optionsSlot}>
-                                    <Menu>
+                                    <Menu onOpenChange={(_event, data) => setOpenMenuEntryKey(data.open ? entryKey : null)}>
                                         <MenuTrigger disableButtonEnhancement>
                                             <Button
                                                 icon={<MoreHorizontal20Regular />}
                                                 appearance="subtle"
                                                 size="small"
-                                                className={styles.optionsButton}
                                                 aria-label={t("components.history.options")}
                                             />
                                         </MenuTrigger>
@@ -262,7 +274,7 @@ export const UnifiedSidebarHistory = ({ requestClose }: UnifiedSidebarHistoryPro
                                                 <MenuItem icon={<Edit20Regular />} onClick={() => renameEntry(entry)}>
                                                     {t("components.history.rename")}
                                                 </MenuItem>
-                                                <MenuItem icon={<Delete20Regular />} onClick={() => setEntryToDelete(entry)} className={styles.deleteMenuItem}>
+                                                <MenuItem tone="danger" icon={<Delete20Regular />} onClick={() => setEntryToDelete(entry)}>
                                                     {t("components.history.delete")}
                                                 </MenuItem>
                                             </MenuList>

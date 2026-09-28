@@ -36,7 +36,9 @@ dependencies = [
     "python-multipart>=0.0.5",
     "deepagents>=0.7.6",
     "langgraph-checkpoint-postgres>=3.1.2",
-    "psycopg[binary]>=3.2"
+    "psycopg[binary]>=3.2",
+    "ag-ui-langgraph[fastapi]==0.0.45",
+    "ag-ui-protocol==1.0.0",
 ]
 
 [dependency-groups]

@@ -6,13 +6,15 @@ from langchain_core.messages import AIMessage, HumanMessage
 from langgraph.checkpoint.postgres.aio import AsyncPostgresSaver
 from psycopg.rows import dict_row
 from psycopg_pool import AsyncConnectionPool
+from sqlalchemy import Connection, inspect
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker
+from sqlalchemy.schema import CreateColumn
 
 from api.api_models import ChatCompletionMessage
 from config.settings import Settings
 from core.logtools import getLogger
 from database.conversation_repo import ConversationRepository
-from database.database_models import Base
+from database.database_models import Base, Chat
 from database.session import create_engine_and_session_factory
 
 logger = getLogger()
@@ -46,6 +48,33 @@ def _message_content(message: HumanMessage | AIMessage) -> str:
     )
 
 
+def _ensure_chat_schema(connection: Connection) -> None:
+    """Create the chat table and add model-defined columns missing from it.
+
+    This intentionally handles only additive changes to core-owned chat
+    persistence. Existing column definitions and constraints are not altered.
+    """
+    chat_table = Chat.__table__
+    Base.metadata.create_all(connection, tables=[chat_table])
+
+    existing_columns = {
+        column["name"] for column in inspect(connection).get_columns(chat_table.name)
+    }
+    table_name = connection.dialect.identifier_preparer.format_table(chat_table)
+
+    for column in chat_table.columns:
+        if column.name in existing_columns:
+            continue
+
+        column_definition = str(
+            CreateColumn(column).compile(dialect=connection.dialect)
+        )
+        connection.exec_driver_sql(
+            f"ALTER TABLE {table_name} ADD COLUMN IF NOT EXISTS {column_definition}"
+        )
+        logger.info("Added missing chats column: %s", column.name)
+
+
 class PersistanceHelpers:
     _pool: AsyncConnectionPool | None = None
     _checkpointer: AsyncPostgresSaver | None = None
@@ -69,7 +98,7 @@ class PersistanceHelpers:
         # LangGraph owns message storage. SQLAlchemy owns the application table.
         engine, session_factory = create_engine_and_session_factory(settings)
         async with engine.begin() as connection:
-            await connection.run_sync(Base.metadata.create_all)
+            await connection.run_sync(_ensure_chat_schema)
 
         PersistanceHelpers._pool = pool
         PersistanceHelpers._checkpointer = checkpointer

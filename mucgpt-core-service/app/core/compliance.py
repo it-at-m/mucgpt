@@ -61,7 +61,7 @@ async def _check_category(
             ChatCompletionMessage(role="system", content=system_instruction.content),
             ChatCompletionMessage(
                 role="user",
-                content=f"<assistant_system_prompt>\n{system_prompt}\n</assistant_system_prompt>",
+                content=f"Here is the system prompt to be evaluated for compliance with the EU AI Act: \n\nBEGIN ASSISTANT SYSTEM PROMPT\n[{system_prompt}]\nEND ASSISTANT SYSTEM PROMPT",
             ),
         ],
         user_info=user_info,

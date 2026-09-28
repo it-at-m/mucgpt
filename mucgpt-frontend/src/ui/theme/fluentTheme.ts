@@ -2,6 +2,16 @@ import { createDarkTheme, createLightTheme, type Theme } from "@fluentui/react-c
 
 import { dangerRamp, mucgptBrandRamp, neutralRamp, successRamp, warningRamp } from "./palette";
 
+// Subtle controls can render on every neutral surface tier. A translucent tint
+// keeps their hover and pressed feedback visible without looking like a new
+// surface level.
+const withAlpha = (hex: string, alpha: number) => {
+    const r = parseInt(hex.slice(1, 3), 16);
+    const g = parseInt(hex.slice(3, 5), 16);
+    const b = parseInt(hex.slice(5, 7), 16);
+    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+};
+
 const shapeOverrides = {
     borderRadiusSmall: "6px",
     borderRadiusMedium: "10px",
@@ -44,6 +54,11 @@ const lightNeutralOverrides = {
     colorNeutralForeground2Pressed: neutralRamp[50],
     colorNeutralForeground2Selected: neutralRamp[50],
 
+    // Keep subtle control icons aligned with their labels instead of changing
+    // to the brand color while hovered or pressed.
+    colorNeutralForeground2BrandHover: neutralRamp[50],
+    colorNeutralForeground2BrandPressed: neutralRamp[50],
+
     colorNeutralForeground3: neutralRamp[70],
     colorNeutralForeground3Hover: neutralRamp[60],
     colorNeutralForeground3Pressed: neutralRamp[60],
@@ -66,6 +81,9 @@ const lightNeutralOverrides = {
     colorNeutralStroke3: neutralRamp[120],
     colorNeutralStrokeSubtle: neutralRamp[120],
     colorNeutralStrokeAccessible: neutralRamp[70],
+
+    colorSubtleBackgroundHover: withAlpha(neutralRamp[40], 0.06),
+    colorSubtleBackgroundPressed: withAlpha(neutralRamp[40], 0.1),
 
     // Text on brand surfaces
     colorNeutralForegroundOnBrand: neutralRamp[160],
@@ -109,6 +127,9 @@ const darkNeutralOverrides = {
     colorNeutralForeground2Pressed: neutralRamp[120],
     colorNeutralForeground2Selected: neutralRamp[120],
 
+    colorNeutralForeground2BrandHover: neutralRamp[120],
+    colorNeutralForeground2BrandPressed: neutralRamp[120],
+
     colorNeutralForeground3: neutralRamp[100],
     colorNeutralForeground3Hover: neutralRamp[110],
     colorNeutralForeground3Pressed: neutralRamp[110],
@@ -131,6 +152,12 @@ const darkNeutralOverrides = {
     colorNeutralStroke3: neutralRamp[50],
     colorNeutralStrokeSubtle: neutralRamp[50],
     colorNeutralStrokeAccessible: neutralRamp[100],
+
+    colorSubtleBackgroundHover: withAlpha(neutralRamp[150], 0.08),
+    colorSubtleBackgroundPressed: withAlpha(neutralRamp[150], 0.14),
+
+    colorNeutralStencil1: neutralRamp[70],
+    colorNeutralStencil2: neutralRamp[60],
 
     // Dark primary surfaces use a light brand color,
     // therefore foreground-on-brand needs to be dark.

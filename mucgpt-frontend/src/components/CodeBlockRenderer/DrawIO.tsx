@@ -19,11 +19,7 @@ export interface DrawIOProps {
  */
 export function normalizeDrawioXml(raw: string): string | null {
     // Only strip stray markdown fences at the edges — keep backticks inside labels.
-    let xml = raw
-        .trim()
-        .replace(/^`+/, "")
-        .replace(/`+$/, "")
-        .trim();
+    let xml = raw.trim().replace(/^`+/, "").replace(/`+$/, "").trim();
     if (!xml) return null;
 
     if (xml.startsWith("{")) {

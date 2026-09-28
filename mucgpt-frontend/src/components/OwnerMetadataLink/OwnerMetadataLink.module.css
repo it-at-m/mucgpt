@@ -1,4 +1,8 @@
 .ownerLink {
+    /* Sits inside the card, above the stretched title action's ::after overlay, so it
+       stays independently clickable/focusable instead of being covered by it. */
+    position: relative;
+    z-index: 1;
     color: var(--colorBrandForegroundLink);
     text-decoration: none;
 }

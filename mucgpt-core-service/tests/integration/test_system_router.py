@@ -21,8 +21,19 @@ def test_config_endpoint(test_client):
     assert "assistant_version" in data
     assert "env_name" in data
     assert "alternative_logo" in data
+    assert "admin_role" in data
     assert "models" in data
     assert isinstance(data["models"], list)
+
+
+@pytest.mark.integration
+def test_config_endpoint_includes_admin_role(test_client):
+    """admin_role is sourced from the configured SSO admin role."""
+    mock_settings = Settings(SSO={"ADMIN_ROLE": "custom-admin-role"})
+    with patch("api.routers.system_router.settings", mock_settings):
+        response = test_client.get("/config", headers=headers)
+    assert response.status_code == 200
+    assert response.json()["admin_role"] == "custom-admin-role"
 
 
 @pytest.mark.integration

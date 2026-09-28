@@ -8,6 +8,7 @@ from fastapi.responses import JSONResponse
 
 from api.exceptions import AuthenticationException
 from api.routers import (
+    admin_assistants_router,
     assistants_router,
     department_router,
     system_router,
@@ -74,6 +75,7 @@ api_app = FastAPI(
 
 # Include routers
 api_app.include_router(assistants_router)
+api_app.include_router(admin_assistants_router)
 api_app.include_router(users_router)
 api_app.include_router(system_router)
 api_app.include_router(department_router)

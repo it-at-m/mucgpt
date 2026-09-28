@@ -6,6 +6,7 @@ from typing import Any, TypedDict
 
 from sqlalchemy import (
     Boolean,
+    CheckConstraint,
     Column,
     DateTime,
     ForeignKey,
@@ -81,6 +82,11 @@ class AssistantVersion(Base):
     compliance_confirmation = Column(
         Boolean, default=False, nullable=False, server_default="0"
     )
+    state = Column(
+        String(32), nullable=False, default="active", server_default="active"
+    )
+    state_changed_by = Column(String(255), nullable=True)
+    state_change_reason = Column(Text, nullable=True)
 
     assistant = relationship("Assistant", back_populates="versions")
     tool_associations = relationship(
@@ -109,10 +115,17 @@ class AssistantVersion(Base):
             "tags": self.tags,
             "compliance_check_result": self.compliance_check_result,
             "compliance_confirmation": self.compliance_confirmation,
+            "state": self.state,
+            "state_changed_by": self.state_changed_by,
+            "state_change_reason": self.state_change_reason,
         }
 
     __table_args__ = (
         UniqueConstraint("assistant_id", "version", name="uq_assistant_version"),
+        CheckConstraint(
+            "state IN ('active', 'inactive', 'pending_legal_review')",
+            name="ck_assistant_version_state",
+        ),
     )
 
     def __repr__(self):

@@ -1,0 +1,17 @@
+id: add resource access role claim
+author: Default
+realm: local_realm
+changes:
+  - addClientMapper:
+      clientId: mucgpt
+      name: userClientRolesResourceAccess
+      protocolMapper: oidc-usermodel-client-role-mapper
+      config:
+        access.token.claim: true
+        id.token.claim: true
+        userinfo.token.claim: true
+        jsonType.label: String
+        multivalued: true
+        claim.name: "resource_access.mucgpt.roles"
+        usermodel.clientRoleMapping.clientId: mucgpt
+        usermodel.clientRoleMapping.rolePrefix: ""

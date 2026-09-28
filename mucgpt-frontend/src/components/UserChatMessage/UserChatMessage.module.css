@@ -7,7 +7,7 @@
 
 .message {
     padding: 0.9em 1.2em;
-    background: var(--app-user-message-background);
+    background: var(--colorNeutralBackground3);
     color: var(--colorNeutralForeground1);
     border-radius: var(--app-radius-xxlarge) var(--app-radius-xxlarge) var(--app-radius-xsmall) var(--app-radius-xxlarge);
     max-width: 100%; /* Ensure it doesn't overflow container */

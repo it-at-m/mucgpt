@@ -29,8 +29,12 @@ interface CreateAssistantStateOptions {
     enabled: boolean;
 }
 
+export type CreateAssistantDraftValues = Omit<CreateAssistantDraft, "view" | "input" | "selectedTemplate">;
+
+export const hasCreateAssistantDraft = () => loadSessionDraft<CreateAssistantDraft>(STORAGE_KEYS.CREATE_ASSISTANT_DRAFT) !== null;
+
 // Prefills the create flow, e.g. from an imported assistant, so the user reviews and creates it like any other assistant.
-export const saveCreateAssistantDraft = (values: Omit<CreateAssistantDraft, "view" | "input" | "selectedTemplate">) => {
+export const saveCreateAssistantDraft = (values: CreateAssistantDraftValues) => {
     const draft: CreateAssistantDraft = {
         ...values,
         view: "settings",

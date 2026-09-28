@@ -464,7 +464,12 @@ i18n
                             import: "Importieren",
                             import_error: "Import fehlgeschlagen",
                             import_failed: "Die Datei konnte nicht importiert werden",
-                            import_invalid_format: "Ungültiges Dateiformat. Die Datei muss einen Titel und System-Prompt enthalten."
+                            import_invalid_format: "Ungültiges Dateiformat. Die Datei muss einen Titel und System-Prompt enthalten.",
+                            draft_exists_title: "Entwurf bereits vorhanden",
+                            draft_exists_message:
+                                "Du hast bereits einen ungespeicherten Assistenten-Entwurf. Beim Importieren wird dieser Entwurf überschrieben.",
+                            draft_exists_overwrite: "Überschreiben",
+                            draft_exists_open: "Entwurf öffnen"
                         },
                         assistant_preview: {
                             title: "Vorschau-Chat",
@@ -1313,7 +1318,11 @@ i18n
                             import: "Import",
                             import_error: "Import failed",
                             import_failed: "The file could not be imported",
-                            import_invalid_format: "Invalid file format. The file must contain a title and system prompt."
+                            import_invalid_format: "Invalid file format. The file must contain a title and system prompt.",
+                            draft_exists_title: "Draft already exists",
+                            draft_exists_message: "You already have an unsaved assistant draft. Importing will overwrite this draft.",
+                            draft_exists_overwrite: "Overwrite",
+                            draft_exists_open: "Open draft"
                         },
                         assistant_preview: {
                             title: "Preview Chat",
@@ -2145,7 +2154,11 @@ i18n
                             import: "Importiern",
                             import_error: "Import fehlgschlogn",
                             import_failed: "De Datei konnt ned importiert werdn",
-                            import_invalid_format: "Ungültigs Dateiformat. De Datei muass an Titel und System-Prompt enthoidn."
+                            import_invalid_format: "Ungültigs Dateiformat. De Datei muass an Titel und System-Prompt enthoidn.",
+                            draft_exists_title: "Entwurf is scho do",
+                            draft_exists_message: "Du host scho an ungspeichertn Assistentn-Entwurf. Beim Importiern wead der Entwurf überschriebn.",
+                            draft_exists_overwrite: "Überschreibn",
+                            draft_exists_open: "Entwurf aufmachn"
                         },
                         assistant_preview: {
                             title: "Vorschau-Chat",
@@ -2979,7 +2992,11 @@ i18n
                             import: "Importer",
                             import_error: "Échec de l'importation",
                             import_failed: "Le fichier n'a pas pu être importé",
-                            import_invalid_format: "Format de fichier invalide. Le fichier doit contenir un titre et un prompt système."
+                            import_invalid_format: "Format de fichier invalide. Le fichier doit contenir un titre et un prompt système.",
+                            draft_exists_title: "Un brouillon existe déjà",
+                            draft_exists_message: "Vous avez déjà un brouillon d'assistant non enregistré. L'importation écrasera ce brouillon.",
+                            draft_exists_overwrite: "Écraser",
+                            draft_exists_open: "Ouvrir le brouillon"
                         },
                         assistant_preview: {
                             title: "Chat d'aperçu",
@@ -3805,7 +3822,11 @@ i18n
                             import: "Імпортувати",
                             import_error: "Помилка імпорту",
                             import_failed: "Не вдалося імпортувати файл",
-                            import_invalid_format: "Недійсний формат файлу. Файл повинен містити назву та системний запит."
+                            import_invalid_format: "Недійсний формат файлу. Файл повинен містити назву та системний запит.",
+                            draft_exists_title: "Чернетка вже існує",
+                            draft_exists_message: "У вас вже є незбережена чернетка асистента. Імпорт перезапише цю чернетку.",
+                            draft_exists_overwrite: "Перезаписати",
+                            draft_exists_open: "Відкрити чернетку"
                         },
                         assistant_preview: {
                             title: "Чат попереднього перегляду",

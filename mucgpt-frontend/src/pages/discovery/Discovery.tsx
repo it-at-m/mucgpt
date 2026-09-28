@@ -28,7 +28,11 @@ import { ConfigContext } from "../../context/ConfigContext";
 import { Dropdown } from "../../ui/Dropdown";
 import { Option } from "../../ui/Option";
 import { SearchBox } from "../../ui/SearchBox";
-import { saveCreateAssistantDraft } from "../../components/AssistantDialogs/shared/hooks/useCreateAssistantState";
+import {
+    CreateAssistantDraftValues,
+    hasCreateAssistantDraft,
+    saveCreateAssistantDraft
+} from "../../components/AssistantDialogs/shared/hooks/useCreateAssistantState";
 
 const communityAssistantStorageService = new CommunityAssistantStorageService(COMMUNITY_ASSISTANT_STORE);
 const assistantStorageService = new AssistantStorageService(ASSISTANT_STORE);
@@ -78,6 +82,7 @@ const Discovery = () => {
     const [selectedAssistant, setSelectedAssistant] = useState<AssistantCardData | null>(null);
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
     const [showUnsubscribeConfirm, setShowUnsubscribeConfirm] = useState(false);
+    const [pendingImportDraft, setPendingImportDraft] = useState<CreateAssistantDraftValues | null>(null);
     const assistantToOpenId = searchParams.get("openAssistant");
     const {
         isLoading,
@@ -190,6 +195,14 @@ const Discovery = () => {
         }
     }, [resolveAssistantData, selectedAssistant, showError, showSuccess, t]);
 
+    const openImportedDraft = useCallback(
+        (draft: CreateAssistantDraftValues) => {
+            saveCreateAssistantDraft(draft);
+            navigate(isComplianceCheckEnabled ? "/assistant/create#compliance-review" : "/assistant/create");
+        },
+        [navigate, isComplianceCheckEnabled]
+    );
+
     const importAssistant = useCallback(() => {
         const fileInput = document.createElement("input");
         fileInput.type = "file";
@@ -212,7 +225,7 @@ const Discovery = () => {
                     throw new Error(t("components.import_assistant.import_invalid_format"));
                 }
 
-                saveCreateAssistantDraft({
+                const draft: CreateAssistantDraftValues = {
                     title: importedData.title,
                     description: typeof importedData.description === "string" ? importedData.description : "",
                     systemPrompt: importedData.system_message,
@@ -223,9 +236,13 @@ const Discovery = () => {
                     starterPrompts: asArray(importedData.examples),
                     hierarchicalAccess: asArray(importedData.hierarchical_access),
                     isVisible: importedData.is_visible === true
-                });
+                };
 
-                navigate(isComplianceCheckEnabled ? "/assistant/create#compliance-review" : "/assistant/create");
+                if (hasCreateAssistantDraft()) {
+                    setPendingImportDraft(draft);
+                } else {
+                    openImportedDraft(draft);
+                }
             } catch (error) {
                 console.error("Failed to import assistant", error);
                 const errorMessage = error instanceof Error ? error.message : t("components.import_assistant.import_failed");
@@ -234,7 +251,7 @@ const Discovery = () => {
         };
 
         fileInput.click();
-    }, [t, showError, navigate, isComplianceCheckEnabled]);
+    }, [t, showError, openImportedDraft]);
 
     const handleSearch = (_event: SearchBoxChangeEvent | null, data: InputOnChangeData) => {
         setSearchText(data.value || "");
@@ -745,6 +762,23 @@ const Discovery = () => {
                     { title: assistantToDuplicate?.title ?? "" }
                 )}
                 confirmLabel={t("components.community_assistants.duplicate_confirm_action")}
+            />
+            <CloseConfirmationDialog
+                open={pendingImportDraft !== null}
+                onOpenChange={open => {
+                    if (!open) setPendingImportDraft(null);
+                }}
+                onConfirmClose={() => {
+                    if (pendingImportDraft) openImportedDraft(pendingImportDraft);
+                }}
+                title={t("components.import_assistant.draft_exists_title")}
+                message={t("components.import_assistant.draft_exists_message")}
+                confirmLabel={t("components.import_assistant.draft_exists_overwrite")}
+                confirmIntent="danger"
+                secondaryAction={{
+                    label: t("components.import_assistant.draft_exists_open"),
+                    onClick: () => navigate("/assistant/create")
+                }}
             />
         </div>
     );

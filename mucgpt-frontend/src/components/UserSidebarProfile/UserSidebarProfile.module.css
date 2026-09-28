@@ -3,6 +3,22 @@
     font-size: var(--fontSizeBase300);
 }
 
+.labelContent[class] {
+    display: flex;
+    align-items: center;
+    gap: var(--spacingHorizontalXS);
+}
+
+.name {
+    flex: 1;
+    min-width: 0;
+}
+
+.settingsIcon {
+    flex-shrink: 0;
+    color: var(--colorNeutralForeground3);
+}
+
 .popover[class] {
     width: 248px;
     max-width: calc(100vw - 2 * var(--spacingHorizontalM));

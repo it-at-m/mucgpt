@@ -26,7 +26,7 @@
     flex: 1;
     height: 100%;
     min-height: 0;
-    padding: var(--spacingVerticalM) var(--spacingHorizontalM);
+    padding: var(--spacingVerticalM) var(--spacingHorizontalM) var(--spacingVerticalS);
     width: 100%;
     box-sizing: border-box;
 }
@@ -85,9 +85,10 @@
     transform: translate(-50%, -50%);
 }
 
-/* Fluent's Divider grows by default and would absorb the free space of the content column. */
-.headerDivider[class] {
-    flex-grow: 0;
+/* Extends dividers across the body padding to the sidebar edges. */
+.edgeDivider[class] {
+    width: auto;
+    margin-inline: calc(-1 * var(--spacingHorizontalM));
 }
 
 .navGroup {
@@ -128,7 +129,7 @@
 }
 
 .footerSection {
-    gap: var(--spacingVerticalM);
+    gap: var(--spacingVerticalS);
 }
 
 .secondarySection {

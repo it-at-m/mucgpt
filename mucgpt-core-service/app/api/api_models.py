@@ -524,3 +524,7 @@ class ConfigResponse(BaseModel):
         None,
         description="Template for assistant owner profile links. The '{uid}' placeholder is replaced with the owner lhmObjectID.",
     )
+    ag_ui_enabled: bool = Field(
+        False,
+        description="Whether the AG UI is enabled.",
+    )

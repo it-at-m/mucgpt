@@ -79,6 +79,7 @@ const Discovery = () => {
     const [selectedAssistant, setSelectedAssistant] = useState<AssistantCardData | null>(null);
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
     const [showUnsubscribeConfirm, setShowUnsubscribeConfirm] = useState(false);
+    const [showResetMockConfirm, setShowResetMockConfirm] = useState(false);
     const assistantToOpenId = searchParams.get("openAssistant");
     const {
         isLoading,
@@ -546,7 +547,7 @@ const Discovery = () => {
                                     </Text>
                                     <div className={styles.headerActions}>
                                         {isMockMode && (
-                                            <Button appearance="transparent" icon={<ArrowResetRegular />} onClick={resetMockData}>
+                                            <Button appearance="transparent" icon={<ArrowResetRegular />} onClick={() => setShowResetMockConfirm(true)}>
                                                 {t("discovery.reset_mock_data")}
                                             </Button>
                                         )}
@@ -763,6 +764,17 @@ const Discovery = () => {
                 )}
                 confirmLabel={t("components.community_assistants.duplicate_confirm_action")}
             />
+            {isMockMode && (
+                <CloseConfirmationDialog
+                    open={showResetMockConfirm}
+                    onOpenChange={setShowResetMockConfirm}
+                    onConfirmClose={resetMockData}
+                    title={t("discovery.reset_mock_data_confirm_title")}
+                    message={t("discovery.reset_mock_data_confirm_message")}
+                    confirmLabel={t("discovery.reset_mock_data")}
+                    confirmIntent="danger"
+                />
+            )}
         </div>
     );
 };

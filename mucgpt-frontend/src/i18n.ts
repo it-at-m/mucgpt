@@ -864,7 +864,10 @@ i18n
                     discovery: {
                         title: "Assistenten",
                         subtitle: "Finde und verwalte Assistenten für deine wiederkehrenden Aufgaben.",
-                        reset_mock_data: "Mock-Daten zurücksetzen"
+                        reset_mock_data: "Mock-Daten zurücksetzen",
+                        reset_mock_data_confirm_title: "Mock-Daten zurücksetzen?",
+                        reset_mock_data_confirm_message:
+                            "Die Mock-Assistenten und Szenario-Daten werden auf den Ausgangszustand zurückgesetzt. Deine übrigen lokalen Assistenten und Chats bleiben erhalten."
                     },
                     ...tutorialsTranslations.DE,
                     ...versionTranslations.DE
@@ -1710,7 +1713,10 @@ i18n
                     discovery: {
                         title: "Assistants",
                         subtitle: "Find and manage assistants for your recurring tasks.",
-                        reset_mock_data: "Reset mock data"
+                        reset_mock_data: "Reset mock data",
+                        reset_mock_data_confirm_title: "Reset mock data?",
+                        reset_mock_data_confirm_message:
+                            "The mock assistants and scenario data will be restored to their initial state. Your other local assistants and chats are kept."
                     },
                     ...tutorialsTranslations.EN,
                     ...versionTranslations.EN
@@ -2545,7 +2551,10 @@ i18n
                     discovery: {
                         title: "Assistentn",
                         subtitle: "Find und verwalt Assistentn für deine wiederkehrenden Aufgabn.",
-                        reset_mock_data: "Mock-Datn zrucksetzn"
+                        reset_mock_data: "Mock-Datn zrucksetzn",
+                        reset_mock_data_confirm_title: "Mock-Datn zrucksetzn?",
+                        reset_mock_data_confirm_message:
+                            "De Mock-Assistentn und Szenario-Datn wern auf an Ausgangszustand zruckgsetzt. Deine andern lokaln Assistentn und Chats bleibn erhaltn."
                     },
                     ...tutorialsTranslations.BA,
                     ...versionTranslations.BA
@@ -3378,7 +3387,10 @@ i18n
                     discovery: {
                         title: "Assistants",
                         subtitle: "Trouvez et gérez des assistants pour vos tâches récurrentes.",
-                        reset_mock_data: "Réinitialiser les données fictives"
+                        reset_mock_data: "Réinitialiser les données fictives",
+                        reset_mock_data_confirm_title: "Réinitialiser les données fictives ?",
+                        reset_mock_data_confirm_message:
+                            "Les assistants fictifs et les données de scénario seront restaurés à leur état initial. Vos autres assistants et conversations locaux sont conservés."
                     },
                     ...tutorialsTranslations.FR,
                     ...versionTranslations.FR
@@ -4210,7 +4222,10 @@ i18n
                     discovery: {
                         title: "Асистенти",
                         subtitle: "Знаходьте та керуйте асистентами для своїх повторюваних завдань.",
-                        reset_mock_data: "Скинути тестові дані"
+                        reset_mock_data: "Скинути тестові дані",
+                        reset_mock_data_confirm_title: "Скинути тестові дані?",
+                        reset_mock_data_confirm_message:
+                            "Тестових асистентів і дані сценаріїв буде відновлено до початкового стану. Інші ваші локальні асистенти та чати збережуться."
                     },
                     ...tutorialsTranslations.UK,
                     ...versionTranslations.UK

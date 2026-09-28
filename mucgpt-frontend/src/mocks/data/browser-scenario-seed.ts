@@ -2,7 +2,6 @@ import type { Assistant, CommunityAssistantSnapshot } from "../../api/models";
 import { ASSISTANT_STORE, COMMUNITY_ASSISTANT_STORE, CREATIVITY_LOW, CREATIVITY_MEDIUM } from "../../constants";
 import { AssistantStorageService } from "../../service/assistantstorage";
 import { CommunityAssistantStorageService } from "../../service/communityassistantstorage";
-import { StorageService } from "../../service/storage";
 import { COMMUNITY_ASSISTANT_SNAPSHOT_VERSION } from "../../utils/community-assistant-snapshots";
 import { resetMockAssistants } from "./assistant-store";
 
@@ -60,15 +59,15 @@ const getStorage = (): Storage | undefined => {
     }
 };
 
-const clearObjectStore = async (config: typeof ASSISTANT_STORE): Promise<void> => {
-    const storageService = new StorageService(config);
-    const database = await storageService.connectToDB();
-    await database.clear(config.objectStore_name);
-    database.close();
-};
+const removeSeededScenarioRecords = async (): Promise<void> => {
+    const assistantStorageService = new AssistantStorageService(ASSISTANT_STORE);
+    const communityAssistantStorageService = new CommunityAssistantStorageService(COMMUNITY_ASSISTANT_STORE);
 
-const clearScenarioIndexedDb = async (): Promise<void> => {
-    await Promise.all([clearObjectStore(ASSISTANT_STORE), clearObjectStore(COMMUNITY_ASSISTANT_STORE)]);
+    await Promise.all([
+        ...MOCK_LOCAL_ASSISTANTS.map(({ id }) => assistantStorageService.deleteConfigAndChatsForAssistant(id)),
+        communityAssistantStorageService.deleteConfigForAssistant(MOCK_DELETED_SUBSCRIBED_SNAPSHOT.id),
+        assistantStorageService.deleteChatsForAssistant(MOCK_DELETED_SUBSCRIBED_SNAPSHOT.id)
+    ]);
 };
 
 const seedIfMissing = async (id: string, read: () => Promise<unknown>, write: () => Promise<unknown>): Promise<void> => {
@@ -108,7 +107,7 @@ export const initializeMockScenarios = async (): Promise<void> => {
     }
 };
 
-/** Clears all browser-side mock data so the next load receives a pristine scenario catalog. */
+/** Restores the mock-server seed and re-seeds the browser-side scenarios, keeping all other local records. */
 export const resetMockScenarios = async (): Promise<void> => {
     resetMockAssistants();
 
@@ -119,7 +118,7 @@ export const resetMockScenarios = async (): Promise<void> => {
     }
 
     try {
-        await clearScenarioIndexedDb();
+        await removeSeededScenarioRecords();
     } catch (error) {
         console.warn("Could not reset dev mock scenarios:", error);
     }

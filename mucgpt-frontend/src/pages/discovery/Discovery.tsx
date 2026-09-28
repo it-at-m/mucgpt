@@ -199,10 +199,13 @@ const Discovery = () => {
 
     const openImportedDraft = useCallback(
         (draft: CreateAssistantDraftValues) => {
-            saveCreateAssistantDraft(draft);
+            if (!saveCreateAssistantDraft(draft)) {
+                showError(t("components.import_assistant.import_error"), t("components.import_assistant.import_failed"));
+                return;
+            }
             navigate(isComplianceCheckEnabled ? "/assistant/create#compliance-review" : "/assistant/create");
         },
-        [navigate, isComplianceCheckEnabled]
+        [navigate, isComplianceCheckEnabled, showError, t]
     );
 
     const importAssistant = useCallback(() => {

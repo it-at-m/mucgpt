@@ -34,7 +34,7 @@ export type CreateAssistantDraftValues = Omit<CreateAssistantDraft, "view" | "in
 export const hasCreateAssistantDraft = () => loadSessionDraft<CreateAssistantDraft>(STORAGE_KEYS.CREATE_ASSISTANT_DRAFT) !== null;
 
 // Prefills the create flow, e.g. from an imported assistant, so the user reviews and creates it like any other assistant.
-export const saveCreateAssistantDraft = (values: CreateAssistantDraftValues) => {
+export const saveCreateAssistantDraft = (values: CreateAssistantDraftValues): boolean => {
     const draft: CreateAssistantDraft = {
         ...values,
         view: "settings",
@@ -43,7 +43,7 @@ export const saveCreateAssistantDraft = (values: CreateAssistantDraftValues) => 
         followUpActions: ensurePromptIds(values.followUpActions),
         starterPrompts: ensurePromptIds(values.starterPrompts)
     };
-    saveSessionDraft(STORAGE_KEYS.CREATE_ASSISTANT_DRAFT, draft);
+    return saveSessionDraft(STORAGE_KEYS.CREATE_ASSISTANT_DRAFT, draft);
 };
 
 export const useCreateAssistantState = ({ enabled }: CreateAssistantStateOptions) => {

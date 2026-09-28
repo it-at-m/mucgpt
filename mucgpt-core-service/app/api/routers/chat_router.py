@@ -9,6 +9,7 @@ from api.api_models import (
     ChatCompletionMessage,
     ChatCompletionRequest,
     ChatCompletionResponse,
+    ConversationMetadata,
 )
 from api.exception import llm_exception_handler
 from config.settings import get_settings
@@ -162,6 +163,20 @@ async def chat_endpoint(
         logger.exception("Exception in /chat/completions")
         msg = llm_exception_handler(ex=e, logger=logger)
         raise HTTPException(status_code=500, detail=msg) from e
+
+
+@router.get(
+    "/conversations",
+    summary="List the caller's conversations",
+    response_model=list[ConversationMetadata],
+)
+async def list_conversations(
+    user_info: Annotated[AuthenticationResult, Depends(authenticate_user)],
+) -> list[ConversationMetadata]:
+    """Return the authenticated user's conversations as metadata (no messages),
+    most recently active first."""
+    rows = await PersistanceHelpers.get_conversations_for_user(user_info.user_id)
+    return [ConversationMetadata(**row) for row in rows]
 
 
 @router.get(

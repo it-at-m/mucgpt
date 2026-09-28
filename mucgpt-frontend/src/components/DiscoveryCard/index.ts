@@ -1,2 +1,3 @@
 export { DiscoveryCard } from "./DiscoveryCard";
-export type { DiscoveryCardProps } from "./DiscoveryCard";
+export { DiscoveryCardSkeleton } from "./DiscoveryCardSkeleton";
+export type { DiscoveryCardBadge, DiscoveryCardProps } from "./DiscoveryCard";

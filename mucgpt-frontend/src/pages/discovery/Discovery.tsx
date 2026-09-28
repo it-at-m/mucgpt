@@ -7,7 +7,7 @@ import { useTranslation } from "react-i18next";
 
 import styles from "./Discovery.module.css";
 import { getCommunityAssistantApi, deleteCommunityAssistantApi, unsubscribeFromAssistantApi } from "../../api/assistant-client";
-import { Assistant, AssistantResponse, CommunityAssistantSnapshot } from "../../api/models";
+import { Assistant, AssistantResponse, CommunityAssistantSnapshot, ToolBase } from "../../api/models";
 import { AssistantStorageService } from "../../service/assistantstorage";
 import { CommunityAssistantStorageService } from "../../service/communityassistantstorage";
 import { ASSISTANT_STORE, COMMUNITY_ASSISTANT_STORE, CREATIVITY_LOW } from "../../constants";
@@ -37,6 +37,8 @@ import {
 const communityAssistantStorageService = new CommunityAssistantStorageService(COMMUNITY_ASSISTANT_STORE);
 const assistantStorageService = new AssistantStorageService(ASSISTANT_STORE);
 const asArray = <T,>(value: unknown): T[] => (Array.isArray(value) ? value : []);
+const isToolBase = (value: unknown): value is ToolBase =>
+    typeof value === "object" && value !== null && typeof (value as ToolBase).id === "string" && (value as ToolBase).id !== "";
 const isAssistantResponse = (data: AssistantResponse | CommunityAssistantSnapshot): data is AssistantResponse =>
     "latest_version" in data && data.latest_version != null && typeof data.latest_version.name === "string";
 
@@ -225,13 +227,18 @@ const Discovery = () => {
                     throw new Error(t("components.import_assistant.import_invalid_format"));
                 }
 
+                const tools = asArray<unknown>(importedData.tools);
+                if (!tools.every(isToolBase)) {
+                    throw new Error(t("components.import_assistant.import_invalid_format"));
+                }
+
                 const draft: CreateAssistantDraftValues = {
                     title: importedData.title,
                     description: typeof importedData.description === "string" ? importedData.description : "",
                     systemPrompt: importedData.system_message,
                     creativity: typeof importedData.creativity === "string" ? importedData.creativity : CREATIVITY_LOW,
                     defaultModel: typeof importedData.default_model === "string" ? importedData.default_model : undefined,
-                    tools: asArray(importedData.tools),
+                    tools,
                     followUpActions: asArray(importedData.quick_prompts),
                     starterPrompts: asArray(importedData.examples),
                     hierarchicalAccess: asArray(importedData.hierarchical_access),

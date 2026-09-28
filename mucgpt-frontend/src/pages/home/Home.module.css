@@ -5,7 +5,7 @@
     min-height: 100%;
     min-width: 0;
     overflow-x: hidden;
-    background: var(--colorNeutralBackground1);
+    background: var(--colorNeutralBackground3);
 }
 
 .chatstartercontainer {
@@ -57,8 +57,8 @@
 }
 
 .chatNavigationButton {
-    background: var(--app-primary-action-background);
-    color: var(--app-primary-action-foreground);
+    background: var(--colorBrandBackground);
+    color: var(--colorNeutralForegroundOnBrand);
     padding: 12px 24px;
     border-radius: 6px;
     text-decoration: none;
@@ -76,7 +76,7 @@
 }
 
 .chatNavigationButton:hover {
-    background: var(--app-primary-action-hover);
+    background: var(--colorBrandBackgroundHover);
     text-decoration: none;
     transform: translateY(-1px);
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
@@ -112,13 +112,6 @@
 
 .modeTabs {
     flex-shrink: 0;
-}
-
-.exploreBadge {
-    color: var(--colorBrandBackground) !important;
-    background-color: var(--colorNeutralBackground2) !important;
-    border-color: var(--colorBrandStroke2) !important;
-    font-weight: var(--fontWeightSemibold);
 }
 
 .assistantGrid {
@@ -159,7 +152,7 @@
 }
 
 .footerContent {
-    width: min(1180px, 100%);
+    width: min(var(--pageContentMaxWidth), 100%);
     margin: 0 auto;
 }
 

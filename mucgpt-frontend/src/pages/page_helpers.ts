@@ -272,6 +272,7 @@ export const makeApiRequest = async (
         throw Error("No response body");
     } // Initialize token counters for usage tracking
     let user_tokens = 0;
+    let cache_read_tokens = 0;
     let streamed_tokens = 0;
     let context_tokens = 0;
 
@@ -384,6 +385,7 @@ export const makeApiRequest = async (
                         // (finish_reason: "stop") chunk, so it must be read before that check below.
                         if (chunk.usage) {
                             user_tokens = user_tokens + (chunk.usage.prompt_tokens || 0);
+                            cache_read_tokens += chunk.usage.cache_read_tokens ?? 0;
                             streamed_tokens = streamed_tokens + (chunk.usage.completion_tokens || 0);
                             context_tokens =
                                 chunk.usage.context_tokens ??
@@ -444,7 +446,9 @@ export const makeApiRequest = async (
 
     const finalToolContent = toolStreamHandler.getFormattedContent();
     const finalCombinedContent = textBuffer + finalToolContent;
-    const usageCost = user_tokens * (LLM.input_cost_per_token ?? 0) + streamed_tokens * (LLM.output_cost_per_token ?? 0);
+    // Cached input is excluded until its price is configured; usage totals still include it.
+    // TODO: Add cache_read_tokens * cached input price when that price is available.
+    const usageCost = Math.max(0, user_tokens - cache_read_tokens) * (LLM.input_cost_per_token ?? 0) + streamed_tokens * (LLM.output_cost_per_token ?? 0);
 
     const finalResponse = {
         ...askResponse,

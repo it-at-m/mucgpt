@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from datetime import datetime
+from enum import Enum
 from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field  # added ConfigDict
@@ -19,6 +20,12 @@ ComplianceCategoryId = Literal[
     "education",
 ]
 ComplianceStatus = Literal["passed", "high_risk_detected", "error"]
+
+
+class AssistantState(str, Enum):  # noqa: UP042
+    ACTIVE = "active"
+    INACTIVE = "inactive"
+    PENDING_LEGAL_REVIEW = "pending_legal_review"
 
 
 class ComplianceCategoryResult(BaseModel):
@@ -509,6 +516,25 @@ class AssistantVersionResponse(AssistantBase):
         False,
         description="Whether the owner confirmed the compliance review for this assistant version.",
     )
+    state: AssistantState = Field(
+        AssistantState.ACTIVE,
+        description="Lifecycle state assigned to this immutable version.",
+    )
+    state_changed_by: str | None = Field(
+        None, description="User ID that assigned this version's lifecycle state."
+    )
+    state_change_reason: str | None = Field(
+        None, description="Reason recorded for this version's lifecycle state."
+    )
+
+
+class AssistantStateUpdate(BaseModel):
+    """Administrative lifecycle-state transition for the current assistant version."""
+
+    state: AssistantState
+    expected_state: AssistantState
+    version: int = Field(ge=1)
+    reason: str | None = Field(None, max_length=2000)
 
 
 class AssistantResponse(BaseModel):
@@ -661,6 +687,10 @@ class SubscriptionResponse(BaseModel):
         True,
         description="Whether this assistant is publicly listed in the UI",
         example=True,
+    )
+    state: AssistantState = Field(
+        AssistantState.ACTIVE,
+        description="Lifecycle state of the subscribed assistant's latest version.",
     )
     owners_detailed: list[OwnerDetailsResponse] | None = Field(
         None,

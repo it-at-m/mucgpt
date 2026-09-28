@@ -305,6 +305,7 @@ class TestMUCGPTAgentExecutor:
                         "input_tokens": 12,
                         "output_tokens": 3,
                         "total_tokens": 15,
+                        "input_token_details": {"cache_read": 4},
                     }
                 )
                 yield (
@@ -345,6 +346,7 @@ class TestMUCGPTAgentExecutor:
             "completion_tokens": 3,
             "total_tokens": 15,
             "context_tokens": 15,
+            "cache_read_tokens": 4,
         }
 
     @pytest.mark.asyncio
@@ -402,6 +404,7 @@ class TestMUCGPTAgentExecutor:
             "completion_tokens": 6,
             "total_tokens": 36,
             "context_tokens": 24,
+            "cache_read_tokens": 0,
         }
 
     @pytest.mark.asyncio
@@ -442,6 +445,7 @@ class TestMUCGPTAgentExecutor:
             "completion_tokens": 6,
             "total_tokens": 36,
             "context_tokens": 24,
+            "cache_read_tokens": 0,
         }
 
     @pytest.mark.asyncio

@@ -1,0 +1,37 @@
+id: add admin user
+author: Default
+realm: local_realm
+changes:
+  - addRole:
+      name: lhm-ab-mucgpt-admin
+      description: Local development role for MUCGPT administration
+      clientRole: true
+      clientId: mucgpt
+      composite: false
+  - addUser:
+      name: mucgpt-admin-user
+      lastName: Admin
+      firstName: MUCGPT
+      enabled: true
+      emailVerified: true
+      email: mucgpt-admin@user.com
+      attributes:
+        user_name:
+          - mucgpt-admin-user
+        lhmObjectID:
+          - 111160471
+        telephoneNumber:
+          - "089-99998000"
+        department:
+          - "ITM"
+  - updateUserPassword:
+      name: mucgpt-admin-user
+      password: "mucgpt"
+  - assignRole:
+      user: mucgpt-admin-user
+      role: lhm-ab-mucgpt-user
+      clientId: mucgpt
+  - assignRole:
+      user: mucgpt-admin-user
+      role: lhm-ab-mucgpt-admin
+      clientId: mucgpt

@@ -340,7 +340,7 @@ def test_update_assistant_strict_mode_accepts_verified_prompt_change(
 def test_update_assistant_strict_mode_unchanged_prompt_preserves_compliance_result(
     test_client, monkeypatch: pytest.MonkeyPatch
 ):
-    """Strict mode should not require re-verification when the prompt value is unchanged."""
+    """An unchanged approved prompt does not depend on the Redis cache."""
     monkeypatch.setattr(
         assistants_router_module.get_settings(),
         "COMPLIANCE_REQUIRE_VERIFICATION",
@@ -390,12 +390,35 @@ def test_update_assistant_strict_mode_unchanged_prompt_preserves_compliance_resu
     created = AssistantResponse.model_validate(create_response.json())
     assert created.latest_version.compliance_check_result == result
 
+    async def _cache_unavailable(_key: str):
+        raise RuntimeError("Redis is unavailable")
+
+    monkeypatch.setattr(
+        assistants_router_module.RedisCache,
+        "get_object",
+        _cache_unavailable,
+    )
+
+    submitted_result = result.model_copy(
+        update={
+            "overall_status": "high_risk_detected",
+            "results": [
+                {
+                    "category": "public_services_access",
+                    "status": "high_risk_detected",
+                    "reasoning": "A rerun may produce different model reasoning.",
+                }
+            ],
+        }
+    )
+
     update_response = test_client.post(
         f"assistant/{created.id}/update",
         json=AssistantUpdate(
             version=created.latest_version.version,
             system_prompt=system_prompt,
             name="Updated name only",
+            compliance_check_result=submitted_result,
         ).model_dump(),
         headers=headers,
     )
@@ -403,6 +426,7 @@ def test_update_assistant_strict_mode_unchanged_prompt_preserves_compliance_resu
     assert update_response.status_code == 200
     updated = AssistantResponse.model_validate(update_response.json())
     assert updated.latest_version.compliance_check_result == result
+    assert updated.latest_version.state == created.latest_version.state
 
 
 @pytest.mark.integration

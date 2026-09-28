@@ -35,6 +35,7 @@ async def get_config(user_info=Depends(authenticate_user)) -> ConfigResponse:
         incident_report_url=settings.INCIDENT_REPORT_URL,
         feature_request_url=settings.FEATURE_REQUEST_URL,
         contact_mail_url=settings.CONTACT_MAIL_URL,
+        admin_role=settings.SSO.ADMIN_ROLE,
         ad2image_url=settings.AD2IMAGE_URL,
         owner_profile_url_template=settings.OWNER_PROFILE_URL_TEMPLATE,
     )

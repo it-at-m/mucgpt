@@ -5,7 +5,7 @@ landingURL: https://it-at-m.github.io/mucgpt/
 isBasedOn: https://github.com/Azure-Samples/azure-search-openai-demo
 softwareVersion: "2.0"
 releaseDate: 2025-04-24
-logo: assets/mucgpt_title.svg
+logo: mucgpt_title.svg
 platforms:
   - web
 categories:

@@ -9,6 +9,7 @@ from api.api_models import (
     AssistantListSortBy,
     AssistantListSortOrder,
     AssistantResponse,
+    AssistantState,
     AssistantVersionResponse,
     StatusResponse,
     SubscriptionResponse,
@@ -17,6 +18,7 @@ from api.api_models import (
 from api.exceptions import (
     AlreadySubscribedException,
     AssistantNotFoundException,
+    AssistantUnavailableForUseException,
     NotAllowedToAccessException,
     SubscriptionNotFoundException,
 )
@@ -81,6 +83,11 @@ async def _build_assistant_response_list(
                 ),
                 compliance_confirmation=bool(
                     getattr(latest_version, "compliance_confirmation", False)
+                ),
+                state=getattr(latest_version, "state", AssistantState.ACTIVE),
+                state_changed_by=getattr(latest_version, "state_changed_by", None),
+                state_change_reason=getattr(
+                    latest_version, "state_change_reason", None
                 ),
             )
             response = AssistantResponse(
@@ -182,11 +189,19 @@ async def subscribe_to_assistant(
     )
 
     assistant_repo = AssistantRepository(db)
-    assistant = await assistant_repo.get(assistant_id)
+    # Lifecycle changes lock this row before appending a new version. Acquire the
+    # same lock before validating so the check and subscription commit serialize.
+    assistant = await assistant_repo.get_for_update(assistant_id)
     if not assistant:
         raise AssistantNotFoundException(assistant_id)
     if not await assistant.is_allowed_for_user(user_info.department):
         raise NotAllowedToAccessException(assistant_id)
+    latest_version = await assistant_repo.get_latest_version(assistant_id)
+    if latest_version is None or latest_version.state != AssistantState.ACTIVE:
+        raise AssistantUnavailableForUseException(
+            assistant_id,
+            latest_version.state if latest_version is not None else None,
+        )
 
     is_subscribed = await assistant_repo.is_user_subscribed(
         assistant_id, user_info.user_id
@@ -308,6 +323,7 @@ async def get_user_subscriptions(
                 subscriptions_count=getattr(assistant, "subscriptions_count", 0) or 0,
                 tags=latest_version.tags or [],
                 is_visible=bool(getattr(assistant, "is_visible", True)),
+                state=getattr(latest_version, "state", AssistantState.ACTIVE),
                 owners_detailed=owners_detailed,
             )
             response_list.append(response)

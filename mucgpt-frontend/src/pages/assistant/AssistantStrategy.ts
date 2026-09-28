@@ -1,5 +1,5 @@
 import { AssistantStorageService } from "../../service/assistantstorage";
-import { AssistantUpdateInput, Assistant, ComplianceCheckResponse } from "../../api/models";
+import { AssistantUpdateInput, Assistant, AssistantState, ComplianceCheckResponse } from "../../api/models";
 import { ASSISTANT_STORE, COMMUNITY_ASSISTANT_STORE } from "../../constants";
 import {
     createCommunityAssistantApi,
@@ -22,7 +22,7 @@ export interface AssistantStrategy {
     updateAssistant?(
         assistantId: string,
         newAssistant: Assistant
-    ): Promise<{ updatedAssistant?: Assistant; persistedComplianceCheckResult?: ComplianceCheckResponse | null }>;
+    ): Promise<{ updatedAssistant?: Assistant; persistedComplianceCheckResult?: ComplianceCheckResponse | null; state?: AssistantState }>;
     isOwned: boolean;
     canEdit: boolean;
     requiresReloadOnSave?: boolean; // New flag to indicate if page reload is needed after save
@@ -46,7 +46,7 @@ export class LocalAssistantStrategy implements AssistantStrategy {
     async updateAssistant(
         assistantId: string,
         newAssistant: Assistant
-    ): Promise<{ updatedAssistant?: Assistant; persistedComplianceCheckResult?: ComplianceCheckResponse | null }> {
+    ): Promise<{ updatedAssistant?: Assistant; persistedComplianceCheckResult?: ComplianceCheckResponse | null; state?: AssistantState }> {
         const assistantStorageService = new AssistantStorageService(ASSISTANT_STORE);
         const response = await createCommunityAssistantApi({
             name: newAssistant.title,
@@ -68,7 +68,10 @@ export class LocalAssistantStrategy implements AssistantStrategy {
         await assistantStorageService.deleteConfigAndChatsForAssistant(assistantId);
         window.location.href = `/#/owned/communityassistant/${response.id}`;
 
-        return { persistedComplianceCheckResult: response.latest_version.compliance_check_result ?? null };
+        return {
+            persistedComplianceCheckResult: response.latest_version.compliance_check_result ?? null,
+            state: response.latest_version.state
+        };
     }
 }
 
@@ -144,7 +147,7 @@ export class OwnedCommunityAssistantStrategy implements AssistantStrategy {
     async updateAssistant(
         assistantId: string,
         newAssistant: Assistant
-    ): Promise<{ updatedAssistant?: Assistant; persistedComplianceCheckResult?: ComplianceCheckResponse | null }> {
+    ): Promise<{ updatedAssistant?: Assistant; persistedComplianceCheckResult?: ComplianceCheckResponse | null; state?: AssistantState }> {
         const updateInput: AssistantUpdateInput = {
             name: newAssistant.title,
             description: newAssistant.description,
@@ -165,6 +168,9 @@ export class OwnedCommunityAssistantStrategy implements AssistantStrategy {
 
         const response = await updateCommunityAssistantApi(assistantId, updateInput);
 
-        return { persistedComplianceCheckResult: response.latest_version.compliance_check_result ?? null };
+        return {
+            persistedComplianceCheckResult: response.latest_version.compliance_check_result ?? null,
+            state: response.latest_version.state
+        };
     }
 }

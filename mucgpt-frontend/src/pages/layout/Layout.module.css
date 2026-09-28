@@ -1,7 +1,7 @@
 .layout {
     height: 100vh;
     width: 100%;
-    background-color: var(--colorNeutralBackground1);
+    background-color: var(--colorNeutralBackground3);
     overflow: hidden;
 }
 
@@ -94,7 +94,7 @@
     min-height: 0;
     overflow-y: auto;
     overflow-x: hidden;
-    background-color: var(--colorNeutralBackground1);
+    background-color: var(--colorNeutralBackground3);
 }
 
 .mobileSidebarSurface {

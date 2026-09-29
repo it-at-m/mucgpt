@@ -21,7 +21,6 @@ export const TermsOfUseDialog = ({
     defaultOpen,
     onAccept,
     showTrigger = true,
-    triggerClassName,
     requireAcceptance = true,
     open: controlledOpen,
     onOpenChange

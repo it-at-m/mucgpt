@@ -4,6 +4,7 @@ import { MenuDivider, DrawerBody, OverlayDrawer, FluentProvider, InlineDrawer } 
 import {
     Book24Regular,
     CalendarNote24Regular,
+    DocumentBulletListMultiple24Regular,
     Lightbulb24Regular,
     Mail24Regular,
     Navigation24Regular,
@@ -88,6 +89,7 @@ const AppShell = ({
     const [isMobile, setIsMobile] = useState<boolean>(window.innerWidth <= MOBILE_LAYOUT_BREAKPOINT);
     const [mobileSidebarOpen, setMobileSidebarOpen] = useState<boolean>(false);
     const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(() => localStorage.getItem(APP_NAV_COLLAPSED_KEY) === "true");
+    const [termsOfUseOpen, setTermsOfUseOpen] = useState<boolean>(false);
 
     useEffect(() => {
         const handleResize = () => {
@@ -165,7 +167,9 @@ const AppShell = ({
                 />
             )}
             <MenuDivider />
-            <TermsOfUseDialog defaultOpen={false} onAccept={onAcceptTermsOfUse} showTrigger requireAcceptance={false} />
+            <MenuItem icon={<DocumentBulletListMultiple24Regular />} onClick={() => setTermsOfUseOpen(true)}>
+                {t("components.terms_of_use.label", "Nutzungsbedingungen")}
+            </MenuItem>
             <MenuItem icon={<CalendarNote24Regular />} onClick={handleOpenVersionNotes}>
                 {t("components.versioninfo.whats_new", "Was gibt's neues?")}
             </MenuItem>
@@ -251,7 +255,8 @@ const AppShell = ({
                 </OverlayDrawer>
             )}
 
-            <TermsOfUseDialog defaultOpen={!termsOfUseRead} onAccept={onAcceptTermsOfUse} showTrigger={false} />
+            <TermsOfUseDialog defaultOpen={!termsOfUseRead} onAccept={onAcceptTermsOfUse} />
+            <TermsOfUseDialog defaultOpen={false} requireAcceptance={false} open={termsOfUseOpen} onOpenChange={setTermsOfUseOpen} />
         </>
     );
 };

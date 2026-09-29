@@ -148,7 +148,6 @@ i18n
                         main_content: "Hauptinhalt",
                         footer_info: "Fußzeileninformationen",
                         settings: "Einstellungen",
-                        theme: "Farbschema",
                         language: "Sprache",
                         close: "Schließen",
                         messages: "Nachrichten",
@@ -269,10 +268,10 @@ i18n
                             aria_label: "Verbesserungswünsche"
                         },
                         theme_selector: {
-                            theme_light: "Helles Design",
-                            theme_dark: "Dunkles Design",
-                            light_short: "Hell",
-                            dark_short: "Dunkel"
+                            label: "Design",
+                            light: "Hell",
+                            dark: "Dunkel",
+                            system: "System"
                         },
                         sumlength: {
                             sentences: "Zwei Sätze",
@@ -1027,7 +1026,6 @@ i18n
                         main_content: "Main content",
                         footer_info: "Footer information",
                         settings: "Settings",
-                        theme: "Theme",
                         language: "Language",
                         messages: "Messages",
                         starter_prompts: "Starter prompts",
@@ -1148,10 +1146,10 @@ i18n
                             aria_label: "Request feature"
                         },
                         theme_selector: {
-                            theme_light: "Light theme",
-                            theme_dark: "Dark theme",
-                            light_short: "Light",
-                            dark_short: "Dark"
+                            label: "Appearance",
+                            light: "Light",
+                            dark: "Dark",
+                            system: "System"
                         },
                         sumlength: {
                             sentences: "Two sentences",
@@ -1892,7 +1890,6 @@ i18n
                         main_content: "Hauptinhalt",
                         footer_info: "Fußzeilen-Info",
                         settings: "Konfiguration",
-                        theme: "Farbschema",
                         language: "Sproch",
                         messages: "Nochrichten",
                         starter_prompts: "Startvorschläge",
@@ -2017,10 +2014,10 @@ i18n
                             aria_label: "Vobessarungswünsch"
                         },
                         theme_selector: {
-                            theme_light: "Helles Design",
-                            theme_dark: "Dunkles Design",
-                            light_short: "Hell",
-                            dark_short: "Dunkl"
+                            label: "Design",
+                            light: "Hell",
+                            dark: "Dunkl",
+                            system: "System"
                         },
                         sumlength: {
                             sentences: "Zwoa Sätzen",
@@ -2758,7 +2755,6 @@ i18n
                         main_content: "Contenu principal",
                         footer_info: "Informations du pied de page",
                         settings: "Paramètres",
-                        theme: "Thème",
                         language: "Langue",
                         messages: "Messages",
                         starter_prompts: "Starter prompts",
@@ -2878,10 +2874,10 @@ i18n
                             aria_label: "Suggestion d'amélioration"
                         },
                         theme_selector: {
-                            theme_light: "Thème clair",
-                            theme_dark: "Thème sombre",
-                            light_short: "Clair",
-                            dark_short: "Sombre"
+                            label: "Apparence",
+                            light: "Clair",
+                            dark: "Sombre",
+                            system: "Système"
                         },
                         sumlength: {
                             sentences: "Deux phrases",
@@ -3614,7 +3610,6 @@ i18n
                         main_content: "Основний контент",
                         footer_info: "Інформація у футері",
                         settings: "Налаштування",
-                        theme: "Тема",
                         language: "Мова",
                         messages: "Повідомлення",
                         starter_prompts: "Стартові підказки",
@@ -3734,10 +3729,10 @@ i18n
                             aria_label: "Удосконалення"
                         },
                         theme_selector: {
-                            theme_light: "Світла тема",
-                            theme_dark: "Темна тема",
-                            light_short: "Світло",
-                            dark_short: "Темно"
+                            label: "Вигляд",
+                            light: "Світла",
+                            dark: "Темна",
+                            system: "Системна"
                         },
                         sumlength: {
                             sentences: "Два речення",

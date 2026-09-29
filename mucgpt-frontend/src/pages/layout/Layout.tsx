@@ -4,6 +4,7 @@ import { MenuDivider, DrawerBody, OverlayDrawer, FluentProvider, InlineDrawer } 
 import {
     Book24Regular,
     CalendarNote24Regular,
+    DocumentBulletListMultiple24Regular,
     Lightbulb24Regular,
     Mail24Regular,
     Navigation24Regular,
@@ -28,6 +29,7 @@ import { DEFAULT_APP_CONFIG } from "../../constants";
 import { UserContextProvider } from "./UserContextProvider";
 import { LanguageSelector } from "../../components/LanguageSelector";
 import { ThemeSelector } from "../../components/ThemeSelector";
+import { ThemePreference, useThemePreference } from "../../hooks/useThemePreference";
 import { ExternalLinkMenuItem } from "../../components/ExternalLinkMenuItem";
 import { configApi } from "../../api/core-client";
 import { ApiError } from "../../api/fetch-utils";
@@ -61,12 +63,22 @@ interface AppShellProps {
     isLight: boolean;
     languagePreference: string;
     onLanguageSelectionChanged: (nextLanguage: string) => void;
-    onThemeChange: (light: boolean) => void;
+    themePreference: ThemePreference;
+    onThemePreferenceChange: (themePreference: ThemePreference) => void;
     onAcceptTermsOfUse: () => void;
     termsOfUseRead: boolean;
 }
 
-const AppShell = ({ config, isLight, languagePreference, onLanguageSelectionChanged, onThemeChange, onAcceptTermsOfUse, termsOfUseRead }: AppShellProps) => {
+const AppShell = ({
+    config,
+    isLight,
+    languagePreference,
+    onLanguageSelectionChanged,
+    themePreference,
+    onThemePreferenceChange,
+    onAcceptTermsOfUse,
+    termsOfUseRead
+}: AppShellProps) => {
     const { t } = useTranslation();
     const location = useLocation();
     const navigate = useNavigate();
@@ -77,6 +89,7 @@ const AppShell = ({ config, isLight, languagePreference, onLanguageSelectionChan
     const [isMobile, setIsMobile] = useState<boolean>(window.innerWidth <= MOBILE_LAYOUT_BREAKPOINT);
     const [mobileSidebarOpen, setMobileSidebarOpen] = useState<boolean>(false);
     const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(() => localStorage.getItem(APP_NAV_COLLAPSED_KEY) === "true");
+    const [termsOfUseOpen, setTermsOfUseOpen] = useState<boolean>(false);
 
     useEffect(() => {
         const handleResize = () => {
@@ -115,7 +128,7 @@ const AppShell = ({ config, isLight, languagePreference, onLanguageSelectionChan
         <>
             <LanguageSelector defaultlang={languagePreference} onSelectionChange={onLanguageSelectionChanged} />
             {config.transcription_enabled && <TranscriptionSettingsButton />}
-            <ThemeSelector isLight={isLight} onThemeChange={onThemeChange} />
+            <ThemeSelector themePreference={themePreference} onThemePreferenceChange={onThemePreferenceChange} />
             <MenuDivider />
             <MenuItem icon={<Book24Regular />} onClick={() => navigate("/tutorials")}>
                 {t("header.go_to_tutorials", { defaultValue: "Tutorials" })}
@@ -154,7 +167,9 @@ const AppShell = ({ config, isLight, languagePreference, onLanguageSelectionChan
                 />
             )}
             <MenuDivider />
-            <TermsOfUseDialog defaultOpen={false} onAccept={onAcceptTermsOfUse} showTrigger requireAcceptance={false} />
+            <MenuItem icon={<DocumentBulletListMultiple24Regular />} onClick={() => setTermsOfUseOpen(true)}>
+                {t("components.terms_of_use.label", "Nutzungsbedingungen")}
+            </MenuItem>
             <MenuItem icon={<CalendarNote24Regular />} onClick={handleOpenVersionNotes}>
                 {t("components.versioninfo.whats_new", "Was gibt's neues?")}
             </MenuItem>
@@ -240,7 +255,8 @@ const AppShell = ({ config, isLight, languagePreference, onLanguageSelectionChan
                 </OverlayDrawer>
             )}
 
-            <TermsOfUseDialog defaultOpen={!termsOfUseRead} onAccept={onAcceptTermsOfUse} showTrigger={false} />
+            <TermsOfUseDialog defaultOpen={!termsOfUseRead} onAccept={onAcceptTermsOfUse} />
+            <TermsOfUseDialog defaultOpen={false} requireAcceptance={false} open={termsOfUseOpen} onOpenChange={setTermsOfUseOpen} />
         </>
     );
 };
@@ -269,9 +285,7 @@ export const Layout = () => {
     const fontScalingPreference = Number(localStorage.getItem(STORAGE_KEYS.SETTINGS_FONT_SCALING)) || 1;
     const [fontscaling] = useState<number>(fontScalingPreference);
 
-    const lightThemePreference =
-        localStorage.getItem(STORAGE_KEYS.SETTINGS_IS_LIGHT_THEME) === null ? true : localStorage.getItem(STORAGE_KEYS.SETTINGS_IS_LIGHT_THEME) === "true";
-    const [isLight, setLight] = useState<boolean>(lightThemePreference);
+    const { themePreference, setThemePreference, isLight } = useThemePreference();
 
     const appTokens = useMemo(() => getAppTokens(isLight), [isLight]);
     const theme = useMemo(() => createScaledTypographyTheme(createMucgptTheme(isLight), fontscaling), [isLight, fontscaling]);
@@ -283,14 +297,6 @@ export const Layout = () => {
             root.style.setProperty(key, value);
         }
     }, [appCssVars]);
-
-    const onThemeChange = useCallback(
-        (light: boolean) => {
-            setLight(light);
-            localStorage.setItem(STORAGE_KEYS.SETTINGS_IS_LIGHT_THEME, String(light));
-        },
-        [setLight]
-    );
 
     useEffect(() => {
         if (configApiCalledRef.current) return;
@@ -365,7 +371,8 @@ export const Layout = () => {
                                             isLight={isLight}
                                             languagePreference={languagePreference}
                                             onLanguageSelectionChanged={onLanguageSelectionChanged}
-                                            onThemeChange={onThemeChange}
+                                            themePreference={themePreference}
+                                            onThemePreferenceChange={setThemePreference}
                                             onAcceptTermsOfUse={onAcceptTermsOfUse}
                                             termsOfUseRead={termsOfUseRead}
                                         />

@@ -1,6 +1,7 @@
 import { Dialog, DialogTrigger, DialogSurface, DialogTitle, DialogBody, DialogActions, DialogContent, Button, Link } from "@fluentui/react-components";
 import { Checkmark24Filled, DocumentBulletListMultiple24Regular } from "@fluentui/react-icons";
 import { useTranslation } from "react-i18next";
+import { MenuItem } from "../../ui/MenuItem";
 import { useState } from "react";
 
 import styles from "./TermsOfUseDialog.module.css";
@@ -11,7 +12,6 @@ interface TermsOfUseDialogProps {
     defaultOpen: boolean;
     onAccept?: () => void;
     showTrigger?: boolean;
-    triggerClassName?: string;
     requireAcceptance?: boolean;
     open?: boolean;
     onOpenChange?: (open: boolean) => void;
@@ -21,7 +21,6 @@ export const TermsOfUseDialog = ({
     defaultOpen,
     onAccept,
     showTrigger = true,
-    triggerClassName,
     requireAcceptance = true,
     open: controlledOpen,
     onOpenChange
@@ -41,21 +40,16 @@ export const TermsOfUseDialog = ({
     };
     const trigger = showTrigger ? (
         <DialogTrigger disableButtonEnhancement>
-            <Button
-                appearance="transparent"
-                className={`${styles.triggerContainer}${triggerClassName ? ` ${triggerClassName}` : ""}`}
-                onClick={() => setOpen(true)}
-            >
-                <DocumentBulletListMultiple24Regular className={styles.termsIcon} />
-                <span className={styles.termsText}>{t("components.terms_of_use.label", "Nutzungsbedingungen")}</span>
-            </Button>
+            <MenuItem icon={<DocumentBulletListMultiple24Regular />} onClick={() => setOpen(true)}>
+                {t("components.terms_of_use.label", "Nutzungsbedingungen")}
+            </MenuItem>
         </DialogTrigger>
     ) : (
         <></>
     );
 
     return (
-        <div className={styles.container}>
+        <>
             <Dialog modalType={requireAcceptance ? "alert" : "modal"} open={open} onOpenChange={(_event, data) => setOpen(data.open)}>
                 {trigger}
                 <DialogSurface className={styles.dialog}>
@@ -185,7 +179,7 @@ export const TermsOfUseDialog = ({
                     </DialogBody>
                 </DialogSurface>
             </Dialog>
-        </div>
+        </>
     );
 };
 

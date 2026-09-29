@@ -9,7 +9,8 @@
 
 .historyLabel {
     flex: 0 0 auto;
-    padding: var(--spacingVerticalXXS) var(--spacingHorizontalXS) 0;
+    /* Aligns with the chat titles and the navigation icons. */
+    padding: var(--spacingVerticalXXS) var(--spacingHorizontalMNudge) 0;
     color: var(--colorNeutralForeground2);
 }
 
@@ -103,6 +104,8 @@
    the extra ancestor class is needed to reliably win the cascade. */
 .row .chatButton {
     justify-content: flex-start;
+    /* Starts chat titles on the same edge as the navigation icons; the button border counts towards it. */
+    padding-inline-start: calc(var(--spacingHorizontalMNudge) - var(--strokeWidthThin));
 }
 
 .chatButton[aria-current="page"] {
@@ -123,6 +126,7 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+    font-weight: var(--fontWeightRegular);
 }
 
 .pinnedIcon {
@@ -152,6 +156,12 @@
 .optionsSlot:has(:focus-visible) {
     opacity: 1;
     pointer-events: auto;
+}
+
+.row:hover .pinnedIcon,
+.row.rowMenuOpen .pinnedIcon,
+.row:has(.optionsSlot :focus-visible) .pinnedIcon {
+    opacity: 0;
 }
 
 .menuPopover {

@@ -1,4 +1,4 @@
-import { Avatar, Body1Strong, Menu, MenuList, MenuPopover, MenuTrigger } from "@fluentui/react-components";
+import { Avatar, Body1, Menu, MenuList, MenuPopover, MenuTrigger } from "@fluentui/react-components";
 import { Settings20Regular } from "@fluentui/react-icons";
 import { ReactNode, useContext, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -124,7 +124,7 @@ export const UserSidebarProfile = ({ collapsed, isMobile, utilitiesContent }: Us
 
     const avatar = (
         <Avatar
-            color="brand"
+            color="neutral"
             size={32}
             name={userProfile.displayName}
             initials={{ className: styles.avatarInitials }}
@@ -137,7 +137,7 @@ export const UserSidebarProfile = ({ collapsed, isMobile, utilitiesContent }: Us
         <Button appearance="subtle" className={triggerClassName} aria-label={t("common.settings")} icon={{ className: itemStyles.icon, children: avatar }}>
             <span className={itemStyles.label} aria-hidden={isCollapsed}>
                 <span className={`${itemStyles.text} ${styles.labelContent}`}>
-                    <Body1Strong className={styles.name}>{userProfile.firstName}</Body1Strong>
+                    <Body1 className={styles.name}>{userProfile.firstName}</Body1>
                     <Settings20Regular className={styles.settingsIcon} aria-hidden="true" />
                 </span>
             </span>

@@ -333,7 +333,7 @@ export const AppSidebar = ({
                             const navItemClassName = `${itemStyles.control} ${styles.navButton} ${isCollapsed ? itemStyles.collapsed : ""}`;
                             const navLabel = (
                                 <span className={itemStyles.label} aria-hidden={isCollapsed}>
-                                    <span className={itemStyles.text}>{item.label}</span>
+                                    <span className={`${itemStyles.text} ${styles.navLabel}`}>{item.label}</span>
                                 </span>
                             );
                             const icon = { className: itemStyles.icon, children: item.icon };

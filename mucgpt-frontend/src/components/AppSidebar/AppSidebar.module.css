@@ -106,6 +106,10 @@
     position: relative;
 }
 
+.navLabel {
+    font-weight: var(--fontWeightRegular);
+}
+
 .navButton[aria-current="page"] {
     background-color: var(--colorSubtleBackgroundPressed);
 }

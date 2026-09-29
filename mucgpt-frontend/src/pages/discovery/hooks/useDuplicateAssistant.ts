@@ -1,7 +1,7 @@
 import { useCallback, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { createCommunityAssistantApi, getCommunityAssistantApi } from "../../../api/assistant-client";
+import { createCommunityAssistantApi, duplicateCommunityAssistantApi, getCommunityAssistantApi } from "../../../api/assistant-client";
 import { AssistantResponse, CommunityAssistantSnapshot } from "../../../api/models";
 import { ApiError } from "../../../api/fetch-utils";
 import { useGlobalToastContext } from "../../../components/GlobalToastHandler/GlobalToastContext";
@@ -10,7 +10,6 @@ import { AssistantStorageService } from "../../../service/assistantstorage";
 import { CommunityAssistantStorageService } from "../../../service/communityassistantstorage";
 import {
     isCompleteCommunityAssistantSnapshot,
-    mapAssistantResponseToCommunityConfig,
     mapCommunityConfigToAssistantCreateInput,
     mapCommunitySnapshotToCommunityConfig,
     resolveDeletedCommunityAssistantSnapshot
@@ -26,15 +25,11 @@ export interface DuplicateAssistantCandidate {
 const isAssistantResponse = (data: AssistantResponse | CommunityAssistantSnapshot): data is AssistantResponse =>
     "latest_version" in data && data.latest_version != null && typeof (data as AssistantResponse).latest_version.name === "string";
 
-const buildDuplicatedAssistantTitle = (title: string, copyLabel: string): string => {
+const DUPLICATE_TITLE_SUFFIX = "[Kopie]";
+
+const buildDuplicatedAssistantTitle = (title: string): string => {
     const trimmedTitle = title.trim();
-    const trimmedCopyLabel = copyLabel.trim();
-
-    if (!trimmedTitle || !trimmedCopyLabel) {
-        return trimmedTitle || title;
-    }
-
-    return `${trimmedTitle} ${trimmedCopyLabel}`;
+    return trimmedTitle ? `${trimmedTitle} ${DUPLICATE_TITLE_SUFFIX}` : title;
 };
 
 export const useDuplicateAssistant = () => {
@@ -109,17 +104,15 @@ export const useDuplicateAssistant = () => {
         setIsDuplicating(true);
         try {
             const assistantData = await resolveAssistantData(assistantToDuplicate.id, assistantToDuplicate.rawData);
-            const assistantConfig = isAssistantResponse(assistantData)
-                ? mapAssistantResponseToCommunityConfig(assistantData)
-                : mapCommunitySnapshotToCommunityConfig(assistantData);
             const assistantTitle = isAssistantResponse(assistantData) ? assistantData.latest_version.name : assistantData.title;
-            const duplicatedAssistantTitle = buildDuplicatedAssistantTitle(assistantTitle, t("components.community_assistants.duplicate_title_suffix"));
-            const duplicatedAssistant = await createCommunityAssistantApi({
-                ...mapCommunityConfigToAssistantCreateInput(assistantConfig),
-                name: duplicatedAssistantTitle,
-                is_visible: false,
-                hierarchical_access: []
-            });
+            const duplicatedAssistant = isAssistantResponse(assistantData)
+                ? await duplicateCommunityAssistantApi(assistantToDuplicate.id)
+                : await createCommunityAssistantApi({
+                      ...mapCommunityConfigToAssistantCreateInput(mapCommunitySnapshotToCommunityConfig(assistantData)),
+                      name: buildDuplicatedAssistantTitle(assistantTitle),
+                      is_visible: false,
+                      hierarchical_access: []
+                  });
 
             if (assistantToDuplicate.isDeletedSnapshot) {
                 await assistantStorageService.transferChatsToAssistant(assistantToDuplicate.id, duplicatedAssistant.id);

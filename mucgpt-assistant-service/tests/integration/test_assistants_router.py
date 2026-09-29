@@ -3458,3 +3458,140 @@ def test_get_assistant_version_owner_access_without_hierarchical_permission(
         == "You are version 2 of an owner-only assistant."
     )
     assert version2_response_model.creativity == "high"
+
+
+async def _create_duplicate_source(
+    test_db_session,
+    *,
+    hierarchical_access: list[str] | None = None,
+    state: str = "active",
+    compliance_check_result: dict | None = None,
+):
+    assistant_repo = AssistantRepository(test_db_session)
+    source = await assistant_repo.create(
+        hierarchical_access=hierarchical_access or [],
+        owner_ids=["other_user"],
+        is_visible=True,
+    )
+    source_version = await assistant_repo.create_assistant_version(
+        assistant=source,
+        name="Source Assistant",
+        system_prompt="Source System Prompt",
+        description="Source description",
+        creativity="high",
+        default_model="gpt-4",
+        examples=[{"text": "Example", "value": "Example value"}],
+        quick_prompts=[{"label": "Quick", "prompt": "Quick prompt", "tooltip": "Tip"}],
+        tags=["source"],
+        compliance_check_result=compliance_check_result,
+        compliance_confirmation=True,
+        state=state,
+        state_changed_by="legal_admin_123",
+    )
+    test_db_session.add(
+        AssistantTool(
+            assistant_version=source_version,
+            tool_id="WEB_SEARCH",
+            config={"max_results": 5},
+        )
+    )
+    source_id = str(source.id)
+    await test_db_session.commit()
+    return source_id
+
+
+@pytest.mark.integration
+@pytest.mark.asyncio
+async def test_duplicate_assistant_copies_compliance_review_from_source(
+    test_client, test_db_session, monkeypatch: pytest.MonkeyPatch
+):
+    """Duplicating works in strict mode and inherits the source's review."""
+    monkeypatch.setattr(
+        assistants_router_module.get_settings(),
+        "COMPLIANCE_REQUIRE_VERIFICATION",
+        True,
+    )
+    source_result = ComplianceCheckResult(
+        overall_status="high_risk_detected",
+        results=[
+            {
+                "category": "education",
+                "status": "high_risk_detected",
+                "reasoning": "Makes eligibility recommendations.",
+            }
+        ],
+        prompt_hash=hashlib.sha256(b"You assess education eligibility.").hexdigest(),
+    )
+    source_id = await _create_duplicate_source(
+        test_db_session,
+        state="pending_legal_review",
+        compliance_check_result=source_result.model_dump(),
+    )
+
+    response = test_client.post(f"assistant/{source_id}/duplicate", headers=headers)
+
+    assert response.status_code == 200
+    duplicate = AssistantResponse.model_validate(response.json())
+    assert duplicate.id != source_id
+    assert duplicate.owner_ids == ["test_user_123"]
+    assert duplicate.is_visible is False
+    assert duplicate.hierarchical_access == []
+    version = duplicate.latest_version
+    assert version.version == 1
+    assert version.name == "Source Assistant [Kopie]"
+    assert version.description == "Source description"
+    assert version.system_prompt == "Source System Prompt"
+    assert version.creativity == "high"
+    assert version.default_model == "gpt-4"
+    assert [example.model_dump() for example in version.examples] == [
+        {"text": "Example", "value": "Example value"}
+    ]
+    assert [prompt.model_dump() for prompt in version.quick_prompts] == [
+        {"label": "Quick", "prompt": "Quick prompt", "tooltip": "Tip"}
+    ]
+    assert version.tags == ["source"]
+    assert [(tool.id, tool.config) for tool in version.tools] == [
+        ("WEB_SEARCH", {"max_results": 5})
+    ]
+    assert version.compliance_check_result == source_result
+    assert version.compliance_confirmation is True
+    assert version.state == "pending_legal_review"
+
+    source_response = test_client.get(f"assistant/{source_id}", headers=headers)
+    assert source_response.status_code == 200
+    source = AssistantResponse.model_validate(source_response.json())
+    assert source.latest_version.name == "Source Assistant"
+    assert source.owner_ids == ["other_user"]
+
+
+@pytest.mark.integration
+@pytest.mark.asyncio
+async def test_duplicate_assistant_rejects_inaccessible_assistant(
+    test_client, test_db_session
+):
+    source_id = await _create_duplicate_source(
+        test_db_session, hierarchical_access=["HR-Department"]
+    )
+
+    response = test_client.post(f"assistant/{source_id}/duplicate", headers=headers)
+
+    assert response.status_code == 403
+
+
+@pytest.mark.integration
+@pytest.mark.asyncio
+async def test_duplicate_assistant_rejects_inactive_assistant(
+    test_client, test_db_session
+):
+    source_id = await _create_duplicate_source(test_db_session, state="inactive")
+
+    response = test_client.post(f"assistant/{source_id}/duplicate", headers=headers)
+
+    assert response.status_code == 403
+
+
+@pytest.mark.integration
+def test_duplicate_assistant_not_found(test_client):
+    response = test_client.post(f"assistant/{uuid.uuid4()}/duplicate", headers=headers)
+
+    assert response.status_code == 404

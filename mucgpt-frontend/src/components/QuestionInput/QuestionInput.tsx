@@ -9,6 +9,7 @@ import { ToolListResponse } from "../../api/models";
 import { useConfigContext } from "../../context/ConfigContext";
 import { upsertParsedDocumentFromUpload } from "../../service/parsedDocumentStorage";
 import { ContextManagerDialog, UploadedData, createUploadedData, getDataSignature, getFileSignature } from "../ContextManagerDialog/ContextManagerDialog";
+import { ChatDisclaimer } from "../ChatDisclaimer";
 import { ChatToolSelector } from "../ChatToolSelector/ChatToolSelector";
 import { ChatUsageIndicator, type ChatUsageSummary } from "../ChatUsageIndicator/ChatUsageIndicator";
 import { ChatUsageMessageBar } from "../ChatUsageIndicator/ChatUsageMessageBar";
@@ -583,11 +584,7 @@ export const QuestionInput = ({
                     </div>
                 </div>
 
-                {hideDisclaimer ? null : (
-                    <div className={styles.errorhintSection}>
-                        <div className={styles.errorhint}>{t("components.questioninput.errorhint")}</div>
-                    </div>
-                )}
+                {hideDisclaimer ? null : <ChatDisclaimer className={styles.disclaimer} />}
             </div>
 
             {allowFileUpload ? (

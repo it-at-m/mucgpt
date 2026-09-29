@@ -45,6 +45,7 @@ logger = getLogger("assistants_router")
 router = APIRouter()
 
 _COMPLIANCE_CACHE_KEY_PREFIX = "mucgpt:assistant-compliance:v1:"
+_DUPLICATE_NAME_SUFFIX = " [Kopie]"
 
 
 def _build_compliance_cache_key(prompt_hash: str) -> str:
@@ -306,6 +307,90 @@ async def createAssistant(
         logger.error(f"Error creating assistant: {e}")
         await db.rollback()
         raise
+
+
+@router.post(
+    "/assistant/{id}/duplicate",
+    response_model=AssistantResponse,
+    summary="Duplicate an AI assistant",
+    description="""
+    Create a private copy of the latest version of an accessible assistant,
+    owned only by the current user.
+    """,
+    tags=["Assistants"],
+    responses={
+        200: {"description": "The duplicated assistant"},
+        401: {"description": "Unauthorized"},
+        403: {
+            "description": "User is not allowed to access the assistant or it is inactive"
+        },
+        404: {"description": "Assistant not found"},
+    },
+)
+async def duplicateAssistant(
+    id: str,
+    db: AsyncSession = Depends(get_db_session),
+    user_info: AuthenticationResult = Depends(authenticate_user),
+) -> AssistantResponse:
+    logger.info(f"Duplicating assistant with ID: {id} for user {user_info.user_id}")
+    assistant_repo = AssistantRepository(db)
+    source_assistant = await assistant_repo.get(id)
+
+    if not source_assistant:
+        raise AssistantNotFoundException(id)
+    if not await source_assistant.is_allowed_for_user(
+        user_info.department
+    ) and not await assistant_repo.is_owner(id, user_info.user_id):
+        raise NotAllowedToAccessException(id)
+
+    source_version = await assistant_repo.get_latest_version(id)
+    if source_version is None:
+        raise NoVersionException(id)
+    if source_version.state == AssistantState.INACTIVE:
+        raise AssistantUnavailableForUseException(id, source_version.state)
+
+    try:
+        new_assistant = await assistant_repo.create(
+            hierarchical_access=[],
+            owner_ids=[user_info.user_id],
+            is_visible=False,
+        )
+        new_assistant_id = str(new_assistant.id)
+        new_version = await assistant_repo.create_assistant_version(
+            new_assistant,
+            name=f"{source_version.name}{_DUPLICATE_NAME_SUFFIX}",
+            description=source_version.description or "",
+            system_prompt=source_version.system_prompt,
+            creativity=source_version.creativity,
+            default_model=source_version.default_model,
+            examples=source_version.examples or [],
+            quick_prompts=source_version.quick_prompts or [],
+            tags=source_version.tags or [],
+            compliance_check_result=source_version.compliance_check_result,
+            compliance_confirmation=bool(source_version.compliance_confirmation),
+            state=source_version.state,
+            state_changed_by=user_info.user_id,
+        )
+        for tool in assistant_repo.get_tools_from_version(source_version):
+            db.add(
+                AssistantTool(
+                    assistant_version=new_version,
+                    tool_id=tool["id"],
+                    config=tool["config"],
+                )
+            )
+
+        await db.flush()
+        await refresh_owner_details([user_info.user_id], db)
+        response = await getAssistant(id=new_assistant_id, db=db, user_info=user_info)
+        await db.commit()
+    except Exception as e:
+        logger.error(f"Error duplicating assistant {id}: {e}")
+        await db.rollback()
+        raise
+
+    logger.info(f"Assistant {id} duplicated as {new_assistant_id}")
+    return response
 
 
 @router.post(

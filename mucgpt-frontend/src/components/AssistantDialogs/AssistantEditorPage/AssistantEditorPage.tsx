@@ -288,6 +288,7 @@ function SettingsForm(props: SettingsFormProps) {
                         title={t("components.assistant_editor.section_review")}
                         icon={<ClipboardCheckmark24Regular />}
                         className={styles.sectionReview}
+                        id="compliance-review"
                     >
                         <ReviewSection
                             confirmed={props.confirmed}
@@ -625,12 +626,12 @@ export const AssistantEditorPage = (props: AssistantEditorPageProps) => {
         // Support both hash router (/#/route#fragment) and regular routing (#fragment)
         const parts = window.location.hash.split("#");
         const hash = parts[2] || parts[1];
-        if (hash !== "visibility-settings") {
+        if (hash !== "visibility-settings" && hash !== "compliance-review") {
             return;
         }
 
         requestAnimationFrame(() => {
-            document.getElementById("visibility-settings")?.scrollIntoView({ behavior: "smooth", block: "start" });
+            document.getElementById(hash)?.scrollIntoView({ behavior: "smooth", block: "start" });
         });
     }, []);
 

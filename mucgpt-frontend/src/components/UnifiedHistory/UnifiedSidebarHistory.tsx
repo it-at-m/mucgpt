@@ -247,11 +247,12 @@ export const UnifiedSidebarHistory = ({ requestClose }: UnifiedSidebarHistoryPro
                                         aria-current={isActive ? "page" : undefined}
                                     >
                                         <span className={styles.chatButtonContent}>
-                                            {entry.favorite && <Pin16Regular className={styles.pinnedIcon} />}
                                             <span className={styles.chatName}>{title}</span>
                                         </span>
                                     </Button>
                                 </Tooltip>
+
+                                {entry.favorite && <Pin16Regular className={styles.pinnedIcon} aria-hidden="true" />}
 
                                 <div className={styles.optionsSlot}>
                                     <Menu onOpenChange={(_event, data) => setOpenMenuEntryKey(data.open ? entryKey : null)}>

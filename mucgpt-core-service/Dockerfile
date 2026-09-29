@@ -1,8 +1,8 @@
 # small ubi10 image
-FROM registry.access.redhat.com/ubi10/ubi-minimal:latest@sha256:04febb4a74cc9ef3eca05ef851d92957276cc6e82fe8cb1ee44abf5114d440d8
+FROM registry.access.redhat.com/ubi10/ubi-minimal:latest@sha256:a9f9316ec3a1419a2de6ce4d2d9f034d477e97cdf2a16d6f04b7bd632ac753c4
 
 
-COPY --from=ghcr.io/astral-sh/uv:latest@sha256:10787c682e4184e4f290de1171fd4703dc63de99221f10fe1c99002ce7fa9acc /uv /uvx /bin/
+COPY --from=ghcr.io/astral-sh/uv:latest@sha256:100047e74f30778ab704942321a09750d6158739573ff58bf3924085cc6cd2d8 /uv /uvx /bin/
 
 # Enable bytecode compilation
 ENV UV_COMPILE_BYTECODE=1

@@ -328,14 +328,12 @@ export const AppSidebar = ({
                         )}
                     </div>
 
-                    <Divider className={styles.headerDivider} />
-
                     <nav className={styles.navGroup}>
                         {navigationItems.map(item => {
                             const navItemClassName = `${itemStyles.control} ${styles.navButton} ${isCollapsed ? itemStyles.collapsed : ""}`;
                             const navLabel = (
                                 <span className={itemStyles.label} aria-hidden={isCollapsed}>
-                                    <span className={itemStyles.text}>{item.label}</span>
+                                    <span className={`${itemStyles.text} ${styles.navLabel}`}>{item.label}</span>
                                 </span>
                             );
                             const icon = { className: itemStyles.icon, children: item.icon };
@@ -413,7 +411,7 @@ export const AppSidebar = ({
                 <div className={styles.footer}>
                     {utilitiesContent && (
                         <div className={styles.footerSection}>
-                            <Divider />
+                            <Divider className={styles.edgeDivider} />
                             <UserSidebarProfile collapsed={collapsed} isMobile={isMobile} utilitiesContent={utilitiesContent} />
                         </div>
                     )}

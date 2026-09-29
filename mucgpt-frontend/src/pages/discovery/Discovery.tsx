@@ -39,6 +39,13 @@ const assistantStorageService = new AssistantStorageService(ASSISTANT_STORE);
 const asArray = <T,>(value: unknown): T[] => (Array.isArray(value) ? value : []);
 const isToolBase = (value: unknown): value is ToolBase =>
     typeof value === "object" && value !== null && typeof (value as ToolBase).id === "string" && (value as ToolBase).id !== "";
+const isPromptEntry = (value: unknown): value is { label: string; prompt: string; text: string; value: string } =>
+    typeof value === "object" &&
+    value !== null &&
+    typeof (value as { label?: unknown }).label === "string" &&
+    typeof (value as { prompt?: unknown }).prompt === "string" &&
+    typeof (value as { text?: unknown }).text === "string" &&
+    typeof (value as { value?: unknown }).value === "string";
 const isAssistantResponse = (data: AssistantResponse | CommunityAssistantSnapshot): data is AssistantResponse =>
     "latest_version" in data && data.latest_version != null && typeof data.latest_version.name === "string";
 
@@ -235,6 +242,12 @@ const Discovery = () => {
                     throw new Error(t("components.import_assistant.import_invalid_format"));
                 }
 
+                const quickPrompts = asArray<unknown>(importedData.quick_prompts);
+                const examples = asArray<unknown>(importedData.examples);
+                if (!quickPrompts.every(isPromptEntry) || !examples.every(isPromptEntry)) {
+                    throw new Error(t("components.import_assistant.import_invalid_format"));
+                }
+
                 const draft: CreateAssistantDraftValues = {
                     title: importedData.title,
                     description: typeof importedData.description === "string" ? importedData.description : "",
@@ -242,8 +255,8 @@ const Discovery = () => {
                     creativity: typeof importedData.creativity === "string" ? importedData.creativity : CREATIVITY_LOW,
                     defaultModel: typeof importedData.default_model === "string" ? importedData.default_model : undefined,
                     tools,
-                    followUpActions: asArray(importedData.quick_prompts),
-                    starterPrompts: asArray(importedData.examples),
+                    followUpActions: quickPrompts,
+                    starterPrompts: examples,
                     hierarchicalAccess: asArray(importedData.hierarchical_access),
                     isVisible: importedData.is_visible === true
                 };
@@ -277,8 +290,8 @@ const Discovery = () => {
         communitySortMethod === "subscriptions"
             ? t("components.community_assistants.sort_popular", "Beliebteste")
             : communitySortMethod === "updated"
-                ? t("components.community_assistants.sort_updated", "Zuletzt aktualisiert")
-                : t("components.community_assistants.sort_title", "Name");
+              ? t("components.community_assistants.sort_updated", "Zuletzt aktualisiert")
+              : t("components.community_assistants.sort_title", "Name");
 
     const handleMyAssistantsSortChange = (_event: SelectionEvents, data: OptionOnSelectData) => {
         if (data.optionValue === "subscriptions" || data.optionValue === "updated" || data.optionValue === "title" || data.optionValue === "lastUsed") {
@@ -296,10 +309,10 @@ const Discovery = () => {
         myAssistantsSortMethod === "lastUsed"
             ? t("components.community_assistants.sort_last_used", "Zuletzt benutzt")
             : myAssistantsSortMethod === "subscriptions"
-                ? t("components.community_assistants.sort_popular", "Beliebteste")
-                : myAssistantsSortMethod === "updated"
-                    ? t("components.community_assistants.sort_updated", "Zuletzt aktualisiert")
-                    : t("components.community_assistants.sort_title", "Name");
+              ? t("components.community_assistants.sort_popular", "Beliebteste")
+              : myAssistantsSortMethod === "updated"
+                ? t("components.community_assistants.sort_updated", "Zuletzt aktualisiert")
+                : t("components.community_assistants.sort_title", "Name");
 
     const getMetadataFallbackLabel = (assistant: AssistantCardData): string =>
         assistant.isOwnedAssistant ? t("components.community_assistants.metadata_you", "Du") : t("components.community_assistants.filter_all", "Community");

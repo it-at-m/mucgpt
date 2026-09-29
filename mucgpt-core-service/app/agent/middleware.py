@@ -65,6 +65,7 @@ class RequestContext:
     assistant_id: str | None = None
     model_name: str | None = None
     temperature: float = 0.5
+    reasoning_effort: str | None = None
     stream: bool = False
     user: str | None = None
     extra_body: dict[str, Any] | None = None
@@ -283,6 +284,8 @@ def _configure_model_request(request: ModelRequest) -> ModelRequest:
         "temperature": runtime_context.temperature,
         "stream": runtime_context.stream,
     }
+    if runtime_context.reasoning_effort is not None:
+        model_settings["reasoning_effort"] = runtime_context.reasoning_effort
     if runtime_context.user is not None:
         model_settings["user"] = runtime_context.user
     if runtime_context.extra_body is not None:

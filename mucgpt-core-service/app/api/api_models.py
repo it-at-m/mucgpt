@@ -78,6 +78,12 @@ class ChatCompletionRequest(BaseModel):
         None,
         description="Creativity level: 'low' (conservative), 'medium' (balanced), 'high' (creative)",
     )
+    reasoning_effort: Literal["none", "minimal", "low", "medium", "high"] | None = (
+        Field(
+            None,
+            description="Reasoning effort; only applied to models that support reasoning",
+        )
+    )
     max_tokens: int | None = Field(4096, description="Maximum tokens to generate")
     stream: bool | None = Field(
         False, description="Whether to stream partial responses back"

@@ -135,6 +135,7 @@ async def chat_endpoint(
                 assistant_id=request.assistant_id,
                 data_sources=data_sources,
                 conversation_id=request.conversation_id,
+                reasoning_effort=request.reasoning_effort,
             )
 
             async def sse_generator() -> AsyncGenerator[str]:
@@ -153,6 +154,7 @@ async def chat_endpoint(
             assistant_id=request.assistant_id,
             data_sources=data_sources,
             conversation_id=request.conversation_id,
+            reasoning_effort=request.reasoning_effort,
         )
 
         return response

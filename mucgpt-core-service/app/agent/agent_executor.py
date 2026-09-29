@@ -190,6 +190,7 @@ class MUCGPTAgentExecutor:
         assistant_id: str | None = None,
         data_sources: list[dict[str, Any]] | None = None,
         conversation_id: str | None = None,
+        reasoning_effort: str | None = None,
     ) -> AsyncGenerator[dict]:
         logger.debug(
             "Chat streaming started with temperature %s, model %s",
@@ -229,6 +230,7 @@ class MUCGPTAgentExecutor:
                 RunnableConfig(
                     configurable={
                         "llm_temperature": temperature,
+                        "reasoning_effort": reasoning_effort,
                         "llm": model,
                         "llm_streaming": True,
                         "enabled_tools": enabled_tools,
@@ -394,6 +396,7 @@ class MUCGPTAgentExecutor:
         assistant_id: str | None = None,
         data_sources: list[dict[str, Any]] | None = None,
         conversation_id: str | None = None,
+        reasoning_effort: str | None = None,
     ) -> ChatCompletionResponse:
         logger.debug(
             "Chat non-streaming started with temperature %s, model %s",
@@ -420,6 +423,7 @@ class MUCGPTAgentExecutor:
             request_config = RunnableConfig(
                 configurable={
                     "llm_temperature": temperature,
+                    "reasoning_effort": reasoning_effort,
                     "llm": model,
                     "llm_streaming": False,
                     "enabled_tools": enabled_tools,

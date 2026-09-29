@@ -754,7 +754,7 @@ export const tutorialsTranslations = {
                     services: {
                         title: "Access to public services",
                         description:
-                            "Assistants must not check or decide whether a person is entitled to state benefits such as basic income support, housing benefit or health services.",
+                            "Assistants must not check or decide whether a person is entitled to state benefits such as basic income support, housing benefit or health services. They must also not assess or classify emergency calls, dispatch or prioritise emergency and rescue services, or provide systems for triaging patients in emergency care.",
                         not_allowed: "An assistant that uses case data to assess whether a housing benefit application should be approved or rejected."
                     },
                     hr: {
@@ -1249,7 +1249,7 @@ export const tutorialsTranslations = {
                     services: {
                         title: "Zuagang zu öffentliche Leistunga",
                         description:
-                            "Assistentn derfn ned prüfen oder entscheidn, ob a Person Ospruch af staatliche Leistunga wia Bürgergeld, Wohngeld oder Gsundheitsdienste hod.",
+                            "Assistentn derfn ned prüfen oder entscheidn, ob a Person Ospruch af staatliche Leistunga wia Bürgergeld, Wohngeld oder Gsundheitsdienste hod. Assistentn derfn aa ned Notrufe bewertn oder klassifiziern, de Entsendung oder Priorisierung vo Not- und Rettungsdiensten steuerna oder Systeme für d'Triage vo Patientn bei da Notfallversorgung bereitstön.",
                         not_allowed: "A Assistent, der anhand vo Fojdaten bewert, ob a Wohngeldantrag bewuidigt oder oglehnt werdn soi."
                     },
                     hr: {
@@ -1758,7 +1758,7 @@ export const tutorialsTranslations = {
                     services: {
                         title: "Accès aux prestations publiques",
                         description:
-                            "Les assistants ne doivent pas vérifier ni décider si une personne a droit à des prestations publiques telles que le revenu de base, l'allocation logement ou les services de santé.",
+                            "Les assistants ne doivent pas vérifier ni décider si une personne a droit à des prestations publiques telles que le revenu de base, l'allocation logement ou les services de santé. Ils ne doivent pas non plus évaluer ou classer les appels d'urgence, organiser ou prioriser l'intervention des services d'urgence et de secours, ni fournir des systèmes de triage des patients dans le cadre des soins d'urgence.",
                         not_allowed:
                             "Un assistant qui, sur la base de données de dossier, évalue si une demande d'allocation logement doit être approuvée ou rejetée."
                     },
@@ -2258,7 +2258,7 @@ export const tutorialsTranslations = {
                     services: {
                         title: "Доступ до державних послуг",
                         description:
-                            "Асистенти не повинні перевіряти чи вирішувати, чи має особа право на державні виплати, як-от базова допомога, житлова субсидія або медичні послуги.",
+                            "Асистенти не повинні перевіряти чи вирішувати, чи має особа право на державні виплати, як-от базова допомога, житлова субсидія або медичні послуги. Вони також не повинні оцінювати чи класифікувати екстрені виклики, здійснювати чи визначати пріоритетність направлення екстрених і рятувальних служб або надавати системи для сортування пацієнтів під час невідкладної допомоги.",
                         not_allowed: "Асистент, який на основі даних справи оцінює, чи слід задовольнити або відхилити заяву на житлову субсидію."
                     },
                     hr: {

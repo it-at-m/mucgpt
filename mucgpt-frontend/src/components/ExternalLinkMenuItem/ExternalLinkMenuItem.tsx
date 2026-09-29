@@ -11,7 +11,13 @@ interface ExternalLinkMenuItemProps {
 }
 
 export const ExternalLinkMenuItem = ({ href, icon, label, ariaLabel, external = true }: ExternalLinkMenuItemProps) => (
-    <MenuItemLink href={href} target={external ? "_blank" : undefined} rel={external ? "noopener noreferrer" : undefined} icon={icon} aria-label={ariaLabel ?? label}>
+    <MenuItemLink
+        href={href}
+        target={external ? "_blank" : undefined}
+        rel={external ? "noopener noreferrer" : undefined}
+        icon={icon}
+        aria-label={ariaLabel ?? label}
+    >
         {label}
     </MenuItemLink>
 );

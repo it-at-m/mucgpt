@@ -82,6 +82,7 @@ export interface ApplicationConfig {
     incident_report_url?: string;
     feature_request_url?: string;
     contact_mail_url?: string;
+    admin_role?: string;
     ad2image_url?: string;
     owner_profile_url_template?: string;
 }
@@ -132,7 +133,7 @@ export interface ChatCompletionChunk {
     object: "chat.completion.chunk";
     created: number;
     choices: ChatCompletionChunkChoice[];
-    usage?: { prompt_tokens?: number; completion_tokens?: number; total_tokens?: number; context_tokens?: number | null } | null;
+    usage?: { prompt_tokens?: number; completion_tokens?: number; total_tokens?: number; cache_read_tokens?: number; context_tokens?: number | null } | null;
 }
 
 export type CountTokenRequest = {
@@ -168,7 +169,12 @@ export type Assistant = {
     is_visible: boolean;
     compliance_check_result?: ComplianceCheckResponse;
     compliance_confirmation?: boolean;
+    state?: AssistantState;
+    state_changed_by?: string | null;
+    state_change_reason?: string | null;
 };
+
+export type AssistantState = "active" | "pending_legal_review" | "inactive";
 
 export interface ToolBase {
     id: string;
@@ -225,6 +231,9 @@ export interface AssistantVersionResponse {
     is_visible: boolean;
     compliance_check_result?: ComplianceCheckResponse;
     compliance_confirmation?: boolean;
+    state?: AssistantState;
+    state_changed_by?: string | null;
+    state_change_reason?: string | null;
 }
 
 export interface AssistantCreateResponse {
@@ -291,6 +300,14 @@ export interface User {
     preferred_username?: string;
     organization_unit?: string;
     user_id?: string;
+    roles?: string[];
+}
+
+export interface AssistantStateUpdateInput {
+    state: AssistantState;
+    expected_state: AssistantState;
+    version: number;
+    reason?: string;
 }
 
 export type CommunityAssistant = {
@@ -301,6 +318,7 @@ export type CommunityAssistant = {
     subscriptions_count?: number;
     tags?: string[];
     is_visible?: boolean;
+    is_deleted?: boolean;
     owners_detailed?: OwnerDetailsResponse[];
 };
 
@@ -351,4 +369,5 @@ export type CommunityAssistantSnapshot = {
     is_visible: boolean;
     compliance_check_result?: ComplianceCheckResponse;
     compliance_confirmation?: boolean;
+    state?: AssistantState;
 };

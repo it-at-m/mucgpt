@@ -1,21 +1,18 @@
-import { type ReactElement, useCallback, useContext, useEffect, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { Title1, Body1, Text, SearchBox, Dropdown, Option, Button } from "@fluentui/react-components";
-import type { SearchBoxChangeEvent, InputOnChangeData, SelectionEvents, OptionOnSelectData } from "@fluentui/react-components";
-import { Add24Regular, DocumentArrowUpRegular, LibraryRegular, PeopleCommunityRegular, SearchRegular } from "@fluentui/react-icons";
+import { type ReactElement, type TransitionEvent, useCallback, useContext, useEffect, useRef, useState } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { Title2, Text, Button, Tab, TabList, makeStyles, mergeClasses } from "@fluentui/react-components";
+import type { SearchBoxChangeEvent, InputOnChangeData, SelectionEvents, OptionOnSelectData, SelectTabData, SelectTabEvent } from "@fluentui/react-components";
+import { Add24Regular, ArrowResetRegular, DocumentArrowUpRegular, LibraryRegular, PeopleCommunityRegular, SearchRegular } from "@fluentui/react-icons";
 import { useTranslation } from "react-i18next";
 
 import styles from "./Discovery.module.css";
-import { getCommunityAssistantApi, deleteCommunityAssistantApi, createCommunityAssistantApi, unsubscribeFromAssistantApi } from "../../api/assistant-client";
-import { Assistant, AssistantResponse, CommunityAssistantSnapshot } from "../../api/models";
-import { AddAssistantButton } from "../../components/AddAssistantButton/AddAssistantButton";
+import { getCommunityAssistantApi, deleteCommunityAssistantApi, unsubscribeFromAssistantApi } from "../../api/assistant-client";
+import { Assistant, AssistantResponse, CommunityAssistantSnapshot, ToolBase } from "../../api/models";
 import { AssistantStorageService } from "../../service/assistantstorage";
 import { CommunityAssistantStorageService } from "../../service/communityassistantstorage";
 import { ASSISTANT_STORE, COMMUNITY_ASSISTANT_STORE, CREATIVITY_LOW } from "../../constants";
 import { useGlobalToastContext } from "../../components/GlobalToastHandler/GlobalToastContext";
-import { DiscoveryCard } from "../../components/DiscoveryCard/DiscoveryCard";
-import type { DiscoveryCardBadge } from "../../components/DiscoveryCard/DiscoveryCard";
-import { DiscoveryCardSkeleton } from "../../components/DiscoveryCard/DiscoveryCardSkeleton";
+import { DiscoveryCard, DiscoveryCardSkeleton } from "../../components/DiscoveryCard";
 import { OwnerMetadataLink, getPrimaryOwnerDetails } from "../../components/OwnerMetadataLink/OwnerMetadataLink";
 import { AssistantDetailsSidebar, AssistantCardData } from "../../components/AssistantDetailsSidebar/AssistantDetailsSidebar";
 import { CloseConfirmationDialog } from "../../components/AssistantDialogs/shared/CloseConfirmationDialog";
@@ -25,13 +22,35 @@ import { useDiscoveryAssistantLists } from "./hooks/useDiscoveryAssistantLists";
 import { useMigrateLocalAssistant } from "../../hooks/useMigrateLocalAssistant";
 import { downloadAssistantExport, mapAssistantToExportData, mapVersionToExportData } from "../../utils/assistant-export";
 import { isCompleteCommunityAssistantSnapshot, mapCommunitySnapshotToAssistant } from "../../utils/community-assistant-snapshots";
+import { getAssistantBadges, isAssistantPrivate } from "../../utils/assistantCardDisplay";
 import { ApiError } from "../../api/fetch-utils";
 import { ConfigContext } from "../../context/ConfigContext";
+import { Dropdown } from "../../ui/Dropdown";
+import { Option } from "../../ui/Option";
+import { SearchBox } from "../../ui/SearchBox";
+import {
+    CreateAssistantDraftValues,
+    hasCreateAssistantDraft,
+    saveCreateAssistantDraft
+} from "../../components/AssistantDialogs/shared/hooks/useCreateAssistantState";
+import { resetMockScenarios } from "../../mocks/data/browser-scenario-seed";
 
 const communityAssistantStorageService = new CommunityAssistantStorageService(COMMUNITY_ASSISTANT_STORE);
 const assistantStorageService = new AssistantStorageService(ASSISTANT_STORE);
+const asArray = <T,>(value: unknown): T[] => (Array.isArray(value) ? value : []);
+const isToolBase = (value: unknown): value is ToolBase =>
+    typeof value === "object" && value !== null && typeof (value as ToolBase).id === "string" && (value as ToolBase).id !== "";
+const isPromptEntry = (value: unknown): value is { label: string; prompt: string; text: string; value: string } =>
+    typeof value === "object" &&
+    value !== null &&
+    typeof (value as { label?: unknown }).label === "string" &&
+    typeof (value as { prompt?: unknown }).prompt === "string" &&
+    typeof (value as { text?: unknown }).text === "string" &&
+    typeof (value as { value?: unknown }).value === "string";
 const isAssistantResponse = (data: AssistantResponse | CommunityAssistantSnapshot): data is AssistantResponse =>
     "latest_version" in data && data.latest_version != null && typeof data.latest_version.name === "string";
+
+const isMockMode = import.meta.env.MODE === "development";
 
 type EmptyStateAction = {
     label: string;
@@ -47,18 +66,37 @@ type SectionEmptyStateProps = {
     actions?: EmptyStateAction[];
 };
 
+const useStyles = makeStyles({
+    sortDropdown: {
+        "@media (max-width: 550px)": {
+            minWidth: 0
+        }
+    },
+    sortDropdownDrawerOpen: {
+        "@media (max-width: 1100px)": {
+            minWidth: 0
+        }
+    }
+});
+
 const Discovery = () => {
+    const classes = useStyles();
     const { t } = useTranslation();
     const navigate = useNavigate();
+    const [searchParams, setSearchParams] = useSearchParams();
     const appConfig = useContext(ConfigContext);
     const { showError, showSuccess } = useGlobalToastContext();
     const { refreshHistory: refreshUnifiedHistory } = useUnifiedHistory();
     const isComplianceCheckEnabled = appConfig.ai_act_compliance_check_enabled;
 
     const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+    const sortDropdownClassName = mergeClasses(styles.sortDropdown, classes.sortDropdown, isDrawerOpen && classes.sortDropdownDrawerOpen);
     const [selectedAssistant, setSelectedAssistant] = useState<AssistantCardData | null>(null);
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
     const [showUnsubscribeConfirm, setShowUnsubscribeConfirm] = useState(false);
+    const [pendingImportDraft, setPendingImportDraft] = useState<CreateAssistantDraftValues | null>(null);
+    const [showResetMockConfirm, setShowResetMockConfirm] = useState(false);
+    const assistantToOpenId = searchParams.get("openAssistant");
     const {
         isLoading,
         searchText,
@@ -96,22 +134,32 @@ const Discovery = () => {
         performMigration
     } = useMigrateLocalAssistant(assistantStorageService);
 
-    const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-    const latestRequestRef = useRef(0);
-    useEffect(
-        () => () => {
-            if (closeTimerRef.current !== null) clearTimeout(closeTimerRef.current);
-        },
-        []
-    );
+    useEffect(() => {
+        if (!assistantToOpenId) return;
 
-    const closeDrawerAndClearSelection = useCallback(() => {
-        if (closeTimerRef.current !== null) {
-            clearTimeout(closeTimerRef.current);
-        }
+        setSearchText("");
+        setMyAssistantFilter("owned");
+        setShowAllMyAssistants(true);
+    }, [assistantToOpenId, setMyAssistantFilter, setSearchText, setShowAllMyAssistants]);
+
+    const latestRequestRef = useRef(0);
+
+    const resetMockData = async () => {
+        await resetMockScenarios();
+        window.location.reload();
+    };
+
+    const closeDrawer = useCallback(() => {
+        latestRequestRef.current++;
         setIsDrawerOpen(false);
-        closeTimerRef.current = setTimeout(() => setSelectedAssistant(null), 300);
     }, []);
+
+    // The selection is kept until the slot has finished collapsing so the drawer
+    // content stays visible during the close animation.
+    const handleDetailsSidebarSlotTransitionEnd = (event: TransitionEvent<HTMLDivElement>) => {
+        if (event.target !== event.currentTarget || event.propertyName !== "flex-basis" || isDrawerOpen) return;
+        setSelectedAssistant(null);
+    };
 
     const exportAssistant = useCallback(async () => {
         if (!selectedAssistant || selectedAssistant.isLocalAssistant) return;
@@ -165,6 +213,17 @@ const Discovery = () => {
         }
     }, [resolveAssistantData, selectedAssistant, showError, showSuccess, t]);
 
+    const openImportedDraft = useCallback(
+        (draft: CreateAssistantDraftValues) => {
+            if (!saveCreateAssistantDraft(draft)) {
+                showError(t("components.import_assistant.import_error"), t("components.import_assistant.import_failed"));
+                return;
+            }
+            navigate(isComplianceCheckEnabled ? "/assistant/create#compliance-review" : "/assistant/create");
+        },
+        [navigate, isComplianceCheckEnabled, showError, t]
+    );
+
     const importAssistant = useCallback(() => {
         const fileInput = document.createElement("input");
         fileInput.type = "file";
@@ -178,34 +237,43 @@ const Discovery = () => {
                 const content = await file.text();
                 const importedData = JSON.parse(content);
 
-                if (!importedData.title || !importedData.system_message) {
+                if (
+                    typeof importedData?.title !== "string" ||
+                    typeof importedData.system_message !== "string" ||
+                    !importedData.title ||
+                    !importedData.system_message
+                ) {
                     throw new Error(t("components.import_assistant.import_invalid_format"));
                 }
 
-                const createdAssistant = await createCommunityAssistantApi({
-                    name: importedData.title,
-                    description: importedData.description || "",
-                    system_prompt: importedData.system_message,
-                    creativity: importedData.creativity || CREATIVITY_LOW,
-                    default_model: importedData.default_model,
-                    quick_prompts: importedData.quick_prompts || [],
-                    examples: importedData.examples || [],
-                    owner_ids: [],
-                    tags: importedData.tags || [],
-                    hierarchical_access: importedData.hierarchical_access || [],
-                    tools: importedData.tools || [],
-                    is_visible: importedData.is_visible || false
-                });
+                const tools = asArray<unknown>(importedData.tools);
+                if (!tools.every(isToolBase)) {
+                    throw new Error(t("components.import_assistant.import_invalid_format"));
+                }
 
-                if (createdAssistant?.id) {
-                    showSuccess(
-                        t("components.import_assistant.import_success"),
-                        t("components.import_assistant.import_success_message", { title: importedData.title })
-                    );
+                const quickPrompts = asArray<unknown>(importedData.quick_prompts);
+                const examples = asArray<unknown>(importedData.examples);
+                if (!quickPrompts.every(isPromptEntry) || !examples.every(isPromptEntry)) {
+                    throw new Error(t("components.import_assistant.import_invalid_format"));
+                }
 
-                    navigate(`/owned/communityassistant/${createdAssistant.id}`);
+                const draft: CreateAssistantDraftValues = {
+                    title: importedData.title,
+                    description: typeof importedData.description === "string" ? importedData.description : "",
+                    systemPrompt: importedData.system_message,
+                    creativity: typeof importedData.creativity === "string" ? importedData.creativity : CREATIVITY_LOW,
+                    defaultModel: typeof importedData.default_model === "string" ? importedData.default_model : undefined,
+                    tools,
+                    followUpActions: quickPrompts,
+                    starterPrompts: examples,
+                    hierarchicalAccess: asArray(importedData.hierarchical_access),
+                    isVisible: importedData.is_visible === true
+                };
+
+                if (hasCreateAssistantDraft()) {
+                    setPendingImportDraft(draft);
                 } else {
-                    throw new Error(t("components.import_assistant.import_save_failed"));
+                    openImportedDraft(draft);
                 }
             } catch (error) {
                 console.error("Failed to import assistant", error);
@@ -215,7 +283,7 @@ const Discovery = () => {
         };
 
         fileInput.click();
-    }, [t, showSuccess, showError, navigate]);
+    }, [t, showError, openImportedDraft]);
 
     const handleSearch = (_event: SearchBoxChangeEvent | null, data: InputOnChangeData) => {
         setSearchText(data.value || "");
@@ -240,6 +308,12 @@ const Discovery = () => {
         }
     };
 
+    const handleMyAssistantFilterChange = (_event: SelectTabEvent, data: SelectTabData) => {
+        if (data.value === "all" || data.value === "owned" || data.value === "subscribed") {
+            setMyAssistantFilter(data.value);
+        }
+    };
+
     const selectedMyAssistantsSortLabel =
         myAssistantsSortMethod === "lastUsed"
             ? t("components.community_assistants.sort_last_used", "Zuletzt benutzt")
@@ -249,73 +323,12 @@ const Discovery = () => {
                 ? t("components.community_assistants.sort_updated", "Zuletzt aktualisiert")
                 : t("components.community_assistants.sort_title", "Name");
 
-    const getAssistantBadges = (assistant: AssistantCardData): DiscoveryCardBadge[] => {
-        const badges: DiscoveryCardBadge[] = [];
-        const complianceCheckResult =
-            "latest_version" in assistant.rawData
-                ? assistant.rawData.latest_version.compliance_check_result
-                : "compliance_check_result" in assistant.rawData
-                  ? assistant.rawData.compliance_check_result
-                  : undefined;
-
-        if (isComplianceCheckEnabled && complianceCheckResult?.overall_status === "passed") {
-            badges.push({
-                label: t("components.community_assistants.compliance_passed_badge"),
-                color: "success",
-                tone: "success"
-            });
-        }
-
-        if (isComplianceCheckEnabled && complianceCheckResult?.overall_status === "high_risk_detected") {
-            badges.push({
-                label: t("components.community_assistants.compliance_high_risk_badge"),
-                color: "danger",
-                tone: "danger"
-            });
-        }
-
-        if (assistant.isLocalAssistant) {
-            badges.push({
-                label: t("components.community_assistants.local_badge", "Lokal"),
-                color: "warning",
-                tone: "warning"
-            });
-        }
-
-        if (assistant.isDeletedSnapshot) {
-            badges.push({
-                label: t("components.community_assistants.deleted_badge", "Gelöscht"),
-                color: "danger",
-                tone: "danger"
-            });
-        }
-
-        return badges;
-    };
-
-    const isAssistantPrivate = (assistant: AssistantCardData): boolean => {
-        if (assistant.isLocalAssistant) {
-            return true;
-        }
-
-        if ("is_visible" in assistant.rawData) {
-            return assistant.rawData.is_visible === false;
-        }
-
-        return false;
-    };
-
     const getMetadataFallbackLabel = (assistant: AssistantCardData): string =>
         assistant.isOwnedAssistant ? t("components.community_assistants.metadata_you", "Du") : t("components.community_assistants.filter_all", "Community");
 
     const handleAssistantClick = async (assistant: AssistantCardData) => {
-        if (closeTimerRef.current !== null) {
-            clearTimeout(closeTimerRef.current);
-            closeTimerRef.current = null;
-        }
-
         if (selectedAssistant?.id === assistant.id) {
-            closeDrawerAndClearSelection();
+            closeDrawer();
         } else {
             const requestId = ++latestRequestRef.current;
             try {
@@ -349,6 +362,18 @@ const Discovery = () => {
             }
         }
     };
+
+    useEffect(() => {
+        if (!assistantToOpenId || isLoading) return;
+
+        const assistant = filteredMyAssistants.find(item => item.id === assistantToOpenId);
+        if (!assistant) return;
+
+        void handleAssistantClick(assistant);
+        const nextSearchParams = new URLSearchParams(searchParams);
+        nextSearchParams.delete("openAssistant");
+        setSearchParams(nextSearchParams, { replace: true });
+    }, [assistantToOpenId, filteredMyAssistants, handleAssistantClick, isLoading, searchParams, setSearchParams]);
 
     const startConversation = () => {
         if (selectedAssistant) {
@@ -386,7 +411,7 @@ const Discovery = () => {
         if (!selectedAssistant?.isLocalAssistant) return;
         await performMigration(selectedAssistant.rawData as Assistant, selectedAssistant.id, selectedAssistant.title, () => {
             removeYoursAssistant(selectedAssistant.id);
-            closeDrawerAndClearSelection();
+            closeDrawer();
         });
     };
 
@@ -407,7 +432,7 @@ const Discovery = () => {
             );
             removeAssistantFromLists(selectedAssistant.id);
             refreshUnifiedHistory();
-            closeDrawerAndClearSelection();
+            closeDrawer();
         } catch (err) {
             showError(
                 t("components.assistant_chat.delete_assistant_failed"),
@@ -428,7 +453,7 @@ const Discovery = () => {
             );
             removeSubscribedAssistant(selectedAssistant.id);
             refreshUnifiedHistory();
-            closeDrawerAndClearSelection();
+            closeDrawer();
 
             try {
                 await assistantStorageService.deleteChatsForAssistant(selectedAssistant.id);
@@ -448,15 +473,16 @@ const Discovery = () => {
             id={assistant.id}
             title={assistant.title}
             description={assistant.description}
-            badges={getAssistantBadges(assistant)}
+            badges={getAssistantBadges(assistant, t, isComplianceCheckEnabled)}
             metadataStartNode={<OwnerMetadataLink owner={getPrimaryOwnerDetails(assistant.rawData)} fallbackLabel={getMetadataFallbackLabel(assistant)} />}
             subscriberCount={assistant.subscriptions}
             isPrivate={isAssistantPrivate(assistant)}
             privateLabel={t("components.community_assistants.private_label", "Privat")}
-            onClick={() => handleAssistantClick(assistant)}
+            onActivate={() => handleAssistantClick(assistant)}
             isSelected={selectedAssistant?.id === assistant.id}
+            ariaControls="assistant-details-drawer"
+            activateHintLabel={t("components.community_assistants.show_details", "Details anzeigen")}
             role="listitem"
-            aria-label={assistant.title}
         />
     );
 
@@ -472,22 +498,22 @@ const Discovery = () => {
                 {icon}
             </div>
             <div className={styles.emptyCopy}>
-                <Text as="p" weight="semibold" className={styles.emptyTitle}>
+                <Text as="p" size={400} weight="semibold" className={styles.emptyTitle}>
                     {title}
                 </Text>
                 <Text as="p" size={300} className={styles.emptyDescription}>
                     {description}
                 </Text>
+                {actions && actions.length > 0 && (
+                    <div className={styles.emptyActions}>
+                        {actions.map(action => (
+                            <Button key={action.label} appearance={action.appearance ?? "secondary"} icon={action.icon} onClick={action.onClick}>
+                                {action.label}
+                            </Button>
+                        ))}
+                    </div>
+                )}
             </div>
-            {actions && actions.length > 0 && (
-                <div className={styles.emptyActions}>
-                    {actions.map(action => (
-                        <Button key={action.label} appearance={action.appearance ?? "secondary"} icon={action.icon} onClick={action.onClick}>
-                            {action.label}
-                        </Button>
-                    ))}
-                </div>
-            )}
         </div>
     );
 
@@ -517,11 +543,6 @@ const Discovery = () => {
                     appearance: "primary",
                     icon: <Add24Regular />,
                     onClick: () => navigate("/assistant/create")
-                },
-                {
-                    label: t("components.import_assistant.import"),
-                    icon: <DocumentArrowUpRegular />,
-                    onClick: importAssistant
                 }
             ]
         });
@@ -541,7 +562,7 @@ const Discovery = () => {
         });
 
     const renderSkeletonGrid = (keyPrefix: string) => (
-        <div className={styles.assistantsGrid} role="list">
+        <div className={styles.assistantsGrid}>
             {Array.from({ length: 4 }).map((_, index) => (
                 <DiscoveryCardSkeleton key={`${keyPrefix}-skeleton-${index}`} />
             ))}
@@ -555,12 +576,17 @@ const Discovery = () => {
                     <div className={styles.contentWrapper}>
                         <div className={styles.headerSection}>
                             <div className={styles.titleBlock}>
-                                <Title1 className={styles.header}>{t("discovery.title", "Assistenten")}</Title1>
+                                <Title2 className={styles.header}>{t("discovery.title", "Assistenten")}</Title2>
                                 <div className={styles.subtitleRow}>
-                                    <Body1 className={styles.subtitle}>
-                                        {t("discovery.subtitle", "Nutze deine Assistenten oder entdecke neue für wiederkehrende Aufgaben.")}
-                                    </Body1>
+                                    <Text size={400} className={styles.subtitle}>
+                                        {t("discovery.subtitle", "Finde und verwalte Assistenten für deine wiederkehrenden Aufgaben.")}
+                                    </Text>
                                     <div className={styles.headerActions}>
+                                        {isMockMode && (
+                                            <Button appearance="transparent" icon={<ArrowResetRegular />} onClick={() => setShowResetMockConfirm(true)}>
+                                                {t("discovery.reset_mock_data")}
+                                            </Button>
+                                        )}
                                         <Button
                                             appearance="transparent"
                                             icon={<DocumentArrowUpRegular />}
@@ -569,23 +595,30 @@ const Discovery = () => {
                                         >
                                             {t("components.import_assistant.import")}
                                         </Button>
-                                        <AddAssistantButton onClick={() => navigate("/assistant/create")} />
+                                        <Button
+                                            appearance="primary"
+                                            aria-label={t("components.add_assistant_button.add_assistant")}
+                                            icon={<Add24Regular />}
+                                            onClick={() => navigate("/assistant/create")}
+                                        >
+                                            {t("components.add_assistant_button.add_assistant")}
+                                        </Button>
                                     </div>
                                 </div>
                             </div>
                         </div>
 
                         <SearchBox
+                            appearance="subtle"
                             placeholder={t("components.community_assistants.search", "Search assistants by title or description.")}
                             value={searchText}
                             onChange={handleSearch}
                             className={styles.searchBox}
-                            size="medium"
                             aria-label={t("components.community_assistants.search", "Search assistants by title or description.")}
                         />
 
                         {isLoading ? (
-                            <div className={styles.librarySections} aria-label={t("components.community_assistants.loading_assistants")}>
+                            <div className={styles.librarySections} aria-busy="true">
                                 <section className={styles.assistantSection}>
                                     <h2 className={styles.sectionTitle}>{t("components.community_assistants.my_assistants", "Meine Assistenten")}</h2>
                                     {renderSkeletonGrid("my")}
@@ -598,44 +631,29 @@ const Discovery = () => {
                         ) : (
                             <div className={styles.librarySections}>
                                 <section className={styles.assistantSection} aria-labelledby="my-assistants-heading">
-                                    <div className={styles.sectionHeadingBlock}>
+                                    <div className={styles.sectionHeaderRow}>
                                         <h2 id="my-assistants-heading" className={styles.sectionTitle}>
                                             {t("components.community_assistants.my_assistants", "Meine Assistenten")}
                                         </h2>
-                                        <div className={styles.sectionHeaderRow}>
-                                            <div className={styles.myFilterGroup} role="group" aria-labelledby="my-assistants-heading">
-                                                <Button
-                                                    size="small"
-                                                    appearance="subtle"
-                                                    aria-pressed={myAssistantFilter === "all"}
-                                                    onClick={() => setMyAssistantFilter("all")}
-                                                >
-                                                    {t("components.community_assistants.filter_my_all", "Alle")}
-                                                </Button>
-                                                <Button
-                                                    size="small"
-                                                    appearance="subtle"
-                                                    aria-pressed={myAssistantFilter === "owned"}
-                                                    onClick={() => setMyAssistantFilter("owned")}
-                                                >
-                                                    {t("components.community_assistants.filter_created_short", "Erstellt")}
-                                                </Button>
-                                                <Button
-                                                    size="small"
-                                                    appearance="subtle"
-                                                    aria-pressed={myAssistantFilter === "subscribed"}
-                                                    onClick={() => setMyAssistantFilter("subscribed")}
-                                                >
-                                                    {t("components.community_assistants.filter_subscribed", "Abonniert")}
-                                                </Button>
-                                            </div>
+                                        <div className={styles.sectionHeaderControls}>
+                                            <TabList
+                                                className={styles.myFilterGroup}
+                                                size="small"
+                                                selectedValue={myAssistantFilter}
+                                                onTabSelect={handleMyAssistantFilterChange}
+                                                aria-label={t("components.community_assistants.my_assistants", "Meine Assistenten")}
+                                            >
+                                                <Tab value="all">{t("components.community_assistants.filter_my_all", "Alle")}</Tab>
+                                                <Tab value="owned">{t("components.community_assistants.filter_created_short", "Erstellt")}</Tab>
+                                                <Tab value="subscribed">{t("components.community_assistants.filter_subscribed", "Abonniert")}</Tab>
+                                            </TabList>
                                             <Dropdown
                                                 id="my-assistant-sort"
                                                 value={selectedMyAssistantsSortLabel}
                                                 selectedOptions={[myAssistantsSortMethod]}
-                                                appearance="outline"
-                                                className={styles.sortDropdown}
-                                                listbox={{ className: styles.sortDropdownListbox }}
+                                                appearance="subtle"
+                                                className={sortDropdownClassName}
+                                                button={{ children: <span className={styles.sortDropdownValue}>{selectedMyAssistantsSortLabel}</span> }}
                                                 onOptionSelect={handleMyAssistantsSortChange}
                                                 aria-label={t("components.community_assistants.sort_by", "Sortieren nach")}
                                             >
@@ -678,8 +696,6 @@ const Discovery = () => {
                                     )}
                                 </section>
 
-                                <div className={styles.sectionDivider} aria-hidden="true" />
-
                                 <section className={styles.assistantSection} aria-labelledby="community-assistants-heading">
                                     <div className={styles.sectionHeaderRow}>
                                         <h2 id="community-assistants-heading" className={styles.sectionTitle}>
@@ -689,9 +705,9 @@ const Discovery = () => {
                                             id="community-assistant-sort"
                                             value={selectedCommunitySortLabel}
                                             selectedOptions={[communitySortMethod]}
-                                            appearance="outline"
-                                            className={styles.sortDropdown}
-                                            listbox={{ className: styles.sortDropdownListbox }}
+                                            appearance="subtle"
+                                            className={sortDropdownClassName}
+                                            button={{ children: <span className={styles.sortDropdownValue}>{selectedCommunitySortLabel}</span> }}
                                             onOptionSelect={handleCommunitySortChange}
                                             aria-label={t("components.community_assistants.sort_by", "Sortieren nach")}
                                         >
@@ -718,10 +734,10 @@ const Discovery = () => {
                     </div>
                 </div>
 
-                <div className={styles.detailsSidebarSlot} data-open={isDrawerOpen}>
+                <div className={styles.detailsSidebarSlot} data-open={isDrawerOpen} onTransitionEnd={handleDetailsSidebarSlotTransitionEnd}>
                     <AssistantDetailsSidebar
                         isOpen={isDrawerOpen}
-                        onClose={closeDrawerAndClearSelection}
+                        onClose={closeDrawer}
                         assistant={selectedAssistant}
                         ownedAssistantIds={ownedAssistantIds}
                         onStartChat={startConversation}
@@ -784,6 +800,34 @@ const Discovery = () => {
                 )}
                 confirmLabel={t("components.community_assistants.duplicate_confirm_action")}
             />
+            <CloseConfirmationDialog
+                open={pendingImportDraft !== null}
+                onOpenChange={open => {
+                    if (!open) setPendingImportDraft(null);
+                }}
+                onConfirmClose={() => {
+                    if (pendingImportDraft) openImportedDraft(pendingImportDraft);
+                }}
+                title={t("components.import_assistant.draft_exists_title")}
+                message={t("components.import_assistant.draft_exists_message")}
+                confirmLabel={t("components.import_assistant.draft_exists_overwrite")}
+                confirmIntent="danger"
+                secondaryAction={{
+                    label: t("components.import_assistant.draft_exists_open"),
+                    onClick: () => navigate("/assistant/create")
+                }}
+            />
+            {isMockMode && (
+                <CloseConfirmationDialog
+                    open={showResetMockConfirm}
+                    onOpenChange={setShowResetMockConfirm}
+                    onConfirmClose={resetMockData}
+                    title={t("discovery.reset_mock_data_confirm_title")}
+                    message={t("discovery.reset_mock_data_confirm_message")}
+                    confirmLabel={t("discovery.reset_mock_data")}
+                    confirmIntent="danger"
+                />
+            )}
         </div>
     );
 };

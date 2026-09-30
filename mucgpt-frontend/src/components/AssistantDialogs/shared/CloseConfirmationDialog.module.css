@@ -1,15 +1,17 @@
+/* --colorPaletteRedBackground3Hover/-Pressed are not Fluent tokens; the themed
+   --colorStatusDanger* family is, and it carries real hover and pressed steps. */
 .dangerConfirmButton {
-    background-color: var(--colorPaletteRedBackground3, #d13438) !important;
+    background-color: var(--colorStatusDangerBackground3) !important;
     color: var(--colorNeutralForegroundOnBrand) !important;
 }
 
 .dangerConfirmButton:hover {
-    background-color: var(--colorPaletteRedBackground3Hover, var(--colorPaletteRedBackground3, #d13438)) !important;
+    background-color: var(--colorStatusDangerBackground3Hover) !important;
     color: var(--colorNeutralForegroundOnBrand) !important;
 }
 
 .dangerConfirmButton:active {
-    background-color: var(--colorPaletteRedBackground3Pressed, var(--colorPaletteRedBackground3, #d13438)) !important;
+    background-color: var(--colorStatusDangerBackground3Pressed) !important;
     color: var(--colorNeutralForegroundOnBrand) !important;
 }
 

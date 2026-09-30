@@ -1,24 +1,77 @@
-import { Dispatch, SetStateAction, useState, useCallback, useMemo } from "react";
+import { Dispatch, SetStateAction, useState, useCallback, useEffect, useMemo } from "react";
 import { ToolBase } from "../../../../api";
 import { FollowUpActionModel } from "../../../FollowUpAction";
 import { StarterPromptModel } from "../../../StarterPrompt";
 import { CREATIVITY_LOW } from "../../../../constants";
 import { ensurePromptIds } from "../promptIds";
+import { STORAGE_KEYS } from "../../../../pages/layout/LayoutHelper";
+import { clearSessionDraft, loadSessionDraft, saveSessionDraft } from "../sessionStorageDraft";
 
-export const useCreateAssistantState = () => {
+export type CreateView = "mode_select" | "ai_input" | "settings";
+
+interface CreateAssistantDraft {
+    view: CreateView;
+    input: string;
+    title: string;
+    description: string;
+    systemPrompt: string;
+    selectedTemplate: string;
+    tools: ToolBase[];
+    followUpActions: FollowUpActionModel[];
+    starterPrompts: StarterPromptModel[];
+    hierarchicalAccess: string[];
+    isVisible: boolean;
+    creativity: string;
+    defaultModel: string | undefined;
+}
+
+interface CreateAssistantStateOptions {
+    enabled: boolean;
+}
+
+export type CreateAssistantDraftValues = Omit<CreateAssistantDraft, "view" | "input" | "selectedTemplate">;
+
+export const hasCreateAssistantDraft = () => loadSessionDraft<CreateAssistantDraft>(STORAGE_KEYS.CREATE_ASSISTANT_DRAFT) !== null;
+
+// Prefills the create flow, e.g. from an imported assistant, so the user reviews and creates it like any other assistant.
+export const saveCreateAssistantDraft = (values: CreateAssistantDraftValues): boolean => {
+    const draft: CreateAssistantDraft = {
+        ...values,
+        view: "settings",
+        input: "",
+        selectedTemplate: "",
+        followUpActions: ensurePromptIds(values.followUpActions),
+        starterPrompts: ensurePromptIds(values.starterPrompts)
+    };
+    return saveSessionDraft(STORAGE_KEYS.CREATE_ASSISTANT_DRAFT, draft);
+};
+
+export const useCreateAssistantState = ({ enabled }: CreateAssistantStateOptions) => {
+    const [initialDraft] = useState<CreateAssistantDraft | null>(() => {
+        const draft = enabled ? loadSessionDraft<CreateAssistantDraft>(STORAGE_KEYS.CREATE_ASSISTANT_DRAFT) : null;
+        if (!draft) return null;
+
+        return {
+            ...draft,
+            followUpActions: Array.isArray(draft.followUpActions) ? draft.followUpActions : [],
+            starterPrompts: Array.isArray(draft.starterPrompts) ? draft.starterPrompts : []
+        };
+    });
+
     // All state variables
-    const [input, setInput] = useState<string>("");
-    const [title, setTitle] = useState<string>("");
-    const [description, setDescription] = useState<string>("");
-    const [systemPrompt, setSystemPrompt] = useState<string>("");
-    const [selectedTemplate, setSelectedTemplate] = useState<string>("");
-    const [tools, setTools] = useState<ToolBase[]>([]);
-    const [followUpActions, setFollowUpActionsState] = useState<FollowUpActionModel[]>([]);
-    const [starterPrompts, setStarterPromptsState] = useState<StarterPromptModel[]>([]);
-    const [hierarchicalAccess, setHierarchicalAccess] = useState<string[]>([]);
-    const [isVisible, setIsVisible] = useState<boolean>(false);
-    const [creativity, setCreativity] = useState<string>(CREATIVITY_LOW);
-    const [defaultModel, setDefaultModel] = useState<string | undefined>(undefined);
+    const [view, setView] = useState<CreateView>(() => initialDraft?.view ?? "mode_select");
+    const [input, setInput] = useState<string>(() => initialDraft?.input ?? "");
+    const [title, setTitle] = useState<string>(() => initialDraft?.title ?? "");
+    const [description, setDescription] = useState<string>(() => initialDraft?.description ?? "");
+    const [systemPrompt, setSystemPrompt] = useState<string>(() => initialDraft?.systemPrompt ?? "");
+    const [selectedTemplate, setSelectedTemplate] = useState<string>(() => initialDraft?.selectedTemplate ?? "");
+    const [tools, setTools] = useState<ToolBase[]>(() => initialDraft?.tools ?? []);
+    const [followUpActions, setFollowUpActionsState] = useState<FollowUpActionModel[]>(() => ensurePromptIds(initialDraft?.followUpActions));
+    const [starterPrompts, setStarterPromptsState] = useState<StarterPromptModel[]>(() => ensurePromptIds(initialDraft?.starterPrompts));
+    const [hierarchicalAccess, setHierarchicalAccess] = useState<string[]>(() => initialDraft?.hierarchicalAccess ?? []);
+    const [isVisible, setIsVisible] = useState<boolean>(() => initialDraft?.isVisible ?? false);
+    const [creativity, setCreativity] = useState<string>(() => initialDraft?.creativity ?? CREATIVITY_LOW);
+    const [defaultModel, setDefaultModel] = useState<string | undefined>(() => initialDraft?.defaultModel ?? undefined);
 
     // Track if user has made any changes
     const hasChanges = useMemo(() => {
@@ -36,6 +89,49 @@ export const useCreateAssistantState = () => {
             defaultModel !== undefined
         );
     }, [input, title, description, systemPrompt, tools, followUpActions, starterPrompts, hierarchicalAccess, isVisible, creativity, defaultModel]);
+
+    // Persist the in-progress draft so it survives a page refresh, and drop it once the flow is back at its
+    // starting point (nothing left worth restoring).
+    useEffect(() => {
+        if (!enabled) return;
+
+        if (hasChanges || view !== "mode_select") {
+            const draft: CreateAssistantDraft = {
+                view,
+                input,
+                title,
+                description,
+                systemPrompt,
+                selectedTemplate,
+                tools,
+                followUpActions,
+                starterPrompts,
+                hierarchicalAccess,
+                isVisible,
+                creativity,
+                defaultModel
+            };
+            saveSessionDraft(STORAGE_KEYS.CREATE_ASSISTANT_DRAFT, draft);
+        } else {
+            clearSessionDraft(STORAGE_KEYS.CREATE_ASSISTANT_DRAFT);
+        }
+    }, [
+        enabled,
+        view,
+        input,
+        title,
+        description,
+        systemPrompt,
+        selectedTemplate,
+        tools,
+        followUpActions,
+        starterPrompts,
+        hierarchicalAccess,
+        isVisible,
+        creativity,
+        defaultModel,
+        hasChanges
+    ]);
 
     // Change handlers that automatically track changes
     const updateInput = useCallback((newInput: string) => {
@@ -106,8 +202,9 @@ export const useCreateAssistantState = () => {
         setSystemPrompt(generatedSystemPrompt);
     }, []);
 
-    // Reset all state
+    // Reset all state, e.g. after the assistant was created or the create flow was discarded
     const resetAll = useCallback(() => {
+        setView("mode_select");
         setInput("");
         setTitle("");
         setDescription("");
@@ -120,10 +217,12 @@ export const useCreateAssistantState = () => {
         setIsVisible(false);
         setCreativity(CREATIVITY_LOW);
         setDefaultModel(undefined);
-    }, []);
+        if (enabled) clearSessionDraft(STORAGE_KEYS.CREATE_ASSISTANT_DRAFT);
+    }, [enabled]);
 
     return {
         // State
+        view,
         input,
         title,
         description,
@@ -139,6 +238,7 @@ export const useCreateAssistantState = () => {
         hasChanges,
 
         // Setters (direct)
+        setView,
         setFollowUpActions,
         setStarterPrompts,
 

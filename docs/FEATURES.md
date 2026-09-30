@@ -31,6 +31,14 @@ Assistants can use built-in and extendable tools. Examples include:
 
 These examples are illustrative—the platform is designed to grow with additional tools as organizational needs evolve.
 
+## AI Governance And Compliance Checks
+
+Assistant system prompts can be screened against configured EU AI Act high-risk
+use cases before they are saved. High-risk findings route the immutable assistant
+version to an administrator/legal review queue. See the [AI governance and
+compliance checks guide](AI_GOVERNANCE.md) for flow diagrams, configuration,
+verification rules, and the review lifecycle.
+
 ## Start Page
 
 ![Start Page](/docs/startpage.png)

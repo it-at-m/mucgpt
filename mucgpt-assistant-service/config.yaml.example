@@ -32,11 +32,9 @@ COMPLIANCE_REQUIRE_VERIFICATION: false
 # SSO Settings (nested under SSO key)
 SSO:
   ROLE: "mucgpt-user"
+  ADMIN_ROLE: "mucgpt-admin"
   USER_ID_CLAIM: "user_id"
   ORGANIZATION_UNIT_CLAIM: "organization_unit"
-  # ADMIN_ROLE / USE_ROLE_RESTRICTION are reserved for future admin
-  # functionality and don't affect basic access today.
-  # ADMIN_ROLE: "mucgpt-admin"
 
 # Redis Settings (nested under REDIS key)
 REDIS:

@@ -22,6 +22,7 @@ import Unauthorized from "./pages/Unauthorized";
 import Discovery from "./pages/discovery/Discovery";
 import Home from "./pages/home/Home";
 import { AssistantEditorPage } from "./components/AssistantDialogs/AssistantEditorPage/AssistantEditorPage";
+import LegalReview from "./pages/admin/LegalReview";
 
 async function cleanupServiceWorkerForGatewayBuild() {
     const pwaEnabled = import.meta.env.VITE_DISABLE_PWA !== "true";
@@ -76,6 +77,11 @@ const router = createHashRouter([
             {
                 path: "tutorials",
                 element: <Tutorials />,
+                errorElement: <div>Fehler</div>
+            },
+            {
+                path: "admin/legal-review",
+                element: <LegalReview />,
                 errorElement: <div>Fehler</div>
             },
             {
@@ -165,7 +171,8 @@ async function enableMocking() {
     if (import.meta.env?.MODE !== "development" && import.meta.env?.MODE !== "ghpages") {
         return;
     }
-    const { worker } = await import("./mocks/browser.js");
+    const [{ worker }, { initializeMockScenarios }] = await Promise.all([import("./mocks/browser.js"), import("./mocks/data/browser-scenario-seed.js")]);
+    await initializeMockScenarios();
 
     // `worker.start()` returns a Promise that resolves
     // once the Service Worker is up and ready to intercept requests.

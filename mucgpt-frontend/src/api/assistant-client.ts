@@ -1,5 +1,14 @@
-import { getConfig, handleApiRequest, postConfig, deleteConfig } from "./fetch-utils";
-import { AssistantCreateInput, AssistantCreateResponse, AssistantResponse, AssistantUpdateInput, Assistant, CommunityAssistant, DirectoryNode } from "./models";
+import { deleteConfig, getConfig, handleApiRequest, patchConfig, postConfig } from "./fetch-utils";
+import {
+    Assistant,
+    AssistantCreateInput,
+    AssistantCreateResponse,
+    AssistantResponse,
+    AssistantStateUpdateInput,
+    AssistantUpdateInput,
+    CommunityAssistant,
+    DirectoryNode
+} from "./models";
 
 export type AssistantListSortBy = "title" | "updated" | "subscriptions";
 export type AssistantListSortOrder = "asc" | "desc";
@@ -66,6 +75,10 @@ export async function createCommunityAssistantApi(input: AssistantCreateInput): 
     return handleApiRequest(() => fetch("/api/assistant/create", postConfig(input)), "Failed to create community assistant");
 }
 
+export async function duplicateCommunityAssistantApi(id: string): Promise<AssistantResponse> {
+    return handleApiRequest(() => fetch(`/api/assistant/${id}/duplicate`, postConfig()), "Failed to duplicate community assistant");
+}
+
 export async function getAllCommunityAssistantsApi(params?: AssistantListQueryParams, options?: AssistantRequestOptions): Promise<AssistantResponse[]> {
     return handleApiRequest(
         () => fetch(`/api/assistant${buildQueryString(params)}`, { ...getConfig(), signal: options?.signal }),
@@ -96,4 +109,12 @@ export async function getDirectoryChildren(path: string[] = []): Promise<Directo
         url += `?path=${encodeURIComponent(jsonPath)}`;
     }
     return handleApiRequest(() => fetch(url, getConfig()), "Failed to get directory children");
+}
+
+export async function getAssistantReviewQueueApi(options?: AssistantRequestOptions): Promise<AssistantResponse[]> {
+    return handleApiRequest(() => fetch("/api/admin/assistant/review", { ...getConfig(), signal: options?.signal }), "Failed to get assistant review queue");
+}
+
+export async function updateAssistantStateApi(assistantId: string, input: AssistantStateUpdateInput): Promise<AssistantResponse> {
+    return handleApiRequest(() => fetch(`/api/admin/assistant/${assistantId}/state`, patchConfig({ ...input })), "Failed to update assistant state");
 }

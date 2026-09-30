@@ -10,12 +10,14 @@ from api.api_models import (
     AssistantListSortBy,
     AssistantListSortOrder,
     AssistantResponse,
+    AssistantState,
     AssistantUpdate,
     AssistantVersionResponse,
     ComplianceCheckResult,
 )
 from api.exceptions import (
     AssistantNotFoundException,
+    AssistantUnavailableForUseException,
     ComplianceVerificationFailedException,
     DeleteFailedException,
     NotAllowedToAccessException,
@@ -43,6 +45,7 @@ logger = getLogger("assistants_router")
 router = APIRouter()
 
 _COMPLIANCE_CACHE_KEY_PREFIX = "mucgpt:assistant-compliance:v1:"
+_DUPLICATE_NAME_SUFFIX = " [Kopie]"
 
 
 def _build_compliance_cache_key(prompt_hash: str) -> str:
@@ -51,6 +54,22 @@ def _build_compliance_cache_key(prompt_hash: str) -> str:
 
 def _hash_prompt(system_prompt: str) -> str:
     return hashlib.sha256(system_prompt.encode("utf-8")).hexdigest()
+
+
+def _state_from_compliance_result(
+    compliance_result: dict[str, object] | None,
+) -> str:
+    """Map a verified EU AI Act screening result to a version lifecycle state."""
+    if compliance_result and compliance_result.get("overall_status") == "error":
+        raise ComplianceVerificationFailedException(
+            "A compliance check error cannot be saved as an assistant version"
+        )
+    if (
+        compliance_result
+        and compliance_result.get("overall_status") == "high_risk_detected"
+    ):
+        return AssistantState.PENDING_LEGAL_REVIEW
+    return AssistantState.ACTIVE
 
 
 async def _get_verified_compliance_result(
@@ -197,6 +216,8 @@ async def createAssistant(
             tags=assistant.tags or [],
             compliance_check_result=verified_compliance_result,
             compliance_confirmation=assistant.compliance_confirmation is True,
+            state=_state_from_compliance_result(verified_compliance_result),
+            state_changed_by=user_info.user_id,
         )  # Add tools if specified
         if assistant.tools:
             for tool_data in assistant.tools:
@@ -263,6 +284,9 @@ async def createAssistant(
             is_visible=is_visible,
             compliance_check_result=latest_version.compliance_check_result,
             compliance_confirmation=latest_version.compliance_confirmation,
+            state=latest_version.state,
+            state_changed_by=latest_version.state_changed_by,
+            state_change_reason=latest_version.state_change_reason,
         )  # Build AssistantResponse
         response = AssistantResponse(
             id=assistant_id,
@@ -283,6 +307,90 @@ async def createAssistant(
         logger.error(f"Error creating assistant: {e}")
         await db.rollback()
         raise
+
+
+@router.post(
+    "/assistant/{id}/duplicate",
+    response_model=AssistantResponse,
+    summary="Duplicate an AI assistant",
+    description="""
+    Create a private copy of the latest version of an accessible assistant,
+    owned only by the current user.
+    """,
+    tags=["Assistants"],
+    responses={
+        200: {"description": "The duplicated assistant"},
+        401: {"description": "Unauthorized"},
+        403: {
+            "description": "User is not allowed to access the assistant or it is inactive"
+        },
+        404: {"description": "Assistant not found"},
+    },
+)
+async def duplicateAssistant(
+    id: str,
+    db: AsyncSession = Depends(get_db_session),
+    user_info: AuthenticationResult = Depends(authenticate_user),
+) -> AssistantResponse:
+    logger.info(f"Duplicating assistant with ID: {id} for user {user_info.user_id}")
+    assistant_repo = AssistantRepository(db)
+    source_assistant = await assistant_repo.get(id)
+
+    if not source_assistant:
+        raise AssistantNotFoundException(id)
+    if not await source_assistant.is_allowed_for_user(
+        user_info.department
+    ) and not await assistant_repo.is_owner(id, user_info.user_id):
+        raise NotAllowedToAccessException(id)
+
+    source_version = await assistant_repo.get_latest_version(id)
+    if source_version is None:
+        raise NoVersionException(id)
+    if source_version.state == AssistantState.INACTIVE:
+        raise AssistantUnavailableForUseException(id, source_version.state)
+
+    try:
+        new_assistant = await assistant_repo.create(
+            hierarchical_access=[],
+            owner_ids=[user_info.user_id],
+            is_visible=False,
+        )
+        new_assistant_id = str(new_assistant.id)
+        new_version = await assistant_repo.create_assistant_version(
+            new_assistant,
+            name=f"{source_version.name}{_DUPLICATE_NAME_SUFFIX}",
+            description=source_version.description or "",
+            system_prompt=source_version.system_prompt,
+            creativity=source_version.creativity,
+            default_model=source_version.default_model,
+            examples=source_version.examples or [],
+            quick_prompts=source_version.quick_prompts or [],
+            tags=source_version.tags or [],
+            compliance_check_result=source_version.compliance_check_result,
+            compliance_confirmation=bool(source_version.compliance_confirmation),
+            state=source_version.state,
+            state_changed_by=user_info.user_id,
+        )
+        for tool in assistant_repo.get_tools_from_version(source_version):
+            db.add(
+                AssistantTool(
+                    assistant_version=new_version,
+                    tool_id=tool["id"],
+                    config=tool["config"],
+                )
+            )
+
+        await db.flush()
+        await refresh_owner_details([user_info.user_id], db)
+        response = await getAssistant(id=new_assistant_id, db=db, user_info=user_info)
+        await db.commit()
+    except Exception as e:
+        logger.error(f"Error duplicating assistant {id}: {e}")
+        await db.rollback()
+        raise
+
+    logger.info(f"Assistant {id} duplicated as {new_assistant_id}")
+    return response
 
 
 @router.post(
@@ -365,7 +473,9 @@ async def updateAssistant(
     logger.info(f"Updating assistant with ID: {id} by user {user_info.user_id}")
     owner_lookup_cache: dict[str, dict[str, object]] = {}
     assistant_repo = AssistantRepository(db)
-    assistant = await assistant_repo.get(id)
+    # Lock the parent row before reading the latest version so owner updates
+    # serialize with administrative state changes.
+    assistant = await assistant_repo.get_for_update(id)
 
     if not assistant:
         raise AssistantNotFoundException(id)
@@ -380,6 +490,8 @@ async def updateAssistant(
     latest_version = await assistant_repo.get_latest_version(id)
     if not latest_version:
         raise NoVersionException()
+    if latest_version.state == AssistantState.INACTIVE:
+        raise AssistantUnavailableForUseException(id, latest_version.state)
 
     if assistant_update.version != latest_version.version:
         raise VersionConflictException(
@@ -410,7 +522,40 @@ async def updateAssistant(
                 exc_info=True,
             )
 
-    if assistant_update.compliance_check_result is not None:
+    approved_version = latest_version
+    if latest_version.state != AssistantState.ACTIVE or not existing_compliance_result:
+        approved_version = await assistant_repo.get_active_version_for_prompt(
+            id, effective_system_prompt
+        )
+        if approved_version is not None and approved_version.compliance_check_result:
+            try:
+                existing_compliance_result = ComplianceCheckResult.model_validate(
+                    approved_version.compliance_check_result
+                )
+            except Exception:
+                logger.warning(
+                    "Discarding malformed historical compliance result for assistant %s version %s",
+                    id,
+                    approved_version.version,
+                    exc_info=True,
+                )
+                approved_version = latest_version
+
+    inherited_active_approval = (
+        not system_prompt_changed
+        and approved_version is not None
+        and approved_version.state == AssistantState.ACTIVE
+        and existing_compliance_result is not None
+        and existing_compliance_result.prompt_hash
+        == _hash_prompt(effective_system_prompt)
+    )
+
+    if inherited_active_approval:
+        # An active version already represents an approved decision for this
+        # exact prompt. Do not make unchanged metadata updates depend on the
+        # short-lived Redis verification cache.
+        compliance_check_result = existing_compliance_result.model_dump()
+    elif assistant_update.compliance_check_result is not None:
         compliance_check_result = await _require_verified_compliance_result(
             system_prompt=effective_system_prompt,
             candidate=assistant_update.compliance_check_result,
@@ -439,49 +584,73 @@ async def updateAssistant(
             getattr(latest_version, "compliance_confirmation", False)
         )
 
+    if system_prompt_changed or (
+        assistant_update.compliance_check_result is not None
+        and not inherited_active_approval
+    ):
+        state = _state_from_compliance_result(compliance_check_result)
+    else:
+        state = latest_version.state
+
+    # Owner updates may refresh the parent ORM row and expire related instances.
+    # Keep the immutable version values before changing parent-level properties.
+    previous_version = {
+        "name": latest_version.name,
+        "description": latest_version.description,
+        "system_prompt": latest_version.system_prompt,
+        "creativity": latest_version.creativity,
+        "default_model": latest_version.default_model,
+        "examples": latest_version.examples,
+        "quick_prompts": latest_version.quick_prompts,
+        "tags": latest_version.tags,
+    }
+
     await assistant_repo.update(
         assistant_id=id,
         hierarchical_access=assistant_update.hierarchical_access,
         owner_ids=assistant_update.owner_ids,
         is_visible=is_visible,
+        assistant=assistant,
     )
 
     # Create a new version with updated data
     # Using the latest_version already retrieved above
     new_version = await assistant_repo.create_assistant_version(
-        assistant,
+        assistant=assistant,
         name=assistant_update.name
         if assistant_update.name is not None
-        else latest_version.name,
+        else previous_version["name"],
         description=assistant_update.description
         if assistant_update.description is not None
-        else latest_version.description,
+        else previous_version["description"],
         system_prompt=assistant_update.system_prompt
         if assistant_update.system_prompt is not None
-        else latest_version.system_prompt,
+        else previous_version["system_prompt"],
         creativity=assistant_update.creativity
         if assistant_update.creativity is not None
-        else latest_version.creativity,
+        else previous_version["creativity"],
         default_model=(
             None
             if assistant_update.default_model == ""
             else (
                 assistant_update.default_model
                 if assistant_update.default_model is not None
-                else latest_version.default_model
+                else previous_version["default_model"]
             )
         ),
         examples=assistant_update.examples
         if assistant_update.examples is not None
-        else latest_version.examples,
+        else previous_version["examples"],
         quick_prompts=assistant_update.quick_prompts
         if assistant_update.quick_prompts is not None
-        else latest_version.quick_prompts,
+        else previous_version["quick_prompts"],
         tags=assistant_update.tags
         if assistant_update.tags is not None
-        else latest_version.tags,
+        else previous_version["tags"],
         compliance_check_result=compliance_check_result,
         compliance_confirmation=compliance_confirmation,
+        state=state,
+        state_changed_by=user_info.user_id,
     )  # Handle tools for the new version
     if assistant_update.tools is not None:
         for tool_data in assistant_update.tools:
@@ -529,6 +698,9 @@ async def updateAssistant(
         is_visible=is_visible,
         compliance_check_result=latest_version.compliance_check_result,
         compliance_confirmation=latest_version.compliance_confirmation,
+        state=latest_version.state,
+        state_changed_by=latest_version.state_changed_by,
+        state_change_reason=latest_version.state_change_reason,
     )
 
     # Build AssistantResponse
@@ -546,6 +718,40 @@ async def updateAssistant(
 
     logger.info(f"Assistant with ID {id} updated successfully")
     return response
+
+
+@router.get(
+    "/assistant/{id}/configuration",
+    response_model=AssistantResponse,
+    summary="Resolve an assistant configuration for use",
+    tags=["Assistants"],
+    responses={
+        403: {"description": "Assistant is inactive"},
+        451: {"description": "Assistant is pending lifecycle review"},
+    },
+)
+async def get_assistant_configuration_for_use(
+    id: str,
+    db: AsyncSession = Depends(get_db_session),
+    user_info: AuthenticationResult = Depends(authenticate_user),
+) -> AssistantResponse:
+    """Return the latest configuration only when its immutable state is active."""
+    assistant_repo = AssistantRepository(db)
+    assistant = await assistant_repo.get(id)
+    if not assistant:
+        raise AssistantNotFoundException(id)
+    if not await assistant.is_allowed_for_user(
+        user_info.department
+    ) and not await assistant_repo.is_owner(id, user_info.user_id):
+        raise NotAllowedToAccessException(id)
+
+    latest_version = await assistant_repo.get_latest_version(id)
+    if latest_version is None or latest_version.state != AssistantState.ACTIVE:
+        raise AssistantUnavailableForUseException(
+            id,
+            latest_version.state if latest_version is not None else None,
+        )
+    return await getAssistant(id=id, db=db, user_info=user_info)
 
 
 @router.get(
@@ -646,6 +852,9 @@ async def getAllAssistants(
                 is_visible=is_visible,
                 compliance_check_result=latest_version.compliance_check_result,
                 compliance_confirmation=latest_version.compliance_confirmation,
+                state=latest_version.state,
+                state_changed_by=latest_version.state_changed_by,
+                state_change_reason=latest_version.state_change_reason,
             )
 
             # Build AssistantResponse
@@ -754,6 +963,9 @@ async def getAssistant(
         is_visible=is_visible,
         compliance_check_result=latest_version.compliance_check_result,
         compliance_confirmation=latest_version.compliance_confirmation,
+        state=latest_version.state,
+        state_changed_by=latest_version.state_changed_by,
+        state_change_reason=latest_version.state_change_reason,
     )  # Build AssistantResponse
     response = AssistantResponse(
         id=id,
@@ -860,6 +1072,9 @@ async def get_assistant_version(
         is_visible=assistant.is_visible,
         compliance_check_result=assistant_version.compliance_check_result,
         compliance_confirmation=assistant_version.compliance_confirmation,
+        state=assistant_version.state,
+        state_changed_by=assistant_version.state_changed_by,
+        state_change_reason=assistant_version.state_change_reason,
     )
 
     logger.info(f"Returning version {version} of assistant {id}")

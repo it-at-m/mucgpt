@@ -23,7 +23,8 @@ export type WorkerInMessage =
     | { type: "start-recording"; sessionId: number }
     | { type: "audio-frame"; sessionId: number; buffer: Float32Array }
     | { type: "stop-recording"; sessionId: number }
-    | { type: "abort" };
+    | { type: "unload" }
+    | { type: "abort"; requestId: number };
 
 /**
  * Messages the worker posts back. Every recording-scoped message carries the
@@ -71,6 +72,7 @@ let TensorCtor: any = null;
 let loadedModelId: string | null = null;
 let isLoading = false;
 let queuedLoad: Extract<WorkerInMessage, { type: "load" }> | null = null;
+const canceledLoadRequestIds = new Set<number>();
 let hasWebGPU = false;
 let currentLanguage: string | undefined = undefined;
 let inferenceChain: Promise<void> = Promise.resolve();
@@ -167,6 +169,11 @@ async function loadModel(request: Extract<WorkerInMessage, { type: "load" }>) {
         }
         await loadVad();
 
+        if (canceledLoadRequestIds.delete(requestId)) {
+            await unloadModel();
+            return;
+        }
+
         loadedModelId = modelId;
         log("[transcription-worker] init complete, posting ready", { loadedModelId });
         self.postMessage({ type: "ready", requestId, modelId } satisfies WorkerOutMessage);
@@ -179,6 +186,21 @@ async function loadModel(request: Extract<WorkerInMessage, { type: "load" }>) {
         queuedLoad = null;
         if (nextLoad && nextLoad.requestId !== requestId) void loadModel(nextLoad);
     }
+}
+
+/** Disposes the loaded transcription + VAD sessions and resets load bookkeeping. */
+async function unloadModel(): Promise<void> {
+    log("[transcription-worker] unloading model", { loadedModelId });
+    await transcriber?.dispose?.();
+    await vadModel?.dispose?.();
+    transcriber = null;
+    vadModel = null;
+    loadedModelId = null;
+    queuedLoad = null;
+    frameQueue = [];
+    activeSessionId = null;
+    isStopPending = false;
+    cancelAutoStop();
 }
 
 /** @huggingface/transformers ASR pipeline (Whisper entries). */
@@ -581,7 +603,12 @@ self.addEventListener("message", (event: MessageEvent<WorkerInMessage>) => {
         case "stop-recording":
             handleStopRecording(msg.sessionId);
             break;
+        case "unload":
+            void unloadModel();
+            break;
         case "abort":
+            canceledLoadRequestIds.add(msg.requestId);
+            if (queuedLoad?.requestId === msg.requestId) queuedLoad = null;
             break;
     }
 });

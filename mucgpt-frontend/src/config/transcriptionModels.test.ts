@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { DEFAULT_TRANSCRIPTION_MODEL, TRANSCRIPTION_MODELS } from "./transcriptionModels";
+import { DEFAULT_TRANSCRIPTION_MODEL, TRANSCRIPTION_MODELS, orderModelsWithDefaultFirst } from "./transcriptionModels";
 
 describe("TRANSCRIPTION_MODELS", () => {
     it("contains unique model ids", () => {
@@ -57,5 +57,22 @@ describe("TRANSCRIPTION_MODELS", () => {
                 expect(dtype.decoder_model_merged).not.toBe("q4f16");
             }
         }
+    });
+});
+
+describe("orderModelsWithDefaultFirst", () => {
+    it("moves the given model to the front and keeps the remaining order stable", () => {
+        const defaultId = "istupakov/canary-180m-flash-onnx";
+        const ordered = orderModelsWithDefaultFirst(TRANSCRIPTION_MODELS, defaultId);
+        expect(ordered[0].model_id).toBe(defaultId);
+        expect(ordered.map(m => m.model_id).sort()).toEqual(TRANSCRIPTION_MODELS.map(m => m.model_id).sort());
+        const expectedRest = TRANSCRIPTION_MODELS.filter(m => m.model_id !== defaultId).map(m => m.model_id);
+        expect(ordered.slice(1).map(m => m.model_id)).toEqual(expectedRest);
+        expect(ordered).not.toBe(TRANSCRIPTION_MODELS);
+    });
+
+    it("leaves the list untouched for an unknown or already-first default", () => {
+        expect(orderModelsWithDefaultFirst(TRANSCRIPTION_MODELS, "does/not-exist")).toBe(TRANSCRIPTION_MODELS);
+        expect(orderModelsWithDefaultFirst(TRANSCRIPTION_MODELS, DEFAULT_TRANSCRIPTION_MODEL)).toBe(TRANSCRIPTION_MODELS);
     });
 });

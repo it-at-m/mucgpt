@@ -253,14 +253,14 @@ class AssistantRepository(Repository[Assistant]):
                 Assistant.is_visible.is_(True),
                 or_(
                     Assistant.hierarchical_access.is_(None),
-                    Assistant.hierarchical_access == [],
+                    func.json_array_length(Assistant.hierarchical_access) == 0,
                 ),
             )
         elif access == AssistantAccessType.HIERARCHICAL:
             stmt = stmt.where(
                 Assistant.is_visible.is_(True),
                 Assistant.hierarchical_access.is_not(None),
-                Assistant.hierarchical_access != [],
+                func.json_array_length(Assistant.hierarchical_access) > 0,
             )
         if department is not None:
             stmt = stmt.where(Assistant.is_visible.is_(True))

@@ -1,0 +1,251 @@
+.pageWrapper {
+    display: flex;
+    flex: 1;
+    min-width: 0;
+    width: 100%;
+}
+
+.page {
+    box-sizing: border-box;
+    flex: 1;
+    min-width: 0;
+    width: 100%;
+    max-width: 1600px;
+    margin: 0 auto;
+    padding: 32px;
+}
+
+.header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 24px;
+    margin-bottom: 24px;
+}
+
+.headerCopy {
+    display: grid;
+    gap: 8px;
+}
+
+.headerCopy > :last-child {
+    max-width: 66ch;
+    color: var(--colorNeutralForeground2);
+}
+
+.filters {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: end;
+    gap: 12px;
+    margin-bottom: 24px;
+    padding: 16px;
+    border: 1px solid var(--colorNeutralStroke2);
+    border-radius: var(--borderRadiusLarge);
+    background: var(--colorNeutralBackground2);
+}
+
+.search {
+    flex: 1 1 280px;
+}
+
+.accessFilter {
+    flex: 1 1 340px;
+    min-width: 280px;
+}
+
+.accessOption {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+}
+
+.accessOption svg {
+    flex: 0 0 auto;
+}
+
+.accessDescription {
+    color: var(--colorNeutralForeground3);
+}
+
+.departmentPicker {
+    display: grid;
+    gap: 8px;
+    margin: 8px 0 0 28px;
+    padding: 12px;
+    border: 1px solid var(--colorNeutralStroke2);
+    border-radius: var(--borderRadiusMedium);
+}
+
+.sortControls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.message {
+    margin-bottom: 16px;
+}
+
+.list {
+    display: grid;
+    gap: 24px;
+}
+
+.assistantGroup {
+    display: grid;
+    gap: 12px;
+}
+
+.groupTitle {
+    margin: 0;
+}
+
+.card {
+    display: grid;
+    gap: 14px;
+    padding: 18px;
+}
+
+.card[data-selected="true"] {
+    border-color: var(--colorBrandStroke1);
+}
+
+.cardHeader {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+.name {
+    margin: 0 0 6px;
+    color: var(--colorNeutralForeground1);
+    font: var(--fontSizeBase400) / var(--lineHeightBase400) var(--fontFamilyBase);
+    font-weight: var(--fontWeightSemibold);
+}
+
+.cardTitleButton {
+    padding: 0;
+    border: 0;
+    border-radius: var(--borderRadiusSmall);
+    background: transparent;
+    color: inherit;
+    cursor: pointer;
+    font: inherit;
+    text-align: left;
+}
+
+.cardTitleButton:hover {
+    color: var(--colorBrandForeground1);
+}
+
+.cardTitleButton:focus-visible {
+    outline: 2px solid var(--colorStrokeFocus2);
+    outline-offset: 2px;
+}
+
+.detailsSidebarSlot {
+    position: sticky;
+    top: 0;
+    align-self: flex-start;
+    flex: 0 0 0;
+    height: 100vh;
+    min-width: 0;
+    overflow: hidden;
+    transition: flex-basis var(--durationNormal) var(--curveDecelerateMid);
+}
+
+.detailsSidebarSlot[data-open="true"] {
+    flex-basis: var(--assistantDetailsDrawerWidth);
+}
+
+.description {
+    color: var(--colorNeutralForeground2);
+}
+
+.badges,
+.metadata,
+.hierarchy,
+.loadMore {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 16px;
+}
+
+.metadata,
+.hierarchy {
+    color: var(--colorNeutralForeground3);
+    font-size: var(--fontSizeBase200);
+}
+
+.subscribers {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.subscribers svg {
+    width: 16px;
+    height: 16px;
+}
+
+.hierarchy {
+    padding-top: 12px;
+    border-top: 1px solid var(--colorNeutralStroke2);
+}
+
+.hierarchy strong {
+    color: var(--colorNeutralForeground2);
+}
+
+.reviewLink {
+    justify-self: start;
+}
+
+.loadMore {
+    justify-content: center;
+    padding: 24px 0;
+}
+
+.emptyState,
+.centered {
+    display: grid;
+    place-items: center;
+    gap: 12px;
+    min-height: 220px;
+    color: var(--colorNeutralForeground2);
+}
+
+.emptyState {
+    border: 1px dashed var(--colorNeutralStroke1);
+    border-radius: var(--borderRadiusLarge);
+}
+
+@media (max-width: 640px) {
+    .detailsSidebarSlot[data-open="true"] {
+        flex-basis: 100%;
+    }
+
+    .pageWrapper[data-drawer-open="true"] .page {
+        display: none;
+    }
+
+    .page {
+        padding: 20px 16px 64px;
+    }
+
+    .header,
+    .cardHeader {
+        flex-direction: column;
+    }
+
+    .header > button {
+        align-self: flex-start;
+    }
+
+    .filters > * {
+        width: 100%;
+    }
+}

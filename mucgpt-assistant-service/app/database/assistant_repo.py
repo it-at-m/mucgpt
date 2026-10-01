@@ -8,7 +8,7 @@ from sqlalchemy import String, delete, func, insert, or_, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import aliased, attributes, selectinload
 
-from api.api_models import AssistantState
+from api.api_models import AssistantAccessType, AssistantState
 from api.exceptions import AssistantUnavailableForUseException
 from core.logtools import getLogger
 from utils import serialize_list
@@ -23,7 +23,7 @@ from .database_models import (
     ToolAssociation,
     assistant_owners,
 )
-from .path_matcher import _get_directory_index
+from .path_matcher import _get_directory_index, path_matches_department
 from .repo import Repository
 
 logger = getLogger("assistant_repo")
@@ -193,6 +193,109 @@ class AssistantRepository(Repository[Assistant]):
 
         result = await self.session.execute(stmt)
         return list(result.scalars().unique().all())
+
+    async def get_all_assistants_for_admin(
+        self,
+        state: AssistantState | None = None,
+        compliance_status: str | None = None,
+        access: AssistantAccessType | None = None,
+        department: str | None = None,
+        search: str | None = None,
+        sort_by: str = "updated",
+        sort_order: str = "desc",
+        offset: int = 0,
+        limit: int | None = None,
+    ) -> list[Assistant]:
+        """Return all assistants with optional filters on their latest version."""
+        latest_version_subquery = (
+            select(
+                AssistantVersion.assistant_id.label("assistant_id"),
+                func.max(AssistantVersion.version).label("max_version"),
+            )
+            .group_by(AssistantVersion.assistant_id)
+            .subquery()
+        )
+        latest_version_alias = aliased(AssistantVersion)
+        stmt = (
+            select(Assistant)
+            .options(
+                selectinload(Assistant.owners),
+                selectinload(Assistant.versions).selectinload(
+                    AssistantVersion.tool_associations
+                ),
+            )
+            .join(
+                latest_version_subquery,
+                latest_version_subquery.c.assistant_id == Assistant.id,
+            )
+            .join(
+                latest_version_alias,
+                (latest_version_alias.assistant_id == Assistant.id)
+                & (
+                    latest_version_alias.version
+                    == latest_version_subquery.c.max_version
+                ),
+            )
+        )
+        if state is not None:
+            stmt = stmt.where(latest_version_alias.state == state)
+        if compliance_status is not None:
+            stmt = stmt.where(
+                latest_version_alias.compliance_check_result[
+                    "overall_status"
+                ].as_string()
+                == compliance_status
+            )
+        if access == AssistantAccessType.PRIVATE:
+            stmt = stmt.where(Assistant.is_visible.is_(False))
+        elif access == AssistantAccessType.PUBLIC:
+            stmt = stmt.where(
+                Assistant.is_visible.is_(True),
+                or_(
+                    Assistant.hierarchical_access.is_(None),
+                    Assistant.hierarchical_access == [],
+                ),
+            )
+        elif access == AssistantAccessType.HIERARCHICAL:
+            stmt = stmt.where(
+                Assistant.is_visible.is_(True),
+                Assistant.hierarchical_access.is_not(None),
+                Assistant.hierarchical_access != [],
+            )
+        if department is not None:
+            stmt = stmt.where(Assistant.is_visible.is_(True))
+
+        stmt = self._apply_search_filters_sql(stmt, latest_version_alias, search)
+        stmt = self._apply_sort_sql(stmt, latest_version_alias, sort_by, sort_order)
+        if department is None:
+            if offset > 0:
+                stmt = stmt.offset(offset)
+            if limit is not None:
+                stmt = stmt.limit(limit)
+
+        result = await self.session.execute(stmt)
+        assistants = list(result.scalars().unique().all())
+        if department is None:
+            return assistants
+
+        directory_index = await _get_directory_index()
+        matching_assistants: list[Assistant] = []
+        for assistant in assistants:
+            access_paths = assistant.hierarchical_access
+            if not isinstance(access_paths, list):
+                continue
+            for access_path in access_paths:
+                if access_path and await path_matches_department(
+                    access_path,
+                    department,
+                    directory_index=directory_index,
+                ):
+                    matching_assistants.append(assistant)
+                    break
+
+        if limit is None:
+            return matching_assistants[offset:]
+        return matching_assistants[offset : offset + limit]
 
     async def get_all_possible_assistants_for_user_with_department(
         self,

@@ -3,11 +3,13 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.api_models import (
+    AssistantAccessType,
     AssistantListSortBy,
     AssistantListSortOrder,
     AssistantResponse,
     AssistantState,
     AssistantStateUpdate,
+    ComplianceStatus,
 )
 from api.exceptions import AssistantNotFoundException, VersionConflictException
 from api.routers.users_router import _build_assistant_response_list
@@ -18,6 +20,41 @@ from database.database_models import AssistantTool
 from database.session import get_db_session
 
 router = APIRouter()
+
+
+@router.get(
+    "/admin/assistants",
+    response_model=list[AssistantResponse],
+    summary="List all assistants for administration",
+    tags=["Admin"],
+)
+async def get_all_assistants(
+    state: AssistantState | None = Query(None),
+    compliance_status: ComplianceStatus | None = Query(None),
+    access: AssistantAccessType | None = Query(None),
+    department: str | None = Query(None),
+    search: str | None = Query(None),
+    sort_by: AssistantListSortBy = Query("updated"),
+    sort_order: AssistantListSortOrder = Query("desc"),
+    offset: int = Query(0, ge=0),
+    limit: int = Query(200, ge=1, le=500),
+    db: AsyncSession = Depends(get_db_session),
+    _admin: AuthenticationResult = Depends(require_admin),
+) -> list[AssistantResponse]:
+    """List every assistant without user visibility or hierarchy restrictions."""
+    assistant_repo = AssistantRepository(db)
+    assistants = await assistant_repo.get_all_assistants_for_admin(
+        state=state,
+        compliance_status=compliance_status,
+        access=access,
+        department=department,
+        search=search,
+        sort_by=sort_by,
+        sort_order=sort_order,
+        offset=offset,
+        limit=limit,
+    )
+    return await _build_assistant_response_list(assistants, assistant_repo)
 
 
 @router.get(

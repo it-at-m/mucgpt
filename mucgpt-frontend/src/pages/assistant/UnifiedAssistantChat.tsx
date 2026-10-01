@@ -40,6 +40,7 @@ import { useDuplicateAssistant } from "../discovery/hooks/useDuplicateAssistant"
 import { useMigrateLocalAssistant } from "../../hooks/useMigrateLocalAssistant";
 import { CloseConfirmationDialog } from "../../components/AssistantDialogs/shared/CloseConfirmationDialog";
 import { UploadedData } from "../../components/ContextManagerDialog/ContextManagerDialog";
+import { useConfigContext } from "../../context/ConfigContext";
 import { useToolStatusToasts } from "../../hooks/useToolStatusToasts";
 import styles from "./UnifiedAssistantChat.module.css";
 import { useUnifiedHistory, useUnifiedHistoryRegistration } from "../../components/UnifiedHistory";
@@ -50,6 +51,7 @@ interface UnifiedAssistantChatProps {
 }
 
 const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
+    const { ag_ui_enabled: agUiEnabled } = useConfigContext();
     // useReducer für den Chat-Status
     const chatReducer = getChatReducer<Assistant>();
     // Combined states with useReducer
@@ -469,7 +471,9 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                     setToolStatuses,
                     dataSources,
                     lastAnswerRef,
-                    setIsLoadingValue
+                    setIsLoadingValue,
+                    true,
+                    agUiEnabled
                 );
             } catch (e) {
                 setError(e);
@@ -490,7 +494,8 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
             setIsLoadingValue,
             setLastQuestionValue,
             isLegacyAssistant,
-            isAssistantUnavailable
+            isAssistantUnavailable,
+            agUiEnabled
         ]
     );
 

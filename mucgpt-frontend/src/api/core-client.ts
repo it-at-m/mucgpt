@@ -1,4 +1,4 @@
-import { getConfig, getHeaders, handleApiRequest, postConfig, postFormDataConfig } from "./fetch-utils";
+import { getConfig, getHeaders, handleApiRequest, handleRedirect, postConfig, postFormDataConfig } from "./fetch-utils";
 import {
     ApplicationConfig,
     AssistantDraftRequest,
@@ -53,7 +53,12 @@ export class MucgptAgUiAgent extends HttpAgent {
     constructor(private readonly request: ChatRequest) {
         super({
             url: AG_UI_CHAT_URL,
-            threadId: request.conversation_id
+            threadId: request.conversation_id,
+            fetch: async (url, init) => {
+                const response = await fetch(url, init);
+                handleRedirect(response);
+                return response;
+            }
         });
     }
 

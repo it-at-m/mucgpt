@@ -10,7 +10,7 @@ import language from "react-syntax-highlighter/dist/esm/languages/hljs/1c";
 import { AssistantStorageService } from "../service/assistantstorage";
 import { v4 as uuid } from "uuid";
 import { handleRedirect } from "../api/fetch-utils";
-import { createChatName } from "../api/core-client";
+import { createChatName, MucgptAgUiAgent } from "../api/core-client";
 
 /**
  * @fileoverview Chat page helper functions for managing chat state, API requests, and user interactions.
@@ -235,7 +235,8 @@ export const makeApiRequest = async (
     data_sources?: DataSource[],
     answerTopRef?: RefObject<HTMLElement | null>,
     onLoadingChange?: (isLoading: boolean) => void,
-    persist: boolean = true
+    persist: boolean = true,
+    agUiEnabled: boolean = false
 ) => {
     // Create conversation history for the API request
     const history: ChatTurn[] = answers.map((a: { user: any; response: { answer: any } }) => ({ user: a.user, assistant: a.response.answer }));
@@ -263,14 +264,14 @@ export const makeApiRequest = async (
         data_sources: data_sources && data_sources.length > 0 ? data_sources : undefined
     };
 
-    // Make the API call
-    const response = await chatApi(request);
-    handleRedirect(response);
+    // Keep the legacy request behavior unchanged while the AG-UI path is rolled out.
+    const legacyResponse = agUiEnabled ? undefined : await chatApi(request);
+    if (legacyResponse) {
+        handleRedirect(legacyResponse);
+        if (!legacyResponse.body) throw Error("No response body");
+    }
 
-    // Ensure we have a response body for streaming
-    if (!response.body) {
-        throw Error("No response body");
-    } // Initialize token counters for usage tracking
+    // Initialize token counters for usage tracking
     let user_tokens = 0;
     let cache_read_tokens = 0;
     let streamed_tokens = 0;
@@ -311,10 +312,6 @@ export const makeApiRequest = async (
     let textBuffer = ""; // Accumulates regular text content
     let updateTimer: ReturnType<typeof setTimeout> | null = null; // Debounces UI updates
     let includeActiveToolsInUpdate = false; // Tracks whether tool statuses need to be sent in the next update
-    const reader = response.body.getReader();
-    const decoder = new TextDecoder();
-    let streamBuffer = ""; // Buffer for incomplete SSE lines
-
     const scheduleUpdate = () => {
         if (updateTimer) return;
         updateTimer = setTimeout(() => {
@@ -345,85 +342,74 @@ export const makeApiRequest = async (
         }, 100);
     };
 
-    // Set once the server signals the end of the stream ([DONE] or finish_reason:
-    // "stop"). Needed because those markers only break the inner line loop; the outer
-    // read loop must check this flag to stop reading, otherwise it hangs until the
-    // server closes the connection.
-    let streamDone = false;
+    if (agUiEnabled) {
+        let runError: Error | undefined;
+        const agent = new MucgptAgUiAgent(request);
+        await agent.runAgent(undefined, {
+            onTextMessageContentEvent: ({ event }) => {
+                textBuffer += event.delta;
+                scheduleUpdate();
+            },
+            onRunErrorEvent: ({ event }) => {
+                runError = new Error(event.message);
+            }
+        });
+        if (runError) throw runError;
+    } else {
+        const reader = legacyResponse!.body!.getReader();
+        const decoder = new TextDecoder();
+        let streamBuffer = "";
+        let streamDone = false;
 
-    try {
-        // Main streaming loop - process chunks as they arrive
-        while (!streamDone) {
-            const { done, value } = await reader.read();
-            if (done) break;
+        try {
+            while (!streamDone) {
+                const { done, value } = await reader.read();
+                if (done) break;
 
-            // Decode and buffer the incoming data
-            streamBuffer += decoder.decode(value, { stream: true });
-            const lines = streamBuffer.split("\n");
+                streamBuffer += decoder.decode(value, { stream: true });
+                const lines = streamBuffer.split("\n");
+                streamBuffer = lines.pop() || "";
 
-            // Keep the last incomplete line in the buffer for next iteration
-            streamBuffer = lines.pop() || "";
-
-            // Process each complete line
-            for (const line of lines) {
-                if (line.startsWith("data: ")) {
+                for (const line of lines) {
+                    if (!line.startsWith("data: ")) continue;
                     const data = line.slice(6).trim();
-
-                    // Check for stream end marker
                     if (data === "[DONE]") {
                         streamDone = true;
                         break;
                     }
 
                     try {
-                        // Parse the SSE chunk data
                         const chunk = JSON.parse(data) as ChatCompletionChunk;
                         const choice: ChatCompletionChunkChoice | undefined = chunk.choices?.[0];
                         if (!choice) continue;
 
-                        // Handle token usage information if available. This is sent on the final
-                        // (finish_reason: "stop") chunk, so it must be read before that check below.
                         if (chunk.usage) {
-                            user_tokens = user_tokens + (chunk.usage.prompt_tokens || 0);
+                            user_tokens += chunk.usage.prompt_tokens || 0;
                             cache_read_tokens += chunk.usage.cache_read_tokens ?? 0;
-                            streamed_tokens = streamed_tokens + (chunk.usage.completion_tokens || 0);
+                            streamed_tokens += chunk.usage.completion_tokens || 0;
                             context_tokens =
                                 chunk.usage.context_tokens ??
                                 chunk.usage.total_tokens ??
                                 (chunk.usage.prompt_tokens || 0) + (chunk.usage.completion_tokens || 0);
                         }
 
-                        // Check if streaming is complete
                         if (choice.finish_reason === "stop") {
                             streamDone = true;
                             break;
                         }
 
-                        // Handle tool calls if present in the response
                         if (choice.delta?.tool_calls) {
                             for (const toolCall of choice.delta.tool_calls) {
                                 const { statusChange } = toolStreamHandler.handleToolCall(toolCall);
-
-                                // Update active tool statuses if there was a change
                                 if (statusChange) {
                                     activeToolStatuses = toolStreamHandler.getActiveToolStatuses();
-                                    // Notify the component about tool status changes
-                                    if (onToolStatusUpdate) {
-                                        onToolStatusUpdate(activeToolStatuses);
-                                    }
+                                    onToolStatusUpdate?.(activeToolStatuses);
                                     includeActiveToolsInUpdate = true;
                                 }
-
-                                // Batch UI updates to prevent excessive re-renders
                                 scheduleUpdate();
                             }
-                        }
-                        // Handle regular text content from the assistant
-                        else if (choice.delta?.content) {
-                            const content = choice.delta.content;
-                            textBuffer += content;
-
-                            // Batch UI updates to prevent excessive re-renders
+                        } else if (choice.delta?.content) {
+                            textBuffer += choice.delta.content;
                             scheduleUpdate();
                         }
                     } catch (parseError) {
@@ -431,10 +417,9 @@ export const makeApiRequest = async (
                     }
                 }
             }
+        } finally {
+            reader.releaseLock();
         }
-    } finally {
-        // Always release the reader lock to prevent memory leaks
-        reader.releaseLock();
     }
 
     // Ensure the final response is set with combined content after streaming completes

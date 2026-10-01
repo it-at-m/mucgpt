@@ -26,6 +26,7 @@ import { useToolStatusToasts } from "../../hooks/useToolStatusToasts";
 import { useUnifiedHistory, useUnifiedHistoryRegistration } from "../../components/UnifiedHistory";
 import { useLocation, useNavigate } from "react-router-dom";
 import { UserContext } from "../layout/UserContextProvider";
+import { useConfigContext } from "../../context/ConfigContext";
 
 /**
  * Creates a debounced function that delays invoking the provided function
@@ -92,6 +93,7 @@ const Chat = () => {
     const { setFollowUpActions } = useContext(FollowUpActionContext);
     const { tools } = useToolsContext();
     const { user } = useContext(UserContext);
+    const { ag_ui_enabled: agUiEnabled } = useConfigContext();
 
     // Independent states
     const [error, setError] = useState<unknown>();
@@ -280,7 +282,9 @@ const Chat = () => {
                     setToolStatuses,
                     dataSources,
                     lastAnswerRef,
-                    setLoadingState
+                    setLoadingState,
+                    true,
+                    agUiEnabled
                 );
             } catch (e) {
                 setError(e);
@@ -289,7 +293,7 @@ const Chat = () => {
                 setIsStreaming(false);
             }
         },
-        [answers, creativity, LLM, storageService, fetchHistory, selectedTools, setToolStatuses, setLoadingState]
+        [answers, creativity, LLM, storageService, fetchHistory, selectedTools, setToolStatuses, setLoadingState, agUiEnabled]
     );
 
     // Regenerate-Funktion

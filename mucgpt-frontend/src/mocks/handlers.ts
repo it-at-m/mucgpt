@@ -834,6 +834,51 @@ export const handlers = [
         const tools = toolsByLanguage[lang] || toolsByLanguage.deutsch;
         return HttpResponse.json({ tools });
     }),
+    http.post("/api/backend/v1/chat/v2/completions", async ({ request }) => {
+        const body = (await request.json()) as {
+            messages?: { role: string; content: string }[];
+            conversation_id?: string;
+        };
+        const latestUserMessage =
+            body.messages
+                ?.slice()
+                .reverse()
+                .find(message => message.role === "user")?.content || "";
+        const encoder = new TextEncoder();
+        const runId = crypto.randomUUID();
+        const messageId = crypto.randomUUID();
+        const threadId = body.conversation_id ?? crypto.randomUUID();
+        const stream = new ReadableStream({
+            async start(controller) {
+                const send = (event: object) => controller.enqueue(encoder.encode(`data: ${JSON.stringify(event)}\n\n`));
+
+                send({ type: "RUN_STARTED", threadId, runId });
+                await delay(100);
+
+                if (/^\s*agui-error\s*$/i.test(latestUserMessage)) {
+                    send({ type: "RUN_ERROR", message: "Mock AG-UI error" });
+                    controller.close();
+                    return;
+                }
+
+                const chunks = buildChatMessage().match(/[\s\S]{1,40}/g) ?? [];
+                for (const delta of chunks) {
+                    send({ type: "TEXT_MESSAGE_CHUNK", messageId, role: "assistant", delta });
+                    await delay(50);
+                }
+                send({ type: "RUN_FINISHED", threadId, runId });
+                controller.close();
+            }
+        });
+
+        return new HttpResponse(stream, {
+            headers: {
+                "Content-Type": "text/event-stream",
+                "Cache-Control": "no-cache",
+                Connection: "keep-alive"
+            }
+        });
+    }),
     http.post("/api/backend/v1/chat/completions", async ({ request }) => {
         const body = (await request.json()) as {
             stream?: boolean;

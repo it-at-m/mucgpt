@@ -17,7 +17,7 @@ import { ToolStatus } from "../../utils/ToolStreamHandler";
 import { Model } from "../../api";
 import { chatApi } from "../../api/core-client";
 import { useToolsContext } from "../../components/ToolsProvider";
-import { Settings24Regular } from "@fluentui/react-icons";
+import { Code24Regular, Settings24Regular } from "@fluentui/react-icons";
 import { Button } from "@fluentui/react-components";
 import { ChatSettingsDialog } from "../../components/ChatSettingsDialog/ChatSettingsDialog";
 import { UploadedData, createUploadedDataFromContent } from "../../components/ContextManagerDialog/ContextManagerDialog";
@@ -27,6 +27,7 @@ import { useUnifiedHistory, useUnifiedHistoryRegistration } from "../../componen
 import { useLocation, useNavigate } from "react-router-dom";
 import { UserContext } from "../layout/UserContextProvider";
 import { useConfigContext } from "../../context/ConfigContext";
+import { AgUiEventDrawer, type AgUiEventLogEntry } from "../../components/AgUiEventDrawer/AgUiEventDrawer";
 
 /**
  * Creates a debounced function that delays invoking the provided function
@@ -114,6 +115,8 @@ const Chat = () => {
     // Unlike `isLoading` (which only covers the wait for the first token), this stays true for the
     // whole generation, so follow-up actions can be hidden until the message is completely rendered.
     const [isStreaming, setIsStreaming] = useState<boolean>(false);
+    const [isEventDrawerOpen, setIsEventDrawerOpen] = useState(false);
+    const [agUiEvents, setAgUiEvents] = useState<AgUiEventLogEntry[]>([]);
 
     useToolStatusToasts(toolStatuses);
 
@@ -147,6 +150,10 @@ const Chat = () => {
     const setLoadingState = useCallback((nextLoading: boolean) => {
         isLoadingRef.current = nextLoading;
         setIsLoading(nextLoading);
+    }, []);
+
+    const handleAgUiEvent = useCallback((event: AgUiEventLogEntry["event"]) => {
+        setAgUiEvents(current => [...current, { event, receivedAt: new Date().toISOString() }].slice(-200));
     }, []);
 
     // Update activeChatRef whenever active_chat changes
@@ -284,7 +291,8 @@ const Chat = () => {
                     lastAnswerRef,
                     setLoadingState,
                     true,
-                    agUiEnabled
+                    agUiEnabled,
+                    handleAgUiEvent
                 );
             } catch (e) {
                 setError(e);
@@ -293,7 +301,7 @@ const Chat = () => {
                 setIsStreaming(false);
             }
         },
-        [answers, creativity, LLM, storageService, fetchHistory, selectedTools, setToolStatuses, setLoadingState, agUiEnabled]
+        [answers, creativity, LLM, storageService, fetchHistory, selectedTools, setToolStatuses, setLoadingState, agUiEnabled, handleAgUiEvent]
     );
 
     // Regenerate-Funktion
@@ -850,6 +858,7 @@ const Chat = () => {
                     systemPrompt={systemPrompt}
                     setSystemPrompt={onSystemPromptChanged}
                 />
+                <AgUiEventDrawer open={isEventDrawerOpen} events={agUiEvents} onClose={() => setIsEventDrawerOpen(false)} onClear={() => setAgUiEvents([])} />
                 <ChatLayout
                     answers={answerList}
                     input={inputComponent}
@@ -862,12 +871,22 @@ const Chat = () => {
                     defaultLLM={LLM.llm_name}
                     onLLMSelectionChange={onLLMSelectionChange}
                     actions={
-                        <Button
-                            appearance="transparent"
-                            icon={<Settings24Regular />}
-                            onClick={() => setIsSettingsOpen(true)}
-                            aria-label={t("components.chattsettingsdrawer.title")}
-                        />
+                        <>
+                            {agUiEnabled && (
+                                <Button
+                                    appearance="transparent"
+                                    icon={<Code24Regular />}
+                                    onClick={() => setIsEventDrawerOpen(true)}
+                                    aria-label="AG-UI events anzeigen"
+                                />
+                            )}
+                            <Button
+                                appearance="transparent"
+                                icon={<Settings24Regular />}
+                                onClick={() => setIsSettingsOpen(true)}
+                                aria-label={t("components.chattsettingsdrawer.title")}
+                            />
+                        </>
                     }
                 />
             </>
@@ -888,7 +907,10 @@ const Chat = () => {
             creativity,
             onCreativityChanged,
             systemPrompt,
-            onSystemPromptChanged
+            onSystemPromptChanged,
+            agUiEnabled,
+            isEventDrawerOpen,
+            agUiEvents
         ]
     );
 

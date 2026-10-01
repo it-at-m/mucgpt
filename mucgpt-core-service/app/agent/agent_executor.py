@@ -532,6 +532,7 @@ class MUCGPTAgentExecutor:
 
     ###############################################################################
     ###############################################################################
+    @observe(name="Agent", capture_input=False, capture_output=False)
     async def run_agui_with_streaming(
         self,
         messages: list[InputMessage],
@@ -546,96 +547,160 @@ class MUCGPTAgentExecutor:
     ) -> AsyncGenerator[BaseEvent]:
         """Run the agent and stream the result as AG-UI protocol events."""
         run_id = uuid.uuid4().hex
-        config = RunnableConfig(
-            configurable={
-                "thread_id": conversation_id,
-                "llm_temperature": temperature,
-                "reasoning_effort": reasoning_effort,
-                "llm": model,
-                "llm_streaming": True,
-                "enabled_tools": enabled_tools,
-                "agent_state": {"current_scope": "general"},
-                "user_info": user_info,
-                "llm_user": extract_department_prefix(user_info.department),
-                "assistant_id": assistant_id,
-                "data_sources": data_sources,
-            }
+        tags = (
+            [f"assistant-{assistant_id}"]
+            if assistant_id is not None
+            else ["default-assistant"]
         )
-
-        try:
-            yield RunStartedEvent(
-                type=EventType.RUN_STARTED,
-                thread_id=conversation_id,
-                run_id=run_id,
+        with propagate_attributes(
+            user_id=hash_user_id(user_info.user_id),
+            tags=tags,
+            session_id=conversation_id,
+        ):
+            # Same lightweight trace input as run_with_streaming.
+            get_client().update_current_span(
+                input=messages[-1].content if messages else None
             )
-
-            message_id = uuid.uuid4().hex
-            tool_calls: dict[int, tuple[str, str]] = {}
-            async for stream_mode, data in self.agent.graph.astream(
-                {"messages": to_langchain_messages(messages)},
-                stream_mode=["messages", "updates"],
-                config=config,
-            ):
-                if stream_mode == "updates":
-                    for node_name in data:
-                        yield StepFinishedEvent(step_name=node_name)
-                    continue
-
-                chunk, _ = data
-                if isinstance(chunk, ToolMessage):
-                    content = chunk.content
-                    yield ToolCallResultEvent(
-                        type=EventType.TOOL_CALL_RESULT,
-                        message_id=chunk.id or uuid.uuid4().hex,
-                        tool_call_id=chunk.tool_call_id,
-                        content=(
-                            content if isinstance(content, str) else json.dumps(content)
+            answer_chunks: list[str] = []
+            trace_events: list[dict[str, Any]] = []
+            config = merge_configs(
+                self.base_config,
+                RunnableConfig(
+                    configurable={
+                        "thread_id": conversation_id,
+                        "llm_temperature": temperature,
+                        "reasoning_effort": reasoning_effort,
+                        "llm": model,
+                        "llm_streaming": True,
+                        "enabled_tools": enabled_tools,
+                        "agent_state": {"current_scope": "general"},
+                        "user_info": user_info,
+                        "llm_user": extract_department_prefix(user_info.department),
+                        "llm_extra_body": self._build_llm_extra_body(assistant_id),
+                        "assistant_id": assistant_id,
+                        "data_sources": data_sources,
+                        "token_usage": TokenUsage(),
+                        "langfuse_prompt": getattr(
+                            self.agent, "default_langfuse_prompt", None
                         ),
-                        role="tool",
+                    },
+                ),
+            )
+
+            try:
+                yield RunStartedEvent(
+                    type=EventType.RUN_STARTED,
+                    thread_id=conversation_id,
+                    run_id=run_id,
+                )
+
+                message_id = uuid.uuid4().hex
+                tool_calls: dict[int, tuple[str, str]] = {}
+                async for stream_mode, data in self.agent.graph.astream(
+                    {"messages": to_langchain_messages(messages)},
+                    stream_mode=["messages", "custom", "updates"],
+                    config=config,
+                ):
+                    if stream_mode == "custom":
+                        # Only traced, not streamed (matches run_with_streaming trace).
+                        try:
+                            trace_events.append(
+                                {
+                                    "stream": "custom",
+                                    "type": "ToolStreamChunk",
+                                    "content": _json_safe(
+                                        ToolStreamChunk.model_validate_json(data)
+                                    ),
+                                }
+                            )
+                        except Exception:
+                            trace_events.append(
+                                {
+                                    "stream": "custom",
+                                    "type": "raw",
+                                    "content": _json_safe(data),
+                                }
+                            )
+                        continue
+                    if stream_mode == "updates":
+                        trace_events.append(
+                            {"stream": "updates", "content": _json_safe(data)}
+                        )
+                        for node_name in data:
+                            yield StepFinishedEvent(step_name=node_name)
+                        continue
+
+                    chunk, metadata = data
+                    trace_events.append(
+                        _message_chunk_trace_event(
+                            chunk, metadata if isinstance(metadata, dict) else {}
+                        )
                     )
-                    continue
-                if not isinstance(chunk, AIMessageChunk):
-                    continue
-
-                if chunk.id:
-                    message_id = chunk.id
-                for block in chunk.content_blocks:
-                    block_type = block.get("type")
-                    if block_type == "text" and (text := block.get("text")):
-                        yield TextMessageChunkEvent(
-                            type=EventType.TEXT_MESSAGE_CHUNK,
-                            message_id=message_id,
-                            role="assistant",
-                            delta=text,
+                    if isinstance(chunk, ToolMessage):
+                        content = chunk.content
+                        yield ToolCallResultEvent(
+                            type=EventType.TOOL_CALL_RESULT,
+                            message_id=chunk.id or uuid.uuid4().hex,
+                            tool_call_id=chunk.tool_call_id,
+                            content=(
+                                content
+                                if isinstance(content, str)
+                                else json.dumps(content)
+                            ),
+                            role="tool",
                         )
-                    elif block_type in {"tool_call", "tool_call_chunk"}:
-                        index = block.get("index", 0)
-                        tool_call_id = block.get("id")
-                        tool_call_name = block.get("name")
-                        if tool_call_id and tool_call_name:
-                            tool_calls[index] = (tool_call_id, tool_call_name)
-                        elif index in tool_calls:
-                            tool_call_id, tool_call_name = tool_calls[index]
-                        else:
-                            continue
+                        continue
+                    if not isinstance(chunk, AIMessageChunk):
+                        continue
 
-                        args = block.get("args") or ""
-                        yield ToolCallChunkEvent(
-                            type=EventType.TOOL_CALL_CHUNK,
-                            tool_call_id=tool_call_id,
-                            tool_call_name=tool_call_name,
-                            parent_message_id=message_id,
-                            delta=args if isinstance(args, str) else json.dumps(args),
-                        )
+                    if chunk.id:
+                        message_id = chunk.id
+                    for block in chunk.content_blocks:
+                        block_type = block.get("type")
+                        if block_type == "text" and (text := block.get("text")):
+                            answer_chunks.append(text)
+                            yield TextMessageChunkEvent(
+                                type=EventType.TEXT_MESSAGE_CHUNK,
+                                message_id=message_id,
+                                role="assistant",
+                                delta=text,
+                            )
+                        elif block_type in {"tool_call", "tool_call_chunk"}:
+                            index = block.get("index", 0)
+                            tool_call_id = block.get("id")
+                            tool_call_name = block.get("name")
+                            if tool_call_id and tool_call_name:
+                                tool_calls[index] = (tool_call_id, tool_call_name)
+                            elif index in tool_calls:
+                                tool_call_id, tool_call_name = tool_calls[index]
+                            else:
+                                continue
 
-            yield RunFinishedEvent(
-                type=EventType.RUN_FINISHED,
-                thread_id=conversation_id,
-                run_id=run_id,
-            )
-        except Exception as ex:
-            logger.exception("Exception in AG-UI streaming")
-            yield RunErrorEvent(
-                type=EventType.RUN_ERROR,
-                message=llm_exception_handler(ex=ex, logger=logger),
-            )
+                            args = block.get("args") or ""
+                            yield ToolCallChunkEvent(
+                                type=EventType.TOOL_CALL_CHUNK,
+                                tool_call_id=tool_call_id,
+                                tool_call_name=tool_call_name,
+                                parent_message_id=message_id,
+                                delta=(
+                                    args if isinstance(args, str) else json.dumps(args)
+                                ),
+                            )
+
+                _write_stream_trace_span(messages, trace_events)
+                get_client().update_current_span(
+                    output="".join(answer_chunks),
+                    metadata={"agent_stream_event_count": len(trace_events)},
+                )
+                yield RunFinishedEvent(
+                    type=EventType.RUN_FINISHED,
+                    thread_id=conversation_id,
+                    run_id=run_id,
+                )
+            except Exception as ex:
+                _write_stream_trace_span(messages, trace_events)
+                logger.exception("Exception in AG-UI streaming")
+                yield RunErrorEvent(
+                    type=EventType.RUN_ERROR,
+                    message=llm_exception_handler(ex=ex, logger=logger),
+                )

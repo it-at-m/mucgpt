@@ -1,4 +1,4 @@
-import { getConfig, handleApiRequest, postConfig, postFormDataConfig } from "./fetch-utils";
+import { getConfig, getHeaders, handleApiRequest, postConfig, postFormDataConfig } from "./fetch-utils";
 import {
     ApplicationConfig,
     AssistantDraftRequest,
@@ -11,19 +11,16 @@ import {
     CountTokenResponse,
     ToolListResponse
 } from "./models";
+import { HttpAgent } from "@ag-ui/client";
+import type { RunAgentInput } from "@ag-ui/core";
 
 const PARSE_SERVICE_BASE = "/api/backend/v1/parse";
 
 export const API_BASE = "/api/backend/";
 
-export async function getTools(lang?: string): Promise<ToolListResponse> {
-    const url = lang ? `${API_BASE}v1/tools?lang=${encodeURIComponent(lang)}` : `${API_BASE}v1/tools`;
-    return handleApiRequest(() => fetch(url, getConfig()), "Failed to get tools");
-}
+const AG_UI_CHAT_URL = API_BASE + "v1/chat/v2/completions";
 
-export async function chatApi(options: ChatRequest): Promise<Response> {
-    const url = API_BASE + "v1/chat/completions";
-    // build OpenAI-compatible messages array
+function toChatCompletionBody(options: ChatRequest) {
     const messages: Array<{ role: string; content: string }> = [];
     if (options.system_message) {
         messages.push({ role: "system", content: options.system_message });
@@ -34,36 +31,56 @@ export async function chatApi(options: ChatRequest): Promise<Response> {
             messages.push({ role: "assistant", content: turn.assistant });
         }
     }
-    const body: {
-        model?: string;
-        messages: Array<{ role: string; content: string }>;
-        temperature?: number;
-        stream?: boolean;
-        creativity?: string;
-        enabled_tools?: string[];
-        assistant_id?: string;
-        conversation_id?: string;
-        data_sources?: ChatRequest["data_sources"];
-    } = {
+
+    return {
         model: options.model,
         messages,
         temperature: options.temperature,
         stream: options.shouldStream,
-        creativity: options.creativity
+        creativity: options.creativity,
+        ...(options.enabled_tools ? { enabled_tools: options.enabled_tools } : {}),
+        ...(options.assistant_id ? { assistant_id: options.assistant_id } : {}),
+        ...(options.conversation_id ? { conversation_id: options.conversation_id } : {}),
+        ...(options.data_sources ? { data_sources: options.data_sources } : {})
     };
-    if (options.enabled_tools) {
-        body.enabled_tools = options.enabled_tools;
+}
+
+/**
+ * AG-UI client for the transitional endpoint, which emits AG-UI events but
+ * still accepts MUCGPT's existing chat request envelope.
+ */
+export class MucgptAgUiAgent extends HttpAgent {
+    constructor(private readonly request: ChatRequest) {
+        super({
+            url: AG_UI_CHAT_URL,
+            threadId: request.conversation_id
+        });
     }
-    if (options.assistant_id) {
-        body.assistant_id = options.assistant_id;
+
+    protected override requestInit(_input: RunAgentInput): RequestInit {
+        const headers = getHeaders();
+        headers.set("Accept", "text/event-stream");
+
+        return {
+            method: "POST",
+            body: JSON.stringify(toChatCompletionBody(this.request)),
+            headers,
+            mode: "cors",
+            credentials: "same-origin",
+            redirect: "manual",
+            signal: this.abortController.signal
+        };
     }
-    if (options.conversation_id) {
-        body.conversation_id = options.conversation_id;
-    }
-    if (options.data_sources) {
-        body.data_sources = options.data_sources;
-    }
-    return await fetch(url, postConfig(body));
+}
+
+export async function getTools(lang?: string): Promise<ToolListResponse> {
+    const url = lang ? `${API_BASE}v1/tools?lang=${encodeURIComponent(lang)}` : `${API_BASE}v1/tools`;
+    return handleApiRequest(() => fetch(url, getConfig()), "Failed to get tools");
+}
+
+export async function chatApi(options: ChatRequest): Promise<Response> {
+    const url = API_BASE + "v1/chat/completions";
+    return await fetch(url, postConfig(toChatCompletionBody(options)));
 }
 
 export async function configApi(): Promise<ApplicationConfig> {

@@ -78,6 +78,7 @@ export interface ApplicationConfig {
     /** Model id preselected for first-time users; null = frontend built-in default. */
     transcription_default_model: string | null;
     ai_act_compliance_check_enabled: boolean;
+    ag_ui_enabled: boolean;
     footer_link_url?: string;
     footer_label?: string;
     faq_url?: string;

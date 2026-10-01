@@ -1,10 +1,13 @@
 import asyncio
+from unittest.mock import AsyncMock, Mock
 
 import pytest
 from fastapi.testclient import TestClient
+from sqlalchemy.dialects import postgresql
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
 from api.api_models import (
+    AssistantAccessType,
     AssistantCreate,
     AssistantResponse,
     AssistantStateUpdate,
@@ -35,6 +38,25 @@ def admin_client(test_client: TestClient):
     api_app.dependency_overrides[require_admin] = _get_admin
     yield test_client
     api_app.dependency_overrides.pop(require_admin, None)
+
+
+@pytest.mark.integration
+def test_public_access_filter_uses_postgresql_json_array_length() -> None:
+    session = AsyncMock()
+    result = Mock()
+    result.scalars.return_value.unique.return_value.all.return_value = []
+    session.execute.return_value = result
+
+    repository = AssistantRepository(session)
+    asyncio.run(
+        repository.get_all_assistants_for_admin(access=AssistantAccessType.PUBLIC)
+    )
+
+    statement = session.execute.await_args.args[0]
+    sql = str(statement.compile(dialect=postgresql.dialect()))
+
+    assert "json_array_length(assistants.hierarchical_access)" in sql
+    assert "assistants.hierarchical_access =" not in sql
 
 
 @pytest.mark.integration

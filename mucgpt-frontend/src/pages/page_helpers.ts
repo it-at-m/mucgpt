@@ -11,6 +11,7 @@ import { AssistantStorageService } from "../service/assistantstorage";
 import { v4 as uuid } from "uuid";
 import { handleRedirect } from "../api/fetch-utils";
 import { createChatName, MucgptAgUiAgent } from "../api/core-client";
+import type { BaseEvent } from "@ag-ui/core";
 
 /**
  * @fileoverview Chat page helper functions for managing chat state, API requests, and user interactions.
@@ -236,7 +237,8 @@ export const makeApiRequest = async (
     answerTopRef?: RefObject<HTMLElement | null>,
     onLoadingChange?: (isLoading: boolean) => void,
     persist: boolean = true,
-    agUiEnabled: boolean = false
+    agUiEnabled: boolean = false,
+    onAgUiEvent?: (event: BaseEvent) => void
 ) => {
     // Create conversation history for the API request
     const history: ChatTurn[] = answers.map((a: { user: any; response: { answer: any } }) => ({ user: a.user, assistant: a.response.answer }));
@@ -346,6 +348,9 @@ export const makeApiRequest = async (
         let runError: Error | undefined;
         const agent = new MucgptAgUiAgent(request);
         await agent.runAgent(undefined, {
+            onEvent: ({ event }) => {
+                onAgUiEvent?.(event);
+            },
             onTextMessageContentEvent: ({ event }) => {
                 textBuffer += event.delta;
                 scheduleUpdate();

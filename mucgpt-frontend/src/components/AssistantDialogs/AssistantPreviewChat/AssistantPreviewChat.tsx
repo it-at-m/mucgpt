@@ -18,6 +18,7 @@ import { ToolStatus } from "../../../utils/ToolStreamHandler";
 import { useToolStatusToasts } from "../../../hooks/useToolStatusToasts";
 import { getChatReducer, makeApiRequest } from "../../../pages/page_helpers";
 import type { StorageService } from "../../../service/storage";
+import { useConfigContext } from "../../../context/ConfigContext";
 
 interface AssistantPreviewChatProps {
     /** Live system prompt from the editor form. */
@@ -49,6 +50,7 @@ export const AssistantPreviewChat = ({
     onCollapse,
     collapseIcon
 }: AssistantPreviewChatProps) => {
+    const { ag_ui_enabled: agUiEnabled } = useConfigContext();
     const { t } = useTranslation();
     const { LLM, setLLM, availableLLMs } = useContext(LLMContext);
     const { tools } = useToolsContext();
@@ -237,7 +239,8 @@ export const AssistantPreviewChat = ({
                     undefined, // data_sources — preview has no file uploads
                     undefined, // answerTopRef
                     setIsLoadingValue,
-                    false // persist — keep the preview conversation ephemeral
+                    false, // persist — keep the preview conversation ephemeral
+                    agUiEnabled
                 );
             } catch (e) {
                 setError(e);
@@ -245,7 +248,7 @@ export const AssistantPreviewChat = ({
             setIsLoadingValue(false);
             setIsStreaming(false);
         },
-        [answers, error, LLM, setIsLoadingValue, setLastQuestionValue]
+        [answers, error, LLM, setIsLoadingValue, setLastQuestionValue, agUiEnabled]
     );
 
     const onRegenerate = useCallback(() => {

@@ -14,9 +14,7 @@ import {
     MenuList,
     MenuDivider,
     Tooltip,
-    makeStyles,
-    mergeClasses,
-    tokens
+    mergeClasses
 } from "@fluentui/react-components";
 import {
     Dismiss24Regular,
@@ -76,37 +74,6 @@ const getModelDisplayName = (model: string | undefined): string | undefined => {
     if (!model) return undefined;
     return model.split("/").pop() || model;
 };
-
-const useStyles = makeStyles({
-    drawer: {
-        position: "relative",
-        flexShrink: 0,
-        zIndex: 2,
-        boxSizing: "border-box",
-        width: "var(--assistantDetailsDrawerWidth)",
-        height: "100%",
-        backgroundColor: tokens.colorNeutralBackground1,
-        "@media (max-width: 1200px)": {
-            width: "var(--assistantDetailsDrawerCompactWidth)"
-        },
-        "@media (max-width: 600px)": {
-            width: "100%"
-        }
-    },
-    drawerBody: {
-        paddingTop: tokens.spacingVerticalL,
-        paddingBottom: tokens.spacingVerticalXXL
-    },
-    drawerFooter: {
-        paddingTop: tokens.spacingVerticalL,
-        paddingBottom: tokens.spacingVerticalL
-    },
-    startChatButton: {
-        flexGrow: 1,
-        minWidth: 0,
-        maxWidth: "none"
-    }
-});
 
 interface DetailsGroupProps {
     title: string;
@@ -332,7 +299,6 @@ export const AssistantDetailsSidebar = ({
     const hasDangerMenuActions = canDelete || Boolean(canUnsubscribe && onUnsubscribe);
     const hasMoreOptions = hasNeutralMenuActions || hasDangerMenuActions;
 
-    const classes = useStyles();
     const calloutState: AssistantCalloutState | undefined = isDeletedSnapshot
         ? "deleted"
         : isLegacyAssistant
@@ -346,7 +312,7 @@ export const AssistantDetailsSidebar = ({
                 : undefined;
 
     return (
-        <InlineDrawer id="assistant-details-drawer" open={isOpen} position="end" className={classes.drawer} aria-labelledby="sidebar-title">
+        <InlineDrawer id="assistant-details-drawer" open={isOpen} position="end" className={styles.drawer} aria-labelledby="sidebar-title">
             <DrawerHeader>
                 <DrawerHeaderTitle
                     heading={{ as: "h2", id: "sidebar-title", className: styles.sidebarTitle }}
@@ -356,7 +322,7 @@ export const AssistantDetailsSidebar = ({
                 </DrawerHeaderTitle>
             </DrawerHeader>
 
-            <DrawerBody className={mergeClasses(styles.drawerBody, classes.drawerBody)}>
+            <DrawerBody className={styles.drawerBody}>
                 {isLoading ? (
                     <div className={styles.loadingContainer}>
                         <EdelweissSpinner size="extra-large" />
@@ -478,8 +444,8 @@ export const AssistantDetailsSidebar = ({
                 )}
             </DrawerBody>
             {assistant && !isLoading && !isUnavailable && !hideStartChat && !isDeletedSnapshot && !isLocalAssistant && !isLegacyAssistant && (
-                <DrawerFooter className={mergeClasses(styles.actions, classes.drawerFooter)}>
-                    <Button appearance="primary" icon={<Chat20Regular />} onClick={onStartChat} className={classes.startChatButton}>
+                <DrawerFooter>
+                    <Button appearance="primary" icon={<Chat20Regular />} onClick={onStartChat} className={styles.startChatButton}>
                         {t("app_sidebar.new_chat")}
                     </Button>
                     {canEdit && onEdit && (

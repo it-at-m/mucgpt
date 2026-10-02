@@ -1,6 +1,15 @@
-.actions {
-    display: flex;
-    gap: var(--spacingHorizontalS);
+.drawer {
+    flex-shrink: 0;
+    z-index: 2;
+    align-self: stretch;
+    min-width: var(--assistantDetailsDrawerWidth);
+    max-width: var(--assistantDetailsDrawerWidth);
+}
+
+.startChatButton {
+    flex-grow: 1;
+    min-width: 0;
+    max-width: none;
 }
 
 .sidebarTitle {
@@ -168,4 +177,18 @@
     display: flex;
     flex-wrap: wrap;
     gap: var(--spacingVerticalXS) var(--spacingHorizontalXS);
+}
+
+@media (max-width: 1200px) {
+    .drawer {
+        min-width: var(--assistantDetailsDrawerCompactWidth);
+        max-width: var(--assistantDetailsDrawerCompactWidth);
+    }
+}
+
+@media (max-width: 600px) {
+    .drawer {
+        min-width: 100%;
+        max-width: 100%;
+    }
 }

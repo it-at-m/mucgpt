@@ -217,12 +217,15 @@ class AssistantRepository(Repository[Assistant]):
         )
         latest_version_alias = aliased(AssistantVersion)
         stmt = (
-            select(Assistant)
-            .options(
-                selectinload(Assistant.owners),
-                selectinload(Assistant.versions).selectinload(
-                    AssistantVersion.tool_associations
-                ),
+            (
+                select(Assistant.id, Assistant.hierarchical_access)
+                if department is not None
+                else select(Assistant).options(
+                    selectinload(Assistant.owners),
+                    selectinload(Assistant.versions).selectinload(
+                        AssistantVersion.tool_associations
+                    ),
+                )
             )
             .join(
                 latest_version_subquery,
@@ -274,14 +277,12 @@ class AssistantRepository(Repository[Assistant]):
                 stmt = stmt.limit(limit)
 
         result = await self.session.execute(stmt)
-        assistants = list(result.scalars().unique().all())
         if department is None:
-            return assistants
+            return list(result.scalars().unique().all())
 
         directory_index = await _get_directory_index()
-        matching_assistants: list[Assistant] = []
-        for assistant in assistants:
-            access_paths = assistant.hierarchical_access
+        matching_assistant_ids: list[str] = []
+        for assistant_id, access_paths in result:
             if not isinstance(access_paths, list):
                 continue
             for access_path in access_paths:
@@ -290,12 +291,33 @@ class AssistantRepository(Repository[Assistant]):
                     department,
                     directory_index=directory_index,
                 ):
-                    matching_assistants.append(assistant)
+                    matching_assistant_ids.append(assistant_id)
                     break
 
-        if limit is None:
-            return matching_assistants[offset:]
-        return matching_assistants[offset : offset + limit]
+        paged_assistant_ids = self._slice_assistants(
+            matching_assistant_ids, offset=offset, limit=limit
+        )
+        if not paged_assistant_ids:
+            return []
+
+        paged_stmt = (
+            select(Assistant)
+            .options(
+                selectinload(Assistant.owners),
+                selectinload(Assistant.versions).selectinload(
+                    AssistantVersion.tool_associations
+                ),
+            )
+            .where(Assistant.id.in_(paged_assistant_ids))
+        )
+        paged_result = await self.session.execute(paged_stmt)
+        assistants = list(paged_result.scalars().unique().all())
+        position_by_id = {
+            assistant_id: index
+            for index, assistant_id in enumerate(paged_assistant_ids)
+        }
+        assistants.sort(key=lambda assistant: position_by_id[assistant.id])
+        return assistants
 
     async def get_all_possible_assistants_for_user_with_department(
         self,

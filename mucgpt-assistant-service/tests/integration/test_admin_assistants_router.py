@@ -1,10 +1,13 @@
 import asyncio
+from unittest.mock import AsyncMock, Mock
 
 import pytest
 from fastapi.testclient import TestClient
+from sqlalchemy.dialects import postgresql
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
 from api.api_models import (
+    AssistantAccessType,
     AssistantCreate,
     AssistantResponse,
     AssistantStateUpdate,
@@ -35,6 +38,25 @@ def admin_client(test_client: TestClient):
     api_app.dependency_overrides[require_admin] = _get_admin
     yield test_client
     api_app.dependency_overrides.pop(require_admin, None)
+
+
+@pytest.mark.integration
+def test_public_access_filter_uses_postgresql_json_array_length() -> None:
+    session = AsyncMock()
+    result = Mock()
+    result.scalars.return_value.unique.return_value.all.return_value = []
+    session.execute.return_value = result
+
+    repository = AssistantRepository(session)
+    asyncio.run(
+        repository.get_all_assistants_for_admin(access=AssistantAccessType.PUBLIC)
+    )
+
+    statement = session.execute.await_args.args[0]
+    sql = str(statement.compile(dialect=postgresql.dialect()))
+
+    assert "json_array_length(assistants.hierarchical_access)" in sql
+    assert "assistants.hierarchical_access =" not in sql
 
 
 @pytest.mark.integration
@@ -213,6 +235,135 @@ def test_non_admin_cannot_access_review_queue(test_client: TestClient) -> None:
     response = test_client.get("admin/assistant/review", headers=headers)
 
     assert response.status_code == 403
+
+
+@pytest.mark.integration
+def test_non_admin_cannot_list_all_assistants(test_client: TestClient) -> None:
+    response = test_client.get("admin/assistants", headers=headers)
+
+    assert response.status_code == 403
+
+
+@pytest.mark.integration
+def test_admin_lists_assistants_with_latest_version_filters(
+    admin_client: TestClient,
+) -> None:
+    public_response = admin_client.post(
+        "assistant/create",
+        json={
+            "name": "Public assistant",
+            "system_prompt": "Help with public information.",
+            "compliance_check_result": {
+                "overall_status": "passed",
+                "results": [{"category": "education", "status": "passed"}],
+            },
+        },
+        headers=headers,
+    )
+    hierarchical_response = admin_client.post(
+        "assistant/create",
+        json={
+            "name": "Hierarchical assistant",
+            "system_prompt": "Assess education eligibility.",
+            "hierarchical_access": ["IT"],
+            "compliance_check_result": {
+                "overall_status": "high_risk_detected",
+                "results": [{"category": "education", "status": "high_risk_detected"}],
+            },
+        },
+        headers=headers,
+    )
+    private_response = admin_client.post(
+        "assistant/create",
+        json={
+            "name": "Private assistant",
+            "system_prompt": "Assess public service eligibility.",
+            "is_visible": False,
+            "compliance_check_result": {
+                "overall_status": "high_risk_detected",
+                "results": [
+                    {
+                        "category": "public_services_access",
+                        "status": "high_risk_detected",
+                    }
+                ],
+            },
+        },
+        headers=headers,
+    )
+    assert public_response.status_code == 200
+    assert hierarchical_response.status_code == 200
+    assert private_response.status_code == 200
+
+    public = AssistantResponse.model_validate(public_response.json())
+    hierarchical = AssistantResponse.model_validate(hierarchical_response.json())
+    private = AssistantResponse.model_validate(private_response.json())
+
+    inactive_response = admin_client.patch(
+        f"admin/assistant/{private.id}/state",
+        json={
+            "state": "inactive",
+            "expected_state": "pending_legal_review",
+            "version": private.latest_version.version,
+        },
+        headers=headers,
+    )
+    assert inactive_response.status_code == 200
+
+    all_assistants = admin_client.get("admin/assistants", headers=headers)
+    public_list = admin_client.get(
+        "admin/assistants?access=public&compliance_status=passed", headers=headers
+    )
+    hierarchical_list = admin_client.get(
+        "admin/assistants?access=hierarchical&state=pending_legal_review&compliance_status=high_risk_detected",
+        headers=headers,
+    )
+    department_list = admin_client.get(
+        "admin/assistants?department=IT-Test-Department", headers=headers
+    )
+    private_list = admin_client.get(
+        "admin/assistants?access=private&state=inactive", headers=headers
+    )
+
+    assert all_assistants.status_code == 200
+    assert {assistant["id"] for assistant in all_assistants.json()} == {
+        public.id,
+        hierarchical.id,
+        private.id,
+    }
+    assert public_list.status_code == 200
+    assert [assistant["id"] for assistant in public_list.json()] == [public.id]
+    assert hierarchical_list.status_code == 200
+    assert [assistant["id"] for assistant in hierarchical_list.json()] == [
+        hierarchical.id
+    ]
+    assert department_list.status_code == 200
+    assert [assistant["id"] for assistant in department_list.json()] == [
+        hierarchical.id
+    ]
+    assert private_list.status_code == 200
+    assert [assistant["id"] for assistant in private_list.json()] == [private.id]
+
+
+@pytest.mark.integration
+def test_admin_assistant_list_paginates_after_sorting(admin_client: TestClient) -> None:
+    for name in ("Charlie", "Alpha", "Bravo"):
+        response = admin_client.post(
+            "assistant/create",
+            json={"name": name, "system_prompt": f"You are {name}."},
+            headers=headers,
+        )
+        assert response.status_code == 200
+
+    response = admin_client.get(
+        "admin/assistants?sort_by=title&sort_order=asc&offset=1&limit=1",
+        headers=headers,
+    )
+
+    assert response.status_code == 200
+    assert [assistant["latest_version"]["name"] for assistant in response.json()] == [
+        "Bravo"
+    ]
 
 
 @pytest.mark.integration

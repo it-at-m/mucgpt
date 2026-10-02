@@ -23,6 +23,7 @@ import Discovery from "./pages/discovery/Discovery";
 import Home from "./pages/home/Home";
 import { AssistantEditorPage } from "./components/AssistantDialogs/AssistantEditorPage/AssistantEditorPage";
 import LegalReview from "./pages/admin/LegalReview";
+import AdminAssistants from "./pages/admin/AdminAssistants";
 
 async function cleanupServiceWorkerForGatewayBuild() {
     const pwaEnabled = import.meta.env.VITE_DISABLE_PWA !== "true";
@@ -77,6 +78,11 @@ const router = createHashRouter([
             {
                 path: "tutorials",
                 element: <Tutorials />,
+                errorElement: <div>Fehler</div>
+            },
+            {
+                path: "admin/assistants",
+                element: <AdminAssistants />,
                 errorElement: <div>Fehler</div>
             },
             {

@@ -26,6 +26,7 @@ import {
     Edit20Regular,
     Delete20Regular,
     ArrowExportUp20Regular,
+    Share20Regular,
     MoreHorizontal20Regular
 } from "@fluentui/react-icons";
 import { useState, useCallback, useRef, useEffect, useId, type ReactNode } from "react";
@@ -41,6 +42,7 @@ import { EdelweissSpinner } from "../EdelweissSpinner";
 import { CREATIVITY_MEDIUM } from "../../constants";
 import { getCreativityOption } from "../../utils/creativityOptions";
 import { getPrimaryOwnerDetails, OwnerMetadataLink } from "../OwnerMetadataLink/OwnerMetadataLink";
+import { useGlobalToastContext } from "../GlobalToastHandler/GlobalToastContext";
 
 export interface AssistantCardData {
     id: string;
@@ -262,6 +264,7 @@ export const AssistantDetailsSidebar = ({
     hideStartChat
 }: AssistantDetailsSidebarProps) => {
     const { t, i18n } = useTranslation();
+    const { showSuccess, showError } = useGlobalToastContext();
     const [systemPromptCopied, setSystemPromptCopied] = useState<boolean>(false);
     const responseData = assistant?.rawData && "latest_version" in assistant.rawData ? assistant.rawData : undefined;
     const latestVersion = responseData?.latest_version;
@@ -307,6 +310,18 @@ export const AssistantDetailsSidebar = ({
             console.error("Failed to copy system prompt:", err);
         }
     }, [systemPrompt]);
+
+    const onCopyShareLink = useCallback(async () => {
+        if (!assistant) return;
+        const shareLink = `${window.location.origin}${window.location.pathname}#/communityassistant/${assistant.id}`;
+        try {
+            await navigator.clipboard.writeText(shareLink);
+            showSuccess(t("components.community_assistants.share_link_copied"));
+        } catch (err) {
+            console.error("Failed to copy share link:", err);
+            showError(t("components.community_assistants.share_link_copy_failed"));
+        }
+    }, [assistant, showError, showSuccess, t]);
 
     useEffect(() => {
         setSystemPromptCopied(false);
@@ -487,6 +502,9 @@ export const AssistantDetailsSidebar = ({
                             <Button appearance="subtle" icon={<Edit20Regular />} onClick={onEdit} />
                         </Tooltip>
                     )}
+                    <Tooltip content={t("components.community_assistants.share_link_copy")} relationship="label">
+                        <Button appearance="subtle" icon={<Share20Regular />} onClick={onCopyShareLink} />
+                    </Tooltip>
                     {hasMoreOptions && (
                         <Menu positioning="above-end">
                             <MenuTrigger disableButtonEnhancement>

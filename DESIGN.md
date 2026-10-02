@@ -298,7 +298,6 @@ Assistant use must preserve context. Users should always understand which assist
 Good workspace patterns include:
 
 - assistant header with title, scope, owner, and primary action;
-- compact trust metadata near the title;
 - stable chat composer at the bottom or within the local work surface;
 - optional disclosure or side panel for tools, examples, models, and configuration details;
 - visible distinction between private, shared, and broadly visible assistants.

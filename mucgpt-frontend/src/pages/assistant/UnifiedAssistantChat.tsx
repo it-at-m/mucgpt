@@ -23,10 +23,11 @@ import { useGlobalToastContext } from "../../components/GlobalToastHandler/Globa
 import { getOwnedCommunityAssistants, getUserSubscriptionsApi, subscribeToAssistantApi, unsubscribeFromAssistantApi } from "../../api/assistant-client";
 import { NotSubscribedDialog } from "../../components/NotSubscribedDialog";
 import { useToolsContext } from "../../components/ToolsProvider";
-import { Button, MessageBar, MessageBarBody, Skeleton, SkeletonItem } from "@fluentui/react-components";
+import { Button, Skeleton, SkeletonItem } from "@fluentui/react-components";
 import { Info24Regular, Settings24Regular } from "@fluentui/react-icons";
 import { AssistantEditorPage } from "../../components/AssistantDialogs/AssistantEditorPage/AssistantEditorPage";
 import { AssistantDetailsSidebar, AssistantCardData } from "../../components/AssistantDetailsSidebar/AssistantDetailsSidebar";
+import { AssistantStateCallout } from "../../components/AssistantStateCallout/AssistantStateCallout";
 import { getCommunityAssistantApi } from "../../api/assistant-client";
 import { ApiError } from "../../api/fetch-utils";
 import {
@@ -775,25 +776,15 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
     const inputComponent = useMemo(() => {
         if (isLegacyAssistant) {
             return (
-                <div className={styles.deletedChatWarningWrapper}>
-                    <MessageBar intent="warning" layout="multiline" className={styles.chatWarningBar}>
-                        <MessageBarBody>
-                            <div className={styles.deletedChatWarningContent}>
-                                <div className={styles.deletedChatWarningText}>{t("components.community_assistants.legacy_state_hint")}</div>
-                                <div className={styles.deletedChatActions}>
-                                    <Button
-                                        appearance="primary"
-                                        onClick={async () => {
-                                            await assistantStorageService.deleteConfigAndChatsForAssistant(assistant_id);
-                                            navigate("/");
-                                        }}
-                                    >
-                                        {t("common.delete", "Löschen")}
-                                    </Button>
-                                </div>
-                            </div>
-                        </MessageBarBody>
-                    </MessageBar>
+                <div className={styles.stateCallout}>
+                    <AssistantStateCallout
+                        state="legacy"
+                        context="chat"
+                        onDelete={async () => {
+                            await assistantStorageService.deleteConfigAndChatsForAssistant(assistant_id);
+                            navigate("/");
+                        }}
+                    />
                 </div>
             );
         }
@@ -802,48 +793,35 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
             const duplicateCandidateSnapshot = deletedAssistantSnapshot;
 
             return (
-                <div className={styles.deletedChatWarningWrapper}>
-                    <MessageBar intent="warning" layout="multiline" className={styles.chatWarningBar}>
-                        <MessageBarBody>
-                            <div className={styles.deletedChatWarningContent}>
-                                <div className={styles.deletedChatWarningText}>{t("components.community_assistants.deleted_chat_warning")}</div>
-                                <div className={styles.deletedChatActions}>
-                                    <Button
-                                        appearance="primary"
-                                        disabled={!duplicateCandidateSnapshot}
-                                        onClick={() => {
-                                            if (!duplicateCandidateSnapshot) {
-                                                return;
-                                            }
-
-                                            requestDuplicateAssistant({
-                                                id: assistant_id,
-                                                title: duplicateCandidateSnapshot.title,
-                                                rawData: duplicateCandidateSnapshot,
-                                                isDeletedSnapshot: true
-                                            });
-                                        }}
-                                    >
-                                        {t("components.community_assistants.deleted_state_save_action")}
-                                    </Button>
-                                </div>
-                            </div>
-                        </MessageBarBody>
-                    </MessageBar>
+                <div className={styles.stateCallout}>
+                    <AssistantStateCallout
+                        state="deleted"
+                        context="chat"
+                        onDuplicate={
+                            duplicateCandidateSnapshot
+                                ? () =>
+                                      requestDuplicateAssistant({
+                                          id: assistant_id,
+                                          title: duplicateCandidateSnapshot.title,
+                                          rawData: duplicateCandidateSnapshot,
+                                          isDeletedSnapshot: true
+                                      })
+                                : undefined
+                        }
+                        onDelete={() => setShowDeleteConfirm(true)}
+                    />
                 </div>
             );
         }
 
         if (isAssistantUnavailable) {
             return (
-                <div className={styles.deletedChatWarningWrapper}>
-                    <MessageBar intent={assistantConfig.state === "pending_legal_review" ? "warning" : "error"} className={styles.chatWarningBar}>
-                        <MessageBarBody>
-                            {assistantConfig.state === "pending_legal_review"
-                                ? t("components.community_assistants.pending_review_hint")
-                                : t("components.community_assistants.inactive_hint")}
-                        </MessageBarBody>
-                    </MessageBar>
+                <div className={styles.stateCallout}>
+                    <AssistantStateCallout
+                        state={assistantConfig.state === "pending_legal_review" ? "pending_legal_review" : "inactive"}
+                        context="chat"
+                        onEdit={canEdit ? () => navigate("edit") : undefined}
+                    />
                 </div>
             );
         }
@@ -851,19 +829,13 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
         if (isLocalAssistant) {
             return (
                 <>
-                    <div className={styles.deletedChatWarningWrapper}>
-                        <MessageBar intent="warning" layout="multiline" className={styles.chatWarningBar}>
-                            <MessageBarBody>
-                                <div className={styles.deletedChatWarningContent}>
-                                    <div className={styles.deletedChatWarningText}>{t("components.community_assistants.local_chat_warning")}</div>
-                                    <div className={styles.deletedChatActions}>
-                                        <Button appearance="primary" onClick={() => setShowLocalMigrateConfirm(true)}>
-                                            {t("components.community_assistants.local_state_publish_action")}
-                                        </Button>
-                                    </div>
-                                </div>
-                            </MessageBarBody>
-                        </MessageBar>
+                    <div className={styles.stateCallout}>
+                        <AssistantStateCallout
+                            state="local"
+                            context="chat"
+                            onMigrateLocal={() => setShowLocalMigrateConfirm(true)}
+                            onDelete={() => setShowDeleteConfirm(true)}
+                        />
                     </div>
                     <QuestionInput
                         clearOnSend
@@ -949,7 +921,9 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
         isLocalAssistant,
         isAssistantUnavailable,
         deletedAssistantSnapshot,
-        t,
+        canEdit,
+        navigate,
+        setShowLocalMigrateConfirm,
         requestDuplicateAssistant,
         assistant_id,
         assistantConfig,
@@ -1045,6 +1019,8 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
             // If default model doesn't exist, show all models (user needs to choose)
         }
 
+        const canChat = !isDeletedAssistant && !isLegacyAssistant && !isAssistantUnavailable;
+
         return (
             <>
                 <ChatLayout
@@ -1053,7 +1029,8 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                     input={inputComponent}
                     showStarterPrompts={!lastQuestion}
                     header={assistantConfig.title}
-                    welcomeMessage={isDeletedAssistant ? t("components.community_assistants.deleted_state_title") : t("chat.header")}
+                    welcomeMessage={canChat ? t("chat.header") : undefined}
+                    showDisclaimer={canChat || Boolean(lastQuestion)}
                     header_as_markdown={false}
                     messages_description={t("common.messages")}
                     llmOptions={modelsToShow}

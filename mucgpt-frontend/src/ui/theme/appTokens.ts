@@ -16,7 +16,7 @@ export interface AppTokens {
 }
 
 const lightAppTokens: AppTokens = {
-    userMessageBackground: "#E8F0FE",
+    userMessageBackground: "#FFFFFF",
     assistantConfigSurface: "#F8FAFC",
     assistantConfigSurfaceHover: "#F1F6FD",
     assistantConfigSurfaceEditing: "#EFF6FF",

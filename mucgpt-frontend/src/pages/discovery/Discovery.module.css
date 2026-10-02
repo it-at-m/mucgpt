@@ -30,6 +30,7 @@
 
 .mainContent {
     flex: 1;
+    container-type: inline-size;
     padding: var(--spacingVerticalXXL) var(--spacingHorizontalXXXL) 80px var(--spacingHorizontalXXXL);
     min-width: 0;
     overflow-y: auto;
@@ -196,6 +197,18 @@
     gap: var(--spacingHorizontalXL);
 }
 
+@container (max-width: 940px) {
+    .assistantsGrid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@container (max-width: 560px) {
+    .assistantsGrid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+
 @media (max-width: 1200px) {
     .detailsSidebarSlot[data-open="true"] {
         flex-basis: var(--assistantDetailsDrawerCompactWidth);
@@ -205,10 +218,6 @@
 @media (max-width: 1024px) {
     .mainContent {
         padding: var(--spacingVerticalXL) var(--spacingHorizontalXXL) var(--spacingVerticalXXL);
-    }
-
-    .assistantsGrid {
-        grid-template-columns: repeat(2, 1fr);
     }
 }
 
@@ -235,10 +244,6 @@
     .sortDropdown {
         width: 100%;
         max-width: none;
-    }
-
-    .assistantsGrid {
-        grid-template-columns: 1fr;
     }
 
     .librarySections {
@@ -283,10 +288,6 @@
 }
 
 @media (max-width: 1100px) {
-    .flexContainer[data-drawer-open="true"] .assistantsGrid {
-        grid-template-columns: 1fr;
-    }
-
     .flexContainer[data-drawer-open="true"] .searchBox {
         width: 100%;
         min-width: 0;

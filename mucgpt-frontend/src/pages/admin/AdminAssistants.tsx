@@ -215,9 +215,9 @@ const AdminAssistants = () => {
                             aria-label={t("admin.assistants.search_placeholder")}
                         />
                         <Dropdown
-                            value={state || ""}
                             selectedOptions={state ? [state] : []}
                             onOptionSelect={(_, data) => setState((data.optionValue as AssistantState) || undefined)}
+                            placeholder={t("admin.assistants.all_states")}
                             aria-label={t("admin.assistants.all_states")}
                         >
                             <Option value="">{t("admin.assistants.all_states")}</Option>
@@ -226,9 +226,9 @@ const AdminAssistants = () => {
                             <Option value="inactive">{t("admin.assistants.state_inactive")}</Option>
                         </Dropdown>
                         <Dropdown
-                            value={complianceStatus || ""}
                             selectedOptions={complianceStatus ? [complianceStatus] : []}
                             onOptionSelect={(_, data) => setComplianceStatus((data.optionValue as ComplianceStatus) || undefined)}
+                            placeholder={t("admin.assistants.all_compliance")}
                             aria-label={t("admin.assistants.all_compliance")}
                         >
                             <Option value="">{t("admin.assistants.all_compliance")}</Option>
@@ -247,12 +247,7 @@ const AdminAssistants = () => {
                                     label={
                                         <span className={styles.accessOption}>
                                             <Eye24Regular />
-                                            <span>
-                                                {t("admin.assistants.access_public")}
-                                                <Body2 className={styles.accessDescription}>
-                                                    {t("components.publish_assistant_dialog.visibility_public_description")}
-                                                </Body2>
-                                            </span>
+                                            <span>{t("admin.assistants.access_public")}</span>
                                         </span>
                                     }
                                 />
@@ -261,18 +256,12 @@ const AdminAssistants = () => {
                                     label={
                                         <span className={styles.accessOption}>
                                             <People24Regular />
-                                            <span>
-                                                {t("admin.assistants.access_hierarchical")}
-                                                <Body2 className={styles.accessDescription}>
-                                                    {t("components.publish_assistant_dialog.departments_description")}
-                                                </Body2>
-                                            </span>
+                                            <span>{t("admin.assistants.access_hierarchical")}</span>
                                         </span>
                                     }
                                 />
                                 {access === "hierarchical" && (
                                     <div className={styles.departmentPicker}>
-                                        <Body2>{t("admin.assistants.department_hint")}</Body2>
                                         <DepartmentTreeDropdown publishDepartments={departments} setPublishDepartments={setDepartments} multiple={false} />
                                     </div>
                                 )}
@@ -281,12 +270,7 @@ const AdminAssistants = () => {
                                     label={
                                         <span className={styles.accessOption}>
                                             <EyeOff24Regular />
-                                            <span>
-                                                {t("admin.assistants.access_private")}
-                                                <Body2 className={styles.accessDescription}>
-                                                    {t("components.publish_assistant_dialog.visibility_private_description")}
-                                                </Body2>
-                                            </span>
+                                            <span>{t("admin.assistants.access_private")}</span>
                                         </span>
                                     }
                                 />

@@ -84,6 +84,7 @@
 
 .contentSection {
     flex: 1;
+    container-type: inline-size;
     display: flex;
     flex-direction: column;
     max-width: min(1100px, 90%);
@@ -116,9 +117,21 @@
 
 .assistantGrid {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 12px;
     width: 100%;
+}
+
+@container (max-width: 940px) {
+    .assistantGrid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@container (max-width: 560px) {
+    .assistantGrid {
+        grid-template-columns: minmax(0, 1fr);
+    }
 }
 
 .fallbackContainer {
@@ -198,18 +211,6 @@
 @media screen and (max-width: 1060px) {
     .footerCompanyBlock {
         font-size: 12px;
-    }
-}
-
-@media screen and (max-width: 900px) {
-    .assistantGrid {
-        grid-template-columns: repeat(2, 1fr);
-    }
-}
-
-@media screen and (max-width: 600px) {
-    .assistantGrid {
-        grid-template-columns: 1fr;
     }
 }
 

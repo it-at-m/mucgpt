@@ -87,6 +87,7 @@ class _ConfiguredLangChainDeepAgentGraph:
             model_name=selected_llm,
             user=llm_user,
             temperature=configurable.get("llm_temperature", RequestContext.temperature),
+            reasoning_effort=configurable.get("reasoning_effort"),
             stream=configurable.get("llm_streaming", False),
             extra_body=extra_body,
             enabled_tools=enabled_tools,

@@ -9,11 +9,12 @@ export function loadSessionDraft<T>(key: string): T | null {
     }
 }
 
-export function saveSessionDraft(key: string, value: unknown): void {
+export function saveSessionDraft(key: string, value: unknown): boolean {
     try {
         sessionStorage.setItem(key, JSON.stringify(value));
+        return true;
     } catch {
-        // Ignore sessionStorage errors and continue without draft persistence.
+        return false;
     }
 }
 

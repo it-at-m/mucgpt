@@ -1,7 +1,7 @@
 """CLI utility to test assistant hierarchical access against a dumped LDAP tree.
 
 Example:
-    uv run python scripts/check_hierarchical_access.py --access ITM --department ITM-KM-DI
+    uv run python scripts/check_hierarchical_access.py --access TEAM-A --department TEAM-A-1
 """
 
 from __future__ import annotations
@@ -63,12 +63,12 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--access",
         required=True,
-        help="Hierarchical access path for the assistant (for example: ITM)",
+        help="Hierarchical access path for the assistant (for example: TEAM-A)",
     )
     parser.add_argument(
         "--department",
         required=True,
-        help="User department to check (for example: ITM-KM-DI)",
+        help="User organization unit to check (for example: TEAM-A-1)",
     )
     parser.add_argument(
         "--tree",

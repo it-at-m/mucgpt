@@ -91,7 +91,7 @@ export const AnswerList = ({
                         usermsg={<UserChatMessage message={lastQuestionRef.current} />}
                         usermsglabel={t("components.usericon.label") + " " + (answers.length + 1).toString()}
                         assistantmsglabel={t("components.answericon.label") + " " + (answers.length + 1).toString()}
-                        assistantmsg={<AnswerLoading text={t("chat.answer_loading")} />}
+                        assistantmsg={<AnswerLoading />}
                     ></ChatTurnComponent>
                 ) : (
                     <div></div>

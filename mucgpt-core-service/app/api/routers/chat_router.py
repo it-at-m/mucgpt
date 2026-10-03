@@ -2,7 +2,8 @@ import json
 from collections.abc import AsyncGenerator
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException
+from ag_ui.encoder import EventEncoder
+from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import StreamingResponse
 
 from api.api_models import (
@@ -135,6 +136,7 @@ async def chat_endpoint(
                 assistant_id=request.assistant_id,
                 data_sources=data_sources,
                 conversation_id=request.conversation_id,
+                reasoning_effort=request.reasoning_effort,
             )
 
             async def sse_generator() -> AsyncGenerator[str]:
@@ -153,6 +155,7 @@ async def chat_endpoint(
             assistant_id=request.assistant_id,
             data_sources=data_sources,
             conversation_id=request.conversation_id,
+            reasoning_effort=request.reasoning_effort,
         )
 
         return response
@@ -162,6 +165,71 @@ async def chat_endpoint(
         logger.exception("Exception in /chat/completions")
         msg = llm_exception_handler(ex=e, logger=logger)
         raise HTTPException(status_code=500, detail=msg) from e
+
+
+@router.post(
+    "/chat/v2/completions",
+    summary="Create chat completion",
+    description="OpenAI-compatible endpoint for chat completions",
+    response_class=StreamingResponse,
+    responses={
+        200: {"description": "Successful Response"},
+        400: {"description": "Bad Request"},
+        403: {"description": "Forbidden"},
+        500: {"description": "Internal Server Error"},
+    },
+)
+async def ag_ui_chat_endpoint(
+    chat_request: ChatCompletionRequest,
+    user_info: Annotated[AuthenticationResult, Depends(authenticate_user)],
+    request: Request,
+) -> StreamingResponse:
+    if not chat_request.conversation_id:
+        raise HTTPException(status_code=400, detail="conversation_id is required")
+    if not chat_request.messages:
+        raise HTTPException(status_code=400, detail="messages must not be empty")
+
+    # Verify the conversation belongs to this user (row is created on first use).
+    authorized = await PersistanceHelpers.verify_user_in_conversation(
+        user_info.user_id, chat_request.conversation_id
+    )
+    if not authorized:
+        raise HTTPException(
+            status_code=403,
+            detail=f"User {user_info.user_id} is not authorized to access conversation {chat_request.conversation_id}",
+        )
+
+    # Seed a new checkpoint with the complete client history so the system
+    # prompt and existing browser-held turns are retained. Once state exists,
+    # only append the newest user message to avoid duplicating the history.
+    messages_for_agent = (
+        [chat_request.messages[-1]]
+        if await PersistanceHelpers.has_checkpoint(chat_request.conversation_id)
+        else chat_request.messages
+    )
+    encoder = EventEncoder(accept=request.headers.get("accept"))
+    agent = await init_agent(user_info=user_info, model_name=chat_request.model)
+    events = agent.run_agui_with_streaming(
+        messages=messages_for_agent,
+        temperature=get_temperature_from_request(chat_request),
+        model=chat_request.model,
+        user_info=user_info,
+        conversation_id=chat_request.conversation_id,
+        enabled_tools=chat_request.enabled_tools or [],
+        assistant_id=chat_request.assistant_id,
+        data_sources=(
+            [source.model_dump() for source in chat_request.data_sources]
+            if chat_request.data_sources
+            else None
+        ),
+        reasoning_effort=chat_request.reasoning_effort,
+    )
+
+    async def event_generator() -> AsyncGenerator[str]:
+        async for event in events:
+            yield encoder.encode(event)
+
+    return StreamingResponse(event_generator(), media_type=encoder.get_content_type())
 
 
 @router.get(

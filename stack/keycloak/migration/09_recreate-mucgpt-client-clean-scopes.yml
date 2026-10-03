@@ -27,4 +27,4 @@ changes:
 
   - assignDefaultClientScope:
       clientId: mucgpt
-      clientScopeName: lhm-core
+      clientScopeName: mucgpt-core

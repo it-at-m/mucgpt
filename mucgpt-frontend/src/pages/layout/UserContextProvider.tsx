@@ -26,7 +26,7 @@ export const UserContextProvider: React.FC<UserContextProviderProps> = ({ childr
     const [isLoading, setIsLoading] = useState<boolean>(true);
     const [error, setError] = useState<Error | null>(null);
     const { admin_role: configuredAdminRole } = useContext(ConfigContext);
-    const adminRole = configuredAdminRole || import.meta.env.VITE_ADMIN_ROLE || "lhm-ab-mucgpt-admin";
+    const adminRole = configuredAdminRole || import.meta.env.VITE_ADMIN_ROLE || "mucgpt-admin";
 
     useEffect(() => {
         const fetchUser = async () => {

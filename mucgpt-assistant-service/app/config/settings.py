@@ -21,6 +21,8 @@ class SSOConfig(BaseModel):
 
     ROLE: str | None = None
     ADMIN_ROLE: str | None = None
+    USER_ID_CLAIM: str = "user_id"
+    ORGANIZATION_UNIT_CLAIM: str = "organization_unit"
 
 
 class DBConfig(BaseModel):
@@ -55,12 +57,13 @@ class LDAPConfig(BaseModel):
     CA_CERT_FILE: str | None = None
     BIND_DN: str | None = None
     BIND_PASSWORD: SecretStr | None = None
-    SEARCH_BASE: str = "o=Landeshauptstadt München,c=de"
+    SEARCH_BASE: str = "dc=example,dc=org"
     SEARCH_FILTER: str = "(objectClass=organizationalUnit)"
     DISPLAY_ATTRIBUTE: str = "ou"
+    SHORTNAME_ATTRIBUTE: str = "departmentCode"
     PARENT_ATTRIBUTE: str | None = None
     ADDITIONAL_ATTRIBUTES: list[str] | None = None
-    REQUIRED_ATTRIBUTES: list[str] = Field(default_factory=lambda: ["lhmOUShortname"])
+    REQUIRED_ATTRIBUTES: list[str] = Field(default_factory=list)
     IGNORED_OU_PREFIXES: list[str] = Field(default_factory=lambda: ["_"])
     IGNORED_OU_SUFFIXES: list[str] = Field(default_factory=lambda: ["-xxx"])
     IGNORED_OU_SHORTNAME_EXCEPTIONS: list[str] = Field(default_factory=list)
@@ -75,15 +78,15 @@ class LDAPConfig(BaseModel):
             "givenName",
             "sn",
             "mail",
-            "lhmobjectid",
-            "organizationalunit",
+            "userId",
+            "organizationUnit",
         ]
     )
-    USER_ID_ATTRIBUTE: str = "lhmobjectid"
+    USER_ID_ATTRIBUTE: str = "userId"
     USER_GIVEN_NAME_ATTRIBUTE: str = "givenName"
     USER_SURNAME_ATTRIBUTE: str = "sn"
     USER_MAIL_ATTRIBUTE: str = "mail"
-    USER_ORGANIZATIONAL_UNIT_ATTRIBUTE: str = "organizationalunit"
+    USER_ORGANIZATIONAL_UNIT_ATTRIBUTE: str = "organizationUnit"
 
 
 # Backward-compatible aliases so existing imports keep working

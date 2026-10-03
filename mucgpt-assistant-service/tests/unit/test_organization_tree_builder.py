@@ -10,8 +10,9 @@ def _entry(dn: str, name: str) -> dict[str, object]:
         "attributes": {
             "ou": [name],
             "distinguishedName": dn,
-            "lhmOULongname": [f"Long {name}"],
-            "lhmOUShortname": [f"Short {name}"],
+            "displayName": [f"Long {name}"],
+            "shortName": [f"Short {name}"],
+            "departmentCode": [f"Short {name}"],
         },
     }
 
@@ -24,7 +25,7 @@ def test_tree_builder_ignores_prefix_and_suffix() -> None:
             "attributes": {
                 "ou": ["Finance-xxx"],
                 "distinguishedName": "ou=Finance-xxx,ou=ROOT,o=example",
-                "lhmOULongname": ["Finance legacy"],
+                "displayName": ["Finance legacy"],
                 # no shortname -> should remain excluded by suffix rule
             },
         },
@@ -72,30 +73,32 @@ def test_suffix_xxx_with_shortname_is_kept() -> None:
 def test_ignore_prefix_can_be_bypassed_by_shortname_exception() -> None:
     entries = [
         {
-            "dn": "ou=_Hidden,ou=GSR,o=example",
+            "dn": "ou=_Hidden,ou=DEPT,o=example",
             "attributes": {
                 "ou": ["_Hidden"],
-                "distinguishedName": "ou=_Hidden,ou=GSR,o=example",
-                "lhmOULongname": ["Hidden Unit"],
-                "lhmOUShortname": ["FBM"],
+                "distinguishedName": "ou=_Hidden,ou=DEPT,o=example",
+                "displayName": ["Hidden Unit"],
+                "shortName": ["TEAM-HIDDEN"],
+                "departmentCode": ["TEAM-HIDDEN"],
             },
         },
         {
-            "dn": "ou=Another,ou=GSR,o=example",
+            "dn": "ou=Another,ou=DEPT,o=example",
             "attributes": {
                 "ou": ["Another"],
-                "distinguishedName": "ou=Another,ou=GSR,o=example",
-                "lhmOULongname": ["Another"],
-                "lhmOUShortname": ["ANOTHER"],
+                "distinguishedName": "ou=Another,ou=DEPT,o=example",
+                "displayName": ["Another"],
+                "shortName": ["TEAM-ANOTHER"],
+                "departmentCode": ["TEAM-ANOTHER"],
             },
         },
-        _entry("ou=Child,ou=_Hidden,ou=GSR,o=example", "Child"),
+        _entry("ou=Child,ou=_Hidden,ou=DEPT,o=example", "Child"),
     ]
 
     builder = OrganizationTreeBuilder(
         search_base="o=example",
         ignored_prefixes=["_"],
-        ignored_shortname_exceptions=["FBM"],
+        ignored_shortname_exceptions=["TEAM-HIDDEN"],
     )
 
     roots = builder.build(entries)
@@ -103,7 +106,7 @@ def test_ignore_prefix_can_be_bypassed_by_shortname_exception() -> None:
 
     assert [node.name for node in roots] == ["example"]
     root = roots[0]
-    assert [child.name for child in root.children] == ["GSR"]
+    assert [child.name for child in root.children] == ["DEPT"]
     assert set(child.name for child in root.children[0].children) == {
         "_Hidden",
         "Another",
@@ -172,15 +175,15 @@ def test_nodes_without_required_attributes_are_skipped() -> None:
             "attributes": {
                 "ou": ["HR"],
                 "distinguishedName": "ou=HR,ou=ROOT,o=example",
-                "lhmOULongname": ["Long HR"],
-                "lhmOUShortname": ["HR"],
+                "displayName": ["Long Team"],
+                "shortName": ["TEAM"],
             },
         },
     ]
 
     builder = OrganizationTreeBuilder(
         search_base="o=example",
-        required_attributes=["lhmOULongname", "lhmOUShortname"],
+        required_attributes=["displayName", "shortName"],
     )
 
     roots = builder.build(entries)
@@ -195,15 +198,15 @@ def test_nodes_without_required_attributes_are_skipped() -> None:
 def test_parent_chain_is_created_from_dn_when_missing_entries() -> None:
     entries = [
         _entry(
-            "ou=Stadtteilbibliothek Westend,ou=Region Südwest,ou=Stadtteilbibliotheken,ou=Münchner Stadtbibliothek,ou=Kulturreferat,o=Landeshauptstadt München,c=de",
-            "Stadtteilbibliothek Westend",
+            "ou=Branch West,ou=Region West,ou=Branch Libraries,ou=Central Library,ou=Knowledge Department,o=Example Organization,c=de",
+            "Branch West",
         ),
     ]
 
     builder = OrganizationTreeBuilder(
-        search_base="o=landeshauptstadt münchen,c=de",
+        search_base="o=example organization,c=de",
         # parent_attribute intentionally omitted
-        required_attributes=["lhmOULongname", "lhmOUShortname"],
+        required_attributes=["displayName", "shortName"],
     )
 
     roots = builder.build(entries)
@@ -212,18 +215,18 @@ def test_parent_chain_is_created_from_dn_when_missing_entries() -> None:
     assert len(roots) == 1
     root = roots[0]
     # Search base node
-    assert root.name == "Landeshauptstadt München"
+    assert root.name == "Example Organization"
     assert len(root.children) == 1
     level1 = root.children[0]
-    assert level1.name == "Kulturreferat"
+    assert level1.name == "Knowledge Department"
     level2 = level1.children[0]
-    assert level2.name == "Münchner Stadtbibliothek"
+    assert level2.name == "Central Library"
     level3 = level2.children[0]
-    assert level3.name == "Stadtteilbibliotheken"
+    assert level3.name == "Branch Libraries"
     level4 = level3.children[0]
-    assert level4.name == "Region Südwest"
+    assert level4.name == "Region West"
     level5 = level4.children[0]
-    assert level5.name == "Stadtteilbibliothek Westend"
+    assert level5.name == "Branch West"
 
 
 def test_parent_attribute_overrides_dn_parent() -> None:
@@ -235,8 +238,8 @@ def test_parent_attribute_overrides_dn_parent() -> None:
                 "ou": ["Child"],
                 "distinguishedName": "ou=Child,ou=DNParent,o=example",
                 "parent": "ou=Custom Parent,o=example",
-                "lhmOULongname": ["Long Child"],
-                "lhmOUShortname": ["Short Child"],
+                "displayName": ["Long Child"],
+                "shortName": ["Short Child"],
             },
         },
     ]
@@ -244,7 +247,7 @@ def test_parent_attribute_overrides_dn_parent() -> None:
     builder = OrganizationTreeBuilder(
         search_base="o=example",
         parent_attribute="parent",
-        required_attributes=["lhmOULongname", "lhmOUShortname"],
+        required_attributes=["displayName", "shortName"],
     )
 
     roots = builder.build(entries)
@@ -264,7 +267,7 @@ def test_parent_chain_respects_search_base_boundary() -> None:
 
     builder = OrganizationTreeBuilder(
         search_base="o=example,c=de",
-        required_attributes=["lhmOULongname", "lhmOUShortname"],
+        required_attributes=["displayName", "shortName"],
     )
 
     roots = builder.build(entries)
@@ -283,15 +286,15 @@ def test_bytes_are_decoded_and_display_uses_attribute() -> None:
             "attributes": {
                 "ou": [b"\xc3\xbcber"],  # bytes for "über"
                 "distinguishedName": b"ou=\xc3\xbcmlaut,ou=ROOT,o=example",
-                "lhmOULongname": [b"Lange \xc3\x9cmlaut"],
-                "lhmOUShortname": [b"KU-UE"],
+                "displayName": [b"Lange \xc3\x9cmlaut"],
+                "shortName": [b"TEAM-UE"],
             },
         }
     ]
 
     builder = OrganizationTreeBuilder(
         search_base="o=example",
-        required_attributes=["lhmOULongname", "lhmOUShortname"],
+        required_attributes=["displayName", "shortName"],
     )
 
     roots = builder.build(entries)

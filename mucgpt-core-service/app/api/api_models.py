@@ -482,7 +482,11 @@ class ConfigResponse(BaseModel):
     )
     transcription_enabled: bool = Field(
         False,
-        description="Whether browser-based audio transcription is enabled in the frontend.",
+        description="Whether browser-based audio transcription is enabled in the frontend. Transcription itself runs fully client-side; no audio is sent to the backend.",
+    )
+    transcription_default_model: str | None = Field(
+        None,
+        description="Model id preselected in the transcription settings for users who have not picked a model yet. Unknown ids are ignored; null uses the frontend's built-in default.",
     )
     ai_act_compliance_check_enabled: bool = Field(
         True,
@@ -522,5 +526,5 @@ class ConfigResponse(BaseModel):
     )
     owner_profile_url_template: str | None = Field(
         None,
-        description="Template for assistant owner profile links. The '{uid}' placeholder is replaced with the owner lhmObjectID.",
+        description="Template for assistant owner profile links. The '{uid}' placeholder is replaced with the owner user ID.",
     )

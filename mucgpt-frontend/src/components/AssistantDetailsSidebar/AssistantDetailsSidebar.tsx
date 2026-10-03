@@ -12,7 +12,6 @@ import {
     MenuTrigger,
     MenuPopover,
     MenuList,
-    MenuItem,
     Tooltip,
     Badge
 } from "@fluentui/react-components";
@@ -38,6 +37,7 @@ import { useTranslation } from "react-i18next";
 import styles from "./AssistantDetailsSidebar.module.css";
 import { Assistant, AssistantResponse, CommunityAssistant, CommunityAssistantSnapshot, ToolBase } from "../../api/models";
 import { MarkdownRenderer } from "../MarkdownRenderer/MarkdownRenderer";
+import { MenuItem } from "../../ui/MenuItem";
 import { EdelweissSpinner } from "../EdelweissSpinner";
 import { CREATIVITY_MEDIUM } from "../../constants";
 import { getCreativityOption } from "../../utils/creativityOptions";

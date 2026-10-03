@@ -94,7 +94,7 @@ function findNode(pathSegments: string[]) {
 const CONFIG_RESPONSE: ApplicationConfig = {
     models: [
         {
-            llm_name: "KIESGPT",
+            llm_name: "example-model",
             max_input_tokens: 128000,
             max_output_tokens: 12000,
             description: "GPT build by KIES",
@@ -1091,7 +1091,7 @@ export const handlers = [
             id: `chatcmpl-mock-${Math.random().toString(36).slice(2, 10)}`,
             object: "chat.completion",
             created: Math.floor(Date.now() / 1000),
-            model: "KIESGPT",
+            model: "example-model",
             choices: [
                 {
                     index: 0,

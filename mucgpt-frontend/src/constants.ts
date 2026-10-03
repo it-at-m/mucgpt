@@ -5,7 +5,7 @@ import { IndexedDBStorage } from "./service/indexedDBStorage";
 export const DEFAULT_APP_CONFIG: ApplicationConfig = {
     models: [
         {
-            llm_name: "KIESGPT",
+            llm_name: "example-model",
             max_input_tokens: 128000,
             description: "",
             knowledge_cut_off: "",

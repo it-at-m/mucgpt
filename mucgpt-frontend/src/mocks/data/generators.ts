@@ -260,7 +260,7 @@ function wordChunksFromMessage(message: string) {
         id: `chatcmpl-mock-${Math.random().toString(36).slice(2, 8)}`,
         object: "chat.completion.chunk",
         created: Math.floor(Date.now() / 1000),
-        model: "KIESGPT",
+        model: "example-model",
         choices: [{ index: 0, delta: { content: w }, finish_reason: null }],
         usage: undefined as { prompt_tokens: number; completion_tokens: number; total_tokens: number } | undefined
     }));
@@ -277,7 +277,7 @@ export function generateChatStreamChunks(finalMessage: string, forcedContextToke
         id: `chatcmpl-mock-${Math.random().toString(36).slice(2, 8)}`,
         object: "chat.completion.chunk",
         created: Math.floor(Date.now() / 1000),
-        model: "KIESGPT",
+        model: "example-model",
         choices: [{ index: 0, delta: { content: "" }, finish_reason: null }],
         usage: undefined
     });
@@ -285,7 +285,7 @@ export function generateChatStreamChunks(finalMessage: string, forcedContextToke
         id: `chatcmpl-mock-${Math.random().toString(36).slice(2, 8)}`,
         object: "chat.completion.chunk",
         created: Math.floor(Date.now() / 1000),
-        model: "KIESGPT",
+        model: "example-model",
         choices: [{ index: 0, delta: { content: "" }, finish_reason: "stop" as any }],
         usage: (() => {
             const completion_tokens = Math.round(finalMessage.length / 4);
@@ -346,7 +346,7 @@ export function generateMindmapStreamChunks(topic: string, forcedContextTokens?:
             id: `chatcmpl-mindmap-${Math.random().toString(36).slice(2, 8)}`,
             object: "chat.completion.chunk",
             created: Math.floor(Date.now() / 1000),
-            model: "KIESGPT",
+            model: "example-model",
             choices: [{ index: 0, delta: { tool_calls: [{ name: "Brainstorming", state, content, metadata }] }, finish_reason: null }]
         });
     };
@@ -388,14 +388,14 @@ export function generateMindmapStreamChunks(topic: string, forcedContextTokens?:
         id: `chatcmpl-mindmap-${Math.random().toString(36).slice(2, 8)}`,
         object: "chat.completion.chunk",
         created: Math.floor(Date.now() / 1000),
-        model: "KIESGPT",
+        model: "example-model",
         choices: [{ index: 0, delta: { content: "Your mindmap is ready! (Adaptive ASCII edition)" }, finish_reason: null }]
     });
     chunks.push({
         id: `chatcmpl-mindmap-${Math.random().toString(36).slice(2, 8)}`,
         object: "chat.completion.chunk",
         created: Math.floor(Date.now() / 1000),
-        model: "KIESGPT",
+        model: "example-model",
         choices: [{ index: 0, delta: { content: "" }, finish_reason: "stop" as any }],
         usage: (() => {
             const completion_tokens = Math.round(consolidated.length / 4);
@@ -413,7 +413,7 @@ export function generateSimplifyStreamChunks(forcedContextTokens?: number) {
             id: `chatcmpl-simplify-${Math.random().toString(36).slice(2, 8)}`,
             object: "chat.completion.chunk",
             created: Math.floor(Date.now() / 1000),
-            model: "KIESGPT",
+            model: "example-model",
             choices: [{ index: 0, delta: { tool_calls: [{ name: "Simplify", state, content, metadata }] }, finish_reason: null }]
         });
     };
@@ -468,14 +468,14 @@ export function generateSimplifyStreamChunks(forcedContextTokens?: number) {
         id: `chatcmpl-simplify-${Math.random().toString(36).slice(2, 8)}`,
         object: "chat.completion.chunk",
         created: Math.floor(Date.now() / 1000),
-        model: "KIESGPT",
+        model: "example-model",
         choices: [{ index: 0, delta: { content: "Simplification finished." }, finish_reason: null }]
     });
     chunks.push({
         id: `chatcmpl-simplify-${Math.random().toString(36).slice(2, 8)}`,
         object: "chat.completion.chunk",
         created: Math.floor(Date.now() / 1000),
-        model: "KIESGPT",
+        model: "example-model",
         choices: [
             {
                 index: 0,
@@ -491,7 +491,7 @@ export function generateSimplifyStreamChunks(forcedContextTokens?: number) {
         id: `chatcmpl-simplify-${Math.random().toString(36).slice(2, 8)}`,
         object: "chat.completion.chunk",
         created: Math.floor(Date.now() / 1000),
-        model: "KIESGPT",
+        model: "example-model",
         choices: [{ index: 0, delta: { content: "" }, finish_reason: "stop" as any }],
         usage: (() => {
             const completion_tokens = 300;

@@ -57,7 +57,7 @@ export const DEFAULT_APP_CONFIG: ApplicationConfig = {
     faq_url: "https://ki.muenchen.de",
     incident_report_url: "https://ki.muenchen.de",
     feature_request_url: "https://ki.muenchen.de",
-    admin_role: "lhm-ab-mucgpt-admin"
+    admin_role: "mucgpt-admin"
 };
 
 export const CREATIVITY_LOW = "low";

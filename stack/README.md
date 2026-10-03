@@ -34,6 +34,7 @@ This directory contains the Docker Compose configuration for running the complet
 
 3. Access the services:
    - Frontend: <http://localhost:8083> (user: `demo-user`, password: `mucgpt`)
+   - Frontend admin: <http://localhost:8083> (user: `demo-admin`, password: `mucgpt`)
    - Keycloak Admin: <http://localhost:8100> (admin/admin)
    - PGAdmin: <http://localhost:5050> (admin/admin)
 
@@ -271,7 +272,7 @@ The optional `PROMPTS` section in `core.config.yaml` maps core-service prompt na
 - `generation_prompts/assistant_name`, `assistant_description`, and `assistant_systemprompt` generate the corresponding assistant draft fields.
 - `compliance_prompts/*` classifies assistant prompts for high-risk use cases in migration/asylum/border control, public services, employment, and education.
 
-3. Edit `assistant.config.yaml` – configure database and optional LDAP. The example credentials and other local values are intended for this isolated Compose stack only and must not be used in production or test environments:
+1. Edit `assistant.config.yaml` – configure database and optional LDAP. The example credentials and other local values are intended for this isolated Compose stack only and must not be used in production or test environments:
 
    ```yaml
    DB:
@@ -289,9 +290,9 @@ The optional `PROMPTS` section in `core.config.yaml` maps core-service prompt na
      ENABLED: false
    ```
 
-4. Edit `.env` for proxy/SSL settings (if needed).
+2. Edit `.env` for proxy/SSL settings (if needed).
 
-5. Start the stack:
+3. Start the stack:
 
    ```powershell
    podman compose up -d

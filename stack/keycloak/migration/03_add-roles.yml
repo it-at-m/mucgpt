@@ -8,3 +8,9 @@ changes:
       clientRole: true
       clientId: mucgpt
       composite: false
+  - addRole:
+      name: mucgpt-admin
+      description: Administrative role for MUCGPT management features
+      clientRole: true
+      clientId: mucgpt
+      composite: false

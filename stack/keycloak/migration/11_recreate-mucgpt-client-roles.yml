@@ -9,6 +9,13 @@ changes:
       clientId: mucgpt
       composite: false
 
+  - addRole:
+      name: mucgpt-admin
+      description: Administrative role for MUCGPT management features
+      clientRole: true
+      clientId: mucgpt
+      composite: false
+
   - assignRole:
       user: demo-user
       role: mucgpt-user
@@ -22,4 +29,9 @@ changes:
   - assignRole:
       user: demo-team-b-user
       role: mucgpt-user
+      clientId: mucgpt
+
+  - assignRole:
+      user: demo-admin
+      role: mucgpt-admin
       clientId: mucgpt

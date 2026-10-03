@@ -1,35 +1,10 @@
-id: add admin user
+id: add admin role
 author: Default
 realm: local_realm
 changes:
   - addRole:
       name: mucgpt-admin
-      description: Local development role for MUCGPT administration
+      description: Administrative role for MUCGPT management features
       clientRole: true
       clientId: mucgpt
       composite: false
-  - addUser:
-      name: mucgpt-admin-user
-      lastName: Admin
-      firstName: MUCGPT
-      enabled: true
-      emailVerified: true
-      email: demo-admin@example.org
-      attributes:
-        user_name:
-          - mucgpt-admin-user
-        user_id:
-          - demo-admin-1
-        organization_unit:
-          - demo-team-a
-  - updateUserPassword:
-      name: mucgpt-admin-user
-      password: "mucgpt"
-  - assignRole:
-      user: mucgpt-admin-user
-      role: mucgpt-user
-      clientId: mucgpt
-  - assignRole:
-      user: mucgpt-admin-user
-      role: mucgpt-admin
-      clientId: mucgpt

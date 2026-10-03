@@ -70,3 +70,20 @@ changes:
   - updateUserPassword:
       name: demo-no-access-user
       password: "mucgpt"
+  - addUser:
+      name: demo-admin
+      lastName: Admin
+      firstName: Demo
+      enabled: true
+      emailVerified: true
+      email: demo-admin@example.org
+      attributes:
+        user_name:
+          - demo-admin
+        user_id:
+          - demo-user-5
+        organization_unit:
+          - demo-team-a
+  - updateUserPassword:
+      name: demo-admin
+      password: "mucgpt"

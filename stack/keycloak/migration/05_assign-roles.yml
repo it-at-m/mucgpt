@@ -14,4 +14,8 @@ changes:
       user: demo-team-b-user
       role: mucgpt-user
       clientId: mucgpt
+  - assignRole:
+      user: demo-admin
+      role: mucgpt-admin
+      clientId: mucgpt
   # demo-no-access-user intentionally has no role assigned

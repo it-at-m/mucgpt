@@ -276,6 +276,15 @@ MUCGPT_ASSISTANT_LDAP__IGNORED_OU_SHORTNAME_EXCEPTIONS=["DEPT-EXAMPLE"]
 - Typical use case: keep a business-relevant OU like `_Hidden` by adding its shortname (for example `DEPT-EXAMPLE`) to `IGNORED_OU_SHORTNAME_EXCEPTIONS`.
 - Pagination and robustness: `PAGE_SIZE` (default 500), `CONNECT_TIMEOUT` (default 5s), and `READ_TIMEOUT` (default 10s).
 
+### Demo credentials
+
+The local Docker demo stack includes a standard user and an admin user for testing role-based access:
+
+- `demo-user` / `mucgpt`
+- `demo-admin` / `mucgpt`
+
+These credentials are only for the isolated local development stack and must not be reused in production or test environments.
+
 ### SSO integration
 
 Authentication is performed in front of the services through an OpenID Connect-compatible API gateway. MUCGPT only accepts access tokens that contain a configured authorization role and uses a configurable organization claim for authorization checks.
@@ -285,6 +294,7 @@ The SSO role is configured in each service's `config.yaml` under the `SSO` secti
 ```yaml
 SSO:
   ROLE: "mucgpt-user"
+  ADMIN_ROLE: "mucgpt-admin"
   USER_ID_CLAIM: "user_id"
   ORGANIZATION_UNIT_CLAIM: "organization_unit"
 ```

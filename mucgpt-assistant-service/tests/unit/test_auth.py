@@ -21,6 +21,21 @@ def test_access_is_open_when_no_roles_are_configured():
     assert result.roles == []
 
 
+def test_configured_identity_claims_are_extracted():
+    helper = AuthenticationHelper(
+        role=None,
+        user_id_claim="external_id",
+        organization_unit_claim="team_claim",
+    )
+
+    result = helper.authenticate(
+        _token({"external_id": "demo-user-1", "team_claim": "demo-team-a"})
+    )
+
+    assert result.user_id == "demo-user-1"
+    assert result.department == "demo-team-a"
+
+
 def test_basic_role_grants_access():
     helper = AuthenticationHelper(role="required-role")
 

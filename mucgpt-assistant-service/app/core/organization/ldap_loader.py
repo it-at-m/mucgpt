@@ -28,12 +28,16 @@ class LDAPOrganizationLoader:
         entries = self._fetch_entries()
         builder = OrganizationTreeBuilder(
             display_attribute=self.settings.DISPLAY_ATTRIBUTE,
+            shortname_attribute=self.settings.SHORTNAME_ATTRIBUTE,
             parent_attribute=self.settings.PARENT_ATTRIBUTE,
             search_base=self.settings.SEARCH_BASE,
             ignored_suffixes=self.settings.IGNORED_OU_SUFFIXES,
             ignored_prefixes=self.settings.IGNORED_OU_PREFIXES,
             ignored_shortname_exceptions=self.settings.IGNORED_OU_SHORTNAME_EXCEPTIONS,
-            required_attributes=self.settings.REQUIRED_ATTRIBUTES,
+            required_attributes=[
+                *self.settings.REQUIRED_ATTRIBUTES,
+                self.settings.SHORTNAME_ATTRIBUTE,
+            ],
         )
         roots = builder.build(entries)
         builder.sort_children(roots)
@@ -163,6 +167,8 @@ class LDAPOrganizationLoader:
 
     def _requested_attributes(self) -> list[str]:
         attributes: set[str] = {self.settings.DISPLAY_ATTRIBUTE}
+        if self.settings.SHORTNAME_ATTRIBUTE:
+            attributes.add(self.settings.SHORTNAME_ATTRIBUTE)
         if self.settings.PARENT_ATTRIBUTE:
             attributes.add(self.settings.PARENT_ATTRIBUTE)
         if self.settings.ADDITIONAL_ATTRIBUTES:

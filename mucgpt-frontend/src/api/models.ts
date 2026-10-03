@@ -75,6 +75,8 @@ export interface ApplicationConfig {
     assistant_version: string;
     document_processing_enabled: boolean;
     transcription_enabled: boolean;
+    /** Model id preselected for first-time users; null = frontend built-in default. */
+    transcription_default_model: string | null;
     ai_act_compliance_check_enabled: boolean;
     footer_link_url?: string;
     footer_label?: string;
@@ -298,8 +300,8 @@ export interface User {
     middle_name?: string;
     email?: string;
     preferred_username?: string;
-    department?: string;
-    lhmObjectID?: string;
+    organization_unit?: string;
+    user_id?: string;
     roles?: string[];
 }
 
@@ -318,6 +320,7 @@ export type CommunityAssistant = {
     subscriptions_count?: number;
     tags?: string[];
     is_visible?: boolean;
+    is_deleted?: boolean;
     owners_detailed?: OwnerDetailsResponse[];
 };
 

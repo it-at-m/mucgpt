@@ -1,17 +1,4 @@
-import {
-    DialogContent,
-    Button,
-    Divider,
-    Field,
-    Input,
-    Menu,
-    MenuTrigger,
-    MenuPopover,
-    MenuList,
-    MenuItem,
-    Text,
-    mergeClasses
-} from "@fluentui/react-components";
+import { DialogContent, Button, Divider, Field, Input, Menu, MenuTrigger, MenuPopover, MenuList, Text, mergeClasses } from "@fluentui/react-components";
 import {
     Add24Regular,
     ArrowBidirectionalUpDown24Regular,
@@ -35,6 +22,7 @@ import { ExpandableTextarea } from "../ExpandableTextarea";
 import { StarterPromptModel } from "../../../StarterPrompt";
 import { FollowUpActionModel } from "../../../FollowUpAction";
 import { generatePromptId } from "../promptIds";
+import { MenuItem } from "../../../../ui/MenuItem";
 
 interface ConversationOptionsSectionProps {
     followUpActions: FollowUpActionModel[];

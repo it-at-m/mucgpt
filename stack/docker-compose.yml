@@ -123,7 +123,7 @@ services:
   # #### Valkey ####
   #
   valkey:
-    image: valkey/valkey:9.0.6@sha256:20ad9d9058879d0f571073bfd6879150c3f82f0cf41d006bcbdf8931608db526
+    image: valkey/valkey:9.0.6@sha256:63346cb24a61221e76bdf41acce99b3968a9fa83d8122144deab45394b27b4f2
     ports:
       - "6379:6379"
     command: ["valkey-server", "--requirepass", "password"]
@@ -168,7 +168,7 @@ services:
       - SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_SSO_PROVIDER=sso
       - SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_SSO_CLIENTID=mucgpt
       - SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_SSO_CLIENTSECRET=client_secret
-      - SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_SSO_SCOPE=openid,profile,roles,email,lhm-core
+      - SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_SSO_SCOPE=openid,profile,roles,email,mucgpt-core
     #  - LOGGING_LEVEL_REACTOR_NETTY=INFO
     #  - LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_CLOUD_GATEWAY=TRACE
     #  - SPRING_CLOUD_GATEWAY_HTTPCLIENT_WIRETAP=TRUE

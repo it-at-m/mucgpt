@@ -6,6 +6,7 @@ import { AnswerLoading } from "../Answer/AnswerLoading";
 import { AnswerError } from "../Answer/AnswerError";
 import { ChatMessage } from "../../pages/chat/Chat";
 import { FollowUpActionModel } from "../FollowUpAction";
+import type { RunActivity } from "../../utils/agUiActivity";
 
 interface Props {
     answers: ChatMessage[];
@@ -18,6 +19,8 @@ interface Props {
     lastQuestionRef: React.MutableRefObject<string>;
     onRollbackError?: () => void;
     lastAnswerRef?: React.Ref<HTMLDivElement>;
+    /** Live AG-UI run activity shown in the loading indicator. */
+    loadingActivity?: RunActivity;
 }
 
 export const AnswerList = ({
@@ -30,7 +33,8 @@ export const AnswerList = ({
     chatMessageStreamEnd,
     lastQuestionRef,
     onRollbackError,
-    lastAnswerRef
+    lastAnswerRef,
+    loadingActivity
 }: Props) => {
     const { t } = useTranslation();
 
@@ -91,7 +95,7 @@ export const AnswerList = ({
                         usermsg={<UserChatMessage message={lastQuestionRef.current} />}
                         usermsglabel={t("components.usericon.label") + " " + (answers.length + 1).toString()}
                         assistantmsglabel={t("components.answericon.label") + " " + (answers.length + 1).toString()}
-                        assistantmsg={<AnswerLoading />}
+                        assistantmsg={<AnswerLoading activity={loadingActivity} />}
                     ></ChatTurnComponent>
                 ) : (
                     <div></div>
@@ -111,7 +115,8 @@ export const AnswerList = ({
         makeApiRequest,
         answers.length,
         isLoading,
-        chatMessageStreamEnd
+        chatMessageStreamEnd,
+        loadingActivity
     ]);
 
     return answerList;

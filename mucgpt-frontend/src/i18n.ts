@@ -77,6 +77,7 @@ i18n
                         prompt: "Stelle eine Frage oder lade ein Dokument hoch",
                         prompt_no_upload: "Stelle eine Frage",
                         answer_loading: "Erstelle Antwort",
+                        activity_running_tool: "Nutze {{tool}}",
                         answer_loading_phrases: [
                             "Erstelle Antwort",
                             "Denke nach",
@@ -969,6 +970,7 @@ i18n
                         prompt: "Ask a question or upload a document",
                         prompt_no_upload: "Ask a question",
                         answer_loading: "Generating answer",
+                        activity_running_tool: "Using {{tool}}",
                         answer_loading_phrases: [
                             "Generating an answer",
                             "Thinking it through",
@@ -1850,6 +1852,7 @@ i18n
                         prompt: "Stell a Froog oder lad a Dokument hoch",
                         prompt_no_upload: "Stell a Froog",
                         answer_loading: "I bearbeit grad de Frog",
+                        activity_running_tool: "Nimm grad {{tool}}",
                         answer_loading_phrases: [
                             "I bearbeit grad de Frog",
                             "I denk nach",
@@ -2718,6 +2721,7 @@ i18n
                         prompt: "Posez une question ou téléchargez un document",
                         prompt_no_upload: "Posez une question",
                         answer_loading: "Créer une réponse",
+                        activity_running_tool: "Utilise {{tool}}",
                         answer_loading_phrases: [
                             "Préparation de la réponse",
                             "Réflexion en cours",
@@ -3588,6 +3592,7 @@ i18n
                         prompt: "Задайте питання або завантажте документ",
                         prompt_no_upload: "Задайте питання",
                         answer_loading: "Створення відповіді",
+                        activity_running_tool: "Використовую {{tool}}",
                         answer_loading_phrases: [
                             "Створюю відповідь",
                             "Обмірковую",

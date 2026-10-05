@@ -14,6 +14,7 @@ import { FollowUpActionContext } from "../../components/FollowUpAction";
 import { getChatReducer, handleRegenerate, handleRollback, makeApiRequest } from "../page_helpers";
 import { STORAGE_KEYS } from "../layout/LayoutHelper";
 import { ToolStatus } from "../../utils/ToolStreamHandler";
+import { initialRunActivity, type RunActivity } from "../../utils/agUiActivity";
 import { Model } from "../../api";
 import { chatApi } from "../../api/core-client";
 import { useToolsContext } from "../../components/ToolsProvider";
@@ -108,6 +109,7 @@ const Chat = () => {
         }
     });
     const [toolStatuses, setToolStatuses] = useState<ToolStatus[]>([]);
+    const [runActivity, setRunActivity] = useState<RunActivity>(initialRunActivity);
     const [isSettingsOpen, setIsSettingsOpen] = useState<boolean>(false);
     const [uploadedData, setUploadedData] = useState<UploadedData[]>([]);
     const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -292,7 +294,8 @@ const Chat = () => {
                     setLoadingState,
                     true,
                     agUiEnabled,
-                    handleAgUiEvent
+                    handleAgUiEvent,
+                    setRunActivity
                 );
             } catch (e) {
                 setError(e);
@@ -746,6 +749,7 @@ const Chat = () => {
                 }}
                 onRollbackMessage={onRollbackMessage}
                 isLoading={isLoading}
+                loadingActivity={runActivity}
                 error={error}
                 makeApiRequest={() => {
                     dispatch({ type: "SET_ANSWERS", payload: answers.slice(0, -1) });
@@ -770,6 +774,7 @@ const Chat = () => {
             callApi,
             systemPrompt,
             isLoading,
+            runActivity,
             isStreaming,
             lastQuestionRef,
             chatMessageStreamEnd,

@@ -17,6 +17,7 @@ import { getChatReducer, handleRegenerate, handleRollback, makeApiRequest } from
 import { ChatOptions } from "../chat/Chat";
 import { STORAGE_KEYS } from "../layout/LayoutHelper";
 import { ToolStatus } from "../../utils/ToolStreamHandler";
+import { initialRunActivity, type RunActivity } from "../../utils/agUiActivity";
 import { AssistantStrategy, CommunityAssistantStrategy, DeletedCommunityAssistantStrategy, LocalAssistantStrategy } from "./AssistantStrategy";
 import { chatApi } from "../../api/core-client";
 import { useGlobalToastContext } from "../../components/GlobalToastHandler/GlobalToastContext";
@@ -103,6 +104,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
     const [question, setQuestion] = useState<string>("");
     const [selectedTools, setSelectedTools] = useState<string[]>([]);
     const [toolStatuses, setToolStatuses] = useState<ToolStatus[]>([]);
+    const [runActivity, setRunActivity] = useState<RunActivity>(initialRunActivity);
     const [showNotSubscribedDialog, setShowNotSubscribedDialog] = useState<boolean>(false);
     const [noAccess, setNoAccess] = useState<boolean>(false);
     const [uploadedData, setUploadedData] = useState<UploadedData[]>([]);
@@ -476,7 +478,9 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                     lastAnswerRef,
                     setIsLoadingValue,
                     true,
-                    agUiEnabled
+                    agUiEnabled,
+                    undefined, // onAgUiEvent — event log is only wired up in the main chat
+                    setRunActivity
                 );
             } catch (e) {
                 setError(e);
@@ -1006,6 +1010,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                 }}
                 onRollbackMessage={isDeletedAssistant ? undefined : onRollbackMessage}
                 isLoading={isLoading}
+                loadingActivity={runActivity}
                 error={error}
                 makeApiRequest={() => {
                     dispatch({ type: "SET_ANSWERS", payload: answers.slice(0, -1) });
@@ -1028,6 +1033,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
             onRegenerateResponseClicked,
             onRollbackMessage,
             isLoading,
+            runActivity,
             isStreaming,
             error,
             callApi,

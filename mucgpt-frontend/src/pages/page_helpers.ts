@@ -12,6 +12,7 @@ import { v4 as uuid } from "uuid";
 import { handleRedirect } from "../api/fetch-utils";
 import { createChatName, MucgptAgUiAgent } from "../api/core-client";
 import type { BaseEvent } from "@ag-ui/core";
+import { initialRunActivity, reduceRunActivity, type RunActivity } from "../utils/agUiActivity";
 
 /**
  * @fileoverview Chat page helper functions for managing chat state, API requests, and user interactions.
@@ -238,7 +239,8 @@ export const makeApiRequest = async (
     onLoadingChange?: (isLoading: boolean) => void,
     persist: boolean = true,
     agUiEnabled: boolean = false,
-    onAgUiEvent?: (event: BaseEvent) => void
+    onAgUiEvent?: (event: BaseEvent) => void,
+    onRunActivityChange?: (activity: RunActivity) => void
 ) => {
     // Create conversation history for the API request
     const history: ChatTurn[] = answers.map((a: { user: any; response: { answer: any } }) => ({ user: a.user, assistant: a.response.answer }));
@@ -362,12 +364,19 @@ export const makeApiRequest = async (
             activeToolStatuses = toolStreamHandler.getActiveToolStatuses();
             onToolStatusUpdate?.(activeToolStatuses);
         };
+        let runActivity = initialRunActivity;
+        onRunActivityChange?.(runActivity);
         const agent = new MucgptAgUiAgent(request);
-        const eventSubscription = onAgUiEvent
-            ? agent.subscribe({
-                  onEvent: ({ event }) => onAgUiEvent(event)
-              })
-            : undefined;
+        const eventSubscription = agent.subscribe({
+            onEvent: ({ event }) => {
+                onAgUiEvent?.(event);
+                const nextActivity = reduceRunActivity(runActivity, event);
+                if (nextActivity !== runActivity) {
+                    runActivity = nextActivity;
+                    onRunActivityChange?.(runActivity);
+                }
+            }
+        });
         try {
             await agent.runAgent(undefined, {
                 onTextMessageContentEvent: ({ event }) => {
@@ -403,7 +412,7 @@ export const makeApiRequest = async (
                 }
             });
         } finally {
-            eventSubscription?.unsubscribe();
+            eventSubscription.unsubscribe();
         }
         if (runError) throw runError;
     } else {

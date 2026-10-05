@@ -15,6 +15,7 @@ import { LLMContext } from "../../LLMSelector/LLMContextProvider";
 import { FollowUpActionContext, FollowUpActionModel } from "../../FollowUpAction";
 import { useToolsContext } from "../../ToolsProvider";
 import { ToolStatus } from "../../../utils/ToolStreamHandler";
+import { initialRunActivity, type RunActivity } from "../../../utils/agUiActivity";
 import { useToolStatusToasts } from "../../../hooks/useToolStatusToasts";
 import { getChatReducer, makeApiRequest } from "../../../pages/page_helpers";
 import type { StorageService } from "../../../service/storage";
@@ -75,6 +76,7 @@ export const AssistantPreviewChat = ({
     const [isStreaming, setIsStreaming] = useState<boolean>(false);
     const [error, setError] = useState<unknown>();
     const [toolStatuses, setToolStatuses] = useState<ToolStatus[]>([]);
+    const [runActivity, setRunActivity] = useState<RunActivity>(initialRunActivity);
     const [showScrollToBottom, setShowScrollToBottom] = useState(false);
     const [renderScrollToBottom, setRenderScrollToBottom] = useState(false);
     const [previewInputHeight, setPreviewInputHeight] = useState(0);
@@ -240,7 +242,9 @@ export const AssistantPreviewChat = ({
                     undefined, // answerTopRef
                     setIsLoadingValue,
                     false, // persist — keep the preview conversation ephemeral
-                    agUiEnabled
+                    agUiEnabled,
+                    undefined, // onAgUiEvent — no event log in the preview
+                    setRunActivity
                 );
             } catch (e) {
                 setError(e);
@@ -328,6 +332,7 @@ export const AssistantPreviewChat = ({
                     </>
                 )}
                 isLoading={isLoading}
+                loadingActivity={runActivity}
                 error={error}
                 makeApiRequest={() => {
                     const trimmed = answers.slice(0, -1);
@@ -344,7 +349,7 @@ export const AssistantPreviewChat = ({
                 lastAnswerRef={lastAnswerRef}
             />
         ),
-        [answers, isLoading, isStreaming, error, callApi, lastQuestion, onRegenerate]
+        [answers, isLoading, runActivity, isStreaming, error, callApi, lastQuestion, onRegenerate]
     );
 
     const containerStyle = { "--previewInputHeight": `${previewInputHeight}px` } as CSSProperties;

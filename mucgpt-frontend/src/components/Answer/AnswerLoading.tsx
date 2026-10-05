@@ -1,11 +1,15 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { animated, useSpring } from "@react-spring/web";
 import { useTranslation } from "react-i18next";
 
 import styles from "./Answer.module.css";
+import { useToolDisplayName } from "../../hooks/useToolDisplayName";
+import { getRunningStep, type RunActivity } from "../../utils/agUiActivity";
 
 const PHRASE_COUNT = 12;
 const PHRASE_INTERVAL_MS = 4000;
+// Keeps fast tool calls readable instead of letting them flicker past.
+const MIN_STEP_DISPLAY_MS = 400;
 
 const shuffledIndices = (indices: number[]) => {
     for (let index = indices.length - 1; index > 0; index--) {
@@ -15,8 +19,37 @@ const shuffledIndices = (indices: number[]) => {
     return indices;
 };
 
-export const AnswerLoading = () => {
+/** Returns `value`, but holds each shown value for at least `minMs` before switching. */
+const useMinimumDisplay = <T,>(value: T, minMs: number): T => {
+    const [shown, setShown] = useState(value);
+    const shownAt = useRef(Date.now());
+
+    useEffect(() => {
+        if (value === shown) return;
+        const timeout = window.setTimeout(
+            () => {
+                shownAt.current = Date.now();
+                setShown(value);
+            },
+            Math.max(0, minMs - (Date.now() - shownAt.current))
+        );
+        return () => window.clearTimeout(timeout);
+    }, [value, shown, minMs]);
+
+    return shown;
+};
+
+interface Props {
+    /** Live AG-UI run activity; when a tool is running, it replaces the generic loading phrases. */
+    activity?: RunActivity;
+}
+
+export const AnswerLoading = ({ activity }: Props) => {
     const { t } = useTranslation();
+    const getToolDisplayName = useToolDisplayName();
+    const runningToolName = activity ? getRunningStep(activity)?.toolName : undefined;
+    const shownToolName = useMinimumDisplay(runningToolName, MIN_STEP_DISPLAY_MS);
+    const toolLabel = shownToolName ? t("chat.activity_running_tool", { tool: getToolDisplayName(shownToolName) }) : undefined;
     const [initialPhraseIndex] = useState(() => Math.floor(Math.random() * PHRASE_COUNT));
     const [phraseIndex, setPhraseIndex] = useState(initialPhraseIndex);
     const animatedStyles = useSpring({
@@ -49,8 +82,10 @@ export const AnswerLoading = () => {
         <animated.div style={{ ...animatedStyles }}>
             <div className={styles.answerContainer}>
                 <div className={styles.growItem}>
-                    <p className={styles.answerText} role="status" aria-label={t("chat.answer_loading")}>
-                        <span aria-hidden="true">{phrases[phraseIndex] ?? t("chat.answer_loading")}</span>
+                    <p className={styles.answerText} role="status">
+                        {/* Announce only real progress changes, not the rotating filler phrases. */}
+                        <span className={styles.visuallyHidden}>{toolLabel ?? t("chat.answer_loading")}</span>
+                        <span aria-hidden="true">{toolLabel ?? phrases[phraseIndex] ?? t("chat.answer_loading")}</span>
                         <span className={styles.loadingdots} aria-hidden="true" />
                     </p>
                 </div>

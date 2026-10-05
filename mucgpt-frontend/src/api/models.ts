@@ -1,5 +1,6 @@
 import { StarterPromptModel } from "../components/StarterPrompt";
 import { FollowUpActionModel } from "../components/FollowUpAction";
+import type { ActivityStep } from "../utils/agUiActivity";
 
 export type AskResponse = {
     answer: string;
@@ -24,6 +25,8 @@ export type ChatResponse = {
         state: "STARTED" | "ENDED" | null;
         timestamp: number;
     }>;
+    /** Tool steps the agent took for this answer (AG-UI only). */
+    activitySteps?: ActivityStep[];
 };
 
 export type ChatTurn = {

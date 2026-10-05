@@ -78,6 +78,9 @@ i18n
                         prompt_no_upload: "Stelle eine Frage",
                         answer_loading: "Erstelle Antwort",
                         activity_running_tool: "Nutze {{tool}}",
+                        activity_steps_one: "1 Schritt",
+                        activity_steps_other: "{{count}} Schritte",
+                        activity_step_failed: "fehlgeschlagen",
                         answer_loading_phrases: [
                             "Erstelle Antwort",
                             "Denke nach",
@@ -971,6 +974,9 @@ i18n
                         prompt_no_upload: "Ask a question",
                         answer_loading: "Generating answer",
                         activity_running_tool: "Using {{tool}}",
+                        activity_steps_one: "1 step",
+                        activity_steps_other: "{{count}} steps",
+                        activity_step_failed: "failed",
                         answer_loading_phrases: [
                             "Generating an answer",
                             "Thinking it through",
@@ -1853,6 +1859,9 @@ i18n
                         prompt_no_upload: "Stell a Froog",
                         answer_loading: "I bearbeit grad de Frog",
                         activity_running_tool: "Nimm grad {{tool}}",
+                        activity_steps_one: "1 Schritt",
+                        activity_steps_other: "{{count}} Schritt",
+                        activity_step_failed: "ned highaut",
                         answer_loading_phrases: [
                             "I bearbeit grad de Frog",
                             "I denk nach",
@@ -2722,6 +2731,9 @@ i18n
                         prompt_no_upload: "Posez une question",
                         answer_loading: "Créer une réponse",
                         activity_running_tool: "Utilise {{tool}}",
+                        activity_steps_one: "1 étape",
+                        activity_steps_other: "{{count}} étapes",
+                        activity_step_failed: "échec",
                         answer_loading_phrases: [
                             "Préparation de la réponse",
                             "Réflexion en cours",
@@ -3593,6 +3605,11 @@ i18n
                         prompt_no_upload: "Задайте питання",
                         answer_loading: "Створення відповіді",
                         activity_running_tool: "Використовую {{tool}}",
+                        activity_steps_one: "{{count}} крок",
+                        activity_steps_few: "{{count}} кроки",
+                        activity_steps_many: "{{count}} кроків",
+                        activity_steps_other: "{{count}} кроку",
+                        activity_step_failed: "не вдалося",
                         answer_loading_phrases: [
                             "Створюю відповідь",
                             "Обмірковую",

@@ -284,6 +284,8 @@ export const makeApiRequest = async (
     // Initialize tool stream handler for processing tool calls
     const toolStreamHandler = new ToolStreamHandler();
     let activeToolStatuses: ToolStatus[] = [];
+    let runActivity = initialRunActivity;
+    const activitySteps = () => (runActivity.steps.length > 0 ? runActivity.steps : undefined);
 
     // Add an empty initial message to the chat
     const initialMessage = {
@@ -342,7 +344,8 @@ export const makeApiRequest = async (
                 answer: combinedContent,
                 tokens: streamed_tokens,
                 user_tokens: user_tokens,
-                activeTools: includeActiveToolsInUpdate ? activeToolStatuses : undefined
+                activeTools: includeActiveToolsInUpdate ? activeToolStatuses : undefined,
+                activitySteps: activitySteps()
             };
 
             const updatedMessage = { user: question, response: updatedResponse };
@@ -364,7 +367,6 @@ export const makeApiRequest = async (
             activeToolStatuses = toolStreamHandler.getActiveToolStatuses();
             onToolStatusUpdate?.(activeToolStatuses);
         };
-        let runActivity = initialRunActivity;
         onRunActivityChange?.(runActivity);
         const agent = new MucgptAgUiAgent(request);
         const eventSubscription = agent.subscribe({
@@ -374,6 +376,8 @@ export const makeApiRequest = async (
                 if (nextActivity !== runActivity) {
                     runActivity = nextActivity;
                     onRunActivityChange?.(runActivity);
+                    // Tools can also run after the answer text started; keep its step list current.
+                    if (initialMessageAdded) scheduleUpdate();
                 }
             }
         });
@@ -506,7 +510,8 @@ export const makeApiRequest = async (
         usage_max_input_tokens: LLM.max_input_tokens,
         usage_context_warning_threshold_percent: LLM.context_warning_threshold_percent,
         usage_context_critical_threshold_percent: LLM.context_critical_threshold_percent,
-        activeTools: activeToolStatuses
+        activeTools: activeToolStatuses,
+        activitySteps: activitySteps()
     };
 
     const finalMessage = {

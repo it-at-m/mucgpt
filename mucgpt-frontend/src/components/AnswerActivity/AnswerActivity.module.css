@@ -1,0 +1,30 @@
+.activity {
+    margin-bottom: var(--spacingVerticalS);
+}
+
+.summary {
+    color: var(--colorNeutralForeground3);
+}
+
+.steps {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacingVerticalXS);
+    margin: 0;
+    padding: 0 0 var(--spacingVerticalS);
+    list-style: none;
+}
+
+.step {
+    display: flex;
+    align-items: center;
+    gap: var(--spacingHorizontalS);
+}
+
+.doneIcon {
+    color: var(--colorStatusSuccessForeground1);
+}
+
+.errorIcon {
+    color: var(--colorStatusDangerForeground1);
+}

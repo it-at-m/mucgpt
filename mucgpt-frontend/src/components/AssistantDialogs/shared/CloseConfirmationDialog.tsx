@@ -17,6 +17,11 @@ interface CloseConfirmationDialogProps {
     confirmDisabled?: boolean;
     /** Render the confirm action with destructive styling. */
     confirmIntent?: "default" | "danger";
+    /** Optional third action rendered between cancel and confirm. */
+    secondaryAction?: {
+        label: string;
+        onClick: () => void;
+    };
 }
 
 export const CloseConfirmationDialog = ({
@@ -27,13 +32,19 @@ export const CloseConfirmationDialog = ({
     message,
     confirmLabel,
     confirmDisabled,
-    confirmIntent = "default"
+    confirmIntent = "default",
+    secondaryAction
 }: CloseConfirmationDialogProps) => {
     const { t } = useTranslation();
 
     const handleCancel = useCallback(() => {
         onOpenChange(false);
     }, [onOpenChange]);
+
+    const handleSecondaryAction = useCallback(() => {
+        onOpenChange(false);
+        secondaryAction?.onClick();
+    }, [onOpenChange, secondaryAction]);
 
     const handleConfirm = useCallback(() => {
         if (confirmDisabled) {
@@ -66,6 +77,11 @@ export const CloseConfirmationDialog = ({
                         <Button appearance="secondary" onClick={handleCancel}>
                             {t("common.cancel")}
                         </Button>
+                        {secondaryAction && (
+                            <Button appearance="secondary" onClick={handleSecondaryAction}>
+                                {secondaryAction.label}
+                            </Button>
+                        )}
                         <Button
                             ref={confirmButtonRef}
                             appearance="primary"

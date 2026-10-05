@@ -9,8 +9,8 @@ interface RawUserInfo {
     middle_name?: string;
     email?: string;
     preferred_username?: string;
-    department?: string;
-    lhmObjectID?: string;
+    organization_unit?: string;
+    user_id?: string;
     resource_access?: unknown;
 }
 
@@ -39,8 +39,8 @@ export async function getUser(): Promise<User> {
         middle_name: toStringValue(json.middle_name),
         email: toStringValue(json.email),
         preferred_username: toStringValue(json.preferred_username),
-        department: toStringValue(json.department),
-        lhmObjectID: toStringValue(json.lhmObjectID),
+        organization_unit: toStringValue(json.organization_unit),
+        user_id: toStringValue(json.user_id),
         roles: getRoles(json)
     };
 }

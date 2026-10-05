@@ -6,8 +6,8 @@ class AuthenticationResult(BaseModel):
     Pydantic model representing the result of user authentication.
 
     Attributes:
-        user_id: The LHM Object ID of the authenticated user
-        department: The department the user belongs to
+        user_id: The configured user ID of the authenticated user
+        department: The organization unit the user belongs to
         name: The full name of the authenticated user
         roles: List of roles assigned to the user
         is_admin: Whether the user holds the configured admin role
@@ -23,7 +23,7 @@ class AuthenticationResult(BaseModel):
         json_schema_extra = {
             "example": {
                 "user_id": "12345",
-                "department": "IT Department",
+                "department": "demo-team-a",
                 "name": "John Doe",
                 "roles": ["mucgpt-user"],
                 "is_admin": False,

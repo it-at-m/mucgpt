@@ -1,0 +1,41 @@
+name: Frontend test
+permissions:
+  contents: read
+
+on: [push, workflow_dispatch]
+
+jobs:
+  test_frontend:
+    name: Test Frontend on ${{ matrix.os }} Node ${{ matrix.node_version }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: ["ubuntu-22.04"]
+        node_version: ["24.18.1"]
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+        with:
+          persist-credentials: false
+      - name: Setup node
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
+        with:
+          node-version: ${{ matrix.node_version }}
+          cache: npm
+          cache-dependency-path: mucgpt-frontend/package-lock.json
+      - name: Show toolchain versions
+        run: |
+          node --version
+          npm --version
+      - name: Install dependencies
+        run: |
+          cd ./mucgpt-frontend
+          npm ci
+      - name: Lint frontend
+        run: |
+          cd ./mucgpt-frontend
+          npm run lint
+      - name: Run frontend tests
+        run: |
+          cd ./mucgpt-frontend
+          npm test

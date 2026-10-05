@@ -17,15 +17,15 @@ class LDAPPersonLookupError(RuntimeError):
 
 
 class LDAPPersonLookupLoader:
-    """Loads person details from LDAP by lhmobjectid (or configured ID attribute)."""
+    """Loads person details from LDAP by the configured user ID attribute."""
 
     def __init__(self, settings: LDAPSettings) -> None:
         self.settings = settings
 
-    def lookup_by_lhmobjectid(self, lhmobjectid: str) -> dict[str, str | None] | None:
-        lookup_value = (lhmobjectid or "").strip()
+    def lookup_by_user_id(self, user_id: str) -> dict[str, str | None] | None:
+        lookup_value = (user_id or "").strip()
         if not lookup_value:
-            raise LDAPPersonLookupError("lhmobjectid must not be empty")
+            raise LDAPPersonLookupError("user_id must not be empty")
 
         if not self.settings.ENABLED:
             raise LDAPPersonLookupError("LDAP lookup is disabled")
@@ -66,7 +66,7 @@ class LDAPPersonLookupLoader:
     def _to_lookup_payload(self, attributes: dict[str, Any]) -> dict[str, str | None]:
         sanitized = self._sanitize_attributes(attributes)
         return {
-            "lhmobjectid": self._extract_attribute_value(
+            "user_id": self._extract_attribute_value(
                 sanitized, self.settings.USER_ID_ATTRIBUTE
             ),
             "givenName": self._extract_attribute_value(

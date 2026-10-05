@@ -18,7 +18,7 @@ class _DummyLoader:
         self.errors = errors or set()
         self.calls: list[str] = []
 
-    def lookup_by_lhmobjectid(self, owner_id: str) -> dict[str, str | None] | None:
+    def lookup_by_user_id(self, owner_id: str) -> dict[str, str | None] | None:
         self.calls.append(owner_id)
         if owner_id in self.errors:
             raise LDAPPersonLookupError("boom")
@@ -46,7 +46,7 @@ async def test_build_owner_details_omits_owner_without_useful_fields(
     loader = _DummyLoader(
         responses={
             "known": {
-                "lhmobjectid": "known",
+                "user_id": "known",
                 "givenName": None,
                 "sn": None,
                 "mail": None,
@@ -69,12 +69,12 @@ async def test_build_owner_details_returns_resolved_owner(
 ) -> None:
     loader = _DummyLoader(
         responses={
-            "111160470": {
-                "lhmobjectid": "111160470",
-                "givenName": "Michael",
-                "sn": "Jaumann",
-                "mail": "michael.jaumann@muenchen.de",
-                "organizationalunit": "ITM-SLP43",
+            "demo-user-1": {
+                "user_id": "demo-user-1",
+                "givenName": "Demo",
+                "sn": "User",
+                "mail": "demo.user@example.org",
+                "organizationalunit": "demo-team-a",
             }
         }
     )
@@ -82,12 +82,12 @@ async def test_build_owner_details_returns_resolved_owner(
     monkeypatch.setattr(owner_enrichment, "get_ldap_settings", lambda: object())
     monkeypatch.setattr(owner_enrichment, "LDAPPersonLookupLoader", lambda _s: loader)
 
-    result = await owner_enrichment.build_owner_details(["111160470"])
+    result = await owner_enrichment.build_owner_details(["demo-user-1"])
 
     assert len(result) == 1
-    assert result[0]["user_id"] == "111160470"
-    assert result[0]["username"] == "Michael Jaumann"
-    assert result[0]["mail"] == "michael.jaumann@muenchen.de"
+    assert result[0]["user_id"] == "demo-user-1"
+    assert result[0]["username"] == "Demo User"
+    assert result[0]["mail"] == "demo.user@example.org"
 
 
 @pytest.mark.asyncio
@@ -97,7 +97,7 @@ async def test_build_owner_details_uses_mail_as_username_when_name_missing(
     loader = _DummyLoader(
         responses={
             "mail-only": {
-                "lhmobjectid": "mail-only",
+                "user_id": "mail-only",
                 "givenName": None,
                 "sn": None,
                 "mail": "owner@example.org",
@@ -155,11 +155,11 @@ async def test_refresh_owner_details_retries_after_integrity_error(
     loader = _DummyLoader(
         responses={
             "race-user": {
-                "lhmobjectid": "race-user",
+                "user_id": "race-user",
                 "givenName": "Race",
                 "sn": "Winner",
                 "mail": "race.winner@example.org",
-                "organizationalunit": "ITM-TEST",
+                "organizationalunit": "demo-team-a",
             }
         }
     )

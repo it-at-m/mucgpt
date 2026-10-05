@@ -15,13 +15,7 @@ interface TermsOfUseDialogProps {
     onOpenChange?: (open: boolean) => void;
 }
 
-export const TermsOfUseDialog = ({
-    defaultOpen,
-    onAccept,
-    requireAcceptance = true,
-    open: controlledOpen,
-    onOpenChange
-}: TermsOfUseDialogProps) => {
+export const TermsOfUseDialog = ({ defaultOpen, onAccept, requireAcceptance = true, open: controlledOpen, onOpenChange }: TermsOfUseDialogProps) => {
     const { t } = useTranslation();
     const config = useConfigContext();
     const faqUrl = config.faq_url;

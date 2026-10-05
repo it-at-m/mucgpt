@@ -4,7 +4,7 @@ import { DBObject } from "../service/storage";
 import { ChatMessage, ChatOptions } from "./chat/Chat";
 import { ChatRequest, ChatResponse, ChatTurn, DataSource, Model } from "../api";
 import { ChatCompletionChunk, ChatCompletionChunkChoice } from "../api/models";
-import { ToolStreamHandler, ToolStatus } from "../utils/ToolStreamHandler";
+import { ToolStreamHandler, ToolStatus, ToolStreamState } from "../utils/ToolStreamHandler";
 
 import language from "react-syntax-highlighter/dist/esm/languages/hljs/1c";
 import { AssistantStorageService } from "../service/assistantstorage";
@@ -355,6 +355,13 @@ export const makeApiRequest = async (
 
     if (agUiEnabled) {
         let runError: Error | undefined;
+        // TOOL_CALL_RESULT only carries the call id, so remember which tool each call belongs to.
+        const toolNamesByCallId = new Map<string, string>();
+        const updateToolStatus = (name: string, state: ToolStreamState.STARTED | ToolStreamState.ENDED) => {
+            toolStreamHandler.handleToolCall({ name, state, content: "" });
+            activeToolStatuses = toolStreamHandler.getActiveToolStatuses();
+            onToolStatusUpdate?.(activeToolStatuses);
+        };
         const agent = new MucgptAgUiAgent(request);
         const eventSubscription = onAgUiEvent
             ? agent.subscribe({
@@ -367,6 +374,14 @@ export const makeApiRequest = async (
                     showInitialMessage();
                     textBuffer += event.delta;
                     scheduleUpdate();
+                },
+                onToolCallStartEvent: ({ event }) => {
+                    toolNamesByCallId.set(event.toolCallId, event.toolCallName);
+                    updateToolStatus(event.toolCallName, ToolStreamState.STARTED);
+                },
+                onToolCallResultEvent: ({ event }) => {
+                    const name = toolNamesByCallId.get(event.toolCallId);
+                    if (name) updateToolStatus(name, ToolStreamState.ENDED);
                 },
                 onRunErrorEvent: ({ event }) => {
                     showInitialMessage();

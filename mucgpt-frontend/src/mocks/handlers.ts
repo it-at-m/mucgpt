@@ -1034,7 +1034,9 @@ export const handlers = [
         const body = (await request.json()) as {
             messages?: { role: string; content: string }[];
             conversation_id?: string;
+            enabled_tools?: string[];
         };
+        const mockToolName = body.enabled_tools?.[0];
         const latestUserMessage =
             body.messages
                 ?.slice()
@@ -1055,6 +1057,13 @@ export const handlers = [
                     send({ type: "RUN_ERROR", message: "Mock AG-UI error" });
                     controller.close();
                     return;
+                }
+
+                if (mockToolName) {
+                    const toolCallId = crypto.randomUUID();
+                    send({ type: "TOOL_CALL_CHUNK", toolCallId, toolCallName: mockToolName, parentMessageId: messageId, delta: "{}" });
+                    await delay(1500);
+                    send({ type: "TOOL_CALL_RESULT", messageId: crypto.randomUUID(), toolCallId, content: "Mock tool result", role: "tool" });
                 }
 
                 const chunks = buildChatMessage().match(/[\s\S]{1,40}/g) ?? [];

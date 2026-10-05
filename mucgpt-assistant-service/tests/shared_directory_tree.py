@@ -2,33 +2,33 @@
 
 TEST_TREE = [
     {
-        "shortname": "RIT",
-        "name": "IT-Referat",
+        "shortname": "ORG",
+        "name": "Organization",
         "children": [
             {
-                "shortname": "ITM",
-                "name": "ITM",
+                "shortname": "DEPT",
+                "name": "DEPT",
                 "children": [
                     {
-                        "shortname": "ITM-KM",
-                        "name": "ITM-KM",
+                        "shortname": "DEPT-TEAM",
+                        "name": "DEPT-TEAM",
                         "children": [
                             {
-                                "shortname": "ITM-KM-DI",
-                                "name": "ITM-KM-DI",
+                                "shortname": "DEPT-TEAM-UNIT",
+                                "name": "DEPT-TEAM-UNIT",
                                 "children": [],
                             },
                             {
-                                "shortname": "ITM-KM-TEAM1",
-                                "name": "ITM-KM-TEAM1",
+                                "shortname": "DEPT-TEAM-ALPHA",
+                                "name": "DEPT-TEAM-ALPHA",
                                 "children": [],
                             },
                         ],
                     },
-                    {"shortname": "ITM-AB", "name": "ITM-AB", "children": []},
+                    {"shortname": "DEPT-OTHER", "name": "DEPT-OTHER", "children": []},
                     {
-                        "shortname": "ITM-SPECIFIC",
-                        "name": "ITM-SPECIFIC",
+                        "shortname": "DEPT-SPECIFIC",
+                        "name": "DEPT-SPECIFIC",
                         "children": [],
                     },
                 ],
@@ -94,30 +94,34 @@ TEST_TREE = [
         ],
     },
     {
-        "shortname": "POR",
-        "name": "Personal- und Organisationsreferat",
+        "shortname": "DIVISION",
+        "name": "Division",
         "children": [
             {
-                "shortname": "POR-5",
-                "name": "POR-5",
+                "shortname": "DIVISION-5",
+                "name": "DIVISION-5",
                 "children": [
                     {
-                        "shortname": "POR-5/1",
-                        "name": "POR-5/1",
+                        "shortname": "DIVISION-5/1",
+                        "name": "DIVISION-5/1",
                         "children": [
                             {
-                                "shortname": "POR-5/12",
-                                "name": "POR-5/12",
+                                "shortname": "DIVISION-5/12",
+                                "name": "DIVISION-5/12",
                                 "children": [],
                             },
                             {
-                                "shortname": "POR-5/14",
-                                "name": "POR-5/14",
+                                "shortname": "DIVISION-5/14",
+                                "name": "DIVISION-5/14",
                                 "children": [],
                             },
                         ],
                     },
-                    {"shortname": "POR-5-AB", "name": "POR-5-AB", "children": []},
+                    {
+                        "shortname": "DIVISION-5-OTHER",
+                        "name": "DIVISION-5-OTHER",
+                        "children": [],
+                    },
                 ],
             }
         ],
@@ -155,7 +159,7 @@ TEST_TREE = [
         ],
     },
     {
-        "shortname": "ORG",
+        "shortname": "ORG-SECOND",
         "name": "ORG",
         "children": [
             {

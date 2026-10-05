@@ -17,18 +17,24 @@ LOG_CONFIG: "logconf.yaml"
 # Frontend settings
 ENV_NAME: "MUCGPT"
 ALTERNATIVE_LOGO: false
+# Enables the browser-based speech-to-text feature. Transcription itself runs fully
+# client-side (models are downloaded and cached by the browser; no audio reaches the backend).
 TRANSCRIPTION_ENABLED: false
+# Model id preselected in the transcription settings for first-time users (must match an
+# entry of the frontend's TRANSCRIPTION_MODELS list, e.g. "onnx-community/whisper-small").
+# Unknown ids are ignored; leave unset for the frontend's built-in default.
+TRANSCRIPTION_DEFAULT_MODEL: null
 AI_ACT_COMPLIANCE_CHECK_ENABLED: true
 FRONTEND_VERSION: "unknown"
 ASSISTANT_VERSION: "unknown"
-FOOTER_LINK_URL: "https://ki.muenchen.de"
-FOOTER_LABEL: "DAICE"
-FAQ_URL: "https://ki.muenchen.de/"
-INCIDENT_REPORT_URL: "https://ki.muenchen.de/"
-FEATURE_REQUEST_URL: "https://ki.muenchen.de/"
-CONTACT_MAIL_URL: "mailto:ki@muenchen.de"
+FOOTER_LINK_URL: ""
+FOOTER_LABEL: ""
+FAQ_URL: ""
+INCIDENT_REPORT_URL: ""
+FEATURE_REQUEST_URL: ""
+CONTACT_MAIL_URL: ""
 AD2IMAGE_URL: "http://localhost:8084"  # Base URL of the ad2image service
-OWNER_PROFILE_URL_TEMPLATE: "https://intranet.muenchen.de/person/{uid}"  # Used for providing a link to a external user profile for a given assistant. {uid} is replaced with the owner id
+OWNER_PROFILE_URL_TEMPLATE: "https://intranet.example.org/person/{uid}"  # {uid} is replaced with the owner ID
 
 
 # Backend settings
@@ -84,8 +90,10 @@ MODELS:
 
 # SSO Settings (optional - nested under SSO key)
 SSO:
-  ROLE: "lhm-ab-mucgpt-user"
-  ADMIN_ROLE: "lhm-ab-mucgpt-admin"
+  ROLE: "mucgpt-user"
+  ADMIN_ROLE: "mucgpt-admin"
+  USER_ID_CLAIM: "user_id"
+  ORGANIZATION_UNIT_CLAIM: "organization_unit"
 
 # Langfuse Settings (optional - nested under LANGFUSE key)
 LANGFUSE:

@@ -50,6 +50,7 @@ import { MenuItem } from "../../ui/MenuItem";
 const APP_NAV_COLLAPSED_KEY = "APP_NAV_COLLAPSED";
 const MOBILE_LAYOUT_BREAKPOINT = 640;
 
+/** Formats a date as d-m-yyyy for the display version string. */
 const formatDate = (date: Date) => {
     const formatted_date = date.getDate() + "-" + (date.getMonth() + 1) + "-" + date.getFullYear();
     return formatted_date;
@@ -92,6 +93,7 @@ const AppShell = ({
     const [termsOfUseOpen, setTermsOfUseOpen] = useState<boolean>(false);
 
     useEffect(() => {
+        /** Tracks the viewport against the mobile breakpoint and closes mobile chrome on desktop. */
         const handleResize = () => {
             const nextIsMobile = window.innerWidth <= MOBILE_LAYOUT_BREAKPOINT;
             setIsMobile(nextIsMobile);
@@ -192,9 +194,8 @@ const AppShell = ({
                 </a>
 
                 <div
-                    className={`${styles.shellBody} ${!isMobile && isSidebarCollapsed ? styles.shellBodyCollapsed : ""} ${
-                        isMobile ? styles.shellBodyMobile : ""
-                    }`}
+                    className={`${styles.shellBody} ${!isMobile && isSidebarCollapsed ? styles.shellBodyCollapsed : ""} ${isMobile ? styles.shellBodyMobile : ""
+                        }`}
                 >
                     {!isMobile && (
                         <aside className={styles.sidebarColumn}>
@@ -261,6 +262,7 @@ const AppShell = ({
     );
 };
 
+/** Top-level page shell: loads the deployment config, wires providers and renders the AppShell. */
 export const Layout = () => {
     const navigate = useNavigate();
 
@@ -363,7 +365,7 @@ export const Layout = () => {
                         ) : isUnauthorized ? (
                             <Unauthorized redirectUrl={unauthorizedRedirectUrl} />
                         ) : (
-                            <TranscriptionSettingsProvider deploymentEnabled={config.transcription_enabled}>
+                            <TranscriptionSettingsProvider deploymentEnabled={config.transcription_enabled} defaultModelId={config.transcription_default_model}>
                                 <ToolsProvider>
                                     <UnifiedHistoryProvider>
                                         <AppShell

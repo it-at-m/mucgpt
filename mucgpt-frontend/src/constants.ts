@@ -5,7 +5,7 @@ import { IndexedDBStorage } from "./service/indexedDBStorage";
 export const DEFAULT_APP_CONFIG: ApplicationConfig = {
     models: [
         {
-            llm_name: "KIESGPT",
+            llm_name: "example-model",
             max_input_tokens: 128000,
             description: "",
             knowledge_cut_off: "",
@@ -52,11 +52,12 @@ export const DEFAULT_APP_CONFIG: ApplicationConfig = {
     assistant_version: "DEV 1.0.0",
     document_processing_enabled: false,
     transcription_enabled: false,
+    transcription_default_model: null,
     ai_act_compliance_check_enabled: true,
     faq_url: "https://ki.muenchen.de",
     incident_report_url: "https://ki.muenchen.de",
     feature_request_url: "https://ki.muenchen.de",
-    admin_role: "lhm-ab-mucgpt-admin"
+    admin_role: "mucgpt-admin"
 };
 
 export const CREATIVITY_LOW = "low";

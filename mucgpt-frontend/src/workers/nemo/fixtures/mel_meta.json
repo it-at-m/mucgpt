@@ -1,0 +1,14 @@
+{
+    "cases": [
+        {
+            "samples": 16000,
+            "totalFrames": 101,
+            "validFrames": 101
+        },
+        {
+            "samples": 4096,
+            "totalFrames": 26,
+            "validFrames": 26
+        }
+    ]
+}

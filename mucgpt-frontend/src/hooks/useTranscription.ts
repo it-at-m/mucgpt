@@ -3,6 +3,7 @@ import { TranscriptionSettingsContext, type ITranscriptionSettings } from "../co
 
 export type { TranscriptionStatus, TranscriptionLanguage } from "../components/TranscriptionSettings/TranscriptionSettingsContext";
 
+/** Access hook for the transcription settings, status and actions (context re-export). */
 export function useTranscription(): ITranscriptionSettings {
     return useContext(TranscriptionSettingsContext);
 }

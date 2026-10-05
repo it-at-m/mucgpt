@@ -10,10 +10,12 @@ from ag_ui.core import (
     RunErrorEvent,
     RunFinishedEvent,
     RunStartedEvent,
-    StepFinishedEvent,
     TextMessageChunkEvent,
     ToolCallChunkEvent,
     ToolCallResultEvent,
+)
+from ag_ui.core import (
+    TokenUsage as AgUiTokenUsage,
 )
 from langchain_core.messages import (
     AIMessage,
@@ -76,6 +78,23 @@ def _usage_from_token_usage(token_usage: TokenUsage) -> Usage | None:
         cache_read_tokens=token_usage.cache_read_tokens,
         context_tokens=token_usage.context_tokens,
     )
+
+
+def _ag_ui_usage_from_token_usage(
+    token_usage: TokenUsage, model: str | None
+) -> list[AgUiTokenUsage] | None:
+    if token_usage.context_tokens is None:
+        return None
+    return [
+        AgUiTokenUsage(
+            model=model,
+            input_tokens=token_usage.prompt_tokens,
+            output_tokens=token_usage.completion_tokens,
+            total_tokens=token_usage.prompt_tokens + token_usage.completion_tokens,
+            reasoning_tokens=token_usage.reasoning_tokens or None,
+            cached_input_tokens=token_usage.cache_read_tokens or None,
+        )
+    ]
 
 
 def _message_chunk_trace_event(
@@ -628,8 +647,6 @@ class MUCGPTAgentExecutor:
                         trace_events.append(
                             {"stream": "updates", "content": _json_safe(data)}
                         )
-                        for node_name in data:
-                            yield StepFinishedEvent(step_name=node_name)
                         continue
 
                     chunk, metadata = data
@@ -698,6 +715,16 @@ class MUCGPTAgentExecutor:
                     type=EventType.RUN_FINISHED,
                     thread_id=conversation_id,
                     run_id=run_id,
+                    usage=_ag_ui_usage_from_token_usage(
+                        config["configurable"]["token_usage"], model
+                    ),
+                    metadata={
+                        "mucgpt": {
+                            "contextTokens": config["configurable"][
+                                "token_usage"
+                            ].context_tokens
+                        }
+                    },
                 )
             except Exception as ex:
                 _write_stream_trace_span(messages, trace_events)

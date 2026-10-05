@@ -277,7 +277,7 @@ export const makeApiRequest = async (
     let user_tokens = 0;
     let cache_read_tokens = 0;
     let streamed_tokens = 0;
-    let context_tokens = 0;
+    let context_tokens: number | undefined;
 
     // Initialize tool stream handler for processing tool calls
     const toolStreamHandler = new ToolStreamHandler();
@@ -288,9 +288,18 @@ export const makeApiRequest = async (
         user: question,
         response: { ...askResponse }
     };
-    isLoadingRef.current = false;
-    onLoadingChange?.(false);
-    dispatch({ type: "ADD_ANSWER", payload: initialMessage });
+    let initialMessageAdded = false;
+    const showInitialMessage = () => {
+        if (initialMessageAdded) return;
+        initialMessageAdded = true;
+        isLoadingRef.current = false;
+        onLoadingChange?.(false);
+        dispatch({ type: "ADD_ANSWER", payload: initialMessage });
+    };
+
+    // The legacy fetch has already received its response headers. AG-UI keeps
+    // the loading indicator visible until the first displayable event arrives.
+    if (!agUiEnabled) showInitialMessage();
 
     // Ensure the currently generating answer placeholder is brought into view
     // immediately after submit. We retry because the ref may not be attached
@@ -347,18 +356,40 @@ export const makeApiRequest = async (
     if (agUiEnabled) {
         let runError: Error | undefined;
         const agent = new MucgptAgUiAgent(request);
-        await agent.runAgent(undefined, {
-            onEvent: ({ event }) => {
-                onAgUiEvent?.(event);
-            },
-            onTextMessageContentEvent: ({ event }) => {
-                textBuffer += event.delta;
-                scheduleUpdate();
-            },
-            onRunErrorEvent: ({ event }) => {
-                runError = new Error(event.message);
-            }
-        });
+        const eventSubscription = onAgUiEvent
+            ? agent.subscribe({
+                  onEvent: ({ event }) => onAgUiEvent(event)
+              })
+            : undefined;
+        try {
+            await agent.runAgent(undefined, {
+                onTextMessageContentEvent: ({ event }) => {
+                    showInitialMessage();
+                    textBuffer += event.delta;
+                    scheduleUpdate();
+                },
+                onRunErrorEvent: ({ event }) => {
+                    showInitialMessage();
+                    runError = new Error(event.message);
+                },
+                onRunFinishedEvent: ({ event }) => {
+                    showInitialMessage();
+                    for (const usage of event.usage ?? []) {
+                        user_tokens += usage.inputTokens ?? 0;
+                        cache_read_tokens += usage.cachedInputTokens ?? 0;
+                        streamed_tokens += usage.outputTokens ?? 0;
+                    }
+
+                    const metadata = event.metadata as { mucgpt?: { contextTokens?: unknown } } | undefined;
+                    const reportedContextTokens = metadata?.mucgpt?.contextTokens;
+                    if (typeof reportedContextTokens === "number") {
+                        context_tokens = reportedContextTokens;
+                    }
+                }
+            });
+        } finally {
+            eventSubscription?.unsubscribe();
+        }
         if (runError) throw runError;
     } else {
         const reader = legacyResponse!.body!.getReader();
@@ -445,7 +476,7 @@ export const makeApiRequest = async (
         answer: finalCombinedContent,
         tokens: streamed_tokens,
         user_tokens: user_tokens,
-        context_tokens,
+        ...(context_tokens !== undefined ? { context_tokens } : {}),
         usage_cost: usageCost,
         usage_model: LLM.llm_name,
         usage_max_input_tokens: LLM.max_input_tokens,

@@ -145,6 +145,7 @@ const CONFIG_RESPONSE: ApplicationConfig = {
     transcription_enabled: true,
     transcription_default_model: "onnx-community/whisper-small",
     ai_act_compliance_check_enabled: true,
+    ag_ui_enabled: true,
     footer_link_url: "https://intranet.example.org",
     footer_label: "Example Organization",
     faq_url: "https://intranet.example.org/help",
@@ -1061,7 +1062,13 @@ export const handlers = [
                     send({ type: "TEXT_MESSAGE_CHUNK", messageId, role: "assistant", delta });
                     await delay(50);
                 }
-                send({ type: "RUN_FINISHED", threadId, runId });
+                send({
+                    type: "RUN_FINISHED",
+                    threadId,
+                    runId,
+                    usage: [{ model: "gpt-4o-mini", inputTokens: 120, outputTokens: 30, totalTokens: 150 }],
+                    metadata: { mucgpt: { contextTokens: 150 } }
+                });
                 controller.close();
             }
         });

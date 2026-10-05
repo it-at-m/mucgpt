@@ -1062,7 +1062,13 @@ export const handlers = [
                     send({ type: "TEXT_MESSAGE_CHUNK", messageId, role: "assistant", delta });
                     await delay(50);
                 }
-                send({ type: "RUN_FINISHED", threadId, runId });
+                send({
+                    type: "RUN_FINISHED",
+                    threadId,
+                    runId,
+                    usage: [{ model: "gpt-4o-mini", inputTokens: 120, outputTokens: 30, totalTokens: 150 }],
+                    metadata: { mucgpt: { contextTokens: 150 } }
+                });
                 controller.close();
             }
         });

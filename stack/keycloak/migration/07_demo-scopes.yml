@@ -1,9 +1,9 @@
-id: lhm_scopes
+id: demo_scopes
 author: Default
 realm: local_realm
 changes:
   - addClientScope:
-      name: LHM
+      name: demo
       displayOnConsentScreen: false
       includeInTokenScope: true
       protocolMappers:
@@ -52,41 +52,30 @@ changes:
             userinfo.token.claim: "true"
             id.token.claim: "true"
             access.token.claim: "false"
-        - name: lhmObjectID
+        - name: user_id
           protocol: openid-connect
           protocolMapper: oidc-usermodel-attribute-mapper
           config:
-            claim.name: "lhmObjectID"
-            user.attribute: "lhmObjectID"
+            claim.name: "user_id"
+            user.attribute: "user_id"
             userinfo.token.claim: "true"
             id.token.claim: "true"
             access.token.claim: "true"
             aggregate.attrs: "false"
             multivalued: "false"
-        - name: telephoneNumber
+        - name: organization_unit
           protocol: openid-connect
           protocolMapper: oidc-usermodel-attribute-mapper
           config:
-            claim.name: "telephoneNumber"
-            user.attribute: "telephoneNumber"
-            userinfo.token.claim: "true"
-            id.token.claim: "true"
-            access.token.claim: "false"
-            aggregate.attrs: "false"
-            multivalued: "false"
-        - name: department
-          protocol: openid-connect
-          protocolMapper: oidc-usermodel-attribute-mapper
-          config:
-            claim.name: "department"
-            user.attribute: "department"
+            claim.name: "organization_unit"
+            user.attribute: "organization_unit"
             userinfo.token.claim: "true"
             id.token.claim: "true"
             access.token.claim: "true"
             aggregate.attrs: "false"
             multivalued: "false"
   - addClientScope:
-      name: LHM_Extended
+      name: demo_extended
       displayOnConsentScreen: false
       includeInTokenScope: true
       protocolMappers:
@@ -105,7 +94,7 @@ changes:
   # assign optional scopes to client
   - assignDefaultClientScope:
       clientId: mucgpt
-      clientScopeName: LHM
+      clientScopeName: demo
   - assignOptionalClientScope:
       clientId: mucgpt
-      clientScopeName: LHM_Extended
+      clientScopeName: demo_extended

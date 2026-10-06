@@ -7,7 +7,7 @@ import { WikiTutorial, WikiTutorialSection, wikiAnchor } from "./WikiTutorial";
 import { useConfigContext } from "../../../context/ConfigContext";
 import styles from "./HighRiskTutorial.module.css";
 
-const EU_AI_ACT_ANNEX_URL = "https://ai-act-law.eu/de/anhang/3/";
+const EU_AI_ACT_ANNEX_URL = "https://ai-act-service-desk.ec.europa.eu/de/ai-act/annex-3";
 
 const SectionHeading = ({ icon, title }: { icon: ReactNode; title: string }) => (
     <div className={styles.sectionTitle}>

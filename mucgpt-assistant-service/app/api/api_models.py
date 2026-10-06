@@ -78,8 +78,8 @@ class DirectoryNode(BaseModel):
 
     shortname: str | None = Field(
         None,
-        description="Short identifier (e.g., lhmOUShortname)",
-        example="S-III-U/BNF21",
+        description="Short identifier from the configured directory attribute",
+        example="TEAM-A",
     )
     name: str = Field(
         ..., description="Human readable name of the org unit", example="Team 2.1A"
@@ -91,10 +91,14 @@ class DirectoryNode(BaseModel):
     model_config = ConfigDict(
         json_schema_extra={
             "example": {
-                "shortname": "S-III-U/BNF21",
-                "name": "NQ Tollkirschenweg 6",
+                "shortname": "TEAM-A",
+                "name": "Example Team A",
                 "children": [
-                    {"shortname": "S-III-U/BNF21A", "name": "Team 2.1A", "children": []}
+                    {
+                        "shortname": "TEAM-A-1",
+                        "name": "Example Team A.1",
+                        "children": [],
+                    }
                 ],
             }
         }
@@ -102,9 +106,9 @@ class DirectoryNode(BaseModel):
 
 
 class UserLookupResponse(BaseModel):
-    """Response payload for LDAP user lookup by lhmobjectid."""
+    """Response payload for LDAP user lookup by user ID."""
 
-    lhmobjectid: str = Field(..., description="LHM object id", example="123456789")
+    user_id: str = Field(..., description="Configured user ID", example="demo-user-1")
     givenName: str | None = Field(
         None, description="User first name from LDAP", example="Max"
     )
@@ -114,21 +118,19 @@ class UserLookupResponse(BaseModel):
     mail: str | None = Field(
         None,
         description="User contact email address from LDAP",
-        example="max.mustermann@muenchen.de",
+        example="demo.user@example.org",
     )
     organizationalunit: str | None = Field(
         None,
         description="Organizational unit value from LDAP",
-        example="RIT-GL5",
+        example="DEPT-EXAMPLE",
     )
 
 
 class OwnerDetailsResponse(BaseModel):
     """Enriched owner information resolved from LDAP."""
 
-    user_id: str = Field(
-        ..., description="Owner user id (lhmobjectid)", example="12345"
-    )
+    user_id: str = Field(..., description="Owner user ID", example="demo-user-1")
     username: str = Field(
         ..., description="Display-friendly owner name", example="Max Mustermann"
     )
@@ -141,12 +143,12 @@ class OwnerDetailsResponse(BaseModel):
     mail: str | None = Field(
         None,
         description="Owner email address from LDAP",
-        example="max.mustermann@muenchen.de",
+        example="owner@example.org",
     )
     organizationalunit: str | None = Field(
         None,
         description="Owner organizational unit from LDAP",
-        example="RIT-GL5",
+        example="DEPT-EXAMPLE",
     )
 
 
@@ -191,7 +193,7 @@ class ToolBase(BaseModel):
     config: dict[str, Any] | None = Field(
         None,
         description="Tool-specific configuration settings",
-        example={"url": "muenchen.de", "max_results": 5},
+        example={"url": "example.org", "max_results": 5},
     )
 
     # replaced inner Config with model_config
@@ -200,7 +202,7 @@ class ToolBase(BaseModel):
         json_schema_extra={
             "example": {
                 "id": "WEB_SEARCH",
-                "config": {"url": "muenchen.de", "max_results": 5},
+                "config": {"url": "example.org", "max_results": 5},
             }
         },
     )
@@ -284,7 +286,7 @@ class AssistantBase(BaseModel):
         [],
         description="List of toos that this assistant can use",
         example=[
-            {"id": "WEB_SEARCH", "config": {"url": "muenchen.de", "max_results": 5}}
+            {"id": "WEB_SEARCH", "config": {"url": "example.org", "max_results": 5}}
         ],
     )
     owner_ids: list[str] | None = Field(
@@ -309,7 +311,7 @@ class AssistantBase(BaseModel):
                 "tools": [
                     {
                         "id": "WEB_SEARCH",
-                        "config": {"url": "muenchen.de", "max_results": 5},
+                        "config": {"url": "example.org", "max_results": 5},
                     }
                 ],
                 "owner_ids": ["12345"],
@@ -362,7 +364,7 @@ class AssistantCreate(AssistantBase):
                 "tools": [
                     {
                         "id": "WEB_SEARCH",
-                        "config": {"url": "muenchen.de", "max_results": 5},
+                        "config": {"url": "example.org", "max_results": 5},
                     }
                 ],
                 "owner_ids": ["12345"],
@@ -470,7 +472,7 @@ class AssistantUpdate(BaseModel):
         None,
         description="List of toos that this assistant can use",
         example=[
-            {"id": "WEB_SEARCH", "config": {"url": "muenchen.de", "max_results": 5}}
+            {"id": "WEB_SEARCH", "config": {"url": "example.org", "max_results": 5}}
         ],
     )
     owner_ids: list[str] | None = Field(
@@ -622,7 +624,7 @@ class AssistantResponse(BaseModel):
                     "tools": [
                         {
                             "id": "WEB_SEARCH",
-                            "config": {"url": "muenchen.de", "max_results": 5},
+                            "config": {"url": "example.org", "max_results": 5},
                         }
                     ],
                     "owner_ids": ["12345"],

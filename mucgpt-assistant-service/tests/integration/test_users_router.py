@@ -1,6 +1,7 @@
 import importlib
 
 import pytest
+from fastapi.testclient import TestClient
 from sqlalchemy import select
 
 from api.api_models import (
@@ -25,40 +26,44 @@ headers = {
 
 
 @pytest.mark.integration
-def test_lookup_user_by_lhmobjectid_success(test_client, monkeypatch):
-    def _lookup(_self, lhmobjectid: str):
-        assert lhmobjectid == "12345"
+def test_lookup_user_by_user_id_success(
+    test_client: TestClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    def _lookup(_self, user_id: str):
+        assert user_id == "demo-user-1"
         return {
-            "lhmobjectid": "12345",
+            "user_id": "demo-user-1",
             "givenName": "Max",
             "sn": "Mustermann",
-            "mail": "max.mustermann@muenchen.de",
-            "organizationalunit": "RIT-GL5",
+            "mail": "demo.user@example.org",
+            "organizationalunit": "demo-team-a",
         }
 
     monkeypatch.setattr(
         users_router_module.LDAPPersonLookupLoader,
-        "lookup_by_lhmobjectid",
+        "lookup_by_user_id",
         _lookup,
     )
 
-    response = test_client.get("/user/lookup/12345", headers=headers)
+    response = test_client.get("/user/lookup/demo-user-1", headers=headers)
     assert response.status_code == 200
 
     payload = UserLookupResponse.model_validate(response.json())
-    assert payload.lhmobjectid == "12345"
+    assert payload.user_id == "demo-user-1"
     assert payload.givenName == "Max"
     assert payload.sn == "Mustermann"
-    assert payload.mail == "max.mustermann@muenchen.de"
-    assert payload.organizationalunit == "RIT-GL5"
+    assert payload.mail == "demo.user@example.org"
+    assert payload.organizationalunit == "demo-team-a"
 
 
 @pytest.mark.integration
-def test_lookup_user_by_lhmobjectid_not_found(test_client, monkeypatch):
+def test_lookup_user_by_user_id_not_found(
+    test_client: TestClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
     monkeypatch.setattr(
         users_router_module.LDAPPersonLookupLoader,
-        "lookup_by_lhmobjectid",
-        lambda _self, _lhmobjectid: None,
+        "lookup_by_user_id",
+        lambda _self, _user_id: None,
     )
 
     response = test_client.get("/user/lookup/does-not-exist", headers=headers)
@@ -67,38 +72,42 @@ def test_lookup_user_by_lhmobjectid_not_found(test_client, monkeypatch):
 
 
 @pytest.mark.integration
-def test_lookup_user_by_lhmobjectid_ldap_unavailable(test_client, monkeypatch):
-    def _raise_error(_self, _lhmobjectid: str):
+def test_lookup_user_by_user_id_ldap_unavailable(
+    test_client: TestClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    def _raise_error(_self, _user_id: str):
         raise LDAPPersonLookupError("LDAP lookup is disabled")
 
     monkeypatch.setattr(
         users_router_module.LDAPPersonLookupLoader,
-        "lookup_by_lhmobjectid",
+        "lookup_by_user_id",
         _raise_error,
     )
 
-    response = test_client.get("/user/lookup/12345", headers=headers)
+    response = test_client.get("/user/lookup/demo-user-1", headers=headers)
     assert response.status_code == 503
     assert "disabled" in response.json()["detail"].lower()
 
 
 @pytest.mark.integration
-def test_lookup_user_by_lhmobjectid_missing_required_id(test_client, monkeypatch):
+def test_lookup_user_by_user_id_missing_required_id(
+    test_client: TestClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
     monkeypatch.setattr(
         users_router_module.LDAPPersonLookupLoader,
-        "lookup_by_lhmobjectid",
-        lambda _self, _lhmobjectid: {
-            "lhmobjectid": None,
+        "lookup_by_user_id",
+        lambda _self, _user_id: {
+            "user_id": None,
             "givenName": "Max",
             "sn": "Mustermann",
-            "mail": "max.mustermann@muenchen.de",
-            "organizationalunit": "RIT-GL5",
+            "mail": "demo.user@example.org",
+            "organizationalunit": "demo-team-a",
         },
     )
 
-    response = test_client.get("/user/lookup/12345", headers=headers)
+    response = test_client.get("/user/lookup/demo-user-1", headers=headers)
     assert response.status_code == 502
-    assert "required lhmobjectid" in response.json()["detail"]
+    assert "required user_id" in response.json()["detail"]
 
 
 @pytest.mark.integration

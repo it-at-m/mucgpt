@@ -7,7 +7,7 @@
         "@fontsource/montserrat": "^5.2.8",
         "@huggingface/transformers": "^4.2.0",
         "@react-spring/web": "10.0.4",
-        "dompurify": "3.4.13",
+        "dompurify": "3.4.16",
         "i18next": "25.10.10",
         "idb": "8.0.3",
         "markmap-common": "0.18.9",
@@ -40,7 +40,7 @@
         "@types/react-syntax-highlighter": "15.5.13",
         "@vite-pwa/assets-generator": "^1.0.2",
         "@vitejs/plugin-react": "6.0.3",
-        "brace-expansion": "5.0.9",
+        "brace-expansion": "5.0.12",
         "eslint": "9.39.4",
         "eslint-plugin-react": "7.37.5",
         "gh-pages": "6.3.0",
@@ -61,7 +61,7 @@
         "brace-expansion@^1.1.7": "1.1.18",
         "brace-expansion@^2.0.1": "2.1.4",
         "brace-expansion@^4.0.0": "4.0.1",
-        "brace-expansion@^5.0.5": "5.0.9",
+        "brace-expansion@^5.0.5": "5.0.12",
         "@emnapi/runtime": "1.11.3",
         "@emnapi/core": "1.11.3",
         "protobufjs": "7.6.5",
@@ -94,5 +94,5 @@
         "watch": "tsc && vite build --watch"
     },
     "type": "module",
-    "version": "0.33.0"
+    "version": "0.34.2"
 }

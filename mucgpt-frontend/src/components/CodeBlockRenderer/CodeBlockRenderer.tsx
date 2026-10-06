@@ -1,13 +1,13 @@
 import { Button } from "@fluentui/react-components";
 import { Copy24Regular, CheckmarkSquare24Regular } from "@fluentui/react-icons";
-import { ClassAttributes, HTMLAttributes, useState, useCallback } from "react";
+import { ClassAttributes, HTMLAttributes, useState, useCallback, useContext } from "react";
 import { ExtraProps } from "react-markdown";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { dark, duotoneLight } from "react-syntax-highlighter/dist/esm/styles/prism";
 import styles from "./CodeBlockRenderer.module.css";
 import { Mermaid, MermaidProps } from "./Mermaid";
 import { DrawIO, DrawIOProps } from "./DrawIO";
-import { STORAGE_KEYS } from "../../pages/layout/LayoutHelper";
+import { AppThemeContext } from "../../ui/theme/AppThemeContext";
 import { FragmentManager } from "../Fragments/FragmentManager/FragmentManager";
 import { useAllowDrawioRender } from "./drawioRenderContext";
 
@@ -26,11 +26,6 @@ type CodeBlockRendererProps = ClassAttributes<HTMLElement> & HTMLAttributes<HTML
 const getLanguageFromClassName = (className?: string): string => {
     const match = LANGUAGE_PATTERN.exec(className || "");
     return match ? match[1] : "";
-};
-
-const getThemePreference = (): boolean => {
-    const storedTheme = localStorage.getItem(STORAGE_KEYS.SETTINGS_IS_LIGHT_THEME);
-    return storedTheme === null ? true : storedTheme === "true";
 };
 
 const isFragmentLanguage = (language?: string): boolean => {
@@ -53,7 +48,7 @@ export default function CodeBlockRenderer(props: CodeBlockRendererProps) {
     const [copied, setCopied] = useState<boolean>(false);
     const language = getLanguageFromClassName(className);
     const text = String(children);
-    const lightThemePref = getThemePreference();
+    const { isLight } = useContext(AppThemeContext);
     const allowDrawioRender = useAllowDrawioRender();
 
     // Debug logging
@@ -79,7 +74,7 @@ export default function CodeBlockRenderer(props: CodeBlockRendererProps) {
     if (isMermaidDiagram(language, text)) {
         const mermaidProps: MermaidProps = {
             text: text,
-            darkTheme: !lightThemePref
+            darkTheme: !isLight
         };
         return <Mermaid {...mermaidProps} />;
     }
@@ -88,7 +83,7 @@ export default function CodeBlockRenderer(props: CodeBlockRendererProps) {
     if (isDrawioDiagram(language) && allowDrawioRender) {
         const drawioProps: DrawIOProps = {
             text: text,
-            darkTheme: !lightThemePref
+            darkTheme: !isLight
         };
         return <DrawIO {...drawioProps} />;
     }
@@ -102,7 +97,7 @@ export default function CodeBlockRenderer(props: CodeBlockRendererProps) {
                 <SyntaxHighlighter
                     {...(rest as any)}
                     children={text.replace(/\n$/, "")}
-                    style={lightThemePref ? duotoneLight : dark}
+                    style={isLight ? duotoneLight : dark}
                     language={language}
                     PreTag="div"
                     showLineNumbers={false}

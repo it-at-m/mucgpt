@@ -1,29 +1,29 @@
-id: add_lhm_core_scope
+id: add_mucgpt_core_scope
 author: Default
 realm: local_realm
 changes:
   - addClientScope:
-      name: lhm-core
+      name: mucgpt-core
       displayOnConsentScreen: false
       includeInTokenScope: true
       protocolMappers:
-        - name: lhmObjectID
+        - name: user_id
           protocol: openid-connect
           protocolMapper: oidc-usermodel-attribute-mapper
           config:
-            claim.name: "lhmObjectID"
-            user.attribute: "lhmObjectID"
+            claim.name: "user_id"
+            user.attribute: "user_id"
             userinfo.token.claim: "true"
             id.token.claim: "true"
             access.token.claim: "true"
             aggregate.attrs: "false"
             multivalued: "false"
-        - name: department
+        - name: organization_unit
           protocol: openid-connect
           protocolMapper: oidc-usermodel-attribute-mapper
           config:
-            claim.name: "department"
-            user.attribute: "department"
+            claim.name: "organization_unit"
+            user.attribute: "organization_unit"
             userinfo.token.claim: "true"
             id.token.claim: "true"
             access.token.claim: "true"
@@ -32,4 +32,4 @@ changes:
 
   - assignDefaultClientScope:
       clientId: mucgpt
-      clientScopeName: lhm-core
+      clientScopeName: mucgpt-core

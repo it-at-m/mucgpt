@@ -1068,6 +1068,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
         isDeletedAssistant,
         lastQuestion,
         isLegacyAssistant,
+        isAssistantUnavailable,
         t,
         availableLLMs,
         assistantConfig.default_model,

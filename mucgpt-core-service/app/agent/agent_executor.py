@@ -653,6 +653,9 @@ class MUCGPTAgentExecutor:
                             chunk, metadata if isinstance(metadata, dict) else {}
                         )
                     )
+                    # dont stream summarization chunks
+                    if metadata.get("lc_source") == "summarization":
+                        continue
                     if isinstance(chunk, ToolMessage):
                         content = chunk.content
                         yield ToolCallResultEvent(

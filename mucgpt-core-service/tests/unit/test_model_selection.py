@@ -3,7 +3,7 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 from langchain.agents.middleware import ModelRequest, ModelResponse
 from langchain_core.language_models.fake_chat_models import FakeListChatModel
-from langchain_core.messages import AIMessage
+from langchain_core.messages import AIMessage, SystemMessage
 from langchain_core.tools import tool
 from langchain_openai import ChatOpenAI
 from langgraph.runtime import Runtime
@@ -16,6 +16,19 @@ from agent.middleware import (
 )
 from config.model_provider import ModelRegistry, ModelsConfigurationException
 from config.settings import ModelsConfig
+
+
+CURRENT_DATE = "2026-10-06"
+CURRENT_WEEKDAY = "Tuesday"
+
+
+def _freeze_current_date(monkeypatch: pytest.MonkeyPatch) -> None:
+    mocked_datetime = MagicMock()
+    mocked_datetime.now.return_value.date.return_value.weekday.return_value = 1
+    mocked_datetime.now.return_value.date.return_value.isoformat.return_value = (
+        CURRENT_DATE
+    )
+    monkeypatch.setattr("agent.middleware.datetime", mocked_datetime)
 
 
 @tool
@@ -69,6 +82,39 @@ def test_wrap_model_call_selects_model_and_applies_settings(
         "user": "POR",
         "extra_body": {"metadata": {"tags": ["assistant-1"]}},
     }
+
+
+def test_wrap_model_call_adds_current_date_to_system_message(monkeypatch) -> None:
+    _freeze_current_date(monkeypatch)
+    selected_model = FakeListChatModel(responses=["selected"])
+    monkeypatch.setattr(ModelRegistry, "get_model", lambda _name=None: selected_model)
+    request = _model_request(RequestContext())
+    request = request.override(system_message=SystemMessage(content="Instructions"))
+    handler = MagicMock(return_value=ModelResponse(result=[]))
+
+    ContextMiddleware().wrap_model_call(request, handler)
+
+    system_message = handler.call_args.args[0].system_message
+    assert isinstance(system_message, SystemMessage)
+    assert system_message.content == (
+        "Instructions\n\nCurrent date (Europe/Berlin): "
+        f"{CURRENT_WEEKDAY}, {CURRENT_DATE}"
+    )
+
+
+def test_wrap_model_call_adds_date_without_request_context(monkeypatch) -> None:
+    _freeze_current_date(monkeypatch)
+    selected_model = FakeListChatModel(responses=["selected"])
+    monkeypatch.setattr(ModelRegistry, "get_model", lambda _name=None: selected_model)
+    handler = MagicMock(return_value=ModelResponse(result=[]))
+
+    ContextMiddleware().wrap_model_call(_model_request(None), handler)
+
+    system_message = handler.call_args.args[0].system_message
+    assert isinstance(system_message, SystemMessage)
+    assert system_message.content == (
+        f"Current date (Europe/Berlin): {CURRENT_WEEKDAY}, {CURRENT_DATE}"
+    )
 
 
 def test_wrap_model_call_filters_tools_from_request_context(

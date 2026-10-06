@@ -1,7 +1,9 @@
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
+from datetime import datetime
 from typing import Any
 from xml.sax.saxutils import escape, quoteattr
+from zoneinfo import ZoneInfo
 
 from langchain.agents.middleware import (
     AgentMiddleware,
@@ -28,6 +30,16 @@ from config.model_provider import ModelRegistry
 from core.logtools import getLogger
 
 logger = getLogger(name="agent-middleware")
+
+WEEKDAYS = (
+    "Monday",
+    "Tuesday",
+    "Wednesday",
+    "Thursday",
+    "Friday",
+    "Saturday",
+    "Sunday",
+)
 
 
 @dataclass
@@ -273,11 +285,33 @@ def _get_assistant_id_from_request(request: ModelRequest) -> str | None:
     return str(assistant_id) if assistant_id else None
 
 
+def _add_current_date(system_message: SystemMessage | None) -> SystemMessage:
+    """Add the current date in Munich's timezone to the effective system message."""
+    current_date = datetime.now(ZoneInfo("Europe/Berlin")).date()
+    date_context = (
+        f"Current date (Europe/Berlin): {WEEKDAYS[current_date.weekday()]}, "
+        f"{current_date.isoformat()}"
+    )
+    if system_message is None:
+        return SystemMessage(content=date_context)
+
+    content = system_message.content
+    if isinstance(content, str):
+        content = f"{content}\n\n{date_context}"
+    else:
+        content = [*content, date_context]
+
+    return system_message.model_copy(update={"content": content})
+
+
 def _configure_model_request(request: ModelRequest) -> ModelRequest:
     """Select a concrete model and apply request-scoped invocation settings."""
+    system_message = _add_current_date(request.system_message)
     runtime_context = _get_request_context(request)
     if runtime_context is None:
-        return request.override(model=ModelRegistry.get_model())
+        return request.override(
+            model=ModelRegistry.get_model(), system_message=system_message
+        )
 
     model_settings = {
         **request.model_settings,
@@ -293,7 +327,12 @@ def _configure_model_request(request: ModelRequest) -> ModelRequest:
 
     model = ModelRegistry.get_model(runtime_context.model_name)
     model_settings = ModelRegistry.normalize_model_settings(model, model_settings)
-    return request.override(model=model, model_settings=model_settings)
+
+    return request.override(
+        model=model,
+        model_settings=model_settings,
+        system_message=system_message,
+    )
 
 
 def _filter_request_tools(request: ModelRequest) -> ModelRequest:

@@ -96,6 +96,8 @@ const Chat = () => {
     const { tools } = useToolsContext();
     const { user } = useContext(UserContext);
     const { ag_ui_enabled: agUiEnabled } = useConfigContext();
+    // The raw AG-UI event log is a debugging aid; users see the run activity instead.
+    const showAgUiEventLog = import.meta.env.DEV && agUiEnabled;
 
     // Independent states
     const [error, setError] = useState<unknown>();
@@ -294,7 +296,7 @@ const Chat = () => {
                     setLoadingState,
                     true,
                     agUiEnabled,
-                    handleAgUiEvent,
+                    showAgUiEventLog ? handleAgUiEvent : undefined,
                     setRunActivity
                 );
             } catch (e) {
@@ -304,7 +306,19 @@ const Chat = () => {
                 setIsStreaming(false);
             }
         },
-        [answers, creativity, LLM, storageService, fetchHistory, selectedTools, setToolStatuses, setLoadingState, agUiEnabled, handleAgUiEvent]
+        [
+            answers,
+            creativity,
+            LLM,
+            storageService,
+            fetchHistory,
+            selectedTools,
+            setToolStatuses,
+            setLoadingState,
+            agUiEnabled,
+            showAgUiEventLog,
+            handleAgUiEvent
+        ]
     );
 
     // Regenerate-Funktion
@@ -863,7 +877,14 @@ const Chat = () => {
                     systemPrompt={systemPrompt}
                     setSystemPrompt={onSystemPromptChanged}
                 />
-                <AgUiEventDrawer open={isEventDrawerOpen} events={agUiEvents} onClose={() => setIsEventDrawerOpen(false)} onClear={() => setAgUiEvents([])} />
+                {showAgUiEventLog && (
+                    <AgUiEventDrawer
+                        open={isEventDrawerOpen}
+                        events={agUiEvents}
+                        onClose={() => setIsEventDrawerOpen(false)}
+                        onClear={() => setAgUiEvents([])}
+                    />
+                )}
                 <ChatLayout
                     answers={answerList}
                     input={inputComponent}
@@ -877,7 +898,7 @@ const Chat = () => {
                     onLLMSelectionChange={onLLMSelectionChange}
                     actions={
                         <>
-                            {agUiEnabled && (
+                            {showAgUiEventLog && (
                                 <Button
                                     appearance="transparent"
                                     icon={<Code24Regular />}
@@ -913,7 +934,7 @@ const Chat = () => {
             onCreativityChanged,
             systemPrompt,
             onSystemPromptChanged,
-            agUiEnabled,
+            showAgUiEventLog,
             isEventDrawerOpen,
             agUiEvents
         ]

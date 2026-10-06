@@ -94,5 +94,5 @@
         "watch": "tsc && vite build --watch"
     },
     "type": "module",
-    "version": "0.34.1"
+    "version": "0.34.2"
 }

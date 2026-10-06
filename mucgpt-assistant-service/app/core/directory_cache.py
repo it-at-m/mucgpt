@@ -71,16 +71,20 @@ class _CacheEnvelope(TypedDict):
     loaded_at: str
 
 
-def _simplify_node(node: OrganizationNode) -> DirectoryTreeNode:
+def _simplify_node(
+    node: OrganizationNode, shortname_attribute: str = "departmentCode"
+) -> DirectoryTreeNode:
     attrs = node.attributes or {}
     shortname = None
-    shortnames = attrs.get("lhmOUShortname") or attrs.get("lhmOUShortName")
+    normalized_keys = {key.strip().lower(): key for key in attrs if key}
+    shortname_key = normalized_keys.get(shortname_attribute.strip().lower())
+    shortnames = attrs.get(shortname_key) if shortname_key else None
     if isinstance(shortnames, list) and shortnames:
         shortname = shortnames[0]
     elif isinstance(shortnames, str):
         shortname = shortnames
 
-    children = [_simplify_node(child) for child in node.children]
+    children = [_simplify_node(child, shortname_attribute) for child in node.children]
     return {
         "shortname": shortname,
         "name": node.name or node.dn or "",
@@ -153,7 +157,10 @@ def _load_directory_from_ldap() -> DirectoryTree:
             detail="Failed to load directory from LDAP",
         ) from exc
 
-    raw_nodes = [_simplify_node(root) for root in directory.roots]
+    raw_nodes = [
+        _simplify_node(root, ldap_settings.SHORTNAME_ATTRIBUTE)
+        for root in directory.roots
+    ]
     validated_nodes = _TREE_ADAPTER.validate_python(raw_nodes)
     return _dump_tree(validated_nodes)
 

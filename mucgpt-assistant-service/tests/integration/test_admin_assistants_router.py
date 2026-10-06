@@ -41,16 +41,15 @@ def admin_client(test_client: TestClient):
 
 
 @pytest.mark.integration
-def test_public_access_filter_uses_postgresql_json_array_length() -> None:
+@pytest.mark.asyncio
+async def test_public_access_filter_uses_postgresql_json_array_length() -> None:
     session = AsyncMock()
     result = Mock()
     result.scalars.return_value.unique.return_value.all.return_value = []
     session.execute.return_value = result
 
     repository = AssistantRepository(session)
-    asyncio.run(
-        repository.get_all_assistants_for_admin(access=AssistantAccessType.PUBLIC)
-    )
+    await repository.get_all_assistants_for_admin(access=AssistantAccessType.PUBLIC)
 
     statement = session.execute.await_args.args[0]
     sql = str(statement.compile(dialect=postgresql.dialect()))

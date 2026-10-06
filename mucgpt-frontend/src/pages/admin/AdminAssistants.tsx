@@ -95,6 +95,7 @@ const AdminAssistants = () => {
         const controller = new AbortController();
         requestVersion.current += 1;
         setIsLoading(true);
+        setIsLoadingMore(false);
         setError(null);
         void getAdminAssistantsApi(query, { signal: controller.signal })
             .then(response => {

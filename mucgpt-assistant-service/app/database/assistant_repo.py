@@ -281,6 +281,13 @@ class AssistantRepository(Repository[Assistant]):
             return list(result.scalars().unique().all())
 
         directory_index = await _get_directory_index()
+        if directory_index is None:
+            logger.warning(
+                "Department filter cannot be applied because the directory index is unavailable; returning no matches for department %s",
+                department,
+            )
+            return []
+
         matching_assistant_ids: list[str] = []
         for assistant_id, access_paths in result:
             if not isinstance(access_paths, list):
@@ -995,7 +1002,8 @@ class AssistantRepository(Repository[Assistant]):
         if normalized_sort_by == "title":
             title_order = func.lower(func.coalesce(latest_version_alias.name, ""))
             return stmt.order_by(
-                title_order.desc() if order_desc else title_order.asc()
+                title_order.desc() if order_desc else title_order.asc(),
+                Assistant.id.asc(),
             )
 
         if normalized_sort_by == "subscriptions":
@@ -1009,12 +1017,14 @@ class AssistantRepository(Repository[Assistant]):
                 if order_desc
                 else Assistant.updated_at.asc()
             )
-            return stmt.order_by(primary, secondary)
+            return stmt.order_by(primary, secondary, Assistant.id.asc())
 
         primary = (
             Assistant.updated_at.desc() if order_desc else Assistant.updated_at.asc()
         )
         secondary = func.lower(func.coalesce(latest_version_alias.name, ""))
         return stmt.order_by(
-            primary, secondary.desc() if order_desc else secondary.asc()
+            primary,
+            secondary.desc() if order_desc else secondary.asc(),
+            Assistant.id.asc(),
         )

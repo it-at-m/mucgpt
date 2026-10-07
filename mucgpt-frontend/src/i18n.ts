@@ -582,7 +582,7 @@ i18n
                             review_intro_description_2:
                                 "Die KI-Verordnung stuft KI-Systeme unter anderem dann als Hochrisiko-KI-Systeme ein, wenn sie bestimmungsgemäß einem der in Anhang III KI-Verordnung aufgeführten Verwendungszwecke dienen sollen und ein erhebliches Risiko der Beeinträchtigung der Gesundheit, Sicherheit oder Grundrechte natürlicher Personen bergen.",
                             review_check_title: "Anweisungen prüfen",
-                            review_check_description: "Prüfen Sie die Prompt- bzw. Assistentenanweisungen auf Hinweise auf mögliche Hochrisiko-Zwecke.",
+                            review_check_description: "Prüfen Sie den Systemprompt des Assistenten auf mögliche Hochrisiko-Zwecke.",
                             review_check_learn_more: "Mehr über Hochrisiko-Zwecke erfahren",
                             review_check_supplement:
                                 "Die Prüfung dient nur einer ersten ungefähren Orientierung, kann aber nicht die menschliche juristische Prüfung ersetzen. Bitte wenden Sie sich im Zweifelsfall an die für Ihren Bereich zuständige Rechtsabteilung oder sehen von dem Absenden des Prompts bzw. der Erstellung des Assistenten ab.",
@@ -591,10 +591,10 @@ i18n
                             review_check_running: "Prüfung läuft...",
                             review_result_passed_title: "Alle Prüfungen bestanden",
                             review_result_passed_description:
-                                "Es wurden keine Hinweise auf ein Hochrisikosystem gefunden. Die Prüfung dient nur zur Orientierung. Bitte bestätigen Sie abschließend, dass der Assistent für keinen unzulässigen Hochrisiko-Zweck eingesetzt wird.",
-                            review_result_warning_title: "Hinweis auf ein mögliches Hochrisikosystem",
+                                "Es wurden keine Hinweise auf einen Hochrisiko-Zweck gefunden. Die Prüfung dient nur zur Orientierung. Bitte bestätigen Sie abschließend, dass der Assistent für keinen unzulässigen Hochrisiko-Zweck eingesetzt wird.",
+                            review_result_warning_title: "Hinweis auf einen möglichen Hochrisiko-Zweck.",
                             review_result_warning_guidance:
-                                "Bitte prüfen Sie die folgenden Stellen in den Anweisungen und ändern Sie diese gegebenenfalls, damit kein unzulässiger Hochrisiko-Zweck entsteht. Die Prüfung dient nur zur Orientierung.",
+                                "Bitte prüfen Sie den Systemprompt und ändern sie diesen gegebenfalls, so dass kein unzulässiger Hochrisiko-Zweck verfolgt wird.",
                             review_result_error_title: "Prüfung fehlgeschlagen",
                             review_result_error_description:
                                 "Die Prüfung konnte nicht durchgeführt werden. Speichern ist erst nach einer erfolgreichen erneuten Prüfung möglich.",
@@ -1468,7 +1468,7 @@ i18n
                             review_intro_description_2:
                                 "This prohibition applies to purposes that cause AI systems to be classified as high-risk AI systems under the AI Act. Among other things, the AI Act classifies AI systems as high-risk when they are intended to serve one of the purposes listed in Annex III and pose a significant risk of harm to the health, safety or fundamental rights of natural persons. The purposes listed in Annex III include areas such as education, employment, public services and migration.",
                             review_check_title: "Check instructions",
-                            review_check_description: "Check the prompt or assistant instructions for indications of possible high-risk purposes.",
+                            review_check_description: "Check the assistant's system prompt for indications of possible high-risk purposes.",
                             review_check_learn_more: "Learn more about high-risk purposes",
                             review_check_supplement:
                                 "The check is only a first, approximate guide and cannot replace a human legal review. If in doubt, contact the legal department responsible for your area or refrain from submitting the prompt or creating the assistant.",
@@ -1477,10 +1477,10 @@ i18n
                             review_check_running: "Check in progress...",
                             review_result_passed_title: "All checks passed",
                             review_result_passed_description:
-                                "No indications of a high-risk system were found. The check is for guidance only. Please confirm below that the assistant is not used for any impermissible high-risk purpose.",
-                            review_result_warning_title: "Indication of a possible high-risk system",
+                                "No indications of a high-risk purpose were found. The check is for guidance only. Please confirm below that the assistant is not used for any impermissible high-risk purpose.",
+                            review_result_warning_title: "Indication of a possible high-risk purpose.",
                             review_result_warning_guidance:
-                                "Please review the following parts of the instructions and change them if necessary so that no impermissible high-risk purpose remains. The check is for guidance only.",
+                                "Please review the system prompt and change it if necessary so that no impermissible high-risk purpose is pursued.",
                             review_result_error_title: "Check failed",
                             review_result_error_description: "The check could not be performed. Saving is blocked until a successful re-check is available.",
                             review_result_outdated_title: "Result no longer up to date",
@@ -2337,7 +2337,7 @@ i18n
                             review_intro_description_2:
                                 "Des Verbot bezieht si auf de Verwendungszweck, durch de KI-Systeme nach da KI-Verordnung ois Hochrisiko-KI-Systeme eingestuft wern. De KI-Verordnung stuft KI-Systeme unter anderem dann ois Hochrisiko-KI-Systeme ei, wenn's bestimmungsgemäß oan vo de in Anhang III aufgeführten Verwendungszweck dienen soi und a erhebliches Risiko für de Gesundheit, Sicherheit oder Grundrechte natürlicher Personen besteht. De in Anhang III aufgeführten Verwendungszweck betreffen unter anderem Bereiche wia Buidung, Personal, öffentliche Leistunga und Migration.",
                             review_check_title: "Anweisungen prüfa",
-                            review_check_description: "Prüf de Prompt- bzw. Assistentenanweisungen auf Hinweis auf möglche Hochrisiko-Zweck.",
+                            review_check_description: "Prüf den Systemprompt vom Assistentn auf mögliche Hochrisiko-Zweck.",
                             review_check_learn_more: "Mehr über Hochrisiko-Zweck erfahrn",
                             review_check_supplement:
                                 "De Prüfung is bloß a erste, grobe Orientierung und koane menschliche juristische Prüfung ersetzen. Wennst da unsicher bist, wend di an de für dein Bereich zuständige Rechtsabteilung oder schick den Prompt ned o bzw. erstell den Assistenten ned.",
@@ -2346,10 +2346,10 @@ i18n
                             review_check_running: "Prüfung lafft...",
                             review_result_passed_title: "Olle Prüfungen bestandn",
                             review_result_passed_description:
-                                "Es gibt koane Hinweis auf a Hochrisikosystem. De Prüfung is bloß a Orientierung. Bitte bestätig no, dass da Assistent für koan unzulässigen Hochrisiko-Zweck eigsetzt wird.",
-                            review_result_warning_title: "Hinweis auf a möglichs Hochrisikosystem",
+                                "Es san koane Hinweis auf an Hochrisiko-Zweck gfundn worn. De Prüfung is bloß a Orientierung. Bitte bestätig no, dass da Assistent für koan unzulässigen Hochrisiko-Zweck eigsetzt wird.",
+                            review_result_warning_title: "Hinweis auf an möglichen Hochrisiko-Zweck.",
                             review_result_warning_guidance:
-                                "Bitte schau da de foigenden Stelln in de Anweisungen o und änder's wenn nötig, dass koa unzulässiger Hochrisiko-Zweck entsteht. De Prüfung is bloß a Orientierung.",
+                                "Bitte prüf den Systemprompt und änder ihn gegebenenfalls, sodass koa unzulässiger Hochrisiko-Zweck verfolgt wird.",
                             review_result_error_title: "Prüfung fehlgschlogn",
                             review_result_error_description: "De Prüfung hod net klappt. Speichern geht erst noch ana erfolgreichen erneuten Prüfung.",
                             review_result_outdated_title: "Ergebnis nimma aktuell",
@@ -3211,8 +3211,7 @@ i18n
                             review_intro_description_2:
                                 "Cette interdiction s'applique aux finalités qui entraînent la classification des systèmes d'IA comme systèmes d'IA à haut risque au sens du règlement sur l'IA. Celui-ci classe notamment comme systèmes à haut risque les systèmes destinés à l'une des finalités énumérées à l'annexe III et présentant un risque important d'atteinte à la santé, à la sécurité ou aux droits fondamentaux des personnes physiques. Les finalités énumérées à l'annexe III concernent notamment des domaines tels que l'éducation, l'emploi, les services publics et la migration.",
                             review_check_title: "Vérifier les instructions",
-                            review_check_description:
-                                "Vérifiez le prompt ou les instructions de l'assistant pour détecter d'éventuelles finalités à haut risque.",
+                            review_check_description: "Vérifiez le prompt système de l'assistant pour détecter d'éventuelles finalités à haut risque.",
                             review_check_learn_more: "En savoir plus sur les finalités à haut risque",
                             review_check_supplement:
                                 "La vérification ne constitue qu'une première orientation approximative et ne peut pas remplacer un contrôle juridique humain. En cas de doute, adressez-vous au service juridique compétent pour votre domaine ou renoncez à envoyer le prompt ou à créer l'assistant.",
@@ -3221,10 +3220,10 @@ i18n
                             review_check_running: "Vérification en cours...",
                             review_result_passed_title: "Toutes les vérifications réussies",
                             review_result_passed_description:
-                                "Aucun indice de système à haut risque n'a été trouvé. La vérification sert uniquement d'orientation. Veuillez confirmer ci-dessous que l'assistant n'est pas utilisé pour une finalité à haut risque non autorisée.",
-                            review_result_warning_title: "Indice d'un possible système à haut risque",
+                                "Aucune indication d'une finalité à haut risque n'a été trouvée. La vérification sert uniquement d'orientation. Veuillez confirmer ci-dessous que l'assistant n'est pas utilisé pour une finalité à haut risque interdite.",
+                            review_result_warning_title: "Indice d'une possible finalité à haut risque.",
                             review_result_warning_guidance:
-                                "Veuillez examiner les passages suivants des instructions et les modifier si nécessaire afin qu'aucune finalité à haut risque non autorisée ne subsiste. La vérification sert uniquement d'orientation.",
+                                "Veuillez examiner le prompt système et le modifier si nécessaire afin qu'aucune finalité à haut risque interdite ne soit poursuivie.",
                             review_result_error_title: "Échec de la vérification",
                             review_result_error_description:
                                 "La vérification n'a pas pu être effectuée. L'enregistrement reste bloqué jusqu'à une nouvelle vérification réussie.",
@@ -4074,7 +4073,7 @@ i18n
                             review_intro_description_2:
                                 "Ця заборона стосується цілей, через які системи ШІ класифікуються як системи ШІ з високим ризиком відповідно до Регламенту про ШІ. Зокрема, Регламент класифікує системи ШІ як високоризикові, якщо вони призначені для однієї з цілей, перелічених у Додатку III, і становлять значний ризик шкоди для здоров'я, безпеки або основоположних прав фізичних осіб. Цілі, перелічені в Додатку III, охоплюють, зокрема, такі сфери, як освіта, зайнятість, державні послуги та міграція.",
                             review_check_title: "Перевірити інструкції",
-                            review_check_description: "Перевірте промпт або інструкції асистента на ознаки можливих цілей використання з високим ризиком.",
+                            review_check_description: "Перевірте системний промпт асистента на ознаки можливих цілей використання з високим ризиком.",
                             review_check_learn_more: "Дізнатися більше про цілі використання з високим ризиком",
                             review_check_supplement:
                                 "Перевірка є лише первинним приблизним орієнтиром і не може замінити юридичну перевірку людиною. У разі сумнівів зверніться до юридичного відділу, відповідального за вашу сферу, або не надсилайте промпт і не створюйте асистента.",
@@ -4083,10 +4082,10 @@ i18n
                             review_check_running: "Перевірка триває...",
                             review_result_passed_title: "Усі перевірки пройдено",
                             review_result_passed_description:
-                                "Ознак системи з високим ризиком не виявлено. Перевірка слугує лише орієнтиром. Будь ласка, підтвердьте нижче, що асистент не використовується для недопустимої цілі з високим ризиком.",
-                            review_result_warning_title: "Ознака можливої системи з високим ризиком",
+                                "Не виявлено ознак цілей із високим ризиком. Перевірка слугує лише орієнтиром. Будь ласка, підтвердьте нижче, що асистент не використовується для недопустимої мети з високим ризиком.",
+                            review_result_warning_title: "Ознака можливої мети з високим ризиком.",
                             review_result_warning_guidance:
-                                "Будь ласка, перегляньте наведені нижче місця в інструкціях і за потреби змініть їх, щоб не залишалося недопустимої цілі з високим ризиком. Перевірка слугує лише орієнтиром.",
+                                "Будь ласка, перегляньте системний промпт і, якщо потрібно, змініть його так, щоб не використовувалась недопустима мета з високим ризиком.",
                             review_result_error_title: "Помилка перевірки",
                             review_result_error_description:
                                 "Перевірку не вдалося виконати. Збереження заблоковано, доки повторна перевірка не завершиться успішно.",

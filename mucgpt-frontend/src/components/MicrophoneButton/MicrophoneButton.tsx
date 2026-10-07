@@ -78,7 +78,7 @@ export const MicrophoneButton = ({ onTranscription, onLiveTranscription, onRecor
 
     return (
         <div className={styles.wrapper}>
-            <Tooltip content={getTooltipContent()} relationship="label">
+            <Tooltip positioning={"below"} content={getTooltipContent()} relationship="label">
                 <Button
                     appearance="subtle"
                     className={`${styles.micButton} ${isBusy ? styles.busy : ""}`}

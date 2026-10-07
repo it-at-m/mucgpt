@@ -342,15 +342,15 @@ export const QuestionInput = ({
                         const nextData = currentData.map(currentItem =>
                             currentItem.id === data.id
                                 ? {
-                                      ...currentItem,
-                                      status: "ready" as const,
-                                      fileContent,
-                                      storedDocumentId: storedDocument?.id,
-                                      parsedAt: storedDocument?.parsedAt,
-                                      fileSignature: storedDocument?.fileSignature,
-                                      mimeType: storedDocument?.mimeType,
-                                      source: "upload" as const
-                                  }
+                                    ...currentItem,
+                                    status: "ready" as const,
+                                    fileContent,
+                                    storedDocumentId: storedDocument?.id,
+                                    parsedAt: storedDocument?.parsedAt,
+                                    fileSignature: storedDocument?.fileSignature,
+                                    mimeType: storedDocument?.mimeType,
+                                    source: "upload" as const
+                                }
                                 : currentItem
                         );
 
@@ -483,7 +483,7 @@ export const QuestionInput = ({
                     <div className={styles.actions}>
                         {allowFileUpload ? (
                             <div className={styles.uploadAction}>
-                                <Tooltip content={t("components.questioninput.upload_data", "Dokument hochladen")} relationship="label">
+                                <Tooltip positioning={"below"} content={t("components.questioninput.upload_data", "Dokument hochladen")} relationship="label">
                                     <SubtleButton
                                         ref={uploadButtonRef}
                                         appearance="subtle"
@@ -522,7 +522,7 @@ export const QuestionInput = ({
                                 disabled={disabled}
                             />
                         )}
-                        <Tooltip content={t("components.questioninput.send_question", "Frage senden")} relationship="label">
+                        <Tooltip positioning={"below"} content={t("components.questioninput.send_question", "Frage senden")} relationship="label">
                             <Button
                                 appearance="primary"
                                 icon={<ArrowUp20Regular />}

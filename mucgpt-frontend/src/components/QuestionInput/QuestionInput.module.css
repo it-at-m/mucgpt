@@ -17,7 +17,7 @@
 .composer {
     display: flex;
     flex-direction: column;
-    gap: var(--spacingVerticalM);
+    gap: var(--spacingVerticalXS);
     margin-bottom: var(--spacingVerticalS);
     padding: var(--spacingVerticalS) var(--spacingHorizontalS);
     border: var(--strokeWidthThin) solid var(--colorNeutralStroke3);

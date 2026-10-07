@@ -576,7 +576,6 @@ i18n
                             review_confirmation_label:
                                 "Ich bestätige, dass dieser Assistent nicht für einen in MUCGPT unzulässigen Hochrisiko-Zweck eingesetzt werden soll.",
                             review_required_hint: "Diese Bestätigung ist erforderlich, um den Assistenten zu erstellen oder zu speichern.",
-                            review_intro_title: "Was sind Hochrisiko-Zwecke?",
                             review_intro_description:
                                 "Hochrisiko-KI-Systeme sind nach der Verordnung über künstliche Intelligenz (KI-Verordnung) der Europäischen Union zwar nicht verboten, aber streng reguliert. Die Einhaltung der entsprechenden gesetzlichen Verpflichtungen ist in MUCGPT nicht umsetzbar. Daher ist es nach den {{termsLink}} nicht erlaubt, MUCGPT für Hochrisiko-Zwecke zu verwenden.",
                             review_terms_link: "Nutzungsbedingungen",
@@ -1463,7 +1462,6 @@ i18n
                             review_confirmation_label:
                                 "I confirm that this assistant is not intended to be used for a high-risk purpose that is not permitted in MUCGPT.",
                             review_required_hint: "This confirmation is required in order to create or save the assistant.",
-                            review_intro_title: "What are high-risk purposes?",
                             review_intro_description:
                                 "High-risk AI systems are not prohibited under the European Union's Artificial Intelligence Act, but they are strictly regulated. MUCGPT cannot implement the corresponding legal obligations. Therefore, the MUCGPT {{termsLink}} do not permit using MUCGPT for high-risk purposes.",
                             review_terms_link: "terms of use",
@@ -2333,7 +2331,6 @@ i18n
                             // Review section
                             review_confirmation_label: "I bstätig, dass der Assistent net für an in MUCGPT unzulässign Hochrisiko-Zweck herghalten soi.",
                             review_required_hint: "De Bstätigung braucht ma, damit ma an Assistenten erstelln oda speichern ko.",
-                            review_intro_title: "Wos san Hochrisiko-Zweck?",
                             review_intro_description:
                                 "Hochrisiko-KI-Systeme san nach da Verordnung über künstliche Intelligenz (KI-Verordnung) vo da Europäischen Union zwar ned verboten, oba streng geregelt. De Einhaltung vo de entsprechenden gesetzlichen Pflichten is in MUCGPT ned umsetzbar. Drum is es nach de {{termsLink}} ned erlaubt, MUCGPT für Hochrisiko-Zweck herzunehmen.",
                             review_terms_link: "Nutzungsbedingungen",
@@ -3208,7 +3205,6 @@ i18n
                             review_confirmation_label:
                                 "Je confirme que cet assistant n'est pas destiné à être utilisé pour une finalité à haut risque non autorisée dans MUCGPT.",
                             review_required_hint: "Cette confirmation est requise pour créer ou enregistrer l'assistant.",
-                            review_intro_title: "Que sont les finalités à haut risque ?",
                             review_intro_description:
                                 "Les systèmes d'IA à haut risque ne sont pas interdits par le règlement de l'Union européenne sur l'intelligence artificielle, mais ils sont strictement réglementés. MUCGPT ne peut pas mettre en œuvre les obligations légales correspondantes. C'est pourquoi les {{termsLink}} n'autorisent pas l'utilisation de MUCGPT à des fins à haut risque.",
                             review_terms_link: "conditions d'utilisation de MUCGPT",
@@ -4072,7 +4068,6 @@ i18n
                             review_confirmation_label:
                                 "Я підтверджую, що цей асистент не призначений для використання з недозволеною в MUCGPT ціллю з високим ризиком.",
                             review_required_hint: "Це підтвердження необхідне для створення або збереження асистента.",
-                            review_intro_title: "Що таке цілі використання з високим ризиком?",
                             review_intro_description:
                                 "Системи ШІ з високим ризиком не заборонені Регламентом Європейського Союзу про штучний інтелект, але суворо регулюються. MUCGPT не може забезпечити виконання відповідних юридичних зобов'язань. Тому {{termsLink}} не дозволяють використовувати MUCGPT для цілей із високим ризиком.",
                             review_terms_link: "умови використання MUCGPT",

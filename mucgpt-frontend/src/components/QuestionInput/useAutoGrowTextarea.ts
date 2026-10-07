@@ -12,8 +12,10 @@ export const useAutoGrowTextarea = (value: string) => {
 
         // Collapsing to "auto" resets the scroll position of a textarea that exceeds its max height.
         const { scrollTop } = textarea;
+        textarea.style.overflowY = "hidden";
         textarea.style.height = "auto";
         textarea.style.height = `${textarea.scrollHeight}px`;
+        textarea.style.overflowY = "";
         textarea.scrollTop = scrollTop;
     }, []);
 

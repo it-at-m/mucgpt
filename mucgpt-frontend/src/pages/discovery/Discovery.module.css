@@ -20,6 +20,7 @@
     flex: 0 0 0;
     min-width: 0;
     height: 100%;
+    display: flex;
     overflow: hidden;
     transition: flex-basis 280ms cubic-bezier(0.33, 1, 0.68, 1);
 }

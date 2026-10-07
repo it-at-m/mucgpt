@@ -2,29 +2,135 @@
     margin-bottom: var(--spacingVerticalS);
 }
 
-.summary {
-    color: var(--colorNeutralForeground3);
+/* Aligns the header text with the loading line, so the live line turns into the summary without shifting. */
+.headerButton {
+    width: fit-content;
+    max-width: 100%;
+    min-height: auto;
+    padding-block: var(--spacingVerticalXS);
+    padding-inline: 0 var(--spacingHorizontalXS);
 }
 
-.steps {
-    display: flex;
-    flex-direction: column;
-    gap: var(--spacingVerticalXS);
-    margin: 0;
-    padding: 0 0 var(--spacingVerticalS);
-    list-style: none;
-}
-
-.step {
-    display: flex;
+/* Icon, label and an optional detail line below the label. */
+.line {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    column-gap: var(--spacingHorizontalS);
     align-items: center;
-    gap: var(--spacingHorizontalS);
+    min-width: 0;
+    text-align: start;
 }
 
-.doneIcon {
-    color: var(--colorStatusSuccessForeground1);
+.icon,
+.errorIcon {
+    display: inline-flex;
+    color: var(--colorNeutralForeground3);
 }
 
 .errorIcon {
     color: var(--colorStatusDangerForeground1);
+}
+
+.label {
+    grid-column: 2;
+    min-width: 0;
+    color: var(--colorNeutralForeground3);
+}
+
+.meta {
+    color: var(--colorNeutralForeground3);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+
+.detail {
+    grid-column: 2;
+    min-width: 0;
+    overflow: hidden;
+    color: var(--colorNeutralForeground3);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Progress shimmer: a light brand highlight sweeping back and forth over muted status text. */
+.shimmer {
+    /* One full sweep; slow enough to read as calm background activity. */
+    --activity-shimmer-period: 2s;
+    background: linear-gradient(
+            90deg,
+            var(--colorNeutralForeground3) 0%,
+            var(--colorNeutralForeground3) 38%,
+            var(--app-progress-highlight) 50%,
+            var(--colorNeutralForeground3) 62%,
+            var(--colorNeutralForeground3) 100%
+        )
+        0 0 / 300% 100%;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: progress-shimmer var(--activity-shimmer-period) var(--curveEasyEase) infinite alternate;
+}
+
+@keyframes progress-shimmer {
+    from {
+        background-position: 100% 0;
+    }
+    to {
+        background-position: 0% 0;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .shimmer {
+        background: none;
+        color: var(--colorNeutralForeground2);
+        -webkit-text-fill-color: currentColor;
+        animation: none;
+    }
+}
+
+.panel {
+    margin: 0;
+}
+
+.timeline {
+    display: flex;
+    flex-direction: column;
+    margin: 0;
+    padding: var(--spacingVerticalS) 0;
+    list-style: none;
+}
+
+/* Each step: an icon rail with a connector to the next step, the tool name and its detail. */
+.step {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    column-gap: var(--spacingHorizontalS);
+    padding-bottom: var(--spacingVerticalM);
+}
+
+.step:last-child {
+    padding-bottom: 0;
+}
+
+.rail {
+    display: flex;
+    grid-row: 1 / span 2;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--spacingVerticalXXS);
+}
+
+.connector {
+    flex-grow: 1;
+    width: var(--strokeWidthThin);
+    margin-bottom: calc(-1 * var(--spacingVerticalM));
+    background-color: var(--colorNeutralStroke2);
+}
+
+.step:last-child .connector {
+    display: none;
+}
+
+.stepLabel {
+    color: var(--colorNeutralForeground2);
 }

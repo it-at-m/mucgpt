@@ -81,6 +81,8 @@ i18n
                         activity_steps_one: "1 Schritt",
                         activity_steps_other: "{{count}} Schritte",
                         activity_step_failed: "fehlgeschlagen",
+                        activity_failed_count: "{{count}} fehlgeschlagen",
+                        activity_duration: "{{seconds}} s",
                         answer_loading_phrases: [
                             "Erstelle Antwort",
                             "Denke nach",
@@ -977,6 +979,8 @@ i18n
                         activity_steps_one: "1 step",
                         activity_steps_other: "{{count}} steps",
                         activity_step_failed: "failed",
+                        activity_failed_count: "{{count}} failed",
+                        activity_duration: "{{seconds}} s",
                         answer_loading_phrases: [
                             "Generating an answer",
                             "Thinking it through",
@@ -1862,6 +1866,8 @@ i18n
                         activity_steps_one: "1 Schritt",
                         activity_steps_other: "{{count}} Schritt",
                         activity_step_failed: "ned highaut",
+                        activity_failed_count: "{{count}} ned highaut",
+                        activity_duration: "{{seconds}} s",
                         answer_loading_phrases: [
                             "I bearbeit grad de Frog",
                             "I denk nach",
@@ -2734,6 +2740,8 @@ i18n
                         activity_steps_one: "1 étape",
                         activity_steps_other: "{{count}} étapes",
                         activity_step_failed: "échec",
+                        activity_failed_count: "{{count}} en échec",
+                        activity_duration: "{{seconds}} s",
                         answer_loading_phrases: [
                             "Préparation de la réponse",
                             "Réflexion en cours",
@@ -3610,6 +3618,8 @@ i18n
                         activity_steps_many: "{{count}} кроків",
                         activity_steps_other: "{{count}} кроку",
                         activity_step_failed: "не вдалося",
+                        activity_failed_count: "{{count}} з помилкою",
+                        activity_duration: "{{seconds}} с",
                         answer_loading_phrases: [
                             "Створюю відповідь",
                             "Обмірковую",

@@ -1061,7 +1061,13 @@ export const handlers = [
 
                 if (mockToolName) {
                     const toolCallId = crypto.randomUUID();
-                    send({ type: "TOOL_CALL_CHUNK", toolCallId, toolCallName: mockToolName, parentMessageId: messageId, delta: "{}" });
+                    send({
+                        type: "TOOL_CALL_CHUNK",
+                        toolCallId,
+                        toolCallName: mockToolName,
+                        parentMessageId: messageId,
+                        delta: JSON.stringify({ query: latestUserMessage.slice(0, 80) })
+                    });
                     await delay(1500);
                     send({ type: "TOOL_CALL_RESULT", messageId: crypto.randomUUID(), toolCallId, content: "Mock tool result", role: "tool" });
                 }

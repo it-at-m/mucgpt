@@ -1,51 +1,72 @@
-import { Accordion, AccordionHeader, AccordionItem, AccordionPanel, Caption1, Spinner } from "@fluentui/react-components";
+import { Accordion, AccordionHeader, AccordionItem, AccordionPanel, Caption1 } from "@fluentui/react-components";
 import { CheckmarkCircle16Regular, ErrorCircle16Regular } from "@fluentui/react-icons";
 import { useTranslation } from "react-i18next";
 
 import styles from "./AnswerActivity.module.css";
+import { ActivityLine } from "./ActivityLine";
+import { useToolIcon } from "./useToolIcon";
 import { useToolDisplayName } from "../../hooks/useToolDisplayName";
-import type { ActivityStep } from "../../utils/agUiActivity";
+import { getStepsDurationSeconds, type ActivityStep } from "../../utils/agUiActivity";
 
 interface Props {
     steps: ActivityStep[];
 }
 
-const StepIcon = ({ status }: { status: ActivityStep["status"] }) => {
-    if (status === "running") return <Spinner size="extra-tiny" />;
-    if (status === "error") return <ErrorCircle16Regular className={styles.errorIcon} />;
-    return <CheckmarkCircle16Regular className={styles.doneIcon} />;
-};
-
 /**
  * Compact, collapsed-by-default summary of the tool steps the agent took for an answer.
- * While a tool is still running (e.g. one started after the answer text), the header shows it.
+ * While a tool is still running (e.g. one started after the answer text), the header shows it live.
  */
 export const AnswerActivity = ({ steps }: Props) => {
     const { t } = useTranslation();
     const getToolDisplayName = useToolDisplayName();
+    const getToolIcon = useToolIcon();
 
     const runningStep = steps.findLast(step => step.status === "running");
-    const hasError = steps.some(step => step.status === "error");
-    const toolNames = [...new Set(steps.map(step => getToolDisplayName(step.toolName)))].join(", ");
-    const summary = runningStep
-        ? t("chat.activity_running_tool", { tool: getToolDisplayName(runningStep.toolName) })
-        : `${t("chat.activity_steps", { count: steps.length })} · ${toolNames}`;
+    const failedCount = steps.filter(step => step.status === "error").length;
+    const duration = getStepsDurationSeconds(steps);
+    const summary = [
+        t("chat.activity_steps", { count: steps.length }),
+        failedCount > 0 ? t("chat.activity_failed_count", { count: failedCount }) : undefined,
+        duration ? t("chat.activity_duration", { seconds: duration }) : undefined
+    ]
+        .filter(Boolean)
+        .join(" · ");
 
     return (
         <Accordion collapsible className={styles.activity}>
             <AccordionItem value="activity">
-                <AccordionHeader size="small" expandIconPosition="end" icon={<StepIcon status={runningStep ? "running" : hasError ? "error" : "done"} />}>
-                    <Caption1 className={styles.summary}>{summary}</Caption1>
+                <AccordionHeader size="small" expandIconPosition="end" button={{ className: styles.headerButton }}>
+                    {runningStep ? (
+                        <ActivityLine
+                            icon={getToolIcon(runningStep.toolName)}
+                            label={t("chat.activity_running_tool", { tool: getToolDisplayName(runningStep.toolName) })}
+                            detail={runningStep.detail}
+                            startedAt={runningStep.startedAt}
+                        />
+                    ) : (
+                        <span className={styles.line}>
+                            <span className={failedCount > 0 ? styles.errorIcon : styles.icon} aria-hidden="true">
+                                {failedCount > 0 ? <ErrorCircle16Regular /> : <CheckmarkCircle16Regular />}
+                            </span>
+                            <Caption1 className={styles.label}>{summary}</Caption1>
+                        </span>
+                    )}
                 </AccordionHeader>
-                <AccordionPanel>
-                    <ol className={styles.steps}>
+                <AccordionPanel className={styles.panel}>
+                    <ol className={styles.timeline}>
                         {steps.map(step => (
                             <li key={step.toolCallId} className={styles.step}>
-                                <StepIcon status={step.status} />
-                                <Caption1>
-                                    {getToolDisplayName(step.toolName)}
+                                <span className={styles.rail} aria-hidden="true">
+                                    <span className={step.status === "error" ? styles.errorIcon : styles.icon}>
+                                        {step.status === "error" ? <ErrorCircle16Regular /> : getToolIcon(step.toolName)}
+                                    </span>
+                                    <span className={styles.connector} />
+                                </span>
+                                <Caption1 className={styles.stepLabel}>
+                                    <span className={step.status === "running" ? styles.shimmer : undefined}>{getToolDisplayName(step.toolName)}</span>
                                     {step.status === "error" && ` – ${t("chat.activity_step_failed")}`}
                                 </Caption1>
+                                {step.detail && <Caption1 className={styles.detail}>{step.detail}</Caption1>}
                             </li>
                         ))}
                     </ol>

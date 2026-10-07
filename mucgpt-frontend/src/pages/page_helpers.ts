@@ -284,7 +284,7 @@ export const makeApiRequest = async (
     // Initialize tool stream handler for processing tool calls
     const toolStreamHandler = new ToolStreamHandler();
     let activeToolStatuses: ToolStatus[] = [];
-    let runActivity = initialRunActivity;
+    let runActivity: RunActivity = { ...initialRunActivity, startedAt: Date.now() };
     const activitySteps = () => (runActivity.steps.length > 0 ? runActivity.steps : undefined);
 
     // Add an empty initial message to the chat

@@ -64,46 +64,6 @@
     padding: 5px;
 }
 
-@keyframes loading {
-    0% {
-        content: ".";
-        transform: translateY(0);
-        opacity: 0.6;
-    }
-    25% {
-        content: "..";
-        transform: translateY(-6px);
-        opacity: 0.7;
-    }
-    50% {
-        content: "...";
-        transform: translateY(-12px);
-        opacity: 0.8;
-    }
-    75% {
-        content: "..";
-        transform: translateY(-6px);
-        opacity: 0.9;
-    }
-    100% {
-        content: ".";
-        transform: translateY(0);
-        opacity: 1;
-    }
-}
-
-.loadingdots::after {
-    content: "";
-    animation: loading 1s infinite;
-}
-
-@media (prefers-reduced-motion: reduce) {
-    .loadingdots::after {
-        content: "...";
-        animation: none;
-    }
-}
-
 .unformattedAnswer {
     white-space: pre-wrap;
     line-height: 1.35;
@@ -130,6 +90,12 @@
         opacity: 1;
         margin-bottom: 12px;
     }
+}
+
+/* Matches the activity summary header, so the loading line turns into it without shifting. */
+.loadingLine {
+    padding-block: var(--spacingVerticalXS);
+    margin-bottom: var(--spacingVerticalS);
 }
 
 .visuallyHidden {

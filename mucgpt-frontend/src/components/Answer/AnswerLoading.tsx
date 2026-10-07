@@ -1,8 +1,11 @@
 import { useEffect, useRef, useState } from "react";
 import { animated, useSpring } from "@react-spring/web";
+import { Sparkle16Regular } from "@fluentui/react-icons";
 import { useTranslation } from "react-i18next";
 
 import styles from "./Answer.module.css";
+import { ActivityLine } from "../AnswerActivity/ActivityLine";
+import { useToolIcon } from "../AnswerActivity/useToolIcon";
 import { useToolDisplayName } from "../../hooks/useToolDisplayName";
 import { getRunningStep, type RunActivity } from "../../utils/agUiActivity";
 
@@ -47,9 +50,11 @@ interface Props {
 export const AnswerLoading = ({ activity }: Props) => {
     const { t } = useTranslation();
     const getToolDisplayName = useToolDisplayName();
-    const runningToolName = activity ? getRunningStep(activity)?.toolName : undefined;
-    const shownToolName = useMinimumDisplay(runningToolName, MIN_STEP_DISPLAY_MS);
-    const toolLabel = shownToolName ? t("chat.activity_running_tool", { tool: getToolDisplayName(shownToolName) }) : undefined;
+    const getToolIcon = useToolIcon();
+    const runningCallId = activity ? getRunningStep(activity)?.toolCallId : undefined;
+    const shownCallId = useMinimumDisplay(runningCallId, MIN_STEP_DISPLAY_MS);
+    const shownStep = shownCallId ? activity?.steps.find(step => step.toolCallId === shownCallId) : undefined;
+    const toolLabel = shownStep ? t("chat.activity_running_tool", { tool: getToolDisplayName(shownStep.toolName) }) : undefined;
     const [initialPhraseIndex] = useState(() => Math.floor(Math.random() * PHRASE_COUNT));
     const [phraseIndex, setPhraseIndex] = useState(initialPhraseIndex);
     const animatedStyles = useSpring({
@@ -82,12 +87,26 @@ export const AnswerLoading = ({ activity }: Props) => {
         <animated.div style={{ ...animatedStyles }}>
             <div className={styles.answerContainer}>
                 <div className={styles.growItem}>
-                    <p className={styles.answerText} role="status">
+                    <div className={styles.loadingLine} role="status">
                         {/* Announce only real progress changes, not the rotating filler phrases. */}
                         <span className={styles.visuallyHidden}>{toolLabel ?? t("chat.answer_loading")}</span>
-                        <span aria-hidden="true">{toolLabel ?? phrases[phraseIndex] ?? t("chat.answer_loading")}</span>
-                        <span className={styles.loadingdots} aria-hidden="true" />
-                    </p>
+                        <span aria-hidden="true">
+                            {shownStep && toolLabel ? (
+                                <ActivityLine
+                                    icon={getToolIcon(shownStep.toolName)}
+                                    label={toolLabel}
+                                    detail={shownStep.detail}
+                                    startedAt={activity?.startedAt}
+                                />
+                            ) : (
+                                <ActivityLine
+                                    icon={<Sparkle16Regular />}
+                                    label={phrases[phraseIndex] ?? t("chat.answer_loading")}
+                                    startedAt={activity?.startedAt}
+                                />
+                            )}
+                        </span>
+                    </div>
                 </div>
             </div>
         </animated.div>

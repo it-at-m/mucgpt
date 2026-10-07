@@ -342,15 +342,15 @@ export const QuestionInput = ({
                         const nextData = currentData.map(currentItem =>
                             currentItem.id === data.id
                                 ? {
-                                    ...currentItem,
-                                    status: "ready" as const,
-                                    fileContent,
-                                    storedDocumentId: storedDocument?.id,
-                                    parsedAt: storedDocument?.parsedAt,
-                                    fileSignature: storedDocument?.fileSignature,
-                                    mimeType: storedDocument?.mimeType,
-                                    source: "upload" as const
-                                }
+                                      ...currentItem,
+                                      status: "ready" as const,
+                                      fileContent,
+                                      storedDocumentId: storedDocument?.id,
+                                      parsedAt: storedDocument?.parsedAt,
+                                      fileSignature: storedDocument?.fileSignature,
+                                      mimeType: storedDocument?.mimeType,
+                                      source: "upload" as const
+                                  }
                                 : currentItem
                         );
 

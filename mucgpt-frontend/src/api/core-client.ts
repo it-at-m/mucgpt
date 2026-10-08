@@ -12,7 +12,6 @@ import {
     ToolListResponse
 } from "./models";
 import { HttpAgent } from "@ag-ui/client";
-import type { RunAgentInput } from "@ag-ui/core";
 
 const PARSE_SERVICE_BASE = "/api/backend/v1/parse";
 

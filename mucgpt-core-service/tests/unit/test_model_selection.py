@@ -17,7 +17,6 @@ from agent.middleware import (
 from config.model_provider import ModelRegistry, ModelsConfigurationException
 from config.settings import ModelsConfig
 
-
 CURRENT_DATE = "2026-10-06"
 CURRENT_WEEKDAY = "Tuesday"
 

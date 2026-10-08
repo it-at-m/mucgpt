@@ -1,4 +1,4 @@
-import React, { ReactNode, useLayoutEffect, useMemo, useRef } from "react";
+import React, { CSSProperties, ReactNode, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { ChatTurnComponent } from "../ChatTurnComponent/ChatTurnComponent";
 import { UserChatMessage } from "../UserChatMessage";
@@ -7,6 +7,7 @@ import { AnswerError } from "../Answer/AnswerError";
 import { ChatMessage } from "../../pages/chat/Chat";
 import { FollowUpActionModel } from "../FollowUpAction";
 import type { RunActivity } from "../../utils/agUiActivity";
+import { findScrollContainer, scrollIntoNearestContainer } from "../../utils/scrollIntoNearestContainer";
 
 interface Props {
     answers: ChatMessage[];
@@ -40,6 +41,41 @@ export const AnswerList = ({
 
     const loadingTurnRef = useRef<HTMLDivElement | null>(null);
 
+    // The turn sent in this session reserves one viewport of height, so it can be
+    // scrolled to the top of the list with room for the streamed answer below it.
+    // It is the loading turn while loading and the finished answer at the same index afterwards.
+    const [activeTurnIndex, setActiveTurnIndex] = useState<number | null>(null);
+    const [viewportHeight, setViewportHeight] = useState(0);
+
+    useLayoutEffect(() => {
+        if (isLoading) {
+            setActiveTurnIndex(answers.length);
+        } else if (activeTurnIndex !== null && answers.length !== activeTurnIndex && answers.length !== activeTurnIndex + 1) {
+            // Another chat was opened or the history was rolled back.
+            setActiveTurnIndex(null);
+        }
+    }, [isLoading, answers.length, activeTurnIndex]);
+
+    useLayoutEffect(() => {
+        const container = activeTurnIndex !== null && chatMessageStreamEnd.current ? findScrollContainer(chatMessageStreamEnd.current) : null;
+        if (!container) return;
+
+        const measure = () => {
+            const { paddingTop, paddingBottom } = getComputedStyle(container);
+            setViewportHeight(container.clientHeight - (parseFloat(paddingTop) || 0) - (parseFloat(paddingBottom) || 0));
+        };
+        measure();
+        if (typeof ResizeObserver === "undefined") return;
+        const resizeObserver = new ResizeObserver(measure);
+        resizeObserver.observe(container);
+        return () => resizeObserver.disconnect();
+    }, [activeTurnIndex, chatMessageStreamEnd]);
+
+    const activeTurnStyle = useMemo<CSSProperties | undefined>(
+        () => (viewportHeight > 0 ? { minHeight: `calc(${viewportHeight}px - var(--chatTurnScrollMargin, 0px))` } : undefined),
+        [viewportHeight]
+    );
+
     const shownAnswers = useMemo(() => {
         if (error) {
             return answers.slice(0, -1);
@@ -54,9 +90,9 @@ export const AnswerList = ({
 
         requestAnimationFrame(() => {
             if (loadingTurnRef.current) {
-                loadingTurnRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+                scrollIntoNearestContainer(loadingTurnRef.current, { block: "start" });
             } else {
-                chatMessageStreamEnd.current?.scrollIntoView({ behavior: "smooth" });
+                scrollIntoNearestContainer(chatMessageStreamEnd.current);
             }
         });
     }, [isLoading, shownAnswers.length, chatMessageStreamEnd]);
@@ -70,6 +106,7 @@ export const AnswerList = ({
                         <ChatTurnComponent
                             key={index}
                             innerRef={isLastAnswer ? lastAnswerRef : undefined}
+                            style={index === activeTurnIndex ? activeTurnStyle : undefined}
                             usermsg={
                                 <UserChatMessage message={answer.user} onRollbackMessage={onRollbackMessage ? () => onRollbackMessage(index - 1) : undefined} />
                             }
@@ -92,6 +129,7 @@ export const AnswerList = ({
                 {isLoading ? (
                     <ChatTurnComponent
                         innerRef={loadingTurnRef}
+                        style={activeTurnStyle}
                         usermsg={<UserChatMessage message={lastQuestionRef.current} />}
                         usermsglabel={t("components.usericon.label") + " " + (answers.length + 1).toString()}
                         assistantmsglabel={t("components.answericon.label") + " " + (answers.length + 1).toString()}
@@ -116,7 +154,9 @@ export const AnswerList = ({
         answers.length,
         isLoading,
         chatMessageStreamEnd,
-        loadingActivity
+        loadingActivity,
+        activeTurnIndex,
+        activeTurnStyle
     ]);
 
     return answerList;

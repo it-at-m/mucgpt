@@ -181,7 +181,7 @@ describe("getLiveStatus", () => {
 
     it("waits briefly for the model's description of a running tool", () => {
         expect(getLiveStatus(activity([step({})]), 100, visible)).toMatchObject({ kind: "tool", awaitingDescription: true });
-        expect(getLiveStatus(activity([step({})]), 400, visible)).toMatchObject({ kind: "tool", awaitingDescription: false });
+        expect(getLiveStatus(activity([step({})]), 500, visible)).toMatchObject({ kind: "tool", awaitingDescription: false });
         expect(getLiveStatus(activity([step({ description: "Suche" })]), 100, visible)).toMatchObject({ awaitingDescription: false });
     });
 

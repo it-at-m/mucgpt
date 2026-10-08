@@ -29,6 +29,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { UserContext } from "../layout/UserContextProvider";
 import { useConfigContext } from "../../context/ConfigContext";
 import { AgUiEventDrawer, type AgUiEventLogEntry } from "../../components/AgUiEventDrawer/AgUiEventDrawer";
+import { scrollIntoNearestContainer } from "../../utils/scrollIntoNearestContainer";
 
 /**
  * Creates a debounced function that delays invoking the provided function
@@ -171,7 +172,7 @@ const Chat = () => {
     // Add a scroll function
     const scrollToBottom = useCallback(() => {
         if (chatMessageStreamEnd.current) {
-            chatMessageStreamEnd.current.scrollIntoView({ behavior: "smooth" });
+            scrollIntoNearestContainer(chatMessageStreamEnd.current);
         }
     }, []);
 

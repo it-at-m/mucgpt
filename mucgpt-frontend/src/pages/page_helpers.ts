@@ -13,6 +13,7 @@ import { handleRedirect } from "../api/fetch-utils";
 import { createChatName, MucgptAgUiAgent } from "../api/core-client";
 import type { BaseEvent } from "@ag-ui/core";
 import { initialRunActivity, reduceRunActivity, type RunActivity } from "../utils/agUiActivity";
+import { scrollIntoNearestContainer } from "../utils/scrollIntoNearestContainer";
 
 /**
  * @fileoverview Chat page helper functions for managing chat state, API requests, and user interactions.
@@ -310,11 +311,11 @@ export const makeApiRequest = async (
     // on the first frame right after dispatch.
     const scrollToCurrentGeneration = () => {
         if (answerTopRef?.current) {
-            answerTopRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+            scrollIntoNearestContainer(answerTopRef.current, { block: "start" });
             return;
         }
 
-        chatMessageStreamEnd.current?.scrollIntoView({ behavior: "smooth" });
+        scrollIntoNearestContainer(chatMessageStreamEnd.current);
     };
 
     requestAnimationFrame(() => {
@@ -353,7 +354,7 @@ export const makeApiRequest = async (
             includeActiveToolsInUpdate = false;
 
             requestAnimationFrame(() => {
-                chatMessageStreamEnd.current?.scrollIntoView({ behavior: "smooth" });
+                scrollIntoNearestContainer(chatMessageStreamEnd.current);
             });
         }, 100);
     };
@@ -511,9 +512,9 @@ export const makeApiRequest = async (
     // Auto-scroll to show the latest message
     requestAnimationFrame(() => {
         if (answerTopRef?.current) {
-            answerTopRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+            scrollIntoNearestContainer(answerTopRef.current, { block: "start" });
         } else {
-            chatMessageStreamEnd.current?.scrollIntoView({ behavior: "smooth" });
+            scrollIntoNearestContainer(chatMessageStreamEnd.current);
         }
     });
 

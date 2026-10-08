@@ -46,6 +46,7 @@ import { useToolStatusToasts } from "../../hooks/useToolStatusToasts";
 import styles from "./UnifiedAssistantChat.module.css";
 import { useUnifiedHistory, useUnifiedHistoryRegistration } from "../../components/UnifiedHistory";
 import { downloadAssistantExport, mapAssistantToExportData } from "../../utils/assistant-export";
+import { scrollIntoNearestContainer } from "../../utils/scrollIntoNearestContainer";
 
 interface UnifiedAssistantChatProps {
     strategy: AssistantStrategy;
@@ -507,12 +508,12 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
     );
 
     useEffect(() => {
-        chatMessageStreamEnd.current?.scrollIntoView({ behavior: "smooth" });
+        scrollIntoNearestContainer(chatMessageStreamEnd.current);
     }, [answers.length]);
     // Add a scroll function
     const scrollToBottom = useCallback(() => {
         if (chatMessageStreamEnd.current) {
-            chatMessageStreamEnd.current.scrollIntoView({ behavior: "smooth" });
+            scrollIntoNearestContainer(chatMessageStreamEnd.current);
         }
     }, []);
 

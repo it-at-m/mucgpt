@@ -1,49 +1,56 @@
 import { useEffect, useRef, useState } from "react";
 import { animated, useSpring } from "@react-spring/web";
-import { Sparkle16Regular } from "@fluentui/react-icons";
+import { DocumentBulletList16Regular, Sparkle16Regular } from "@fluentui/react-icons";
 import { useTranslation } from "react-i18next";
 
 import styles from "./Answer.module.css";
 import { ActivityLine } from "../AnswerActivity/ActivityLine";
+import { useIsVisibleTool } from "../AnswerActivity/useIsVisibleTool";
 import { useToolIcon } from "../AnswerActivity/useToolIcon";
 import { useToolDisplayName } from "../../hooks/useToolDisplayName";
-import { getRunningStep, type RunActivity } from "../../utils/agUiActivity";
+import { getLiveStatus, getLiveStatusKey, type LiveStatus, type RunActivity } from "../../utils/agUiActivity";
 
-const PHRASE_COUNT = 12;
-const PHRASE_INTERVAL_MS = 4000;
-// Keeps fast tool calls readable instead of letting them flicker past.
-const MIN_STEP_DISPLAY_MS = 400;
+// Each message stays at least this long; newer ones arriving meanwhile replace it afterwards,
+// skipping anything in between. Skipped steps still show up in the answer's step list.
+const MIN_STATUS_DISPLAY_MS = 2500;
+// How often time-based changes (thinking stages, waiting for a tool's description) are re-checked.
+const STATUS_CHECK_INTERVAL_MS = 250;
 
-const shuffledIndices = (indices: number[]) => {
-    for (let index = indices.length - 1; index > 0; index--) {
-        const randomIndex = Math.floor(Math.random() * (index + 1));
-        [indices[index], indices[randomIndex]] = [indices[randomIndex], indices[index]];
-    }
-    return indices;
+const useNow = (intervalMs: number) => {
+    const [now, setNow] = useState(() => Date.now());
+    useEffect(() => {
+        const interval = window.setInterval(() => setNow(Date.now()), intervalMs);
+        return () => window.clearInterval(interval);
+    }, [intervalMs]);
+    return now;
 };
 
-/** Returns `value`, but holds each shown value for at least `minMs` before switching. */
-const useMinimumDisplay = <T,>(value: T, minMs: number): T => {
-    const [shown, setShown] = useState(value);
+/** Returns the status to show: holds each one for `minMs`, then jumps to the newest. */
+const useHeldStatus = (status: LiveStatus, minMs: number): LiveStatus => {
+    const [shown, setShown] = useState(status);
     const shownAt = useRef(Date.now());
+    const key = getLiveStatusKey(status);
+    const shownKey = getLiveStatusKey(shown);
+    // While a tool's own description is about to arrive, keep the current message instead of flashing the tool name.
+    const isReady = !(status.kind === "tool" && status.awaitingDescription);
 
     useEffect(() => {
-        if (value === shown) return;
+        if (!isReady || key === shownKey) return;
         const timeout = window.setTimeout(
             () => {
                 shownAt.current = Date.now();
-                setShown(value);
+                setShown(status);
             },
             Math.max(0, minMs - (Date.now() - shownAt.current))
         );
         return () => window.clearTimeout(timeout);
-    }, [value, shown, minMs]);
+    }, [status, key, shownKey, isReady, minMs]);
 
     return shown;
 };
 
 interface Props {
-    /** Live AG-UI run activity; when a tool is running, it replaces the generic loading phrases. */
+    /** Live AG-UI run activity; drives what the loading line says. */
     activity?: RunActivity;
 }
 
@@ -51,60 +58,40 @@ export const AnswerLoading = ({ activity }: Props) => {
     const { t } = useTranslation();
     const getToolDisplayName = useToolDisplayName();
     const getToolIcon = useToolIcon();
-    const runningCallId = activity ? getRunningStep(activity)?.toolCallId : undefined;
-    const shownCallId = useMinimumDisplay(runningCallId, MIN_STEP_DISPLAY_MS);
-    const shownStep = shownCallId ? activity?.steps.find(step => step.toolCallId === shownCallId) : undefined;
-    const toolLabel = shownStep ? t("chat.activity_running_tool", { tool: getToolDisplayName(shownStep.toolName) }) : undefined;
-    const [initialPhraseIndex] = useState(() => Math.floor(Math.random() * PHRASE_COUNT));
-    const [phraseIndex, setPhraseIndex] = useState(initialPhraseIndex);
+    const isVisibleTool = useIsVisibleTool();
+    const now = useNow(STATUS_CHECK_INTERVAL_MS);
+    const status = useHeldStatus(getLiveStatus(activity, now, isVisibleTool), MIN_STATUS_DISPLAY_MS);
     const animatedStyles = useSpring({
         from: { opacity: 0 },
         to: { opacity: 1 }
     });
 
-    useEffect(() => {
-        let previousIndex = initialPhraseIndex;
-        let remaining = shuffledIndices(Array.from({ length: PHRASE_COUNT }, (_, index) => index).filter(index => index !== previousIndex));
-
-        const interval = window.setInterval(() => {
-            if (remaining.length === 0) {
-                remaining = shuffledIndices(Array.from({ length: PHRASE_COUNT }, (_, index) => index));
-                if (remaining[0] === previousIndex) {
-                    [remaining[0], remaining[1]] = [remaining[1], remaining[0]];
-                }
-            }
-
-            previousIndex = remaining.shift()!;
-            setPhraseIndex(previousIndex);
-        }, PHRASE_INTERVAL_MS);
-
-        return () => window.clearInterval(interval);
-    }, [initialPhraseIndex]);
-
-    const phrases = t("chat.answer_loading_phrases", { returnObjects: true }) as string[];
+    let icon = <Sparkle16Regular />;
+    let label: string;
+    let detail: string | undefined;
+    if (status.kind === "tool") {
+        // The held step can be outdated; its query keeps streaming into the live one.
+        const liveStep = activity?.steps.find(step => step.toolCallId === status.step.toolCallId) ?? status.step;
+        icon = getToolIcon(liveStep.toolName);
+        label = status.step.description ?? t("chat.activity_running_tool", { tool: getToolDisplayName(liveStep.toolName) });
+        detail = liveStep.detail;
+    } else if (status.kind === "evaluating") {
+        icon = <DocumentBulletList16Regular />;
+        label = t("chat.activity_evaluating");
+    } else {
+        const stages = t("chat.activity_thinking_stages", { returnObjects: true }) as string[];
+        label = stages[Math.min(status.stage, stages.length - 1)] ?? t("chat.answer_loading");
+    }
 
     return (
         <animated.div style={{ ...animatedStyles }}>
             <div className={styles.answerContainer}>
                 <div className={styles.growItem}>
                     <div className={styles.loadingLine} role="status">
-                        {/* Announce only real progress changes, not the rotating filler phrases. */}
-                        <span className={styles.visuallyHidden}>{toolLabel ?? t("chat.answer_loading")}</span>
+                        {/* Announce what is shown, without the ticking time. */}
+                        <span className={styles.visuallyHidden}>{label}</span>
                         <span aria-hidden="true">
-                            {shownStep && toolLabel ? (
-                                <ActivityLine
-                                    icon={getToolIcon(shownStep.toolName)}
-                                    label={toolLabel}
-                                    detail={shownStep.detail}
-                                    startedAt={activity?.startedAt}
-                                />
-                            ) : (
-                                <ActivityLine
-                                    icon={<Sparkle16Regular />}
-                                    label={phrases[phraseIndex] ?? t("chat.answer_loading")}
-                                    startedAt={activity?.startedAt}
-                                />
-                            )}
+                            <ActivityLine icon={icon} label={label} detail={detail} startedAt={activity?.startedAt} reserveDetailLine />
                         </span>
                     </div>
                 </div>

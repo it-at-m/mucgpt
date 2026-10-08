@@ -1,3 +1,4 @@
+import copy
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from datetime import datetime
@@ -17,6 +18,8 @@ from langchain_core.messages import (
     SystemMessage,
     ToolMessage,
 )
+from langchain_core.tools import BaseTool
+from langchain_core.utils.function_calling import convert_to_openai_function
 from langfuse import propagate_attributes
 from langfuse.langchain import CallbackHandler as LFCallbackHandler
 from langgraph.config import get_config as get_runtime_config
@@ -445,6 +448,96 @@ class ContextMiddleware(AgentMiddleware):
             return await handler(request)
         with propagate_attributes(prompt=runtime_context.langfuse_prompt):
             return await handler(request)
+
+
+# Extra argument the model fills on every tool call: a short status line shown to the user
+# while the tool runs. It only exists in what the model sees and is removed before the tool runs.
+TOOL_STATUS_ARG = "status_message"
+TOOL_STATUS_SCHEMA: dict[str, Any] = {
+    "type": "string",
+    "description": (
+        "One short sentence, in the language the user writes in, telling the user what "
+        "you are doing with this call. Start with a verb and name what you are looking "
+        "for or working on, e.g. 'Suche nach den Öffnungszeiten des Bürgerbüros'. "
+        "Do not mention tool names or technical details."
+    ),
+    "minLength": 1,
+    "maxLength": 80,
+}
+
+
+def _has_own_status_arg(tool: BaseTool | None) -> bool:
+    return tool is not None and TOOL_STATUS_ARG in tool.args
+
+
+def _with_status_arg(tool: BaseTool | dict[str, Any]) -> BaseTool | dict[str, Any]:
+    """Return the tool's definition for the model with the status argument added.
+
+    Uses the flat ``{name, description, parameters}`` function format: Deep Agents'
+    tool exclusion runs after this middleware and reads dict tools by their top-level name.
+    """
+    if not isinstance(tool, BaseTool) or _has_own_status_arg(tool):
+        return tool
+    # Deep copy: MCP tools share their parameter schema with the cached tool metadata.
+    spec = copy.deepcopy(convert_to_openai_function(tool))
+    parameters = spec.setdefault("parameters", {"type": "object"})
+    # First property, so it streams before the other arguments and the UI can show it early.
+    parameters["properties"] = {
+        TOOL_STATUS_ARG: TOOL_STATUS_SCHEMA,
+        **parameters.get("properties", {}),
+    }
+    parameters["required"] = [TOOL_STATUS_ARG, *parameters.get("required", [])]
+    return spec
+
+
+def _add_status_arg(request: ModelRequest) -> ModelRequest:
+    if not request.tools:
+        return request
+    return request.override(tools=[_with_status_arg(tool) for tool in request.tools])
+
+
+def _strip_status_arg(request: ToolCallRequest) -> ToolCallRequest:
+    args = request.tool_call.get("args") or {}
+    if TOOL_STATUS_ARG not in args or _has_own_status_arg(request.tool):
+        return request
+    stripped = {key: value for key, value in args.items() if key != TOOL_STATUS_ARG}
+    return request.override(tool_call={**request.tool_call, "args": stripped})
+
+
+class ToolStatusMiddleware(AgentMiddleware):
+    """Let the model describe each tool call for the user, without the tool ever seeing it.
+
+    Must run after tool filtering (``ContextMiddleware``): from here on the model sees
+    tool definitions as dicts instead of ``BaseTool`` objects.
+    """
+
+    def wrap_model_call(
+        self,
+        request: ModelRequest,
+        handler: Callable[[ModelRequest], ModelResponse],
+    ) -> ModelResponse:
+        return handler(_add_status_arg(request))
+
+    async def awrap_model_call(
+        self,
+        request: ModelRequest,
+        handler: Callable[[ModelRequest], Awaitable[ModelResponse]],
+    ) -> ModelResponse:
+        return await handler(_add_status_arg(request))
+
+    def wrap_tool_call(
+        self,
+        request: ToolCallRequest,
+        handler: Callable[[ToolCallRequest], ToolMessage | Command],
+    ) -> ToolMessage | Command:
+        return handler(_strip_status_arg(request))
+
+    async def awrap_tool_call(
+        self,
+        request: ToolCallRequest,
+        handler: Callable[[ToolCallRequest], Awaitable[ToolMessage | Command]],
+    ) -> ToolMessage | Command:
+        return await handler(_strip_status_arg(request))
 
 
 class ToolErrorMiddleware(AgentMiddleware):

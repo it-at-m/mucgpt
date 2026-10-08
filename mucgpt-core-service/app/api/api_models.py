@@ -326,6 +326,10 @@ class ToolListResponse(BaseModel):
     tools: list[ToolInfo] = Field(
         ..., description="List of available tools with details."
     )
+    internal_tool_ids: list[str] = Field(
+        default_factory=list,
+        description="Ids of tools the agent uses internally (e.g. planning, scratch files); not shown to users as activity.",
+    )
     model_config = ConfigDict(
         json_schema_extra={
             "example": {

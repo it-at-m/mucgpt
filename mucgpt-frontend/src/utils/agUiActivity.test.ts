@@ -1,6 +1,15 @@
 import { EventType, type BaseEvent } from "@ag-ui/core";
 import { describe, expect, it } from "vitest";
-import { getRunningStep, getStepsDurationSeconds, initialRunActivity, reduceRunActivity, type RunActivity } from "./agUiActivity";
+import {
+    getLiveStatus,
+    getLiveStatusKey,
+    getRunningStep,
+    getStepsDurationSeconds,
+    initialRunActivity,
+    reduceRunActivity,
+    type ActivityStep,
+    type RunActivity
+} from "./agUiActivity";
 
 const replay = (events: BaseEvent[]): RunActivity => events.reduce((state, event, index) => reduceRunActivity(state, event, index), initialRunActivity);
 
@@ -98,6 +107,26 @@ describe("reduceRunActivity", () => {
         expect(state.steps[0]).toMatchObject({ status: "done", detail: "Kita" });
         expect(state.steps[0]).not.toHaveProperty("args");
     });
+    it("shows the model's status description before the arguments are complete", () => {
+        const state = replay([
+            runStarted,
+            toolStart("c1", "search_snow_kb_eakte"),
+            toolArgs("c1", '{"status_message": "Durchsuche die eAkte-'),
+            toolArgs("c1", 'Wissensdatenbank", "query": "Akte anl')
+        ]);
+        expect(state.steps[0].description).toBe("Durchsuche die eAkte-Wissensdatenbank");
+
+        const settled = reduceRunActivity(state, toolArgs("c1", 'egen"}'), 9);
+        expect(reduceRunActivity(settled, toolEnd("c1"), 10).steps[0]).toMatchObject({
+            description: "Durchsuche die eAkte-Wissensdatenbank",
+            detail: "Akte anlegen"
+        });
+    });
+
+    it("waits for the status description string to be complete", () => {
+        const state = replay([runStarted, toolStart("c1", "InternetSearch"), toolArgs("c1", '{"status_message": "Suche na')]);
+        expect(state.steps[0].description).toBeUndefined();
+    });
 });
 
 describe("getStepsDurationSeconds", () => {
@@ -112,5 +141,43 @@ describe("getStepsDurationSeconds", () => {
 
     it("is undefined while nothing has ended", () => {
         expect(getStepsDurationSeconds([{ toolCallId: "a", toolName: "x", status: "running", startedAt: 0 }])).toBeUndefined();
+    });
+});
+
+describe("getLiveStatus", () => {
+    const visible = (toolName: string) => toolName !== "write_todos";
+    const activity = (steps: ActivityStep[], startedAt = 0): RunActivity => ({ phase: "thinking", steps, startedAt });
+    const step = (overrides: Partial<ActivityStep>): ActivityStep => ({
+        toolCallId: "c1",
+        toolName: "InternetSearch",
+        status: "running",
+        startedAt: 0,
+        ...overrides
+    });
+
+    it("escalates the thinking stage with the run time", () => {
+        expect(getLiveStatus(activity([]), 9_000, visible)).toEqual({ kind: "thinking", stage: 0 });
+        expect(getLiveStatus(activity([]), 10_000, visible)).toEqual({ kind: "thinking", stage: 1 });
+        expect(getLiveStatus(activity([]), 60_000, visible)).toEqual({ kind: "thinking", stage: 2 });
+    });
+
+    it("ignores internal tools", () => {
+        expect(getLiveStatus(activity([step({ toolName: "write_todos" })]), 1_000, visible)).toEqual({ kind: "thinking", stage: 0 });
+    });
+
+    it("waits briefly for the model's description of a running tool", () => {
+        expect(getLiveStatus(activity([step({})]), 100, visible)).toMatchObject({ kind: "tool", awaitingDescription: true });
+        expect(getLiveStatus(activity([step({})]), 400, visible)).toMatchObject({ kind: "tool", awaitingDescription: false });
+        expect(getLiveStatus(activity([step({ description: "Suche" })]), 100, visible)).toMatchObject({ awaitingDescription: false });
+    });
+
+    it("reviews results once visible tools are done", () => {
+        expect(getLiveStatus(activity([step({ status: "done", endedAt: 2 })]), 3_000, visible)).toEqual({ kind: "evaluating" });
+    });
+
+    it("changes the key when the description arrives", () => {
+        const before = getLiveStatusKey(getLiveStatus(activity([step({})]), 400, visible));
+        const after = getLiveStatusKey(getLiveStatus(activity([step({ description: "Suche" })]), 400, visible));
+        expect(before).not.toBe(after);
     });
 });

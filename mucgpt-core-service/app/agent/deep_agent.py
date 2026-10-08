@@ -12,6 +12,7 @@ from agent.middleware import (
     TokenUsage,
     TokenUsageMiddleware,
     ToolErrorMiddleware,
+    ToolStatusMiddleware,
 )
 from agent.state_models.default_state import DefaultAgentState
 from agent.tools.mcp import McpBearerAuthProvider
@@ -45,6 +46,8 @@ class _ConfiguredLangChainDeepAgentGraph:
             tools=self.tools,
             middleware=[
                 ContextMiddleware(state_schema=self.state_schema),
+                # After ContextMiddleware: it filters tools as BaseTool objects.
+                ToolStatusMiddleware(),
                 ToolErrorMiddleware(),
                 TokenUsageMiddleware(),
             ],  # type: ignore

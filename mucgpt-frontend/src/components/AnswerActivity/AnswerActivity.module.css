@@ -56,15 +56,18 @@
 .shimmer {
     /* One full sweep; slow enough to read as calm background activity. */
     --activity-shimmer-period: 2s;
+    /* 200% wide: the highlight at the gradient's middle then travels exactly from one edge of the
+       text to the other, so it never idles off-screen while the easing slows down at the turns. */
     background: linear-gradient(
             90deg,
             var(--colorNeutralForeground3) 0%,
-            var(--colorNeutralForeground3) 38%,
-            var(--app-progress-highlight) 50%,
-            var(--colorNeutralForeground3) 62%,
+            var(--colorNeutralForeground3) 32%,
+            var(--app-progress-highlight) 46%,
+            var(--app-progress-highlight) 54%,
+            var(--colorNeutralForeground3) 68%,
             var(--colorNeutralForeground3) 100%
         )
-        0 0 / 300% 100%;
+        0 0 / 200% 100%;
     background-clip: text;
     -webkit-text-fill-color: transparent;
     animation: progress-shimmer var(--activity-shimmer-period) var(--curveEasyEase) infinite alternate;
@@ -79,7 +82,24 @@
     }
 }
 
+.enter {
+    animation: activity-enter var(--durationNormal) var(--curveDecelerateMid);
+}
+
+@keyframes activity-enter {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
 @media (prefers-reduced-motion: reduce) {
+    .enter {
+        animation: none;
+    }
+
     .shimmer {
         background: none;
         color: var(--colorNeutralForeground2);

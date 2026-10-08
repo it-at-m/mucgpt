@@ -294,6 +294,8 @@ export interface ToolInfo {
 
 export interface ToolListResponse {
     tools: ToolInfo[];
+    /** Ids of tools the agent uses internally (planning, scratch files); not shown as activity. */
+    internal_tool_ids?: string[];
 }
 
 export interface User {

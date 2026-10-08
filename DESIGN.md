@@ -382,6 +382,7 @@ Motion explains state changes and spatial relationships. It is not decoration.
 - Respect `prefers-reduced-motion` for every non-essential transition and animation.
 - Use motion to communicate state or spatial relationships, not decoration.
 - Do not orchestrate page-load animation sequences.
+- In-progress agent activity (thinking, running tools) is shown as status text with a slow back-and-forth shimmer in `--app-progress-highlight`, not with spinners or animated dots. The shimmer is the only motion on that line, stops once the step is done, and becomes static `colorNeutralForeground2` text under reduced motion.
 
 ## 10. Themes
 

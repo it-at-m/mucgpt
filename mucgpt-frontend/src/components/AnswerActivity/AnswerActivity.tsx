@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 
 import styles from "./AnswerActivity.module.css";
 import { ActivityLine } from "./ActivityLine";
+import { useIsVisibleTool } from "./useIsVisibleTool";
 import { useToolIcon } from "./useToolIcon";
 import { useToolDisplayName } from "../../hooks/useToolDisplayName";
 import { getStepsDurationSeconds, type ActivityStep } from "../../utils/agUiActivity";
@@ -16,10 +17,15 @@ interface Props {
  * Compact, collapsed-by-default summary of the tool steps the agent took for an answer.
  * While a tool is still running (e.g. one started after the answer text), the header shows it live.
  */
-export const AnswerActivity = ({ steps }: Props) => {
+export const AnswerActivity = ({ steps: allSteps }: Props) => {
     const { t } = useTranslation();
     const getToolDisplayName = useToolDisplayName();
     const getToolIcon = useToolIcon();
+    const isVisibleTool = useIsVisibleTool();
+
+    // Internal agent tools (planning, scratch files) are left out entirely.
+    const steps = allSteps.filter(step => isVisibleTool(step.toolName));
+    if (steps.length === 0) return null;
 
     const runningStep = steps.findLast(step => step.status === "running");
     const failedCount = steps.filter(step => step.status === "error").length;
@@ -39,7 +45,7 @@ export const AnswerActivity = ({ steps }: Props) => {
                     {runningStep ? (
                         <ActivityLine
                             icon={getToolIcon(runningStep.toolName)}
-                            label={t("chat.activity_running_tool", { tool: getToolDisplayName(runningStep.toolName) })}
+                            label={runningStep.description ?? t("chat.activity_running_tool", { tool: getToolDisplayName(runningStep.toolName) })}
                             detail={runningStep.detail}
                             startedAt={runningStep.startedAt}
                         />
@@ -63,7 +69,9 @@ export const AnswerActivity = ({ steps }: Props) => {
                                     <span className={styles.connector} />
                                 </span>
                                 <Caption1 className={styles.stepLabel}>
-                                    <span className={step.status === "running" ? styles.shimmer : undefined}>{getToolDisplayName(step.toolName)}</span>
+                                    <span className={step.status === "running" ? styles.shimmer : undefined}>
+                                        {step.description ?? getToolDisplayName(step.toolName)}
+                                    </span>
                                     {step.status === "error" && ` – ${t("chat.activity_step_failed")}`}
                                 </Caption1>
                                 {step.detail && <Caption1 className={styles.detail}>{step.detail}</Caption1>}

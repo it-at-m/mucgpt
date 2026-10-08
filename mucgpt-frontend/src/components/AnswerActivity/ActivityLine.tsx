@@ -34,20 +34,25 @@ interface Props {
     detail?: string;
     /** Start of what is being timed (the run or a step); its elapsed time shows once it takes longer than a few seconds. */
     startedAt?: number;
+    /** Keeps the detail line's height even without a detail, so the line doesn't grow and shrink between steps. */
+    reserveDetailLine?: boolean;
 }
 
 /** One in-progress activity line: icon, shimmering label, elapsed time and an optional detail line. */
-export const ActivityLine = ({ icon, label, detail, startedAt }: Props) => {
+export const ActivityLine = ({ icon, label, detail, startedAt, reserveDetailLine = false }: Props) => {
     const { t } = useTranslation();
     const elapsed = useElapsedSeconds(startedAt);
 
     return (
         <span className={styles.line}>
-            <span className={styles.icon} aria-hidden="true">
+            {/* Keyed by label: a new message fades in instead of swapping abruptly. */}
+            <span key={`icon:${label}`} className={`${styles.icon} ${styles.enter}`} aria-hidden="true">
                 {icon}
             </span>
             <Caption1 className={styles.label}>
-                <span className={styles.shimmer}>{label}</span>
+                <span key={label} className={styles.enter}>
+                    <span className={styles.shimmer}>{label}</span>
+                </span>
                 {elapsed !== undefined && elapsed >= SHOW_ELAPSED_AFTER_SECONDS && (
                     // The ticking time is visual reassurance only; announcing it every second would be noise.
                     <span className={styles.meta} aria-hidden="true">
@@ -55,7 +60,15 @@ export const ActivityLine = ({ icon, label, detail, startedAt }: Props) => {
                     </span>
                 )}
             </Caption1>
-            {detail && <Caption1 className={styles.detail}>{detail}</Caption1>}
+            {detail ? (
+                <Caption1 className={styles.detail}>{detail}</Caption1>
+            ) : (
+                reserveDetailLine && (
+                    <Caption1 className={styles.detail} aria-hidden="true">
+                        {"\u00a0"}
+                    </Caption1>
+                )
+            )}
         </span>
     );
 };

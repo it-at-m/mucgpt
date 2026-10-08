@@ -180,6 +180,15 @@ async def ag_ui_chat_endpoint(
     if not chat_request.messages[-1].role == "user":
         raise HTTPException(status_code=400, detail="Last message must be from the user (role='user')")
 
+    try:
+        ModelRegistry.get_model(chat_request.model)
+    except ModelsConfigurationException as exc:
+        detail = str(exc)
+        status_code = 400
+        if "not initialized" in detail.lower():
+            status_code = 500
+        raise HTTPException(status_code=status_code, detail=detail) from exc
+
     encoder = EventEncoder(accept=request.headers.get("accept"))
     agent = await init_agent(user_info=user_info, model_name=chat_request.model)
     events = agent.run_agui_with_streaming(

@@ -1,11 +1,26 @@
+import json
 import time
 import uuid
 from collections.abc import AsyncGenerator
 from typing import Any
 
+from ag_ui.core import (
+    BaseEvent,
+    EventType,
+    RunErrorEvent,
+    RunFinishedEvent,
+    RunStartedEvent,
+    TextMessageChunkEvent,
+    ToolCallChunkEvent,
+    ToolCallResultEvent,
+)
+from ag_ui.core import (
+    TokenUsage as AgUiTokenUsage,
+)
 from langchain_core.messages import (
     AIMessage,
     AIMessageChunk,
+    ToolMessage,
 )
 from langchain_core.runnables import RunnableConfig
 from langchain_core.runnables.config import merge_configs
@@ -63,6 +78,23 @@ def _usage_from_token_usage(token_usage: TokenUsage) -> Usage | None:
         cache_read_tokens=token_usage.cache_read_tokens,
         context_tokens=token_usage.context_tokens,
     )
+
+
+def _ag_ui_usage_from_token_usage(
+    token_usage: TokenUsage, model: str | None
+) -> list[AgUiTokenUsage] | None:
+    if token_usage.context_tokens is None:
+        return None
+    return [
+        AgUiTokenUsage(
+            model=model,
+            input_tokens=token_usage.prompt_tokens,
+            output_tokens=token_usage.completion_tokens,
+            total_tokens=token_usage.prompt_tokens + token_usage.completion_tokens,
+            reasoning_tokens=token_usage.reasoning_tokens or None,
+            cached_input_tokens=token_usage.cache_read_tokens or None,
+        )
+    ]
 
 
 def _message_chunk_trace_event(
@@ -190,6 +222,7 @@ class MUCGPTAgentExecutor:
         assistant_id: str | None = None,
         data_sources: list[dict[str, Any]] | None = None,
         conversation_id: str | None = None,
+        reasoning_effort: str | None = None,
     ) -> AsyncGenerator[dict]:
         logger.debug(
             "Chat streaming started with temperature %s, model %s",
@@ -229,6 +262,7 @@ class MUCGPTAgentExecutor:
                 RunnableConfig(
                     configurable={
                         "llm_temperature": temperature,
+                        "reasoning_effort": reasoning_effort,
                         "llm": model,
                         "llm_streaming": True,
                         "enabled_tools": enabled_tools,
@@ -394,6 +428,7 @@ class MUCGPTAgentExecutor:
         assistant_id: str | None = None,
         data_sources: list[dict[str, Any]] | None = None,
         conversation_id: str | None = None,
+        reasoning_effort: str | None = None,
     ) -> ChatCompletionResponse:
         logger.debug(
             "Chat non-streaming started with temperature %s, model %s",
@@ -420,6 +455,7 @@ class MUCGPTAgentExecutor:
             request_config = RunnableConfig(
                 configurable={
                     "llm_temperature": temperature,
+                    "reasoning_effort": reasoning_effort,
                     "llm": model,
                     "llm_streaming": False,
                     "enabled_tools": enabled_tools,
@@ -511,4 +547,190 @@ class MUCGPTAgentExecutor:
                         total_tokens=0,
                         context_tokens=None,
                     ),
+                )
+
+    ###############################################################################
+    ###############################################################################
+    @observe(name="Agent", capture_input=False, capture_output=False)
+    async def run_agui_with_streaming(
+        self,
+        messages: list[InputMessage],
+        temperature: float,
+        model: str | None,
+        user_info: AuthenticationResult,
+        conversation_id: str,
+        enabled_tools: list[str] | None = None,
+        assistant_id: str | None = None,
+        data_sources: list[dict[str, Any]] | None = None,
+        reasoning_effort: str | None = None,
+    ) -> AsyncGenerator[BaseEvent]:
+        """Run the agent and stream the result as AG-UI protocol events."""
+        run_id = uuid.uuid4().hex
+        tags = (
+            [f"assistant-{assistant_id}"]
+            if assistant_id is not None
+            else ["default-assistant"]
+        )
+        with propagate_attributes(
+            user_id=hash_user_id(user_info.user_id),
+            tags=tags,
+            session_id=conversation_id,
+        ):
+            # Same lightweight trace input as run_with_streaming.
+            get_client().update_current_span(
+                input=messages[-1].content if messages else None
+            )
+            answer_chunks: list[str] = []
+            trace_events: list[dict[str, Any]] = []
+            config = merge_configs(
+                self.base_config,
+                RunnableConfig(
+                    configurable={
+                        "thread_id": conversation_id,
+                        "llm_temperature": temperature,
+                        "reasoning_effort": reasoning_effort,
+                        "llm": model,
+                        "llm_streaming": True,
+                        "enabled_tools": enabled_tools,
+                        "agent_state": {"current_scope": "general"},
+                        "user_info": user_info,
+                        "llm_user": extract_department_prefix(user_info.department),
+                        "llm_extra_body": self._build_llm_extra_body(assistant_id),
+                        "assistant_id": assistant_id,
+                        "data_sources": data_sources,
+                        "token_usage": TokenUsage(),
+                        "langfuse_prompt": getattr(
+                            self.agent, "default_langfuse_prompt", None
+                        ),
+                    },
+                ),
+            )
+
+            try:
+                yield RunStartedEvent(
+                    type=EventType.RUN_STARTED,
+                    thread_id=conversation_id,
+                    run_id=run_id,
+                )
+
+                message_id = uuid.uuid4().hex
+                tool_calls: dict[int, tuple[str, str]] = {}
+                async for stream_mode, data in self.agent.graph.astream(
+                    {"messages": to_langchain_messages(messages)},
+                    stream_mode=["messages", "custom", "updates"],
+                    config=config,
+                ):
+                    if stream_mode == "custom":
+                        # Only traced, not streamed (matches run_with_streaming trace).
+                        try:
+                            trace_events.append(
+                                {
+                                    "stream": "custom",
+                                    "type": "ToolStreamChunk",
+                                    "content": _json_safe(
+                                        ToolStreamChunk.model_validate_json(data)
+                                    ),
+                                }
+                            )
+                        except Exception:
+                            trace_events.append(
+                                {
+                                    "stream": "custom",
+                                    "type": "raw",
+                                    "content": _json_safe(data),
+                                }
+                            )
+                        continue
+                    if stream_mode == "updates":
+                        trace_events.append(
+                            {"stream": "updates", "content": _json_safe(data)}
+                        )
+                        continue
+
+                    chunk, metadata = data
+                    trace_events.append(
+                        _message_chunk_trace_event(
+                            chunk, metadata if isinstance(metadata, dict) else {}
+                        )
+                    )
+                    # dont stream summarization chunks or internal chunks
+                    if metadata.get("lc_source") == "summarization" or _is_internal_chunk(metadata):
+                        continue
+                    if isinstance(chunk, ToolMessage):
+                        content = chunk.content
+                        yield ToolCallResultEvent(
+                            type=EventType.TOOL_CALL_RESULT,
+                            message_id=chunk.id or uuid.uuid4().hex,
+                            tool_call_id=chunk.tool_call_id,
+                            content=(
+                                content
+                                if isinstance(content, str)
+                                else json.dumps(content)
+                            ),
+                            role="tool",
+                        )
+                        continue
+                    if not isinstance(chunk, AIMessageChunk):
+                        continue
+
+                    if chunk.id:
+                        message_id = chunk.id
+                    for block in chunk.content_blocks:
+                        block_type = block.get("type")
+                        if block_type == "text" and (text := block.get("text")):
+                            answer_chunks.append(text)
+                            yield TextMessageChunkEvent(
+                                type=EventType.TEXT_MESSAGE_CHUNK,
+                                message_id=message_id,
+                                role="assistant",
+                                delta=text,
+                            )
+                        elif block_type in {"tool_call", "tool_call_chunk"}:
+                            index = block.get("index", 0)
+                            tool_call_id = block.get("id")
+                            tool_call_name = block.get("name")
+                            if tool_call_id and tool_call_name:
+                                tool_calls[index] = (tool_call_id, tool_call_name)
+                            elif index in tool_calls:
+                                tool_call_id, tool_call_name = tool_calls[index]
+                            else:
+                                continue
+
+                            args = block.get("args") or ""
+                            yield ToolCallChunkEvent(
+                                type=EventType.TOOL_CALL_CHUNK,
+                                tool_call_id=tool_call_id,
+                                tool_call_name=tool_call_name,
+                                parent_message_id=message_id,
+                                delta=(
+                                    args if isinstance(args, str) else json.dumps(args)
+                                ),
+                            )
+
+                _write_stream_trace_span(messages, trace_events)
+                get_client().update_current_span(
+                    output="".join(answer_chunks),
+                    metadata={"agent_stream_event_count": len(trace_events)},
+                )
+                yield RunFinishedEvent(
+                    type=EventType.RUN_FINISHED,
+                    thread_id=conversation_id,
+                    run_id=run_id,
+                    usage=_ag_ui_usage_from_token_usage(
+                        config["configurable"]["token_usage"], model
+                    ),
+                    metadata={
+                        "mucgpt": {
+                            "contextTokens": config["configurable"][
+                                "token_usage"
+                            ].context_tokens
+                        }
+                    },
+                )
+            except Exception as ex:
+                _write_stream_trace_span(messages, trace_events)
+                logger.exception("Exception in AG-UI streaming")
+                yield RunErrorEvent(
+                    type=EventType.RUN_ERROR,
+                    message=llm_exception_handler(ex=ex, logger=logger),
                 )

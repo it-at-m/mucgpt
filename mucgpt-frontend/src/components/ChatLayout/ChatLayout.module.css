@@ -8,6 +8,7 @@
     height: 100vh;
     height: 100dvh;
     overflow: hidden;
+    overflow: clip;
     background: var(--colorNeutralBackground3);
 }
 
@@ -99,6 +100,7 @@
     margin-top: 60px;
     margin-right: 0;
     overflow: hidden;
+    overflow: clip;
     z-index: 1;
     box-sizing: border-box;
     background: var(--colorNeutralBackground3);
@@ -118,6 +120,7 @@
     min-height: 0;
     padding-bottom: var(--chatInputHeight, 0);
     overflow: hidden;
+    overflow: clip;
     box-sizing: border-box;
 }
 

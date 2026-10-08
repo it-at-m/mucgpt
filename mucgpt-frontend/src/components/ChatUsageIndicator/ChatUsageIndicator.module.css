@@ -1,24 +1,11 @@
-/*
- * The Button itself stays a plain, invisible interaction surface (no background/size
- * opinions of its own) - Fluent's hover/pressed/focus handling lives entirely on it,
- * while the visible ring is a plain span inside it that no Fluent state class touches.
- */
-.ringButton {
-    min-width: 0;
-    width: 40px;
-    height: 40px;
-    padding: 0;
-    overflow: visible;
-}
-
 .ring {
     --usage-percent: 0;
 
     position: relative;
     display: grid;
     place-items: center;
-    width: 32px;
-    height: 32px;
+    width: 28px;
+    height: 28px;
     padding: 3px;
     border-radius: var(--borderRadiusCircular);
     background: conic-gradient(var(--colorBrandBackground) calc(var(--usage-percent) * 1%), var(--colorNeutralBackground4) 0);
@@ -96,7 +83,7 @@
     position: absolute;
     inset: 3px;
     border-radius: inherit;
-    background: var(--colorNeutralBackground3);
+    background: var(--colorNeutralBackground1);
 }
 
 .ringValue {

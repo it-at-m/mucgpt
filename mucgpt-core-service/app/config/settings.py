@@ -518,6 +518,7 @@ class Settings(BaseSettings):
     # General settings
     VERSION: str = Field(default="")
     LOG_CONFIG: str = "logconf.yaml"
+    AG_UI_ENABLED: bool = False
 
     # Frontend settings
     ENV_NAME: str = "MUCGPT"

@@ -17,6 +17,7 @@ import { getChatReducer, handleRegenerate, handleRollback, makeApiRequest } from
 import { ChatOptions } from "../chat/Chat";
 import { STORAGE_KEYS } from "../layout/LayoutHelper";
 import { ToolStatus } from "../../utils/ToolStreamHandler";
+import { initialRunActivity, type RunActivity } from "../../utils/agUiActivity";
 import { AssistantStrategy, CommunityAssistantStrategy, DeletedCommunityAssistantStrategy, LocalAssistantStrategy } from "./AssistantStrategy";
 import { chatApi } from "../../api/core-client";
 import { useGlobalToastContext } from "../../components/GlobalToastHandler/GlobalToastContext";
@@ -41,10 +42,12 @@ import { useDuplicateAssistant } from "../discovery/hooks/useDuplicateAssistant"
 import { useMigrateLocalAssistant } from "../../hooks/useMigrateLocalAssistant";
 import { CloseConfirmationDialog } from "../../components/AssistantDialogs/shared/CloseConfirmationDialog";
 import { UploadedData } from "../../components/ContextManagerDialog/ContextManagerDialog";
+import { useConfigContext } from "../../context/ConfigContext";
 import { useToolStatusToasts } from "../../hooks/useToolStatusToasts";
 import styles from "./UnifiedAssistantChat.module.css";
 import { useUnifiedHistory, useUnifiedHistoryRegistration } from "../../components/UnifiedHistory";
 import { downloadAssistantExport, mapAssistantToExportData } from "../../utils/assistant-export";
+import { scrollIntoNearestContainer } from "../../utils/scrollIntoNearestContainer";
 
 interface UnifiedAssistantChatProps {
     strategy: AssistantStrategy;
@@ -52,6 +55,7 @@ interface UnifiedAssistantChatProps {
 
 /** Strategy-driven chat page shared by the personal and community assistant views. */
 const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
+    const { ag_ui_enabled: agUiEnabled } = useConfigContext();
     // useReducer für den Chat-Status
     const chatReducer = getChatReducer<Assistant>();
     // Combined states with useReducer
@@ -102,6 +106,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
     const [question, setQuestion] = useState<string>("");
     const [selectedTools, setSelectedTools] = useState<string[]>([]);
     const [toolStatuses, setToolStatuses] = useState<ToolStatus[]>([]);
+    const [runActivity, setRunActivity] = useState<RunActivity>(initialRunActivity);
     const [showNotSubscribedDialog, setShowNotSubscribedDialog] = useState<boolean>(false);
     const [noAccess, setNoAccess] = useState<boolean>(false);
     const [uploadedData, setUploadedData] = useState<UploadedData[]>([]);
@@ -473,7 +478,11 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                     setToolStatuses,
                     dataSources,
                     lastAnswerRef,
-                    setIsLoadingValue
+                    setIsLoadingValue,
+                    true,
+                    agUiEnabled,
+                    undefined, // onAgUiEvent — event log is only wired up in the main chat
+                    setRunActivity
                 );
             } catch (e) {
                 setError(e);
@@ -494,17 +503,18 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
             setIsLoadingValue,
             setLastQuestionValue,
             isLegacyAssistant,
-            isAssistantUnavailable
+            isAssistantUnavailable,
+            agUiEnabled
         ]
     );
 
     useEffect(() => {
-        chatMessageStreamEnd.current?.scrollIntoView({ behavior: "smooth" });
+        scrollIntoNearestContainer(chatMessageStreamEnd.current);
     }, [answers.length]);
     // Add a scroll function
     const scrollToBottom = useCallback(() => {
         if (chatMessageStreamEnd.current) {
-            chatMessageStreamEnd.current.scrollIntoView({ behavior: "smooth" });
+            scrollIntoNearestContainer(chatMessageStreamEnd.current);
         }
     }, []);
 
@@ -975,6 +985,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                 }}
                 onRollbackMessage={isDeletedAssistant ? undefined : onRollbackMessage}
                 isLoading={isLoading}
+                loadingActivity={runActivity}
                 error={error}
                 makeApiRequest={() => {
                     dispatch({ type: "SET_ANSWERS", payload: answers.slice(0, -1) });
@@ -997,6 +1008,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
             onRegenerateResponseClicked,
             onRollbackMessage,
             isLoading,
+            runActivity,
             isStreaming,
             error,
             callApi,

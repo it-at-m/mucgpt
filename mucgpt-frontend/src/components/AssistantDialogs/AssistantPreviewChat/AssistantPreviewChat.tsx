@@ -15,9 +15,11 @@ import { LLMContext } from "../../LLMSelector/LLMContextProvider";
 import { FollowUpActionContext, FollowUpActionModel } from "../../FollowUpAction";
 import { useToolsContext } from "../../ToolsProvider";
 import { ToolStatus } from "../../../utils/ToolStreamHandler";
+import { initialRunActivity, type RunActivity } from "../../../utils/agUiActivity";
 import { useToolStatusToasts } from "../../../hooks/useToolStatusToasts";
 import { getChatReducer, makeApiRequest } from "../../../pages/page_helpers";
 import type { StorageService } from "../../../service/storage";
+import { useConfigContext } from "../../../context/ConfigContext";
 
 interface AssistantPreviewChatProps {
     /** Live system prompt from the editor form. */
@@ -49,6 +51,7 @@ export const AssistantPreviewChat = ({
     onCollapse,
     collapseIcon
 }: AssistantPreviewChatProps) => {
+    const { ag_ui_enabled: agUiEnabled } = useConfigContext();
     const { t } = useTranslation();
     const { LLM, setLLM, availableLLMs } = useContext(LLMContext);
     const { tools } = useToolsContext();
@@ -73,6 +76,7 @@ export const AssistantPreviewChat = ({
     const [isStreaming, setIsStreaming] = useState<boolean>(false);
     const [error, setError] = useState<unknown>();
     const [toolStatuses, setToolStatuses] = useState<ToolStatus[]>([]);
+    const [runActivity, setRunActivity] = useState<RunActivity>(initialRunActivity);
     const [showScrollToBottom, setShowScrollToBottom] = useState(false);
     const [renderScrollToBottom, setRenderScrollToBottom] = useState(false);
     const [previewInputHeight, setPreviewInputHeight] = useState(0);
@@ -237,7 +241,10 @@ export const AssistantPreviewChat = ({
                     undefined, // data_sources — preview has no file uploads
                     undefined, // answerTopRef
                     setIsLoadingValue,
-                    false // persist — keep the preview conversation ephemeral
+                    false, // persist — keep the preview conversation ephemeral
+                    agUiEnabled,
+                    undefined, // onAgUiEvent — no event log in the preview
+                    setRunActivity
                 );
             } catch (e) {
                 setError(e);
@@ -245,7 +252,7 @@ export const AssistantPreviewChat = ({
             setIsLoadingValue(false);
             setIsStreaming(false);
         },
-        [answers, error, LLM, setIsLoadingValue, setLastQuestionValue]
+        [answers, error, LLM, setIsLoadingValue, setLastQuestionValue, agUiEnabled]
     );
 
     const onRegenerate = useCallback(() => {
@@ -325,6 +332,7 @@ export const AssistantPreviewChat = ({
                     </>
                 )}
                 isLoading={isLoading}
+                loadingActivity={runActivity}
                 error={error}
                 makeApiRequest={() => {
                     const trimmed = answers.slice(0, -1);
@@ -341,7 +349,7 @@ export const AssistantPreviewChat = ({
                 lastAnswerRef={lastAnswerRef}
             />
         ),
-        [answers, isLoading, isStreaming, error, callApi, lastQuestion, onRegenerate]
+        [answers, isLoading, runActivity, isStreaming, error, callApi, lastQuestion, onRegenerate]
     );
 
     const containerStyle = { "--previewInputHeight": `${previewInputHeight}px` } as CSSProperties;

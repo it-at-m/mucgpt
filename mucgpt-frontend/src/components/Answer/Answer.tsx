@@ -2,15 +2,16 @@ import { useCallback, useEffect, useState } from "react";
 
 import styles from "./Answer.module.css";
 
-import { AskResponse } from "../../api";
+import { ChatResponse } from "../../api";
 import { useTranslation } from "react-i18next";
 import { ArrowSync24Regular, CheckmarkSquare24Regular, ContentView24Regular, Copy24Regular } from "@fluentui/react-icons";
 import { Button, Tooltip } from "@fluentui/react-components";
 import { FollowUpActionList } from "../FollowUpAction";
 import { MarkdownRenderer } from "../MarkdownRenderer/MarkdownRenderer";
+import { AnswerActivity } from "../AnswerActivity/AnswerActivity";
 
 interface Props {
-    answer: AskResponse;
+    answer: ChatResponse;
     onRegenerateResponseClicked?: () => void;
     onFollowUpActionSend?: (prompt: string) => void;
     /** Whether this is the newest answer in the chat. Latest answers keep their actions permanently visible; older ones reveal them on hover. */
@@ -53,6 +54,7 @@ export const Answer = ({ answer, onRegenerateResponseClicked, onFollowUpActionSe
         <div className={`${styles.answerWithActions} ${isLatest ? styles.latest : ""}`}>
             <div className={styles.answerContainer}>
                 <div className={styles.growItem}>
+                    {answer.activitySteps && answer.activitySteps.length > 0 && <AnswerActivity steps={answer.activitySteps} />}
                     {formatted && (
                         <div className={styles.answerText}>
                             <MarkdownRenderer allowDrawio isStreaming={isStreaming}>

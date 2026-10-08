@@ -145,6 +145,7 @@ const CONFIG_RESPONSE: ApplicationConfig = {
     transcription_enabled: true,
     transcription_default_model: "onnx-community/whisper-small",
     ai_act_compliance_check_enabled: true,
+    ag_ui_enabled: true,
     footer_link_url: "https://intranet.example.org",
     footer_label: "Example Organization",
     faq_url: "https://intranet.example.org/help",
@@ -1027,7 +1028,73 @@ export const handlers = [
             ]
         };
         const tools = toolsByLanguage[lang] || toolsByLanguage.deutsch;
-        return HttpResponse.json({ tools });
+        return HttpResponse.json({ tools, internal_tool_ids: ["delete", "edit_file", "glob", "grep", "ls", "read_file", "write_file", "write_todos"] });
+    }),
+    http.post("/api/backend/v1/chat/v2/completions", async ({ request }) => {
+        const body = (await request.json()) as {
+            messages?: { role: string; content: string }[];
+            conversation_id?: string;
+            enabled_tools?: string[];
+        };
+        const mockToolName = body.enabled_tools?.[0];
+        const latestUserMessage =
+            body.messages
+                ?.slice()
+                .reverse()
+                .find(message => message.role === "user")?.content || "";
+        const encoder = new TextEncoder();
+        const runId = crypto.randomUUID();
+        const messageId = crypto.randomUUID();
+        const threadId = body.conversation_id ?? crypto.randomUUID();
+        const stream = new ReadableStream({
+            async start(controller) {
+                const send = (event: object) => controller.enqueue(encoder.encode(`data: ${JSON.stringify(event)}\n\n`));
+
+                send({ type: "RUN_STARTED", threadId, runId });
+                await delay(100);
+
+                if (/^\s*agui-error\s*$/i.test(latestUserMessage)) {
+                    send({ type: "RUN_ERROR", message: "Mock AG-UI error" });
+                    controller.close();
+                    return;
+                }
+
+                if (mockToolName) {
+                    const toolCallId = crypto.randomUUID();
+                    send({
+                        type: "TOOL_CALL_CHUNK",
+                        toolCallId,
+                        toolCallName: mockToolName,
+                        parentMessageId: messageId,
+                        delta: JSON.stringify({ status_message: "Suche passende Informationen", query: latestUserMessage.slice(0, 80) })
+                    });
+                    await delay(1500);
+                    send({ type: "TOOL_CALL_RESULT", messageId: crypto.randomUUID(), toolCallId, content: "Mock tool result", role: "tool" });
+                }
+
+                const chunks = buildChatMessage().match(/[\s\S]{1,40}/g) ?? [];
+                for (const delta of chunks) {
+                    send({ type: "TEXT_MESSAGE_CHUNK", messageId, role: "assistant", delta });
+                    await delay(50);
+                }
+                send({
+                    type: "RUN_FINISHED",
+                    threadId,
+                    runId,
+                    usage: [{ model: "gpt-4o-mini", inputTokens: 120, outputTokens: 30, totalTokens: 150 }],
+                    metadata: { mucgpt: { contextTokens: 150 } }
+                });
+                controller.close();
+            }
+        });
+
+        return new HttpResponse(stream, {
+            headers: {
+                "Content-Type": "text/event-stream",
+                "Cache-Control": "no-cache",
+                Connection: "keep-alive"
+            }
+        });
     }),
     http.post("/api/backend/v1/chat/completions", async ({ request }) => {
         const body = (await request.json()) as {

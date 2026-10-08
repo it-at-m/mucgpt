@@ -17,6 +17,7 @@ class ModelRegistry:
 
     _models: dict[str, ChatOpenAI | AzureChatOpenAI] = {}
     _default_model: ChatOpenAI | AzureChatOpenAI | None = None
+    _reasoning_models: set[str] = set()
 
     @staticmethod
     def init_chat_model(config: ModelsConfig) -> ChatOpenAI | AzureChatOpenAI:
@@ -52,8 +53,9 @@ class ModelRegistry:
                 f"Failed to initialize chat model {config.llm_name}: {exc}"
             ) from exc
 
-    @staticmethod
+    @classmethod
     def normalize_model_settings(
+        cls,
         model: ChatOpenAI | AzureChatOpenAI,
         settings: dict[str, Any],
     ) -> dict[str, Any]:
@@ -74,6 +76,9 @@ class ModelRegistry:
             model_name and "gpt-5" in model_name
         ):
             normalized.pop("temperature", None)
+        # Only send reasoning_effort to models configured with supports_reasoning.
+        if model_name not in cls._reasoning_models:
+            normalized.pop("reasoning_effort", None)
         return normalized
 
     @classmethod
@@ -92,6 +97,11 @@ class ModelRegistry:
             raise ModelsConfigurationException("Model names must be unique")
 
         _logger = logger or logging.getLogger(__name__)
+        cls._reasoning_models = {
+            config.llm_name
+            for config in models_config
+            if config.model_info.supports_reasoning
+        }
 
         default_config = next(
             (

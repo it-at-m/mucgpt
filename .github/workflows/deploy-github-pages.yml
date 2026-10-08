@@ -67,6 +67,9 @@ jobs:
           cache-dependency-path: mucgpt-frontend/package-lock.json
 
       - name: Install dependencies
+        env:
+          # onnxruntime-node is only used by local spike scripts; skip its native binary download
+          ONNXRUNTIME_NODE_INSTALL: skip
         run: |
           cd mucgpt-frontend
           npm ci

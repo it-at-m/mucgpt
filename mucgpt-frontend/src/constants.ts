@@ -11,9 +11,7 @@ export const DEFAULT_APP_CONFIG: ApplicationConfig = {
             knowledge_cut_off: "",
             input_cost_per_token: 1,
             output_cost_per_token: 1,
-            supports_function_calling: null,
             supports_reasoning: null,
-            supports_vision: null,
             litellm_provider: null,
             inference_location: null
         },
@@ -24,9 +22,7 @@ export const DEFAULT_APP_CONFIG: ApplicationConfig = {
             knowledge_cut_off: "",
             input_cost_per_token: 1,
             output_cost_per_token: 1,
-            supports_function_calling: null,
             supports_reasoning: null,
-            supports_vision: null,
             litellm_provider: null,
             inference_location: null
         },
@@ -37,9 +33,7 @@ export const DEFAULT_APP_CONFIG: ApplicationConfig = {
             knowledge_cut_off: "",
             input_cost_per_token: 1,
             output_cost_per_token: 1,
-            supports_function_calling: null,
             supports_reasoning: null,
-            supports_vision: null,
             litellm_provider: null,
             inference_location: null
         }

@@ -103,9 +103,7 @@ export interface Model {
     knowledge_cut_off?: string | null;
     input_cost_per_token?: number | null;
     output_cost_per_token?: number | null;
-    supports_function_calling?: boolean | null;
     supports_reasoning?: boolean | null;
-    supports_vision?: boolean | null;
     litellm_provider?: string | null;
     inference_location?: string | null;
 }

@@ -55,9 +55,7 @@ class ModelInfo(BaseModel):
     internal_task_model_strength: InternalTaskModelStrength | None = None
     input_cost_per_token: Decimal | None = None
     output_cost_per_token: Decimal | None = None
-    supports_function_calling: bool | None = None
     supports_reasoning: bool | None = None
-    supports_vision: bool | None = None
     litellm_provider: str | None = None
     inference_location: str | None = None
     knowledge_cut_off: str | None = None
@@ -139,9 +137,7 @@ class ModelsConfig(BaseModel):
             "internal_task_model_strength",
             "input_cost_per_token",
             "output_cost_per_token",
-            "supports_function_calling",
             "supports_reasoning",
-            "supports_vision",
             "litellm_provider",
             "inference_location",
             "knowledge_cut_off",
@@ -266,16 +262,6 @@ class ModelsConfig(BaseModel):
         self.model_info.output_cost_per_token = value
 
     @property
-    def supports_function_calling(self) -> bool | None:
-        """Delegates the function-calling capability flag to the model info."""
-        return self.model_info.supports_function_calling
-
-    @supports_function_calling.setter
-    def supports_function_calling(self, value: bool | None) -> None:
-        """Stores the value in the nested model info."""
-        self.model_info.supports_function_calling = value
-
-    @property
     def supports_reasoning(self) -> bool | None:
         """Delegates the reasoning capability flag to the nested model info."""
         return self.model_info.supports_reasoning
@@ -284,16 +270,6 @@ class ModelsConfig(BaseModel):
     def supports_reasoning(self, value: bool | None) -> None:
         """Stores the value in the nested model info."""
         self.model_info.supports_reasoning = value
-
-    @property
-    def supports_vision(self) -> bool | None:
-        """Delegates the vision capability flag to the nested model info."""
-        return self.model_info.supports_vision
-
-    @supports_vision.setter
-    def supports_vision(self, value: bool | None) -> None:
-        """Stores the value in the nested model info."""
-        self.model_info.supports_vision = value
 
     @property
     def litellm_provider(self) -> str | None:
@@ -696,16 +672,8 @@ def _apply_model_info(model: ModelsConfig, entry: dict[str, Any]) -> None:
             )
         )
 
-    if info.supports_function_calling is None:
-        info.supports_function_calling = _coerce_bool(
-            model_info.get("supports_function_calling")
-        )
-
     if info.supports_reasoning is None:
         info.supports_reasoning = _coerce_bool(model_info.get("supports_reasoning"))
-
-    if info.supports_vision is None:
-        info.supports_vision = _coerce_bool(model_info.get("supports_vision"))
 
     if info.litellm_provider is None:
         info.litellm_provider = _first_non_null(

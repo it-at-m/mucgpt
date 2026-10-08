@@ -145,9 +145,7 @@ class TestSettings:
                     "description": "Test model",
                     "input_cost_per_token": 9e-8,
                     "output_cost_per_token": 3.6e-7,
-                    "supports_function_calling": True,
                     "supports_reasoning": False,
-                    "supports_vision": True,
                     "litellm_provider": "azure",
                     "inference_location": "azure/eu",
                     "knowledge_cut_off": "2023-09-01",
@@ -173,9 +171,7 @@ class TestSettings:
             assert model.description == "Test model"
             assert model.input_cost_per_token == Decimal("9e-8")
             assert model.output_cost_per_token == Decimal("3.6e-7")
-            assert model.supports_function_calling is True
             assert model.supports_reasoning is False
-            assert model.supports_vision is True
             assert model.litellm_provider == "azure"
             assert model.inference_location == "azure/eu"
             assert model.knowledge_cut_off == "2023-09-01"
@@ -230,9 +226,7 @@ class TestSettings:
                 assert model.max_output_tokens == 32768
                 assert model.max_input_tokens == 1048576
                 assert "gpt-4.1-nano" in model.description
-                assert model.supports_function_calling is True
                 assert model.supports_reasoning is True
-                assert model.supports_vision is True
                 assert model.input_cost_per_token == Decimal("9e-8")
                 assert model.output_cost_per_token == Decimal("3.6e-7")
                 assert model.litellm_provider == "azure"
@@ -312,7 +306,7 @@ class TestSettings:
                         "max_output_tokens": 1000,
                         "max_input_tokens": 2000,
                         "description": "Manual",
-                        "supports_function_calling": False,
+                        "supports_reasoning": False,
                     },
                 }
             ]
@@ -330,7 +324,7 @@ class TestSettings:
                 assert model.max_output_tokens == 1000
                 assert model.max_input_tokens == 2000
                 assert model.description == "Manual"
-                assert model.supports_function_calling is False
+                assert model.supports_reasoning is False
         mocked.assert_not_called()
 
     def test_model_context_usage_thresholds_default(self):

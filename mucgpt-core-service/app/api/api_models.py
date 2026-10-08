@@ -455,14 +455,8 @@ class ModelsDTO(BaseModel):
     output_cost_per_token: Decimal | None = Field(
         None, description="Output pricing information per token"
     )
-    supports_function_calling: bool | None = Field(
-        None, description="Whether the model supports structured tool/function calls"
-    )
     supports_reasoning: bool | None = Field(
         None, description="Whether enhanced reasoning is available"
-    )
-    supports_vision: bool | None = Field(
-        None, description="Whether multimodal vision inputs are supported"
     )
     litellm_provider: str | None = Field(
         None, description="Provider identifier reported by LiteLLM"

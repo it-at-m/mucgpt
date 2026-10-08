@@ -101,9 +101,7 @@ const CONFIG_RESPONSE: ApplicationConfig = {
             knowledge_cut_off: "2024-07-01",
             input_cost_per_token: 3e-7,
             output_cost_per_token: 9e-7,
-            supports_function_calling: true,
             supports_reasoning: true,
-            supports_vision: false,
             litellm_provider: "azure_openai",
             inference_location: "westeurope"
         },
@@ -115,9 +113,7 @@ const CONFIG_RESPONSE: ApplicationConfig = {
             knowledge_cut_off: "2024-07-01",
             input_cost_per_token: 1.71e-6,
             output_cost_per_token: 6.84e-6,
-            supports_function_calling: true,
             supports_reasoning: false,
-            supports_vision: false,
             litellm_provider: "openai",
             inference_location: "us-east-1"
         },
@@ -129,9 +125,7 @@ const CONFIG_RESPONSE: ApplicationConfig = {
             knowledge_cut_off: "2023-07-01",
             input_cost_per_token: 3.5e-7,
             output_cost_per_token: 1.37e-6,
-            supports_function_calling: false,
             supports_reasoning: false,
-            supports_vision: false,
             litellm_provider: "ollama"
         }
     ],

@@ -172,9 +172,6 @@ export const LLMSelector = ({ onSelectionChange, defaultLLM, options }: Props) =
     const outputPriceDesc = t("components.llmSelector.outputPrice_description");
     const title = t("components.llmSelector.title");
     const notAvailable = t("components.llmSelector.notAvailable", { defaultValue: "Nicht verfügbar" });
-    const capabilityReasoning = t("components.llmSelector.capability_reasoning", { defaultValue: "Reasoning" });
-    const capabilityFunctionCalling = t("components.llmSelector.capability_functionCalling", { defaultValue: "Function calling" });
-    const capabilityVision = t("components.llmSelector.capability_vision", { defaultValue: "Vision" });
     const providerLabel = t("components.llmSelector.provider", { defaultValue: "Provider" });
     const regionLabel = t("components.llmSelector.region", { defaultValue: "Region" });
     const tokenLabel = t("components.llmSelector.token", { defaultValue: "Token" });
@@ -229,26 +226,11 @@ export const LLMSelector = ({ onSelectionChange, defaultLLM, options }: Props) =
                                 const outputPrice = parseCostPerToken(item.output_cost_per_token);
                                 const priceVal = averageCostPerToken(inputPrice, outputPrice);
 
-                                const capabilityBadges: { key: string; label: string }[] = [];
-                                if (item.supports_reasoning) capabilityBadges.push({ key: "reasoning", label: capabilityReasoning });
-                                if (item.supports_function_calling) capabilityBadges.push({ key: "function-calling", label: capabilityFunctionCalling });
-                                if (item.supports_vision) capabilityBadges.push({ key: "vision", label: capabilityVision });
-
                                 const providerMeta: string[] = [];
                                 const providerDisplay = item.litellm_provider?.trim();
                                 const locationDisplay = item.inference_location?.trim();
                                 if (providerDisplay) providerMeta.push(`${providerLabel}: ${providerDisplay}`);
                                 if (locationDisplay) providerMeta.push(`${regionLabel}: ${locationDisplay}`);
-
-                                const capabilityContent = capabilityBadges.length ? (
-                                    <div className={styles.badgeList}>
-                                        {capabilityBadges.map(badge => (
-                                            <span key={badge.key} className={styles.badge}>
-                                                {badge.label}
-                                            </span>
-                                        ))}
-                                    </div>
-                                ) : null;
 
                                 const knowledgeText = item.knowledge_cut_off?.trim() || "";
                                 const knowledgeDisplay = knowledgeText ? formatKnowledgeDate(knowledgeText, notAvailable) : "";
@@ -280,12 +262,6 @@ export const LLMSelector = ({ onSelectionChange, defaultLLM, options }: Props) =
                                         <div className={styles.cardContent}>
                                             <div className={styles.cardHeader}>
                                                 <h2>{item.llm_name}</h2>
-                                                {capabilityContent && capabilityContent}
-                                                {!capabilityContent && (
-                                                    <div className={styles.badgeList}>
-                                                        <span className={styles.badge}>{notAvailable}</span>
-                                                    </div>
-                                                )}
                                                 {knowledgeBadge}
                                                 <p className={styles.bestForText}>{descriptionText}</p>
                                             </div>

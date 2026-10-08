@@ -178,7 +178,7 @@ timeline
 
 MUCGPT uses a modern microservices architecture optimized for scalability and maintainability:
 
-- **Frontend**: User interface layer built with React
+- **Frontend**: User interface layer built with React; receives agent runs as an [AG-UI](https://docs.ag-ui.com/) event stream
 - **API Gateway**: Entry point for all client requests
 - **Core Service**: LLM agent orchestration and tool integration
 - **Assistant Service**: Configuration management for assistants
@@ -200,6 +200,8 @@ The framework used to implement the backends (the core- and the assistant servic
 Each service provides specialized functionality:
 
 - **Core Service**: Manages LLM interactions and orchestrates tools. It uses LangGraph to create an agent architecture that can process user requests, call appropriate tools, and generate responses.
+
+- **AG-UI**: The Core Service streams agent runs to the frontend via the [AG-UI protocol](https://docs.ag-ui.com/), an open standard for agent–UI communication. Text, tool calls and status updates arrive as standardized events, which the frontend renders live.
 
 - **Assistant Service**: Manages the creation, modification, and sharing of assistant configurations. These configurations define which tools are available to an agent and what system prompts guide their behavior.
 

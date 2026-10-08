@@ -46,7 +46,6 @@ export const AnswerActivity = ({ steps: allSteps }: Props) => {
                         <ActivityLine
                             icon={getToolIcon(runningStep.toolName)}
                             label={runningStep.description ?? t("chat.activity_running_tool", { tool: getToolDisplayName(runningStep.toolName) })}
-                            detail={runningStep.detail}
                             startedAt={runningStep.startedAt}
                         />
                     ) : (

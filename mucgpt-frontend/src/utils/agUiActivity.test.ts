@@ -91,6 +91,20 @@ describe("reduceRunActivity", () => {
         expect(state.steps[0]).not.toHaveProperty("args");
     });
 
+    it("shows the URL read by the web URL tool", () => {
+        const state = replay([
+            runStarted,
+            toolStart("c1", "web_url_read"),
+            toolArgs(
+                "c1",
+                '{"status_message":"Prüfe die offizielle Brisbane-Prognose für morgen","url":"https://www.bom.gov.au/places/qld/brisbane-city/forecast","maxLength":5000}'
+            ),
+            toolEnd("c1")
+        ]);
+        expect(state.steps[0].detail).toBe("https://www.bom.gov.au/places/qld/brisbane-city/forecast");
+        expect(state.steps[0]).not.toHaveProperty("args");
+    });
+
     it("does not show arguments that are not a query", () => {
         const state = replay([runStarted, toolStart("c1", "Simplify"), toolArgs("c1", '{"text": "Ein sehr langer Text"}'), toolResult("c1")]);
         expect(state.steps[0].detail).toBeUndefined();

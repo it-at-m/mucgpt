@@ -30,16 +30,12 @@ interface Props {
     icon: ReactElement;
     /** What is happening right now; rendered with the progress shimmer. */
     label: string;
-    /** Optional second line, e.g. the search query. */
-    detail?: string;
     /** Start of what is being timed (the run or a step); its elapsed time shows once it takes longer than a few seconds. */
     startedAt?: number;
-    /** Keeps the detail line's height even without a detail, so the line doesn't grow and shrink between steps. */
-    reserveDetailLine?: boolean;
 }
 
-/** One in-progress activity line: icon, shimmering label, elapsed time and an optional detail line. */
-export const ActivityLine = ({ icon, label, detail, startedAt, reserveDetailLine = false }: Props) => {
+/** One in-progress activity line: icon, shimmering label and elapsed time. Queries and URLs are left to the step list. */
+export const ActivityLine = ({ icon, label, startedAt }: Props) => {
     const { t } = useTranslation();
     const elapsed = useElapsedSeconds(startedAt);
 
@@ -60,15 +56,6 @@ export const ActivityLine = ({ icon, label, detail, startedAt, reserveDetailLine
                     </span>
                 )}
             </Caption1>
-            {detail ? (
-                <Caption1 className={styles.detail}>{detail}</Caption1>
-            ) : (
-                reserveDetailLine && (
-                    <Caption1 className={styles.detail} aria-hidden="true">
-                        {"\u00a0"}
-                    </Caption1>
-                )
-            )}
         </span>
     );
 };

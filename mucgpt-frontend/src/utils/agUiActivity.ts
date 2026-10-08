@@ -28,7 +28,7 @@ export const initialRunActivity: RunActivity = { phase: "idle", steps: [] };
 
 // Argument names whose value tells the user what a tool is looking for. Other arguments
 // (e.g. the full text handed to "simplify") are not meant to be shown.
-const DETAIL_ARGUMENT_KEYS = ["query", "search_query", "q", "topic"];
+const DETAIL_ARGUMENT_KEYS = ["query", "search_query", "q", "topic", "url"];
 const MAX_DETAIL_LENGTH = 120;
 // Added to every tool by the core service's ToolStatusMiddleware; streamed as the first argument.
 const STATUS_ARGUMENT_KEY = "status_message";
@@ -141,7 +141,7 @@ export type LiveStatus = { kind: "thinking"; stage: number } | { kind: "evaluati
 /** Seconds into the run at which the thinking message escalates to the next stage. */
 export const THINKING_STAGE_STARTS_SECONDS = [0, 10, 25];
 // The model streams its status description first; wait this long for it before falling back to the tool name.
-const DESCRIPTION_GRACE_MS = 300;
+const DESCRIPTION_GRACE_MS = 500;
 
 /** Derives the live status. Internal tools (see `isVisibleTool`) never show up. */
 export const getLiveStatus = (activity: RunActivity | undefined, now: number, isVisibleTool: (toolName: string) => boolean): LiveStatus => {

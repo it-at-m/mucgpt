@@ -11,7 +11,7 @@
     padding-inline: 0 var(--spacingHorizontalXS);
 }
 
-/* Icon, label and an optional detail line below the label. */
+/* Icon and label. */
 .line {
     display: grid;
     grid-template-columns: auto minmax(0, 1fr);

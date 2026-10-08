@@ -68,13 +68,9 @@ export const AnswerLoading = ({ activity }: Props) => {
 
     let icon = <Sparkle16Regular />;
     let label: string;
-    let detail: string | undefined;
     if (status.kind === "tool") {
-        // The held step can be outdated; its query keeps streaming into the live one.
-        const liveStep = activity?.steps.find(step => step.toolCallId === status.step.toolCallId) ?? status.step;
-        icon = getToolIcon(liveStep.toolName);
-        label = status.step.description ?? t("chat.activity_running_tool", { tool: getToolDisplayName(liveStep.toolName) });
-        detail = liveStep.detail;
+        icon = getToolIcon(status.step.toolName);
+        label = status.step.description ?? t("chat.activity_running_tool", { tool: getToolDisplayName(status.step.toolName) });
     } else if (status.kind === "evaluating") {
         icon = <DocumentBulletList16Regular />;
         label = t("chat.activity_evaluating");
@@ -91,7 +87,7 @@ export const AnswerLoading = ({ activity }: Props) => {
                         {/* Announce what is shown, without the ticking time. */}
                         <span className={styles.visuallyHidden}>{label}</span>
                         <span aria-hidden="true">
-                            <ActivityLine icon={icon} label={label} detail={detail} startedAt={activity?.startedAt} reserveDetailLine />
+                            <ActivityLine icon={icon} label={label} startedAt={activity?.startedAt} />
                         </span>
                     </div>
                 </div>

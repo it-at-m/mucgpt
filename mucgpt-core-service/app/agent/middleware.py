@@ -456,13 +456,20 @@ TOOL_STATUS_ARG = "status_message"
 TOOL_STATUS_SCHEMA: dict[str, Any] = {
     "type": "string",
     "description": (
-        "One short sentence, in the language the user writes in, telling the user what "
-        "you are doing with this call. Start with a verb and name what you are looking "
-        "for or working on, e.g. 'Suche nach den Öffnungszeiten des Bürgerbüros'. "
-        "Do not mention tool names or technical details."
+        "A short status line shown to the user while this call runs, written in the user's language. "
+        "Describe what you are doing the way a person would say it out loud, so the user can tell "
+        "WHERE you are looking and WHAT for. Pick the wording that matches what this call actually does:\n"
+        "- searching the internet: 'Durchsuche das Internet nach aktuellen Kita-Gebühren in München'\n"
+        "- opening or reading a specific web page: 'Lese die Seite von muenchen.de zum Anwohnerparken'\n"
+        "- searching internal or organizational documents: 'Durchsuche interne Dokumente nach der Dienstreiseregelung'\n"
+        "- working on text yourself: 'Formuliere den Bescheid in Leichter Sprache um'\n"
+        "Always name the concrete subject (the topic, the website, or the kind of document), not just the activity. "
+        "Bad: 'Suche nach Informationen', 'Rufe Tool auf', 'Führe web_search aus'. "
+        "Never mention tool, function or parameter names, IDs, URLs with query strings, "
+        "or technical terms like API, query, JSON. At most about 10 words, no trailing period."
     ),
-    "minLength": 1,
-    "maxLength": 80,
+    "minLength": 15,
+    "maxLength": 100,
 }
 
 
@@ -498,6 +505,7 @@ def _add_status_arg(request: ModelRequest) -> ModelRequest:
 
 def _strip_status_arg(request: ToolCallRequest) -> ToolCallRequest:
     args = request.tool_call.get("args") or {}
+    print(f"Tool call args for tool {request.tool_call.get('name')}: ", args if "web_url_read" in request.tool_call.get("name") else "")
     if TOOL_STATUS_ARG not in args or _has_own_status_arg(request.tool):
         return request
     stripped = {key: value for key, value in args.items() if key != TOOL_STATUS_ARG}

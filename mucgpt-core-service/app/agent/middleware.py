@@ -505,7 +505,7 @@ def _add_status_arg(request: ModelRequest) -> ModelRequest:
 
 def _strip_status_arg(request: ToolCallRequest) -> ToolCallRequest:
     args = request.tool_call.get("args") or {}
-    print(f"Tool call args for tool {request.tool_call.get('name')}: ", args if "web_url_read" in request.tool_call.get("name") else "")
+    logger.debug(f"Tool call args for tool {request.tool_call.get('name')}: ", args if "web_url_read" in request.tool_call.get("name") else "")
     if TOOL_STATUS_ARG not in args or _has_own_status_arg(request.tool):
         return request
     stripped = {key: value for key, value in args.items() if key != TOOL_STATUS_ARG}

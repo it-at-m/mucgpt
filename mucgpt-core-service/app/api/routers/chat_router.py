@@ -177,6 +177,8 @@ async def ag_ui_chat_endpoint(
         raise HTTPException(status_code=400, detail="conversation_id is required")
     if not chat_request.messages:
         raise HTTPException(status_code=400, detail="messages must not be empty")
+    if not chat_request.messages[-1].role == "user":
+        raise HTTPException(status_code=400, detail="Last message must be from the user (role='user')")
 
     encoder = EventEncoder(accept=request.headers.get("accept"))
     agent = await init_agent(user_info=user_info, model_name=chat_request.model)

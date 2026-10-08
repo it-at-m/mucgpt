@@ -62,7 +62,7 @@ export class MucgptAgUiAgent extends HttpAgent {
         });
     }
 
-    protected override requestInit(_input: RunAgentInput): RequestInit {
+    protected override requestInit(): RequestInit {
         const headers = getHeaders();
         headers.set("Accept", "text/event-stream");
 

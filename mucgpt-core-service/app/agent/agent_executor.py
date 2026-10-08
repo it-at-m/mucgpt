@@ -653,8 +653,8 @@ class MUCGPTAgentExecutor:
                             chunk, metadata if isinstance(metadata, dict) else {}
                         )
                     )
-                    # dont stream summarization chunks
-                    if metadata.get("lc_source") == "summarization":
+                    # dont stream summarization chunks or internal chunks
+                    if metadata.get("lc_source") == "summarization" or _is_internal_chunk(metadata):
                         continue
                     if isinstance(chunk, ToolMessage):
                         content = chunk.content

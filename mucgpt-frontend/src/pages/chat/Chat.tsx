@@ -903,7 +903,7 @@ const Chat = () => {
                                     appearance="transparent"
                                     icon={<Code24Regular />}
                                     onClick={() => setIsEventDrawerOpen(true)}
-                                    aria-label="AG-UI events anzeigen"
+                                    aria-label={t("chat.show_ag_ui_events")}
                                 />
                             )}
                             <Button

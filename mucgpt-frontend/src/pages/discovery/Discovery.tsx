@@ -85,7 +85,7 @@ const Discovery = () => {
     const navigate = useNavigate();
     const [searchParams, setSearchParams] = useSearchParams();
     const appConfig = useContext(ConfigContext);
-    const { showError, showSuccess } = useGlobalToastContext();
+    const { showError, showSuccess, showInfo } = useGlobalToastContext();
     const { refreshHistory: refreshUnifiedHistory } = useUnifiedHistory();
     const isComplianceCheckEnabled = appConfig.ai_act_compliance_check_enabled;
 
@@ -375,14 +375,27 @@ const Discovery = () => {
         setSearchParams(nextSearchParams, { replace: true });
     }, [assistantToOpenId, filteredMyAssistants, handleAssistantClick, isLoading, searchParams, setSearchParams]);
 
+    const getAssistantChatPath = (assistant: AssistantCardData) => {
+        if (assistant.isLocalAssistant) {
+            return `/assistant/${assistant.id}`;
+        }
+        return `/${assistant.isDeletedSnapshot ? "deleted/communityassistant" : "communityassistant"}/${assistant.id}`;
+    };
+
     const startConversation = () => {
         if (selectedAssistant) {
-            if (selectedAssistant.isLocalAssistant) {
-                navigate(`/assistant/${selectedAssistant.id}`);
-                return;
-            }
-            navigate(`/${selectedAssistant.isDeletedSnapshot ? "deleted/communityassistant" : "communityassistant"}/${selectedAssistant.id}`);
+            navigate(getAssistantChatPath(selectedAssistant));
         }
+    };
+
+    const openChatHistory = async () => {
+        if (!selectedAssistant) return;
+        const newestChat = await assistantStorageService.getNewestChatForAssistant(selectedAssistant.id);
+        if (!newestChat?.id) {
+            showInfo(t("components.community_assistants.deleted_state_no_history"));
+            return;
+        }
+        navigate(`${getAssistantChatPath(selectedAssistant)}?chatId=${encodeURIComponent(newestChat.id)}`);
     };
 
     const editAssistant = () => {
@@ -741,6 +754,7 @@ const Discovery = () => {
                         assistant={selectedAssistant}
                         ownedAssistantIds={ownedAssistantIds}
                         onStartChat={startConversation}
+                        onOpenChatHistory={openChatHistory}
                         onEdit={editAssistant}
                         onDuplicate={() => {
                             if (!selectedAssistant || selectedAssistant.isLocalAssistant) {

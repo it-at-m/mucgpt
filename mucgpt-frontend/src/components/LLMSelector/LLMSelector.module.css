@@ -66,6 +66,13 @@
     margin-bottom: 16px;
 }
 
+.shortDescription {
+    margin: 0;
+    color: var(--colorNeutralForeground3);
+    font-size: var(--fontSizeBase300);
+    line-height: var(--lineHeightBase300);
+}
+
 .bestForText {
     margin: 4px 0 0 8px;
     font-size: 14px;
@@ -118,26 +125,6 @@
 .card[data-selected="true"] .moneyActive {
     opacity: 1;
     color: var(--colorBrandBackground);
-}
-
-.infoRow {
-    margin-left: 8px;
-}
-
-.infoRow + .infoRow {
-    margin-top: 8px;
-}
-
-.inlineLabel {
-    margin-left: 8px;
-    margin-right: 8px;
-    display: inline-flex;
-    align-items: center;
-}
-
-.inlineSpacer {
-    display: inline-block;
-    margin-right: 8px;
 }
 
 .sectionTitle {

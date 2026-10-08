@@ -52,6 +52,7 @@ class ModelInfo(BaseModel):
     max_output_tokens: PositiveInt | None = None
     max_input_tokens: PositiveInt | None = None
     description: str | None = None
+    short_description: str | None = None
     internal_task_model_strength: InternalTaskModelStrength | None = None
     input_cost_per_token: Decimal | None = None
     output_cost_per_token: Decimal | None = None
@@ -132,6 +133,7 @@ class ModelsConfig(BaseModel):
             "max_output_tokens",
             "max_input_tokens",
             "description",
+            "short_description",
             "internal_task_model_strength",
             "input_cost_per_token",
             "output_cost_per_token",
@@ -174,6 +176,7 @@ class ModelsConfig(BaseModel):
 
         info = model.model_info
         info.description = (info.description or "").strip() or None
+        info.short_description = (info.short_description or "").strip() or None
 
         if _has_complete_metadata(info):
             return model
@@ -236,6 +239,16 @@ class ModelsConfig(BaseModel):
     def description(self, value: str | None) -> None:
         """Stores the value in the nested model info."""
         self.model_info.description = (value or "").strip() or None
+
+    @property
+    def short_description(self) -> str | None:
+        """Delegates the short model description to the nested model info."""
+        return self.model_info.short_description
+
+    @short_description.setter
+    def short_description(self, value: str | None) -> None:
+        """Stores the value in the nested model info."""
+        self.model_info.short_description = (value or "").strip() or None
 
     @property
     def input_cost_per_token(self) -> Decimal | None:
@@ -661,6 +674,9 @@ def _apply_model_info(model: ModelsConfig, entry: dict[str, Any]) -> None:
 
     if not (info.description or "").strip():
         info.description = _build_description(entry, model.llm_name)
+
+    if not (info.short_description or "").strip():
+        info.short_description = _coerce_str(model_info.get("short_description"))
 
 
 def _coerce_positive_int(value: Any) -> PositiveInt | None:

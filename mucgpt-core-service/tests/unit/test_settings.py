@@ -143,6 +143,7 @@ class TestSettings:
                     "max_output_tokens": 1000,
                     "max_input_tokens": 2000,
                     "description": "Test model",
+                    "short_description": "  Test summary  ",
                     "input_cost_per_token": 9e-8,
                     "output_cost_per_token": 3.6e-7,
                     "supports_reasoning": False,
@@ -167,6 +168,7 @@ class TestSettings:
             assert model.max_output_tokens == 1000
             assert model.max_input_tokens == 2000
             assert model.description == "Test model"
+            assert model.short_description == "Test summary"
             assert model.input_cost_per_token == Decimal("9e-8")
             assert model.output_cost_per_token == Decimal("3.6e-7")
             assert model.supports_reasoning is False
@@ -193,6 +195,7 @@ class TestSettings:
                     "max_input_tokens": 1048576,
                     "version": "2025-04-14",
                     "base_model": "azure/gpt-4.1-nano",
+                    "short_description": "Fast everyday model",
                     "supports_reasoning": True,
                     "input_cost_per_token": 9e-8,
                     "output_cost_per_token": 3.6e-7,
@@ -218,6 +221,7 @@ class TestSettings:
                 assert model.max_output_tokens == 32768
                 assert model.max_input_tokens == 1048576
                 assert "gpt-4.1-nano" in model.description
+                assert model.short_description == "Fast everyday model"
                 assert model.supports_reasoning is True
                 assert model.input_cost_per_token == Decimal("9e-8")
                 assert model.output_cost_per_token == Decimal("3.6e-7")

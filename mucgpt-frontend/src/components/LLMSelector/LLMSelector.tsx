@@ -4,7 +4,6 @@ import { Checkmark24Filled, Money24Filled, MoneyRegular, ChevronDown16Regular } 
 import styles from "./LLMSelector.module.css";
 import { Dialog, DialogTrigger, DialogSurface, DialogTitle, DialogBody, DialogActions, DialogContent, Button, Tooltip, Card } from "@fluentui/react-components";
 import React from "react";
-import { InfoRegular } from "@fluentui/react-icons";
 import { useTranslation } from "react-i18next";
 import { Button as SubtleButton } from "../../ui/Button";
 
@@ -13,8 +12,6 @@ interface Props {
     defaultLLM: string;
     options: Model[];
 }
-
-const TOKENS_PER_MILLION = 1_000_000;
 
 const parseCostPerToken = (value: unknown): number | null => {
     if (value === null || value === undefined) return null;
@@ -29,39 +26,18 @@ const averageCostPerToken = (input: number | null, output: number | null): numbe
     return input ?? output;
 };
 
-const formatCostPerMillion = (costPerToken: number | null, fallbackLabel: string, tokenPluralLabel: string): string => {
-    if (costPerToken === null) return fallbackLabel;
-    const perMillion = costPerToken * TOKENS_PER_MILLION;
-    if (!Number.isFinite(perMillion)) return fallbackLabel;
-    const absValue = Math.abs(perMillion);
-    const maximumFractionDigits = absValue >= 100 ? 2 : absValue >= 10 ? 3 : absValue >= 1 ? 4 : 6;
-    const minimumFractionDigits = absValue >= 1 ? 2 : 4;
-    return `${perMillion.toLocaleString(undefined, {
-        minimumFractionDigits,
-        maximumFractionDigits
-    })}$ / 1M ${tokenPluralLabel}`;
-};
-
-const formatTokenCount = (value: unknown, fallbackLabel: string, tokenLabel: string, tokenPluralLabel: string): string => {
-    if (value === null || value === undefined) return fallbackLabel;
-    const numeric = typeof value === "number" ? value : Number(value);
-    if (!Number.isFinite(numeric)) return fallbackLabel;
-    const formatted = numeric.toLocaleString(undefined);
-    const isPlural = Math.abs(numeric) !== 1;
-    return `${formatted} ${isPlural ? tokenPluralLabel : tokenLabel}`;
-};
-
-const formatKnowledgeDate = (value: string | null | undefined, fallbackLabel: string): string => {
+const formatKnowledgeDate = (value: string | null | undefined, fallbackLabel: string, language: string): string => {
     if (!value) return fallbackLabel;
     const trimmed = value.trim();
     if (!trimmed) return fallbackLabel;
     if (/^\d{4}-\d{2}-\d{2}/.test(trimmed)) {
         const date = new Date(trimmed);
         if (!Number.isNaN(date.getTime())) {
-            return new Intl.DateTimeFormat(undefined, {
-                day: "2-digit",
-                month: "2-digit",
-                year: "numeric"
+            // ISO dates parse as UTC midnight; formatting in UTC keeps "2024-07-01" in July for every user timezone.
+            return new Intl.DateTimeFormat(language === "BA" ? "de-DE" : language, {
+                month: "long",
+                year: "numeric",
+                timeZone: "UTC"
             }).format(date);
         }
     }
@@ -82,32 +58,10 @@ const SectionHeading = ({ title, withSpacing = false, className, stacked = true 
     return <strong className={classes}>{title}</strong>;
 };
 
-interface InfoRowProps {
-    label: React.ReactNode;
-    value: React.ReactNode;
-    tooltip?: React.ReactNode;
-    className?: string;
-    useDefaultSpacing?: boolean;
-    showSpacer?: boolean;
-}
-
-const InfoRow = ({ label, value, tooltip, className, useDefaultSpacing = true, showSpacer = true }: InfoRowProps) => {
-    const containerClass = [useDefaultSpacing ? styles.infoRow : undefined, className].filter(Boolean).join(" ") || undefined;
-
-    return (
-        <div className={containerClass}>
-            <strong className={styles.inlineLabel}>{label}</strong>
-            {tooltip}
-            {showSpacer && <span className={styles.inlineSpacer} aria-hidden="true" />}
-            {value}
-        </div>
-    );
-};
-
 export const LLMSelector = ({ onSelectionChange, defaultLLM, options }: Props) => {
     const [selectedModel, setSelectedModel] = useState(defaultLLM);
 
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
 
     const handleSelectModel = useCallback(
         (modelName: string) => {
@@ -166,14 +120,8 @@ export const LLMSelector = ({ onSelectionChange, defaultLLM, options }: Props) =
         return [min, max];
     }, [options]);
 
-    const maxOutputDesc = t("components.llmSelector.maxOutput_description");
-    const maxInputDesc = t("components.llmSelector.maxInput_description");
-    const inputPriceDesc = t("components.llmSelector.inputPrice__description");
-    const outputPriceDesc = t("components.llmSelector.outputPrice_description");
     const title = t("components.llmSelector.title");
     const notAvailable = t("components.llmSelector.notAvailable", { defaultValue: "Nicht verfügbar" });
-    const tokenLabel = t("components.llmSelector.token", { defaultValue: "Token" });
-    const tokenPluralLabel = t("components.llmSelector.tokens", { defaultValue: "Tokens" });
     const knowledgeTooltipText = t("components.llmSelector.knowledge_description");
 
     // derive numeric rating (1..3) from item.price relative to min/max price
@@ -224,7 +172,9 @@ export const LLMSelector = ({ onSelectionChange, defaultLLM, options }: Props) =
                                 const priceVal = averageCostPerToken(inputPrice, outputPrice);
 
                                 const knowledgeText = item.knowledge_cut_off?.trim() || "";
-                                const knowledgeDisplay = knowledgeText ? formatKnowledgeDate(knowledgeText, notAvailable) : "";
+                                const knowledgeDisplay = knowledgeText
+                                    ? formatKnowledgeDate(knowledgeText, notAvailable, i18n.resolvedLanguage || i18n.language)
+                                    : "";
                                 const knowledgeBadge = knowledgeText ? (
                                     <Tooltip content={knowledgeTooltipText} relationship="description" positioning="above">
                                         <div className={styles.badgeList}>
@@ -235,10 +185,7 @@ export const LLMSelector = ({ onSelectionChange, defaultLLM, options }: Props) =
                                     </Tooltip>
                                 ) : null;
                                 const descriptionText = item.description && item.description.trim().length > 0 ? item.description : notAvailable;
-                                const inputTokensText = formatTokenCount(item.max_input_tokens, notAvailable, tokenLabel, tokenPluralLabel);
-                                const outputTokensText = formatTokenCount(item.max_output_tokens, notAvailable, tokenLabel, tokenPluralLabel);
-                                const inputPriceText = formatCostPerMillion(inputPrice, notAvailable, tokenPluralLabel);
-                                const outputPriceText = formatCostPerMillion(outputPrice, notAvailable, tokenPluralLabel);
+                                const shortDescription = item.short_description?.trim();
                                 const contextRating = getContextRating(item.max_input_tokens);
 
                                 const priceRating = getPriceRating(priceVal ?? undefined);
@@ -253,6 +200,7 @@ export const LLMSelector = ({ onSelectionChange, defaultLLM, options }: Props) =
                                         <div className={styles.cardContent}>
                                             <div className={styles.cardHeader}>
                                                 <h2>{item.llm_name}</h2>
+                                                {shortDescription && <p className={styles.shortDescription}>{shortDescription}</p>}
                                                 {knowledgeBadge}
                                                 <p className={styles.bestForText}>{descriptionText}</p>
                                             </div>
@@ -273,59 +221,19 @@ export const LLMSelector = ({ onSelectionChange, defaultLLM, options }: Props) =
                                                         ))}
                                                     </div>
                                                 </div>
-                                                <InfoRow
-                                                    label={t("components.llmSelector.maxInput")}
-                                                    value={inputTokensText}
-                                                    tooltip={
-                                                        <Tooltip content={maxInputDesc} relationship="description" positioning="above">
-                                                            <InfoRegular></InfoRegular>
-                                                        </Tooltip>
-                                                    }
-                                                />
-                                                <InfoRow
-                                                    label={t("components.llmSelector.maxOutput")}
-                                                    value={outputTokensText}
-                                                    tooltip={
-                                                        <Tooltip content={maxOutputDesc} relationship="description" positioning="above">
-                                                            <InfoRegular></InfoRegular>
-                                                        </Tooltip>
-                                                    }
-                                                />
                                             </div>
                                             <div className={styles.sectionGroup}>
-                                                <div>
-                                                    <div>
-                                                        <div className={styles.price} aria-label={`Price ${priceVal ?? ""}`}>
-                                                            <SectionHeading title={t("components.llmSelector.price")} withSpacing stacked={false} />
-                                                            {Array.from({ length: 3 }).map((_, i) => {
-                                                                const active = i < priceRating;
-                                                                const cls = active ? `${styles.money} ${styles.moneyActive}` : styles.money;
-                                                                return active ? (
-                                                                    <Money24Filled key={i} className={cls} aria-hidden="true" />
-                                                                ) : (
-                                                                    <MoneyRegular key={i} className={cls} aria-hidden="true" />
-                                                                );
-                                                            })}
-                                                        </div>
-                                                        <InfoRow
-                                                            label={t("components.llmSelector.inputPrice")}
-                                                            value={inputPriceText}
-                                                            tooltip={
-                                                                <Tooltip content={inputPriceDesc} relationship="description" positioning="above">
-                                                                    <InfoRegular></InfoRegular>
-                                                                </Tooltip>
-                                                            }
-                                                        />
-                                                        <InfoRow
-                                                            label={t("components.llmSelector.outputPrice")}
-                                                            value={outputPriceText}
-                                                            tooltip={
-                                                                <Tooltip content={outputPriceDesc} relationship="description" positioning="above">
-                                                                    <InfoRegular></InfoRegular>
-                                                                </Tooltip>
-                                                            }
-                                                        />
-                                                    </div>
+                                                <div className={styles.price} aria-label={`${t("components.llmSelector.price")} rating ${priceRating} / 3`}>
+                                                    <SectionHeading title={t("components.llmSelector.price")} withSpacing stacked={false} />
+                                                    {Array.from({ length: 3 }).map((_, i) => {
+                                                        const active = i < priceRating;
+                                                        const cls = active ? `${styles.money} ${styles.moneyActive}` : styles.money;
+                                                        return active ? (
+                                                            <Money24Filled key={i} className={cls} aria-hidden="true" />
+                                                        ) : (
+                                                            <MoneyRegular key={i} className={cls} aria-hidden="true" />
+                                                        );
+                                                    })}
                                                 </div>
                                             </div>
                                         </div>

@@ -42,6 +42,7 @@ MODELS:
       max_output_tokens: 16384
       max_input_tokens: 128000
       description: "<description>"
+      short_description: "<one-line summary>"
       input_cost_per_token: 0.00000009
       output_cost_per_token: 0.00000036
       supports_reasoning: false
@@ -215,7 +216,8 @@ MUCGPT_CORE_LANGFUSE__SECRET_KEY=sk-... # → LANGFUSE: { SECRET_KEY: "sk-..." }
 - `auto_enrich_from_model_info_endpoint`: If `true` (default), missing metadata is fetched from `<endpoint>/model/info` (as it is available in litellm). Set to `false` to require manual values.
 - `max_output_tokens`: Maximum number of tokens the model can generate in a response.
 - `max_input_tokens`: Maximum number of tokens accepted as input.
-- `description`: A human-readable description of the model.
+- `description`: A human-readable description of the model, shown in the model picker.
+- `short_description`: One-line summary of what the model is best suited for, shown in the model picker.
 - `knowledge_cut_off`: Optional ISO date string describing the model's latest training data cutoff.
 - `input_cost_per_token` / `output_cost_per_token`: Optional pricing hints per token.
 - `supports_reasoning`: Whether the model supports reasoning. Only these models receive the requested `reasoning_effort`.

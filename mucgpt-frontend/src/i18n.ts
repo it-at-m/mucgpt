@@ -874,20 +874,6 @@ i18n
                             features: "Funktionen:",
                             features_description: "Funktionalitäten, die das Sprachmodell mitbringt.",
                             context: "Kontext",
-                            token: "Token",
-                            tokens: "Tokens",
-                            maxInput: "Max. Eingabelänge:",
-                            maxInput_description:
-                                "Die Maximale Anzahl an Tokens die das Sprachmodel als Eingabe verarbeiten kann. Ein Token ist ein Wortbestandteil. Im Deutschen ist ein Wort ca 1,3 Token. Als Eingabe gelten alle Nachrichten im Chat.",
-                            maxOutput: "Max. Ausgabelänge:",
-                            maxOutput_description:
-                                "Die Maximale Anzahl an Tokens die das Sprachmodel mit einer Antwort generieren kann. Ein Token ist ein Wortbestandteil. Im Deutschen ist ein Wort ca 1,3 Token.",
-                            inputPrice: "Eingabe Preis:",
-                            inputPrice__description:
-                                "Preis pro 1 Millionen Eingabetoken. Ein Token ist ein Wortbestandteil. Im Deutschen ist ein Wort ca 1,3 Token. Als Eingabe gelten alle Nachrichten im Chat.",
-                            outputPrice: "Ausgabe Preis:",
-                            outputPrice_description:
-                                "Preis pro eine Milionen Ausgabetoken.  Ein Token ist ein Wortbestandteil. Im Deutschen ist ein Wort ca 1,3 Token. Als Ausgabe gilt eine Nachricht, die generiert wird.",
                             price: "Preis",
                             selectButton: "Auswählen"
                         }
@@ -1752,20 +1738,6 @@ i18n
                             features: "Features:",
                             features_description: "Functionalities that the language model offers.",
                             context: "Context",
-                            token: "Token",
-                            tokens: "Tokens",
-                            maxInput: "Max. Input Length:",
-                            maxInput_description:
-                                "The maximum number of tokens that the language model can process as input. A token is a component of a word. In German, a word is approximately 1.3 tokens. All messages in the chat count as input.",
-                            maxOutput: "Max. Output Length:",
-                            maxOutput_description:
-                                "The maximum number of tokens that the language model can generate in a response. A token is a component of a word. In German, a word is approximately 1.3 tokens.",
-                            inputPrice: "Input Price:",
-                            inputPrice__description:
-                                "Price per 1 million input tokens. A token is a component of a word. In German, a word is approximately 1.3 tokens. All messages in the chat count as input.",
-                            outputPrice: "Output Price:",
-                            outputPrice_description:
-                                "Price per 1 million output tokens. A token is a component of a word. In German, a word is approximately 1.3 tokens. A generated message counts as output.",
                             price: "Price",
                             selectButton: "Select"
                         }
@@ -2617,20 +2589,6 @@ i18n
                             features: "Funktionen:",
                             features_description: "Funktionalitäten, die des Sprachmodell mitbringt.",
                             context: "Kontext",
-                            token: "Token",
-                            tokens: "Tokens",
-                            maxInput: "Max. Eingabeläng:",
-                            maxInput_description:
-                                "De maximale Anzahl an Tokens, die des Sprachmodell als Eingabe verarbeiten ko. A Token is a Wortbestandteil. Im Deutschen is a Wort ungefähr 1,3 Tokens. Alle Nachrichten im Chat gängan als Eingabe.",
-                            maxOutput: "Max. Ausgabeläng:",
-                            maxOutput_description:
-                                "De maximale Anzahl an Tokens, die des Sprachmodell mit einer Antwort generieren ko. A Token is a Wortbestandteil. Im Deutschen is a Wort ungefähr 1,3 Tokens.",
-                            inputPrice: "Eingabe-Preis:",
-                            inputPrice__description:
-                                "Preis pro 1 Million Eingabetokens. A Token is a Wortbestandteil. Im Deutschen is a Wort ungefähr 1,3 Tokens. Alle Nachrichten im Chat gängan als Eingabe.",
-                            outputPrice: "Ausgabe-Preis:",
-                            outputPrice_description:
-                                "Preis pro 1 Million Ausgabetokens. A Token is a Wortbestandteil. Im Deutschen is a Wort ungefähr 1,3 Tokens. Eine generierte Nachricht gängan als Ausgabe.",
                             price: "Preis",
                             selectButton: "Auswähln"
                         }
@@ -3484,20 +3442,6 @@ i18n
                             features: "Fonctionnalités :",
                             features_description: "Fonctionnalités que le modèle de langage offre.",
                             context: "Contexte",
-                            token: "Jeton",
-                            tokens: "Jetons",
-                            maxInput: "Longueur maximale d'entrée:",
-                            maxInput_description:
-                                "Le nombre maximal de tokens que le modèle de langage peut traiter en entrée. Un token est une partie de mot. En français, un mot représente environ 1,3 tokens. Toutes les messages dans le chat sont considérées comme des entrées.",
-                            maxOutput: "Longueur maximale de sortie:",
-                            maxOutput_description:
-                                "Le nombre maximal de tokens que le modèle de langage peut générer dans une réponse. Un token est une partie de mot. En français, un mot représente environ 1,3 tokens.",
-                            inputPrice: "Prix d'entrée:",
-                            inputPrice__description:
-                                "Prix par 1 million de tokens d'entrée. Un token est une partie de mot. En français, un mot représente environ 1,3 tokens. Toutes les messages dans le chat sont considérées comme des entrées.",
-                            outputPrice: "Prix de sortie:",
-                            outputPrice_description:
-                                "Prix par 1 million de tokens de sortie. Un token est une partie de mot. En français, un mot représente environ 1,3 tokens. Une message générée est considérée comme une sortie.",
                             price: "Prix",
                             selectButton: "Sélectionner"
                         }
@@ -4352,20 +4296,6 @@ i18n
                             features: "Функції:",
                             features_description: "Функціональність, яку пропонує мовна модель.",
                             context: "Контекст",
-                            token: "Токен",
-                            tokens: "Токени",
-                            maxInput: "Макс. довжина введення:",
-                            maxInput_description:
-                                "Максимальна кількість токенів, яку мовна модель може обробити як введення. Токен - це частина слова. В українській мові слово приблизно дорівнює 1,3 токенам. Всі повідомлення в чаті вважаються введенням.",
-                            maxOutput: "Макс. довжина виведення:",
-                            maxOutput_description:
-                                "Максимальна кількість токенів, яку мовна модель може згенерувати у відповіді. Токен - це частина слова. В українській мові слово приблизно дорівнює 1,3 токенам.",
-                            inputPrice: "Ціна введення:",
-                            inputPrice__description:
-                                "Ціна за 1 мільйон токенів введення. Токен - це частина слова. В українській мові слово приблизно дорівнює 1,3 токенам. Всі повідомлення в чаті вважаються введенням.",
-                            outputPrice: "Ціна виведення:",
-                            outputPrice_description:
-                                "Ціна за 1 мільйон токенів виведення. Токен - це частина слова. В українській мові слово приблизно дорівнює 1,3 токенам. Згенероване повідомлення вважається виведенням.",
                             price: "Ціна",
                             selectButton: "Обрати"
                         }

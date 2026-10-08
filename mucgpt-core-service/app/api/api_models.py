@@ -449,6 +449,9 @@ class ModelsDTO(BaseModel):
         description="Context usage percent at which the frontend shows an explicit nudge",
     )
     description: str | None = Field(None, description="Human-readable summary")
+    short_description: str | None = Field(
+        None, description="One-line summary of what the model is best suited for"
+    )
     input_cost_per_token: Decimal | None = Field(
         None, description="Input pricing information per token"
     )

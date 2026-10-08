@@ -52,6 +52,7 @@ async def get_config(user_info=Depends(authenticate_user)) -> ConfigResponse:
             context_warning_threshold_percent=model.context_warning_threshold_percent,
             context_critical_threshold_percent=model.context_critical_threshold_percent,
             description=model.description,
+            short_description=model.short_description,
             input_cost_per_token=model.input_cost_per_token,
             output_cost_per_token=model.output_cost_per_token,
             supports_reasoning=model.supports_reasoning,

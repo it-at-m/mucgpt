@@ -78,6 +78,7 @@ MODELS:
       context_warning_threshold_percent: 75
       context_critical_threshold_percent: 90
       description: "<description>"
+      short_description: "<one-line summary>"
       internal_task_model_strength: null  # Optional: "weak" for chat titles, "strong" for assistant drafts
       input_cost_per_token: 0.00000009
       output_cost_per_token: 0.00000036

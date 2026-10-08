@@ -307,11 +307,9 @@ Good workspace patterns include:
 
 The composer is a work control, not decorative chatbot chrome.
 
-- It remains visually stable while typing.
-- Send, attach, tools, and options appear in predictable locations.
-- Multiline input does not cause disruptive layout jumps.
-- Focus is clear and keyboard operation is complete.
-- Placeholder text is practical and task-oriented.
+- The text field grows line by line up to a maximum height and then scrolls.
+- Action bar controls share one size and the default Fluent shape. Only send uses the `primary` appearance; it is disabled while the input is empty.
+- Focus is shown by a stronger neutral stroke on the composer border, and keyboard operation is complete: Enter sends, Shift+Enter adds a line.
 
 ### Assistant configuration
 

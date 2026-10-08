@@ -56,8 +56,6 @@ class ModelInfo(BaseModel):
     input_cost_per_token: Decimal | None = None
     output_cost_per_token: Decimal | None = None
     supports_reasoning: bool | None = None
-    litellm_provider: str | None = None
-    inference_location: str | None = None
     knowledge_cut_off: str | None = None
     # Creativity to temperature mappings
     creativity_low_temperature: float | None = None
@@ -138,8 +136,6 @@ class ModelsConfig(BaseModel):
             "input_cost_per_token",
             "output_cost_per_token",
             "supports_reasoning",
-            "litellm_provider",
-            "inference_location",
             "knowledge_cut_off",
             "creativity_low_temperature",
             "creativity_medium_temperature",
@@ -270,26 +266,6 @@ class ModelsConfig(BaseModel):
     def supports_reasoning(self, value: bool | None) -> None:
         """Stores the value in the nested model info."""
         self.model_info.supports_reasoning = value
-
-    @property
-    def litellm_provider(self) -> str | None:
-        """Delegates the LiteLLM provider name to the nested model info."""
-        return self.model_info.litellm_provider
-
-    @litellm_provider.setter
-    def litellm_provider(self, value: str | None) -> None:
-        """Stores the value in the nested model info."""
-        self.model_info.litellm_provider = value
-
-    @property
-    def inference_location(self) -> str | None:
-        """Delegates the inference location to the nested model info."""
-        return self.model_info.inference_location
-
-    @inference_location.setter
-    def inference_location(self, value: str | None) -> None:
-        """Stores the value in the nested model info."""
-        self.model_info.inference_location = value
 
     @property
     def knowledge_cut_off(self) -> str | None:
@@ -675,15 +651,6 @@ def _apply_model_info(model: ModelsConfig, entry: dict[str, Any]) -> None:
     if info.supports_reasoning is None:
         info.supports_reasoning = _coerce_bool(model_info.get("supports_reasoning"))
 
-    if info.litellm_provider is None:
-        info.litellm_provider = _first_non_null(
-            model_info.get("litellm_provider"),
-            entry.get("litellm_provider"),
-        )
-
-    if info.inference_location is None:
-        info.inference_location = model_info.get("inference_location")
-
     if info.knowledge_cut_off is None:
         info.knowledge_cut_off = _coerce_str(
             _first_non_null(
@@ -767,14 +734,11 @@ def _build_description(entry: dict[str, Any], fallback_name: str) -> str:
     parts: list[str] = []
     base_model = model_info.get("base_model")
     version = model_info.get("version")
-    inference_location = model_info.get("inference_location")
 
     if base_model:
         parts.append(str(base_model))
     if version:
         parts.append(f"version {version}")
-    if inference_location:
-        parts.append(f"location {inference_location}")
 
     if parts:
         description = f"{description} ({', '.join(parts)})"

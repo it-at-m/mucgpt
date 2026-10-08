@@ -55,8 +55,6 @@ async def get_config(user_info=Depends(authenticate_user)) -> ConfigResponse:
             input_cost_per_token=model.input_cost_per_token,
             output_cost_per_token=model.output_cost_per_token,
             supports_reasoning=model.supports_reasoning,
-            litellm_provider=model.litellm_provider,
-            inference_location=model.inference_location,
             knowledge_cut_off=model.knowledge_cut_off,
         )
         response.models.append(dto)

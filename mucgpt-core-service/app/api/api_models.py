@@ -458,12 +458,6 @@ class ModelsDTO(BaseModel):
     supports_reasoning: bool | None = Field(
         None, description="Whether enhanced reasoning is available"
     )
-    litellm_provider: str | None = Field(
-        None, description="Provider identifier reported by LiteLLM"
-    )
-    inference_location: str | None = Field(
-        None, description="Physical or logical inference region"
-    )
     knowledge_cut_off: str | None = Field(
         None, description="Last known training data cutoff for the model"
     )

@@ -101,9 +101,7 @@ const CONFIG_RESPONSE: ApplicationConfig = {
             knowledge_cut_off: "2024-07-01",
             input_cost_per_token: 3e-7,
             output_cost_per_token: 9e-7,
-            supports_reasoning: true,
-            litellm_provider: "azure_openai",
-            inference_location: "westeurope"
+            supports_reasoning: true
         },
         {
             llm_name: "UnknownGPT",
@@ -113,9 +111,7 @@ const CONFIG_RESPONSE: ApplicationConfig = {
             knowledge_cut_off: "2024-07-01",
             input_cost_per_token: 1.71e-6,
             output_cost_per_token: 6.84e-6,
-            supports_reasoning: false,
-            litellm_provider: "openai",
-            inference_location: "us-east-1"
+            supports_reasoning: false
         },
         {
             llm_name: "AnnonymGPT",
@@ -125,8 +121,7 @@ const CONFIG_RESPONSE: ApplicationConfig = {
             knowledge_cut_off: "2023-07-01",
             input_cost_per_token: 3.5e-7,
             output_cost_per_token: 1.37e-6,
-            supports_reasoning: false,
-            litellm_provider: "ollama"
+            supports_reasoning: false
         }
     ],
     env_name: "MUCGPT",

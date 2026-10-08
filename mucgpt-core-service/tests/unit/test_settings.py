@@ -146,8 +146,6 @@ class TestSettings:
                     "input_cost_per_token": 9e-8,
                     "output_cost_per_token": 3.6e-7,
                     "supports_reasoning": False,
-                    "litellm_provider": "azure",
-                    "inference_location": "azure/eu",
                     "knowledge_cut_off": "2023-09-01",
                 }
             ]
@@ -172,8 +170,6 @@ class TestSettings:
             assert model.input_cost_per_token == Decimal("9e-8")
             assert model.output_cost_per_token == Decimal("3.6e-7")
             assert model.supports_reasoning is False
-            assert model.litellm_provider == "azure"
-            assert model.inference_location == "azure/eu"
             assert model.knowledge_cut_off == "2023-09-01"
             assert model.model_info.auto_enrich_from_model_info_endpoint is True
 
@@ -196,14 +192,10 @@ class TestSettings:
                     "max_output_tokens": 32768,
                     "max_input_tokens": 1048576,
                     "version": "2025-04-14",
-                    "inference_location": "azure/datazone/eu",
                     "base_model": "azure/gpt-4.1-nano",
-                    "supports_function_calling": True,
                     "supports_reasoning": True,
-                    "supports_vision": True,
                     "input_cost_per_token": 9e-8,
                     "output_cost_per_token": 3.6e-7,
-                    "litellm_provider": "azure",
                     "knowledge_cut_off": "2024-07-01",
                 },
                 "litellm_params": {
@@ -229,8 +221,6 @@ class TestSettings:
                 assert model.supports_reasoning is True
                 assert model.input_cost_per_token == Decimal("9e-8")
                 assert model.output_cost_per_token == Decimal("3.6e-7")
-                assert model.litellm_provider == "azure"
-                assert model.inference_location == "azure/datazone/eu"
                 assert model.knowledge_cut_off == "2024-07-01"
                 assert model.model_info.auto_enrich_from_model_info_endpoint is True
 

@@ -172,12 +172,9 @@ export const LLMSelector = ({ onSelectionChange, defaultLLM, options }: Props) =
     const outputPriceDesc = t("components.llmSelector.outputPrice_description");
     const title = t("components.llmSelector.title");
     const notAvailable = t("components.llmSelector.notAvailable", { defaultValue: "Nicht verfügbar" });
-    const providerLabel = t("components.llmSelector.provider", { defaultValue: "Provider" });
-    const regionLabel = t("components.llmSelector.region", { defaultValue: "Region" });
     const tokenLabel = t("components.llmSelector.token", { defaultValue: "Token" });
     const tokenPluralLabel = t("components.llmSelector.tokens", { defaultValue: "Tokens" });
     const knowledgeTooltipText = t("components.llmSelector.knowledge_description");
-    const originHeading = t("components.llmSelector.origin", { defaultValue: "Herkunft" });
 
     // derive numeric rating (1..3) from item.price relative to min/max price
     const getPriceRating = (price?: number | string): number => {
@@ -226,12 +223,6 @@ export const LLMSelector = ({ onSelectionChange, defaultLLM, options }: Props) =
                                 const outputPrice = parseCostPerToken(item.output_cost_per_token);
                                 const priceVal = averageCostPerToken(inputPrice, outputPrice);
 
-                                const providerMeta: string[] = [];
-                                const providerDisplay = item.litellm_provider?.trim();
-                                const locationDisplay = item.inference_location?.trim();
-                                if (providerDisplay) providerMeta.push(`${providerLabel}: ${providerDisplay}`);
-                                if (locationDisplay) providerMeta.push(`${regionLabel}: ${locationDisplay}`);
-
                                 const knowledgeText = item.knowledge_cut_off?.trim() || "";
                                 const knowledgeDisplay = knowledgeText ? formatKnowledgeDate(knowledgeText, notAvailable) : "";
                                 const knowledgeBadge = knowledgeText ? (
@@ -266,15 +257,6 @@ export const LLMSelector = ({ onSelectionChange, defaultLLM, options }: Props) =
                                                 <p className={styles.bestForText}>{descriptionText}</p>
                                             </div>
 
-                                            <div className={styles.sectionGroup}>
-                                                <SectionHeading title={originHeading} />
-                                                {providerDisplay && <InfoRow label={t("components.llmSelector.provider")} value={providerDisplay} />}
-                                                {locationDisplay ? (
-                                                    <InfoRow label={t("components.llmSelector.location")} value={locationDisplay} />
-                                                ) : (
-                                                    <div className={`${styles.infoRow} ${styles.locationPlaceholder}`} aria-hidden="true" />
-                                                )}
-                                            </div>
                                             <div className={styles.sectionGroup}>
                                                 <div className={styles.contextHeadingRow}>
                                                     <SectionHeading title={t("components.llmSelector.context")} stacked={false} />

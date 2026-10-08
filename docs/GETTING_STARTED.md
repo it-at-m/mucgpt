@@ -45,8 +45,6 @@ MODELS:
       input_cost_per_token: 0.00000009
       output_cost_per_token: 0.00000036
       supports_reasoning: false
-      litellm_provider: "<provider>"
-      inference_location: "<region>"
       knowledge_cut_off: "2024-07-01"
 ```
 
@@ -221,8 +219,6 @@ MUCGPT_CORE_LANGFUSE__SECRET_KEY=sk-... # → LANGFUSE: { SECRET_KEY: "sk-..." }
 - `knowledge_cut_off`: Optional ISO date string describing the model's latest training data cutoff.
 - `input_cost_per_token` / `output_cost_per_token`: Optional pricing hints per token.
 - `supports_reasoning`: Whether the model supports reasoning. Only these models receive the requested `reasoning_effort`.
-- `litellm_provider`: Provider identifier reported by LiteLLM.
-- `inference_location`: Region or deployment location for the model.
 - `creativity_{low,medium,high}_temperature`: Map abstract creativity levels to specific `temperature` values (0.0 - 1.0 or higher depending on model). Defaults are low=0.0, medium=0.5, high=1.0.
 
 Replace the placeholder values with your actual model configuration.

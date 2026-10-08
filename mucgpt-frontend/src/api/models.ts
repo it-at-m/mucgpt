@@ -104,8 +104,6 @@ export interface Model {
     input_cost_per_token?: number | null;
     output_cost_per_token?: number | null;
     supports_reasoning?: boolean | null;
-    litellm_provider?: string | null;
-    inference_location?: string | null;
 }
 
 export interface Labels {

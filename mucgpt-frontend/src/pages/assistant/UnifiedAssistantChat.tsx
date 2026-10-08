@@ -783,6 +783,14 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
     }, [isDeletedAssistant, isLegacyAssistant, assistantConfig.examples, onStarterPromptClicked]);
 
     // Text-Input component
+    // Only the assistant's default model is selectable; if it no longer exists, the user picks from all models.
+    const modelsToShow = useMemo(() => {
+        if (assistantConfig.default_model && availableLLMs.some(m => m.llm_name === assistantConfig.default_model)) {
+            return availableLLMs.filter(m => m.llm_name === assistantConfig.default_model);
+        }
+        return availableLLMs;
+    }, [availableLLMs, assistantConfig.default_model]);
+
     const inputComponent = useMemo(() => {
         if (isLegacyAssistant) {
             return (
@@ -882,6 +890,9 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                         onStartNewChat={startNewChatFromUsage}
                         usageConversationKey={`assistant:${assistant_id}:${active_chat ?? "new"}`}
                         hideDisclaimer
+                        llmOptions={modelsToShow}
+                        selectedLLM={LLM.llm_name}
+                        onLLMSelectionChange={onLLMSelectionChange}
                     />
                 </>
             );
@@ -923,6 +934,9 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                 onStartNewChat={startNewChatFromUsage}
                 usageConversationKey={`assistant:${assistant_id}:${active_chat ?? "new"}`}
                 hideDisclaimer
+                llmOptions={modelsToShow}
+                selectedLLM={LLM.llm_name}
+                onLLMSelectionChange={onLLMSelectionChange}
             />
         );
     }, [
@@ -949,7 +963,10 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
         uploadedData,
         usageSummary,
         active_chat,
-        startNewChatFromUsage
+        startNewChatFromUsage,
+        modelsToShow,
+        LLM.llm_name,
+        onLLMSelectionChange
     ]);
 
     // AnswerList component
@@ -1020,17 +1037,6 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
     );
 
     const layout = useMemo(() => {
-        // Determine which models to show in the selector
-        let modelsToShow = availableLLMs;
-        if (assistantConfig.default_model) {
-            const defaultModelExists = availableLLMs.some(m => m.llm_name === assistantConfig.default_model);
-            if (defaultModelExists) {
-                // Only show the default model if it exists
-                modelsToShow = availableLLMs.filter(m => m.llm_name === assistantConfig.default_model);
-            }
-            // If default model doesn't exist, show all models (user needs to choose)
-        }
-
         const canChat = !isDeletedAssistant && !isLegacyAssistant && !isAssistantUnavailable;
 
         return (
@@ -1045,9 +1051,6 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                     showDisclaimer={canChat || Boolean(lastQuestion)}
                     header_as_markdown={false}
                     messages_description={t("common.messages")}
-                    llmOptions={modelsToShow}
-                    defaultLLM={LLM.llm_name}
-                    onLLMSelectionChange={onLLMSelectionChange}
                     actions={
                         <>
                             {canEdit && !isLegacyAssistant && (
@@ -1082,10 +1085,6 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
         isLegacyAssistant,
         isAssistantUnavailable,
         t,
-        availableLLMs,
-        assistantConfig.default_model,
-        LLM.llm_name,
-        onLLMSelectionChange,
         canEdit,
         assistantInfoData,
         isAssistantInfoLoading,

@@ -91,3 +91,15 @@
         grid-template-columns: minmax(0, 1fr);
     }
 }
+
+/* The details follow the hovered model. Touch devices can't hover and a tap selects right away, so they only get the list. */
+@media (hover: none) {
+    .layout {
+        grid-template-areas: "list";
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .detailsStack {
+        display: none;
+    }
+}

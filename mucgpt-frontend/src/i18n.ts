@@ -866,16 +866,12 @@ i18n
                         },
                         llmSelector: {
                             title: "Sprachmodell Auswahl",
-                            bestFor: "Ideal für:",
-                            knowledge: "Wissensstand:",
-                            knowledge_description:
-                                "Datum der letzten Informationen, mit denen das Modell trainiert wurde. Es kann über nichts bescheid wissen, was neuer ist.",
-                            notAvailable: "Nicht verfügbar",
-                            features: "Funktionen:",
-                            features_description: "Funktionalitäten, die das Sprachmodell mitbringt.",
+                            knowledge: "Wissensstand",
                             context: "Kontext",
-                            price: "Preis",
-                            selectButton: "Auswählen"
+                            context_description:
+                                "Wie viel Text das Modell in einem Chat gleichzeitig berücksichtigen kann: Nachrichten, Antworten und Dokumente zusammen.",
+                            cost: "Kosten",
+                            rating: "{{value}} von {{max}}"
                         }
                     },
                     discovery: {
@@ -1731,15 +1727,11 @@ i18n
                         },
                         llmSelector: {
                             title: "Language Model Selection",
-                            bestFor: "Ideal for:",
-                            knowledge: "Knowledge Level:",
-                            knowledge_description: "Date of the last information the model was trained on. It may not be aware of anything newer.",
-                            notAvailable: "Not available",
-                            features: "Features:",
-                            features_description: "Functionalities that the language model offers.",
+                            knowledge: "Knowledge cutoff",
                             context: "Context",
-                            price: "Price",
-                            selectButton: "Select"
+                            context_description: "How much text the model can take into account at once in a chat: messages, answers, and documents combined.",
+                            cost: "Cost",
+                            rating: "{{value}} of {{max}}"
                         }
                     },
                     discovery: {
@@ -2582,15 +2574,11 @@ i18n
                         },
                         llmSelector: {
                             title: "Sprachmodell-Auswahl",
-                            bestFor: "Ideal für:",
-                            knowledge: "Wissensstand:",
-                            knowledge_description: "Datum von de letzten Infos, mit denen des Modell trainiert woan is. Es ko nix wissen, was neuer is.",
-                            notAvailable: "Ned verfügbar",
-                            features: "Funktionen:",
-                            features_description: "Funktionalitäten, die des Sprachmodell mitbringt.",
+                            knowledge: "Wissensstand",
                             context: "Kontext",
-                            price: "Preis",
-                            selectButton: "Auswähln"
+                            context_description: "Wia vui Text des Modell in am Chat auf oamoi berücksichtign ko: Nachrichtn, Antwortn und Dokumente zamm.",
+                            cost: "Kostn",
+                            rating: "{{value}} vo {{max}}"
                         }
                     },
                     discovery: {
@@ -3434,16 +3422,12 @@ i18n
                         },
                         llmSelector: {
                             title: "Sélection du modèle de langage",
-                            bestFor: "Idéal pour:",
-                            knowledge: "Niveau de connaissance :",
-                            knowledge_description:
-                                "Date des dernières informations avec lesquelles le modèle a été entraîné. Il peut ne pas être au courant des informations plus récentes.",
-                            notAvailable: "Non disponible",
-                            features: "Fonctionnalités :",
-                            features_description: "Fonctionnalités que le modèle de langage offre.",
+                            knowledge: "Niveau de connaissance",
                             context: "Contexte",
-                            price: "Prix",
-                            selectButton: "Sélectionner"
+                            context_description:
+                                "Quantité de texte que le modèle peut prendre en compte en même temps dans une conversation : messages, réponses et documents réunis.",
+                            cost: "Coût",
+                            rating: "{{value}} sur {{max}}"
                         }
                     },
                     discovery: {
@@ -4289,15 +4273,11 @@ i18n
                         },
                         llmSelector: {
                             title: "Вибір мовної моделі",
-                            bestFor: "Ідеально для:",
-                            knowledge: "Рівень знань:",
-                            knowledge_description: "Дата останніх інформацій, за якими модель була навчена. Модель може не знати нічого нового.",
-                            notAvailable: "Недоступно",
-                            features: "Функції:",
-                            features_description: "Функціональність, яку пропонує мовна модель.",
+                            knowledge: "Рівень знань",
                             context: "Контекст",
-                            price: "Ціна",
-                            selectButton: "Обрати"
+                            context_description: "Скільки тексту модель може одночасно враховувати в чаті: повідомлення, відповіді та документи разом.",
+                            cost: "Вартість",
+                            rating: "{{value}} з {{max}}"
                         }
                     },
                     discovery: {

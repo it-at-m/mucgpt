@@ -503,9 +503,6 @@ export const QuestionInput = ({
                             </div>
                         ) : null}
                         <div className={styles.spacer} />
-                        {llmOptions && selectedLLM && onLLMSelectionChange && (
-                            <LLMSelector onSelectionChange={onLLMSelectionChange} defaultLLM={selectedLLM} options={llmOptions} />
-                        )}
                         {usage && (
                             <ChatUsageIndicator
                                 usage={usage}
@@ -513,6 +510,9 @@ export const QuestionInput = ({
                                 onStartNewChat={onStartNewChat}
                                 onDismissNotice={() => setIsUsagePopoverOpen(false)}
                             />
+                        )}
+                        {llmOptions && selectedLLM && onLLMSelectionChange && (
+                            <LLMSelector onSelectionChange={onLLMSelectionChange} defaultLLM={selectedLLM} options={llmOptions} />
                         )}
                         {allowTranscription && onTranscription && transcriptionReady && (
                             <MicrophoneButton

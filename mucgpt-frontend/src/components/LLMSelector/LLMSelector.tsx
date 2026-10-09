@@ -43,7 +43,9 @@ const useStyles = makeStyles({
     // Quieter than the subtle button's default text so the model name doesn't compete with the input.
     trigger: {
         color: tokens.colorNeutralForeground3,
-        fontWeight: tokens.fontWeightRegular
+        fontWeight: tokens.fontWeightRegular,
+        // The chevron already carries its own whitespace; full button padding leaves a wide gap to the next action.
+        paddingRight: tokens.spacingHorizontalSNudge
     }
 });
 

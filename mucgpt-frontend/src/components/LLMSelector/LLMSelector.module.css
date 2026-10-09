@@ -90,6 +90,10 @@
             "details";
         grid-template-columns: minmax(0, 1fr);
     }
+
+    .detailsStack {
+        contain: inline-size;
+    }
 }
 
 /* The details follow the hovered model. Touch devices can't hover and a tap selects right away, so they only get the list. */

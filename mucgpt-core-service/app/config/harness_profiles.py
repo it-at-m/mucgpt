@@ -29,6 +29,11 @@ DEEP_AGENT_BUILTIN_TOOLS = frozenset(
     }
 )
 
+# Built-ins that are agent plumbing (planning, scratch files) rather than work the user
+# cares about; the frontend leaves them out of the activity display. Sub-agents ("task")
+# and "execute" stay visible if ever used.
+DEEP_AGENT_INTERNAL_TOOLS = DEEP_AGENT_BUILTIN_TOOLS - {"task", "execute"}
+
 logger = logging.getLogger(__name__)
 
 

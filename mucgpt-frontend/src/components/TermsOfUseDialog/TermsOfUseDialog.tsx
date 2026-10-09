@@ -1,7 +1,6 @@
 import { Dialog, DialogTrigger, DialogSurface, DialogTitle, DialogBody, DialogActions, DialogContent, Button, Link } from "@fluentui/react-components";
-import { Checkmark24Filled, DocumentBulletListMultiple24Regular } from "@fluentui/react-icons";
+import { Checkmark24Filled } from "@fluentui/react-icons";
 import { useTranslation } from "react-i18next";
-import { MenuItem } from "../../ui/MenuItem";
 import { useState } from "react";
 
 import styles from "./TermsOfUseDialog.module.css";
@@ -11,20 +10,12 @@ import { useConfigContext } from "../../context/ConfigContext";
 interface TermsOfUseDialogProps {
     defaultOpen: boolean;
     onAccept?: () => void;
-    showTrigger?: boolean;
     requireAcceptance?: boolean;
     open?: boolean;
     onOpenChange?: (open: boolean) => void;
 }
 
-export const TermsOfUseDialog = ({
-    defaultOpen,
-    onAccept,
-    showTrigger = true,
-    requireAcceptance = true,
-    open: controlledOpen,
-    onOpenChange
-}: TermsOfUseDialogProps) => {
+export const TermsOfUseDialog = ({ defaultOpen, onAccept, requireAcceptance = true, open: controlledOpen, onOpenChange }: TermsOfUseDialogProps) => {
     const { t } = useTranslation();
     const config = useConfigContext();
     const faqUrl = config.faq_url;
@@ -38,20 +29,10 @@ export const TermsOfUseDialog = ({
         }
         onOpenChange?.(nextOpen);
     };
-    const trigger = showTrigger ? (
-        <DialogTrigger disableButtonEnhancement>
-            <MenuItem icon={<DocumentBulletListMultiple24Regular />} onClick={() => setOpen(true)}>
-                {t("components.terms_of_use.label", "Nutzungsbedingungen")}
-            </MenuItem>
-        </DialogTrigger>
-    ) : (
-        <></>
-    );
 
     return (
         <>
             <Dialog modalType={requireAcceptance ? "alert" : "modal"} open={open} onOpenChange={(_event, data) => setOpen(data.open)}>
-                {trigger}
                 <DialogSurface className={styles.dialog}>
                     <DialogBody className={styles.dialogContent}>
                         <DialogTitle>

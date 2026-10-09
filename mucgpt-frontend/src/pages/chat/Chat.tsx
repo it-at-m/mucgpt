@@ -14,10 +14,11 @@ import { FollowUpActionContext } from "../../components/FollowUpAction";
 import { getChatReducer, handleRegenerate, handleRollback, makeApiRequest } from "../page_helpers";
 import { STORAGE_KEYS } from "../layout/LayoutHelper";
 import { ToolStatus } from "../../utils/ToolStreamHandler";
+import { initialRunActivity, type RunActivity } from "../../utils/agUiActivity";
 import { Model } from "../../api";
 import { chatApi } from "../../api/core-client";
 import { useToolsContext } from "../../components/ToolsProvider";
-import { Settings24Regular } from "@fluentui/react-icons";
+import { Code24Regular, Settings24Regular } from "@fluentui/react-icons";
 import { Button } from "@fluentui/react-components";
 import { ChatSettingsDialog } from "../../components/ChatSettingsDialog/ChatSettingsDialog";
 import { UploadedData, createUploadedDataFromContent } from "../../components/ContextManagerDialog/ContextManagerDialog";
@@ -26,6 +27,9 @@ import { useToolStatusToasts } from "../../hooks/useToolStatusToasts";
 import { useUnifiedHistory, useUnifiedHistoryRegistration } from "../../components/UnifiedHistory";
 import { useLocation, useNavigate } from "react-router-dom";
 import { UserContext } from "../layout/UserContextProvider";
+import { useConfigContext } from "../../context/ConfigContext";
+import { AgUiEventDrawer, type AgUiEventLogEntry } from "../../components/AgUiEventDrawer/AgUiEventDrawer";
+import { scrollIntoNearestContainer } from "../../utils/scrollIntoNearestContainer";
 
 /**
  * Creates a debounced function that delays invoking the provided function
@@ -92,6 +96,9 @@ const Chat = () => {
     const { setFollowUpActions } = useContext(FollowUpActionContext);
     const { tools } = useToolsContext();
     const { user } = useContext(UserContext);
+    const { ag_ui_enabled: agUiEnabled } = useConfigContext();
+    // The raw AG-UI event log is a debugging aid; users see the run activity instead.
+    const showAgUiEventLog = import.meta.env.DEV && agUiEnabled;
 
     // Independent states
     const [error, setError] = useState<unknown>();
@@ -105,6 +112,7 @@ const Chat = () => {
         }
     });
     const [toolStatuses, setToolStatuses] = useState<ToolStatus[]>([]);
+    const [runActivity, setRunActivity] = useState<RunActivity>(initialRunActivity);
     const [isSettingsOpen, setIsSettingsOpen] = useState<boolean>(false);
     const [uploadedData, setUploadedData] = useState<UploadedData[]>([]);
     const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -112,6 +120,8 @@ const Chat = () => {
     // Unlike `isLoading` (which only covers the wait for the first token), this stays true for the
     // whole generation, so follow-up actions can be hidden until the message is completely rendered.
     const [isStreaming, setIsStreaming] = useState<boolean>(false);
+    const [isEventDrawerOpen, setIsEventDrawerOpen] = useState(false);
+    const [agUiEvents, setAgUiEvents] = useState<AgUiEventLogEntry[]>([]);
 
     useToolStatusToasts(toolStatuses);
 
@@ -147,6 +157,10 @@ const Chat = () => {
         setIsLoading(nextLoading);
     }, []);
 
+    const handleAgUiEvent = useCallback((event: AgUiEventLogEntry["event"]) => {
+        setAgUiEvents(current => [...current, { event, receivedAt: new Date().toISOString() }].slice(-200));
+    }, []);
+
     // Update activeChatRef whenever active_chat changes
     useEffect(() => {
         activeChatRef.current = active_chat;
@@ -158,7 +172,7 @@ const Chat = () => {
     // Add a scroll function
     const scrollToBottom = useCallback(() => {
         if (chatMessageStreamEnd.current) {
-            chatMessageStreamEnd.current.scrollIntoView({ behavior: "smooth" });
+            scrollIntoNearestContainer(chatMessageStreamEnd.current);
         }
     }, []);
 
@@ -280,7 +294,11 @@ const Chat = () => {
                     setToolStatuses,
                     dataSources,
                     lastAnswerRef,
-                    setLoadingState
+                    setLoadingState,
+                    true,
+                    agUiEnabled,
+                    showAgUiEventLog ? handleAgUiEvent : undefined,
+                    setRunActivity
                 );
             } catch (e) {
                 setError(e);
@@ -289,7 +307,19 @@ const Chat = () => {
                 setIsStreaming(false);
             }
         },
-        [answers, creativity, LLM, storageService, fetchHistory, selectedTools, setToolStatuses, setLoadingState]
+        [
+            answers,
+            creativity,
+            LLM,
+            storageService,
+            fetchHistory,
+            selectedTools,
+            setToolStatuses,
+            setLoadingState,
+            agUiEnabled,
+            showAgUiEventLog,
+            handleAgUiEvent
+        ]
     );
 
     // Regenerate-Funktion
@@ -734,6 +764,7 @@ const Chat = () => {
                 }}
                 onRollbackMessage={onRollbackMessage}
                 isLoading={isLoading}
+                loadingActivity={runActivity}
                 error={error}
                 makeApiRequest={() => {
                     dispatch({ type: "SET_ANSWERS", payload: answers.slice(0, -1) });
@@ -758,6 +789,7 @@ const Chat = () => {
             callApi,
             systemPrompt,
             isLoading,
+            runActivity,
             isStreaming,
             lastQuestionRef,
             chatMessageStreamEnd,
@@ -846,6 +878,14 @@ const Chat = () => {
                     systemPrompt={systemPrompt}
                     setSystemPrompt={onSystemPromptChanged}
                 />
+                {showAgUiEventLog && (
+                    <AgUiEventDrawer
+                        open={isEventDrawerOpen}
+                        events={agUiEvents}
+                        onClose={() => setIsEventDrawerOpen(false)}
+                        onClear={() => setAgUiEvents([])}
+                    />
+                )}
                 <ChatLayout
                     answers={answerList}
                     input={inputComponent}
@@ -858,12 +898,22 @@ const Chat = () => {
                     defaultLLM={LLM.llm_name}
                     onLLMSelectionChange={onLLMSelectionChange}
                     actions={
-                        <Button
-                            appearance="transparent"
-                            icon={<Settings24Regular />}
-                            onClick={() => setIsSettingsOpen(true)}
-                            aria-label={t("components.chattsettingsdrawer.title")}
-                        />
+                        <>
+                            {showAgUiEventLog && (
+                                <Button
+                                    appearance="transparent"
+                                    icon={<Code24Regular />}
+                                    onClick={() => setIsEventDrawerOpen(true)}
+                                    aria-label={t("chat.show_ag_ui_events")}
+                                />
+                            )}
+                            <Button
+                                appearance="transparent"
+                                icon={<Settings24Regular />}
+                                onClick={() => setIsSettingsOpen(true)}
+                                aria-label={t("components.chattsettingsdrawer.title")}
+                            />
+                        </>
                     }
                 />
             </>
@@ -884,7 +934,10 @@ const Chat = () => {
             creativity,
             onCreativityChanged,
             systemPrompt,
-            onSystemPromptChanged
+            onSystemPromptChanged,
+            showAgUiEventLog,
+            isEventDrawerOpen,
+            agUiEvents
         ]
     );
 

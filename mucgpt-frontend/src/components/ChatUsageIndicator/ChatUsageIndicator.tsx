@@ -1,4 +1,4 @@
-import { Button, Caption1, Divider, Popover, PopoverSurface, PopoverTrigger, Text } from "@fluentui/react-components";
+import { Button, Caption1, Divider, makeStyles, Popover, PopoverSurface, PopoverTrigger, Text } from "@fluentui/react-components";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -16,6 +16,17 @@ interface Props {
 
 const HOVER_OPEN_DELAY_MS = 300;
 
+// Sized like the other icon buttons in the composer action bar.
+const useStyles = makeStyles({
+    ringButton: {
+        minWidth: 0,
+        width: "32px",
+        height: "32px",
+        padding: 0,
+        overflow: "visible"
+    }
+});
+
 const costLocales: Readonly<Record<string, string>> = {
     BA: "de-DE",
     DE: "de-DE",
@@ -26,6 +37,7 @@ const costLocales: Readonly<Record<string, string>> = {
 
 export const ChatUsageIndicator = ({ usage, autoOpenNotice = false, onStartNewChat, onDismissNotice }: Props) => {
     const { t, i18n } = useTranslation();
+    const classes = useStyles();
     const [open, setOpen] = useState(false);
     // Pinned = kept open by a click or by the auto-open warning notice; only closes on
     // an explicit re-click, "later", or an outside click - hover leave must not close it.
@@ -149,9 +161,7 @@ export const ChatUsageIndicator = ({ usage, autoOpenNotice = false, onStartNewCh
             <PopoverTrigger disableButtonEnhancement>
                 <Button
                     appearance="transparent"
-                    shape="circular"
-                    size="small"
-                    className={styles.ringButton}
+                    className={classes.ringButton}
                     role="progressbar"
                     aria-valuemin={0}
                     aria-valuemax={100}

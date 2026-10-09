@@ -91,6 +91,9 @@ MODELS:
       output_cost_per_token: 0.00000036
       supports_function_calling: true
       supports_reasoning: false
+      # Defaults to true. Set false for models that reject temperature (e.g. GPT-5/GPT-6).
+      # This explicit setting controls filtering; model names/profiles are not consulted.
+      supports_temperature: true
       supports_vision: true
       litellm_provider: "<provider>"
       inference_location: "<region>"

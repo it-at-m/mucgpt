@@ -6,6 +6,7 @@ import {
     MenuList,
     MenuPopover,
     MenuTrigger,
+    tokens,
     Tooltip,
     typographyStyles,
     type MenuProps
@@ -38,7 +39,12 @@ const useStyles = makeStyles({
         overflow: "hidden"
     },
     // Fluent's default menu subtext (10px) is smaller than any other text in the picker.
-    subText: typographyStyles.caption1
+    subText: typographyStyles.caption1,
+    // Quieter than the subtle button's default text so the model name doesn't compete with the input.
+    trigger: {
+        color: tokens.colorNeutralForeground3,
+        fontWeight: tokens.fontWeightRegular
+    }
 });
 
 const toNumber = (value: unknown): number | null => {
@@ -178,7 +184,7 @@ export const LLMSelector = ({ onSelectionChange, defaultLLM, options }: Props) =
         >
             <MenuTrigger disableButtonEnhancement>
                 <Tooltip content={title} relationship="description" positioning="below">
-                    <Button appearance="subtle" icon={<ChevronDown16Regular />} iconPosition="after">
+                    <Button appearance="subtle" className={classes.trigger} icon={<ChevronDown16Regular />} iconPosition="after">
                         {getDisplayName(defaultLLM)}
                     </Button>
                 </Tooltip>

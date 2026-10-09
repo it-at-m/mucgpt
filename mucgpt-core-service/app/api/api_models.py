@@ -79,6 +79,12 @@ class ChatCompletionRequest(BaseModel):
         None,
         description="Creativity level: 'low' (conservative), 'medium' (balanced), 'high' (creative)",
     )
+    reasoning_effort: Literal["none", "minimal", "low", "medium", "high"] | None = (
+        Field(
+            None,
+            description="Reasoning effort; only applied to models that support reasoning",
+        )
+    )
     max_tokens: int | None = Field(4096, description="Maximum tokens to generate")
     stream: bool | None = Field(
         False, description="Whether to stream partial responses back"
@@ -321,6 +327,10 @@ class ToolListResponse(BaseModel):
     tools: list[ToolInfo] = Field(
         ..., description="List of available tools with details."
     )
+    internal_tool_ids: list[str] = Field(
+        default_factory=list,
+        description="Ids of tools the agent uses internally (e.g. planning, scratch files); not shown to users as activity.",
+    )
     model_config = ConfigDict(
         json_schema_extra={
             "example": {
@@ -503,7 +513,11 @@ class ConfigResponse(BaseModel):
     )
     transcription_enabled: bool = Field(
         False,
-        description="Whether browser-based audio transcription is enabled in the frontend.",
+        description="Whether browser-based audio transcription is enabled in the frontend. Transcription itself runs fully client-side; no audio is sent to the backend.",
+    )
+    transcription_default_model: str | None = Field(
+        None,
+        description="Model id preselected in the transcription settings for users who have not picked a model yet. Unknown ids are ignored; null uses the frontend's built-in default.",
     )
     ai_act_compliance_check_enabled: bool = Field(
         True,
@@ -543,5 +557,9 @@ class ConfigResponse(BaseModel):
     )
     owner_profile_url_template: str | None = Field(
         None,
-        description="Template for assistant owner profile links. The '{uid}' placeholder is replaced with the owner lhmObjectID.",
+        description="Template for assistant owner profile links. The '{uid}' placeholder is replaced with the owner user ID.",
+    )
+    ag_ui_enabled: bool = Field(
+        False,
+        description="Whether the AG UI is enabled.",
     )

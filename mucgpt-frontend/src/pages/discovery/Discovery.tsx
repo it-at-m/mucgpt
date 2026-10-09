@@ -2,12 +2,12 @@ import { type ReactElement, type TransitionEvent, useCallback, useContext, useEf
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Title2, Text, Button, Tab, TabList, makeStyles, mergeClasses } from "@fluentui/react-components";
 import type { SearchBoxChangeEvent, InputOnChangeData, SelectionEvents, OptionOnSelectData, SelectTabData, SelectTabEvent } from "@fluentui/react-components";
-import { Add24Regular, DocumentArrowUpRegular, LibraryRegular, PeopleCommunityRegular, SearchRegular } from "@fluentui/react-icons";
+import { Add24Regular, ArrowResetRegular, DocumentArrowUpRegular, LibraryRegular, PeopleCommunityRegular, SearchRegular } from "@fluentui/react-icons";
 import { useTranslation } from "react-i18next";
 
 import styles from "./Discovery.module.css";
-import { getCommunityAssistantApi, deleteCommunityAssistantApi, createCommunityAssistantApi, unsubscribeFromAssistantApi } from "../../api/assistant-client";
-import { Assistant, AssistantResponse, CommunityAssistantSnapshot } from "../../api/models";
+import { getCommunityAssistantApi, deleteCommunityAssistantApi, unsubscribeFromAssistantApi } from "../../api/assistant-client";
+import { Assistant, AssistantResponse, CommunityAssistantSnapshot, ToolBase } from "../../api/models";
 import { AssistantStorageService } from "../../service/assistantstorage";
 import { CommunityAssistantStorageService } from "../../service/communityassistantstorage";
 import { ASSISTANT_STORE, COMMUNITY_ASSISTANT_STORE, CREATIVITY_LOW } from "../../constants";
@@ -28,11 +28,29 @@ import { ConfigContext } from "../../context/ConfigContext";
 import { Dropdown } from "../../ui/Dropdown";
 import { Option } from "../../ui/Option";
 import { SearchBox } from "../../ui/SearchBox";
+import {
+    CreateAssistantDraftValues,
+    hasCreateAssistantDraft,
+    saveCreateAssistantDraft
+} from "../../components/AssistantDialogs/shared/hooks/useCreateAssistantState";
+import { resetMockScenarios } from "../../mocks/data/browser-scenario-seed";
 
 const communityAssistantStorageService = new CommunityAssistantStorageService(COMMUNITY_ASSISTANT_STORE);
 const assistantStorageService = new AssistantStorageService(ASSISTANT_STORE);
+const asArray = <T,>(value: unknown): T[] => (Array.isArray(value) ? value : []);
+const isToolBase = (value: unknown): value is ToolBase =>
+    typeof value === "object" && value !== null && typeof (value as ToolBase).id === "string" && (value as ToolBase).id !== "";
+const isPromptEntry = (value: unknown): value is { label: string; prompt: string; text: string; value: string } =>
+    typeof value === "object" &&
+    value !== null &&
+    typeof (value as { label?: unknown }).label === "string" &&
+    typeof (value as { prompt?: unknown }).prompt === "string" &&
+    typeof (value as { text?: unknown }).text === "string" &&
+    typeof (value as { value?: unknown }).value === "string";
 const isAssistantResponse = (data: AssistantResponse | CommunityAssistantSnapshot): data is AssistantResponse =>
     "latest_version" in data && data.latest_version != null && typeof data.latest_version.name === "string";
+
+const isMockMode = import.meta.env.MODE === "development";
 
 type EmptyStateAction = {
     label: string;
@@ -67,7 +85,7 @@ const Discovery = () => {
     const navigate = useNavigate();
     const [searchParams, setSearchParams] = useSearchParams();
     const appConfig = useContext(ConfigContext);
-    const { showError, showSuccess } = useGlobalToastContext();
+    const { showError, showSuccess, showInfo } = useGlobalToastContext();
     const { refreshHistory: refreshUnifiedHistory } = useUnifiedHistory();
     const isComplianceCheckEnabled = appConfig.ai_act_compliance_check_enabled;
 
@@ -76,6 +94,8 @@ const Discovery = () => {
     const [selectedAssistant, setSelectedAssistant] = useState<AssistantCardData | null>(null);
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
     const [showUnsubscribeConfirm, setShowUnsubscribeConfirm] = useState(false);
+    const [pendingImportDraft, setPendingImportDraft] = useState<CreateAssistantDraftValues | null>(null);
+    const [showResetMockConfirm, setShowResetMockConfirm] = useState(false);
     const assistantToOpenId = searchParams.get("openAssistant");
     const {
         isLoading,
@@ -123,6 +143,11 @@ const Discovery = () => {
     }, [assistantToOpenId, setMyAssistantFilter, setSearchText, setShowAllMyAssistants]);
 
     const latestRequestRef = useRef(0);
+
+    const resetMockData = async () => {
+        await resetMockScenarios();
+        window.location.reload();
+    };
 
     const closeDrawer = useCallback(() => {
         latestRequestRef.current++;
@@ -188,6 +213,17 @@ const Discovery = () => {
         }
     }, [resolveAssistantData, selectedAssistant, showError, showSuccess, t]);
 
+    const openImportedDraft = useCallback(
+        (draft: CreateAssistantDraftValues) => {
+            if (!saveCreateAssistantDraft(draft)) {
+                showError(t("components.import_assistant.import_error"), t("components.import_assistant.import_failed"));
+                return;
+            }
+            navigate(isComplianceCheckEnabled ? "/assistant/create#compliance-review" : "/assistant/create");
+        },
+        [navigate, isComplianceCheckEnabled, showError, t]
+    );
+
     const importAssistant = useCallback(() => {
         const fileInput = document.createElement("input");
         fileInput.type = "file";
@@ -201,34 +237,43 @@ const Discovery = () => {
                 const content = await file.text();
                 const importedData = JSON.parse(content);
 
-                if (!importedData.title || !importedData.system_message) {
+                if (
+                    typeof importedData?.title !== "string" ||
+                    typeof importedData.system_message !== "string" ||
+                    !importedData.title ||
+                    !importedData.system_message
+                ) {
                     throw new Error(t("components.import_assistant.import_invalid_format"));
                 }
 
-                const createdAssistant = await createCommunityAssistantApi({
-                    name: importedData.title,
-                    description: importedData.description || "",
-                    system_prompt: importedData.system_message,
-                    creativity: importedData.creativity || CREATIVITY_LOW,
-                    default_model: importedData.default_model,
-                    quick_prompts: importedData.quick_prompts || [],
-                    examples: importedData.examples || [],
-                    owner_ids: [],
-                    tags: importedData.tags || [],
-                    hierarchical_access: importedData.hierarchical_access || [],
-                    tools: importedData.tools || [],
-                    is_visible: importedData.is_visible || false
-                });
+                const tools = asArray<unknown>(importedData.tools);
+                if (!tools.every(isToolBase)) {
+                    throw new Error(t("components.import_assistant.import_invalid_format"));
+                }
 
-                if (createdAssistant?.id) {
-                    showSuccess(
-                        t("components.import_assistant.import_success"),
-                        t("components.import_assistant.import_success_message", { title: importedData.title })
-                    );
+                const quickPrompts = asArray<unknown>(importedData.quick_prompts);
+                const examples = asArray<unknown>(importedData.examples);
+                if (!quickPrompts.every(isPromptEntry) || !examples.every(isPromptEntry)) {
+                    throw new Error(t("components.import_assistant.import_invalid_format"));
+                }
 
-                    navigate(`/owned/communityassistant/${createdAssistant.id}`);
+                const draft: CreateAssistantDraftValues = {
+                    title: importedData.title,
+                    description: typeof importedData.description === "string" ? importedData.description : "",
+                    systemPrompt: importedData.system_message,
+                    creativity: typeof importedData.creativity === "string" ? importedData.creativity : CREATIVITY_LOW,
+                    defaultModel: typeof importedData.default_model === "string" ? importedData.default_model : undefined,
+                    tools,
+                    followUpActions: quickPrompts,
+                    starterPrompts: examples,
+                    hierarchicalAccess: asArray(importedData.hierarchical_access),
+                    isVisible: importedData.is_visible === true
+                };
+
+                if (hasCreateAssistantDraft()) {
+                    setPendingImportDraft(draft);
                 } else {
-                    throw new Error(t("components.import_assistant.import_save_failed"));
+                    openImportedDraft(draft);
                 }
             } catch (error) {
                 console.error("Failed to import assistant", error);
@@ -238,7 +283,7 @@ const Discovery = () => {
         };
 
         fileInput.click();
-    }, [t, showSuccess, showError, navigate]);
+    }, [t, showError, openImportedDraft]);
 
     const handleSearch = (_event: SearchBoxChangeEvent | null, data: InputOnChangeData) => {
         setSearchText(data.value || "");
@@ -330,14 +375,27 @@ const Discovery = () => {
         setSearchParams(nextSearchParams, { replace: true });
     }, [assistantToOpenId, filteredMyAssistants, handleAssistantClick, isLoading, searchParams, setSearchParams]);
 
+    const getAssistantChatPath = (assistant: AssistantCardData) => {
+        if (assistant.isLocalAssistant) {
+            return `/assistant/${assistant.id}`;
+        }
+        return `/${assistant.isDeletedSnapshot ? "deleted/communityassistant" : "communityassistant"}/${assistant.id}`;
+    };
+
     const startConversation = () => {
         if (selectedAssistant) {
-            if (selectedAssistant.isLocalAssistant) {
-                navigate(`/assistant/${selectedAssistant.id}`);
-                return;
-            }
-            navigate(`/${selectedAssistant.isDeletedSnapshot ? "deleted/communityassistant" : "communityassistant"}/${selectedAssistant.id}`);
+            navigate(getAssistantChatPath(selectedAssistant));
         }
+    };
+
+    const openChatHistory = async () => {
+        if (!selectedAssistant) return;
+        const newestChat = await assistantStorageService.getNewestChatForAssistant(selectedAssistant.id);
+        if (!newestChat?.id) {
+            showInfo(t("components.community_assistants.deleted_state_no_history"));
+            return;
+        }
+        navigate(`${getAssistantChatPath(selectedAssistant)}?chatId=${encodeURIComponent(newestChat.id)}`);
     };
 
     const editAssistant = () => {
@@ -537,6 +595,11 @@ const Discovery = () => {
                                         {t("discovery.subtitle", "Finde und verwalte Assistenten für deine wiederkehrenden Aufgaben.")}
                                     </Text>
                                     <div className={styles.headerActions}>
+                                        {isMockMode && (
+                                            <Button appearance="transparent" icon={<ArrowResetRegular />} onClick={() => setShowResetMockConfirm(true)}>
+                                                {t("discovery.reset_mock_data")}
+                                            </Button>
+                                        )}
                                         <Button
                                             appearance="transparent"
                                             icon={<DocumentArrowUpRegular />}
@@ -691,6 +754,7 @@ const Discovery = () => {
                         assistant={selectedAssistant}
                         ownedAssistantIds={ownedAssistantIds}
                         onStartChat={startConversation}
+                        onOpenChatHistory={openChatHistory}
                         onEdit={editAssistant}
                         onDuplicate={() => {
                             if (!selectedAssistant || selectedAssistant.isLocalAssistant) {
@@ -750,6 +814,34 @@ const Discovery = () => {
                 )}
                 confirmLabel={t("components.community_assistants.duplicate_confirm_action")}
             />
+            <CloseConfirmationDialog
+                open={pendingImportDraft !== null}
+                onOpenChange={open => {
+                    if (!open) setPendingImportDraft(null);
+                }}
+                onConfirmClose={() => {
+                    if (pendingImportDraft) openImportedDraft(pendingImportDraft);
+                }}
+                title={t("components.import_assistant.draft_exists_title")}
+                message={t("components.import_assistant.draft_exists_message")}
+                confirmLabel={t("components.import_assistant.draft_exists_overwrite")}
+                confirmIntent="danger"
+                secondaryAction={{
+                    label: t("components.import_assistant.draft_exists_open"),
+                    onClick: () => navigate("/assistant/create")
+                }}
+            />
+            {isMockMode && (
+                <CloseConfirmationDialog
+                    open={showResetMockConfirm}
+                    onOpenChange={setShowResetMockConfirm}
+                    onConfirmClose={resetMockData}
+                    title={t("discovery.reset_mock_data_confirm_title")}
+                    message={t("discovery.reset_mock_data_confirm_message")}
+                    confirmLabel={t("discovery.reset_mock_data")}
+                    confirmIntent="danger"
+                />
+            )}
         </div>
     );
 };

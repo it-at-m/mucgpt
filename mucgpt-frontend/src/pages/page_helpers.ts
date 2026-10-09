@@ -10,7 +10,10 @@ import language from "react-syntax-highlighter/dist/esm/languages/hljs/1c";
 import { AssistantStorageService } from "../service/assistantstorage";
 import { v4 as uuid } from "uuid";
 import { handleRedirect } from "../api/fetch-utils";
-import { createChatName } from "../api/core-client";
+import { createChatName, MucgptAgUiAgent } from "../api/core-client";
+import type { BaseEvent } from "@ag-ui/core";
+import { initialRunActivity, reduceRunActivity, type RunActivity } from "../utils/agUiActivity";
+import { scrollIntoNearestContainer } from "../utils/scrollIntoNearestContainer";
 
 /**
  * @fileoverview Chat page helper functions for managing chat state, API requests, and user interactions.
@@ -235,7 +238,10 @@ export const makeApiRequest = async (
     data_sources?: DataSource[],
     answerTopRef?: RefObject<HTMLElement | null>,
     onLoadingChange?: (isLoading: boolean) => void,
-    persist: boolean = true
+    persist: boolean = true,
+    agUiEnabled: boolean = false,
+    onAgUiEvent?: (event: BaseEvent) => void,
+    onRunActivityChange?: (activity: RunActivity) => void
 ) => {
     // Create conversation history for the API request
     const history: ChatTurn[] = answers.map((a: { user: any; response: { answer: any } }) => ({ user: a.user, assistant: a.response.answer }));
@@ -263,42 +269,53 @@ export const makeApiRequest = async (
         data_sources: data_sources && data_sources.length > 0 ? data_sources : undefined
     };
 
-    // Make the API call
-    const response = await chatApi(request);
-    handleRedirect(response);
+    // Keep the legacy request behavior unchanged while the AG-UI path is rolled out.
+    const legacyResponse = agUiEnabled ? undefined : await chatApi(request);
+    if (legacyResponse) {
+        handleRedirect(legacyResponse);
+        if (!legacyResponse.body) throw Error("No response body");
+    }
 
-    // Ensure we have a response body for streaming
-    if (!response.body) {
-        throw Error("No response body");
-    } // Initialize token counters for usage tracking
+    // Initialize token counters for usage tracking
     let user_tokens = 0;
     let cache_read_tokens = 0;
     let streamed_tokens = 0;
-    let context_tokens = 0;
+    let context_tokens: number | undefined;
 
     // Initialize tool stream handler for processing tool calls
     const toolStreamHandler = new ToolStreamHandler();
     let activeToolStatuses: ToolStatus[] = [];
+    let runActivity: RunActivity = { ...initialRunActivity, startedAt: Date.now() };
+    const activitySteps = () => (runActivity.steps.length > 0 ? runActivity.steps : undefined);
 
     // Add an empty initial message to the chat
     const initialMessage = {
         user: question,
         response: { ...askResponse }
     };
-    isLoadingRef.current = false;
-    onLoadingChange?.(false);
-    dispatch({ type: "ADD_ANSWER", payload: initialMessage });
+    let initialMessageAdded = false;
+    const showInitialMessage = () => {
+        if (initialMessageAdded) return;
+        initialMessageAdded = true;
+        isLoadingRef.current = false;
+        onLoadingChange?.(false);
+        dispatch({ type: "ADD_ANSWER", payload: initialMessage });
+    };
+
+    // The legacy fetch has already received its response headers. AG-UI keeps
+    // the loading indicator visible until the first displayable event arrives.
+    if (!agUiEnabled) showInitialMessage();
 
     // Ensure the currently generating answer placeholder is brought into view
     // immediately after submit. We retry because the ref may not be attached
     // on the first frame right after dispatch.
     const scrollToCurrentGeneration = () => {
         if (answerTopRef?.current) {
-            answerTopRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+            scrollIntoNearestContainer(answerTopRef.current, { block: "start" });
             return;
         }
 
-        chatMessageStreamEnd.current?.scrollIntoView({ behavior: "smooth" });
+        scrollIntoNearestContainer(chatMessageStreamEnd.current);
     };
 
     requestAnimationFrame(() => {
@@ -311,10 +328,6 @@ export const makeApiRequest = async (
     let textBuffer = ""; // Accumulates regular text content
     let updateTimer: ReturnType<typeof setTimeout> | null = null; // Debounces UI updates
     let includeActiveToolsInUpdate = false; // Tracks whether tool statuses need to be sent in the next update
-    const reader = response.body.getReader();
-    const decoder = new TextDecoder();
-    let streamBuffer = ""; // Buffer for incomplete SSE lines
-
     const scheduleUpdate = () => {
         if (updateTimer) return;
         updateTimer = setTimeout(() => {
@@ -332,7 +345,8 @@ export const makeApiRequest = async (
                 answer: combinedContent,
                 tokens: streamed_tokens,
                 user_tokens: user_tokens,
-                activeTools: includeActiveToolsInUpdate ? activeToolStatuses : undefined
+                activeTools: includeActiveToolsInUpdate ? activeToolStatuses : undefined,
+                activitySteps: activitySteps()
             };
 
             const updatedMessage = { user: question, response: updatedResponse };
@@ -340,90 +354,113 @@ export const makeApiRequest = async (
             includeActiveToolsInUpdate = false;
 
             requestAnimationFrame(() => {
-                chatMessageStreamEnd.current?.scrollIntoView({ behavior: "smooth" });
+                scrollIntoNearestContainer(chatMessageStreamEnd.current);
             });
         }, 100);
     };
 
-    // Set once the server signals the end of the stream ([DONE] or finish_reason:
-    // "stop"). Needed because those markers only break the inner line loop; the outer
-    // read loop must check this flag to stop reading, otherwise it hangs until the
-    // server closes the connection.
-    let streamDone = false;
+    if (agUiEnabled) {
+        let runError: Error | undefined;
+        // Tool progress is shown through the run activity (loading indicator and answer steps), not toasts.
+        onRunActivityChange?.(runActivity);
+        const agent = new MucgptAgUiAgent(request);
+        const eventSubscription = agent.subscribe({
+            onEvent: ({ event }) => {
+                onAgUiEvent?.(event);
+                const nextActivity = reduceRunActivity(runActivity, event);
+                if (nextActivity !== runActivity) {
+                    runActivity = nextActivity;
+                    onRunActivityChange?.(runActivity);
+                    // Tools can also run after the answer text started; keep its step list current.
+                    if (initialMessageAdded) scheduleUpdate();
+                }
+            }
+        });
+        try {
+            await agent.runAgent(undefined, {
+                onTextMessageContentEvent: ({ event }) => {
+                    showInitialMessage();
+                    textBuffer += event.delta;
+                    scheduleUpdate();
+                },
+                onRunErrorEvent: ({ event }) => {
+                    showInitialMessage();
+                    runError = new Error(event.message);
+                },
+                onRunFinishedEvent: ({ event }) => {
+                    showInitialMessage();
+                    for (const usage of event.usage ?? []) {
+                        user_tokens += usage.inputTokens ?? 0;
+                        cache_read_tokens += usage.cachedInputTokens ?? 0;
+                        streamed_tokens += usage.outputTokens ?? 0;
+                    }
 
-    try {
-        // Main streaming loop - process chunks as they arrive
-        while (!streamDone) {
-            const { done, value } = await reader.read();
-            if (done) break;
+                    const metadata = event.metadata as { mucgpt?: { contextTokens?: unknown } } | undefined;
+                    const reportedContextTokens = metadata?.mucgpt?.contextTokens;
+                    if (typeof reportedContextTokens === "number") {
+                        context_tokens = reportedContextTokens;
+                    }
+                }
+            });
+        } finally {
+            eventSubscription.unsubscribe();
+        }
+        if (runError) throw runError;
+    } else {
+        const reader = legacyResponse!.body!.getReader();
+        const decoder = new TextDecoder();
+        let streamBuffer = "";
+        let streamDone = false;
 
-            // Decode and buffer the incoming data
-            streamBuffer += decoder.decode(value, { stream: true });
-            const lines = streamBuffer.split("\n");
+        try {
+            while (!streamDone) {
+                const { done, value } = await reader.read();
+                if (done) break;
 
-            // Keep the last incomplete line in the buffer for next iteration
-            streamBuffer = lines.pop() || "";
+                streamBuffer += decoder.decode(value, { stream: true });
+                const lines = streamBuffer.split("\n");
+                streamBuffer = lines.pop() || "";
 
-            // Process each complete line
-            for (const line of lines) {
-                if (line.startsWith("data: ")) {
+                for (const line of lines) {
+                    if (!line.startsWith("data: ")) continue;
                     const data = line.slice(6).trim();
-
-                    // Check for stream end marker
                     if (data === "[DONE]") {
                         streamDone = true;
                         break;
                     }
 
                     try {
-                        // Parse the SSE chunk data
                         const chunk = JSON.parse(data) as ChatCompletionChunk;
                         const choice: ChatCompletionChunkChoice | undefined = chunk.choices?.[0];
                         if (!choice) continue;
 
-                        // Handle token usage information if available. This is sent on the final
-                        // (finish_reason: "stop") chunk, so it must be read before that check below.
                         if (chunk.usage) {
-                            user_tokens = user_tokens + (chunk.usage.prompt_tokens || 0);
+                            user_tokens += chunk.usage.prompt_tokens || 0;
                             cache_read_tokens += chunk.usage.cache_read_tokens ?? 0;
-                            streamed_tokens = streamed_tokens + (chunk.usage.completion_tokens || 0);
+                            streamed_tokens += chunk.usage.completion_tokens || 0;
                             context_tokens =
                                 chunk.usage.context_tokens ??
                                 chunk.usage.total_tokens ??
                                 (chunk.usage.prompt_tokens || 0) + (chunk.usage.completion_tokens || 0);
                         }
 
-                        // Check if streaming is complete
                         if (choice.finish_reason === "stop") {
                             streamDone = true;
                             break;
                         }
 
-                        // Handle tool calls if present in the response
                         if (choice.delta?.tool_calls) {
                             for (const toolCall of choice.delta.tool_calls) {
                                 const { statusChange } = toolStreamHandler.handleToolCall(toolCall);
-
-                                // Update active tool statuses if there was a change
                                 if (statusChange) {
                                     activeToolStatuses = toolStreamHandler.getActiveToolStatuses();
-                                    // Notify the component about tool status changes
-                                    if (onToolStatusUpdate) {
-                                        onToolStatusUpdate(activeToolStatuses);
-                                    }
+                                    onToolStatusUpdate?.(activeToolStatuses);
                                     includeActiveToolsInUpdate = true;
                                 }
-
-                                // Batch UI updates to prevent excessive re-renders
                                 scheduleUpdate();
                             }
-                        }
-                        // Handle regular text content from the assistant
-                        else if (choice.delta?.content) {
-                            const content = choice.delta.content;
-                            textBuffer += content;
-
-                            // Batch UI updates to prevent excessive re-renders
+                        } else if (choice.delta?.content) {
+                            textBuffer += choice.delta.content;
                             scheduleUpdate();
                         }
                     } catch (parseError) {
@@ -431,10 +468,9 @@ export const makeApiRequest = async (
                     }
                 }
             }
+        } finally {
+            reader.releaseLock();
         }
-    } finally {
-        // Always release the reader lock to prevent memory leaks
-        reader.releaseLock();
     }
 
     // Ensure the final response is set with combined content after streaming completes
@@ -455,13 +491,14 @@ export const makeApiRequest = async (
         answer: finalCombinedContent,
         tokens: streamed_tokens,
         user_tokens: user_tokens,
-        context_tokens,
+        ...(context_tokens !== undefined ? { context_tokens } : {}),
         usage_cost: usageCost,
         usage_model: LLM.llm_name,
         usage_max_input_tokens: LLM.max_input_tokens,
         usage_context_warning_threshold_percent: LLM.context_warning_threshold_percent,
         usage_context_critical_threshold_percent: LLM.context_critical_threshold_percent,
-        activeTools: activeToolStatuses
+        activeTools: activeToolStatuses,
+        activitySteps: activitySteps()
     };
 
     const finalMessage = {
@@ -475,9 +512,9 @@ export const makeApiRequest = async (
     // Auto-scroll to show the latest message
     requestAnimationFrame(() => {
         if (answerTopRef?.current) {
-            answerTopRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+            scrollIntoNearestContainer(answerTopRef.current, { block: "start" });
         } else {
-            chatMessageStreamEnd.current?.scrollIntoView({ behavior: "smooth" });
+            scrollIntoNearestContainer(chatMessageStreamEnd.current);
         }
     });
 

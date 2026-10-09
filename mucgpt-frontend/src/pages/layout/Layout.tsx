@@ -1,13 +1,22 @@
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
-import { Button, Divider, DrawerBody, OverlayDrawer, FluentProvider, InlineDrawer } from "@fluentui/react-components";
-import { CalendarNote24Regular, Navigation24Regular } from "@fluentui/react-icons";
+import { MenuDivider, DrawerBody, OverlayDrawer, FluentProvider, InlineDrawer } from "@fluentui/react-components";
+import {
+    Book24Regular,
+    CalendarNote24Regular,
+    DocumentBulletListMultiple24Regular,
+    Lightbulb24Regular,
+    Mail24Regular,
+    Navigation24Regular,
+    QuestionCircle24Regular,
+    Warning24Regular
+} from "@fluentui/react-icons";
 import { useTranslation } from "react-i18next";
 
 import styles from "./Layout.module.css";
-import logo from "../../assets/edelweiss_pride.svg";
+import logo from "../../assets/edelweiss_white.svg";
 import alternative_logo from "../../assets/mugg_tschibidi.png";
-import logo_black from "../../assets/edelweiss_pride.svg";
+import logo_black from "../../assets/edelweiss.svg";
 import { DEFAULTLANG, LanguageContext } from "../../components/LanguageSelector/LanguageContextProvider";
 import { TermsOfUseDialog } from "../../components/TermsOfUseDialog";
 import { ApplicationConfig } from "../../api";
@@ -15,20 +24,17 @@ import { STORAGE_KEYS } from "./LayoutHelper";
 import { createMucgptTheme, createScaledTypographyTheme } from "../../ui/theme/fluentTheme";
 import { createAppCssVars, getAppTokens } from "../../ui/theme/appTokens";
 import { DEFAULTLLM, LLMContext } from "../../components/LLMSelector/LLMContextProvider";
-import { LightContext } from "./LightContext";
+import { AppThemeContext } from "../../ui/theme/AppThemeContext";
 import { DEFAULT_APP_CONFIG } from "../../constants";
 import { UserContextProvider } from "./UserContextProvider";
 import { LanguageSelector } from "../../components/LanguageSelector";
 import { ThemeSelector } from "../../components/ThemeSelector";
-import { FeedbackButton } from "../../components/FeedbackButton";
-import { FaqButton } from "../../components/FaqButton";
-import { IncidentReportButton } from "../../components/IncidentReportButton";
-import { FeatureRequestButton } from "../../components/FeatureRequestButton";
+import { ThemePreference, useThemePreference } from "../../hooks/useThemePreference";
+import { ExternalLinkMenuItem } from "../../components/ExternalLinkMenuItem";
 import { configApi } from "../../api/core-client";
 import { ApiError } from "../../api/fetch-utils";
 import { useGlobalToastContext } from "../../components/GlobalToastHandler/GlobalToastContext";
 import GlobalToastHandler from "../../components/GlobalToastHandler/GlobalToastHandler";
-import TutorialsButton from "../../components/TutorialsButton";
 import { TranscriptionSettingsButton } from "../../components/TranscriptionSettings/TranscriptionSettingsButton";
 import { TranscriptionSettingsProvider } from "../../components/TranscriptionSettings/TranscriptionSettingsContext";
 import { ToolsProvider } from "../../components/ToolsProvider";
@@ -38,26 +44,42 @@ import { AppSidebar } from "../../components/AppSidebar";
 import { UnifiedHistoryProvider, UnifiedSidebarHistory } from "../../components/UnifiedHistory";
 import { EdelweissSpinner } from "../../components/EdelweissSpinner";
 import { VersionInfo } from "../../components/VersionInfo";
+import { Button } from "../../ui/Button";
+import { MenuItem } from "../../ui/MenuItem";
 
 const APP_NAV_COLLAPSED_KEY = "APP_NAV_COLLAPSED";
 const MOBILE_LAYOUT_BREAKPOINT = 640;
 
+/** Formats a date as d-m-yyyy for the display version string. */
 const formatDate = (date: Date) => {
     const formatted_date = date.getDate() + "-" + (date.getMonth() + 1) + "-" + date.getFullYear();
     return formatted_date;
 };
+
+const buildMailtoLink = (mailUrl: string, subject: string) =>
+    mailUrl.includes("subject=") ? mailUrl : `${mailUrl}${mailUrl.includes("?") ? "&" : "?"}subject=${encodeURIComponent(subject)}`;
 
 interface AppShellProps {
     config: ApplicationConfig;
     isLight: boolean;
     languagePreference: string;
     onLanguageSelectionChanged: (nextLanguage: string) => void;
-    onThemeChange: (light: boolean) => void;
+    themePreference: ThemePreference;
+    onThemePreferenceChange: (themePreference: ThemePreference) => void;
     onAcceptTermsOfUse: () => void;
     termsOfUseRead: boolean;
 }
 
-const AppShell = ({ config, isLight, languagePreference, onLanguageSelectionChanged, onThemeChange, onAcceptTermsOfUse, termsOfUseRead }: AppShellProps) => {
+const AppShell = ({
+    config,
+    isLight,
+    languagePreference,
+    onLanguageSelectionChanged,
+    themePreference,
+    onThemePreferenceChange,
+    onAcceptTermsOfUse,
+    termsOfUseRead
+}: AppShellProps) => {
     const { t } = useTranslation();
     const location = useLocation();
     const navigate = useNavigate();
@@ -68,8 +90,10 @@ const AppShell = ({ config, isLight, languagePreference, onLanguageSelectionChan
     const [isMobile, setIsMobile] = useState<boolean>(window.innerWidth <= MOBILE_LAYOUT_BREAKPOINT);
     const [mobileSidebarOpen, setMobileSidebarOpen] = useState<boolean>(false);
     const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(() => localStorage.getItem(APP_NAV_COLLAPSED_KEY) === "true");
+    const [termsOfUseOpen, setTermsOfUseOpen] = useState<boolean>(false);
 
     useEffect(() => {
+        /** Tracks the viewport against the mobile breakpoint and closes mobile chrome on desktop. */
         const handleResize = () => {
             const nextIsMobile = window.innerWidth <= MOBILE_LAYOUT_BREAKPOINT;
             setIsMobile(nextIsMobile);
@@ -103,74 +127,61 @@ const AppShell = ({ config, isLight, languagePreference, onLanguageSelectionChan
     }, [navigate]);
 
     const utilitiesContent = (
-        <div className={styles.mobileUtilities}>
-            <div className={styles.mobileUtilityGroup}>
-                <div className={styles.mobileUtilityRow}>
-                    <LanguageSelector
-                        defaultlang={languagePreference}
-                        onSelectionChange={onLanguageSelectionChanged}
-                        layout="row"
-                        label={t("common.language")}
-                    />
-                </div>
-                <div className={styles.mobileUtilityRow}>{config.transcription_enabled ? <TranscriptionSettingsButton /> : null}</div>
-                <div className={styles.mobileUtilityRow}>
-                    <ThemeSelector isLight={isLight} onThemeChange={onThemeChange} layout="row" label={t("common.theme")} />
-                </div>
-            </div>
-            <Divider className={styles.settingsDivider} />
-            <div className={styles.mobileUtilityGroup}>
-                <div className={styles.mobileUtilityRow}>
-                    <TutorialsButton />
-                </div>
-                {faqUrl && (
-                    <div className={styles.mobileUtilityRow}>
-                        <FaqButton url={faqUrl} label={t("components.faqbutton.label")} />
-                    </div>
-                )}
-                {incidentReportUrl && (
-                    <div className={styles.mobileUtilityRow}>
-                        <IncidentReportButton url={incidentReportUrl} />
-                    </div>
-                )}
-                {featureRequestUrl && (
-                    <div className={styles.mobileUtilityRow}>
-                        <FeatureRequestButton url={featureRequestUrl} />
-                    </div>
-                )}
-                {contactMailUrl && (
-                    <div className={styles.mobileUtilityRow}>
-                        <FeedbackButton contactMailUrl={contactMailUrl} />
-                    </div>
-                )}
-            </div>
-            <Divider className={styles.settingsDivider} />
-            <div className={styles.mobileUtilityGroup}>
-                <div className={styles.mobileUtilityRow}>
-                    <TermsOfUseDialog
-                        defaultOpen={false}
-                        onAccept={onAcceptTermsOfUse}
-                        showTrigger
-                        requireAcceptance={false}
-                        triggerClassName={styles.mobileUtilityTrigger}
-                    />
-                </div>
-                <div className={styles.mobileUtilityRow}>
-                    <Button appearance="subtle" icon={<CalendarNote24Regular />} onClick={handleOpenVersionNotes}>
-                        {t("components.versioninfo.whats_new", "Was gibt's neues?")}
-                    </Button>
-                </div>
-                <div className={styles.mobileUtilityRow}>
-                    <VersionInfo
-                        app_version={config.app_version}
-                        core_version={config.core_version}
-                        frontend_version={config.frontend_version}
-                        assistant_version={config.assistant_version}
-                        layout="menu"
-                    />
-                </div>
-            </div>
-        </div>
+        <>
+            <LanguageSelector defaultlang={languagePreference} onSelectionChange={onLanguageSelectionChanged} />
+            {config.transcription_enabled && <TranscriptionSettingsButton />}
+            <ThemeSelector themePreference={themePreference} onThemePreferenceChange={onThemePreferenceChange} />
+            <MenuDivider />
+            <MenuItem icon={<Book24Regular />} onClick={() => navigate("/tutorials")}>
+                {t("header.go_to_tutorials", { defaultValue: "Tutorials" })}
+            </MenuItem>
+            {faqUrl && (
+                <ExternalLinkMenuItem
+                    href={faqUrl}
+                    icon={<QuestionCircle24Regular />}
+                    label={t("components.faqbutton.label", "Fragen & Antworten")}
+                    ariaLabel={t("components.faqbutton.aria_label", "Fragen und Antworten öffnen")}
+                />
+            )}
+            {incidentReportUrl && (
+                <ExternalLinkMenuItem
+                    href={incidentReportUrl}
+                    icon={<Warning24Regular />}
+                    label={t("components.incident_report_button.label", "Störung melden")}
+                    ariaLabel={t("components.incident_report_button.aria_label", "Störung melden")}
+                />
+            )}
+            {featureRequestUrl && (
+                <ExternalLinkMenuItem
+                    href={featureRequestUrl}
+                    icon={<Lightbulb24Regular />}
+                    label={t("components.feature_request_button.label", "Verbesserungswunsch vorschlagen")}
+                    ariaLabel={t("components.feature_request_button.aria_label", "Verbesserungswunsch vorschlagen")}
+                />
+            )}
+            {contactMailUrl && (
+                <ExternalLinkMenuItem
+                    href={buildMailtoLink(contactMailUrl, "Feedback")}
+                    icon={<Mail24Regular />}
+                    label={t("components.feedback.label", "Feedback")}
+                    ariaLabel={t("components.feedback.aria_label", "Send feedback via email")}
+                    external={false}
+                />
+            )}
+            <MenuDivider />
+            <MenuItem icon={<DocumentBulletListMultiple24Regular />} onClick={() => setTermsOfUseOpen(true)}>
+                {t("components.terms_of_use.label", "Nutzungsbedingungen")}
+            </MenuItem>
+            <MenuItem icon={<CalendarNote24Regular />} onClick={handleOpenVersionNotes}>
+                {t("components.versioninfo.whats_new", "Was gibt's neues?")}
+            </MenuItem>
+            <VersionInfo
+                app_version={config.app_version}
+                core_version={config.core_version}
+                frontend_version={config.frontend_version}
+                assistant_version={config.assistant_version}
+            />
+        </>
     );
     const logoSrc = config.alternative_logo ? alternative_logo : isLight ? logo_black : logo;
     const appTitleAriaLabel = t("common.environment_label", "Umgebung: {{env}}", { env: config.env_name });
@@ -216,7 +227,7 @@ const AppShell = ({ config, isLight, languagePreference, onLanguageSelectionChan
                     className={styles.mobileMenuButton}
                     icon={<Navigation24Regular className={styles.iconSize24} />}
                     onClick={() => setMobileSidebarOpen(true)}
-                    aria-label={t("app_sidebar.toggle_navigation")}
+                    aria-label={t("app_sidebar.open_navigation")}
                     aria-expanded={false}
                     size="medium"
                 />
@@ -246,11 +257,13 @@ const AppShell = ({ config, isLight, languagePreference, onLanguageSelectionChan
                 </OverlayDrawer>
             )}
 
-            <TermsOfUseDialog defaultOpen={!termsOfUseRead} onAccept={onAcceptTermsOfUse} showTrigger={false} />
+            <TermsOfUseDialog defaultOpen={!termsOfUseRead} onAccept={onAcceptTermsOfUse} />
+            <TermsOfUseDialog defaultOpen={false} requireAcceptance={false} open={termsOfUseOpen} onOpenChange={setTermsOfUseOpen} />
         </>
     );
 };
 
+/** Top-level page shell: loads the deployment config, wires providers and renders the AppShell. */
 export const Layout = () => {
     const navigate = useNavigate();
 
@@ -275,9 +288,7 @@ export const Layout = () => {
     const fontScalingPreference = Number(localStorage.getItem(STORAGE_KEYS.SETTINGS_FONT_SCALING)) || 1;
     const [fontscaling] = useState<number>(fontScalingPreference);
 
-    const lightThemePreference =
-        localStorage.getItem(STORAGE_KEYS.SETTINGS_IS_LIGHT_THEME) === null ? true : localStorage.getItem(STORAGE_KEYS.SETTINGS_IS_LIGHT_THEME) === "true";
-    const [isLight, setLight] = useState<boolean>(lightThemePreference);
+    const { themePreference, setThemePreference, isLight } = useThemePreference();
 
     const appTokens = useMemo(() => getAppTokens(isLight), [isLight]);
     const theme = useMemo(() => createScaledTypographyTheme(createMucgptTheme(isLight), fontscaling), [isLight, fontscaling]);
@@ -289,14 +300,6 @@ export const Layout = () => {
             root.style.setProperty(key, value);
         }
     }, [appCssVars]);
-
-    const onThemeChange = useCallback(
-        (light: boolean) => {
-            setLight(light);
-            localStorage.setItem(STORAGE_KEYS.SETTINGS_IS_LIGHT_THEME, String(light));
-        },
-        [setLight]
-    );
 
     useEffect(() => {
         if (configApiCalledRef.current) return;
@@ -353,7 +356,7 @@ export const Layout = () => {
 
     return (
         <FluentProvider theme={theme}>
-            <LightContext.Provider value={isLight}>
+            <AppThemeContext.Provider value={{ isLight }}>
                 <ConfigContext.Provider value={config}>
                     <UserContextProvider>
                         {isLoadingConfig ? (
@@ -363,7 +366,7 @@ export const Layout = () => {
                         ) : isUnauthorized ? (
                             <Unauthorized redirectUrl={unauthorizedRedirectUrl} />
                         ) : (
-                            <TranscriptionSettingsProvider deploymentEnabled={config.transcription_enabled}>
+                            <TranscriptionSettingsProvider deploymentEnabled={config.transcription_enabled} defaultModelId={config.transcription_default_model}>
                                 <ToolsProvider>
                                     <UnifiedHistoryProvider>
                                         <AppShell
@@ -371,7 +374,8 @@ export const Layout = () => {
                                             isLight={isLight}
                                             languagePreference={languagePreference}
                                             onLanguageSelectionChanged={onLanguageSelectionChanged}
-                                            onThemeChange={onThemeChange}
+                                            themePreference={themePreference}
+                                            onThemePreferenceChange={setThemePreference}
                                             onAcceptTermsOfUse={onAcceptTermsOfUse}
                                             termsOfUseRead={termsOfUseRead}
                                         />
@@ -382,7 +386,7 @@ export const Layout = () => {
                         <GlobalToastHandler />
                     </UserContextProvider>
                 </ConfigContext.Provider>
-            </LightContext.Provider>
+            </AppThemeContext.Provider>
         </FluentProvider>
     );
 };

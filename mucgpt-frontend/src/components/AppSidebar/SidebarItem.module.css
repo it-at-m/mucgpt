@@ -1,0 +1,63 @@
+/* Shared geometry for brand, navigation and profile. The 40px icon column
+   starts at the sidebar's invariant 12px gutter: every centre is at 32px. */
+/* Keep the border geometry constant even when Fluent adds its focus border.
+   Fluent's inset focus ring and outline remain intact. */
+button.control[class],
+a.control[class] {
+    display: grid;
+    grid-template-columns: var(--sidebar-icon-size) minmax(0, 1fr);
+    align-items: center;
+    justify-content: start;
+    width: 100%;
+    min-width: var(--sidebar-icon-size);
+    min-height: var(--sidebar-control-height, var(--sidebar-icon-size));
+    padding: 0;
+    border-width: 0;
+    text-align: left;
+    transition-duration: var(--durationFast);
+    transition-timing-function: var(--curveDecelerateMid);
+}
+
+.control .icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: var(--sidebar-icon-size);
+    height: var(--sidebar-control-height, var(--sidebar-icon-size));
+    margin: 0;
+}
+
+.label {
+    min-width: 0;
+    overflow: clip;
+}
+
+/* Keep the expanded text measure even in the rail. Wrapped/scaled text then
+   reserves identical row heights throughout collapse, without moving icons. */
+.text {
+    display: block;
+    box-sizing: border-box;
+    width: var(--sidebar-label-width);
+    padding: var(--sidebar-label-padding, var(--spacingVerticalS)) var(--spacingHorizontalXS);
+    overflow-wrap: anywhere;
+    white-space: normal;
+    opacity: 1;
+    transform: translateX(0);
+    transition:
+        opacity var(--durationNormal) var(--curveDecelerateMid),
+        transform var(--durationSlow) var(--curveDecelerateMid);
+}
+
+.collapsed .text {
+    opacity: 0;
+    transform: translateX(calc(-1 * var(--sidebar-label-width)));
+    pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    button.control[class],
+    a.control[class],
+    .text {
+        transition: none;
+    }
+}

@@ -1,6 +1,6 @@
 .container {
     --chatReadableWidth: 820px;
-    --chatContentWidth: min(50%, var(--chatReadableWidth));
+    --chatContentWidth: min(100%, var(--chatReadableWidth));
     display: flex;
     flex-direction: column;
     flex: 1;
@@ -8,6 +8,7 @@
     height: 100vh;
     height: 100dvh;
     overflow: hidden;
+    overflow: clip;
     background: var(--colorNeutralBackground3);
 }
 
@@ -99,6 +100,7 @@
     margin-top: 60px;
     margin-right: 0;
     overflow: hidden;
+    overflow: clip;
     z-index: 1;
     box-sizing: border-box;
     background: var(--colorNeutralBackground3);
@@ -118,6 +120,7 @@
     min-height: 0;
     padding-bottom: var(--chatInputHeight, 0);
     overflow: hidden;
+    overflow: clip;
     box-sizing: border-box;
 }
 
@@ -317,15 +320,9 @@
     min-width: 0;
 }
 
-.disclaimerText {
+.disclaimer {
     width: 100%;
     max-width: var(--chatContentWidth, min(60%, 1000px));
-    min-height: 20px;
-    font-style: italic;
-    font-size: 0.75rem;
-    letter-spacing: 0.01em;
-    text-align: center;
-    color: var(--colorNeutralForeground1);
 }
 
 .container[data-info-open="true"] .scrollToBottomWrapper,
@@ -334,11 +331,6 @@
 }
 
 @media (max-width: 1200px) {
-    .container {
-        --chatReadableWidth: 80%;
-        --chatContentWidth: min(80%, var(--chatReadableWidth));
-    }
-
     .container[data-info-open="true"] .headerBar,
     .container[data-info-open="true"] .scrollToBottomWrapper,
     .container[data-info-open="true"] .bottomBar {
@@ -350,17 +342,7 @@
     }
 }
 
-@media (max-width: 768px) {
-    .container {
-        --chatContentWidth: min(90%, var(--chatReadableWidth));
-    }
-}
-
 @media (max-width: 650px) {
-    .container {
-        --chatReadableWidth: 100%;
-    }
-
     .chatRoot {
         min-height: 0;
     }

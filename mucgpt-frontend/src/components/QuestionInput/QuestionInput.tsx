@@ -1,14 +1,17 @@
-import { Button, Textarea, type TextareaOnChangeData, Tooltip } from "@fluentui/react-components";
-import { Send28Filled, DocumentAdd24Regular } from "@fluentui/react-icons";
-import { useCallback, useEffect, useRef, useState, type Dispatch, type SetStateAction } from "react";
+import { Button, mergeClasses, Tooltip } from "@fluentui/react-components";
+import { Add20Regular, ArrowUp20Regular } from "@fluentui/react-icons";
+import { useCallback, useEffect, useRef, useState, type ChangeEvent, type Dispatch, type MouseEvent, type SetStateAction } from "react";
 import { useTranslation } from "react-i18next";
 
 import styles from "./QuestionInput.module.css";
+import { useAutoGrowTextarea } from "./useAutoGrowTextarea";
+import { Button as SubtleButton } from "../../ui/Button";
 import { uploadFileApi } from "../../api/core-client";
 import { ToolListResponse } from "../../api/models";
 import { useConfigContext } from "../../context/ConfigContext";
 import { upsertParsedDocumentFromUpload } from "../../service/parsedDocumentStorage";
 import { ContextManagerDialog, UploadedData, createUploadedData, getDataSignature, getFileSignature } from "../ContextManagerDialog/ContextManagerDialog";
+import { ChatDisclaimer } from "../ChatDisclaimer";
 import { ChatToolSelector } from "../ChatToolSelector/ChatToolSelector";
 import { ChatUsageIndicator, type ChatUsageSummary } from "../ChatUsageIndicator/ChatUsageIndicator";
 import { ChatUsageMessageBar } from "../ChatUsageIndicator/ChatUsageMessageBar";
@@ -72,8 +75,7 @@ export const QuestionInput = ({
     const allowFileUpload = allowFileUploadProp ?? config.document_processing_enabled;
     const allowTranscription = config.transcription_enabled;
     const resolvedPlaceholder = placeholder ?? (allowFileUpload ? t("chat.prompt") : t("chat.prompt_no_upload"));
-    const textareaRef = useRef<HTMLTextAreaElement | null>(null);
-    const sendButtonRef = useRef<HTMLButtonElement | null>(null);
+    const textareaRef = useAutoGrowTextarea(question);
     const uploadButtonRef = useRef<HTMLButtonElement | null>(null);
     const wasDisabledRef = useRef(disabled);
     const wasDialogOpenRef = useRef(false);
@@ -81,7 +83,6 @@ export const QuestionInput = ({
     const [internalUploadedData, setInternalUploadedData] = useState<UploadedData[]>([]);
     const uploadedDataRef = useRef<UploadedData[]>([]);
     const [isDragActive, setIsDragActive] = useState(false);
-    const [isExpandedInput, setIsExpandedInput] = useState(false);
     const [hasShownUsagePopover, setHasShownUsagePopover] = useState(false);
     const [isUsagePopoverOpen, setIsUsagePopoverOpen] = useState(false);
     const [isUsageMessageBarDismissed, setIsUsageMessageBarDismissed] = useState(false);
@@ -241,60 +242,6 @@ export const QuestionInput = ({
         return false;
     }, []);
 
-    useEffect(() => {
-        const resizeTextarea = () => {
-            const textarea = textareaRef.current;
-            if (!textarea) {
-                return;
-            }
-
-            const maxHeight = 200;
-            const computedStyle = window.getComputedStyle(textarea);
-            const lineHeight = Number.parseFloat(computedStyle.lineHeight) || 24;
-            const paddingTop = Number.parseFloat(computedStyle.paddingTop) || 0;
-            const paddingBottom = Number.parseFloat(computedStyle.paddingBottom) || 0;
-            const verticalPadding = paddingTop + paddingBottom;
-            const singleLineHeight = lineHeight + verticalPadding;
-            const canvas = document.createElement("canvas");
-            const context = canvas.getContext("2d");
-            const horizontalPadding = (Number.parseFloat(computedStyle.paddingLeft) || 0) + (Number.parseFloat(computedStyle.paddingRight) || 0);
-            const availableLineWidth = textarea.clientWidth - horizontalPadding;
-            const needsWrappedLine =
-                context && availableLineWidth > 0
-                    ? question.split("\n").some(line => {
-                          context.font = computedStyle.font;
-                          return context.measureText(line || " ").width > availableLineWidth;
-                      })
-                    : false;
-            const nextExpandedInput = question.trim().length > 0 && (question.includes("\n") || needsWrappedLine);
-
-            setIsExpandedInput(nextExpandedInput);
-            textarea.style.height = "auto";
-
-            if (!nextExpandedInput) {
-                textarea.style.height = `${singleLineHeight}px`;
-                textarea.style.overflowY = "hidden";
-                return;
-            }
-
-            const scrollHeight = textarea.scrollHeight;
-            const newHeight = Math.min(scrollHeight, maxHeight);
-
-            textarea.style.height = `${newHeight}px`;
-            textarea.style.overflowY = scrollHeight > maxHeight ? "auto" : "hidden";
-        };
-
-        resizeTextarea();
-
-        if (question === "") {
-            const textarea = textareaRef.current;
-            if (textarea) {
-                textarea.style.height = "auto";
-                textarea.style.overflowY = "hidden";
-            }
-        }
-    }, [question]);
-
     const sendQuestion = useCallback(() => {
         if (disabled || !question.trim()) {
             return;
@@ -331,7 +278,7 @@ export const QuestionInput = ({
 
     const onEnterPress = useCallback(
         (event: React.KeyboardEvent<Element>) => {
-            if (event.key === "Enter" && !event.shiftKey) {
+            if (event.key === "Enter" && !event.shiftKey && !event.nativeEvent.isComposing) {
                 event.preventDefault();
                 sendQuestion();
             }
@@ -340,10 +287,21 @@ export const QuestionInput = ({
     );
 
     const onQuestionChange = useCallback(
-        (_event: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>, data: TextareaOnChangeData) => {
-            setQuestion(data.value || "");
+        (event: ChangeEvent<HTMLTextAreaElement>) => {
+            setQuestion(event.target.value);
         },
         [setQuestion]
+    );
+
+    const focusInputOnBackgroundClick = useCallback(
+        (event: MouseEvent<HTMLDivElement>) => {
+            const target = event.target as HTMLElement;
+            // React events bubble out of portals (e.g. popovers), which are not part of the composer surface.
+            if (event.currentTarget.contains(target) && !target.closest("button")) {
+                textareaRef.current?.focus();
+            }
+        },
+        [textareaRef]
     );
 
     const handleUploadButtonClick = useCallback(() => {
@@ -505,42 +463,39 @@ export const QuestionInput = ({
                 )}
 
                 <div
-                    className={`${styles.questionInputContainer} ${
-                        !tools?.tools?.length || !setSelectedTools ? styles.noTools : ""
-                    } ${isDragActive ? styles.dragActive : ""} ${isExpandedInput ? styles.expandedInput : ""} ${!allowFileUpload ? styles.noUpload : ""}`}
+                    className={mergeClasses(styles.composer, isDragActive && styles.dragActive)}
+                    onClick={focusInputOnBackgroundClick}
                     onDragEnter={allowFileUpload ? handleDragEnter : undefined}
                     onDragOver={allowFileUpload ? handleDragOver : undefined}
                     onDragLeave={allowFileUpload ? handleDragLeave : undefined}
                     onDrop={allowFileUpload ? handleDrop : undefined}
                 >
-                    {allowFileUpload ? (
-                        <Tooltip content={t("components.questioninput.upload_data", "Dokument hochladen")} relationship="label">
-                            <div className={styles.uploadButtonWrapper}>
-                                <Button
-                                    ref={uploadButtonRef}
-                                    size="large"
-                                    appearance="subtle"
-                                    icon={<DocumentAdd24Regular />}
-                                    aria-label={t("components.questioninput.upload_data", "Dokument hochladen")}
-                                    onClick={handleUploadButtonClick}
-                                    disabled={disabled}
-                                />
-                                {activeDocumentCount > 0 ? <span className={styles.uploadCountBadge}>{activeDocumentCount}</span> : null}
-                            </div>
-                        </Tooltip>
-                    ) : null}
-                    <Textarea
-                        className={styles.questionInputTextArea}
+                    <textarea
+                        ref={textareaRef}
+                        className={styles.input}
+                        rows={1}
                         placeholder={resolvedPlaceholder}
-                        resize="none"
                         value={question}
-                        size="large"
                         onChange={onQuestionChange}
                         onKeyDown={onEnterPress}
-                        ref={textareaRef}
                         disabled={disabled || isTranscriptionActive}
                     />
-                    <div className={styles.questionInputButtons}>
+                    <div className={styles.actions}>
+                        {allowFileUpload ? (
+                            <div className={styles.uploadAction}>
+                                <Tooltip positioning={"below"} content={t("components.questioninput.upload_data", "Dokument hochladen")} relationship="label">
+                                    <SubtleButton
+                                        ref={uploadButtonRef}
+                                        appearance="subtle"
+                                        icon={<Add20Regular />}
+                                        onClick={handleUploadButtonClick}
+                                        disabled={disabled}
+                                    />
+                                </Tooltip>
+                                {activeDocumentCount > 0 ? <span className={styles.uploadCountBadge}>{activeDocumentCount}</span> : null}
+                            </div>
+                        ) : null}
+                        <div className={styles.spacer} />
                         {usage && (
                             <ChatUsageIndicator
                                 usage={usage}
@@ -567,27 +522,18 @@ export const QuestionInput = ({
                                 disabled={disabled}
                             />
                         )}
-                        {hasSendableQuestion ? (
-                            <Tooltip content={resolvedPlaceholder} relationship="label">
-                                <Button
-                                    ref={sendButtonRef}
-                                    size="large"
-                                    appearance="transparent"
-                                    icon={<Send28Filled />}
-                                    aria-label={t("components.questioninput.send_question", "Frage senden")}
-                                    disabled={disabled || isTranscriptionActive}
-                                    onClick={sendQuestion}
-                                />
-                            </Tooltip>
-                        ) : null}
+                        <Tooltip positioning={"below"} content={t("components.questioninput.send_question", "Frage senden")} relationship="label">
+                            <Button
+                                appearance="primary"
+                                icon={<ArrowUp20Regular />}
+                                disabled={!hasSendableQuestion || disabled || isTranscriptionActive}
+                                onClick={sendQuestion}
+                            />
+                        </Tooltip>
                     </div>
                 </div>
 
-                {hideDisclaimer ? null : (
-                    <div className={styles.errorhintSection}>
-                        <div className={styles.errorhint}>{t("components.questioninput.errorhint")}</div>
-                    </div>
-                )}
+                {hideDisclaimer ? null : <ChatDisclaimer className={styles.disclaimer} />}
             </div>
 
             {allowFileUpload ? (

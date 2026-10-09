@@ -31,7 +31,8 @@ i18n
                         go_assistants: "Zur Assistenten-Übersicht navigieren",
                         start_new_chat: "Neuen Chat starten",
                         preferences_and_help: "Einstellungen und Hilfe",
-                        toggle_navigation: "Navigation umschalten",
+                        open_navigation: "Seitenleiste öffnen",
+                        close_navigation: "Seitenleiste schließen",
                         resize_navigation: "Navigation an der Kante umschalten",
                         new_chat_dialog_subtitle: "Wie möchtest du deinen neuen Chat starten?",
                         new_chat_default_primary: "Freien Chat starten",
@@ -76,20 +77,15 @@ i18n
                         prompt: "Stelle eine Frage oder lade ein Dokument hoch",
                         prompt_no_upload: "Stelle eine Frage",
                         answer_loading: "Erstelle Antwort",
-                        answer_loading_phrases: [
-                            "Erstelle Antwort",
-                            "Denke nach",
-                            "Ordne Gedanken",
-                            "Formuliere die Antwort",
-                            "Arbeite an der Frage",
-                            "Finde passende Worte",
-                            "Verbinde Ideen",
-                            "Strukturiere die Antwort",
-                            "Gehe die Frage durch",
-                            "Bringe es auf den Punkt",
-                            "Feile an der Formulierung",
-                            "Bereite die Antwort vor"
-                        ],
+                        activity_running_tool: "Nutze {{tool}}",
+                        activity_steps_one: "1 Schritt",
+                        activity_steps_other: "{{count}} Schritte",
+                        activity_step_failed: "fehlgeschlagen",
+                        activity_failed_count: "{{count}} fehlgeschlagen",
+                        activity_duration: "{{seconds}} s",
+                        activity_evaluating: "Werte die Ergebnisse aus",
+                        activity_thinking_stages: ["Denke nach", "Denke noch nach", "Das ist knifflig – gleich hab ich's"],
+                        show_ag_ui_events: "AG-UI-Events anzeigen",
                         usage_context: "Auslastung",
                         usage_context_summary: "Auslastung: {{used}} / {{max}} Tokens ({{percent}}%)",
                         usage_context_summary_no_max: "Auslastung: {{used}} Tokens",
@@ -147,7 +143,6 @@ i18n
                         main_content: "Hauptinhalt",
                         footer_info: "Fußzeileninformationen",
                         settings: "Einstellungen",
-                        theme: "Farbschema",
                         language: "Sprache",
                         close: "Schließen",
                         messages: "Nachrichten",
@@ -268,10 +263,10 @@ i18n
                             aria_label: "Verbesserungswünsche"
                         },
                         theme_selector: {
-                            theme_light: "Helles Design",
-                            theme_dark: "Dunkles Design",
-                            light_short: "Hell",
-                            dark_short: "Dunkel"
+                            label: "Design",
+                            light: "Hell",
+                            dark: "Dunkel",
+                            system: "System"
                         },
                         sumlength: {
                             sentences: "Zwei Sätze",
@@ -324,6 +319,7 @@ i18n
                             tokensused: "Token verbraucht",
                             limit: ". Ältere Eingaben werden bei der Generierung nicht berücksichtigt!",
                             errorhint: "MUCGPT kann Fehler machen. Überprüfe wichtige Informationen.",
+                            high_risk_hint: "Die Nutzung für <tutorial>Hochrisiko-Zwecke</tutorial> nach der KI-Verordnung ist nicht erlaubt.",
                             toolsselectorbutton_tooltip: "Werkzeuge auswählen",
                             tutorial_help: "Tutorial öffnen",
                             tool_header: "Zusätzliche Werkzeuge wählen:",
@@ -387,14 +383,26 @@ i18n
                             enable_label: "Transkription aktivieren",
                             enable_hint: "Ist diese Option aktiv und ein Modell heruntergeladen, erscheint im Chat ein Mikrofon-Button.",
                             model_label: "Modell",
+                            model_languages: "Sprachen: {{languages}}",
+                            languages: {
+                                de: "Deutsch",
+                                en: "Englisch",
+                                fr: "Französisch",
+                                es: "Spanisch",
+                                uk: "Ukrainisch"
+                            },
                             model_ready: "bereit",
+                            downloading: "Modell wird heruntergeladen",
+                            cancel_download: "Download abbrechen",
                             download: "Modell herunterladen",
-                            redownload: "Erneut herunterladen",
-                            status_idle: "Nicht geladen",
-                            status_loading: "Lädt … {{progress}} %",
-                            status_loading_mb: "Lädt … {{downloaded_mb}} MB / {{total_mb}} MB ({{progress}} %)",
-                            status_loading_indeterminate: "Lädt …",
-                            status_ready: "Bereit",
+                            recommended: "empfohlen",
+                            delete_model: "Modell löschen",
+                            clear_models: "Heruntergeladene Modelle löschen",
+                            clear_models_confirm_title: "Modelle löschen?",
+                            clear_models_confirm_message:
+                                "Alle heruntergeladenen Modelle werden von diesem Gerät entfernt. Zur weiteren Nutzung müssen sie erneut heruntergeladen werden.",
+                            confirm: "Löschen",
+                            cancel: "Abbrechen",
                             close: "Schließen"
                         },
                         suminput: {
@@ -446,7 +454,7 @@ i18n
                         },
                         history: {
                             history: "Historie",
-                            recents_label: "Letzte Chats",
+                            recents_label: "Letzte Unterhaltungen",
                             newchat: "Gib dem Chat einen neuen Namen:",
                             options: "Chat-Optionen",
                             rename: "Chat umbenennen",
@@ -476,12 +484,14 @@ i18n
                         },
                         import_assistant: {
                             import: "Importieren",
-                            import_success: "Import erfolgreich",
-                            import_success_message: 'Der Assistent "{{title}}" wurde importiert und kann nun verwendet werden.',
                             import_error: "Import fehlgeschlagen",
                             import_failed: "Die Datei konnte nicht importiert werden",
                             import_invalid_format: "Ungültiges Dateiformat. Die Datei muss einen Titel und System-Prompt enthalten.",
-                            import_save_failed: "Fehler beim Speichern des importierten Assistenten"
+                            draft_exists_title: "Entwurf bereits vorhanden",
+                            draft_exists_message:
+                                "Du hast bereits einen ungespeicherten Assistenten-Entwurf. Beim Importieren wird dieser Entwurf überschrieben.",
+                            draft_exists_overwrite: "Überschreiben",
+                            draft_exists_open: "Entwurf öffnen"
                         },
                         assistant_preview: {
                             title: "Vorschau-Chat",
@@ -555,27 +565,31 @@ i18n
                             section_tools: "Werkzeuge",
                             section_conversation_options: "Unterhaltungsoptionen",
                             section_access: "Zugriff & Sichtbarkeit",
-                            section_review: "Prüfung",
+                            section_review: "Einhaltung des Hochrisiko-Verbots",
 
                             // Review section
                             review_confirmation_label:
-                                "Ich bestätige, dass dieser Assistent nicht für einen in MUCGPT unzulässigen Hochrisiko-Anwendungsfall eingesetzt werden soll.",
+                                "Ich bestätige, dass dieser Assistent nicht für einen in MUCGPT unzulässigen Hochrisiko-Zweck eingesetzt werden soll.",
                             review_required_hint: "Diese Bestätigung ist erforderlich, um den Assistenten zu erstellen oder zu speichern.",
-                            review_intro_title: "Was sind Hochrisiko-Anwendungsfälle?",
                             review_intro_description:
-                                "Hochrisiko-Anwendungsfälle sind KI-Einsätze, bei denen Entscheidungen oder Bewertungen über Menschen besonders folgenreich sein können, etwa in Personal, Bildung, öffentlichen Leistungen oder Migration.",
+                                "Hochrisiko-KI-Systeme sind nach der Verordnung über künstliche Intelligenz (KI-Verordnung) der Europäischen Union zwar nicht verboten, aber streng reguliert. Die Einhaltung der entsprechenden gesetzlichen Verpflichtungen ist in MUCGPT nicht umsetzbar. Daher ist es nach den {{termsLink}} nicht erlaubt, MUCGPT für Hochrisiko-Zwecke zu verwenden.",
+                            review_terms_link: "Nutzungsbedingungen",
+                            review_intro_description_2:
+                                "Die KI-Verordnung stuft KI-Systeme unter anderem dann als Hochrisiko-KI-Systeme ein, wenn sie bestimmungsgemäß einem der in Anhang III KI-Verordnung aufgeführten Verwendungszwecke dienen sollen und ein erhebliches Risiko der Beeinträchtigung der Gesundheit, Sicherheit oder Grundrechte natürlicher Personen bergen.",
                             review_check_title: "Anweisungen prüfen",
-                            review_check_description: "Prüfen Sie die Assistentenanweisungen auf Hinweise auf mögliche Hochrisiko-Anwendungsfälle.",
-                            review_check_learn_more: "Mehr über Hochrisiko-Anwendungsfälle erfahren",
+                            review_check_description: "Prüfen Sie den Systemprompt des Assistenten auf mögliche Hochrisiko-Zwecke.",
+                            review_check_learn_more: "Mehr über Hochrisiko-Zwecke erfahren",
+                            review_check_supplement:
+                                "Die Prüfung dient nur einer ersten ungefähren Orientierung, kann aber nicht die menschliche juristische Prüfung ersetzen. Bitte wenden Sie sich im Zweifelsfall an die für Ihren Bereich zuständige Rechtsabteilung oder sehen von dem Absenden des Prompts bzw. der Erstellung des Assistenten ab.",
                             review_check_start: "Prüfung starten",
                             review_check_recheck: "Erneut prüfen",
                             review_check_running: "Prüfung läuft...",
                             review_result_passed_title: "Alle Prüfungen bestanden",
                             review_result_passed_description:
-                                "Es wurden keine Hinweise auf ein Hochrisikosystem gefunden. Die Prüfung dient nur zur Orientierung. Bitte bestätigen Sie abschließend, dass der Assistent für keinen unzulässigen Hochrisiko-Anwendungsfall eingesetzt wird.",
-                            review_result_warning_title: "Hinweis auf ein mögliches Hochrisikosystem",
+                                "Es wurden keine Hinweise auf einen Hochrisiko-Zweck gefunden. Die Prüfung dient nur zur Orientierung. Bitte bestätigen Sie abschließend, dass der Assistent für keinen unzulässigen Hochrisiko-Zweck eingesetzt wird.",
+                            review_result_warning_title: "Hinweis auf einen möglichen Hochrisiko-Zweck.",
                             review_result_warning_guidance:
-                                "Bitte prüfen Sie die folgenden Stellen in den Anweisungen und ändern Sie diese gegebenenfalls, damit kein Hochrisiko-Anwendungsfall entsteht. Die Prüfung dient nur zur Orientierung.",
+                                "Bitte prüfen Sie den Systemprompt und ändern sie diesen gegebenfalls, so dass kein unzulässiger Hochrisiko-Zweck verfolgt wird.",
                             review_result_error_title: "Prüfung fehlgeschlagen",
                             review_result_error_description:
                                 "Die Prüfung konnte nicht durchgeführt werden. Speichern ist erst nach einer erfolgreichen erneuten Prüfung möglich.",
@@ -583,10 +597,11 @@ i18n
                             review_result_outdated_description:
                                 "Der System-Prompt wurde nach dieser Prüfung geändert. Die Hinweise beziehen sich auf die vorherige Fassung. Starten Sie die Prüfung erneut, um ein aktuelles Ergebnis zu erhalten.",
                             review_confirmation_label_high_risk:
-                                "Ich habe die Hinweise geprüft und bestätige, dass dieser Assistent nicht für einen in MUCGPT unzulässigen Hochrisiko-Anwendungsfall eingesetzt werden soll.",
+                                "Ich habe die Hinweise geprüft und bestätige, dass dieser Assistent nicht für einen in MUCGPT unzulässigen Hochrisiko-Zweck eingesetzt werden soll.",
                             review_category_migration_asylum_border: "Migration, Asyl und Grenzkontrolle",
-                            review_category_public_services_access: "Zugang zu grundlegenden öffentlichen Diensten",
-                            review_category_hr_employment: "Beschäftigung und Personalmanagement",
+                            review_category_public_services_access:
+                                "Zugänglichkeit und Inanspruchnahme (grundlegender privater - nachfolgend ausgeklammert - und) grundlegender öffentlicher Dienste und Leistungen",
+                            review_category_hr_employment: "Beschäftigung, Personalmanagement und Zugang zur Selbständigkeit",
                             review_category_education: "Allgemeine und berufliche Bildung",
 
                             // Advanced settings fields
@@ -735,15 +750,24 @@ i18n
                             empty_community_title: "Noch keine Community-Assistenten verfügbar",
                             empty_community_description: "Veröffentlichte Assistenten erscheinen hier, sobald sie mit der Organisation geteilt wurden.",
                             empty_create_own: "Eigenen Assistenten erstellen",
-                            start_chat: "Neuen Chat starten",
                             system_prompt_copy: "System-Prompt kopieren",
                             system_prompt_copied: "Kopiert",
-                            created_by: "Von",
-                            created_by_you: "Von dir",
-                            subscriber_count: "{{count}} Abonnent:innen",
+                            show_more: "Mehr anzeigen",
+                            show_more_count_one: "{{count}} weiteren anzeigen",
+                            show_more_count_other: "{{count}} weitere anzeigen",
+                            show_less: "Weniger anzeigen",
+                            section_in_chat: "Im Chat",
+                            section_configuration: "Konfiguration",
+                            section_about: "Über diesen Assistenten",
+                            visibility: "Sichtbarkeit",
+                            share_link_copy: "Link zum Teilen kopieren",
+                            share_link_copied: "Link kopiert",
+                            share_link_copy_failed: "Link konnte nicht kopiert werden",
+                            created_by: "Erstellt von",
+                            subscribers: "Abonnent:innen",
                             responsible: "Verantwortliche",
-                            version: "Version {{version}}",
-                            configuration_updated: "Konfiguration geändert am {{date}}",
+                            version: "Version",
+                            last_updated: "Zuletzt geändert",
                             sort_by: "Sortieren nach",
                             sort_title: "Name",
                             sort_last_used: "Zuletzt benutzt",
@@ -789,7 +813,6 @@ i18n
                             duplicate_confirm_message_deleted:
                                 'Der ursprüngliche Assistent "{{title}}" ist nicht mehr verfügbar. Wenn du weiter damit arbeiten möchtest, kannst du jetzt eine eigene Kopie aus der zuletzt gespeicherten Version erstellen.',
                             duplicate_confirm_action: "Kopie erstellen",
-                            duplicate_title_suffix: "[Kopie]",
                             duplicate_success_title: "Assistent dupliziert",
                             duplicate_success_message: 'Der Assistent "{{title}}" wurde erfolgreich dupliziert.',
                             duplicate_failed_title: "Assistent konnte nicht dupliziert werden",
@@ -824,7 +847,7 @@ i18n
                             deleted_chat_warning:
                                 "Dieser Community-Assistent wurde vom Ersteller gelöscht und ist nicht mehr verfügbar. Diese Version liegt nur noch lokal im Browser und kann verloren gehen. Der Chatverlauf ist schreibgeschützt. Sichern Sie sie als eigenen Assistenten, wenn Sie weiter damit arbeiten möchten.",
                             deleted_state_save_action: "Als eigenen Assistenten speichern",
-                            deleted_state_history_action: "Alten Chatverlauf ansehen",
+                            deleted_state_history_action: "Chatverlauf",
                             deleted_state_no_history: "Für diesen Assistenten ist kein lokaler Chatverlauf verfügbar.",
                             legacy_state_title: "Veralteter Community-Assistent",
                             legacy_state_hint:
@@ -877,7 +900,11 @@ i18n
                     },
                     discovery: {
                         title: "Assistenten",
-                        subtitle: "Finde und verwalte Assistenten für deine wiederkehrenden Aufgaben."
+                        subtitle: "Finde und verwalte Assistenten für deine wiederkehrenden Aufgaben.",
+                        reset_mock_data: "Mock-Daten zurücksetzen",
+                        reset_mock_data_confirm_title: "Mock-Daten zurücksetzen?",
+                        reset_mock_data_confirm_message:
+                            "Die Mock-Assistenten und Szenario-Daten werden auf den Ausgangszustand zurückgesetzt. Deine übrigen lokalen Assistenten und Chats bleiben erhalten."
                     },
                     ...tutorialsTranslations.DE,
                     ...versionTranslations.DE
@@ -899,7 +926,8 @@ i18n
                         go_assistants: "Go to assistants overview",
                         start_new_chat: "Start a new chat",
                         preferences_and_help: "Settings and help",
-                        toggle_navigation: "Toggle navigation",
+                        open_navigation: "Open sidebar",
+                        close_navigation: "Close sidebar",
                         resize_navigation: "Toggle navigation from the edge handle",
                         new_chat_dialog_subtitle: "How would you like to start your new chat?",
                         new_chat_default_primary: "Start open chat",
@@ -944,20 +972,15 @@ i18n
                         prompt: "Ask a question or upload a document",
                         prompt_no_upload: "Ask a question",
                         answer_loading: "Generating answer",
-                        answer_loading_phrases: [
-                            "Generating an answer",
-                            "Thinking it through",
-                            "Organizing thoughts",
-                            "Putting the answer into words",
-                            "Working through the question",
-                            "Finding the right words",
-                            "Connecting ideas",
-                            "Structuring the answer",
-                            "Considering the question",
-                            "Getting to the point",
-                            "Refining the wording",
-                            "Preparing the answer"
-                        ],
+                        activity_running_tool: "Using {{tool}}",
+                        activity_steps_one: "1 step",
+                        activity_steps_other: "{{count}} steps",
+                        activity_step_failed: "failed",
+                        activity_failed_count: "{{count}} failed",
+                        activity_duration: "{{seconds}} s",
+                        activity_evaluating: "Reviewing the results",
+                        activity_thinking_stages: ["Thinking", "Still thinking", "This one is tricky – almost there"],
+                        show_ag_ui_events: "Show AG-UI events",
                         usage_context: "Usage",
                         usage_context_summary: "Usage: {{used}} / {{max}} tokens ({{percent}}%)",
                         usage_context_summary_no_max: "Usage: {{used}} tokens",
@@ -1013,7 +1036,6 @@ i18n
                         main_content: "Main content",
                         footer_info: "Footer information",
                         settings: "Settings",
-                        theme: "Theme",
                         language: "Language",
                         messages: "Messages",
                         starter_prompts: "Starter prompts",
@@ -1134,10 +1156,10 @@ i18n
                             aria_label: "Request feature"
                         },
                         theme_selector: {
-                            theme_light: "Light theme",
-                            theme_dark: "Dark theme",
-                            light_short: "Light",
-                            dark_short: "Dark"
+                            label: "Appearance",
+                            light: "Light",
+                            dark: "Dark",
+                            system: "System"
                         },
                         sumlength: {
                             sentences: "Two sentences",
@@ -1190,6 +1212,7 @@ i18n
                             tokensused: "Token used",
                             limit: ". Previous inputs are not considered during generation!",
                             errorhint: "MUCGPT can make errors. Verify important information.",
+                            high_risk_hint: "Use for <tutorial>high-risk purposes</tutorial> under the EU AI Act is not permitted.",
                             toolsselectorbutton_tooltip: "Select tools",
                             tutorial_help: "Open tutorial",
                             tool_header: "Choose additional tools:",
@@ -1253,14 +1276,26 @@ i18n
                             enable_label: "Enable transcription",
                             enable_hint: "When enabled and a model is downloaded, a microphone button appears in the chat.",
                             model_label: "Model",
+                            model_languages: "Languages: {{languages}}",
+                            languages: {
+                                de: "German",
+                                en: "English",
+                                fr: "French",
+                                es: "Spanish",
+                                uk: "Ukrainian"
+                            },
                             model_ready: "ready",
+                            downloading: "Model is downloading",
+                            cancel_download: "Cancel download",
                             download: "Download model",
-                            redownload: "Re-download",
-                            status_idle: "Not loaded",
-                            status_loading: "Loading … {{progress}} %",
-                            status_loading_mb: "Loading … {{downloaded_mb}} MB / {{total_mb}} MB ({{progress}} %)",
-                            status_loading_indeterminate: "Loading …",
-                            status_ready: "Ready",
+                            recommended: "Recommended",
+                            delete_model: "Delete model",
+                            clear_models: "Delete downloaded models",
+                            clear_models_confirm_title: "Delete models?",
+                            clear_models_confirm_message:
+                                "All downloaded models will be removed from this device. They must be downloaded again before they can be used.",
+                            confirm: "Delete",
+                            cancel: "Cancel",
                             close: "Close"
                         },
                         suminput: {
@@ -1342,12 +1377,13 @@ i18n
                         },
                         import_assistant: {
                             import: "Import",
-                            import_success: "Import successful",
-                            import_success_message: 'The assistant "{{title}}" has been imported and is ready to use.',
                             import_error: "Import failed",
                             import_failed: "The file could not be imported",
                             import_invalid_format: "Invalid file format. The file must contain a title and system prompt.",
-                            import_save_failed: "Error saving imported assistant"
+                            draft_exists_title: "Draft already exists",
+                            draft_exists_message: "You already have an unsaved assistant draft. Importing will overwrite this draft.",
+                            draft_exists_overwrite: "Overwrite",
+                            draft_exists_open: "Open draft"
                         },
                         assistant_preview: {
                             title: "Preview Chat",
@@ -1419,38 +1455,42 @@ i18n
                             section_tools: "Tools",
                             section_conversation_options: "Conversation Options",
                             section_access: "Access & Visibility",
-                            section_review: "Review",
+                            section_review: "Compliance with the high-risk ban",
 
                             // Review section
                             review_confirmation_label:
-                                "I confirm that this assistant is not intended to be used for a high-risk use case that is not permitted in MUCGPT.",
+                                "I confirm that this assistant is not intended to be used for a high-risk purpose that is not permitted in MUCGPT.",
                             review_required_hint: "This confirmation is required in order to create or save the assistant.",
-                            review_intro_title: "What are high-risk use cases?",
                             review_intro_description:
-                                "High-risk use cases are AI applications in which decisions or assessments about people can be especially consequential, for example in human resources, education, public services or migration.",
+                                "High-risk AI systems are not prohibited under the European Union's Artificial Intelligence Act, but they are strictly regulated. MUCGPT cannot implement the corresponding legal obligations. Therefore, the MUCGPT {{termsLink}} do not permit using MUCGPT for high-risk purposes.",
+                            review_terms_link: "terms of use",
+                            review_intro_description_2:
+                                "This prohibition applies to purposes that cause AI systems to be classified as high-risk AI systems under the AI Act. Among other things, the AI Act classifies AI systems as high-risk when they are intended to serve one of the purposes listed in Annex III and pose a significant risk of harm to the health, safety or fundamental rights of natural persons. The purposes listed in Annex III include areas such as education, employment, public services and migration.",
                             review_check_title: "Check instructions",
-                            review_check_description: "Check the assistant instructions for indications of possible high-risk use cases.",
-                            review_check_learn_more: "Learn more about high-risk use cases",
+                            review_check_description: "Check the assistant's system prompt for indications of possible high-risk purposes.",
+                            review_check_learn_more: "Learn more about high-risk purposes",
+                            review_check_supplement:
+                                "The check is only a first, approximate guide and cannot replace a human legal review. If in doubt, contact the legal department responsible for your area or refrain from submitting the prompt or creating the assistant.",
                             review_check_start: "Start check",
                             review_check_recheck: "Check again",
                             review_check_running: "Check in progress...",
                             review_result_passed_title: "All checks passed",
                             review_result_passed_description:
-                                "No indications of a high-risk system were found. The check is for guidance only. Please confirm below that the assistant is not used for any impermissible high-risk use case.",
-                            review_result_warning_title: "Indication of a possible high-risk system",
+                                "No indications of a high-risk purpose were found. The check is for guidance only. Please confirm below that the assistant is not used for any impermissible high-risk purpose.",
+                            review_result_warning_title: "Indication of a possible high-risk purpose.",
                             review_result_warning_guidance:
-                                "Please review the following parts of the instructions and change them if necessary so that no high-risk use case remains. The check is for guidance only.",
+                                "Please review the system prompt and change it if necessary so that no impermissible high-risk purpose is pursued.",
                             review_result_error_title: "Check failed",
                             review_result_error_description: "The check could not be performed. Saving is blocked until a successful re-check is available.",
                             review_result_outdated_title: "Result no longer up to date",
                             review_result_outdated_description:
                                 "The system prompt was changed after this check. The findings refer to the previous version. Run the check again to get an up-to-date result.",
                             review_confirmation_label_high_risk:
-                                "I have reviewed the findings and confirm that this assistant is not intended for a high-risk use case that is not permitted in MUCGPT.",
+                                "I have reviewed the findings and confirm that this assistant is not intended for a high-risk purpose that is not permitted in MUCGPT.",
                             review_category_migration_asylum_border: "Migration, asylum and border control",
-                            review_category_public_services_access: "Access to essential public services",
-                            review_category_hr_employment: "Employment and personnel management",
-                            review_category_education: "General and vocational education",
+                            review_category_public_services_access: "Access to public services",
+                            review_category_hr_employment: "Employment and personnel",
+                            review_category_education: "Education and vocational training",
 
                             // Advanced settings fields
                             creativity: "Answer style",
@@ -1596,15 +1636,24 @@ i18n
                             empty_community_title: "No community assistants available yet",
                             empty_community_description: "Published assistants appear here as soon as they are shared with the organization.",
                             empty_create_own: "Create your own assistant",
-                            start_chat: "Start new chat",
                             system_prompt_copy: "Copy system prompt",
                             system_prompt_copied: "Copied",
-                            created_by: "By",
-                            created_by_you: "By you",
-                            subscriber_count: "{{count}} subscribers",
+                            show_more: "Show more",
+                            show_more_count_one: "Show {{count}} more",
+                            show_more_count_other: "Show {{count}} more",
+                            show_less: "Show less",
+                            section_in_chat: "In the chat",
+                            section_configuration: "Configuration",
+                            section_about: "About this assistant",
+                            visibility: "Visibility",
+                            share_link_copy: "Copy link to share",
+                            share_link_copied: "Link copied",
+                            share_link_copy_failed: "Link could not be copied",
+                            created_by: "Created by",
+                            subscribers: "Subscribers",
                             responsible: "Responsible",
-                            version: "Version {{version}}",
-                            configuration_updated: "Configuration changed on {{date}}",
+                            version: "Version",
+                            last_updated: "Last changed",
                             sort_by: "Sort by",
                             sort_title: "Name",
                             sort_last_used: "Last used",
@@ -1650,7 +1699,6 @@ i18n
                             duplicate_confirm_message_deleted:
                                 'The original assistant "{{title}}" is no longer available. If you want to keep using it, you can create your own copy now from the last cached version.',
                             duplicate_confirm_action: "Create copy",
-                            duplicate_title_suffix: "[Copy]",
                             duplicate_success_title: "Assistant duplicated",
                             duplicate_success_message: 'The assistant "{{title}}" was duplicated successfully.',
                             duplicate_failed_title: "Assistant could not be duplicated",
@@ -1684,7 +1732,7 @@ i18n
                             deleted_chat_warning:
                                 "This community assistant was deleted by its creator and is no longer available. This version only exists locally in this browser and may be lost. The chat history is read-only. Save it as your own assistant if you want to keep using it.",
                             deleted_state_save_action: "Save as own assistant",
-                            deleted_state_history_action: "View old chat history",
+                            deleted_state_history_action: "Chat history",
                             deleted_state_no_history: "No local chat history is available for this assistant.",
                             legacy_state_title: "Deprecated Community Assistant",
                             legacy_state_hint:
@@ -1736,7 +1784,11 @@ i18n
                     },
                     discovery: {
                         title: "Assistants",
-                        subtitle: "Find and manage assistants for your recurring tasks."
+                        subtitle: "Find and manage assistants for your recurring tasks.",
+                        reset_mock_data: "Reset mock data",
+                        reset_mock_data_confirm_title: "Reset mock data?",
+                        reset_mock_data_confirm_message:
+                            "The mock assistants and scenario data will be restored to their initial state. Your other local assistants and chats are kept."
                     },
                     ...tutorialsTranslations.EN,
                     ...versionTranslations.EN
@@ -1758,7 +1810,8 @@ i18n
                         go_assistants: "Zur Assistentn-Übersicht navigiern",
                         start_new_chat: "Neian Chat startn",
                         preferences_and_help: "Einstellungen und Hilfe",
-                        toggle_navigation: "Navigation umschoitn",
+                        open_navigation: "Seitnleisten aufmacha",
+                        close_navigation: "Seitnleisten zuamacha",
                         resize_navigation: "Navigation am Rand umschoitn",
                         new_chat_dialog_subtitle: "Wia mechst du dein neian Chat startn?",
                         new_chat_default_primary: "Freien Chat startn",
@@ -1803,20 +1856,15 @@ i18n
                         prompt: "Stell a Froog oder lad a Dokument hoch",
                         prompt_no_upload: "Stell a Froog",
                         answer_loading: "I bearbeit grad de Frog",
-                        answer_loading_phrases: [
-                            "I bearbeit grad de Frog",
-                            "I denk nach",
-                            "I sortier mei Gedanken",
-                            "I formulier de Antwort",
-                            "I geh de Frog durch",
-                            "I suach de richtigen Wort",
-                            "I verbind de Ideen",
-                            "I bring Ordnung in de Antwort",
-                            "I schau ma de Frog o",
-                            "I bring's aufn Punkt",
-                            "I feil an da Formulierung",
-                            "I bereit de Antwort vor"
-                        ],
+                        activity_running_tool: "Nimm grad {{tool}}",
+                        activity_steps_one: "1 Schritt",
+                        activity_steps_other: "{{count}} Schritt",
+                        activity_step_failed: "ned highaut",
+                        activity_failed_count: "{{count}} ned highaut",
+                        activity_duration: "{{seconds}} s",
+                        activity_evaluating: "I schau ma de Ergebnisse o",
+                        activity_thinking_stages: ["I denk nach", "I denk no nach", "Des is a harte Nuss – glei hob i's"],
+                        show_ag_ui_events: "AG-UI-Events ozoang",
                         usage_context: "Auslastung",
                         usage_context_summary: "Auslastung: {{used}} / {{max}} Tokens ({{percent}}%)",
                         usage_context_summary_no_max: "Auslastung: {{used}} Tokens",
@@ -1867,7 +1915,6 @@ i18n
                         main_content: "Hauptinhalt",
                         footer_info: "Fußzeilen-Info",
                         settings: "Konfiguration",
-                        theme: "Farbschema",
                         language: "Sproch",
                         messages: "Nochrichten",
                         starter_prompts: "Startvorschläge",
@@ -1992,10 +2039,10 @@ i18n
                             aria_label: "Vobessarungswünsch"
                         },
                         theme_selector: {
-                            theme_light: "Helles Design",
-                            theme_dark: "Dunkles Design",
-                            light_short: "Hell",
-                            dark_short: "Dunkl"
+                            label: "Design",
+                            light: "Hell",
+                            dark: "Dunkl",
+                            system: "System"
                         },
                         sumlength: {
                             sentences: "Zwoa Sätzen",
@@ -2048,6 +2095,7 @@ i18n
                             tokensused: "Token vabrocht",
                             limit: ". Oide Eingabn wean bei da Generierung ned mit einbezogn!",
                             errorhint: "MUCGPT kann a Schmarrn macha. Schau oba wichtige Informationen stimma.",
+                            high_risk_hint: "Für <tutorial>Hochrisiko-Zweck</tutorial> nach da KI-Verordnung derf ma MUCGPT ned hernehma.",
                             toolsselectorbutton_tooltip: "Werkzeig aussuachn",
                             tutorial_help: "Tutorial aufmachn",
                             tool_header: "Zusätzliche Werkzeig auswähln:",
@@ -2102,14 +2150,25 @@ i18n
                             enable_label: "Transkription aktivieren",
                             enable_hint: "Is des aktiv und a Modell obagladn, erscheint im Ratsch a Mikrofon-Knopf.",
                             model_label: "Modell",
+                            model_languages: "Sprachen: {{languages}}",
+                            languages: {
+                                de: "Deutsch",
+                                en: "Englisch",
+                                fr: "Französisch",
+                                es: "Spanisch",
+                                uk: "Ukrainisch"
+                            },
                             model_ready: "bereit",
+                            downloading: "Modell wird heruntergeladen",
+                            cancel_download: "Download abbrecha",
                             download: "Modell obaladn",
-                            redownload: "Nei obaladn",
-                            status_idle: "Ned gladn",
-                            status_loading: "Lodt … {{progress}} %",
-                            status_loading_mb: "Lodt … {{downloaded_mb}} MB / {{total_mb}} MB ({{progress}} %)",
-                            status_loading_indeterminate: "Lodt …",
-                            status_ready: "Bereit",
+                            recommended: "Empfohln",
+                            delete_model: "Modell wegdoa",
+                            clear_models: "Obaglane Modell wegdoa",
+                            clear_models_confirm_title: "Modell wegdoa?",
+                            clear_models_confirm_message: "Olle obaglanen Modell wern vo dem Gerät entfernt. Zum Nutzn miasn's wieda obagladn wern.",
+                            confirm: "Wegdoa",
+                            cancel: "Obbrecha",
                             close: "Zuamacha"
                         },
                         suminput: {
@@ -2191,12 +2250,13 @@ i18n
                         },
                         import_assistant: {
                             import: "Importiern",
-                            import_success: "Import erfolgreich",
-                            import_success_message: 'Dea Assistent "{{title}}" is importiert wordn und ko jetzt verwendet werdn.',
                             import_error: "Import fehlgschlogn",
                             import_failed: "De Datei konnt ned importiert werdn",
                             import_invalid_format: "Ungültigs Dateiformat. De Datei muass an Titel und System-Prompt enthoidn.",
-                            import_save_failed: "Fehler beim Speichern vom importierten Assistentn"
+                            draft_exists_title: "Entwurf is scho do",
+                            draft_exists_message: "Du host scho an ungspeichertn Assistentn-Entwurf. Beim Importiern wead der Entwurf überschriebn.",
+                            draft_exists_overwrite: "Überschreibn",
+                            draft_exists_open: "Entwurf aufmachn"
                         },
                         assistant_preview: {
                             title: "Vorschau-Chat",
@@ -2269,38 +2329,41 @@ i18n
                             section_tools: "Werkzeig",
                             section_conversation_options: "Unterhaltungsoptionen",
                             section_access: "Zugriff & Sichtbarkeit",
-                            section_review: "Prüfung",
+                            section_review: "Einhaltung vom Hochrisiko-Verbot",
 
                             // Review section
-                            review_confirmation_label:
-                                "I bstätig, dass der Assistent net für an in MUCGPT unzulässign Hochrisiko-Anwendungsfall herghalten soi.",
+                            review_confirmation_label: "I bstätig, dass der Assistent net für an in MUCGPT unzulässign Hochrisiko-Zweck herghalten soi.",
                             review_required_hint: "De Bstätigung braucht ma, damit ma an Assistenten erstelln oda speichern ko.",
-                            review_intro_title: "Wos san Hochrisiko-Anwendungsfäi?",
                             review_intro_description:
-                                "Hochrisiko-Anwendungsfäi san KI-Eisätz, wo Entscheidunga oda Bewertunga über Menschn bsonders folgnreich sei kennan, zum Beispui in Personoi, Buidung, öffentliche Leistunga oda Migration.",
+                                "Hochrisiko-KI-Systeme san nach da Verordnung über künstliche Intelligenz (KI-Verordnung) vo da Europäischen Union zwar ned verboten, oba streng geregelt. De Einhaltung vo de entsprechenden gesetzlichen Pflichten is in MUCGPT ned umsetzbar. Drum is es nach de {{termsLink}} ned erlaubt, MUCGPT für Hochrisiko-Zweck herzunehmen.",
+                            review_terms_link: "Nutzungsbedingungen",
+                            review_intro_description_2:
+                                "Des Verbot bezieht si auf de Verwendungszweck, durch de KI-Systeme nach da KI-Verordnung ois Hochrisiko-KI-Systeme eingestuft wern. De KI-Verordnung stuft KI-Systeme unter anderem dann ois Hochrisiko-KI-Systeme ei, wenn's bestimmungsgemäß oan vo de in Anhang III aufgeführten Verwendungszweck dienen soi und a erhebliches Risiko für de Gesundheit, Sicherheit oder Grundrechte natürlicher Personen besteht. De in Anhang III aufgeführten Verwendungszweck betreffen unter anderem Bereiche wia Buidung, Personal, öffentliche Leistunga und Migration.",
                             review_check_title: "Anweisungen prüfa",
-                            review_check_description: "Prüf de Assistentenanweisungen auf Hinweis auf möglche Hochrisiko-Anwendungsfäi.",
-                            review_check_learn_more: "Mehr über Hochrisiko-Anwendungsfäi erfahrn",
+                            review_check_description: "Prüf den Systemprompt vom Assistentn auf mögliche Hochrisiko-Zweck.",
+                            review_check_learn_more: "Mehr über Hochrisiko-Zweck erfahrn",
+                            review_check_supplement:
+                                "De Prüfung is bloß a erste, grobe Orientierung und koane menschliche juristische Prüfung ersetzen. Wennst da unsicher bist, wend di an de für dein Bereich zuständige Rechtsabteilung oder schick den Prompt ned o bzw. erstell den Assistenten ned.",
                             review_check_start: "Prüfung starten",
                             review_check_recheck: "Nochamoi prüfa",
                             review_check_running: "Prüfung lafft...",
                             review_result_passed_title: "Olle Prüfungen bestandn",
                             review_result_passed_description:
-                                "Es gibt koane Hinweis auf a Hochrisikosystem. De Prüfung is bloß a Orientierung. Bitte bestätig no, dass da Assistent für koan unzulässigen Hochrisiko-Anwendungsfoi eigsetzt wird.",
-                            review_result_warning_title: "Hinweis auf a möglichs Hochrisikosystem",
+                                "Es san koane Hinweis auf an Hochrisiko-Zweck gfundn worn. De Prüfung is bloß a Orientierung. Bitte bestätig no, dass da Assistent für koan unzulässigen Hochrisiko-Zweck eigsetzt wird.",
+                            review_result_warning_title: "Hinweis auf an möglichen Hochrisiko-Zweck.",
                             review_result_warning_guidance:
-                                "Bitte schau da de foigenden Stelln in de Anweisungen o und änder's wenn nötig, dass koa Hochrisiko-Anwendungsfoi entsteht. De Prüfung is bloß a Orientierung.",
+                                "Bitte prüf den Systemprompt und änder ihn gegebenenfalls, sodass koa unzulässiger Hochrisiko-Zweck verfolgt wird.",
                             review_result_error_title: "Prüfung fehlgschlogn",
                             review_result_error_description: "De Prüfung hod net klappt. Speichern geht erst noch ana erfolgreichen erneuten Prüfung.",
                             review_result_outdated_title: "Ergebnis nimma aktuell",
                             review_result_outdated_description:
                                 "Da System-Prompt is noch der Prüfung gändert worn. De Hinweis ghean zua vorherign Fassung. Stort de Prüfung nochamoi, damitst a aktuells Ergebnis kriagst.",
                             review_confirmation_label_high_risk:
-                                "I hob ma de Hinweis oogschaut und bestätig, dass der Assistent net für an in MUCGPT unzulässigen Hochrisiko-Anwendungsfoi eigsetzt wern soi.",
+                                "I hob ma de Hinweis oogschaut und bestätig, dass der Assistent net für an in MUCGPT unzulässigen Hochrisiko-Zweck eigsetzt wern soi.",
                             review_category_migration_asylum_border: "Migration, Asyl und Grenzkontrolle",
-                            review_category_public_services_access: "Zugang zu grundlegende öffentliche Dienste",
-                            review_category_hr_employment: "Beschäftigung und Personalmanagement",
-                            review_category_education: "Allgemeine und berufliche Bildung",
+                            review_category_public_services_access: "Zuagang zu öffentliche Leistunga",
+                            review_category_hr_employment: "Beschäftigung und Personal",
+                            review_category_education: "Buidung und Berufsbuidung",
 
                             // Advanced settings fields
                             creativity: "Antwortstil",
@@ -2442,15 +2505,24 @@ i18n
                             empty_community_title: "No koane Community-Assistentn verfügbar",
                             empty_community_description: "Veröffentlichte Assistentn erscheina do, sobald's mit da Organisation teilt worn san.",
                             empty_create_own: "Eignen Assistentn erstellen",
-                            start_chat: "Neia Ratsch o'fanga",
                             system_prompt_copy: "System-Prompt kopiern",
                             system_prompt_copied: "Kopiert",
-                            created_by: "Von",
-                            created_by_you: "Von dir",
-                            subscriber_count: "{{count}} Abonnent:innen",
+                            show_more: "Mehr anzeign",
+                            show_more_count_one: "{{count}} weiteren anzeign",
+                            show_more_count_other: "{{count}} weitere anzeign",
+                            show_less: "Weniger anzeign",
+                            section_in_chat: "Im Ratsch",
+                            section_configuration: "Konfiguration",
+                            section_about: "Über den Assistentn",
+                            visibility: "Sichtbarkeit",
+                            share_link_copy: "Link zum Teiln kopiern",
+                            share_link_copied: "Link kopiert",
+                            share_link_copy_failed: "Link hod ned kopiert werdn kenna",
+                            created_by: "Erstellt vo",
+                            subscribers: "Abonnent:innen",
                             responsible: "Verantwortliche",
-                            version: "Version {{version}}",
-                            configuration_updated: "Konfiguration geändert am {{date}}",
+                            version: "Version",
+                            last_updated: "Zuletzt g'ändert",
                             sort_by: "Sortieren noch",
                             sort_title: "Name",
                             sort_last_used: "Zuletzt benutzt",
@@ -2495,7 +2567,6 @@ i18n
                             duplicate_confirm_message_deleted:
                                 'Da ursprüngliche Assistent "{{title}}" is nimmer verfuegbar. Wennst weitermacha mogst, koanst jetz a eigene Kopie aus da zletzt gspeicherten Version erstoin.',
                             duplicate_confirm_action: "Kopie erstoin",
-                            duplicate_title_suffix: "[Kopie]",
                             duplicate_success_title: "Assistent dupliziert",
                             duplicate_success_message: 'Da Assistent "{{title}}" is erfolgreich dupliziert worn.',
                             duplicate_failed_title: "Assistent hod ned dupliziert wern kina",
@@ -2532,7 +2603,7 @@ i18n
                             deleted_chat_warning:
                                 "Der Community-Assistent is vom Ersteller glascht worn und nimmer verfuegbar. De Version liegt bloß no lokal im Browser und ko verloren geh. Der Chatverlauf is nur lesend. Sicherst as ois eigenen Assistenten, wennst weitermacha mogst.",
                             deleted_state_save_action: "Ois eigenen Assistenten speichern",
-                            deleted_state_history_action: "Oidn Chatverlauf anschaugn",
+                            deleted_state_history_action: "Chatverlauf",
                             deleted_state_no_history: "Fuer den Assistenten gibt's koan lokalen Chatverlauf.",
                             legacy_state_title: "Veralteter Community-Assistent",
                             legacy_state_hint:
@@ -2584,7 +2655,11 @@ i18n
                     },
                     discovery: {
                         title: "Assistentn",
-                        subtitle: "Find und verwalt Assistentn für deine wiederkehrenden Aufgabn."
+                        subtitle: "Find und verwalt Assistentn für deine wiederkehrenden Aufgabn.",
+                        reset_mock_data: "Mock-Datn zrucksetzn",
+                        reset_mock_data_confirm_title: "Mock-Datn zrucksetzn?",
+                        reset_mock_data_confirm_message:
+                            "De Mock-Assistentn und Szenario-Datn wern auf an Ausgangszustand zruckgsetzt. Deine andern lokaln Assistentn und Chats bleibn erhaltn."
                     },
                     ...tutorialsTranslations.BA,
                     ...versionTranslations.BA
@@ -2606,7 +2681,8 @@ i18n
                         go_assistants: "Aller à la vue des assistants",
                         start_new_chat: "Démarrer un nouveau chat",
                         preferences_and_help: "Paramètres et aide",
-                        toggle_navigation: "Basculer la navigation",
+                        open_navigation: "Ouvrir la barre latérale",
+                        close_navigation: "Fermer la barre latérale",
                         resize_navigation: "Basculer la navigation depuis le bord",
                         new_chat_dialog_subtitle: "Comment souhaitez-vous démarrer votre nouveau chat ?",
                         new_chat_default_primary: "Démarrer un chat libre",
@@ -2651,20 +2727,15 @@ i18n
                         prompt: "Posez une question ou téléchargez un document",
                         prompt_no_upload: "Posez une question",
                         answer_loading: "Créer une réponse",
-                        answer_loading_phrases: [
-                            "Préparation de la réponse",
-                            "Réflexion en cours",
-                            "Organisation des idées",
-                            "Formulation de la réponse",
-                            "Examen de la question",
-                            "Recherche des mots justes",
-                            "Mise en lien des idées",
-                            "Structuration de la réponse",
-                            "Réflexion sur la question",
-                            "Aller à l’essentiel",
-                            "Affinement de la formulation",
-                            "Réponse en préparation"
-                        ],
+                        activity_running_tool: "Utilise {{tool}}",
+                        activity_steps_one: "1 étape",
+                        activity_steps_other: "{{count}} étapes",
+                        activity_step_failed: "échec",
+                        activity_failed_count: "{{count}} en échec",
+                        activity_duration: "{{seconds}} s",
+                        activity_evaluating: "J'analyse les résultats",
+                        activity_thinking_stages: ["Je réfléchis", "Je réfléchis encore", "C'est épineux – j'y suis presque"],
+                        show_ag_ui_events: "Afficher les événements AG-UI",
                         usage_context: "Utilisation",
                         usage_context_summary: "Utilisation : {{used}} / {{max}} jetons ({{percent}}%)",
                         usage_context_summary_no_max: "Utilisation : {{used}} jetons",
@@ -2723,7 +2794,6 @@ i18n
                         main_content: "Contenu principal",
                         footer_info: "Informations du pied de page",
                         settings: "Paramètres",
-                        theme: "Thème",
                         language: "Langue",
                         messages: "Messages",
                         starter_prompts: "Starter prompts",
@@ -2843,10 +2913,10 @@ i18n
                             aria_label: "Suggestion d'amélioration"
                         },
                         theme_selector: {
-                            theme_light: "Thème clair",
-                            theme_dark: "Thème sombre",
-                            light_short: "Clair",
-                            dark_short: "Sombre"
+                            label: "Apparence",
+                            light: "Clair",
+                            dark: "Sombre",
+                            system: "Système"
                         },
                         sumlength: {
                             sentences: "Deux phrases",
@@ -2899,6 +2969,8 @@ i18n
                             tokensused: "Jetons utilisés",
                             limit: ". Les entrées plus anciennes ne seront pas prises en compte lors de la génération !",
                             errorhint: "MUCGPT peut faire des erreurs. Vérifiez les informations importantes.",
+                            high_risk_hint:
+                                "L'utilisation à des <tutorial>finalités à haut risque</tutorial> au sens du règlement sur l'IA n'est pas autorisée.",
                             toolsselectorbutton_tooltip: "Sélectionner des outils",
                             tutorial_help: "Ouvrir le tutoriel",
                             tool_header: "Choisir des outils supplémentaires:",
@@ -2954,13 +3026,25 @@ i18n
                             enable_hint: "Lorsque l'option est activée et qu'un modèle est téléchargé, un bouton microphone apparaît dans le chat.",
                             model_label: "Modèle",
                             model_ready: "prêt",
+                            downloading: "Téléchargement du modèle",
+                            cancel_download: "Annuler le téléchargement",
+                            model_languages: "Langues : {{languages}}",
+                            languages: {
+                                de: "Allemand",
+                                en: "Anglais",
+                                fr: "Français",
+                                es: "Espagnol",
+                                uk: "Ukrainien"
+                            },
                             download: "Télécharger le modèle",
-                            redownload: "Re-télécharger",
-                            status_idle: "Non chargé",
-                            status_loading: "Chargement … {{progress}} %",
-                            status_loading_mb: "Chargement … {{downloaded_mb}} MB / {{total_mb}} MB ({{progress}} %)",
-                            status_loading_indeterminate: "Chargement …",
-                            status_ready: "Prêt",
+                            recommended: "Recommandé",
+                            delete_model: "Supprimer le modèle",
+                            clear_models: "Supprimer les modèles téléchargés",
+                            clear_models_confirm_title: "Supprimer les modèles ?",
+                            clear_models_confirm_message:
+                                "Tous les modèles téléchargés seront supprimés de cet appareil. Ils devront être téléchargés à nouveau pour être utilisés.",
+                            confirm: "Supprimer",
+                            cancel: "Annuler",
                             close: "Fermer"
                         },
                         suminput: {
@@ -3042,12 +3126,13 @@ i18n
                         },
                         import_assistant: {
                             import: "Importer",
-                            import_success: "Importation réussie",
-                            import_success_message: 'L\'assistant "{{title}}" a été importé et est prêt à être utilisé.',
                             import_error: "Échec de l'importation",
                             import_failed: "Le fichier n'a pas pu être importé",
                             import_invalid_format: "Format de fichier invalide. Le fichier doit contenir un titre et un prompt système.",
-                            import_save_failed: "Erreur lors de l'enregistrement de l'assistant importé"
+                            draft_exists_title: "Un brouillon existe déjà",
+                            draft_exists_message: "Vous avez déjà un brouillon d'assistant non enregistré. L'importation écrasera ce brouillon.",
+                            draft_exists_overwrite: "Écraser",
+                            draft_exists_open: "Ouvrir le brouillon"
                         },
                         assistant_preview: {
                             title: "Chat d'aperçu",
@@ -3121,27 +3206,31 @@ i18n
                             section_tools: "Outils",
                             section_conversation_options: "Options de conversation",
                             section_access: "Accès et visibilité",
-                            section_review: "Vérification",
+                            section_review: "Respect de l'interdiction des usages à haut risque",
 
                             // Review section
                             review_confirmation_label:
-                                "Je confirme que cet assistant n'est pas destiné à être utilisé pour un cas d'usage à haut risque non autorisé dans MUCGPT.",
+                                "Je confirme que cet assistant n'est pas destiné à être utilisé pour une finalité à haut risque non autorisée dans MUCGPT.",
                             review_required_hint: "Cette confirmation est requise pour créer ou enregistrer l'assistant.",
-                            review_intro_title: "Que sont les cas d'usage à haut risque ?",
                             review_intro_description:
-                                "Les cas d'usage à haut risque sont des utilisations de l'IA dans lesquelles les décisions ou les évaluations concernant des personnes peuvent avoir des conséquences particulièrement lourdes, par exemple dans les ressources humaines, l'éducation, les services publics ou la migration.",
+                                "Les systèmes d'IA à haut risque ne sont pas interdits par le règlement de l'Union européenne sur l'intelligence artificielle, mais ils sont strictement réglementés. MUCGPT ne peut pas mettre en œuvre les obligations légales correspondantes. C'est pourquoi les {{termsLink}} n'autorisent pas l'utilisation de MUCGPT à des fins à haut risque.",
+                            review_terms_link: "conditions d'utilisation de MUCGPT",
+                            review_intro_description_2:
+                                "Cette interdiction s'applique aux finalités qui entraînent la classification des systèmes d'IA comme systèmes d'IA à haut risque au sens du règlement sur l'IA. Celui-ci classe notamment comme systèmes à haut risque les systèmes destinés à l'une des finalités énumérées à l'annexe III et présentant un risque important d'atteinte à la santé, à la sécurité ou aux droits fondamentaux des personnes physiques. Les finalités énumérées à l'annexe III concernent notamment des domaines tels que l'éducation, l'emploi, les services publics et la migration.",
                             review_check_title: "Vérifier les instructions",
-                            review_check_description: "Vérifiez les instructions de l'assistant pour détecter d'éventuels cas d'usage à haut risque.",
-                            review_check_learn_more: "En savoir plus sur les cas d'usage à haut risque",
+                            review_check_description: "Vérifiez le prompt système de l'assistant pour détecter d'éventuelles finalités à haut risque.",
+                            review_check_learn_more: "En savoir plus sur les finalités à haut risque",
+                            review_check_supplement:
+                                "La vérification ne constitue qu'une première orientation approximative et ne peut pas remplacer un contrôle juridique humain. En cas de doute, adressez-vous au service juridique compétent pour votre domaine ou renoncez à envoyer le prompt ou à créer l'assistant.",
                             review_check_start: "Lancer la vérification",
                             review_check_recheck: "Vérifier à nouveau",
                             review_check_running: "Vérification en cours...",
                             review_result_passed_title: "Toutes les vérifications réussies",
                             review_result_passed_description:
-                                "Aucun indice de système à haut risque n'a été trouvé. La vérification sert uniquement d'orientation. Veuillez confirmer ci-dessous que l'assistant n'est pas utilisé pour un cas d'usage à haut risque non autorisé.",
-                            review_result_warning_title: "Indice d'un possible système à haut risque",
+                                "Aucune indication d'une finalité à haut risque n'a été trouvée. La vérification sert uniquement d'orientation. Veuillez confirmer ci-dessous que l'assistant n'est pas utilisé pour une finalité à haut risque interdite.",
+                            review_result_warning_title: "Indice d'une possible finalité à haut risque.",
                             review_result_warning_guidance:
-                                "Veuillez examiner les passages suivants des instructions et les modifier si nécessaire afin qu'aucun cas d'usage à haut risque ne subsiste. La vérification sert uniquement d'orientation.",
+                                "Veuillez examiner le prompt système et le modifier si nécessaire afin qu'aucune finalité à haut risque interdite ne soit poursuivie.",
                             review_result_error_title: "Échec de la vérification",
                             review_result_error_description:
                                 "La vérification n'a pas pu être effectuée. L'enregistrement reste bloqué jusqu'à une nouvelle vérification réussie.",
@@ -3149,11 +3238,11 @@ i18n
                             review_result_outdated_description:
                                 "Le prompt système a été modifié après cette vérification. Les indices se rapportent à la version précédente. Relancez la vérification pour obtenir un résultat à jour.",
                             review_confirmation_label_high_risk:
-                                "J'ai examiné les indices et je confirme que cet assistant n'est pas destiné à un cas d'usage à haut risque non autorisé dans MUCGPT.",
+                                "J'ai examiné les indices et je confirme que cet assistant n'est pas destiné à une finalité à haut risque non autorisée dans MUCGPT.",
                             review_category_migration_asylum_border: "Migration, asile et contrôle des frontières",
-                            review_category_public_services_access: "Accès aux services publics essentiels",
-                            review_category_hr_employment: "Emploi et gestion du personnel",
-                            review_category_education: "Éducation générale et formation professionnelle",
+                            review_category_public_services_access: "Accès aux prestations publiques",
+                            review_category_hr_employment: "Emploi et personnel",
+                            review_category_education: "Éducation et formation professionnelle",
 
                             // Advanced settings fields
                             creativity: "Style de réponse",
@@ -3288,15 +3377,24 @@ i18n
                             private_label: "Privé",
                             show_details: "Afficher les détails",
                             show_more_personal_assistants: "Afficher plus d'assistants personnels",
-                            start_chat: "Démarrer une nouvelle conversation",
                             system_prompt_copy: "Copier le prompt système",
                             system_prompt_copied: "Copié",
-                            created_by: "Par",
-                            created_by_you: "Par vous",
-                            subscriber_count: "{{count}} abonnés",
+                            show_more: "Afficher plus",
+                            show_more_count_one: "Afficher {{count}} de plus",
+                            show_more_count_other: "Afficher {{count}} de plus",
+                            show_less: "Afficher moins",
+                            section_in_chat: "Dans le chat",
+                            section_configuration: "Configuration",
+                            section_about: "À propos de cet assistant",
+                            visibility: "Visibilité",
+                            share_link_copy: "Copier le lien de partage",
+                            share_link_copied: "Lien copié",
+                            share_link_copy_failed: "Impossible de copier le lien",
+                            created_by: "Créé par",
+                            subscribers: "Abonnés",
                             responsible: "Responsables",
-                            version: "Version {{version}}",
-                            configuration_updated: "Configuration modifiée le {{date}}",
+                            version: "Version",
+                            last_updated: "Dernière modification",
                             sort_by: "Trier par",
                             sort_title: "Nom",
                             sort_last_used: "Dernière utilisation",
@@ -3340,7 +3438,6 @@ i18n
                             duplicate_confirm_message: `Vous pouvez continuer à utiliser "{{title}}" sans créer votre propre copie. Voulez-vous quand même en créer une ? Les modifications futures de l'assistant d'origine ne seront pas appliquées à votre copie.`,
                             duplicate_confirm_message_deleted: `L'assistant d'origine "{{title}}" n'est plus disponible. Si vous voulez continuer à l'utiliser, vous pouvez créer maintenant votre propre copie à partir de la dernière version en cache.`,
                             duplicate_confirm_action: "Créer la copie",
-                            duplicate_title_suffix: "[Copie]",
                             duplicate_success_title: "Assistant dupliqué",
                             duplicate_success_message: `L'assistant "{{title}}" a été dupliqué avec succès.`,
                             duplicate_failed_title: "L'assistant n'a pas pu être dupliqué",
@@ -3377,7 +3474,7 @@ i18n
                             deleted_chat_warning:
                                 "Cet assistant communautaire a été supprimé par son créateur et n'est plus disponible. Cette version n'existe plus que localement dans ce navigateur et peut être perdue. L'historique du chat est en lecture seule. Enregistrez-la comme votre propre assistant si vous voulez continuer à l'utiliser.",
                             deleted_state_save_action: "Enregistrer comme assistant personnel",
-                            deleted_state_history_action: "Voir l'ancien historique de chat",
+                            deleted_state_history_action: "Historique",
                             deleted_state_no_history: "Aucun historique de chat local n'est disponible pour cet assistant.",
                             legacy_state_title: "Assistant communautaire obsolète",
                             legacy_state_hint:
@@ -3430,7 +3527,11 @@ i18n
                     },
                     discovery: {
                         title: "Assistants",
-                        subtitle: "Trouvez et gérez des assistants pour vos tâches récurrentes."
+                        subtitle: "Trouvez et gérez des assistants pour vos tâches récurrentes.",
+                        reset_mock_data: "Réinitialiser les données fictives",
+                        reset_mock_data_confirm_title: "Réinitialiser les données fictives ?",
+                        reset_mock_data_confirm_message:
+                            "Les assistants fictifs et les données de scénario seront restaurés à leur état initial. Vos autres assistants et conversations locaux sont conservés."
                     },
                     ...tutorialsTranslations.FR,
                     ...versionTranslations.FR
@@ -3452,7 +3553,8 @@ i18n
                         go_assistants: "Перейти до огляду асистентів",
                         start_new_chat: "Розпочати новий чат",
                         preferences_and_help: "Налаштування та допомога",
-                        toggle_navigation: "Перемкнути навігацію",
+                        open_navigation: "Відкрити бічну панель",
+                        close_navigation: "Закрити бічну панель",
                         resize_navigation: "Перемкнути навігацію з краю",
                         new_chat_dialog_subtitle: "Як ви хочете розпочати новий чат?",
                         new_chat_default_primary: "Розпочати вільний чат",
@@ -3497,20 +3599,17 @@ i18n
                         prompt: "Задайте питання або завантажте документ",
                         prompt_no_upload: "Задайте питання",
                         answer_loading: "Створення відповіді",
-                        answer_loading_phrases: [
-                            "Створюю відповідь",
-                            "Обмірковую",
-                            "Впорядковую думки",
-                            "Формулюю відповідь",
-                            "Опрацьовую запитання",
-                            "Добираю слова",
-                            "Поєдную ідеї",
-                            "Структурую відповідь",
-                            "Розглядаю запитання",
-                            "Переходжу до суті",
-                            "Уточнюю формулювання",
-                            "Готую відповідь"
-                        ],
+                        activity_running_tool: "Використовую {{tool}}",
+                        activity_steps_one: "{{count}} крок",
+                        activity_steps_few: "{{count}} кроки",
+                        activity_steps_many: "{{count}} кроків",
+                        activity_steps_other: "{{count}} кроку",
+                        activity_step_failed: "не вдалося",
+                        activity_failed_count: "{{count}} з помилкою",
+                        activity_duration: "{{seconds}} с",
+                        activity_evaluating: "Аналізую результати",
+                        activity_thinking_stages: ["Думаю", "Ще думаю", "Складне питання – майже готово"],
+                        show_ag_ui_events: "Показати події AG-UI",
                         usage_context: "Використання",
                         usage_context_summary: "Використання: {{used}} / {{max}} токенів ({{percent}}%)",
                         usage_context_summary_no_max: "Використання: {{used}} токенів",
@@ -3566,7 +3665,6 @@ i18n
                         main_content: "Основний контент",
                         footer_info: "Інформація у футері",
                         settings: "Налаштування",
-                        theme: "Тема",
                         language: "Мова",
                         messages: "Повідомлення",
                         starter_prompts: "Стартові підказки",
@@ -3686,10 +3784,10 @@ i18n
                             aria_label: "Удосконалення"
                         },
                         theme_selector: {
-                            theme_light: "Світла тема",
-                            theme_dark: "Темна тема",
-                            light_short: "Світло",
-                            dark_short: "Темно"
+                            label: "Вигляд",
+                            light: "Світла",
+                            dark: "Темна",
+                            system: "Системна"
                         },
                         sumlength: {
                             sentences: "Два речення",
@@ -3742,6 +3840,7 @@ i18n
                             tokensused: "Використано токени",
                             limit: ". Старіші введення не будуть враховані при генерації!",
                             errorhint: "MUCGPT може помилятися. Перевірте важливу інформацію.",
+                            high_risk_hint: "Використання для <tutorial>цілей з високим ризиком</tutorial> відповідно до Регламенту ЄС про ШІ заборонено.",
                             toolsselectorbutton_tooltip: "Вибрати інструменти",
                             tutorial_help: "Відкрити навчальний посібник",
                             tool_header: "Вибрати додаткові інструменти:",
@@ -3797,13 +3896,25 @@ i18n
                             enable_hint: "Якщо увімкнено й модель завантажено, у чаті з'явиться кнопка мікрофона.",
                             model_label: "Модель",
                             model_ready: "готова",
+                            downloading: "Модель завантажується",
+                            cancel_download: "Скасувати завантаження",
                             download: "Завантажити модель",
-                            redownload: "Завантажити знову",
-                            status_idle: "Не завантажено",
-                            status_loading: "Завантаження … {{progress}} %",
-                            status_loading_mb: "Завантаження … {{downloaded_mb}} MB / {{total_mb}} MB ({{progress}} %)",
-                            status_loading_indeterminate: "Завантаження …",
-                            status_ready: "Готова",
+                            recommended: "Рекомендовано",
+                            delete_model: "Видалити модель",
+                            clear_models: "Видалити завантажені моделі",
+                            clear_models_confirm_title: "Видалити моделі?",
+                            clear_models_confirm_message:
+                                "Усі завантажені моделі буде видалено з цього пристрою. Щоб скористатися ними, потрібно завантажити їх знову.",
+                            confirm: "Видалити",
+                            cancel: "Скасувати",
+                            model_languages: "Мови: {{languages}}",
+                            languages: {
+                                de: "Німецька",
+                                en: "Англійська",
+                                fr: "Французька",
+                                es: "Іспанська",
+                                uk: "Українська"
+                            },
                             close: "Закрити"
                         },
                         suminput: {
@@ -3885,12 +3996,13 @@ i18n
                         },
                         import_assistant: {
                             import: "Імпортувати",
-                            import_success: "Імпорт успішний",
-                            import_success_message: 'Асистент "{{title}}" було імпортовано і готовий до використання.',
                             import_error: "Помилка імпорту",
                             import_failed: "Не вдалося імпортувати файл",
                             import_invalid_format: "Недійсний формат файлу. Файл повинен містити назву та системний запит.",
-                            import_save_failed: "Помилка збереження імпортованого асистента"
+                            draft_exists_title: "Чернетка вже існує",
+                            draft_exists_message: "У вас вже є незбережена чернетка асистента. Імпорт перезапише цю чернетку.",
+                            draft_exists_overwrite: "Перезаписати",
+                            draft_exists_open: "Відкрити чернетку"
                         },
                         assistant_preview: {
                             title: "Чат попереднього перегляду",
@@ -3962,27 +4074,31 @@ i18n
                             section_tools: "Інструменти",
                             section_conversation_options: "Опції розмови",
                             section_access: "Доступ і видимість",
-                            section_review: "Перевірка",
+                            section_review: "Дотримання заборони використання з високим ризиком",
 
                             // Review section
                             review_confirmation_label:
-                                "Я підтверджую, що цей асистент не призначений для використання у високоризиковому сценарії, недозволеному в MUCGPT.",
+                                "Я підтверджую, що цей асистент не призначений для використання з недозволеною в MUCGPT ціллю з високим ризиком.",
                             review_required_hint: "Це підтвердження необхідне для створення або збереження асистента.",
-                            review_intro_title: "Що таке сценарії використання з високим ризиком?",
                             review_intro_description:
-                                "Сценарії використання з високим ризиком — це застосування ШІ, у яких рішення або оцінки щодо людей можуть мати особливо серйозні наслідки, наприклад у сфері персоналу, освіти, державних послуг або міграції.",
+                                "Системи ШІ з високим ризиком не заборонені Регламентом Європейського Союзу про штучний інтелект, але суворо регулюються. MUCGPT не може забезпечити виконання відповідних юридичних зобов'язань. Тому {{termsLink}} не дозволяють використовувати MUCGPT для цілей із високим ризиком.",
+                            review_terms_link: "умови використання MUCGPT",
+                            review_intro_description_2:
+                                "Ця заборона стосується цілей, через які системи ШІ класифікуються як системи ШІ з високим ризиком відповідно до Регламенту про ШІ. Зокрема, Регламент класифікує системи ШІ як високоризикові, якщо вони призначені для однієї з цілей, перелічених у Додатку III, і становлять значний ризик шкоди для здоров'я, безпеки або основоположних прав фізичних осіб. Цілі, перелічені в Додатку III, охоплюють, зокрема, такі сфери, як освіта, зайнятість, державні послуги та міграція.",
                             review_check_title: "Перевірити інструкції",
-                            review_check_description: "Перевірте інструкції асистента на ознаки можливих сценаріїв використання з високим ризиком.",
-                            review_check_learn_more: "Дізнатися більше про сценарії використання з високим ризиком",
+                            review_check_description: "Перевірте системний промпт асистента на ознаки можливих цілей використання з високим ризиком.",
+                            review_check_learn_more: "Дізнатися більше про цілі використання з високим ризиком",
+                            review_check_supplement:
+                                "Перевірка є лише первинним приблизним орієнтиром і не може замінити юридичну перевірку людиною. У разі сумнівів зверніться до юридичного відділу, відповідального за вашу сферу, або не надсилайте промпт і не створюйте асистента.",
                             review_check_start: "Почати перевірку",
                             review_check_recheck: "Перевірити знову",
                             review_check_running: "Перевірка триває...",
                             review_result_passed_title: "Усі перевірки пройдено",
                             review_result_passed_description:
-                                "Ознак системи з високим ризиком не виявлено. Перевірка слугує лише орієнтиром. Будь ласка, підтвердьте нижче, що асистент не використовується для недопустимого сценарію використання з високим ризиком.",
-                            review_result_warning_title: "Ознака можливої системи з високим ризиком",
+                                "Не виявлено ознак цілей із високим ризиком. Перевірка слугує лише орієнтиром. Будь ласка, підтвердьте нижче, що асистент не використовується для недопустимої мети з високим ризиком.",
+                            review_result_warning_title: "Ознака можливої мети з високим ризиком.",
                             review_result_warning_guidance:
-                                "Будь ласка, перегляньте наведені нижче місця в інструкціях і за потреби змініть їх, щоб не залишалося сценарію використання з високим ризиком. Перевірка слугує лише орієнтиром.",
+                                "Будь ласка, перегляньте системний промпт і, якщо потрібно, змініть його так, щоб не використовувалась недопустима мета з високим ризиком.",
                             review_result_error_title: "Помилка перевірки",
                             review_result_error_description:
                                 "Перевірку не вдалося виконати. Збереження заблоковано, доки повторна перевірка не завершиться успішно.",
@@ -3990,11 +4106,11 @@ i18n
                             review_result_outdated_description:
                                 "Системний промпт було змінено після цієї перевірки. Виявлені ознаки стосуються попередньої версії. Запустіть перевірку ще раз, щоб отримати актуальний результат.",
                             review_confirmation_label_high_risk:
-                                "Я переглянув(-ла) виявлені ознаки та підтверджую, що цей асистент не призначений для недопустимого в MUCGPT сценарію використання з високим ризиком.",
+                                "Я переглянув(-ла) виявлені ознаки та підтверджую, що цей асистент не призначений для недопустимої в MUCGPT цілі з високим ризиком.",
                             review_category_migration_asylum_border: "Міграція, притулок та прикордонний контроль",
-                            review_category_public_services_access: "Доступ до основних державних послуг",
-                            review_category_hr_employment: "Зайнятість та управління персоналом",
-                            review_category_education: "Загальна та професійна освіта",
+                            review_category_public_services_access: "Доступ до державних послуг",
+                            review_category_hr_employment: "Зайнятість і персонал",
+                            review_category_education: "Освіта та професійне навчання",
 
                             // Advanced settings fields
                             creativity: "Стиль відповіді",
@@ -4133,15 +4249,26 @@ i18n
                             empty_community_title: "Громадські асистенти ще недоступні",
                             empty_community_description: "Опубліковані асистенти з'являться тут, щойно їх буде поширено в організації.",
                             empty_create_own: "Створити власного асистента",
-                            start_chat: "Розпочати новий чат",
                             system_prompt_copy: "Копіювати системний промпт",
                             system_prompt_copied: "Скопійовано",
-                            created_by: "Автор:",
-                            created_by_you: "Ви автор",
-                            subscriber_count: "{{count}} підписників",
+                            show_more: "Показати більше",
+                            show_more_count_one: "Показати ще {{count}}",
+                            show_more_count_few: "Показати ще {{count}}",
+                            show_more_count_many: "Показати ще {{count}}",
+                            show_more_count_other: "Показати ще {{count}}",
+                            show_less: "Показати менше",
+                            section_in_chat: "У чаті",
+                            section_configuration: "Конфігурація",
+                            section_about: "Про цього асистента",
+                            visibility: "Видимість",
+                            share_link_copy: "Копіювати посилання для поширення",
+                            share_link_copied: "Посилання скопійовано",
+                            share_link_copy_failed: "Не вдалося скопіювати посилання",
+                            created_by: "Автор",
+                            subscribers: "Підписники",
                             responsible: "Відповідальні",
-                            version: "Версія {{version}}",
-                            configuration_updated: "Конфігурацію змінено {{date}}",
+                            version: "Версія",
+                            last_updated: "Востаннє змінено",
                             sort_by: "Сортувати за",
                             sort_title: "Назва",
                             sort_last_used: "Останнє використання",
@@ -4186,7 +4313,6 @@ i18n
                             duplicate_confirm_message_deleted:
                                 'Оригінальний асистент "{{title}}" більше недоступний. Якщо ви хочете й далі ним користуватися, зараз можна створити власну копію з останньої кешованої версії.',
                             duplicate_confirm_action: "Створити копію",
-                            duplicate_title_suffix: "[Копія]",
                             duplicate_success_title: "Асистента дубльовано",
                             duplicate_success_message: 'Асистента "{{title}}" успішно дубльовано.',
                             duplicate_failed_title: "Не вдалося дублювати асистента",
@@ -4223,7 +4349,7 @@ i18n
                             deleted_chat_warning:
                                 "Цей асистент спільноти був видалений автором і більше недоступний. Ця версія зберігається лише локально в цьому браузері й може бути втрачена. Історія чату доступна лише для читання. Збережіть її як власного асистента, якщо хочете й далі нею користуватися.",
                             deleted_state_save_action: "Зберегти як власного асистента",
-                            deleted_state_history_action: "Переглянути стару історію чату",
+                            deleted_state_history_action: "Історія чату",
                             deleted_state_no_history: "Для цього асистента немає локальної історії чату.",
                             legacy_state_title: "Застарілий Асистент Спільноти",
                             legacy_state_hint:
@@ -4275,7 +4401,11 @@ i18n
                     },
                     discovery: {
                         title: "Асистенти",
-                        subtitle: "Знаходьте та керуйте асистентами для своїх повторюваних завдань."
+                        subtitle: "Знаходьте та керуйте асистентами для своїх повторюваних завдань.",
+                        reset_mock_data: "Скинути тестові дані",
+                        reset_mock_data_confirm_title: "Скинути тестові дані?",
+                        reset_mock_data_confirm_message:
+                            "Тестових асистентів і дані сценаріїв буде відновлено до початкового стану. Інші ваші локальні асистенти та чати збережуться."
                     },
                     ...tutorialsTranslations.UK,
                     ...versionTranslations.UK

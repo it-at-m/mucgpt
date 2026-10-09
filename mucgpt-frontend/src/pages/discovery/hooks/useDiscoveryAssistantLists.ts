@@ -288,7 +288,8 @@ export const useDiscoveryAssistantLists = ({
                                 ...(sub.tags ? { tags: sub.tags } : {}),
                                 subscriptions: fullData?.subscriptions_count ?? sub.subscriptions_count ?? 0,
                                 updated: fullData?.updated_at ?? sub.updated_at ?? (localData ? getSnapshotUpdatedAt(localData) : undefined),
-                                isSubscribedAssistant: true
+                                isSubscribedAssistant: true,
+                                isDeletedSnapshot: sub.is_deleted === true
                             });
 
                             if (getPrimaryOwnerDetails(cardData.rawData) === undefined && sub.owners_detailed && sub.owners_detailed.length > 0) {

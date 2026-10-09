@@ -73,6 +73,7 @@ Entry: `app.py` → `backend.py` builds the FastAPI app, mounts `api_app` at `/a
 
 **Agent** (`agent/`): `react_agent.py` wraps LangChain's `create_agent` (LangGraph) in `_ConfiguredLangChainAgentGraph`. The compiled graph is reused across invocations and uses `DefaultAgentState` as its stable, compile-time state schema. Request-specific model settings (`extra_body`, `user`, selected LLM alternative) and the enabled-tool allowlist are passed through `RequestContext`; `middleware.py` applies them to each model request and handles tool errors.
 
+- **Tool status messages.** `ToolStatusMiddleware` adds a required `status_message` argument to every tool definition the model sees (a one-line, user-facing description of the call) and strips it again before the tool runs, so tools and MCP servers never receive it. The frontend shows it as the live activity label. It must stay after `ContextMiddleware`, which filters tools as `BaseTool` objects; from there on tools are flat `{name, description, parameters}` dicts.
 - **State schema is not selected per request.** LangGraph state schemas are fixed when the reusable graph is compiled. The stable schema name is added to Langfuse trace metadata, while enabled tools remain request-scoped and are filtered by middleware.
 - **Tools** live in `agent/tools/` (`brainstorm`, `simplify`, `internet_search`, plus MCP tools loaded dynamically by `mcp.py::McpLoader`). `tools.py::ToolCollection` is the registry; `tools_router.py` exposes them. `tools.py` also defines `make_retrieval_tool` (`RetrievePMDocs`), which queries a configurable retrieval backend (`RETRIEVAL.API_URL` / `MUCGPT_CORE_RETRIEVAL__API_URL`) across configurable PM-document collections and returns reranked matches — like `internet_search`, it's only added to the tool list when `is_retrieval_configured()` is true (i.e. `RETRIEVAL.API_URL` is set).
 - **Prompts** are Markdown files in `agent/prompt_pool/` and `create_assistant/`, read at import time — edit the `.md`, not string literals.
@@ -89,6 +90,7 @@ Standard FastAPI + SQLAlchemy (async) + Postgres. Routers in `api/routers/` (`as
 
 ## Conventions
 
+- run python tooling with uv or uvx (e.g. `uvx --from onnx python -c ...` for one-off scripts or `uv run pytest` for project tests) and never pip install into a system python.
 - Ruff selects `E,F,I,UP`, ignores `E501,E701`. Python target 3.13 (services), formatted/linted via pre-commit.
 - Commits use **gitmoji** (e.g. `✨`, see recent history); branches `feat/...`, PRs against `main`.
 - Frontend API clients are in `src/api/` (`core-client`, `assistant-client`, `conversations-client`, `user-client`); MSW handlers in `src/mocks/` back the mocked dev mode. Pages in `src/pages/`, shared UI in `src/components/`.

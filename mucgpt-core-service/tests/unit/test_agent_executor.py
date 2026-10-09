@@ -4,7 +4,8 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 from langchain_core.messages import AIMessage, AIMessageChunk, ToolCall
 
-from agent.agent_executor import MUCGPTAgentExecutor
+from agent.agent_executor import MUCGPTAgentExecutor, _ag_ui_usage_from_token_usage
+from agent.middleware import TokenUsage
 from agent.tools.tool_chunk import ToolStreamChunk, ToolStreamState
 from api.api_models import ChatCompletionMessage as InputMessage
 
@@ -59,6 +60,33 @@ class DummyLLM:
         # Store messages for assertions
         self.invoked_messages = msgs
         return AIMessage(content="<einfachesprache>Simplified text.</einfachesprache>")
+
+
+def test_ag_ui_usage_uses_protocol_shape():
+    usage = _ag_ui_usage_from_token_usage(
+        TokenUsage(
+            prompt_tokens=120,
+            completion_tokens=30,
+            context_tokens=150,
+            cache_read_tokens=20,
+            reasoning_tokens=5,
+        ),
+        "test-model",
+    )
+
+    assert usage is not None
+    assert usage[0].model_dump(by_alias=True, exclude_none=True) == {
+        "model": "test-model",
+        "inputTokens": 120,
+        "outputTokens": 30,
+        "totalTokens": 150,
+        "reasoningTokens": 5,
+        "cachedInputTokens": 20,
+    }
+
+
+def test_ag_ui_usage_is_absent_without_provider_usage():
+    assert _ag_ui_usage_from_token_usage(TokenUsage(), "test-model") is None
 
 
 class DummyRunnerLLM(DummyLLM):

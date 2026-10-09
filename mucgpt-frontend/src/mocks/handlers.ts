@@ -2,6 +2,7 @@
 import { http, HttpResponse, delay, passthrough } from "msw";
 import {
     ApplicationConfig,
+    AssistantCreateInput,
     AssistantCreateResponse,
     AssistantStateUpdateInput,
     AssistantUpdateInput,
@@ -10,7 +11,6 @@ import {
 } from "../api";
 import {
     buildAssistantCreateResponse,
-    buildAssistantList,
     buildOwnersDetailedFromOwnerIds,
     buildChatMessage,
     buildDrawioChatMessage,
@@ -19,62 +19,67 @@ import {
     generateMindmapStreamChunks,
     generateSimplifyStreamChunks
 } from "./data/generators";
-import { CREATIVITY_HIGH } from "../constants";
+import { CREATIVITY_HIGH, CREATIVITY_MEDIUM } from "../constants";
+import { loadMockAssistants, loadMockSubscriptions, saveMockAssistants, saveMockSubscriptions } from "./data/assistant-store";
+import { MOCK_DELETED_SUBSCRIBED_SNAPSHOT, MOCK_SUBSCRIPTION_SEED } from "./data/browser-scenario-seed";
 
 const DIRECTORY_TREE = [
     {
         shortname: null,
-        name: "Landeshauptstadt München",
+        name: "Example Organization",
         children: [
             {
-                shortname: "BAU",
-                name: "Baureferat",
+                shortname: "TEAM-A",
+                name: "Demo Team A",
                 children: [
                     {
-                        shortname: "BAU-BEURL",
-                        name: "Beurlaubte des Baureferates",
+                        shortname: "TEAM-A-1",
+                        name: "Demo Team A.1",
                         children: [
-                            { shortname: "BAU-BEURL-TECH", name: "Technik", children: [] },
-                            { shortname: null, name: "Allgemein", children: [] }
+                            { shortname: "TEAM-A-1-TECH", name: "Technical Team", children: [] },
+                            { shortname: null, name: "General", children: [] }
                         ]
                     },
-                    { shortname: "BAU-G", name: "HA Gartenbau", children: [] }
+                    { shortname: "TEAM-A-2", name: "Demo Team A.2", children: [] }
                 ]
             },
             {
-                shortname: "RIT",
-                name: "IT-Referat",
+                shortname: "TEAM-B",
+                name: "Demo Team B",
                 children: [
-                    { shortname: "RIT-AI", name: "Ur future AI Overlords ", children: [] },
+                    { shortname: "TEAM-B-AI", name: "AI Team", children: [] },
                     {
-                        shortname: "ITM",
-                        name: "IT@M",
-                        children: [{ shortname: "ITM-KM-DI", name: "Data & Innovation", children: [] }]
+                        shortname: "TEAM-B-DATA",
+                        name: "Data Team",
+                        children: [{ shortname: "TEAM-B-DATA-1", name: "Data Operations", children: [] }]
                     }
                 ]
             },
             {
-                shortname: "POR",
-                name: "Personal- und Organisationsreferat",
+                shortname: "TEAM-C",
+                name: "Demo Team C",
                 children: [
-                    { shortname: "POR-P", name: "Personalbereich", children: [] },
-                    { shortname: "POR-O", name: "Organisationsbereich", children: [] }
+                    { shortname: "TEAM-C-1", name: "People Operations", children: [] },
+                    { shortname: "TEAM-C-2", name: "Organization Operations", children: [] }
                 ]
             }
         ]
     }
 ];
 
+/** Lower-cases and trims a node segment for tolerant matching. */
 function normalize(value: string | null) {
     return value?.trim().toLowerCase() || null;
 }
 
+/** True when a URL segment matches a tree node by shortname or name. */
 function matchNode(segment: string, node: any) {
     const target = normalize(segment);
     if (!target) return false;
     return target === normalize(node.shortname) || target === normalize(node.name);
 }
 
+/** Resolves a chain of URL segments to a mock tree node. */
 function findNode(pathSegments: string[]) {
     let currentList: any[] = DIRECTORY_TREE;
     let current: any | null = null;
@@ -89,7 +94,7 @@ function findNode(pathSegments: string[]) {
 const CONFIG_RESPONSE: ApplicationConfig = {
     models: [
         {
-            llm_name: "KIESGPT",
+            llm_name: "example-model",
             max_input_tokens: 128000,
             max_output_tokens: 12000,
             description: "GPT build by KIES",
@@ -138,24 +143,44 @@ const CONFIG_RESPONSE: ApplicationConfig = {
     assistant_version: "0.0.1",
     document_processing_enabled: true,
     transcription_enabled: true,
+    transcription_default_model: "onnx-community/whisper-small",
     ai_act_compliance_check_enabled: true,
-    footer_link_url: "https://ki.muenchen.de",
-    footer_label: "DAICE",
-    faq_url: "https://ki.muenchen.de/",
-    incident_report_url: "https://ki.muenchen.de/",
-    feature_request_url: "https://ki.muenchen.de/",
-    contact_mail_url: "mailto:ki@muenchen.de",
+    ag_ui_enabled: true,
+    footer_link_url: "https://intranet.example.org",
+    footer_label: "Example Organization",
+    faq_url: "https://intranet.example.org/help",
+    incident_report_url: "https://intranet.example.org/incidents",
+    feature_request_url: "https://intranet.example.org/feedback",
+    contact_mail_url: "mailto:support@example.org",
     ad2image_url: "",
-    owner_profile_url_template: "https://intranet.muenchen.de/person/{uid}",
-    admin_role: "lhm-ab-mucgpt-admin"
+    owner_profile_url_template: "https://intranet.example.org/person/{uid}",
+    admin_role: "mucgpt-admin"
 };
 
-const DYNAMIC_ASSISTANTS: AssistantCreateResponse[] = buildAssistantList(6);
-const pendingAssistant = DYNAMIC_ASSISTANTS[0];
-if (pendingAssistant) pendingAssistant.latest_version.state = "pending_legal_review";
+const MOCK_SEED_TIMESTAMP = "2026-01-01T09:00:00.000Z";
+const MOCK_CURRENT_OWNER_ID = "user-mock-123";
+const MOCK_ASSISTANT_SEED: AssistantCreateResponse[] = [];
+
+function buildSeedAssistant(overrides: Partial<AssistantCreateResponse>): AssistantCreateResponse {
+    const assistant = buildAssistantCreateResponse(overrides);
+
+    return {
+        ...assistant,
+        created_at: MOCK_SEED_TIMESTAMP,
+        updated_at: MOCK_SEED_TIMESTAMP,
+        hierarchical_access: assistant.latest_version.hierarchical_access,
+        owner_ids: assistant.latest_version.owner_ids,
+        owners_detailed: assistant.latest_version.owners_detailed,
+        latest_version: {
+            ...assistant.latest_version,
+            created_at: MOCK_SEED_TIMESTAMP
+        }
+    };
+}
 
 const MOCK_SUBSCRIPTION_COUNTS = [10350, 2500, 1400, 980, 620, 410, 275, 190, 135, 88, 42, 17];
 
+/** Deterministic pseudo-random subscription count for an assistant id. */
 function getMockSubscriptionCount(assistantId: string): number {
     const exists = DYNAMIC_ASSISTANTS.some(assistant => assistant.id === assistantId);
     if (!exists) return 0;
@@ -164,6 +189,7 @@ function getMockSubscriptionCount(assistantId: string): number {
     return MOCK_SUBSCRIPTION_COUNTS[stableIndex];
 }
 
+/** Copies an assistant DTO enriched with a mock subscription count. */
 function withMockSubscriptionCount(assistant: AssistantCreateResponse) {
     return {
         ...assistant,
@@ -173,20 +199,87 @@ function withMockSubscriptionCount(assistant: AssistantCreateResponse) {
     };
 }
 
+type LifecycleAssistantScenario = {
+    id: string;
+    name: string;
+    description: string;
+    ownerId: string;
+    state: NonNullable<AssistantCreateResponse["latest_version"]["state"]>;
+    stateChangeReason?: string;
+};
+
+const buildLifecycleAssistant = ({ id, name, description, ownerId, state, stateChangeReason }: LifecycleAssistantScenario): AssistantCreateResponse => {
+    const assistant = buildSeedAssistant({});
+    const ownerIds = [ownerId];
+    const ownersDetailed = buildOwnersDetailedFromOwnerIds(ownerIds);
+
+    return {
+        ...assistant,
+        id,
+        hierarchical_access: ["TEAM-A"],
+        owner_ids: ownerIds,
+        owners_detailed: ownersDetailed,
+        latest_version: {
+            ...assistant.latest_version,
+            id: `version-${id}`,
+            name,
+            description,
+            system_prompt: `Du bist ${name}. Unterstütze Menschen mit klaren, nachvollziehbaren Antworten.`,
+            hierarchical_access: ["TEAM-A"],
+            creativity: CREATIVITY_MEDIUM,
+            tools: [
+                { id: "Brainstorming", config: { enabled: true } },
+                { id: "Vereinfachen", config: { enabled: false } }
+            ],
+            owner_ids: ownerIds,
+            owners_detailed: ownersDetailed,
+            state,
+            state_changed_by: state === "inactive" ? "admin-mock-001" : null,
+            state_change_reason: stateChangeReason ?? null
+        }
+    };
+};
+
+// Lifecycle scenarios make pending and rejected assistants visible in both personal and subscribed views.
+MOCK_ASSISTANT_SEED.push(
+    buildLifecycleAssistant({
+        id: "own-pending-legal-review",
+        name: "Eigener Textassistent (in Prüfung)",
+        description: "Ein eigener Assistent, dessen Veröffentlichung noch auf die Prüfung wartet.",
+        ownerId: MOCK_CURRENT_OWNER_ID,
+        state: "pending_legal_review"
+    }),
+    buildLifecycleAssistant({
+        id: "own-rejected-legal-review",
+        name: "Eigener Auswahlhelfer (abgelehnt)",
+        description: "Ein eigener Assistent, der nach der Prüfung abgelehnt und deaktiviert wurde.",
+        ownerId: MOCK_CURRENT_OWNER_ID,
+        state: "inactive",
+        stateChangeReason: "Abgelehnt: Der Assistent darf keine Personen bewerten oder priorisieren."
+    }),
+    buildLifecycleAssistant({
+        id: "foreign-subscribed-pending-review",
+        name: "Abonnierter Zusammenfassungsassistent (in Prüfung)",
+        description: "Ein abonnierter Assistent einer anderen Person, dessen Prüfung noch aussteht.",
+        ownerId: "user-mock-001",
+        state: "pending_legal_review"
+    })
+);
+
 // Add a specific assistant with a default model
-DYNAMIC_ASSISTANTS.push(
-    buildAssistantCreateResponse({
+MOCK_ASSISTANT_SEED.push(
+    buildSeedAssistant({
         id: "assistant-with-default-model",
         latest_version: {
             id: "version-default-model-1",
             version: 1,
             created_at: new Date().toISOString(),
-            name: "KIES Research Assistant",
-            description: "A specialized research assistant that always uses the KIESGPT model for consistent, high-quality responses.",
-            system_prompt: "You are the KIES Research Assistant. Provide detailed, well-researched answers with citations when possible.",
-            hierarchical_access: ["RIT-AI", "ITM-KM-DI"],
+            name: "Research Assistant",
+            description: "A specialized research assistant that uses a selected model for consistent, high-quality responses.",
+            system_prompt: "You are a research assistant. Provide detailed, well-researched answers with citations when possible.",
+            hierarchical_access: ["TEAM-B-AI", "TEAM-B-DATA-1"],
             creativity: "low",
-            default_model: "KIESGPT",
+            default_model: "example-model",
             is_visible: true,
             tools: [
                 { id: "Brainstorming", config: { enabled: true } },
@@ -203,14 +296,14 @@ DYNAMIC_ASSISTANTS.push(
                 { label: "Research Topic", prompt: "Please research this topic in detail:" },
                 { label: "Summarize Paper", prompt: "Summarize this research paper:" }
             ],
-            tags: ["research", "academic", "kiesgpt"]
+            tags: ["research", "academic"]
         }
     })
 );
 
 // Add an assistant with a deprecated/unavailable default model
-DYNAMIC_ASSISTANTS.push(
-    buildAssistantCreateResponse({
+MOCK_ASSISTANT_SEED.push(
+    buildSeedAssistant({
         id: "assistant-with-deprecated-model",
         latest_version: {
             id: "version-deprecated-model-1",
@@ -219,7 +312,7 @@ DYNAMIC_ASSISTANTS.push(
             name: "Legacy Document Assistant",
             description: "An older assistant configured to use GPT-3.5-Turbo, which has been deprecated and is no longer available in the system.",
             system_prompt: "You are a document processing assistant. Help users analyze, summarize, and extract information from documents.",
-            hierarchical_access: ["BAU", "POR"],
+            hierarchical_access: ["TEAM-A", "TEAM-C"],
             creativity: CREATIVITY_HIGH,
             default_model: "gpt-3.5-turbo",
             is_visible: true,
@@ -238,32 +331,32 @@ DYNAMIC_ASSISTANTS.push(
                 { label: "Summarize", prompt: "Please summarize this document:" },
                 { label: "Key Points", prompt: "Extract the key points from this text:" }
             ],
-            tags: ["documents", "legacy", "deprecated"]
+            tags: []
         }
     })
 );
 
 // Add assistants with longer names, descriptions, and system prompts
-DYNAMIC_ASSISTANTS.push(
-    buildAssistantCreateResponse({
+MOCK_ASSISTANT_SEED.push(
+    buildSeedAssistant({
         id: "assistant-email-composer",
         latest_version: {
             id: "v-email-1",
             version: 1,
             created_at: new Date().toISOString(),
-            name: "Professional E-Mail Drafting Assistant",
+            name: "Kommunikationsassistent für verständliche, freundliche und rechtssichere interne E-Mail-Entwürfe",
             description:
                 "This assistant helps you compose clear, professional e-mails for a variety of workplace scenarios. Whether you need to write a follow-up to a meeting, respond to a client inquiry, or draft an internal announcement, it adapts tone and structure to your audience. It also suggests subject lines and can rewrite existing drafts to improve clarity and politeness.",
             system_prompt:
-                "You are a professional e-mail drafting assistant for employees of the City of Munich. Your task is to help users compose, edit, and improve e-mails. Always match the formality level to the intended audience — formal for external partners, semi-formal for cross-department communication, and friendly-professional for team-internal messages. Offer alternative phrasings when the user's draft could be misunderstood. Include a clear subject-line suggestion with every draft. Avoid jargon unless the user explicitly requests it. If the user provides bullet points, convert them into well-structured paragraphs. Always end with an appropriate closing.",
-            hierarchical_access: ["ITM-KM-DI"],
+                "You are a professional e-mail drafting assistant. Help users compose, edit, and improve e-mails. Match the formality level to the intended audience and provide a clear subject-line suggestion with every draft.",
+            hierarchical_access: ["TEAM-B-DATA-1"],
             creativity: "medium",
             is_visible: true,
             tools: [
                 { id: "Brainstorming", config: { enabled: false } },
                 { id: "Vereinfachen", config: { enabled: true } }
             ],
-            owner_ids: ["user-mock-001"],
+            owner_ids: [MOCK_CURRENT_OWNER_ID],
             examples: [
                 {
                     text: "Draft a follow-up e-mail after a project kickoff meeting",
@@ -278,14 +371,14 @@ DYNAMIC_ASSISTANTS.push(
                 { label: "Follow-up", prompt: "Draft a follow-up e-mail for a meeting that took place yesterday." },
                 { label: "Apology", prompt: "Write a professional apology e-mail for a delayed response." }
             ],
-            tags: ["e-mail", "communication", "writing"]
+            tags: []
         }
     })
 );
 
-DYNAMIC_ASSISTANTS.push(
-    buildAssistantCreateResponse({
-        id: "assistant-meeting-minutes",
+MOCK_ASSISTANT_SEED.push(
+    buildSeedAssistant({
+        id: "foreign-subscribed-active",
         latest_version: {
             id: "v-meeting-1",
             version: 2,
@@ -308,13 +401,13 @@ DYNAMIC_ASSISTANTS.push(
                 { label: "Format Notes", prompt: "Please format the following rough meeting notes into structured minutes:" },
                 { label: "Extract Actions", prompt: "Extract all action items from the following meeting transcript:" }
             ],
-            tags: ["meetings", "productivity", "documentation"]
+            tags: []
         }
     })
 );
 
-DYNAMIC_ASSISTANTS.push(
-    buildAssistantCreateResponse({
+MOCK_ASSISTANT_SEED.push(
+    buildSeedAssistant({
         id: "assistant-policy-explainer",
         latest_version: {
             id: "v-policy-1",
@@ -344,13 +437,13 @@ DYNAMIC_ASSISTANTS.push(
                 { label: "Summarize Policy", prompt: "Summarize the following policy document in plain language:" },
                 { label: "Compare Versions", prompt: "Compare these two versions of the regulation and highlight what changed:" }
             ],
-            tags: ["policy", "legal", "compliance", "onboarding"]
+            tags: []
         }
     })
 );
 
-DYNAMIC_ASSISTANTS.push(
-    buildAssistantCreateResponse({
+MOCK_ASSISTANT_SEED.push(
+    buildSeedAssistant({
         id: "assistant-markdown-playground",
         latest_version: {
             id: "v-markdown-1",
@@ -388,12 +481,115 @@ You are a **structured assistant**.
                 { id: "Vereinfachen", config: { enabled: false } }
             ],
             owner_ids: ["user-mock-777"],
-            tags: ["markdown", "demo", "discovery"]
+            tags: []
         }
     })
 );
 
+type UnsubscribedAssistantScenario = {
+    id: string;
+    name: string;
+    description: string;
+    ownerId: string;
+};
+
+const buildUnsubscribedAssistant = ({ id, name, description, ownerId }: UnsubscribedAssistantScenario): AssistantCreateResponse => {
+    const assistant = buildSeedAssistant({});
+    const ownerIds = [ownerId];
+    const ownersDetailed = buildOwnersDetailedFromOwnerIds(ownerIds);
+
+    return {
+        ...assistant,
+        id,
+        hierarchical_access: ["TEAM-A"],
+        owner_ids: ownerIds,
+        owners_detailed: ownersDetailed,
+        latest_version: {
+            ...assistant.latest_version,
+            id: `version-${id}`,
+            created_at: MOCK_SEED_TIMESTAMP,
+            name,
+            description,
+            system_prompt: `Du bist ${name}. Unterstütze Mitarbeitende bei wiederkehrenden Aufgaben klar, strukturiert und nachvollziehbar.`,
+            hierarchical_access: ["TEAM-A"],
+            creativity: CREATIVITY_HIGH,
+            default_model: undefined,
+            is_visible: true,
+            tools: [],
+            owner_ids: ownerIds,
+            owners_detailed: ownersDetailed,
+            examples: [],
+            quick_prompts: [],
+            tags: [],
+            compliance_confirmation: false
+        }
+    };
+};
+
+const UNSUBSCRIBED_ASSISTANT_SCENARIOS: UnsubscribedAssistantScenario[] = [
+    {
+        id: "foreign-unsubscribed-protocol",
+        name: "Protokoll-Assistent",
+        description: "Strukturiert Besprechungsnotizen und bereitet Entscheidungen sowie offene Punkte auf.",
+        ownerId: "user-mock-001"
+    },
+    {
+        id: "foreign-unsubscribed-plain-language",
+        name: "Leichte-Sprache-Prüfung",
+        description: "Überarbeitet Texte für eine verständliche und zugängliche Kommunikation.",
+        ownerId: "user-mock-002"
+    },
+    {
+        id: "foreign-unsubscribed-project-update",
+        name: "Projektstatus-Update",
+        description: "Erstellt kompakte Statusberichte für Projekte und Vorhaben.",
+        ownerId: "user-mock-003"
+    },
+    {
+        id: "foreign-unsubscribed-citizen-letter",
+        name: "Bürgeranschreiben",
+        description: "Entwirft klare und wertschätzende Schreiben für Bürgerinnen und Bürger.",
+        ownerId: "user-mock-456"
+    },
+    {
+        id: "foreign-unsubscribed-research",
+        name: "Recherche-Notizen",
+        description: "Fasst Rechercheergebnisse zusammen und trennt Fakten von offenen Fragen.",
+        ownerId: "user-mock-777"
+    },
+    {
+        id: "foreign-unsubscribed-agenda",
+        name: "Agenda-Planer",
+        description: "Bereitet nachvollziehbare Tagesordnungen für Workshops und Sitzungen vor.",
+        ownerId: "user-mock-001"
+    },
+    {
+        id: "foreign-unsubscribed-data-protection",
+        name: "Datenschutz-Checkliste",
+        description: "Hilft beim Formulieren einer ersten Checkliste für datenschutzrelevante Vorhaben.",
+        ownerId: "user-mock-002"
+    },
+    {
+        id: "foreign-unsubscribed-event",
+        name: "Veranstaltungsankündigung",
+        description: "Formuliert Einladungen, Ablaufhinweise und Nachfasskommunikation für Veranstaltungen.",
+        ownerId: "user-mock-003"
+    },
+    {
+        id: "foreign-unsubscribed-onboarding",
+        name: "Onboarding-Begleitung",
+        description: "Erstellt verständliche Einstiegsinformationen für neue Kolleginnen und Kollegen.",
+        ownerId: "user-mock-456"
+    }
+];
+
+MOCK_ASSISTANT_SEED.push(...UNSUBSCRIBED_ASSISTANT_SCENARIOS.map(buildUnsubscribedAssistant));
+
+const DYNAMIC_ASSISTANTS = loadMockAssistants(MOCK_ASSISTANT_SEED);
+const MOCK_SUBSCRIPTIONS = new Set(loadMockSubscriptions(MOCK_SUBSCRIPTION_SEED));
+
 // Helper to choose stream type basierend auf enabled_tools
+/** Picks the SSE stream type mocking tool-less vs tool-enabled chats. */
 function chooseStreamType(enabledTools?: string[]) {
     const options: Array<"mindmap" | "simplify"> = [];
     if (enabledTools?.includes("Brainstorming")) options.push("mindmap");
@@ -469,6 +665,7 @@ function resolveForcedContextTokens(userMessage: string, modelName: string | und
     return Math.round((targetPercent / 100) * maxInputTokens);
 }
 
+/** Mocked document-upload handler returning parsed text sections. */
 async function parseUploadHandler({ request }: { request: Request }) {
     // Simulate network delay for file upload and parsing
     await delay(8000 + Math.random() * 4000); // 8-12 seconds delay
@@ -831,7 +1028,73 @@ export const handlers = [
             ]
         };
         const tools = toolsByLanguage[lang] || toolsByLanguage.deutsch;
-        return HttpResponse.json({ tools });
+        return HttpResponse.json({ tools, internal_tool_ids: ["delete", "edit_file", "glob", "grep", "ls", "read_file", "write_file", "write_todos"] });
+    }),
+    http.post("/api/backend/v1/chat/v2/completions", async ({ request }) => {
+        const body = (await request.json()) as {
+            messages?: { role: string; content: string }[];
+            conversation_id?: string;
+            enabled_tools?: string[];
+        };
+        const mockToolName = body.enabled_tools?.[0];
+        const latestUserMessage =
+            body.messages
+                ?.slice()
+                .reverse()
+                .find(message => message.role === "user")?.content || "";
+        const encoder = new TextEncoder();
+        const runId = crypto.randomUUID();
+        const messageId = crypto.randomUUID();
+        const threadId = body.conversation_id ?? crypto.randomUUID();
+        const stream = new ReadableStream({
+            async start(controller) {
+                const send = (event: object) => controller.enqueue(encoder.encode(`data: ${JSON.stringify(event)}\n\n`));
+
+                send({ type: "RUN_STARTED", threadId, runId });
+                await delay(100);
+
+                if (/^\s*agui-error\s*$/i.test(latestUserMessage)) {
+                    send({ type: "RUN_ERROR", message: "Mock AG-UI error" });
+                    controller.close();
+                    return;
+                }
+
+                if (mockToolName) {
+                    const toolCallId = crypto.randomUUID();
+                    send({
+                        type: "TOOL_CALL_CHUNK",
+                        toolCallId,
+                        toolCallName: mockToolName,
+                        parentMessageId: messageId,
+                        delta: JSON.stringify({ status_message: "Suche passende Informationen", query: latestUserMessage.slice(0, 80) })
+                    });
+                    await delay(1500);
+                    send({ type: "TOOL_CALL_RESULT", messageId: crypto.randomUUID(), toolCallId, content: "Mock tool result", role: "tool" });
+                }
+
+                const chunks = buildChatMessage().match(/[\s\S]{1,40}/g) ?? [];
+                for (const delta of chunks) {
+                    send({ type: "TEXT_MESSAGE_CHUNK", messageId, role: "assistant", delta });
+                    await delay(50);
+                }
+                send({
+                    type: "RUN_FINISHED",
+                    threadId,
+                    runId,
+                    usage: [{ model: "gpt-4o-mini", inputTokens: 120, outputTokens: 30, totalTokens: 150 }],
+                    metadata: { mucgpt: { contextTokens: 150 } }
+                });
+                controller.close();
+            }
+        });
+
+        return new HttpResponse(stream, {
+            headers: {
+                "Content-Type": "text/event-stream",
+                "Cache-Control": "no-cache",
+                Connection: "keep-alive"
+            }
+        });
     }),
     http.post("/api/backend/v1/chat/completions", async ({ request }) => {
         const body = (await request.json()) as {
@@ -895,7 +1158,7 @@ export const handlers = [
             id: `chatcmpl-mock-${Math.random().toString(36).slice(2, 10)}`,
             object: "chat.completion",
             created: Math.floor(Date.now() / 1000),
-            model: "KIESGPT",
+            model: "example-model",
             choices: [
                 {
                     index: 0,
@@ -963,6 +1226,7 @@ export const handlers = [
         };
         const index = DYNAMIC_ASSISTANTS.indexOf(assistant);
         DYNAMIC_ASSISTANTS[index] = updated;
+        saveMockAssistants(DYNAMIC_ASSISTANTS);
         return HttpResponse.json(withMockSubscriptionCount(updated));
     }),
 
@@ -970,6 +1234,43 @@ export const handlers = [
         const a = DYNAMIC_ASSISTANTS.find(x => x.id === params.id);
         if (!a) return new HttpResponse(null, { status: 404 });
         return HttpResponse.json(withMockSubscriptionCount(a));
+    }),
+
+    http.post("/api/assistant/create", async ({ request }) => {
+        await delay(300);
+        const body = (await request.json()) as AssistantCreateInput;
+        const now = new Date().toISOString();
+        const ownerIds = body.owner_ids?.length ? body.owner_ids : [MOCK_CURRENT_OWNER_ID];
+        const ownersDetailed = buildOwnersDetailedFromOwnerIds(ownerIds);
+        const created = buildAssistantCreateResponse();
+
+        created.created_at = now;
+        created.updated_at = now;
+        created.owner_ids = ownerIds;
+        created.owners_detailed = ownersDetailed;
+        created.latest_version = {
+            ...created.latest_version,
+            created_at: now,
+            name: body.name,
+            description: body.description,
+            system_prompt: body.system_prompt,
+            hierarchical_access: body.hierarchical_access,
+            creativity: body.creativity ?? created.latest_version.creativity,
+            default_model: body.default_model,
+            tools: body.tools ?? [],
+            owner_ids: ownerIds,
+            owners_detailed: ownersDetailed,
+            examples: body.examples ?? [],
+            quick_prompts: body.quick_prompts ?? [],
+            tags: [],
+            is_visible: body.is_visible,
+            compliance_check_result: body.compliance_check_result,
+            compliance_confirmation: body.compliance_confirmation ?? false
+        };
+
+        DYNAMIC_ASSISTANTS.push(created);
+        saveMockAssistants(DYNAMIC_ASSISTANTS);
+        return HttpResponse.json(withMockSubscriptionCount(created));
     }),
 
     http.post("/api/assistant/:id/update", async ({ params, request }) => {
@@ -1000,12 +1301,15 @@ export const handlers = [
                 owners_detailed: updatedOwnersDetailed,
                 examples: body.examples || current.latest_version.examples,
                 quick_prompts: body.quick_prompts || current.latest_version.quick_prompts,
-                tags: body.tags || current.latest_version.tags,
+                tags: [],
+                is_visible: body.is_visible,
+                compliance_check_result: body.compliance_check_result,
                 compliance_confirmation: body.compliance_confirmation ?? current.latest_version.compliance_confirmation ?? false,
                 created_at: new Date().toISOString()
             }
         };
         DYNAMIC_ASSISTANTS[idx] = updated;
+        saveMockAssistants(DYNAMIC_ASSISTANTS);
         return HttpResponse.json(updated);
     }),
 
@@ -1014,6 +1318,7 @@ export const handlers = [
         const idx = DYNAMIC_ASSISTANTS.findIndex(a => a.id === params.id);
         if (idx === -1) return new HttpResponse(null, { status: 404 });
         DYNAMIC_ASSISTANTS.splice(idx, 1);
+        saveMockAssistants(DYNAMIC_ASSISTANTS);
         return HttpResponse.json({ message: "Assistant deleted successfully" });
     }),
 
@@ -1024,7 +1329,7 @@ export const handlers = [
     }),
 
     http.get("/api/user/assistants", () => {
-        return HttpResponse.json(DYNAMIC_ASSISTANTS.slice(0, 3).map(withMockSubscriptionCount));
+        return HttpResponse.json(DYNAMIC_ASSISTANTS.filter(assistant => assistant.owner_ids?.includes(MOCK_CURRENT_OWNER_ID)).map(withMockSubscriptionCount));
     }),
 
     http.get("/api/sso/userinfo", () => {
@@ -1034,13 +1339,13 @@ export const handlers = [
             family_name: "Maskottchen",
             given_name: "Max",
             middle_name: "Theo",
-            email: "mucgpt@user.com",
-            preferred_username: "mucgpt-user",
-            department: "IT-KI",
-            lhmObjectID: "2232324224",
+            email: "demo-user@example.org",
+            preferred_username: "demo-user",
+            organization_unit: "TEAM-A",
+            user_id: "demo-user-1",
             resource_access: {
                 mucgpt: {
-                    roles: ["lhm-ab-mucgpt-user", "lhm-ab-mucgpt-admin"]
+                    roles: ["mucgpt-user", "mucgpt-admin"]
                 }
             }
         });
@@ -1048,14 +1353,34 @@ export const handlers = [
 
     http.get("/api/user/subscriptions", async () => {
         await delay(300);
-        // Return a subset of assistants as subscriptions with simplified information
-        // as defined in the SubscriptionResponse model
-        const subscriptions = DYNAMIC_ASSISTANTS.slice(0, 2).map(assistant => ({
-            id: assistant.id,
-            title: assistant.latest_version.name,
-            description: assistant.latest_version.description,
-            subscriptions_count: getMockSubscriptionCount(assistant.id)
-        }));
+        const subscriptions = [...MOCK_SUBSCRIPTIONS]
+            .map(assistantId => {
+                const assistant = DYNAMIC_ASSISTANTS.find(item => item.id === assistantId);
+                if (assistant) {
+                    return {
+                        id: assistant.id,
+                        title: assistant.latest_version.name,
+                        description: assistant.latest_version.description,
+                        subscriptions_count: getMockSubscriptionCount(assistant.id),
+                        is_visible: assistant.latest_version.is_visible,
+                        owners_detailed: assistant.owners_detailed
+                    };
+                }
+
+                if (assistantId === MOCK_DELETED_SUBSCRIBED_SNAPSHOT.id) {
+                    return {
+                        id: MOCK_DELETED_SUBSCRIBED_SNAPSHOT.id,
+                        title: MOCK_DELETED_SUBSCRIBED_SNAPSHOT.title,
+                        description: MOCK_DELETED_SUBSCRIBED_SNAPSHOT.description,
+                        subscriptions_count: 0,
+                        is_visible: MOCK_DELETED_SUBSCRIBED_SNAPSHOT.is_visible,
+                        is_deleted: true
+                    };
+                }
+
+                return undefined;
+            })
+            .filter(subscription => subscription !== undefined);
         return HttpResponse.json(subscriptions);
     }),
 
@@ -1065,14 +1390,25 @@ export const handlers = [
         if (!assistant) {
             return new HttpResponse(null, { status: 404 });
         }
-        // In a real implementation, this would add the subscription to a database
-        // For the mock, we just return success
+        MOCK_SUBSCRIPTIONS.add(assistant.id);
+        saveMockSubscriptions(MOCK_SUBSCRIPTIONS);
         return HttpResponse.json({
             id: assistant.id,
             title: assistant.latest_version.name,
             description: assistant.latest_version.description,
             subscriptions_count: getMockSubscriptionCount(assistant.id)
         });
+    }),
+
+    http.delete("/api/user/subscriptions/:assistantId", async ({ params }) => {
+        await delay(300);
+        if (typeof params.assistantId !== "string" || !MOCK_SUBSCRIPTIONS.has(params.assistantId)) {
+            return new HttpResponse(null, { status: 404 });
+        }
+
+        MOCK_SUBSCRIPTIONS.delete(params.assistantId);
+        saveMockSubscriptions(MOCK_SUBSCRIPTIONS);
+        return HttpResponse.json({ message: "Subscription removed successfully" });
     }),
 
     http.post("/api/backend/v1/compliance/check", async ({ request }) => {

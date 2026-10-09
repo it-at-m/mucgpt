@@ -7,7 +7,7 @@ ARG NO_PROXY
 ENV GENERATE_SOURCEMAP=false
 ENV NODE_OPTIONS=--max_old_space_size=4096
 ENV VITE_DISABLE_PWA=true
-#ENV ONNXRUNTIME_NODE_INSTALL=skip
+ENV ONNXRUNTIME_NODE_INSTALL=skip
 ENV HTTP_PROXY=${HTTP_PROXY}
 ENV http_proxy=${HTTP_PROXY}
 ENV HTTPS_PROXY=${HTTPS_PROXY}
@@ -41,7 +41,7 @@ COPY src/ ./src/
 RUN --mount=type=cache,target=/build/node_modules/.vite \
     npm run build
 
-FROM registry.access.redhat.com/ubi9/nginx-124:9.8-1789637096@sha256:85a20c56e46659c9c658a86c19156fbf460f9245c8fee1df72baf0c2092b6a9c
+FROM registry.access.redhat.com/ubi9/nginx-124:9.8-1790729277@sha256:a06ab8261e4d49a48d1e465a48eac1f867b1a696e5481b8d661ddadef0cb4352
 
 # Copy built web application
 COPY --from=builder /build/dist ./

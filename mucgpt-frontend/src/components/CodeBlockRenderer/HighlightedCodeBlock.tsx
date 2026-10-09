@@ -1,12 +1,8 @@
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { dark, duotoneLight } from "react-syntax-highlighter/dist/esm/styles/prism";
+import { useContext } from "react";
 import styles from "./CodeBlockRenderer.module.css";
-import { STORAGE_KEYS } from "../../pages/layout/LayoutHelper";
-
-export const getCodeBlockLightThemePreference = (): boolean => {
-    const storedTheme = localStorage.getItem(STORAGE_KEYS.SETTINGS_IS_LIGHT_THEME);
-    return storedTheme === null ? true : storedTheme === "true";
-};
+import { AppThemeContext } from "../../ui/theme/AppThemeContext";
 
 export type HighlightedCodeBlockProps = {
     text: string;
@@ -16,7 +12,8 @@ export type HighlightedCodeBlockProps = {
 
 /** Shared Prism code block used by CodeBlockRenderer and diagram error fallbacks. */
 export function HighlightedCodeBlock({ text, language, lightTheme }: HighlightedCodeBlockProps) {
-    const resolvedLightTheme = lightTheme ?? getCodeBlockLightThemePreference();
+    const { isLight } = useContext(AppThemeContext);
+    const resolvedLightTheme = lightTheme ?? isLight;
 
     return (
         <div className={styles.codeContainer}>

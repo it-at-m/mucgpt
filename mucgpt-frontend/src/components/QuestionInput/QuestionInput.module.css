@@ -14,151 +14,83 @@
     }
 }
 
-.toolBadgesHeader {
+.composer {
     display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    align-items: center;
-    padding: 12px 16px 8px;
-}
-
-.toolBadgesLabel {
-    font-size: 0.875rem;
-    font-weight: 500;
-    margin-right: 8px;
-    white-space: nowrap;
-}
-
-.toolButtonsRow {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    align-items: center;
-}
-
-.questionInputContainer {
+    flex-direction: column;
+    gap: var(--spacingVerticalXS);
+    margin-bottom: var(--spacingVerticalS);
+    padding: var(--spacingVerticalS) var(--spacingHorizontalS);
+    border: var(--strokeWidthThin) solid var(--colorNeutralStroke3);
     border-radius: var(--borderRadiusXLarge);
-    background: var(--colorNeutralBackground3);
-    outline: 1px solid var(--colorNeutralStroke1);
-    width: 100%;
-    min-height: 52px;
-    padding: 4px 4px 4px 8px;
-    display: grid;
-    grid-template-columns: auto minmax(0, 1fr) auto;
-    align-items: center;
-    column-gap: 8px;
-    row-gap: 4px;
-    margin-bottom: 10px;
-    transition: box-shadow 0.2s ease;
-    border: 2px solid transparent;
-    min-width: 0;
-    box-sizing: border-box;
+    background: var(--colorNeutralBackground1);
+    transition: border-color var(--durationFaster) var(--curveEasyEase);
 }
 
-.expandedInput {
-    padding: 8px 4px 6px 8px;
-    align-items: end;
+@media (prefers-reduced-motion: reduce) {
+    .composer {
+        transition: none;
+    }
+}
+
+.composer:hover {
+    border-color: var(--colorNeutralStroke2);
+}
+
+.composer:focus-within {
+    border-color: var(--colorNeutralStroke1);
 }
 
 .dragActive {
-    border: 2px dashed var(--colorBrandStroke1);
-    background: var(--colorNeutralBackground2);
-    box-shadow: none;
+    border-style: dashed;
+    border-color: var(--colorBrandStroke1);
+    background: var(--colorBrandBackground2);
 }
 
-.questionInputContainer:focus-within {
-    transform: translateY(-1px);
-    outline: 2px solid var(--colorBrandBackground);
-    outline-offset: 1px;
-    transition:
-        box-shadow 0.15s ease,
-        outline 0.15s ease,
-        transform 0.15s ease;
-}
-
-.noTools {
-    margin-top: 0;
-}
-
-.questionInputTextArea {
-    grid-column: 2;
-    grid-row: 1;
-    min-height: 24px;
-    height: 24px;
-    resize: none !important;
-    border: none !important;
-    padding: 0;
-    font-size: var(--fontSizeBase300);
-    line-height: 24px;
+.input {
+    display: block;
+    width: 100%;
+    max-height: calc(8 * var(--lineHeightBase400) + 2 * var(--spacingVerticalXS));
+    margin: 0;
+    padding: var(--spacingVerticalXS) var(--spacingHorizontalSNudge);
     box-sizing: border-box;
+    overflow-y: auto;
+    border: none;
+    outline: none;
+    resize: none;
     background: transparent;
-    transition: height 0.1s ease;
-    background: var(--colorNeutralBackground3) !important;
-    min-width: 0;
+    color: var(--colorNeutralForeground1);
+    font-family: var(--fontFamilyBase);
+    font-size: var(--fontSizeBase400);
+    font-weight: var(--fontWeightRegular);
+    line-height: var(--lineHeightBase400);
 }
 
-.questionInputTextArea :global(textarea) {
-    min-height: 24px !important;
-    padding-top: 0 !important;
-    padding-bottom: 0 !important;
-    line-height: 24px !important;
+.input::placeholder {
+    overflow: hidden;
+    color: var(--colorNeutralForeground4);
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    opacity: 1;
 }
 
-.expandedInput .questionInputTextArea {
-    grid-column: 1 / -1;
-    grid-row: 1;
-    height: auto;
-    padding: 4px 8px 2px;
+.input:disabled {
+    color: var(--colorNeutralForegroundDisabled);
+    cursor: not-allowed;
 }
 
-.expandedInput .questionInputTextArea :global(textarea) {
-    padding-top: 4px !important;
-    padding-bottom: 2px !important;
-}
-
-.noUpload .questionInputTextArea {
-    grid-column: 1 / 3;
-}
-
-.noUpload.expandedInput .questionInputTextArea {
-    grid-column: 1 / -1;
-}
-
-.questionInputTextArea:focus {
-    outline: none !important;
-    border: none !important;
-}
-
-.questionInputTextArea::before,
-.questionInputTextArea::after {
-    display: none !important;
-}
-
-.questionInputButtons {
-    grid-column: 3;
-    grid-row: 1;
+.actions {
     display: flex;
-    flex-direction: row;
     align-items: center;
-    gap: 4px;
-    flex-shrink: 0;
+    gap: var(--spacingHorizontalXS);
 }
 
-.expandedInput .questionInputButtons {
-    grid-row: 2;
+.spacer {
+    flex: 1;
 }
 
-.uploadButtonWrapper {
-    grid-column: 1;
-    grid-row: 1;
+.uploadAction {
     position: relative;
     display: inline-flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.expandedInput .uploadButtonWrapper {
-    grid-row: 2;
 }
 
 .uploadCountBadge {
@@ -181,97 +113,12 @@
     pointer-events: none;
 }
 
-.uploadedDataHeader {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    align-items: center;
-    padding: 0 16px 8px 16px;
-}
-
-.errorhintSection {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
+.disclaimer {
     padding: 0 4px;
-    min-height: 20px;
-    text-align: center;
-}
-
-.errorhint {
-    font-style: italic;
-    font-size: 0.75rem;
-    margin: 0;
-    letter-spacing: 0.01em;
-}
-
-.toolButton {
-    border-radius: 16px;
-    font-size: 0.875rem;
-    font-weight: 500;
-    transition: all 0.2s ease;
-}
-
-.toolButtonWrapper {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    position: relative;
-}
-
-.toolHelpButton {
-    background: none;
-    border: none;
-    padding: 4px;
-    cursor: pointer;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    color: var(--colorNeutralForeground1);
-    transition: all 0.2s ease;
-    border-radius: 50%;
-    width: 20px;
-    height: 20px;
 }
 
 @media (max-width: 768px) {
     .questionInputWrapper {
         max-width: var(--chatContentWidth, min(90%, 1000px));
-    }
-
-    .questionInputContainer {
-        background: var(--colorNeutralBackground3);
-        min-height: 52px;
-        padding: 4px 4px 4px 8px;
-        border-radius: var(--borderRadiusLarge);
-    }
-
-    .expandedInput {
-        padding: 8px 4px 6px 8px;
-    }
-
-    .questionInputTextArea {
-        background: var(--colorNeutralBackground3) !important;
-        font-size: var(--fontSizeBase200, 1rem);
-        padding: 0;
-        line-height: 22px;
-    }
-
-    .questionInputTextArea :global(textarea) {
-        min-height: 22px !important;
-        line-height: 22px !important;
-    }
-
-    .questionInputButtons {
-        gap: 2px;
-    }
-
-    .toolButton {
-        font-size: 0.75rem;
-    }
-
-    .errorhint {
-        font-size: 0.7rem;
     }
 }

@@ -1,5 +1,5 @@
 import { Dialog, DialogTrigger, DialogSurface, DialogTitle, DialogBody, DialogActions, DialogContent, Button, Link } from "@fluentui/react-components";
-import { Checkmark24Filled, DocumentBulletListMultiple24Regular } from "@fluentui/react-icons";
+import { Checkmark24Filled } from "@fluentui/react-icons";
 import { useTranslation } from "react-i18next";
 import { useState } from "react";
 
@@ -9,38 +9,30 @@ import { useConfigContext } from "../../context/ConfigContext";
 
 interface TermsOfUseDialogProps {
     defaultOpen: boolean;
-    onAccept: () => void;
-    showTrigger?: boolean;
-    triggerClassName?: string;
+    onAccept?: () => void;
     requireAcceptance?: boolean;
+    open?: boolean;
+    onOpenChange?: (open: boolean) => void;
 }
 
-export const TermsOfUseDialog = ({ defaultOpen, onAccept, showTrigger = true, triggerClassName, requireAcceptance = true }: TermsOfUseDialogProps) => {
+export const TermsOfUseDialog = ({ defaultOpen, onAccept, requireAcceptance = true, open: controlledOpen, onOpenChange }: TermsOfUseDialogProps) => {
     const { t } = useTranslation();
     const config = useConfigContext();
     const faqUrl = config.faq_url;
     const contactMailUrl = config.contact_mail_url;
     const contactMailLabel = contactMailUrl?.replace(/^mailto:/, "").split("?")[0];
-    const [open, setOpen] = useState<boolean>(defaultOpen);
-    const trigger = showTrigger ? (
-        <DialogTrigger disableButtonEnhancement>
-            <Button
-                appearance="transparent"
-                className={`${styles.triggerContainer}${triggerClassName ? ` ${triggerClassName}` : ""}`}
-                onClick={() => setOpen(true)}
-            >
-                <DocumentBulletListMultiple24Regular className={styles.termsIcon} />
-                <span className={styles.termsText}>{t("components.terms_of_use.label", "Nutzungsbedingungen")}</span>
-            </Button>
-        </DialogTrigger>
-    ) : (
-        <></>
-    );
+    const [internalOpen, setInternalOpen] = useState<boolean>(defaultOpen);
+    const open = controlledOpen ?? internalOpen;
+    const setOpen = (nextOpen: boolean) => {
+        if (controlledOpen === undefined) {
+            setInternalOpen(nextOpen);
+        }
+        onOpenChange?.(nextOpen);
+    };
 
     return (
-        <div className={styles.container}>
+        <>
             <Dialog modalType={requireAcceptance ? "alert" : "modal"} open={open} onOpenChange={(_event, data) => setOpen(data.open)}>
-                {trigger}
                 <DialogSurface className={styles.dialog}>
                     <DialogBody className={styles.dialogContent}>
                         <DialogTitle>
@@ -57,6 +49,11 @@ export const TermsOfUseDialog = ({ defaultOpen, onAccept, showTrigger = true, tr
                                 <li>
                                     <strong>Erlaubte Nutzung:</strong> MUCGPT darf nur im dienstlichen Kontext genutzt werden. Die Nutzung vergleichbarer
                                     kommerzieller KI-Produkte (z.B. ChatGPT, Gemini etc.) ist nur mit öffentlichen Daten erlaubt.{" "}
+                                </li>
+                                <li>
+                                    <strong>Nicht erlaubte Nutzung:</strong> MUCGPT darf nicht zu Hochrisiko-Zwecken im Sinne der Verordnung über künstliche
+                                    Intelligenz (KI-Verordnung/ AI Act, VO [EU] 2024/1689) genutzt werden. Nähere Hinweise hierzu finden Sie in MUCGPT im
+                                    Eingabebereich für Prompts bzw. Assistenten
                                 </li>
                                 <li>
                                     <strong>Informationssicherheit und Datenschutz</strong> Bei der Nutzung von MUCGPT dürfen keine personenbezogenen Daten
@@ -149,7 +146,7 @@ export const TermsOfUseDialog = ({ defaultOpen, onAccept, showTrigger = true, tr
                                     size="medium"
                                     onClick={() => {
                                         if (requireAcceptance) {
-                                            onAccept();
+                                            onAccept?.();
                                         }
                                         setOpen(false);
                                     }}
@@ -163,7 +160,7 @@ export const TermsOfUseDialog = ({ defaultOpen, onAccept, showTrigger = true, tr
                     </DialogBody>
                 </DialogSurface>
             </Dialog>
-        </div>
+        </>
     );
 };
 

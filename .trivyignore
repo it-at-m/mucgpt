@@ -4,3 +4,4 @@
 # CVE-2021-12345
 # CVE-2022-67890
 GHSA-w5hq-g745-h8pq # the project inherits a uuid version (11.1.0) from the mermaid package with a medium security vulnerability
+CVE-2026-76845 # adm-zip 0.6.0 is the latest release (no fix published); transitive dev-only dependency of onnxruntime-node, medium severity

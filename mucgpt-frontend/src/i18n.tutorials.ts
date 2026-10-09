@@ -213,11 +213,11 @@ export const tutorialsTranslations = {
             },
             high_risk: {
                 title: "Hochrisiko-Zwecke",
-                description: "Wann gilt ein Einsatz von KI als Hochrisiko-Zweck und was Sie dabei beachten sollten.",
+                description: "Wann gilt ein Einsatz von KI einem Hochrisiko-Zweck und was sollten Sie dabei beachten.",
                 toc_title: "Auf dieser Seite",
                 sections: {
                     titles: {
-                        intro: "Was sind Hochrisiko-KI-Zwecke?",
+                        intro: "Was sind Hochrisiko-Zwecke?",
                         relevant: "Wichtige Bereiche",
                         other: "Weitere Bereiche",
                         check: "Prüfung",
@@ -225,7 +225,7 @@ export const tutorialsTranslations = {
                     }
                 },
                 intro: {
-                    title: "Was sind Hochrisiko-KI-Zwecke?",
+                    title: "Was sind Hochrisiko-Zwecke?",
                     description:
                         "Die EU regelt mit der Verordnung über künstliche Intelligenz (KI-Verordnung/ AI Act, VO [EU] 2024/1689), wie künstliche Intelligenz eingesetzt werden darf. Als Hochrisiko-KI-Systeme gelten unter anderem KI-Systeme, die in sensiblen Bereichen wichtige Entscheidungen oder Bewertungen treffen oder wesentlich beeinflussen sollen. Hochrisiko-KI-Systeme unterliegen besonderen gesetzlichen Anforderungen. MUCGPT ist nicht für solche Einsatzzwecke vorgesehen. Deshalb dürfen Prompts und Assistenten in MUCGPT nicht für Hochrisiko-Zwecke erstellt und eingesetzt werden."
                 },
@@ -257,13 +257,13 @@ export const tutorialsTranslations = {
                         title: "Beschäftigung, Personalmanagement und Zugang zur Selbständigkeit",
                         description:
                             "MUCGPT darf nicht für die Einstellung oder Auswahl von Personen oder für Entscheidungen verwendet werden, die die Bedingungen von Arbeitsverhältnissen oder die Förderung und Kündigung von Arbeitsverträgen beeinflussen. MUCGPT darf auch nicht für die Zuweisung von Aufgaben aufgrund des individuellen Verhaltens oder persönlicher Merkmale oder Eigenschaften oder für die Beobachtung und Bewertung der Leistung und des Verhaltens von Personen in solchen Beziehungen verwendet werden.",
-                        not_allowed: "MUCGPT verwenden, um Lebensläufe zu filtern und eine Rangliste der Bewerbenden zu erstellen"
+                        not_allowed: "MUCGPT verwenden, um Lebensläufe zu filtern und eine Rangliste der Bewerbenden zu erstellen."
                     },
                     education: {
                         title: "Allgemeine und berufliche Bildung",
                         description:
                             "MUCGPT darf nicht zur Feststellung des Zugangs, der Zulassung oder der Zuweisung zu Bildungseinrichtungen verwendet werden. MUCGPT darf auch nicht für die Bewertung von Lernergebnissen oder zum Zweck der Bewertung des angemessenen Bildungsniveaus für Personen oder zur Überwachung und Erkennung von verbotenem Verhalten von Schüler*innen verwendet werden.",
-                        not_allowed: "Ein Assistent, der Prüfungen abschließend benotet oder entscheidet, ob ein Kind für das Gymnasium geeignet ist."
+                        not_allowed: "MUCGPT verwenden, um Prüfungen zu benoten oder zu entscheiden, ob ein Kind für das Gymnasium geeignet ist.."
                     }
                 },
                 other: {
@@ -297,12 +297,12 @@ export const tutorialsTranslations = {
                         "Wenn Sie einen Assistenten erstellen oder bearbeiten, können Sie diesen im Editor automatisiert prüfen lassen. MUCGPT sucht dabei nach Formulierungen, die auf einen möglicherweise unzulässigen Hochrisiko-Zweck hindeuten. Das Ergebnis sehen Sie direkt im Editor.",
                     disclaimer_title: "Wichtig:",
                     disclaimer:
-                        "Die Prüfung ist eine Orientierungshilfe und keine rechtliche oder abschließende Bewertung. Sie berücksichtigt nur die hinterlegten Prompt- bzw. Assistentenanweisungen und kann Hinweise übersehen oder zu vorsichtig sein. Entscheidend bleibt der tatsächliche vorgesehene Einsatz.",
+                        "Die Prüfung ist eine Orientierungshilfe und keine rechtliche oder abschließende Bewertung. Sie berücksichtigt nur den hinterlegten Systemprompt des Assistenten und kann Hinweise übersehen oder zu vorsichtig sein. Entscheidend bleibt der tatsächliche vorgesehene Einsatz.",
                     steps_title: "Wenn die Prüfung einen möglichen Hochrisiko-Zweck meldet:",
-                    step1: "Lesen Sie Ihren Prompt bzw. Assistenten noch einmal aufmerksam durch.",
-                    step2: "Überlegen Sie, ob Ihr Prompt bzw. Assistent in einen der beschriebenen Bereiche fällt.",
-                    step3: "Passen Sie den Prompt bzw. Assistenten an, wenn er eine kritische Aufgabe beschreibt oder missverständlich formuliert ist.",
-                    step4: "Sind Sie unsicher, wenden Sie sich an die für Sie zuständige Rechtsabteilung oder sehen von der Ausführung des Prompts bzw. der Erstellung des Assistenten ab.",
+                    step1: "Lesen Sie den Systemprompt des Assistenten noch einmal aufmerksam durch.",
+                    step2: "Überlegen Sie, ob Ihr Assistent in einen der beschriebenen Bereiche fällt.",
+                    step3: "Passen Sie den Systemprompt des Assistenten an, wenn er eine kritische Aufgabe beschreibt oder missverständlich formuliert ist.",
+                    step4: "Sind Sie unsicher, wenden Sie sich an die für Sie zuständige Rechtsabteilung oder sehen von der Erstellung des Assistenten ab.",
                     outro: "Auch ohne Hinweis bleiben Sie selbst verantwortlich: Beim Speichern bestätigen Sie, dass der vorgesehene Einsatz von MUCGPT nicht einem Hochrisiko-Zweck dient."
                 },
                 links: {
@@ -796,11 +796,11 @@ export const tutorialsTranslations = {
                         "When you create or edit an assistant, you can have the system prompt checked in the editor. MUCGPT looks for wording that suggests a possibly impermissible high-risk use case in one of the four areas described. You see the result directly in the editor.",
                     disclaimer_title: "Important:",
                     disclaimer:
-                        "The check is a guide, not a legal or final assessment. It only considers the stored assistant instructions and may miss indications or be too cautious. What matters is the actual intended use.",
+                        "The check is a guide, not a legal or final assessment. It only considers the stored system prompt of the assistant and may miss indications or be too cautious. What matters is the actual intended use.",
                     steps_title: "If the check reports a possible high-risk use case:",
-                    step1: "Read through your system prompt carefully once more.",
+                    step1: "Read through the assistant's system prompt carefully once more.",
                     step2: "Consider whether your assistant falls into one of the areas described.",
-                    step3: "Adjust the prompt if it describes a critical task or is phrased ambiguously.",
+                    step3: "Adjust the assistant's system prompt if it describes a critical task or is phrased ambiguously.",
                     step4: "If you are unsure, contact those responsible for MUCGPT.",
                     outro: "Even without a warning, you remain responsible yourself: when saving, you confirm that the intended use of the assistant does not correspond to any high-risk use case that is impermissible in MUCGPT."
                 },
@@ -1293,11 +1293,11 @@ export const tutorialsTranslations = {
                         "Wenn'st an Assistentn erstöist oder bearbeitst, kannst du den System-Prompt im Editor prüfen lassn. MUCGPT suacht dabei noch Formulierunga, de af an möglicherweis unzulässign Hochrisiko-Anwendungsfoi in oam vo de vier beschriebne Bereiche hideitn. As Ergebnis siagst du direkt im Editor.",
                     disclaimer_title: "Wichtig:",
                     disclaimer:
-                        "De Prüfung is a Orientierungshüif und koa rechtliche oder obschließende Bewertung. Sie berücksichtigt bloß de hinterlegtn Assistentnanweisunga und ko Hinweise übersehng oder z'vorsichtig sei. Entscheidend bleibt da tatsächliche vorgsehne Eisatz.",
+                        "De Prüfung is a Orientierungshüif und koa rechtliche oder obschließende Bewertung. Sie berücksichtigt bloß den hinterlegten System-Prompt vom Assistentn und ko Hinweise übersehng oder z'vorsichtig sei. Entscheidend bleibt da tatsächliche vorgsehne Eisatz.",
                     steps_title: "Wenn de Prüfung an möglichn Hochrisiko-Anwendungsfoi mejdt:",
-                    step1: "Lies dein System-Prompt no amoi aufmerksam durch.",
+                    step1: "Lies den System-Prompt vom Assistentn no amoi aufmerksam durch.",
                     step2: "Überleg da, ob dei Assistent in oan vo de beschriebne Bereiche fäjt.",
-                    step3: "Pass an Prompt o, wenn er a kritische Aufgab beschreibt oder missverständlich formuliert is.",
+                    step3: "Pass den System-Prompt vom Assistentn o, wenn er a kritische Aufgab beschreibt oder missverständlich formuliert is.",
                     step4: "Bist da unsicher, wend di an de Verantwortlichn für MUCGPT.",
                     outro: "A ohne Hinweis bleibst du selba verantwortlich: Beim Speichern bestätigst du, dass da vorgsehne Eisatz vo deim Assistentn koam in MUCGPT unzulässign Hochrisiko-Anwendungsfoi entspricht."
                 },
@@ -1804,11 +1804,11 @@ export const tutorialsTranslations = {
                         "Lorsque vous créez ou modifiez un assistant, vous pouvez faire vérifier l'invite système dans l'éditeur. MUCGPT recherche à cette occasion des formulations qui indiquent un cas d'usage à haut risque potentiellement non autorisé dans l'un des quatre domaines décrits. Vous voyez le résultat directement dans l'éditeur.",
                     disclaimer_title: "Important :",
                     disclaimer:
-                        "La vérification est une aide à l'orientation et non une évaluation juridique ou définitive. Elle ne prend en compte que les instructions d'assistant enregistrées et peut passer à côté d'indices ou se montrer trop prudente. Ce qui est déterminant reste l'utilisation réellement prévue.",
+                        "La vérification est une aide à l'orientation et non une évaluation juridique ou définitive. Elle ne prend en compte que le prompt système enregistré de l'assistant et peut passer à côté d'indices ou se montrer trop prudente. Ce qui est déterminant reste l'utilisation réellement prévue.",
                     steps_title: "Si la vérification signale un cas d'usage à haut risque possible :",
-                    step1: "Relisez attentivement votre invite système.",
+                    step1: "Relisez attentivement le prompt système de l'assistant.",
                     step2: "Réfléchissez à la question de savoir si votre assistant relève de l'un des domaines décrits.",
-                    step3: "Adaptez l'invite si elle décrit une tâche critique ou si elle est formulée de manière ambiguë.",
+                    step3: "Adaptez le prompt système de l'assistant si celui-ci décrit une tâche critique ou est formulé de manière ambiguë.",
                     step4: "Si vous n'êtes pas sûr, adressez-vous aux responsables de MUCGPT.",
                     outro: "Même sans avertissement, vous restez vous-même responsable : lors de l'enregistrement, vous confirmez que l'utilisation prévue de l'assistant ne correspond à aucun cas d'usage à haut risque non autorisé dans MUCGPT."
                 },
@@ -2301,11 +2301,11 @@ export const tutorialsTranslations = {
                         "Коли Ви створюєте або редагуєте асистента, Ви можете перевірити системний промпт у редакторі. При цьому MUCGPT шукає формулювання, які вказують на можливо недозволений сценарій використання з високим ризиком в одній із чотирьох описаних сфер. Результат Ви бачите безпосередньо в редакторі.",
                     disclaimer_title: "Важливо:",
                     disclaimer:
-                        "Перевірка є орієнтиром, а не юридичною чи остаточною оцінкою. Вона враховує лише збережені інструкції асистента й може пропустити ознаки або бути надто обережною. Вирішальним залишається фактичне передбачене використання.",
+                        "Перевірка є орієнтиром, а не юридичною чи остаточною оцінкою. Вона враховує лише збережений системний промпт асистента й може пропустити ознаки або бути надто обережною. Вирішальним залишається фактичне передбачене використання.",
                     steps_title: "Якщо перевірка повідомляє про можливий сценарій використання з високим ризиком:",
-                    step1: "Ще раз уважно прочитайте свій системний промпт.",
+                    step1: "Ще раз уважно прочитайте системний промпт асистента.",
                     step2: "Подумайте, чи належить Ваш асистент до однієї з описаних сфер.",
-                    step3: "Скоригуйте промпт, якщо він описує критичне завдання або сформульований неоднозначно.",
+                    step3: "Скоригуйте системний промпт асистента, якщо він описує критичне завдання або сформульований неоднозначно.",
                     step4: "Якщо Ви не впевнені, зверніться до відповідальних за MUCGPT.",
                     outro: "Навіть без попередження Ви самі залишаєтеся відповідальними: під час збереження Ви підтверджуєте, що передбачене використання Вашого асистента не відповідає жодному недозволеному в MUCGPT сценарію використання з високим ризиком."
                 },

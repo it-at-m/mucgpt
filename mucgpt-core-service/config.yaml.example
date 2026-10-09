@@ -83,6 +83,9 @@ MODELS:
       input_cost_per_token: 0.00000009
       output_cost_per_token: 0.00000036
       supports_reasoning: false
+      # Defaults to true. Set false for models that reject temperature (e.g. GPT-5/GPT-6).
+      # This explicit setting controls filtering; model names/profiles are not consulted.
+      supports_temperature: true
       knowledge_cut_off: "2024-07-01"
 
 # SSO Settings (optional - nested under SSO key)

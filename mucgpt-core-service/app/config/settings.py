@@ -57,6 +57,7 @@ class ModelInfo(BaseModel):
     input_cost_per_token: Decimal | None = None
     output_cost_per_token: Decimal | None = None
     supports_reasoning: bool | None = None
+    supports_temperature: bool = True
     knowledge_cut_off: str | None = None
     # Creativity to temperature mappings
     creativity_low_temperature: float | None = None
@@ -138,6 +139,7 @@ class ModelsConfig(BaseModel):
             "input_cost_per_token",
             "output_cost_per_token",
             "supports_reasoning",
+            "supports_temperature",
             "knowledge_cut_off",
             "creativity_low_temperature",
             "creativity_medium_temperature",
@@ -279,6 +281,16 @@ class ModelsConfig(BaseModel):
     def supports_reasoning(self, value: bool | None) -> None:
         """Stores the value in the nested model info."""
         self.model_info.supports_reasoning = value
+
+    @property
+    def supports_temperature(self) -> bool:
+        """Delegates the configured temperature capability to the model info."""
+        return self.model_info.supports_temperature
+
+    @supports_temperature.setter
+    def supports_temperature(self, value: bool) -> None:
+        """Stores the configured temperature capability in the model info."""
+        self.model_info.supports_temperature = value
 
     @property
     def knowledge_cut_off(self) -> str | None:

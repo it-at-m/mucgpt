@@ -13,6 +13,8 @@ import { CommunityAssistantStorageService } from "../../service/communityassista
 import { ASSISTANT_STORE, COMMUNITY_ASSISTANT_STORE, CREATIVITY_LOW } from "../../constants";
 import { useGlobalToastContext } from "../../components/GlobalToastHandler/GlobalToastContext";
 import { DiscoveryCard, DiscoveryCardSkeleton } from "../../components/DiscoveryCard";
+import { FollowUpActionModel } from "../../components/FollowUpAction";
+import { StarterPromptModel } from "../../components/StarterPrompt";
 import { OwnerMetadataLink, getPrimaryOwnerDetails } from "../../components/OwnerMetadataLink/OwnerMetadataLink";
 import { AssistantDetailsSidebar, AssistantCardData } from "../../components/AssistantDetailsSidebar/AssistantDetailsSidebar";
 import { CloseConfirmationDialog } from "../../components/AssistantDialogs/shared/CloseConfirmationDialog";
@@ -40,11 +42,14 @@ const assistantStorageService = new AssistantStorageService(ASSISTANT_STORE);
 const asArray = <T,>(value: unknown): T[] => (Array.isArray(value) ? value : []);
 const isToolBase = (value: unknown): value is ToolBase =>
     typeof value === "object" && value !== null && typeof (value as ToolBase).id === "string" && (value as ToolBase).id !== "";
-const isPromptEntry = (value: unknown): value is { label: string; prompt: string; text: string; value: string } =>
+const isQuickPrompt = (value: unknown): value is FollowUpActionModel =>
     typeof value === "object" &&
     value !== null &&
     typeof (value as { label?: unknown }).label === "string" &&
-    typeof (value as { prompt?: unknown }).prompt === "string" &&
+    typeof (value as { prompt?: unknown }).prompt === "string";
+const isExample = (value: unknown): value is StarterPromptModel =>
+    typeof value === "object" &&
+    value !== null &&
     typeof (value as { text?: unknown }).text === "string" &&
     typeof (value as { value?: unknown }).value === "string";
 const isAssistantResponse = (data: AssistantResponse | CommunityAssistantSnapshot): data is AssistantResponse =>
@@ -253,7 +258,7 @@ const Discovery = () => {
 
                 const quickPrompts = asArray<unknown>(importedData.quick_prompts);
                 const examples = asArray<unknown>(importedData.examples);
-                if (!quickPrompts.every(isPromptEntry) || !examples.every(isPromptEntry)) {
+                if (!quickPrompts.every(isQuickPrompt) || !examples.every(isExample)) {
                     throw new Error(t("components.import_assistant.import_invalid_format"));
                 }
 

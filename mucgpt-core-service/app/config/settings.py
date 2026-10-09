@@ -52,15 +52,12 @@ class ModelInfo(BaseModel):
     max_output_tokens: PositiveInt | None = None
     max_input_tokens: PositiveInt | None = None
     description: str | None = None
+    short_description: str | None = None
     internal_task_model_strength: InternalTaskModelStrength | None = None
     input_cost_per_token: Decimal | None = None
     output_cost_per_token: Decimal | None = None
-    supports_function_calling: bool | None = None
     supports_reasoning: bool | None = None
     supports_temperature: bool = True
-    supports_vision: bool | None = None
-    litellm_provider: str | None = None
-    inference_location: str | None = None
     knowledge_cut_off: str | None = None
     # Creativity to temperature mappings
     creativity_low_temperature: float | None = None
@@ -137,15 +134,12 @@ class ModelsConfig(BaseModel):
             "max_output_tokens",
             "max_input_tokens",
             "description",
+            "short_description",
             "internal_task_model_strength",
             "input_cost_per_token",
             "output_cost_per_token",
-            "supports_function_calling",
             "supports_reasoning",
             "supports_temperature",
-            "supports_vision",
-            "litellm_provider",
-            "inference_location",
             "knowledge_cut_off",
             "creativity_low_temperature",
             "creativity_medium_temperature",
@@ -184,6 +178,7 @@ class ModelsConfig(BaseModel):
 
         info = model.model_info
         info.description = (info.description or "").strip() or None
+        info.short_description = (info.short_description or "").strip() or None
 
         if _has_complete_metadata(info):
             return model
@@ -248,6 +243,16 @@ class ModelsConfig(BaseModel):
         self.model_info.description = (value or "").strip() or None
 
     @property
+    def short_description(self) -> str | None:
+        """Delegates the short model description to the nested model info."""
+        return self.model_info.short_description
+
+    @short_description.setter
+    def short_description(self, value: str | None) -> None:
+        """Stores the value in the nested model info."""
+        self.model_info.short_description = (value or "").strip() or None
+
+    @property
     def input_cost_per_token(self) -> Decimal | None:
         """Delegates input token cost to the nested model info."""
         return self.model_info.input_cost_per_token
@@ -268,16 +273,6 @@ class ModelsConfig(BaseModel):
         self.model_info.output_cost_per_token = value
 
     @property
-    def supports_function_calling(self) -> bool | None:
-        """Delegates the function-calling capability flag to the model info."""
-        return self.model_info.supports_function_calling
-
-    @supports_function_calling.setter
-    def supports_function_calling(self, value: bool | None) -> None:
-        """Stores the value in the nested model info."""
-        self.model_info.supports_function_calling = value
-
-    @property
     def supports_reasoning(self) -> bool | None:
         """Delegates the reasoning capability flag to the nested model info."""
         return self.model_info.supports_reasoning
@@ -296,36 +291,6 @@ class ModelsConfig(BaseModel):
     def supports_temperature(self, value: bool) -> None:
         """Stores the configured temperature capability in the model info."""
         self.model_info.supports_temperature = value
-
-    @property
-    def supports_vision(self) -> bool | None:
-        """Delegates the vision capability flag to the nested model info."""
-        return self.model_info.supports_vision
-
-    @supports_vision.setter
-    def supports_vision(self, value: bool | None) -> None:
-        """Stores the value in the nested model info."""
-        self.model_info.supports_vision = value
-
-    @property
-    def litellm_provider(self) -> str | None:
-        """Delegates the LiteLLM provider name to the nested model info."""
-        return self.model_info.litellm_provider
-
-    @litellm_provider.setter
-    def litellm_provider(self, value: str | None) -> None:
-        """Stores the value in the nested model info."""
-        self.model_info.litellm_provider = value
-
-    @property
-    def inference_location(self) -> str | None:
-        """Delegates the inference location to the nested model info."""
-        return self.model_info.inference_location
-
-    @inference_location.setter
-    def inference_location(self, value: str | None) -> None:
-        """Stores the value in the nested model info."""
-        self.model_info.inference_location = value
 
     @property
     def knowledge_cut_off(self) -> str | None:
@@ -708,25 +673,8 @@ def _apply_model_info(model: ModelsConfig, entry: dict[str, Any]) -> None:
             )
         )
 
-    if info.supports_function_calling is None:
-        info.supports_function_calling = _coerce_bool(
-            model_info.get("supports_function_calling")
-        )
-
     if info.supports_reasoning is None:
         info.supports_reasoning = _coerce_bool(model_info.get("supports_reasoning"))
-
-    if info.supports_vision is None:
-        info.supports_vision = _coerce_bool(model_info.get("supports_vision"))
-
-    if info.litellm_provider is None:
-        info.litellm_provider = _first_non_null(
-            model_info.get("litellm_provider"),
-            entry.get("litellm_provider"),
-        )
-
-    if info.inference_location is None:
-        info.inference_location = model_info.get("inference_location")
 
     if info.knowledge_cut_off is None:
         info.knowledge_cut_off = _coerce_str(
@@ -738,6 +686,9 @@ def _apply_model_info(model: ModelsConfig, entry: dict[str, Any]) -> None:
 
     if not (info.description or "").strip():
         info.description = _build_description(entry, model.llm_name)
+
+    if not (info.short_description or "").strip():
+        info.short_description = _coerce_str(model_info.get("short_description"))
 
 
 def _coerce_positive_int(value: Any) -> PositiveInt | None:
@@ -811,14 +762,11 @@ def _build_description(entry: dict[str, Any], fallback_name: str) -> str:
     parts: list[str] = []
     base_model = model_info.get("base_model")
     version = model_info.get("version")
-    inference_location = model_info.get("inference_location")
 
     if base_model:
         parts.append(str(base_model))
     if version:
         parts.append(f"version {version}")
-    if inference_location:
-        parts.append(f"location {inference_location}")
 
     if parts:
         description = f"{description} ({', '.join(parts)})"

@@ -42,13 +42,10 @@ MODELS:
       max_output_tokens: 16384
       max_input_tokens: 128000
       description: "<description>"
+      short_description: "<one-line summary>"
       input_cost_per_token: 0.00000009
       output_cost_per_token: 0.00000036
-      supports_function_calling: true
       supports_reasoning: false
-      supports_vision: true
-      litellm_provider: "<provider>"
-      inference_location: "<region>"
       knowledge_cut_off: "2024-07-01"
 ```
 
@@ -219,12 +216,11 @@ MUCGPT_CORE_LANGFUSE__SECRET_KEY=sk-... # → LANGFUSE: { SECRET_KEY: "sk-..." }
 - `auto_enrich_from_model_info_endpoint`: If `true` (default), missing metadata is fetched from `<endpoint>/model/info` (as it is available in litellm). Set to `false` to require manual values.
 - `max_output_tokens`: Maximum number of tokens the model can generate in a response.
 - `max_input_tokens`: Maximum number of tokens accepted as input.
-- `description`: A human-readable description of the model.
+- `description`: A human-readable description of the model, shown in the model picker.
+- `short_description`: One-line summary of what the model is best suited for, shown in the model picker.
 - `knowledge_cut_off`: Optional ISO date string describing the model's latest training data cutoff.
 - `input_cost_per_token` / `output_cost_per_token`: Optional pricing hints per token.
-- `supports_function_calling`, `supports_reasoning`, `supports_vision`: Capability flags advertised to the UI.
-- `litellm_provider`: Provider identifier reported by LiteLLM.
-- `inference_location`: Region or deployment location for the model.
+- `supports_reasoning`: Whether the model supports reasoning. Only these models receive the requested `reasoning_effort`.
 - `creativity_{low,medium,high}_temperature`: Map abstract creativity levels to specific `temperature` values (0.0 - 1.0 or higher depending on model). Defaults are low=0.0, medium=0.5, high=1.0.
 
 Replace the placeholder values with your actual model configuration.

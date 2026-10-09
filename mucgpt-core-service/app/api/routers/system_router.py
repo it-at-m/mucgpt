@@ -52,13 +52,10 @@ async def get_config(user_info=Depends(authenticate_user)) -> ConfigResponse:
             context_warning_threshold_percent=model.context_warning_threshold_percent,
             context_critical_threshold_percent=model.context_critical_threshold_percent,
             description=model.description,
+            short_description=model.short_description,
             input_cost_per_token=model.input_cost_per_token,
             output_cost_per_token=model.output_cost_per_token,
-            supports_function_calling=model.supports_function_calling,
             supports_reasoning=model.supports_reasoning,
-            supports_vision=model.supports_vision,
-            litellm_provider=model.litellm_provider,
-            inference_location=model.inference_location,
             knowledge_cut_off=model.knowledge_cut_off,
         )
         response.models.append(dto)

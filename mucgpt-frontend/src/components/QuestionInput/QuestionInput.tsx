@@ -7,7 +7,7 @@ import styles from "./QuestionInput.module.css";
 import { useAutoGrowTextarea } from "./useAutoGrowTextarea";
 import { Button as SubtleButton } from "../../ui/Button";
 import { uploadFileApi } from "../../api/core-client";
-import { ToolListResponse } from "../../api/models";
+import { Model, ToolListResponse } from "../../api/models";
 import { useConfigContext } from "../../context/ConfigContext";
 import { upsertParsedDocumentFromUpload } from "../../service/parsedDocumentStorage";
 import { ContextManagerDialog, UploadedData, createUploadedData, getDataSignature, getFileSignature } from "../ContextManagerDialog/ContextManagerDialog";
@@ -15,6 +15,7 @@ import { ChatDisclaimer } from "../ChatDisclaimer";
 import { ChatToolSelector } from "../ChatToolSelector/ChatToolSelector";
 import { ChatUsageIndicator, type ChatUsageSummary } from "../ChatUsageIndicator/ChatUsageIndicator";
 import { ChatUsageMessageBar } from "../ChatUsageIndicator/ChatUsageMessageBar";
+import { LLMSelector } from "../LLMSelector/LLMSelector";
 import { getContextUsagePercent, getUsageCriticalThreshold, getUsageWarningThreshold } from "../ChatUsageIndicator/chatUsage";
 import { MicrophoneButton } from "../MicrophoneButton/MicrophoneButton";
 import { useTranscription } from "../TranscriptionSettings/TranscriptionSettingsContext";
@@ -44,6 +45,10 @@ interface Props {
     onStartNewChat?: () => void;
     usageConversationKey?: string;
     hideDisclaimer?: boolean;
+    llmOptions?: Model[];
+    selectedLLM?: string;
+    onLLMSelectionChange?: (nextLLM: string) => void;
+    llmLockedByAssistant?: boolean;
 }
 
 export const QuestionInput = ({
@@ -68,7 +73,11 @@ export const QuestionInput = ({
     usage,
     onStartNewChat,
     usageConversationKey,
-    hideDisclaimer = false
+    hideDisclaimer = false,
+    llmOptions,
+    selectedLLM,
+    onLLMSelectionChange,
+    llmLockedByAssistant
 }: Props) => {
     const { t } = useTranslation();
     const config = useConfigContext();
@@ -502,6 +511,14 @@ export const QuestionInput = ({
                                 autoOpenNotice={isUsagePopoverOpen}
                                 onStartNewChat={onStartNewChat}
                                 onDismissNotice={() => setIsUsagePopoverOpen(false)}
+                            />
+                        )}
+                        {llmOptions && selectedLLM && onLLMSelectionChange && (
+                            <LLMSelector
+                                onSelectionChange={onLLMSelectionChange}
+                                selectedLLM={selectedLLM}
+                                options={llmOptions}
+                                lockedByAssistant={llmLockedByAssistant}
                             />
                         )}
                         {allowTranscription && onTranscription && transcriptionReady && (

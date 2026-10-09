@@ -99,15 +99,12 @@ export interface Model {
     context_warning_threshold_percent?: number;
     context_critical_threshold_percent?: number;
     description?: string | null;
+    short_description?: string | null;
     max_output_tokens?: number | null;
     knowledge_cut_off?: string | null;
     input_cost_per_token?: number | null;
     output_cost_per_token?: number | null;
-    supports_function_calling?: boolean | null;
     supports_reasoning?: boolean | null;
-    supports_vision?: boolean | null;
-    litellm_provider?: string | null;
-    inference_location?: string | null;
 }
 
 export interface Labels {

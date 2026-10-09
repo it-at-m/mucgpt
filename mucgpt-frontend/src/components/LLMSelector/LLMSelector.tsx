@@ -1,405 +1,236 @@
-import { useState, useEffect, useCallback, useMemo } from "react";
-import { Model } from "../../api";
-import { Checkmark24Filled, Money24Filled, MoneyRegular, ChevronDown20Regular } from "@fluentui/react-icons";
-import styles from "./LLMSelector.module.css";
-import { Dialog, DialogTrigger, DialogSurface, DialogTitle, DialogBody, DialogActions, DialogContent, Button, Tooltip, Card } from "@fluentui/react-components";
-import React from "react";
-import { InfoRegular } from "@fluentui/react-icons";
+import {
+    Body1,
+    Body1Strong,
+    makeStyles,
+    Menu,
+    MenuGroup,
+    MenuGroupHeader,
+    MenuList,
+    MenuPopover,
+    MenuTrigger,
+    tokens,
+    Tooltip,
+    typographyStyles,
+    type MenuProps
+} from "@fluentui/react-components";
+import { ChevronDown16Regular, Info16Regular } from "@fluentui/react-icons";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
+
+import styles from "./LLMSelector.module.css";
+import { Model } from "../../api";
+import { Button } from "../../ui/Button";
+import { MenuItemRadio } from "../../ui/MenuItem";
 
 interface Props {
     onSelectionChange: (nextLLM: string) => void;
-    defaultLLM: string;
+    selectedLLM: string;
     options: Model[];
-    compact?: boolean;
+    /** Only the selected model is offered; all options remain the basis for the cost and context ratings. */
+    lockedByAssistant?: boolean;
 }
 
-const TOKENS_PER_MILLION = 1_000_000;
+const MODEL_GROUP = "model";
+const RATING_STEPS = 3;
+const VIEWPORT_GUTTER = 16;
 
-const parseCostPerToken = (value: unknown): number | null => {
+// Fluent caps the menu popover width; the two-column picker sizes itself to its content instead.
+const useStyles = makeStyles({
+    popover: {
+        width: "max-content",
+        maxWidth: `calc(100vw - ${2 * VIEWPORT_GUTTER}px)`,
+        padding: 0,
+        overflow: "hidden"
+    },
+    // Fluent's default menu subtext (10px) is smaller than any other text in the picker.
+    subText: typographyStyles.caption1,
+    // Quieter than the subtle button's default text so the model name doesn't compete with the input.
+    trigger: {
+        color: tokens.colorNeutralForeground3,
+        fontWeight: tokens.fontWeightRegular,
+        // The chevron already carries its own whitespace; full button padding leaves a wide gap to the next action.
+        paddingRight: tokens.spacingHorizontalSNudge
+    }
+});
+
+const toNumber = (value: unknown): number | null => {
     if (value === null || value === undefined) return null;
     const numeric = typeof value === "number" ? value : Number(value);
     return Number.isFinite(numeric) ? numeric : null;
 };
 
-const averageCostPerToken = (input: number | null, output: number | null): number | null => {
-    if (input !== null && output !== null) {
-        return (input + output) / 2;
-    }
+const getAveragePrice = (model: Model): number | null => {
+    const input = toNumber(model.input_cost_per_token);
+    const output = toNumber(model.output_cost_per_token);
+    if (input !== null && output !== null) return (input + output) / 2;
     return input ?? output;
 };
 
-const formatCostPerMillion = (costPerToken: number | null, fallbackLabel: string, tokenPluralLabel: string): string => {
-    if (costPerToken === null) return fallbackLabel;
-    const perMillion = costPerToken * TOKENS_PER_MILLION;
-    if (!Number.isFinite(perMillion)) return fallbackLabel;
-    const absValue = Math.abs(perMillion);
-    const maximumFractionDigits = absValue >= 100 ? 2 : absValue >= 10 ? 3 : absValue >= 1 ? 4 : 6;
-    const minimumFractionDigits = absValue >= 1 ? 2 : 4;
-    return `${perMillion.toLocaleString(undefined, {
-        minimumFractionDigits,
-        maximumFractionDigits
-    })}$ / 1M ${tokenPluralLabel}`;
+// Rates a value from 1 to RATING_STEPS relative to the other offered models. Prices and context sizes differ
+// by factors rather than fixed amounts, so the scale is logarithmic: an outlier must not squash the others.
+const getRelativeRating = (value: number | null, values: number[]): number | null => {
+    if (value === null || value <= 0) return null;
+    const logValues = values.filter(candidate => candidate > 0).map(Math.log);
+    const min = Math.min(...logValues);
+    const max = Math.max(...logValues);
+    if (max === min) return null;
+    return Math.round(((Math.log(value) - min) / (max - min)) * (RATING_STEPS - 1)) + 1;
 };
 
-const formatTokenCount = (value: unknown, fallbackLabel: string, tokenLabel: string, tokenPluralLabel: string): string => {
-    if (value === null || value === undefined) return fallbackLabel;
-    const numeric = typeof value === "number" ? value : Number(value);
-    if (!Number.isFinite(numeric)) return fallbackLabel;
-    const formatted = numeric.toLocaleString(undefined);
-    const isPlural = Math.abs(numeric) !== 1;
-    return `${formatted} ${isPlural ? tokenPluralLabel : tokenLabel}`;
-};
-
-const formatKnowledgeDate = (value: string | null | undefined, fallbackLabel: string): string => {
-    if (!value) return fallbackLabel;
-    const trimmed = value.trim();
-    if (!trimmed) return fallbackLabel;
+const formatKnowledgeDate = (value: string | null | undefined, language: string): string | undefined => {
+    const trimmed = value?.trim();
+    if (!trimmed) return undefined;
     if (/^\d{4}-\d{2}-\d{2}/.test(trimmed)) {
         const date = new Date(trimmed);
         if (!Number.isNaN(date.getTime())) {
-            return new Intl.DateTimeFormat(undefined, {
-                day: "2-digit",
-                month: "2-digit",
-                year: "numeric"
+            // ISO dates parse as UTC midnight; formatting in UTC keeps "2024-07-01" in July for every user timezone.
+            return new Intl.DateTimeFormat(language === "BA" ? "de-DE" : language, {
+                month: "long",
+                year: "numeric",
+                timeZone: "UTC"
             }).format(date);
         }
     }
     return trimmed;
 };
 
-interface SectionHeadingProps {
-    title: React.ReactNode;
-    withSpacing?: boolean;
-    className?: string;
-    stacked?: boolean;
-}
+const getDisplayName = (llmName: string) => llmName.split("/").pop() || llmName;
 
-const SectionHeading = ({ title, withSpacing = false, className, stacked = true }: SectionHeadingProps) => {
-    const classes = [styles.sectionTitle, withSpacing ? styles.sectionTitleSpacing : "", stacked ? styles.sectionTitleStacked : "", className]
-        .filter(Boolean)
-        .join(" ");
-    return <strong className={classes}>{title}</strong>;
-};
+const RatingMeter = ({ value, label }: { value: number; label: string }) => (
+    <span className={styles.meter} role="img" aria-label={label}>
+        {Array.from({ length: RATING_STEPS }, (_, index) => (
+            <span key={index} className={styles.meterStep} data-active={index < value} />
+        ))}
+    </span>
+);
 
-interface InfoRowProps {
-    label: React.ReactNode;
-    value: React.ReactNode;
-    tooltip?: React.ReactNode;
-    className?: string;
-    useDefaultSpacing?: boolean;
-    showSpacer?: boolean;
-}
+const Fact = ({ label, children }: { label: ReactNode; children: ReactNode }) => (
+    <>
+        <dt className={styles.factLabel}>{label}</dt>
+        <dd className={styles.factValue}>{children}</dd>
+    </>
+);
 
-const InfoRow = ({ label, value, tooltip, className, useDefaultSpacing = true, showSpacer = true }: InfoRowProps) => {
-    const containerClass = [useDefaultSpacing ? styles.infoRow : undefined, className].filter(Boolean).join(" ") || undefined;
+export const LLMSelector = ({ onSelectionChange, selectedLLM, options, lockedByAssistant = false }: Props) => {
+    const { t, i18n } = useTranslation();
+    const classes = useStyles();
+    const [open, setOpen] = useState(false);
+    const [previewLLM, setPreviewLLM] = useState(selectedLLM);
+    const itemRefs = useRef(new Map<string, HTMLDivElement>());
 
-    return (
-        <div className={containerClass}>
-            <strong className={styles.inlineLabel}>{label}</strong>
-            {tooltip}
-            {showSpacer && <span className={styles.inlineSpacer} aria-hidden="true" />}
-            {value}
-        </div>
-    );
-};
+    const priceValues = useMemo(() => options.map(getAveragePrice).filter((value): value is number => value !== null), [options]);
+    const contextValues = useMemo(() => options.map(model => toNumber(model.max_input_tokens)).filter((value): value is number => value !== null), [options]);
 
-export const LLMSelector = ({ onSelectionChange, defaultLLM, options, compact }: Props) => {
-    const [selectedModel, setSelectedModel] = useState(defaultLLM);
-
-    const { t } = useTranslation();
-
-    const handleSelectModel = useCallback(
-        (modelName: string) => {
-            setSelectedModel(modelName);
-            onSelectionChange(modelName);
-        },
-        [onSelectionChange]
-    );
-
+    // Fluent focuses the first item on open; start on the selected model so keyboard users and the details panel agree.
     useEffect(() => {
-        setSelectedModel(defaultLLM);
-    }, [defaultLLM]);
+        if (!open) return;
+        const frame = requestAnimationFrame(() => itemRefs.current.get(selectedLLM)?.focus());
+        return () => cancelAnimationFrame(frame);
+    }, [open, selectedLLM]);
 
-    const displayName = useMemo(() => {
-        const parts = selectedModel.split("/");
-        return parts[parts.length - 1];
-    }, [selectedModel]);
+    const handleOpenChange: MenuProps["onOpenChange"] = (_, data) => {
+        setOpen(data.open);
+        if (data.open) setPreviewLLM(selectedLLM);
+    };
 
-    // compute numeric min/max prices from options once
-    const [minPrice, maxPrice] = useMemo(() => {
-        let min = Number.POSITIVE_INFINITY;
-        let max = Number.NEGATIVE_INFINITY;
+    const handleCheckedValueChange: MenuProps["onCheckedValueChange"] = (_, data) => {
+        const nextLLM = data.checkedItems[0];
+        if (nextLLM && nextLLM !== selectedLLM) onSelectionChange(nextLLM);
+    };
 
-        for (const o of options) {
-            const input = parseCostPerToken(o.input_cost_per_token);
-            const output = parseCostPerToken(o.output_cost_per_token);
-            const price = averageCostPerToken(input, output);
-
-            if (price === null) continue;
-            if (price < min) min = price;
-            if (price > max) max = price;
-        }
-
-        if (min === Number.POSITIVE_INFINITY) {
-            // fallback if no valid prices found
-            return [0, 0];
-        }
-        return [min, max];
-    }, [options]);
-
-    const [minContextTokens, maxContextTokens] = useMemo(() => {
-        let min = Number.POSITIVE_INFINITY;
-        let max = Number.NEGATIVE_INFINITY;
-
-        for (const o of options) {
-            const value = Number(o.max_input_tokens ?? NaN);
-            if (!Number.isFinite(value)) continue;
-            if (value < min) min = value;
-            if (value > max) max = value;
-        }
-
-        if (min === Number.POSITIVE_INFINITY) {
-            return [0, 0];
-        }
-
-        return [min, max];
-    }, [options]);
-
-    const maxOutputDesc = t("components.llmSelector.maxOutput_description");
-    const maxInputDesc = t("components.llmSelector.maxInput_description");
-    const inputPriceDesc = t("components.llmSelector.inputPrice__description");
-    const outputPriceDesc = t("components.llmSelector.outputPrice_description");
+    const visibleModels = lockedByAssistant ? options.filter(model => model.llm_name === selectedLLM) : options;
+    const previewModel = visibleModels.find(model => model.llm_name === previewLLM) ?? visibleModels.find(model => model.llm_name === selectedLLM);
     const title = t("components.llmSelector.title");
-    const notAvailable = t("components.llmSelector.notAvailable", { defaultValue: "Nicht verfügbar" });
-    const capabilityReasoning = t("components.llmSelector.capability_reasoning", { defaultValue: "Reasoning" });
-    const capabilityFunctionCalling = t("components.llmSelector.capability_functionCalling", { defaultValue: "Function calling" });
-    const capabilityVision = t("components.llmSelector.capability_vision", { defaultValue: "Vision" });
-    const providerLabel = t("components.llmSelector.provider", { defaultValue: "Provider" });
-    const regionLabel = t("components.llmSelector.region", { defaultValue: "Region" });
-    const tokenLabel = t("components.llmSelector.token", { defaultValue: "Token" });
-    const tokenPluralLabel = t("components.llmSelector.tokens", { defaultValue: "Tokens" });
-    const knowledgeTooltipText = t("components.llmSelector.knowledge_description");
-    const originHeading = t("components.llmSelector.origin", { defaultValue: "Herkunft" });
 
-    // derive numeric rating (1..3) from item.price relative to min/max price
-    const getPriceRating = (price?: number | string): number => {
-        const p = Number(price ?? NaN);
-        if (!Number.isFinite(p)) return 1;
-        if (maxPrice === minPrice) {
-            // all prices equal -> show full (3) to indicate parity
-            return 3;
-        }
-        const range = maxPrice - minPrice;
-        const ratio = (p - minPrice) / range;
-        const v = Math.round(ratio * 2) + 1;
-        return Math.max(1, Math.min(3, v));
+    const renderDetails = (model: Model, active: boolean) => {
+        const description = model.description?.trim();
+        const knowledge = formatKnowledgeDate(model.knowledge_cut_off, i18n.resolvedLanguage || i18n.language);
+        const priceRating = getRelativeRating(getAveragePrice(model), priceValues);
+        const contextRating = getRelativeRating(toNumber(model.max_input_tokens), contextValues);
+        const ratingLabel = (label: string, value: number) => `${label}: ${t("components.llmSelector.rating", { value, max: RATING_STEPS })}`;
+
+        return (
+            <div key={model.llm_name} className={styles.details} data-active={active}>
+                <Body1Strong>{getDisplayName(model.llm_name)}</Body1Strong>
+                {(knowledge || priceRating !== null || contextRating !== null) && (
+                    <dl className={styles.facts}>
+                        {priceRating !== null && (
+                            <Fact label={t("components.llmSelector.cost")}>
+                                <RatingMeter value={priceRating} label={ratingLabel(t("components.llmSelector.cost"), priceRating)} />
+                            </Fact>
+                        )}
+                        {contextRating !== null && (
+                            <Fact
+                                label={
+                                    <Tooltip content={t("components.llmSelector.context_description")} relationship="description" positioning="above" withArrow>
+                                        <span className={styles.factHint}>
+                                            {t("components.llmSelector.context")}
+                                            <Info16Regular className={styles.factHintIcon} />
+                                        </span>
+                                    </Tooltip>
+                                }
+                            >
+                                <RatingMeter value={contextRating} label={ratingLabel(t("components.llmSelector.context"), contextRating)} />
+                            </Fact>
+                        )}
+                        {knowledge && <Fact label={t("components.llmSelector.knowledge")}>{knowledge}</Fact>}
+                    </dl>
+                )}
+                {description && <Body1 className={styles.description}>{description}</Body1>}
+            </div>
+        );
     };
 
-    const getContextRating = (tokens?: number | string | null): number => {
-        const tokenCount = Number(tokens ?? NaN);
-        if (!Number.isFinite(tokenCount)) return 1;
-        if (maxContextTokens === minContextTokens) {
-            return maxContextTokens > 0 ? 3 : 1;
-        }
-        const range = maxContextTokens - minContextTokens;
-        const ratio = (tokenCount - minContextTokens) / range;
-        const v = Math.round(ratio * 2) + 1;
-        return Math.max(1, Math.min(3, v));
-    };
+    const modelItems = visibleModels.map(model => {
+        const shortDescription = model.short_description?.trim();
+        return (
+            <MenuItemRadio
+                key={model.llm_name}
+                ref={element => {
+                    if (element) itemRefs.current.set(model.llm_name, element);
+                    else itemRefs.current.delete(model.llm_name);
+                }}
+                name={MODEL_GROUP}
+                value={model.llm_name}
+                subText={shortDescription ? { children: shortDescription, className: classes.subText } : undefined}
+                onFocus={() => setPreviewLLM(model.llm_name)}
+            >
+                {getDisplayName(model.llm_name)}
+            </MenuItemRadio>
+        );
+    });
 
     return (
-        <div className={compact ? `${styles.container} ${styles.compact}` : styles.container}>
-            <Dialog modalType="modal">
-                <DialogTrigger disableButtonEnhancement>
-                    <Tooltip content={title} relationship="description" positioning="after">
-                        <button type="button" className={`${styles.container} ${styles.buttonContainer}`}>
-                            <span className={styles.modelName}>{displayName}</span>
-                            <ChevronDown20Regular className={styles.iconLeftMargin} />
-                        </button>
-                    </Tooltip>
-                </DialogTrigger>
-
-                <DialogSurface className={styles.dialogSurface}>
-                    <DialogBody className={styles.dialogContent}>
-                        <DialogTitle>{title}</DialogTitle>
-                        <DialogContent>
-                            <div className={styles.main}>
-                                {options.map((item: Model) => {
-                                    // compute a single numeric price for this model from input/output prices
-                                    const inputPrice = parseCostPerToken(item.input_cost_per_token);
-                                    const outputPrice = parseCostPerToken(item.output_cost_per_token);
-                                    const priceVal = averageCostPerToken(inputPrice, outputPrice);
-
-                                    const capabilityBadges: { key: string; label: string }[] = [];
-                                    if (item.supports_reasoning) capabilityBadges.push({ key: "reasoning", label: capabilityReasoning });
-                                    if (item.supports_function_calling) capabilityBadges.push({ key: "function-calling", label: capabilityFunctionCalling });
-                                    if (item.supports_vision) capabilityBadges.push({ key: "vision", label: capabilityVision });
-
-                                    const providerMeta: string[] = [];
-                                    const providerDisplay = item.litellm_provider?.trim();
-                                    const locationDisplay = item.inference_location?.trim();
-                                    if (providerDisplay) providerMeta.push(`${providerLabel}: ${providerDisplay}`);
-                                    if (locationDisplay) providerMeta.push(`${regionLabel}: ${locationDisplay}`);
-
-                                    const capabilityContent = capabilityBadges.length ? (
-                                        <div className={styles.badgeList}>
-                                            {capabilityBadges.map(badge => (
-                                                <span key={badge.key} className={styles.badge}>
-                                                    {badge.label}
-                                                </span>
-                                            ))}
-                                        </div>
-                                    ) : null;
-
-                                    const knowledgeText = item.knowledge_cut_off?.trim() || "";
-                                    const knowledgeDisplay = knowledgeText ? formatKnowledgeDate(knowledgeText, notAvailable) : "";
-                                    const knowledgeBadge = knowledgeText ? (
-                                        <Tooltip content={knowledgeTooltipText} relationship="description" positioning="above">
-                                            <div className={styles.badgeList}>
-                                                <span className={`${styles.badge} ${styles.badgeKnowledge}`}>
-                                                    {t("components.llmSelector.knowledge")}: {knowledgeDisplay}
-                                                </span>
-                                            </div>
-                                        </Tooltip>
-                                    ) : null;
-                                    const descriptionText = item.description && item.description.trim().length > 0 ? item.description : notAvailable;
-                                    const inputTokensText = formatTokenCount(item.max_input_tokens, notAvailable, tokenLabel, tokenPluralLabel);
-                                    const outputTokensText = formatTokenCount(item.max_output_tokens, notAvailable, tokenLabel, tokenPluralLabel);
-                                    const inputPriceText = formatCostPerMillion(inputPrice, notAvailable, tokenPluralLabel);
-                                    const outputPriceText = formatCostPerMillion(outputPrice, notAvailable, tokenPluralLabel);
-                                    const contextRating = getContextRating(item.max_input_tokens);
-
-                                    const priceRating = getPriceRating(priceVal ?? undefined);
-                                    return (
-                                        <Card
-                                            className={styles.card}
-                                            key={item.llm_name}
-                                            selected={selectedModel === item.llm_name}
-                                            data-selected={selectedModel === item.llm_name}
-                                            onSelectionChange={() => handleSelectModel(item.llm_name)}
-                                        >
-                                            <div className={styles.cardContent}>
-                                                <div className={styles.cardHeader}>
-                                                    <h2>{item.llm_name}</h2>
-                                                    {capabilityContent && capabilityContent}
-                                                    {!capabilityContent && (
-                                                        <div className={styles.badgeList}>
-                                                            <span className={styles.badge}>{notAvailable}</span>
-                                                        </div>
-                                                    )}
-                                                    {knowledgeBadge}
-                                                    <p className={styles.bestForText}>{descriptionText}</p>
-                                                </div>
-
-                                                <div className={styles.sectionGroup}>
-                                                    <SectionHeading title={originHeading} />
-                                                    {providerDisplay && <InfoRow label={t("components.llmSelector.provider")} value={providerDisplay} />}
-                                                    {locationDisplay ? (
-                                                        <InfoRow label={t("components.llmSelector.location")} value={locationDisplay} />
-                                                    ) : (
-                                                        <div className={`${styles.infoRow} ${styles.locationPlaceholder}`} aria-hidden="true" />
-                                                    )}
-                                                </div>
-                                                <div className={styles.sectionGroup}>
-                                                    <div className={styles.contextHeadingRow}>
-                                                        <SectionHeading title={t("components.llmSelector.context")} stacked={false} />
-                                                        <div
-                                                            className={styles.contextMeter}
-                                                            aria-label={`${t("components.llmSelector.context")} rating ${contextRating} / 3`}
-                                                        >
-                                                            {Array.from({ length: 3 }).map((_, i) => (
-                                                                <span
-                                                                    key={i}
-                                                                    className={`${styles.contextBar} ${i < contextRating ? styles.contextBarActive : ""}`.trim()}
-                                                                    aria-hidden="true"
-                                                                />
-                                                            ))}
-                                                        </div>
-                                                    </div>
-                                                    <InfoRow
-                                                        label={t("components.llmSelector.maxInput")}
-                                                        value={inputTokensText}
-                                                        tooltip={
-                                                            <Tooltip content={maxInputDesc} relationship="description" positioning="above">
-                                                                <InfoRegular></InfoRegular>
-                                                            </Tooltip>
-                                                        }
-                                                    />
-                                                    <InfoRow
-                                                        label={t("components.llmSelector.maxOutput")}
-                                                        value={outputTokensText}
-                                                        tooltip={
-                                                            <Tooltip content={maxOutputDesc} relationship="description" positioning="above">
-                                                                <InfoRegular></InfoRegular>
-                                                            </Tooltip>
-                                                        }
-                                                    />
-                                                </div>
-                                                <div className={styles.sectionGroup}>
-                                                    <div>
-                                                        <div>
-                                                            <div className={styles.price} aria-label={`Price ${priceVal ?? ""}`}>
-                                                                <SectionHeading title={t("components.llmSelector.price")} withSpacing stacked={false} />
-                                                                {Array.from({ length: 3 }).map((_, i) => {
-                                                                    const active = i < priceRating;
-                                                                    const cls = active ? `${styles.money} ${styles.moneyActive}` : styles.money;
-                                                                    return active ? (
-                                                                        <Money24Filled key={i} className={cls} aria-hidden="true" />
-                                                                    ) : (
-                                                                        <MoneyRegular key={i} className={cls} aria-hidden="true" />
-                                                                    );
-                                                                })}
-                                                            </div>
-                                                            <InfoRow
-                                                                label={t("components.llmSelector.inputPrice")}
-                                                                value={inputPriceText}
-                                                                tooltip={
-                                                                    <Tooltip content={inputPriceDesc} relationship="description" positioning="above">
-                                                                        <InfoRegular></InfoRegular>
-                                                                    </Tooltip>
-                                                                }
-                                                            />
-                                                            <InfoRow
-                                                                label={t("components.llmSelector.outputPrice")}
-                                                                value={outputPriceText}
-                                                                tooltip={
-                                                                    <Tooltip content={outputPriceDesc} relationship="description" positioning="above">
-                                                                        <InfoRegular></InfoRegular>
-                                                                    </Tooltip>
-                                                                }
-                                                            />
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </Card>
-                                    );
-                                })}
-                            </div>
-                        </DialogContent>
-
-                        <DialogActions className={styles.dialogActions}>
-                            <DialogTrigger disableButtonEnhancement>
-                                <Button appearance="primary" size="medium" onClick={() => handleSelectModel(selectedModel)} className={styles.acceptButton}>
-                                    <Checkmark24Filled className={styles.checkIcon} />
-                                    {t("components.llmSelector.selectButton", { defaultValue: "Auswählen" })}
-                                </Button>
-                            </DialogTrigger>
-                        </DialogActions>
-                    </DialogBody>
-                </DialogSurface>
-            </Dialog>
-        </div>
-    );
-};
-
-export const Selectable = (): React.JSX.Element => {
-    const [selected1, setSelected1] = React.useState(false);
-
-    return (
-        <div className={styles.main}>
-            <Card selected={selected1} onSelectionChange={(_, { selected }) => setSelected1(selected)} />
-        </div>
+        <Menu
+            open={open}
+            onOpenChange={handleOpenChange}
+            checkedValues={{ [MODEL_GROUP]: [selectedLLM] }}
+            onCheckedValueChange={handleCheckedValueChange}
+            positioning={{ position: "above", align: "end", offset: 8, overflowBoundaryPadding: VIEWPORT_GUTTER }}
+        >
+            <MenuTrigger disableButtonEnhancement>
+                <Tooltip content={title} relationship="description" positioning="below">
+                    <Button appearance="subtle" className={classes.trigger} icon={<ChevronDown16Regular />} iconPosition="after">
+                        {getDisplayName(selectedLLM)}
+                    </Button>
+                </Tooltip>
+            </MenuTrigger>
+            <MenuPopover className={classes.popover}>
+                <div className={styles.layout}>
+                    <MenuList className={styles.list} aria-label={title}>
+                        {lockedByAssistant ? (
+                            <MenuGroup>
+                                <MenuGroupHeader>{t("components.llmSelector.locked_by_assistant")}</MenuGroupHeader>
+                                {modelItems}
+                            </MenuGroup>
+                        ) : (
+                            modelItems
+                        )}
+                    </MenuList>
+                    {/* All details share one grid cell so the popover keeps the height of the longest one while previewing. */}
+                    <div className={styles.detailsStack}>{visibleModels.map(model => renderDetails(model, model.llm_name === previewModel?.llm_name))}</div>
+                </div>
+            </MenuPopover>
+        </Menu>
     );
 };

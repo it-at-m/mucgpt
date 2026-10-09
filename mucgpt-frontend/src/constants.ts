@@ -11,11 +11,7 @@ export const DEFAULT_APP_CONFIG: ApplicationConfig = {
             knowledge_cut_off: "",
             input_cost_per_token: 1,
             output_cost_per_token: 1,
-            supports_function_calling: null,
-            supports_reasoning: null,
-            supports_vision: null,
-            litellm_provider: null,
-            inference_location: null
+            supports_reasoning: null
         },
         {
             llm_name: "UnknownGPT",
@@ -24,11 +20,7 @@ export const DEFAULT_APP_CONFIG: ApplicationConfig = {
             knowledge_cut_off: "",
             input_cost_per_token: 1,
             output_cost_per_token: 1,
-            supports_function_calling: null,
-            supports_reasoning: null,
-            supports_vision: null,
-            litellm_provider: null,
-            inference_location: null
+            supports_reasoning: null
         },
         {
             llm_name: "AnnonymGPT",
@@ -37,11 +29,7 @@ export const DEFAULT_APP_CONFIG: ApplicationConfig = {
             knowledge_cut_off: "",
             input_cost_per_token: 1,
             output_cost_per_token: 1,
-            supports_function_calling: null,
-            supports_reasoning: null,
-            supports_vision: null,
-            litellm_provider: null,
-            inference_location: null
+            supports_reasoning: null
         }
     ],
     env_name: "MUC tschibidi-C",

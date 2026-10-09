@@ -10,7 +10,6 @@ import { Answer } from "../../Answer";
 import { AnswerList } from "../../AnswerList/AnswerList";
 import { QuestionInput } from "../../QuestionInput";
 import { StarterPromptList, StarterPromptModel } from "../../StarterPrompt";
-import { LLMSelector } from "../../LLMSelector/LLMSelector";
 import { LLMContext } from "../../LLMSelector/LLMContextProvider";
 import { FollowUpActionContext, FollowUpActionModel } from "../../FollowUpAction";
 import { useToolsContext } from "../../ToolsProvider";
@@ -284,13 +283,7 @@ export const AssistantPreviewChat = ({
         [availableLLMs, setLLM]
     );
 
-    const modelsToShow = useMemo(() => {
-        if (defaultModel) {
-            const defaultModelExists = availableLLMs.some(m => m.llm_name === defaultModel);
-            if (defaultModelExists) return availableLLMs.filter(m => m.llm_name === defaultModel);
-        }
-        return availableLLMs;
-    }, [availableLLMs, defaultModel]);
+    const isLLMLocked = Boolean(defaultModel && availableLLMs.some(m => m.llm_name === defaultModel));
 
     const usageSummary = useMemo(() => {
         let totalCost = 0;
@@ -359,7 +352,6 @@ export const AssistantPreviewChat = ({
             <header className={styles.previewHeader}>
                 <div className={styles.previewHeaderLeft}>
                     <span className={styles.previewTitle}>{t("components.assistant_preview.title")}</span>
-                    <LLMSelector onSelectionChange={onLLMSelectionChange} defaultLLM={LLM.llm_name} options={modelsToShow} compact />
                 </div>
                 <div className={styles.previewHeaderActions}>
                     <Tooltip content={t("components.assistant_preview.reset")} relationship="label">
@@ -425,6 +417,10 @@ export const AssistantPreviewChat = ({
                     allowToolSelection={false}
                     allowFileUpload={false}
                     usage={usageSummary}
+                    llmOptions={availableLLMs}
+                    selectedLLM={LLM.llm_name}
+                    onLLMSelectionChange={onLLMSelectionChange}
+                    llmLockedByAssistant={isLLMLocked}
                 />
             </div>
         </div>

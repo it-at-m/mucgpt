@@ -98,41 +98,33 @@ const CONFIG_RESPONSE: ApplicationConfig = {
             max_input_tokens: 128000,
             max_output_tokens: 12000,
             description: "GPT build by KIES",
+            short_description: "Ausgewogen für die meisten Aufgaben",
             knowledge_cut_off: "2024-07-01",
             input_cost_per_token: 3e-7,
             output_cost_per_token: 9e-7,
-            supports_function_calling: true,
-            supports_reasoning: true,
-            supports_vision: false,
-            litellm_provider: "azure_openai",
-            inference_location: "westeurope"
+            supports_reasoning: true
         },
         {
             llm_name: "UnknownGPT",
             max_input_tokens: 128000,
             max_output_tokens: 128000,
             description: "A young model that has to earn it's name, but with a lot of potential.",
+            short_description: "Für komplexe Analysen",
             knowledge_cut_off: "2024-07-01",
             input_cost_per_token: 1.71e-6,
             output_cost_per_token: 6.84e-6,
-            supports_function_calling: true,
-            supports_reasoning: false,
-            supports_vision: false,
-            litellm_provider: "openai",
-            inference_location: "us-east-1"
+            supports_reasoning: false
         },
         {
             llm_name: "AnnonymGPT",
             max_input_tokens: 500000,
             max_output_tokens: 12000,
             description: "A GPT that tends to write reddit comments",
+            short_description: "Für lange Dokumente",
             knowledge_cut_off: "2023-07-01",
             input_cost_per_token: 3.5e-7,
             output_cost_per_token: 1.37e-6,
-            supports_function_calling: false,
-            supports_reasoning: false,
-            supports_vision: false,
-            litellm_provider: "ollama"
+            supports_reasoning: false
         }
     ],
     env_name: "MUCGPT",

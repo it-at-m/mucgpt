@@ -1,291 +1,109 @@
-.container {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    position: relative;
-}
-
-.buttonContainer {
-    display: inline-flex;
-    align-items: flex-start;
-    justify-content: center;
-    border-radius: 8px;
-    padding: 6px 12px;
-    background-color: transparent;
-    color: var(--colorNeutralForeground1);
-    border: 1px solid var(--colorNeutralStroke1);
-    box-shadow: none;
-    cursor: pointer;
-    transition:
-        transform 140ms ease,
-        box-shadow 140ms ease,
-        background-color 140ms ease;
-}
-
-.buttonContainer:hover {
-    transform: translateY(-1px);
-    outline: 1px solid var(--colorBrandBackground);
-    border-radius: 8px;
-}
-
-.buttonContainer:focus,
-.buttonContainer:focus-visible {
-    outline: 1px solid var(--colorBrandBackground);
-}
-
-.iconLeftMargin {
-    margin-left: 8px;
-    width: 18px;
-    height: 18px;
-    color: currentcolor;
-}
-
-.compact .iconLeftMargin {
-    margin-left: 0;
-}
-
-.compact .modelName {
-    display: none;
-}
-
-.modelName {
-    display: inline-block;
-    padding: 2px 6px;
-    border-radius: 6px;
-    font-weight: 700;
-    font-size: 14px;
-    color: var(--colorNeutralForeground1);
-    min-width: 28px;
-    text-align: center;
-}
-
-.main {
-    padding: 8px;
-    gap: 16px;
+.layout {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    align-items: stretch;
-    width: 100%;
+    grid-template-areas: "details list";
+    grid-template-columns: 280px auto;
+}
+
+.list {
+    grid-area: list;
+    padding: var(--spacingVerticalXS);
+}
+
+.detailsStack {
+    grid-area: details;
+    display: grid;
+    min-width: 0;
+    background: var(--colorNeutralBackground2);
+}
+
+.details {
+    grid-area: 1 / 1;
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacingVerticalM);
+    padding: var(--spacingVerticalM) var(--spacingHorizontalM);
     box-sizing: border-box;
+    min-width: 0;
 }
 
-@media (max-width: 900px) {
-    .main {
-        grid-template-columns: repeat(2, 1fr);
-    }
+.details[data-active="false"] {
+    visibility: hidden;
 }
 
-@media (max-width: 600px) {
-    .main {
-        grid-template-columns: 1fr;
-    }
+.description {
+    color: var(--colorNeutralForeground2);
 }
 
-.card {
-    position: relative;
-    width: 100%;
-    display: flex;
-    flex-direction: column;
+.facts {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: center;
+    gap: var(--spacingVerticalXS) var(--spacingHorizontalM);
     margin: 0;
-    border: 1px solid var(--colorNeutralStroke1);
-    border-radius: var(--borderRadiusSmall, 8px);
-    background-color: var(--colorNeutralBackground1);
-    color: var(--colorNeutralForeground1);
-    overflow: hidden;
-    box-shadow: 0 12px 36px rgba(0, 0, 0, 0.291);
-    transition:
-        transform 160ms ease,
-        box-shadow 160ms ease,
-        background-color 160ms ease,
-        color 160ms ease;
-    height: 100%;
+    font-size: var(--fontSizeBase200);
+    line-height: var(--lineHeightBase200);
 }
 
-.card:hover {
-    transform: translateY(-2px);
-    background-color: var(--colorNeutralBackground2);
+.factLabel {
+    color: var(--colorNeutralForeground3);
 }
 
-.card[data-selected="true"] {
-    transform: translateY(-2px) scale(1.02);
-    background-color: var(--colorNeutralBackground2);
-    border-color: var(--colorBrandBackground);
-}
-
-.cardContent {
-    display: flex;
-    flex-direction: column;
-    flex: 1 1 auto;
-    justify-content: center;
-    padding: 14px;
-}
-
-.cardHeader {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    margin-bottom: 16px;
-}
-
-.bestForText {
-    margin: 4px 0 0 8px;
-    font-size: 14px;
-    color: var(--onPrimaryContainer);
-    height: 100px;
-    overflow: hidden;
-    display: -webkit-box;
-    -webkit-line-clamp: 3;
-    line-clamp: 3;
-    -webkit-box-orient: vertical;
-    line-height: 1.4;
-}
-
-.dialogSurface {
-    min-width: min(1240px, 96vw);
-    max-width: 96vw;
-    background-color: var(--colorNeutralBackground1);
-    border: none;
-    border-radius: var(--borderRadiusMedium, 8px);
-    padding: 12px;
-}
-
-.money {
-    width: 28px;
-    height: 28px;
-    font-size: 20px;
-    opacity: 0.56;
-    color: var(--colorBrandBackground);
-    transition:
-        color 140ms ease,
-        opacity 140ms ease,
-        transform 140ms ease;
+.factHint {
     display: inline-flex;
     align-items: center;
-    justify-content: center;
+    gap: var(--spacingHorizontalXXS);
+    cursor: help;
+}
+
+/* Fluent ships the info icon only in 12px and 16px; 14px sits between the caption text and its line height. */
+.factHintIcon {
+    width: 14px;
+    height: 14px;
+}
+
+.factValue {
+    margin: 0;
+    color: var(--colorNeutralForeground1);
+}
+
+.meter {
+    display: inline-flex;
+    gap: var(--spacingHorizontalXXS);
     vertical-align: middle;
 }
 
-.moneyActive {
-    opacity: 1;
-    color: var(--colorBrandBackground);
-    transform: translateY(-1px) scale(1.05);
-}
-
-.card:hover .money,
-.card[data-selected="true"] .money {
-    opacity: 0.6;
-}
-
-.card[data-selected="true"] .moneyActive {
-    opacity: 1;
-    color: var(--colorBrandBackground);
-}
-
-.infoRow {
-    margin-left: 8px;
-}
-
-.infoRow + .infoRow {
-    margin-top: 8px;
-}
-
-.locationPlaceholder {
-    min-height: 28px;
-    display: block;
-}
-
-.inlineLabel {
-    margin-left: 8px;
-    margin-right: 8px;
-    display: inline-flex;
-    align-items: center;
-}
-
-.inlineSpacer {
-    display: inline-block;
-    margin-right: 8px;
-}
-
-.sectionTitle {
-    font-size: 16px;
-    font-weight: 700;
-}
-
-.sectionTitleSpacing {
-    margin-right: 8px;
-}
-
-.sectionTitleStacked {
-    display: inline-block;
-    margin-bottom: 8px;
-}
-
-.badgeList {
-    display: inline-flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    margin-top: 8px;
-}
-
-.badge {
-    border-radius: 999px;
-    padding: 2px 10px;
-    background-color: var(--colorBrandBackground2);
-    color: var(--colorNeutralForeground1);
-    font-size: 12px;
-    font-weight: 600;
-}
-
-.badgeKnowledge {
-    background-color: var(--colorBrandBackground2);
-    color: var(--colorNeutralForeground1);
-}
-
-.featuresValue {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-}
-
-.featuresMeta {
-    font-size: 12px;
-    margin-top: 6px;
-}
-
-.sectionGroup {
-    margin-top: 20px;
-}
-
-.rowSpacing {
-    margin-top: 12px;
-}
-
-.contextHeadingRow {
-    display: flex;
-    align-items: center;
-    justify-content: flex-start;
-    gap: 10px;
-    flex-wrap: wrap;
-}
-
-.contextMeter {
-    display: inline-flex;
-    gap: 6px;
-    align-items: center;
-}
-
-.contextBar {
-    width: 18px;
+.meterStep {
+    width: 16px;
     height: 6px;
-    border-radius: 999px;
-    background-color: var(--colorBrandBackground);
-    opacity: 0.4;
-    transition:
-        background-color 140ms ease,
-        opacity 140ms ease;
+    border-radius: var(--borderRadiusCircular);
+    background: var(--colorNeutralStroke2);
 }
 
-.contextBarActive {
-    background-color: var(--colorBrandBackground);
-    opacity: 1;
+.meterStep[data-active="true"] {
+    background: var(--colorNeutralForeground3);
+}
+
+@media (max-width: 640px) {
+    .layout {
+        grid-template-areas:
+            "list"
+            "details";
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .detailsStack {
+        contain: inline-size;
+    }
+}
+
+/* The details follow the hovered model. Touch devices can't hover and a tap selects right away, so they only get the list. */
+@media (hover: none) {
+    .layout {
+        grid-template-areas: "list";
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .detailsStack {
+        display: none;
+    }
 }

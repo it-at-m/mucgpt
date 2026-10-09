@@ -147,13 +147,10 @@ MODELS:
       max_output_tokens: 16384
       max_input_tokens: 128000
       description: "<description>"
+      short_description: "<one-line summary>"
       input_cost_per_token: 0.00000009
       output_cost_per_token: 0.00000036
-      supports_function_calling: true
       supports_reasoning: false
-      supports_vision: true
-      litellm_provider: "<provider>"
-      inference_location: "<region>"
       knowledge_cut_off: "2024-07-01"
 
 # Additional models can be added here as list items:

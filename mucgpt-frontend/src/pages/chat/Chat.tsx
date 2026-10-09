@@ -849,6 +849,9 @@ const Chat = () => {
                 onStartNewChat={startNewChatFromUsage}
                 usageConversationKey={`chat:${active_chat ?? "new"}`}
                 hideDisclaimer
+                llmOptions={availableLLMs}
+                selectedLLM={LLM.llm_name}
+                onLLMSelectionChange={onLLMSelectionChange}
             />
         );
     }, [
@@ -864,7 +867,10 @@ const Chat = () => {
         uploadedDataToDataSources,
         getNavigationParams,
         startNewChatFromUsage,
-        usageSummary
+        usageSummary,
+        availableLLMs,
+        LLM.llm_name,
+        onLLMSelectionChange
     ]);
 
     const layout = useMemo(
@@ -894,9 +900,6 @@ const Chat = () => {
                     welcomeMessage={welcomeMessage}
                     header_as_markdown={false}
                     messages_description={t("common.messages")}
-                    llmOptions={availableLLMs}
-                    defaultLLM={LLM.llm_name}
-                    onLLMSelectionChange={onLLMSelectionChange}
                     actions={
                         <>
                             {showAgUiEventLog && (
@@ -924,9 +927,6 @@ const Chat = () => {
             lastQuestionRef.current,
             t,
             welcomeMessage,
-            availableLLMs,
-            LLM.llm_name,
-            onLLMSelectionChange,
             clearChat,
             activeChatName,
             isLoading,

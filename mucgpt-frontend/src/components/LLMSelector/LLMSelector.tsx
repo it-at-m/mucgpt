@@ -3,6 +3,8 @@ import {
     Body1Strong,
     makeStyles,
     Menu,
+    MenuGroup,
+    MenuGroupHeader,
     MenuList,
     MenuPopover,
     MenuTrigger,
@@ -22,8 +24,10 @@ import { MenuItemRadio } from "../../ui/MenuItem";
 
 interface Props {
     onSelectionChange: (nextLLM: string) => void;
-    defaultLLM: string;
+    selectedLLM: string;
     options: Model[];
+    /** Only the selected model is offered; all options remain the basis for the cost and context ratings. */
+    lockedByAssistant?: boolean;
 }
 
 const MODEL_GROUP = "model";
@@ -69,7 +73,7 @@ const getRelativeRating = (value: number | null, values: number[]): number | nul
     const logValues = values.filter(candidate => candidate > 0).map(Math.log);
     const min = Math.min(...logValues);
     const max = Math.max(...logValues);
-    if (max === min) return RATING_STEPS;
+    if (max === min) return null;
     return Math.round(((Math.log(value) - min) / (max - min)) * (RATING_STEPS - 1)) + 1;
 };
 
@@ -107,11 +111,11 @@ const Fact = ({ label, children }: { label: ReactNode; children: ReactNode }) =>
     </>
 );
 
-export const LLMSelector = ({ onSelectionChange, defaultLLM, options }: Props) => {
+export const LLMSelector = ({ onSelectionChange, selectedLLM, options, lockedByAssistant = false }: Props) => {
     const { t, i18n } = useTranslation();
     const classes = useStyles();
     const [open, setOpen] = useState(false);
-    const [previewLLM, setPreviewLLM] = useState(defaultLLM);
+    const [previewLLM, setPreviewLLM] = useState(selectedLLM);
     const itemRefs = useRef(new Map<string, HTMLDivElement>());
 
     const priceValues = useMemo(() => options.map(getAveragePrice).filter((value): value is number => value !== null), [options]);
@@ -120,21 +124,22 @@ export const LLMSelector = ({ onSelectionChange, defaultLLM, options }: Props) =
     // Fluent focuses the first item on open; start on the selected model so keyboard users and the details panel agree.
     useEffect(() => {
         if (!open) return;
-        const frame = requestAnimationFrame(() => itemRefs.current.get(defaultLLM)?.focus());
+        const frame = requestAnimationFrame(() => itemRefs.current.get(selectedLLM)?.focus());
         return () => cancelAnimationFrame(frame);
-    }, [open, defaultLLM]);
+    }, [open, selectedLLM]);
 
     const handleOpenChange: MenuProps["onOpenChange"] = (_, data) => {
         setOpen(data.open);
-        if (data.open) setPreviewLLM(defaultLLM);
+        if (data.open) setPreviewLLM(selectedLLM);
     };
 
     const handleCheckedValueChange: MenuProps["onCheckedValueChange"] = (_, data) => {
         const nextLLM = data.checkedItems[0];
-        if (nextLLM && nextLLM !== defaultLLM) onSelectionChange(nextLLM);
+        if (nextLLM && nextLLM !== selectedLLM) onSelectionChange(nextLLM);
     };
 
-    const previewModel = options.find(model => model.llm_name === previewLLM) ?? options.find(model => model.llm_name === defaultLLM);
+    const visibleModels = lockedByAssistant ? options.filter(model => model.llm_name === selectedLLM) : options;
+    const previewModel = visibleModels.find(model => model.llm_name === previewLLM) ?? visibleModels.find(model => model.llm_name === selectedLLM);
     const title = t("components.llmSelector.title");
 
     const renderDetails = (model: Model, active: boolean) => {
@@ -176,45 +181,54 @@ export const LLMSelector = ({ onSelectionChange, defaultLLM, options }: Props) =
         );
     };
 
+    const modelItems = visibleModels.map(model => {
+        const shortDescription = model.short_description?.trim();
+        return (
+            <MenuItemRadio
+                key={model.llm_name}
+                ref={element => {
+                    if (element) itemRefs.current.set(model.llm_name, element);
+                    else itemRefs.current.delete(model.llm_name);
+                }}
+                name={MODEL_GROUP}
+                value={model.llm_name}
+                subText={shortDescription ? { children: shortDescription, className: classes.subText } : undefined}
+                onFocus={() => setPreviewLLM(model.llm_name)}
+            >
+                {getDisplayName(model.llm_name)}
+            </MenuItemRadio>
+        );
+    });
+
     return (
         <Menu
             open={open}
             onOpenChange={handleOpenChange}
-            checkedValues={{ [MODEL_GROUP]: [defaultLLM] }}
+            checkedValues={{ [MODEL_GROUP]: [selectedLLM] }}
             onCheckedValueChange={handleCheckedValueChange}
             positioning={{ position: "above", align: "end", offset: 8, overflowBoundaryPadding: VIEWPORT_GUTTER }}
         >
             <MenuTrigger disableButtonEnhancement>
                 <Tooltip content={title} relationship="description" positioning="below">
                     <Button appearance="subtle" className={classes.trigger} icon={<ChevronDown16Regular />} iconPosition="after">
-                        {getDisplayName(defaultLLM)}
+                        {getDisplayName(selectedLLM)}
                     </Button>
                 </Tooltip>
             </MenuTrigger>
             <MenuPopover className={classes.popover}>
                 <div className={styles.layout}>
                     <MenuList className={styles.list} aria-label={title}>
-                        {options.map(model => {
-                            const shortDescription = model.short_description?.trim();
-                            return (
-                                <MenuItemRadio
-                                    key={model.llm_name}
-                                    ref={element => {
-                                        if (element) itemRefs.current.set(model.llm_name, element);
-                                        else itemRefs.current.delete(model.llm_name);
-                                    }}
-                                    name={MODEL_GROUP}
-                                    value={model.llm_name}
-                                    subText={shortDescription ? { children: shortDescription, className: classes.subText } : undefined}
-                                    onFocus={() => setPreviewLLM(model.llm_name)}
-                                >
-                                    {getDisplayName(model.llm_name)}
-                                </MenuItemRadio>
-                            );
-                        })}
+                        {lockedByAssistant ? (
+                            <MenuGroup>
+                                <MenuGroupHeader>{t("components.llmSelector.locked_by_assistant")}</MenuGroupHeader>
+                                {modelItems}
+                            </MenuGroup>
+                        ) : (
+                            modelItems
+                        )}
                     </MenuList>
                     {/* All details share one grid cell so the popover keeps the height of the longest one while previewing. */}
-                    <div className={styles.detailsStack}>{options.map(model => renderDetails(model, model.llm_name === previewModel?.llm_name))}</div>
+                    <div className={styles.detailsStack}>{visibleModels.map(model => renderDetails(model, model.llm_name === previewModel?.llm_name))}</div>
                 </div>
             </MenuPopover>
         </Menu>

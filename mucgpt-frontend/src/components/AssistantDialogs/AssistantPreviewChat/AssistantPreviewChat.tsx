@@ -283,13 +283,7 @@ export const AssistantPreviewChat = ({
         [availableLLMs, setLLM]
     );
 
-    const modelsToShow = useMemo(() => {
-        if (defaultModel) {
-            const defaultModelExists = availableLLMs.some(m => m.llm_name === defaultModel);
-            if (defaultModelExists) return availableLLMs.filter(m => m.llm_name === defaultModel);
-        }
-        return availableLLMs;
-    }, [availableLLMs, defaultModel]);
+    const isLLMLocked = Boolean(defaultModel && availableLLMs.some(m => m.llm_name === defaultModel));
 
     const usageSummary = useMemo(() => {
         let totalCost = 0;
@@ -423,9 +417,10 @@ export const AssistantPreviewChat = ({
                     allowToolSelection={false}
                     allowFileUpload={false}
                     usage={usageSummary}
-                    llmOptions={modelsToShow}
+                    llmOptions={availableLLMs}
                     selectedLLM={LLM.llm_name}
                     onLLMSelectionChange={onLLMSelectionChange}
+                    llmLockedByAssistant={isLLMLocked}
                 />
             </div>
         </div>

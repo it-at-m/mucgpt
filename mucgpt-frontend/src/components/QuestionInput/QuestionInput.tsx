@@ -48,6 +48,7 @@ interface Props {
     llmOptions?: Model[];
     selectedLLM?: string;
     onLLMSelectionChange?: (nextLLM: string) => void;
+    llmLockedByAssistant?: boolean;
 }
 
 export const QuestionInput = ({
@@ -75,7 +76,8 @@ export const QuestionInput = ({
     hideDisclaimer = false,
     llmOptions,
     selectedLLM,
-    onLLMSelectionChange
+    onLLMSelectionChange,
+    llmLockedByAssistant
 }: Props) => {
     const { t } = useTranslation();
     const config = useConfigContext();
@@ -512,7 +514,12 @@ export const QuestionInput = ({
                             />
                         )}
                         {llmOptions && selectedLLM && onLLMSelectionChange && (
-                            <LLMSelector onSelectionChange={onLLMSelectionChange} defaultLLM={selectedLLM} options={llmOptions} />
+                            <LLMSelector
+                                onSelectionChange={onLLMSelectionChange}
+                                selectedLLM={selectedLLM}
+                                options={llmOptions}
+                                lockedByAssistant={llmLockedByAssistant}
+                            />
                         )}
                         {allowTranscription && onTranscription && transcriptionReady && (
                             <MicrophoneButton

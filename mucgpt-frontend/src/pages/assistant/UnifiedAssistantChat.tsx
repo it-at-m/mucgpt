@@ -784,12 +784,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
 
     // Text-Input component
     // Only the assistant's default model is selectable; if it no longer exists, the user picks from all models.
-    const modelsToShow = useMemo(() => {
-        if (assistantConfig.default_model && availableLLMs.some(m => m.llm_name === assistantConfig.default_model)) {
-            return availableLLMs.filter(m => m.llm_name === assistantConfig.default_model);
-        }
-        return availableLLMs;
-    }, [availableLLMs, assistantConfig.default_model]);
+    const isLLMLocked = Boolean(assistantConfig.default_model && availableLLMs.some(m => m.llm_name === assistantConfig.default_model));
 
     const inputComponent = useMemo(() => {
         if (isLegacyAssistant) {
@@ -890,9 +885,10 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                         onStartNewChat={startNewChatFromUsage}
                         usageConversationKey={`assistant:${assistant_id}:${active_chat ?? "new"}`}
                         hideDisclaimer
-                        llmOptions={modelsToShow}
+                        llmOptions={availableLLMs}
                         selectedLLM={LLM.llm_name}
                         onLLMSelectionChange={onLLMSelectionChange}
+                        llmLockedByAssistant={isLLMLocked}
                     />
                 </>
             );
@@ -934,9 +930,10 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                 onStartNewChat={startNewChatFromUsage}
                 usageConversationKey={`assistant:${assistant_id}:${active_chat ?? "new"}`}
                 hideDisclaimer
-                llmOptions={modelsToShow}
+                llmOptions={availableLLMs}
                 selectedLLM={LLM.llm_name}
                 onLLMSelectionChange={onLLMSelectionChange}
+                llmLockedByAssistant={isLLMLocked}
             />
         );
     }, [
@@ -964,7 +961,8 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
         usageSummary,
         active_chat,
         startNewChatFromUsage,
-        modelsToShow,
+        availableLLMs,
+        isLLMLocked,
         LLM.llm_name,
         onLLMSelectionChange
     ]);

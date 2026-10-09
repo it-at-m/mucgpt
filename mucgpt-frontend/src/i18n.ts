@@ -871,6 +871,7 @@ i18n
                             context_description:
                                 "Wie viel Text das Modell in einem Chat gleichzeitig berücksichtigen kann: Nachrichten, Antworten und Dokumente zusammen.",
                             cost: "Kosten",
+                            locked_by_assistant: "Von diesem Assistenten festgelegt",
                             rating: "{{value}} von {{max}}"
                         }
                     },
@@ -1731,6 +1732,7 @@ i18n
                             context: "Context",
                             context_description: "How much text the model can take into account at once in a chat: messages, answers, and documents combined.",
                             cost: "Cost",
+                            locked_by_assistant: "Set by this assistant",
                             rating: "{{value}} of {{max}}"
                         }
                     },
@@ -2578,6 +2580,7 @@ i18n
                             context: "Kontext",
                             context_description: "Wia vui Text des Modell in am Chat auf oamoi berücksichtign ko: Nachrichtn, Antwortn und Dokumente zamm.",
                             cost: "Kostn",
+                            locked_by_assistant: "Vo dem Assistentn festglegt",
                             rating: "{{value}} vo {{max}}"
                         }
                     },
@@ -3427,6 +3430,7 @@ i18n
                             context_description:
                                 "Quantité de texte que le modèle peut prendre en compte en même temps dans une conversation : messages, réponses et documents réunis.",
                             cost: "Coût",
+                            locked_by_assistant: "Défini par cet assistant",
                             rating: "{{value}} sur {{max}}"
                         }
                     },
@@ -4277,6 +4281,7 @@ i18n
                             context: "Контекст",
                             context_description: "Скільки тексту модель може одночасно враховувати в чаті: повідомлення, відповіді та документи разом.",
                             cost: "Вартість",
+                            locked_by_assistant: "Визначено цим асистентом",
                             rating: "{{value}} з {{max}}"
                         }
                     },

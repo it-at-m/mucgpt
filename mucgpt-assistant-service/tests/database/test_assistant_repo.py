@@ -673,6 +673,38 @@ class TestAssistantRepository:
         assert assistant3.id in assistant_ids
         assert assistant2.id not in assistant_ids
 
+    async def test_get_all_assistants_for_admin_filters_before_pagination(
+        self, db_session, sample_assistant_version_data
+    ):
+        """Test admin department pagination is applied after access filtering."""
+        assistant_repo = AssistantRepository(db_session)
+
+        async def create_assistant_with_version(access_path: str, name: str):
+            assistant = await assistant_repo.create(
+                hierarchical_access=[access_path], owner_ids=[name]
+            )
+            await assistant_repo.create_assistant_version(
+                assistant=assistant,
+                name=name,
+                system_prompt=sample_assistant_version_data.system_prompt,
+                description=sample_assistant_version_data.description,
+                creativity=sample_assistant_version_data.creativity,
+            )
+            return assistant
+
+        await create_assistant_with_version("ITM-AB", "a-inaccessible")
+        accessible = await create_assistant_with_version("ITM-KM", "b-accessible")
+        await create_assistant_with_version("ITM-KM", "c-accessible")
+        await db_session.commit()
+
+        result = await assistant_repo.get_all_assistants_for_admin(
+            department="ITM-KM", sort_by="title", sort_order="asc", limit=1
+        )
+
+        assert [assistant.id for assistant in result] == [accessible.id]
+        assert result[0].owners[0].user_id == "b-accessible"
+        assert result[0].versions[0].name == "b-accessible"
+
     async def test_get_all_possible_assistants_for_user_with_department_hierarchical(
         self, db_session
     ):

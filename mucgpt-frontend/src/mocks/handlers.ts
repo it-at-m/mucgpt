@@ -1209,6 +1209,47 @@ export const handlers = [
         );
     }),
 
+    http.get("/api/admin/assistants", ({ request }) => {
+        const url = new URL(request.url);
+        const search = url.searchParams.get("search")?.trim().toLowerCase();
+        const state = url.searchParams.get("state");
+        const complianceStatus = url.searchParams.get("compliance_status");
+        const access = url.searchParams.get("access");
+        const department = url.searchParams.get("department")?.trim().toLowerCase();
+        const sortBy = url.searchParams.get("sort_by") || "updated";
+        const sortOrder = url.searchParams.get("sort_order") || "desc";
+        const offset = Number(url.searchParams.get("offset") || "0");
+        const limit = Number(url.searchParams.get("limit") || "200");
+
+        const assistants = DYNAMIC_ASSISTANTS.filter(assistant => {
+            const version = assistant.latest_version;
+            const hierarchy = assistant.hierarchical_access || version.hierarchical_access || [];
+            const isHierarchical = version.is_visible && hierarchy.length > 0;
+            const isPublic = version.is_visible && hierarchy.length === 0;
+            const isPrivate = !version.is_visible;
+            const matchesAccess =
+                !access || (access === "private" && isPrivate) || (access === "public" && isPublic) || (access === "hierarchical" && isHierarchical);
+            const matchesSearch = !search || `${version.name} ${version.description || ""}`.toLowerCase().includes(search);
+            const matchesDepartment =
+                !department ||
+                (version.is_visible && hierarchy.some(path => path.toLowerCase() === department || department.startsWith(`${path.toLowerCase()}-`)));
+            return (
+                matchesAccess &&
+                matchesSearch &&
+                matchesDepartment &&
+                (!state || version.state === state) &&
+                (!complianceStatus || version.compliance_check_result?.overall_status === complianceStatus)
+            );
+        }).sort((left, right) => {
+            const direction = sortOrder === "asc" ? 1 : -1;
+            if (sortBy === "title") return direction * left.latest_version.name.localeCompare(right.latest_version.name);
+            if (sortBy === "subscriptions") return direction * (getMockSubscriptionCount(left.id) - getMockSubscriptionCount(right.id));
+            return direction * left.updated_at.localeCompare(right.updated_at);
+        });
+
+        return HttpResponse.json(assistants.slice(offset, offset + limit).map(withMockSubscriptionCount));
+    }),
+
     http.patch("/api/admin/assistant/:id/state", async ({ params, request }) => {
         const body = (await request.json()) as AssistantStateUpdateInput;
         const assistant = DYNAMIC_ASSISTANTS.find(item => item.id === params.id);

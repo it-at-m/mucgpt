@@ -18,6 +18,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       actions: write
+      contents: write
       packages: write
     steps:
       - name: Harden the runner (Audit all outbound calls)
@@ -26,6 +27,8 @@ jobs:
           egress-policy: audit
       - name: Checkout code
         uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+        with:
+          ref: ${{ inputs.tag || github.ref }}
       - name: Set up QEMU
         uses: docker/setup-qemu-action@1f40c72289eff860ee54a304f1438e3cff362e0a # v4.3.0
       - name: Set up Docker Buildx
@@ -60,6 +63,7 @@ jobs:
         id: build_ts
         run: echo "BUILD_TS=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> "$GITHUB_ENV"
       - name: Build and push mucgpt-assistant-migrations Docker image
+        id: build
         uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
         with:
           context: ./mucgpt-assistant-service-migrations
@@ -83,3 +87,30 @@ jobs:
           echo "mucgpt-assistant-migrations image built and pushed:"
           echo "  ghcr.io/${{ github.repository }}/mucgpt-assistant-migrations:${{ steps.vars.outputs.version }}"
           echo "  ghcr.io/${{ github.repository }}/mucgpt-assistant-migrations:latest"
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ steps.vars.outputs.full_tag }}
+          VERSION: ${{ steps.vars.outputs.version }}
+          DIGEST: ${{ steps.build.outputs.digest }}
+          IMAGE: ghcr.io/${{ steps.vars.outputs.repo_lowercase }}/mucgpt-assistant-migrations
+        run: |
+          if gh release view "$TAG" > /dev/null 2>&1; then
+            echo "GitHub Release $TAG already exists."
+            exit 0
+          fi
+
+          notes=$(cat <<EOF
+          ## Container image
+
+          \`$IMAGE:$VERSION\`
+
+          Digest: \`$DIGEST\`
+          EOF
+          )
+
+          gh release create "$TAG" \
+            --verify-tag \
+            --title "Assistant migrations $VERSION" \
+            --generate-notes \
+            --notes "$notes"

@@ -21,6 +21,18 @@ CURRENT_DATE = "2026-10-06"
 CURRENT_WEEKDAY = "Tuesday"
 
 
+def _initialize_model(config: ModelsConfig, monkeypatch: pytest.MonkeyPatch):
+    for field in (
+        "_models",
+        "_default_model",
+        "_reasoning_models",
+        "_models_without_temperature",
+    ):
+        monkeypatch.setattr(ModelRegistry, field, getattr(ModelRegistry, field))
+    ModelRegistry.init_models([config])
+    return ModelRegistry.get_model(config.llm_name)
+
+
 def _freeze_current_date(monkeypatch: pytest.MonkeyPatch) -> None:
     mocked_datetime = MagicMock()
     mocked_datetime.now.return_value.date.return_value.weekday.return_value = 1
@@ -188,13 +200,21 @@ async def test_awrap_model_call_matches_sync_selection(
 def test_wrap_model_call_omits_unsupported_temperature(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    selected_model = ChatOpenAI(model="gpt-5", api_key="test")
-    monkeypatch.setattr(ModelRegistry, "get_model", lambda _name=None: selected_model)
+    _initialize_model(
+        ModelsConfig(
+            type="OPENAI",
+            llm_name="gpt-6",
+            endpoint="https://example.test",
+            api_key="test",
+            model_info={"supports_temperature": False},
+        ),
+        monkeypatch,
+    )
     handler = MagicMock(return_value=ModelResponse(result=[]))
 
     ContextMiddleware().wrap_model_call(
         _model_request(
-            RequestContext(model_name="gpt-5", temperature=0.2, stream=True)
+            RequestContext(model_name="gpt-6", temperature=0.2, stream=True)
         ),
         handler,
     )
@@ -289,7 +309,7 @@ def test_initialized_model_uses_request_scoped_streaming_and_temperature() -> No
     assert model._should_stream(async_api=True, stream=False) is False
 
 
-def test_azure_model_alias_uses_base_model_profile() -> None:
+def test_azure_model_alias_uses_configured_temperature_capability(monkeypatch) -> None:
     config = ModelsConfig(
         type="AZURE",
         llm_name="gpt-5",
@@ -302,10 +322,11 @@ def test_azure_model_alias_uses_base_model_profile() -> None:
             "max_output_tokens": 128_000,
             "max_input_tokens": 272_000,
             "description": "GPT-5 Azure test model",
+            "supports_temperature": False,
         },
     )
 
-    model = ModelRegistry.init_chat_model(config)
+    model = _initialize_model(config, monkeypatch)
     settings = ModelRegistry.normalize_model_settings(
         model, {"temperature": 0.2, "stream": True}
     )
@@ -313,6 +334,55 @@ def test_azure_model_alias_uses_base_model_profile() -> None:
     assert model.model_name == "gpt-5"
     assert model.deployment_name == "production-chat"
     assert settings == {"stream": True}
+
+
+@pytest.mark.parametrize("model_name", ["gpt-6", "gpt-5", "custom-proxy-model"])
+@pytest.mark.parametrize("supports_temperature", [True, False, None])
+def test_temperature_filtering_is_configuration_driven(
+    monkeypatch, model_name, supports_temperature
+) -> None:
+    model_info = {"supports_reasoning": True}
+    if supports_temperature is not None:
+        model_info["supports_temperature"] = supports_temperature
+    model = _initialize_model(
+        ModelsConfig(
+            type="OPENAI",
+            llm_name=model_name,
+            endpoint="https://example.test",
+            api_key="test",
+            model_info=model_info,
+        ),
+        monkeypatch,
+    )
+    original = {"temperature": 0.4, "stream": False, "reasoning_effort": "low"}
+
+    normalized = ModelRegistry.normalize_model_settings(model, original)
+
+    expected = dict(original)
+    if supports_temperature is False:
+        expected.pop("temperature")
+    assert normalized == expected
+    assert original["temperature"] == 0.4
+    assert ModelRegistry.get_model() is model
+
+
+def test_reinitializing_registry_resets_temperature_capability(monkeypatch) -> None:
+    config = ModelsConfig(
+        type="OPENAI",
+        llm_name="custom-proxy-model",
+        endpoint="https://example.test",
+        api_key="test",
+        model_info={"supports_temperature": False},
+    )
+    model = _initialize_model(config, monkeypatch)
+    assert ModelRegistry.normalize_model_settings(model, {"temperature": 0.4}) == {}
+
+    config.model_info.supports_temperature = True
+    ModelRegistry.init_models([config])
+
+    assert ModelRegistry.normalize_model_settings(
+        ModelRegistry.get_model(), {"temperature": 0.4}
+    ) == {"temperature": 0.4}
 
 
 def test_model_registry_uses_default_and_rejects_unknown(

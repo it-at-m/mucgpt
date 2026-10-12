@@ -57,6 +57,7 @@ class ModelInfo(BaseModel):
     output_cost_per_token: Decimal | None = None
     supports_function_calling: bool | None = None
     supports_reasoning: bool | None = None
+    supports_temperature: bool = True
     supports_vision: bool | None = None
     litellm_provider: str | None = None
     inference_location: str | None = None
@@ -141,6 +142,7 @@ class ModelsConfig(BaseModel):
             "output_cost_per_token",
             "supports_function_calling",
             "supports_reasoning",
+            "supports_temperature",
             "supports_vision",
             "litellm_provider",
             "inference_location",
@@ -284,6 +286,16 @@ class ModelsConfig(BaseModel):
     def supports_reasoning(self, value: bool | None) -> None:
         """Stores the value in the nested model info."""
         self.model_info.supports_reasoning = value
+
+    @property
+    def supports_temperature(self) -> bool:
+        """Delegates the configured temperature capability to the model info."""
+        return self.model_info.supports_temperature
+
+    @supports_temperature.setter
+    def supports_temperature(self, value: bool) -> None:
+        """Stores the configured temperature capability in the model info."""
+        self.model_info.supports_temperature = value
 
     @property
     def supports_vision(self) -> bool | None:

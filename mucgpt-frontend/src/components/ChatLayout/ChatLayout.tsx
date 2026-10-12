@@ -24,6 +24,7 @@ interface Props {
     llmOptions?: Model[];
     defaultLLM?: string;
     actions?: ReactNode;
+    showDisclaimer?: boolean;
 }
 
 export const ChatLayout = ({
@@ -40,7 +41,8 @@ export const ChatLayout = ({
     onLLMSelectionChange,
     onHeaderClick,
     infoDrawerOpen,
-    actions
+    actions,
+    showDisclaimer = true
 }: Props) => {
     const chatInputRef = useRef<HTMLDivElement | null>(null);
     const chatMessagesRef = useRef<HTMLUListElement | null>(null);
@@ -241,7 +243,7 @@ export const ChatLayout = ({
                     )}
                     <div className={styles.bottomBar} ref={chatInputRef}>
                         {!showStarterPrompts && <div className={styles.chatInput}>{input}</div>}
-                        <ChatDisclaimer className={styles.disclaimer} />
+                        {showDisclaimer && <ChatDisclaimer className={styles.disclaimer} />}
                     </div>
                 </div>
             </div>

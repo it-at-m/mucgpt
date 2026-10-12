@@ -3,6 +3,7 @@
     width: 100%;
     background-color: var(--colorNeutralBackground3);
     overflow: hidden;
+    overflow: clip;
 }
 
 .loadingContainer {
@@ -54,6 +55,7 @@
     height: 100%;
     min-height: 0;
     overflow: hidden;
+    overflow: clip;
     transition: grid-template-columns var(--durationSlow) var(--curveDecelerateMid);
 }
 

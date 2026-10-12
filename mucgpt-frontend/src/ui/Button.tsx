@@ -1,7 +1,10 @@
 import { forwardRef, useContext } from "react";
-import { Button as FluentButton, buttonClassNames, type ButtonProps, makeStyles, mergeClasses, tokens } from "@fluentui/react-components";
+import { Button as FluentButton, buttonClassNames, type ButtonProps, makeStyles, mergeClasses, shorthands, tokens } from "@fluentui/react-components";
 
 import { AppThemeContext } from "./theme/AppThemeContext";
+
+type ButtonTone = "danger";
+type MucgptButtonProps = ButtonProps & { tone?: ButtonTone };
 
 const useStyles = makeStyles({
     darkSubtle: {
@@ -18,13 +21,28 @@ const useStyles = makeStyles({
                 color: tokens.colorNeutralForeground1
             }
         }
+    },
+    danger: {
+        color: tokens.colorStatusDangerForeground1,
+        ...shorthands.borderColor(tokens.colorStatusDangerBorder1),
+        [`& .${buttonClassNames.icon}`]: {
+            color: tokens.colorStatusDangerForeground1
+        },
+        ":hover, :hover:active": {
+            color: tokens.colorStatusDangerForeground1,
+            ...shorthands.borderColor(tokens.colorStatusDangerBorder2),
+            [`& .${buttonClassNames.icon}`]: {
+                color: tokens.colorStatusDangerForeground1
+            }
+        }
     }
 });
 
-export const Button = forwardRef<HTMLButtonElement, ButtonProps>(({ appearance, className, disabled, disabledFocusable, ...props }, ref) => {
+export const Button = forwardRef<HTMLButtonElement, MucgptButtonProps>(({ appearance, className, disabled, disabledFocusable, tone, ...props }, ref) => {
     const { isLight } = useContext(AppThemeContext);
     const styles = useStyles();
-    const useDarkSubtleForeground = !isLight && appearance === "subtle" && !disabled && !disabledFocusable;
+    const isEnabled = !disabled && !disabledFocusable;
+    const useDarkSubtleForeground = !isLight && appearance === "subtle" && isEnabled;
 
     return (
         <FluentButton
@@ -33,7 +51,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(({ appearance, 
             appearance={appearance}
             disabled={disabled}
             disabledFocusable={disabledFocusable}
-            className={mergeClasses(useDarkSubtleForeground && styles.darkSubtle, className)}
+            className={mergeClasses(useDarkSubtleForeground && styles.darkSubtle, isEnabled && tone === "danger" && styles.danger, className)}
         />
     );
 });

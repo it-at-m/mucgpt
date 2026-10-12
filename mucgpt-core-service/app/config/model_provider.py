@@ -17,6 +17,8 @@ class ModelRegistry:
 
     _models: dict[str, ChatOpenAI | AzureChatOpenAI] = {}
     _default_model: ChatOpenAI | AzureChatOpenAI | None = None
+    _reasoning_models: set[str] = set()
+    _models_without_temperature: set[str] = set()
 
     @staticmethod
     def init_chat_model(config: ModelsConfig) -> ChatOpenAI | AzureChatOpenAI:
@@ -52,28 +54,21 @@ class ModelRegistry:
                 f"Failed to initialize chat model {config.llm_name}: {exc}"
             ) from exc
 
-    @staticmethod
+    @classmethod
     def normalize_model_settings(
+        cls,
         model: ChatOpenAI | AzureChatOpenAI,
         settings: dict[str, Any],
     ) -> dict[str, Any]:
         """Remove request parameters the selected model explicitly rejects."""
         normalized = dict(settings)
-        profile = getattr(model, "profile", None)
         model_name = getattr(model, "model_name", None)
 
-        # NOTE: 
-        # as of 08.2026 13 models introduced after 17.02.2026 have no model profile
-        # until this is resolved, the model name is used to determine whether 
-        # the temperature parameter should be removed from the request settings.
-        # https://github.com/langchain-ai/langchainjs/issues/11313
-        #
-        # gpt-5 models do not support temperature anymore. the way to control the model output is via the reasoning effort parameter.
-        # https://medium.com/@skomarovsky/migrating-from-gpt-4-to-gpt-5-2-why-your-code-will-break-and-how-to-fix-it-372e0a89d449
-        if (profile and profile.get("temperature") is False) or (
-            model_name and "gpt-5" in model_name
-        ):
+        if model_name in cls._models_without_temperature:
             normalized.pop("temperature", None)
+        # Only send reasoning_effort to models configured with supports_reasoning.
+        if model_name not in cls._reasoning_models:
+            normalized.pop("reasoning_effort", None)
         return normalized
 
     @classmethod
@@ -92,6 +87,16 @@ class ModelRegistry:
             raise ModelsConfigurationException("Model names must be unique")
 
         _logger = logger or logging.getLogger(__name__)
+        cls._reasoning_models = {
+            config.llm_name
+            for config in models_config
+            if config.model_info.supports_reasoning
+        }
+        cls._models_without_temperature = {
+            config.llm_name
+            for config in models_config
+            if not config.model_info.supports_temperature
+        }
 
         default_config = next(
             (
@@ -116,10 +121,12 @@ class ModelRegistry:
             try:
                 models[config.llm_name] = cls.init_chat_model(config)
             except ModelsConfigurationException as exc:
-                _logger.warning("Failed to initialize model %s: %s", config.llm_name, exc)
+                _logger.warning(
+                    "Failed to initialize model %s: %s", config.llm_name, exc
+                )
 
-            cls._models = models
-            cls._default_model = default_model
+        cls._models = models
+        cls._default_model = default_model
 
     @classmethod
     def get_model(

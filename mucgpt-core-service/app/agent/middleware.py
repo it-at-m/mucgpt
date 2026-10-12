@@ -1,7 +1,10 @@
+import copy
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
+from datetime import datetime
 from typing import Any
 from xml.sax.saxutils import escape, quoteattr
+from zoneinfo import ZoneInfo
 
 from langchain.agents.middleware import (
     AgentMiddleware,
@@ -15,6 +18,8 @@ from langchain_core.messages import (
     SystemMessage,
     ToolMessage,
 )
+from langchain_core.tools import BaseTool
+from langchain_core.utils.function_calling import convert_to_openai_function
 from langfuse import propagate_attributes
 from langfuse.langchain import CallbackHandler as LFCallbackHandler
 from langgraph.config import get_config as get_runtime_config
@@ -28,6 +33,16 @@ from config.model_provider import ModelRegistry
 from core.logtools import getLogger
 
 logger = getLogger(name="agent-middleware")
+
+WEEKDAYS = (
+    "Monday",
+    "Tuesday",
+    "Wednesday",
+    "Thursday",
+    "Friday",
+    "Saturday",
+    "Sunday",
+)
 
 
 @dataclass
@@ -65,6 +80,7 @@ class RequestContext:
     assistant_id: str | None = None
     model_name: str | None = None
     temperature: float = 0.5
+    reasoning_effort: str | None = None
     stream: bool = False
     user: str | None = None
     extra_body: dict[str, Any] | None = None
@@ -272,17 +288,41 @@ def _get_assistant_id_from_request(request: ModelRequest) -> str | None:
     return str(assistant_id) if assistant_id else None
 
 
+def _add_current_date(system_message: SystemMessage | None) -> SystemMessage:
+    """Add the current date in Munich's timezone to the effective system message."""
+    current_date = datetime.now(ZoneInfo("Europe/Berlin")).date()
+    date_context = (
+        f"Current date (Europe/Berlin): {WEEKDAYS[current_date.weekday()]}, "
+        f"{current_date.isoformat()}"
+    )
+    if system_message is None:
+        return SystemMessage(content=date_context)
+
+    content = system_message.content
+    if isinstance(content, str):
+        content = f"{content}\n\n{date_context}"
+    else:
+        content = [*content, date_context]
+
+    return system_message.model_copy(update={"content": content})
+
+
 def _configure_model_request(request: ModelRequest) -> ModelRequest:
     """Select a concrete model and apply request-scoped invocation settings."""
+    system_message = _add_current_date(request.system_message)
     runtime_context = _get_request_context(request)
     if runtime_context is None:
-        return request.override(model=ModelRegistry.get_model())
+        return request.override(
+            model=ModelRegistry.get_model(), system_message=system_message
+        )
 
     model_settings = {
         **request.model_settings,
         "temperature": runtime_context.temperature,
         "stream": runtime_context.stream,
     }
+    if runtime_context.reasoning_effort is not None:
+        model_settings["reasoning_effort"] = runtime_context.reasoning_effort
     if runtime_context.user is not None:
         model_settings["user"] = runtime_context.user
     if runtime_context.extra_body is not None:
@@ -290,7 +330,12 @@ def _configure_model_request(request: ModelRequest) -> ModelRequest:
 
     model = ModelRegistry.get_model(runtime_context.model_name)
     model_settings = ModelRegistry.normalize_model_settings(model, model_settings)
-    return request.override(model=model, model_settings=model_settings)
+
+    return request.override(
+        model=model,
+        model_settings=model_settings,
+        system_message=system_message,
+    )
 
 
 def _filter_request_tools(request: ModelRequest) -> ModelRequest:
@@ -403,6 +448,104 @@ class ContextMiddleware(AgentMiddleware):
             return await handler(request)
         with propagate_attributes(prompt=runtime_context.langfuse_prompt):
             return await handler(request)
+
+
+# Extra argument the model fills on every tool call: a short status line shown to the user
+# while the tool runs. It only exists in what the model sees and is removed before the tool runs.
+TOOL_STATUS_ARG = "status_message"
+TOOL_STATUS_SCHEMA: dict[str, Any] = {
+    "type": "string",
+    "description": (
+        "A short status line shown to the user while this call runs, written in the user's language. "
+        "Describe what you are doing the way a person would say it out loud, so the user can tell "
+        "WHERE you are looking and WHAT for. Pick the wording that matches what this call actually does:\n"
+        "- searching the internet: 'Durchsuche das Internet nach aktuellen Kita-Gebühren in München'\n"
+        "- opening or reading a specific web page: 'Lese die Seite von muenchen.de zum Anwohnerparken'\n"
+        "- searching internal or organizational documents: 'Durchsuche interne Dokumente nach der Dienstreiseregelung'\n"
+        "- working on text yourself: 'Formuliere den Bescheid in Leichter Sprache um'\n"
+        "Always name the concrete subject (the topic, the website, or the kind of document), not just the activity. "
+        "Bad: 'Suche nach Informationen', 'Rufe Tool auf', 'Führe web_search aus'. "
+        "Never mention tool, function or parameter names, IDs, URLs with query strings, "
+        "or technical terms like API, query, JSON. At most about 10 words, no trailing period."
+    ),
+    "minLength": 15,
+    "maxLength": 100,
+}
+
+
+def _has_own_status_arg(tool: BaseTool | None) -> bool:
+    return tool is not None and TOOL_STATUS_ARG in tool.args
+
+
+def _with_status_arg(tool: BaseTool | dict[str, Any]) -> BaseTool | dict[str, Any]:
+    """Return the tool's definition for the model with the status argument added.
+
+    Uses the flat ``{name, description, parameters}`` function format: Deep Agents'
+    tool exclusion runs after this middleware and reads dict tools by their top-level name.
+    """
+    if not isinstance(tool, BaseTool) or _has_own_status_arg(tool):
+        return tool
+    # Deep copy: MCP tools share their parameter schema with the cached tool metadata.
+    spec = copy.deepcopy(convert_to_openai_function(tool))
+    parameters = spec.setdefault("parameters", {"type": "object"})
+    # First property, so it streams before the other arguments and the UI can show it early.
+    parameters["properties"] = {
+        TOOL_STATUS_ARG: TOOL_STATUS_SCHEMA,
+        **parameters.get("properties", {}),
+    }
+    parameters["required"] = [TOOL_STATUS_ARG, *parameters.get("required", [])]
+    return spec
+
+
+def _add_status_arg(request: ModelRequest) -> ModelRequest:
+    if not request.tools:
+        return request
+    return request.override(tools=[_with_status_arg(tool) for tool in request.tools])
+
+
+def _strip_status_arg(request: ToolCallRequest) -> ToolCallRequest:
+    args = request.tool_call.get("args") or {}
+    logger.debug(f"Tool call args for tool {request.tool_call.get('name')}: ", args if "web_url_read" in request.tool_call.get("name") else "")
+    if TOOL_STATUS_ARG not in args or _has_own_status_arg(request.tool):
+        return request
+    stripped = {key: value for key, value in args.items() if key != TOOL_STATUS_ARG}
+    return request.override(tool_call={**request.tool_call, "args": stripped})
+
+
+class ToolStatusMiddleware(AgentMiddleware):
+    """Let the model describe each tool call for the user, without the tool ever seeing it.
+
+    Must run after tool filtering (``ContextMiddleware``): from here on the model sees
+    tool definitions as dicts instead of ``BaseTool`` objects.
+    """
+
+    def wrap_model_call(
+        self,
+        request: ModelRequest,
+        handler: Callable[[ModelRequest], ModelResponse],
+    ) -> ModelResponse:
+        return handler(_add_status_arg(request))
+
+    async def awrap_model_call(
+        self,
+        request: ModelRequest,
+        handler: Callable[[ModelRequest], Awaitable[ModelResponse]],
+    ) -> ModelResponse:
+        return await handler(_add_status_arg(request))
+
+    def wrap_tool_call(
+        self,
+        request: ToolCallRequest,
+        handler: Callable[[ToolCallRequest], ToolMessage | Command],
+    ) -> ToolMessage | Command:
+        return handler(_strip_status_arg(request))
+
+    async def awrap_tool_call(
+        self,
+        request: ToolCallRequest,
+        handler: Callable[[ToolCallRequest], Awaitable[ToolMessage | Command]],
+    ) -> ToolMessage | Command:
+        return await handler(_strip_status_arg(request))
 
 
 class ToolErrorMiddleware(AgentMiddleware):

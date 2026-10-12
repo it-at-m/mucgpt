@@ -3,6 +3,7 @@ import re
 from agent.tools.mcp import McpLoader
 from agent.tools.tools import LOCAL_TOOLS
 from api.api_models import ToolInfo, ToolListResponse
+from config.harness_profiles import DEEP_AGENT_INTERNAL_TOOLS
 from config.settings import get_mcp_settings
 from core.auth import AuthenticationResult
 
@@ -90,4 +91,6 @@ async def list_tool_metadata(
             )
         )
 
-    return ToolListResponse(tools=tools_info)
+    return ToolListResponse(
+        tools=tools_info, internal_tool_ids=sorted(DEEP_AGENT_INTERNAL_TOOLS)
+    )

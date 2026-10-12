@@ -9,7 +9,7 @@ export const ChatDisclaimer = ({ className }: ChatDisclaimerProps) => {
     const { t } = useTranslation();
 
     return (
-        <Caption1 block italic align="center" className={className}>
+        <Caption1 block align="center" className={className}>
             {t("components.questioninput.errorhint")}{" "}
             <Trans
                 i18nKey="components.questioninput.high_risk_hint"

@@ -70,9 +70,6 @@ export const ReviewSection = ({
             <div className={styles.card}>
                 <div className={styles.cardColumns}>
                     <div className={styles.cardLeft}>
-                        <Text as="h4" weight="semibold" className={styles.columnTitle}>
-                            {t("components.assistant_editor.review_intro_title")}
-                        </Text>
                         <Text className={styles.columnText}>
                             {introBeforeTerms}
                             {introAfterTerms !== undefined && (

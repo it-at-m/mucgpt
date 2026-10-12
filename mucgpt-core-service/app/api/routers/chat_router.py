@@ -1,6 +1,9 @@
 import json
+from collections.abc import AsyncGenerator
+from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException
+from ag_ui.encoder import EventEncoder
+from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import StreamingResponse
 
 from api.api_models import (
@@ -126,6 +129,7 @@ async def chat_completions(
                 assistant_id=request.assistant_id,
                 data_sources=data_sources,
                 conversation_id=request.conversation_id,
+                reasoning_effort=request.reasoning_effort,
             )
 
             async def sse_generator():
@@ -143,6 +147,7 @@ async def chat_completions(
                 assistant_id=request.assistant_id,
                 data_sources=data_sources,
                 conversation_id=request.conversation_id,
+                reasoning_effort=request.reasoning_effort,
             )
     except HTTPException:
         raise
@@ -150,3 +155,60 @@ async def chat_completions(
         logger.exception("Exception in /chat/completions")
         msg = llm_exception_handler(ex=e, logger=logger)
         raise HTTPException(status_code=500, detail=msg)
+
+
+@router.post(
+    "/chat/v2/completions",
+    summary="Create chat completion",
+    description="OpenAI-compatible endpoint for chat completions",
+    response_class=StreamingResponse,
+    responses={
+        200: {"description": "Successful Response"},
+        400: {"description": "Bad Request"},
+        500: {"description": "Internal Server Error"},
+    },
+)
+async def ag_ui_chat_endpoint(
+    chat_request: ChatCompletionRequest,
+    user_info: Annotated[AuthenticationResult, Depends(authenticate_user)],
+    request: Request,
+) -> StreamingResponse:
+    if not chat_request.conversation_id:
+        raise HTTPException(status_code=400, detail="conversation_id is required")
+    if not chat_request.messages:
+        raise HTTPException(status_code=400, detail="messages must not be empty")
+    if not chat_request.messages[-1].role == "user":
+        raise HTTPException(status_code=400, detail="Last message must be from the user (role='user')")
+
+    try:
+        ModelRegistry.get_model(chat_request.model)
+    except ModelsConfigurationException as exc:
+        detail = str(exc)
+        status_code = 400
+        if "not initialized" in detail.lower():
+            status_code = 500
+        raise HTTPException(status_code=status_code, detail=detail) from exc
+
+    encoder = EventEncoder(accept=request.headers.get("accept"))
+    agent = await init_agent(user_info=user_info, model_name=chat_request.model)
+    events = agent.run_agui_with_streaming(
+        messages=chat_request.messages,
+        temperature=get_temperature_from_request(chat_request),
+        model=chat_request.model,
+        user_info=user_info,
+        conversation_id=chat_request.conversation_id,
+        enabled_tools=chat_request.enabled_tools or [],
+        assistant_id=chat_request.assistant_id,
+        data_sources=(
+            [source.model_dump() for source in chat_request.data_sources]
+            if chat_request.data_sources
+            else None
+        ),
+        reasoning_effort=chat_request.reasoning_effort,
+    )
+
+    async def event_generator() -> AsyncGenerator[str]:
+        async for event in events:
+            yield encoder.encode(event)
+
+    return StreamingResponse(event_generator(), media_type=encoder.get_content_type())

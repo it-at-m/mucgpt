@@ -10,6 +10,7 @@ from pydantic import ValidationError
 
 from config.settings import (
     MCPTransport,
+    ModelsConfig,
     ParserBackendType,
     Settings,
     enrich_model_metadata,
@@ -19,6 +20,34 @@ from config.settings import (
     get_settings,
     get_sso_settings,
 )
+
+
+@pytest.mark.parametrize(
+    ("capability_config", "expected"),
+    [
+        ({}, True),
+        ({"supports_temperature": False}, False),
+        ({"model_info": {"supports_temperature": False}}, False),
+        (
+            {
+                "supports_temperature": False,
+                "model_info": {"supports_temperature": True},
+            },
+            True,
+        ),
+    ],
+)
+def test_temperature_capability_configuration(capability_config, expected) -> None:
+    config = ModelsConfig(
+        type="OPENAI",
+        llm_name="test-model",
+        endpoint="https://example.test",
+        api_key="test",
+        **capability_config,
+    )
+
+    assert config.model_info.supports_temperature is expected
+    assert config.supports_temperature is expected
 
 
 class TestSettings:
@@ -147,6 +176,7 @@ class TestSettings:
                     "output_cost_per_token": 3.6e-7,
                     "supports_function_calling": True,
                     "supports_reasoning": False,
+                    "supports_temperature": False,
                     "supports_vision": True,
                     "litellm_provider": "azure",
                     "inference_location": "azure/eu",
@@ -175,6 +205,7 @@ class TestSettings:
             assert model.output_cost_per_token == Decimal("3.6e-7")
             assert model.supports_function_calling is True
             assert model.supports_reasoning is False
+            assert model.supports_temperature is False
             assert model.supports_vision is True
             assert model.litellm_provider == "azure"
             assert model.inference_location == "azure/eu"

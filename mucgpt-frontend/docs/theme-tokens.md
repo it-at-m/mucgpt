@@ -43,6 +43,7 @@ These have no Fluent equivalent and are exposed as `--app-*`:
 - `--app-assistant-config-surface` / `-hover` / `-editing` - assistant config field surface states
 - `--app-assistant-config-border` / `-hover` - assistant config field border states
 - `--app-status-info-border` - info accent (Fluent has no `colorStatusInfo*` family); sourced from `infoRamp`
+- `--app-progress-highlight` - light brand blue of the shimmer that sweeps over in-progress status text (agent activity); sourced from `mucgptBrandRamp`. Only a moving highlight on top of `colorNeutralForeground3` text, never a standalone text color
 - `--app-radius-xsmall` (2px) / `--app-radius-xxlarge` (24px) - asymmetric chat-bubble corner radii, not part of Fluent's radius scale
 
 ## Fluent Radius Scale

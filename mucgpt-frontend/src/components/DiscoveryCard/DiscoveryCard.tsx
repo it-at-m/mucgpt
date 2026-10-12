@@ -1,9 +1,10 @@
 import React, { forwardRef, ReactNode } from "react";
 import { Link } from "react-router-dom";
-import { Badge, Card, CardFooter, makeStyles, mergeClasses, shorthands, CardProps, BadgeProps, Text, tokens } from "@fluentui/react-components";
+import { Card, CardFooter, makeStyles, mergeClasses, CardProps, BadgeProps, Text, tokens } from "@fluentui/react-components";
 import { LockClosed16Regular, People16Regular, Person16Regular } from "@fluentui/react-icons";
 import styles from "./DiscoveryCard.module.css";
 import { MarkdownRenderer } from "../MarkdownRenderer/MarkdownRenderer";
+import { Badge } from "../../ui/Badge";
 
 export interface DiscoveryCardBadge {
     label: string;
@@ -36,7 +37,7 @@ export type DiscoveryCardProps =
     | (DiscoveryCardBaseProps & { linkTo?: never; onActivate?: never });
 
 // Colored tones map straight onto Fluent's tint badge colors, which the theme aliases
-// onto the app's brand and --colorStatus* ramps. "neutral" has no Fluent equivalent.
+// onto the app's brand and --colorStatus* ramps. "neutral" uses the shared neutral badge tone.
 const toTintBadgeColor = (tone: DiscoveryCardBadge["tone"]): Extract<BadgeProps["color"], "brand" | "success" | "warning" | "danger"> | undefined =>
     tone === "neutral" ? undefined : tone;
 
@@ -45,24 +46,11 @@ const useStyles = makeStyles({
         padding: `${tokens.spacingVerticalM} ${tokens.spacingHorizontalM} ${tokens.spacingVerticalMNudge}`,
         rowGap: 0
     },
-    // Fluent has no neutral badge color that matches this palette.
-    badgeNeutral: {
-        color: tokens.colorNeutralForeground2,
-        backgroundColor: tokens.colorNeutralBackground2,
-        ...shorthands.borderColor(tokens.colorNeutralStroke1)
-    },
     // Colors come from Fluent's tint appearance; colored badges only read heavier.
     badgeTinted: {
         fontWeight: tokens.fontWeightSemibold
     }
 });
-
-const formatSubscriberCount = (count: number): string => {
-    if (count >= 1000) {
-        return (count / 1000).toFixed(1).replace(/\.0$/, "") + "k";
-    }
-    return count.toString();
-};
 
 export const DiscoveryCard = forwardRef<HTMLDivElement, DiscoveryCardProps>((props, ref) => {
     const {
@@ -125,8 +113,9 @@ export const DiscoveryCard = forwardRef<HTMLDivElement, DiscoveryCardProps>((pro
                                 return (
                                     <Badge
                                         key={renderedBadge.label}
-                                        className={mergeClasses(styles.headerBadge, tintColor ? classes.badgeTinted : classes.badgeNeutral)}
+                                        className={mergeClasses(styles.headerBadge, tintColor && classes.badgeTinted)}
                                         appearance="tint"
+                                        tone={tintColor ? undefined : "neutral"}
                                         color={tintColor}
                                         size="small"
                                         icon={renderedBadge.icon}
@@ -160,7 +149,7 @@ export const DiscoveryCard = forwardRef<HTMLDivElement, DiscoveryCardProps>((pro
         ) : hasSubscriberCount ? (
             <>
                 <People16Regular aria-hidden="true" />
-                <span>{formatSubscriberCount(subscriberCount)}</span>
+                <span>{subscriberCount}</span>
             </>
         ) : undefined;
 

@@ -4,6 +4,9 @@
     list-style: none;
     width: var(--chatContentWidth, min(60%, 1000px));
     margin: 0 auto 0;
+    /* Keeps a turn scrolled to the top clear of the message list's top fade. */
+    --chatTurnScrollMargin: 28px;
+    scroll-margin-top: var(--chatTurnScrollMargin);
 }
 
 .chatMessageUser {

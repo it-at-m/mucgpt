@@ -1,8 +1,9 @@
-import { Button, Tooltip } from "@fluentui/react-components";
+import { Tooltip } from "@fluentui/react-components";
 import { MicRegular, MicRecordRegular, MicSyncRegular, MicOffRegular } from "@fluentui/react-icons";
 import { useTranslation } from "react-i18next";
 import { useCallback, useEffect, useRef } from "react";
 import styles from "./MicrophoneButton.module.css";
+import { Button } from "../../ui/Button";
 import { useTranscription } from "../../hooks/useTranscription";
 
 interface Props {
@@ -77,10 +78,9 @@ export const MicrophoneButton = ({ onTranscription, onLiveTranscription, onRecor
 
     return (
         <div className={styles.wrapper}>
-            <Tooltip content={getTooltipContent()} relationship="label">
+            <Tooltip positioning={"below"} content={getTooltipContent()} relationship="label">
                 <Button
-                    size="large"
-                    appearance="transparent"
+                    appearance="subtle"
                     className={`${styles.micButton} ${isBusy ? styles.busy : ""}`}
                     icon={getIcon()}
                     aria-label={getTooltipContent()}

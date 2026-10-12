@@ -1,5 +1,6 @@
 import { StarterPromptModel } from "../components/StarterPrompt";
 import { FollowUpActionModel } from "../components/FollowUpAction";
+import type { ActivityStep } from "../utils/agUiActivity";
 
 export type AskResponse = {
     answer: string;
@@ -24,6 +25,8 @@ export type ChatResponse = {
         state: "STARTED" | "ENDED" | null;
         timestamp: number;
     }>;
+    /** Tool steps the agent took for this answer (AG-UI only). */
+    activitySteps?: ActivityStep[];
 };
 
 export type ChatTurn = {
@@ -78,6 +81,7 @@ export interface ApplicationConfig {
     /** Model id preselected for first-time users; null = frontend built-in default. */
     transcription_default_model: string | null;
     ai_act_compliance_check_enabled: boolean;
+    ag_ui_enabled: boolean;
     footer_link_url?: string;
     footer_label?: string;
     faq_url?: string;
@@ -290,6 +294,8 @@ export interface ToolInfo {
 
 export interface ToolListResponse {
     tools: ToolInfo[];
+    /** Ids of tools the agent uses internally (planning, scratch files); not shown as activity. */
+    internal_tool_ids?: string[];
 }
 
 export interface User {

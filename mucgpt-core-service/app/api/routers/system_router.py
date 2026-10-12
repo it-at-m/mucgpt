@@ -40,6 +40,7 @@ async def get_config(user_info=Depends(authenticate_user)) -> ConfigResponse:
         admin_role=settings.SSO.ADMIN_ROLE,
         ad2image_url=settings.AD2IMAGE_URL,
         owner_profile_url_template=settings.OWNER_PROFILE_URL_TEMPLATE,
+        ag_ui_enabled=settings.AG_UI_ENABLED
     )
 
     models = settings.MODELS

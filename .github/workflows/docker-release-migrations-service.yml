@@ -29,6 +29,9 @@ jobs:
         uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
         with:
           ref: ${{ inputs.tag || github.ref }}
+      - name: Record checked-out commit
+        id: revision
+        run: echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
       - name: Set up QEMU
         uses: docker/setup-qemu-action@1f40c72289eff860ee54a304f1438e3cff362e0a # v4.3.0
       - name: Set up Docker Buildx
@@ -59,10 +62,22 @@ jobs:
           echo "full_tag=${FULL_TAG}" >> $GITHUB_OUTPUT
           echo "version=${VERSION}" >> $GITHUB_OUTPUT
           echo "repo_lowercase=$(echo '${{ github.repository }}' | tr '[:upper:]' '[:lower:]')" >> $GITHUB_OUTPUT
+      - name: Check for an existing GitHub Release
+        id: existing-release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ steps.vars.outputs.full_tag }}
+        run: |
+          if gh release view "$TAG" > /dev/null 2>&1; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
       - name: Set build timestamp
         id: build_ts
         run: echo "BUILD_TS=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> "$GITHUB_ENV"
       - name: Build and push mucgpt-assistant-migrations Docker image
+        if: steps.existing-release.outputs.exists != 'true'
         id: build
         uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
         with:
@@ -78,16 +93,18 @@ jobs:
           cache-to: type=gha,mode=max
           build-args: |
             IMAGE_CREATED=${{ github.event.repository.pushed_at || env.BUILD_TS }}
-            IMAGE_REVISION=${{ github.sha }}
+            IMAGE_REVISION=${{ steps.revision.outputs.sha }}
             IMAGE_VERSION=${{ steps.vars.outputs.version }}
-            COMMIT=${{ github.sha }}
+            COMMIT=${{ steps.revision.outputs.sha }}
             VERSION=${{ steps.vars.outputs.version }}
       - name: Image digest
+        if: steps.existing-release.outputs.exists != 'true'
         run: |
           echo "mucgpt-assistant-migrations image built and pushed:"
           echo "  ghcr.io/${{ github.repository }}/mucgpt-assistant-migrations:${{ steps.vars.outputs.version }}"
           echo "  ghcr.io/${{ github.repository }}/mucgpt-assistant-migrations:latest"
       - name: Create GitHub Release
+        if: steps.existing-release.outputs.exists != 'true'
         env:
           GH_TOKEN: ${{ github.token }}
           TAG: ${{ steps.vars.outputs.full_tag }}
@@ -95,11 +112,6 @@ jobs:
           DIGEST: ${{ steps.build.outputs.digest }}
           IMAGE: ghcr.io/${{ steps.vars.outputs.repo_lowercase }}/mucgpt-assistant-migrations
         run: |
-          if gh release view "$TAG" > /dev/null 2>&1; then
-            echo "GitHub Release $TAG already exists."
-            exit 0
-          fi
-
           notes=$(cat <<EOF
           ## Container image
 

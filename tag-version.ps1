@@ -39,6 +39,12 @@ $serviceConfig = @{
 }
 $availableServices = @($serviceConfig.Keys)
 
+$repositoryRoot = git -C $PSScriptRoot rev-parse --show-toplevel
+if ($LASTEXITCODE -ne 0) {
+    throw "Unable to find the repository root."
+}
+Push-Location $repositoryRoot
+
 function Read-YesNo {
     param(
         [Parameter(Mandatory=$true)][string]$Prompt
@@ -120,6 +126,41 @@ function Get-ManifestVersion {
 
     if ($ManifestType -eq "packageJson") {
         return (Get-Content -Raw -Path $FilePath | ConvertFrom-Json).version
+    }
+
+    throw "Unsupported manifest type '$ManifestType'"
+}
+
+function Test-LockfileVersion {
+    param(
+        [Parameter(Mandatory=$true)][string]$FilePath,
+        [Parameter(Mandatory=$true)][string]$ManifestType,
+        [Parameter(Mandatory=$true)][string]$ManifestVersion
+    )
+
+    $projectDir = Split-Path -Parent $FilePath
+    if ($ManifestType -eq "packageJson") {
+        $lockPath = Join-Path -Path $projectDir -ChildPath "package-lock.json"
+        if (-not (Test-Path $lockPath)) {
+            throw "Unable to find lockfile: $lockPath"
+        }
+
+        $lockVersion = node -p "require(process.argv[1]).packages[''].version" $lockPath
+        if ($LASTEXITCODE -ne 0) {
+            throw "Unable to read the root package version from $lockPath"
+        }
+        if ($lockVersion -ne $ManifestVersion) {
+            throw "package-lock.json version $lockVersion does not match package.json version $ManifestVersion"
+        }
+        return
+    }
+
+    if ($ManifestType -eq "pyproject") {
+        $uvOutput = uv lock --check --project $projectDir 2>&1
+        if ($LASTEXITCODE -ne 0) {
+            throw "uv.lock does not match pyproject.toml: $uvOutput"
+        }
+        return
     }
 
     throw "Unsupported manifest type '$ManifestType'"
@@ -332,6 +373,7 @@ if (-not (Test-Path $manifestPath)) {
 }
 
 $manifestVersion = Get-ManifestVersion -FilePath $manifestPath -ManifestType $manifestType
+Test-LockfileVersion -FilePath $manifestPath -ManifestType $manifestType -ManifestVersion $manifestVersion
 if ($manifestVersion -ne $newVersion) {
     $updateManifest = Read-YesNo "Update the manifest and lockfile to version $newVersion? (y/n)"
     if ($updateManifest -ne "y") {
@@ -363,6 +405,9 @@ else {
 }
 
 $uncommittedVersionFiles = @(git status --porcelain -- $versionFiles)
+if ($LASTEXITCODE -ne 0) {
+    throw "Unable to determine whether version files are committed."
+}
 if ($uncommittedVersionFiles.Count -gt 0) {
     Write-Host "Version files must be committed before tagging:" -ForegroundColor Red
     $uncommittedVersionFiles | ForEach-Object { Write-Host "  $_" -ForegroundColor Red }

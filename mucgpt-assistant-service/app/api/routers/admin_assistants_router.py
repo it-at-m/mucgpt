@@ -66,6 +66,14 @@ async def update_assistant_state(
     if assistant is None:
         raise AssistantNotFoundException(assistant_id)
 
+    if not await assistant_repo.claim_version_update(assistant):
+        await db.rollback()
+        current_version = await assistant_repo.get_latest_version(assistant_id)
+        raise VersionConflictException(
+            state_update.version,
+            current_version.version if current_version is not None else "none",
+        )
+
     latest_version = await assistant_repo.get_latest_version(assistant_id)
     if latest_version is None or latest_version.version != state_update.version:
         raise VersionConflictException(

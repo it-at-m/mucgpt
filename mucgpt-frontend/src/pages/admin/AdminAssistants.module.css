@@ -42,10 +42,8 @@
 }
 
 .filters {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: end;
-    gap: var(--spacingHorizontalM);
+    display: grid;
+    gap: var(--spacingVerticalL);
     margin-bottom: var(--spacingVerticalXL);
     padding: var(--spacingVerticalL);
     border: 1px solid var(--colorNeutralStroke2);
@@ -53,12 +51,46 @@
     background: var(--colorNeutralBackground2);
 }
 
+.filterGroup,
+.orderingGroup {
+    display: grid;
+    align-content: start;
+    gap: var(--spacingVerticalM) var(--spacingHorizontalM);
+    min-width: 0;
+}
+
+.filterGroup {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.filterGroup > h3,
+.search,
+.filterGroup > button {
+    grid-column: 1 / -1;
+}
+
+.orderingGroup {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--spacingVerticalS) var(--spacingHorizontalS);
+    padding-top: var(--spacingVerticalM);
+    border-top: 1px solid var(--colorNeutralStroke2);
+}
+
+.orderingLabel {
+    font-weight: var(--fontWeightSemibold);
+}
+
+.orderingGroup > button {
+    margin-left: auto;
+}
+
 .search {
-    flex: 1 0 100%;
+    min-width: 0;
 }
 
 .accessFilter {
-    flex: 1 1 320px;
     min-width: 0;
 }
 
@@ -79,16 +111,10 @@
 .departmentPicker {
     display: grid;
     gap: var(--spacingVerticalS);
-    margin: var(--spacingVerticalS) 0 0 28px;
     padding: var(--spacingVerticalM);
     border: 1px solid var(--colorNeutralStroke2);
     border-radius: var(--borderRadiusMedium);
-}
-
-.sortControls {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--spacingHorizontalS);
+    min-width: 0;
 }
 
 .message {
@@ -277,6 +303,14 @@
 
     .cardHeader {
         flex-direction: column;
+    }
+
+    .filterGroup {
+        grid-template-columns: 1fr;
+    }
+
+    .orderingGroup > button {
+        margin-left: 0;
     }
 
     .filters > * {

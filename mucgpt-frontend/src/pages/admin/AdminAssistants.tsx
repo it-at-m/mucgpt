@@ -192,6 +192,29 @@ const AdminAssistants = () => {
         label: t(`admin.assistants.access_${accessType}`),
         assistants: assistants.filter(assistant => getAccessType(assistant) === accessType)
     }));
+    const selectedStateLabel =
+        state === "active"
+            ? t("admin.assistants.state_active")
+            : state === "pending_legal_review"
+              ? t("admin.assistants.state_pending")
+              : state === "inactive"
+                ? t("admin.assistants.state_inactive")
+                : t("admin.assistants.all_states");
+    const selectedComplianceLabel =
+        complianceStatus === "passed"
+            ? t("admin.assistants.compliance_passed")
+            : complianceStatus === "high_risk_detected"
+              ? t("admin.assistants.compliance_high_risk")
+              : complianceStatus === "error"
+                ? t("admin.assistants.compliance_error")
+                : t("admin.assistants.all_compliance");
+    const selectedSortByLabel =
+        sortBy === "title"
+            ? t("admin.assistants.sort_title")
+            : sortBy === "subscriptions"
+              ? t("admin.assistants.sort_subscriptions")
+              : t("admin.assistants.sort_updated");
+    const selectedSortOrderLabel = sortOrder === "asc" ? t("admin.assistants.sort_asc") : t("admin.assistants.sort_desc");
 
     return (
         <div className={styles.pageWrapper} data-drawer-open={isDetailsOpen}>
@@ -208,101 +231,137 @@ const AdminAssistants = () => {
                     </header>
 
                     <section className={styles.filters} aria-label={t("admin.assistants.filters")}>
-                        <SearchBox
-                            className={styles.search}
-                            value={search}
-                            onChange={(_, data) => setSearch(data.value)}
-                            placeholder={t("admin.assistants.search_placeholder")}
-                            aria-label={t("admin.assistants.search_placeholder")}
-                        />
-                        <Dropdown
-                            selectedOptions={state ? [state] : []}
-                            onOptionSelect={(_, data) => setState((data.optionValue as AssistantState) || undefined)}
-                            placeholder={t("admin.assistants.all_states")}
-                            aria-label={t("admin.assistants.all_states")}
-                        >
-                            <Option value="">{t("admin.assistants.all_states")}</Option>
-                            <Option value="active">{t("admin.assistants.state_active")}</Option>
-                            <Option value="pending_legal_review">{t("admin.assistants.state_pending")}</Option>
-                            <Option value="inactive">{t("admin.assistants.state_inactive")}</Option>
-                        </Dropdown>
-                        <Dropdown
-                            selectedOptions={complianceStatus ? [complianceStatus] : []}
-                            onOptionSelect={(_, data) => setComplianceStatus((data.optionValue as ComplianceStatus) || undefined)}
-                            placeholder={t("admin.assistants.all_compliance")}
-                            aria-label={t("admin.assistants.all_compliance")}
-                        >
-                            <Option value="">{t("admin.assistants.all_compliance")}</Option>
-                            <Option value="passed">{t("admin.assistants.compliance_passed")}</Option>
-                            <Option value="high_risk_detected">{t("admin.assistants.compliance_high_risk")}</Option>
-                            <Option value="error">{t("admin.assistants.compliance_error")}</Option>
-                        </Dropdown>
-                        <Field className={styles.accessFilter} label={t("admin.assistants.all_access")}>
-                            <RadioGroup
-                                value={access || "all"}
-                                onChange={(_, data) => handleAccessChange(data.value === "all" ? undefined : (data.value as AssistantAccessType))}
-                            >
-                                <Radio value="all" label={t("admin.assistants.all_access")} />
-                                <Radio
-                                    value="public"
-                                    label={
-                                        <span className={styles.accessOption}>
-                                            <Eye24Regular />
-                                            <span>{t("admin.assistants.access_public")}</span>
-                                        </span>
-                                    }
-                                />
-                                <Radio
-                                    value="hierarchical"
-                                    label={
-                                        <span className={styles.accessOption}>
-                                            <People24Regular />
-                                            <span>{t("admin.assistants.access_hierarchical")}</span>
-                                        </span>
-                                    }
-                                />
-                                {access === "hierarchical" && (
-                                    <div className={styles.departmentPicker}>
-                                        <DepartmentTreeDropdown publishDepartments={departments} setPublishDepartments={setDepartments} multiple={false} />
-                                    </div>
-                                )}
-                                <Radio
-                                    value="private"
-                                    label={
-                                        <span className={styles.accessOption}>
-                                            <EyeOff24Regular />
-                                            <span>{t("admin.assistants.access_private")}</span>
-                                        </span>
-                                    }
-                                />
-                            </RadioGroup>
-                        </Field>
-                        <div className={styles.sortControls}>
+                        <section className={styles.filterGroup} aria-labelledby="assistant-filter-heading">
+                            <Title3 id="assistant-filter-heading">{t("admin.assistants.filters")}</Title3>
+                            <SearchBox
+                                className={styles.search}
+                                value={search}
+                                onChange={(_, data) => setSearch(data.value)}
+                                placeholder={t("admin.assistants.search_placeholder")}
+                                aria-label={t("admin.assistants.search_placeholder")}
+                            />
                             <Dropdown
-                                value={sortBy}
+                                value={selectedStateLabel}
+                                selectedOptions={[state ?? ""]}
+                                button={{ children: selectedStateLabel }}
+                                onOptionSelect={(_, data) => setState((data.optionValue as AssistantState) || undefined)}
+                                placeholder={t("admin.assistants.all_states")}
+                                aria-label={t("admin.assistants.all_states")}
+                            >
+                                <Option value="" text={t("admin.assistants.all_states")}>
+                                    {t("admin.assistants.all_states")}
+                                </Option>
+                                <Option value="active" text={t("admin.assistants.state_active")}>
+                                    {t("admin.assistants.state_active")}
+                                </Option>
+                                <Option value="pending_legal_review" text={t("admin.assistants.state_pending")}>
+                                    {t("admin.assistants.state_pending")}
+                                </Option>
+                                <Option value="inactive" text={t("admin.assistants.state_inactive")}>
+                                    {t("admin.assistants.state_inactive")}
+                                </Option>
+                            </Dropdown>
+                            <Dropdown
+                                value={selectedComplianceLabel}
+                                selectedOptions={[complianceStatus ?? ""]}
+                                button={{ children: selectedComplianceLabel }}
+                                onOptionSelect={(_, data) => setComplianceStatus((data.optionValue as ComplianceStatus) || undefined)}
+                                placeholder={t("admin.assistants.all_compliance")}
+                                aria-label={t("admin.assistants.all_compliance")}
+                            >
+                                <Option value="" text={t("admin.assistants.all_compliance")}>
+                                    {t("admin.assistants.all_compliance")}
+                                </Option>
+                                <Option value="passed" text={t("admin.assistants.compliance_passed")}>
+                                    {t("admin.assistants.compliance_passed")}
+                                </Option>
+                                <Option value="high_risk_detected" text={t("admin.assistants.compliance_high_risk")}>
+                                    {t("admin.assistants.compliance_high_risk")}
+                                </Option>
+                                <Option value="error" text={t("admin.assistants.compliance_error")}>
+                                    {t("admin.assistants.compliance_error")}
+                                </Option>
+                            </Dropdown>
+                            <Field className={styles.accessFilter} label={t("admin.assistants.all_access")}>
+                                <RadioGroup
+                                    value={access || "all"}
+                                    onChange={(_, data) => handleAccessChange(data.value === "all" ? undefined : (data.value as AssistantAccessType))}
+                                >
+                                    <Radio value="all" label={t("admin.assistants.all_access")} />
+                                    <Radio
+                                        value="public"
+                                        label={
+                                            <span className={styles.accessOption}>
+                                                <Eye24Regular />
+                                                <span>{t("admin.assistants.access_public")}</span>
+                                            </span>
+                                        }
+                                    />
+                                    <Radio
+                                        value="hierarchical"
+                                        label={
+                                            <span className={styles.accessOption}>
+                                                <People24Regular />
+                                                <span>{t("admin.assistants.access_hierarchical")}</span>
+                                            </span>
+                                        }
+                                    />
+                                    <Radio
+                                        value="private"
+                                        label={
+                                            <span className={styles.accessOption}>
+                                                <EyeOff24Regular />
+                                                <span>{t("admin.assistants.access_private")}</span>
+                                            </span>
+                                        }
+                                    />
+                                </RadioGroup>
+                            </Field>
+                            {access === "hierarchical" && (
+                                <Field className={styles.departmentPicker} label={t("admin.assistants.department_label")}>
+                                    <DepartmentTreeDropdown publishDepartments={departments} setPublishDepartments={setDepartments} multiple={false} />
+                                </Field>
+                            )}
+                        </section>
+                        <section className={styles.orderingGroup} aria-label={t("admin.assistants.sort_by")}>
+                            <Body2 className={styles.orderingLabel}>{t("admin.assistants.sort_by")}</Body2>
+                            <Dropdown
+                                value={selectedSortByLabel}
                                 selectedOptions={[sortBy]}
+                                button={{ children: selectedSortByLabel }}
                                 onOptionSelect={(_, data) => setSortBy(data.optionValue as typeof sortBy)}
                                 aria-label={t("admin.assistants.sort_by")}
                             >
-                                <Option value="updated">{t("admin.assistants.sort_updated")}</Option>
-                                <Option value="title">{t("admin.assistants.sort_title")}</Option>
-                                <Option value="subscriptions">{t("admin.assistants.sort_subscriptions")}</Option>
+                                <Option value="updated" text={t("admin.assistants.sort_updated")}>
+                                    {t("admin.assistants.sort_updated")}
+                                </Option>
+                                <Option value="title" text={t("admin.assistants.sort_title")}>
+                                    {t("admin.assistants.sort_title")}
+                                </Option>
+                                <Option value="subscriptions" text={t("admin.assistants.sort_subscriptions")}>
+                                    {t("admin.assistants.sort_subscriptions")}
+                                </Option>
                             </Dropdown>
                             <Dropdown
-                                value={sortOrder}
+                                value={selectedSortOrderLabel}
                                 selectedOptions={[sortOrder]}
+                                button={{ children: selectedSortOrderLabel }}
                                 onOptionSelect={(_, data) => setSortOrder(data.optionValue as typeof sortOrder)}
                                 aria-label={t("admin.assistants.sort_order")}
                             >
-                                <Option value="desc">{t("admin.assistants.sort_desc")}</Option>
-                                <Option value="asc">{t("admin.assistants.sort_asc")}</Option>
+                                <Option value="desc" text={t("admin.assistants.sort_desc")}>
+                                    {t("admin.assistants.sort_desc")}
+                                </Option>
+                                <Option value="asc" text={t("admin.assistants.sort_asc")}>
+                                    {t("admin.assistants.sort_asc")}
+                                </Option>
                             </Dropdown>
-                        </div>
-                        {hasFilters && (
-                            <Button appearance="subtle" icon={<ArrowResetRegular />} onClick={clearFilters}>
-                                {t("admin.assistants.clear_filters")}
-                            </Button>
-                        )}
+                            {hasFilters && (
+                                <Button appearance="subtle" icon={<ArrowResetRegular />} onClick={clearFilters}>
+                                    {t("admin.assistants.clear_filters")}
+                                </Button>
+                            )}
+                        </section>
                     </section>
 
                     {error && (

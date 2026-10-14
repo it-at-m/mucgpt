@@ -1,6 +1,6 @@
 [project]
 name = "mucgpt-core-service"
-version = "0.20.0"
+version = "0.21.0"
 description = "a web interface for large language models for the public administration"
 readme = "README.md"
 requires-python= ">=3.13"
@@ -39,7 +39,7 @@ dependencies = [
     "psycopg[binary]>=3.2",
     "sqlalchemy>=2.0",
     "asyncpg>=0.31.0",
-    "ag-ui-langgraph[fastapi]==0.0.45",
+    "ag-ui-langgraph[fastapi]==0.0.47",
     "ag-ui-protocol==1.0.0",
 ]
 

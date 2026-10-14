@@ -28,6 +28,12 @@ class AssistantState(str, Enum):  # noqa: UP042
     PENDING_LEGAL_REVIEW = "pending_legal_review"
 
 
+class AssistantAccessType(str, Enum):  # noqa: UP042
+    PRIVATE = "private"
+    PUBLIC = "public"
+    HIERARCHICAL = "hierarchical"
+
+
 class ComplianceCategoryResult(BaseModel):
     """Result for one EU AI Act high-risk category."""
 

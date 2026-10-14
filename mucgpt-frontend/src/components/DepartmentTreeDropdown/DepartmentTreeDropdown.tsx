@@ -20,9 +20,10 @@ interface Props {
     publishDepartments: string[];
     setPublishDepartments: (departments: string[]) => void;
     disabled?: boolean;
+    multiple?: boolean;
 }
 
-export const DepartmentTreeDropdown = ({ publishDepartments, setPublishDepartments, disabled }: Props) => {
+export const DepartmentTreeDropdown = ({ publishDepartments, setPublishDepartments, disabled, multiple = true }: Props) => {
     const { t } = useTranslation();
     const [tree, setTree] = useState<Record<string, DirectoryNode[]>>({});
     const [expanded, setExpanded] = useState<Set<string>>(new Set());
@@ -83,6 +84,10 @@ export const DepartmentTreeDropdown = ({ publishDepartments, setPublishDepartmen
         if (isSelected) {
             setPublishDepartments(publishDepartments.filter(sel => sel !== value));
         } else {
+            if (!multiple) {
+                setPublishDepartments([value]);
+                return;
+            }
             const newSelected = publishDepartments.filter(sel => !isDepartmentPrefixMatch(sel, value));
             setPublishDepartments([...newSelected, value]);
         }

@@ -4,6 +4,7 @@ import {
     AssistantCreateInput,
     AssistantCreateResponse,
     AssistantResponse,
+    AssistantState,
     AssistantStateUpdateInput,
     AssistantUpdateInput,
     CommunityAssistant,
@@ -23,6 +24,21 @@ export interface AssistantListQueryParams {
     exclude_subscribed?: boolean;
 }
 
+export type AssistantAccessType = "private" | "public" | "hierarchical";
+export type ComplianceStatus = "passed" | "high_risk_detected" | "error";
+
+export interface AdminAssistantListQueryParams {
+    state?: AssistantState;
+    compliance_status?: ComplianceStatus;
+    access?: AssistantAccessType;
+    department?: string;
+    search?: string;
+    sort_by?: AssistantListSortBy;
+    sort_order?: AssistantListSortOrder;
+    offset?: number;
+    limit?: number;
+}
+
 interface AssistantRequestOptions {
     signal?: AbortSignal;
 }
@@ -38,6 +54,24 @@ const buildQueryString = (params?: AssistantListQueryParams): string => {
     if (typeof params.limit === "number") query.set("limit", String(params.limit));
     if (params.exclude_owned) query.set("exclude_owned", "true");
     if (params.exclude_subscribed) query.set("exclude_subscribed", "true");
+
+    const queryString = query.toString();
+    return queryString ? `?${queryString}` : "";
+};
+
+const buildAdminQueryString = (params?: AdminAssistantListQueryParams): string => {
+    if (!params) return "";
+
+    const query = new URLSearchParams();
+    if (params.state) query.set("state", params.state);
+    if (params.compliance_status) query.set("compliance_status", params.compliance_status);
+    if (params.access) query.set("access", params.access);
+    if (params.department?.trim()) query.set("department", params.department.trim());
+    if (params.search?.trim()) query.set("search", params.search.trim());
+    if (params.sort_by) query.set("sort_by", params.sort_by);
+    if (params.sort_order) query.set("sort_order", params.sort_order);
+    if (typeof params.offset === "number") query.set("offset", String(params.offset));
+    if (typeof params.limit === "number") query.set("limit", String(params.limit));
 
     const queryString = query.toString();
     return queryString ? `?${queryString}` : "";
@@ -113,6 +147,13 @@ export async function getDirectoryChildren(path: string[] = []): Promise<Directo
 
 export async function getAssistantReviewQueueApi(options?: AssistantRequestOptions): Promise<AssistantResponse[]> {
     return handleApiRequest(() => fetch("/api/admin/assistant/review", { ...getConfig(), signal: options?.signal }), "Failed to get assistant review queue");
+}
+
+export async function getAdminAssistantsApi(params?: AdminAssistantListQueryParams, options?: AssistantRequestOptions): Promise<AssistantResponse[]> {
+    return handleApiRequest(
+        () => fetch(`/api/admin/assistants${buildAdminQueryString(params)}`, { ...getConfig(), signal: options?.signal }),
+        "Failed to get admin assistant list"
+    );
 }
 
 export async function updateAssistantStateApi(assistantId: string, input: AssistantStateUpdateInput): Promise<AssistantResponse> {

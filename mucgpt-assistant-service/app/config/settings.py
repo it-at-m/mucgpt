@@ -119,6 +119,7 @@ class Settings(BaseSettings):
     LOG_CONFIG: str = str(Path(__file__).resolve().parent.parent / "logconf.yaml")
     OWNER_CACHE_REFRESH_ON_READ: bool = False
     COMPLIANCE_REQUIRE_VERIFICATION: bool = True
+    COMPLIANCE_REQUIRE_LEGAL_REVIEW: bool = True
 
     # Nested sub-configurations
     DB: DBConfig

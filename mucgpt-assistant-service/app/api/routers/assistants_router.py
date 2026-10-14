@@ -68,7 +68,8 @@ def _state_from_compliance_result(
         compliance_result
         and compliance_result.get("overall_status") == "high_risk_detected"
     ):
-        return AssistantState.PENDING_LEGAL_REVIEW
+        if get_settings().COMPLIANCE_REQUIRE_LEGAL_REVIEW:
+            return AssistantState.PENDING_LEGAL_REVIEW
     return AssistantState.ACTIVE
 
 

@@ -39,6 +39,12 @@ $serviceConfig = @{
 }
 $availableServices = @($serviceConfig.Keys)
 
+$repositoryRoot = git -C $PSScriptRoot rev-parse --show-toplevel
+if ($LASTEXITCODE -ne 0) {
+    throw "Unable to find the repository root."
+}
+Push-Location $repositoryRoot
+
 function Read-YesNo {
     param(
         [Parameter(Mandatory=$true)][string]$Prompt
@@ -85,20 +91,79 @@ function Update-ManifestVersion {
         Write-Host $uvOutput -ForegroundColor DarkGray
     }
     elseif ($ManifestType -eq "packageJson") {
-        $content = Get-Content -Raw -Path $FilePath
-        $regex = [regex]::new('(?m)("version"\s*:\s*")[^"]+("\s*)')
-
-        if (-not $regex.IsMatch($content)) {
-            throw "Could not find a version entry in $FilePath"
+        $projectDir = Split-Path -Parent $FilePath
+        Write-Host "Running: npm version $NewVersion --no-git-tag-version --ignore-scripts" -ForegroundColor DarkGray
+        Push-Location $projectDir
+        try {
+            $npmOutput = npm version $NewVersion --no-git-tag-version --ignore-scripts 2>&1
+            if ($LASTEXITCODE -ne 0) {
+                throw "npm version failed: $npmOutput"
+            }
+            Write-Host $npmOutput -ForegroundColor DarkGray
         }
-
-        $replacement = { param($match) return $match.Groups[1].Value + $NewVersion + $match.Groups[2].Value }
-        $updatedContent = $regex.Replace($content, $replacement, 1)
-        [System.IO.File]::WriteAllText($FilePath, $updatedContent, (New-Object System.Text.UTF8Encoding $false))
+        finally {
+            Pop-Location
+        }
     }
     else {
         throw "Unsupported manifest type '$ManifestType'"
     }
+}
+
+function Get-ManifestVersion {
+    param(
+        [Parameter(Mandatory=$true)][string]$FilePath,
+        [Parameter(Mandatory=$true)][string]$ManifestType
+    )
+
+    if ($ManifestType -eq "pyproject") {
+        $match = [regex]::Match((Get-Content -Raw -Path $FilePath), '(?m)^version\s*=\s*"([^"]+)"')
+        if (-not $match.Success) {
+            throw "Could not find a project version in $FilePath"
+        }
+        return $match.Groups[1].Value
+    }
+
+    if ($ManifestType -eq "packageJson") {
+        return (Get-Content -Raw -Path $FilePath | ConvertFrom-Json).version
+    }
+
+    throw "Unsupported manifest type '$ManifestType'"
+}
+
+function Test-LockfileVersion {
+    param(
+        [Parameter(Mandatory=$true)][string]$FilePath,
+        [Parameter(Mandatory=$true)][string]$ManifestType,
+        [Parameter(Mandatory=$true)][string]$ManifestVersion
+    )
+
+    $projectDir = Split-Path -Parent $FilePath
+    if ($ManifestType -eq "packageJson") {
+        $lockPath = Join-Path -Path $projectDir -ChildPath "package-lock.json"
+        if (-not (Test-Path $lockPath)) {
+            throw "Unable to find lockfile: $lockPath"
+        }
+
+        $lockVersion = node -p "require(process.argv[1]).packages[''].version" $lockPath
+        if ($LASTEXITCODE -ne 0) {
+            throw "Unable to read the root package version from $lockPath"
+        }
+        if ($lockVersion -ne $ManifestVersion) {
+            throw "package-lock.json version $lockVersion does not match package.json version $ManifestVersion"
+        }
+        return
+    }
+
+    if ($ManifestType -eq "pyproject") {
+        $uvOutput = uv lock --check --project $projectDir 2>&1
+        if ($LASTEXITCODE -ne 0) {
+            throw "uv.lock does not match pyproject.toml: $uvOutput"
+        }
+        return
+    }
+
+    throw "Unsupported manifest type '$ManifestType'"
 }
 
 # Interactive service selection if not provided
@@ -300,49 +365,63 @@ Write-Host "New version:     $newVersion" -ForegroundColor Green
 Write-Host "New tag:         $newTag" -ForegroundColor Green
 Write-Host "=======================================" -ForegroundColor Cyan
 
-$manifestPath = $null
-$manifestType = $null
-if ($serviceConfig[$Service].ManifestPath) {
-    $manifestPath = Join-Path -Path $PSScriptRoot -ChildPath $serviceConfig[$Service].ManifestPath
-    $manifestType = $serviceConfig[$Service].ManifestType
-}
-$operationSucceeded = $false
+$manifestPath = Join-Path -Path $PSScriptRoot -ChildPath $serviceConfig[$Service].ManifestPath
+$manifestType = $serviceConfig[$Service].ManifestType
 
-$options = @("y", "n")
-$confirmation = ""
-while ($confirmation -notin $options) {
-    $userInput = Read-Host "Do you want to create this tag? (y/n)"
-
-    # Handle empty input
-    if ([string]::IsNullOrWhiteSpace($userInput)) {
-        Write-Host "Please enter 'y' or 'n'" -ForegroundColor Red
-        continue
-    }
-
-    # Direct match
-    if ($userInput -eq "y" -or $userInput -eq "n") {
-        $confirmation = $userInput
-        continue
-    }
-
-    # Try autocomplete
-    $matchedOptions = $options | Where-Object { $_ -like "$userInput*" }
-
-    if ($matchedOptions.Count -eq 1) {
-        $confirmation = $matchedOptions[0]
-        Write-Host "Selected: $confirmation" -ForegroundColor Green
-    } else {
-        Write-Host "Please enter 'y' or 'n'" -ForegroundColor Red
-    }
+if (-not (Test-Path $manifestPath)) {
+    throw "Unable to find manifest file: $manifestPath"
 }
 
+$manifestVersion = Get-ManifestVersion -FilePath $manifestPath -ManifestType $manifestType
+Test-LockfileVersion -FilePath $manifestPath -ManifestType $manifestType -ManifestVersion $manifestVersion
+if ($manifestVersion -ne $newVersion) {
+    $updateManifest = Read-YesNo "Update the manifest and lockfile to version $newVersion? (y/n)"
+    if ($updateManifest -ne "y") {
+        Write-Host "Operation cancelled." -ForegroundColor Yellow
+        exit
+    }
+
+    Update-ManifestVersion -FilePath $manifestPath -ManifestType $manifestType -NewVersion $newVersion
+    Write-Host "`nVersion files updated. Review and commit them before creating the release tag:" -ForegroundColor Green
+    Write-Host "  git add $($serviceConfig[$Service].ManifestPath)" -ForegroundColor Cyan
+    if ($manifestType -eq "packageJson") {
+        Write-Host "  git add mucgpt-frontend/package-lock.json" -ForegroundColor Cyan
+    }
+    else {
+        $projectDir = Split-Path -Parent $serviceConfig[$Service].ManifestPath
+        Write-Host "  git add $projectDir/uv.lock" -ForegroundColor Cyan
+    }
+    Write-Host "  git commit -m '🔖 release $Service $newVersion'" -ForegroundColor Cyan
+    Write-Host "Then run this script again to create and push $newTag." -ForegroundColor Cyan
+    exit
+}
+
+$versionFiles = @($serviceConfig[$Service].ManifestPath)
+if ($manifestType -eq "packageJson") {
+    $versionFiles += "mucgpt-frontend/package-lock.json"
+}
+else {
+    $versionFiles += (Join-Path (Split-Path -Parent $serviceConfig[$Service].ManifestPath) "uv.lock")
+}
+
+$uncommittedVersionFiles = @(git status --porcelain -- $versionFiles)
+if ($LASTEXITCODE -ne 0) {
+    throw "Unable to determine whether version files are committed."
+}
+if ($uncommittedVersionFiles.Count -gt 0) {
+    Write-Host "Version files must be committed before tagging:" -ForegroundColor Red
+    $uncommittedVersionFiles | ForEach-Object { Write-Host "  $_" -ForegroundColor Red }
+    exit 1
+}
+
+$confirmation = Read-YesNo "Create annotated tag $newTag from the current committed version files? (y/n)"
 if ($confirmation -ne "y") {
     Write-Host "Operation cancelled." -ForegroundColor Yellow
     exit
 }
 
 # Create the tag
-$tagCreationOutput = git tag $newTag 2>&1
+$tagCreationOutput = git tag -a $newTag -m "$Service $newVersion" 2>&1
 if ($LASTEXITCODE -ne 0) {
     Write-Host "`n❌ ERROR CREATING TAG" -ForegroundColor White -BackgroundColor Red
     Write-Host "-------------------------------------" -ForegroundColor Red
@@ -350,13 +429,9 @@ if ($LASTEXITCODE -ne 0) {
         Write-Host $line -ForegroundColor Red
     }
     Write-Host "-------------------------------------" -ForegroundColor Red
-    if ($manifestPath) {
-        Write-Host "Manifest update skipped because tag creation failed." -ForegroundColor Yellow
-    }
     exit 1
 }
 
-$operationSucceeded = $true
 Write-Host "Tag $newTag created locally." -ForegroundColor Green
 
 $pushOptions = @("y", "n")
@@ -408,7 +483,6 @@ if ($pushConfirmation -eq "y") {
             if ($packageUrl) {
                 Write-Host "You can check the new $Service version at: $packageUrl" -ForegroundColor Cyan
             }
-            $operationSucceeded = $true
         } else {
             Write-Host "`n❌ ERROR PUSHING TAG" -ForegroundColor White -BackgroundColor Red
             Write-Host "-------------------------------------" -ForegroundColor Red
@@ -419,7 +493,6 @@ if ($pushConfirmation -eq "y") {
             Write-Host "The tag was created locally but could not be pushed to remote repository." -ForegroundColor Yellow
             Write-Host "Check your internet connection or repository access permissions." -ForegroundColor Yellow
             Write-Host "To push later, use: git push origin $newTag" -ForegroundColor Cyan
-            $operationSucceeded = $false
         }
     } catch {
         Write-Host "`n❌ ERROR PUSHING TAG" -ForegroundColor White -BackgroundColor Red
@@ -429,36 +502,8 @@ if ($pushConfirmation -eq "y") {
         Write-Host "The tag was created locally but could not be pushed to remote repository." -ForegroundColor Yellow
         Write-Host "Check your internet connection or repository access permissions." -ForegroundColor Yellow
         Write-Host "To push later, use: git push origin $newTag" -ForegroundColor Cyan
-        $operationSucceeded = $false
     }
 }else {
     Write-Host "Tag was created locally but not pushed." -ForegroundColor Yellow
     Write-Host "To push later, use: git push origin $newTag" -ForegroundColor Cyan
-}
-
-if ($operationSucceeded -and $manifestPath) {
-    Write-Host "`nManifest file detected: $manifestPath" -ForegroundColor Cyan
-
-    if (-not (Test-Path $manifestPath)) {
-        Write-Host "  ⚠️ Unable to find manifest file. Skipping version file update." -ForegroundColor Yellow
-    }
-    else {
-        $updateManifest = Read-YesNo "Do you want to update this file to version $newVersion? (y/n)"
-
-        if ($updateManifest -eq "y") {
-            try {
-                Update-ManifestVersion -FilePath $manifestPath -ManifestType $manifestType -NewVersion $newVersion
-                Write-Host "Manifest version updated to $newVersion" -ForegroundColor Green
-            }
-            catch {
-                Write-Host "Failed to update manifest version: $($_.Exception.Message)" -ForegroundColor Red
-            }
-        }
-        else {
-            Write-Host "Manifest file left unchanged." -ForegroundColor Yellow
-        }
-    }
-}
-elseif ($manifestPath) {
-    Write-Host "`nSkipping manifest update because the tagging workflow did not complete successfully." -ForegroundColor Yellow
 }

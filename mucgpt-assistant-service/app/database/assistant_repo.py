@@ -81,6 +81,18 @@ class AssistantRepository(Repository[Assistant]):
         )
         return result.scalars().first()
 
+    async def claim_version_update(self, assistant: Assistant) -> bool:
+        """Claim an assistant for a version append using its update timestamp."""
+        result = await self.session.execute(
+            update(Assistant)
+            .where(
+                Assistant.id == assistant.id,
+                Assistant.updated_at == assistant.updated_at,
+            )
+            .values(updated_at=datetime.utcnow())
+        )
+        return result.rowcount == 1
+
     async def create_assistant_version(
         self,
         assistant: Assistant,

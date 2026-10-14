@@ -1224,15 +1224,15 @@ export const handlers = [
         const assistants = DYNAMIC_ASSISTANTS.filter(assistant => {
             const version = assistant.latest_version;
             const hierarchy = assistant.hierarchical_access || version.hierarchical_access || [];
-            const isHierarchical = version.is_visible && hierarchy.length > 0;
-            const isPublic = version.is_visible && hierarchy.length === 0;
-            const isPrivate = !version.is_visible;
+            const isVisible = version.is_visible ?? true;
+            const isHierarchical = isVisible && hierarchy.length > 0;
+            const isPublic = isVisible && hierarchy.length === 0;
+            const isPrivate = !isVisible;
             const matchesAccess =
                 !access || (access === "private" && isPrivate) || (access === "public" && isPublic) || (access === "hierarchical" && isHierarchical);
             const matchesSearch = !search || `${version.name} ${version.description || ""}`.toLowerCase().includes(search);
             const matchesDepartment =
-                !department ||
-                (version.is_visible && hierarchy.some(path => path.toLowerCase() === department || department.startsWith(`${path.toLowerCase()}-`)));
+                !department || (isVisible && hierarchy.some(path => path.toLowerCase() === department || department.startsWith(`${path.toLowerCase()}-`)));
             return (
                 matchesAccess &&
                 matchesSearch &&

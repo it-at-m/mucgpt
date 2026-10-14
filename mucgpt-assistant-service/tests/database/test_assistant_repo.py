@@ -674,9 +674,25 @@ class TestAssistantRepository:
         assert assistant2.id not in assistant_ids
 
     async def test_get_all_assistants_for_admin_filters_before_pagination(
-        self, db_session, sample_assistant_version_data
+        self, db_session, monkeypatch, sample_assistant_version_data
     ):
         """Test admin department pagination is applied after access filtering."""
+        tree = [
+            {"shortname": "demo-team-a", "name": "DEMO-TEAM-A", "children": []},
+            {"shortname": "demo-team-b", "name": "DEMO-TEAM-B", "children": []},
+        ]
+
+        async def _fake_get_tree():
+            return tree
+
+        monkeypatch.setattr(
+            path_matcher.directory_cache,
+            "get_simplified_directory_tree",
+            _fake_get_tree,
+        )
+        monkeypatch.setattr(
+            path_matcher, "_INDEX_CACHE", {"index": None, "expires_at": None}
+        )
         assistant_repo = AssistantRepository(db_session)
 
         async def create_assistant_with_version(access_path: str, name: str):
@@ -692,13 +708,13 @@ class TestAssistantRepository:
             )
             return assistant
 
-        await create_assistant_with_version("ITM-AB", "a-inaccessible")
-        accessible = await create_assistant_with_version("ITM-KM", "b-accessible")
-        await create_assistant_with_version("ITM-KM", "c-accessible")
+        await create_assistant_with_version("DEMO-TEAM-B", "a-inaccessible")
+        accessible = await create_assistant_with_version("DEMO-TEAM-A", "b-accessible")
+        await create_assistant_with_version("DEMO-TEAM-A", "c-accessible")
         await db_session.commit()
 
         result = await assistant_repo.get_all_assistants_for_admin(
-            department="ITM-KM", sort_by="title", sort_order="asc", limit=1
+            department="DEMO-TEAM-A", sort_by="title", sort_order="asc", limit=1
         )
 
         assert [assistant.id for assistant in result] == [accessible.id]

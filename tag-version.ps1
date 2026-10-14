@@ -56,7 +56,7 @@ function Read-YesNo {
         $userInput = Read-Host $Prompt
 
         if ([string]::IsNullOrWhiteSpace($userInput)) {
-            Write-Host "Please enter 'y' or 'n'" -ForegroundColor Red
+            Write-Host 'Please enter y or n.' -ForegroundColor Red
             continue
         }
 
@@ -70,7 +70,7 @@ function Read-YesNo {
             return $matchedOptions[0]
         }
 
-        Write-Host "Please enter 'y' or 'n'" -ForegroundColor Red
+        Write-Host 'Please enter y or n.' -ForegroundColor Red
     }
 }
 
@@ -307,7 +307,9 @@ if ($tags.Count -gt 0) {
             Write-Host "  Warning: Skipping tag $tag as it doesn't follow semantic versioning format" -ForegroundColor Yellow
             Write-Host "  Error: $($_.Exception.Message)" -ForegroundColor DarkYellow
         }
-    }    if ($versionObjects.Count -gt 0) {
+    }
+
+    if ($versionObjects.Count -gt 0) {
         # Sort by Major, Minor, Patch in descending order
         $sortedVersions = $versionObjects | Sort-Object -Property Major,Minor,Patch -Descending
 
@@ -391,7 +393,7 @@ if ($manifestVersion -ne $newVersion) {
         $projectDir = Split-Path -Parent $serviceConfig[$Service].ManifestPath
         Write-Host "  git add $projectDir/uv.lock" -ForegroundColor Cyan
     }
-    Write-Host "  git commit -m '🔖 release $Service $newVersion'" -ForegroundColor Cyan
+    Write-Host "  git commit -m 'release $Service $newVersion'" -ForegroundColor Cyan
     Write-Host "Then run this script again to create and push $newTag." -ForegroundColor Cyan
     exit
 }
@@ -434,31 +436,31 @@ if ($LASTEXITCODE -ne 0) {
 
 Write-Host "Tag $newTag created locally." -ForegroundColor Green
 
-$pushOptions = @("y", "n")
-$pushConfirmation = ""
+$pushOptions = @('y', 'n')
+$pushConfirmation = ''
 while ($pushConfirmation -notin $pushOptions) {
-    $userInput = Read-Host "Do you want to push this tag to origin? (y/n)"
+    $userInput = Read-Host 'Do you want to push this tag to origin? (y/n)'
 
     # Handle empty input
     if ([string]::IsNullOrWhiteSpace($userInput)) {
-        Write-Host "Please enter 'y' or 'n'" -ForegroundColor Red
+        Write-Host 'Please enter y or n.' -ForegroundColor Red
         continue
     }
 
     # Direct match
-    if ($userInput -eq "y" -or $userInput -eq "n") {
+    if ($userInput -eq 'y' -or $userInput -eq 'n') {
         $pushConfirmation = $userInput
         continue
     }
 
     # Try autocomplete
-    $matchedOptions = $pushOptions | Where-Object { $_ -like "$userInput*" }
+    $matchedOptions = $pushOptions | Where-Object { $_ -like ($userInput + '*') }
 
     if ($matchedOptions.Count -eq 1) {
         $pushConfirmation = $matchedOptions[0]
-        Write-Host "Selected: $pushConfirmation" -ForegroundColor Green
+        Write-Host ('Selected: ' + $pushConfirmation) -ForegroundColor Green
     } else {
-        Write-Host "Please enter 'y' or 'n'" -ForegroundColor Red
+        Write-Host 'Please enter y or n.' -ForegroundColor Red
     }
 }
 

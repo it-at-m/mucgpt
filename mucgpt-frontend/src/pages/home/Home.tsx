@@ -5,13 +5,14 @@ import { useTranslation } from "react-i18next";
 import { Button, Tab, TabList } from "@fluentui/react-components";
 import type { SelectTabData, SelectTabEvent } from "@fluentui/react-components";
 import { CompassNorthwest24Regular } from "@fluentui/react-icons";
-import { useContext, useEffect, useMemo, useState } from "react";
+import { useCallback, useContext, useEffect, useMemo, useState } from "react";
 
 import { AssistantStorageService } from "../../service/assistantstorage";
-import { AssistantResponse, CommunityAssistant, OwnerDetailsResponse } from "../../api/models";
+import { AssistantResponse, CommunityAssistant, Model, OwnerDetailsResponse } from "../../api/models";
 import { ASSISTANT_STORE } from "../../constants";
 import { UserContext } from "../layout/UserContextProvider";
 import { QuestionInput } from "../../components/QuestionInput/QuestionInput";
+import { LLMContext } from "../../components/LLMSelector/LLMContextProvider";
 import { getAllCommunityAssistantsApi, getUserSubscriptionsApi, getOwnedCommunityAssistants } from "../../api/assistant-client";
 import { DiscoveryCard } from "../../components/DiscoveryCard";
 import { OwnerMetadataLink, getPrimaryOwnerDetails } from "../../components/OwnerMetadataLink/OwnerMetadataLink";
@@ -71,6 +72,7 @@ const Home = () => {
 
     const { user } = useContext(UserContext);
     const config = useContext(ConfigContext);
+    const { LLM, setLLM, availableLLMs } = useContext(LLMContext);
 
     useEffect(() => {
         if (user) {
@@ -255,6 +257,21 @@ const Home = () => {
         }
     };
 
+    const onLLMSelectionChange = useCallback(
+        (nextLLM: string) => {
+            const found = availableLLMs.find((m: Model) => m.llm_name === nextLLM);
+            if (found) {
+                setLLM(found);
+                try {
+                    localStorage.setItem(STORAGE_KEYS.SETTINGS_LLM, nextLLM);
+                } catch {
+                    // ignore storage errors
+                }
+            }
+        },
+        [availableLLMs, setLLM]
+    );
+
     const onSendQuestion = (nextQuestion: string, uploadedFiles: UploadedData[]) => {
         const uploadedFileIds = Array.from(
             new Set(
@@ -315,6 +332,9 @@ const Home = () => {
                         tools={tools}
                         question={question}
                         onTranscription={text => setQuestion(text)}
+                        llmOptions={availableLLMs}
+                        selectedLLM={LLM.llm_name}
+                        onLLMSelectionChange={onLLMSelectionChange}
                     />
                 </div>
             </section>

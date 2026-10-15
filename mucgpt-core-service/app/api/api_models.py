@@ -80,7 +80,7 @@ class ChatCompletionRequest(BaseModel):
     )
     reasoning_effort: Literal["none", "minimal", "low", "medium", "high"] | None = (
         Field(
-            None,
+            "low",
             description="Reasoning effort; only applied to models that support reasoning",
         )
     )

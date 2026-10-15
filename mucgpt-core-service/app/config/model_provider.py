@@ -66,8 +66,10 @@ class ModelRegistry:
 
         if model_name in cls._models_without_temperature:
             normalized.pop("temperature", None)
-        # Only send reasoning_effort to models configured with supports_reasoning.
-        if model_name not in cls._reasoning_models:
+
+        if model_name in cls._reasoning_models:
+            normalized.pop("temperature", None)
+        else:
             normalized.pop("reasoning_effort", None)
         return normalized
 

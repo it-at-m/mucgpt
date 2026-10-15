@@ -11,6 +11,7 @@ class TestChatCompletionRequestConversationId:
 
         assert request.conversation_id is None
         assert request.model is None
+        assert request.reasoning_effort == "low"
 
     def test_conversation_id_is_accepted_when_provided(self) -> None:
         request = ChatCompletionRequest(

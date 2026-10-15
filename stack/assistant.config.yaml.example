@@ -24,6 +24,9 @@ OWNER_CACHE_REFRESH_ON_READ: false
 # Set to false for local setups without Redis-backed compliance cache.
 # Keep this aligned with MUCGPT_CORE_AI_ACT_COMPLIANCE_CHECK_ENABLED.
 COMPLIANCE_REQUIRE_VERIFICATION: false
+# Optional: send high-risk results to the administrator/legal review queue.
+# When false, high-risk results are still persisted, but the assistant remains active.
+COMPLIANCE_REQUIRE_LEGAL_REVIEW: true
 
 # SSO Settings (Keycloak)
 # Used by both core and assistant services for authentication

@@ -251,50 +251,41 @@ def test_token_usage_details_do_not_change_totals(include_total: bool) -> None:
     assert usage.cache_read_tokens == 2845
 
 
-def _usage_message(input_tokens: int, output_tokens: int) -> AIMessage:
-    return AIMessage(
-        content="response",
-        usage_metadata={
-            "input_tokens": input_tokens,
-            "output_tokens": output_tokens,
-            "total_tokens": input_tokens + output_tokens,
-        },
-    )
-
-
-def test_token_usage_middleware_records_usage_after_model() -> None:
+@pytest.mark.asyncio
+@pytest.mark.parametrize("async_call", [False, True], ids=["sync", "async"])
+async def test_token_usage_middleware_accumulates_calls_and_keeps_latest_context(
+    async_call: bool,
+) -> None:
     token_usage = TokenUsage()
-    runtime = Runtime(context=RequestContext(token_usage=token_usage))
+    request = _model_request(RequestContext(token_usage=token_usage))
     middleware = TokenUsageMiddleware()
 
     for input_tokens, output_tokens in ((10, 2), (20, 4)):
-        result = middleware.after_model(
-            {"messages": [_usage_message(input_tokens, output_tokens)]}, runtime
+        response = ModelResponse(
+            result=[
+                AIMessage(
+                    content="response",
+                    usage_metadata={
+                        "input_tokens": input_tokens,
+                        "output_tokens": output_tokens,
+                        "total_tokens": input_tokens + output_tokens,
+                    },
+                )
+            ]
         )
-        assert result is None
+        if async_call:
+            handler = AsyncMock(return_value=response)
+            result = await middleware.awrap_model_call(request, handler)
+            handler.assert_awaited_once_with(request)
+        else:
+            handler = MagicMock(return_value=response)
+            result = middleware.wrap_model_call(request, handler)
+            handler.assert_called_once_with(request)
+        assert result is response
 
     assert token_usage.prompt_tokens == 30
     assert token_usage.completion_tokens == 6
     assert token_usage.context_tokens == 24
-
-
-@pytest.mark.asyncio
-async def test_token_usage_middleware_records_usage_after_model_async() -> None:
-    token_usage = TokenUsage()
-    runtime = Runtime(context=RequestContext(token_usage=token_usage))
-
-    await TokenUsageMiddleware().aafter_model(
-        {"messages": [_usage_message(7, 3)]}, runtime
-    )
-
-    assert token_usage.prompt_tokens == 7
-    assert token_usage.completion_tokens == 3
-    assert token_usage.context_tokens == 10
-
-
-def test_token_usage_middleware_does_not_wrap_model_call() -> None:
-    assert "wrap_model_call" not in TokenUsageMiddleware.__dict__
-    assert "awrap_model_call" not in TokenUsageMiddleware.__dict__
 
 
 def test_normalize_model_settings_preserves_unknown_model_temperature() -> None:

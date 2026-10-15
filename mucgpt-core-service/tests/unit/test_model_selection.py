@@ -341,7 +341,7 @@ def test_azure_model_alias_uses_configured_temperature_capability(monkeypatch) -
 def test_temperature_filtering_is_configuration_driven(
     monkeypatch, model_name, supports_temperature
 ) -> None:
-    model_info = {"supports_reasoning": True}
+    model_info = {"supports_reasoning": False}
     if supports_temperature is not None:
         model_info["supports_temperature"] = supports_temperature
     model = _initialize_model(
@@ -359,11 +359,37 @@ def test_temperature_filtering_is_configuration_driven(
     normalized = ModelRegistry.normalize_model_settings(model, original)
 
     expected = dict(original)
+    expected.pop("reasoning_effort")
     if supports_temperature is False:
         expected.pop("temperature")
     assert normalized == expected
     assert original["temperature"] == 0.4
     assert ModelRegistry.get_model() is model
+
+
+def test_reasoning_models_omit_temperature_and_keep_reasoning_effort(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    model = _initialize_model(
+        ModelsConfig(
+            type="OPENAI",
+            llm_name="reasoning-model",
+            endpoint="https://example.test",
+            api_key="test",
+            model_info={
+                "supports_reasoning": True,
+                "supports_temperature": True,
+            },
+        ),
+        monkeypatch,
+    )
+
+    normalized = ModelRegistry.normalize_model_settings(
+        model,
+        {"temperature": 0.4, "stream": False, "reasoning_effort": "low"},
+    )
+
+    assert normalized == {"stream": False, "reasoning_effort": "low"}
 
 
 def test_reinitializing_registry_resets_temperature_capability(monkeypatch) -> None:

@@ -20,6 +20,7 @@ import {
     ChevronRight24Regular,
     CompassNorthwest24Regular,
     Dismiss24Regular,
+    PeopleCommunity20Regular,
     Shield20Regular,
     Sparkle24Regular
 } from "@fluentui/react-icons";
@@ -134,6 +135,15 @@ export const AppSidebar = ({
             },
             ...(isAdmin
                 ? [
+                      {
+                          id: "admin-assistants",
+                          kind: "link" as const,
+                          label: t("app_sidebar.admin_assistants", "All assistants"),
+                          ariaLabel: t("app_sidebar.go_admin_assistants", "Open all assistants"),
+                          to: "/admin/assistants",
+                          icon: <PeopleCommunity20Regular />,
+                          isActive: location.pathname.startsWith("/admin/assistants")
+                      },
                       {
                           id: "legal-review",
                           kind: "link" as const,

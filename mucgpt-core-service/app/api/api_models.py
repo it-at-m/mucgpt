@@ -3,6 +3,8 @@ from typing import Any, Final, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, PositiveInt
 
+from config.settings import ReasoningEffort
+
 
 class SummarizeResult(BaseModel):
     """Result model for the summarize endpoint."""
@@ -78,11 +80,13 @@ class ChatCompletionRequest(BaseModel):
         None,
         description="Creativity level: 'low' (conservative), 'medium' (balanced), 'high' (creative)",
     )
-    reasoning_effort: Literal["none", "minimal", "low", "medium", "high"] | None = (
-        Field(
-            None,
-            description="Reasoning effort; only applied to models that support reasoning",
-        )
+    reasoning_effort: ReasoningEffort | None = Field(
+        None,
+        description=(
+            "Reasoning effort; only applied to models that support reasoning. "
+            "Defaults to the model's configured effort and is adjusted to the "
+            "nearest effort the model supports"
+        ),
     )
     max_tokens: int | None = Field(4096, description="Maximum tokens to generate")
     stream: bool | None = Field(
@@ -460,6 +464,12 @@ class ModelsDTO(BaseModel):
     )
     supports_reasoning: bool | None = Field(
         None, description="Whether enhanced reasoning is available"
+    )
+    supported_reasoning_efforts: list[ReasoningEffort] | None = Field(
+        None, description="Reasoning efforts the model accepts, if known"
+    )
+    default_reasoning_effort: ReasoningEffort | None = Field(
+        None, description="Reasoning effort used when a request sets none"
     )
     knowledge_cut_off: str | None = Field(
         None, description="Last known training data cutoff for the model"

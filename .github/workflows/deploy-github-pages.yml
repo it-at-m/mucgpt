@@ -56,8 +56,13 @@ jobs:
       - name: Update version in package.json
         run: |
           cd mucgpt-frontend
-          npm version ${{ steps.vars.outputs.version }} --no-git-tag-version
-          echo "Updated package.json to version ${{ steps.vars.outputs.version }}"
+          CURRENT_VERSION=$(node -p "require('./package.json').version")
+          if [[ "$CURRENT_VERSION" != "${{ steps.vars.outputs.version }}" ]]; then
+            npm version ${{ steps.vars.outputs.version }} --no-git-tag-version
+            echo "Updated package.json to version ${{ steps.vars.outputs.version }}"
+          else
+            echo "package.json already has version $CURRENT_VERSION"
+          fi
 
       - name: Setup Node.js
         uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0

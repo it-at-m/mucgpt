@@ -17,7 +17,7 @@ wheels = [
 
 [[package]]
 name = "ag-ui-langgraph"
-version = "0.0.45"
+version = "0.0.47"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "ag-ui-a2ui-toolkit" },
@@ -27,9 +27,9 @@ dependencies = [
     { name = "langgraph" },
     { name = "pydantic" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/cf/f8/4c3addf0b8153bf5fce1fe65e8e533db17f3c156f4af5155d98b30867602/ag_ui_langgraph-0.0.45.tar.gz", hash = "sha256:a275fec2a8f03bebd3c729504199159e8864aadd04abf315024f2152f2f25f51", size = 375447, upload-time = "2026-09-09T15:22:31.921Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/d5/df/c21e7c4757c7092a2a5ab97a3c512ba36b6c9034731ffc7a7b927b631b6e/ag_ui_langgraph-0.0.47.tar.gz", hash = "sha256:e19c1b13c909d1fbbf46968c65cb3ab6c681d97a0f6f2b980bb94ee000ca8079", size = 380811, upload-time = "2026-10-08T07:54:45.871Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/b3/a0/75149ab9c9f21a9e8f620cd10db0d7672d52e184becae605356bf2e0947e/ag_ui_langgraph-0.0.45-py3-none-any.whl", hash = "sha256:f3db2b1a0b33916deafd5383f337a945b234f4bf72eb34a94b08270e30cc1be4", size = 113812, upload-time = "2026-09-09T15:22:30.558Z" },
+    { url = "https://files.pythonhosted.org/packages/f8/15/25e40bc240c9b92e1cfc1d2a416642b0d7928be24fbaba59e0357e117227/ag_ui_langgraph-0.0.47-py3-none-any.whl", hash = "sha256:481956ec2313987c041feb13cd593fa346b825be62bd0ba248738af48ef7717c", size = 111110, upload-time = "2026-10-08T07:54:44.813Z" },
 ]
 
 [package.optional-dependencies]
@@ -1665,7 +1665,7 @@ wheels = [
 
 [[package]]
 name = "mucgpt-core-service"
-version = "0.20.0"
+version = "0.22.0"
 source = { virtual = "." }
 dependencies = [
     { name = "ag-ui-langgraph", extra = ["fastapi"] },
@@ -1708,7 +1708,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "ag-ui-langgraph", extras = ["fastapi"], specifier = "==0.0.45" },
+    { name = "ag-ui-langgraph", extras = ["fastapi"], specifier = "==0.0.47" },
     { name = "ag-ui-protocol", specifier = "==1.0.0" },
     { name = "asgi-correlation-id", specifier = ">=4.3.4" },
     { name = "cloudpickle", specifier = ">=3.1.2" },

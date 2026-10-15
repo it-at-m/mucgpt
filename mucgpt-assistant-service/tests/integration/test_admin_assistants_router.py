@@ -17,6 +17,7 @@ from api.api_models import (
 from api.exceptions import VersionConflictException
 from api.routers.admin_assistants_router import update_assistant_state
 from backend import api_app
+from config.settings import get_settings
 from core.auth import require_admin
 from core.auth_models import AuthenticationResult
 from database.assistant_repo import AssistantRepository
@@ -59,7 +60,10 @@ async def test_public_access_filter_uses_postgresql_json_array_length() -> None:
 
 
 @pytest.mark.integration
-def test_high_risk_assistant_is_pending_legal_review(admin_client: TestClient) -> None:
+def test_high_risk_assistant_is_pending_legal_review(
+    admin_client: TestClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(get_settings(), "COMPLIANCE_REQUIRE_LEGAL_REVIEW", True)
     result = ComplianceCheckResult(
         overall_status="high_risk_detected",
         results=[
@@ -110,6 +114,65 @@ def test_high_risk_assistant_is_pending_legal_review(admin_client: TestClient) -
     assert inactive_subscription_response.status_code == 403
     assert inactive_subscription_response.json()["detail"] == (
         f"Assistant with ID {assistant.id} is unavailable for use"
+    )
+
+
+@pytest.mark.integration
+def test_high_risk_assistant_remains_active_when_legal_review_is_disabled(
+    test_client: TestClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(get_settings(), "COMPLIANCE_REQUIRE_LEGAL_REVIEW", False)
+    high_risk_result = ComplianceCheckResult(
+        overall_status="high_risk_detected",
+        results=[
+            {
+                "category": "education",
+                "status": "high_risk_detected",
+                "reasoning": "Makes eligibility recommendations.",
+            }
+        ],
+    )
+    create_response = test_client.post(
+        "assistant/create",
+        json=AssistantCreate(
+            name="High risk assistant without review",
+            system_prompt="Help write an education newsletter.",
+            compliance_check_result=high_risk_result,
+        ).model_dump(),
+        headers=headers,
+    )
+
+    assert create_response.status_code == 200
+    created = AssistantResponse.model_validate(create_response.json())
+    assert created.latest_version.state == "active"
+    assert created.latest_version.compliance_check_result == high_risk_result
+
+    updated_high_risk_result = high_risk_result.model_copy(
+        update={
+            "results": [
+                {
+                    "category": "education",
+                    "status": "high_risk_detected",
+                    "reasoning": "Evaluates education eligibility.",
+                }
+            ],
+        }
+    )
+    update_response = test_client.post(
+        f"assistant/{created.id}/update",
+        json=AssistantUpdate(
+            version=created.latest_version.version,
+            system_prompt="Assess education eligibility.",
+            compliance_check_result=updated_high_risk_result,
+        ).model_dump(),
+        headers=headers,
+    )
+
+    assert update_response.status_code == 200
+    updated = AssistantResponse.model_validate(update_response.json())
+    assert updated.latest_version.state == "active"
+    assert updated.latest_version.compliance_check_result.model_dump() == (
+        updated_high_risk_result.model_dump()
     )
 
 

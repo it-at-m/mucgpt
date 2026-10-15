@@ -102,15 +102,18 @@ stored on the version that was screened, not on a mutable assistant-level record
 | Compliance result | Initial version state | Meaning |
 | --- | --- | --- |
 | No high-risk category detected | `active` | The version can be used according to normal access rules. |
-| At least one high-risk category detected | `pending_legal_review` | The version is held for an administrator/legal decision. |
+| At least one high-risk category detected, with legal review enabled | `pending_legal_review` | The version is held for an administrator/legal decision. |
+| At least one high-risk category detected, with legal review disabled | `active` | The result is persisted, but the version remains usable according to normal access rules. |
 | Check failed | Not persisted | The version cannot be saved as verified. |
 
 ```mermaid
 stateDiagram-v2
     [*] --> active: verified result passed
-    [*] --> pending_legal_review: verified result detects high risk
+    [*] --> pending_legal_review: high risk + legal review enabled
+    [*] --> active: high risk + legal review disabled
     active --> active: metadata update / same prompt
-    active --> pending_legal_review: changed prompt + high-risk result
+    active --> pending_legal_review: changed prompt + high risk + legal review enabled
+    active --> active: changed prompt + high risk + legal review disabled
     active --> active: changed prompt + passed result
     pending_legal_review --> active: administrator approves
     pending_legal_review --> inactive: administrator deactivates
@@ -165,6 +168,19 @@ COMPLIANCE_REQUIRE_VERIFICATION: true
 The corresponding environment variable is
 `MUCGPT_ASSISTANT_COMPLIANCE_REQUIRE_VERIFICATION=true`.
 
+It separately controls whether a persisted high-risk result requires an
+administrator/legal decision before the version can be used:
+
+```yaml
+COMPLIANCE_REQUIRE_LEGAL_REVIEW: true
+```
+
+The corresponding environment variable is
+`MUCGPT_ASSISTANT_COMPLIANCE_REQUIRE_LEGAL_REVIEW=true`. This setting defaults
+to `true`. When set to `false`, high-risk results are still persisted, but the
+version remains `active`. It does not disable strict verification or permit
+results with `overall_status: error` to be saved.
+
 The persisted version in PostgreSQL is the source of truth for the compliance
 result and lifecycle state. Redis entries may expire; unchanged active prompts
 remain usable because their persisted result is inherited during metadata-only
@@ -175,9 +191,10 @@ updates.
 - **Assistant authors**: describe the intended use accurately, run the check for
   the current prompt, read the findings, and confirm that the result was reviewed
   before saving.
-- **Administrators/legal reviewers**: inspect every version in
-  `pending_legal_review`, record a reason, and explicitly approve or deactivate
-  it. Approval is a governance decision, not an automatic model conclusion.
+- **Administrators/legal reviewers**: when legal review is enabled, inspect every
+  version in `pending_legal_review`, record a reason, and explicitly approve or
+  deactivate it. Approval is a governance decision, not an automatic model
+  conclusion.
 - **Service operators**: keep the internal task model, Langfuse prompts, cache,
   and observability configuration available and monitored.
 - **Prompt maintainers**: evaluate category-prompt changes against the compliance
@@ -193,8 +210,10 @@ evaluated with the compliance experiment documented in
   organizational context, or actual use.
 - A `passed` result means no configured category was detected by this screening
   workflow. It does not mean that the assistant is legally cleared.
-- A `high_risk_detected` result routes the version to review; it does not itself
-  prohibit an administrator from approving the version.
+- With legal review enabled, a `high_risk_detected` result routes the version to
+  review; it does not itself prohibit an administrator from approving the version.
+- With legal review disabled, a `high_risk_detected` result is persisted on an
+  active version and does not create a review-queue entry.
 - If the model or compliance service fails, the result is `error` and strict mode
   blocks persistence.
 - If Redis is unavailable while verifying a newly checked prompt, strict mode

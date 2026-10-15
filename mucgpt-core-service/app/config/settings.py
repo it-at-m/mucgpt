@@ -42,6 +42,17 @@ class InternalTaskModelStrength(StrEnum):
     STRONG = "strong"
 
 
+ReasoningEffort = Literal["none", "minimal", "low", "medium", "high"]
+# Ascending order; used to clamp a requested effort to the nearest supported one.
+REASONING_EFFORT_ORDER: tuple[ReasoningEffort, ...] = (
+    "none",
+    "minimal",
+    "low",
+    "medium",
+    "high",
+)
+
+
 _logger = logging.getLogger(__name__)
 _positive_int_adapter = TypeAdapter(PositiveInt)
 _decimal_adapter = TypeAdapter(Decimal)
@@ -57,6 +68,8 @@ class ModelInfo(BaseModel):
     output_cost_per_token: Decimal | None = None
     supports_function_calling: bool | None = None
     supports_reasoning: bool | None = None
+    supported_reasoning_efforts: list[ReasoningEffort] | None = None
+    default_reasoning_effort: ReasoningEffort | None = None
     supports_temperature: bool = True
     supports_vision: bool | None = None
     litellm_provider: str | None = None
@@ -142,6 +155,8 @@ class ModelsConfig(BaseModel):
             "output_cost_per_token",
             "supports_function_calling",
             "supports_reasoning",
+            "supported_reasoning_efforts",
+            "default_reasoning_effort",
             "supports_temperature",
             "supports_vision",
             "litellm_provider",
@@ -560,6 +575,9 @@ class Settings(BaseSettings):
     # Backend settings
     UNAUTHORIZED_USER_REDIRECT_URL: str = ""
     MODELS: list[ModelsConfig] = []
+    # Reasoning effort for reasoning models when neither the request nor the model
+    # sets one. None omits the parameter so the provider default applies.
+    FALLBACK_REASONING_EFFORT: ReasoningEffort | None = "low"
     MEMORY_SERVICE_URL: str = ""
     PROMPTS: PromptPoolConfig = Field(default_factory=PromptPoolConfig)
 
@@ -727,6 +745,16 @@ def _apply_model_info(model: ModelsConfig, entry: dict[str, Any]) -> None:
     if info.supports_reasoning is None:
         info.supports_reasoning = _coerce_bool(model_info.get("supports_reasoning"))
 
+    if info.supported_reasoning_efforts is None:
+        info.supported_reasoning_efforts = _coerce_reasoning_efforts(
+            model_info.get("supported_reasoning_efforts")
+        )
+
+    if info.default_reasoning_effort is None:
+        info.default_reasoning_effort = _coerce_reasoning_effort(
+            model_info.get("default_reasoning_effort")
+        )
+
     if info.supports_vision is None:
         info.supports_vision = _coerce_bool(model_info.get("supports_vision"))
 
@@ -798,6 +826,34 @@ def _coerce_str(value: Any) -> str | None:
     if isinstance(value, str):
         return value.strip() or None
     return str(value).strip() or None
+
+
+def _coerce_reasoning_effort(value: Any) -> ReasoningEffort | None:
+    """Parses a single reasoning effort; unknown values yield None (logged)."""
+    cleaned = _coerce_str(value)
+    if cleaned is None:
+        return None
+    lowered = cleaned.lower()
+    if lowered in REASONING_EFFORT_ORDER:
+        return lowered
+    _logger.debug("Invalid reasoning effort received from model info: %s", value)
+    return None
+
+
+def _coerce_reasoning_efforts(value: Any) -> list[ReasoningEffort] | None:
+    """Parses a list or comma-separated string of efforts; empty results yield None."""
+    if value is None:
+        return None
+    raw = value.split(",") if isinstance(value, str) else value
+    if not isinstance(raw, list | tuple | set):
+        _logger.debug("Invalid reasoning efforts received from model info: %s", value)
+        return None
+    efforts: list[ReasoningEffort] = []
+    for item in raw:
+        effort = _coerce_reasoning_effort(item)
+        if effort is not None and effort not in efforts:
+            efforts.append(effort)
+    return efforts or None
 
 
 def _first_non_null(*values: Any) -> Any:

@@ -55,6 +55,7 @@ async def warmup_app() -> None:
     ModelRegistry.init_models(
         models_config=settings.MODELS,
         logger=logger,
+        fallback_reasoning_effort=settings.FALLBACK_REASONING_EFFORT,
     )
     # Register model-specific Deep Agents harness profiles.
     for model_config in settings.MODELS:

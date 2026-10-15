@@ -26,6 +26,9 @@ def _initialize_model(config: ModelsConfig, monkeypatch: pytest.MonkeyPatch):
         "_models",
         "_default_model",
         "_reasoning_models",
+        "_supported_reasoning_efforts",
+        "_default_reasoning_efforts",
+        "_fallback_reasoning_effort",
         "_models_without_temperature",
     ):
         monkeypatch.setattr(ModelRegistry, field, getattr(ModelRegistry, field))
@@ -248,29 +251,37 @@ def test_token_usage_details_do_not_change_totals(include_total: bool) -> None:
     assert usage.cache_read_tokens == 2845
 
 
-def test_token_usage_middleware_accumulates_calls_and_keeps_latest_context() -> None:
+@pytest.mark.asyncio
+@pytest.mark.parametrize("async_call", [False, True], ids=["sync", "async"])
+async def test_token_usage_middleware_accumulates_calls_and_keeps_latest_context(
+    async_call: bool,
+) -> None:
     token_usage = TokenUsage()
     request = _model_request(RequestContext(token_usage=token_usage))
     middleware = TokenUsageMiddleware()
 
     for input_tokens, output_tokens in ((10, 2), (20, 4)):
-        middleware.wrap_model_call(
-            request,
-            MagicMock(
-                return_value=ModelResponse(
-                    result=[
-                        AIMessage(
-                            content="response",
-                            usage_metadata={
-                                "input_tokens": input_tokens,
-                                "output_tokens": output_tokens,
-                                "total_tokens": input_tokens + output_tokens,
-                            },
-                        )
-                    ]
+        response = ModelResponse(
+            result=[
+                AIMessage(
+                    content="response",
+                    usage_metadata={
+                        "input_tokens": input_tokens,
+                        "output_tokens": output_tokens,
+                        "total_tokens": input_tokens + output_tokens,
+                    },
                 )
-            ),
+            ]
         )
+        if async_call:
+            handler = AsyncMock(return_value=response)
+            result = await middleware.awrap_model_call(request, handler)
+            handler.assert_awaited_once_with(request)
+        else:
+            handler = MagicMock(return_value=response)
+            result = middleware.wrap_model_call(request, handler)
+            handler.assert_called_once_with(request)
+        assert result is response
 
     assert token_usage.prompt_tokens == 30
     assert token_usage.completion_tokens == 6
@@ -341,7 +352,7 @@ def test_azure_model_alias_uses_configured_temperature_capability(monkeypatch) -
 def test_temperature_filtering_is_configuration_driven(
     monkeypatch, model_name, supports_temperature
 ) -> None:
-    model_info = {"supports_reasoning": True}
+    model_info = {"supports_reasoning": False}
     if supports_temperature is not None:
         model_info["supports_temperature"] = supports_temperature
     model = _initialize_model(
@@ -359,11 +370,172 @@ def test_temperature_filtering_is_configuration_driven(
     normalized = ModelRegistry.normalize_model_settings(model, original)
 
     expected = dict(original)
+    expected.pop("reasoning_effort")
     if supports_temperature is False:
         expected.pop("temperature")
     assert normalized == expected
     assert original["temperature"] == 0.4
     assert ModelRegistry.get_model() is model
+
+
+def test_reasoning_models_omit_temperature_and_keep_reasoning_effort(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    model = _initialize_model(
+        ModelsConfig(
+            type="OPENAI",
+            llm_name="reasoning-model",
+            endpoint="https://example.test",
+            api_key="test",
+            model_info={
+                "supports_reasoning": True,
+                "supports_temperature": True,
+            },
+        ),
+        monkeypatch,
+    )
+
+    normalized = ModelRegistry.normalize_model_settings(
+        model,
+        {"temperature": 0.4, "stream": False, "reasoning_effort": "low"},
+    )
+
+    assert normalized == {"stream": False, "reasoning_effort": "low"}
+
+
+def _reasoning_model(monkeypatch: pytest.MonkeyPatch, **reasoning_info):
+    return _initialize_model(
+        ModelsConfig(
+            type="OPENAI",
+            llm_name="reasoning-model",
+            endpoint="https://example.test",
+            api_key="test",
+            model_info={"supports_reasoning": True, **reasoning_info},
+        ),
+        monkeypatch,
+    )
+
+
+@pytest.mark.parametrize(
+    ("reasoning_info", "expected"),
+    [
+        ({}, "low"),
+        ({"default_reasoning_effort": "medium"}, "medium"),
+        ({"supported_reasoning_efforts": ["medium", "high"]}, "medium"),
+        (
+            {
+                "supported_reasoning_efforts": ["low", "medium"],
+                "default_reasoning_effort": "high",
+            },
+            "medium",
+        ),
+    ],
+)
+def test_reasoning_effort_defaults_when_not_requested(
+    monkeypatch: pytest.MonkeyPatch, reasoning_info, expected
+) -> None:
+    model = _reasoning_model(monkeypatch, **reasoning_info)
+
+    for settings in ({"stream": False}, {"stream": False, "reasoning_effort": None}):
+        normalized = ModelRegistry.normalize_model_settings(model, settings)
+        assert normalized == {"stream": False, "reasoning_effort": expected}
+
+
+@pytest.mark.parametrize(
+    ("supported", "requested", "expected"),
+    [
+        (["low", "medium", "high"], "none", "low"),
+        (["low", "medium", "high"], "minimal", "low"),
+        (["low", "medium", "high"], "medium", "medium"),
+        (["none", "low", "medium", "high"], "none", "none"),
+        (["none", "low"], "minimal", "low"),
+        (["high"], "none", "high"),
+        (["none", "minimal"], "high", "minimal"),
+    ],
+)
+def test_reasoning_effort_clamped_to_supported_efforts(
+    monkeypatch: pytest.MonkeyPatch, supported, requested, expected
+) -> None:
+    model = _reasoning_model(monkeypatch, supported_reasoning_efforts=supported)
+
+    normalized = ModelRegistry.normalize_model_settings(
+        model, {"reasoning_effort": requested}
+    )
+
+    assert normalized == {"reasoning_effort": expected}
+
+
+@pytest.mark.parametrize(
+    ("fallback", "reasoning_info", "expected"),
+    [
+        ("medium", {}, {"reasoning_effort": "medium"}),
+        (
+            "none",
+            {"supported_reasoning_efforts": ["low", "high"]},
+            {"reasoning_effort": "low"},
+        ),
+        ("high", {"default_reasoning_effort": "low"}, {"reasoning_effort": "low"}),
+        (None, {}, {}),
+        (None, {"supported_reasoning_efforts": ["low", "high"]}, {}),
+    ],
+)
+def test_configured_fallback_reasoning_effort(
+    monkeypatch: pytest.MonkeyPatch, fallback, reasoning_info, expected
+) -> None:
+    # Snapshot registry state, then re-initialize with the configured fallback.
+    _reasoning_model(monkeypatch, **reasoning_info)
+    ModelRegistry.init_models(
+        [
+            ModelsConfig(
+                type="OPENAI",
+                llm_name="reasoning-model",
+                endpoint="https://example.test",
+                api_key="test",
+                model_info={"supports_reasoning": True, **reasoning_info},
+            )
+        ],
+        fallback_reasoning_effort=fallback,
+    )
+    model = ModelRegistry.get_model("reasoning-model")
+
+    assert ModelRegistry.normalize_model_settings(model, {}) == expected
+
+
+def test_reasoning_effort_passes_through_without_supported_efforts(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    model = _reasoning_model(monkeypatch, default_reasoning_effort="medium")
+
+    normalized = ModelRegistry.normalize_model_settings(
+        model, {"reasoning_effort": "none"}
+    )
+
+    assert normalized == {"reasoning_effort": "none"}
+
+
+def test_model_without_reasoning_info_never_gets_reasoning_effort(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    model = _initialize_model(
+        ModelsConfig(
+            type="OPENAI",
+            llm_name="gpt-4.1-mini",
+            endpoint="https://example.test",
+            api_key="test",
+            model_info={
+                "supported_reasoning_efforts": ["low"],
+                "default_reasoning_effort": "low",
+            },
+        ),
+        monkeypatch,
+    )
+
+    assert ModelRegistry.normalize_model_settings(model, {"temperature": 0.4}) == {
+        "temperature": 0.4
+    }
+    assert ModelRegistry.normalize_model_settings(
+        model, {"temperature": 0.4, "reasoning_effort": "high"}
+    ) == {"temperature": 0.4}
 
 
 def test_reinitializing_registry_resets_temperature_capability(monkeypatch) -> None:

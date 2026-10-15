@@ -235,6 +235,8 @@ class TestSettings:
                     "base_model": "azure/gpt-4.1-nano",
                     "supports_function_calling": True,
                     "supports_reasoning": True,
+                    "supported_reasoning_efforts": ["low", "Medium", "bogus", "high"],
+                    "default_reasoning_effort": "low",
                     "supports_vision": True,
                     "input_cost_per_token": 9e-8,
                     "output_cost_per_token": 3.6e-7,
@@ -269,7 +271,93 @@ class TestSettings:
                 assert model.litellm_provider == "azure"
                 assert model.inference_location == "azure/datazone/eu"
                 assert model.knowledge_cut_off == "2024-07-01"
+                assert model.model_info.supported_reasoning_efforts == [
+                    "low",
+                    "medium",
+                    "high",
+                ]
+                assert model.model_info.default_reasoning_effort == "low"
                 assert model.model_info.auto_enrich_from_model_info_endpoint is True
+
+    def test_fallback_reasoning_effort_defaults_to_low_and_is_overridable(self):
+        assert Settings().FALLBACK_REASONING_EFFORT == "low"
+        with patch.dict(
+            os.environ, {"MUCGPT_CORE_FALLBACK_REASONING_EFFORT": "medium"}
+        ):
+            assert Settings().FALLBACK_REASONING_EFFORT == "medium"
+        with patch.dict(
+            os.environ, {"MUCGPT_CORE_FALLBACK_REASONING_EFFORT": "extreme"}
+        ):
+            with pytest.raises(ValidationError):
+                Settings()
+
+    def test_configured_reasoning_efforts_win_over_info_endpoint(self):
+        models_json = json.dumps(
+            [
+                {
+                    "type": "OPENAI",
+                    "llm_name": "gpt-6",
+                    "endpoint": "https://exampleproxy/v1",
+                    "api_key": "proxy-key",
+                    "supported_reasoning_efforts": ["medium", "high"],
+                    "default_reasoning_effort": "medium",
+                }
+            ]
+        )
+        info_payload = [
+            {
+                "model_name": "gpt-6",
+                "model_info": {
+                    "max_output_tokens": 1000,
+                    "max_input_tokens": 2000,
+                    "supported_reasoning_efforts": "low, medium",
+                    "default_reasoning_effort": "low",
+                },
+            }
+        ]
+
+        with patch("config.settings._load_model_info", return_value=info_payload):
+            with patch.dict(os.environ, {"MUCGPT_CORE_MODELS": models_json}):
+                model = Settings().MODELS[0]
+                enrich_model_metadata(model)
+
+        assert model.model_info.supported_reasoning_efforts == ["medium", "high"]
+        assert model.model_info.default_reasoning_effort == "medium"
+
+    def test_reasoning_efforts_parsed_from_comma_separated_info(self):
+        models_json = json.dumps(
+            [
+                {
+                    "type": "OPENAI",
+                    "llm_name": "gpt-6",
+                    "endpoint": "https://exampleproxy/v1",
+                    "api_key": "proxy-key",
+                }
+            ]
+        )
+        info_payload = [
+            {
+                "model_name": "gpt-6",
+                "model_info": {
+                    "max_output_tokens": 1000,
+                    "max_input_tokens": 2000,
+                    "supported_reasoning_efforts": "low, medium,high",
+                    "default_reasoning_effort": "extreme",
+                },
+            }
+        ]
+
+        with patch("config.settings._load_model_info", return_value=info_payload):
+            with patch.dict(os.environ, {"MUCGPT_CORE_MODELS": models_json}):
+                model = Settings().MODELS[0]
+                enrich_model_metadata(model)
+
+        assert model.model_info.supported_reasoning_efforts == [
+            "low",
+            "medium",
+            "high",
+        ]
+        assert model.model_info.default_reasoning_effort is None
 
     def test_model_configuration_missing_metadata_raises_without_info(self):
         models_json = json.dumps(

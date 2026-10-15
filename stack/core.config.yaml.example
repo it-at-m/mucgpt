@@ -134,6 +134,9 @@ INTERNET_SEARCH:
 # Configure your LLM models here instead of using base64-encoded JSON in environment variables
 # IMPORTANT: Replace placeholder values with your actual configuration
 # Consider using environment variables for sensitive data like API keys
+# Reasoning effort sent to reasoning models when neither the request nor the model's
+# default_reasoning_effort sets one. Set to null to omit it and use the provider default.
+FALLBACK_REASONING_EFFORT: "low"
 MODELS:
   - type: "OPENAI"
     llm_name: "<your-llm-name>"
@@ -151,6 +154,10 @@ MODELS:
       output_cost_per_token: 0.00000036
       supports_function_calling: true
       supports_reasoning: false
+      # Optional, usually provided by LiteLLM model_info. Requests are clamped to the
+      # nearest supported effort; without a default, FALLBACK_REASONING_EFFORT applies.
+      # supported_reasoning_efforts: [low, medium, high]
+      # default_reasoning_effort: low
       supports_vision: true
       litellm_provider: "<provider>"
       inference_location: "<region>"

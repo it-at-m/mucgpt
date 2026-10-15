@@ -48,6 +48,9 @@ COMPLIANCE_CACHE_TTL_SECONDS: 1800
 
 # Models configuration
 # Instead of base64 encoded JSON in environment variables, you can configure models here
+# Reasoning effort sent to reasoning models when neither the request nor the model's
+# default_reasoning_effort sets one. Set to null to omit it and use the provider default.
+FALLBACK_REASONING_EFFORT: "low"
 MODELS:
   - type: "OPENAI"
     llm_name: "<your-llm-name>"
@@ -83,6 +86,10 @@ MODELS:
       output_cost_per_token: 0.00000036
       supports_function_calling: true
       supports_reasoning: false
+      # Optional, usually provided by LiteLLM model_info. Requests are clamped to the
+      # nearest supported effort; without a default, FALLBACK_REASONING_EFFORT applies.
+      # supported_reasoning_efforts: [low, medium, high]
+      # default_reasoning_effort: low
       # Defaults to true. Set false for models that reject temperature (e.g. GPT-5/GPT-6).
       # This explicit setting controls filtering; model names/profiles are not consulted.
       supports_temperature: true

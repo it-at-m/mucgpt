@@ -3,7 +3,7 @@ from typing import Any
 
 from langchain_openai import AzureChatOpenAI, ChatOpenAI
 
-from config.settings import ModelsConfig
+from config.settings import REASONING_EFFORT_ORDER, ModelsConfig, ReasoningEffort
 
 
 class ModelsConfigurationException(Exception):
@@ -18,6 +18,9 @@ class ModelRegistry:
     _models: dict[str, ChatOpenAI | AzureChatOpenAI] = {}
     _default_model: ChatOpenAI | AzureChatOpenAI | None = None
     _reasoning_models: set[str] = set()
+    _supported_reasoning_efforts: dict[str, tuple[ReasoningEffort, ...]] = {}
+    _default_reasoning_efforts: dict[str, ReasoningEffort] = {}
+    _fallback_reasoning_effort: ReasoningEffort | None = "low"
     _models_without_temperature: set[str] = set()
 
     @staticmethod
@@ -69,15 +72,54 @@ class ModelRegistry:
 
         if model_name in cls._reasoning_models:
             normalized.pop("temperature", None)
+            effort = cls._resolve_reasoning_effort(
+                model_name, normalized.get("reasoning_effort")
+            )
+            if effort is None:
+                normalized.pop("reasoning_effort", None)
+            else:
+                normalized["reasoning_effort"] = effort
         else:
             normalized.pop("reasoning_effort", None)
         return normalized
+
+    @classmethod
+    def _resolve_reasoning_effort(
+        cls, model_name: str, requested: ReasoningEffort | None
+    ) -> ReasoningEffort | None:
+        """Apply the model default and clamp to the efforts the model supports."""
+        effort = (
+            requested
+            or cls._default_reasoning_efforts.get(model_name)
+            or cls._fallback_reasoning_effort
+        )
+        supported = cls._supported_reasoning_efforts.get(model_name)
+        if effort is None or not supported or effort in supported:
+            return effort
+
+        # Nearest supported effort; on a tie prefer the higher one.
+        index = REASONING_EFFORT_ORDER.index(effort)
+        clamped = min(
+            supported,
+            key=lambda e: (
+                abs(REASONING_EFFORT_ORDER.index(e) - index),
+                -REASONING_EFFORT_ORDER.index(e),
+            ),
+        )
+        logging.getLogger(__name__).debug(
+            "Reasoning effort %r not supported by %s, using %r",
+            effort,
+            model_name,
+            clamped,
+        )
+        return clamped
 
     @classmethod
     def init_models(
         cls,
         models_config: list[ModelsConfig],
         logger: logging.Logger | None = None,
+        fallback_reasoning_effort: ReasoningEffort | None = "low",
     ) -> None:
         """Initialize the model registry with a list of model configurations."""
         if not models_config:
@@ -93,6 +135,19 @@ class ModelRegistry:
             config.llm_name
             for config in models_config
             if config.model_info.supports_reasoning
+        }
+        cls._supported_reasoning_efforts = {
+            config.llm_name: tuple(config.model_info.supported_reasoning_efforts)
+            for config in models_config
+            if config.model_info.supports_reasoning
+            and config.model_info.supported_reasoning_efforts
+        }
+        cls._fallback_reasoning_effort = fallback_reasoning_effort
+        cls._default_reasoning_efforts = {
+            config.llm_name: config.model_info.default_reasoning_effort
+            for config in models_config
+            if config.model_info.supports_reasoning
+            and config.model_info.default_reasoning_effort
         }
         cls._models_without_temperature = {
             config.llm_name

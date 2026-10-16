@@ -662,6 +662,8 @@ i18n
                             default_model_description: "Dieses Modell wird für alle Unterhaltungen verwendet. Nutzer können kein anderes Modell auswählen.",
                             default_model_placeholder: "Wählen Sie ein Modell aus...",
                             no_default_model: "Im Chat wählbar",
+                            no_default_model_description:
+                                "Nutzer können im Chat frei aus allen aktuell verfügbaren Modellen wählen. Die Auswahl ist nicht auf ein Modell beschränkt.",
                             departments: "Abteilungen",
                             departments_info:
                                 "Dies sind die Abteilungen, die Zugriff auf den Assistenten haben. Alle Abteilungen in der Hierarchie unter den ausgewählten Abteilungen haben ebenfalls Zugriff.",
@@ -1569,6 +1571,8 @@ i18n
                             default_model_description: "This model is used for all conversations. Users cannot choose a different model.",
                             default_model_placeholder: "Select a model...",
                             no_default_model: "Selectable in chat",
+                            no_default_model_description:
+                                "Users can freely choose from all currently available models in the chat. The choice is not limited to one model.",
                             departments: "Departments",
                             departments_info:
                                 "These are the departments that have access to the assistant. All departments in the hierarchy below the selected departments also have access.",
@@ -2461,6 +2465,8 @@ i18n
                             default_model_description: "Dieses Modell wird für alle Unterhaltungen verwendet. Nutzer können kein anderes Modell auswählen.",
                             default_model_placeholder: "Such da a Modell aus...",
                             no_default_model: "Im Chat wählbar",
+                            no_default_model_description:
+                                "D'Leit kenna im Chat frei aus olle grad verfügbaren Modelle wähln. D'Auswahl is ned auf oa Modell beschränkt.",
                             departments: "Abteilungen",
                             departments_info:
                                 "Des san de Abteilungen, de Zugriff auf den Assistenten ham. Olle Abteilungen in da Hierarchie unter de ausgsuachten Abteilungen ham a Zugriff.",
@@ -3360,6 +3366,8 @@ i18n
                                 "Ce modèle est utilisé pour toutes les conversations. Les utilisateurs ne peuvent pas choisir un autre modèle.",
                             default_model_placeholder: "Sélectionnez un modèle...",
                             no_default_model: "Sélectionnable dans le chat",
+                            no_default_model_description:
+                                "Les utilisateurs peuvent choisir librement parmi tous les modèles actuellement disponibles dans le chat. Le choix n'est pas limité à un seul modèle.",
                             departments: "Départements",
                             departments_info:
                                 "Ce sont les départements qui ont accès à l'assistant. Tous les départements situés en dessous dans la hiérarchie y ont également accès.",
@@ -4246,6 +4254,8 @@ i18n
                             default_model_description: "Ця модель використовується для всіх розмов. Користувачі не можуть вибрати іншу модель.",
                             default_model_placeholder: "Оберіть модель...",
                             no_default_model: "Можна вибрати в чаті",
+                            no_default_model_description:
+                                "Користувачі можуть вільно обирати в чаті з усіх наразі доступних моделей. Вибір не обмежено однією моделлю.",
                             departments: "Підрозділи",
                             departments_info: "Це підрозділи, які мають доступ до асистента. Усі підрозділи нижче у вибраній ієрархії також матимуть доступ.",
 

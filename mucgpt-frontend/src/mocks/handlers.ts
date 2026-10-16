@@ -273,7 +273,7 @@ MOCK_ASSISTANT_SEED.push(
             system_prompt: "You are a research assistant. Provide detailed, well-researched answers with citations when possible.",
             hierarchical_access: ["TEAM-B-AI", "TEAM-B-DATA-1"],
             creativity: "low",
-            default_model: "gpt-5.6-terra",
+            default_model: "example-model",
             is_visible: true,
             tools: [
                 { id: "Brainstorming", config: { enabled: true } },

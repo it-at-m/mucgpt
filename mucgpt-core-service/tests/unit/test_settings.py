@@ -229,6 +229,7 @@ class TestSettings:
                     "version": "2025-04-14",
                     "base_model": "azure/gpt-4.1-nano",
                     "display_name": "GPT-4.1 nano",
+                    "description": "Small and fast model",
                     "short_description": "Fast everyday model",
                     "supports_reasoning": True,
                     "supported_reasoning_efforts": ["low", "Medium", "bogus", "high"],
@@ -256,7 +257,7 @@ class TestSettings:
                 enrich_model_metadata(model)
                 assert model.max_output_tokens == 32768
                 assert model.max_input_tokens == 1048576
-                assert "gpt-4.1-nano" in model.description
+                assert model.description == "Small and fast model"
                 assert model.display_name == "GPT-4.1 nano"
                 assert model.short_description == "Fast everyday model"
                 assert model.supports_reasoning is True

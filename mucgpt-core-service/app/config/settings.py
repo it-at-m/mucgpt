@@ -821,29 +821,15 @@ def _first_non_null(*values: Any) -> Any:
 
 
 def _build_description(entry: dict[str, Any], fallback_name: str) -> str:
-    """Composes a description from available metadata, falling back to the model name."""
+    """Takes the description from the info entry, falling back to the model name."""
     model_info = entry.get("model_info") or {}
 
-    description = (
-        model_info.get("description")
-        or entry.get("description")
-        or entry.get("model_name")
+    return (
+        _coerce_str(model_info.get("description"))
+        or _coerce_str(entry.get("description"))
+        or _coerce_str(entry.get("model_name"))
         or fallback_name
     )
-
-    parts: list[str] = []
-    base_model = model_info.get("base_model")
-    version = model_info.get("version")
-
-    if base_model:
-        parts.append(str(base_model))
-    if version:
-        parts.append(f"version {version}")
-
-    if parts:
-        description = f"{description} ({', '.join(parts)})"
-
-    return description
 
 
 def _fetch_remote_model_entry(model: ModelsConfig) -> dict[str, Any] | None:

@@ -25,13 +25,21 @@ import { getModelDisplayName } from "../../utils/modelDisplayName";
 
 interface Props {
     onSelectionChange: (nextLLM: string) => void;
-    selectedLLM: string;
+    /** Undefined while the `noneOption` is chosen. */
+    selectedLLM?: string;
     options: Model[];
     /** Only the selected model is offered; all options remain the basis for the cost and context ratings. */
     lockedByAssistant?: boolean;
+    /** Offers a first entry that selects no model. */
+    noneOption?: { label: string; description?: string; onSelect: () => void };
+    /** "subtle" sits quietly inside the chat input; "outline" reads as a form control. */
+    appearance?: "subtle" | "outline";
+    disabled?: boolean;
 }
 
 const MODEL_GROUP = "model";
+// Model ids are never empty, so the empty string can't collide with a model.
+const NONE_VALUE = "";
 const RATING_STEPS = 3;
 const VIEWPORT_GUTTER = 16;
 
@@ -51,6 +59,10 @@ const useStyles = makeStyles({
         fontWeight: tokens.fontWeightRegular,
         // The chevron already carries its own whitespace; full button padding leaves a wide gap to the next action.
         paddingRight: tokens.spacingHorizontalSNudge
+    },
+    // A selection, not an action: the outline trigger keeps regular weight like other form values.
+    fieldTrigger: {
+        fontWeight: tokens.fontWeightRegular
     }
 });
 
@@ -110,11 +122,20 @@ const Fact = ({ label, children }: { label: ReactNode; children: ReactNode }) =>
     </>
 );
 
-export const LLMSelector = ({ onSelectionChange, selectedLLM, options, lockedByAssistant = false }: Props) => {
+export const LLMSelector = ({
+    onSelectionChange,
+    selectedLLM,
+    options,
+    lockedByAssistant = false,
+    noneOption,
+    appearance = "subtle",
+    disabled = false
+}: Props) => {
     const { t, i18n } = useTranslation();
     const classes = useStyles();
     const [open, setOpen] = useState(false);
-    const [previewLLM, setPreviewLLM] = useState(selectedLLM);
+    const selectedValue = selectedLLM ?? NONE_VALUE;
+    const [previewLLM, setPreviewLLM] = useState(selectedValue);
     const itemRefs = useRef(new Map<string, HTMLDivElement>());
 
     const priceValues = useMemo(() => options.map(getAveragePrice).filter((value): value is number => value !== null), [options]);
@@ -123,22 +144,32 @@ export const LLMSelector = ({ onSelectionChange, selectedLLM, options, lockedByA
     // Fluent focuses the first item on open; start on the selected model so keyboard users and the details panel agree.
     useEffect(() => {
         if (!open) return;
-        const frame = requestAnimationFrame(() => itemRefs.current.get(selectedLLM)?.focus());
+        const frame = requestAnimationFrame(() => itemRefs.current.get(selectedValue)?.focus());
         return () => cancelAnimationFrame(frame);
-    }, [open, selectedLLM]);
+    }, [open, selectedValue]);
 
     const handleOpenChange: MenuProps["onOpenChange"] = (_, data) => {
         setOpen(data.open);
-        if (data.open) setPreviewLLM(selectedLLM);
+        if (data.open) setPreviewLLM(selectedValue);
     };
 
     const handleCheckedValueChange: MenuProps["onCheckedValueChange"] = (_, data) => {
-        const nextLLM = data.checkedItems[0];
-        if (nextLLM && nextLLM !== selectedLLM) onSelectionChange(nextLLM);
+        const nextValue = data.checkedItems[0];
+        if (nextValue === undefined || nextValue === selectedValue) return;
+        if (nextValue === NONE_VALUE) noneOption?.onSelect();
+        else onSelectionChange(nextValue);
+    };
+
+    const registerItem = (value: string) => (element: HTMLDivElement | null) => {
+        if (element) itemRefs.current.set(value, element);
+        else itemRefs.current.delete(value);
     };
 
     const visibleModels = lockedByAssistant ? options.filter(model => model.llm_name === selectedLLM) : options;
-    const previewModel = visibleModels.find(model => model.llm_name === previewLLM) ?? visibleModels.find(model => model.llm_name === selectedLLM);
+    const previewModel =
+        previewLLM === NONE_VALUE
+            ? undefined
+            : (visibleModels.find(model => model.llm_name === previewLLM) ?? visibleModels.find(model => model.llm_name === selectedLLM));
     const title = t("components.llmSelector.title");
 
     const renderDetails = (model: Model, active: boolean) => {
@@ -185,10 +216,7 @@ export const LLMSelector = ({ onSelectionChange, selectedLLM, options, lockedByA
         return (
             <MenuItemRadio
                 key={model.llm_name}
-                ref={element => {
-                    if (element) itemRefs.current.set(model.llm_name, element);
-                    else itemRefs.current.delete(model.llm_name);
-                }}
+                ref={registerItem(model.llm_name)}
                 name={MODEL_GROUP}
                 value={model.llm_name}
                 subText={shortDescription ? { children: shortDescription, className: classes.subText } : undefined}
@@ -199,18 +227,36 @@ export const LLMSelector = ({ onSelectionChange, selectedLLM, options, lockedByA
         );
     });
 
+    const noneItem = noneOption && (
+        <MenuItemRadio ref={registerItem(NONE_VALUE)} name={MODEL_GROUP} value={NONE_VALUE} onFocus={() => setPreviewLLM(NONE_VALUE)}>
+            {noneOption.label}
+        </MenuItemRadio>
+    );
+    const isSubtle = appearance === "subtle";
+
     return (
         <Menu
             open={open}
             onOpenChange={handleOpenChange}
-            checkedValues={{ [MODEL_GROUP]: [selectedLLM] }}
+            checkedValues={{ [MODEL_GROUP]: [selectedValue] }}
             onCheckedValueChange={handleCheckedValueChange}
-            positioning={{ position: "above", align: "end", offset: 8, overflowBoundaryPadding: VIEWPORT_GUTTER }}
+            positioning={{
+                position: isSubtle ? "above" : "below",
+                align: "end",
+                offset: 8,
+                overflowBoundaryPadding: VIEWPORT_GUTTER
+            }}
         >
             <MenuTrigger disableButtonEnhancement>
                 <Tooltip content={title} relationship="description" positioning="below">
-                    <Button appearance="subtle" className={classes.trigger} icon={<ChevronDown16Regular />} iconPosition="after">
-                        {getModelDisplayName(selectedLLM, options)}
+                    <Button
+                        appearance={appearance}
+                        className={isSubtle ? classes.trigger : classes.fieldTrigger}
+                        icon={<ChevronDown16Regular />}
+                        iconPosition="after"
+                        disabled={disabled}
+                    >
+                        {selectedLLM ? getModelDisplayName(selectedLLM, options) : noneOption?.label}
                     </Button>
                 </Tooltip>
             </MenuTrigger>
@@ -223,11 +269,22 @@ export const LLMSelector = ({ onSelectionChange, selectedLLM, options, lockedByA
                                 {modelItems}
                             </MenuGroup>
                         ) : (
-                            modelItems
+                            <>
+                                {noneItem}
+                                {modelItems}
+                            </>
                         )}
                     </MenuList>
                     {/* All details share one grid cell so the popover keeps the height of the longest one while previewing. */}
-                    <div className={styles.detailsStack}>{visibleModels.map(model => renderDetails(model, model.llm_name === previewModel?.llm_name))}</div>
+                    <div className={styles.detailsStack}>
+                        {noneOption && (
+                            <div className={styles.details} data-active={!previewModel}>
+                                <Body1Strong>{noneOption.label}</Body1Strong>
+                                {noneOption.description && <Body1 className={styles.description}>{noneOption.description}</Body1>}
+                            </div>
+                        )}
+                        {visibleModels.map(model => renderDetails(model, model.llm_name === previewModel?.llm_name))}
+                    </div>
                 </div>
             </MenuPopover>
         </Menu>

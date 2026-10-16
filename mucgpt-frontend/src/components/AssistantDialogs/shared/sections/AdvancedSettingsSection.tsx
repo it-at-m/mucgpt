@@ -1,11 +1,11 @@
-import { DialogContent, Divider, Field, Dropdown, Option, Text, type OptionOnSelectData, type SelectionEvents } from "@fluentui/react-components";
+import { DialogContent, Divider, Field, Text } from "@fluentui/react-components";
 import { useTranslation } from "react-i18next";
 import { useCallback, useContext } from "react";
 import { LLMContext } from "../../../LLMSelector/LLMContextProvider";
 import sharedStyles from "../AssistantDialog.module.css";
 import styles from "./AdvancedSettingsSection.module.css";
 import { CreativityRadioGroup } from "../../../CreativityRadioGroup/CreativityRadioGroup";
-import { getModelDisplayName } from "../../../../utils/modelDisplayName";
+import { LLMSelector } from "../../../LLMSelector/LLMSelector";
 
 interface AdvancedSettingsSectionProps {
     creativity: string;
@@ -36,20 +36,13 @@ export const AdvancedSettingsSection = ({
         [creativity, onCreativityChange, onHasChanged]
     );
 
-    // Model change
-    const onDefaultModelChangeHandler = useCallback(
-        (_ev: SelectionEvents, data: OptionOnSelectData) => {
-            const value = data.optionValue === "none" ? undefined : data.optionValue;
-            onDefaultModelChange?.(value);
+    const onDefaultModelSelect = useCallback(
+        (model: string | undefined) => {
+            onDefaultModelChange?.(model);
             onHasChanged?.(true);
         },
         [onDefaultModelChange, onHasChanged]
     );
-
-    const noDefaultModelOptionValue = "none";
-    const noDefaultModelLabel = t("components.assistant_editor.no_default_model");
-    const defaultModelValue = defaultModel ? getModelDisplayName(defaultModel, availableLLMs) : noDefaultModelLabel;
-    const selectedDefaultModelOptions = defaultModel ? [defaultModel] : [noDefaultModelOptionValue];
 
     return (
         <DialogContent className={styles.advancedContent}>
@@ -67,26 +60,26 @@ export const AdvancedSettingsSection = ({
             </Field>
             <Divider />
             <Field size="large" className={`${sharedStyles.fieldSection} ${styles.compactField}`}>
-                <label className={sharedStyles.formLabel}>{t("components.assistant_editor.default_model")}</label>
-                <Text as="p" size={200} className={`${styles.fieldDescription} ${styles.defaultModelDescription}`}>
-                    {t("components.assistant_editor.default_model_description")}
-                </Text>
-                <Dropdown
-                    placeholder={t("components.assistant_editor.default_model_placeholder")}
-                    value={defaultModelValue}
-                    selectedOptions={selectedDefaultModelOptions}
-                    onOptionSelect={onDefaultModelChangeHandler}
-                    disabled={!isOwner}
-                >
-                    <Option key={noDefaultModelOptionValue} value={noDefaultModelOptionValue}>
-                        {noDefaultModelLabel}
-                    </Option>
-                    {availableLLMs.map(model => (
-                        <Option key={model.llm_name} value={model.llm_name}>
-                            {getModelDisplayName(model.llm_name, availableLLMs)}
-                        </Option>
-                    ))}
-                </Dropdown>
+                <div className={styles.fieldRow}>
+                    <div className={styles.fieldRowText}>
+                        <label className={sharedStyles.formLabel}>{t("components.assistant_editor.default_model")}</label>
+                        <Text as="p" size={200} className={`${styles.fieldDescription} ${styles.defaultModelDescription}`}>
+                            {t("components.assistant_editor.default_model_description")}
+                        </Text>
+                    </div>
+                    <LLMSelector
+                        appearance="outline"
+                        options={availableLLMs}
+                        selectedLLM={defaultModel}
+                        onSelectionChange={onDefaultModelSelect}
+                        noneOption={{
+                            label: t("components.assistant_editor.no_default_model"),
+                            description: t("components.assistant_editor.no_default_model_description"),
+                            onSelect: () => onDefaultModelSelect(undefined)
+                        }}
+                        disabled={!isOwner}
+                    />
+                </div>
             </Field>
         </DialogContent>
     );

@@ -438,6 +438,9 @@ class ChatTitleResult(BaseModel):
 
 class ModelsDTO(BaseModel):
     llm_name: str = Field(..., description="Identifier of the model/deployment")
+    display_name: str | None = Field(
+        None, description="Human-readable model name; clients fall back to llm_name"
+    )
     max_output_tokens: PositiveInt | None = Field(
         None, description="Maximum tokens the model can generate"
     )
@@ -453,14 +456,14 @@ class ModelsDTO(BaseModel):
         description="Context usage percent at which the frontend shows an explicit nudge",
     )
     description: str | None = Field(None, description="Human-readable summary")
+    short_description: str | None = Field(
+        None, description="One-line summary of what the model is best suited for"
+    )
     input_cost_per_token: Decimal | None = Field(
         None, description="Input pricing information per token"
     )
     output_cost_per_token: Decimal | None = Field(
         None, description="Output pricing information per token"
-    )
-    supports_function_calling: bool | None = Field(
-        None, description="Whether the model supports structured tool/function calls"
     )
     supports_reasoning: bool | None = Field(
         None, description="Whether enhanced reasoning is available"
@@ -470,15 +473,6 @@ class ModelsDTO(BaseModel):
     )
     default_reasoning_effort: ReasoningEffort | None = Field(
         None, description="Reasoning effort used when a request sets none"
-    )
-    supports_vision: bool | None = Field(
-        None, description="Whether multimodal vision inputs are supported"
-    )
-    litellm_provider: str | None = Field(
-        None, description="Provider identifier reported by LiteLLM"
-    )
-    inference_location: str | None = Field(
-        None, description="Physical or logical inference region"
     )
     knowledge_cut_off: str | None = Field(
         None, description="Last known training data cutoff for the model"

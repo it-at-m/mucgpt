@@ -6,6 +6,7 @@ from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.api_models import (
+    AdminTag,
     AssistantCreate,
     AssistantListSortBy,
     AssistantListSortOrder,
@@ -799,6 +800,14 @@ async def getAllAssistants(
         False,
         description="Exclude assistants subscribed by the authenticated user.",
     ),
+    admin_tags: list[AdminTag] | None = Query(
+        None,
+        description="Only return assistants matching at least one of these admin tags.",
+    ),
+    priority_admin_tags: list[AdminTag] | None = Query(
+        None,
+        description="Prioritize assistants matching at least one of these admin tags.",
+    ),
     db: AsyncSession = Depends(get_db_session),
     user_info: AuthenticationResult = Depends(authenticate_user),
 ):
@@ -817,6 +826,8 @@ async def getAllAssistants(
             exclude_subscribed_by_user_id=user_info.user_id
             if exclude_subscribed
             else None,
+            admin_tags=admin_tags,
+            priority_admin_tags=priority_admin_tags,
         )
     )
 

@@ -349,6 +349,8 @@ class AssistantRepository(Repository[Assistant]):
         limit: int | None = None,
         exclude_owned_by_user_id: str | None = None,
         exclude_subscribed_by_user_id: str | None = None,
+        admin_tags: Sequence[str] | None = None,
+        priority_admin_tags: Sequence[str] | None = None,
     ) -> list[Assistant]:
         logger.info(f"Fetching all assistants for department: {department}")
         """Get all assistants that are allowed for a specific department.
@@ -413,6 +415,16 @@ class AssistantRepository(Repository[Assistant]):
         candidate_result = await self.session.execute(candidate_stmt)
         candidate_assistants = list(candidate_result.scalars().all())
 
+        requested_admin_tags = {tag.lower() for tag in admin_tags or ()}
+        if requested_admin_tags:
+            candidate_assistants = [
+                assistant
+                for assistant in candidate_assistants
+                if requested_admin_tags.intersection(
+                    tag.lower() for tag in (assistant.admin_tags or [])
+                )
+            ]
+
         accessible_assistant_ids: list[str] = []
         directory_index = await _get_directory_index()
 
@@ -422,6 +434,20 @@ class AssistantRepository(Repository[Assistant]):
                 directory_index=directory_index,
             ):
                 accessible_assistant_ids.append(str(assistant.id))
+
+        requested_priority_tags = {tag.lower() for tag in priority_admin_tags or ()}
+        if requested_priority_tags:
+            candidate_by_id = {
+                str(assistant.id): assistant for assistant in candidate_assistants
+            }
+            accessible_assistant_ids.sort(
+                key=lambda assistant_id: (
+                    not requested_priority_tags.intersection(
+                        tag.lower()
+                        for tag in (candidate_by_id[assistant_id].admin_tags or [])
+                    )
+                )
+            )
 
         paged_assistant_ids = self._slice_assistants(
             accessible_assistant_ids, offset=offset, limit=limit

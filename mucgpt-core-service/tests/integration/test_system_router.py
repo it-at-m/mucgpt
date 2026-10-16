@@ -38,6 +38,32 @@ def test_config_endpoint_includes_admin_role(test_client):
 
 
 @pytest.mark.integration
+def test_config_endpoint_includes_model_display_name(test_client):
+    """Models expose their configured display_name next to the llm_name identifier."""
+    model = {
+        "type": "OPENAI",
+        "endpoint": "https://example.com/v1",
+        "api_key": "key",
+        "max_output_tokens": 1000,
+        "max_input_tokens": 2000,
+        "description": "Test model",
+        "auto_enrich_from_model_info_endpoint": False,
+    }
+    mock_settings = Settings(
+        MODELS=[
+            {**model, "llm_name": "gpt-5.6-terra", "display_name": "GPT-5.6 Terra"},
+            {**model, "llm_name": "mistral-large-3"},
+        ]
+    )
+    with patch("api.routers.system_router.settings", mock_settings):
+        response = test_client.get("/config", headers=headers)
+    assert response.status_code == 200
+    models = {m["llm_name"]: m for m in response.json()["models"]}
+    assert models["gpt-5.6-terra"]["display_name"] == "GPT-5.6 Terra"
+    assert models["mistral-large-3"]["display_name"] is None
+
+
+@pytest.mark.integration
 def test_health_check(test_client):
     """Test the /health endpoint returns OK."""
     response = test_client.get("/health")

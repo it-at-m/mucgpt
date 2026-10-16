@@ -2,9 +2,11 @@ import { forwardRef, useContext } from "react";
 import {
     MenuItem as FluentMenuItem,
     MenuItemLink as FluentMenuItemLink,
+    MenuItemRadio as FluentMenuItemRadio,
     menuItemClassNames,
     type MenuItemLinkProps,
     type MenuItemProps,
+    type MenuItemRadioProps,
     makeStyles,
     mergeClasses,
     tokens
@@ -27,6 +29,11 @@ const useStyles = makeStyles({
         },
         '&[aria-expanded="true"]': {
             backgroundColor: tokens.colorSubtleBackgroundHover
+        }
+    },
+    checked: {
+        '&[aria-checked="true"], &[aria-checked="true"]:hover': {
+            backgroundColor: tokens.colorSubtleBackgroundSelected
         }
     },
     darkForeground: {
@@ -96,5 +103,20 @@ export const MenuItemLink = forwardRef<HTMLAnchorElement, MucgptMenuItemLinkProp
     );
 });
 
+export const MenuItemRadio = forwardRef<HTMLDivElement, MenuItemRadioProps>(({ className, disabled, ...props }, ref) => {
+    const { isLight } = useContext(AppThemeContext);
+    const styles = useStyles();
+
+    return (
+        <FluentMenuItemRadio
+            {...props}
+            ref={ref}
+            disabled={disabled}
+            className={mergeClasses(!disabled && styles.subtle, !disabled && styles.checked, !isLight && !disabled && styles.darkForeground, className)}
+        />
+    );
+});
+
 MenuItem.displayName = "MenuItem";
 MenuItemLink.displayName = "MenuItemLink";
+MenuItemRadio.displayName = "MenuItemRadio";

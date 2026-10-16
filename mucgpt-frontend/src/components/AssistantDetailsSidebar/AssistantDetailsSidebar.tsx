@@ -27,7 +27,7 @@ import {
     Share20Regular,
     MoreHorizontal20Regular
 } from "@fluentui/react-icons";
-import { useState, useCallback, useRef, useEffect, useId, type ReactNode } from "react";
+import { useState, useCallback, useContext, useRef, useEffect, useId, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import styles from "./AssistantDetailsSidebar.module.css";
 import { Assistant, AssistantResponse, CommunityAssistant, CommunityAssistantSnapshot, ToolBase } from "../../api/models";
@@ -39,6 +39,8 @@ import { MenuItem } from "../../ui/MenuItem";
 import { EdelweissSpinner } from "../EdelweissSpinner";
 import { CREATIVITY_MEDIUM } from "../../constants";
 import { getCreativityOption } from "../../utils/creativityOptions";
+import { getModelDisplayName } from "../../utils/modelDisplayName";
+import { LLMContext } from "../LLMSelector/LLMContextProvider";
 import { getPrimaryOwnerDetails, OwnerMetadataLink } from "../OwnerMetadataLink/OwnerMetadataLink";
 import { useGlobalToastContext } from "../GlobalToastHandler/GlobalToastContext";
 
@@ -70,11 +72,6 @@ const formatConfigurationDate = (value: string | undefined, locale: string): str
         month: "long",
         year: "numeric"
     }).format(date);
-};
-
-const getModelDisplayName = (model: string | undefined): string | undefined => {
-    if (!model) return undefined;
-    return model.split("/").pop() || model;
 };
 
 interface DetailsGroupProps {
@@ -232,6 +229,7 @@ export const AssistantDetailsSidebar = ({
 }: AssistantDetailsSidebarProps) => {
     const { t, i18n } = useTranslation();
     const { showSuccess, showError } = useGlobalToastContext();
+    const { availableLLMs } = useContext(LLMContext);
     const [systemPromptCopied, setSystemPromptCopied] = useState<boolean>(false);
     const responseData = assistant?.rawData && "latest_version" in assistant.rawData ? assistant.rawData : undefined;
     const latestVersion = responseData?.latest_version;
@@ -411,7 +409,7 @@ export const AssistantDetailsSidebar = ({
                             <dl className={styles.detailsList}>
                                 <DetailsRow label={t("components.assistant_editor.creativity")}>{creativityConfig.label}</DetailsRow>
                                 <DetailsRow label={t("components.assistant_editor.default_model")}>
-                                    {getModelDisplayName(defaultModel) || t("components.assistant_editor.no_default_model")}
+                                    {defaultModel ? getModelDisplayName(defaultModel, availableLLMs) : t("components.assistant_editor.no_default_model")}
                                 </DetailsRow>
                             </dl>
 

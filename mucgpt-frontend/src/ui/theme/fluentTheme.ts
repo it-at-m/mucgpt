@@ -84,6 +84,7 @@ const lightNeutralOverrides = {
 
     colorSubtleBackgroundHover: withAlpha(neutralRamp[40], 0.06),
     colorSubtleBackgroundPressed: withAlpha(neutralRamp[40], 0.1),
+    colorSubtleBackgroundSelected: withAlpha(neutralRamp[40], 0.08),
 
     // Text on brand surfaces
     colorNeutralForegroundOnBrand: neutralRamp[160],
@@ -156,6 +157,7 @@ const darkNeutralOverrides = {
 
     colorSubtleBackgroundHover: withAlpha(neutralRamp[150], 0.08),
     colorSubtleBackgroundPressed: withAlpha(neutralRamp[150], 0.14),
+    colorSubtleBackgroundSelected: withAlpha(neutralRamp[150], 0.11),
 
     colorNeutralStencil1: neutralRamp[70],
     colorNeutralStencil2: neutralRamp[60],

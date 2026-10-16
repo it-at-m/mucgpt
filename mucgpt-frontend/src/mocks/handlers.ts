@@ -2,6 +2,7 @@
 import { http, HttpResponse, delay, passthrough } from "msw";
 import {
     ApplicationConfig,
+    AdminTag,
     AssistantCreateInput,
     AssistantCreateResponse,
     AssistantStateUpdateInput,
@@ -193,6 +194,7 @@ function getMockSubscriptionCount(assistantId: string): number {
 function withMockSubscriptionCount(assistant: AssistantCreateResponse) {
     return {
         ...assistant,
+        admin_tags: assistant.admin_tags ?? [],
         is_visible: assistant.latest_version.is_visible ?? true,
         latest_version: { state: "active", ...assistant.latest_version },
         subscriptions_count: getMockSubscriptionCount(assistant.id)
@@ -1262,6 +1264,21 @@ export const handlers = [
             updated_at: new Date().toISOString(),
             latest_version: { ...assistant.latest_version, state: body.state, state_change_reason: body.reason }
         };
+        const index = DYNAMIC_ASSISTANTS.indexOf(assistant);
+        DYNAMIC_ASSISTANTS[index] = updated;
+        saveMockAssistants(DYNAMIC_ASSISTANTS);
+        return HttpResponse.json(withMockSubscriptionCount(updated));
+    }),
+
+    http.patch("/api/admin/assistant/:id/tags", async ({ params, request }) => {
+        const body = (await request.json()) as { admin_tags?: string[] };
+        const assistant = DYNAMIC_ASSISTANTS.find(item => item.id === params.id);
+        if (!assistant) return new HttpResponse(null, { status: 404 });
+        if (!body.admin_tags || body.admin_tags.some(tag => tag !== "featured")) {
+            return HttpResponse.json({ detail: "Unsupported administrator tag" }, { status: 422 });
+        }
+        const adminTags = [...new Set(body.admin_tags)] as AdminTag[];
+        const updated = { ...assistant, admin_tags: adminTags, updated_at: new Date().toISOString() };
         const index = DYNAMIC_ASSISTANTS.indexOf(assistant);
         DYNAMIC_ASSISTANTS[index] = updated;
         saveMockAssistants(DYNAMIC_ASSISTANTS);

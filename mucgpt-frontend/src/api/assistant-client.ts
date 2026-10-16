@@ -6,6 +6,7 @@ import {
     AssistantResponse,
     AssistantState,
     AssistantStateUpdateInput,
+    AdminTagsUpdateInput,
     AssistantUpdateInput,
     CommunityAssistant,
     DirectoryNode
@@ -158,4 +159,8 @@ export async function getAdminAssistantsApi(params?: AdminAssistantListQueryPara
 
 export async function updateAssistantStateApi(assistantId: string, input: AssistantStateUpdateInput): Promise<AssistantResponse> {
     return handleApiRequest(() => fetch(`/api/admin/assistant/${assistantId}/state`, patchConfig({ ...input })), "Failed to update assistant state");
+}
+
+export async function updateAssistantAdminTagsApi(assistantId: string, input: AdminTagsUpdateInput): Promise<AssistantResponse> {
+    return handleApiRequest(() => fetch(`/api/admin/assistant/${assistantId}/tags`, patchConfig({ ...input })), "Failed to update assistant tags");
 }

@@ -1,6 +1,7 @@
 from __future__ import annotations  # Enable forward references in annotations
 
 import uuid
+from collections.abc import Sequence
 from datetime import datetime
 from typing import Any
 
@@ -647,6 +648,16 @@ class AssistantRepository(Repository[Assistant]):
             logger.error(f"Error updating assistant {assistant_id}: {e}")
             await self.session.rollback()
             raise
+
+    async def update_admin_tags(
+        self, assistant: Assistant, admin_tags: Sequence[str]
+    ) -> Assistant:
+        """Update administrator-managed metadata without creating a new version."""
+        assistant.admin_tags = list(dict.fromkeys(admin_tags))
+        assistant.updated_at = datetime.utcnow()
+        await self.session.flush()
+        await self.session.refresh(assistant)
+        return assistant
 
     async def get_with_owners(self, assistant_id: str) -> Assistant | None:
         logger.debug(f"Fetching assistant with owners for assistant {assistant_id}")

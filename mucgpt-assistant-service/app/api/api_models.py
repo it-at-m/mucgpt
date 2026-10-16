@@ -13,6 +13,7 @@ CREATIVITY_HIGH = "high"
 
 AssistantListSortBy = Literal["title", "updated", "subscriptions"]
 AssistantListSortOrder = Literal["asc", "desc"]
+AdminTag = Literal["featured"]
 ComplianceCategoryId = Literal[
     "migration_asylum_border",
     "public_services_access",
@@ -545,6 +546,14 @@ class AssistantStateUpdate(BaseModel):
     reason: str | None = Field(None, max_length=2000)
 
 
+class AdminTagsUpdate(BaseModel):
+    """Administrator-managed tags for an assistant."""
+
+    admin_tags: list[AdminTag] = Field(
+        description="Allowed administrator-managed tags for this assistant."
+    )
+
+
 class AssistantResponse(BaseModel):
     """Complete response model for AI assistant data.
 
@@ -578,6 +587,11 @@ class AssistantResponse(BaseModel):
         True,
         description="Whether this assistant is publicly listed in the UI",
         example=True,
+    )
+    admin_tags: list[AdminTag] = Field(
+        default_factory=list,
+        description="Administrator-managed tags for this assistant.",
+        example=["featured"],
     )
     owner_ids: list[str] | None = Field(
         [],
@@ -690,6 +704,11 @@ class SubscriptionResponse(BaseModel):
         default_factory=list,
         description="Tags of the subscribed assistant's latest version",
         example=["support", "technical"],
+    )
+    admin_tags: list[AdminTag] = Field(
+        default_factory=list,
+        description="Administrator-managed tags for this assistant.",
+        example=["featured"],
     )
     is_visible: bool = Field(
         True,

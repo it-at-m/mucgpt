@@ -21,8 +21,14 @@ import { ArrowResetRegular, ArrowSyncRegular, Eye24Regular, EyeOff24Regular, Peo
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 
-import { type AdminAssistantListQueryParams, type AssistantAccessType, type ComplianceStatus, getAdminAssistantsApi } from "../../api/assistant-client";
-import { type AssistantResponse, type AssistantState } from "../../api/models";
+import {
+    type AdminAssistantListQueryParams,
+    type AssistantAccessType,
+    type ComplianceStatus,
+    getAdminAssistantsApi,
+    updateAssistantAdminTagsApi
+} from "../../api/assistant-client";
+import { type AdminTag, type AssistantResponse, type AssistantState } from "../../api/models";
 import { ApiError } from "../../api/fetch-utils";
 import { AssistantDetailsSidebar, type AssistantCardData } from "../../components/AssistantDetailsSidebar/AssistantDetailsSidebar";
 import { getPrimaryOwnerDetails, OwnerMetadataLink } from "../../components/OwnerMetadataLink/OwnerMetadataLink";
@@ -73,6 +79,7 @@ const AdminAssistants = () => {
     const [isLoadingMore, setIsLoadingMore] = useState(false);
     const [hasMore, setHasMore] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [updatingAssistantId, setUpdatingAssistantId] = useState<string | null>(null);
     const [refreshKey, setRefreshKey] = useState(0);
     const [isDetailsOpen, setIsDetailsOpen] = useState(false);
     const [selectedAssistant, setSelectedAssistant] = useState<AssistantCardData | null>(null);
@@ -164,6 +171,23 @@ const AdminAssistants = () => {
             rawData: assistant
         });
         setIsDetailsOpen(true);
+    };
+
+    const toggleFeatured = async (assistant: AssistantResponse) => {
+        const adminTags: AdminTag[] = assistant.admin_tags.includes("featured") ? [] : ["featured"];
+        setUpdatingAssistantId(assistant.id);
+        setError(null);
+        try {
+            const updated = await updateAssistantAdminTagsApi(assistant.id, { admin_tags: adminTags });
+            setAssistants(current => current.map(item => (item.id === updated.id ? updated : item)));
+            setSelectedAssistant(current => (current?.id === updated.id ? { ...current, rawData: updated } : current));
+        } catch (updateError) {
+            setError(
+                updateError instanceof Error ? updateError.message : t("admin.assistants.featured_update_failed", "The Featured tag could not be updated.")
+            );
+        } finally {
+            setUpdatingAssistantId(null);
+        }
     };
 
     const closeDetails = () => setIsDetailsOpen(false);
@@ -418,6 +442,11 @@ const AdminAssistants = () => {
                                                                 </Body2>
                                                             </div>
                                                             <div className={styles.badges}>
+                                                                {assistant.admin_tags.includes("featured") && (
+                                                                    <Badge appearance="tint" color="brand">
+                                                                        {t("admin.assistants.featured", "Featured")}
+                                                                    </Badge>
+                                                                )}
                                                                 <Badge appearance="tint" color={lifecycle.color}>
                                                                     {lifecycle.label}
                                                                 </Badge>
@@ -456,6 +485,17 @@ const AdminAssistants = () => {
                                                                 {t("admin.assistants.open_legal_review")}
                                                             </Button>
                                                         )}
+                                                        <Button
+                                                            appearance="secondary"
+                                                            onClick={() => void toggleFeatured(assistant)}
+                                                            disabled={updatingAssistantId === assistant.id}
+                                                        >
+                                                            {updatingAssistantId === assistant.id
+                                                                ? t("common.loading")
+                                                                : assistant.admin_tags.includes("featured")
+                                                                  ? t("admin.assistants.remove_featured", "Remove Featured")
+                                                                  : t("admin.assistants.mark_featured", "Mark as Featured")}
+                                                        </Button>
                                                     </Card>
                                                 );
                                             })}

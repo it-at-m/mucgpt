@@ -778,6 +778,7 @@ i18n
                             owner_details: "Besitzer",
                             pending_review_badge: "Ausstehend",
                             inactive_badge: "Deaktiviert",
+                            featured_badge: "Empfohlen",
                             pending_review_title: "Rechtliche Prüfung ausstehend",
                             pending_review_hint: "Dieser Assistent ist bis zum Abschluss der rechtlichen Prüfung für Chats deaktiviert.",
                             inactive_title: "Assistent deaktiviert",
@@ -1706,6 +1707,7 @@ i18n
                             metadata_you: "You",
                             pending_review_badge: "Pending",
                             inactive_badge: "Inactive",
+                            featured_badge: "Featured",
                             pending_review_title: "Legal review pending",
                             pending_review_hint: "This assistant is unavailable for chat until legal review is complete.",
                             inactive_title: "Assistant inactive",
@@ -2706,6 +2708,7 @@ i18n
                             local_badge: "Lokal",
                             pending_review_badge: "Ausstehend",
                             inactive_badge: "Deaktiviert",
+                            featured_badge: "Empfohlen",
                             accepted_badge: "Konform",
                             local_state_title: "Der lokale Assistent is veraltet",
                             discovery_local_hint:
@@ -3620,6 +3623,7 @@ i18n
                             local_badge: "Local",
                             pending_review_badge: "En attente",
                             inactive_badge: "Inactif",
+                            featured_badge: "À la une",
                             accepted_badge: "Conforme",
                             local_state_title: "Cet assistant local est obsolète",
                             discovery_local_hint:
@@ -4538,6 +4542,7 @@ i18n
                             local_badge: "Локальний",
                             pending_review_badge: "Очікує перевірки",
                             inactive_badge: "Неактивний",
+                            featured_badge: "Рекомендований",
                             accepted_badge: "Відповідає вимогам",
                             local_state_title: "Цей локальний асистент застарів",
                             discovery_local_hint:

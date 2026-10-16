@@ -196,10 +196,13 @@ const Home = () => {
                 }
                 setRecentAssistants(recent.slice(0, MAX_CARDS));
 
-                // Build recommended: top 5 visible community assistants by subscription count
+                // Build recommended: featured assistants first, then rank by subscriptions.
                 const recommended = [...allCommunity]
                     .filter(a => a.is_visible)
-                    .sort((a, b) => (b.subscriptions_count || 0) - (a.subscriptions_count || 0))
+                    .sort((a, b) => {
+                        const featuredDifference = Number(b.admin_tags?.includes("featured")) - Number(a.admin_tags?.includes("featured"));
+                        return featuredDifference || (b.subscriptions_count || 0) - (a.subscriptions_count || 0);
+                    })
                     .slice(0, MAX_CARDS)
                     .map(a => ({
                         id: a.id,

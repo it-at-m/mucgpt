@@ -100,7 +100,10 @@ i18n
                             unknown_owner: "Unbekannte:r Ersteller:in",
                             hierarchy: "Freigegeben für",
                             open_legal_review: "Rechtliche Prüfung öffnen",
-                            load_more: "Weitere Assistenten laden"
+                            load_more: "Weitere Assistenten laden",
+                            featured: "Empfohlen",
+                            remove_featured: "Empfohlen entfernen",
+                            mark_featured: "Als empfohlen markieren"
                         }
                     },
                     home: {
@@ -1039,7 +1042,10 @@ i18n
                             unknown_owner: "Unknown owner",
                             hierarchy: "Shared with",
                             open_legal_review: "Open legal review",
-                            load_more: "Load more assistants"
+                            load_more: "Load more assistants",
+                            featured: "Featured",
+                            remove_featured: "Remove Featured",
+                            mark_featured: "Mark as Featured"
                         }
                     },
                     home: {
@@ -1967,7 +1973,10 @@ i18n
                             unknown_owner: "Unbekannter Ersteller",
                             hierarchy: "Freigegeben für",
                             open_legal_review: "Rechtliche Obacht aufmacha",
-                            load_more: "Weitere Assistenten laden"
+                            load_more: "Weitere Assistenten laden",
+                            featured: "Empfohlen",
+                            remove_featured: "Empfohlen wegnehmen",
+                            mark_featured: "Als empfohlen markieren"
                         }
                     },
                     home: {
@@ -2882,7 +2891,10 @@ i18n
                             unknown_owner: "Créateur inconnu",
                             hierarchy: "Partagé avec",
                             open_legal_review: "Ouvrir la révision juridique",
-                            load_more: "Charger plus d’assistants"
+                            load_more: "Charger plus d’assistants",
+                            featured: "À la une",
+                            remove_featured: "Retirer de la une",
+                            mark_featured: "Mettre à la une"
                         }
                     },
                     home: {
@@ -3798,7 +3810,10 @@ i18n
                             unknown_owner: "Невідомий автор",
                             hierarchy: "Доступ надано для",
                             open_legal_review: "Відкрити юридичну перевірку",
-                            load_more: "Завантажити більше помічників"
+                            load_more: "Завантажити більше помічників",
+                            featured: "Рекомендовані",
+                            remove_featured: "Зняти позначку «Рекомендовані»",
+                            mark_featured: "Позначити як рекомендовані"
                         }
                     },
                     home: {

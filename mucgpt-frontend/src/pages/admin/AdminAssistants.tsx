@@ -179,8 +179,10 @@ const AdminAssistants = () => {
         setError(null);
         try {
             const updated = await updateAssistantAdminTagsApi(assistant.id, { admin_tags: adminTags });
-            setAssistants(current => current.map(item => (item.id === updated.id ? updated : item)));
             setSelectedAssistant(current => (current?.id === updated.id ? { ...current, rawData: updated } : current));
+            setAssistants([]);
+            setHasMore(false);
+            setRefreshKey(current => current + 1);
         } catch (updateError) {
             setError(
                 updateError instanceof Error ? updateError.message : t("admin.assistants.featured_update_failed", "The Featured tag could not be updated.")

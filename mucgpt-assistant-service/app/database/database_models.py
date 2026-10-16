@@ -142,6 +142,7 @@ class Assistant(Base):
     is_visible = Column(
         Boolean, default=True, nullable=False
     )  # Whether this assistant is publicly listed
+    admin_tags = Column(JSON, default=list, nullable=False, server_default="[]")
     subscriptions_count = Column(Integer, nullable=False, default=0, server_default="0")
 
     versions = relationship(

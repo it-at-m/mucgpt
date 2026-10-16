@@ -116,10 +116,16 @@ const Home = () => {
             try {
                 const assistantStorageService = new AssistantStorageService(ASSISTANT_STORE);
 
-                const [subs, owned, allCommunity] = await Promise.all([
+                const [subs, owned, allCommunity, recommendedCommunity] = await Promise.all([
                     getUserSubscriptionsApi(),
                     getOwnedCommunityAssistants(),
-                    getAllCommunityAssistantsApi()
+                    getAllCommunityAssistantsApi(),
+                    getAllCommunityAssistantsApi({
+                        limit: MAX_CARDS,
+                        sort_by: "subscriptions",
+                        sort_order: "desc",
+                        priority_admin_tags: ["featured"]
+                    })
                 ]);
 
                 const allCommunityMap = new Map<string, AssistantResponse>();
@@ -196,22 +202,17 @@ const Home = () => {
                 }
                 setRecentAssistants(recent.slice(0, MAX_CARDS));
 
-                // Build recommended: top 5 visible community assistants by subscription count
-                const recommended = [...allCommunity]
-                    .filter(a => a.is_visible)
-                    .sort((a, b) => (b.subscriptions_count || 0) - (a.subscriptions_count || 0))
-                    .slice(0, MAX_CARDS)
-                    .map(a => ({
-                        id: a.id,
-                        title: a.latest_version.name,
-                        description: a.latest_version.description || "",
-                        lastUsed: 0,
-                        linkTo: `/communityassistant/${a.id}`,
-                        metadataOwner: getPrimaryOwnerDetails(a),
-                        metadataFallbackLabel: t("components.community_assistants.filter_all", "Community"),
-                        rawData: a,
-                        subscriberCount: a.subscriptions_count || 0
-                    }));
+                const recommended = recommendedCommunity.map(a => ({
+                    id: a.id,
+                    title: a.latest_version.name,
+                    description: a.latest_version.description || "",
+                    lastUsed: 0,
+                    linkTo: `/communityassistant/${a.id}`,
+                    metadataOwner: getPrimaryOwnerDetails(a),
+                    metadataFallbackLabel: t("components.community_assistants.filter_all", "Community"),
+                    rawData: a,
+                    subscriberCount: a.subscriptions_count || 0
+                }));
                 if (!mounted) {
                     return;
                 }

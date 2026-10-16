@@ -96,7 +96,7 @@ export const mapAssistantVersionToSnapshot = (assistantId: string, version: Assi
 });
 
 export const mapAssistantResponseToSnapshot = (assistant: AssistantResponse): CommunityAssistantSnapshot => {
-    return mapAssistantVersionToSnapshot(assistant.id, assistant.latest_version);
+    return { ...mapAssistantVersionToSnapshot(assistant.id, assistant.latest_version), admin_tags: assistant.admin_tags };
 };
 
 export const mapAssistantToCommunitySnapshot = (assistant: Assistant): CommunityAssistantSnapshot => ({

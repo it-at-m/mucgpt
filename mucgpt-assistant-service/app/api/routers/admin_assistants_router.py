@@ -3,6 +3,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.api_models import (
+    AdminTagsUpdate,
     AssistantAccessType,
     AssistantListSortBy,
     AssistantListSortOrder,
@@ -83,6 +84,32 @@ async def get_review_queue(
         limit=limit,
     )
     return await _build_assistant_response_list(assistants, assistant_repo)
+
+
+@router.patch(
+    "/admin/assistant/{assistant_id}/tags",
+    response_model=AssistantResponse,
+    summary="Update administrator-managed assistant tags",
+    tags=["Admin"],
+)
+async def update_admin_tags(
+    assistant_id: str,
+    tags_update: AdminTagsUpdate,
+    db: AsyncSession = Depends(get_db_session),
+    _admin: AuthenticationResult = Depends(require_admin),
+) -> AssistantResponse:
+    """Update parent-level metadata without creating an assistant version."""
+    assistant_repo = AssistantRepository(db)
+    assistant = await assistant_repo.get_for_update(assistant_id)
+    if assistant is None:
+        raise AssistantNotFoundException(assistant_id)
+
+    await assistant_repo.update_admin_tags(assistant, tags_update.admin_tags)
+    await db.commit()
+    refreshed_assistant = await assistant_repo.get_with_owners(assistant_id)
+    return (
+        await _build_assistant_response_list([refreshed_assistant], assistant_repo)
+    )[0]
 
 
 @router.patch(

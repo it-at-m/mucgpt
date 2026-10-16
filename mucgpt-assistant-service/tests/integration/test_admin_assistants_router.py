@@ -509,3 +509,44 @@ def test_admin_review_rejects_stale_version(admin_client: TestClient) -> None:
     )
 
     assert response.status_code == 409
+
+
+@pytest.mark.integration
+def test_admin_can_update_admin_tags_without_creating_version(
+    admin_client: TestClient,
+) -> None:
+    create_response = admin_client.post(
+        "assistant/create",
+        json={"name": "Featured assistant", "system_prompt": "Help users."},
+        headers=headers,
+    )
+    created = AssistantResponse.model_validate(create_response.json())
+
+    response = admin_client.patch(
+        f"admin/assistant/{created.id}/tags",
+        json={"admin_tags": ["featured"]},
+        headers=headers,
+    )
+
+    assert response.status_code == 200
+    updated = AssistantResponse.model_validate(response.json())
+    assert updated.admin_tags == ["featured"]
+    assert updated.latest_version.version == created.latest_version.version
+
+
+@pytest.mark.integration
+def test_admin_tags_reject_unknown_values(admin_client: TestClient) -> None:
+    create_response = admin_client.post(
+        "assistant/create",
+        json={"name": "Tagged assistant", "system_prompt": "Help users."},
+        headers=headers,
+    )
+    created = AssistantResponse.model_validate(create_response.json())
+
+    response = admin_client.patch(
+        f"admin/assistant/{created.id}/tags",
+        json={"admin_tags": ["recommended"]},
+        headers=headers,
+    )
+
+    assert response.status_code == 422

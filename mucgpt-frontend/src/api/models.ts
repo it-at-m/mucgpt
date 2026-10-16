@@ -249,6 +249,7 @@ export interface AssistantCreateResponse {
     hierarchical_access?: string[];
     owner_ids?: string[];
     owners_detailed?: OwnerDetailsResponse[];
+    admin_tags?: AdminTag[];
     latest_version: AssistantVersionResponse;
 }
 
@@ -280,6 +281,13 @@ export interface AssistantResponse {
     owners_detailed?: OwnerDetailsResponse[];
     latest_version: AssistantVersionResponse;
     is_visible: boolean;
+    admin_tags: AdminTag[];
+}
+
+export type AdminTag = "featured";
+
+export interface AdminTagsUpdateInput {
+    admin_tags: AdminTag[];
 }
 
 // Tool info and list response for /tools endpoint
@@ -325,6 +333,7 @@ export type CommunityAssistant = {
     updated_at?: string;
     subscriptions_count?: number;
     tags?: string[];
+    admin_tags?: AdminTag[];
     is_visible?: boolean;
     is_deleted?: boolean;
     owners_detailed?: OwnerDetailsResponse[];
@@ -372,6 +381,7 @@ export type CommunityAssistantSnapshot = {
     examples?: StarterPromptInput[];
     quick_prompts?: FollowUpActionModel[];
     tags?: string[];
+    admin_tags?: AdminTag[];
     hierarchical_access?: string[];
     tools?: ToolBase[];
     is_visible: boolean;

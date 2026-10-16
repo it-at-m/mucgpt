@@ -100,7 +100,10 @@ i18n
                             unknown_owner: "Unbekannte:r Ersteller:in",
                             hierarchy: "Freigegeben für",
                             open_legal_review: "Rechtliche Prüfung öffnen",
-                            load_more: "Weitere Assistenten laden"
+                            load_more: "Weitere Assistenten laden",
+                            featured: "Empfohlen",
+                            remove_featured: "Empfohlen entfernen",
+                            mark_featured: "Als empfohlen markieren"
                         }
                     },
                     home: {
@@ -778,6 +781,7 @@ i18n
                             owner_details: "Besitzer",
                             pending_review_badge: "Ausstehend",
                             inactive_badge: "Deaktiviert",
+                            featured_badge: "Empfohlen",
                             pending_review_title: "Rechtliche Prüfung ausstehend",
                             pending_review_hint: "Dieser Assistent ist bis zum Abschluss der rechtlichen Prüfung für Chats deaktiviert.",
                             inactive_title: "Assistent deaktiviert",
@@ -1038,7 +1042,10 @@ i18n
                             unknown_owner: "Unknown owner",
                             hierarchy: "Shared with",
                             open_legal_review: "Open legal review",
-                            load_more: "Load more assistants"
+                            load_more: "Load more assistants",
+                            featured: "Featured",
+                            remove_featured: "Remove Featured",
+                            mark_featured: "Mark as Featured"
                         }
                     },
                     home: {
@@ -1706,6 +1713,7 @@ i18n
                             metadata_you: "You",
                             pending_review_badge: "Pending",
                             inactive_badge: "Inactive",
+                            featured_badge: "Featured",
                             pending_review_title: "Legal review pending",
                             pending_review_hint: "This assistant is unavailable for chat until legal review is complete.",
                             inactive_title: "Assistant inactive",
@@ -1965,7 +1973,10 @@ i18n
                             unknown_owner: "Unbekannter Ersteller",
                             hierarchy: "Freigegeben für",
                             open_legal_review: "Rechtliche Obacht aufmacha",
-                            load_more: "Weitere Assistenten laden"
+                            load_more: "Weitere Assistenten laden",
+                            featured: "Empfohlen",
+                            remove_featured: "Empfohlen wegnehmen",
+                            mark_featured: "Als empfohlen markieren"
                         }
                     },
                     home: {
@@ -2706,6 +2717,7 @@ i18n
                             local_badge: "Lokal",
                             pending_review_badge: "Ausstehend",
                             inactive_badge: "Deaktiviert",
+                            featured_badge: "Empfohlen",
                             accepted_badge: "Konform",
                             local_state_title: "Der lokale Assistent is veraltet",
                             discovery_local_hint:
@@ -2879,7 +2891,10 @@ i18n
                             unknown_owner: "Créateur inconnu",
                             hierarchy: "Partagé avec",
                             open_legal_review: "Ouvrir la révision juridique",
-                            load_more: "Charger plus d’assistants"
+                            load_more: "Charger plus d’assistants",
+                            featured: "À la une",
+                            remove_featured: "Retirer de la une",
+                            mark_featured: "Mettre à la une"
                         }
                     },
                     home: {
@@ -3620,6 +3635,7 @@ i18n
                             local_badge: "Local",
                             pending_review_badge: "En attente",
                             inactive_badge: "Inactif",
+                            featured_badge: "À la une",
                             accepted_badge: "Conforme",
                             local_state_title: "Cet assistant local est obsolète",
                             discovery_local_hint:
@@ -3794,7 +3810,10 @@ i18n
                             unknown_owner: "Невідомий автор",
                             hierarchy: "Доступ надано для",
                             open_legal_review: "Відкрити юридичну перевірку",
-                            load_more: "Завантажити більше помічників"
+                            load_more: "Завантажити більше помічників",
+                            featured: "Рекомендовані",
+                            remove_featured: "Зняти позначку «Рекомендовані»",
+                            mark_featured: "Позначити як рекомендовані"
                         }
                     },
                     home: {
@@ -4538,6 +4557,7 @@ i18n
                             local_badge: "Локальний",
                             pending_review_badge: "Очікує перевірки",
                             inactive_badge: "Неактивний",
+                            featured_badge: "Рекомендований",
                             accepted_badge: "Відповідає вимогам",
                             local_state_title: "Цей локальний асистент застарів",
                             discovery_local_hint:

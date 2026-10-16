@@ -1,5 +1,5 @@
 import type { TFunction } from "i18next";
-import { CheckmarkCircle16Regular, CircleOff16Regular, Clock16Regular } from "@fluentui/react-icons";
+import { CheckmarkCircle16Regular, CircleOff16Regular, Clock16Regular, Star16Regular } from "@fluentui/react-icons";
 import type { AssistantCardData } from "../components/AssistantDetailsSidebar/AssistantDetailsSidebar";
 import type { DiscoveryCardBadge } from "../components/DiscoveryCard";
 
@@ -9,6 +9,7 @@ export const getAssistantBadges = (
     isComplianceCheckEnabled?: boolean
 ): DiscoveryCardBadge[] => {
     const badges: DiscoveryCardBadge[] = [];
+    const adminTags = "admin_tags" in assistant.rawData ? assistant.rawData.admin_tags || [] : [];
     const complianceCheckResult =
         "latest_version" in assistant.rawData
             ? assistant.rawData.latest_version.compliance_check_result
@@ -17,6 +18,14 @@ export const getAssistantBadges = (
               : undefined;
     const assistantState =
         "latest_version" in assistant.rawData ? assistant.rawData.latest_version.state : "state" in assistant.rawData ? assistant.rawData.state : undefined;
+
+    if (adminTags.includes("featured")) {
+        badges.push({
+            label: t("components.community_assistants.featured_badge", "Featured"),
+            icon: <Star16Regular aria-hidden="true" />,
+            tone: "brand"
+        });
+    }
 
     if (isComplianceCheckEnabled && assistantState === "pending_legal_review") {
         badges.push({

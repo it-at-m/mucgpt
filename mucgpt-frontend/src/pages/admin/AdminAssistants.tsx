@@ -427,7 +427,7 @@ const AdminAssistants = () => {
                                                         data-selected={selectedAssistant?.id === assistant.id || undefined}
                                                     >
                                                         <div className={styles.cardHeader}>
-                                                            <div>
+                                                            <div className={styles.cardCopy}>
                                                                 <h3 className={styles.name}>
                                                                     <button
                                                                         type="button"
@@ -445,14 +445,14 @@ const AdminAssistants = () => {
                                                             </div>
                                                             <div className={styles.badges}>
                                                                 {assistant.admin_tags.includes("featured") && (
-                                                                    <Badge appearance="tint" color="brand">
+                                                                    <Badge className={styles.badge} appearance="tint" color="brand">
                                                                         {t("admin.assistants.featured", "Featured")}
                                                                     </Badge>
                                                                 )}
-                                                                <Badge appearance="tint" color={lifecycle.color}>
+                                                                <Badge className={styles.badge} appearance="tint" color={lifecycle.color}>
                                                                     {lifecycle.label}
                                                                 </Badge>
-                                                                <Badge appearance="tint" color={compliance.color}>
+                                                                <Badge className={styles.badge} appearance="tint" color={compliance.color}>
                                                                     {compliance.label}
                                                                 </Badge>
                                                             </div>

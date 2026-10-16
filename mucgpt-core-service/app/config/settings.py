@@ -62,6 +62,7 @@ class ModelInfo(BaseModel):
     auto_enrich_from_model_info_endpoint: bool = True
     max_output_tokens: PositiveInt | None = None
     max_input_tokens: PositiveInt | None = None
+    display_name: str | None = None
     description: str | None = None
     short_description: str | None = None
     internal_task_model_strength: InternalTaskModelStrength | None = None
@@ -146,6 +147,7 @@ class ModelsConfig(BaseModel):
             "auto_enrich",
             "max_output_tokens",
             "max_input_tokens",
+            "display_name",
             "description",
             "short_description",
             "internal_task_model_strength",
@@ -192,6 +194,7 @@ class ModelsConfig(BaseModel):
         """Ensure model metadata is consistent before optional enrichment."""
 
         info = model.model_info
+        info.display_name = (info.display_name or "").strip() or None
         info.description = (info.description or "").strip() or None
         info.short_description = (info.short_description or "").strip() or None
 
@@ -246,6 +249,16 @@ class ModelsConfig(BaseModel):
     def context_critical_threshold_percent(self, value: int) -> None:
         """Stores the value in the nested model info."""
         self.model_info.context_critical_threshold_percent = value
+
+    @property
+    def display_name(self) -> str | None:
+        """Delegates the human-readable model name to the nested model info."""
+        return self.model_info.display_name
+
+    @display_name.setter
+    def display_name(self, value: str | None) -> None:
+        """Stores the value in the nested model info."""
+        self.model_info.display_name = (value or "").strip() or None
 
     @property
     def description(self) -> str | None:
@@ -711,6 +724,9 @@ def _apply_model_info(model: ModelsConfig, entry: dict[str, Any]) -> None:
                 entry.get("knowledge_cut_off"),
             )
         )
+
+    if not (info.display_name or "").strip():
+        info.display_name = _coerce_str(model_info.get("display_name"))
 
     if not (info.description or "").strip():
         info.description = _build_description(entry, model.llm_name)

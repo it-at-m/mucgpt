@@ -5,6 +5,7 @@ import { LLMContext } from "../../../LLMSelector/LLMContextProvider";
 import sharedStyles from "../AssistantDialog.module.css";
 import styles from "./AdvancedSettingsSection.module.css";
 import { CreativityRadioGroup } from "../../../CreativityRadioGroup/CreativityRadioGroup";
+import { getModelDisplayName } from "../../../../utils/modelDisplayName";
 
 interface AdvancedSettingsSectionProps {
     creativity: string;
@@ -47,8 +48,8 @@ export const AdvancedSettingsSection = ({
 
     const noDefaultModelOptionValue = "none";
     const noDefaultModelLabel = t("components.assistant_editor.no_default_model");
-    const defaultModelValue = defaultModel ? availableLLMs.find(model => model.llm_name === defaultModel)?.llm_name || defaultModel : noDefaultModelLabel;
-    const selectedDefaultModelOptions = defaultModel ? [defaultModelValue] : [noDefaultModelOptionValue];
+    const defaultModelValue = defaultModel ? getModelDisplayName(defaultModel, availableLLMs) : noDefaultModelLabel;
+    const selectedDefaultModelOptions = defaultModel ? [defaultModel] : [noDefaultModelOptionValue];
 
     return (
         <DialogContent className={styles.advancedContent}>
@@ -82,7 +83,7 @@ export const AdvancedSettingsSection = ({
                     </Option>
                     {availableLLMs.map(model => (
                         <Option key={model.llm_name} value={model.llm_name}>
-                            {model.llm_name}
+                            {getModelDisplayName(model.llm_name, availableLLMs)}
                         </Option>
                     ))}
                 </Dropdown>

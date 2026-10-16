@@ -171,6 +171,7 @@ class TestSettings:
                     "api_key": "test-key",
                     "max_output_tokens": 1000,
                     "max_input_tokens": 2000,
+                    "display_name": "  Test Model  ",
                     "description": "Test model",
                     "short_description": "  Test summary  ",
                     "input_cost_per_token": 9e-8,
@@ -197,6 +198,7 @@ class TestSettings:
             assert model.api_key.get_secret_value() == "test-key"
             assert model.max_output_tokens == 1000
             assert model.max_input_tokens == 2000
+            assert model.display_name == "Test Model"
             assert model.description == "Test model"
             assert model.short_description == "Test summary"
             assert model.input_cost_per_token == Decimal("9e-8")
@@ -226,6 +228,7 @@ class TestSettings:
                     "max_input_tokens": 1048576,
                     "version": "2025-04-14",
                     "base_model": "azure/gpt-4.1-nano",
+                    "display_name": "GPT-4.1 nano",
                     "short_description": "Fast everyday model",
                     "supports_reasoning": True,
                     "supported_reasoning_efforts": ["low", "Medium", "bogus", "high"],
@@ -254,6 +257,7 @@ class TestSettings:
                 assert model.max_output_tokens == 32768
                 assert model.max_input_tokens == 1048576
                 assert "gpt-4.1-nano" in model.description
+                assert model.display_name == "GPT-4.1 nano"
                 assert model.short_description == "Fast everyday model"
                 assert model.supports_reasoning is True
                 assert model.input_cost_per_token == Decimal("9e-8")

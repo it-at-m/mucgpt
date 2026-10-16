@@ -105,7 +105,8 @@ const CONFIG_RESPONSE: ApplicationConfig = {
             supports_reasoning: true
         },
         {
-            llm_name: "UnknownGPT",
+            llm_name: "unknown-gpt",
+            display_name: "UnknownGPT",
             max_input_tokens: 128000,
             max_output_tokens: 128000,
             description: "A young model that has to earn it's name, but with a lot of potential.",
@@ -117,6 +118,7 @@ const CONFIG_RESPONSE: ApplicationConfig = {
         },
         {
             llm_name: "AnnonymGPT",
+            display_name: "AnnonymGPT",
             max_input_tokens: 500000,
             max_output_tokens: 12000,
             description: "A GPT that tends to write reddit comments",
@@ -271,7 +273,7 @@ MOCK_ASSISTANT_SEED.push(
             system_prompt: "You are a research assistant. Provide detailed, well-researched answers with citations when possible.",
             hierarchical_access: ["TEAM-B-AI", "TEAM-B-DATA-1"],
             creativity: "low",
-            default_model: "example-model",
+            default_model: "gpt-5.6-terra",
             is_visible: true,
             tools: [
                 { id: "Brainstorming", config: { enabled: true } },

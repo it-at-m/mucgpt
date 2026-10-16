@@ -438,6 +438,9 @@ class ChatTitleResult(BaseModel):
 
 class ModelsDTO(BaseModel):
     llm_name: str = Field(..., description="Identifier of the model/deployment")
+    display_name: str | None = Field(
+        None, description="Human-readable model name; clients fall back to llm_name"
+    )
     max_output_tokens: PositiveInt | None = Field(
         None, description="Maximum tokens the model can generate"
     )

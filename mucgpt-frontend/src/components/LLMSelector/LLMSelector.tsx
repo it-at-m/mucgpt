@@ -21,6 +21,7 @@ import styles from "./LLMSelector.module.css";
 import { Model } from "../../api";
 import { Button } from "../../ui/Button";
 import { MenuItemRadio } from "../../ui/MenuItem";
+import { getModelDisplayName } from "../../utils/modelDisplayName";
 
 interface Props {
     onSelectionChange: (nextLLM: string) => void;
@@ -94,8 +95,6 @@ const formatKnowledgeDate = (value: string | null | undefined, language: string)
     return trimmed;
 };
 
-const getDisplayName = (llmName: string) => llmName.split("/").pop() || llmName;
-
 const RatingMeter = ({ value, label }: { value: number; label: string }) => (
     <span className={styles.meter} role="img" aria-label={label}>
         {Array.from({ length: RATING_STEPS }, (_, index) => (
@@ -151,7 +150,7 @@ export const LLMSelector = ({ onSelectionChange, selectedLLM, options, lockedByA
 
         return (
             <div key={model.llm_name} className={styles.details} data-active={active}>
-                <Body1Strong>{getDisplayName(model.llm_name)}</Body1Strong>
+                <Body1Strong>{getModelDisplayName(model.llm_name, options)}</Body1Strong>
                 {(knowledge || priceRating !== null || contextRating !== null) && (
                     <dl className={styles.facts}>
                         {priceRating !== null && (
@@ -195,7 +194,7 @@ export const LLMSelector = ({ onSelectionChange, selectedLLM, options, lockedByA
                 subText={shortDescription ? { children: shortDescription, className: classes.subText } : undefined}
                 onFocus={() => setPreviewLLM(model.llm_name)}
             >
-                {getDisplayName(model.llm_name)}
+                {getModelDisplayName(model.llm_name, options)}
             </MenuItemRadio>
         );
     });
@@ -211,7 +210,7 @@ export const LLMSelector = ({ onSelectionChange, selectedLLM, options, lockedByA
             <MenuTrigger disableButtonEnhancement>
                 <Tooltip content={title} relationship="description" positioning="below">
                     <Button appearance="subtle" className={classes.trigger} icon={<ChevronDown16Regular />} iconPosition="after">
-                        {getDisplayName(selectedLLM)}
+                        {getModelDisplayName(selectedLLM, options)}
                     </Button>
                 </Tooltip>
             </MenuTrigger>

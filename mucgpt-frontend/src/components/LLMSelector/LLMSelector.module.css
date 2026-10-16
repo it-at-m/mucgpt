@@ -1,7 +1,7 @@
 .layout {
     display: grid;
     grid-template-areas: "details list";
-    grid-template-columns: 280px auto;
+    grid-template-columns: 320px auto;
 }
 
 .list {

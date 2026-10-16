@@ -6,6 +6,7 @@ from langchain_core.runnables import RunnableConfig
 from langchain_core.runnables.config import merge_configs
 from langchain_core.tools.base import BaseTool
 from langgraph.checkpoint.postgres.aio import AsyncPostgresSaver
+from langgraph.types import Durability
 
 from agent.middleware import (
     ContextMiddleware,
@@ -22,6 +23,12 @@ from core.lf_prompts import PromptPool
 from core.logtools import getLogger
 
 logger = getLogger(name="mucgpt-core-react-agent")
+
+# Write one checkpoint when a run exits instead of one per graph step (LangGraph's
+# "async" default). Only the latest checkpoint is ever read: we don't resume runs
+# mid-way, so per-step checkpoints would only multiply stored message history.
+# The state reached so far is still written if the run fails or is aborted.
+CHECKPOINT_DURABILITY: Durability = "exit"
 
 
 class _ConfiguredLangChainDeepAgentGraph:
@@ -128,6 +135,7 @@ class _ConfiguredLangChainDeepAgentGraph:
             stream_mode=stream_mode,
             config=config,
             context=request_context,
+            durability=CHECKPOINT_DURABILITY,
             **kwargs,
         ):
             yield item
@@ -152,7 +160,11 @@ class _ConfiguredLangChainDeepAgentGraph:
             input_payload["data_sources"] = data_sources  # type: ignore
 
         return await self.agent.ainvoke(
-            input_payload, config=config, context=request_context, **kwargs
+            input_payload,
+            config=config,
+            context=request_context,
+            durability=CHECKPOINT_DURABILITY,
+            **kwargs,
         )
 
 

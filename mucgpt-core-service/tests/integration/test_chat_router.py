@@ -219,6 +219,113 @@ class TestChatRouter:
             "messages"
         ] == [messages[-1]]
 
+    @pytest.mark.parametrize("has_checkpoint", [False, True])
+    @patch("api.routers.chat_router.init_agent", new_callable=AsyncMock)
+    def test_stateless_request_skips_persistence(
+        self,
+        mock_init_agent: AsyncMock,
+        has_checkpoint: bool,
+        test_client: TestClient,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        """persist=False runs on the full client history and touches no stored state."""
+        from core.persistance_helpers import PersistanceHelpers
+
+        verify_mock = AsyncMock(return_value=True)
+        has_checkpoint_mock = AsyncMock(return_value=has_checkpoint)
+        monkeypatch.setattr(
+            PersistanceHelpers, "verify_user_in_conversation", verify_mock
+        )
+        monkeypatch.setattr(PersistanceHelpers, "has_checkpoint", has_checkpoint_mock)
+        mock_agent_executor = Mock(MUCGPTAgentExecutor)
+        mock_agent_executor.run_without_streaming = AsyncMock(
+            return_value=ChatCompletionResponse(
+                id="chatcmpl-test123",
+                object="chat.completion",
+                created=1234567890,
+                choices=[
+                    ChatCompletionChoice(
+                        index=0,
+                        message=ChatCompletionMessage(role="assistant", content="Hi"),
+                        finish_reason="stop",
+                    )
+                ],
+                usage=Usage(prompt_tokens=1, completion_tokens=1, total_tokens=2),
+            )
+        )
+        mock_init_agent.return_value = mock_agent_executor
+        messages = [
+            ChatCompletionMessage(role="system", content="Preview prompt"),
+            ChatCompletionMessage(role="user", content="First question"),
+            ChatCompletionMessage(role="assistant", content="First response"),
+            ChatCompletionMessage(role="user", content="Second question"),
+        ]
+
+        response = test_client.post(
+            "/v1/chat/completions",
+            json=ChatCompletionRequest(
+                model="gpt-4o-mini",
+                messages=messages,
+                stream=False,
+                conversation_id=DUMMY_CONVERSATION_ID,
+                persist=False,
+            ).model_dump(),
+        )
+
+        assert response.status_code == 200, response.text
+        verify_mock.assert_not_awaited()
+        has_checkpoint_mock.assert_not_awaited()
+        assert mock_init_agent.await_args.kwargs["persist"] is False
+        assert (
+            mock_agent_executor.run_without_streaming.await_args.kwargs["messages"]
+            == messages
+        )
+
+    @patch("api.routers.chat_router.init_agent", new_callable=AsyncMock)
+    def test_ag_ui_stateless_request_skips_persistence(
+        self,
+        mock_init_agent: AsyncMock,
+        test_client: TestClient,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        from core.persistance_helpers import PersistanceHelpers
+
+        verify_mock = AsyncMock(return_value=True)
+        monkeypatch.setattr(
+            PersistanceHelpers, "verify_user_in_conversation", verify_mock
+        )
+
+        async def no_events():
+            return
+            yield
+
+        mock_agent_executor = Mock(MUCGPTAgentExecutor)
+        mock_agent_executor.run_agui_with_streaming.return_value = no_events()
+        mock_init_agent.return_value = mock_agent_executor
+        messages = [
+            ChatCompletionMessage(role="user", content="First question"),
+            ChatCompletionMessage(role="assistant", content="First response"),
+            ChatCompletionMessage(role="user", content="Second question"),
+        ]
+
+        response = test_client.post(
+            "/v1/chat/v2/completions",
+            json=ChatCompletionRequest(
+                model="gpt-4o-mini",
+                messages=messages,
+                conversation_id=DUMMY_CONVERSATION_ID,
+                persist=False,
+            ).model_dump(),
+        )
+
+        assert response.status_code == 200, response.text
+        verify_mock.assert_not_awaited()
+        assert mock_init_agent.await_args.kwargs["persist"] is False
+        assert (
+            mock_agent_executor.run_agui_with_streaming.call_args.kwargs["messages"]
+            == messages
+        )
+
     def test_get_conversation_messages(self, test_client: TestClient) -> None:
         response = test_client.get(
             f"/v1/conversations/{DUMMY_CONVERSATION_ID}/messages"

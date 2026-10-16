@@ -51,6 +51,8 @@ export type ChatRequest = {
     enabled_tools?: string[];
     assistant_id?: string;
     conversation_id?: string;
+    /** False runs a stateless chat that is not stored server-side (e.g. assistant previews). */
+    persist?: boolean;
     data_sources?: DataSource[];
 };
 

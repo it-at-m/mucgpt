@@ -103,6 +103,13 @@ class ChatCompletionRequest(BaseModel):
         None,
         description="Stable client-generated id used as the LangGraph checkpoint thread id.",
     )
+    persist: bool = Field(
+        True,
+        description=(
+            "Store the conversation server-side. If false, the chat runs statelessly "
+            "on the full client history and nothing is persisted (e.g. assistant previews)."
+        ),
+    )
     data_sources: list[ChatDataSource] | None = Field(
         None,
         description="Structured document payload with title, content and metadata",

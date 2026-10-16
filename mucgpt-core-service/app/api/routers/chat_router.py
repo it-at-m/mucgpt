@@ -71,6 +71,34 @@ def get_temperature_from_request(request: ChatCompletionRequest) -> float:
     return 0.5
 
 
+async def get_messages_for_agent(
+    request: ChatCompletionRequest, user_id: str
+) -> list[ChatCompletionMessage]:
+    """Authorize the conversation and pick the messages the agent receives.
+
+    A stateless request (``persist=False``) runs on the full client history. A
+    persisted conversation is seeded with the full history on its first turn so
+    the system prompt and existing browser-held turns are retained; once state
+    exists, only the newest user message is appended to avoid duplicating it.
+    """
+    if not request.persist:
+        return request.messages
+
+    # Verify the conversation belongs to this user (row is created on first use).
+    authorized = await PersistanceHelpers.verify_user_in_conversation(
+        user_id, request.conversation_id
+    )
+    if not authorized:
+        raise HTTPException(
+            status_code=403,
+            detail=f"User {user_id} is not authorized to access conversation {request.conversation_id}",
+        )
+
+    if await PersistanceHelpers.has_checkpoint(request.conversation_id):
+        return [request.messages[-1]]
+    return request.messages
+
+
 @router.post(
     "/chat/completions",
     summary="Create chat completion",
@@ -100,26 +128,11 @@ async def chat_endpoint(
         )
 
     try:
-        # Verify the conversation belongs to this user (row is created on first use).
-        authorized = await PersistanceHelpers.verify_user_in_conversation(
-            user_info.user_id, request.conversation_id
-        )
-        if not authorized:
-            raise HTTPException(
-                status_code=403,
-                detail=f"User {user_info.user_id} is not authorized to access conversation {request.conversation_id}",
-            )
+        messages_for_agent = await get_messages_for_agent(request, user_info.user_id)
 
-        # Seed a new checkpoint with the complete client history so the system
-        # prompt and existing browser-held turns are retained. Once state exists,
-        # only append the newest user message to avoid duplicating the history.
-        messages_for_agent = (
-            [request.messages[-1]]
-            if await PersistanceHelpers.has_checkpoint(request.conversation_id)
-            else request.messages
+        agent = await init_agent(
+            user_info=user_info, model_name=request.model, persist=request.persist
         )
-
-        agent = await init_agent(user_info=user_info, model_name=request.model)
         temperature = get_temperature_from_request(request)
         enabled_tools = request.enabled_tools or []
         data_sources = (
@@ -285,25 +298,14 @@ async def ag_ui_chat_endpoint(
             status_code = 500
         raise HTTPException(status_code=status_code, detail=detail) from exc
 
-    authorized = await PersistanceHelpers.verify_user_in_conversation(
-        user_info.user_id, chat_request.conversation_id
-    )
-    if not authorized:
-        raise HTTPException(
-            status_code=403,
-            detail=f"User {user_info.user_id} is not authorized to access conversation {chat_request.conversation_id}",
-        )
-
-    # Same checkpoint seeding as /chat/completions: send the full client history
-    # only for a new conversation, afterwards just the newest user message.
-    messages_for_agent = (
-        [chat_request.messages[-1]]
-        if await PersistanceHelpers.has_checkpoint(chat_request.conversation_id)
-        else chat_request.messages
-    )
+    messages_for_agent = await get_messages_for_agent(chat_request, user_info.user_id)
 
     encoder = EventEncoder(accept=request.headers.get("accept"))
-    agent = await init_agent(user_info=user_info, model_name=chat_request.model)
+    agent = await init_agent(
+        user_info=user_info,
+        model_name=chat_request.model,
+        persist=chat_request.persist,
+    )
     events = agent.run_agui_with_streaming(
         messages=messages_for_agent,
         temperature=get_temperature_from_request(chat_request),

@@ -623,7 +623,7 @@ class MUCGPTAgentExecutor:
                     config=config,
                 ):
                     if stream_mode == "custom":
-                        # Only traced, not streamed (matches run_with_streaming trace).
+                        # Only traced, not streamed.
                         try:
                             trace_events.append(
                                 {

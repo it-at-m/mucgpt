@@ -63,6 +63,31 @@ class TestInitApp:
         assert isinstance(result, MUCGPTAgentExecutor)
         get_checkpointer.assert_called_once()
 
+    @pytest.mark.asyncio
+    @patch("config.model_provider.ModelRegistry.get_model")
+    @patch("agent.tools.tools.ToolCollection.get_tools", new_callable=AsyncMock)
+    async def test_init_agent_without_persistence_skips_checkpointer(
+        self,
+        mock_get_tools,
+        mock_get_model,
+        monkeypatch: pytest.MonkeyPatch,
+    ):
+        mock_get_model.return_value = self.mock_model
+        mock_get_tools.return_value = []
+        monkeypatch.setattr(
+            "agent.deep_agent.PromptPool.get_resolved_prompt",
+            lambda _name: ResolvedPrompt(content="default instruction"),
+        )
+        get_checkpointer = MagicMock(return_value=InMemorySaver())
+        monkeypatch.setattr(
+            PersistanceHelpers, "get_checkpointer_if_ready", get_checkpointer
+        )
+
+        result = await init_agent(self.mock_user, persist=False)
+
+        assert isinstance(result, MUCGPTAgentExecutor)
+        get_checkpointer.assert_not_called()
+
     def test_model_options_validates_temperature_too_high(self):
         """Test that ModelOptions validates temperature is not too high."""
         # Act & Assert

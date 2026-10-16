@@ -217,7 +217,7 @@ export async function handleRegenerate(
  * @param enabled_tools - Optional array of enabled tool names
  * @param onToolStatusUpdate - Optional callback for tool status updates
  * @param persist - When false, the answer is streamed and rendered but never written to
- *                  storage or the history list. Used by the ephemeral assistant preview chat.
+ *                  storage, the history list or the backend. Used by the ephemeral assistant preview chat.
  */
 export const makeApiRequest = async (
     answers: any[],
@@ -266,6 +266,7 @@ export const makeApiRequest = async (
         enabled_tools: enabled_tools && enabled_tools.length > 0 ? enabled_tools : undefined,
         assistant_id: assistant_id,
         conversation_id: conversationId,
+        persist,
         data_sources: data_sources && data_sources.length > 0 ? data_sources : undefined
     };
 

@@ -3,6 +3,7 @@ import { StorageService, type DBObject } from "../../service/storage";
 import { ASSISTANT_STORE, CHAT_STORE } from "../../constants";
 import type { Assistant, ChatResponse } from "../../api";
 import { getOwnedCommunityAssistants } from "../../api/assistant-client";
+import { deleteConversationApi } from "../../api/core-client";
 
 interface StoredChatOptions {
     system: string;
@@ -88,6 +89,9 @@ export class UnifiedHistoryStorage {
             if (!deleted) {
                 throw new Error(`Failed to delete assistant history entry "${entry.id}"`);
             }
+            if (entry.assistantId) {
+                AssistantStorageService.deleteChatOnServer(entry.assistantId, entry.id);
+            }
             return;
         }
 
@@ -95,6 +99,8 @@ export class UnifiedHistoryStorage {
         if (!deleted) {
             throw new Error(`Failed to delete chat history entry "${entry.id}"`);
         }
+        // Normal chats use the local id as the backend conversation id.
+        void deleteConversationApi(entry.id);
     }
 
     async renameEntry(entry: UnifiedHistoryEntry, name: string): Promise<void> {

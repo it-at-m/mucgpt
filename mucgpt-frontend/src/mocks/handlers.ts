@@ -1202,6 +1202,11 @@ export const handlers = [
         return HttpResponse.json({ title: words.join(" ") || "New Chat" });
     }),
 
+    http.delete("/api/backend/v1/conversations/:conversationId", async () => {
+        await delay(100);
+        return new HttpResponse(null, { status: 204 });
+    }),
+
     http.get("/api/assistant", () => {
         return HttpResponse.json(DYNAMIC_ASSISTANTS.map(withMockSubscriptionCount));
     }),

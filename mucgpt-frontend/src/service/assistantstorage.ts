@@ -1,5 +1,5 @@
 import { StorageService, DBMessage } from "./storage";
-import { Assistant, ChatResponse } from "../api";
+import { Assistant, ChatResponse, deleteConversationApi } from "../api";
 import { v4 as uuid } from "uuid";
 import { IndexedDBStorage } from "./indexedDBStorage";
 
@@ -143,8 +143,10 @@ export class AssistantStorageService {
                 id.startsWith(AssistantStorageService.GENERATE_BOT_CHAT_PREFIX(assistant_id))
         );
         for (let i = 0; i < results.length; i++) {
-            if (results[i].id) {
-                await this.storageService.delete(results[i].id ?? "");
+            const id = results[i].id;
+            if (id) {
+                await this.storageService.delete(id);
+                AssistantStorageService.deleteChatOnServer(assistant_id, id);
             }
         }
     }
@@ -156,9 +158,22 @@ export class AssistantStorageService {
     async deleteChatsForAssistant(assistant_id: string) {
         const results = await this._getAllChatsAndConfigs((id: string) => id.startsWith(AssistantStorageService.GENERATE_BOT_CHAT_PREFIX(assistant_id)));
         for (let i = 0; i < results.length; i++) {
-            if (results[i].id) {
-                await this.storageService.delete(results[i].id ?? "");
+            const id = results[i].id;
+            if (id) {
+                await this.storageService.delete(id);
+                AssistantStorageService.deleteChatOnServer(assistant_id, id);
             }
+        }
+    }
+
+    /**
+     * Fire-and-forget deletion of an assistant chat's server-side state. The backend
+     * conversation id is the chat UUID without the local assistant prefix.
+     */
+    static deleteChatOnServer(assistant_id: string, chat_id: string) {
+        const prefix = AssistantStorageService.GENERATE_BOT_CHAT_PREFIX(assistant_id);
+        if (chat_id.startsWith(prefix)) {
+            void deleteConversationApi(chat_id.slice(prefix.length));
         }
     }
 

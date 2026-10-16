@@ -232,20 +232,24 @@ async def delete_conversation(
     if checkpointer is None:
         raise HTTPException(status_code=500, detail="Persistence not initialized")
 
+    # Delete the checkpoint state before the ownership row. If the row went first
+    # and this failed, the orphaned state would be handed to whoever next sends
+    # this conversation_id. Keeping the row on failure lets the owner retry.
+    try:
+        await checkpointer.adelete_thread(conversation_id)
+    except Exception as e:
+        logger.exception(
+            "Failed to delete checkpoint state for conversation %s", conversation_id
+        )
+        raise HTTPException(
+            status_code=500, detail="Failed to delete conversation"
+        ) from e
+
     deleted = await PersistanceHelpers.delete_conversation_mapping(
         conversation_id, user_info.user_id
     )
     if not deleted:
         raise HTTPException(status_code=404, detail="Conversation not found")
-
-    # Ownership row is already gone;
-    # attempt to delete the checkpoint state, but don't fail if it fails.
-    try:
-        await checkpointer.adelete_thread(conversation_id)
-    except Exception:
-        logger.exception(
-            "Failed to delete checkpoint state for conversation %s", conversation_id
-        )
 
 
 @router.post(

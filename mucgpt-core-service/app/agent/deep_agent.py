@@ -28,6 +28,7 @@ logger = getLogger(name="mucgpt-core-react-agent")
 # "async" default). Only the latest checkpoint is ever read: we don't resume runs
 # mid-way, so per-step checkpoints would only multiply stored message history.
 # The state reached so far is still written if the run fails or is aborted.
+# https://docs.langchain.com/oss/python/langgraph/checkpointers#durability-modes
 CHECKPOINT_DURABILITY: Durability = "exit"
 
 

@@ -41,7 +41,7 @@ COPY src/ ./src/
 RUN --mount=type=cache,target=/build/node_modules/.vite \
     npm run build
 
-FROM registry.access.redhat.com/ubi9/nginx-124:9.8-1791288493@sha256:da54bbccb61ef4c1229b501276e6af35878455471598426346bb3014571843ed
+FROM registry.access.redhat.com/ubi9/nginx-124:9.8-1791969177@sha256:34f9e6e406e72041463c5d6426f5f76ba8d59ab9ad111636bf4a9fb75f4c768d
 
 # Copy built web application
 COPY --from=builder /build/dist ./

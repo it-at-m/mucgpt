@@ -15,7 +15,19 @@
     line-height: 1.4;
 }
 
+.fieldRow {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px 16px;
+}
+
+.fieldRowText {
+    flex: 1 1 280px;
+    min-width: 0;
+}
+
 .defaultModelDescription {
-    width: 100%;
-    max-width: none;
+    margin-bottom: 0;
 }

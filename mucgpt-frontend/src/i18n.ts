@@ -665,6 +665,8 @@ i18n
                             default_model_description: "Dieses Modell wird für alle Unterhaltungen verwendet. Nutzer können kein anderes Modell auswählen.",
                             default_model_placeholder: "Wählen Sie ein Modell aus...",
                             no_default_model: "Im Chat wählbar",
+                            no_default_model_description:
+                                "Nutzer können im Chat frei aus allen aktuell verfügbaren Modellen wählen. Die Auswahl ist nicht auf ein Modell beschränkt.",
                             departments: "Abteilungen",
                             departments_info:
                                 "Dies sind die Abteilungen, die Zugriff auf den Assistenten haben. Alle Abteilungen in der Hierarchie unter den ausgewählten Abteilungen haben ebenfalls Zugriff.",
@@ -912,37 +914,13 @@ i18n
                         },
                         llmSelector: {
                             title: "Sprachmodell Auswahl",
-                            bestFor: "Ideal für:",
-                            knowledge: "Wissensstand:",
-                            knowledge_description:
-                                "Datum der letzten Informationen, mit denen das Modell trainiert wurde. Es kann über nichts bescheid wissen, was neuer ist.",
-                            notAvailable: "Nicht verfügbar",
-                            capability_reasoning: "Reasoning",
-                            capability_functionCalling: "Function Calling",
-                            capability_vision: "Vision",
-                            provider: "Anbieter:",
-                            region: "Region:",
-                            location: "Standort:",
-                            features: "Funktionen:",
-                            features_description: "Funktionalitäten, die das Sprachmodell mitbringt.",
+                            knowledge: "Wissensstand",
                             context: "Kontext",
-                            origin: "Herkunft",
-                            token: "Token",
-                            tokens: "Tokens",
-                            maxInput: "Max. Eingabelänge:",
-                            maxInput_description:
-                                "Die Maximale Anzahl an Tokens die das Sprachmodel als Eingabe verarbeiten kann. Ein Token ist ein Wortbestandteil. Im Deutschen ist ein Wort ca 1,3 Token. Als Eingabe gelten alle Nachrichten im Chat.",
-                            maxOutput: "Max. Ausgabelänge:",
-                            maxOutput_description:
-                                "Die Maximale Anzahl an Tokens die das Sprachmodel mit einer Antwort generieren kann. Ein Token ist ein Wortbestandteil. Im Deutschen ist ein Wort ca 1,3 Token.",
-                            inputPrice: "Eingabe Preis:",
-                            inputPrice__description:
-                                "Preis pro 1 Millionen Eingabetoken. Ein Token ist ein Wortbestandteil. Im Deutschen ist ein Wort ca 1,3 Token. Als Eingabe gelten alle Nachrichten im Chat.",
-                            outputPrice: "Ausgabe Preis:",
-                            outputPrice_description:
-                                "Preis pro eine Milionen Ausgabetoken.  Ein Token ist ein Wortbestandteil. Im Deutschen ist ein Wort ca 1,3 Token. Als Ausgabe gilt eine Nachricht, die generiert wird.",
-                            price: "Preis",
-                            selectButton: "Auswählen"
+                            context_description:
+                                "Wie viel Text das Modell in einem Chat gleichzeitig berücksichtigen kann: Nachrichten, Antworten und Dokumente zusammen.",
+                            cost: "Kosten",
+                            locked_by_assistant: "Von diesem Assistenten festgelegt",
+                            rating: "{{value}} von {{max}}"
                         }
                     },
                     discovery: {
@@ -1600,6 +1578,8 @@ i18n
                             default_model_description: "This model is used for all conversations. Users cannot choose a different model.",
                             default_model_placeholder: "Select a model...",
                             no_default_model: "Selectable in chat",
+                            no_default_model_description:
+                                "Users can freely choose from all currently available models in the chat. The choice is not limited to one model.",
                             departments: "Departments",
                             departments_info:
                                 "These are the departments that have access to the assistant. All departments in the hierarchy below the selected departments also have access.",
@@ -1844,36 +1824,12 @@ i18n
                         },
                         llmSelector: {
                             title: "Language Model Selection",
-                            bestFor: "Ideal for:",
-                            knowledge: "Knowledge Level:",
-                            knowledge_description: "Date of the last information the model was trained on. It may not be aware of anything newer.",
-                            notAvailable: "Not available",
-                            capability_reasoning: "Reasoning",
-                            capability_functionCalling: "Function Calling",
-                            capability_vision: "Vision",
-                            provider: "Provider:",
-                            region: "Region:",
-                            location: "Location:",
-                            features: "Features:",
-                            features_description: "Functionalities that the language model offers.",
+                            knowledge: "Knowledge cutoff",
                             context: "Context",
-                            origin: "Origin",
-                            token: "Token",
-                            tokens: "Tokens",
-                            maxInput: "Max. Input Length:",
-                            maxInput_description:
-                                "The maximum number of tokens that the language model can process as input. A token is a component of a word. In German, a word is approximately 1.3 tokens. All messages in the chat count as input.",
-                            maxOutput: "Max. Output Length:",
-                            maxOutput_description:
-                                "The maximum number of tokens that the language model can generate in a response. A token is a component of a word. In German, a word is approximately 1.3 tokens.",
-                            inputPrice: "Input Price:",
-                            inputPrice__description:
-                                "Price per 1 million input tokens. A token is a component of a word. In German, a word is approximately 1.3 tokens. All messages in the chat count as input.",
-                            outputPrice: "Output Price:",
-                            outputPrice_description:
-                                "Price per 1 million output tokens. A token is a component of a word. In German, a word is approximately 1.3 tokens. A generated message counts as output.",
-                            price: "Price",
-                            selectButton: "Select"
+                            context_description: "How much text the model can take into account at once in a chat: messages, answers, and documents combined.",
+                            cost: "Cost",
+                            locked_by_assistant: "Set by this assistant",
+                            rating: "{{value}} of {{max}}"
                         }
                     },
                     discovery: {
@@ -2520,6 +2476,8 @@ i18n
                             default_model_description: "Dieses Modell wird für alle Unterhaltungen verwendet. Nutzer können kein anderes Modell auswählen.",
                             default_model_placeholder: "Such da a Modell aus...",
                             no_default_model: "Im Chat wählbar",
+                            no_default_model_description:
+                                "D'Leit kenna im Chat frei aus olle grad verfügbaren Modelle wähln. D'Auswahl is ned auf oa Modell beschränkt.",
                             departments: "Abteilungen",
                             departments_info:
                                 "Des san de Abteilungen, de Zugriff auf den Assistenten ham. Olle Abteilungen in da Hierarchie unter de ausgsuachten Abteilungen ham a Zugriff.",
@@ -2762,36 +2720,12 @@ i18n
                         },
                         llmSelector: {
                             title: "Sprachmodell-Auswahl",
-                            bestFor: "Ideal für:",
-                            knowledge: "Wissensstand:",
-                            knowledge_description: "Datum von de letzten Infos, mit denen des Modell trainiert woan is. Es ko nix wissen, was neuer is.",
-                            notAvailable: "Ned verfügbar",
-                            capability_reasoning: "Denka",
-                            capability_functionCalling: "Funktions-Aufrufe",
-                            capability_vision: "Visioon",
-                            provider: "Anbieter:",
-                            region: "Region:",
-                            location: "Standort:",
-                            features: "Funktionen:",
-                            features_description: "Funktionalitäten, die des Sprachmodell mitbringt.",
+                            knowledge: "Wissensstand",
                             context: "Kontext",
-                            origin: "Herkunft",
-                            token: "Token",
-                            tokens: "Tokens",
-                            maxInput: "Max. Eingabeläng:",
-                            maxInput_description:
-                                "De maximale Anzahl an Tokens, die des Sprachmodell als Eingabe verarbeiten ko. A Token is a Wortbestandteil. Im Deutschen is a Wort ungefähr 1,3 Tokens. Alle Nachrichten im Chat gängan als Eingabe.",
-                            maxOutput: "Max. Ausgabeläng:",
-                            maxOutput_description:
-                                "De maximale Anzahl an Tokens, die des Sprachmodell mit einer Antwort generieren ko. A Token is a Wortbestandteil. Im Deutschen is a Wort ungefähr 1,3 Tokens.",
-                            inputPrice: "Eingabe-Preis:",
-                            inputPrice__description:
-                                "Preis pro 1 Million Eingabetokens. A Token is a Wortbestandteil. Im Deutschen is a Wort ungefähr 1,3 Tokens. Alle Nachrichten im Chat gängan als Eingabe.",
-                            outputPrice: "Ausgabe-Preis:",
-                            outputPrice_description:
-                                "Preis pro 1 Million Ausgabetokens. A Token is a Wortbestandteil. Im Deutschen is a Wort ungefähr 1,3 Tokens. Eine generierte Nachricht gängan als Ausgabe.",
-                            price: "Preis",
-                            selectButton: "Auswähln"
+                            context_description: "Wia vui Text des Modell in am Chat auf oamoi berücksichtign ko: Nachrichtn, Antwortn und Dokumente zamm.",
+                            cost: "Kostn",
+                            locked_by_assistant: "Vo dem Assistentn festglegt",
+                            rating: "{{value}} vo {{max}}"
                         }
                     },
                     discovery: {
@@ -3447,6 +3381,8 @@ i18n
                                 "Ce modèle est utilisé pour toutes les conversations. Les utilisateurs ne peuvent pas choisir un autre modèle.",
                             default_model_placeholder: "Sélectionnez un modèle...",
                             no_default_model: "Sélectionnable dans le chat",
+                            no_default_model_description:
+                                "Les utilisateurs peuvent choisir librement parmi tous les modèles actuellement disponibles dans le chat. Le choix n'est pas limité à un seul modèle.",
                             departments: "Départements",
                             departments_info:
                                 "Ce sont les départements qui ont accès à l'assistant. Tous les départements situés en dessous dans la hiérarchie y ont également accès.",
@@ -3680,37 +3616,13 @@ i18n
                         },
                         llmSelector: {
                             title: "Sélection du modèle de langage",
-                            bestFor: "Idéal pour:",
-                            knowledge: "Niveau de connaissance :",
-                            knowledge_description:
-                                "Date des dernières informations avec lesquelles le modèle a été entraîné. Il peut ne pas être au courant des informations plus récentes.",
-                            notAvailable: "Non disponible",
-                            capability_reasoning: "Raisonnement",
-                            capability_functionCalling: "Appel de fonction",
-                            capability_vision: "Vision",
-                            provider: "Fournisseur:",
-                            region: "Région:",
-                            location: "Région:",
-                            features: "Fonctionnalités :",
-                            features_description: "Fonctionnalités que le modèle de langage offre.",
+                            knowledge: "Niveau de connaissance",
                             context: "Contexte",
-                            origin: "Origine",
-                            token: "Jeton",
-                            tokens: "Jetons",
-                            maxInput: "Longueur maximale d'entrée:",
-                            maxInput_description:
-                                "Le nombre maximal de tokens que le modèle de langage peut traiter en entrée. Un token est une partie de mot. En français, un mot représente environ 1,3 tokens. Toutes les messages dans le chat sont considérées comme des entrées.",
-                            maxOutput: "Longueur maximale de sortie:",
-                            maxOutput_description:
-                                "Le nombre maximal de tokens que le modèle de langage peut générer dans une réponse. Un token est une partie de mot. En français, un mot représente environ 1,3 tokens.",
-                            inputPrice: "Prix d'entrée:",
-                            inputPrice__description:
-                                "Prix par 1 million de tokens d'entrée. Un token est une partie de mot. En français, un mot représente environ 1,3 tokens. Toutes les messages dans le chat sont considérées comme des entrées.",
-                            outputPrice: "Prix de sortie:",
-                            outputPrice_description:
-                                "Prix par 1 million de tokens de sortie. Un token est une partie de mot. En français, un mot représente environ 1,3 tokens. Une message générée est considérée comme une sortie.",
-                            price: "Prix",
-                            selectButton: "Sélectionner"
+                            context_description:
+                                "Quantité de texte que le modèle peut prendre en compte en même temps dans une conversation : messages, réponses et documents réunis.",
+                            cost: "Coût",
+                            locked_by_assistant: "Défini par cet assistant",
+                            rating: "{{value}} sur {{max}}"
                         }
                     },
                     discovery: {
@@ -4361,6 +4273,8 @@ i18n
                             default_model_description: "Ця модель використовується для всіх розмов. Користувачі не можуть вибрати іншу модель.",
                             default_model_placeholder: "Оберіть модель...",
                             no_default_model: "Можна вибрати в чаті",
+                            no_default_model_description:
+                                "Користувачі можуть вільно обирати в чаті з усіх наразі доступних моделей. Вибір не обмежено однією моделлю.",
                             departments: "Підрозділи",
                             departments_info: "Це підрозділи, які мають доступ до асистента. Усі підрозділи нижче у вибраній ієрархії також матимуть доступ.",
 
@@ -4602,36 +4516,12 @@ i18n
                         },
                         llmSelector: {
                             title: "Вибір мовної моделі",
-                            bestFor: "Ідеально для:",
-                            knowledge: "Рівень знань:",
-                            knowledge_description: "Дата останніх інформацій, за якими модель була навчена. Модель може не знати нічого нового.",
-                            notAvailable: "Недоступно",
-                            capability_reasoning: "Міркування",
-                            capability_functionCalling: "Виклик функцій",
-                            capability_vision: "Зір",
-                            provider: "Постачальник:",
-                            region: "Регіон:",
-                            location: "Регіон:",
-                            features: "Функції:",
-                            features_description: "Функціональність, яку пропонує мовна модель.",
+                            knowledge: "Рівень знань",
                             context: "Контекст",
-                            origin: "Походження",
-                            token: "Токен",
-                            tokens: "Токени",
-                            maxInput: "Макс. довжина введення:",
-                            maxInput_description:
-                                "Максимальна кількість токенів, яку мовна модель може обробити як введення. Токен - це частина слова. В українській мові слово приблизно дорівнює 1,3 токенам. Всі повідомлення в чаті вважаються введенням.",
-                            maxOutput: "Макс. довжина виведення:",
-                            maxOutput_description:
-                                "Максимальна кількість токенів, яку мовна модель може згенерувати у відповіді. Токен - це частина слова. В українській мові слово приблизно дорівнює 1,3 токенам.",
-                            inputPrice: "Ціна введення:",
-                            inputPrice__description:
-                                "Ціна за 1 мільйон токенів введення. Токен - це частина слова. В українській мові слово приблизно дорівнює 1,3 токенам. Всі повідомлення в чаті вважаються введенням.",
-                            outputPrice: "Ціна виведення:",
-                            outputPrice_description:
-                                "Ціна за 1 мільйон токенів виведення. Токен - це частина слова. В українській мові слово приблизно дорівнює 1,3 токенам. Згенероване повідомлення вважається виведенням.",
-                            price: "Ціна",
-                            selectButton: "Обрати"
+                            context_description: "Скільки тексту модель може одночасно враховувати в чаті: повідомлення, відповіді та документи разом.",
+                            cost: "Вартість",
+                            locked_by_assistant: "Визначено цим асистентом",
+                            rating: "{{value}} з {{max}}"
                         }
                     },
                     discovery: {

@@ -10,7 +10,6 @@ __pycache__/
 .vscode/
 .coverage
 .ruff_cache/
-.python-version
 
 # Ignore environment files
 .env

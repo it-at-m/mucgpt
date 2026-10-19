@@ -1908,6 +1908,93 @@ async def test_get_all_assistants_pagination_after_access_filter(
 
 
 @pytest.mark.integration
+@pytest.mark.asyncio
+async def test_get_all_assistants_supports_tag_filter_priority_and_limit(
+    test_client, test_db_session
+):
+    """Tag priority is applied before the requested page is sliced."""
+    assistant_repo = AssistantRepository(test_db_session)
+
+    featured = await assistant_repo.create(
+        hierarchical_access=["IT-Test-Department"], owner_ids=["featured-owner"]
+    )
+    await assistant_repo.create_assistant_version(
+        assistant=featured,
+        name="Featured Assistant",
+        system_prompt="featured",
+        description="",
+        creativity="medium",
+        tags=[],
+        examples=[],
+        quick_prompts=[],
+    )
+    featured.admin_tags = ["featured"]
+    featured.subscriptions_count = 0
+
+    popular = await assistant_repo.create(
+        hierarchical_access=["IT-Test-Department"], owner_ids=["popular-owner"]
+    )
+    await assistant_repo.create_assistant_version(
+        assistant=popular,
+        name="Popular Assistant",
+        system_prompt="popular",
+        description="",
+        creativity="medium",
+        tags=[],
+        examples=[],
+        quick_prompts=[],
+    )
+    popular.subscriptions_count = 20
+
+    tagged = await assistant_repo.create(
+        hierarchical_access=["IT-Test-Department"], owner_ids=["tagged-owner"]
+    )
+    await assistant_repo.create_assistant_version(
+        assistant=tagged,
+        name="Tagged Assistant",
+        system_prompt="tagged",
+        description="",
+        creativity="medium",
+        tags=[],
+        examples=[],
+        quick_prompts=[],
+    )
+    tagged.admin_tags = ["featured"]
+    tagged.subscriptions_count = 10
+
+    await test_db_session.commit()
+
+    response = test_client.get(
+        "/assistant",
+        params=[
+            ("priority_admin_tags", "featured"),
+            ("sort_by", "subscriptions"),
+            ("sort_order", "desc"),
+            ("limit", "2"),
+        ],
+        headers=headers,
+    )
+
+    assert response.status_code == 200
+    assert [item["latest_version"]["name"] for item in response.json()] == [
+        "Tagged Assistant",
+        "Featured Assistant",
+    ]
+
+    filtered_response = test_client.get(
+        "/assistant",
+        params={"admin_tags": "featured"},
+        headers=headers,
+    )
+
+    assert filtered_response.status_code == 200
+    assert {item["latest_version"]["name"] for item in filtered_response.json()} == {
+        "Featured Assistant",
+        "Tagged Assistant",
+    }
+
+
+@pytest.mark.integration
 def test_update_assistant_clear_optional_fields(
     created_assistant_for_update, test_client
 ):

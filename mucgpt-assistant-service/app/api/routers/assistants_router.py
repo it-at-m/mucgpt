@@ -6,6 +6,7 @@ from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.api_models import (
+    AdminTag,
     AssistantCreate,
     AssistantListSortBy,
     AssistantListSortOrder,
@@ -295,6 +296,7 @@ async def createAssistant(
             updated_at=assistant_record.updated_at,
             hierarchical_access=assistant_record.hierarchical_access or [],
             is_visible=is_visible,
+            admin_tags=assistant_record.admin_tags or [],
             owner_ids=owner_ids,
             owners_detailed=owners_detailed,
             subscriptions_count=getattr(assistant_record, "subscriptions_count", 0)
@@ -711,6 +713,7 @@ async def updateAssistant(
         updated_at=assistant.updated_at,
         hierarchical_access=assistant.hierarchical_access or [],
         is_visible=is_visible,
+        admin_tags=assistant.admin_tags or [],
         owner_ids=owner_ids,
         owners_detailed=owners_detailed,
         subscriptions_count=getattr(assistant, "subscriptions_count", 0) or 0,
@@ -797,6 +800,14 @@ async def getAllAssistants(
         False,
         description="Exclude assistants subscribed by the authenticated user.",
     ),
+    admin_tags: list[AdminTag] | None = Query(
+        None,
+        description="Only return assistants matching at least one of these admin tags.",
+    ),
+    priority_admin_tags: list[AdminTag] | None = Query(
+        None,
+        description="Prioritize assistants matching at least one of these admin tags.",
+    ),
     db: AsyncSession = Depends(get_db_session),
     user_info: AuthenticationResult = Depends(authenticate_user),
 ):
@@ -815,6 +826,8 @@ async def getAllAssistants(
             exclude_subscribed_by_user_id=user_info.user_id
             if exclude_subscribed
             else None,
+            admin_tags=admin_tags,
+            priority_admin_tags=priority_admin_tags,
         )
     )
 
@@ -865,6 +878,7 @@ async def getAllAssistants(
                 updated_at=assistant.updated_at,
                 hierarchical_access=assistant.hierarchical_access or [],
                 is_visible=is_visible,
+                admin_tags=assistant.admin_tags or [],
                 owner_ids=owner_ids,
                 owners_detailed=owners_detailed,
                 subscriptions_count=getattr(assistant, "subscriptions_count", 0) or 0,
@@ -974,6 +988,7 @@ async def getAssistant(
         updated_at=assistant.updated_at,
         hierarchical_access=assistant.hierarchical_access or [],
         is_visible=is_visible,
+        admin_tags=assistant.admin_tags or [],
         owner_ids=owner_ids,
         owners_detailed=owners_detailed,
         subscriptions_count=getattr(assistant, "subscriptions_count", 0) or 0,

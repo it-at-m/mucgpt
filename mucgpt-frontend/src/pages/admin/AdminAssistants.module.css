@@ -155,9 +155,15 @@
 
 .cardHeader {
     display: flex;
+    flex-wrap: wrap;
     align-items: flex-start;
     justify-content: space-between;
-    gap: var(--spacingHorizontalL);
+    gap: var(--spacingVerticalS) var(--spacingHorizontalL);
+}
+
+.cardCopy {
+    flex: 1 1 20ch;
+    min-width: 0;
 }
 
 .name {
@@ -224,6 +230,16 @@
 .hierarchy {
     color: var(--colorNeutralForeground3);
     font-size: var(--fontSizeBase200);
+}
+
+.badges {
+    flex-shrink: 0;
+    max-width: 100%;
+}
+
+.badge {
+    flex-shrink: 0;
+    white-space: nowrap;
 }
 
 .subscribers {
@@ -303,6 +319,11 @@
 
     .cardHeader {
         flex-direction: column;
+    }
+
+    .cardCopy {
+        flex-basis: auto;
+        max-width: 100%;
     }
 
     .filterGroup {

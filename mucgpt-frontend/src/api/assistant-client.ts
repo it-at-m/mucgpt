@@ -6,6 +6,7 @@ import {
     AssistantResponse,
     AssistantState,
     AssistantStateUpdateInput,
+    AdminTagsUpdateInput,
     AssistantUpdateInput,
     CommunityAssistant,
     DirectoryNode
@@ -22,6 +23,8 @@ export interface AssistantListQueryParams {
     limit?: number;
     exclude_owned?: boolean;
     exclude_subscribed?: boolean;
+    admin_tags?: string[];
+    priority_admin_tags?: string[];
 }
 
 export type AssistantAccessType = "private" | "public" | "hierarchical";
@@ -54,6 +57,8 @@ const buildQueryString = (params?: AssistantListQueryParams): string => {
     if (typeof params.limit === "number") query.set("limit", String(params.limit));
     if (params.exclude_owned) query.set("exclude_owned", "true");
     if (params.exclude_subscribed) query.set("exclude_subscribed", "true");
+    params.admin_tags?.forEach(tag => query.append("admin_tags", tag));
+    params.priority_admin_tags?.forEach(tag => query.append("priority_admin_tags", tag));
 
     const queryString = query.toString();
     return queryString ? `?${queryString}` : "";
@@ -158,4 +163,8 @@ export async function getAdminAssistantsApi(params?: AdminAssistantListQueryPara
 
 export async function updateAssistantStateApi(assistantId: string, input: AssistantStateUpdateInput): Promise<AssistantResponse> {
     return handleApiRequest(() => fetch(`/api/admin/assistant/${assistantId}/state`, patchConfig({ ...input })), "Failed to update assistant state");
+}
+
+export async function updateAssistantAdminTagsApi(assistantId: string, input: AdminTagsUpdateInput): Promise<AssistantResponse> {
+    return handleApiRequest(() => fetch(`/api/admin/assistant/${assistantId}/tags`, patchConfig({ ...input })), "Failed to update assistant tags");
 }

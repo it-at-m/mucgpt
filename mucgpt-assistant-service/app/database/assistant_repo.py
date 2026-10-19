@@ -1,6 +1,7 @@
 from __future__ import annotations  # Enable forward references in annotations
 
 import uuid
+from collections.abc import Sequence
 from datetime import datetime
 from typing import Any
 
@@ -348,6 +349,8 @@ class AssistantRepository(Repository[Assistant]):
         limit: int | None = None,
         exclude_owned_by_user_id: str | None = None,
         exclude_subscribed_by_user_id: str | None = None,
+        admin_tags: Sequence[str] | None = None,
+        priority_admin_tags: Sequence[str] | None = None,
     ) -> list[Assistant]:
         logger.info(f"Fetching all assistants for department: {department}")
         """Get all assistants that are allowed for a specific department.
@@ -412,6 +415,16 @@ class AssistantRepository(Repository[Assistant]):
         candidate_result = await self.session.execute(candidate_stmt)
         candidate_assistants = list(candidate_result.scalars().all())
 
+        requested_admin_tags = {tag.lower() for tag in admin_tags or ()}
+        if requested_admin_tags:
+            candidate_assistants = [
+                assistant
+                for assistant in candidate_assistants
+                if requested_admin_tags.intersection(
+                    tag.lower() for tag in (assistant.admin_tags or [])
+                )
+            ]
+
         accessible_assistant_ids: list[str] = []
         directory_index = await _get_directory_index()
 
@@ -421,6 +434,20 @@ class AssistantRepository(Repository[Assistant]):
                 directory_index=directory_index,
             ):
                 accessible_assistant_ids.append(str(assistant.id))
+
+        requested_priority_tags = {tag.lower() for tag in priority_admin_tags or ()}
+        if requested_priority_tags:
+            candidate_by_id = {
+                str(assistant.id): assistant for assistant in candidate_assistants
+            }
+            accessible_assistant_ids.sort(
+                key=lambda assistant_id: (
+                    not requested_priority_tags.intersection(
+                        tag.lower()
+                        for tag in (candidate_by_id[assistant_id].admin_tags or [])
+                    )
+                )
+            )
 
         paged_assistant_ids = self._slice_assistants(
             accessible_assistant_ids, offset=offset, limit=limit
@@ -647,6 +674,16 @@ class AssistantRepository(Repository[Assistant]):
             logger.error(f"Error updating assistant {assistant_id}: {e}")
             await self.session.rollback()
             raise
+
+    async def update_admin_tags(
+        self, assistant: Assistant, admin_tags: Sequence[str]
+    ) -> Assistant:
+        """Update administrator-managed metadata without creating a new version."""
+        assistant.admin_tags = list(dict.fromkeys(admin_tags))
+        assistant.updated_at = datetime.utcnow()
+        await self.session.flush()
+        await self.session.refresh(assistant)
+        return assistant
 
     async def get_with_owners(self, assistant_id: str) -> Assistant | None:
         logger.debug(f"Fetching assistant with owners for assistant {assistant_id}")

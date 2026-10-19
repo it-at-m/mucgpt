@@ -118,17 +118,17 @@ const Home = () => {
             try {
                 const assistantStorageService = new AssistantStorageService(ASSISTANT_STORE);
 
-                const [subs, owned, allCommunity, recommendedCommunity] = await Promise.all([
+                const [subs, owned, allCommunity] = await Promise.all([
                     getUserSubscriptionsApi(),
                     getOwnedCommunityAssistants(),
-                    getAllCommunityAssistantsApi(),
-                    getAllCommunityAssistantsApi({
-                        limit: MAX_CARDS,
-                        sort_by: "subscriptions",
-                        sort_order: "desc",
-                        priority_admin_tags: ["featured"]
-                    })
+                    getAllCommunityAssistantsApi()
                 ]);
+                const recommendedCommunity = await getAllCommunityAssistantsApi({
+                    limit: MAX_CARDS,
+                    sort_by: "subscriptions",
+                    sort_order: "desc",
+                    priority_admin_tags: ["featured"]
+                }).catch(() => allCommunity.slice(0, MAX_CARDS));
 
                 const allCommunityMap = new Map<string, AssistantResponse>();
                 allCommunity.forEach(a => allCommunityMap.set(a.id, a));

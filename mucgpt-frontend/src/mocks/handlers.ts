@@ -1295,7 +1295,7 @@ export const handlers = [
         const body = (await request.json()) as { admin_tags?: string[] };
         const assistant = DYNAMIC_ASSISTANTS.find(item => item.id === params.id);
         if (!assistant) return new HttpResponse(null, { status: 404 });
-        if (!body.admin_tags || body.admin_tags.some(tag => tag !== "featured")) {
+        if (!Array.isArray(body.admin_tags) || body.admin_tags.some(tag => tag !== "featured")) {
             return HttpResponse.json({ detail: "Unsupported administrator tag" }, { status: 422 });
         }
         const adminTags = [...new Set(body.admin_tags)] as AdminTag[];

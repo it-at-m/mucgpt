@@ -25,6 +25,10 @@ describe("reduceRunActivity", () => {
         expect(replay([runStarted])).toEqual({ phase: "thinking", steps: [], startedAt: 0 });
     });
 
+    it("does not invent a duration for restored steps without timestamps", () => {
+        expect(getStepsDurationSeconds([{ toolCallId: "a", toolName: "search", status: "done" }])).toBeUndefined();
+    });
+
     it("keeps the start time set when the request was sent", () => {
         expect(reduceRunActivity({ ...initialRunActivity, startedAt: 42 }, runStarted, 99).startedAt).toBe(42);
     });

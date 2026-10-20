@@ -2,13 +2,13 @@ from __future__ import annotations
 
 from typing import Any
 
-from langchain_core.messages import AIMessage, HumanMessage
+from langchain_core.messages import AIMessage, HumanMessage, ToolMessage
 from langgraph.checkpoint.postgres.aio import AsyncPostgresSaver
 from psycopg.rows import dict_row
 from psycopg_pool import AsyncConnectionPool
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker
 
-from api.api_models import ChatCompletionMessage
+from api.api_models import ConversationActivityStep, ConversationMessage
 from config.settings import Settings
 from core.logtools import getLogger
 from database.conversation_repo import ConversationRepository
@@ -44,6 +44,15 @@ def _message_content(message: HumanMessage | AIMessage) -> str:
         for block in message.content
         if isinstance(block, str) or block.get("type") == "text"
     )
+
+
+def _display_text(value: Any, max_length: int) -> str | None:
+    if not isinstance(value, str):
+        return None
+    text = " ".join(value.split())
+    if not text:
+        return None
+    return text if len(text) <= max_length else text[: max_length - 1] + "…"
 
 
 class PersistanceHelpers:
@@ -159,7 +168,7 @@ class PersistanceHelpers:
     @staticmethod
     async def get_conversation_messages(
         conversation_id: str,
-    ) -> list[ChatCompletionMessage]:
+    ) -> list[ConversationMessage]:
         """Read the displayable user/assistant chain from LangGraph state."""
         checkpoint = await PersistanceHelpers.get_checkpointer().aget(
             {"configurable": {"thread_id": conversation_id}}
@@ -168,19 +177,56 @@ class PersistanceHelpers:
             return []
 
         messages = checkpoint.get("channel_values", {}).get("messages", [])
-        result: list[ChatCompletionMessage] = []
+        result: list[ConversationMessage] = []
+        turn: ConversationMessage | None = None
+        steps: dict[str, ConversationActivityStep] = {}
         for message in messages:
             if isinstance(message, HumanMessage):
-                result.append(
-                    ChatCompletionMessage(
-                        role="user", content=_message_content(message)
-                    )
+                turn = ConversationMessage(
+                    role="user", content=_message_content(message)
                 )
+                result.append(turn)
+                steps = {}
+            elif (
+                isinstance(message, AIMessage)
+                and message.tool_calls
+                and turn is not None
+            ):
+                for call in message.tool_calls:
+                    call_id = call.get("id")
+                    if not call_id or call_id in steps:
+                        continue
+                    args = call.get("args") or {}
+                    detail = next(
+                        (
+                            text
+                            for key in ("query", "search_query", "q", "topic", "url")
+                            if (text := _display_text(args.get(key), 120))
+                        ),
+                        None,
+                    )
+                    step = ConversationActivityStep(
+                        tool_call_id=call_id,
+                        tool_name=call["name"],
+                        # A call without a result was interrupted, not still running
+                        # in the browser loading this historical checkpoint.
+                        status="error",
+                        description=_display_text(args.get("status_message"), 80),
+                        detail=detail,
+                    )
+                    steps[call_id] = step
+                    turn.activity_steps.append(step)
+            elif isinstance(message, ToolMessage) and message.tool_call_id in steps:
+                failed = message.status == "error" or (
+                    isinstance(message.content, str)
+                    and message.content.startswith("Tool execution failed:")
+                )
+                steps[message.tool_call_id].status = "error" if failed else "done"
             elif isinstance(message, AIMessage) and not message.tool_calls:
                 content = _message_content(message)
                 if content:
                     result.append(
-                        ChatCompletionMessage(role="assistant", content=content)
+                        ConversationMessage(role="assistant", content=content)
                     )
         return result
 

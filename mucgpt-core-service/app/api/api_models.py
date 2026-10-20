@@ -61,6 +61,20 @@ class ChatCompletionMessage(BaseModel):
     )
 
 
+class ConversationActivityStep(BaseModel):
+    """Display metadata reconstructed from a checkpoint, without raw tool results."""
+
+    tool_call_id: str
+    tool_name: str
+    status: Literal["done", "error"]
+    description: str | None = None
+    detail: str | None = None
+
+
+class ConversationMessage(ChatCompletionMessage):
+    activity_steps: list[ConversationActivityStep] = Field(default_factory=list)
+
+
 class ChatDataSource(BaseModel):
     title: str = Field(..., description="Document title")
     content: str = Field(..., description="Document content to inject")

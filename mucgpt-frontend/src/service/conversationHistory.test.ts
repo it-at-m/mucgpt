@@ -108,6 +108,68 @@ describe("conversation history", () => {
         expect(put).toHaveBeenCalledWith(ASSISTANT_STORE.objectStore_name, expect.objectContaining({ id: "CHAT_assistant-id_thread" }));
     });
 
+    it("restores server tool steps in a fresh browser and keeps them on the correct turn", async () => {
+        vi.mocked(getConversationMessagesApi).mockResolvedValue([
+            {
+                role: "user",
+                content: "Question",
+                activity_steps: [
+                    { tool_call_id: "search", tool_name: "InternetSearch", status: "done", description: "Search Kita fees", detail: "Kita fees" },
+                    { tool_call_id: "read", tool_name: "web_url_read", status: "error", description: null, detail: "https://muenchen.de" }
+                ]
+            },
+            { role: "assistant", content: "Answer" },
+            { role: "user", content: "Next question" },
+            { role: "assistant", content: "Next answer" }
+        ]);
+        const storage = new StorageService<ChatResponse, Record<string, never>>(CHAT_STORE);
+
+        const chat = await loadConversation(storage, "thread", "thread", {});
+
+        expect(chat.messages[0].response.activitySteps).toEqual([
+            { toolCallId: "search", toolName: "InternetSearch", status: "done", description: "Search Kita fees", detail: "Kita fees" },
+            { toolCallId: "read", toolName: "web_url_read", status: "error", detail: "https://muenchen.de" }
+        ]);
+        expect(chat.messages[1].response.activitySteps).toBeUndefined();
+        expect(put).toHaveBeenCalledWith(CHAT_STORE.objectStore_name, chat);
+    });
+
+    it("uses server steps while preserving matching local timings and usage", async () => {
+        vi.mocked(StorageService.prototype.get).mockResolvedValue({
+            id: "thread",
+            config: {},
+            messages: [
+                {
+                    user: "Question",
+                    response: {
+                        answer: "Answer",
+                        tokens: 42,
+                        activitySteps: [
+                            { toolCallId: "search", toolName: "InternetSearch", status: "running", startedAt: 1000, endedAt: 3000 },
+                            { toolCallId: "stale", toolName: "search", status: "done" }
+                        ]
+                    }
+                }
+            ]
+        });
+        vi.mocked(getConversationMessagesApi).mockResolvedValue([
+            {
+                role: "user",
+                content: "Question",
+                activity_steps: [{ tool_call_id: "search", tool_name: "InternetSearch", status: "done", description: "Search fees" }]
+            },
+            { role: "assistant", content: "Answer" }
+        ]);
+        const storage = new StorageService<ChatResponse, Record<string, never>>(CHAT_STORE);
+
+        const chat = await loadConversation(storage, "thread", "thread", {});
+
+        expect(chat.messages[0].response.tokens).toBe(42);
+        expect(chat.messages[0].response.activitySteps).toEqual([
+            { toolCallId: "search", toolName: "InternetSearch", status: "done", description: "Search fees", startedAt: 1000, endedAt: 3000 }
+        ]);
+    });
+
     it("allows local-only transcripts on 404 but surfaces authorization and server errors", async () => {
         const cached = { id: "local", backendPersisted: true, config: {}, messages: [{ user: "Question", response: { answer: "Answer" } }] };
         vi.mocked(StorageService.prototype.get).mockResolvedValue(cached);

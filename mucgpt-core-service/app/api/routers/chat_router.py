@@ -10,6 +10,7 @@ from api.api_models import (
     ChatCompletionMessage,
     ChatCompletionRequest,
     ChatCompletionResponse,
+    ConversationMessage,
     ConversationMetadata,
 )
 from api.exception import llm_exception_handler
@@ -199,13 +200,14 @@ async def list_conversations(
 @router.get(
     "/conversations/{conversation_id}/messages",
     summary="Get conversation messages",
-    response_model=list[ChatCompletionMessage],
+    response_model=list[ConversationMessage],
+    response_model_exclude_defaults=True,
     responses={403: {"description": "Forbidden"}, 404: {"description": "Not found"}},
 )
 async def get_conversation_messages(
     conversation_id: str,
     user_info: Annotated[AuthenticationResult, Depends(authenticate_user)],
-) -> list[ChatCompletionMessage]:
+) -> list[ConversationMessage]:
     """Return the user/assistant chain from the conversation's latest checkpoint."""
     if not await PersistanceHelpers.is_user_in_conversation(
         user_info.user_id, conversation_id
@@ -287,7 +289,9 @@ async def ag_ui_chat_endpoint(
     if not chat_request.messages:
         raise HTTPException(status_code=400, detail="messages must not be empty")
     if not chat_request.messages[-1].role == "user":
-        raise HTTPException(status_code=400, detail="Last message must be from the user (role='user')")
+        raise HTTPException(
+            status_code=400, detail="Last message must be from the user (role='user')"
+        )
 
     try:
         ModelRegistry.get_model(chat_request.model)

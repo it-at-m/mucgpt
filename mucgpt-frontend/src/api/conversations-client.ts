@@ -12,6 +12,13 @@ export interface ConversationMetadata {
 export interface ConversationMessage {
     role: "system" | "user" | "assistant";
     content: string;
+    activity_steps?: {
+        tool_call_id: string;
+        tool_name: string;
+        status: "done" | "error";
+        description?: string | null;
+        detail?: string | null;
+    }[];
 }
 
 export function listConversationsApi(): Promise<ConversationMetadata[]> {

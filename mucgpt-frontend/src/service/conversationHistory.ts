@@ -85,6 +85,19 @@ export function toChatTurns(messages: ConversationMessage[]): DBMessage<ChatResp
             const turn = turns[turns.length - 1];
             turn.response.answer += (turn.response.answer ? "\n\n" : "") + message.content;
         }
+        if (message.activity_steps?.length && turns.length > 0 && message.role !== "system") {
+            const response = turns[turns.length - 1].response;
+            response.activitySteps = [
+                ...(response.activitySteps ?? []),
+                ...message.activity_steps.map(step => ({
+                    toolCallId: step.tool_call_id,
+                    toolName: step.tool_name,
+                    status: step.status,
+                    ...(step.description ? { description: step.description } : {}),
+                    ...(step.detail ? { detail: step.detail } : {})
+                }))
+            ];
+        }
     }
     return turns;
 }
@@ -114,9 +127,18 @@ export async function loadConversation<C>(
         backendPersisted: true,
         messages: toChatTurns(messages).map((turn, index) => {
             const local = cached?.messages[index];
-            // Keep locally available tool activity and usage statistics when
-            // the stored transcript still matches this server turn.
-            return local?.user === turn.user && local.response.answer === turn.response.answer ? local : turn;
+            if (local?.user !== turn.user || local.response.answer !== turn.response.answer) return turn;
+            // The server supplies the steps; keep local usage and step timings
+            // only when they still belong to this transcript and tool call.
+            const localSteps = new Map(local.response.activitySteps?.map(step => [step.toolCallId, step]));
+            return {
+                ...turn,
+                response: {
+                    ...local.response,
+                    ...turn.response,
+                    activitySteps: turn.response.activitySteps?.map(step => ({ ...localSteps.get(step.toolCallId), ...step })) ?? local.response.activitySteps
+                }
+            };
         }),
         config: cached?.config ?? defaultConfig
     };

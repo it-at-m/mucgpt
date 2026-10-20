@@ -16,16 +16,24 @@ class ConversationRepository:
         self.session = session
 
     async def verify_user_in_conversation(
-        self, user_id: str, conversation_id: str
+        self, user_id: str, conversation_id: str, assistant_id: str | None = None
     ) -> bool:
         """Create a conversation for its owner, or refresh its activity timestamp."""
         statement = insert(Chat).values(
             conversation_id=conversation_id,
             user_id=user_id,
+            assistant_id=assistant_id,
         )
         statement = statement.on_conflict_do_update(
             index_elements=[Chat.conversation_id],
-            set_={"updated_at": func.now()},
+            set_={
+                "updated_at": func.now(),
+                # Preserve the original association. Fill a missing one for
+                # legacy conversations or rows created by title generation.
+                "assistant_id": func.coalesce(
+                    Chat.assistant_id, statement.excluded.assistant_id
+                ),
+            },
             where=Chat.user_id == statement.excluded.user_id,
         )
         await self.session.execute(statement)
@@ -45,6 +53,7 @@ class ConversationRepository:
             select(
                 Chat.conversation_id,
                 Chat.chat_title.label("title"),
+                Chat.assistant_id,
                 Chat.created_at,
                 Chat.updated_at,
             )

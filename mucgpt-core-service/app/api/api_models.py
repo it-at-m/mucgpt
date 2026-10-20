@@ -451,6 +451,10 @@ class ChatTitleResult(BaseModel):
 class ConversationMetadata(BaseModel):
     """One row of the caller's conversation list (metadata only, no messages)."""
 
+    assistant_id: str | None = Field(
+        default=None,
+        description="Assistant associated with this conversation, or null for ordinary chats.",
+    )
     conversation_id: str = Field(
         ..., description="LangGraph checkpoint thread id for the conversation."
     )

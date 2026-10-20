@@ -86,7 +86,7 @@ async def get_messages_for_agent(
 
     # Verify the conversation belongs to this user (row is created on first use).
     authorized = await PersistanceHelpers.verify_user_in_conversation(
-        user_id, request.conversation_id
+        user_id, request.conversation_id, request.assistant_id
     )
     if not authorized:
         raise HTTPException(

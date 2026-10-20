@@ -109,7 +109,9 @@ class PersistanceHelpers:
         return checkpoint is not None
 
     @staticmethod
-    async def verify_user_in_conversation(user_id: str, conversation_id: str) -> bool:
+    async def verify_user_in_conversation(
+        user_id: str, conversation_id: str, assistant_id: str | None = None
+    ) -> bool:
         """True if the conversation belongs to `user_id`. First time a conversation_id
         is seen, create the chat row and return True (new chat); on later calls by
         the owner, bump ``updated_at`` so it tracks last activity.
@@ -121,7 +123,7 @@ class PersistanceHelpers:
         factory = PersistanceHelpers._get_session_factory()
         async with factory.begin() as session:
             return await ConversationRepository(session).verify_user_in_conversation(
-                user_id, conversation_id
+                user_id, conversation_id, assistant_id
             )
 
     @staticmethod

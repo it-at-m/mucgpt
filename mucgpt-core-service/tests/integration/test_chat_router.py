@@ -326,6 +326,52 @@ class TestChatRouter:
             == messages
         )
 
+    @pytest.mark.asyncio
+    async def test_chat_passes_assistant_association_to_persistence(self) -> None:
+        from api.routers.chat_router import get_messages_for_agent
+        from core.persistance_helpers import PersistanceHelpers
+
+        request = ChatCompletionRequest(
+            model="gpt-4o-mini",
+            messages=[ChatCompletionMessage(role="user", content="Hello")],
+            conversation_id=DUMMY_CONVERSATION_ID,
+            assistant_id="assistant-123",
+        )
+
+        await get_messages_for_agent(request, DUMMY_USER_ID)
+
+        PersistanceHelpers.verify_user_in_conversation.assert_awaited_once_with(
+            DUMMY_USER_ID, DUMMY_CONVERSATION_ID, "assistant-123"
+        )
+
+    @pytest.mark.parametrize("assistant_id", [None, "assistant-123"])
+    def test_list_conversations_includes_assistant_association(
+        self,
+        test_client: TestClient,
+        monkeypatch: pytest.MonkeyPatch,
+        assistant_id: str | None,
+    ) -> None:
+        from core.persistance_helpers import PersistanceHelpers
+
+        list_mock = AsyncMock(
+            return_value=[
+                {
+                    "conversation_id": DUMMY_CONVERSATION_ID,
+                    "title": "Test chat",
+                    "assistant_id": assistant_id,
+                    "created_at": "2026-10-20T10:00:00Z",
+                    "updated_at": "2026-10-20T10:00:00Z",
+                }
+            ]
+        )
+        monkeypatch.setattr(PersistanceHelpers, "get_conversations_for_user", list_mock)
+
+        response = test_client.get("/v1/conversations")
+
+        assert response.status_code == 200, response.text
+        assert response.json()[0]["assistant_id"] == assistant_id
+        list_mock.assert_awaited_once_with(DUMMY_USER_ID)
+
     def test_get_conversation_messages(self, test_client: TestClient) -> None:
         response = test_client.get(
             f"/v1/conversations/{DUMMY_CONVERSATION_ID}/messages"

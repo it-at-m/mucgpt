@@ -36,6 +36,26 @@ async def test_verify_user_upsert_refreshes_only_the_owner() -> None:
 
 @pytest.mark.unit
 @pytest.mark.asyncio
+async def test_assistant_association_is_preserved_and_owner_guarded() -> None:
+    session = AsyncMock()
+    session.execute.side_effect = [
+        Mock(),
+        Mock(scalar_one_or_none=Mock(return_value=True)),
+    ]
+    repository = ConversationRepository(session)
+
+    assert await repository.verify_user_in_conversation(
+        "owner", "conversation", "assistant-123"
+    )
+
+    sql = _compiled(session.execute.await_args_list[0].args[0])
+    assert "'assistant-123'" in sql
+    assert "assistant_id = coalesce(chats.assistant_id, excluded.assistant_id)" in sql
+    assert "WHERE chats.user_id = excluded.user_id" in sql
+
+
+@pytest.mark.unit
+@pytest.mark.asyncio
 async def test_title_upsert_is_guarded_by_owner() -> None:
     session = AsyncMock()
     session.execute.return_value = Mock(

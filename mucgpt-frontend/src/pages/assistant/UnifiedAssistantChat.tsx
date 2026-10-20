@@ -48,6 +48,7 @@ import styles from "./UnifiedAssistantChat.module.css";
 import { useUnifiedHistory, useUnifiedHistoryRegistration } from "../../components/UnifiedHistory";
 import { downloadAssistantExport, mapAssistantToExportData } from "../../utils/assistant-export";
 import { scrollIntoNearestContainer } from "../../utils/scrollIntoNearestContainer";
+import { loadConversation } from "../../service/conversationHistory";
 
 interface UnifiedAssistantChatProps {
     strategy: AssistantStrategy;
@@ -525,7 +526,8 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                 return false;
             }
 
-            const chat = await assistantChatStorage.get(id);
+            const prefix = AssistantStorageService.GENERATE_BOT_CHAT_PREFIX(assistant_id);
+            const chat = await loadConversation(assistantChatStorage, id, id.slice(prefix.length), assistantConfig);
             if (!chat) {
                 return false;
             }
@@ -541,7 +543,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
 
             return true;
         },
-        [assistantChatStorage, assistant_id, scrollToBottom, setLastQuestionValue]
+        [assistantChatStorage, assistant_id, assistantConfig, scrollToBottom, setLastQuestionValue]
     );
 
     useEffect(() => {
@@ -550,11 +552,16 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
             return;
         }
 
-        void loadAssistantChat(requestedChatId).then(loaded => {
-            if (!loaded) {
-                clearRequestedChatId();
-            }
-        });
+        void loadAssistantChat(requestedChatId)
+            .then(loaded => {
+                if (!loaded) {
+                    clearRequestedChatId();
+                }
+            })
+            .catch(err => {
+                setError(err);
+                showError(t("components.assistant_chat.load_chat_failed"), t("components.assistant_chat.load_chat_failed_message"));
+            });
     }, [clearRequestedChatId, getRequestedChatId, loadAssistantChat, location.search]);
 
     useEffect(() => {

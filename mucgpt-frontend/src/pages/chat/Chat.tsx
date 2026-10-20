@@ -30,6 +30,7 @@ import { UserContext } from "../layout/UserContextProvider";
 import { useConfigContext } from "../../context/ConfigContext";
 import { AgUiEventDrawer, type AgUiEventLogEntry } from "../../components/AgUiEventDrawer/AgUiEventDrawer";
 import { scrollIntoNearestContainer } from "../../utils/scrollIntoNearestContainer";
+import { loadConversation } from "../../service/conversationHistory";
 
 /**
  * Creates a debounced function that delays invoking the provided function
@@ -212,7 +213,7 @@ const Chat = () => {
         async (id: string) => {
             try {
                 setError(undefined);
-                const chat = await storageService.get(id);
+                const chat = await loadConversation(storageService, id, id, { system: "", creativity: CREATIVITY_LOW });
                 if (chat) {
                     dispatch({ type: "SET_ANSWERS", payload: chat.messages });
                     dispatch({ type: "SET_CREATIVITY", payload: chat.config.creativity });

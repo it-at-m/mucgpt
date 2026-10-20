@@ -12,6 +12,8 @@ export interface DBObject<M, C> {
     id?: string;
     name?: string;
     favorite?: boolean;
+    /** This cache entry is backed by a server-side conversation. */
+    backendPersisted?: boolean;
     messages: DBMessage<M>[];
     config: C;
 }

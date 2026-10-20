@@ -2,6 +2,7 @@
 import { http, HttpResponse, delay, passthrough } from "msw";
 import {
     ApplicationConfig,
+    AdminTag,
     AssistantCreateInput,
     AssistantCreateResponse,
     AssistantStateUpdateInput,
@@ -187,6 +188,7 @@ function getMockSubscriptionCount(assistantId: string): number {
 function withMockSubscriptionCount(assistant: AssistantCreateResponse) {
     return {
         ...assistant,
+        admin_tags: assistant.admin_tags ?? [],
         is_visible: assistant.latest_version.is_visible ?? true,
         latest_version: { state: "active", ...assistant.latest_version },
         subscriptions_count: getMockSubscriptionCount(assistant.id)
@@ -1201,8 +1203,35 @@ export const handlers = [
         return new HttpResponse(null, { status: 204 });
     }),
 
-    http.get("/api/assistant", () => {
-        return HttpResponse.json(DYNAMIC_ASSISTANTS.map(withMockSubscriptionCount));
+    http.get("/api/assistant", ({ request }) => {
+        const url = new URL(request.url);
+        const search = url.searchParams.get("search")?.trim().toLowerCase();
+        const sortBy = url.searchParams.get("sort_by") || "subscriptions";
+        const sortOrder = url.searchParams.get("sort_order") || "desc";
+        const priorityTags = new Set<string>(url.searchParams.getAll("priority_admin_tags"));
+        const adminTags = new Set<string>(url.searchParams.getAll("admin_tags"));
+        const offset = Number(url.searchParams.get("offset") || "0");
+        const limit = Number(url.searchParams.get("limit") || "200");
+
+        const assistants = DYNAMIC_ASSISTANTS.filter(assistant => {
+            const version = assistant.latest_version;
+            const matchesSearch = !search || `${version.name} ${version.description || ""} ${version.tags?.join(" ") || ""}`.toLowerCase().includes(search);
+            const assistantAdminTags = new Set<string>(assistant.admin_tags || []);
+            const matchesAdminTags = adminTags.size === 0 || [...adminTags].some(tag => assistantAdminTags.has(tag));
+            return (version.is_visible ?? true) && matchesSearch && matchesAdminTags;
+        }).sort((left, right) => {
+            const priorityDifference =
+                Number(priorityTags.has("featured") && left.admin_tags?.includes("featured")) -
+                Number(priorityTags.has("featured") && right.admin_tags?.includes("featured"));
+            if (priorityDifference) return -priorityDifference;
+
+            const direction = sortOrder === "asc" ? 1 : -1;
+            if (sortBy === "title") return direction * left.latest_version.name.localeCompare(right.latest_version.name);
+            if (sortBy === "subscriptions") return direction * (getMockSubscriptionCount(left.id) - getMockSubscriptionCount(right.id));
+            return direction * left.updated_at.localeCompare(right.updated_at);
+        });
+
+        return HttpResponse.json(assistants.slice(offset, offset + limit).map(withMockSubscriptionCount));
     }),
 
     http.get("/api/admin/assistant/review", () => {
@@ -1264,6 +1293,21 @@ export const handlers = [
             updated_at: new Date().toISOString(),
             latest_version: { ...assistant.latest_version, state: body.state, state_change_reason: body.reason }
         };
+        const index = DYNAMIC_ASSISTANTS.indexOf(assistant);
+        DYNAMIC_ASSISTANTS[index] = updated;
+        saveMockAssistants(DYNAMIC_ASSISTANTS);
+        return HttpResponse.json(withMockSubscriptionCount(updated));
+    }),
+
+    http.patch("/api/admin/assistant/:id/tags", async ({ params, request }) => {
+        const body = (await request.json()) as { admin_tags?: string[] };
+        const assistant = DYNAMIC_ASSISTANTS.find(item => item.id === params.id);
+        if (!assistant) return new HttpResponse(null, { status: 404 });
+        if (!Array.isArray(body.admin_tags) || body.admin_tags.some(tag => tag !== "featured")) {
+            return HttpResponse.json({ detail: "Unsupported administrator tag" }, { status: 422 });
+        }
+        const adminTags = [...new Set(body.admin_tags)] as AdminTag[];
+        const updated = { ...assistant, admin_tags: adminTags, updated_at: new Date().toISOString() };
         const index = DYNAMIC_ASSISTANTS.indexOf(assistant);
         DYNAMIC_ASSISTANTS[index] = updated;
         saveMockAssistants(DYNAMIC_ASSISTANTS);

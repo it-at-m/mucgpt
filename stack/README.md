@@ -40,6 +40,19 @@ This directory contains the Docker Compose configuration for running the complet
 
 The demo credentials above are intentionally provided only for the isolated local environment. They are public example credentials and must not be used as production credentials or reused in test environments.
 
+## Using Docker instead of Podman
+
+The Compose stack targets rootless Podman. Docker (including inside WSL2) needs two adjustments in `docker-compose.yml`:
+
+1. **Postgres volume:** make `postgres-data` a plain named volume (remove `driver_opts`) — Docker rejects the Podman-only option with `missing required option: "device"`.
+2. **Postgres data directory:** postgres 18 images expect the volume at `/var/lib/postgresql` and set `PGDATA` themselves (`/var/lib/postgresql/data` is a symlink now). In the `postgres` service, mount `postgres-data:/var/lib/postgresql` and remove the `PGDATA` line, otherwise the container exits with `mkdir: Permission denied`.
+
+After changing the volume config, recreate it once: `docker volume rm mucgpt-stack_postgres-data`.
+
+### WSL2 specifics
+
+The login flow redirects the browser to `http://keycloak:8100`. On WSL2 with the browser running on Windows, add `127.0.0.1 keycloak` to `C:\Windows\System32\drivers\etc\hosts` (as administrator) and run `ipconfig /flushdns`. An entry in the WSL `/etc/hosts` is not enough since WSL auto-creates that file.
+
 ## Architecture Overview
 
 ```text

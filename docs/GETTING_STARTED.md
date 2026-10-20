@@ -350,3 +350,8 @@ See the [stack README](../stack/README.md) for the local Docker Compose setup in
 - Service architecture and ports
 - Local Compose and local development modes
 - Common commands and troubleshooting
+- [Using Docker instead of Podman (incl. Windows/WSL2)](../stack/README.md#using-docker-instead-of-podman)
+
+## 🔧 Troubleshooting
+
+- **Chat requests fail with `Prompt configuration missing`:** prompts are fetched from Langfuse when configured; otherwise the core service uses the local fallback files in `mucgpt-core-service/app/agent/prompt_pool/` (see [Prompt Configuration](#prompt-configuration)). Create the missing `.md` files there and rebuild the core-service image.

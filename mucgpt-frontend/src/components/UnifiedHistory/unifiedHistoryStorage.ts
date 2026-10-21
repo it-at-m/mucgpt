@@ -1,4 +1,5 @@
 import { AssistantStorageService } from "../../service/assistantstorage";
+import { canvasStorage } from "../../service/canvasStorage";
 import { StorageService, type DBObject } from "../../service/storage";
 import { ASSISTANT_STORE, CHAT_STORE } from "../../constants";
 import type { Assistant, ChatResponse } from "../../api";
@@ -101,6 +102,15 @@ export class UnifiedHistoryStorage {
         const deleted = await this.chatStorage.delete(entry.id);
         if (!deleted) {
             throw new Error(`Failed to delete chat history entry "${entry.id}"`);
+        }
+        // The canvas record (content and revision rings) rides along; the server
+        // copy is removed by the conversation delete's canvas cascade. Best
+        // effort: the chat entry is already gone locally, so a failed canvas
+        // cleanup must not abort the flow and leave the server copy behind.
+        try {
+            await canvasStorage.deleteCanvas(entry.id);
+        } catch (error) {
+            console.error(`Failed to delete canvas record for "${entry.id}"`, error);
         }
     }
 

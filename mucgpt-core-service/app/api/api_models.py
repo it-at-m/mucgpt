@@ -110,6 +110,13 @@ class CanvasState(BaseModel):
     )
 
 
+class CanvasResponse(BaseModel):
+    """Canvas document retrieval."""
+
+    content: str = Field(..., description="Full GFM markdown document")
+    updated_at: datetime = Field(..., description="Last modification timestamp")
+
+
 class ChatCompletionRequest(BaseModel):
     model: str | None = Field(None, description="The model to use")
     messages: list[ChatCompletionMessage] = Field(

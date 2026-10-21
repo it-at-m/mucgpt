@@ -93,6 +93,7 @@ class _ConfiguredLangChainDeepAgentGraph:
 
         messages = input_data.get("messages", [])
         data_sources = configurable.get("data_sources", [])
+        canvas = configurable.get("canvas")
 
         request_context = RequestContext(
             assistant_id=str(assistant_id) if assistant_id else None,
@@ -107,6 +108,7 @@ class _ConfiguredLangChainDeepAgentGraph:
             langfuse_prompt=configurable.get(
                 "langfuse_prompt", self.default_langfuse_prompt
             ),
+            canvas=canvas,
         )
 
         return messages, data_sources, request_context
@@ -131,6 +133,8 @@ class _ConfiguredLangChainDeepAgentGraph:
         input_payload = {"messages": messages}
         if data_sources:
             input_payload["data_sources"] = data_sources  # type: ignore
+        if request_context.canvas:
+            input_payload["canvas"] = request_context.canvas  # type: ignore
 
         stream = self.agent.astream(
             input_payload,
@@ -164,6 +168,8 @@ class _ConfiguredLangChainDeepAgentGraph:
         input_payload = {"messages": messages}
         if data_sources:
             input_payload["data_sources"] = data_sources  # type: ignore
+        if request_context.canvas:
+            input_payload["canvas"] = request_context.canvas  # type: ignore
 
         return await self.agent.ainvoke(
             input_payload,

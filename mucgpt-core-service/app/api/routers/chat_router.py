@@ -167,6 +167,7 @@ async def chat_endpoint(
             if request.data_sources
             else None
         )
+        canvas = request.canvas
 
         if request.stream:
             gen = agent.run_with_streaming(
@@ -177,6 +178,7 @@ async def chat_endpoint(
                 enabled_tools=enabled_tools,
                 assistant_id=request.assistant_id,
                 data_sources=data_sources,
+                canvas=canvas,
                 conversation_id=request.conversation_id,
                 reasoning_effort=request.reasoning_effort,
             )
@@ -200,6 +202,7 @@ async def chat_endpoint(
             enabled_tools=enabled_tools,
             assistant_id=request.assistant_id,
             data_sources=data_sources,
+            canvas=canvas,
             conversation_id=request.conversation_id,
             reasoning_effort=request.reasoning_effort,
         )
@@ -456,6 +459,7 @@ async def ag_ui_chat_endpoint(
             if chat_request.data_sources
             else None
         ),
+        canvas=chat_request.canvas,
         reasoning_effort=chat_request.reasoning_effort,
     )
 

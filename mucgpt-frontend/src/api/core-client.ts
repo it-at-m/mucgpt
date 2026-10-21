@@ -1,4 +1,4 @@
-import { deleteConfig, getConfig, getHeaders, handleApiRequest, handleRedirect, postConfig, postFormDataConfig } from "./fetch-utils";
+import { deleteConfig, getConfig, getHeaders, handleApiRequest, handleRedirect, postConfig, postFormDataConfig, putConfig } from "./fetch-utils";
 import {
     ApplicationConfig,
     AssistantDraftRequest,
@@ -12,6 +12,7 @@ import {
     ToolListResponse
 } from "./models";
 import { HttpAgent } from "@ag-ui/client";
+import type { CanvasRevisions } from "../service/canvasStorage";
 
 const PARSE_SERVICE_BASE = "/api/backend/v1/parse";
 
@@ -163,4 +164,51 @@ export async function uploadFileApi(file: File): Promise<string> {
         const response = await fetch(`${PARSE_SERVICE_BASE}`, postFormDataConfig(formData));
         return response;
     }, "Failed to upload file");
+}
+
+export interface CanvasContentResponse {
+    content: string;
+    updated_at: string;
+}
+
+function canvasUrl(conversationId: string, suffix = ""): string {
+    return API_BASE + "v1/conversations/" + encodeURIComponent(conversationId) + "/canvas" + suffix;
+}
+
+/**
+ * Loads the canvas document stored server-side. Returns null when the
+ * conversation (or its canvas) does not exist on the server.
+ */
+export async function getCanvasApi(conversationId: string): Promise<CanvasContentResponse | null> {
+    const response = await fetch(canvasUrl(conversationId), getConfig());
+    handleRedirect(response);
+    if (response.status === 404) {
+        return null;
+    }
+    return handleApiRequest(() => Promise.resolve(response), "Failed to get canvas");
+}
+
+/**
+ * Loads the client-owned canvas revision rings from the server. Returns null
+ * when the conversation (or its canvas revisions) does not exist there.
+ */
+export async function getCanvasRevisionsApi(conversationId: string): Promise<CanvasRevisions | null> {
+    const response = await fetch(canvasUrl(conversationId, "/revisions"), getConfig());
+    handleRedirect(response);
+    if (response.status === 404) {
+        return null;
+    }
+    return handleApiRequest(() => Promise.resolve(response), "Failed to get canvas revisions");
+}
+
+/**
+ * Replaces the client-owned canvas revision rings on the server (wholesale
+ * overwrite, max 512 KB).
+ */
+export async function putCanvasRevisionsApi(conversationId: string, revisions: CanvasRevisions): Promise<void> {
+    const response = await fetch(canvasUrl(conversationId, "/revisions"), putConfig({ ...revisions }));
+    handleRedirect(response);
+    if (!response.ok && response.status !== 404) {
+        throw new Error(`Failed to save canvas revisions: ${response.status}`);
+    }
 }

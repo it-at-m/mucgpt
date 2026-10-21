@@ -1,5 +1,6 @@
 import { openDB, type IDBPDatabase } from "idb";
 
+import { getCanvasApi, getCanvasRevisionsApi } from "../api/core-client";
 import { CANVAS_STORE } from "../constants";
 import type { IndexedDBStorage } from "./indexedDBStorage";
 
@@ -95,3 +96,33 @@ export class CanvasStorage implements CanvasStorageService {
 }
 
 export const canvasStorage = new CanvasStorage();
+
+/**
+ * Canvas content for a conversation: the local IndexedDB record if present,
+ * otherwise the server-side copy (device switch / conversation reload).
+ */
+export async function loadCanvasState(conversationId: string): Promise<string | null> {
+    const local = await canvasStorage.getCanvas(conversationId);
+    if (local !== null) {
+        return local.content;
+    }
+    const server = await getCanvasApi(conversationId).catch(error => {
+        console.error(`Failed to load canvas ${conversationId} from the server`, error);
+        return null;
+    });
+    return server?.content ?? null;
+}
+
+/**
+ * Canvas revision rings for a conversation: local first, server as fallback.
+ */
+export async function loadCanvasRevisions(conversationId: string): Promise<CanvasRevisions | null> {
+    const local = await canvasStorage.getRevisions(conversationId);
+    if (local !== null) {
+        return local;
+    }
+    return getCanvasRevisionsApi(conversationId).catch(error => {
+        console.error(`Failed to load canvas revisions ${conversationId} from the server`, error);
+        return null;
+    });
+}

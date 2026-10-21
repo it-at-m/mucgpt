@@ -1207,6 +1207,35 @@ export const handlers = [
         return new HttpResponse(null, { status: 204 });
     }),
 
+    http.get("/api/backend/v1/conversations/:conversationId/canvas", async () => {
+        await delay(100);
+        return HttpResponse.json({
+            content: "# Mocked Canvas\n\nThis canvas document was restored from the server.",
+            updated_at: new Date().toISOString()
+        });
+    }),
+
+    http.get("/api/backend/v1/conversations/:conversationId/canvas/revisions", async () => {
+        await delay(100);
+        return HttpResponse.json({
+            auto: [
+                {
+                    revision: 1,
+                    doc_json: { type: "doc", content: [] },
+                    timestamp: Date.now(),
+                    source: "agent"
+                }
+            ],
+            manual: []
+        });
+    }),
+
+    http.put("/api/backend/v1/conversations/:conversationId/canvas/revisions", async ({ request }) => {
+        await delay(100);
+        const revisions = await request.json();
+        return HttpResponse.json(revisions);
+    }),
+
     http.get("/api/assistant", ({ request }) => {
         const url = new URL(request.url);
         const search = url.searchParams.get("search")?.trim().toLowerCase();

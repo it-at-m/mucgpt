@@ -16,6 +16,7 @@ from api.api_models import (
 )
 from config.settings import Settings, get_settings
 from core.logtools import getLogger
+from database.canvas_repo import CanvasRepository
 from database.conversation_repo import ConversationRepository
 from database.database_models import Base, CanvasDocument, Chat
 from database.session import create_engine_and_session_factory
@@ -301,6 +302,43 @@ class PersistanceHelpers:
             return await ConversationRepository(session).delete_conversation_mapping(
                 conversation_id, user_id
             )
+
+    @staticmethod
+    async def get_canvas(conversation_id: str) -> CanvasDocument | None:
+        """Return the canvas document for a conversation, or None."""
+        factory = PersistanceHelpers._get_session_factory()
+        async with factory() as session:
+            return await CanvasRepository(session).get_canvas(conversation_id)
+
+    @staticmethod
+    async def upsert_canvas(conversation_id: str, content: str) -> None:
+        """Create or update the canvas content of a conversation."""
+        factory = PersistanceHelpers._get_session_factory()
+        async with factory.begin() as session:
+            await CanvasRepository(session).upsert_canvas(conversation_id, content)
+
+    @staticmethod
+    async def get_canvas_revisions(conversation_id: str) -> dict | None:
+        """Return the client-owned revision rings, or None when not stored."""
+        factory = PersistanceHelpers._get_session_factory()
+        async with factory() as session:
+            return await CanvasRepository(session).get_canvas_revisions(conversation_id)
+
+    @staticmethod
+    async def upsert_canvas_revisions(conversation_id: str, revisions: dict) -> None:
+        """Wholesale-overwrite the client-owned revision rings."""
+        factory = PersistanceHelpers._get_session_factory()
+        async with factory.begin() as session:
+            await CanvasRepository(session).upsert_canvas_revisions(
+                conversation_id, revisions
+            )
+
+    @staticmethod
+    async def delete_canvas(conversation_id: str) -> bool:
+        """Delete the canvas row (content and revision rings). Returns True if a row was deleted."""
+        factory = PersistanceHelpers._get_session_factory()
+        async with factory.begin() as session:
+            return await CanvasRepository(session).delete_canvas(conversation_id)
 
     @staticmethod
     def _get_session_factory() -> async_sessionmaker[AsyncSession]:

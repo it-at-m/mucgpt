@@ -6,6 +6,7 @@ from typing import Any
 
 from ag_ui.core import (
     BaseEvent,
+    CustomEvent,
     EventType,
     RunErrorEvent,
     RunFinishedEvent,
@@ -29,8 +30,10 @@ from langfuse.langchain import CallbackHandler
 
 from agent.deep_agent import MUCGPTAgent
 from agent.middleware import TokenUsage
+from agent.tools.canvas import CANVAS_STREAM_NAME
 from agent.tools.tool_chunk import ToolStreamChunk
 from api.api_models import (
+    CanvasState,
     ChatCompletionChoice,
     ChatCompletionChunk,
     ChatCompletionChunkChoice,
@@ -221,6 +224,7 @@ class MUCGPTAgentExecutor:
         enabled_tools: list[str] | None = None,
         assistant_id: str | None = None,
         data_sources: list[dict[str, Any]] | None = None,
+        canvas: CanvasState | None = None,
         conversation_id: str | None = None,
         reasoning_effort: str | None = None,
     ) -> AsyncGenerator[dict]:
@@ -273,6 +277,7 @@ class MUCGPTAgentExecutor:
                         "llm_extra_body": llm_extra_body,
                         "assistant_id": assistant_id,
                         "data_sources": data_sources,
+                        "canvas": canvas,
                         "token_usage": token_usage,
                         "langfuse_prompt": getattr(
                             self.agent, "default_langfuse_prompt", None
@@ -428,6 +433,7 @@ class MUCGPTAgentExecutor:
         enabled_tools: list[str] | None = None,
         assistant_id: str | None = None,
         data_sources: list[dict[str, Any]] | None = None,
+        canvas: CanvasState | None = None,
         conversation_id: str | None = None,
         reasoning_effort: str | None = None,
     ) -> ChatCompletionResponse:
@@ -467,6 +473,7 @@ class MUCGPTAgentExecutor:
                     "llm_extra_body": llm_extra_body,
                     "assistant_id": assistant_id,
                     "data_sources": data_sources,
+                    "canvas": canvas,
                     "token_usage": token_usage,
                     "langfuse_prompt": getattr(
                         self.agent, "default_langfuse_prompt", None
@@ -564,6 +571,7 @@ class MUCGPTAgentExecutor:
         enabled_tools: list[str] | None = None,
         assistant_id: str | None = None,
         data_sources: list[dict[str, Any]] | None = None,
+        canvas: CanvasState | None = None,
         reasoning_effort: str | None = None,
     ) -> AsyncGenerator[BaseEvent]:
         """Run the agent and stream the result as AG-UI protocol events."""
@@ -600,6 +608,7 @@ class MUCGPTAgentExecutor:
                         "llm_extra_body": self._build_llm_extra_body(assistant_id),
                         "assistant_id": assistant_id,
                         "data_sources": data_sources,
+                        "canvas": canvas,
                         "token_usage": TokenUsage(),
                         "langfuse_prompt": getattr(
                             self.agent, "default_langfuse_prompt", None
@@ -623,17 +632,25 @@ class MUCGPTAgentExecutor:
                     config=config,
                 ):
                     if stream_mode == "custom":
-                        # Only traced, not streamed.
+                        canvas_event: CustomEvent | None = None
                         try:
+                            chunk_obj = ToolStreamChunk.model_validate_json(data)
                             trace_events.append(
                                 {
                                     "stream": "custom",
                                     "type": "ToolStreamChunk",
-                                    "content": _json_safe(
-                                        ToolStreamChunk.model_validate_json(data)
-                                    ),
+                                    "content": _json_safe(chunk_obj),
                                 }
                             )
+                            # Canvas chunks must reach the frontend as AG-UI
+                            # events: the model's own tool-call events
+                            # carry the raw tool name, not "Canvas".
+                            if chunk_obj.tool_name == CANVAS_STREAM_NAME:
+                                canvas_event = CustomEvent(
+                                    type=EventType.CUSTOM,
+                                    name=CANVAS_STREAM_NAME,
+                                    value=chunk_obj.model_dump(),
+                                )
                         except Exception:
                             trace_events.append(
                                 {
@@ -642,6 +659,8 @@ class MUCGPTAgentExecutor:
                                     "content": _json_safe(data),
                                 }
                             )
+                        if canvas_event is not None:
+                            yield canvas_event
                         continue
                     if stream_mode == "updates":
                         trace_events.append(
@@ -656,7 +675,9 @@ class MUCGPTAgentExecutor:
                         )
                     )
                     # dont stream summarization chunks or internal chunks
-                    if metadata.get("lc_source") == "summarization" or _is_internal_chunk(metadata):
+                    if metadata.get(
+                        "lc_source"
+                    ) == "summarization" or _is_internal_chunk(metadata):
                         continue
                     if isinstance(chunk, ToolMessage):
                         content = chunk.content

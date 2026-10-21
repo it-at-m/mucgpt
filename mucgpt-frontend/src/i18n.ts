@@ -187,6 +187,49 @@ i18n
                                 "Formuliere deine letzte Nachricht zu einem neuen informelleren Text, der den ursprünglichen Inhalt in einer lockeren Schreibweise wiedergibt. Dieser Text soll dem Leser ein ungezwungenes Leseerlebnis bieten, indem er leicht verständliche Sprache und gegebenenfalls auch humorvolle Elemente verwendet."
                         }
                     },
+                    canvas: {
+                        toggle: "Canvas",
+                        panel_title: "Canvas",
+                        status_writing: "Agent schreibt…",
+                        split_divider: "Canvas-Breite anpassen",
+                        empty_state: "Leeres Canvas",
+                        empty_state_hint: "Schreibe hier deinen Entwurf oder überlasse dem Agenten den ersten Text.",
+                        context_menu: {
+                            open: "Canvas-Aktionen",
+                            insert_into_chat: "In Chat übernehmen",
+                            agent_revise: "Agent soll das überarbeiten"
+                        },
+                        toolbar: {
+                            label: "Canvas-Werkzeuge",
+                            undo: "Rückgängig",
+                            redo: "Wiederherstellen",
+                            bold: "Fett",
+                            italic: "Kursiv",
+                            heading_1: "Überschrift 1",
+                            heading_2: "Überschrift 2",
+                            heading_3: "Überschrift 3",
+                            bullet_list: "Aufzählung",
+                            ordered_list: "Nummerierte Liste",
+                            insert_table: "Tabelle einfügen",
+                            save_version: "Version speichern",
+                            export: "Export",
+                            export_md: "Markdown (.md)",
+                            export_pdf: "PDF (bald verfügbar)",
+                            export_word: "Word (bald verfügbar)",
+                            export_excel: "Excel (bald verfügbar)",
+                            close: "Canvas schließen"
+                        },
+                        versions: {
+                            title: "Versionen",
+                            manual_group: "Gespeicherte Versionen",
+                            auto_group: "Verlauf",
+                            restore: "Wiederherstellen",
+                            empty: "Noch keine Versionen gespeichert.",
+                            source_manual: "Manuell gespeichert",
+                            source_agent: "Nach Agent-Bearbeitung",
+                            source_restore: "Wiederhergestellt"
+                        }
+                    },
                     version: {
                         header: "Was gibt's Neues?",
                         added: "Neu",
@@ -1123,6 +1166,49 @@ i18n
                                 "Rewrite your last message into a new formal text that presents the original content in an academic writing style. This text should have a clear structure, use precise and factual language, and provide the reader with a professional reading experience.",
                             informal_prompt:
                                 "Rewrite your last message into a new, more informal text that conveys the original content in a casual writing style. This text should provide the reader with a relaxed reading experience by using easily understandable language and, if appropriate, incorporating humorous elements."
+                        }
+                    },
+                    canvas: {
+                        toggle: "Canvas",
+                        panel_title: "Canvas",
+                        status_writing: "Agent is writing…",
+                        split_divider: "Resize canvas",
+                        empty_state: "Empty canvas",
+                        empty_state_hint: "Write your draft here or let the agent start the first text.",
+                        context_menu: {
+                            open: "Canvas actions",
+                            insert_into_chat: "Transfer to chat",
+                            agent_revise: "Let the agent revise this"
+                        },
+                        toolbar: {
+                            label: "Canvas tools",
+                            undo: "Undo",
+                            redo: "Redo",
+                            bold: "Bold",
+                            italic: "Italic",
+                            heading_1: "Heading 1",
+                            heading_2: "Heading 2",
+                            heading_3: "Heading 3",
+                            bullet_list: "Bullet list",
+                            ordered_list: "Numbered list",
+                            insert_table: "Insert table",
+                            save_version: "Save version",
+                            export: "Export",
+                            export_md: "Markdown (.md)",
+                            export_pdf: "PDF (coming soon)",
+                            export_word: "Word (coming soon)",
+                            export_excel: "Excel (coming soon)",
+                            close: "Close canvas"
+                        },
+                        versions: {
+                            title: "Versions",
+                            manual_group: "Saved versions",
+                            auto_group: "History",
+                            restore: "Restore",
+                            empty: "No versions saved yet.",
+                            source_manual: "Manually saved",
+                            source_agent: "After agent edit",
+                            source_restore: "Restored"
                         }
                     },
                     version: {

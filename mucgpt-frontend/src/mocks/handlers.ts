@@ -8,6 +8,7 @@ import {
     AssistantStateUpdateInput,
     AssistantUpdateInput,
     AdminOwnersUpdateInput,
+    CanvasState,
     ComplianceCategoryResult,
     ComplianceCheckResponse
 } from "../api";
@@ -702,6 +703,42 @@ async function parseUploadHandler({ request }: { request: Request }) {
     return HttpResponse.json(content);
 }
 
+const MOCK_CANVAS_DOCUMENT =
+    "# Bescheid-Entwurf\n\nSehr geehrte Damen und Herren,\n\nhiermit erhalten Sie den Entwurf des Bescheids.\n\n| Verfahren | Zuständigkeit |\n| --- | --- |\n| Auskunft | Amt A |\n\n> Hinweis: Der Entwurf wird im Canvas verwaltet.";
+
+const CANVAS_STREAM_DELTAS = ["Sehr geehrte Damen und Herren,\n\n", "anbei erhalten Sie ", "**den neuen Bescheid**", "\n\nMit freundlichen Grüßen"];
+
+const buildCanvasToolCallEvents = (parentMessageId: string) => {
+    const toolCallId = crypto.randomUUID();
+    const events: object[] = [
+        {
+            type: "TOOL_CALL_CHUNK",
+            toolCallId,
+            toolCallName: "Canvas",
+            parentMessageId,
+            delta: JSON.stringify({ state: "STARTED", content: "" })
+        }
+    ];
+    for (const delta of CANVAS_STREAM_DELTAS) {
+        events.push({
+            type: "TOOL_CALL_CHUNK",
+            toolCallId,
+            toolCallName: "Canvas",
+            parentMessageId,
+            delta: JSON.stringify({ state: "APPEND", content: delta })
+        });
+    }
+    events.push({
+        type: "TOOL_CALL_CHUNK",
+        toolCallId,
+        toolCallName: "Canvas",
+        parentMessageId,
+        delta: JSON.stringify({ state: "UPDATE", content: MOCK_CANVAS_DOCUMENT, metadata: { canvas_revision: 1 } })
+    });
+    events.push({ type: "TOOL_CALL_RESULT", messageId: crypto.randomUUID(), toolCallId, content: MOCK_CANVAS_DOCUMENT, role: "tool" });
+    return events;
+};
+
 export const handlers = [
     http.all("https://huggingface.co/*", () => passthrough()),
     http.all("https://cdn-lfs.huggingface.co/*", () => passthrough()),
@@ -1053,6 +1090,7 @@ export const handlers = [
             messages?: { role: string; content: string }[];
             conversation_id?: string;
             enabled_tools?: string[];
+            canvas?: CanvasState | null;
         };
         const mockToolName = body.enabled_tools?.[0];
         const latestUserMessage =
@@ -1088,6 +1126,13 @@ export const handlers = [
                     });
                     await delay(1500);
                     send({ type: "TOOL_CALL_RESULT", messageId: crypto.randomUUID(), toolCallId, content: "Mock tool result", role: "tool" });
+                }
+
+                if (body.canvas) {
+                    for (const event of buildCanvasToolCallEvents(messageId)) {
+                        send(event);
+                        await delay(150);
+                    }
                 }
 
                 const chunks = buildChatMessage().match(/[\s\S]{1,40}/g) ?? [];
@@ -1229,34 +1274,8 @@ export const handlers = [
         return new HttpResponse(null, { status: 204 });
     }),
 
-    http.get("/api/backend/v1/conversations/:conversationId/canvas", async () => {
-        await delay(100);
-        return HttpResponse.json({
-            content: "# Mocked Canvas\n\nThis canvas document was restored from the server.",
-            updated_at: new Date().toISOString()
-        });
-    }),
-
-    http.get("/api/backend/v1/conversations/:conversationId/canvas/revisions", async () => {
-        await delay(100);
-        return HttpResponse.json({
-            auto: [
-                {
-                    revision: 1,
-                    doc_json: { type: "doc", content: [] },
-                    timestamp: Date.now(),
-                    source: "agent"
-                }
-            ],
-            manual: []
-        });
-    }),
-
-    http.put("/api/backend/v1/conversations/:conversationId/canvas/revisions", async ({ request }) => {
-        await delay(100);
-        const revisions = await request.json();
-        return HttpResponse.json(revisions);
-    }),
+    // Canvas handlers (GET canvas, GET/PUT revisions, POST export) live further down
+    // one handler set per route only.
 
     http.get("/api/assistant", ({ request }) => {
         const url = new URL(request.url);
@@ -1600,6 +1619,40 @@ export const handlers = [
         }
         return HttpResponse.json(response);
     }),
+
+    // Canvas handlers
+    http.get("/api/backend/v1/conversations/:id/canvas", () => HttpResponse.json({ content: MOCK_CANVAS_DOCUMENT, updated_at: new Date().toISOString() })),
+    http.get("/api/backend/v1/conversations/:id/canvas/revisions", () =>
+        HttpResponse.json({
+            auto: [
+                {
+                    revision: 2,
+                    timestamp: Date.now() - 60_000,
+                    source: "agent",
+                    doc_json: { type: "doc", content: [{ type: "paragraph", content: [{ type: "text", text: MOCK_CANVAS_DOCUMENT }] }] }
+                }
+            ],
+            manual: [
+                {
+                    revision: 1,
+                    timestamp: Date.now() - 120_000,
+                    source: "manual",
+                    doc_json: { type: "doc", content: [{ type: "paragraph", content: [{ type: "text", text: "Gespeicherter Stand" }] }] }
+                }
+            ]
+        })
+    ),
+    http.put("/api/backend/v1/conversations/:id/canvas/revisions", async ({ request }) => HttpResponse.json(await request.json())),
+    http.post(
+        "/api/backend/v1/export",
+        () =>
+            new HttpResponse(new Uint8Array([0x4d, 0x55, 0x43, 0x47, 0x50, 0x54]), {
+                headers: {
+                    "Content-Type": "application/octet-stream",
+                    "Content-Disposition": 'attachment; filename="canvas.bin"'
+                }
+            })
+    ),
 
     // Parse API handlers (core-service route + legacy compatibility)
     http.post("/api/backend/v1/parse", parseUploadHandler),

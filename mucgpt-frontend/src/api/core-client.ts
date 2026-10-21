@@ -1,4 +1,4 @@
-import { deleteConfig, getConfig, getHeaders, handleApiRequest, handleRedirect, postConfig, postFormDataConfig, putConfig } from "./fetch-utils";
+import { getConfig, getHeaders, handleApiRequest, handleRedirect, postConfig, postFormDataConfig, putConfig } from "./fetch-utils";
 import {
     ApplicationConfig,
     AssistantDraftRequest,
@@ -132,23 +132,6 @@ export async function createChatName(conversationId: string, query: string, answ
 
     const generatedName = parsedResponse.title;
     return generatedName || "New Chat";
-}
-
-/**
- * Deletes a conversation's server-side state. Best effort: a 404 (the chat never
- * reached the server) counts as deleted, and other failures are only logged so
- * local deletion never depends on the backend.
- */
-export async function deleteConversationApi(conversationId: string): Promise<void> {
-    try {
-        const response = await fetch(API_BASE + "v1/conversations/" + encodeURIComponent(conversationId), deleteConfig());
-        handleRedirect(response);
-        if (!response.ok && response.status !== 404) {
-            console.error(`Failed to delete conversation ${conversationId} on the server: ${response.status}`);
-        }
-    } catch (error) {
-        console.error(`Failed to delete conversation ${conversationId} on the server`, error);
-    }
 }
 
 /**

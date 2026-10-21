@@ -45,6 +45,8 @@ import { CloseConfirmationDialog } from "../../components/AssistantDialogs/share
 import { UploadedData } from "../../components/ContextManagerDialog/ContextManagerDialog";
 import { useConfigContext } from "../../context/ConfigContext";
 import { useToolStatusToasts } from "../../hooks/useToolStatusToasts";
+import { useCanvasController } from "../../hooks/useCanvasController";
+import { CanvasSplitView } from "../../components/Canvas/CanvasSplitView";
 import styles from "./UnifiedAssistantChat.module.css";
 import { useUnifiedHistory, useUnifiedHistoryRegistration } from "../../components/UnifiedHistory";
 import { downloadAssistantExport, mapAssistantToExportData } from "../../utils/assistant-export";
@@ -76,6 +78,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
 
     // Destructuring for easier access
     const { answers, creativity, systemPrompt, active_chat } = chatState;
+    const canvas = useCanvasController(active_chat);
 
     // References
     const activeChatRef = useRef(active_chat);
@@ -1041,39 +1044,41 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
 
         return (
             <>
-                <ChatLayout
-                    starterPrompts={starterPromptsComponent}
-                    answers={answerList}
-                    input={inputComponent}
-                    showStarterPrompts={!lastQuestion}
-                    header={assistantConfig.title}
-                    welcomeMessage={canChat ? t("chat.header") : undefined}
-                    showDisclaimer={canChat || Boolean(lastQuestion)}
-                    header_as_markdown={false}
-                    messages_description={t("common.messages")}
-                    actions={
-                        <>
-                            {canEdit && !isLegacyAssistant && (
-                                <Button
-                                    appearance="subtle"
-                                    icon={<Settings24Regular />}
-                                    onClick={() => navigate("edit")}
-                                    aria-label={t("components.assistantsettingsdrawer.show_configurations")}
-                                />
-                            )}
-                            {(assistantInfoData || isAssistantInfoLoading) && (
-                                <Button
-                                    appearance="subtle"
-                                    icon={<Info24Regular />}
-                                    onClick={() => setIsInfoDrawerOpen(prev => !prev)}
-                                    aria-label={t("components.community_assistants.about", "About")}
-                                />
-                            )}
-                        </>
-                    }
-                    onHeaderClick={assistantInfoData || isAssistantInfoLoading ? () => setIsInfoDrawerOpen(prev => !prev) : undefined}
-                    infoDrawerOpen={isInfoDrawerOpen}
-                />
+                <CanvasSplitView controller={canvas} conversationId={active_chat}>
+                    <ChatLayout
+                        starterPrompts={starterPromptsComponent}
+                        answers={answerList}
+                        input={inputComponent}
+                        showStarterPrompts={!lastQuestion}
+                        header={assistantConfig.title}
+                        welcomeMessage={canChat ? t("chat.header") : undefined}
+                        showDisclaimer={canChat || Boolean(lastQuestion)}
+                        header_as_markdown={false}
+                        messages_description={t("common.messages")}
+                        actions={
+                            <>
+                                {canEdit && !isLegacyAssistant && (
+                                    <Button
+                                        appearance="subtle"
+                                        icon={<Settings24Regular />}
+                                        onClick={() => navigate("edit")}
+                                        aria-label={t("components.assistantsettingsdrawer.show_configurations")}
+                                    />
+                                )}
+                                {(assistantInfoData || isAssistantInfoLoading) && (
+                                    <Button
+                                        appearance="subtle"
+                                        icon={<Info24Regular />}
+                                        onClick={() => setIsInfoDrawerOpen(prev => !prev)}
+                                        aria-label={t("components.community_assistants.about", "About")}
+                                    />
+                                )}
+                            </>
+                        }
+                        onHeaderClick={assistantInfoData || isAssistantInfoLoading ? () => setIsInfoDrawerOpen(prev => !prev) : undefined}
+                        infoDrawerOpen={isInfoDrawerOpen}
+                    />
+                </CanvasSplitView>
             </>
         );
     }, [
@@ -1088,7 +1093,9 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
         canEdit,
         assistantInfoData,
         isAssistantInfoLoading,
-        isInfoDrawerOpen
+        isInfoDrawerOpen,
+        canvas,
+        active_chat
     ]);
 
     const isRequestedChatLoading = Boolean(requestedChatId && requestedChatId !== active_chat);

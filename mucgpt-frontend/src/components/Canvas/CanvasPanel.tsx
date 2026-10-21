@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { canvasStorage, loadCanvasState } from "../../service/canvasStorage";
+import { putCanvasRevisionsApi } from "../../api/core-client";
 import type { CanvasControllerInstance } from "../../hooks/useCanvasController";
 import { CanvasEditor } from "./CanvasEditor";
 import { CanvasToolbar } from "./CanvasToolbar";
@@ -56,12 +57,15 @@ export const CanvasPanel = ({ controller, conversationId, onInsertIntoChat, onAg
         });
     }, [conversationId]);
 
+    // Ring changes persist debounced to IndexedDB and (best effort) to the server
+    //; the PUT is 404-tolerant for conversations never persisted server-side.
     useEffect(() => {
         if (!conversationId) return;
         const timer = setTimeout(() => {
             const revisions = controllerRef.current.listRevisions();
             if (revisions.auto.length === 0 && revisions.manual.length === 0) return;
             void canvasStorage.saveRevisions(conversationId, revisions);
+            putCanvasRevisionsApi(conversationId, revisions).catch(error => console.error("Saving canvas revisions to the server failed:", error));
         }, SAVE_REVISIONS_DEBOUNCE_MS);
         return () => clearTimeout(timer);
     }, [conversationId, controller.revisions]);

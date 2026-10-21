@@ -42,7 +42,8 @@ function toChatCompletionBody(options: ChatRequest) {
         ...(options.assistant_id ? { assistant_id: options.assistant_id } : {}),
         ...(options.conversation_id ? { conversation_id: options.conversation_id } : {}),
         ...(options.persist === false ? { persist: false } : {}),
-        ...(options.data_sources ? { data_sources: options.data_sources } : {})
+        ...(options.data_sources ? { data_sources: options.data_sources } : {}),
+        ...(options.canvas ? { canvas: options.canvas } : {})
     };
 }
 
@@ -211,4 +212,28 @@ export async function putCanvasRevisionsApi(conversationId: string, revisions: C
     if (!response.ok && response.status !== 404) {
         throw new Error(`Failed to save canvas revisions: ${response.status}`);
     }
+}
+
+export type ExportTarget = "pdf" | "docx" | "xlsx";
+
+/**
+ * Converts the canvas document to a binary file via the backend export endpoint
+ *. All three TipTap serializations are sent so each
+ * converter picks the lowest-loss input.
+ */
+export async function exportCanvasApi(markdown: string, html: string, docJson: string, target: ExportTarget): Promise<Blob> {
+    const response = await fetch(
+        API_BASE + "v1/export",
+        postConfig({
+            markdown,
+            html,
+            doc_json: docJson,
+            target
+        })
+    );
+    handleRedirect(response);
+    if (!response.ok) {
+        throw new Error(`Export failed: ${response.status}`);
+    }
+    return await response.blob();
 }

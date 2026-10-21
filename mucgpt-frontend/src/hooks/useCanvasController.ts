@@ -138,7 +138,12 @@ export function useCanvasController(conversationId: string | undefined): CanvasC
         [conversationId]
     );
 
-    const lock = useCallback(() => setIsLocked(true), []);
+    // Called on RUN_STARTED: the server numbers canvas_revision per run,
+    // so the monotonicity guard must reset per run, not per conversation.
+    const lock = useCallback(() => {
+        lastStreamRevisionRef.current = 0;
+        setIsLocked(true);
+    }, []);
     const unlock = useCallback(() => setIsLocked(false), []);
 
     const getSelectionMarkdown = useCallback((opts?: { expandMarks?: boolean } | undefined): string | null => {

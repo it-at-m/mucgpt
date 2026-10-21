@@ -180,7 +180,8 @@ i18n
                         context_menu: {
                             open: "Canvas-Aktionen",
                             insert_into_chat: "In Chat übernehmen",
-                            agent_revise: "Agent soll das überarbeiten"
+                            agent_revise: "Agent soll das überarbeiten",
+                            agent_revise_template: "Bitte überarbeite den folgenden markierten Text aus dem Canvas:\n\n{{selection}}"
                         },
                         toolbar: {
                             label: "Canvas-Werkzeuge",
@@ -197,10 +198,17 @@ i18n
                             save_version: "Version speichern",
                             export: "Export",
                             export_md: "Markdown (.md)",
-                            export_pdf: "PDF (bald verfügbar)",
-                            export_word: "Word (bald verfügbar)",
-                            export_excel: "Excel (bald verfügbar)",
+                            export_pdf: "PDF (.pdf)",
+                            export_word: "Word (.docx)",
+                            export_excel: "Excel (.xlsx)",
+                            export_failed: "Export fehlgeschlagen",
+                            export_failed_message: "Der Export nach {{target}} ist fehlgeschlagen. Bitte versuche es erneut.",
                             close: "Canvas schließen"
+                        },
+                        fragment: {
+                            title: "Canvas",
+                            copy: "In Canvas übernehmen",
+                            copy_tooltip: "Öffnet den Canvas und ersetzt dessen Inhalt durch diesen Text"
                         },
                         versions: {
                             title: "Versionen",
@@ -1142,7 +1150,8 @@ i18n
                         context_menu: {
                             open: "Canvas actions",
                             insert_into_chat: "Transfer to chat",
-                            agent_revise: "Let the agent revise this"
+                            agent_revise: "Let the agent revise this",
+                            agent_revise_template: "Please revise the following selected passage from the canvas:\n\n{{selection}}"
                         },
                         toolbar: {
                             label: "Canvas tools",
@@ -1159,10 +1168,17 @@ i18n
                             save_version: "Save version",
                             export: "Export",
                             export_md: "Markdown (.md)",
-                            export_pdf: "PDF (coming soon)",
-                            export_word: "Word (coming soon)",
-                            export_excel: "Excel (coming soon)",
+                            export_pdf: "PDF (.pdf)",
+                            export_word: "Word (.docx)",
+                            export_excel: "Excel (.xlsx)",
+                            export_failed: "Export failed",
+                            export_failed_message: "Exporting to {{target}} failed. Please try again.",
                             close: "Close canvas"
+                        },
+                        fragment: {
+                            title: "Canvas",
+                            copy: "Copy into Canvas",
+                            copy_tooltip: "Opens the canvas and replaces its content with this text"
                         },
                         versions: {
                             title: "Versions",

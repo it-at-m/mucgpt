@@ -17,6 +17,10 @@ from api.api_models import CanvasState
 # (```MUCGPTCanvas) and the activity timeline stay uniform.
 CANVAS_STREAM_NAME = "Canvas"
 
+# Groups the three canvas tools into one "Canvas" entry in the tool selector
+# mirrors the mcp_group set on the built tools.
+CANVAS_MCP_GROUP = "Canvas"
+
 CANVAS_WRITE_SUMMARY = (
     "Replaces the entire canvas document with the given markdown content. "
     "Only use this when the user explicitly wants the whole document rewritten."
@@ -183,6 +187,7 @@ def make_canvas_write_tool(logger: Logger) -> BaseTool:
             runtime, content, CanvasState(content=content, selection=None)
         )
 
+    canvas_write.metadata = {"mcp_group": CANVAS_MCP_GROUP}
     return canvas_write
 
 
@@ -231,6 +236,7 @@ def make_canvas_edit_tool(logger: Logger) -> BaseTool:
             CanvasState(content=updated, selection=canvas.selection),
         )
 
+    canvas_edit.metadata = {"mcp_group": CANVAS_MCP_GROUP}
     return canvas_edit
 
 
@@ -244,6 +250,7 @@ def make_canvas_read_tool(logger: Logger) -> BaseTool:
             return NO_CANVAS_ERROR
         return canvas.content
 
+    canvas_read.metadata = {"mcp_group": CANVAS_MCP_GROUP}
     return canvas_read
 
 
@@ -252,6 +259,7 @@ WRITE_TOOL = LocalTool(
     factory=make_canvas_write_tool,
     metadata=CANVAS_METADATA["canvas_write"],
     needs_model=False,
+    mcp_group=CANVAS_MCP_GROUP,
 )
 
 EDIT_TOOL = LocalTool(
@@ -259,6 +267,7 @@ EDIT_TOOL = LocalTool(
     factory=make_canvas_edit_tool,
     metadata=CANVAS_METADATA["canvas_edit"],
     needs_model=False,
+    mcp_group=CANVAS_MCP_GROUP,
 )
 
 READ_TOOL = LocalTool(
@@ -266,6 +275,7 @@ READ_TOOL = LocalTool(
     factory=make_canvas_read_tool,
     metadata=CANVAS_METADATA["canvas_read"],
     needs_model=False,
+    mcp_group=CANVAS_MCP_GROUP,
 )
 
 TOOLS = (WRITE_TOOL, EDIT_TOOL, READ_TOOL)

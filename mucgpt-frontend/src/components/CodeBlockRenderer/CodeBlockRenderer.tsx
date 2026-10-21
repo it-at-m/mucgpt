@@ -18,7 +18,7 @@ const MERMAID_MIN_TEXT_LENGTH = 30;
 
 const MERMAID_DIAGRAM_TYPES = ["flowchart", "classDiagram", "sequenceDiagram", "stateDiagram", "pie", "mindmap", "journey", "erDiagram", "gantt"] as const;
 
-const FRAGMENT_LANGUAGES = ["mucgptbrainstorming", "mucgpt-brainstorming", "mucgptsimplify", "mucgpt-simplify"] as const;
+const FRAGMENT_LANGUAGES = ["mucgptbrainstorming", "mucgpt-brainstorming", "mucgptsimplify", "mucgpt-simplify", "mucgptcanvas", "mucgpt-canvas"] as const;
 
 type CodeBlockRendererProps = ClassAttributes<HTMLElement> & HTMLAttributes<HTMLElement> & ExtraProps;
 
@@ -51,11 +51,6 @@ export default function CodeBlockRenderer(props: CodeBlockRendererProps) {
     const { isLight } = useContext(AppThemeContext);
     const allowDrawioRender = useAllowDrawioRender();
 
-    // Debug logging
-    if (language && (language.toLowerCase().includes("mucgpt") || language.toLowerCase().includes("brainstorm"))) {
-        console.log("CodeBlockRenderer debug:", { language, className, isFragment: isFragmentLanguage(language) });
-    }
-
     const onCopy = useCallback(() => {
         navigator.clipboard.writeText(text);
         setCopied(true);
@@ -66,7 +61,6 @@ export default function CodeBlockRenderer(props: CodeBlockRendererProps) {
 
     // Check if this is a special fragment that should be rendered by FragmentManager
     if (isFragmentLanguage(language)) {
-        console.log("Fragment detected:", { language, text: text.substring(0, 100) + "..." });
         return <FragmentManager content={text} fragmentType={language} />;
     }
 

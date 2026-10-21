@@ -18,7 +18,7 @@ from api.api_models import (
 from config.settings import Settings, get_settings
 from core.logtools import getLogger
 from database.conversation_repo import ConversationRepository
-from database.database_models import Base, Chat
+from database.database_models import Base, CanvasDocument, Chat
 from database.fenced_checkpointer import FencedPostgresSaver
 from database.session import create_engine_and_session_factory
 
@@ -145,7 +145,10 @@ class PersistanceHelpers:
     ) -> None:
         """Migrate retirement metadata and quarantine/erase legacy orphan state."""
         async with engine.begin() as connection:
-            await connection.run_sync(Base.metadata.create_all, tables=[Chat.__table__])
+            await connection.run_sync(
+                Base.metadata.create_all,
+                tables=[Chat.__table__, CanvasDocument.__table__],
+            )
 
         # create_all does not alter existing tables. Keep the core's startup
         # migration idempotent and quarantine pre-fence orphan checkpoint IDs.

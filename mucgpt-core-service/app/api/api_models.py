@@ -101,6 +101,15 @@ class ChatDataSource(BaseModel):
     )
 
 
+class CanvasState(BaseModel):
+    """Client-side canvas document state."""
+
+    content: str = Field(..., description="Full GFM markdown document")
+    selection: str | None = Field(
+        None, description="Serialized markdown of the current selection, if any"
+    )
+
+
 class ChatCompletionRequest(BaseModel):
     model: str | None = Field(None, description="The model to use")
     messages: list[ChatCompletionMessage] = Field(
@@ -145,6 +154,10 @@ class ChatCompletionRequest(BaseModel):
     data_sources: list[ChatDataSource] | None = Field(
         None,
         description="Structured document payload with title, content and metadata",
+    )
+    canvas: CanvasState | None = Field(
+        None,
+        description="Canvas document state for the canvas feature",
     )
     model_config = ConfigDict(
         json_schema_extra={

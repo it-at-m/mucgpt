@@ -1192,7 +1192,17 @@ export const handlers = [
                 async start(controller) {
                     let chunks: any[] = [];
                     const forcedContextTokens = resolveForcedContextTokens(latestUserMessage, body.model);
-                    if (streamType === "mindmap") {
+                    // Canvas first: an open canvas means the request carries canvas state,
+                    // and the mocked canvas flow must not be shadowed by the tool-specific
+                    // demo streams (mindmap/simplify).
+                    if (body.canvas) {
+                        // Legacy SSE fallback: the canvas content lands as a
+                        // ```MUCGPTCanvas fenced block in the chat answer.
+                        chunks = generateChatStreamChunks(
+                            "Ich habe den Canvas-Inhalt aktualisiert:\n\n```MUCGPTCanvas\n" + MOCK_CANVAS_DOCUMENT + "\n```\n",
+                            forcedContextTokens
+                        );
+                    } else if (streamType === "mindmap") {
                         const topic = latestUserMessage || "Künstliche Intelligenz";
                         chunks = generateMindmapStreamChunks(topic, forcedContextTokens);
                     } else if (streamType === "simplify") {
@@ -1201,13 +1211,6 @@ export const handlers = [
                         chunks = generateChatStreamChunks(buildDrawioChatMessage(), forcedContextTokens);
                     } else if (wantsInvalidDrawioMock) {
                         chunks = generateChatStreamChunks(buildInvalidDrawioChatMessage(), forcedContextTokens);
-                    } else if (body.canvas) {
-                        // Legacy SSE fallback: the canvas content lands as a
-                        // ```MUCGPTCanvas fenced block in the chat answer.
-                        chunks = generateChatStreamChunks(
-                            "Ich habe den Canvas-Inhalt aktualisiert:\n\n```MUCGPTCanvas\n" + MOCK_CANVAS_DOCUMENT + "\n```\n",
-                            forcedContextTokens
-                        );
                     } else {
                         let reply = buildChatMessage();
                         if (Math.random() > 0.7) {

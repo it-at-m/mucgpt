@@ -4,8 +4,9 @@ import { useEditor } from "@tiptap/react";
 import type { Node as PMNode } from "@tiptap/pm/model";
 
 import type { CanvasState } from "../api/models";
-import { loadCanvasRevisions, type CanvasRevision, type CanvasRevisions } from "../service/canvasStorage";
+import { loadCanvasRevisions, loadCanvasState, type CanvasRevision, type CanvasRevisions } from "../service/canvasStorage";
 import type { CanvasStreamEvent } from "../utils/canvasStream";
+import { CANVAS_PERSISTENCE_RESET, persistentCaret } from "../components/Canvas/canvasSelectionPersistence";
 import { canvasExtensions } from "../components/Canvas/canvasExtensions";
 
 /**
@@ -52,11 +53,28 @@ interface MarkdownEditorStorage {
     serializer: { serialize(node: PMNode): string };
 }
 
-const markdownStorage = (editor: Editor): MarkdownEditorStorage => (editor.storage as unknown as Record<string, unknown>).markdown as MarkdownEditorStorage;
+export const markdownStorage = (editor: Editor): MarkdownEditorStorage =>
+    (editor.storage as unknown as Record<string, unknown>).markdown as MarkdownEditorStorage;
 
 const pushCapped = (ring: CanvasRevision[], revision: CanvasRevision, cap: number): CanvasRevision[] => [...ring, revision].slice(-cap);
 
 const emptyRevisions = (): CanvasRevisions => ({ auto: [], manual: [] });
+
+/**
+ * Caret position as character offset into the serialized markdown, so the agent
+ * can anchor edits near "where the user is" in the same text it sees. Uses the
+ * selection start, so a selected passage reports where it begins.
+ */
+export const caretMarkdownOffset = (editor: Editor | null, pos?: number): number | null => {
+    if (!editor) return null;
+    const { doc, selection } = editor.state;
+    const at = pos ?? selection.from;
+    if (at >= doc.content.size) {
+        return markdownStorage(editor).serializer.serialize(doc).length;
+    }
+    const prefix = markdownStorage(editor).serializer.serialize(doc.cut(0, at));
+    return prefix.replace(/\n$/, "").length;
+};
 
 export function useCanvasController(conversationId: string | undefined): CanvasControllerInstance {
     const editor = useEditor({
@@ -66,13 +84,18 @@ export function useCanvasController(conversationId: string | undefined): CanvasC
     const editorRef = useRef<Editor | null>(editor);
     editorRef.current = editor;
 
-    const openByConversationRef = useRef(new Map<string, boolean>());
     const [isOpen, setIsOpenState] = useState(false);
     const [isLocked, setIsLocked] = useState(false);
     const [revisions, setRevisions] = useState<CanvasRevisions>(emptyRevisions);
 
     const nextRevisionRef = useRef(1);
     const lastStreamRevisionRef = useRef(0);
+    // Tracks the conversation the switch effect last ran with; starts as a sentinel
+    // (not undefined) so the initial mount load isn't mistaken for an id assignment.
+    const prevConversationIdRef = useRef<string | undefined | "uninitialized">("uninitialized");
+    // Mirrors isOpen for the switch effect, which must not depend on the state value
+    // (adding it to the deps would re-run the whole switch on every open/close toggle).
+    const isOpenRef = useRef(false);
     const subscribersRef = useRef(new Set<(markdown: string) => void>());
     const notifyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const revisionsRef = useRef(revisions);
@@ -101,17 +124,31 @@ export function useCanvasController(conversationId: string | undefined): CanvasC
         };
     }, [editor, notifySubscribers]);
 
+    // Conversation switch: reset run-scoped state, clear the editor and reopen only
+    // when the conversation's stored canvas has content — the open state is derived
+    // from content, so new (empty) chats always start closed.
     useEffect(() => {
-        openByConversationRef.current.set(conversationId ?? "", isOpen);
-    }, [conversationId, isOpen]);
+        const previous = prevConversationIdRef.current;
+        prevConversationIdRef.current = conversationId;
+        // The undefined→id transition is ambiguous: either the first prompt of this
+        // new chat just got its id (same logical conversation — the canvas is open
+        // and/or holds content: keep everything) or a page reload is restoring an
+        // existing conversation (fresh controller, canvas closed and empty: run the
+        // load path below to restore the stored canvas before an empty canvas state
+        // is sent and overwrites it server-side).
+        if (previous === undefined && conversationId !== undefined && (isOpenRef.current || getMarkdown().trim())) return;
 
-    // Conversation switch: reset run-scoped state and restore the remembered open flag + revision rings.
-    useEffect(() => {
         lastStreamRevisionRef.current = 0;
         nextRevisionRef.current = 1;
         setIsLocked(false);
-        setIsOpenState(openByConversationRef.current.get(conversationId ?? "") ?? false);
+        setIsOpen(false);
         setRevisions(emptyRevisions());
+        const current = editorRef.current;
+        if (current && getMarkdown().trim()) {
+            current.commands.setContent("");
+            // A stale caret/selection must not leak into another conversation's document.
+            current.view.dispatch(current.state.tr.setMeta(CANVAS_PERSISTENCE_RESET, true));
+        }
         let cancelled = false;
         if (conversationId) {
             loadCanvasRevisions(conversationId)
@@ -124,19 +161,27 @@ export function useCanvasController(conversationId: string | undefined): CanvasC
                     setRevisions(stored);
                 })
                 .catch(error => console.error("Loading canvas revisions failed:", error));
+            loadCanvasState(conversationId)
+                .then(stored => {
+                    if (cancelled) return;
+                    if (stored === null || !stored.trim()) return;
+                    const editor = editorRef.current;
+                    if (!editor) return;
+                    editor.commands.setContent(stored);
+                    editor.view.dispatch(editor.state.tr.setMeta(CANVAS_PERSISTENCE_RESET, true));
+                    setIsOpen(true);
+                })
+                .catch(error => console.error("Loading canvas content failed:", error));
         }
         return () => {
             cancelled = true;
         };
     }, [conversationId]);
 
-    const setIsOpen = useCallback(
-        (open: boolean) => {
-            setIsOpenState(open);
-            if (conversationId) openByConversationRef.current.set(conversationId, open);
-        },
-        [conversationId]
-    );
+    const setIsOpen = useCallback((open: boolean) => {
+        isOpenRef.current = open;
+        setIsOpenState(open);
+    }, []);
 
     // Called on RUN_STARTED: the server numbers canvas_revision per run,
     // so the monotonicity guard must reset per run, not per conversation.
@@ -161,10 +206,17 @@ export function useCanvasController(conversationId: string | undefined): CanvasC
     }, []);
 
     const toCanvasState = useCallback((): CanvasState | null => {
+        // Sent whenever the canvas is open — an empty document still counts as an
+        // active canvas the agent may write into. The cursor is the anchor the user
+        // currently sees (the persistent caret marker): agent rewrites reset it, so
+        // nothing stale is silently anchored at the document start.
         if (!isOpen) return null;
-        const content = getMarkdown();
-        if (!content.trim()) return null;
-        return { content, selection: getSelectionMarkdown() };
+        const caretPos = persistentCaret(editorRef.current);
+        return {
+            content: getMarkdown(),
+            selection: getSelectionMarkdown(),
+            cursor: caretPos === null ? null : caretMarkdownOffset(editorRef.current, caretPos)
+        };
     }, [isOpen, getMarkdown, getSelectionMarkdown]);
 
     const applyStreamEvent = useCallback((ev: CanvasStreamEvent) => {
@@ -177,6 +229,8 @@ export function useCanvasController(conversationId: string | undefined): CanvasC
                 lastStreamRevisionRef.current = revision;
             }
             current.commands.setContent(ev.content);
+            // The agent replaced the document; a stale caret/selection there would be misleading.
+            current.view.dispatch(current.state.tr.setMeta(CANVAS_PERSISTENCE_RESET, true));
         } else if (ev.state === "APPEND") {
             const doc = current.state.doc;
             const endPos = doc.content.size;

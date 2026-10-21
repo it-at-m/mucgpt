@@ -272,27 +272,36 @@ const Chat = () => {
     // Canvas ↔ chat wiring: the request carries the current
     // canvas state, and stream events + run lifecycle are routed into the editor.
     // The ref keeps the wiring stable while the controller identity changes.
-    const canvasWiring = useMemo<CanvasWiring>(
-        () => ({
+    const canvasWiring = useMemo<CanvasWiring>(() => {
+        let runHadCanvasActivity = false;
+        return {
             getCanvasState: () => canvasRef.current.toCanvasState(),
-            onStreamEvent: event => canvasRef.current.applyStreamEvent(event),
+            onStreamEvent: event => {
+                const c = canvasRef.current;
+                if (!runHadCanvasActivity && event.state === "STARTED") {
+                    runHadCanvasActivity = true;
+                    // Pre-edit snapshot exactly when the agent starts writing (the
+                    // editor still holds the pre-edit content); runs without canvas
+                    // activity stay out of the revision rings entirely.
+                    if (c.isOpen && c.getMarkdown().trim()) c.snapshot("agent");
+                }
+                c.applyStreamEvent(event);
+            },
             onRunStarted: () => {
                 const c = canvasRef.current;
-                // A closed canvas sent no canvas state, so the agent cannot write
-                // to it this run — no lock, and no empty-doc snapshots into the rings.
-                if (c.isOpen) {
-                    c.lock();
-                    if (c.getMarkdown().trim()) c.snapshot("agent");
-                }
+                runHadCanvasActivity = false;
+                // An open canvas is sent with the request even when empty, so the
+                // agent may write to it this run.
+                if (c.isOpen) c.lock();
             },
             onRunFinished: () => {
                 const c = canvasRef.current;
-                if (c.isOpen && c.getMarkdown().trim()) c.snapshot("agent");
+                if (runHadCanvasActivity && c.isOpen && c.getMarkdown().trim()) c.snapshot("agent");
+                runHadCanvasActivity = false;
                 c.unlock();
             }
-        }),
-        []
-    );
+        };
+    }, []);
 
     // Canvas open ⇒ the three canvas tools are auto-enabled; the grouped "Canvas"
     // badge in the tool selector lets the user toggle them back off.
@@ -315,12 +324,12 @@ const Chat = () => {
     // Selection context menu: quote the selection into the chat input, or
     // insert the agent-revise instruction template.
     const insertCanvasSelectionIntoChat = useCallback((markdown: string) => {
-        setQuestion(
+        const quote =
             markdown
                 .split("\n")
                 .map(line => `> ${line}`)
-                .join("\n") + "\n\n"
-        );
+                .join("\n") + "\n\n";
+        setQuestion(prev => (prev ? prev.trimEnd() + "\n\n" : "") + quote);
     }, []);
     const insertCanvasReviseRequest = useCallback(
         (markdown: string) => {
@@ -459,6 +468,7 @@ const Chat = () => {
             hashParams.delete("data");
             hashParams.delete("new");
             hashParams.delete("chatId");
+            hashParams.delete("canvas");
             const newHashQuery = hashParams.toString();
             currentUrl.hash = newHashQuery ? `${hashPath}?${newHashQuery}` : hashPath;
         }
@@ -472,6 +482,7 @@ const Chat = () => {
             searchParams.delete("data");
             searchParams.delete("new");
             searchParams.delete("chatId");
+            searchParams.delete("canvas");
             const newSearch = searchParams.toString();
             currentUrl.search = newSearch ? `?${newSearch}` : "";
         }
@@ -535,6 +546,7 @@ const Chat = () => {
         const dataFromUrl = queryParams.get("data");
         const newChatToken = queryParams.get("new");
         const chatIdFromUrl = queryParams.get("chatId");
+        const canvasRequested = queryParams.get("canvas") !== null;
 
         return {
             questionFromUrl,
@@ -542,7 +554,8 @@ const Chat = () => {
             dataFromUrl,
             newChatRequested: newChatToken !== null,
             newChatToken,
-            chatIdFromUrl
+            chatIdFromUrl,
+            canvasRequested
         };
     }, [location.hash, location.search]);
 
@@ -606,7 +619,7 @@ const Chat = () => {
         isLoadingRef.current = true;
 
         // Check URL for question parameter - Handle hash router format
-        const { questionFromUrl, toolsFromUrl, dataFromUrl, newChatRequested, newChatToken, chatIdFromUrl } = getNavigationParams();
+        const { questionFromUrl, toolsFromUrl, dataFromUrl, newChatRequested, newChatToken, chatIdFromUrl, canvasRequested } = getNavigationParams();
 
         // Parse tools from URL if present
         if (toolsFromUrl) {
@@ -683,6 +696,9 @@ const Chat = () => {
                 });
         } else if (questionFromUrl || newChatRequested) {
             lastHandledNewChatTokenRef.current = newChatToken;
+            if (newChatRequested && canvasRequested) {
+                canvasRef.current.setIsOpen(true);
+            }
             setPendingQuestion(questionFromUrl);
             Promise.resolve(
                 newChatRequested
@@ -719,7 +735,7 @@ const Chat = () => {
             return;
         }
 
-        const { chatIdFromUrl, newChatRequested, newChatToken } = getNavigationParams();
+        const { chatIdFromUrl, newChatRequested, newChatToken, canvasRequested } = getNavigationParams();
 
         if (chatIdFromUrl && chatIdFromUrl !== activeChatRef.current) {
             void loadChat(chatIdFromUrl).then(async loaded => {
@@ -738,6 +754,9 @@ const Chat = () => {
         }
 
         lastHandledNewChatTokenRef.current = newChatToken;
+        if (canvasRequested) {
+            canvasRef.current.setIsOpen(true);
+        }
         if (isCurrentChatEmpty) {
             clearNavigationQueryParams();
             return;

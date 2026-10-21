@@ -240,27 +240,36 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
     // Canvas ↔ chat wiring, mirroring Chat.tsx: request state,
     // stream events and run lifecycle route into the editor; canvas open auto-enables
     // the grouped canvas tools ("Canvas" badge, toggleable like other tools).
-    const canvasWiring = useMemo<CanvasWiring>(
-        () => ({
+    const canvasWiring = useMemo<CanvasWiring>(() => {
+        let runHadCanvasActivity = false;
+        return {
             getCanvasState: () => canvasRef.current.toCanvasState(),
-            onStreamEvent: event => canvasRef.current.applyStreamEvent(event),
+            onStreamEvent: event => {
+                const c = canvasRef.current;
+                if (!runHadCanvasActivity && event.state === "STARTED") {
+                    runHadCanvasActivity = true;
+                    // Pre-edit snapshot exactly when the agent starts writing (the
+                    // editor still holds the pre-edit content); runs without canvas
+                    // activity stay out of the revision rings entirely.
+                    if (c.isOpen && c.getMarkdown().trim()) c.snapshot("agent");
+                }
+                c.applyStreamEvent(event);
+            },
             onRunStarted: () => {
                 const c = canvasRef.current;
-                // A closed canvas sent no canvas state, so the agent cannot write
-                // to it this run — no lock, and no empty-doc snapshots into the rings.
-                if (c.isOpen) {
-                    c.lock();
-                    if (c.getMarkdown().trim()) c.snapshot("agent");
-                }
+                runHadCanvasActivity = false;
+                // An open canvas is sent with the request even when empty, so the
+                // agent may write to it this run.
+                if (c.isOpen) c.lock();
             },
             onRunFinished: () => {
                 const c = canvasRef.current;
-                if (c.isOpen && c.getMarkdown().trim()) c.snapshot("agent");
+                if (runHadCanvasActivity && c.isOpen && c.getMarkdown().trim()) c.snapshot("agent");
+                runHadCanvasActivity = false;
                 c.unlock();
             }
-        }),
-        []
-    );
+        };
+    }, []);
 
     useEffect(() => {
         setSelectedToolsGuarded(prev =>
@@ -279,12 +288,12 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
     }, []);
 
     const insertCanvasSelectionIntoChat = useCallback((markdown: string) => {
-        setQuestion(
+        const quote =
             markdown
                 .split("\n")
                 .map(line => `> ${line}`)
-                .join("\n") + "\n\n"
-        );
+                .join("\n") + "\n\n";
+        setQuestion(prev => (prev ? prev.trimEnd() + "\n\n" : "") + quote);
     }, []);
     const insertCanvasReviseRequest = useCallback(
         (markdown: string) => {

@@ -108,6 +108,13 @@ class CanvasState(BaseModel):
     selection: str | None = Field(
         None, description="Serialized markdown of the current selection, if any"
     )
+    cursor: int | None = Field(
+        None,
+        description=(
+            "Caret position as character offset into the markdown document "
+            "(selection start when text is selected)"
+        ),
+    )
 
 
 class CanvasResponse(BaseModel):

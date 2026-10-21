@@ -52,7 +52,9 @@ def select_agent_state_schema(tools: list[BaseTool]) -> type[DefaultAgentState]:
         return DefaultAgentState
 
     if len(tool_groups) > 1:
-        logger.warning(
+        # Routine since canvas tools carry their own group: e.g. "Canvas" plus any
+        # ungrouped or MCP tools is the normal mixed selection, not a misconfiguration.
+        logger.debug(
             "Schema decision: DefaultAgentState because multiple mcp_group values were detected: %s. Tool/group mapping: %s",
             sorted(tool_groups),
             ", ".join(tool_group_details),

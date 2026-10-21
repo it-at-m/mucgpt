@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
-import { canvasStorage, loadCanvasState } from "../../service/canvasStorage";
+import { canvasStorage } from "../../service/canvasStorage";
 import { putCanvasRevisionsApi } from "../../api/core-client";
 import type { CanvasControllerInstance } from "../../hooks/useCanvasController";
 import { CanvasEditor } from "./CanvasEditor";
@@ -27,28 +27,8 @@ export const CanvasPanel = ({ controller, conversationId, onInsertIntoChat, onAg
     const controllerRef = useRef(controller);
     controllerRef.current = controller;
 
-    // Local-first load with server fallback.
-    useEffect(() => {
-        if (!conversationId) return;
-        let cancelled = false;
-        void (async () => {
-            try {
-                const stored = await loadCanvasState(conversationId);
-                const current = controllerRef.current;
-                if (cancelled || !current) return;
-                if (stored !== null) {
-                    current.setMarkdown(stored);
-                } else if (current.getMarkdown().trim()) {
-                    current.setMarkdown("");
-                }
-            } catch (error) {
-                console.error("Loading canvas content failed:", error);
-            }
-        })();
-        return () => {
-            cancelled = true;
-        };
-    }, [conversationId]);
+    // Content lifecycle (load/clear on conversation switch) lives in the controller;
+    // the panel only persists what the editor emits.
 
     useEffect(() => {
         if (!conversationId) return;
@@ -69,6 +49,20 @@ export const CanvasPanel = ({ controller, conversationId, onInsertIntoChat, onAg
         }, SAVE_REVISIONS_DEBOUNCE_MS);
         return () => clearTimeout(timer);
     }, [conversationId, controller.revisions]);
+
+    // Flush the rings on canvas close, conversation switch and unmount so a save
+    // inside the debounce window is not lost (mirrors the content subscribe-flush
+    // in useCanvasController). Keyed on conversationId only: the cleanup closes over
+    // the outgoing id and runs before the controller resets to the new conversation.
+    useEffect(() => {
+        if (!conversationId) return;
+        return () => {
+            const revisions = controllerRef.current.listRevisions();
+            if (revisions.auto.length === 0 && revisions.manual.length === 0) return;
+            void canvasStorage.saveRevisions(conversationId, revisions);
+            putCanvasRevisionsApi(conversationId, revisions).catch(error => console.error("Saving canvas revisions to the server failed:", error));
+        };
+    }, [conversationId]);
 
     useEffect(() => {
         const updateEmpty = () => setIsEmpty(controllerRef.current.getMarkdown().trim() === "");

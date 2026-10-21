@@ -5,6 +5,8 @@ import { Table } from "@tiptap/extension-table";
 import StarterKit from "@tiptap/starter-kit";
 import { Markdown } from "tiptap-markdown";
 
+import { CanvasSelectionPersistence } from "./canvasSelectionPersistence";
+
 /**
  * Canvas schema. The schema is the gatekeeper: only nodes that
  * round-trip through GFM may be produced. Underline is therefore disabled — GFM cannot
@@ -20,6 +22,7 @@ export const canvasExtensions = [
     TableRow,
     TableHeader,
     TableCell,
+    CanvasSelectionPersistence,
     Markdown.configure({
         html: false,
         tightLists: true,

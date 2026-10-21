@@ -89,6 +89,26 @@ def test_wrap_model_call_without_canvas_injects_nothing(no_model_registry) -> No
     assert messages == [HumanMessage(content="hi")]
 
 
+def test_wrap_model_call_injects_cursor_offset(no_model_registry) -> None:
+    request = _model_request(
+        [HumanMessage(content="hi")],
+        {"canvas": CanvasState(content="# Doc\n\nbody", cursor=7)},
+    )
+
+    messages = _wrap_model_call(request).messages
+
+    injected = [
+        m
+        for m in messages
+        if isinstance(m, HumanMessage) and CANVAS_SENTINEL in m.content
+    ]
+    assert "<cursor>\n7\n</cursor>" in injected[0].content
+    assert "<before># Doc\n\n</before>" in injected[0].content
+    assert "<after>body</after>" in injected[0].content
+    assert "anchor additions or extensions" in injected[0].content
+    assert "text you added yourself" in injected[0].content
+
+
 def test_canvas_injection_is_idempotent(no_model_registry) -> None:
     existing = HumanMessage(content=f"{CANVAS_SENTINEL}\nprevious block")
     request = _model_request([existing], {"canvas": CanvasState(content="# Doc")})
@@ -96,6 +116,46 @@ def test_canvas_injection_is_idempotent(no_model_registry) -> None:
     messages = _wrap_model_call(request).messages
 
     assert messages == [existing]
+
+
+def test_canvas_injection_notes_tool_modified_document(no_model_registry) -> None:
+    request_canvas = CanvasState(content="original")
+    state_canvas = CanvasState(content="original plus agent edit", cursor=5)
+    request = _model_request(
+        [HumanMessage(content="hi")],
+        {"canvas": state_canvas},
+        context=RequestContext(canvas=request_canvas),
+    )
+
+    messages = _wrap_model_call(request).messages
+
+    injected = [
+        m
+        for m in messages
+        if isinstance(m, HumanMessage) and CANVAS_SENTINEL in m.content
+    ]
+    assert "changes you made with canvas tools" in injected[0].content
+    assert "original plus agent edit" in injected[0].content
+
+
+def test_canvas_injection_without_tool_changes_has_no_attribution_note(
+    no_model_registry,
+) -> None:
+    canvas = CanvasState(content="same in state and request")
+    request = _model_request(
+        [HumanMessage(content="hi")],
+        {"canvas": canvas},
+        context=RequestContext(canvas=canvas),
+    )
+
+    messages = _wrap_model_call(request).messages
+
+    injected = [
+        m
+        for m in messages
+        if isinstance(m, HumanMessage) and CANVAS_SENTINEL in m.content
+    ]
+    assert "changes you made with canvas tools" not in injected[0].content
 
 
 def test_wrap_model_call_reads_canvas_from_request_context(no_model_registry) -> None:

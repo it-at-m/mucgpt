@@ -46,6 +46,8 @@ export interface CanvasState {
     content: string;
     /** Serialized markdown of the current selection, if any */
     selection: string | null;
+    /** Caret position as character offset in the markdown document (selection start when text is selected) */
+    cursor?: number | null;
 }
 
 export type ChatRequest = {

@@ -24,6 +24,8 @@ import { ChatSettingsDialog } from "../../components/ChatSettingsDialog/ChatSett
 import { UploadedData, createUploadedDataFromContent } from "../../components/ContextManagerDialog/ContextManagerDialog";
 import { getStoredParsedDocuments } from "../../service/parsedDocumentStorage";
 import { useToolStatusToasts } from "../../hooks/useToolStatusToasts";
+import { useCanvasController } from "../../hooks/useCanvasController";
+import { CanvasSplitView } from "../../components/Canvas/CanvasSplitView";
 import { useUnifiedHistory, useUnifiedHistoryRegistration } from "../../components/UnifiedHistory";
 import { useLocation, useNavigate } from "react-router-dom";
 import { UserContext } from "../layout/UserContextProvider";
@@ -137,6 +139,7 @@ const Chat = () => {
 
     // Destructuring for easier access
     const { answers, creativity, systemPrompt, active_chat, allChats } = chatState;
+    const canvas = useCanvasController(active_chat);
     const activeChatName = useMemo(() => allChats.find(chat => chat.id === active_chat)?.name, [active_chat, allChats]);
 
     // Picked once per mount so the greeting doesn't change while the empty state is visible.
@@ -942,7 +945,11 @@ const Chat = () => {
         ]
     );
 
-    return layout;
+    return (
+        <CanvasSplitView controller={canvas} conversationId={active_chat}>
+            {layout}
+        </CanvasSplitView>
+    );
 };
 
 export default Chat;

@@ -1,0 +1,64 @@
+.split {
+    display: flex;
+    width: 100%;
+    height: 100dvh;
+    min-height: 0;
+}
+
+/* Closed canvas: the chat page renders untouched; ChatLayout provides its own height. */
+.full {
+    position: relative;
+    width: 100%;
+}
+
+.chatPane {
+    flex: 1 1 auto;
+    min-width: 0;
+    height: 100%;
+    overflow: hidden;
+}
+
+.canvasPane {
+    flex: 0 0 auto;
+    min-width: 0;
+    height: 100%;
+}
+
+/* Keyboard-resizable divider (role=separator) with a visible handle and focus indicator. */
+.divider {
+    flex: 0 0 6px;
+    align-self: stretch;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: col-resize;
+    background-color: var(--colorNeutralBackground3);
+    border: none;
+    padding: 0;
+}
+
+.divider:hover,
+.divider:focus-visible {
+    background-color: var(--colorBrandBackground2);
+    outline: none;
+}
+
+.dividerHandle {
+    width: 2px;
+    height: 32px;
+    border-radius: var(--borderRadiusCircular);
+    background-color: var(--colorNeutralStroke1);
+}
+
+.divider:hover .dividerHandle,
+.divider:focus-visible .dividerHandle {
+    background-color: var(--colorBrandForeground1);
+}
+
+/* Floating toggle to open the canvas; mirrors the AssistantEditorPage preview toggle. */
+.floatingToggle {
+    position: absolute;
+    top: 68px;
+    right: 16px;
+    z-index: 4;
+}

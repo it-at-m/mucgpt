@@ -103,3 +103,67 @@ async def test_missing_checkpoint_history_is_empty(monkeypatch, checkpoint):
         Mock(aget=AsyncMock(return_value=checkpoint)),
     )
     assert await PersistanceHelpers.get_conversation_messages("thread") == []
+
+
+@pytest.mark.unit
+@pytest.mark.asyncio
+async def test_history_restores_latest_usage_per_turn_and_legacy_context(monkeypatch):
+    from config.settings import get_settings
+
+    model = get_settings().MODELS[0]
+    snapshot = {
+        "context_tokens": 240,
+        "user_tokens": 300,
+        "tokens": 60,
+        "usage_cost": 0.04,
+        "usage_model": "historical-model",
+        "usage_max_input_tokens": 10000,
+        "usage_context_warning_threshold_percent": 60,
+        "usage_context_critical_threshold_percent": 80,
+    }
+    messages = [
+        HumanMessage(content="Question"),
+        AIMessage(
+            content="",
+            tool_calls=[{"id": "search", "name": "search", "args": {}}],
+            response_metadata={"mucgpt_usage": {"context_tokens": 120}},
+        ),
+        ToolMessage(content="result", tool_call_id="search"),
+        AIMessage(content="Answer", response_metadata={"mucgpt_usage": snapshot}),
+        HumanMessage(content="Legacy question"),
+        AIMessage(
+            content="Legacy answer",
+            response_metadata={"model_name": model.llm_name},
+            usage_metadata={
+                "input_tokens": 400,
+                "output_tokens": 50,
+                "total_tokens": 450,
+            },
+        ),
+        HumanMessage(content="Unknown model"),
+        AIMessage(
+            content="Answer",
+            response_metadata={
+                "model_name": "unknown",
+                "mucgpt_usage": {"context_tokens": -1},
+            },
+            usage_metadata={"input_tokens": 10, "output_tokens": 2, "total_tokens": 12},
+        ),
+        HumanMessage(content="No usage"),
+        AIMessage(content="Answer"),
+    ]
+    monkeypatch.setattr(
+        PersistanceHelpers,
+        "_checkpointer",
+        Mock(aget=AsyncMock(return_value={"channel_values": {"messages": messages}})),
+    )
+
+    history = await PersistanceHelpers.get_conversation_messages("thread")
+
+    assert history[0].usage.model_dump(exclude_none=True) == snapshot
+    assert history[2].usage.context_tokens == 450
+    assert history[2].usage.usage_max_input_tokens == model.max_input_tokens
+    assert history[2].usage.user_tokens is None
+    assert history[4].usage.context_tokens == 12
+    assert history[4].usage.usage_max_input_tokens is None
+    assert history[6].usage is None

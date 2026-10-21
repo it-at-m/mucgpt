@@ -98,6 +98,11 @@ export function toChatTurns(messages: ConversationMessage[]): DBMessage<ChatResp
                 }))
             ];
         }
+        if (message.usage && turns.length > 0 && message.role !== "system") {
+            const response = turns[turns.length - 1].response;
+            // Missing legacy fields must not overwrite valid local metadata.
+            Object.assign(response, Object.fromEntries(Object.entries(message.usage).filter(([, value]) => value !== null && value !== undefined)));
+        }
     }
     return turns;
 }
@@ -128,8 +133,8 @@ export async function loadConversation<C>(
         messages: toChatTurns(messages).map((turn, index) => {
             const local = cached?.messages[index];
             if (local?.user !== turn.user || local.response.answer !== turn.response.answer) return turn;
-            // The server supplies the steps; keep local usage and step timings
-            // only when they still belong to this transcript and tool call.
+            // Server usage and steps take precedence; keep legacy local metadata
+            // and step timings only for this matching transcript and tool call.
             const localSteps = new Map(local.response.activitySteps?.map(step => [step.toolCallId, step]));
             return {
                 ...turn,

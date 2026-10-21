@@ -1,4 +1,5 @@
 import { API_BASE } from "./core-client";
+import type { ChatResponse } from "./models";
 import { ApiError, deleteConfig, getConfig, handleApiRequest, handleRedirect } from "./fetch-utils";
 
 export interface ConversationMetadata {
@@ -12,6 +13,17 @@ export interface ConversationMetadata {
 export interface ConversationMessage {
     role: "system" | "user" | "assistant";
     content: string;
+    usage?: Pick<
+        ChatResponse,
+        | "context_tokens"
+        | "user_tokens"
+        | "tokens"
+        | "usage_cost"
+        | "usage_model"
+        | "usage_max_input_tokens"
+        | "usage_context_warning_threshold_percent"
+        | "usage_context_critical_threshold_percent"
+    > | null;
     activity_steps?: {
         tool_call_id: string;
         tool_name: string;

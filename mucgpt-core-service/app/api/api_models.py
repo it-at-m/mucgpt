@@ -71,8 +71,26 @@ class ConversationActivityStep(BaseModel):
     detail: str | None = None
 
 
+class ConversationUsage(BaseModel):
+    """Usage of a turn, using the same fields as the live frontend response."""
+
+    context_tokens: int | None = Field(default=None, ge=0)
+    user_tokens: int | None = Field(default=None, ge=0)
+    tokens: int | None = Field(default=None, ge=0)
+    usage_cost: float | None = Field(default=None, ge=0)
+    usage_model: str | None = None
+    usage_max_input_tokens: int | None = Field(default=None, gt=0)
+    usage_context_warning_threshold_percent: int | None = Field(
+        default=None, ge=1, le=100
+    )
+    usage_context_critical_threshold_percent: int | None = Field(
+        default=None, ge=1, le=100
+    )
+
+
 class ConversationMessage(ChatCompletionMessage):
     activity_steps: list[ConversationActivityStep] = Field(default_factory=list)
+    usage: ConversationUsage | None = None
 
 
 class ChatDataSource(BaseModel):

@@ -6,10 +6,15 @@ from langchain_core.messages import AIMessage, HumanMessage, ToolMessage
 from langgraph.checkpoint.postgres.aio import AsyncPostgresSaver
 from psycopg.rows import dict_row
 from psycopg_pool import AsyncConnectionPool
+from pydantic import ValidationError
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker
 
-from api.api_models import ConversationActivityStep, ConversationMessage
-from config.settings import Settings
+from api.api_models import (
+    ConversationActivityStep,
+    ConversationMessage,
+    ConversationUsage,
+)
+from config.settings import Settings, get_settings
 from core.logtools import getLogger
 from database.conversation_repo import ConversationRepository
 from database.database_models import Base, Chat
@@ -53,6 +58,40 @@ def _display_text(value: Any, max_length: int) -> str | None:
     if not text:
         return None
     return text if len(text) <= max_length else text[: max_length - 1] + "…"
+
+
+def _conversation_usage(message: AIMessage) -> ConversationUsage | None:
+    snapshot = message.response_metadata.get("mucgpt_usage")
+    if isinstance(snapshot, dict):
+        try:
+            return ConversationUsage.model_validate(snapshot)
+        except ValidationError:
+            logger.warning("Ignoring invalid conversation usage snapshot")
+    metadata = message.usage_metadata
+    if not metadata:
+        return None
+    # Legacy checkpoints still carry the provider's latest context count.
+    # Do not confuse a single call's usage with cumulative turn consumption.
+    context_tokens = metadata.get("total_tokens")
+    if context_tokens is None:
+        context_tokens = metadata.get("input_tokens", 0) + metadata.get(
+            "output_tokens", 0
+        )
+    usage = ConversationUsage(context_tokens=context_tokens)
+    model_name = message.response_metadata.get("model_name")
+    model = next(
+        (model for model in get_settings().MODELS if model.llm_name == model_name), None
+    )
+    if model is not None:
+        usage.usage_model = model.llm_name
+        usage.usage_max_input_tokens = model.max_input_tokens
+        usage.usage_context_warning_threshold_percent = (
+            model.context_warning_threshold_percent
+        )
+        usage.usage_context_critical_threshold_percent = (
+            model.context_critical_threshold_percent
+        )
+    return usage
 
 
 class PersistanceHelpers:
@@ -181,6 +220,10 @@ class PersistanceHelpers:
         turn: ConversationMessage | None = None
         steps: dict[str, ConversationActivityStep] = {}
         for message in messages:
+            if isinstance(message, AIMessage) and turn is not None:
+                usage = _conversation_usage(message)
+                if usage is not None:
+                    turn.usage = usage
             if isinstance(message, HumanMessage):
                 turn = ConversationMessage(
                     role="user", content=_message_content(message)

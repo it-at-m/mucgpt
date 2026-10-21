@@ -170,6 +170,61 @@ describe("conversation history", () => {
         ]);
     });
 
+    it("restores per-turn context usage and historical model limits in an empty browser", async () => {
+        const firstUsage = {
+            context_tokens: 240,
+            user_tokens: 300,
+            tokens: 60,
+            usage_cost: 0.04,
+            usage_model: "first",
+            usage_max_input_tokens: 10000,
+            usage_context_warning_threshold_percent: 60,
+            usage_context_critical_threshold_percent: 80
+        };
+        const secondUsage = { context_tokens: 450, usage_model: "second", usage_max_input_tokens: 20000 };
+        vi.mocked(getConversationMessagesApi).mockResolvedValue([
+            { role: "user", content: "Question", usage: firstUsage },
+            { role: "assistant", content: "Answer" },
+            { role: "user", content: "Next question", usage: secondUsage },
+            { role: "assistant", content: "Next answer" }
+        ]);
+        const storage = new StorageService<ChatResponse, Record<string, never>>(CHAT_STORE);
+
+        const chat = await loadConversation(storage, "thread", "thread", {});
+
+        expect(chat.messages[0].response).toEqual({ answer: "Answer", ...firstUsage });
+        expect(chat.messages[1].response).toEqual({ answer: "Next answer", ...secondUsage });
+    });
+
+    it("prefers server usage over stale cache and retains unavailable legacy fields", async () => {
+        vi.mocked(StorageService.prototype.get).mockResolvedValue({
+            id: "thread",
+            config: {},
+            messages: [
+                {
+                    user: "Question",
+                    response: {
+                        answer: "Answer",
+                        context_tokens: 1,
+                        tokens: 60,
+                        usage_cost: 0.04,
+                        usage_model: "first",
+                        usage_max_input_tokens: 10000
+                    }
+                }
+            ]
+        });
+        vi.mocked(getConversationMessagesApi).mockResolvedValue([
+            { role: "user", content: "Question", usage: { context_tokens: 240 } },
+            { role: "assistant", content: "Answer" }
+        ]);
+        const storage = new StorageService<ChatResponse, Record<string, never>>(CHAT_STORE);
+
+        const chat = await loadConversation(storage, "thread", "thread", {});
+
+        expect(chat.messages[0].response).toMatchObject({ context_tokens: 240, tokens: 60, usage_cost: 0.04, usage_max_input_tokens: 10000 });
+    });
+
     it("allows local-only transcripts on 404 but surfaces authorization and server errors", async () => {
         const cached = { id: "local", backendPersisted: true, config: {}, messages: [{ user: "Question", response: { answer: "Answer" } }] };
         vi.mocked(StorageService.prototype.get).mockResolvedValue(cached);

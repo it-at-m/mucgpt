@@ -24,6 +24,7 @@ import {
 } from "./data/generators";
 import { CREATIVITY_HIGH, CREATIVITY_MEDIUM } from "../constants";
 import type { AssistantAuditEvent } from "../api/models";
+import { CANVAS_TOOL_IDS } from "../utils/canvasStream";
 import { loadMockAssistants, loadMockSubscriptions, saveMockAssistants, saveMockSubscriptions } from "./data/assistant-store";
 import { MOCK_DELETED_SUBSCRIBED_SNAPSHOT, MOCK_SUBSCRIPTION_SEED } from "./data/browser-scenario-seed";
 
@@ -708,34 +709,31 @@ const MOCK_CANVAS_DOCUMENT =
 
 const CANVAS_STREAM_DELTAS = ["Sehr geehrte Damen und Herren,\n\n", "anbei erhalten Sie ", "**den neuen Bescheid**", "\n\nMit freundlichen Grüßen"];
 
+// Mirrors the real backend (agent_executor.py): the model's own tool-call events
+// carry the raw tool name, while the streamed canvas chunks are forwarded as
+// CustomEvents named "Canvas" whose value is the ToolStreamChunk payload.
 const buildCanvasToolCallEvents = (parentMessageId: string) => {
     const toolCallId = crypto.randomUUID();
+    const canvasChunk = (chunk: object) => ({
+        type: "CUSTOM",
+        name: "Canvas",
+        value: { tool_name: "Canvas", ...chunk }
+    });
     const events: object[] = [
         {
-            type: "TOOL_CALL_CHUNK",
+            type: "TOOL_CALL_START",
             toolCallId,
-            toolCallName: "Canvas",
+            toolCallName: "canvas_write",
             parentMessageId,
-            delta: JSON.stringify({ state: "STARTED", content: "" })
-        }
+            args: JSON.stringify({ content: MOCK_CANVAS_DOCUMENT })
+        },
+        canvasChunk({ state: "STARTED", content: "" })
     ];
     for (const delta of CANVAS_STREAM_DELTAS) {
-        events.push({
-            type: "TOOL_CALL_CHUNK",
-            toolCallId,
-            toolCallName: "Canvas",
-            parentMessageId,
-            delta: JSON.stringify({ state: "APPEND", content: delta })
-        });
+        events.push(canvasChunk({ state: "APPEND", content: delta }));
     }
-    events.push({
-        type: "TOOL_CALL_CHUNK",
-        toolCallId,
-        toolCallName: "Canvas",
-        parentMessageId,
-        delta: JSON.stringify({ state: "UPDATE", content: MOCK_CANVAS_DOCUMENT, metadata: { canvas_revision: 1 } })
-    });
-    events.push({ type: "TOOL_CALL_RESULT", messageId: crypto.randomUUID(), toolCallId, content: MOCK_CANVAS_DOCUMENT, role: "tool" });
+    events.push(canvasChunk({ state: "UPDATE", content: MOCK_CANVAS_DOCUMENT, metadata: { canvas_revision: 1 } }));
+    events.push({ type: "TOOL_CALL_END", toolCallId, parentMessageId });
     return events;
 };
 
@@ -1083,7 +1081,38 @@ export const handlers = [
             ]
         };
         const tools = toolsByLanguage[lang] || toolsByLanguage.deutsch;
-        return HttpResponse.json({ tools, internal_tool_ids: ["delete", "edit_file", "glob", "grep", "ls", "read_file", "write_file", "write_todos"] });
+        // Canvas tools mirror the real LOCAL_TOOLS: one
+        // "Canvas" group of three; canvas_read is internal (hidden from activity).
+        const canvasTools = [
+            {
+                id: "canvas_write",
+                name: "Canvas schreiben",
+                long_description: "Ersetzt den gesamten Canvas-Inhalt durch neuen Markdown-Text.",
+                lang: "deutsch",
+                config: { enabled: true },
+                mcp_group: "Canvas"
+            },
+            {
+                id: "canvas_edit",
+                name: "Canvas bearbeiten",
+                long_description: "Ersetzt eine bestimmte Textstelle im Canvas durch einen neuen Text.",
+                lang: "deutsch",
+                config: { enabled: true },
+                mcp_group: "Canvas"
+            },
+            {
+                id: "canvas_read",
+                name: "Canvas lesen",
+                long_description: "Liest den aktuellen Canvas-Inhalt als Markdown aus.",
+                lang: "deutsch",
+                config: { enabled: true },
+                mcp_group: "Canvas"
+            }
+        ];
+        return HttpResponse.json({
+            tools: [...tools, ...canvasTools],
+            internal_tool_ids: ["canvas_read", "delete", "edit_file", "glob", "grep", "ls", "read_file", "write_file", "write_todos"]
+        });
     }),
     http.post("/api/backend/v1/chat/v2/completions", async ({ request }) => {
         const body = (await request.json()) as {
@@ -1092,7 +1121,9 @@ export const handlers = [
             enabled_tools?: string[];
             canvas?: CanvasState | null;
         };
-        const mockToolName = body.enabled_tools?.[0];
+        // Canvas tools are auto-added while the canvas is open; the generic
+        // demo tool call must not fire from those.
+        const mockToolName = body.enabled_tools?.find(id => !(CANVAS_TOOL_IDS as readonly string[]).includes(id));
         const latestUserMessage =
             body.messages
                 ?.slice()
@@ -1165,6 +1196,7 @@ export const handlers = [
             messages?: { role: string; content: string }[];
             enabled_tools?: string[];
             model?: string;
+            canvas?: CanvasState | null;
         };
         const latestUserMessage =
             body.messages
@@ -1191,6 +1223,13 @@ export const handlers = [
                         chunks = generateChatStreamChunks(buildDrawioChatMessage(), forcedContextTokens);
                     } else if (wantsInvalidDrawioMock) {
                         chunks = generateChatStreamChunks(buildInvalidDrawioChatMessage(), forcedContextTokens);
+                    } else if (body.canvas) {
+                        // Legacy SSE fallback: the canvas content lands as a
+                        // ```MUCGPTCanvas fenced block in the chat answer.
+                        chunks = generateChatStreamChunks(
+                            "Ich habe den Canvas-Inhalt aktualisiert:\n\n```MUCGPTCanvas\n" + MOCK_CANVAS_DOCUMENT + "\n```\n",
+                            forcedContextTokens
+                        );
                     } else {
                         let reply = buildChatMessage();
                         if (Math.random() > 0.7) {
@@ -1643,16 +1682,21 @@ export const handlers = [
         })
     ),
     http.put("/api/backend/v1/conversations/:id/canvas/revisions", async ({ request }) => HttpResponse.json(await request.json())),
-    http.post(
-        "/api/backend/v1/export",
-        () =>
-            new HttpResponse(new Uint8Array([0x4d, 0x55, 0x43, 0x47, 0x50, 0x54]), {
-                headers: {
-                    "Content-Type": "application/octet-stream",
-                    "Content-Disposition": 'attachment; filename="canvas.bin"'
-                }
-            })
-    ),
+    http.post("/api/backend/v1/export", async ({ request }) => {
+        const body = (await request.json()) as { target?: string };
+        const mimetypes: Record<string, string> = {
+            pdf: "application/pdf",
+            docx: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            xlsx: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        };
+        const target = body.target && body.target in mimetypes ? body.target : "pdf";
+        return new HttpResponse(new Uint8Array([0x4d, 0x55, 0x43, 0x47, 0x50, 0x54]), {
+            headers: {
+                "Content-Type": mimetypes[target],
+                "Content-Disposition": `attachment; filename="canvas.${target}"`
+            }
+        });
+    }),
 
     // Parse API handlers (core-service route + legacy compatibility)
     http.post("/api/backend/v1/parse", parseUploadHandler),

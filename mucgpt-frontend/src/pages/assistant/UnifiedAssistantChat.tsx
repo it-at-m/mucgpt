@@ -13,7 +13,7 @@ import { StorageService } from "../../service/storage";
 import { AnswerList } from "../../components/AnswerList/AnswerList";
 import { StarterPromptList } from "../../components/StarterPrompt";
 import { FollowUpActionContext } from "../../components/FollowUpAction";
-import { getChatReducer, handleRegenerate, handleRollback, makeApiRequest } from "../page_helpers";
+import { CanvasWiring, getChatReducer, handleRegenerate, handleRollback, makeApiRequest } from "../page_helpers";
 import { getConversationActionCapabilities } from "../../utils/conversationActions";
 import { ChatOptions } from "../chat/Chat";
 import { STORAGE_KEYS } from "../layout/LayoutHelper";
@@ -52,6 +52,7 @@ import { useUnifiedHistory, useUnifiedHistoryRegistration } from "../../componen
 import { downloadAssistantExport, mapAssistantToExportData } from "../../utils/assistant-export";
 import { scrollIntoNearestContainer } from "../../utils/scrollIntoNearestContainer";
 import { loadConversation } from "../../service/conversationHistory";
+import { CANVAS_TOOL_IDS, setCopyIntoCanvasHandler } from "../../utils/canvasStream";
 
 const requestPersist = true;
 const conversationActions = getConversationActionCapabilities(requestPersist);
@@ -79,6 +80,8 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
     // Destructuring for easier access
     const { answers, creativity, systemPrompt, active_chat } = chatState;
     const canvas = useCanvasController(active_chat);
+    const canvasRef = useRef(canvas);
+    canvasRef.current = canvas;
 
     // References
     const activeChatRef = useRef(active_chat);
@@ -236,6 +239,62 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
             });
         },
         [mergeLockedToolIds]
+    );
+
+    // Canvas ↔ chat wiring, mirroring Chat.tsx: request state,
+    // stream events and run lifecycle route into the editor; canvas open auto-enables
+    // the grouped canvas tools ("Canvas" badge, toggleable like other tools).
+    const canvasWiring = useMemo<CanvasWiring>(
+        () => ({
+            getCanvasState: () => canvasRef.current.toCanvasState(),
+            onStreamEvent: event => canvasRef.current.applyStreamEvent(event),
+            onRunStarted: () => {
+                const c = canvasRef.current;
+                // A closed canvas sent no canvas state, so the agent cannot write
+                // to it this run — no lock, and no empty-doc snapshots into the rings.
+                if (c.isOpen) {
+                    c.lock();
+                    if (c.getMarkdown().trim()) c.snapshot("agent");
+                }
+            },
+            onRunFinished: () => {
+                const c = canvasRef.current;
+                if (c.isOpen && c.getMarkdown().trim()) c.snapshot("agent");
+                c.unlock();
+            }
+        }),
+        []
+    );
+
+    useEffect(() => {
+        setSelectedToolsGuarded(prev =>
+            canvas.isOpen ? [...new Set([...prev, ...CANVAS_TOOL_IDS])] : prev.filter(id => !(CANVAS_TOOL_IDS as readonly string[]).includes(id))
+        );
+    }, [canvas.isOpen, setSelectedToolsGuarded]);
+
+    // "Copy into Canvas" from the legacy fenced fallback reaches the editor through
+    // the canvasStream bridge (fragments have no access to the page).
+    useEffect(() => {
+        setCopyIntoCanvasHandler(markdown => {
+            canvasRef.current.setMarkdown(markdown);
+            canvasRef.current.setIsOpen(true);
+        });
+        return () => setCopyIntoCanvasHandler(undefined);
+    }, []);
+
+    const insertCanvasSelectionIntoChat = useCallback((markdown: string) => {
+        setQuestion(
+            markdown
+                .split("\n")
+                .map(line => `> ${line}`)
+                .join("\n") + "\n\n"
+        );
+    }, []);
+    const insertCanvasReviseRequest = useCallback(
+        (markdown: string) => {
+            setQuestion(t("canvas.context_menu.agent_revise_template", { selection: markdown }));
+        },
+        [t]
     );
     const resetActiveChatState = useCallback(() => {
         setLastQuestionValue("");
@@ -490,7 +549,8 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                     requestPersist,
                     agUiEnabled,
                     undefined, // onAgUiEvent — event log is only wired up in the main chat
-                    setRunActivity
+                    setRunActivity,
+                    canvasWiring
                 );
             } catch (e) {
                 setError(e);
@@ -512,7 +572,8 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
             setLastQuestionValue,
             isLegacyAssistant,
             isAssistantUnavailable,
-            agUiEnabled
+            agUiEnabled,
+            canvasWiring
         ]
     );
 
@@ -1044,7 +1105,12 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
 
         return (
             <>
-                <CanvasSplitView controller={canvas} conversationId={active_chat}>
+                <CanvasSplitView
+                    controller={canvas}
+                    conversationId={active_chat}
+                    onInsertIntoChat={insertCanvasSelectionIntoChat}
+                    onAgentRevise={insertCanvasReviseRequest}
+                >
                     <ChatLayout
                         starterPrompts={starterPromptsComponent}
                         answers={answerList}
@@ -1095,7 +1161,9 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
         isAssistantInfoLoading,
         isInfoDrawerOpen,
         canvas,
-        active_chat
+        active_chat,
+        insertCanvasSelectionIntoChat,
+        insertCanvasReviseRequest
     ]);
 
     const isRequestedChatLoading = Boolean(requestedChatId && requestedChatId !== active_chat);

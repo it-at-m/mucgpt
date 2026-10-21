@@ -1,4 +1,5 @@
 import type { Editor } from "@tiptap/core";
+import { useState } from "react";
 import { Button, Menu, MenuItem, MenuList, MenuPopover, MenuTrigger, Tooltip } from "@fluentui/react-components";
 import {
     ArrowDownload24Regular,
@@ -16,6 +17,8 @@ import {
 import { useEditorState } from "@tiptap/react";
 import { useTranslation } from "react-i18next";
 
+import { exportCanvasApi, type ExportTarget } from "../../api/core-client";
+import { useGlobalToastContext } from "../GlobalToastHandler/GlobalToastContext";
 import type { CanvasController } from "../../hooks/useCanvasController";
 import styles from "./CanvasToolbar.module.css";
 
@@ -28,8 +31,16 @@ interface Props {
 
 const tooltipPositioning = "above";
 
+const EXPORT_FILE_EXTENSIONS: Record<ExportTarget, string> = {
+    pdf: "pdf",
+    docx: "docx",
+    xlsx: "xlsx"
+};
+
 export const CanvasToolbar = ({ editor, controller, onOpenVersions, disabled }: Props) => {
     const { t } = useTranslation();
+    const { showError } = useGlobalToastContext();
+    const [isExporting, setIsExporting] = useState<ExportTarget | null>(null);
 
     const state = useEditorState({
         editor,
@@ -56,6 +67,27 @@ export const CanvasToolbar = ({ editor, controller, onOpenVersions, disabled }: 
         anchor.download = "canvas.md";
         anchor.click();
         URL.revokeObjectURL(url);
+    };
+
+    // backend conversion via /v1/export; all three serializations are sent so
+    // each converter picks the lowest-loss input (pdf←html, docx←markdown, xlsx←html).
+    const downloadExport = async (target: ExportTarget) => {
+        if (!editor) return;
+        setIsExporting(target);
+        try {
+            const blob = await exportCanvasApi(controller.getMarkdown(), editor.getHTML(), JSON.stringify(editor.getJSON()), target);
+            const url = URL.createObjectURL(blob);
+            const anchor = document.createElement("a");
+            anchor.href = url;
+            anchor.download = `canvas.${EXPORT_FILE_EXTENSIONS[target]}`;
+            anchor.click();
+            URL.revokeObjectURL(url);
+        } catch (error) {
+            console.error(`Canvas export to ${target} failed:`, error);
+            showError(t("canvas.toolbar.export_failed"), t("canvas.toolbar.export_failed_message", { target: target.toUpperCase() }));
+        } finally {
+            setIsExporting(null);
+        }
     };
 
     const canUndo = !disabled && (state?.canUndo ?? false);
@@ -188,9 +220,15 @@ export const CanvasToolbar = ({ editor, controller, onOpenVersions, disabled }: 
                         <MenuItem icon={<ArrowDownload24Regular />} onClick={downloadMarkdown}>
                             {t("canvas.toolbar.export_md")}
                         </MenuItem>
-                        <MenuItem disabled>{t("canvas.toolbar.export_pdf")}</MenuItem>
-                        <MenuItem disabled>{t("canvas.toolbar.export_word")}</MenuItem>
-                        <MenuItem disabled>{t("canvas.toolbar.export_excel")}</MenuItem>
+                        <MenuItem icon={<ArrowDownload24Regular />} disabled={isExporting !== null} onClick={() => void downloadExport("pdf")}>
+                            {t("canvas.toolbar.export_pdf")}
+                        </MenuItem>
+                        <MenuItem icon={<ArrowDownload24Regular />} disabled={isExporting !== null} onClick={() => void downloadExport("docx")}>
+                            {t("canvas.toolbar.export_word")}
+                        </MenuItem>
+                        <MenuItem icon={<ArrowDownload24Regular />} disabled={isExporting !== null} onClick={() => void downloadExport("xlsx")}>
+                            {t("canvas.toolbar.export_excel")}
+                        </MenuItem>
                     </MenuList>
                 </MenuPopover>
             </Menu>

@@ -153,6 +153,9 @@ notebooks
 .idea/
 *.iml
 
+# git worktrees
+.worktrees/
+
 #configs
 config/c.json
 config/k.json

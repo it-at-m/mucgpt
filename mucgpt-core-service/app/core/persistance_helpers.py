@@ -17,7 +17,7 @@ from api.api_models import (
 from config.settings import Settings, get_settings
 from core.logtools import getLogger
 from database.conversation_repo import ConversationRepository
-from database.database_models import Base, Chat
+from database.database_models import Base, CanvasDocument, Chat
 from database.session import create_engine_and_session_factory
 
 logger = getLogger()
@@ -117,7 +117,10 @@ class PersistanceHelpers:
         # LangGraph owns message storage. SQLAlchemy owns the application table.
         engine, session_factory = create_engine_and_session_factory(settings)
         async with engine.begin() as connection:
-            await connection.run_sync(Base.metadata.create_all, tables=[Chat.__table__])
+            await connection.run_sync(
+                Base.metadata.create_all,
+                tables=[Chat.__table__, CanvasDocument.__table__],
+            )
 
         PersistanceHelpers._pool = pool
         PersistanceHelpers._checkpointer = checkpointer

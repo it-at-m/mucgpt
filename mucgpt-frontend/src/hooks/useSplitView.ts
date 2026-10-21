@@ -16,9 +16,13 @@ const HARD_MAX_PERCENT = 80;
  */
 export const useSplitView = () => {
     const [canvasPercent, setCanvasPercent] = useState<number>(DEFAULT_CANVAS_PERCENT);
+    const [canvasWidthPx, setCanvasWidthPx] = useState(0);
     const isDraggingRef = useRef(false);
     const containerRef = useRef<HTMLElement | null>(null);
     const observerRef = useRef<ResizeObserver | null>(null);
+
+    const canvasPercentRef = useRef(canvasPercent);
+    canvasPercentRef.current = canvasPercent;
 
     const clampPercent = useCallback(
         (percent: number) => {
@@ -69,6 +73,19 @@ export const useSplitView = () => {
         };
     }, [applyClientX]);
 
+    // ChatLayout's fixed-position bars offset by the canvas pane width; published in
+    // px because fixed elements resolve percentages against the viewport.
+    const measureCanvasWidth = useCallback(() => {
+        const container = containerRef.current;
+        if (!container) return;
+        const width = container.getBoundingClientRect().width;
+        setCanvasWidthPx((width * canvasPercentRef.current) / 100);
+    }, []);
+
+    useEffect(() => {
+        measureCanvasWidth();
+    }, [canvasPercent, measureCanvasWidth]);
+
     // Callback ref: the split view swaps the container element when the canvas
     // opens/closes, so the observer must re-attach to whatever node is current.
     const attachContainer = useCallback(
@@ -77,6 +94,7 @@ export const useSplitView = () => {
             observerRef.current?.disconnect();
             if (!node) return;
             const observer = new ResizeObserver(() => {
+                measureCanvasWidth();
                 setCanvasPercent(prev => {
                     const clamped = clampPercent(prev);
                     return clamped === prev ? prev : clamped;
@@ -85,7 +103,7 @@ export const useSplitView = () => {
             observer.observe(node);
             observerRef.current = observer;
         },
-        [clampPercent]
+        [clampPercent, measureCanvasWidth]
     );
 
     useEffect(() => {
@@ -111,5 +129,5 @@ export const useSplitView = () => {
         [clampPercent]
     );
 
-    return { canvasPercent, attachContainer, onDividerMouseDown, onDividerKeyDown };
+    return { canvasPercent, canvasWidthPx, attachContainer, onDividerMouseDown, onDividerKeyDown };
 };

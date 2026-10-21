@@ -273,7 +273,15 @@ _CANVAS_GUARD = (
     "To change the canvas, use the canvas tools: prefer canvas_edit with an "
     "exact old_text match copied verbatim from the document over canvas_write; "
     "a full canvas_write is only for when the user explicitly wants the whole "
-    "document rewritten."
+    "document rewritten.\n"
+    "If a <cursor> offset is given, it is where the user's caret (or selected "
+    "passage) sits in the markdown above — anchor additions or extensions there "
+    "when the user refers to 'this spot' or 'here'. The <cursor_context> block "
+    "quotes the text immediately before (<before>) and after (<after>) that "
+    "offset; these markers are context labels, never part of the document.\n"
+    "This block always shows the document's current state: content you do not "
+    "recognize from the user's messages may be text you added yourself with "
+    "canvas tools earlier in this run — do not report it as pre-existing."
 )
 
 
@@ -295,13 +303,41 @@ def _build_canvas_block(canvas: CanvasState) -> str:
     lines = ["<canvas>", "<content>", canvas.content, "</content>"]
     if canvas.selection and canvas.selection.strip():
         lines.extend(["<selection>", canvas.selection.strip(), "</selection>"])
+    if canvas.cursor is not None:
+        lines.extend(["<cursor>", str(canvas.cursor), "</cursor>"])
+        offset = min(max(canvas.cursor, 0), len(canvas.content))
+        lines.extend(
+            [
+                "<cursor_context>",
+                "<before>" + canvas.content[max(0, offset - 40) : offset] + "</before>",
+                "<after>" + canvas.content[offset : offset + 40] + "</after>",
+                "</cursor_context>",
+            ]
+        )
     lines.append("</canvas>")
     return "\n".join(lines)
+
+
+def _canvas_changed_by_tools(
+    state_canvas: Any, runtime_context: RequestContext | None
+) -> bool:
+    """True when the graph-state canvas diverges from the request canvas, i.e. the
+    agent's own canvas tools modified the document during this run."""
+    if state_canvas is None:
+        return False
+    state = _canvas_from(state_canvas)
+    if state is None:
+        return False
+    request_canvas = getattr(runtime_context, "canvas", None)
+    if request_canvas is None:
+        return True
+    return state.content != request_canvas.content
 
 
 def _inject_canvas_context(
     messages: list[AnyMessage],
     canvas: CanvasState | None,
+    tool_modified: bool = False,
 ) -> list[AnyMessage]:
     """Inject the current canvas document as a guarded HumanMessage."""
     if canvas is None:
@@ -314,10 +350,17 @@ def _inject_canvas_context(
 
     logger.info("Injecting canvas context into request context")
 
+    attribution = (
+        "Note: this document already contains the changes you made with canvas "
+        "tools earlier in this run. Do not describe them as pre-existing.\n\n"
+        if tool_modified
+        else ""
+    )
     context_message = HumanMessage(
         content=(
             f"{CANVAS_SENTINEL}\n"
             f"{_CANVAS_GUARD}\n\n"
+            f"{attribution}"
             "The user's current canvas document:\n"
             f"{_build_canvas_block(canvas)}"
         )
@@ -518,7 +561,10 @@ class ContextMiddleware(AgentMiddleware):
             getattr(runtime_context, "canvas", None)
         )
         if canvas is not None:
-            new_messages = _inject_canvas_context(request.messages, canvas)
+            tool_modified = _canvas_changed_by_tools(state_canvas, runtime_context)
+            new_messages = _inject_canvas_context(
+                request.messages, canvas, tool_modified
+            )
             request = request.override(messages=new_messages)
 
         request = _configure_model_request(request)
@@ -566,7 +612,10 @@ class ContextMiddleware(AgentMiddleware):
             getattr(runtime_context, "canvas", None)
         )
         if canvas is not None:
-            new_messages = _inject_canvas_context(request.messages, canvas)
+            tool_modified = _canvas_changed_by_tools(state_canvas, runtime_context)
+            new_messages = _inject_canvas_context(
+                request.messages, canvas, tool_modified
+            )
             request = request.override(messages=new_messages)
 
         request = _configure_model_request(request)

@@ -444,6 +444,9 @@ export const makeApiRequest = async (
             });
         } finally {
             eventSubscription.unsubscribe();
+            // RUN_FINISHED/RUN_ERROR normally unlock; this covers the path where
+            // the run throws before any event is emitted.
+            canvasWiring?.onRunFinished();
         }
         if (runError) throw runError;
     } else {

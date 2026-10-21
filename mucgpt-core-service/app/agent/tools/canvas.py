@@ -225,6 +225,16 @@ def make_canvas_edit_tool(logger: Logger) -> BaseTool:
             )
 
         updated = document.replace(old_text, new_text, 1)
+        # Keep the reported caret meaningful across the edit: shift it by the
+        # length delta when it sits after the replaced passage, move it to the
+        # edit start when it sat inside the passage.
+        cursor = canvas.cursor
+        if cursor is not None:
+            start = document.find(old_text)
+            if cursor >= start + len(old_text):
+                cursor += len(new_text) - len(old_text)
+            elif cursor > start:
+                cursor = start
         writer = _get_writer()
         _emit(writer, ToolStreamState.STARTED, "")
         # Only canvas_write's UPDATE carries revision metadata; canvas_edit's
@@ -233,7 +243,7 @@ def make_canvas_edit_tool(logger: Logger) -> BaseTool:
         return _tool_result(
             runtime,
             updated,
-            CanvasState(content=updated, selection=canvas.selection),
+            CanvasState(content=updated, selection=canvas.selection, cursor=cursor),
         )
 
     canvas_edit.metadata = {"mcp_group": CANVAS_MCP_GROUP}

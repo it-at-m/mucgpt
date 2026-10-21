@@ -1,6 +1,6 @@
 import type { Editor } from "@tiptap/core";
 import { useState } from "react";
-import { Button, Menu, MenuItem, MenuList, MenuPopover, MenuTrigger, Tooltip } from "@fluentui/react-components";
+import { Button, makeStyles, mergeClasses, Menu, MenuItem, MenuList, MenuPopover, MenuTrigger, tokens, Tooltip } from "@fluentui/react-components";
 import {
     ArrowDownload24Regular,
     ArrowRedo24Regular,
@@ -9,6 +9,13 @@ import {
     Grid24Regular,
     History24Regular,
     Save24Regular,
+    TableDeleteColumn24Regular,
+    TableDeleteRow24Regular,
+    TableDismiss24Regular,
+    TableStackAbove24Regular,
+    TableStackBelow24Regular,
+    TableStackLeft24Regular,
+    TableStackRight24Regular,
     TextBold24Regular,
     TextBulletListLtr24Regular,
     TextItalic24Regular,
@@ -37,9 +44,22 @@ const EXPORT_FILE_EXTENSIONS: Record<ExportTarget, string> = {
     xlsx: "xlsx"
 };
 
+// Fluent's small Button ships minWidth: 64px plus wide padding. Griffel-styled
+// overrides must go through mergeClasses (user className is merged last inside
+// Button, so its atomic dedup replaces those rules); a plain CSS module class
+// loses the cascade against griffel's runtime-injected rules.
+const useHeadingStyles = makeStyles({
+    headingButton: {
+        minWidth: "0px",
+        paddingLeft: tokens.spacingHorizontalXS,
+        paddingRight: tokens.spacingHorizontalXS
+    }
+});
+
 export const CanvasToolbar = ({ editor, controller, onOpenVersions, disabled }: Props) => {
     const { t } = useTranslation();
     const { showError } = useGlobalToastContext();
+    const headingStyles = useHeadingStyles();
     const [isExporting, setIsExporting] = useState<ExportTarget | null>(null);
 
     const state = useEditorState({
@@ -51,12 +71,13 @@ export const CanvasToolbar = ({ editor, controller, onOpenVersions, disabled }: 
                 bold: ctx.editor.isActive("bold"),
                 italic: ctx.editor.isActive("italic"),
                 bulletList: ctx.editor.isActive("bulletList"),
-                orderedList: ctx.editor.isActive("orderedList")
+                orderedList: ctx.editor.isActive("orderedList"),
+                inTable: ctx.editor.isActive("table")
             }
     });
 
-    const run = (command: (chain: ReturnType<Editor["chain"]>) => void) => () => {
-        if (editor) command(editor.chain().focus());
+    const run = (build: (chain: ReturnType<Editor["chain"]>) => ReturnType<Editor["chain"]>) => () => {
+        if (editor) build(editor.chain().focus()).run();
     };
 
     const downloadMarkdown = () => {
@@ -143,13 +164,15 @@ export const CanvasToolbar = ({ editor, controller, onOpenVersions, disabled }: 
                 />
             </Tooltip>
 
+            <div className={styles.divider} />
+
             {(["1", "2", "3"] as const).map(level => (
                 <Button
                     key={level}
                     appearance="subtle"
                     size="small"
                     disabled={disabled}
-                    className={editor?.isActive("heading", { level: Number(level) }) ? styles.active : undefined}
+                    className={mergeClasses(headingStyles.headingButton, editor?.isActive("heading", { level: Number(level) }) && styles.active)}
                     onClick={run(chain => chain.toggleHeading({ level: Number(level) as 1 | 2 | 3 }))}
                     aria-label={t(`canvas.toolbar.heading_${level}`)}
                     aria-pressed={editor?.isActive("heading", { level: Number(level) })}
@@ -157,6 +180,8 @@ export const CanvasToolbar = ({ editor, controller, onOpenVersions, disabled }: 
                     H{level}
                 </Button>
             ))}
+
+            <div className={styles.divider} />
 
             <Tooltip content={t("canvas.toolbar.bullet_list")} relationship="label" positioning={tooltipPositioning}>
                 <Button
@@ -192,6 +217,82 @@ export const CanvasToolbar = ({ editor, controller, onOpenVersions, disabled }: 
                     aria-label={t("canvas.toolbar.insert_table")}
                 />
             </Tooltip>
+
+            {state?.inTable && (
+                <>
+                    <div className={styles.divider} />
+                    <Tooltip content={t("canvas.toolbar.table_add_row_above")} relationship="label" positioning={tooltipPositioning}>
+                        <Button
+                            appearance="subtle"
+                            size="small"
+                            icon={<TableStackAbove24Regular />}
+                            disabled={disabled}
+                            onClick={run(chain => chain.addRowBefore())}
+                            aria-label={t("canvas.toolbar.table_add_row_above")}
+                        />
+                    </Tooltip>
+                    <Tooltip content={t("canvas.toolbar.table_add_row_below")} relationship="label" positioning={tooltipPositioning}>
+                        <Button
+                            appearance="subtle"
+                            size="small"
+                            icon={<TableStackBelow24Regular />}
+                            disabled={disabled}
+                            onClick={run(chain => chain.addRowAfter())}
+                            aria-label={t("canvas.toolbar.table_add_row_below")}
+                        />
+                    </Tooltip>
+                    <Tooltip content={t("canvas.toolbar.table_add_column_before")} relationship="label" positioning={tooltipPositioning}>
+                        <Button
+                            appearance="subtle"
+                            size="small"
+                            icon={<TableStackLeft24Regular />}
+                            disabled={disabled}
+                            onClick={run(chain => chain.addColumnBefore())}
+                            aria-label={t("canvas.toolbar.table_add_column_before")}
+                        />
+                    </Tooltip>
+                    <Tooltip content={t("canvas.toolbar.table_add_column_after")} relationship="label" positioning={tooltipPositioning}>
+                        <Button
+                            appearance="subtle"
+                            size="small"
+                            icon={<TableStackRight24Regular />}
+                            disabled={disabled}
+                            onClick={run(chain => chain.addColumnAfter())}
+                            aria-label={t("canvas.toolbar.table_add_column_after")}
+                        />
+                    </Tooltip>
+                    <Tooltip content={t("canvas.toolbar.table_delete_row")} relationship="label" positioning={tooltipPositioning}>
+                        <Button
+                            appearance="subtle"
+                            size="small"
+                            icon={<TableDeleteRow24Regular />}
+                            disabled={disabled}
+                            onClick={run(chain => chain.deleteRow())}
+                            aria-label={t("canvas.toolbar.table_delete_row")}
+                        />
+                    </Tooltip>
+                    <Tooltip content={t("canvas.toolbar.table_delete_column")} relationship="label" positioning={tooltipPositioning}>
+                        <Button
+                            appearance="subtle"
+                            size="small"
+                            icon={<TableDeleteColumn24Regular />}
+                            disabled={disabled}
+                            onClick={run(chain => chain.deleteColumn())}
+                            aria-label={t("canvas.toolbar.table_delete_column")}
+                        />
+                    </Tooltip>
+                    <Tooltip content={t("canvas.toolbar.table_delete_table")} relationship="label" positioning={tooltipPositioning}>
+                        <Button
+                            appearance="subtle"
+                            size="small"
+                            icon={<TableDismiss24Regular />}
+                            disabled={disabled}
+                            onClick={run(chain => chain.deleteTable())}
+                            aria-label={t("canvas.toolbar.table_delete_table")}
+                        />
+                    </Tooltip>
+                </>
+            )}
 
             <div className={styles.divider} />
 

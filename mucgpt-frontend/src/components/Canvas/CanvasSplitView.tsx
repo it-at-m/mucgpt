@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useState, type CSSProperties, type ReactNode } from "react";
 import { Button, OverlayDrawer } from "@fluentui/react-components";
 import { PanelRight24Regular } from "@fluentui/react-icons";
 import { useTranslation } from "react-i18next";
@@ -36,9 +36,13 @@ export const CanvasSplitView = ({ controller, conversationId, children, onInsert
 
     const panel = <CanvasPanel controller={controller} conversationId={conversationId} onInsertIntoChat={onInsertIntoChat} onAgentRevise={onAgentRevise} />;
 
+    // ChatLayout's fixed bars (header, input, scroll-to-bottom) offset their right
+    // edge by the pane width while the split is active; the drawer takes no offset.
+    const containerStyle = { "--canvasPaneWidth": controller.isOpen && !isNarrow ? `${split.canvasWidthPx}px` : "0px" } as CSSProperties;
+
     if (!controller.isOpen) {
         return (
-            <div className={styles.full} ref={split.attachContainer}>
+            <div className={styles.full} ref={split.attachContainer} style={containerStyle}>
                 {children}
                 <Button appearance="secondary" className={styles.floatingToggle} icon={<PanelRight24Regular />} onClick={() => controller.setIsOpen(true)}>
                     {t("canvas.toggle")}
@@ -49,7 +53,7 @@ export const CanvasSplitView = ({ controller, conversationId, children, onInsert
 
     if (isNarrow) {
         return (
-            <div className={styles.full} ref={split.attachContainer}>
+            <div className={styles.full} ref={split.attachContainer} style={containerStyle}>
                 {children}
                 {/* <900px: the canvas opens as a Fluent OverlayDrawer (modal by Fluent design). */}
                 <OverlayDrawer position="end" size="medium" open onOpenChange={(_, data) => !data.open && controller.setIsOpen(false)}>
@@ -60,7 +64,7 @@ export const CanvasSplitView = ({ controller, conversationId, children, onInsert
     }
 
     return (
-        <div className={styles.split} ref={split.attachContainer}>
+        <div className={styles.split} ref={split.attachContainer} style={containerStyle}>
             <div className={styles.chatPane}>{children}</div>
             <div
                 role="separator"

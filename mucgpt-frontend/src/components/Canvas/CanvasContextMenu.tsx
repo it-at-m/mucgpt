@@ -29,28 +29,26 @@ export const CanvasContextMenu = ({ editor, containerRef, getSelectionMarkdown, 
     useEffect(() => {
         if (!editor) return;
 
+        // The menu follows the selection and deliberately ignores focus: it stays
+        // anchored while the user types in the chat input, and only a collapsed
+        // selection (or a document replace, which resets the selection) hides it.
         const update = () => {
             const containerRect = containerRef.current?.getBoundingClientRect();
             const { empty, from } = editor.state.selection;
-            if (empty || !editor.isFocused || !containerRect) {
+            if (empty || !containerRect) {
                 setPosition(null);
                 return;
             }
             const coords = editor.view.coordsAtPos(from);
             setPosition({
-                top: Math.max(coords.top - containerRect.top - 44, 0),
+                top: Math.max(coords.top - containerRect.top - 30, 0),
                 left: Math.max(Math.min(coords.left - containerRect.left, containerRect.width - 48), 0)
             });
         };
 
         editor.on("transaction", update);
-        editor.on("focus", update);
-        const onBlur = () => setPosition(null);
-        editor.on("blur", onBlur);
         return () => {
             editor.off("transaction", update);
-            editor.off("focus", update);
-            editor.off("blur", onBlur);
         };
     }, [editor, containerRef]);
 
@@ -68,11 +66,20 @@ export const CanvasContextMenu = ({ editor, containerRef, getSelectionMarkdown, 
         <div className={styles.wrapper} style={{ top: position.top, left: position.left }} onMouseDown={event => event.preventDefault()}>
             <Menu>
                 <MenuTrigger disableButtonEnhancement>
-                    <Button appearance="subtle" size="small" icon={<ChevronDown20Regular />} aria-label={t("canvas.context_menu.open")} />
+                    <Button appearance="secondary" size="small" icon={<ChevronDown20Regular />} aria-label={t("canvas.context_menu.open")} />
                 </MenuTrigger>
                 <MenuPopover>
                     <MenuList>
-                        <MenuItem onClick={() => onInsertIntoChat?.(getSelectionMarkdown() ?? "")} disabled={!onInsertIntoChat}>
+                        <MenuItem
+                            onClick={() => {
+                                const markdown = getSelectionMarkdown() ?? "";
+                                // The passage was taken into the chat: drop the highlight so the
+                                // agent is no longer anchored to it (and the menu follows suit).
+                                editor.chain().setTextSelection(editor.state.selection.to).run();
+                                onInsertIntoChat?.(markdown);
+                            }}
+                            disabled={!onInsertIntoChat}
+                        >
                             {t("canvas.context_menu.insert_into_chat")}
                         </MenuItem>
                         <MenuItem onClick={() => onAgentRevise?.(getSelectionMarkdown() ?? "")} disabled={!onAgentRevise}>

@@ -29,7 +29,8 @@ CANVAS_WRITE_SUMMARY = (
 CANVAS_EDIT_SUMMARY = (
     "Replaces the exact string old_text with new_text in the canvas document. "
     "Prefer this over canvas_write for any change smaller than a full rewrite; "
-    "copy old_text verbatim from the document."
+    "copy old_text verbatim from the document. When the context contains a "
+    "<selection>, include its referenced text in old_text."
 )
 
 CANVAS_READ_SUMMARY = (

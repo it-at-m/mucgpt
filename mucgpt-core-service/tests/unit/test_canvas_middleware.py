@@ -109,6 +109,27 @@ def test_wrap_model_call_injects_cursor_offset(no_model_registry) -> None:
     assert "text you added yourself" in injected[0].content
 
 
+def test_guard_defines_table_selection_semantics(no_model_registry) -> None:
+    request = _model_request(
+        [HumanMessage(content="hi")],
+        {"canvas": CanvasState(content="# Doc", selection=None)},
+    )
+
+    messages = _wrap_model_call(request).messages
+
+    injected = [
+        m
+        for m in messages
+        if isinstance(m, HumanMessage) and CANVAS_SENTINEL in m.content
+    ]
+    content = injected[0].content
+    assert "the header is row 1" in content
+    assert "delimiter line is not a row" in content
+    assert "referenced text" in content
+    assert "never a desired or target value" in content
+    assert "old_text must contain the referenced text" in content
+
+
 def test_canvas_injection_is_idempotent(no_model_registry) -> None:
     existing = HumanMessage(content=f"{CANVAS_SENTINEL}\nprevious block")
     request = _model_request([existing], {"canvas": CanvasState(content="# Doc")})

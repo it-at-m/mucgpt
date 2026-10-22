@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { Content, Editor } from "@tiptap/core";
 import { useEditor } from "@tiptap/react";
 import type { Node as PMNode } from "@tiptap/pm/model";
+import type { EditorState } from "@tiptap/pm/state";
 
 import type { CanvasState } from "../api/models";
 import { loadCanvasRevisions, loadCanvasState, type CanvasRevision, type CanvasRevisions } from "../service/canvasStorage";
@@ -59,6 +60,41 @@ export const markdownStorage = (editor: Editor): MarkdownEditorStorage =>
 const pushCapped = (ring: CanvasRevision[], revision: CanvasRevision, cap: number): CanvasRevision[] => [...ring, revision].slice(-cap);
 
 const emptyRevisions = (): CanvasRevisions => ({ auto: [], manual: [] });
+
+/**
+ * Selection starting inside a table: the cut document's first row is a partial
+ * body row, which the GFM serializer rejects (it would collapse to "[table]"),
+ * so quote coordinates plus the verbatim cell text instead. The text stays a
+ * document substring, which canvas_edit's selection check relies on.
+ * Row 1 is the header row; the canvas schema allows no colspans, so the cell
+ * index is the column index. The highlighted text may be a partial cell, hence
+ * "referenced text" rather than "cell content".
+ */
+export const tableSelectionMarkdown = (state: EditorState): string | null => {
+    const { $from, $to, from, to } = state.selection;
+    let tableDepth = 0;
+    for (let d = $from.depth; d > 0; d--) {
+        if ($from.node(d).type.name === "table") {
+            tableDepth = d;
+            break;
+        }
+    }
+    if (!tableDepth || $from.pos <= $from.start(tableDepth)) return null;
+
+    const startRow = $from.index(tableDepth) + 1;
+    const startCol = $from.index(tableDepth + 1) + 1;
+    const sameTable = $to.depth > tableDepth && $to.node(tableDepth) === $from.node(tableDepth);
+    const endRow = sameTable ? $to.index(tableDepth) + 1 : startRow;
+    const endCol = sameTable ? $to.index(tableDepth + 1) + 1 : startCol;
+
+    const table = $from.node(tableDepth);
+    const range = (word: string, start: number, end: number) => (end > start ? `${word}s ${start}-${end}` : `${word} ${start}`);
+    const headerCell = startRow > 1 ? table.child(0)?.child(startCol - 1) : null;
+    const col = headerCell?.type.name === "tableHeader" && headerCell.textContent.trim() ? `col "${headerCell.textContent.trim()}"` : `col ${startCol}`;
+
+    const text = state.doc.textBetween(from, to, " ", " ");
+    return `[table, ${range("row", startRow, endRow)}, ${endCol > startCol ? range("col", startCol, endCol) : col}, referenced text: "${text}"]`;
+};
 
 /**
  * Caret position as character offset into the serialized markdown, so the agent
@@ -198,7 +234,7 @@ export function useCanvasController(conversationId: string | undefined): CanvasC
         if (!current) return null;
         const { from, to, empty } = current.state.selection;
         if (empty) return null;
-        return markdownStorage(current).serializer.serialize(current.state.doc.cut(from, to));
+        return tableSelectionMarkdown(current.state) ?? markdownStorage(current).serializer.serialize(current.state.doc.cut(from, to));
     }, []);
 
     const setMarkdown = useCallback((md: string) => {

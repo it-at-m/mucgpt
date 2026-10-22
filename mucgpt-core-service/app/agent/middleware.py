@@ -279,6 +279,15 @@ _CANVAS_GUARD = (
     "when the user refers to 'this spot' or 'here'. The <cursor_context> block "
     "quotes the text immediately before (<before>) and after (<after>) that "
     "offset; these markers are context labels, never part of the document.\n"
+    "A <selection> quotes the passage the user highlighted in the canvas. "
+    "Plain selections appear as verbatim markdown. A selection inside a table "
+    'uses the annotation [table, row R, col "Header" (or col N), referenced '
+    'text: "..."] — rows are counted including the header row (the header is '
+    "row 1; the GFM delimiter line is not a row), and the referenced text is "
+    "the verbatim current content of the highlighted passage (it may be a "
+    "partial cell). It locates the passage; it is never a desired or target "
+    "value. While a passage is selected, canvas_edit's old_text must contain "
+    "the referenced text.\n"
     "This block always shows the document's current state: content you do not "
     "recognize from the user's messages may be text you added yourself with "
     "canvas tools earlier in this run — do not report it as pre-existing."

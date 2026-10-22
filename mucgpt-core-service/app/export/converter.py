@@ -1,15 +1,17 @@
 from typing import Literal
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from export.docx_converter import convert_docx
 from export.xlsx_converter import convert_xlsx
 
+_MAX_CONTENT_CHARS = 2_000_000
+
 
 class ExportRequest(BaseModel):
-    markdown: str
-    html: str
-    doc_json: str
+    markdown: str = Field(max_length=_MAX_CONTENT_CHARS)
+    html: str = Field(max_length=_MAX_CONTENT_CHARS)
+    doc_json: str = Field(max_length=_MAX_CONTENT_CHARS)
     target: Literal["pdf", "docx", "xlsx"]
 
 

@@ -13,7 +13,7 @@ import { handleRedirect } from "../api/fetch-utils";
 import { createChatName, MucgptAgUiAgent } from "../api/core-client";
 import { EventType, type BaseEvent, type CustomEvent } from "@ag-ui/core";
 import { initialRunActivity, reduceRunActivity, type RunActivity } from "../utils/agUiActivity";
-import { isCanvasToolCall, type CanvasStreamEvent } from "../utils/canvasStream";
+import { isCanvasToolCall, parseCanvasStreamEvent, type CanvasStreamEvent } from "../utils/canvasStream";
 import { scrollIntoNearestContainer } from "../utils/scrollIntoNearestContainer";
 import { getConversationActionCapabilities } from "../utils/conversationActions";
 
@@ -399,7 +399,17 @@ export const makeApiRequest = async (
                         //; the value is the ToolStreamChunk.
                         const custom = event as CustomEvent;
                         if (isCanvasToolCall(custom.name)) {
-                            canvasWiring.onStreamEvent(custom.value as CanvasStreamEvent);
+                            const canvasEvent = parseCanvasStreamEvent(custom.value);
+                            if (canvasEvent) canvasWiring.onStreamEvent(canvasEvent);
+                            // No canvas content in the console: log a shape summary, never the payload.
+                            else {
+                                const value = custom.value;
+                                console.error(
+                                    "Dropped invalid canvas stream event",
+                                    custom.name,
+                                    typeof value === "string" ? `string(len ${value.length})` : typeof value
+                                );
+                            }
                         }
                     } else if (event.type === EventType.RUN_STARTED) {
                         canvasWiring.onRunStarted();

@@ -61,7 +61,9 @@ def test_canvas_write_replaces_document_and_streams(monkeypatch: Any) -> None:
 
     result, updated_canvas = _command_result(result)
 
-    assert result == "# Title\n\nBody text"
+    # short confirmation only — the full document must not be duplicated into
+    # the persisted ToolMessage (state injection refreshes it next model call)
+    assert result == "Canvas document updated (18 characters)."
     assert updated_canvas == CanvasState(content="# Title\n\nBody text", selection=None)
     states = [chunk.state for chunk in writer.chunks]
     assert states[0] == ToolStreamState.STARTED
@@ -117,7 +119,7 @@ def test_canvas_edit_replaces_first_occurrence_and_streams(monkeypatch: Any) -> 
 
     result, updated_canvas = _command_result(result)
 
-    assert result == "Hello there"
+    assert result == "Canvas document updated (11 characters)."
     assert updated_canvas == CanvasState(content="Hello there", selection=None)
     assert [chunk.state for chunk in writer.chunks] == [
         ToolStreamState.STARTED,
@@ -175,7 +177,7 @@ def test_canvas_write_then_edit_build_on_previous_update(monkeypatch: Any) -> No
     )
     result, updated_canvas = _command_result(second)
 
-    assert result == "Hello there"
+    assert result == "Canvas document updated (11 characters)."
     assert updated_canvas.content == "Hello there"
     updates = [
         chunk for chunk in writer.chunks if chunk.state == ToolStreamState.UPDATE

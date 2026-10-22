@@ -20,10 +20,20 @@ def _extract_prose(soup: BeautifulSoup) -> list[str]:
     return prose
 
 
+def _neutralize_formula(value: str) -> str:
+    if value.startswith(("=", "+", "-", "@")):
+        return f"'{value}"
+    return value
+
+
 def _fill_table(sheet, table: Tag) -> None:
     for row_index, tr in enumerate(table.find_all("tr"), start=1):
         for col_index, cell in enumerate(tr.find_all(["th", "td"]), start=1):
-            sheet.cell(row=row_index, column=col_index, value=cell.get_text(strip=True))
+            sheet.cell(
+                row=row_index,
+                column=col_index,
+                value=_neutralize_formula(cell.get_text(strip=True)),
+            )
 
 
 def convert_xlsx(html: str) -> bytes:
@@ -34,7 +44,7 @@ def convert_xlsx(html: str) -> bytes:
 
     prose = _extract_prose(soup)
     for row_index, paragraph in enumerate(prose, start=1):
-        text_sheet.cell(row=row_index, column=1, value=paragraph)
+        text_sheet.cell(row=row_index, column=1, value=_neutralize_formula(paragraph))
     if not prose:
         workbook.remove(text_sheet)
 

@@ -18,7 +18,7 @@ _LIST_STYLES = {
     (True, 3): "List Number 3",
 }
 
-# Tiptap's GFM schema is the gatekeeper; span/mark (v1.1 colors) are not
+# Tiptap's GFM schema is the gatekeeper; span/mark (e.g. colors) are not
 # produced yet and degrade to plain runs here.
 _INLINE_FORMAT: dict[str, dict[str, bool]] = {
     "strong": {"bold": True},
@@ -29,6 +29,14 @@ _INLINE_FORMAT: dict[str, dict[str, bool]] = {
     "del": {"strike": True},
     "code": {"mono": True},
 }
+
+
+_MAX_COLSPAN = 32
+_MAX_TABLE_WIDTH = 32
+_MAX_TABLE_ROWS = 1_000
+# python-docx merges are quadratic in cost; bound their total per table so a
+# colspan-heavy payload cannot dominate request latency.
+_MERGE_BUDGET = 256
 
 
 def _add_run(
@@ -140,23 +148,35 @@ def _fill_cell(cell: Any, tag: Tag, *, header: bool) -> None:
         _walk_inline(paragraph, tag)
 
 
+def _colspan(cell: Any) -> int:
+    try:
+        span = int(cell.get("colspan", 1))
+    except (TypeError, ValueError):
+        return 1
+    return min(max(span, 1), _MAX_COLSPAN)
+
+
 def _render_table(doc: Any, tag: Tag) -> None:
-    rows = tag.find_all("tr")
+    rows = tag.find_all("tr")[:_MAX_TABLE_ROWS]
     if not rows:
         return
-    width = max(
-        sum(int(cell.get("colspan", 1)) for cell in row.find_all(["th", "td"]))
-        for row in rows
+    width = min(
+        max(sum(_colspan(cell) for cell in row.find_all(["th", "td"])) for row in rows),
+        _MAX_TABLE_WIDTH,
     )
     table = doc.add_table(rows=len(rows), cols=width)
     table.style = "Table Grid"
+    budget = _MERGE_BUDGET
     for row_index, row in enumerate(rows):
         column = 0
         for cell in row.find_all(["th", "td"]):
-            span = min(int(cell.get("colspan", 1)), width - column)
+            if column >= width:
+                break
+            span = min(_colspan(cell), width - column, budget + 1)
             target = table.rows[row_index].cells[column]
             for offset in range(1, span):
                 target = target.merge(table.rows[row_index].cells[column + offset])
+            budget -= span - 1
             _fill_cell(target, cell, header=cell.name == "th")
             column += span
 

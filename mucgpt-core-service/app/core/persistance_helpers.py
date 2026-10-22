@@ -364,15 +364,6 @@ class PersistanceHelpers:
         )
 
     @staticmethod
-    async def delete_conversation_with_canvas(conversation_id: str, user_id: str) -> bool:
-        """Delete a conversation together with its canvas row; the erasure
-        transaction retires the ownership row and cascades the canvas."""
-        return (
-            await PersistanceHelpers.erase_conversation(conversation_id, user_id)
-            == "deleted"
-        )
-
-    @staticmethod
     async def erase_conversation(conversation_id: str, user_id: str) -> str:
         """Erase checkpoints and retire the ID under the ownership row's UPDATE lock.
 
@@ -439,13 +430,6 @@ class PersistanceHelpers:
             await CanvasRepository(session).upsert_canvas_revisions(
                 conversation_id, revisions
             )
-
-    @staticmethod
-    async def delete_canvas(conversation_id: str) -> bool:
-        """Delete the canvas row (content and revision rings). Returns True if a row was deleted."""
-        factory = PersistanceHelpers._get_session_factory()
-        async with factory.begin() as session:
-            return await CanvasRepository(session).delete_canvas(conversation_id)
 
     @staticmethod
     def _get_session_factory() -> async_sessionmaker[AsyncSession]:

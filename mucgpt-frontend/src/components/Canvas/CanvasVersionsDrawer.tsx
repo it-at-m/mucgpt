@@ -9,6 +9,17 @@ import type { CanvasControllerInstance } from "../../hooks/useCanvasController";
 import { canvasExtensions } from "./canvasExtensions";
 import styles from "./CanvasVersionsDrawer.module.css";
 
+// Registered once: previews are planned to gain links in v1.1, so any anchor that
+// survives sanitization must not navigate the app or leak window references.
+// Namespace-scoped so other DOMPurify consumers (e.g. SVG sanitization) stay untouched.
+DOMPurify.addHook("afterSanitizeAttributes", node => {
+    const element = node as Element;
+    if (element.namespaceURI === "http://www.w3.org/1999/xhtml" && element.tagName === "A") {
+        element.setAttribute("rel", "noopener noreferrer");
+        element.setAttribute("target", "_blank");
+    }
+});
+
 interface Props {
     open: boolean;
     onClose: () => void;
@@ -35,7 +46,14 @@ export const CanvasVersionsDrawer = ({ open, onClose, controller }: Props) => {
 
     const formatSource = (source: CanvasRevision["source"]) => t(`canvas.versions.source_${source}`);
 
-    const previewHtml = (docJson: unknown) => DOMPurify.sanitize(generateHTML(docJson as Parameters<typeof generateHTML>[0], canvasExtensions));
+    const previewHtml = (docJson: unknown) => {
+        try {
+            return DOMPurify.sanitize(generateHTML(docJson as Parameters<typeof generateHTML>[0], canvasExtensions), { USE_PROFILES: { html: true } });
+        } catch (error) {
+            console.error("Canvas revision preview failed:", error);
+            return "";
+        }
+    };
 
     return (
         <OverlayDrawer open={open} position="end" size="medium" onOpenChange={(_, data) => !data.open && onClose()}>
@@ -49,8 +67,8 @@ export const CanvasVersionsDrawer = ({ open, onClose, controller }: Props) => {
                         group.revisions.length > 0 && (
                             <section key={group.key} className={styles.group} aria-label={group.title}>
                                 <h3 className={styles.groupTitle}>{group.title}</h3>
-                                {group.revisions.map(revision => (
-                                    <article key={revision.revision} className={styles.revision}>
+                                {group.revisions.map((revision, index) => (
+                                    <article key={`${revision.source}-${revision.revision}-${index}`} className={styles.revision}>
                                         <div className={styles.revisionHeader}>
                                             <span className={styles.timestamp}>{formatTimestamp(revision.timestamp)}</span>
                                             <span className={styles.source}>{formatSource(revision.source)}</span>

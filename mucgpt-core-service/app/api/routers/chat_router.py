@@ -294,7 +294,9 @@ async def delete_conversation(
     """Return 204 after atomic erasure/retirement, including an owner's retry.
 
     Unknown IDs return 404, other owners receive 403, and cleanup failures return
-    500 with the protected ownership row retained for retry.
+    500 with the protected ownership row retained for retry. The conversation's
+    canvas row (content plus revision rings) is cascaded inside the same
+    transaction.
     """
     try:
         result = await PersistanceHelpers.erase_conversation(
@@ -313,21 +315,11 @@ async def delete_conversation(
     if result == "forbidden":
         raise HTTPException(status_code=403, detail="Conversation access denied")
 
-    # The canvas row (content plus revision rings) rides along with the delete.
-    # Best effort: the conversation is already gone, so a failed cleanup must
-    # not turn into a 500 — it would only leave an orphaned canvas row.
-    try:
-        await PersistanceHelpers.delete_canvas(conversation_id)
-    except Exception:
-        logger.exception("Failed to delete canvas for conversation %s", conversation_id)
-
 
 async def _authorize_conversation_access(conversation_id: str, user_id: str) -> None:
-    """Raise 404/403 like the delete endpoint when the conversation is missing
-    or does not belong to the caller."""
+    """404 for missing conversations, 403 for foreign ones."""
     if not await PersistanceHelpers.conversation_exists(conversation_id):
         raise HTTPException(status_code=404, detail="Conversation not found")
-
     if not await PersistanceHelpers.is_user_in_conversation(user_id, conversation_id):
         raise HTTPException(status_code=403, detail="Conversation access denied")
 

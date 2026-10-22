@@ -7,6 +7,7 @@ import { Editor } from "@tiptap/core";
 
 import { canvasExtensions } from "../components/Canvas/canvasExtensions";
 import { caretMarkdownOffset, markdownStorage, tableSelectionMarkdown, useCanvasController, type CanvasControllerInstance } from "./useCanvasController";
+import { CANVAS_STREAM_CONTENT_LIMIT, parseCanvasStreamEvent } from "../utils/canvasStream";
 import type { CanvasRevisions } from "../service/canvasStorage";
 
 (globalThis as Record<string, unknown>).IS_REACT_ACT_ENVIRONMENT = true;
@@ -139,6 +140,134 @@ describe("caretMarkdownOffset", () => {
         const editor = editorFor("Hello world");
         editor.chain().setTextSelection({ from: 3, to: 8 }).run();
         expect(caretMarkdownOffset(editor)).toBe(2);
+    });
+});
+
+describe("parseCanvasStreamEvent", () => {
+    it("accepts a valid event with revision metadata", () => {
+        expect(parseCanvasStreamEvent({ state: "UPDATE", content: "# Doc", metadata: { canvas_revision: 3 } })).toEqual({
+            state: "UPDATE",
+            content: "# Doc",
+            metadata: { canvas_revision: 3 }
+        });
+    });
+
+    it("accepts events without metadata and all four states", () => {
+        for (const state of ["STARTED", "UPDATE", "APPEND", "ENDED"] as const) {
+            expect(parseCanvasStreamEvent({ state, content: "" })).toEqual({ state, content: "" });
+        }
+    });
+
+    it("ignores non-string content", () => {
+        expect(parseCanvasStreamEvent({ state: "UPDATE", content: 5 })).toBeNull();
+        expect(parseCanvasStreamEvent({ state: "APPEND", content: null })).toBeNull();
+    });
+
+    it("ignores content beyond the size cap", () => {
+        expect(parseCanvasStreamEvent({ state: "APPEND", content: "A".repeat(CANVAS_STREAM_CONTENT_LIMIT) })).not.toBeNull();
+        expect(parseCanvasStreamEvent({ state: "APPEND", content: "A".repeat(CANVAS_STREAM_CONTENT_LIMIT + 1) })).toBeNull();
+    });
+
+    it("treats null metadata like absent metadata (canvas_edit UPDATE wire shape)", () => {
+        expect(parseCanvasStreamEvent({ state: "UPDATE", content: "x", metadata: null })).toEqual({
+            state: "UPDATE",
+            content: "x",
+            metadata: undefined
+        });
+    });
+
+    it("ignores events with a non-finite canvas_revision", () => {
+        expect(parseCanvasStreamEvent({ state: "UPDATE", content: "x", metadata: { canvas_revision: "1" } })).toBeNull();
+        expect(parseCanvasStreamEvent({ state: "UPDATE", content: "x", metadata: { canvas_revision: Number.NaN } })).toBeNull();
+        expect(parseCanvasStreamEvent({ state: "UPDATE", content: "x", metadata: 5 })).toBeNull();
+    });
+
+    it("ignores unknown states and non-object values", () => {
+        expect(parseCanvasStreamEvent({ state: "BROKEN", content: "x" })).toBeNull();
+        expect(parseCanvasStreamEvent(null)).toBeNull();
+        expect(parseCanvasStreamEvent("UPDATE")).toBeNull();
+    });
+});
+
+describe("applyStreamEvent", () => {
+    it("appends valid APPEND events to the document", () => {
+        const harness = renderController();
+        harness.render(undefined);
+        act(() => {
+            harness.current.setMarkdown("First");
+            harness.current.applyStreamEvent({ state: "APPEND", content: " Second" });
+        });
+        expect(harness.current.getMarkdown()).toBe("First Second");
+    });
+
+    it("applies UPDATE events only with a rising canvas_revision", () => {
+        const harness = renderController();
+        harness.render(undefined);
+        act(() => {
+            harness.current.applyStreamEvent({ state: "UPDATE", content: "newest", metadata: { canvas_revision: 2 } });
+        });
+        expect(harness.current.getMarkdown()).toBe("newest");
+        act(() => {
+            harness.current.applyStreamEvent({ state: "UPDATE", content: "stale", metadata: { canvas_revision: 1 } });
+        });
+        expect(harness.current.getMarkdown()).toBe("newest");
+    });
+
+    it("applies a first-of-run UPDATE with canvas_revision 0 after lock()", () => {
+        const harness = renderController();
+        harness.render(undefined);
+        act(() => {
+            harness.current.lock();
+            harness.current.applyStreamEvent({ state: "UPDATE", content: "zeroth", metadata: { canvas_revision: 0 } });
+        });
+        expect(harness.current.getMarkdown()).toBe("zeroth");
+        act(() => {
+            harness.current.applyStreamEvent({ state: "UPDATE", content: "replayed", metadata: { canvas_revision: 0 } });
+        });
+        expect(harness.current.getMarkdown()).toBe("zeroth");
+    });
+
+    it("applies a canvas_edit UPDATE whose metadata serialized as null", () => {
+        const harness = renderController();
+        harness.render(undefined);
+        const wireEvent = parseCanvasStreamEvent({ state: "UPDATE", content: "edited", metadata: null });
+        expect(wireEvent).not.toBeNull();
+        act(() => {
+            harness.current.applyStreamEvent(wireEvent!);
+        });
+        expect(harness.current.getMarkdown()).toBe("edited");
+    });
+});
+
+describe("loading stored revisions", () => {
+    it("degrades malformed revision rings to empty rings without crashing", async () => {
+        loadCanvasStateMock.mockResolvedValue(null);
+        loadCanvasRevisionsMock.mockResolvedValue({ auto: null, manual: [] } as unknown as CanvasRevisions);
+
+        const harness = renderController();
+        harness.render(undefined);
+
+        await harness.rerender("conv-1");
+
+        expect(harness.current.revisions).toEqual({ auto: [], manual: [] });
+    });
+
+    it("drops malformed ring entries when loading revisions", async () => {
+        loadCanvasStateMock.mockResolvedValue(null);
+        loadCanvasRevisionsMock.mockResolvedValue({
+            auto: [{ revision: 2, doc_json: { type: "doc" }, timestamp: 2, source: "agent" }, { revision: "x" }, null],
+            manual: "nope"
+        } as unknown as CanvasRevisions);
+
+        const harness = renderController();
+        harness.render(undefined);
+
+        await harness.rerender("conv-1");
+
+        expect(harness.current.revisions).toEqual({
+            auto: [{ revision: 2, doc_json: { type: "doc" }, timestamp: 2, source: "agent" }],
+            manual: []
+        });
     });
 });
 

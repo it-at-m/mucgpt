@@ -5,7 +5,7 @@ import type { Node as PMNode } from "@tiptap/pm/model";
 import type { EditorState } from "@tiptap/pm/state";
 
 import type { CanvasState } from "../api/models";
-import { loadCanvasRevisions, loadCanvasState, type CanvasRevision, type CanvasRevisions } from "../service/canvasStorage";
+import { loadCanvasRevisions, loadCanvasState, parseCanvasRevisions, type CanvasRevision, type CanvasRevisions } from "../service/canvasStorage";
 import type { CanvasStreamEvent } from "../utils/canvasStream";
 import { CANVAS_PERSISTENCE_RESET, persistentCaret } from "../components/Canvas/canvasSelectionPersistence";
 import { canvasExtensions } from "../components/Canvas/canvasExtensions";
@@ -125,7 +125,7 @@ export function useCanvasController(conversationId: string | undefined): CanvasC
     const [revisions, setRevisions] = useState<CanvasRevisions>(emptyRevisions);
 
     const nextRevisionRef = useRef(1);
-    const lastStreamRevisionRef = useRef(0);
+    const lastStreamRevisionRef = useRef(-1);
     // Tracks the conversation the switch effect last ran with; starts as a sentinel
     // (not undefined) so the initial mount load isn't mistaken for an id assignment.
     const prevConversationIdRef = useRef<string | undefined | "uninitialized">("uninitialized");
@@ -174,7 +174,7 @@ export function useCanvasController(conversationId: string | undefined): CanvasC
         // is sent and overwrites it server-side).
         if (previous === undefined && conversationId !== undefined && (isOpenRef.current || getMarkdown().trim())) return;
 
-        lastStreamRevisionRef.current = 0;
+        lastStreamRevisionRef.current = -1;
         nextRevisionRef.current = 1;
         setIsLocked(false);
         setIsOpen(false);
@@ -190,11 +190,12 @@ export function useCanvasController(conversationId: string | undefined): CanvasC
             loadCanvasRevisions(conversationId)
                 .then(stored => {
                     if (cancelled || !stored) return;
+                    const rings = parseCanvasRevisions(stored);
                     // Keep the monotonic revision counter ahead of the loaded rings so
                     // new snapshots never collide with stored revision numbers.
-                    const maxRevision = Math.max(0, ...stored.auto.map(entry => entry.revision), ...stored.manual.map(entry => entry.revision));
+                    const maxRevision = Math.max(0, ...rings.auto.map(entry => entry.revision), ...rings.manual.map(entry => entry.revision));
                     nextRevisionRef.current = maxRevision + 1;
-                    setRevisions(stored);
+                    setRevisions(rings);
                 })
                 .catch(error => console.error("Loading canvas revisions failed:", error));
             loadCanvasState(conversationId)
@@ -222,7 +223,7 @@ export function useCanvasController(conversationId: string | undefined): CanvasC
     // Called on RUN_STARTED: the server numbers canvas_revision per run,
     // so the monotonicity guard must reset per run, not per conversation.
     const lock = useCallback(() => {
-        lastStreamRevisionRef.current = 0;
+        lastStreamRevisionRef.current = -1;
         setIsLocked(true);
     }, []);
     const unlock = useCallback(() => setIsLocked(false), []);

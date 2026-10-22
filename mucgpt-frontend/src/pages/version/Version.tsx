@@ -27,7 +27,44 @@ const Version = () => {
 
             <div className={styles.versionRoot}>
                 <h1 className={styles.header}>{t("version.header")}</h1>
-                <Accordion multiple collapsible defaultOpenItems="2.0.1">
+                <Accordion multiple collapsible defaultOpenItems="2.0.2">
+                    <AccordionItem value="2.0.2">
+                        <AccordionHeader>[2.0.2]</AccordionHeader>
+                        <AccordionPanel>
+                            <div className={styles.panel}>
+                                <h2>Version 2.0.2</h2>
+
+                                <h3>Modelle</h3>
+                                <p>
+                                    <strong>gpt-5.6 luna</strong> und <strong>gpt-5.6 terra</strong> sind nun verfügbar.
+                                </p>
+
+                                <h3>Oberfläche</h3>
+                                <p>
+                                    <strong>Modelpicker:</strong> Der Modelpicker wurde in das Prompt-Input integriert und vereinfacht.
+                                </p>
+                                <p>
+                                    <strong>Teilen:</strong> Assistenten können nun auch über einen Link bzw. durch Klicken auf einen Button geteilt werden.
+                                </p>
+                                <p>
+                                    <strong>Design:</strong> Weitere Vereinheitlichung des Designs für die Sidebar (Chats), die Discovery-Seite und die
+                                    Assistenten-Detail-Sidebar.
+                                </p>
+                                <p>
+                                    <strong>Animation:</strong> Die Animation während das Sprachmodell nachdenkt, bis die erste Antwort kommt, wurde geändert.
+                                </p>
+                                <p>
+                                    <strong>Admins:</strong> Assistenten können nun von Admins als "empfohlen" gekennzeichnet werden.
+                                </p>
+
+                                <h3>Fehlerbehebungen</h3>
+                                <p>
+                                    <strong>Prompt-Input:</strong> Das Prompt-Input wächst nun korrekt und springt nicht mehr ständig hin und her, wenn man
+                                    mehrere Zeilen eingibt.
+                                </p>
+                            </div>
+                        </AccordionPanel>
+                    </AccordionItem>
                     <AccordionItem value="2.0.1">
                         <AccordionHeader>[2.0.1]</AccordionHeader>
                         <AccordionPanel>

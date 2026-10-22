@@ -557,7 +557,13 @@ class CanvasCustomAgent:
 
 
 @pytest.mark.asyncio
-async def test_run_agui_streams_canvas_chunks_as_custom_events():
+async def test_run_agui_streams_canvas_chunks_as_custom_events(monkeypatch):
+    langfuse_client = FakeLangfuseClient()
+    monkeypatch.setattr("agent.agent_executor.get_client", lambda: langfuse_client)
+    monkeypatch.setattr(
+        "agent.agent_executor.propagate_attributes",
+        lambda **_kwargs: nullcontext(),
+    )
     agent = CanvasCustomAgent()
     runner = MUCGPTAgentExecutor(agent)
 
@@ -579,3 +585,27 @@ async def test_run_agui_streams_canvas_chunks_as_custom_events():
     assert canvas_events[1].value["metadata"] == {"canvas_revision": 1}
     # non-canvas custom chunks stay internal (traced only, not streamed)
     assert not any(getattr(e, "name", None) == "Brainstorming" for e in events)
+
+    traced = langfuse_client.spans[0].updates[0]["output"]["events"]
+    assert [e["content"] for e in traced if e["stream"] == "custom"] == [
+        {
+            "tool_name": "Canvas",
+            "state": "STARTED",
+            "content_length": 0,
+            "content_preview": "",
+            "metadata": None,
+        },
+        {
+            "tool_name": "Canvas",
+            "state": "UPDATE",
+            "content_length": 5,
+            "content_preview": "# doc",
+            "metadata": {"canvas_revision": 1},
+        },
+        {
+            "state": "APPEND",
+            "content": "x",
+            "tool_name": "Brainstorming",
+            "metadata": None,
+        },
+    ]

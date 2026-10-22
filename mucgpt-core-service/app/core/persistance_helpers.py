@@ -200,15 +200,6 @@ class PersistanceHelpers:
             )
 
     @staticmethod
-    async def conversation_exists(conversation_id: str) -> bool:
-        """Check whether a conversation exists without checking its owner."""
-        factory = PersistanceHelpers._get_session_factory()
-        async with factory() as session:
-            return await ConversationRepository(session).conversation_exists(
-                conversation_id
-            )
-
-    @staticmethod
     async def get_conversation_messages(
         conversation_id: str,
     ) -> list[ConversationMessage]:
@@ -295,13 +286,20 @@ class PersistanceHelpers:
             ).set_chat_title_for_conversation(conversation_id, user_id, title)
 
     @staticmethod
-    async def delete_conversation_mapping(conversation_id: str, user_id: str) -> bool:
-        """Delete the conversation mapping row. Returns True if a row was deleted."""
+    async def delete_conversation_with_canvas(
+        conversation_id: str, user_id: str
+    ) -> bool:
+        """Delete the ownership row and the canvas row in one transaction, so a
+        failed canvas delete cannot orphan personal data behind a conversation
+        that no longer exists. Returns True if the ownership row was deleted."""
         factory = PersistanceHelpers._get_session_factory()
         async with factory.begin() as session:
-            return await ConversationRepository(session).delete_conversation_mapping(
+            deleted = await ConversationRepository(session).delete_conversation_mapping(
                 conversation_id, user_id
             )
+            if deleted:
+                await CanvasRepository(session).delete_canvas(conversation_id)
+            return deleted
 
     @staticmethod
     async def get_canvas(conversation_id: str) -> CanvasDocument | None:
@@ -332,13 +330,6 @@ class PersistanceHelpers:
             await CanvasRepository(session).upsert_canvas_revisions(
                 conversation_id, revisions
             )
-
-    @staticmethod
-    async def delete_canvas(conversation_id: str) -> bool:
-        """Delete the canvas row (content and revision rings). Returns True if a row was deleted."""
-        factory = PersistanceHelpers._get_session_factory()
-        async with factory.begin() as session:
-            return await CanvasRepository(session).delete_canvas(conversation_id)
 
     @staticmethod
     def _get_session_factory() -> async_sessionmaker[AsyncSession]:

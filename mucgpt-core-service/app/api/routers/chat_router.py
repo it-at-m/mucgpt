@@ -237,7 +237,6 @@ async def get_conversation_messages(
     summary="Delete conversation",
     status_code=204,
     responses={
-        403: {"description": "Forbidden"},
         404: {"description": "Not found"},
         500: {"description": "Internal Server Error"},
     },
@@ -246,14 +245,9 @@ async def delete_conversation(
     conversation_id: str,
     user_info: Annotated[AuthenticationResult, Depends(authenticate_user)],
 ) -> None:
-    """Delete the conversation: its ownership row and all LangGraph checkpoint state."""
-    if not await PersistanceHelpers.conversation_exists(conversation_id):
-        raise HTTPException(status_code=404, detail="Conversation not found")
-
-    if not await PersistanceHelpers.is_user_in_conversation(
-        user_info.user_id, conversation_id
-    ):
-        raise HTTPException(status_code=403, detail="Conversation access denied")
+    """Delete the conversation: its ownership row, its canvas row and all
+    LangGraph checkpoint state."""
+    await _authorize_conversation_access(conversation_id, user_info.user_id)
 
     checkpointer = PersistanceHelpers.get_checkpointer_if_ready()
     if checkpointer is None:
@@ -272,36 +266,34 @@ async def delete_conversation(
             status_code=500, detail="Failed to delete conversation"
         ) from e
 
-    deleted = await PersistanceHelpers.delete_conversation_mapping(
-        conversation_id, user_info.user_id
-    )
+    # Ownership row and canvas row are deleted in one transaction: a failed
+    # canvas delete rolls the ownership row back too, so no personal data is
+    # orphaned and the owner can retry.
+    try:
+        deleted = await PersistanceHelpers.delete_conversation_with_canvas(
+            conversation_id, user_info.user_id
+        )
+    except Exception as e:
+        logger.exception("Failed to delete conversation %s", conversation_id)
+        raise HTTPException(
+            status_code=500, detail="Failed to delete conversation"
+        ) from e
     if not deleted:
         raise HTTPException(status_code=404, detail="Conversation not found")
 
-    # The canvas row (content plus revision rings) rides along with the delete.
-    # Best effort: the conversation is already gone, so a failed cleanup must
-    # not turn into a 500 — it would only leave an orphaned canvas row.
-    try:
-        await PersistanceHelpers.delete_canvas(conversation_id)
-    except Exception:
-        logger.exception("Failed to delete canvas for conversation %s", conversation_id)
-
 
 async def _authorize_conversation_access(conversation_id: str, user_id: str) -> None:
-    """Raise 404/403 like the delete endpoint when the conversation is missing
-    or does not belong to the caller."""
-    if not await PersistanceHelpers.conversation_exists(conversation_id):
-        raise HTTPException(status_code=404, detail="Conversation not found")
-
+    """404 for missing and foreign conversations alike, so responses do not
+    reveal which conversation ids exist."""
     if not await PersistanceHelpers.is_user_in_conversation(user_id, conversation_id):
-        raise HTTPException(status_code=403, detail="Conversation access denied")
+        raise HTTPException(status_code=404, detail="Conversation not found")
 
 
 @router.get(
     "/conversations/{conversation_id}/canvas",
     summary="Get conversation canvas",
     response_model=CanvasResponse,
-    responses={403: {"description": "Forbidden"}, 404: {"description": "Not found"}},
+    responses={404: {"description": "Not found"}},
 )
 async def get_conversation_canvas(
     conversation_id: str,
@@ -319,7 +311,7 @@ async def get_conversation_canvas(
 @router.get(
     "/conversations/{conversation_id}/canvas/revisions",
     summary="Get conversation canvas revisions",
-    responses={403: {"description": "Forbidden"}, 404: {"description": "Not found"}},
+    responses={404: {"description": "Not found"}},
 )
 async def get_conversation_canvas_revisions(
     conversation_id: str,
@@ -339,7 +331,6 @@ async def get_conversation_canvas_revisions(
     summary="Replace conversation canvas revisions",
     status_code=204,
     responses={
-        403: {"description": "Forbidden"},
         404: {"description": "Not found"},
         413: {"description": "Revisions payload too large"},
     },

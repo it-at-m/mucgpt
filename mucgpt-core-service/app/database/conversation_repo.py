@@ -62,12 +62,6 @@ class ConversationRepository:
         )
         return [dict(row) for row in result.mappings().all()]
 
-    async def conversation_exists(self, conversation_id: str) -> bool:
-        result = await self.session.execute(
-            select(Chat.conversation_id).where(Chat.conversation_id == conversation_id)
-        )
-        return result.scalar_one_or_none() is not None
-
     async def set_chat_title_for_conversation(
         self, conversation_id: str, user_id: str, title: str
     ) -> bool:

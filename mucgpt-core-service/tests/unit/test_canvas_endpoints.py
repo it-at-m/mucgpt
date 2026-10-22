@@ -5,6 +5,7 @@ import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
+from api.api_models import CANVAS_CONTENT_MAX_CHARS
 from api.routers.chat_router import router as chat_router
 from core.auth import authenticate_user
 from core.auth_models import AuthenticationResult
@@ -59,9 +60,6 @@ def test_client(monkeypatch: pytest.MonkeyPatch) -> TestClient:
     app.dependency_overrides[authenticate_user] = _get_test_user
 
     monkeypatch.setattr(
-        PersistanceHelpers, "conversation_exists", AsyncMock(return_value=True)
-    )
-    monkeypatch.setattr(
         PersistanceHelpers, "is_user_in_conversation", AsyncMock(return_value=True)
     )
     monkeypatch.setattr(
@@ -85,18 +83,15 @@ def test_client(monkeypatch: pytest.MonkeyPatch) -> TestClient:
         PersistanceHelpers, "upsert_canvas_revisions", AsyncMock(return_value=None)
     )
     monkeypatch.setattr(
-        PersistanceHelpers, "delete_canvas", AsyncMock(return_value=True)
+        PersistanceHelpers,
+        "delete_conversation_with_canvas",
+        AsyncMock(return_value=True),
     )
     monkeypatch.setattr(
         PersistanceHelpers, "verify_user_in_conversation", AsyncMock(return_value=True)
     )
     monkeypatch.setattr(
         PersistanceHelpers, "has_checkpoint", AsyncMock(return_value=False)
-    )
-    monkeypatch.setattr(
-        PersistanceHelpers,
-        "delete_conversation_mapping",
-        AsyncMock(return_value=True),
     )
     monkeypatch.setattr(
         PersistanceHelpers,
@@ -120,24 +115,13 @@ class TestCanvasEndpoints:
         assert body["content"] == "# Title"
         assert body["updated_at"].startswith("2026-01-01")
 
-    def test_get_canvas_of_foreign_conversation_is_forbidden(
+    def test_get_canvas_of_foreign_conversation_is_not_found(
         self, test_client: TestClient, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         monkeypatch.setattr(
             PersistanceHelpers,
             "is_user_in_conversation",
             AsyncMock(return_value=False),
-        )
-
-        response = test_client.get(f"/v1/conversations/{CONVERSATION_ID}/canvas")
-
-        assert response.status_code == 403
-
-    def test_get_canvas_of_unknown_conversation_is_not_found(
-        self, test_client: TestClient, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
-        monkeypatch.setattr(
-            PersistanceHelpers, "conversation_exists", AsyncMock(return_value=False)
         )
 
         response = test_client.get(f"/v1/conversations/{CONVERSATION_ID}/canvas")
@@ -183,7 +167,7 @@ class TestCanvasEndpoints:
 
         assert response.status_code == 404
 
-    def test_get_canvas_revisions_of_foreign_conversation_is_forbidden(
+    def test_get_canvas_revisions_of_foreign_conversation_is_not_found(
         self, test_client: TestClient, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         monkeypatch.setattr(
@@ -196,7 +180,7 @@ class TestCanvasEndpoints:
             f"/v1/conversations/{CONVERSATION_ID}/canvas/revisions"
         )
 
-        assert response.status_code == 403
+        assert response.status_code == 404
 
     def test_put_canvas_revisions_overwrites(
         self, test_client: TestClient, monkeypatch: pytest.MonkeyPatch
@@ -254,7 +238,7 @@ class TestCanvasEndpoints:
         assert response.status_code == 204, response.text
         upsert_mock.assert_awaited_once()
 
-    def test_put_canvas_revisions_of_foreign_conversation_is_forbidden(
+    def test_put_canvas_revisions_of_foreign_conversation_is_not_found(
         self, test_client: TestClient, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         monkeypatch.setattr(
@@ -268,18 +252,33 @@ class TestCanvasEndpoints:
             json={"auto": [], "manual": []},
         )
 
-        assert response.status_code == 403
+        assert response.status_code == 404
 
     def test_delete_conversation_cascades_canvas(
         self, test_client: TestClient, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        delete_canvas_mock = AsyncMock(return_value=True)
-        monkeypatch.setattr(PersistanceHelpers, "delete_canvas", delete_canvas_mock)
+        delete_mock = AsyncMock(return_value=True)
+        monkeypatch.setattr(
+            PersistanceHelpers, "delete_conversation_with_canvas", delete_mock
+        )
 
         response = test_client.delete(f"/v1/conversations/{CONVERSATION_ID}")
 
         assert response.status_code == 204, response.text
-        delete_canvas_mock.assert_awaited_once_with(CONVERSATION_ID)
+        delete_mock.assert_awaited_once_with(CONVERSATION_ID, USER_ID)
+
+    def test_delete_conversation_canvas_failure_returns_500(
+        self, test_client: TestClient, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        monkeypatch.setattr(
+            PersistanceHelpers,
+            "delete_conversation_with_canvas",
+            AsyncMock(side_effect=RuntimeError("db down")),
+        )
+
+        response = test_client.delete(f"/v1/conversations/{CONVERSATION_ID}")
+
+        assert response.status_code == 500, response.text
 
     def test_persisted_chat_upserts_canvas_content(
         self, test_client: TestClient, monkeypatch: pytest.MonkeyPatch
@@ -298,6 +297,27 @@ class TestCanvasEndpoints:
 
         assert response.status_code == 200, response.text
         upsert_mock.assert_awaited_once_with(CONVERSATION_ID, "# Canvas")
+
+    def test_persisted_chat_rejects_oversized_canvas(
+        self, test_client: TestClient, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        upsert_mock = AsyncMock(return_value=None)
+        monkeypatch.setattr(PersistanceHelpers, "upsert_canvas", upsert_mock)
+        payload = {
+            "model": "gpt-4o-mini",
+            "messages": [{"role": "user", "content": "Hi"}],
+            "stream": False,
+            "conversation_id": CONVERSATION_ID,
+            "canvas": {
+                "content": "x" * (CANVAS_CONTENT_MAX_CHARS + 1),
+                "selection": None,
+            },
+        }
+
+        response = test_client.post("/v1/chat/completions", json=payload)
+
+        assert response.status_code == 422, response.text
+        upsert_mock.assert_not_awaited()
 
     def test_stateless_chat_does_not_upsert_canvas(
         self, test_client: TestClient, monkeypatch: pytest.MonkeyPatch

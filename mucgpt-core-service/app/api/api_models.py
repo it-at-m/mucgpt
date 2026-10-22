@@ -101,12 +101,21 @@ class ChatDataSource(BaseModel):
     )
 
 
+CANVAS_CONTENT_MAX_CHARS = 512 * 1024
+
+
 class CanvasState(BaseModel):
     """Client-side canvas document state."""
 
-    content: str = Field(..., description="Full GFM markdown document")
+    content: str = Field(
+        ...,
+        max_length=CANVAS_CONTENT_MAX_CHARS,
+        description="Full GFM markdown document",
+    )
     selection: str | None = Field(
-        None, description="Serialized markdown of the current selection, if any"
+        None,
+        max_length=CANVAS_CONTENT_MAX_CHARS,
+        description="Serialized markdown of the current selection, if any",
     )
     cursor: int | None = Field(
         None,

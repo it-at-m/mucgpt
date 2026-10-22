@@ -42,11 +42,6 @@ def stub_persistence(monkeypatch: pytest.MonkeyPatch) -> None:
     )
     monkeypatch.setattr(
         PersistanceHelpers,
-        "conversation_exists",
-        AsyncMock(return_value=True),
-    )
-    monkeypatch.setattr(
-        PersistanceHelpers,
         "has_checkpoint",
         AsyncMock(return_value=False),
     )
@@ -62,7 +57,7 @@ def stub_persistence(monkeypatch: pytest.MonkeyPatch) -> None:
     )
     monkeypatch.setattr(
         PersistanceHelpers,
-        "delete_conversation_mapping",
+        "delete_conversation_with_canvas",
         AsyncMock(return_value=True),
     )
     monkeypatch.setattr(
@@ -407,10 +402,12 @@ class TestChatRouter:
 
         # Shared parent records the call order across both mocks.
         calls = Mock()
-        calls.delete_mapping = AsyncMock(return_value=True)
+        calls.delete_with_canvas = AsyncMock(return_value=True)
         calls.adelete_thread = AsyncMock()
         monkeypatch.setattr(
-            PersistanceHelpers, "delete_conversation_mapping", calls.delete_mapping
+            PersistanceHelpers,
+            "delete_conversation_with_canvas",
+            calls.delete_with_canvas,
         )
         monkeypatch.setattr(
             PersistanceHelpers,
@@ -422,14 +419,17 @@ class TestChatRouter:
 
         assert response.status_code == 204, response.text
         assert response.content == b""
-        calls.delete_mapping.assert_awaited_once_with(
+        calls.delete_with_canvas.assert_awaited_once_with(
             DUMMY_CONVERSATION_ID, DUMMY_USER_ID
         )
         calls.adelete_thread.assert_awaited_once_with(DUMMY_CONVERSATION_ID)
         # Checkpoint state goes first so a failure never leaves it ownerless.
-        assert [c[0] for c in calls.mock_calls] == ["adelete_thread", "delete_mapping"]
+        assert [c[0] for c in calls.mock_calls] == [
+            "adelete_thread",
+            "delete_with_canvas",
+        ]
 
-    def test_delete_conversation_forbidden(
+    def test_delete_conversation_of_foreign_user_is_not_found(
         self, test_client: TestClient, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         from core.persistance_helpers import PersistanceHelpers
@@ -439,10 +439,17 @@ class TestChatRouter:
             "is_user_in_conversation",
             AsyncMock(return_value=False),
         )
+        adelete_thread = AsyncMock()
+        monkeypatch.setattr(
+            PersistanceHelpers,
+            "get_checkpointer_if_ready",
+            Mock(return_value=Mock(adelete_thread=adelete_thread)),
+        )
 
         response = test_client.delete(f"/v1/conversations/{DUMMY_CONVERSATION_ID}")
 
-        assert response.status_code == 403
+        assert response.status_code == 404
+        adelete_thread.assert_not_awaited()
 
     def test_delete_conversation_not_found(
         self, test_client: TestClient, monkeypatch: pytest.MonkeyPatch
@@ -451,36 +458,13 @@ class TestChatRouter:
 
         monkeypatch.setattr(
             PersistanceHelpers,
-            "conversation_exists",
-            AsyncMock(return_value=False),
-        )
-        monkeypatch.setattr(
-            PersistanceHelpers,
-            "delete_conversation_mapping",
+            "delete_conversation_with_canvas",
             AsyncMock(return_value=False),
         )
 
         response = test_client.delete(f"/v1/conversations/{DUMMY_CONVERSATION_ID}")
 
         assert response.status_code == 404
-
-    def test_delete_conversation_missing_is_not_forbidden(
-        self, test_client: TestClient, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
-        from core.persistance_helpers import PersistanceHelpers
-
-        monkeypatch.setattr(
-            PersistanceHelpers,
-            "conversation_exists",
-            AsyncMock(return_value=False),
-        )
-        is_user_mock = AsyncMock(return_value=False)
-        monkeypatch.setattr(PersistanceHelpers, "is_user_in_conversation", is_user_mock)
-
-        response = test_client.delete(f"/v1/conversations/{DUMMY_CONVERSATION_ID}")
-
-        assert response.status_code == 404
-        is_user_mock.assert_not_awaited()
 
     def test_delete_conversation_persistence_not_ready(
         self, test_client: TestClient, monkeypatch: pytest.MonkeyPatch
@@ -506,9 +490,9 @@ class TestChatRouter:
         checkpointer = Mock(
             adelete_thread=AsyncMock(side_effect=RuntimeError("db down"))
         )
-        mapping_mock = AsyncMock(return_value=True)
+        rows_mock = AsyncMock(return_value=True)
         monkeypatch.setattr(
-            PersistanceHelpers, "delete_conversation_mapping", mapping_mock
+            PersistanceHelpers, "delete_conversation_with_canvas", rows_mock
         )
         monkeypatch.setattr(
             PersistanceHelpers,
@@ -520,7 +504,7 @@ class TestChatRouter:
 
         assert response.status_code == 500, response.text
         checkpointer.adelete_thread.assert_awaited_once_with(DUMMY_CONVERSATION_ID)
-        mapping_mock.assert_not_awaited()
+        rows_mock.assert_not_awaited()
 
     @patch("api.routers.chat_router.init_agent", new_callable=AsyncMock)
     def test_streaming_completion(self, mock_init_agent, test_client: TestClient):

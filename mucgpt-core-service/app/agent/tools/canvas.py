@@ -111,23 +111,27 @@ def _next_revision(runtime: ToolRuntime | None) -> int:
 
 def _tool_result(
     runtime: ToolRuntime | None,
-    content: str,
-    updated_canvas: CanvasState | None = None,
-) -> str | Command:
+    updated_canvas: CanvasState,
+) -> Command:
     """Wrap a mutating tool's result so the updated canvas lands in graph state.
 
-    The Command must carry the terminating ToolMessage bound to the tool call id
-    (what the model sees); the ``canvas`` update keeps later tool calls and the
-    next model call in the same run on fresh content.
+    The ToolMessage carries only a short confirmation, not the full document:
+    it is persisted per tool call in the LangGraph checkpoint, while the next
+    model call re-injects the fresh document from graph state anyway.
+
+    The Command must carry the terminating ToolMessage bound to the tool call
+    id (what the model sees); the ``canvas`` update keeps later tool calls and
+    the next model call in the same run on fresh content.
     """
-    if updated_canvas is None:
-        return content
+    confirmation = (
+        f"Canvas document updated ({len(updated_canvas.content)} characters)."
+    )
     return Command(
         update={
             "canvas": updated_canvas,
             "messages": [
                 ToolMessage(
-                    content=content,
+                    content=confirmation,
                     tool_call_id=getattr(runtime, "tool_call_id", None) or "",
                 )
             ],
@@ -184,9 +188,7 @@ def make_canvas_write_tool(logger: Logger) -> BaseTool:
             metadata={"canvas_revision": _next_revision(runtime)},
         )
         # A full replace clears the selection (mirrors the client's setMarkdown).
-        return _tool_result(
-            runtime, content, CanvasState(content=content, selection=None)
-        )
+        return _tool_result(runtime, CanvasState(content=content, selection=None))
 
     canvas_write.metadata = {"mcp_group": CANVAS_MCP_GROUP}
     return canvas_write
@@ -243,7 +245,6 @@ def make_canvas_edit_tool(logger: Logger) -> BaseTool:
         _emit(writer, ToolStreamState.UPDATE, updated)
         return _tool_result(
             runtime,
-            updated,
             CanvasState(content=updated, selection=canvas.selection, cursor=cursor),
         )
 

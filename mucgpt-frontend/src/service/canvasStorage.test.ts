@@ -30,7 +30,7 @@ vi.mock("../api/core-client", () => ({
     getCanvasRevisionsApi: (...args: unknown[]) => getCanvasRevisionsApiMock(...args)
 }));
 
-import { canvasStorage, loadCanvasRevisions, loadCanvasState } from "./canvasStorage";
+import { canvasStorage, loadCanvasRevisions, loadCanvasState, parseCanvasRevisions } from "./canvasStorage";
 
 describe("loadCanvasState", () => {
     beforeEach(() => {
@@ -87,5 +87,48 @@ describe("loadCanvasRevisions", () => {
         getCanvasRevisionsApiMock.mockRejectedValue(new Error("server down"));
 
         expect(await loadCanvasRevisions("conv-3")).toBeNull();
+    });
+});
+
+describe("parseCanvasRevisions", () => {
+    it("degrades non-array rings to empty rings", () => {
+        expect(parseCanvasRevisions({ auto: null, manual: [] })).toEqual({ auto: [], manual: [] });
+        expect(parseCanvasRevisions({ auto: "nope", manual: 5 })).toEqual({ auto: [], manual: [] });
+    });
+
+    it("returns empty rings for non-object values", () => {
+        expect(parseCanvasRevisions(null)).toEqual({ auto: [], manual: [] });
+        expect(parseCanvasRevisions("garbage")).toEqual({ auto: [], manual: [] });
+    });
+
+    it("drops entries without a finite numeric revision or without a document", () => {
+        const valid = { revision: 2, doc_json: { type: "doc" }, timestamp: 2, source: "agent" as const };
+        expect(parseCanvasRevisions({ auto: [valid, { revision: "x" }, { revision: Number.POSITIVE_INFINITY }, { revision: 3 }, null], manual: [] })).toEqual({
+            auto: [valid],
+            manual: []
+        });
+    });
+
+    it("drops entries with a non-finite timestamp", () => {
+        const valid = { revision: 1, doc_json: { type: "doc" }, timestamp: 1, source: "agent" as const };
+        expect(
+            parseCanvasRevisions({
+                auto: [
+                    valid,
+                    { revision: 2, doc_json: {}, timestamp: "garbage", source: "agent" },
+                    { revision: 3, doc_json: {}, timestamp: Number.NaN },
+                    { revision: 4, doc_json: {} }
+                ],
+                manual: []
+            })
+        ).toEqual({ auto: [valid], manual: [] });
+    });
+
+    it("keeps well-formed rings untouched", () => {
+        const rings = {
+            auto: [{ revision: 1, doc_json: {}, timestamp: 1, source: "agent" as const }],
+            manual: [{ revision: 2, doc_json: {}, timestamp: 2, source: "manual" as const }]
+        };
+        expect(parseCanvasRevisions(rings)).toEqual(rings);
     });
 });

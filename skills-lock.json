@@ -5,13 +5,13 @@
       "source": "fastapi/fastapi",
       "sourceType": "github",
       "skillPath": "fastapi/.agents/skills/fastapi/SKILL.md",
-      "computedHash": "9feb517089c269af4fdab5031dea1100a92fd50081e906ccfaf8a971858e39f9"
+      "computedHash": "2f0ff30756b435168276e1a7eb78c07856118575ea174535de7ed86dc88c9be4"
     },
     "find-skills": {
       "source": "vercel-labs/skills",
       "sourceType": "github",
       "skillPath": "skills/find-skills/SKILL.md",
-      "computedHash": "9e1c8b3103f92fa8092568a44fe64858de7c5c9dc65ce4bea8f168080e889cfd"
+      "computedHash": "b146008599c31057cef1c145774cea5d5afb30e8f43fa802e47a4b461419aaaf"
     },
     "framework-selection": {
       "source": "langchain-ai/langchain-skills",
@@ -23,37 +23,37 @@
       "source": "langchain-ai/langchain-skills",
       "sourceType": "github",
       "skillPath": "config/skills/langchain-fundamentals/SKILL.md",
-      "computedHash": "7f23a1fb935bb09221a7fb4e50d484abbe3ba93767de832b1904cf9101ff1fe2"
+      "computedHash": "5a1ded1b185ed95aab2b795f6134ce1ea9c19dddc5d5c8f291b31c0db4f0e379"
     },
     "langchain-middleware": {
       "source": "langchain-ai/langchain-skills",
       "sourceType": "github",
       "skillPath": "config/skills/langchain-middleware/SKILL.md",
-      "computedHash": "8649cb289562f93beef2caeb8fa10792e1af6be9c829c585c39e1a9328b22fab"
+      "computedHash": "f8b6897ba1f027d56ff9fffa72d4d27d8e048232fe1e1c13e219df98969d55b0"
     },
     "langfuse": {
       "source": "langfuse/skills",
       "sourceType": "github",
       "skillPath": "skills/langfuse/SKILL.md",
-      "computedHash": "a72c15d6329867b84c4e7456f4e04d8c06ce5298d1d0068dbe864b8b00fb406c"
+      "computedHash": "ff5c606d22961ae0c70968e8944c73ce576a3a0a8422415861d6d7839a45539d"
     },
     "langgraph-docs": {
       "source": "langchain-ai/deepagents",
       "sourceType": "github",
-      "skillPath": "libs/cli/examples/skills/langgraph-docs/SKILL.md",
-      "computedHash": "bc33fbf2b3d1b0f8a93d2ccc52e1fef3ba193059418bccf9583f0c71780f6985"
+      "skillPath": "libs/code/examples/skills/langgraph-docs/SKILL.md",
+      "computedHash": "623b8c10cbb70f70ea875d1b0901f0fb0e174a837c2d6d10707627a46ae30631"
     },
     "langgraph-fundamentals": {
       "source": "langchain-ai/langchain-skills",
       "sourceType": "github",
       "skillPath": "config/skills/langgraph-fundamentals/SKILL.md",
-      "computedHash": "43a226ecc442ba6d6091eea39cf587a7583fa532e73db58259e35b1393c31418"
+      "computedHash": "71a81a229a520f2a887e12d9114684243eae6d910e951a316c4c8f81b3444dd8"
     },
     "transformers-js": {
       "source": "huggingface/skills",
       "sourceType": "github",
       "skillPath": "skills/transformers-js/SKILL.md",
-      "computedHash": "1fca591721276bc2bc240759320a10ed5165602c9dd639265d359acee5fb6388"
+      "computedHash": "f61c531d0cc9ee4cb714b5a651f4a7a939ce127f70333d44af179cbbb1663de1"
     }
   }
 }

@@ -4,7 +4,8 @@
     "hf-cli": {
       "source": "huggingface/skills",
       "sourceType": "github",
-      "computedHash": "90f4850d81eb5b8a6e15ff2e3cca19d760f93d16e1c060cf60460a3a0c4616db"
+      "skillPath": "skills/hf-cli/SKILL.md",
+      "computedHash": "455a5d7ffb745b07c7e6cd398ce844385af6f7cfa51f80dc9c4c0731f85d2c78"
     }
   }
 }

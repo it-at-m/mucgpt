@@ -217,7 +217,7 @@ export async function handleRegenerate(
  * @param enabled_tools - Optional array of enabled tool names
  * @param onToolStatusUpdate - Optional callback for tool status updates
  * @param persist - When false, the answer is streamed and rendered but never written to
- *                  storage or the history list. Used by the ephemeral assistant preview chat.
+ *                  storage, the history list or the backend. Used by the ephemeral assistant preview chat.
  */
 export const makeApiRequest = async (
     answers: any[],
@@ -266,6 +266,7 @@ export const makeApiRequest = async (
         enabled_tools: enabled_tools && enabled_tools.length > 0 ? enabled_tools : undefined,
         assistant_id: assistant_id,
         conversation_id: conversationId,
+        persist,
         data_sources: data_sources && data_sources.length > 0 ? data_sources : undefined
     };
 
@@ -531,7 +532,7 @@ export const makeApiRequest = async (
         if (fetchHistory) fetchHistory();
     } else {
         // Create a new chat with generated name
-        const chatname = await createChatName(question, finalResponse.answer, options.system ?? "");
+        const chatname = await createChatName(conversationId, question, finalResponse.answer, options.system ?? "");
 
         // For assistant chats, keep the assistant-prefixed local storage key while
         // reusing the same canonical conversation id sent to the backend.

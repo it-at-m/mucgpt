@@ -7,8 +7,11 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import StreamingResponse
 
 from api.api_models import (
+    ChatCompletionMessage,
     ChatCompletionRequest,
     ChatCompletionResponse,
+    ConversationMessage,
+    ConversationMetadata,
 )
 from api.exception import llm_exception_handler
 from config.model_provider import ModelRegistry, ModelsConfigurationException
@@ -16,6 +19,7 @@ from config.settings import get_settings
 from core.auth import authenticate_user
 from core.auth_models import AuthenticationResult
 from core.logtools import getLogger
+from core.persistance_helpers import PersistanceHelpers
 from init_app import init_agent
 
 logger = getLogger()
@@ -68,6 +72,34 @@ def get_temperature_from_request(request: ChatCompletionRequest) -> float:
     return 0.5
 
 
+async def get_messages_for_agent(
+    request: ChatCompletionRequest, user_id: str
+) -> list[ChatCompletionMessage]:
+    """Authorize the conversation and pick the messages the agent receives.
+
+    A stateless request (``persist=False``) runs on the full client history. A
+    persisted conversation is seeded with the full history on its first turn so
+    the system prompt and existing browser-held turns are retained; once state
+    exists, only the newest user message is appended to avoid duplicating it.
+    """
+    if not request.persist:
+        return request.messages
+
+    # Verify the conversation belongs to this user (row is created on first use).
+    authorized = await PersistanceHelpers.verify_user_in_conversation(
+        user_id, request.conversation_id, request.assistant_id
+    )
+    if not authorized:
+        raise HTTPException(
+            status_code=403,
+            detail=f"User {user_id} is not authorized to access conversation {request.conversation_id}",
+        )
+
+    if await PersistanceHelpers.has_checkpoint(request.conversation_id):
+        return [request.messages[-1]]
+    return request.messages
+
+
 @router.post(
     "/chat/completions",
     summary="Create chat completion",
@@ -75,53 +107,44 @@ def get_temperature_from_request(request: ChatCompletionRequest) -> float:
     response_model=ChatCompletionResponse,
     responses={
         200: {"description": "Successful Response"},
+        400: {"description": "Bad Request"},
+        403: {"description": "Forbidden"},
         500: {"description": "Internal Server Error"},
     },
 )
-async def chat_completions(
+async def chat_endpoint(
     request: ChatCompletionRequest,
-    user_info: AuthenticationResult = Depends(authenticate_user),
+    user_info: Annotated[AuthenticationResult, Depends(authenticate_user)],
 ) -> StreamingResponse | ChatCompletionResponse:
     """
     OpenAI-compatible chat completion endpoint (streaming or non-streaming)
     """
-    # TODO: init_agent currently rebuilds the tool collection and LangChain agent
-    # for every message, even within the same chat. Consider introducing a
-    # user-scoped tool/runtime cache while keeping assistant/chat-specific
-    # enabled tools, prompts, data sources, and policy state request-scoped.
+    if not request.conversation_id:
+        raise HTTPException(status_code=400, detail="conversation_id is required")
+    if not request.messages:
+        raise HTTPException(status_code=400, detail="messages must not be empty")
+    if request.messages[-1].role != "user":
+        raise HTTPException(
+            status_code=400, detail="last message must have role 'user'"
+        )
+
     try:
-        try:
-            ModelRegistry.get_model(request.model)
-        except ModelsConfigurationException as exc:
-            detail = str(exc)
-            status_code = 400
-            if "not initialized" in detail.lower():
-                status_code = 500
-            raise HTTPException(status_code=status_code, detail=detail) from exc
+        messages_for_agent = await get_messages_for_agent(request, user_info.user_id)
 
-        ae = await init_agent(user_info=user_info, model_name=request.model)
-        if request.conversation_id:
-            logger.debug(
-                "Received conversation_id=%s",
-                request.conversation_id,
-                extra={"conversation_id": request.conversation_id},
-            )
-
-        # Convert creativity to temperature
+        agent = await init_agent(
+            user_info=user_info, model_name=request.model, persist=request.persist
+        )
         temperature = get_temperature_from_request(request)
-
-        # Use enabled_tools from request if provided, otherwise use no tool
         enabled_tools = request.enabled_tools or []
-
-        # Structured data sources for request context
         data_sources = (
             [source.model_dump() for source in request.data_sources]
             if request.data_sources
             else None
         )
+
         if request.stream:
-            gen = ae.run_with_streaming(
-                messages=request.messages,
+            gen = agent.run_with_streaming(
+                messages=messages_for_agent,
                 temperature=temperature,
                 model=request.model,
                 user_info=user_info,
@@ -132,29 +155,116 @@ async def chat_completions(
                 reasoning_effort=request.reasoning_effort,
             )
 
-            async def sse_generator():
+            async def sse_generator() -> AsyncGenerator[str]:
                 async for chunk in gen:
                     yield f"data: {json.dumps(chunk)}\n\n"
+                yield "data: [DONE]\n\n"
 
             return StreamingResponse(sse_generator(), media_type="text/event-stream")
-        else:
-            return await ae.run_without_streaming(
-                messages=request.messages,
-                temperature=temperature,
-                model=request.model,
-                user_info=user_info,
-                enabled_tools=enabled_tools,
-                assistant_id=request.assistant_id,
-                data_sources=data_sources,
-                conversation_id=request.conversation_id,
-                reasoning_effort=request.reasoning_effort,
-            )
+
+        response = await agent.run_without_streaming(
+            messages=messages_for_agent,
+            temperature=temperature,
+            model=request.model,
+            user_info=user_info,
+            enabled_tools=enabled_tools,
+            assistant_id=request.assistant_id,
+            data_sources=data_sources,
+            conversation_id=request.conversation_id,
+            reasoning_effort=request.reasoning_effort,
+        )
+
+        return response
     except HTTPException:
         raise
     except Exception as e:
         logger.exception("Exception in /chat/completions")
         msg = llm_exception_handler(ex=e, logger=logger)
-        raise HTTPException(status_code=500, detail=msg)
+        raise HTTPException(status_code=500, detail=msg) from e
+
+
+@router.get(
+    "/conversations",
+    summary="List the caller's conversations",
+    response_model=list[ConversationMetadata],
+)
+async def list_conversations(
+    user_info: Annotated[AuthenticationResult, Depends(authenticate_user)],
+) -> list[ConversationMetadata]:
+    """Return the authenticated user's conversations as metadata (no messages),
+    most recently active first."""
+    rows = await PersistanceHelpers.get_conversations_for_user(user_info.user_id)
+    return [ConversationMetadata(**row) for row in rows]
+
+
+@router.get(
+    "/conversations/{conversation_id}/messages",
+    summary="Get conversation messages",
+    response_model=list[ConversationMessage],
+    response_model_exclude_defaults=True,
+    responses={403: {"description": "Forbidden"}, 404: {"description": "Not found"}},
+)
+async def get_conversation_messages(
+    conversation_id: str,
+    user_info: Annotated[AuthenticationResult, Depends(authenticate_user)],
+) -> list[ConversationMessage]:
+    """Return the user/assistant chain from the conversation's latest checkpoint."""
+    if not await PersistanceHelpers.is_user_in_conversation(
+        user_info.user_id, conversation_id
+    ):
+        raise HTTPException(status_code=403, detail="Conversation access denied")
+
+    messages = await PersistanceHelpers.get_conversation_messages(conversation_id)
+    if not messages:
+        raise HTTPException(status_code=404, detail="Conversation not found")
+    return messages
+
+
+@router.delete(
+    "/conversations/{conversation_id}",
+    summary="Delete conversation",
+    status_code=204,
+    responses={
+        403: {"description": "Forbidden"},
+        404: {"description": "Not found"},
+        500: {"description": "Internal Server Error"},
+    },
+)
+async def delete_conversation(
+    conversation_id: str,
+    user_info: Annotated[AuthenticationResult, Depends(authenticate_user)],
+) -> None:
+    """Delete the conversation: its ownership row and all LangGraph checkpoint state."""
+    if not await PersistanceHelpers.conversation_exists(conversation_id):
+        raise HTTPException(status_code=404, detail="Conversation not found")
+
+    if not await PersistanceHelpers.is_user_in_conversation(
+        user_info.user_id, conversation_id
+    ):
+        raise HTTPException(status_code=403, detail="Conversation access denied")
+
+    checkpointer = PersistanceHelpers.get_checkpointer_if_ready()
+    if checkpointer is None:
+        raise HTTPException(status_code=500, detail="Persistence not initialized")
+
+    # Delete the checkpoint state before the ownership row. If the row went first
+    # and this failed, the orphaned state would be handed to whoever next sends
+    # this conversation_id. Keeping the row on failure lets the owner retry.
+    try:
+        await checkpointer.adelete_thread(conversation_id)
+    except Exception as e:
+        logger.exception(
+            "Failed to delete checkpoint state for conversation %s", conversation_id
+        )
+        raise HTTPException(
+            status_code=500, detail="Failed to delete conversation"
+        ) from e
+
+    deleted = await PersistanceHelpers.delete_conversation_mapping(
+        conversation_id, user_info.user_id
+    )
+    if not deleted:
+        raise HTTPException(status_code=404, detail="Conversation not found")
 
 
 @router.post(
@@ -165,6 +275,7 @@ async def chat_completions(
     responses={
         200: {"description": "Successful Response"},
         400: {"description": "Bad Request"},
+        403: {"description": "Forbidden"},
         500: {"description": "Internal Server Error"},
     },
 )
@@ -178,7 +289,9 @@ async def ag_ui_chat_endpoint(
     if not chat_request.messages:
         raise HTTPException(status_code=400, detail="messages must not be empty")
     if not chat_request.messages[-1].role == "user":
-        raise HTTPException(status_code=400, detail="Last message must be from the user (role='user')")
+        raise HTTPException(
+            status_code=400, detail="Last message must be from the user (role='user')"
+        )
 
     try:
         ModelRegistry.get_model(chat_request.model)
@@ -189,10 +302,16 @@ async def ag_ui_chat_endpoint(
             status_code = 500
         raise HTTPException(status_code=status_code, detail=detail) from exc
 
+    messages_for_agent = await get_messages_for_agent(chat_request, user_info.user_id)
+
     encoder = EventEncoder(accept=request.headers.get("accept"))
-    agent = await init_agent(user_info=user_info, model_name=chat_request.model)
+    agent = await init_agent(
+        user_info=user_info,
+        model_name=chat_request.model,
+        persist=chat_request.persist,
+    )
     events = agent.run_agui_with_streaming(
-        messages=chat_request.messages,
+        messages=messages_for_agent,
         temperature=get_temperature_from_request(chat_request),
         model=chat_request.model,
         user_info=user_info,

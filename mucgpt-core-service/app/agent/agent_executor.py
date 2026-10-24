@@ -261,6 +261,7 @@ class MUCGPTAgentExecutor:
                 self.base_config,
                 RunnableConfig(
                     configurable={
+                        "thread_id": conversation_id,
                         "llm_temperature": temperature,
                         "reasoning_effort": reasoning_effort,
                         "llm": model,
@@ -454,6 +455,7 @@ class MUCGPTAgentExecutor:
             token_usage = TokenUsage()
             request_config = RunnableConfig(
                 configurable={
+                    "thread_id": conversation_id,
                     "llm_temperature": temperature,
                     "reasoning_effort": reasoning_effort,
                     "llm": model,
@@ -621,7 +623,7 @@ class MUCGPTAgentExecutor:
                     config=config,
                 ):
                     if stream_mode == "custom":
-                        # Only traced, not streamed (matches run_with_streaming trace).
+                        # Only traced, not streamed.
                         try:
                             trace_events.append(
                                 {

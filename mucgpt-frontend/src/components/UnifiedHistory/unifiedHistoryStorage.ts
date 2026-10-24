@@ -3,6 +3,8 @@ import { StorageService, type DBObject } from "../../service/storage";
 import { ASSISTANT_STORE, CHAT_STORE } from "../../constants";
 import type { Assistant, ChatResponse } from "../../api";
 import { getOwnedCommunityAssistants } from "../../api/assistant-client";
+import { deletePersistedConversationApi } from "../../api/conversations-client";
+import { syncConversationHistory } from "../../service/conversationHistory";
 
 interface StoredChatOptions {
     system: string;
@@ -74,6 +76,9 @@ export class UnifiedHistoryStorage {
     private readonly assistantChatStorage = this.assistantStorage.getChatStorageService();
 
     async getAllHistoryEntries(): Promise<UnifiedHistoryEntry[]> {
+        await syncConversationHistory().catch(error => {
+            console.error("Failed to synchronize conversation history", error);
+        });
         const [normalChats, assistantStoreEntries] = await Promise.all([this.chatStorage.getAll(), this.assistantChatStorage.getAll()]);
 
         return [
@@ -83,6 +88,8 @@ export class UnifiedHistoryStorage {
     }
 
     async deleteEntry(entry: UnifiedHistoryEntry): Promise<void> {
+        const conversationId = entry.assistantId ? entry.id.slice(AssistantStorageService.GENERATE_BOT_CHAT_PREFIX(entry.assistantId).length) : entry.id;
+        await deletePersistedConversationApi(conversationId);
         if (entry.kind === "assistant") {
             const deleted = await this.assistantChatStorage.delete(entry.id);
             if (!deleted) {

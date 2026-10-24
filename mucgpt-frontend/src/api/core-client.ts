@@ -1,4 +1,4 @@
-import { getConfig, getHeaders, handleApiRequest, handleRedirect, postConfig, postFormDataConfig } from "./fetch-utils";
+import { deleteConfig, getConfig, getHeaders, handleApiRequest, handleRedirect, postConfig, postFormDataConfig } from "./fetch-utils";
 import {
     ApplicationConfig,
     AssistantDraftRequest,
@@ -40,6 +40,7 @@ function toChatCompletionBody(options: ChatRequest) {
         ...(options.enabled_tools ? { enabled_tools: options.enabled_tools } : {}),
         ...(options.assistant_id ? { assistant_id: options.assistant_id } : {}),
         ...(options.conversation_id ? { conversation_id: options.conversation_id } : {}),
+        ...(options.persist === false ? { persist: false } : {}),
         ...(options.data_sources ? { data_sources: options.data_sources } : {})
     };
 }
@@ -117,9 +118,10 @@ export async function checkAssistantComplianceApi(input: ComplianceCheckRequest)
     return handleApiRequest(() => fetch(API_BASE + "v1/compliance/check", postConfig(input)), "Failed to run compliance check");
 }
 
-export async function createChatName(query: string, answer: string, system_message: string) {
+export async function createChatName(conversationId: string, query: string, answer: string, system_message: string) {
     const url = API_BASE + "v1/generations/chat-title";
     const body = {
+        conversation_id: conversationId,
         query,
         answer,
         system_message
@@ -129,6 +131,23 @@ export async function createChatName(query: string, answer: string, system_messa
 
     const generatedName = parsedResponse.title;
     return generatedName || "New Chat";
+}
+
+/**
+ * Deletes a conversation's server-side state. Best effort: a 404 (the chat never
+ * reached the server) counts as deleted, and other failures are only logged so
+ * local deletion never depends on the backend.
+ */
+export async function deleteConversationApi(conversationId: string): Promise<void> {
+    try {
+        const response = await fetch(API_BASE + "v1/conversations/" + encodeURIComponent(conversationId), deleteConfig());
+        handleRedirect(response);
+        if (!response.ok && response.status !== 404) {
+            console.error(`Failed to delete conversation ${conversationId} on the server: ${response.status}`);
+        }
+    } catch (error) {
+        console.error(`Failed to delete conversation ${conversationId} on the server`, error);
+    }
 }
 
 /**

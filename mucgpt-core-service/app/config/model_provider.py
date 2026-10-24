@@ -93,6 +93,8 @@ class ModelRegistry:
             or cls._default_reasoning_efforts.get(model_name)
             or cls._fallback_reasoning_effort
         )
+
+        logging.getLogger(__name__).debug("Requested reasoning effort %r for model %s", effort, model_name)
         supported = cls._supported_reasoning_efforts.get(model_name)
         if effort is None or not supported or effort in supported:
             return effort
@@ -106,7 +108,7 @@ class ModelRegistry:
                 -REASONING_EFFORT_ORDER.index(e),
             ),
         )
-        logging.getLogger(__name__).debug(
+        logging.getLogger(__name__).warning(
             "Reasoning effort %r not supported by %s, using %r",
             effort,
             model_name,

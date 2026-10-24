@@ -1182,7 +1182,10 @@ export const handlers = [
 
     http.post("/api/backend/v1/generations/chat-title", async ({ request }) => {
         await delay(250);
-        const body = (await request.json()) as { query?: string; answer?: string; system_message?: string };
+        const body = (await request.json()) as { conversation_id?: string; query?: string; answer?: string; system_message?: string };
+        if (!body.conversation_id?.trim()) {
+            return HttpResponse.json({ detail: "conversation_id is required" }, { status: 422 });
+        }
         const fallback = body.query?.trim() || "New Chat";
         const words = fallback
             .replace(/["']/g, "")
@@ -1193,6 +1196,15 @@ export const handlers = [
             .filter(Boolean)
             .slice(0, 4);
         return HttpResponse.json({ title: words.join(" ") || "New Chat" });
+    }),
+
+    http.get("/api/backend/v1/conversations", () => HttpResponse.json([])),
+
+    http.get("/api/backend/v1/conversations/:conversationId/messages", () => new HttpResponse(null, { status: 404 })),
+
+    http.delete("/api/backend/v1/conversations/:conversationId", async () => {
+        await delay(100);
+        return new HttpResponse(null, { status: 204 });
     }),
 
     http.get("/api/assistant", ({ request }) => {

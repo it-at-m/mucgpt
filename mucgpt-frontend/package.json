@@ -43,7 +43,7 @@
         "@vite-pwa/assets-generator": "^1.0.2",
         "@vitejs/plugin-react": "6.0.5",
         "brace-expansion": "5.0.12",
-        "eslint": "9.39.5",
+        "eslint": "10.13.0",
         "eslint-plugin-react": "7.37.5",
         "msw": "2.12.14",
         "prettier": "3.8.5",

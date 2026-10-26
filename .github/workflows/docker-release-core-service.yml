@@ -109,11 +109,14 @@ jobs:
           VERSION: ${{ steps.vars.outputs.version }}
           DIGEST: ${{ steps.build.outputs.digest }}
           IMAGE: ghcr.io/${{ steps.vars.outputs.repo_lowercase }}/mucgpt-core
+          OPENCODE_IMAGE: registry.opencode.de/landeshauptstadt-muenchen/mucgpt/mucgpt-core
         run: |
           notes=$(cat <<EOF
           ## Container image
 
           \`$IMAGE:$VERSION\`
+
+          Also available at \`$OPENCODE_IMAGE:$VERSION\`
 
           Digest: \`$DIGEST\`
           EOF
@@ -124,3 +127,30 @@ jobs:
             --title "Core service $VERSION" \
             --generate-notes \
             --notes "$notes"
+      - name: Log in to openCode container registry
+        if: steps.existing-release.outputs.exists != 'true'
+        continue-on-error: true
+        uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
+        with:
+          registry: registry.opencode.de
+          username: ${{ secrets.OPENCODE_REGISTRY_USERNAME }}
+          password: ${{ secrets.OPENCODE_REGISTRY_TOKEN }}
+      - name: Push image to openCode container registry
+        if: steps.existing-release.outputs.exists != 'true'
+        continue-on-error: true
+        env:
+          SOURCE: ghcr.io/${{ steps.vars.outputs.repo_lowercase }}/mucgpt-core@${{ steps.build.outputs.digest }}
+          OPENCODE_IMAGE: registry.opencode.de/landeshauptstadt-muenchen/mucgpt/mucgpt-core
+          VERSION: ${{ steps.vars.outputs.version }}
+        run: |
+          TAGS=("$OPENCODE_IMAGE:$VERSION")
+          if [ "$VERSION" != "latest" ]; then
+            TAGS+=("$OPENCODE_IMAGE:latest")
+          fi
+          ARGS=()
+          for tag in "${TAGS[@]}"; do
+            ARGS+=(-t "$tag")
+          done
+          docker buildx imagetools create "${ARGS[@]}" "$SOURCE"
+          echo "Copied image to openCode container registry:"
+          printf '  %s\n' "${TAGS[@]}"

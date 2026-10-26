@@ -13,7 +13,7 @@ maintainers = [
 ]
 requires-python = ">=3.13"
 dependencies = [
-    "asgi-correlation-id==4.3.4",
+    "asgi-correlation-id==5.0.1",
     "asyncpg>=0.30.0",
     "fastapi[standard]==0.135.4",
     "joserfc==1.6.8",

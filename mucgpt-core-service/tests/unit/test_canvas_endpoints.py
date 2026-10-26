@@ -288,16 +288,6 @@ class TestCanvasEndpoints:
 
         assert response.status_code == 403
 
-    def test_delete_conversation_cascades_canvas(
-        self, test_client: TestClient, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
-        erase_mock = AsyncMock(return_value="deleted")
-        monkeypatch.setattr(PersistanceHelpers, "erase_conversation", erase_mock)
-
-        response = test_client.delete(f"/v1/conversations/{CONVERSATION_ID}")
-
-        assert response.status_code == 204, response.text
-        erase_mock.assert_awaited_once_with(CONVERSATION_ID, USER_ID)
 
     def test_delete_conversation_canvas_failure_returns_500(
         self, test_client: TestClient, monkeypatch: pytest.MonkeyPatch

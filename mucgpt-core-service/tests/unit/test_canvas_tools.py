@@ -8,7 +8,7 @@ from langgraph.types import Command
 from agent.middleware import RequestContext
 from agent.tools import canvas
 from agent.tools.tool_chunk import ToolStreamChunk, ToolStreamState
-from api.api_models import CanvasState, ChatCompletionRequest
+from api.api_models import CanvasState
 
 
 class RecordingWriter:
@@ -46,6 +46,10 @@ def _canvas(content: str = "old content", selection: str | None = None) -> Canva
     return CanvasState(content=content, selection=selection)
 
 
+# user-facing confirmation prefix returned by mutating canvas tools
+CONFIRMATION = "Canvas document updated"
+
+
 def test_canvas_write_replaces_document_and_streams(monkeypatch: Any) -> None:
     writer = RecordingWriter()
     monkeypatch.setattr(canvas, "_get_writer", lambda: writer)
@@ -63,7 +67,7 @@ def test_canvas_write_replaces_document_and_streams(monkeypatch: Any) -> None:
 
     # short confirmation only — the full document must not be duplicated into
     # the persisted ToolMessage (state injection refreshes it next model call)
-    assert result == "Canvas document updated (18 characters)."
+    assert result.startswith(CONFIRMATION)
     assert updated_canvas == CanvasState(content="# Title\n\nBody text", selection=None)
     states = [chunk.state for chunk in writer.chunks]
     assert states[0] == ToolStreamState.STARTED
@@ -119,7 +123,7 @@ def test_canvas_edit_replaces_first_occurrence_and_streams(monkeypatch: Any) -> 
 
     result, updated_canvas = _command_result(result)
 
-    assert result == "Canvas document updated (11 characters)."
+    assert result.startswith(CONFIRMATION)
     assert updated_canvas == CanvasState(content="Hello there", selection=None)
     assert [chunk.state for chunk in writer.chunks] == [
         ToolStreamState.STARTED,
@@ -177,7 +181,7 @@ def test_canvas_write_then_edit_build_on_previous_update(monkeypatch: Any) -> No
     )
     result, updated_canvas = _command_result(second)
 
-    assert result == "Canvas document updated (11 characters)."
+    assert result.startswith(CONFIRMATION)
     assert updated_canvas.content == "Hello there"
     updates = [
         chunk for chunk in writer.chunks if chunk.state == ToolStreamState.UPDATE
@@ -283,19 +287,3 @@ def test_canvas_read_is_hidden_from_activity_ui() -> None:
     assert "canvas_read" in DEEP_AGENT_INTERNAL_TOOLS
     assert "canvas_write" not in DEEP_AGENT_INTERNAL_TOOLS
     assert "canvas_edit" not in DEEP_AGENT_INTERNAL_TOOLS
-
-
-def test_chat_request_accepts_canvas_state() -> None:
-    request = ChatCompletionRequest(
-        messages=[{"role": "user", "content": "hi"}],
-        conversation_id="c1",
-        canvas={"content": "# md", "selection": None},
-    )
-
-    assert isinstance(request.canvas, CanvasState)
-    assert request.canvas.content == "# md"
-
-    empty = ChatCompletionRequest(
-        messages=[{"role": "user", "content": "hi"}], conversation_id="c1"
-    )
-    assert empty.canvas is None

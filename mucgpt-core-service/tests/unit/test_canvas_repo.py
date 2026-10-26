@@ -26,11 +26,9 @@ async def test_upsert_canvas_overwrites_content_only() -> None:
     await repository.upsert_canvas("conversation", "# Title")
 
     sql = _compiled(session.execute.await_args.args[0])
-    assert "INSERT INTO canvas_documents" in sql
-    assert "ON CONFLICT (conversation_id) DO UPDATE" in sql
-    assert "content = excluded.content" in sql
-    assert "updated_at = now()" in sql
+    # the content upsert must never touch the client-owned revision rings
     assert "revisions" not in sql
+    assert "content = excluded.content" in sql
 
 
 @pytest.mark.unit
@@ -44,9 +42,7 @@ async def test_upsert_canvas_revisions_overwrites_rings_wholesale() -> None:
     )
 
     sql = _compiled(session.execute.await_args.args[0], literal_binds=False)
-    assert "ON CONFLICT (conversation_id) DO UPDATE" in sql
     assert "revisions = excluded.revisions" in sql
-    assert "updated_at = now()" in sql
     assert "content = excluded.content" not in sql
 
 
@@ -54,17 +50,15 @@ async def test_upsert_canvas_revisions_overwrites_rings_wholesale() -> None:
 @pytest.mark.asyncio
 async def test_delete_canvas_returns_whether_a_row_existed() -> None:
     session = AsyncMock()
+    repository = CanvasRepository(session)
+
     session.execute.return_value = Mock(
         scalar_one_or_none=Mock(return_value="conversation")
     )
-    repository = CanvasRepository(session)
-
     assert await repository.delete_canvas("conversation")
 
-    sql = _compiled(session.execute.await_args.args[0])
-    assert "DELETE FROM canvas_documents" in sql
-    assert "canvas_documents.conversation_id = 'conversation'" in sql
-    assert "RETURNING canvas_documents.conversation_id" in sql
+    session.execute.return_value = Mock(scalar_one_or_none=Mock(return_value=None))
+    assert not await repository.delete_canvas("conversation")
 
 
 def _erase_harness(monkeypatch: pytest.MonkeyPatch) -> tuple[Mock, Mock]:

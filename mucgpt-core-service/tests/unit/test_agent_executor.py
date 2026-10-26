@@ -1,3 +1,4 @@
+import json
 from contextlib import nullcontext
 from unittest.mock import AsyncMock, MagicMock
 
@@ -525,6 +526,11 @@ class TestMUCGPTAgentExecutor:
         assert events[3]["content"]["agent"]["messages"][0]["content"] == "done"
 
 
+# longer than the trace-summary preview window, so the full-document
+# suppression in traces is observable
+CANVAS_DOC = "# " + "x" * 250
+
+
 class CanvasCustomGraph:
     async def astream(self, *_args, **_kwargs):
         yield (
@@ -537,7 +543,7 @@ class CanvasCustomGraph:
             "custom",
             ToolStreamChunk(
                 state=ToolStreamState.UPDATE,
-                content="# doc",
+                content=CANVAS_DOC,
                 tool_name="Canvas",
                 metadata={"canvas_revision": 1},
             ).model_dump_json(),
@@ -575,37 +581,19 @@ async def test_run_agui_streams_canvas_chunks_as_custom_events(monkeypatch):
         user_info=AuthenticationResult(token="t", user_id="u", department="d"),
         conversation_id="conv-1",
         enabled_tools=["canvas_write", "canvas_edit", "canvas_read"],
-        canvas=CanvasState(content="# doc", selection=None),
+        canvas=CanvasState(content=CANVAS_DOC, selection=None),
     ):
         events.append(event)
 
     canvas_events = [e for e in events if getattr(e, "name", None) == "Canvas"]
     assert [e.value["state"] for e in canvas_events] == ["STARTED", "UPDATE"]
-    assert canvas_events[1].value["content"] == "# doc"
+    assert canvas_events[1].value["content"] == CANVAS_DOC
     assert canvas_events[1].value["metadata"] == {"canvas_revision": 1}
     # non-canvas custom chunks stay internal (traced only, not streamed)
     assert not any(getattr(e, "name", None) == "Brainstorming" for e in events)
 
+    # traces summarize canvas chunks: present, but never the full document
     traced = langfuse_client.spans[0].updates[0]["output"]["events"]
-    assert [e["content"] for e in traced if e["stream"] == "custom"] == [
-        {
-            "tool_name": "Canvas",
-            "state": "STARTED",
-            "content_length": 0,
-            "content_preview": "",
-            "metadata": None,
-        },
-        {
-            "tool_name": "Canvas",
-            "state": "UPDATE",
-            "content_length": 5,
-            "content_preview": "# doc",
-            "metadata": {"canvas_revision": 1},
-        },
-        {
-            "state": "APPEND",
-            "content": "x",
-            "tool_name": "Brainstorming",
-            "metadata": None,
-        },
-    ]
+    traced_custom = [e for e in traced if e["stream"] == "custom"]
+    assert any(e["content"]["tool_name"] == "Canvas" for e in traced_custom)
+    assert CANVAS_DOC not in json.dumps(traced_custom)

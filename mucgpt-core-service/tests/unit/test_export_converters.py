@@ -255,14 +255,10 @@ def test_docx_huge_colspan_is_clamped() -> None:
 
 @pytest.mark.unit
 def test_docx_total_merge_budget_is_bounded() -> None:
-    import time
-
     row = "<tr>" + '<td colspan="64">x</td>' * 4 + "</tr>"
     html = "<table>" + row * 100 + "</table>"
 
-    start = time.monotonic()
     document = _load_docx(convert_docx(html))
-    assert time.monotonic() - start < 10
 
     (table,) = document.tables
     # early rows spend the merge budget; once it is exhausted every

@@ -1,17 +1,10 @@
 # MUCGPT Repository Instructions
 
-These instructions apply to all coding agents and automated development tools
-working in this repository.
+These instructions apply to all coding agents and automated development tools working in this repository.
 
 ## Scoped instructions
 
-When working inside mucgpt-frontend, also follow:
-
-mucgpt-frontend/AGENTS.md
-
-Frontend-specific architecture, Fluent UI, styling, accessibility and design-system rules are defined there and are mandatory for frontend changes.
-
-For UI and styling decisions, DESIGN.md is the source of truth for the MUCGPT design system.
+When working inside `mucgpt-frontend/`, also follow `mucgpt-frontend/AGENTS.md` — frontend-specific architecture, Fluent UI, styling, accessibility and design-system rules are defined there and are mandatory for frontend changes. For UI and styling decisions, `DESIGN.md` is the source of truth for the MUCGPT design system.
 
 ## What this is
 
@@ -21,21 +14,21 @@ MUCGPT is a web interface to LLMs for public administration (it@M / City of Muni
 
 Four independently-versioned, independently-deployed components, each with its own `pyproject.toml`/`package.json`, `Dockerfile`, `uv.lock`, and CI workflow:
 
-- **`mucgpt-core-service/`** — Python 3.13 / FastAPI. LLM agent orchestration (LangGraph), tools, chat, document parsing, server-side chat persistence. The heart of the system.
+- **`mucgpt-core-service/`** — Python 3.13 / FastAPI. LLM agent orchestration (LangGraph/Deep Agents), tools, document parsing. The heart of the system.
 - **`mucgpt-assistant-service/`** — Python 3.13 / FastAPI. CRUD + sharing of assistant configurations; departments/users via LDAP; talks to Postgres.
 - **`mucgpt-assistant-service-migrations/`** — Alembic migrations for the assistant service's Postgres schema (run-once container).
-- **`mucgpt-frontend/`** — React 19 + TypeScript + Vite, Fluent UI, i18next. MSW mocks the backend in dev.
+- **`mucgpt-frontend/`** — React 19 + TypeScript + Vite 8 (Rolldown), Fluent UI v9, i18next, PWA. MSW mocks the backend in dev.
 
-The root `pyproject.toml` is a thin dev wrapper (ruff + pre-commit). Real dependency sets live in each service.
+The root `pyproject.toml` is only a dev wrapper (ruff + pre-commit); its pytest/ruff paths are stale. **Run all commands from inside the relevant service directory**, never from the root.
 
 ## Commands
 
-All Python services use **uv** and are managed from inside their own directory (`cd mucgpt-core-service` etc.).
+All Python services use **uv** and are managed from inside their own directory:
 
 ```bash
 # Python service (run inside the service dir)
 uv sync --all-extras            # install deps
-uv run pytest                   # run all tests (config in that service's pyproject.toml)
+uv run pytest                   # all tests (CI does exactly this; no infra needed)
 uv run pytest tests/unit        # one suite / dir
 uv run pytest tests/unit/test_foo.py::test_bar   # single test
 uv run pytest -m "not integration"               # skip integration-marked tests
@@ -44,58 +37,73 @@ uv run ruff check --fix         # lint + autofix
 
 # Frontend (inside mucgpt-frontend/)
 npm run dev          # Vite dev server WITH MSW API mocking (no backend needed)
-npm run dev-no-mock  # Vite dev server hitting the real container stack
+npm run dev-no-mock  # Vite dev server; proxies /api to the stack gateway on localhost:8083
 npm run lint         # prettier --check + eslint + tsc --noEmit
 npm run fix          # prettier --write + eslint --fix
 npm run build        # tsc && vite build
-
-# Full local stack (inside stack/) — Postgres, Keycloak, Valkey, gateway, all services
-podman compose up -d
-podman compose -f docker-compose.yml -f docker-compose.dev.yml up   # routes gateway to LOCALLY-running services
 ```
 
-Pre-commit: `uv run pre-commit install` (ruff lint+format, hooks in `.pre-commit-config.yaml`).
+- Pre-commit: `uv run pre-commit install` — ruff lint+format, gitleaks, and a hook that runs `npm run fix` in the frontend whenever `mucgpt-frontend/src/` files change.
+- Node >= 24 required (`engines` in `package.json`).
 
-Tests are marked `unit` / `integration` (registered as pytest markers; the services use `--strict-markers`).
+## Testing quirks
+
+- **No real infrastructure needed.** `pytest-env` (in each service's `pyproject.toml`) injects fake config env vars (`MUCGPT_CORE_MODELS`, `MUCGPT_ASSISTANT_DB__*`, …), so tests run without `config.yaml`, LLM endpoints, Postgres, or Redis. Assistant-service "integration" tests use aiosqlite, not Postgres.
+- Tests are split by **directory** (`tests/unit/`, `tests/integration/`); "integration" here means FastAPI `TestClient` router tests, not external services.
+- Only the `integration` marker is actually used in tests. Core registers `unit`/`integration`; assistant registers only `integration` (`--strict-markers`), so `-m unit` errors there — use `-m "not integration"`.
 
 ## Configuration model
 
-Each Python service is configured by a **`config.yaml`** (see each service's `config.yaml.example`, and `stack/*.config.yaml.example`). Settings are pydantic-settings with **env-var overrides** that win over YAML. Nesting uses a `__` delimiter and a per-service prefix:
+Each Python service is configured by a **`config.yaml`** (see each service's `config.yaml.example`, and `stack/*.config.yaml.example`). Settings are pydantic-settings with nesting via `__` and a per-service prefix:
 
 - core-service: `MUCGPT_CORE_` (e.g. `MUCGPT_CORE_REDIS__HOST=valkey`)
 - assistant-service + migrations: `MUCGPT_ASSISTANT_` (e.g. `MUCGPT_ASSISTANT_DB__PASSWORD=...`)
 
-Priority: constructor/init (tests) > env vars (incl. `.env`) > `config.yaml`. core config covers MODELS/Langfuse/MCP/Redis/SSO; assistant config covers DB/Redis/LDAP/SSO.
+Source priority (core): constructor/init (tests) > env vars > `config.yaml` > `shared-config.yaml` > `.env`. Core config covers MODELS/Langfuse/MCP/Redis/SSO/INTERNET_SEARCH; assistant config covers DB/Redis/LDAP/SSO.
 
 ## Core service architecture (`mucgpt-core-service/app/`)
 
-Entry: `app.py` → `backend.py` builds the FastAPI app, mounts `api_app` at `/api/`, and includes routers from `api/routers/` (`chat`, `conversations`, `tools`, `parsing`, `system`). `init_app.py` has `warmup_app`/`destroy_app` lifespan hooks.
+Entry: `app.py` → `backend.py` builds the FastAPI app, mounts `api_app` at `/api/`, and includes routers from `api/routers/`: `chat`, `compliance`, `generation`, `parsing`, `system`, `tools` (all under `/v1`). `init_app.py` has `warmup_app`/`destroy_app` lifespan hooks; `init_agent()` builds the tool collection + agent **per message** (known TODO, see `chat_router.py`).
 
-**Agent** (`agent/`): `react_agent.py` wraps LangChain's `create_agent` (LangGraph) in `_ConfiguredLangChainAgentGraph`. The compiled graph is reused across invocations and uses `DefaultAgentState` as its stable, compile-time state schema. Request-specific model settings (`extra_body`, `user`, selected LLM alternative) and the enabled-tool allowlist are passed through `RequestContext`; `middleware.py` applies them to each model request and handles tool errors.
+**Agent** (`agent/`): `deep_agent.py::MUCGPTAgent` wraps LangChain **Deep Agents** (`deepagents.create_deep_agent`) in `_ConfiguredLangChainDeepAgentGraph`. The graph is compiled once and reused; `DefaultAgentState` is fixed at compile time (per-request schema selection is no longer supported — see comment after PR #1177; `agent/tools/tools.py::select_agent_state_schema` still exists but its result is not used for the compiled graph). `agent_executor.py` drives the agent and emits OpenAI-compatible `ChatCompletionChunk` streams with Langfuse tracing.
 
-- **Tool status messages.** `ToolStatusMiddleware` adds a required `status_message` argument to every tool definition the model sees (a one-line, user-facing description of the call) and strips it again before the tool runs, so tools and MCP servers never receive it. The frontend shows it as the live activity label. It must stay after `ContextMiddleware`, which filters tools as `BaseTool` objects; from there on tools are flat `{name, description, parameters}` dicts.
-- **State schema is not selected per request.** LangGraph state schemas are fixed when the reusable graph is compiled. The stable schema name is added to Langfuse trace metadata, while enabled tools remain request-scoped and are filtered by middleware.
-- **Tools** live in `agent/tools/` (`brainstorm`, `simplify`, `internet_search`, plus MCP tools loaded dynamically by `mcp.py::McpLoader`). `tools.py::ToolCollection` is the registry; `tools_router.py` exposes them. `tools.py` also defines `make_retrieval_tool` (`RetrievePMDocs`), which queries a configurable retrieval backend (`RETRIEVAL.API_URL` / `MUCGPT_CORE_RETRIEVAL__API_URL`) across configurable PM-document collections and returns reranked matches — like `internet_search`, it's only added to the tool list when `is_retrieval_configured()` is true (i.e. `RETRIEVAL.API_URL` is set).
-- **Prompts** are Markdown files in `agent/prompt_pool/` and `create_assistant/`, read at import time — edit the `.md`, not string literals.
+- **`checkpointer=None` is deliberate** in `create_deep_agent`. Chat persistence is request-authoritative: the client resends full history each turn; `conversation_id` is accepted but unused server-side (history lives client-side in IndexedDB). Don't "fix" this by attaching the checkpointer.
+- Request-specific settings (`model`, `extra_body`, `user`, temperature, `enabled_tools`, `data_sources`) flow through `RequestContext` (the graph's `context_schema`); `middleware.py` (`ContextMiddleware`, `ToolStatusMiddleware`, `ToolErrorMiddleware`, `TokenUsageMiddleware`) applies them per model request. `ContextMiddleware` injects request `data_sources` into the prompt. `ToolStatusMiddleware` adds a required `status_message` argument to every tool definition and strips it again before the tool runs (the frontend shows it as the live activity label) — it must stay **after** `ContextMiddleware`, which filters tools as `BaseTool` objects; from there on tools are flat `{name, description, parameters}` dicts.
 
-**Chat persistence is request-authoritative.** The client resends full history each turn and supplies conversation IDs. The LangGraph **checkpointer is deliberately kept OFF the chat-serving graphs** (`checkpointer=None` in every `create_agent` call) so that no `thread_id` is required and the `add_messages` reducer can't double messages. It's held dormant on the object only for a possible future resume path. Server-side history is persisted separately via `database/conversation_repo.py` and the `conversations_router`. Don't "fix" this by attaching the checkpointer.
+**Tools** (`agent/tools/`): **read `agent/tools/README.md` first** — it's the authoritative guide.
+- Local tools use the `LocalTool` spec pattern (`spec.py`): add a module with `TOOL = LocalTool(id=..., factory=..., metadata=..., is_configured=...)` and register it in `LOCAL_TOOLS` in `tools.py`; `get_tools()` and `GET /v1/tools` pick it up automatically.
+- MCP tools are a **config change only** (`MCP` settings / `MUCGPT_CORE_MCP__...`), loaded per-user by `mcp.py::McpLoader` and cached in Redis with distributed locking — that caching is load-bearing, don't simplify it away. `McpBearerAuthProvider` forwards the per-user token to MCP servers.
+- `internet_search` is only added when `INTERNET_SEARCH.SEARXNG_URL` is set (`is_configured()`).
 
-**Parsing** (`parsing/`): factory pattern; Kreuzberg is the only backend (note: Kreuzberg is ELv2-licensed, not MIT).
+**Prompts** are Markdown files in `agent/prompt_pool/` (incl. `generation_prompts/` for assistant title/description/system-prompt generation and `compliance_prompts/`), read at import time — edit the `.md`, not string literals.
+
+**Compliance**: `compliance_router` + `core/compliance.py` screen assistant prompts against EU AI Act high-risk categories (feature flag `AI_ACT_COMPLIANCE_CHECK_ENABLED`). Tuning workflow: `app/scripts/run_compliance_experiment.py` + the repo skill `compliance-prompt-improvement` (`.agents/skills/`).
+
+**Parsing** (`parsing/`): factory pattern; Xberg (`xberg.py`) is the only backend (Kreuzberg is ELv2-licensed, not MIT).
 
 ## Assistant service architecture (`mucgpt-assistant-service/app/`)
 
 Standard FastAPI + SQLAlchemy (async) + Postgres. Routers in `api/routers/` (`assistants`, `users`, `department`, `system`). `database/` uses a generic `repo.py` + specialized `assistant_repo.py`. `core/organization/` loads org structure from LDAP (`ldap_loader.py`) with a `directory_cache`. Schema changes go through the **separate migrations component** (Alembic) — never hand-edit the live schema.
 
-**Migrations** (`mucgpt-assistant-service-migrations/`): a standalone, run-once container whose entrypoint is `uv run migrations/run_migrations.py` (Alembic under the hood). Behavior is controlled entirely via env vars (documented in the script's own docstring): `MIGRATION_REVISION` (default `head`), `MIGRATION_LOG_LEVEL`, `MIGRATION_CHECK_ONLY` (validate config without migrating), `MIGRATION_SHOW_SQL`, `MIGRATION_DB_TIMEOUT`/`MIGRATION_DB_RETRIES`/`MIGRATION_DB_RETRY_DELAY` (connection retry tuning).
+**Migrations** (`mucgpt-assistant-service-migrations/`): standalone, run-once container, entrypoint `uv run migrations/run_migrations.py`. Controlled entirely via env vars (see the script's docstring): `MIGRATION_REVISION` (default `head`), `MIGRATION_LOG_LEVEL`, `MIGRATION_CHECK_ONLY`, `MIGRATION_SHOW_SQL`, `MIGRATION_DB_TIMEOUT`/`MIGRATION_DB_RETRIES`/`MIGRATION_DB_RETRY_DELAY`.
+
+## Frontend notes
+
+- API clients in `src/api/` (`core-client`, `assistant-client`, `user-client`); MSW handlers in `src/mocks/` back mocked dev mode. Pages in `src/pages/`, shared UI in `src/components/`.
+- The dev server proxies `/api` → `http://localhost:8083` (the gateway), so `dev-no-mock` needs the stack running.
+- GitHub Pages builds use base `/mucgpt/` (`npm run build:ghpages` / `deploy`).
 
 ## Conventions
 
-- run python tooling with uv or uvx (e.g. `uvx --from onnx python -c ...` for one-off scripts or `uv run pytest` for project tests) and never pip install into a system python.
-- Ruff selects `E,F,I,UP`, ignores `E501,E701`. Python target 3.13 (services), formatted/linted via pre-commit.
+- Run Python tooling with uv/uvx (e.g. `uvx --from onnx python -c ...` for one-off scripts, `uv run pytest` for project tests); never pip install into a system Python.
+- Ruff selects `E,F,I,UP`, ignores `E501,E701`; target py313 (per-service config).
 - Commits use **gitmoji** (e.g. `✨`, see recent history); branches `feat/...`, PRs against `main`.
-- Frontend API clients are in `src/api/` (`core-client`, `assistant-client`, `conversations-client`, `user-client`); MSW handlers in `src/mocks/` back the mocked dev mode. Pages in `src/pages/`, shared UI in `src/components/`.
-- Gateway path routing: `/api/backend/**` → core, `/api/assistant/**` → assistant, `/api/sso/**` → Keycloak, `/**` → frontend.
+- Gateway path routing (see `stack/docker-compose.yml`): `/api/backend/**` → core (rewritten to `/api/...`), `/api/assistant/**`, `/api/user/**`, `/api/directory/**` → assistant, `/api/sso/**` → Keycloak, `/**` → frontend.
+
+## Release / deploy
+
+Images are released per component by pushing a tag `mucgpt-{frontend,core,assistant,assistant-migrations}-<version>` (triggers the matching `docker-release-*.yml` workflow); a frontend tag also redeploys GitHub Pages. Use the interactive `tag-version.ps1` (bumps the manifest version via `uv version`/package.json and creates+pushes the tag) or tag manually per `docs/DEVELOPMENT.md`.
 
 ## Docs worth reading
 
-`docs/GETTING_STARTED.md` (config, LDAP, SSO, MCP setup), `docs/DEVELOPMENT.md` (uv workflow, image release via git tags, MCP credential security note), `stack/README.md` (compose topology, ports, config), `DESIGN.md`, `docs/FEATURES.md` (user-facing feature descriptions — e.g. it describes chat history as staying local in the browser; that's the simplified user-facing view, not the technical one above).
+`docs/GETTING_STARTED.md` (config, LDAP, SSO, MCP setup), `docs/DEVELOPMENT.md` (uv workflow, release tags, MCP credential security note), `stack/README.md` (compose topology, ports — gateway :8083, Keycloak :8100 `admin/admin`, needs a `keycloak` hosts entry), `mucgpt-core-service/app/agent/tools/README.md` (tool handling), `DESIGN.md`. Note: `docs/FEATURES.md` is the user-facing view (e.g. "chat history stays in the browser") — the technical truth is in the sections above.

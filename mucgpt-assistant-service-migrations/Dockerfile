@@ -72,5 +72,6 @@ ENV PYTHONWARNINGS="ignore"
 
 ENV APP_VERSION=${IMAGE_VERSION}
 
-# Run migrations by default using uv
-ENTRYPOINT ["uv", "run", "migrations/run_migrations.py"]
+USER 1001
+
+CMD ["python", "migrations/run_migrations.py"]

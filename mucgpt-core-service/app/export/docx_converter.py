@@ -18,8 +18,8 @@ _LIST_STYLES = {
     (True, 3): "List Number 3",
 }
 
-# Tiptap's GFM schema is the gatekeeper; span/mark (e.g. colors) are not
-# produced yet and degrade to plain runs here.
+# The canvas schema is the gatekeeper and produces only GFM nodes; anything
+# else degrades to plain runs here.
 _INLINE_FORMAT: dict[str, dict[str, bool]] = {
     "strong": {"bold": True},
     "b": {"bold": True},

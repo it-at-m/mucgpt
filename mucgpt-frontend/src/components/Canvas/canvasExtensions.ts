@@ -9,8 +9,10 @@ import { CanvasSelectionPersistence } from "./canvasSelectionPersistence";
 
 /**
  * Canvas schema. The schema is the gatekeeper: only nodes that
- * round-trip through GFM may be produced. Underline is therefore disabled — GFM cannot
- * express it and the v1 HTML allowlist is empty. Hard-break parsing is on.
+ * round-trip through GFM may be produced. Underline is therefore disabled —
+ * GFM cannot express it and raw HTML is not allowed in the canvas, so HTML
+ * markup would only show up as literal text (the Markdown parser runs with
+ * html: false). Hard-break parsing is on.
  */
 export const canvasExtensions = [
     StarterKit.configure({

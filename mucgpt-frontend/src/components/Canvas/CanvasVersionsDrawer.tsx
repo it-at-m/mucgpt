@@ -9,7 +9,7 @@ import type { CanvasControllerInstance } from "../../hooks/useCanvasController";
 import { canvasExtensions } from "./canvasExtensions";
 import styles from "./CanvasVersionsDrawer.module.css";
 
-// Registered once: previews are planned to gain links in v1.1, so any anchor that
+// Revision previews are rendered via dangerouslySetInnerHTML, so any link that
 // survives sanitization must not navigate the app or leak window references.
 // Namespace-scoped so other DOMPurify consumers (e.g. SVG sanitization) stay untouched.
 DOMPurify.addHook("afterSanitizeAttributes", node => {

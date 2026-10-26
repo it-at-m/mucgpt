@@ -107,6 +107,71 @@ def test_canvas_write_rejects_empty_content(monkeypatch: Any) -> None:
     assert writer.chunks == []
 
 
+def test_canvas_write_rejects_raw_html(monkeypatch: Any) -> None:
+    writer = RecordingWriter()
+    monkeypatch.setattr(canvas, "_get_writer", lambda: writer)
+    tool = canvas.make_canvas_write_tool(_logger())
+
+    result = tool.invoke(
+        {
+            "content": "Hello <u>underlined</u> world",
+            "canvas_state": _canvas(),
+            "runtime": _runtime(),
+        }
+    )
+
+    assert result.startswith("Error:")
+    assert "GitHub-Flavored Markdown" in result
+    assert writer.chunks == []
+
+
+def test_canvas_write_allows_html_inside_code(monkeypatch: Any) -> None:
+    writer = RecordingWriter()
+    monkeypatch.setattr(canvas, "_get_writer", lambda: writer)
+    tool = canvas.make_canvas_write_tool(_logger())
+
+    fenced = "# Config\n\n```text\n<div>not html</div>\n```"
+    result, updated_canvas = _command_result(
+        tool.invoke(
+            {"content": fenced, "canvas_state": _canvas(), "runtime": _runtime()}
+        )
+    )
+
+    assert result.startswith(CONFIRMATION)
+    assert updated_canvas.content == fenced
+    inline = "use `a < b` comparisons"
+    result, _ = _command_result(
+        tool.invoke(
+            {
+                "content": inline,
+                "canvas_state": updated_canvas,
+                "runtime": _runtime(revision=1),
+            }
+        )
+    )
+
+    assert result.startswith(CONFIRMATION)
+
+
+def test_canvas_edit_rejects_raw_html_in_new_text(monkeypatch: Any) -> None:
+    writer = RecordingWriter()
+    monkeypatch.setattr(canvas, "_get_writer", lambda: writer)
+    tool = canvas.make_canvas_edit_tool(_logger())
+
+    result = tool.invoke(
+        {
+            "old_text": "world",
+            "new_text": "<u>there</u>",
+            "canvas_state": _canvas("Hello world"),
+            "runtime": _runtime(),
+        }
+    )
+
+    assert result.startswith("Error:")
+    assert "GitHub-Flavored Markdown" in result
+    assert writer.chunks == []
+
+
 def test_canvas_edit_replaces_first_occurrence_and_streams(monkeypatch: Any) -> None:
     writer = RecordingWriter()
     monkeypatch.setattr(canvas, "_get_writer", lambda: writer)

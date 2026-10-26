@@ -22,8 +22,7 @@ export interface CanvasController {
     lock(): void;
     unlock(): void;
     getMarkdown(): string;
-    /** expandMarks: selection-expansion rule, v1.1 */
-    getSelectionMarkdown(opts?: { expandMarks?: boolean }): string | null;
+    getSelectionMarkdown(): string | null;
     /** Full replace; clears selection */
     setMarkdown(md: string): void;
     /** Null when closed or empty */
@@ -228,9 +227,7 @@ export function useCanvasController(conversationId: string | undefined): CanvasC
     }, []);
     const unlock = useCallback(() => setIsLocked(false), []);
 
-    const getSelectionMarkdown = useCallback((opts?: { expandMarks?: boolean } | undefined): string | null => {
-        // expandMarks (selection-expansion rule) is deferred to v1.1.
-        void opts?.expandMarks;
+    const getSelectionMarkdown = useCallback((): string | null => {
         const current = editorRef.current;
         if (!current) return null;
         const { from, to, empty } = current.state.selection;

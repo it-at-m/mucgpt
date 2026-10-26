@@ -6,8 +6,8 @@ import { canvasExtensions } from "./canvasExtensions";
 
 /**
  * Round-trip property test: the markdown serializer must be
- * idempotent for every structure the canvas allows — serialize(parse(serialize(doc))) ==
- * serialize(doc). Fixture-driven, so v1.1 color fixtures slot in without restructuring.
+ * idempotent for every structure the canvas allows —
+ * serialize(parse(serialize(doc))) == serialize(doc). Fixture-driven.
  */
 const FIXTURES: Array<{ name: string; markdown: string }> = [
     {

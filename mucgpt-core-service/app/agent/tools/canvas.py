@@ -1,3 +1,4 @@
+import re
 from collections.abc import Iterator
 from logging import Logger
 from typing import Annotated, Any
@@ -75,6 +76,26 @@ NO_CANVAS_ERROR = (
     "Error: no canvas is active for this conversation. "
     "The canvas tools are only available while the user has the canvas open."
 )
+
+HTML_NOT_ALLOWED_ERROR = (
+    "Error: canvas content must be GitHub-Flavored Markdown without raw HTML tags "
+    "(e.g. <b> or <u>). Use GFM formatting instead (e.g. **bold**)."
+)
+
+# HTML-tag syntax outside code; whatever the editor's html:false Markdown parser
+# would treat as inline HTML and render as literal text.
+_HTML_TAG = re.compile(r"</?[a-zA-Z][a-zA-Z0-9]*(\s[^<>]*)?/?>")
+
+# Fenced code blocks and inline code spans may legitimately contain angle
+# brackets; strip them before scanning.
+_CODE_SPAN = re.compile(r"`[^`]*`")
+_FENCED_BLOCK = re.compile(r"```.*?(?:```|\Z)", re.DOTALL)
+
+
+def _contains_html(text: str) -> bool:
+    stripped = _CODE_SPAN.sub("", _FENCED_BLOCK.sub("", text))
+    return _HTML_TAG.search(stripped) is not None
+
 
 # The ToolNode strips caller-supplied values for InjectedToolArg-style params
 # (anti-forgery), so canvas_state is delivered from graph state via InjectedState
@@ -176,6 +197,8 @@ def make_canvas_write_tool(logger: Logger) -> BaseTool:
             return NO_CANVAS_ERROR
         if not content or not content.strip():
             return "Error: content is required for canvas_write."
+        if _contains_html(content):
+            return HTML_NOT_ALLOWED_ERROR
 
         writer = _get_writer()
         _emit(writer, ToolStreamState.STARTED, "")
@@ -226,6 +249,8 @@ def make_canvas_edit_tool(logger: Logger) -> BaseTool:
                 "Error: a passage is selected in the canvas; "
                 "old_text must be part of the selected text."
             )
+        if _contains_html(new_text):
+            return HTML_NOT_ALLOWED_ERROR
 
         updated = document.replace(old_text, new_text, 1)
         # Keep the reported caret meaningful across the edit: shift it by the

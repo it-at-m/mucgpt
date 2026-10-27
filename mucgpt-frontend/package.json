@@ -14,7 +14,7 @@
         "markmap-lib": "0.18.12",
         "markmap-toolbar": "0.18.12",
         "markmap-view": "0.18.12",
-        "mermaid": "11.16.1",
+        "mermaid": "12.2.0",
         "ndjson-readablestream": "1.4.0",
         "onnxruntime-web": "1.26.0",
         "prismjs": ">=1.30.0",

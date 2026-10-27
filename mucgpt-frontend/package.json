@@ -8,7 +8,7 @@
         "@huggingface/transformers": "^4.2.0",
         "@react-spring/web": "10.0.4",
         "dompurify": "3.4.17",
-        "i18next": "25.10.10",
+        "i18next": "26.5.8",
         "idb": "8.0.4",
         "markmap-common": "0.18.9",
         "markmap-lib": "0.18.12",

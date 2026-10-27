@@ -103,7 +103,23 @@ i18n
                             load_more: "Weitere Assistenten laden",
                             featured: "Empfohlen",
                             remove_featured: "Empfohlen entfernen",
-                            mark_featured: "Als empfohlen markieren"
+                            mark_featured: "Als empfohlen markieren",
+                            manage_owners: "Besitzer verwalten",
+                            owner_hint: "Fügen Sie Besitzer-IDs hinzu oder entfernen Sie sie. Mindestens ein Besitzer ist erforderlich.",
+                            owner_id: "Besitzer-ID",
+                            owner_id_hint: "Geben Sie eine Benutzer-ID ein und fügen Sie sie der Besitzerliste hinzu.",
+                            add_owner: "Hinzufügen",
+                            remove_owner: "Entfernen",
+                            owner_required: "Mindestens ein Besitzer ist erforderlich.",
+                            owner_directory_unavailable: "Keine LDAP-Details verfügbar.",
+                            owners_update_failed: "Die Besitzer konnten nicht aktualisiert werden.",
+                            audit_history: "Aktivitätsverlauf",
+                            audit_actions: {
+                                created: "Erstellt",
+                                version_created: "Version erstellt",
+                                owners_updated: "Besitzer aktualisiert",
+                                admin_tags_updated: "Admin-Tags aktualisiert"
+                            }
                         }
                     },
                     home: {
@@ -1023,7 +1039,23 @@ i18n
                             load_more: "Load more assistants",
                             featured: "Featured",
                             remove_featured: "Remove Featured",
-                            mark_featured: "Mark as Featured"
+                            mark_featured: "Mark as Featured",
+                            manage_owners: "Manage owners",
+                            owner_hint: "Add or remove owner user IDs. At least one owner is required.",
+                            owner_id: "Owner user ID",
+                            owner_id_hint: "Enter a user ID and add it to the owner list.",
+                            add_owner: "Add",
+                            remove_owner: "Remove",
+                            owner_required: "At least one owner is required.",
+                            owner_directory_unavailable: "LDAP details unavailable",
+                            owners_update_failed: "The owners could not be updated.",
+                            audit_history: "Activity history",
+                            audit_actions: {
+                                created: "Created",
+                                version_created: "Version created",
+                                owners_updated: "Owners updated",
+                                admin_tags_updated: "Admin tags updated"
+                            }
                         }
                     },
                     home: {

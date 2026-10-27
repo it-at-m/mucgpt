@@ -307,6 +307,86 @@ def test_non_admin_cannot_list_all_assistants(test_client: TestClient) -> None:
 
 
 @pytest.mark.integration
+def test_non_admin_cannot_update_assistant_owners(test_client: TestClient) -> None:
+    response = test_client.patch(
+        "admin/assistant/not-an-assistant/owners",
+        json={"owner_ids": ["owner"]},
+        headers=headers,
+    )
+
+    assert response.status_code == 403
+
+
+@pytest.mark.integration
+def test_non_admin_cannot_read_assistant_audit_events(test_client: TestClient) -> None:
+    response = test_client.get(
+        "admin/assistant/not-an-assistant/audit-events", headers=headers
+    )
+
+    assert response.status_code == 403
+
+
+@pytest.mark.integration
+def test_admin_can_replace_assistant_owners_without_creating_version(
+    admin_client: TestClient,
+) -> None:
+    create_response = admin_client.post(
+        "assistant/create",
+        json={
+            "name": "Owner-managed assistant",
+            "system_prompt": "Help manage owners.",
+            "owner_ids": ["initial-owner"],
+        },
+        headers=headers,
+    )
+    assert create_response.status_code == 200
+    created = AssistantResponse.model_validate(create_response.json())
+
+    update_response = admin_client.patch(
+        f"admin/assistant/{created.id}/owners",
+        json={"owner_ids": ["replacement-owner", "replacement-owner", "second-owner"]},
+        headers=headers,
+    )
+
+    assert update_response.status_code == 200
+    updated = AssistantResponse.model_validate(update_response.json())
+    assert updated.owner_ids == ["replacement-owner", "second-owner"]
+    assert updated.latest_version.version == created.latest_version.version
+
+    audit_response = admin_client.get(
+        f"admin/assistant/{created.id}/audit-events", headers=headers
+    )
+    assert audit_response.status_code == 200
+    events = audit_response.json()
+    assert [event["action"] for event in events[:2]] == [
+        "owners_updated",
+        "created",
+    ]
+    assert events[0]["actor_user_id"] == "legal_admin_123"
+    assert events[0]["before"] == {"owner_ids": ["initial-owner", "test_user_123"]}
+    assert events[0]["after"] == {"owner_ids": ["replacement-owner", "second-owner"]}
+
+
+@pytest.mark.integration
+def test_admin_owner_update_requires_an_owner(admin_client: TestClient) -> None:
+    create_response = admin_client.post(
+        "assistant/create",
+        json={"name": "Owner validation assistant", "system_prompt": "Help."},
+        headers=headers,
+    )
+    assert create_response.status_code == 200
+    assistant = AssistantResponse.model_validate(create_response.json())
+
+    response = admin_client.patch(
+        f"admin/assistant/{assistant.id}/owners",
+        json={"owner_ids": [" "]},
+        headers=headers,
+    )
+
+    assert response.status_code == 422
+
+
+@pytest.mark.integration
 def test_admin_lists_assistants_with_latest_version_filters(
     admin_client: TestClient,
 ) -> None:

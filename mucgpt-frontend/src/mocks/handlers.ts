@@ -7,6 +7,7 @@ import {
     AssistantCreateResponse,
     AssistantStateUpdateInput,
     AssistantUpdateInput,
+    AdminOwnersUpdateInput,
     ComplianceCategoryResult,
     ComplianceCheckResponse
 } from "../api";
@@ -1304,6 +1305,43 @@ export const handlers = [
         DYNAMIC_ASSISTANTS[index] = updated;
         saveMockAssistants(DYNAMIC_ASSISTANTS);
         return HttpResponse.json(withMockSubscriptionCount(updated));
+    }),
+
+    http.patch("/api/admin/assistant/:id/owners", async ({ params, request }) => {
+        const body = (await request.json()) as AdminOwnersUpdateInput;
+        const assistant = DYNAMIC_ASSISTANTS.find(item => item.id === params.id);
+        if (!assistant) return new HttpResponse(null, { status: 404 });
+        const ownerIds = [...new Set((body.owner_ids || []).map(ownerId => ownerId.trim()).filter(Boolean))];
+        if (ownerIds.length === 0) return HttpResponse.json({ detail: "At least one owner is required" }, { status: 422 });
+        const ownersDetailed = buildOwnersDetailedFromOwnerIds(ownerIds);
+        const updated = {
+            ...assistant,
+            owner_ids: ownerIds,
+            owners_detailed: ownersDetailed,
+            updated_at: new Date().toISOString(),
+            latest_version: { ...assistant.latest_version, owner_ids: ownerIds, owners_detailed: ownersDetailed }
+        };
+        const index = DYNAMIC_ASSISTANTS.indexOf(assistant);
+        DYNAMIC_ASSISTANTS[index] = updated;
+        saveMockAssistants(DYNAMIC_ASSISTANTS);
+        return HttpResponse.json(withMockSubscriptionCount(updated));
+    }),
+
+    http.get("/api/admin/assistant/:id/audit-events", ({ params }) => {
+        const assistant = DYNAMIC_ASSISTANTS.find(item => item.id === params.id);
+        if (!assistant) return new HttpResponse(null, { status: 404 });
+        const occurredAt = assistant.updated_at;
+        return HttpResponse.json([
+            {
+                id: 1,
+                assistant_id: assistant.id,
+                occurred_at: occurredAt,
+                actor_user_id: MOCK_CURRENT_OWNER_ID,
+                actor_name: "Demo User",
+                action: "created",
+                after: { version: assistant.latest_version.version, owner_ids: assistant.owner_ids }
+            }
+        ]);
     }),
 
     http.get("/api/assistant/:id", ({ params }) => {

@@ -554,6 +554,31 @@ class AdminTagsUpdate(BaseModel):
     )
 
 
+class AdminOwnersUpdate(BaseModel):
+    """Complete owner list managed by an administrator."""
+
+    owner_ids: list[str] = Field(
+        ..., min_length=1, description="At least one owner user ID is required."
+    )
+
+
+class AssistantAuditEventResponse(BaseModel):
+    """A recorded assistant mutation."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    assistant_id: str
+    occurred_at: datetime
+    actor_user_id: str
+    actor_name: str | None = None
+    action: str
+    before: dict[str, Any] | None = None
+    after: dict[str, Any] | None = None
+    reason: str | None = None
+    assistant_version: int | None = None
+
+
 class AssistantResponse(BaseModel):
     """Complete response model for AI assistant data.
 

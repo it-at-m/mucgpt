@@ -4,8 +4,10 @@ import {
     AssistantCreateInput,
     AssistantCreateResponse,
     AssistantResponse,
+    AssistantAuditEvent,
     AssistantState,
     AssistantStateUpdateInput,
+    AdminOwnersUpdateInput,
     AdminTagsUpdateInput,
     AssistantUpdateInput,
     CommunityAssistant,
@@ -167,4 +169,15 @@ export async function updateAssistantStateApi(assistantId: string, input: Assist
 
 export async function updateAssistantAdminTagsApi(assistantId: string, input: AdminTagsUpdateInput): Promise<AssistantResponse> {
     return handleApiRequest(() => fetch(`/api/admin/assistant/${assistantId}/tags`, patchConfig({ ...input })), "Failed to update assistant tags");
+}
+
+export async function updateAssistantOwnersApi(assistantId: string, input: AdminOwnersUpdateInput): Promise<AssistantResponse> {
+    return handleApiRequest(() => fetch(`/api/admin/assistant/${assistantId}/owners`, patchConfig({ ...input })), "Failed to update assistant owners");
+}
+
+export async function getAssistantAuditEventsApi(assistantId: string, options?: AssistantRequestOptions): Promise<AssistantAuditEvent[]> {
+    return handleApiRequest(
+        () => fetch(`/api/admin/assistant/${assistantId}/audit-events`, { ...getConfig(), signal: options?.signal }),
+        "Failed to get assistant audit events"
+    );
 }

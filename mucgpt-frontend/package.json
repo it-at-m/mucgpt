@@ -35,6 +35,9 @@
         "@ag-ui/core": "1.0.3"
     },
     "devDependencies": {
+        "@testing-library/jest-dom": "^7.0.1",
+        "@testing-library/react": "^16.3.3",
+        "@testing-library/user-event": "^14.6.8",
         "@types/dompurify": "3.2.0",
         "@types/node": "^24.13.3",
         "@types/react": "19.2.18",
@@ -45,6 +48,7 @@
         "brace-expansion": "5.0.12",
         "eslint": "9.39.5",
         "eslint-plugin-react": "7.37.5",
+        "jsdom": "^29.1.1",
         "msw": "2.12.14",
         "prettier": "3.8.5",
         "typescript": "6.0.3",

@@ -240,6 +240,15 @@ async def createAssistant(
                 )
                 db.add(assistant_tool)
 
+        await assistant_repo.record_audit_event(
+            assistant_id=assistant_id,
+            actor_user_id=user_info.user_id,
+            actor_name=user_info.name,
+            action="created",
+            after={"version": first_version.version, "owner_ids": owner_ids},
+            assistant_version=first_version.version,
+        )
+
         await db.commit()
         await db.refresh(new_assistant)
         # first_version is already committed and refreshed by create_assistant_version
@@ -383,6 +392,15 @@ async def duplicateAssistant(
                 )
             )
 
+        await assistant_repo.record_audit_event(
+            assistant_id=new_assistant_id,
+            actor_user_id=user_info.user_id,
+            actor_name=user_info.name,
+            action="duplicated",
+            after={"source_assistant_id": id, "version": new_version.version},
+            assistant_version=new_version.version,
+        )
+
         await db.flush()
         await refresh_owner_details([user_info.user_id], db)
         response = await getAssistant(id=new_assistant_id, db=db, user_info=user_info)
@@ -438,6 +456,13 @@ async def deleteAssistant(
 
     if not success:
         raise DeleteFailedException(id)
+
+    await assistant_repo.record_audit_event(
+        assistant_id=id,
+        actor_user_id=user_info.user_id,
+        actor_name=user_info.name,
+        action="deleted",
+    )
 
     await db.commit()
     logger.info(f"Assistant with ID {id} successfully deleted")
@@ -607,6 +632,12 @@ async def updateAssistant(
         "quick_prompts": latest_version.quick_prompts,
         "tags": latest_version.tags,
     }
+    previous_owner_ids = await assistant_repo.get_owner_ids(id)
+    previous_parent = {
+        "owner_ids": previous_owner_ids,
+        "hierarchical_access": assistant.hierarchical_access or [],
+        "is_visible": assistant.is_visible,
+    }
 
     await assistant_repo.update(
         assistant_id=id,
@@ -663,6 +694,46 @@ async def updateAssistant(
                 config=tool_data.config,
             )
             db.add(assistant_tool)
+
+    next_owner_ids = (
+        list(dict.fromkeys(assistant_update.owner_ids))
+        if assistant_update.owner_ids is not None
+        else previous_owner_ids
+    )
+    next_parent = {
+        "owner_ids": next_owner_ids,
+        "hierarchical_access": assistant.hierarchical_access or [],
+        "is_visible": assistant.is_visible,
+    }
+    changed_fields = [
+        field
+        for field in (
+            "name",
+            "description",
+            "system_prompt",
+            "creativity",
+            "default_model",
+            "examples",
+            "quick_prompts",
+            "tags",
+            "tools",
+        )
+        if getattr(assistant_update, field) is not None
+    ]
+    changed_fields.extend(
+        field
+        for field in ("owner_ids", "hierarchical_access", "is_visible")
+        if previous_parent[field] != next_parent[field]
+    )
+    await assistant_repo.record_audit_event(
+        assistant_id=id,
+        actor_user_id=user_info.user_id,
+        actor_name=user_info.name,
+        action="version_created",
+        before={"version": latest_version.version, "changed_fields": changed_fields},
+        after={"version": new_version.version, "parent": next_parent},
+        assistant_version=new_version.version,
+    )
 
     await db.commit()
     await db.refresh(assistant)

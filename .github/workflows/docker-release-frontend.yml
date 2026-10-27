@@ -153,10 +153,18 @@ jobs:
           fi
           # GitLab's registry does not accept BuildKit's attestation manifests.
           # Mirror only actual platform manifests while retaining attestations in GHCR.
-          mapfile -t PLATFORM_DIGESTS < <(
-            docker buildx imagetools inspect --raw "$SOURCE" |
-              jq -r '.manifests[]? | select(.platform.os != "unknown" and .platform.architecture != "unknown") | .digest'
-          )
+          INSPECT_RAW=$(docker buildx imagetools inspect --raw "$SOURCE") || {
+            echo "Failed to inspect source image: $SOURCE" >&2
+            exit 1
+          }
+          PLATFORM_DIGESTS_OUTPUT=$(printf '%s\n' "$INSPECT_RAW" | jq -r '.manifests[]? | select(.platform.os != "unknown" and .platform.architecture != "unknown") | .digest') || {
+            echo "Failed to parse image inspection result: $SOURCE" >&2
+            exit 1
+          }
+          PLATFORM_DIGESTS=()
+          if [ -n "$PLATFORM_DIGESTS_OUTPUT" ]; then
+            mapfile -t PLATFORM_DIGESTS <<< "$PLATFORM_DIGESTS_OUTPUT"
+          fi
           SOURCES=()
           if [ "${#PLATFORM_DIGESTS[@]}" -eq 0 ]; then
             SOURCES=("$SOURCE")

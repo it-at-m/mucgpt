@@ -20,7 +20,7 @@
         "prismjs": ">=1.30.0",
         "react": "19.2.9",
         "react-dom": "19.2.9",
-        "react-i18next": "16.6.6",
+        "react-i18next": "17.1.8",
         "react-markdown": "10.1.0",
         "react-router-dom": "7.18.4",
         "react-syntax-highlighter": "16.1.2",

@@ -44,6 +44,13 @@
 [![Assistant service version][assistant-service-version-shield]][assistant-service-container]
 [![Migrations service version][migrations-service-version-shield]][migrations-service-container]
 
+All release images are published to GitHub Container Registry (links above) and mirrored to the openCode container registry (GitLab registry of gitlab.opencode.de). Both carry the same tags (`<version>` and `latest`) and the same image digest, so you can pull from whichever registry suits your deployment:
+
+- Frontend: `registry.opencode.de/landeshauptstadt-muenchen/mucgpt/mucgpt-frontend`
+- Core service: `registry.opencode.de/landeshauptstadt-muenchen/mucgpt/mucgpt-core`
+- Assistant service: `registry.opencode.de/landeshauptstadt-muenchen/mucgpt/mucgpt-assistant`
+- Migrations service: `registry.opencode.de/landeshauptstadt-muenchen/mucgpt/mucgpt-assistant-migrations`
+
 </div>
 
 <!-- ABOUT THE PROJECT -->

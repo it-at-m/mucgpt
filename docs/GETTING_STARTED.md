@@ -352,6 +352,26 @@ See the [stack README](../stack/README.md) for the local Docker Compose setup in
 - Common commands and troubleshooting
 - [Using Docker instead of Podman (incl. Windows/WSL2)](../stack/README.md#using-docker-instead-of-podman)
 
+### Prebuilt container images
+
+For real deployments, pull the prebuilt release images instead of building from source. Every release publishes the same image (same tags and digest) to two registries — pick whichever suits your environment:
+
+| Component | ghcr.io | registry.opencode.de |
+| --- | --- | --- |
+| Frontend | `ghcr.io/it-at-m/mucgpt/mucgpt-frontend` | `registry.opencode.de/landeshauptstadt-muenchen/mucgpt/mucgpt-frontend` |
+| Core service | `ghcr.io/it-at-m/mucgpt/mucgpt-core` | `registry.opencode.de/landeshauptstadt-muenchen/mucgpt/mucgpt-core` |
+| Assistant service | `ghcr.io/it-at-m/mucgpt/mucgpt-assistant` | `registry.opencode.de/landeshauptstadt-muenchen/mucgpt/mucgpt-assistant` |
+| Migrations service | `ghcr.io/it-at-m/mucgpt/mucgpt-assistant-migrations` | `registry.opencode.de/landeshauptstadt-muenchen/mucgpt/mucgpt-assistant-migrations` |
+
+Tags follow the release tags (`mucgpt-<component>-<version>`): each image is available as `<version>` and as `latest`, for example:
+
+```bash
+docker pull registry.opencode.de/landeshauptstadt-muenchen/mucgpt/mucgpt-core:latest
+docker pull ghcr.io/it-at-m/mucgpt/mucgpt-core:1.0.0
+```
+
+Pulling from ghcr.io is anonymous. The openCode registry is the GitLab container registry of gitlab.opencode.de: anonymous pulls work if the project is public, otherwise authenticate with a GitLab account or an access token with `read_registry` scope.
+
 ## 🔧 Troubleshooting
 
 - **Chat requests fail with `Prompt configuration missing`:** prompts are fetched from Langfuse when configured; otherwise the core service uses the local fallback files in `mucgpt-core-service/app/agent/prompt_pool/` (see [Prompt Configuration](#prompt-configuration)). Create the missing `.md` files there and rebuild the core-service image.

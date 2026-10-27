@@ -1,6 +1,6 @@
 {
     "dependencies": {
-        "@atlaskit/pragmatic-drag-and-drop": "^1.7.7",
+        "@atlaskit/pragmatic-drag-and-drop": "^4.0.0",
         "@atlaskit/pragmatic-drag-and-drop-hitbox": "^1.1.0",
         "@fluentui/react-components": "9.73.8",
         "@fluentui/react-icons": "2.0.344",

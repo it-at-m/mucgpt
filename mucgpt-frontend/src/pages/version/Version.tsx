@@ -28,6 +28,17 @@ const Version = () => {
             <div className={styles.versionRoot}>
                 <h1 className={styles.header}>{t("version.header")}</h1>
                 <Accordion multiple collapsible defaultOpenItems="2.0.2">
+                    <AccordionItem value="2.0.21">
+                        <AccordionHeader>Änderung der Kennzeichnungsplicht</AccordionHeader>
+                        <AccordionPanel>
+                            <div className={styles.panel}>
+                                <p>
+                                    <strong>Nutzungsbedingungen:</strong> Wenn die Ergebnisse von einer Person überprüft wurden, müssen sie nicht gekennzeichnet
+                                    werden. Weitere Informationen finden Sie im Abschnitt <i>Weiterverwendung der Ergebnisse</i> der Nutzungsbedingungen.
+                                </p>
+                            </div>
+                        </AccordionPanel>
+                    </AccordionItem>
                     <AccordionItem value="2.0.2">
                         <AccordionHeader>[2.0.2]</AccordionHeader>
                         <AccordionPanel>

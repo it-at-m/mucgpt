@@ -1,9 +1,9 @@
 [project]
 name = "MUCGPT"
-version = "1.2.5"
+version = "2.0.2"
 description = "a web interface for large language models for the public administration"
 readme = "README.md"
-requires-python= ">=3.10"
+requires-python= ">=3.13"
 authors = [
     { name = "Michael Jaumann", email = "michael.jaumann@muenchen.de" },
     { name = "Paul Ilitz", email = "paul.ilitz@muenchen.de" },
@@ -12,41 +12,25 @@ authors = [
     { name = "Daniel Nischwitz", email = "daniel.nischwitz@muenchen.de" },
     { name = "Dominik Grenz", email = "dominik.grenz@muenchen.de" },
     { name = "Benedikt Jursch", email = "benedikt.jursch@muenchen.de" },
+    { name = "Sebastian Berger", email = "sebastian.berger@muenchen.de" },
+    { name = "Fabian Reinold", email = "fabian.reinold@muenchen.de" },
 ]
 maintainers = [
-    { name = "ITM KIES", email = "ki@muenchen.de" },
+    { name = "ITM-SLP43", email = "itm.slp43@muenchen.de" },
     { name = "Michael Jaumann", email = "michael.jaumann@muenchen.de" },
-    { name = "Paul Ilitz", email = "paul.ilitz@muenchen.de" },
+    { name = "Sebastian Berger", email = "sebastian.berger@muenchen.de" },
+    { name = "Daniel Nischwitz", email = "daniel.nischwitz@muenchen.de" },
 ]
 
 
 [dependency-groups]
 dev = [
-    "ipykernel==7.2.0",
-    "pre-commit==4.5.1",
-    "ruff==0.15.22",
+    "ipykernel==7.4.0",
+    "pre-commit==4.7.0",
+    "ruff==0.17.2",
+    "ty==0.0.92",
 ]
-
-[tool.uv]
 
 [[tool.uv.index]]
 name = "pypy"
 url = "https://pypi.org/simple"
-
-[tool.ruff]
-target-version = "py38"
-src = ["mucgpt-core-service/src/"]
-
-[tool.ruff.lint]
-select = ["E", "F", "I", "UP"]
-ignore = ["E501", "E701"] # line too long, multiple statements on one line
-
-[tool.pytest.ini_options]
-addopts = "-ra --cov"
-pythonpath = ["mucgpt-core-service/src/"]
-testpaths = [
-    "tests"]
-markers = [
-    "integration: mark a test as a integration test",
-    "unit: mark test as a unit test"
-]

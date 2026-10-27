@@ -152,6 +152,20 @@ jobs:
             DIGEST=$(docker buildx imagetools inspect "$GHCR_IMAGE:$VERSION" | awk '/^Digest:/ {print $2; exit}')
             SOURCE="$GHCR_IMAGE@$DIGEST"
           fi
+          # GitLab's registry does not accept BuildKit's attestation manifests.
+          # Mirror only actual platform manifests while retaining attestations in GHCR.
+          mapfile -t PLATFORM_DIGESTS < <(
+            docker buildx imagetools inspect --raw "$SOURCE" |
+              jq -r '.manifests[]? | select(.platform.os != "unknown" and .platform.architecture != "unknown") | .digest'
+          )
+          SOURCES=()
+          if [ "${#PLATFORM_DIGESTS[@]}" -eq 0 ]; then
+            SOURCES=("$SOURCE")
+          else
+            for digest in "${PLATFORM_DIGESTS[@]}"; do
+              SOURCES+=("$GHCR_IMAGE@$digest")
+            done
+          fi
           TAGS=("$OPENCODE_IMAGE:$VERSION")
           if [ "$VERSION" != "latest" ]; then
             TAGS+=("$OPENCODE_IMAGE:latest")
@@ -160,6 +174,6 @@ jobs:
           for tag in "${TAGS[@]}"; do
             ARGS+=(-t "$tag")
           done
-          docker buildx imagetools create "${ARGS[@]}" "$SOURCE"
+          docker buildx imagetools create "${ARGS[@]}" "${SOURCES[@]}"
           echo "Copied image to openCode container registry:"
           printf '  %s\n' "${TAGS[@]}"

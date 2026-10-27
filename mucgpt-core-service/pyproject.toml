@@ -37,7 +37,7 @@ dependencies = [
     "deepagents>=0.7.6",
     "ag-ui-langgraph[fastapi]==0.0.47",
     "ag-ui-protocol==1.0.0",
-    "mcp>=1.30,<2.0",
+    "mcp>=2.3,<2.4",
 ]
 
 [dependency-groups]

@@ -44,6 +44,11 @@ export interface AdminAssistantListQueryParams {
     limit?: number;
 }
 
+export interface AssistantAuditEventQueryParams {
+    offset?: number;
+    limit?: number;
+}
+
 interface AssistantRequestOptions {
     signal?: AbortSignal;
 }
@@ -175,9 +180,18 @@ export async function updateAssistantOwnersApi(assistantId: string, input: Admin
     return handleApiRequest(() => fetch(`/api/admin/assistant/${assistantId}/owners`, patchConfig({ ...input })), "Failed to update assistant owners");
 }
 
-export async function getAssistantAuditEventsApi(assistantId: string, options?: AssistantRequestOptions): Promise<AssistantAuditEvent[]> {
+export async function getAssistantAuditEventsApi(
+    assistantId: string,
+    params?: AssistantAuditEventQueryParams,
+    options?: AssistantRequestOptions
+): Promise<AssistantAuditEvent[]> {
+    const query = new URLSearchParams();
+    if (typeof params?.offset === "number") query.set("offset", String(params.offset));
+    if (typeof params?.limit === "number") query.set("limit", String(params.limit));
+    const queryString = query.size > 0 ? `?${query.toString()}` : "";
+
     return handleApiRequest(
-        () => fetch(`/api/admin/assistant/${assistantId}/audit-events`, { ...getConfig(), signal: options?.signal }),
+        () => fetch(`/api/admin/assistant/${assistantId}/audit-events${queryString}`, { ...getConfig(), signal: options?.signal }),
         "Failed to get assistant audit events"
     );
 }

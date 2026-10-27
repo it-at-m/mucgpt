@@ -47,6 +47,7 @@ import { UserContext } from "../layout/UserContextProvider";
 import styles from "./AdminAssistants.module.css";
 
 const PAGE_SIZE = 50;
+const AUDIT_EVENTS_PAGE_SIZE = 100;
 const NO_OWNED_ASSISTANTS = new Set<string>();
 
 const getAccessType = (assistant: AssistantResponse): AssistantAccessType => {
@@ -97,8 +98,13 @@ const AdminAssistants = () => {
     const [ownerInput, setOwnerInput] = useState("");
     const [ownerIds, setOwnerIds] = useState<string[]>([]);
     const [isSavingOwners, setIsSavingOwners] = useState(false);
+    const [ownerUpdateError, setOwnerUpdateError] = useState<string | null>(null);
     const [auditEvents, setAuditEvents] = useState<AssistantAuditEvent[]>([]);
+    const [hasMoreAuditEvents, setHasMoreAuditEvents] = useState(false);
+    const [isLoadingMoreAuditEvents, setIsLoadingMoreAuditEvents] = useState(false);
     const requestVersion = useRef(0);
+    const auditRequestVersion = useRef(0);
+    const auditRequestController = useRef<AbortController | null>(null);
 
     const query: AdminAssistantListQueryParams = {
         state,
@@ -174,6 +180,29 @@ const AdminAssistants = () => {
         if (value !== "hierarchical") setDepartments([]);
     };
 
+    const loadAuditEvents = (assistantId: string, offset = 0) => {
+        auditRequestController.current?.abort();
+        const controller = new AbortController();
+        const currentRequestVersion = ++auditRequestVersion.current;
+        auditRequestController.current = controller;
+        setIsLoadingMoreAuditEvents(offset > 0);
+
+        void getAssistantAuditEventsApi(assistantId, { offset, limit: AUDIT_EVENTS_PAGE_SIZE }, { signal: controller.signal })
+            .then(events => {
+                if (auditRequestVersion.current !== currentRequestVersion) return;
+                setAuditEvents(current => (offset === 0 ? events : [...current, ...events]));
+                setHasMoreAuditEvents(events.length === AUDIT_EVENTS_PAGE_SIZE);
+            })
+            .catch(() => {
+                if (controller.signal.aborted || auditRequestVersion.current !== currentRequestVersion) return;
+                if (offset === 0) setAuditEvents([]);
+                setHasMoreAuditEvents(false);
+            })
+            .finally(() => {
+                if (auditRequestVersion.current === currentRequestVersion) setIsLoadingMoreAuditEvents(false);
+            });
+    };
+
     const openDetails = (assistant: AssistantResponse) => {
         const version = assistant.latest_version;
         setSelectedAssistant({
@@ -187,9 +216,8 @@ const AdminAssistants = () => {
         });
         setIsDetailsOpen(true);
         setAuditEvents([]);
-        void getAssistantAuditEventsApi(assistant.id)
-            .then(setAuditEvents)
-            .catch(() => setAuditEvents([]));
+        setHasMoreAuditEvents(false);
+        loadAuditEvents(assistant.id);
     };
 
     const toggleFeatured = async (assistant: AssistantResponse) => {
@@ -215,6 +243,7 @@ const AdminAssistants = () => {
         setOwnersAssistant(assistant);
         setOwnerIds(assistant.owner_ids || []);
         setOwnerInput("");
+        setOwnerUpdateError(null);
     };
 
     const addOwner = () => {
@@ -231,20 +260,27 @@ const AdminAssistants = () => {
     const saveOwners = async () => {
         if (!ownersAssistant || ownerIds.length === 0) return;
         setIsSavingOwners(true);
-        setError(null);
+        setOwnerUpdateError(null);
         try {
             const updated = await updateAssistantOwnersApi(ownersAssistant.id, { owner_ids: ownerIds });
             setAssistants(current => current.map(item => (item.id === updated.id ? updated : item)));
             setSelectedAssistant(current => (current?.id === updated.id ? { ...current, rawData: updated } : current));
             setOwnersAssistant(null);
+            if (selectedAssistant?.id === updated.id) loadAuditEvents(updated.id);
         } catch (updateError) {
-            setError(updateError instanceof Error ? updateError.message : t("admin.assistants.owners_update_failed", "The owners could not be updated."));
+            setOwnerUpdateError(
+                updateError instanceof Error ? updateError.message : t("admin.assistants.owners_update_failed", "The owners could not be updated.")
+            );
         } finally {
             setIsSavingOwners(false);
         }
     };
 
-    const closeDetails = () => setIsDetailsOpen(false);
+    const closeDetails = () => {
+        auditRequestController.current?.abort();
+        auditRequestVersion.current += 1;
+        setIsDetailsOpen(false);
+    };
 
     const handleDetailsSlotTransitionEnd = (event: TransitionEvent<HTMLDivElement>) => {
         if (event.target !== event.currentTarget || event.propertyName !== "flex-basis" || isDetailsOpen) return;
@@ -579,6 +615,9 @@ const AdminAssistants = () => {
                     ownedAssistantIds={NO_OWNED_ASSISTANTS}
                     hideStartChat
                     auditEvents={auditEvents}
+                    hasMoreAuditEvents={hasMoreAuditEvents}
+                    isLoadingMoreAuditEvents={isLoadingMoreAuditEvents}
+                    onLoadMoreAuditEvents={() => selectedAssistant && loadAuditEvents(selectedAssistant.id, auditEvents.length)}
                 />
             </div>
             <Dialog open={ownersAssistant !== null} onOpenChange={(_, data) => !data.open && setOwnersAssistant(null)}>
@@ -603,7 +642,9 @@ const AdminAssistants = () => {
                                                 ownerId={ownerId}
                                                 details={details}
                                                 onRemove={() => removeOwner(ownerId)}
-                                                removeLabel={t("admin.assistants.remove_owner", "Remove")}
+                                                removeLabel={`${t("admin.assistants.remove_owner", "Remove")}: ${
+                                                    [details?.givenName, details?.sn].filter(Boolean).join(" ") || details?.username || ownerId
+                                                }`}
                                                 directoryUnavailableLabel={t("admin.assistants.owner_directory_unavailable", "LDAP details unavailable")}
                                             />
                                         );
@@ -627,6 +668,11 @@ const AdminAssistants = () => {
                             </Field>
                             {ownerIds.length === 0 && (
                                 <Body2 className={styles.ownerValidation}>{t("admin.assistants.owner_required", "At least one owner is required.")}</Body2>
+                            )}
+                            {ownerUpdateError && (
+                                <MessageBar intent="error">
+                                    <MessageBarBody>{ownerUpdateError}</MessageBarBody>
+                                </MessageBar>
                             )}
                         </DialogContent>
                         <DialogActions>

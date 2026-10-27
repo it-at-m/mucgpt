@@ -444,7 +444,7 @@ async def deleteAssistant(
 ):
     logger.info(f"Deleting assistant with ID: {id} by user {user_info.user_id}")
     assistant_repo = AssistantRepository(db)
-    assistant = await assistant_repo.get(id)
+    assistant = await assistant_repo.get_for_update(id)
 
     if not assistant:
         raise AssistantNotFoundException(id)
@@ -730,7 +730,11 @@ async def updateAssistant(
         actor_user_id=user_info.user_id,
         actor_name=user_info.name,
         action="version_created",
-        before={"version": latest_version.version, "changed_fields": changed_fields},
+        before={
+            "version": latest_version.version,
+            "changed_fields": changed_fields,
+            "parent": previous_parent,
+        },
         after={"version": new_version.version, "parent": next_parent},
         assistant_version=new_version.version,
     )

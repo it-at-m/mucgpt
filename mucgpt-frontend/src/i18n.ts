@@ -118,7 +118,8 @@ i18n
                                 created: "Erstellt",
                                 version_created: "Version erstellt",
                                 owners_updated: "Besitzer aktualisiert",
-                                admin_tags_updated: "Admin-Tags aktualisiert"
+                                admin_tags_updated: "Admin-Tags aktualisiert",
+                                state_updated: "Status aktualisiert"
                             }
                         }
                     },
@@ -1054,7 +1055,8 @@ i18n
                                 created: "Created",
                                 version_created: "Version created",
                                 owners_updated: "Owners updated",
-                                admin_tags_updated: "Admin tags updated"
+                                admin_tags_updated: "Admin tags updated",
+                                state_updated: "State updated"
                             }
                         }
                     },

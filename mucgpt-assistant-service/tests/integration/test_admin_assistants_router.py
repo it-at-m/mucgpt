@@ -365,6 +365,7 @@ def test_admin_can_replace_assistant_owners_without_creating_version(
     assert events[0]["actor_user_id"] == "legal_admin_123"
     assert events[0]["before"] == {"owner_ids": ["initial-owner", "test_user_123"]}
     assert events[0]["after"] == {"owner_ids": ["replacement-owner", "second-owner"]}
+    assert events[0]["occurred_at"].endswith(("Z", "+00:00"))
 
 
 @pytest.mark.integration
@@ -380,6 +381,27 @@ def test_admin_owner_update_requires_an_owner(admin_client: TestClient) -> None:
     response = admin_client.patch(
         f"admin/assistant/{assistant.id}/owners",
         json={"owner_ids": [" "]},
+        headers=headers,
+    )
+
+    assert response.status_code == 422
+
+
+@pytest.mark.integration
+def test_admin_owner_update_rejects_oversized_owner_id(
+    admin_client: TestClient,
+) -> None:
+    create_response = admin_client.post(
+        "assistant/create",
+        json={"name": "Owner length validation assistant", "system_prompt": "Help."},
+        headers=headers,
+    )
+    assert create_response.status_code == 200
+    assistant = AssistantResponse.model_validate(create_response.json())
+
+    response = admin_client.patch(
+        f"admin/assistant/{assistant.id}/owners",
+        json={"owner_ids": ["a" * 256]},
         headers=headers,
     )
 

@@ -212,6 +212,9 @@ interface AssistantDetailsSidebarProps {
     onMigrateLocal?: () => void;
     hideStartChat?: boolean;
     auditEvents?: AssistantAuditEvent[];
+    hasMoreAuditEvents?: boolean;
+    isLoadingMoreAuditEvents?: boolean;
+    onLoadMoreAuditEvents?: () => void;
 }
 
 export const AssistantDetailsSidebar = ({
@@ -229,7 +232,10 @@ export const AssistantDetailsSidebar = ({
     onUnsubscribe,
     onMigrateLocal,
     hideStartChat,
-    auditEvents
+    auditEvents,
+    hasMoreAuditEvents = false,
+    isLoadingMoreAuditEvents = false,
+    onLoadMoreAuditEvents
 }: AssistantDetailsSidebarProps) => {
     const { t, i18n } = useTranslation();
     const { showSuccess, showError } = useGlobalToastContext();
@@ -470,6 +476,11 @@ export const AssistantDetailsSidebar = ({
                                         </li>
                                     ))}
                                 </ul>
+                                {hasMoreAuditEvents && onLoadMoreAuditEvents && (
+                                    <Button appearance="secondary" onClick={onLoadMoreAuditEvents} disabled={isLoadingMoreAuditEvents}>
+                                        {isLoadingMoreAuditEvents ? t("common.loading") : t("admin.assistants.load_more")}
+                                    </Button>
+                                )}
                             </DetailsGroup>
                         )}
                     </>

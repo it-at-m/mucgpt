@@ -90,6 +90,15 @@ You can find the available versions under:
 - Assistant: <https://github.com/it-at-m/mucgpt/pkgs/container/mucgpt%2Fmucgpt-assistant>
 - Migrations: <https://github.com/it-at-m/mucgpt/pkgs/container/mucgpt%2Fmucgpt-assistant-migrations>
 
+Every release image is also mirrored to the openCode container registry (GitLab registry of gitlab.opencode.de):
+
+- Frontend: `registry.opencode.de/landeshauptstadt-muenchen/mucgpt/mucgpt-frontend`
+- Core: `registry.opencode.de/landeshauptstadt-muenchen/mucgpt/mucgpt-core`
+- Assistant: `registry.opencode.de/landeshauptstadt-muenchen/mucgpt/mucgpt-assistant`
+- Migrations: `registry.opencode.de/landeshauptstadt-muenchen/mucgpt/mucgpt-assistant-migrations`
+
+Both registries carry the same tags (`<version>` and `latest`) and the same image digest. If the openCode push fails, the GitHub release still succeeds (the mirror step tolerates errors); re-running the release workflow for the same tag retries the mirror.
+
 > Note: A new frontend tag will also create a new github pages deployment with the actual version
 
 

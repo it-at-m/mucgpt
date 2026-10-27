@@ -110,11 +110,14 @@ jobs:
           VERSION: ${{ steps.vars.outputs.version }}
           DIGEST: ${{ steps.build.outputs.digest }}
           IMAGE: ghcr.io/${{ steps.vars.outputs.repo_lowercase }}/mucgpt-assistant
+          OPENCODE_IMAGE: registry.opencode.de/landeshauptstadt-muenchen/mucgpt/mucgpt-assistant
         run: |
           notes=$(cat <<EOF
           ## Container image
 
           \`$IMAGE:$VERSION\`
+
+          Also available at \`$OPENCODE_IMAGE:$VERSION\`
 
           Digest: \`$DIGEST\`
           EOF
@@ -125,3 +128,37 @@ jobs:
             --title "Assistant service $VERSION" \
             --generate-notes \
             --notes "$notes"
+      - name: Log in to openCode container registry
+        continue-on-error: true
+        uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
+        with:
+          registry: registry.opencode.de
+          username: ${{ secrets.OPENCODE_REGISTRY_USERNAME }}
+          password: ${{ secrets.OPENCODE_REGISTRY_TOKEN }}
+      - name: Push image to openCode container registry
+        continue-on-error: true
+        env:
+          GHCR_IMAGE: ghcr.io/${{ steps.vars.outputs.repo_lowercase }}/mucgpt-assistant
+          BUILT_DIGEST: ${{ steps.build.outputs.digest }}
+          OPENCODE_IMAGE: registry.opencode.de/landeshauptstadt-muenchen/mucgpt/mucgpt-assistant
+          VERSION: ${{ steps.vars.outputs.version }}
+        run: |
+          if [ -n "$BUILT_DIGEST" ]; then
+            SOURCE="$GHCR_IMAGE@$BUILT_DIGEST"
+          else
+            # Build was skipped because the release already exists; resolve the
+            # digest from the published GHCR tag so the mirror can be retried.
+            DIGEST=$(docker buildx imagetools inspect "$GHCR_IMAGE:$VERSION" | awk '/^Digest:/ {print $2; exit}')
+            SOURCE="$GHCR_IMAGE@$DIGEST"
+          fi
+          TAGS=("$OPENCODE_IMAGE:$VERSION")
+          if [ "$VERSION" != "latest" ]; then
+            TAGS+=("$OPENCODE_IMAGE:latest")
+          fi
+          ARGS=()
+          for tag in "${TAGS[@]}"; do
+            ARGS+=(-t "$tag")
+          done
+          docker buildx imagetools create "${ARGS[@]}" "$SOURCE"
+          echo "Copied image to openCode container registry:"
+          printf '  %s\n' "${TAGS[@]}"

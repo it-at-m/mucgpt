@@ -71,6 +71,7 @@ ENV PYTHONWARNINGS="ignore"
 
 ENV APP_VERSION=${IMAGE_VERSION}
 
+USER 1001
 
 EXPOSE 8000
 CMD ["python","-m",  "uvicorn", "app:backend", "--host", "0.0.0.0", "--port", "8000"]

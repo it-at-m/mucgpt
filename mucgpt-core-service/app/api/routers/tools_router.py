@@ -30,9 +30,11 @@ async def list_tools(
         :param lang: Language for tool metadata. Supported: deutsch, english, français, bairisch, українська
         :param force_reload: If true, bypass cache and force-refresh MCP tools for this request
     """
-    return await list_tool_metadata(
+    tool_list = await list_tool_metadata(
         lang=lang, user_info=user_info, force_reload=force_reload
     )
+    tool_list.tools = [tool for tool in tool_list.tools if tool.access == "public"]
+    return tool_list
 
 
 @router.get(

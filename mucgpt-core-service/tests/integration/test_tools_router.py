@@ -1,6 +1,7 @@
 import pytest
 from fastapi.testclient import TestClient
 
+from api.api_models import ToolInfo, ToolListResponse
 from backend import api_app
 from core.auth import authenticate_user
 from core.auth_models import AuthenticationResult
@@ -26,6 +27,33 @@ def test_tools_list(test_client: TestClient):
         and "access" in tool
         for tool in data["tools"]
     )
+
+
+@pytest.mark.integration
+def test_tools_list_excludes_restricted_tools(
+    test_client: TestClient, monkeypatch: pytest.MonkeyPatch
+):
+    async def list_tools_with_restricted_tool(**_kwargs) -> ToolListResponse:
+        return ToolListResponse(
+            tools=[
+                ToolInfo(id="public", name="Public", description="Public tool"),
+                ToolInfo(
+                    id="restricted",
+                    name="Restricted",
+                    description="Restricted tool",
+                    access="restricted",
+                ),
+            ]
+        )
+
+    monkeypatch.setattr(
+        "api.routers.tools_router.list_tool_metadata", list_tools_with_restricted_tool
+    )
+
+    response = test_client.get("/v1/tools", headers=headers)
+
+    assert response.status_code == 200
+    assert [tool["id"] for tool in response.json()["tools"]] == ["public"]
 
 
 @pytest.mark.integration

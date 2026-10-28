@@ -10,9 +10,10 @@ import styles from "./AdminToolGrants.module.css";
 
 interface AdminToolGrantsProps {
     assistantId: string;
+    showHeading?: boolean;
 }
 
-export const AdminToolGrants = ({ assistantId }: AdminToolGrantsProps) => {
+export const AdminToolGrants = ({ assistantId, showHeading = true }: AdminToolGrantsProps) => {
     const { t, i18n } = useTranslation();
     const { showError, showSuccess } = useGlobalToastContext();
     const [catalog, setCatalog] = useState<ToolInfo[]>([]);
@@ -94,13 +95,15 @@ export const AdminToolGrants = ({ assistantId }: AdminToolGrantsProps) => {
     };
 
     return (
-        <section className={styles.section} aria-labelledby="admin-tool-grants-title">
-            <div>
-                <Title3 as="h3" id="admin-tool-grants-title">
-                    {t("admin.assistants.tool_grants_title")}
-                </Title3>
-                <Body2>{t("admin.assistants.tool_grants_description")}</Body2>
-            </div>
+        <section className={styles.section} aria-labelledby={showHeading ? "admin-tool-grants-title" : undefined}>
+            {showHeading && (
+                <div>
+                    <Title3 as="h3" id="admin-tool-grants-title">
+                        {t("admin.assistants.tool_grants_title")}
+                    </Title3>
+                    <Body2>{t("admin.assistants.tool_grants_description")}</Body2>
+                </div>
+            )}
             {error && (
                 <MessageBar intent="error">
                     <MessageBarBody>{error}</MessageBarBody>
@@ -158,9 +161,11 @@ export const AdminToolGrants = ({ assistantId }: AdminToolGrantsProps) => {
                             <Field label={t("admin.assistants.tool_grant_reason_label")} hint={t("admin.assistants.tool_grant_reason_hint")}>
                                 <Textarea value={reason} onChange={(_event, data) => setReason(data.value)} resize="vertical" />
                             </Field>
-                            <Button appearance="primary" disabled={!selectedTool || isSaving} onClick={() => void grantTool()}>
-                                {isSaving ? t("common.loading") : t("admin.assistants.grant_tool")}
-                            </Button>
+                            <div className={styles.grantAction}>
+                                <Button appearance="primary" disabled={!selectedTool || isSaving} onClick={() => void grantTool()}>
+                                    {isSaving ? t("common.loading") : t("admin.assistants.grant_tool")}
+                                </Button>
+                            </div>
                         </div>
                     )}
                 </>

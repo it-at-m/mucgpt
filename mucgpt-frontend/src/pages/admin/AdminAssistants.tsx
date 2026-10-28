@@ -25,7 +25,16 @@ import {
     Title1,
     Title3
 } from "@fluentui/react-components";
-import { ArrowResetRegular, ArrowSyncRegular, DismissRegular, Eye24Regular, EyeOff24Regular, People24Regular, PeopleRegular } from "@fluentui/react-icons";
+import {
+    ArrowResetRegular,
+    ArrowSyncRegular,
+    DismissRegular,
+    Eye24Regular,
+    EyeOff24Regular,
+    People24Regular,
+    PeopleRegular,
+    WrenchRegular
+} from "@fluentui/react-icons";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 
@@ -96,6 +105,7 @@ const AdminAssistants = () => {
     const [isDetailsOpen, setIsDetailsOpen] = useState(false);
     const [selectedAssistant, setSelectedAssistant] = useState<AssistantCardData | null>(null);
     const [ownersAssistant, setOwnersAssistant] = useState<AssistantResponse | null>(null);
+    const [toolGrantsAssistant, setToolGrantsAssistant] = useState<AssistantResponse | null>(null);
     const [ownerInput, setOwnerInput] = useState("");
     const [ownerIds, setOwnerIds] = useState<string[]>([]);
     const [isSavingOwners, setIsSavingOwners] = useState(false);
@@ -590,6 +600,13 @@ const AdminAssistants = () => {
                                                         <Button appearance="secondary" icon={<PeopleRegular />} onClick={() => openOwnerDialog(assistant)}>
                                                             {t("admin.assistants.manage_owners", "Manage owners")}
                                                         </Button>
+                                                        <Button
+                                                            appearance="secondary"
+                                                            icon={<WrenchRegular />}
+                                                            onClick={() => setToolGrantsAssistant(assistant)}
+                                                        >
+                                                            {t("admin.assistants.manage_restricted_tools")}
+                                                        </Button>
                                                     </Card>
                                                 );
                                             })}
@@ -615,7 +632,6 @@ const AdminAssistants = () => {
                     assistant={selectedAssistant}
                     ownedAssistantIds={NO_OWNED_ASSISTANTS}
                     hideStartChat
-                    supplementaryContent={selectedAssistant ? <AdminToolGrants assistantId={selectedAssistant.id} /> : undefined}
                     auditEvents={auditEvents}
                     hasMoreAuditEvents={hasMoreAuditEvents}
                     isLoadingMoreAuditEvents={isLoadingMoreAuditEvents}
@@ -683,6 +699,22 @@ const AdminAssistants = () => {
                             </Button>
                             <Button appearance="primary" onClick={() => void saveOwners()} disabled={ownerIds.length === 0 || isSavingOwners}>
                                 {isSavingOwners ? t("common.loading") : t("common.save", "Save")}
+                            </Button>
+                        </DialogActions>
+                    </DialogBody>
+                </DialogSurface>
+            </Dialog>
+            <Dialog open={toolGrantsAssistant !== null} onOpenChange={(_, data) => !data.open && setToolGrantsAssistant(null)}>
+                <DialogSurface className={styles.ownerDialogSurface}>
+                    <DialogBody>
+                        <DialogTitle>{t("admin.assistants.tool_grants_title")}</DialogTitle>
+                        <DialogContent className={styles.ownerDialogContent}>
+                            <Body2>{t("admin.assistants.tool_grants_description")}</Body2>
+                            {toolGrantsAssistant && <AdminToolGrants assistantId={toolGrantsAssistant.id} showHeading={false} />}
+                        </DialogContent>
+                        <DialogActions>
+                            <Button appearance="secondary" onClick={() => setToolGrantsAssistant(null)}>
+                                {t("common.close", "Close")}
                             </Button>
                         </DialogActions>
                     </DialogBody>

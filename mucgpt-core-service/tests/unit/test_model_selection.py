@@ -316,6 +316,7 @@ def test_initialized_model_uses_request_scoped_streaming_and_temperature() -> No
 
     assert "streaming" not in model.model_fields_set
     assert "temperature" not in model.model_fields_set
+    assert model.store is False
     assert model._should_stream(async_api=True, stream=True) is True
     assert model._should_stream(async_api=True, stream=False) is False
 

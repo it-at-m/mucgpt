@@ -242,12 +242,52 @@ async def revoke_tool(
     db: AsyncSession = Depends(get_db_session),
     admin: AuthenticationResult = Depends(require_admin),
 ) -> Response:
-    """Revoke availability without changing the assistant's saved configuration."""
+    """Revoke availability and remove the tool from the latest assistant version."""
     assistant_repo = AssistantRepository(db)
-    if await assistant_repo.get_for_update(assistant_id) is None:
+    assistant = await assistant_repo.get_for_update(assistant_id)
+    if assistant is None:
         raise AssistantNotFoundException(assistant_id)
     if not await assistant_repo.revoke_tool(assistant_id, tool_id, admin.user_id):
         raise HTTPException(status_code=404, detail="Active tool grant not found")
+
+    latest_version = await assistant_repo.get_latest_version(assistant_id)
+    if latest_version is not None and any(
+        tool.tool_id == tool_id for tool in latest_version.tool_associations
+    ):
+        replacement_version = await assistant_repo.create_assistant_version(
+            assistant=assistant,
+            name=latest_version.name,
+            description=latest_version.description or "",
+            system_prompt=latest_version.system_prompt,
+            creativity=latest_version.creativity,
+            default_model=latest_version.default_model,
+            examples=latest_version.examples or [],
+            quick_prompts=latest_version.quick_prompts or [],
+            tags=latest_version.tags or [],
+            compliance_check_result=latest_version.compliance_check_result,
+            compliance_confirmation=latest_version.compliance_confirmation,
+            state=latest_version.state,
+            state_changed_by=latest_version.state_changed_by,
+            state_change_reason=latest_version.state_change_reason,
+        )
+        for tool in latest_version.tool_associations:
+            if tool.tool_id != tool_id:
+                db.add(
+                    AssistantTool(
+                        assistant_version=replacement_version,
+                        tool_id=tool.tool_id,
+                        config=tool.config,
+                    )
+                )
+        await assistant_repo.record_audit_event(
+            assistant_id=assistant_id,
+            actor_user_id=admin.user_id,
+            actor_name=admin.name,
+            action="tool_revoked",
+            before={"tool_id": tool_id, "version": latest_version.version},
+            after={"tool_id": tool_id, "version": replacement_version.version},
+            assistant_version=replacement_version.version,
+        )
 
     await db.commit()
     return Response(status_code=204)

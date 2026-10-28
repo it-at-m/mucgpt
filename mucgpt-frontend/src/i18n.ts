@@ -138,7 +138,8 @@ i18n
                                 version_created: "Version erstellt",
                                 owners_updated: "Besitzer aktualisiert",
                                 admin_tags_updated: "Admin-Tags aktualisiert",
-                                state_updated: "Status aktualisiert"
+                                state_updated: "Status aktualisiert",
+                                tool_revoked: "Tool entfernt"
                             }
                         }
                     },
@@ -1094,7 +1095,8 @@ i18n
                                 version_created: "Version created",
                                 owners_updated: "Owners updated",
                                 admin_tags_updated: "Admin tags updated",
-                                state_updated: "State updated"
+                                state_updated: "State updated",
+                                tool_revoked: "Tool removed"
                             }
                         }
                     },

@@ -709,6 +709,76 @@ def test_admin_can_grant_and_owner_can_list_tool_availability(
 
 
 @pytest.mark.integration
+def test_revoking_granted_tool_removes_it_from_latest_assistant_version(
+    admin_client: TestClient,
+) -> None:
+    restricted_tool_id = "document-source/read_confidential_document"
+    retained_tool = {"id": "WEB_SEARCH", "config": {"max_results": 5}}
+    create_response = admin_client.post(
+        "assistant/create",
+        json={
+            "name": "Document assistant",
+            "description": "Reads approved documents.",
+            "system_prompt": "Help users with approved documents.",
+            "creativity": "low",
+            "tools": [
+                {"id": restricted_tool_id, "config": {"scope": "confidential"}},
+                retained_tool,
+            ],
+        },
+        headers=headers,
+    )
+    created = AssistantResponse.model_validate(create_response.json())
+
+    grant_response = admin_client.put(
+        f"admin/assistant/{created.id}/tool-grants/{restricted_tool_id}",
+        json={"reason": "Approved for this workflow."},
+        headers=headers,
+    )
+    assert grant_response.status_code == 200
+
+    revoke_response = admin_client.delete(
+        f"admin/assistant/{created.id}/tool-grants/{restricted_tool_id}",
+        headers=headers,
+    )
+    assert revoke_response.status_code == 204
+
+    configuration_response = admin_client.get(
+        f"assistant/{created.id}/configuration", headers=headers
+    )
+    configuration = AssistantResponse.model_validate(configuration_response.json())
+    assert configuration.latest_version.version == created.latest_version.version + 1
+    assert [tool.model_dump() for tool in configuration.latest_version.tools] == [
+        retained_tool
+    ]
+    assert configuration.latest_version.name == "Document assistant"
+    assert (
+        configuration.latest_version.system_prompt
+        == "Help users with approved documents."
+    )
+
+    original_version_response = admin_client.get(
+        f"assistant/{created.id}/version/{created.latest_version.version}",
+        headers=headers,
+    )
+    assert original_version_response.status_code == 200
+    assert {tool["id"] for tool in original_version_response.json()["tools"]} == {
+        restricted_tool_id,
+        retained_tool["id"],
+    }
+
+    audit_response = admin_client.get(
+        f"admin/assistant/{created.id}/audit-events", headers=headers
+    )
+    assert audit_response.status_code == 200
+    assert any(
+        event["action"] == "tool_revoked"
+        and event["assistant_version"] == configuration.latest_version.version
+        for event in audit_response.json()
+    )
+
+
+@pytest.mark.integration
 def test_admin_assistant_list_filters_by_active_tool_grant(
     admin_client: TestClient,
 ) -> None:

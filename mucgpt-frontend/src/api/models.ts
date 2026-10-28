@@ -176,6 +176,7 @@ export type Assistant = {
     state?: AssistantState;
     state_changed_by?: string | null;
     state_change_reason?: string | null;
+    granted_tool_ids?: string[];
 };
 
 export type AssistantState = "active" | "pending_legal_review" | "inactive";
@@ -280,6 +281,7 @@ export interface AssistantResponse {
     latest_version: AssistantVersionResponse;
     is_visible: boolean;
     admin_tags: AdminTag[];
+    granted_tool_ids?: string[];
 }
 
 export type AdminTag = "featured";

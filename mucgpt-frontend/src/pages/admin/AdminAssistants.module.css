@@ -64,9 +64,16 @@
 }
 
 .filterGroup > h3,
-.search,
+.primaryFilters,
 .filterGroup > button {
     grid-column: 1 / -1;
+}
+
+.primaryFilters {
+    display: grid;
+    grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+    gap: var(--spacingHorizontalM);
+    min-width: 0;
 }
 
 .orderingGroup {
@@ -429,6 +436,10 @@
     }
 
     .filterGroup {
+        grid-template-columns: 1fr;
+    }
+
+    .primaryFilters {
         grid-template-columns: 1fr;
     }
 

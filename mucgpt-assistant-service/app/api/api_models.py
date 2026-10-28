@@ -657,6 +657,10 @@ class AssistantResponse(BaseModel):
         description="Number of users subscribed to this assistant",
         example=42,
     )
+    granted_tool_ids: list[str] | None = Field(
+        None,
+        description="Active restricted-tool grants, returned only to assistant owners and administrators.",
+    )
     latest_version: AssistantVersionResponse = Field(
         ..., description="The latest version of the assistant"
     )

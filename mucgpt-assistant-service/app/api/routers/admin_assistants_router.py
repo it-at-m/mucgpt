@@ -18,7 +18,7 @@ from api.api_models import (
 )
 from api.exceptions import AssistantNotFoundException, VersionConflictException
 from api.routers.users_router import _build_assistant_response_list
-from core.auth import require_admin
+from core.auth import authenticate_user, require_admin
 from core.auth_models import AuthenticationResult
 from core.owner_enrichment import refresh_owner_details
 from database.assistant_repo import AssistantRepository
@@ -184,12 +184,19 @@ async def update_admin_owners(
 async def list_tool_grants(
     assistant_id: str,
     db: AsyncSession = Depends(get_db_session),
-    _admin: AuthenticationResult = Depends(require_admin),
+    user_info: AuthenticationResult = Depends(authenticate_user),
 ) -> list[AssistantToolGrantResponse]:
-    """Return active administrator-managed restricted-tool grants."""
+    """Return active restricted-tool grants to an administrator or assistant owner."""
     assistant_repo = AssistantRepository(db)
     if await assistant_repo.get(assistant_id) is None:
         raise AssistantNotFoundException(assistant_id)
+    if not user_info.is_admin and not await assistant_repo.is_owner(
+        assistant_id, user_info.user_id
+    ):
+        raise HTTPException(
+            status_code=403,
+            detail="Only administrators and assistant owners can view tool grants",
+        )
     grants = await assistant_repo.list_active_tool_grants(assistant_id)
     return [AssistantToolGrantResponse.model_validate(grant) for grant in grants]
 

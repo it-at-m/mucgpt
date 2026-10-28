@@ -31,7 +31,7 @@ import {
 
 import styles from "./AssistantEditorPage.module.css";
 import { AssistantCreateFlow } from "./AssistantCreateFlow";
-import { Assistant, AssistantState, ComplianceCheckResponse, ToolBase, ToolInfo } from "../../../api";
+import { Assistant, AssistantState, ComplianceCheckResponse, ToolBase, ToolInfo, ToolListResponse } from "../../../api";
 import { createCommunityAssistantApi } from "../../../api/assistant-client";
 import { checkAssistantComplianceApi, generateAssistantDraftApi } from "../../../api/core-client";
 import { ApiError } from "../../../api/fetch-utils";
@@ -62,6 +62,24 @@ type DiscardTarget = "back" | "discovery";
 
 // A compliance review only applies to the exact prompt it was run against, so every gate compares the same way.
 const hasSystemPromptChanged = (systemPrompt: string, savedSystemPrompt: string | undefined) => systemPrompt !== (savedSystemPrompt ?? "");
+
+export function filterEditorToolCatalog(catalog: ToolListResponse, grantedToolIds: string[]): ToolListResponse {
+    const publicToolIds = new Set(catalog.tools.map(tool => tool.id));
+    return {
+        ...catalog,
+        tools: [
+            ...catalog.tools,
+            ...grantedToolIds
+                .filter(toolId => !publicToolIds.has(toolId))
+                .map(toolId => ({
+                    id: toolId,
+                    name: toolId,
+                    description: "",
+                    access: "restricted" as const
+                }))
+        ]
+    };
+}
 
 interface AssistantEditorPageCreateProps {
     mode: "create";
@@ -134,6 +152,7 @@ interface SettingsFormProps {
     onCreativityChange: (value: string) => void;
     onDefaultModelChange: (value: string | undefined) => void;
     selectedTools: ToolInfo[];
+    availableTools?: ToolListResponse;
     onToolsChange: (tools: ToolBase[]) => void;
     followUpActions: FollowUpActionModel[];
     onFollowUpActionsChange: (value: FollowUpActionModel[]) => void;
@@ -159,7 +178,6 @@ interface SettingsFormProps {
 
 function SettingsForm(props: SettingsFormProps) {
     const { t } = useTranslation();
-    const { tools: availableTools } = useToolsContext();
 
     const onChange = (setter: (value: string) => void) => (_event: FormEvent<HTMLInputElement | HTMLTextAreaElement>, data?: TextareaOnChangeData) => {
         setter(data?.value || "");
@@ -261,7 +279,7 @@ function SettingsForm(props: SettingsFormProps) {
                 <SectionCard title={t("components.assistant_editor.section_tools")} icon={<Wrench24Regular />} className={styles.sectionTools}>
                     <ToolsSection
                         selectedTools={props.selectedTools}
-                        availableTools={availableTools}
+                        availableTools={props.availableTools}
                         onToolsChange={props.onToolsChange}
                         onHasChanged={props.onHasChanged}
                     />
@@ -380,10 +398,11 @@ export const AssistantEditorPage = (props: AssistantEditorPageProps) => {
     ]);
 
     const selectedTools = useMemo(() => {
-        if (!availableTools) return [] as ToolInfo[];
-        const toolMap = new Map(availableTools.tools.map(tool => [tool.id, tool]));
+        const editorTools = availableTools && filterEditorToolCatalog(availableTools, editAssistant?.granted_tool_ids ?? []);
+        if (!editorTools) return [] as ToolInfo[];
+        const toolMap = new Map(editorTools.tools.map(tool => [tool.id, tool]));
         return (state.tools ?? []).map(tool => toolMap.get(tool.id)).filter(Boolean) as ToolInfo[];
-    }, [availableTools, state.tools]);
+    }, [availableTools, editAssistant?.granted_tool_ids, state.tools]);
 
     const handleCancel = useCallback(() => {
         const hasChanges = isCreate ? createState.hasChanges : editState.hasChanged;
@@ -687,6 +706,7 @@ export const AssistantEditorPage = (props: AssistantEditorPageProps) => {
                         onCreativityChange={settingsState.updateCreativity}
                         onDefaultModelChange={settingsState.updateDefaultModel}
                         selectedTools={selectedTools}
+                        availableTools={availableTools && filterEditorToolCatalog(availableTools, editAssistant?.granted_tool_ids ?? [])}
                         onToolsChange={settingsState.updateTools}
                         followUpActions={settingsState.followUpActions ?? []}
                         onFollowUpActionsChange={settingsState.setFollowUpActions}

@@ -388,13 +388,32 @@ const AdminAssistants = () => {
                     <section className={styles.filters} aria-label={t("admin.assistants.filters")}>
                         <section className={styles.filterGroup} aria-labelledby="assistant-filter-heading">
                             <Title3 id="assistant-filter-heading">{t("admin.assistants.filters")}</Title3>
-                            <SearchBox
-                                className={styles.search}
-                                value={search}
-                                onChange={(_, data) => setSearch(data.value)}
-                                placeholder={t("admin.assistants.search_placeholder")}
-                                aria-label={t("admin.assistants.search_placeholder")}
-                            />
+                            <div className={styles.primaryFilters}>
+                                <SearchBox
+                                    className={styles.search}
+                                    value={search}
+                                    onChange={(_, data) => setSearch(data.value)}
+                                    placeholder={t("admin.assistants.search_placeholder")}
+                                    aria-label={t("admin.assistants.search_placeholder")}
+                                />
+                                <Dropdown
+                                    value={selectedToolGrantLabel}
+                                    selectedOptions={[toolGrant ?? ""]}
+                                    button={{ children: selectedToolGrantLabel }}
+                                    onOptionSelect={(_, data) => setToolGrant(data.optionValue || undefined)}
+                                    placeholder={t("admin.assistants.all_tool_grants")}
+                                    aria-label={t("admin.assistants.tool_grant_filter_label")}
+                                >
+                                    <Option value="" text={t("admin.assistants.all_tool_grants")}>
+                                        {t("admin.assistants.all_tool_grants")}
+                                    </Option>
+                                    {restrictedTools.map(tool => (
+                                        <Option key={tool.id} value={tool.id} text={tool.name}>
+                                            {tool.name}
+                                        </Option>
+                                    ))}
+                                </Dropdown>
+                            </div>
                             <Dropdown
                                 value={selectedStateLabel}
                                 selectedOptions={[state ?? ""]}
@@ -436,23 +455,6 @@ const AdminAssistants = () => {
                                 <Option value="error" text={t("admin.assistants.compliance_error")}>
                                     {t("admin.assistants.compliance_error")}
                                 </Option>
-                            </Dropdown>
-                            <Dropdown
-                                value={selectedToolGrantLabel}
-                                selectedOptions={[toolGrant ?? ""]}
-                                button={{ children: selectedToolGrantLabel }}
-                                onOptionSelect={(_, data) => setToolGrant(data.optionValue || undefined)}
-                                placeholder={t("admin.assistants.all_tool_grants")}
-                                aria-label={t("admin.assistants.tool_grant_filter_label")}
-                            >
-                                <Option value="" text={t("admin.assistants.all_tool_grants")}>
-                                    {t("admin.assistants.all_tool_grants")}
-                                </Option>
-                                {restrictedTools.map(tool => (
-                                    <Option key={tool.id} value={tool.id} text={tool.name}>
-                                        {tool.name}
-                                    </Option>
-                                ))}
                             </Dropdown>
                             <Field className={styles.accessFilter} label={t("admin.assistants.all_access")}>
                                 <RadioGroup

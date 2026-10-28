@@ -655,7 +655,7 @@ def test_admin_tags_reject_unknown_values(admin_client: TestClient) -> None:
 
 
 @pytest.mark.integration
-def test_admin_can_grant_list_and_revoke_tool_availability(
+def test_admin_can_grant_and_owner_can_list_tool_availability(
     admin_client: TestClient,
 ) -> None:
     create_response = admin_client.post(
@@ -683,6 +683,7 @@ def test_admin_can_grant_list_and_revoke_tool_availability(
     configuration = AssistantResponse.model_validate(configuration_response.json())
     assert configuration.latest_version.version == created.latest_version.version
     assert configuration.latest_version.tools == []
+    assert configuration.granted_tool_ids == [tool_id]
 
     list_response = admin_client.get(
         f"admin/assistant/{created.id}/tool-grants", headers=headers

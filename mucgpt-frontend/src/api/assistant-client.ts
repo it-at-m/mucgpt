@@ -39,6 +39,7 @@ export interface AdminAssistantListQueryParams {
     compliance_status?: ComplianceStatus;
     access?: AssistantAccessType;
     department?: string;
+    tool_grant?: string;
     search?: string;
     sort_by?: AssistantListSortBy;
     sort_order?: AssistantListSortOrder;
@@ -81,6 +82,7 @@ const buildAdminQueryString = (params?: AdminAssistantListQueryParams): string =
     if (params.compliance_status) query.set("compliance_status", params.compliance_status);
     if (params.access) query.set("access", params.access);
     if (params.department?.trim()) query.set("department", params.department.trim());
+    if (params.tool_grant) query.set("tool_grant", params.tool_grant);
     if (params.search?.trim()) query.set("search", params.search.trim());
     if (params.sort_by) query.set("sort_by", params.sort_by);
     if (params.sort_order) query.set("sort_order", params.sort_order);

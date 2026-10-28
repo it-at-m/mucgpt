@@ -1304,6 +1304,7 @@ export const handlers = [
         const complianceStatus = url.searchParams.get("compliance_status");
         const access = url.searchParams.get("access");
         const department = url.searchParams.get("department")?.trim().toLowerCase();
+        const toolGrant = url.searchParams.get("tool_grant");
         const sortBy = url.searchParams.get("sort_by") || "updated";
         const sortOrder = url.searchParams.get("sort_order") || "desc";
         const offset = Number(url.searchParams.get("offset") || "0");
@@ -1325,6 +1326,7 @@ export const handlers = [
                 matchesAccess &&
                 matchesSearch &&
                 matchesDepartment &&
+                (!toolGrant || (MOCK_TOOL_GRANTS.get(assistant.id) || []).some(grant => grant.tool_id === toolGrant)) &&
                 (!state || version.state === state) &&
                 (!complianceStatus || version.compliance_check_result?.overall_status === complianceStatus)
             );

@@ -5,7 +5,7 @@ from collections.abc import Sequence
 from datetime import datetime
 from typing import Any
 
-from sqlalchemy import String, delete, func, insert, or_, select, update
+from sqlalchemy import String, delete, exists, func, insert, or_, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import aliased, attributes, selectinload
 
@@ -265,6 +265,7 @@ class AssistantRepository(Repository[Assistant]):
         compliance_status: str | None = None,
         access: AssistantAccessType | None = None,
         department: str | None = None,
+        tool_grant: str | None = None,
         search: str | None = None,
         sort_by: str = "updated",
         sort_order: str = "desc",
@@ -329,6 +330,14 @@ class AssistantRepository(Repository[Assistant]):
                 Assistant.is_visible.is_(True),
                 Assistant.hierarchical_access.is_not(None),
                 func.json_array_length(Assistant.hierarchical_access) > 0,
+            )
+        if tool_grant is not None:
+            stmt = stmt.where(
+                exists().where(
+                    AssistantToolGrant.assistant_id == Assistant.id,
+                    AssistantToolGrant.tool_id == tool_grant,
+                    AssistantToolGrant.revoked_at.is_(None),
+                )
             )
         if department is not None:
             stmt = stmt.where(Assistant.is_visible.is_(True))

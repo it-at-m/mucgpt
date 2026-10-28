@@ -708,6 +708,42 @@ def test_admin_can_grant_list_and_revoke_tool_availability(
 
 
 @pytest.mark.integration
+def test_admin_assistant_list_filters_by_active_tool_grant(
+    admin_client: TestClient,
+) -> None:
+    matching_response = admin_client.post(
+        "assistant/create",
+        json={"name": "Document assistant", "system_prompt": "Help users."},
+        headers=headers,
+    )
+    non_matching_response = admin_client.post(
+        "assistant/create",
+        json={"name": "Other assistant", "system_prompt": "Help users."},
+        headers=headers,
+    )
+    matching = AssistantResponse.model_validate(matching_response.json())
+    non_matching = AssistantResponse.model_validate(non_matching_response.json())
+    tool_id = "document-source/read_confidential_document"
+
+    grant_response = admin_client.put(
+        f"admin/assistant/{matching.id}/tool-grants/{tool_id}",
+        json={},
+        headers=headers,
+    )
+    assert grant_response.status_code == 200
+
+    response = admin_client.get(
+        "admin/assistants",
+        params={"tool_grant": tool_id},
+        headers=headers,
+    )
+
+    assert response.status_code == 200
+    assert [assistant["id"] for assistant in response.json()] == [matching.id]
+    assert matching.id != non_matching.id
+
+
+@pytest.mark.integration
 def test_tool_grants_require_administrator_role(test_client: TestClient) -> None:
     create_response = test_client.post(
         "assistant/create",

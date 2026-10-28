@@ -47,7 +47,15 @@ import {
     updateAssistantAdminTagsApi,
     updateAssistantOwnersApi
 } from "../../api/assistant-client";
-import { type AdminTag, type AssistantAuditEvent, type AssistantResponse, type AssistantState, type OwnerDetailsResponse } from "../../api/models";
+import { getAdminTools } from "../../api/core-client";
+import {
+    type AdminTag,
+    type AssistantAuditEvent,
+    type AssistantResponse,
+    type AssistantState,
+    type OwnerDetailsResponse,
+    type ToolInfo
+} from "../../api/models";
 import { ApiError } from "../../api/fetch-utils";
 import { AssistantDetailsSidebar, type AssistantCardData } from "../../components/AssistantDetailsSidebar/AssistantDetailsSidebar";
 import { getPrimaryOwnerDetails, OwnerMetadataLink } from "../../components/OwnerMetadataLink/OwnerMetadataLink";
@@ -93,6 +101,8 @@ const AdminAssistants = () => {
     const [complianceStatus, setComplianceStatus] = useState<ComplianceStatus | undefined>();
     const [access, setAccess] = useState<AssistantAccessType | undefined>();
     const [departments, setDepartments] = useState<string[]>([]);
+    const [toolGrant, setToolGrant] = useState<string | undefined>();
+    const [restrictedTools, setRestrictedTools] = useState<ToolInfo[]>([]);
     const [sortBy, setSortBy] = useState<NonNullable<AdminAssistantListQueryParams["sort_by"]>>("updated");
     const [sortOrder, setSortOrder] = useState<NonNullable<AdminAssistantListQueryParams["sort_order"]>>("desc");
     const [assistants, setAssistants] = useState<AssistantResponse[]>([]);
@@ -122,6 +132,7 @@ const AdminAssistants = () => {
         compliance_status: complianceStatus,
         access,
         department: departments[0],
+        tool_grant: toolGrant,
         search: deferredSearch,
         sort_by: sortBy,
         sort_order: sortOrder,
@@ -156,7 +167,22 @@ const AdminAssistants = () => {
             });
 
         return () => controller.abort();
-    }, [access, complianceStatus, departments, deferredSearch, isAdmin, isLoadingUser, navigate, refreshKey, sortBy, sortOrder, state, t]);
+    }, [access, complianceStatus, departments, deferredSearch, isAdmin, isLoadingUser, navigate, refreshKey, sortBy, sortOrder, state, t, toolGrant]);
+
+    useEffect(() => {
+        let cancelled = false;
+        void getAdminTools(i18n.language)
+            .then(response => {
+                if (!cancelled) setRestrictedTools(response.tools.filter(tool => tool.access === "restricted"));
+            })
+            .catch(() => {
+                if (!cancelled) setRestrictedTools([]);
+            });
+
+        return () => {
+            cancelled = true;
+        };
+    }, [i18n.language]);
 
     const loadMore = async () => {
         const currentRequestVersion = requestVersion.current;
@@ -180,11 +206,14 @@ const AdminAssistants = () => {
         setComplianceStatus(undefined);
         setAccess(undefined);
         setDepartments([]);
+        setToolGrant(undefined);
         setSortBy("updated");
         setSortOrder("desc");
     };
 
-    const hasFilters = Boolean(search || state || complianceStatus || access || departments.length > 0 || sortBy !== "updated" || sortOrder !== "desc");
+    const hasFilters = Boolean(
+        search || state || complianceStatus || access || departments.length > 0 || toolGrant || sortBy !== "updated" || sortOrder !== "desc"
+    );
 
     const handleAccessChange = (value: AssistantAccessType | undefined) => {
         setAccess(value);
@@ -333,6 +362,7 @@ const AdminAssistants = () => {
               : complianceStatus === "error"
                 ? t("admin.assistants.compliance_error")
                 : t("admin.assistants.all_compliance");
+    const selectedToolGrantLabel = restrictedTools.find(tool => tool.id === toolGrant)?.name || t("admin.assistants.all_tool_grants");
     const selectedSortByLabel =
         sortBy === "title"
             ? t("admin.assistants.sort_title")
@@ -406,6 +436,23 @@ const AdminAssistants = () => {
                                 <Option value="error" text={t("admin.assistants.compliance_error")}>
                                     {t("admin.assistants.compliance_error")}
                                 </Option>
+                            </Dropdown>
+                            <Dropdown
+                                value={selectedToolGrantLabel}
+                                selectedOptions={[toolGrant ?? ""]}
+                                button={{ children: selectedToolGrantLabel }}
+                                onOptionSelect={(_, data) => setToolGrant(data.optionValue || undefined)}
+                                placeholder={t("admin.assistants.all_tool_grants")}
+                                aria-label={t("admin.assistants.tool_grant_filter_label")}
+                            >
+                                <Option value="" text={t("admin.assistants.all_tool_grants")}>
+                                    {t("admin.assistants.all_tool_grants")}
+                                </Option>
+                                {restrictedTools.map(tool => (
+                                    <Option key={tool.id} value={tool.id} text={tool.name}>
+                                        {tool.name}
+                                    </Option>
+                                ))}
                             </Dropdown>
                             <Field className={styles.accessFilter} label={t("admin.assistants.all_access")}>
                                 <RadioGroup

@@ -17,6 +17,7 @@ class ResizeObserverMock {
 if (typeof window !== "undefined") {
     Object.defineProperty(window, "ResizeObserver", {
         configurable: true,
+        writable: true,
         value: ResizeObserverMock
     });
 

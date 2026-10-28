@@ -167,6 +167,13 @@
     overflow-wrap: anywhere;
 }
 
+.auditEvent {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacingVerticalXXS);
+    overflow-wrap: anywhere;
+}
+
 /* Spacing comes from the list gap; this overrides the global list item margin. */
 .textList .textListItem,
 .chipList .chipItem {

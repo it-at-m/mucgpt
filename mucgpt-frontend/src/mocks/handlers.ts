@@ -7,6 +7,7 @@ import {
     AssistantCreateResponse,
     AssistantStateUpdateInput,
     AssistantUpdateInput,
+    AdminOwnersUpdateInput,
     ComplianceCategoryResult,
     ComplianceCheckResponse
 } from "../api";
@@ -21,6 +22,7 @@ import {
     generateSimplifyStreamChunks
 } from "./data/generators";
 import { CREATIVITY_HIGH, CREATIVITY_MEDIUM } from "../constants";
+import type { AssistantAuditEvent } from "../api/models";
 import { loadMockAssistants, loadMockSubscriptions, saveMockAssistants, saveMockSubscriptions } from "./data/assistant-store";
 import { MOCK_DELETED_SUBSCRIBED_SNAPSHOT, MOCK_SUBSCRIPTION_SEED } from "./data/browser-scenario-seed";
 
@@ -582,7 +584,27 @@ const UNSUBSCRIBED_ASSISTANT_SCENARIOS: UnsubscribedAssistantScenario[] = [
 MOCK_ASSISTANT_SEED.push(...UNSUBSCRIBED_ASSISTANT_SCENARIOS.map(buildUnsubscribedAssistant));
 
 const DYNAMIC_ASSISTANTS = loadMockAssistants(MOCK_ASSISTANT_SEED);
+const MOCK_AUDIT_EVENTS = new Map<string, AssistantAuditEvent[]>();
 const MOCK_SUBSCRIPTIONS = new Set(loadMockSubscriptions(MOCK_SUBSCRIPTION_SEED));
+
+function getMockAuditEvents(assistant: AssistantCreateResponse): AssistantAuditEvent[] {
+    const events = MOCK_AUDIT_EVENTS.get(assistant.id);
+    if (events) return events;
+
+    const created: AssistantAuditEvent[] = [
+        {
+            id: 1,
+            assistant_id: assistant.id,
+            occurred_at: assistant.created_at,
+            actor_user_id: MOCK_CURRENT_OWNER_ID,
+            actor_name: "Demo User",
+            action: "created",
+            after: { version: assistant.latest_version.version, owner_ids: assistant.owner_ids }
+        }
+    ];
+    MOCK_AUDIT_EVENTS.set(assistant.id, created);
+    return created;
+}
 
 // Helper to choose stream type basierend auf enabled_tools
 /** Picks the SSE stream type mocking tool-less vs tool-enabled chats. */
@@ -1304,6 +1326,47 @@ export const handlers = [
         DYNAMIC_ASSISTANTS[index] = updated;
         saveMockAssistants(DYNAMIC_ASSISTANTS);
         return HttpResponse.json(withMockSubscriptionCount(updated));
+    }),
+
+    http.patch("/api/admin/assistant/:id/owners", async ({ params, request }) => {
+        const body = (await request.json()) as AdminOwnersUpdateInput;
+        const assistant = DYNAMIC_ASSISTANTS.find(item => item.id === params.id);
+        if (!assistant) return new HttpResponse(null, { status: 404 });
+        const ownerIds = [...new Set((body.owner_ids || []).map(ownerId => ownerId.trim()).filter(Boolean))];
+        if (ownerIds.length === 0) return HttpResponse.json({ detail: "At least one owner is required" }, { status: 422 });
+        const ownersDetailed = buildOwnersDetailedFromOwnerIds(ownerIds);
+        const occurredAt = new Date().toISOString();
+        const updated = {
+            ...assistant,
+            owner_ids: ownerIds,
+            owners_detailed: ownersDetailed,
+            updated_at: occurredAt,
+            latest_version: { ...assistant.latest_version, owner_ids: ownerIds, owners_detailed: ownersDetailed }
+        };
+        const index = DYNAMIC_ASSISTANTS.indexOf(assistant);
+        DYNAMIC_ASSISTANTS[index] = updated;
+        const events = getMockAuditEvents(assistant);
+        events.unshift({
+            id: events.length + 1,
+            assistant_id: assistant.id,
+            occurred_at: occurredAt,
+            actor_user_id: MOCK_CURRENT_OWNER_ID,
+            actor_name: "Demo User",
+            action: "owners_updated",
+            before: { owner_ids: assistant.owner_ids },
+            after: { owner_ids: ownerIds }
+        });
+        saveMockAssistants(DYNAMIC_ASSISTANTS);
+        return HttpResponse.json(withMockSubscriptionCount(updated));
+    }),
+
+    http.get("/api/admin/assistant/:id/audit-events", ({ params, request }) => {
+        const assistant = DYNAMIC_ASSISTANTS.find(item => item.id === params.id);
+        if (!assistant) return new HttpResponse(null, { status: 404 });
+        const url = new URL(request.url);
+        const offset = Number(url.searchParams.get("offset") || 0);
+        const limit = Number(url.searchParams.get("limit") || 100);
+        return HttpResponse.json(getMockAuditEvents(assistant).slice(offset, offset + limit));
     }),
 
     http.get("/api/assistant/:id", ({ params }) => {

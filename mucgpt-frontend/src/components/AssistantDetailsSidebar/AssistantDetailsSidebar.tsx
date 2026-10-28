@@ -30,7 +30,7 @@ import {
 import { useState, useCallback, useContext, useRef, useEffect, useId, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import styles from "./AssistantDetailsSidebar.module.css";
-import { Assistant, AssistantResponse, CommunityAssistant, CommunityAssistantSnapshot, ToolBase } from "../../api/models";
+import { Assistant, AssistantAuditEvent, AssistantResponse, CommunityAssistant, CommunityAssistantSnapshot, ToolBase } from "../../api/models";
 import { MarkdownRenderer } from "../MarkdownRenderer/MarkdownRenderer";
 import { Badge } from "../../ui/Badge";
 import { AssistantStateCallout, type AssistantCalloutState } from "../AssistantStateCallout/AssistantStateCallout";
@@ -73,6 +73,8 @@ const formatConfigurationDate = (value: string | undefined, locale: string): str
         year: "numeric"
     }).format(date);
 };
+
+const getAuditActionLabel = (action: string, t: (key: string, fallback: string) => string) => t(`admin.assistants.audit_actions.${action}`, action);
 
 interface DetailsGroupProps {
     title: string;
@@ -209,6 +211,10 @@ interface AssistantDetailsSidebarProps {
     onUnsubscribe?: () => void;
     onMigrateLocal?: () => void;
     hideStartChat?: boolean;
+    auditEvents?: AssistantAuditEvent[];
+    hasMoreAuditEvents?: boolean;
+    isLoadingMoreAuditEvents?: boolean;
+    onLoadMoreAuditEvents?: () => void;
 }
 
 export const AssistantDetailsSidebar = ({
@@ -225,7 +231,11 @@ export const AssistantDetailsSidebar = ({
     onDelete,
     onUnsubscribe,
     onMigrateLocal,
-    hideStartChat
+    hideStartChat,
+    auditEvents,
+    hasMoreAuditEvents = false,
+    isLoadingMoreAuditEvents = false,
+    onLoadMoreAuditEvents
 }: AssistantDetailsSidebarProps) => {
     const { t, i18n } = useTranslation();
     const { showSuccess, showError } = useGlobalToastContext();
@@ -451,6 +461,26 @@ export const AssistantDetailsSidebar = ({
                                         <DetailsRow label={t("components.community_assistants.last_updated")}>{configurationDate}</DetailsRow>
                                     )}
                                 </dl>
+                            </DetailsGroup>
+                        )}
+                        {auditEvents && auditEvents.length > 0 && (
+                            <DetailsGroup title={t("admin.assistants.audit_history", "Activity history")}>
+                                <ul className={styles.textList}>
+                                    {auditEvents.map(event => (
+                                        <li key={event.id} className={styles.auditEvent}>
+                                            <Text weight="semibold">{getAuditActionLabel(event.action, t)}</Text>
+                                            <Caption1Strong>
+                                                {event.actor_name || event.actor_user_id} ·{" "}
+                                                {new Date(event.occurred_at).toLocaleString(i18n.resolvedLanguage || i18n.language)}
+                                            </Caption1Strong>
+                                        </li>
+                                    ))}
+                                </ul>
+                                {hasMoreAuditEvents && onLoadMoreAuditEvents && (
+                                    <Button appearance="secondary" onClick={onLoadMoreAuditEvents} disabled={isLoadingMoreAuditEvents}>
+                                        {isLoadingMoreAuditEvents ? t("common.loading") : t("admin.assistants.load_more")}
+                                    </Button>
+                                )}
                             </DetailsGroup>
                         )}
                     </>

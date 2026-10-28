@@ -287,7 +287,10 @@ const Chat = () => {
                     // Pre-edit snapshot exactly when the agent starts writing (the
                     // editor still holds the pre-edit content); runs without canvas
                     // activity stay out of the revision rings entirely.
-                    if (c.isOpen && c.getMarkdown().trim()) c.snapshot("agent");
+                    if (c.getMarkdown().trim()) c.snapshot("agent");
+                    // The canvas is always editable: an agent change while the
+                    // panel is closed opens the view so the user follows along.
+                    if (!c.isOpen) c.setIsOpen(true);
                 }
                 c.applyStreamEvent(event);
             },
@@ -295,7 +298,8 @@ const Chat = () => {
                 const c = canvasRef.current;
                 runHadCanvasActivity = false;
                 // An open canvas is sent with the request even when empty, so the
-                // agent may write to it this run.
+                // agent may write to it this run. A closed canvas locks when the
+                // first canvas event auto-opens the view.
                 if (c.isOpen) c.lock();
             },
             onRunFinished: () => {
@@ -306,14 +310,6 @@ const Chat = () => {
             }
         };
     }, []);
-
-    // Canvas open ⇒ the three canvas tools are auto-enabled; the grouped "Canvas"
-    // badge in the tool selector lets the user toggle them back off.
-    useEffect(() => {
-        setSelectedTools(prev =>
-            canvas.isOpen ? [...new Set([...prev, ...CANVAS_TOOL_IDS])] : prev.filter(id => !(CANVAS_TOOL_IDS as readonly string[]).includes(id))
-        );
-    }, [canvas.isOpen]);
 
     // "Copy into Canvas" from the legacy fenced fallback: fragments have no
     // access to the page, so they call through the canvasStream bridge.
@@ -600,8 +596,9 @@ const Chat = () => {
 
     useEffect(() => {
         try {
-            // Canvas tools ride along only while the canvas is open; they are not a
-            // durable tool preference, so they never persist across sessions.
+            // Canvas tool ids never belong to the persisted selection (base tools,
+            // hidden from the selector); filter them out in case stale storage
+            // still contains them from earlier versions.
             localStorage.setItem(STORAGE_KEYS.SELECTED_TOOLS, JSON.stringify(selectedTools.filter(id => !(CANVAS_TOOL_IDS as readonly string[]).includes(id))));
         } catch {
             // ignore storage errors

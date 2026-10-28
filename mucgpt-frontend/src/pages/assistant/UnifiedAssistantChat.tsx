@@ -52,7 +52,7 @@ import { useUnifiedHistory, useUnifiedHistoryRegistration } from "../../componen
 import { downloadAssistantExport, mapAssistantToExportData } from "../../utils/assistant-export";
 import { scrollIntoNearestContainer } from "../../utils/scrollIntoNearestContainer";
 import { loadConversation } from "../../service/conversationHistory";
-import { CANVAS_TOOL_IDS, setCopyIntoCanvasHandler } from "../../utils/canvasStream";
+import { setCopyIntoCanvasHandler } from "../../utils/canvasStream";
 
 const requestPersist = true;
 const conversationActions = getConversationActionCapabilities(requestPersist);
@@ -255,7 +255,10 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                     // Pre-edit snapshot exactly when the agent starts writing (the
                     // editor still holds the pre-edit content); runs without canvas
                     // activity stay out of the revision rings entirely.
-                    if (c.isOpen && c.getMarkdown().trim()) c.snapshot("agent");
+                    if (c.getMarkdown().trim()) c.snapshot("agent");
+                    // The canvas is always editable: an agent change while the
+                    // panel is closed opens the view so the user follows along.
+                    if (!c.isOpen) c.setIsOpen(true);
                 }
                 c.applyStreamEvent(event);
             },
@@ -263,7 +266,8 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                 const c = canvasRef.current;
                 runHadCanvasActivity = false;
                 // An open canvas is sent with the request even when empty, so the
-                // agent may write to it this run.
+                // agent may write to it this run. A closed canvas locks when the
+                // first canvas event auto-opens the view.
                 if (c.isOpen) c.lock();
             },
             onRunFinished: () => {
@@ -274,12 +278,6 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
             }
         };
     }, []);
-
-    useEffect(() => {
-        setSelectedToolsGuarded(prev =>
-            canvas.isOpen ? [...new Set([...prev, ...CANVAS_TOOL_IDS])] : prev.filter(id => !(CANVAS_TOOL_IDS as readonly string[]).includes(id))
-        );
-    }, [canvas.isOpen, setSelectedToolsGuarded]);
 
     // "Copy into Canvas" from the legacy fenced fallback reaches the editor through
     // the canvasStream bridge (fragments have no access to the page).

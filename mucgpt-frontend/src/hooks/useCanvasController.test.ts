@@ -350,4 +350,25 @@ describe("cursor anchor sampling", () => {
         });
         expect(harness.current.toCanvasState()?.cursor).toBe(6);
     });
+
+    it("sends the canvas state with a closed panel when it has content", () => {
+        const harness = renderController();
+        harness.render(undefined);
+        act(() => {
+            harness.current.setMarkdown("Hello world");
+            clickAt(harness, 3);
+        });
+
+        // closed with content: the document and the 'here' caret ride along,
+        // the view-only selection does not
+        const closed = harness.current.toCanvasState();
+        expect(closed?.content).toBe("Hello world");
+        expect(closed?.selection).toBeNull();
+        expect(closed?.cursor).toBe(2);
+
+        act(() => {
+            harness.current.setMarkdown("");
+        });
+        expect(harness.current.toCanvasState()).toBeNull();
+    });
 });

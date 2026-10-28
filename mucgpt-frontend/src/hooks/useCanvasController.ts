@@ -25,7 +25,7 @@ export interface CanvasController {
     getSelectionMarkdown(): string | null;
     /** Full replace; clears selection */
     setMarkdown(md: string): void;
-    /** Null when closed or empty */
+    /** Null only when no canvas content exists; sent open or closed */
     toCanvasState(): CanvasState | null;
     /** APPEND → live insert; UPDATE → replace doc */
     applyStreamEvent(ev: CanvasStreamEvent): void;
@@ -240,15 +240,19 @@ export function useCanvasController(conversationId: string | undefined): CanvasC
     }, []);
 
     const toCanvasState = useCallback((): CanvasState | null => {
-        // Sent whenever the canvas is open — an empty document still counts as an
-        // active canvas the agent may write into. The cursor is the anchor the user
-        // currently sees (the persistent caret marker): agent rewrites reset it, so
-        // nothing stale is silently anchored at the document start.
-        if (!isOpen) return null;
+        // The canvas is always editable: whenever the document has content it is
+        // sent with the request — panel open or closed — so the agent works on
+        // the document the user last saw and the server copy stays in sync. An
+        // open empty document still counts as an active canvas the agent may
+        // write into. The caret is the 'here' anchor the agent needs even while
+        // the panel is closed (small screens); the selection is view state and
+        // only meaningful while open.
+        const markdown = getMarkdown();
+        if (!isOpen && !markdown?.trim()) return null;
         const caretPos = persistentCaret(editorRef.current);
         return {
-            content: getMarkdown(),
-            selection: getSelectionMarkdown(),
+            content: markdown,
+            selection: isOpen ? getSelectionMarkdown() : null,
             cursor: caretPos === null ? null : caretMarkdownOffset(editorRef.current, caretPos)
         };
     }, [isOpen, getMarkdown, getSelectionMarkdown]);

@@ -1,6 +1,7 @@
 from typing import Any
 from unittest.mock import MagicMock
 
+from langchain_core.messages import AIMessage, ToolMessage
 from langchain_core.utils.function_calling import convert_to_openai_function
 from langgraph.prebuilt import ToolRuntime
 from langgraph.types import Command
@@ -85,15 +86,21 @@ def test_canvas_write_replaces_document_and_streams(monkeypatch: Any) -> None:
     assert final.metadata == {"canvas_revision": 1}
 
 
-def test_canvas_write_without_canvas_state_errors(monkeypatch: Any) -> None:
+def test_canvas_write_creates_canvas_without_prior_state(monkeypatch: Any) -> None:
+    """The canvas is always editable: canvas_write starts one from nothing."""
     writer = RecordingWriter()
     monkeypatch.setattr(canvas, "_get_writer", lambda: writer)
     tool = canvas.make_canvas_write_tool(_logger())
 
-    result = tool.invoke({"content": "# Title"})
+    result, updated_canvas = _command_result(
+        tool.invoke({"content": "# Title", "runtime": _runtime()})
+    )
 
-    assert result.startswith("Error:")
-    assert writer.chunks == []
+    assert result.startswith(CONFIRMATION)
+    assert updated_canvas == CanvasState(content="# Title", selection=None)
+    states = [chunk.state for chunk in writer.chunks]
+    assert states[0] == ToolStreamState.STARTED
+    assert states[-1] == ToolStreamState.UPDATE
 
 
 def test_canvas_write_rejects_empty_content(monkeypatch: Any) -> None:
@@ -310,13 +317,95 @@ def test_canvas_edit_must_target_active_selection(monkeypatch: Any) -> None:
     assert writer.chunks == []
 
 
-def test_canvas_read_returns_document(monkeypatch: Any) -> None:
-    monkeypatch.setattr(canvas, "_get_writer", lambda: RecordingWriter())
+def test_canvas_read_returns_document_with_context_info(monkeypatch: Any) -> None:
     tool = canvas.make_canvas_read_tool(_logger())
 
-    result = tool.invoke({"canvas_state": _canvas("# Doc\n\ncontent")})
+    result = tool.invoke(
+        {
+            "canvas_state": _canvas("# Doc\n\ncontent", selection="selected text"),
+        }
+    )
 
-    assert result == "# Doc\n\ncontent"
+    assert "Untrusted user data" in result
+    assert "# Doc\n\ncontent" in result
+    assert "Full document (14 characters)" in result
+    assert "selected text" in result
+    assert "canvas_edit's old_text must be part of it" in result
+    # no cursor: no cursor line, and no table-annotation note for plain selections
+    assert "Cursor" not in result
+    assert "[table, row" not in result
+
+
+def test_canvas_read_reports_cursor_and_table_selection() -> None:
+    tool = canvas.make_canvas_read_tool(_logger())
+    doc = "| a | b |\n| --- | --- |\n| 1 | 2 |"
+    selection = '[table, row 2, col "a", referenced text: "1"]'
+
+    result = tool.invoke(
+        {"canvas_state": CanvasState(content=doc, selection=selection, cursor=10)}
+    )
+
+    assert "Cursor (the user's 'here') at character offset 10" in result
+    assert 'after "| a | b |\n"' in result
+    assert 'before "| --- | --- |\n| 1 | 2 |"' in result
+    assert selection in result
+    assert "the header is row 1" in result
+
+
+def test_canvas_read_around_cursor_returns_only_a_window() -> None:
+    tool = canvas.make_canvas_read_tool(_logger())
+    doc = "a" * 2000 + "MIDDLE" + "b" * 20000
+
+    result = tool.invoke(
+        {"canvas_state": CanvasState(content=doc, cursor=2003), "around_cursor": True}
+    )
+
+    assert "Showing characters " in result
+    assert "of 22006" in result
+    assert "MIDDLE" in result
+    # the window stays bounded around the cursor: no full a-run survives
+    assert "a" * 2000 not in result
+
+
+def test_canvas_read_around_cursor_without_cursor_errors() -> None:
+    tool = canvas.make_canvas_read_tool(_logger())
+
+    result = tool.invoke({"canvas_state": _canvas("# Doc"), "around_cursor": True})
+
+    assert result.startswith("Error:")
+    assert "without around_cursor" in result
+
+
+def test_canvas_read_prunes_earlier_read_results() -> None:
+    """An earlier full document must not stay in the checkpointed history."""
+    tool = canvas.make_canvas_read_tool(_logger())
+    prior_read_tool_call = {
+        "name": "canvas_read",
+        "args": {},
+        "id": "call-1",
+        "type": "tool_call",
+    }
+    history = [
+        AIMessage(content="", tool_calls=[prior_read_tool_call]),
+        ToolMessage(content="the old document", tool_call_id="call-1", id="msg-1"),
+    ]
+
+    result = tool.invoke(
+        {
+            "canvas_state": _canvas("# Doc v2"),
+            "messages": history,
+            "runtime": _runtime(tool_call_id="call-2"),
+            "around_cursor": False,
+        }
+    )
+
+    updated = result.update["messages"]
+    replacement, fresh = updated
+    assert replacement.id == "msg-1"
+    assert replacement.tool_call_id == "call-1"
+    assert replacement.content.startswith("[Canvas content from an earlier read")
+    assert fresh.tool_call_id == "call-2"
+    assert "# Doc v2" in fresh.content
 
 
 def test_canvas_read_without_canvas_state_errors(monkeypatch: Any) -> None:
@@ -329,13 +418,13 @@ def test_model_visible_schemas_contain_only_contract_args() -> None:
     expected = [
         (canvas.WRITE_TOOL, {"content"}),
         (canvas.EDIT_TOOL, {"old_text", "new_text"}),
-        (canvas.READ_TOOL, set()),
+        (canvas.READ_TOOL, {"around_cursor"}),
     ]
     for local_tool, visible_args in expected:
         spec = convert_to_openai_function(local_tool.build(None, _logger()))
         properties = set(spec["parameters"].get("properties", {}))
         assert properties == visible_args
-        for hidden in ("canvas_state", "canvas_revision", "status_message"):
+        for hidden in ("canvas_state", "canvas_revision", "status_message", "messages"):
             assert hidden not in properties
 
 

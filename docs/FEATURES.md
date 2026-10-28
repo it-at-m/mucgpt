@@ -15,6 +15,7 @@ The chat provides a clear space to work with the underlying language model on al
 
 Work side by side with the agent: open a rich-text canvas panel next to any chat and draft documents together.
 - Toggle the canvas at any time, mid-conversation; on small screens it opens as an overlay so the chat stays usable.
+- The agent can start or edit the canvas while it is closed: the view opens automatically as soon as the agent writes.
 - Write and format text yourself (headings, lists, tables, undo/redo). The agent can write and edit the canvas directly — the editor locks while the agent works and changes appear live as they are generated.
 - Select a passage to quote it into the chat or to ask the agent to revise exactly that text.
 - Save versions manually and review an automatic history of agent edits. Restoring an older version is non-destructive and can be undone like any edit.

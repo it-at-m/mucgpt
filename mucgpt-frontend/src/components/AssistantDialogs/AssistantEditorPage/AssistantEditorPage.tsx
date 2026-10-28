@@ -57,29 +57,12 @@ import { CREATIVITY_LOW } from "../../../constants";
 import { EdelweissSpinner } from "../../EdelweissSpinner";
 import { AssistantPreviewChat } from "../AssistantPreviewChat/AssistantPreviewChat";
 import { useResizablePreview } from "./useResizablePreview";
+import { mergeRestrictedTools } from "../../../utils/tool-catalog";
 
 type DiscardTarget = "back" | "discovery";
 
 // A compliance review only applies to the exact prompt it was run against, so every gate compares the same way.
 const hasSystemPromptChanged = (systemPrompt: string, savedSystemPrompt: string | undefined) => systemPrompt !== (savedSystemPrompt ?? "");
-
-export function filterEditorToolCatalog(catalog: ToolListResponse, grantedToolIds: string[]): ToolListResponse {
-    const publicToolIds = new Set(catalog.tools.map(tool => tool.id));
-    return {
-        ...catalog,
-        tools: [
-            ...catalog.tools,
-            ...grantedToolIds
-                .filter(toolId => !publicToolIds.has(toolId))
-                .map(toolId => ({
-                    id: toolId,
-                    name: toolId,
-                    description: "",
-                    access: "restricted" as const
-                }))
-        ]
-    };
-}
 
 interface AssistantEditorPageCreateProps {
     mode: "create";
@@ -398,7 +381,7 @@ export const AssistantEditorPage = (props: AssistantEditorPageProps) => {
     ]);
 
     const selectedTools = useMemo(() => {
-        const editorTools = availableTools && filterEditorToolCatalog(availableTools, editAssistant?.granted_tool_ids ?? []);
+        const editorTools = availableTools && mergeRestrictedTools(availableTools, editAssistant?.granted_tool_ids ?? []);
         if (!editorTools) return [] as ToolInfo[];
         const toolMap = new Map(editorTools.tools.map(tool => [tool.id, tool]));
         return (state.tools ?? []).map(tool => toolMap.get(tool.id)).filter(Boolean) as ToolInfo[];
@@ -706,7 +689,7 @@ export const AssistantEditorPage = (props: AssistantEditorPageProps) => {
                         onCreativityChange={settingsState.updateCreativity}
                         onDefaultModelChange={settingsState.updateDefaultModel}
                         selectedTools={selectedTools}
-                        availableTools={availableTools && filterEditorToolCatalog(availableTools, editAssistant?.granted_tool_ids ?? [])}
+                        availableTools={availableTools && mergeRestrictedTools(availableTools, editAssistant?.granted_tool_ids ?? [])}
                         onToolsChange={settingsState.updateTools}
                         followUpActions={settingsState.followUpActions ?? []}
                         onFollowUpActionsChange={settingsState.setFollowUpActions}

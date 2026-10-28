@@ -1,10 +1,10 @@
 import { describe, expect, it } from "vitest";
 
-import { filterEditorToolCatalog } from "./AssistantEditorPage";
+import { mergeRestrictedTools } from "../../../utils/tool-catalog";
 
-describe("filterEditorToolCatalog", () => {
+describe("mergeRestrictedTools", () => {
     it("adds granted restricted tools to the public catalog", () => {
-        const result = filterEditorToolCatalog(
+        const result = mergeRestrictedTools(
             {
                 tools: [{ id: "public-tool", name: "Public", description: "", access: "public" }]
             },

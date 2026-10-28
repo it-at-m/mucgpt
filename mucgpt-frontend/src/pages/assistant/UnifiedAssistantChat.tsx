@@ -48,6 +48,7 @@ import styles from "./UnifiedAssistantChat.module.css";
 import { useUnifiedHistory, useUnifiedHistoryRegistration } from "../../components/UnifiedHistory";
 import { downloadAssistantExport, mapAssistantToExportData } from "../../utils/assistant-export";
 import { scrollIntoNearestContainer } from "../../utils/scrollIntoNearestContainer";
+import { mergeRestrictedTools } from "../../utils/tool-catalog";
 
 interface UnifiedAssistantChatProps {
     strategy: AssistantStrategy;
@@ -165,6 +166,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
         strategy.canEdit &&
         (strategy instanceof LocalAssistantStrategy || assistantConfig.state === "active" || assistantConfig.state === "pending_legal_review");
     const lockedToolIds = useMemo(() => assistantConfig.tools?.map(tool => tool.id) ?? [], [assistantConfig.tools]);
+    const assistantTools = tools && mergeRestrictedTools(tools, lockedToolIds);
 
     useEffect(() => {
         if (!isEditMode || isAssistantContentLoading || (canEdit && !isLegacyAssistant)) return;
@@ -876,7 +878,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                         setQuestion={question => setQuestion(question)}
                         selectedTools={selectedTools}
                         setSelectedTools={setSelectedToolsGuarded}
-                        tools={tools}
+                        tools={assistantTools}
                         allowToolSelection={true}
                         lockedToolIds={lockedToolIds}
                         uploadedData={uploadedData}
@@ -921,7 +923,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                 setQuestion={question => setQuestion(question)}
                 selectedTools={selectedTools}
                 setSelectedTools={setSelectedToolsGuarded}
-                tools={tools}
+                tools={assistantTools}
                 allowToolSelection={true}
                 lockedToolIds={lockedToolIds}
                 uploadedData={uploadedData}
@@ -954,7 +956,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
         error,
         selectedTools,
         setSelectedToolsGuarded,
-        tools,
+        assistantTools,
         lockedToolIds,
         draftCacheKey,
         uploadedData,

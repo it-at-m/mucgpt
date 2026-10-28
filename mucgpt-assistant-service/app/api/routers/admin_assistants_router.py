@@ -3,8 +3,10 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.api_models import (
+    AdminOwnersUpdate,
     AdminTagsUpdate,
     AssistantAccessType,
+    AssistantAuditEventResponse,
     AssistantListSortBy,
     AssistantListSortOrder,
     AssistantResponse,
@@ -18,6 +20,7 @@ from api.exceptions import AssistantNotFoundException, VersionConflictException
 from api.routers.users_router import _build_assistant_response_list
 from core.auth import require_admin
 from core.auth_models import AuthenticationResult
+from core.owner_enrichment import refresh_owner_details
 from database.assistant_repo import AssistantRepository
 from database.database_models import AssistantTool
 from database.session import get_db_session
@@ -106,7 +109,63 @@ async def update_admin_tags(
     if assistant is None:
         raise AssistantNotFoundException(assistant_id)
 
-    await assistant_repo.update_admin_tags(assistant, tags_update.admin_tags)
+    previous_tags = list(assistant.admin_tags or [])
+    next_tags = list(dict.fromkeys(tags_update.admin_tags))
+    await assistant_repo.update_admin_tags(assistant, next_tags)
+    await assistant_repo.record_audit_event(
+        assistant_id=assistant_id,
+        actor_user_id=_admin.user_id,
+        actor_name=_admin.name,
+        action="admin_tags_updated",
+        before={"admin_tags": previous_tags},
+        after={"admin_tags": next_tags},
+    )
+    await db.commit()
+    refreshed_assistant = await assistant_repo.get_with_owners(assistant_id)
+    return (
+        await _build_assistant_response_list([refreshed_assistant], assistant_repo)
+    )[0]
+
+
+@router.patch(
+    "/admin/assistant/{assistant_id}/owners",
+    response_model=AssistantResponse,
+    summary="Update assistant owners",
+    tags=["Admin"],
+)
+async def update_admin_owners(
+    assistant_id: str,
+    owners_update: AdminOwnersUpdate,
+    db: AsyncSession = Depends(get_db_session),
+    _admin: AuthenticationResult = Depends(require_admin),
+) -> AssistantResponse:
+    """Replace an assistant's owners without creating a new assistant version."""
+    owner_ids = list(
+        dict.fromkeys(owner_id.strip() for owner_id in owners_update.owner_ids)
+    )
+    if not all(owner_ids):
+        raise HTTPException(status_code=422, detail="Owner IDs must not be empty")
+
+    assistant_repo = AssistantRepository(db)
+    assistant = await assistant_repo.get_for_update(assistant_id)
+    if assistant is None:
+        raise AssistantNotFoundException(assistant_id)
+
+    previous_owner_ids = await assistant_repo.get_owner_ids(assistant_id)
+    await refresh_owner_details(owner_ids, db)
+    await assistant_repo.update(
+        assistant_id=assistant_id,
+        owner_ids=owner_ids,
+        assistant=assistant,
+    )
+    await assistant_repo.record_audit_event(
+        assistant_id=assistant_id,
+        actor_user_id=_admin.user_id,
+        actor_name=_admin.name,
+        action="owners_updated",
+        before={"owner_ids": previous_owner_ids},
+        after={"owner_ids": owner_ids},
+    )
     await db.commit()
     refreshed_assistant = await assistant_repo.get_with_owners(assistant_id)
     return (
@@ -255,6 +314,16 @@ async def update_assistant_state(
                     config=tool.config,
                 )
             )
+        await assistant_repo.record_audit_event(
+            assistant_id=assistant_id,
+            actor_user_id=admin.user_id,
+            actor_name=admin.name,
+            action="state_updated",
+            before={"state": latest_version.state, "version": latest_version.version},
+            after={"state": state_update.state, "version": review_version.version},
+            reason=state_update.reason,
+            assistant_version=review_version.version,
+        )
         await db.commit()
     except IntegrityError:
         await db.rollback()
@@ -268,3 +337,26 @@ async def update_assistant_state(
     return (
         await _build_assistant_response_list([refreshed_assistant], assistant_repo)
     )[0]
+
+
+@router.get(
+    "/admin/assistant/{assistant_id}/audit-events",
+    response_model=list[AssistantAuditEventResponse],
+    summary="List assistant audit events",
+    tags=["Admin"],
+)
+async def get_assistant_audit_events(
+    assistant_id: str,
+    offset: int = Query(0, ge=0),
+    limit: int = Query(100, ge=1, le=500),
+    db: AsyncSession = Depends(get_db_session),
+    _admin: AuthenticationResult = Depends(require_admin),
+) -> list[AssistantAuditEventResponse]:
+    """Return the immutable administrative and configuration history."""
+    assistant_repo = AssistantRepository(db)
+    events = await assistant_repo.get_audit_events(
+        assistant_id, offset=offset, limit=limit
+    )
+    if not events and await assistant_repo.get(assistant_id) is None:
+        raise AssistantNotFoundException(assistant_id)
+    return [AssistantAuditEventResponse.model_validate(event) for event in events]

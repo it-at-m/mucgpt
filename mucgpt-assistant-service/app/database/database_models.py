@@ -155,6 +155,28 @@ class AssistantVersion(Base):
         return f"<AssistantVersion(assistant_id={self.assistant_id}, version='{self.version}')>"
 
 
+class AssistantAuditEvent(Base):
+    """Immutable record of a change made to an assistant."""
+
+    __tablename__ = "assistant_audit_events"
+
+    id = Column(Integer, primary_key=True)
+    assistant_id = Column(String(36), nullable=False, index=True)
+    occurred_at = Column(DateTime, default=datetime.utcnow, nullable=False, index=True)
+    actor_user_id = Column(String(255), nullable=False)
+    actor_name = Column(String(255), nullable=True)
+    action = Column(String(64), nullable=False)
+    before = Column(JSON, nullable=True)
+    after = Column(JSON, nullable=True)
+    reason = Column(Text, nullable=True)
+    assistant_version = Column(Integer, nullable=True)
+
+    __table_args__ = (
+        # Stable ordering for events created in the same microsecond.
+        UniqueConstraint("occurred_at", "id", name="uq_assistant_audit_order"),
+    )
+
+
 class Assistant(Base):
     __tablename__ = "assistants"  # Use UUID version 4 (random) as the primary key
     id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))

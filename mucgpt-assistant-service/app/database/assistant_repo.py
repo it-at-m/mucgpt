@@ -16,6 +16,7 @@ from utils import serialize_list
 
 from .database_models import (
     Assistant,
+    AssistantAuditEvent,
     AssistantToolGrant,
     AssistantVersion,
     Example,
@@ -82,6 +83,56 @@ class AssistantRepository(Repository[Assistant]):
             select(Assistant).filter(Assistant.id == assistant_id).with_for_update()
         )
         return result.scalars().first()
+
+    async def record_audit_event(
+        self,
+        *,
+        assistant_id: str,
+        actor_user_id: str,
+        action: str,
+        actor_name: str | None = None,
+        before: dict[str, Any] | None = None,
+        after: dict[str, Any] | None = None,
+        reason: str | None = None,
+        assistant_version: int | None = None,
+    ) -> AssistantAuditEvent:
+        """Queue an audit event in the current transaction."""
+        event = AssistantAuditEvent(
+            assistant_id=assistant_id,
+            actor_user_id=actor_user_id,
+            actor_name=actor_name,
+            action=action,
+            before=before,
+            after=after,
+            reason=reason,
+            assistant_version=assistant_version,
+        )
+        self.session.add(event)
+        await self.session.flush()
+        return event
+
+    async def get_audit_events(
+        self, assistant_id: str, *, offset: int = 0, limit: int = 100
+    ) -> list[AssistantAuditEvent]:
+        result = await self.session.execute(
+            select(AssistantAuditEvent)
+            .where(AssistantAuditEvent.assistant_id == assistant_id)
+            .order_by(
+                AssistantAuditEvent.occurred_at.desc(),
+                AssistantAuditEvent.id.desc(),
+            )
+            .offset(offset)
+            .limit(limit)
+        )
+        return list(result.scalars().all())
+
+    async def get_owner_ids(self, assistant_id: str) -> list[str]:
+        result = await self.session.execute(
+            select(assistant_owners.c.user_id)
+            .where(assistant_owners.c.assistant_id == assistant_id)
+            .order_by(assistant_owners.c.user_id)
+        )
+        return list(result.scalars().all())
 
     async def claim_version_update(self, assistant: Assistant) -> bool:
         """Claim an assistant for a version append using its update timestamp."""

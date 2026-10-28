@@ -4,8 +4,10 @@ import {
     AssistantCreateInput,
     AssistantCreateResponse,
     AssistantResponse,
+    AssistantAuditEvent,
     AssistantState,
     AssistantStateUpdateInput,
+    AdminOwnersUpdateInput,
     AdminTagsUpdateInput,
     AssistantUpdateInput,
     AssistantToolGrant,
@@ -40,6 +42,11 @@ export interface AdminAssistantListQueryParams {
     search?: string;
     sort_by?: AssistantListSortBy;
     sort_order?: AssistantListSortOrder;
+    offset?: number;
+    limit?: number;
+}
+
+export interface AssistantAuditEventQueryParams {
     offset?: number;
     limit?: number;
 }
@@ -189,5 +196,25 @@ export async function revokeAssistantToolApi(assistantId: string, toolId: string
     return handleApiRequest(
         () => fetch(`/api/admin/assistant/${encodeURIComponent(assistantId)}/tool-grants/${encodeURIComponent(toolId)}`, deleteConfig()),
         "Failed to revoke assistant tool availability"
+    );
+}
+
+export async function updateAssistantOwnersApi(assistantId: string, input: AdminOwnersUpdateInput): Promise<AssistantResponse> {
+    return handleApiRequest(() => fetch(`/api/admin/assistant/${assistantId}/owners`, patchConfig({ ...input })), "Failed to update assistant owners");
+}
+
+export async function getAssistantAuditEventsApi(
+    assistantId: string,
+    params?: AssistantAuditEventQueryParams,
+    options?: AssistantRequestOptions
+): Promise<AssistantAuditEvent[]> {
+    const query = new URLSearchParams();
+    if (typeof params?.offset === "number") query.set("offset", String(params.offset));
+    if (typeof params?.limit === "number") query.set("limit", String(params.limit));
+    const queryString = query.size > 0 ? `?${query.toString()}` : "";
+
+    return handleApiRequest(
+        () => fetch(`/api/admin/assistant/${assistantId}/audit-events${queryString}`, { ...getConfig(), signal: options?.signal }),
+        "Failed to get assistant audit events"
     );
 }

@@ -354,7 +354,7 @@ See the [stack README](../stack/README.md) for the local Docker Compose setup in
 
 ### Prebuilt container images
 
-For real deployments, pull the prebuilt release images instead of building from source. Every release publishes the same image (same tags and digest) to two registries — pick whichever suits your environment:
+For real deployments, pull the prebuilt release images instead of building from source. Every release publishes the same runnable image (same tags and platform images) to two registries — pick whichever suits your environment. The openCode mirror omits GHCR-only BuildKit attestations:
 
 | Component | ghcr.io | registry.opencode.de |
 | --- | --- | --- |

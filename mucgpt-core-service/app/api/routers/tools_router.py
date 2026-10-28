@@ -1,4 +1,6 @@
-from fastapi import APIRouter, Depends, HTTPException
+from typing import Annotated
+
+from fastapi import APIRouter, Depends, HTTPException, Query
 
 from agent.tools.tool_metadata import list_tool_metadata
 from api.api_models import ToolListResponse
@@ -34,6 +36,29 @@ async def list_tools(
         lang=lang, user_info=user_info, force_reload=force_reload
     )
     tool_list.tools = [tool for tool in tool_list.tools if tool.access == "public"]
+    return tool_list
+
+
+@router.get(
+    "/tools/metadata",
+    summary="Get tool metadata by ID",
+    description="Get display metadata for specific tool IDs, including restricted tools.",
+    response_model=ToolListResponse,
+    responses={200: {"description": "Successful Response"}},
+)
+async def get_tool_metadata(
+    tool_ids: Annotated[
+        list[str], Query(alias="tool_id", min_length=1, max_length=100)
+    ],
+    user_info=Depends(authenticate_user),
+    lang: str = "deutsch",
+) -> ToolListResponse:
+    """Return non-sensitive display metadata for requested tool IDs."""
+    tool_list = await list_tool_metadata(lang=lang, user_info=user_info)
+    requested_tool_ids = set(tool_ids)
+    tool_list.tools = [
+        tool for tool in tool_list.tools if tool.id in requested_tool_ids
+    ]
     return tool_list
 
 

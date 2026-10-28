@@ -33,7 +33,7 @@ import styles from "./AssistantEditorPage.module.css";
 import { AssistantCreateFlow } from "./AssistantCreateFlow";
 import { Assistant, AssistantState, ComplianceCheckResponse, ToolBase, ToolInfo, ToolListResponse } from "../../../api";
 import { createCommunityAssistantApi } from "../../../api/assistant-client";
-import { checkAssistantComplianceApi, generateAssistantDraftApi } from "../../../api/core-client";
+import { checkAssistantComplianceApi, generateAssistantDraftApi, getToolMetadata } from "../../../api/core-client";
 import { ApiError } from "../../../api/fetch-utils";
 import { useGlobalToastContext } from "../../GlobalToastHandler/GlobalToastContext";
 import { StarterPromptModel } from "../../StarterPrompt";
@@ -41,6 +41,8 @@ import { LLMContext } from "../../LLMSelector/LLMContextProvider";
 import { ConfigContext } from "../../../context/ConfigContext";
 import { FollowUpActionModel } from "../../FollowUpAction";
 import { useToolsContext } from "../../ToolsProvider";
+import { LanguageContext } from "../../LanguageSelector/LanguageContextProvider";
+import { mapContextToBackendLang } from "../../../utils/language-utils";
 import { useAssistantState } from "../shared/hooks/useAssistantState";
 import { useCreateAssistantState } from "../shared/hooks/useCreateAssistantState";
 import {
@@ -312,6 +314,7 @@ export const AssistantEditorPage = (props: AssistantEditorPageProps) => {
     const { t } = useTranslation();
     const navigate = useNavigate();
     const { LLM } = useContext(LLMContext);
+    const { language } = useContext(LanguageContext);
     const appConfig = useContext(ConfigContext);
     const { showError, showSuccess } = useGlobalToastContext();
     const { tools: availableTools } = useToolsContext();
@@ -350,6 +353,7 @@ export const AssistantEditorPage = (props: AssistantEditorPageProps) => {
     const isComplianceCheckEnabled = appConfig.ai_act_compliance_check_enabled;
 
     const [loading, setLoading] = useState(false);
+    const [restrictedToolMetadata, setRestrictedToolMetadata] = useState<ToolInfo[]>([]);
     const [discardOpen, setDiscardOpen] = useState(false);
     const [discardTarget, setDiscardTarget] = useState<DiscardTarget>("back");
     // A restored edit draft can already carry an unsaved system prompt change. It never passed through the
@@ -364,6 +368,27 @@ export const AssistantEditorPage = (props: AssistantEditorPageProps) => {
     const [reviewCheckOutdated, setReviewCheckOutdated] = useState(draftHasUnreviewedPrompt);
     // Bumped whenever the confirmation is reset so the checkbox remounts and reliably reflects the cleared state.
     const [reviewResetKey, setReviewResetKey] = useState(0);
+
+    useEffect(() => {
+        const grantedToolIds = editAssistant?.granted_tool_ids ?? [];
+        if (grantedToolIds.length === 0) {
+            setRestrictedToolMetadata([]);
+            return;
+        }
+
+        let cancelled = false;
+        void getToolMetadata(grantedToolIds, mapContextToBackendLang(language))
+            .then(response => {
+                if (!cancelled) setRestrictedToolMetadata(response.tools);
+            })
+            .catch(() => {
+                if (!cancelled) setRestrictedToolMetadata([]);
+            });
+
+        return () => {
+            cancelled = true;
+        };
+    }, [editAssistant?.granted_tool_ids, language]);
 
     useEffect(() => {
         if (!isCreate && !editState.hasChanged) {
@@ -381,11 +406,11 @@ export const AssistantEditorPage = (props: AssistantEditorPageProps) => {
     ]);
 
     const selectedTools = useMemo(() => {
-        const editorTools = availableTools && mergeRestrictedTools(availableTools, editAssistant?.granted_tool_ids ?? []);
+        const editorTools = availableTools && mergeRestrictedTools(availableTools, [...restrictedToolMetadata, ...(editAssistant?.granted_tool_ids ?? [])]);
         if (!editorTools) return [] as ToolInfo[];
         const toolMap = new Map(editorTools.tools.map(tool => [tool.id, tool]));
         return (state.tools ?? []).map(tool => toolMap.get(tool.id)).filter(Boolean) as ToolInfo[];
-    }, [availableTools, editAssistant?.granted_tool_ids, state.tools]);
+    }, [availableTools, editAssistant?.granted_tool_ids, restrictedToolMetadata, state.tools]);
 
     const handleCancel = useCallback(() => {
         const hasChanges = isCreate ? createState.hasChanges : editState.hasChanged;
@@ -689,7 +714,9 @@ export const AssistantEditorPage = (props: AssistantEditorPageProps) => {
                         onCreativityChange={settingsState.updateCreativity}
                         onDefaultModelChange={settingsState.updateDefaultModel}
                         selectedTools={selectedTools}
-                        availableTools={availableTools && mergeRestrictedTools(availableTools, editAssistant?.granted_tool_ids ?? [])}
+                        availableTools={
+                            availableTools && mergeRestrictedTools(availableTools, [...restrictedToolMetadata, ...(editAssistant?.granted_tool_ids ?? [])])
+                        }
                         onToolsChange={settingsState.updateTools}
                         followUpActions={settingsState.followUpActions ?? []}
                         onFollowUpActionsChange={settingsState.setFollowUpActions}

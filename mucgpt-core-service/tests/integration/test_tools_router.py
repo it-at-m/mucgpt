@@ -57,6 +57,43 @@ def test_tools_list_excludes_restricted_tools(
 
 
 @pytest.mark.integration
+def test_tool_metadata_returns_requested_restricted_tool(
+    test_client: TestClient, monkeypatch: pytest.MonkeyPatch
+):
+    async def list_tools_with_restricted_tool(**_kwargs) -> ToolListResponse:
+        return ToolListResponse(
+            tools=[
+                ToolInfo(id="public", name="Public", description="Public tool"),
+                ToolInfo(
+                    id="restricted",
+                    name="Restricted",
+                    description="Restricted tool",
+                    access="restricted",
+                ),
+            ]
+        )
+
+    monkeypatch.setattr(
+        "api.routers.tools_router.list_tool_metadata", list_tools_with_restricted_tool
+    )
+
+    response = test_client.get("/v1/tools/metadata?tool_id=restricted", headers=headers)
+
+    assert response.status_code == 200
+    assert response.json()["tools"] == [
+        {
+            "id": "restricted",
+            "name": "Restricted",
+            "description": "Restricted tool",
+            "mcp_source": None,
+            "mcp_scope": None,
+            "mcp_group": None,
+            "access": "restricted",
+        }
+    ]
+
+
+@pytest.mark.integration
 def test_admin_tools_list_requires_administrator(test_client: TestClient):
     response = test_client.get("/v1/admin/tools", headers=headers)
     assert response.status_code == 403

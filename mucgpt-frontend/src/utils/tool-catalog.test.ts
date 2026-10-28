@@ -14,4 +14,23 @@ describe("mergeRestrictedTools", () => {
 
         expect(result.tools).toHaveLength(1);
     });
+
+    it("uses restricted-tool metadata when it is available", () => {
+        const result = mergeRestrictedTools({ tools: [{ id: "public-tool", name: "Public", description: "", access: "public" }] }, [
+            "restricted-tool",
+            {
+                id: "restricted-tool",
+                name: "Confidential document search",
+                description: "Search approved confidential documents.",
+                access: "restricted"
+            }
+        ]);
+
+        expect(result.tools).toContainEqual({
+            id: "restricted-tool",
+            name: "Confidential document search",
+            description: "Search approved confidential documents.",
+            access: "restricted"
+        });
+    });
 });

@@ -1,6 +1,7 @@
 import * as React from "react";
 import { ToolListResponse, ToolInfo } from "../../api/models";
 import { Dialog, DialogSurface, DialogTitle, DialogBody, DialogContent, Button, Text, Checkbox } from "@fluentui/react-components";
+import { LockClosed16Regular } from "@fluentui/react-icons";
 import { useTranslation } from "react-i18next";
 import styles from "./ToolsSelector.module.css";
 
@@ -69,20 +70,32 @@ export const ToolsSelectorContent: React.FC<ToolsSelectorContentProps> = ({
                         </div>
                     )}
                     <div className={styles.toolCardsContainer}>
-                        {tools.tools.map((tool: ToolInfo) => (
-                            <div key={tool.id} className={styles.toolCard}>
-                                <span className={styles.toolCardHeader}>
-                                    <span className={styles.toolName}>{tool.name}</span>
-                                    <span className={styles.toolDescription}>{tool.description}</span>
-                                </span>
-                                <Checkbox
-                                    checked={selected.has(tool.id)}
-                                    onChange={() => handleToggle(tool)}
-                                    className={styles.toolCardCheckbox}
-                                    aria-label={tool.name}
-                                />
-                            </div>
-                        ))}
+                        {tools.tools.map((tool: ToolInfo) => {
+                            const isRestricted = tool.access === "restricted";
+                            const restrictedToolLabel = t("admin.assistants.restricted_tool_label");
+
+                            return (
+                                <div key={tool.id} className={styles.toolCard}>
+                                    <span className={styles.toolCardHeader}>
+                                        <span className={styles.toolName}>
+                                            {tool.name}
+                                            {isRestricted && (
+                                                <span className={styles.restrictedToolIcon} aria-label={restrictedToolLabel} title={restrictedToolLabel}>
+                                                    <LockClosed16Regular aria-hidden="true" />
+                                                </span>
+                                            )}
+                                        </span>
+                                        <span className={styles.toolDescription}>{tool.description}</span>
+                                    </span>
+                                    <Checkbox
+                                        checked={selected.has(tool.id)}
+                                        onChange={() => handleToggle(tool)}
+                                        className={styles.toolCardCheckbox}
+                                        aria-label={isRestricted ? `${tool.name}: ${restrictedToolLabel}` : tool.name}
+                                    />
+                                </div>
+                            );
+                        })}
                     </div>
                 </>
             ) : (

@@ -23,6 +23,12 @@
     overflow: hidden;
     text-overflow: ellipsis;
 }
+.restrictedToolIcon {
+    display: inline-flex;
+    margin-inline-start: var(--spacingHorizontalXXS);
+    vertical-align: text-bottom;
+    color: var(--colorNeutralForeground2);
+}
 .toolDescription {
     font-size: var(--fontSizeBase300, 0.97rem);
     color: var(--colorNeutralForeground2);

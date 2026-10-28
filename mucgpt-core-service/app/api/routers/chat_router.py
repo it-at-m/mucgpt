@@ -112,6 +112,9 @@ async def chat_completions(
 
         # Use enabled_tools from request if provided, otherwise use no tool
         enabled_tools = request.enabled_tools or []
+        # TODO: Before running the agent, verify restricted tools against the
+        # assistant's active grants. Client-provided enabled_tools is not an
+        # authorization boundary.
 
         # Structured data sources for request context
         data_sources = (
@@ -178,7 +181,9 @@ async def ag_ui_chat_endpoint(
     if not chat_request.messages:
         raise HTTPException(status_code=400, detail="messages must not be empty")
     if not chat_request.messages[-1].role == "user":
-        raise HTTPException(status_code=400, detail="Last message must be from the user (role='user')")
+        raise HTTPException(
+            status_code=400, detail="Last message must be from the user (role='user')"
+        )
 
     try:
         ModelRegistry.get_model(chat_request.model)

@@ -103,7 +103,23 @@ i18n
                             load_more: "Weitere Assistenten laden",
                             featured: "Empfohlen",
                             remove_featured: "Empfohlen entfernen",
-                            mark_featured: "Als empfohlen markieren"
+                            mark_featured: "Als empfohlen markieren",
+                            tool_grants_title: "Verfügbarkeit eingeschränkter Tools",
+                            tool_grants_description: "Diese Freigaben machen Tools verfügbar, wählen sie aber nicht für den Assistenten aus.",
+                            active_tool_grants: "Aktive Tool-Freigaben",
+                            no_tool_grants: "Für diesen Assistenten sind keine eingeschränkten Tools freigegeben.",
+                            restricted_tool_label: "Eingeschränktes Tool",
+                            restricted_tool_placeholder: "Tool auswählen",
+                            tool_grant_reason_label: "Begründung",
+                            tool_grant_reason_hint: "Optional. Diese Notiz wird mit der Freigabe gespeichert.",
+                            grant_tool: "Tool freigeben",
+                            revoke_tool: "Freigabe widerrufen",
+                            tool_granted: "Tool wurde freigegeben.",
+                            tool_revoked: "Tool-Freigabe wurde widerrufen.",
+                            tool_granted_at: "Freigegeben am {{date}}",
+                            tool_grants_load_failed: "Die Tool-Freigaben konnten nicht geladen werden.",
+                            tool_grant_failed: "Das Tool konnte nicht freigegeben werden.",
+                            tool_revoke_failed: "Die Tool-Freigabe konnte nicht widerrufen werden."
                         }
                     },
                     home: {
@@ -1023,7 +1039,23 @@ i18n
                             load_more: "Load more assistants",
                             featured: "Featured",
                             remove_featured: "Remove Featured",
-                            mark_featured: "Mark as Featured"
+                            mark_featured: "Mark as Featured",
+                            tool_grants_title: "Restricted tool availability",
+                            tool_grants_description: "These grants make tools available but do not select them for the assistant.",
+                            active_tool_grants: "Active tool grants",
+                            no_tool_grants: "No restricted tools are available to this assistant.",
+                            restricted_tool_label: "Restricted tool",
+                            restricted_tool_placeholder: "Select a tool",
+                            tool_grant_reason_label: "Reason",
+                            tool_grant_reason_hint: "Optional. This note is stored with the grant.",
+                            grant_tool: "Make tool available",
+                            revoke_tool: "Revoke availability",
+                            tool_granted: "Tool is now available.",
+                            tool_revoked: "Tool availability was revoked.",
+                            tool_granted_at: "Granted {{date}}",
+                            tool_grants_load_failed: "Tool grants could not be loaded.",
+                            tool_grant_failed: "The tool could not be made available.",
+                            tool_revoke_failed: "Tool availability could not be revoked."
                         }
                     },
                     home: {
@@ -1932,7 +1964,23 @@ i18n
                             load_more: "Weitere Assistenten laden",
                             featured: "Empfohlen",
                             remove_featured: "Empfohlen wegnehmen",
-                            mark_featured: "Als empfohlen markieren"
+                            mark_featured: "Als empfohlen markieren",
+                            tool_grants_title: "Eing'schränkte Werkzeig freigebn",
+                            tool_grants_description: "De Freigaben machan Werkzeig verfügbar, wählns oba ned fia den Assistentn aus.",
+                            active_tool_grants: "Aktive Werkzeig-Freigaben",
+                            no_tool_grants: "Fia den Assistentn san koane eing'schränkten Werkzeig freigegebn.",
+                            restricted_tool_label: "Eing'schränktes Werkzeig",
+                            restricted_tool_placeholder: "Werkzeig auswähln",
+                            tool_grant_reason_label: "Begründung",
+                            tool_grant_reason_hint: "Optional. De Notiz werd mit da Freigab g'speichert.",
+                            grant_tool: "Werkzeig freigebn",
+                            revoke_tool: "Freigab widerrufn",
+                            tool_granted: "Werkzeig is freigegebn.",
+                            tool_revoked: "Werkzeig-Freigab is widerrufn.",
+                            tool_granted_at: "Freigegebn am {{date}}",
+                            tool_grants_load_failed: "De Werkzeig-Freigaben ham ned g'ladn werdn kenna.",
+                            tool_grant_failed: "Des Werkzeig hod ned freigegebn werdn kenna.",
+                            tool_revoke_failed: "De Werkzeig-Freigab hod ned widerrufn werdn kenna."
                         }
                     },
                     home: {
@@ -2828,7 +2876,23 @@ i18n
                             load_more: "Charger plus d’assistants",
                             featured: "À la une",
                             remove_featured: "Retirer de la une",
-                            mark_featured: "Mettre à la une"
+                            mark_featured: "Mettre à la une",
+                            tool_grants_title: "Disponibilité des outils restreints",
+                            tool_grants_description: "Ces autorisations rendent des outils disponibles sans les sélectionner pour l’assistant.",
+                            active_tool_grants: "Autorisations d’outils actives",
+                            no_tool_grants: "Aucun outil restreint n’est disponible pour cet assistant.",
+                            restricted_tool_label: "Outil restreint",
+                            restricted_tool_placeholder: "Sélectionner un outil",
+                            tool_grant_reason_label: "Motif",
+                            tool_grant_reason_hint: "Facultatif. Cette note est enregistrée avec l’autorisation.",
+                            grant_tool: "Rendre l’outil disponible",
+                            revoke_tool: "Retirer la disponibilité",
+                            tool_granted: "L’outil est maintenant disponible.",
+                            tool_revoked: "La disponibilité de l’outil a été retirée.",
+                            tool_granted_at: "Accordé le {{date}}",
+                            tool_grants_load_failed: "Les autorisations d’outils n’ont pas pu être chargées.",
+                            tool_grant_failed: "L’outil n’a pas pu être rendu disponible.",
+                            tool_revoke_failed: "La disponibilité de l’outil n’a pas pu être retirée."
                         }
                     },
                     home: {
@@ -3725,7 +3789,23 @@ i18n
                             load_more: "Завантажити більше помічників",
                             featured: "Рекомендовані",
                             remove_featured: "Зняти позначку «Рекомендовані»",
-                            mark_featured: "Позначити як рекомендовані"
+                            mark_featured: "Позначити як рекомендовані",
+                            tool_grants_title: "Доступність обмежених інструментів",
+                            tool_grants_description: "Ці дозволи роблять інструменти доступними, але не вибирають їх для асистента.",
+                            active_tool_grants: "Активні дозволи інструментів",
+                            no_tool_grants: "Для цього асистента немає доступних обмежених інструментів.",
+                            restricted_tool_label: "Обмежений інструмент",
+                            restricted_tool_placeholder: "Виберіть інструмент",
+                            tool_grant_reason_label: "Причина",
+                            tool_grant_reason_hint: "Необов’язково. Цю примітку буде збережено з дозволом.",
+                            grant_tool: "Зробити інструмент доступним",
+                            revoke_tool: "Скасувати доступність",
+                            tool_granted: "Інструмент тепер доступний.",
+                            tool_revoked: "Доступність інструменту скасовано.",
+                            tool_granted_at: "Надано {{date}}",
+                            tool_grants_load_failed: "Не вдалося завантажити дозволи інструментів.",
+                            tool_grant_failed: "Не вдалося зробити інструмент доступним.",
+                            tool_revoke_failed: "Не вдалося скасувати доступність інструменту."
                         }
                     },
                     home: {

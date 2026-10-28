@@ -196,6 +196,10 @@ export async function handleApiRequest<T>(request: () => Promise<Response>, defa
             throw new ApiError(message, response.status, redirectUrl);
         }
 
+        if (response.status === 204) {
+            return undefined as T;
+        }
+
         const parsedResponse = await handleResponse(response);
         return parsedResponse;
     } catch (error) {

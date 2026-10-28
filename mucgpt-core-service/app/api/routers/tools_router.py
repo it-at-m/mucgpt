@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 
 from agent.tools.tool_metadata import list_tool_metadata
 from api.api_models import ToolListResponse
@@ -30,6 +30,27 @@ async def list_tools(
         :param lang: Language for tool metadata. Supported: deutsch, english, français, bairisch, українська
         :param force_reload: If true, bypass cache and force-refresh MCP tools for this request
     """
+    return await list_tool_metadata(
+        lang=lang, user_info=user_info, force_reload=force_reload
+    )
+
+
+@router.get(
+    "/admin/tools",
+    summary="List tools for assistant availability administration",
+    description="Get tool metadata and availability classification for administrator-managed assistant grants.",
+    response_model=ToolListResponse,
+    responses={200: {"description": "Successful Response"}},
+)
+async def list_admin_tools(
+    user_info=Depends(authenticate_user),
+    lang: str = "deutsch",
+    force_reload: bool = False,
+) -> ToolListResponse:
+    """Return the tools the administrator can manage, including their access class."""
+    if not user_info.is_admin:
+        raise HTTPException(status_code=403, detail="Administrator access required")
+
     return await list_tool_metadata(
         lang=lang, user_info=user_info, force_reload=force_reload
     )

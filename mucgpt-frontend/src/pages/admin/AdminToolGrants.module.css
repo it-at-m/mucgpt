@@ -1,0 +1,42 @@
+.section,
+.grantForm,
+.grantCopy {
+    display: flex;
+    flex-direction: column;
+}
+
+.section {
+    gap: var(--spacingVerticalM);
+    padding-top: var(--spacingVerticalL);
+    border-top: 1px solid var(--colorNeutralStroke2);
+}
+
+.grantList {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacingVerticalS);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.grantItem {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: var(--spacingHorizontalM);
+    padding: var(--spacingVerticalS) var(--spacingHorizontalM);
+    border: 1px solid var(--colorNeutralStroke2);
+    border-radius: var(--borderRadiusMedium);
+    background-color: var(--colorNeutralBackground1);
+}
+
+.grantCopy,
+.grantForm {
+    gap: var(--spacingVerticalXS);
+    min-width: 0;
+}
+
+.metadata {
+    color: var(--colorNeutralForeground2);
+}

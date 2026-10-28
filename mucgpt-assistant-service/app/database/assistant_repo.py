@@ -16,6 +16,7 @@ from utils import serialize_list
 
 from .database_models import (
     Assistant,
+    AssistantToolGrant,
     AssistantVersion,
     Example,
     Owner,
@@ -684,6 +685,78 @@ class AssistantRepository(Repository[Assistant]):
         await self.session.flush()
         await self.session.refresh(assistant)
         return assistant
+
+    async def list_active_tool_grants(
+        self, assistant_id: str
+    ) -> list[AssistantToolGrant]:
+        """Return currently active restricted-tool grants for an assistant."""
+        result = await self.session.execute(
+            select(AssistantToolGrant)
+            .where(
+                AssistantToolGrant.assistant_id == assistant_id,
+                AssistantToolGrant.revoked_at.is_(None),
+            )
+            .order_by(AssistantToolGrant.tool_id)
+        )
+        return list(result.scalars().all())
+
+    async def grant_tool(
+        self,
+        assistant_id: str,
+        tool_id: str,
+        granted_by: str,
+        reason: str | None,
+    ) -> AssistantToolGrant:
+        """Create or reactivate an administrator-managed tool grant."""
+        result = await self.session.execute(
+            select(AssistantToolGrant)
+            .where(
+                AssistantToolGrant.assistant_id == assistant_id,
+                AssistantToolGrant.tool_id == tool_id,
+            )
+            .with_for_update()
+        )
+        grant = result.scalars().first()
+        if grant is None:
+            grant = AssistantToolGrant(
+                assistant_id=assistant_id,
+                tool_id=tool_id,
+                granted_by=granted_by,
+                reason=reason,
+            )
+            self.session.add(grant)
+        else:
+            grant.granted_by = granted_by
+            grant.granted_at = datetime.utcnow()
+            grant.reason = reason
+            grant.revoked_by = None
+            grant.revoked_at = None
+
+        await self.session.flush()
+        await self.session.refresh(grant)
+        return grant
+
+    async def revoke_tool(
+        self, assistant_id: str, tool_id: str, revoked_by: str
+    ) -> bool:
+        """Revoke an active administrator-managed tool grant."""
+        result = await self.session.execute(
+            select(AssistantToolGrant)
+            .where(
+                AssistantToolGrant.assistant_id == assistant_id,
+                AssistantToolGrant.tool_id == tool_id,
+                AssistantToolGrant.revoked_at.is_(None),
+            )
+            .with_for_update()
+        )
+        grant = result.scalars().first()
+        if grant is None:
+            return False
+
+        grant.revoked_by = revoked_by
+        grant.revoked_at = datetime.utcnow()
+        await self.session.flush()
+        return True
 
     async def get_with_owners(self, assistant_id: str) -> Assistant | None:
         logger.debug(f"Fetching assistant with owners for assistant {assistant_id}")

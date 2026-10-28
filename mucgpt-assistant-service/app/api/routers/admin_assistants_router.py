@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Response
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -10,6 +10,8 @@ from api.api_models import (
     AssistantResponse,
     AssistantState,
     AssistantStateUpdate,
+    AssistantToolGrantResponse,
+    AssistantToolGrantUpdate,
     ComplianceStatus,
 )
 from api.exceptions import AssistantNotFoundException, VersionConflictException
@@ -110,6 +112,77 @@ async def update_admin_tags(
     return (
         await _build_assistant_response_list([refreshed_assistant], assistant_repo)
     )[0]
+
+
+@router.get(
+    "/admin/assistant/{assistant_id}/tool-grants",
+    response_model=list[AssistantToolGrantResponse],
+    summary="List restricted tools available to an assistant",
+    tags=["Admin"],
+)
+async def list_tool_grants(
+    assistant_id: str,
+    db: AsyncSession = Depends(get_db_session),
+    _admin: AuthenticationResult = Depends(require_admin),
+) -> list[AssistantToolGrantResponse]:
+    """Return active administrator-managed restricted-tool grants."""
+    assistant_repo = AssistantRepository(db)
+    if await assistant_repo.get(assistant_id) is None:
+        raise AssistantNotFoundException(assistant_id)
+    grants = await assistant_repo.list_active_tool_grants(assistant_id)
+    return [AssistantToolGrantResponse.model_validate(grant) for grant in grants]
+
+
+@router.put(
+    "/admin/assistant/{assistant_id}/tool-grants/{tool_id:path}",
+    response_model=AssistantToolGrantResponse,
+    summary="Make a restricted tool available to an assistant",
+    tags=["Admin"],
+)
+async def grant_tool(
+    assistant_id: str,
+    tool_id: str,
+    grant_update: AssistantToolGrantUpdate,
+    db: AsyncSession = Depends(get_db_session),
+    admin: AuthenticationResult = Depends(require_admin),
+) -> AssistantToolGrantResponse:
+    """Grant availability only; assistant owners still choose whether to configure it."""
+    assistant_repo = AssistantRepository(db)
+    if await assistant_repo.get_for_update(assistant_id) is None:
+        raise AssistantNotFoundException(assistant_id)
+
+    grant = await assistant_repo.grant_tool(
+        assistant_id=assistant_id,
+        tool_id=tool_id,
+        granted_by=admin.user_id,
+        reason=grant_update.reason,
+    )
+    response = AssistantToolGrantResponse.model_validate(grant)
+    await db.commit()
+    return response
+
+
+@router.delete(
+    "/admin/assistant/{assistant_id}/tool-grants/{tool_id:path}",
+    status_code=204,
+    summary="Revoke a restricted tool from an assistant",
+    tags=["Admin"],
+)
+async def revoke_tool(
+    assistant_id: str,
+    tool_id: str,
+    db: AsyncSession = Depends(get_db_session),
+    admin: AuthenticationResult = Depends(require_admin),
+) -> Response:
+    """Revoke availability without changing the assistant's saved configuration."""
+    assistant_repo = AssistantRepository(db)
+    if await assistant_repo.get_for_update(assistant_id) is None:
+        raise AssistantNotFoundException(assistant_id)
+    if not await assistant_repo.revoke_tool(assistant_id, tool_id, admin.user_id):
+        raise HTTPException(status_code=404, detail="Active tool grant not found")
+
+    await db.commit()
+    return Response(status_code=204)
 
 
 @router.patch(

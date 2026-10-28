@@ -34,6 +34,7 @@ import { AssistantDetailsSidebar, type AssistantCardData } from "../../component
 import { getPrimaryOwnerDetails, OwnerMetadataLink } from "../../components/OwnerMetadataLink/OwnerMetadataLink";
 import DepartmentTreeDropdown from "../../components/DepartmentTreeDropdown/DepartmentTreeDropdown";
 import { UserContext } from "../layout/UserContextProvider";
+import { AdminToolGrants } from "./AdminToolGrants";
 import styles from "./AdminAssistants.module.css";
 
 const PAGE_SIZE = 50;
@@ -523,6 +524,7 @@ const AdminAssistants = () => {
                     assistant={selectedAssistant}
                     ownedAssistantIds={NO_OWNED_ASSISTANTS}
                     hideStartChat
+                    supplementaryContent={selectedAssistant ? <AdminToolGrants assistantId={selectedAssistant.id} /> : undefined}
                 />
             </div>
         </div>

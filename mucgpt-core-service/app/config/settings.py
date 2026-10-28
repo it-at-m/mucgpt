@@ -393,11 +393,19 @@ class LangfuseConfig(BaseModel):
     HOST: str | None = None
 
 
-class MCPToolDescription(BaseModel):
-    """Configuration for overriding an MCP tool's description."""
+class MCPToolOverride(BaseModel):
+    """Configuration for overriding MCP tool metadata."""
 
     name: str
-    description: str
+    description: str | None = None
+    access: Literal["public", "restricted"] | None = None
+
+    @model_validator(mode="after")
+    def has_override(self):
+        """Require at least one setting to override."""
+        if self.description is None and self.access is None:
+            raise ValueError("MCP tool overrides require description or access")
+        return self
 
 
 class MCPSourceConfig(BaseModel):
@@ -410,7 +418,8 @@ class MCPSourceConfig(BaseModel):
     headers: dict[str, SecretStr] | None = None
     group: str | None = None
     tool_groups: dict[str, str] | None = None
-    descriptions: list[MCPToolDescription] | None = None
+    overrides: list[MCPToolOverride] | None = None
+    access: Literal["public", "restricted"] = "public"
 
     @field_validator("forward_auth_override", mode="before")
     @staticmethod

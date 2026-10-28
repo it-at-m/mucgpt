@@ -60,6 +60,29 @@ class AssistantTool(Base):
         return f"<AssistantTool(assistant_version_id={self.assistant_version_id}, tool_id='{self.tool_id}')>"
 
 
+class AssistantToolGrant(Base):
+    """Administrator-managed availability of a restricted tool for an assistant."""
+
+    __tablename__ = "assistant_tool_grants"
+
+    id = Column(Integer, primary_key=True)
+    assistant_id = Column(
+        String(36), ForeignKey("assistants.id", ondelete="CASCADE"), nullable=False
+    )
+    tool_id = Column(String(255), nullable=False)
+    granted_by = Column(String(255), nullable=False)
+    granted_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    reason = Column(Text, nullable=True)
+    revoked_by = Column(String(255), nullable=True)
+    revoked_at = Column(DateTime, nullable=True)
+
+    assistant = relationship("Assistant", back_populates="tool_grants")
+
+    __table_args__ = (
+        UniqueConstraint("assistant_id", "tool_id", name="uq_assistant_tool_grant"),
+    )
+
+
 class AssistantVersion(Base):
     __tablename__ = "assistant_versions"
 
@@ -154,6 +177,10 @@ class Assistant(Base):
 
     owners = relationship(
         "Owner", secondary=assistant_owners, back_populates="assistants"
+    )
+
+    tool_grants = relationship(
+        "AssistantToolGrant", back_populates="assistant", cascade="all, delete-orphan"
     )
 
     def is_owner(self, user_id: str) -> bool:

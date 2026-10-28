@@ -296,12 +296,24 @@ export interface ToolInfo {
     mcp_source?: string | null;
     mcp_scope?: string | null;
     mcp_group?: string | null;
+    access: "public" | "restricted";
 }
 
 export interface ToolListResponse {
     tools: ToolInfo[];
     /** Ids of tools the agent uses internally (planning, scratch files); not shown as activity. */
     internal_tool_ids?: string[];
+}
+
+export interface AssistantToolGrant {
+    tool_id: string;
+    granted_by: string;
+    granted_at: string;
+    reason?: string | null;
+}
+
+export interface AssistantToolGrantUpdateInput {
+    reason?: string;
 }
 
 export interface User {

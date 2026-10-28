@@ -43,6 +43,14 @@ def _infer_mcp_source(tool_name: str, mcp_sources: set[str]) -> str | None:
     return None
 
 
+def _source_tool_access(mcp_source: str | None) -> str:
+    if mcp_source is None:
+        return "public"
+
+    source = (get_mcp_settings().SOURCES or {}).get(mcp_source)
+    return source.access if source is not None else "public"
+
+
 async def list_tool_metadata(
     user_info: AuthenticationResult,
     lang: str = "Deutsch",
@@ -64,6 +72,7 @@ async def list_tool_metadata(
             mcp_source=None,
             mcp_scope=t.mcp_group,
             mcp_group=t.mcp_group,
+            access="public",
         )
         for t in LOCAL_TOOLS
         if t.is_configured()
@@ -88,6 +97,8 @@ async def list_tool_metadata(
                 mcp_source=mcp_source,
                 mcp_scope=mcp_group,
                 mcp_group=mcp_group,
+                access=runtime_metadata.get("access")
+                or _source_tool_access(mcp_source),
             )
         )
 

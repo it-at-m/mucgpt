@@ -554,6 +554,27 @@ class AdminTagsUpdate(BaseModel):
     )
 
 
+class AssistantToolGrantUpdate(BaseModel):
+    """Administrator request to make a restricted tool available to an assistant."""
+
+    reason: str | None = Field(
+        None,
+        max_length=2000,
+        description="Optional reason for granting the restricted tool.",
+    )
+
+
+class AssistantToolGrantResponse(BaseModel):
+    """Active administrator-managed restricted-tool availability for an assistant."""
+
+    tool_id: str
+    granted_by: str
+    granted_at: datetime
+    reason: str | None = None
+
+    model_config = ConfigDict(from_attributes=True)
+
+
 class AssistantResponse(BaseModel):
     """Complete response model for AI assistant data.
 

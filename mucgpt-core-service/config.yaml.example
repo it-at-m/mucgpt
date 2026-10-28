@@ -155,13 +155,15 @@ MCP:
     "ki in muenchen":
       url: "http://localhost:8088/sse"
       transport: "sse"
+      # access: "restricted"  # requires an administrator availability grant per assistant
       # group: "jira"  # optional: all tools from this server get this group in the frontend
       # tool_groups:   # optional: fine-grained grouping by tool name prefix (overrides group)
       #   "jira__": "jira"
       #   "confluence_": "confluence"
-      # descriptions:  # optional: overrides for tool descriptions
+      # overrides:  # optional: per-tool description and access overrides
       #   - name: "searchConfluenceUsingCql"
       #     description: "Search Confluence content using CQL queries. Use for structured or advanced filtering."
+      #     access: "restricted"  # overrides the source-level access setting for this tool
   CACHE_TTL: 43200
 
 # Internet Search Settings (optional - backed by SearXNG)

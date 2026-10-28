@@ -550,3 +550,74 @@ def test_admin_tags_reject_unknown_values(admin_client: TestClient) -> None:
     )
 
     assert response.status_code == 422
+
+
+@pytest.mark.integration
+def test_admin_can_grant_list_and_revoke_tool_availability(
+    admin_client: TestClient,
+) -> None:
+    create_response = admin_client.post(
+        "assistant/create",
+        json={"name": "Restricted tool assistant", "system_prompt": "Help users."},
+        headers=headers,
+    )
+    created = AssistantResponse.model_validate(create_response.json())
+    tool_id = "document-source/read_confidential_document"
+
+    grant_response = admin_client.put(
+        f"admin/assistant/{created.id}/tool-grants/{tool_id}",
+        json={"reason": "Approved for the document workflow."},
+        headers=headers,
+    )
+
+    assert grant_response.status_code == 200
+    assert grant_response.json()["tool_id"] == tool_id
+    assert grant_response.json()["granted_by"] == "legal_admin_123"
+    assert grant_response.json()["reason"] == "Approved for the document workflow."
+
+    configuration_response = admin_client.get(
+        f"assistant/{created.id}/configuration", headers=headers
+    )
+    configuration = AssistantResponse.model_validate(configuration_response.json())
+    assert configuration.latest_version.version == created.latest_version.version
+    assert configuration.latest_version.tools == []
+
+    list_response = admin_client.get(
+        f"admin/assistant/{created.id}/tool-grants", headers=headers
+    )
+    assert list_response.status_code == 200
+    assert [grant["tool_id"] for grant in list_response.json()] == [tool_id]
+
+    revoke_response = admin_client.delete(
+        f"admin/assistant/{created.id}/tool-grants/{tool_id}", headers=headers
+    )
+    assert revoke_response.status_code == 204
+
+    list_response = admin_client.get(
+        f"admin/assistant/{created.id}/tool-grants", headers=headers
+    )
+    assert list_response.status_code == 200
+    assert list_response.json() == []
+
+    repeat_revoke_response = admin_client.delete(
+        f"admin/assistant/{created.id}/tool-grants/{tool_id}", headers=headers
+    )
+    assert repeat_revoke_response.status_code == 404
+
+
+@pytest.mark.integration
+def test_tool_grants_require_administrator_role(test_client: TestClient) -> None:
+    create_response = test_client.post(
+        "assistant/create",
+        json={"name": "Regular user assistant", "system_prompt": "Help users."},
+        headers=headers,
+    )
+    created = AssistantResponse.model_validate(create_response.json())
+
+    response = test_client.put(
+        f"admin/assistant/{created.id}/tool-grants/restricted_tool",
+        json={},
+        headers=headers,
+    )
+
+    assert response.status_code == 403

@@ -209,6 +209,7 @@ interface AssistantDetailsSidebarProps {
     onUnsubscribe?: () => void;
     onMigrateLocal?: () => void;
     hideStartChat?: boolean;
+    supplementaryContent?: ReactNode;
 }
 
 export const AssistantDetailsSidebar = ({
@@ -225,7 +226,8 @@ export const AssistantDetailsSidebar = ({
     onDelete,
     onUnsubscribe,
     onMigrateLocal,
-    hideStartChat
+    hideStartChat,
+    supplementaryContent
 }: AssistantDetailsSidebarProps) => {
     const { t, i18n } = useTranslation();
     const { showSuccess, showError } = useGlobalToastContext();
@@ -427,6 +429,8 @@ export const AssistantDetailsSidebar = ({
                                 </DetailsField>
                             )}
                         </DetailsGroup>
+
+                        {assistant && supplementaryContent}
 
                         {assistant && (
                             <DetailsGroup title={t("components.community_assistants.section_about")}>

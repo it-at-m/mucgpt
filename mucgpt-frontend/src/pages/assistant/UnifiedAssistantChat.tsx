@@ -618,29 +618,14 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
     // Unsubscribe function for the info sidebar (subscribed, non-owned community assistants only)
     const performUnsubscribeAssistant = useCallback(async () => {
         try {
+            await assistantStorageService.deleteChatsForAssistant(assistant_id);
             await unsubscribeFromAssistantApi(assistant_id);
+            await communityAssistantStorageService.deleteConfigForAssistant(assistant_id);
         } catch (err) {
             console.error("Failed to unsubscribe from assistant:", err);
             showError(t("components.community_assistants.unsubscribe_failed_title"), t("components.community_assistants.unsubscribe_failed_message"));
             return;
         }
-
-        const cleanupTasks: Array<[string, () => Promise<unknown>]> = [
-            ["local chats", () => assistantStorageService.deleteChatsForAssistant(assistant_id)],
-            ["local assistant config", () => communityAssistantStorageService.deleteConfigForAssistant(assistant_id)]
-        ];
-        const results = await Promise.allSettled(cleanupTasks.map(([, task]) => task()));
-        await Promise.all(
-            results.map(async (result, index) => {
-                if (result.status !== "rejected") return;
-                const [label, task] = cleanupTasks[index];
-                try {
-                    await task();
-                } catch (retryErr) {
-                    console.error(`Failed to delete ${label} after unsubscribe (retry failed):`, retryErr);
-                }
-            })
-        );
 
         showSuccess(
             t("components.community_assistants.unsubscribe_success_title"),
@@ -798,14 +783,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
         if (isLegacyAssistant) {
             return (
                 <div className={styles.stateCallout}>
-                    <AssistantStateCallout
-                        state="legacy"
-                        context="chat"
-                        onDelete={async () => {
-                            await assistantStorageService.deleteConfigAndChatsForAssistant(assistant_id);
-                            navigate("/");
-                        }}
-                    />
+                    <AssistantStateCallout state="legacy" context="chat" onDelete={performDeleteAssistant} />
                 </div>
             );
         }
@@ -972,7 +950,8 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
         availableLLMs,
         isLLMLocked,
         LLM.llm_name,
-        onLLMSelectionChange
+        onLLMSelectionChange,
+        performDeleteAssistant
     ]);
 
     // AnswerList component

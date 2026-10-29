@@ -46,7 +46,8 @@ export async function getConversationMessagesApi(conversationId: string): Promis
     return response.json();
 }
 
-export async function deletePersistedConversationApi(conversationId: string): Promise<void> {
+/** Deletes server state; success and 404 complete deletion, while other failures propagate for retry. */
+export async function deleteConversationApi(conversationId: string): Promise<void> {
     const response = await fetch(API_BASE + "v1/conversations/" + encodeURIComponent(conversationId), deleteConfig());
     handleRedirect(response);
     if (!response.ok && response.status !== 404) {

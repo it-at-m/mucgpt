@@ -35,6 +35,7 @@ class ModelRegistry:
                     base_url=config.endpoint.unicode_string(),
                     use_responses_api=False, # needs to be disabled for now to avoid issues with the non-streaming generations
                     stream_usage=True,
+                    store=False,
                 )
             if config.type == "AZURE":
                 return AzureChatOpenAI(
@@ -45,6 +46,7 @@ class ModelRegistry:
                     api_version=config.api_version,
                     openai_api_type="azure",
                     stream_usage=True,
+                    store=False,
                 )
             raise ModelsConfigurationException(
                 f"Unknown model type: {config.type}. Currently only `AZURE` and `OPENAI` are supported."

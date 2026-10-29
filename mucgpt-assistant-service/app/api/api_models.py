@@ -1,11 +1,11 @@
 # Pydantic models for request/response validation
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import UTC, datetime
 from enum import Enum
-from typing import Any, Literal
+from typing import Annotated, Any, Literal
 
-from pydantic import BaseModel, ConfigDict, Field  # added ConfigDict
+from pydantic import BaseModel, ConfigDict, Field, field_serializer  # added ConfigDict
 
 CREATIVITY_LOW = "low"
 CREATIVITY_MEDIUM = "medium"
@@ -552,6 +552,35 @@ class AdminTagsUpdate(BaseModel):
     admin_tags: list[AdminTag] = Field(
         description="Allowed administrator-managed tags for this assistant."
     )
+
+
+class AdminOwnersUpdate(BaseModel):
+    """Complete owner list managed by an administrator."""
+
+    owner_ids: list[Annotated[str, Field(max_length=255)]] = Field(
+        ..., min_length=1, description="At least one owner user ID is required."
+    )
+
+
+class AssistantAuditEventResponse(BaseModel):
+    """A recorded assistant mutation."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    assistant_id: str
+    occurred_at: datetime
+    actor_user_id: str
+    actor_name: str | None = None
+    action: str
+    before: dict[str, Any] | None = None
+    after: dict[str, Any] | None = None
+    reason: str | None = None
+    assistant_version: int | None = None
+
+    @field_serializer("occurred_at")
+    def serialize_occurred_at(self, value: datetime) -> datetime:
+        return value.replace(tzinfo=UTC) if value.tzinfo is None else value
 
 
 class AssistantResponse(BaseModel):

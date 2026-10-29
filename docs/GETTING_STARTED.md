@@ -328,7 +328,7 @@ MCP:
         - name: "search_documents"
           description: "Search approved internal documents."
           access: "restricted"
-   CACHE_TTL: 43200 # seconds, default: 12h
+  CACHE_TTL: 43200 # seconds, default: 12h
 ```
 
 Or via environment variable:

@@ -22,6 +22,6 @@ export function mergeRestrictedTools(catalog: ToolListResponse, restrictedTools:
 
     return {
         ...catalog,
-        tools: [...catalog.tools, ...restrictedToolMap.values().filter(tool => !catalogToolIds.has(tool.id))]
+        tools: [...catalog.tools, ...Array.from(restrictedToolMap.values()).filter(tool => !catalogToolIds.has(tool.id))]
     };
 }

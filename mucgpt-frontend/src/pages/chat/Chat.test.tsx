@@ -100,14 +100,14 @@ describe("chat error recovery", () => {
         await act(async () => {});
         expect(screen.getByRole("textbox", { name: "Message" })).toBeDisabled();
         await act(async () => failRequest());
-        await screen.findByText("Failed run");
+        await screen.findByText(/Failed run/);
         expect(screen.getByRole("textbox", { name: "Message" })).toBeEnabled();
         expect(screen.queryByRole("button", { name: "components.answererror.retry" })).not.toBeInTheDocument();
 
         api.mockResolvedValueOnce(new Response('data: {"choices":[{"delta":{"content":"Recovered answer"}}]}\n\ndata: [DONE]\n\n'));
         sendMessage("New question");
         await screen.findByText("Recovered answer");
-        expect(screen.queryByText("Failed run")).not.toBeInTheDocument();
+        expect(screen.queryByText(/Failed run/)).not.toBeInTheDocument();
         expect(screen.getByText("Original answer")).toBeInTheDocument();
         expect(api).toHaveBeenLastCalledWith(
             expect.objectContaining({

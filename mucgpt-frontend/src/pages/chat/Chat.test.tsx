@@ -34,7 +34,17 @@ vi.mock("../../components/ChatLayout/ChatLayout", () => ({
 }));
 vi.mock("../../components/Answer", () => ({ Answer: ({ answer }: { answer: { answer: string } }) => <p>{answer.answer}</p> }));
 vi.mock("../../components/QuestionInput", () => ({
-    QuestionInput: ({ disabled, question, setQuestion, onSend }: { disabled: boolean; question: string; setQuestion: (value: string) => void; onSend: (value: string, data: []) => void }) => (
+    QuestionInput: ({
+        disabled,
+        question,
+        setQuestion,
+        onSend
+    }: {
+        disabled: boolean;
+        question: string;
+        setQuestion: (value: string) => void;
+        onSend: (value: string, data: []) => void;
+    }) => (
         <textarea
             aria-label="Message"
             disabled={disabled}

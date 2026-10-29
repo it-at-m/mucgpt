@@ -111,11 +111,15 @@ describe("unified history renaming", () => {
             expect(StorageService.prototype.renameChat).not.toHaveBeenCalled();
         });
 
-        it("allows local-only history to be renamed when there is no server row", async () => {
-            vi.mocked(StorageService.prototype.get).mockResolvedValue({ messages: [], config: {} });
-            fetchMock.mockResolvedValue(new Response(null, { status: 404 }));
-            await service.renameEntry(entry, "Local title");
-            expect(StorageService.prototype.renameChat).toHaveBeenCalledExactlyOnceWith(entry.id, "Local title");
+        describe.each([false, undefined])("browser-only history with backendPersisted %s", backendPersisted => {
+            it.each([403, 404, 500, 503, "network"])("falls back to a local rename after %s failure", async status => {
+                vi.mocked(StorageService.prototype.get).mockResolvedValue({ messages: [], config: {}, backendPersisted });
+                if (status === "network") fetchMock.mockRejectedValue(new TypeError("Failed to fetch"));
+                else fetchMock.mockResolvedValue(new Response(null, { status: Number(status) }));
+                await service.renameEntry(entry, "Local title");
+                expect(fetchMock).toHaveBeenCalledOnce();
+                expect(StorageService.prototype.renameChat).toHaveBeenCalledExactlyOnceWith(entry.id, "Local title");
+            });
         });
 
         it("surfaces a cache write failure", async () => {

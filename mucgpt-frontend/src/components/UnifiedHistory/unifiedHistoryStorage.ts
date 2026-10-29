@@ -4,7 +4,6 @@ import { ASSISTANT_STORE, CHAT_STORE } from "../../constants";
 import type { Assistant, ChatResponse } from "../../api";
 import { getOwnedCommunityAssistants } from "../../api/assistant-client";
 import { deleteConversationApi, renameConversationApi } from "../../api/conversations-client";
-import { ApiError } from "../../api/fetch-utils";
 import { syncConversationHistory } from "../../service/conversationHistory";
 
 interface StoredChatOptions {
@@ -113,8 +112,8 @@ export class UnifiedHistoryStorage {
             const result = await renameConversationApi(conversationId, name);
             name = result.title;
         } catch (error) {
-            // Legacy browser-only history has no server row to rename.
-            if (!(error instanceof ApiError && error.status === 404 && cached && !cached.backendPersisted)) {
+            // TODO: Remove this local fallback once all browser-only chats have migrated to backend persistence.
+            if (!cached || cached.backendPersisted) {
                 throw error;
             }
         }

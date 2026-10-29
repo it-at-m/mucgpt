@@ -46,10 +46,10 @@
 
 All release images are published to GitHub Container Registry (links above) and mirrored to the openCode container registry (GitLab registry of gitlab.opencode.de). Both carry the same tags (`<version>` and `latest`) and the same runnable platform images, so you can pull from whichever registry suits your deployment:
 
-- Frontend: `registry.opencode.de/landeshauptstadt-muenchen/mucgpt/mucgpt-frontend`
-- Core service: `registry.opencode.de/landeshauptstadt-muenchen/mucgpt/mucgpt-core`
-- Assistant service: `registry.opencode.de/landeshauptstadt-muenchen/mucgpt/mucgpt-assistant`
-- Migrations service: `registry.opencode.de/landeshauptstadt-muenchen/mucgpt/mucgpt-assistant-migrations`
+[![Frontend version][frontend-opencode-version-shield]][opencode-container-registry]
+[![Core service version][core-opencode-version-shield]][opencode-container-registry]
+[![Assistant service version][assistant-opencode-version-shield]][opencode-container-registry]
+[![Migrations service version][migrations-opencode-version-shield]][opencode-container-registry]
 
 </div>
 
@@ -71,6 +71,10 @@ All release images are published to GitHub Container Registry (links above) and 
 [core-service-version-shield]: https://img.shields.io/github/v/tag/it-at-m/mucgpt?filter=mucgpt-core-*&label=core-service&style=for-the-badge&color=blue
 [assistant-service-version-shield]: https://img.shields.io/github/v/tag/it-at-m/mucgpt?filter=mucgpt-assistant-0*&label=assistant-service&style=for-the-badge&color=blue
 [migrations-service-version-shield]: https://img.shields.io/github/v/tag/it-at-m/mucgpt?filter=mucgpt-assistant-migrations-*&label=migrations&style=for-the-badge&color=blue
+[frontend-opencode-version-shield]: https://img.shields.io/github/v/tag/it-at-m/mucgpt?filter=mucgpt-frontend-*&label=openCode%20frontend&style=for-the-badge&color=blue
+[core-opencode-version-shield]: https://img.shields.io/github/v/tag/it-at-m/mucgpt?filter=mucgpt-core-*&label=openCode%20core&style=for-the-badge&color=blue
+[assistant-opencode-version-shield]: https://img.shields.io/github/v/tag/it-at-m/mucgpt?filter=mucgpt-assistant-0*&label=openCode%20assistant&style=for-the-badge&color=blue
+[migrations-opencode-version-shield]: https://img.shields.io/github/v/tag/it-at-m/mucgpt?filter=mucgpt-assistant-migrations-*&label=openCode%20migrations&style=for-the-badge&color=blue
 [assistant-service-tests-shield]: https://github.com/it-at-m/mucgpt/actions/workflows/test-assistant-service.yaml/badge.svg
 [core-service-tests-shield]: https://github.com/it-at-m/mucgpt/actions/workflows/test-core-service.yaml/badge.svg
 [assistant-service-tests]: https://github.com/it-at-m/mucgpt/actions/workflows/test-assistant-service.yaml
@@ -79,6 +83,7 @@ All release images are published to GitHub Container Registry (links above) and 
 [core-service-container]: https://github.com/it-at-m/mucgpt/pkgs/container/mucgpt%2Fmucgpt-core
 [assistant-service-container]: https://github.com/it-at-m/mucgpt/pkgs/container/mucgpt%2Fmucgpt-assistant
 [migrations-service-container]: https://github.com/it-at-m/mucgpt/pkgs/container/mucgpt%2Fmucgpt-assistant-migrations
+[opencode-container-registry]: https://gitlab.opencode.de/landeshauptstadt-muenchen/mucgpt/container_registry
 
 MUCGPT is a system that enables users to interact with a large language model (LLM) through a web interface. This interaction is facilitated by an agentic system that can access several tools. To get a feel for it, take a look at our [demo frontend](https://it-at-m.github.io/mucgpt/).
 

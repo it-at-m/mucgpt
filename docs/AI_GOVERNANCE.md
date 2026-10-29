@@ -143,7 +143,7 @@ required in strict mode, even when the new prompt looks similar to the old one.
 The core-service controls whether the frontend workflow is exposed:
 
 ```yaml
-AI_ACT_COMPLIANCE_CHECK_ENABLED: true
+ai_act_compliance_check_enabled: true
 ```
 
 The corresponding environment variable is
@@ -153,8 +153,8 @@ The core-service also controls result caching. The cache is keyed by prompt hash
 and is a verification aid, not the system of record:
 
 ```yaml
-COMPLIANCE_CACHE_ENABLED: true
-COMPLIANCE_CACHE_TTL_SECONDS: 1800
+compliance_cache_enabled: true
+compliance_cache_ttl_seconds: 1800
 ```
 
 ### Assistant-Service
@@ -162,7 +162,7 @@ COMPLIANCE_CACHE_TTL_SECONDS: 1800
 The assistant-service controls whether submitted results must be verified:
 
 ```yaml
-COMPLIANCE_REQUIRE_VERIFICATION: true
+compliance_require_verification: true
 ```
 
 The corresponding environment variable is
@@ -172,7 +172,7 @@ It separately controls whether a persisted high-risk result requires an
 administrator/legal decision before the version can be used:
 
 ```yaml
-COMPLIANCE_REQUIRE_LEGAL_REVIEW: true
+compliance_require_legal_review: true
 ```
 
 The corresponding environment variable is

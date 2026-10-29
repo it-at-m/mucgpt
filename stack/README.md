@@ -186,13 +186,21 @@ See [DEVELOPMENT.md](../docs/DEVELOPMENT.md) for details on local development se
 
 The stack uses **YAML configuration files** as the primary configuration source, with environment variables available as overrides. Each service has its own `config.yaml` mounted into the container.
 
+**YAML keys are lowercase** (e.g. `models:`, `redis:`, `host:`, `password:`). Environment variable names stay UPPERCASE — they are matched case-insensitively against the settings, so existing env vars remain valid. Legacy UPPERCASE YAML keys are ignored; migrate existing config files (most mistakes fail loudly at startup).
+
+> **Migration notes (from older versions):**
+>
+> - Lowercase your `config.yaml` keys (legacy UPPERCASE keys are ignored).
+> - Move model connection settings (`type`/`endpoint`/`api_key`/`api_version`) into a `providers` section and reference it from each model via `provider: <key>`; inline provider fields on `models[]` entries are rejected at startup.
+> - Replace `MUCGPT_CORE_LANGFUSE__*` environment variables with the standard `LANGFUSE_PUBLIC_KEY` / `LANGFUSE_SECRET_KEY` / `LANGFUSE_HOST` — the old prefixed variables are silently ignored.
+
 > **Secrets:** Never store real secrets (passwords, API keys, tokens) in `config.yaml` — config files are typically mounted as ConfigMaps (leaking values into etcd) or risk being committed to Git. Provide secrets via **environment variables** instead (see [Environment Variable Overrides](#environment-variable-overrides)); they always override YAML values.
 
 ### Configuration Files
 
 | File | Mounted to | Used by | Purpose |
 |------|-----------|---------|---------|
-| `core.config.yaml` | `/app/config.yaml` | core-service | Models, Langfuse prompts, MCP, Redis, SSO |
+| `core.config.yaml` | `/app/config.yaml` | core-service | Providers, models, prompts, MCP, Redis, SSO |
 | `assistant.config.yaml` | `/app/config.yaml` | assistant-service, assistant-migrations | Database, Redis, LDAP, SSO |
 | `.env` | env vars | all services | Proxies, SSL, infrastructure overrides |
 
@@ -206,49 +214,48 @@ The stack uses **YAML configuration files** as the primary configuration source,
    cp assistant.config.yaml.example assistant.config.yaml
    ```
 
-2. Edit `core.config.yaml` – configure your LLM models and optional features. The placeholder values and any local demo values in these examples are for local use only and must not be carried over to production or test environments:
+2. Edit `core.config.yaml` – configure your LLM providers and models, and optional features. The placeholder values and any local demo values in these examples are for local use only and must not be carried over to production or test environments:
 
    ```yaml
-   MODELS:
-      - type: "OPENAI"
-        llm_name: "gpt-4.1"
-        endpoint: "https://your-endpoint.example.com/v1"
-        api_key: "sk-..."
-        model_info:
-          auto_enrich_from_model_info_endpoint: true
-          internal_task_model_strength: "strong"
+   providers:
+     my_gateway:
+       type: "openai"             # "openai" or "azure"
+       endpoint: "https://your-endpoint.example.com/v1"
+       # api_key: "sk-..."        # provide via MUCGPT_CORE_PROVIDERS__MY_GATEWAY__API_KEY instead
 
-      - type: "OPENAI"
-        llm_name: "gpt-4.1-nano"
-        endpoint: "https://your-endpoint.example.com/v1"
-        api_key: "sk-..."
-        model_info:
-          auto_enrich_from_model_info_endpoint: true
-          internal_task_model_strength: "weak"
+   models:
+     - provider: "my_gateway"     # required reference into providers
+       llm_name: "gpt-4.1"
+       model_info:
+         auto_enrich_from_model_info_endpoint: true
+         internal_task_model_strength: "strong"
 
-    REDIS:
-      HOST: "valkey"
-      PORT: 6379
+     - provider: "my_gateway"
+       llm_name: "gpt-4.1-nano"
+       model_info:
+         auto_enrich_from_model_info_endpoint: true
+         internal_task_model_strength: "weak"
 
-   LANGFUSE:
-     HOST: "https://your-langfuse-host.example.com"
-     PUBLIC_KEY: "pk-lf-..."
-     SECRET_KEY: "sk-lf-..."
+   redis:
+     host: "valkey"
+     port: 6379
 
-   MCP:
-     SOURCES:
+   mcp:
+     sources:
        "my-mcp-server":
           url: "http://mcpdoc-server:8088/sse"
           transport: "sse"
-    ```
+   ```
 
-   > **Note:** The `api_key`/`SECRET_KEY` values above are placeholders. In production, provide secrets via environment variables (see [Environment Variable Overrides](#environment-variable-overrides)) instead of storing them in `config.yaml`. Exception: `MODELS[].api_key` cannot be overridden per model via environment variables — provide the whole `MODELS` list via the `MUCGPT_CORE_MODELS` environment variable (JSON array) or protect the config file accordingly.
+   > **Note:** The `api_key` value above is a placeholder. In production, provide it via environment variables (see [Environment Variable Overrides](#environment-variable-overrides)) instead of storing it in `config.yaml`: `api_key` is configured **per provider** and can be overridden per provider via `MUCGPT_CORE_PROVIDERS__<PROVIDER>__API_KEY`, or the whole sections can be replaced via `MUCGPT_CORE_PROVIDERS` (JSON object) and `MUCGPT_CORE_MODELS` (JSON array).
+
+   Langfuse is not configured in this file: the Langfuse SDK reads the standard environment variables `LANGFUSE_PUBLIC_KEY`, `LANGFUSE_SECRET_KEY`, and `LANGFUSE_HOST` directly. `MUCGPT_CORE_LANGFUSE__*` variables are no longer read (silently ignored).
 
 ### Internal Task Models
 
 The core service supports an optional internal model hint for lightweight generation tasks.
 
-Set this per model under `MODELS[].model_info.internal_task_model_strength`:
+Set this per model under `models[].model_info.internal_task_model_strength`:
 
 - `strong`: preferred for assistant draft generation
 - `weak`: preferred for chat title generation
@@ -256,18 +263,19 @@ Set this per model under `MODELS[].model_info.internal_task_model_strength`:
 Example:
 
 ```yaml
-MODELS:
-  - type: "OPENAI"
-    llm_name: "gpt-4.1-mini"
+providers:
+  my_gateway:
+    type: "openai"
     endpoint: "https://your-endpoint.example.com/v1"
-    api_key: "sk-..."
+
+models:
+  - provider: "my_gateway"
+    llm_name: "gpt-4.1-mini"
     model_info:
       internal_task_model_strength: "strong"
 
-  - type: "OPENAI"
+  - provider: "my_gateway"
     llm_name: "gpt-4.1-nano"
-    endpoint: "https://your-endpoint.example.com/v1"
-    api_key: "sk-..."
     model_info:
       internal_task_model_strength: "weak"
 ```
@@ -276,13 +284,13 @@ Selection behavior:
 
 - Assistant drafts use the first model marked as `strong`
 - Chat title generation uses the first model marked as `weak`
-- If no matching model is configured for a task, the first model in `MODELS` is used as a fallback
+- If no matching model is configured for a task, the first model in `models` is used as a fallback
 
 This setting is internal to the core service and is not exposed to the frontend config API.
 
 ### Prompt Pool Configuration
 
-The optional `PROMPTS` section in `core.config.yaml` maps core-service prompt names to Langfuse folders and labels. Configure a mapping only when the matching prompt exists in Langfuse. The full commented example is in `core.config.yaml.example`.
+The optional `prompts` section in `core.config.yaml` maps core-service prompt names to Langfuse folders and labels. Configure a mapping only when the matching prompt exists in Langfuse. The full commented example is in `core.config.yaml.example`.
 
 - `defaults/default_instructions` provides general chat instructions.
 - `generation_prompts/chat_title` generates conversation titles.
@@ -292,19 +300,20 @@ The optional `PROMPTS` section in `core.config.yaml` maps core-service prompt na
 1. Edit `assistant.config.yaml` – configure database and optional LDAP. The example credentials and other local values are intended for this isolated Compose stack only and must not be used in production or test environments:
 
    ```yaml
-   DB:
-     HOST: "postgres"
-     PORT: 5432
-     NAME: "postgres"
-     USER: "admin"
-     PASSWORD: "admin"
+   db:
+     host: "postgres"
+     port: 5432
+     name: "postgres"
+     user: "admin"
+     # Provide password via MUCGPT_ASSISTANT_DB__PASSWORD instead of storing it here.
+     # password: "admin"
 
-   REDIS:
-     HOST: "valkey"
-     PORT: 6379
+   redis:
+     host: "valkey"
+     port: 6379
 
-   LDAP:
-     ENABLED: false
+   ldap:
+     enabled: false
    ```
 
 2. Edit `.env` for proxy/SSL settings (if needed).
@@ -327,22 +336,29 @@ Any YAML setting can be overridden with environment variables. The services use 
 
 **Mapping rules:**
 
-- Top-level fields: `MUCGPT_CORE_VERSION=1.0.0` → `VERSION: "1.0.0"`
-- Nested fields use `__`: `MUCGPT_ASSISTANT_DB__PASSWORD=secret` → `DB: { PASSWORD: "secret" }`
-- Nested Redis: `MUCGPT_CORE_REDIS__HOST=valkey` → `REDIS: { HOST: "valkey" }`
+- Top-level fields: `MUCGPT_CORE_VERSION=1.0.0` → `version: "1.0.0"`
+- Nested fields use `__`: `MUCGPT_ASSISTANT_DB__PASSWORD=secret` → `db: { password: "secret" }`
+- Nested Redis: `MUCGPT_CORE_REDIS__HOST=valkey` → `redis: { host: "valkey" }`
 
 **Examples – set via `.env` or container `environment:`:**
 
 ```bash
-# Override assistant database password (nested under DB section)
+# Override assistant database password (nested under db section)
 MUCGPT_ASSISTANT_DB__PASSWORD=my-secure-password
 
-# Override core Redis host (nested under REDIS section)
+# Override core Redis host (nested under redis section)
 MUCGPT_CORE_REDIS__HOST=my-redis-host
 
-# Override core Langfuse secret key (nested under LANGFUSE section)
-MUCGPT_CORE_LANGFUSE__SECRET_KEY=sk-lf-...
+# Override one provider's api_key (segment mirrors the provider key, case-insensitive)
+MUCGPT_CORE_PROVIDERS__MY_GATEWAY__API_KEY=sk-...
+
+# Langfuse: standard SDK variables (no MUCGPT_CORE_ prefix)
+LANGFUSE_PUBLIC_KEY=pk-lf-...
+LANGFUSE_SECRET_KEY=sk-lf-...
+LANGFUSE_HOST=https://your-langfuse-host.example.com
 ```
+
+> **Warning:** `MUCGPT_CORE_LANGFUSE__*` environment variables are **no longer read** (silently ignored) — use the standard `LANGFUSE_*` variables above.
 
 This is the recommended way to provide **secrets**: keep them out of `config.yaml` (which is mounted as a file/ConfigMap and can leak into etcd or Git) and inject them via the container environment, Kubernetes Secrets, or a secret manager.
 

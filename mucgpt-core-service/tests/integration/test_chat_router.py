@@ -652,29 +652,71 @@ class TestChatRouter:
                 f"Combined content was: {content_buffer}"
             )
 
+    @pytest.mark.parametrize(
+        "endpoint", ["/v1/chat/completions", "/v1/chat/v2/completions"]
+    )
+    @pytest.mark.parametrize("stream", [False, True])
+    @patch("api.routers.chat_router.get_messages_for_agent", new_callable=AsyncMock)
     @patch("api.routers.chat_router.init_agent", new_callable=AsyncMock)
     def test_chat_completion_invalid_model(
-        self, mock_init_agent, test_client: TestClient
-    ):
-        """Test chat completion with invalid model."""
-        mock_agent_executor = Mock(MUCGPTAgentExecutor)
-        mock_agent_executor.run_without_streaming = AsyncMock(
-            side_effect=Exception("Invalid model")
-        )
-        mock_init_agent.return_value = mock_agent_executor
-
-        # Create payload using proper model
+        self,
+        mock_init_agent: AsyncMock,
+        mock_get_messages: AsyncMock,
+        test_client: TestClient,
+        endpoint: str,
+        stream: bool,
+    ) -> None:
+        """Reject unknown models before preparing persistence or initializing an agent."""
         payload_model = ChatCompletionRequest(
             model="invalid-model",
+            messages=[ChatCompletionMessage(role="user", content="Hello")],
+            stream=stream,
+            conversation_id=DUMMY_CONVERSATION_ID,
+        )
+
+        resp = test_client.post(endpoint, json=payload_model.model_dump())
+
+        assert resp.status_code == 400
+        assert resp.json() == {
+            "detail": "Model 'invalid-model' not found in the registry"
+        }
+        mock_get_messages.assert_not_called()
+        mock_init_agent.assert_not_called()
+
+    @pytest.mark.parametrize(
+        "endpoint", ["/v1/chat/completions", "/v1/chat/v2/completions"]
+    )
+    @patch("api.routers.chat_router.get_messages_for_agent", new_callable=AsyncMock)
+    @patch("api.routers.chat_router.init_agent", new_callable=AsyncMock)
+    def test_chat_completion_uninitialized_model_registry(
+        self,
+        mock_init_agent: AsyncMock,
+        mock_get_messages: AsyncMock,
+        test_client: TestClient,
+        monkeypatch: pytest.MonkeyPatch,
+        endpoint: str,
+    ) -> None:
+        """An unavailable registry returns 500 without touching persistence or agents."""
+        monkeypatch.setattr(
+            ModelRegistry,
+            "get_model",
+            Mock(
+                side_effect=ModelsConfigurationException("Model registry not initialized")
+            ),
+        )
+        payload_model = ChatCompletionRequest(
+            model="gpt-4o-mini",
             messages=[ChatCompletionMessage(role="user", content="Hello")],
             stream=False,
             conversation_id=DUMMY_CONVERSATION_ID,
         )
-        payload = payload_model.model_dump()
-        resp = test_client.post("/v1/chat/completions", json=payload)
-        # Model-name validation is not done in the router (it surfaces from the
-        # agent/middleware layer); the request must fail, status code is not pinned.
-        assert resp.status_code >= 400
+
+        resp = test_client.post(endpoint, json=payload_model.model_dump())
+
+        assert resp.status_code == 500
+        assert resp.json() == {"detail": "Model registry not initialized"}
+        mock_get_messages.assert_not_called()
+        mock_init_agent.assert_not_called()
 
     def test_chat_completion_missing_messages(self, test_client: TestClient):
         """Test chat completion with missing messages."""

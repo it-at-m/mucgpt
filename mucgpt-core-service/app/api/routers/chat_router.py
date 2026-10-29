@@ -129,6 +129,15 @@ async def chat_endpoint(
         )
 
     try:
+        ModelRegistry.get_model(request.model)
+    except ModelsConfigurationException as exc:
+        detail = str(exc)
+        status_code = 400
+        if "not initialized" in detail.lower():
+            status_code = 500
+        raise HTTPException(status_code=status_code, detail=detail) from exc
+
+    try:
         messages_for_agent = await get_messages_for_agent(request, user_info.user_id)
 
         agent = await init_agent(

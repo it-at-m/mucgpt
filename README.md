@@ -44,7 +44,7 @@
 [![Assistant service version][assistant-service-version-shield]][assistant-service-container]
 [![Migrations service version][migrations-service-version-shield]][migrations-service-container]
 
-All release images are published to GitHub Container Registry (links above) and mirrored to the openCode container registry (GitLab registry of gitlab.opencode.de). Both carry the same tags (`<version>` and `latest`) and the same runnable platform images, so you can pull from whichever registry suits your deployment:
+All release images are published to GitHub Container Registry (links above) and mirrored to the openCode container registry (GitLab registry of gitlab.opencode.de). You find the links below. Both carry the same tags (`<version>` and `latest`) and the same runnable platform images, so you can pull from whichever registry suits your deployment:
 
 [![Frontend version][frontend-opencode-version-shield]][opencode-container-registry]
 [![Core service version][core-opencode-version-shield]][opencode-container-registry]
@@ -71,10 +71,10 @@ All release images are published to GitHub Container Registry (links above) and 
 [core-service-version-shield]: https://img.shields.io/github/v/tag/it-at-m/mucgpt?filter=mucgpt-core-*&label=core-service&style=for-the-badge&color=blue
 [assistant-service-version-shield]: https://img.shields.io/github/v/tag/it-at-m/mucgpt?filter=mucgpt-assistant-0*&label=assistant-service&style=for-the-badge&color=blue
 [migrations-service-version-shield]: https://img.shields.io/github/v/tag/it-at-m/mucgpt?filter=mucgpt-assistant-migrations-*&label=migrations&style=for-the-badge&color=blue
-[frontend-opencode-version-shield]: https://img.shields.io/github/v/tag/it-at-m/mucgpt?filter=mucgpt-frontend-*&label=openCode%20frontend&style=for-the-badge&color=blue
-[core-opencode-version-shield]: https://img.shields.io/github/v/tag/it-at-m/mucgpt?filter=mucgpt-core-*&label=openCode%20core&style=for-the-badge&color=blue
-[assistant-opencode-version-shield]: https://img.shields.io/github/v/tag/it-at-m/mucgpt?filter=mucgpt-assistant-0*&label=openCode%20assistant&style=for-the-badge&color=blue
-[migrations-opencode-version-shield]: https://img.shields.io/github/v/tag/it-at-m/mucgpt?filter=mucgpt-assistant-migrations-*&label=openCode%20migrations&style=for-the-badge&color=blue
+[frontend-opencode-version-shield]: https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fgitlab.opencode.de%2Fapi%2Fv4%2Fprojects%2F7202%2Fregistry%2Frepositories%2F8265%2Ftags%3Fper_page%3D1%26order_by%3Dupdated_at%26sort%3Ddesc&query=%24%5B0%5D.name&label=openCode%20frontend&style=for-the-badge&color=blue
+[core-opencode-version-shield]: https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fgitlab.opencode.de%2Fapi%2Fv4%2Fprojects%2F7202%2Fregistry%2Frepositories%2F8284%2Ftags%3Fper_page%3D1%26order_by%3Dupdated_at%26sort%3Ddesc&query=%24%5B0%5D.name&label=openCode%20core&style=for-the-badge&color=blue
+[assistant-opencode-version-shield]: https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fgitlab.opencode.de%2Fapi%2Fv4%2Fprojects%2F7202%2Fregistry%2Frepositories%2F8286%2Ftags%3Fper_page%3D1%26order_by%3Dupdated_at%26sort%3Ddesc&query=%24%5B0%5D.name&label=openCode%20assistant&style=for-the-badge&color=blue
+[migrations-opencode-version-shield]: https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fgitlab.opencode.de%2Fapi%2Fv4%2Fprojects%2F7202%2Fregistry%2Frepositories%2F8285%2Ftags%3Fper_page%3D1%26order_by%3Dupdated_at%26sort%3Ddesc&query=%24%5B0%5D.name&label=openCode%20migrations&style=for-the-badge&color=blue
 [assistant-service-tests-shield]: https://github.com/it-at-m/mucgpt/actions/workflows/test-assistant-service.yaml/badge.svg
 [core-service-tests-shield]: https://github.com/it-at-m/mucgpt/actions/workflows/test-core-service.yaml/badge.svg
 [assistant-service-tests]: https://github.com/it-at-m/mucgpt/actions/workflows/test-assistant-service.yaml

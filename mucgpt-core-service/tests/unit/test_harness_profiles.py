@@ -14,7 +14,7 @@ def test_registers_model_specific_builtin_tool_profile(monkeypatch) -> None:
         "config.harness_profiles.register_harness_profile", register_profile
     )
     model_config = ModelsConfig.model_construct(
-        type="OPENAI",
+        type="openai",
         llm_name="test-model",
         deep_agent=DeepAgentModelConfig(enabled_builtin_tools={"write_todos"}),
     )
@@ -35,7 +35,7 @@ def test_registers_azure_model_profile_with_azure_provider_key(monkeypatch) -> N
         "config.harness_profiles.register_harness_profile", register_profile
     )
     model_config = ModelsConfig.model_construct(
-        type="AZURE", llm_name="test-model", deep_agent=DeepAgentModelConfig()
+        type="azure", llm_name="test-model", deep_agent=DeepAgentModelConfig()
     )
 
     register_model_harness_profile(model_config)
@@ -53,7 +53,7 @@ def test_profile_summarizer_replaces_deep_agents_default(monkeypatch) -> None:
         "config.harness_profiles.ModelRegistry.get_model", lambda: summary_model
     )
     model_config = ModelsConfig.model_construct(
-        type="OPENAI",
+        type="openai",
         llm_name="test-model",
         deep_agent=DeepAgentModelConfig(
             enabled_builtin_tools={"read_file", "write_file", "edit_file"},

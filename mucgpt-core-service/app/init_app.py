@@ -9,7 +9,6 @@ from config.model_provider import ModelRegistry
 from config.settings import (
     Settings,
     enrich_model_metadata,
-    get_langfuse_settings,
     get_settings,
 )
 from core.auth_models import AuthenticationResult
@@ -52,18 +51,16 @@ async def warmup_app() -> None:
     _initialize_models_metadata(settings)
     # init model
     ModelRegistry.init_models(
-        models_config=settings.MODELS,
+        models_config=settings.models,
         logger=logger,
-        fallback_reasoning_effort=settings.FALLBACK_REASONING_EFFORT,
+        fallback_reasoning_effort=settings.fallback_reasoning_effort,
     )
     # Register model-specific Deep Agents harness profiles.
-    for model_config in settings.MODELS:
+    for model_config in settings.models:
         register_model_harness_profile(model_config)
-    # init langfuse
-    lf_client = LangfuseProvider.init(
-        version=settings.VERSION, langfuse_cfg=get_langfuse_settings()
-    )
-    PromptPool.init(lf_client, settings.PROMPTS)
+    # init langfuse (credentials come from the standard LANGFUSE_* env vars)
+    lf_client = LangfuseProvider.init(version=settings.version)
+    PromptPool.init(lf_client, settings.prompts)
     # init redis
     await RedisCache.init_redis()
     logger.info("App context warmed up")
@@ -82,14 +79,14 @@ async def destroy_app() -> None:
 def _initialize_models_metadata(cfg: Settings) -> None:
     """Ensure all configured models have complete metadata before use."""
 
-    for model in cfg.MODELS:
+    for model in cfg.models:
         try:
             enrich_model_metadata(model)
         except ValueError as exc:
             logger.error(
                 "Unable to prepare model %s for %s: %s",
                 getattr(model, "llm_name", "<unknown>"),
-                cfg.ENV_NAME,
+                cfg.env_name,
                 exc,
             )
             raise

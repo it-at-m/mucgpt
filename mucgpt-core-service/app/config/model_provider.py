@@ -27,7 +27,7 @@ class ModelRegistry:
     def init_chat_model(config: ModelsConfig) -> ChatOpenAI | AzureChatOpenAI:
         """Initialize a concrete chat model from configuration."""
         try:
-            if config.type == "OPENAI":
+            if config.type == "openai":
                 return ChatOpenAI(
                     default_headers={"extra-parameters": "drop"},
                     model=config.llm_name,
@@ -36,7 +36,7 @@ class ModelRegistry:
                     stream_usage=True,
                     store=False,
                 )
-            if config.type == "AZURE":
+            if config.type == "azure":
                 return AzureChatOpenAI(
                     azure_deployment=config.deployment,
                     model=config.llm_name,
@@ -48,7 +48,7 @@ class ModelRegistry:
                     store=False,
                 )
             raise ModelsConfigurationException(
-                f"Unknown model type: {config.type}. Currently only `AZURE` and `OPENAI` are supported."
+                f"Unknown model type: {config.type}. Currently only `openai` and `azure` are supported."
             )
         except Exception as exc:
             if isinstance(exc, ModelsConfigurationException):

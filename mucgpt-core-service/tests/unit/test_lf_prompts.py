@@ -31,7 +31,7 @@ def test_get_prompt_uses_configured_folder_name_label_and_local_fallback() -> No
     lf_client = MagicMock()
     lf_client.get_prompt.return_value = SimpleNamespace(prompt="from langfuse")
     config = PromptPoolConfig(
-        FOLDERS=[
+        folders=[
             PromptFolderConfig(
                 name="/custom/",
                 prompts=[
@@ -57,7 +57,7 @@ def test_configured_prompt_name_is_used_for_langfuse_and_local_fallback() -> Non
     lf_client = MagicMock()
     lf_client.get_prompt.return_value = SimpleNamespace(prompt="remote prompt")
     config = PromptPoolConfig(
-        FOLDERS=[
+        folders=[
             PromptFolderConfig(
                 name="generation_prompts",
                 prompts=[
@@ -80,7 +80,7 @@ def test_compliance_prompt_uses_category_as_langfuse_prompt_name() -> None:
     lf_client = MagicMock()
     lf_client.get_prompt.return_value = SimpleNamespace(prompt="remote compliance")
     config = PromptPoolConfig(
-        FOLDERS=[
+        folders=[
             PromptFolderConfig(
                 name="compliance",
                 prompts=[PromptConfig(name="education", label="production")],
@@ -102,7 +102,7 @@ def test_resolved_prompt_retains_remote_prompt_metadata() -> None:
     remote_prompt = SimpleNamespace(prompt="remote prompt", is_fallback=False)
     lf_client.get_prompt.return_value = remote_prompt
     config = PromptPoolConfig(
-        FOLDERS=[
+        folders=[
             PromptFolderConfig(
                 name="generation_prompts",
                 prompts=[PromptConfig(name="assistant_name")],
@@ -122,7 +122,7 @@ def test_langfuse_error_uses_matching_local_prompt() -> None:
     lf_client = MagicMock()
     lf_client.get_prompt.side_effect = RuntimeError("unreachable")
     config = PromptPoolConfig(
-        FOLDERS=[
+        folders=[
             PromptFolderConfig(
                 name="defaults",
                 prompts=[PromptConfig(name="default_instructions")],
@@ -153,7 +153,7 @@ def test_configured_remote_only_prompt_does_not_invent_a_fallback() -> None:
     lf_client = MagicMock()
     lf_client.get_prompt.return_value = SimpleNamespace(prompt="remote only")
     config = PromptPoolConfig(
-        FOLDERS=[
+        folders=[
             PromptFolderConfig(
                 name="generation_prompts",
                 prompts=[PromptConfig(name="remote_only", label="production")],
@@ -174,7 +174,7 @@ def test_configured_remote_only_prompt_without_local_file_uses_langfuse() -> Non
     lf_client = MagicMock()
     lf_client.get_prompt.return_value = SimpleNamespace(prompt="remote only")
     config = PromptPoolConfig(
-        FOLDERS=[
+        folders=[
             PromptFolderConfig(
                 name="generation_prompts",
                 prompts=[

@@ -1,11 +1,19 @@
 # Core Service Configuration
 # This file provides an example YAML configuration for the MUCGPT core service.
-# You can use this instead of environment variables or base64 encoded JSON.
+# You can use this instead of environment variables (e.g. MUCGPT_CORE_MODELS as a
+# JSON array for models).
 #
 # Priority order (highest to lowest):
 # 1. Environment variables (MUCGPT_CORE_* for top-level, MUCGPT_CORE_<SECTION>__<FIELD> for nested)
 # 2. YAML configuration file (this file, when named config.yaml)
 # 3. .env file
+#
+# SECURITY - secrets doctrine:
+# Do NOT store real secrets (passwords, API keys, tokens) in this file.
+# Config files are often mounted as ConfigMaps (leaking values into etcd) or get
+# committed to Git. Provide secrets via environment variables instead - they
+# always override YAML values (priority 1 above). Secret-bearing fields below are
+# commented out and name the matching environment variable.
 #
 # Note: Because case_sensitive=False in settings, use UPPERCASE field names in YAML
 # Nested env vars use __ (double underscore) as delimiter, e.g. MUCGPT_CORE_REDIS__HOST
@@ -56,7 +64,11 @@ MODELS:
     llm_name: "<your-llm-name>"
     deployment: ""
     endpoint: "<your-endpoint>"
-    api_key: "<your-sk>"
+    # api_key: "<your-sk>"
+    # NOTE: api_key cannot be overridden per model via environment variables (lists
+    # cannot be indexed by env vars). Provide the whole MODELS list via the
+    # MUCGPT_CORE_MODELS environment variable (JSON array) instead, or protect
+    # this config file accordingly.
     api_version: ""
     deep_agent:
       # Built-in tools are disabled unless explicitly enabled for this model.
@@ -106,7 +118,8 @@ SSO:
 # Langfuse Settings (optional - nested under LANGFUSE key)
 LANGFUSE:
   PUBLIC_KEY: "<your-public-key>"
-  SECRET_KEY: "<your-secret-key>"
+  # Provide via environment variable MUCGPT_CORE_LANGFUSE__SECRET_KEY instead of storing it here.
+  # SECRET_KEY: "<your-secret-key>"
   HOST: "https://langfuse.example.com"
 
 # Prompt settings (optional - nested under PROMPTS key)
@@ -185,4 +198,5 @@ REDIS:
   HOST: "localhost"
   PORT: 6379
   USERNAME: "default"
-  PASSWORD: "<your-password>"
+  # Provide via environment variable MUCGPT_CORE_REDIS__PASSWORD instead of storing it here.
+  # PASSWORD: "<your-password>"

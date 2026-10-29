@@ -61,6 +61,8 @@ Each Python service is configured by a **`config.yaml`** (see each service's `co
 
 Source priority (core): constructor/init (tests) > env vars > `config.yaml` > `shared-config.yaml` > `.env`. Core config covers MODELS/Langfuse/MCP/Redis/SSO/INTERNET_SEARCH; assistant config covers DB/Redis/LDAP/SSO.
 
+Secrets doctrine: real secrets (passwords, API keys, tokens) belong in **environment variables** (prefix + `__`), never in `config.yaml` (ConfigMap/etcd/Git leak risk). Exception: `MODELS[].api_key` has no per-field env override — use the `MUCGPT_CORE_MODELS` JSON env var or protect the file.
+
 ## Core service architecture (`mucgpt-core-service/app/`)
 
 Entry: `app.py` → `backend.py` builds the FastAPI app, mounts `api_app` at `/api/`, and includes routers from `api/routers/`: `chat`, `compliance`, `generation`, `parsing`, `system`, `tools` (all under `/v1`). `init_app.py` has `warmup_app`/`destroy_app` lifespan hooks; `init_agent()` builds the tool collection + agent **per message** (known TODO, see `chat_router.py`).

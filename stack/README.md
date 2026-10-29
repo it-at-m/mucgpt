@@ -186,6 +186,8 @@ See [DEVELOPMENT.md](../docs/DEVELOPMENT.md) for details on local development se
 
 The stack uses **YAML configuration files** as the primary configuration source, with environment variables available as overrides. Each service has its own `config.yaml` mounted into the container.
 
+> **Secrets:** Never store real secrets (passwords, API keys, tokens) in `config.yaml` — config files are typically mounted as ConfigMaps (leaking values into etcd) or risk being committed to Git. Provide secrets via **environment variables** instead (see [Environment Variable Overrides](#environment-variable-overrides)); they always override YAML values.
+
 ### Configuration Files
 
 | File | Mounted to | Used by | Purpose |
@@ -239,6 +241,8 @@ The stack uses **YAML configuration files** as the primary configuration source,
           url: "http://mcpdoc-server:8088/sse"
           transport: "sse"
     ```
+
+   > **Note:** The `api_key`/`SECRET_KEY` values above are placeholders. In production, provide secrets via environment variables (see [Environment Variable Overrides](#environment-variable-overrides)) instead of storing them in `config.yaml`. Exception: `MODELS[].api_key` cannot be overridden per model via environment variables — provide the whole `MODELS` list via the `MUCGPT_CORE_MODELS` environment variable (JSON array) or protect the config file accordingly.
 
 ### Internal Task Models
 
@@ -340,13 +344,16 @@ MUCGPT_CORE_REDIS__HOST=my-redis-host
 MUCGPT_CORE_LANGFUSE__SECRET_KEY=sk-lf-...
 ```
 
+This is the recommended way to provide **secrets**: keep them out of `config.yaml` (which is mounted as a file/ConfigMap and can leak into etcd or Git) and inject them via the container environment, Kubernetes Secrets, or a secret manager.
+
 ### Configuration Priority
 
 Settings are loaded in this order (highest priority wins):
 
 1. **Constructor / init** – used in tests
-2. **Environment variables** – including `.env` file, uses `__` for nesting
+2. **Environment variables** – `MUCGPT_CORE_*` / `MUCGPT_ASSISTANT_*`, uses `__` for nesting
 3. **YAML config file** – `config.yaml` mounted into each container
+4. **`.env` file** – lowest priority; values here will **not** override anything set in `config.yaml` or environment variables
 
 This means environment variables always override YAML values, which is useful for injecting secrets in CI/CD without storing them in config files.
 

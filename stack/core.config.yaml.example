@@ -1,7 +1,20 @@
 # Core Service Configuration for Docker Compose Stack
 # This file is mounted into the core-service container at /app/config.yaml
 #
+# Priority order (highest to lowest):
+# 1. Environment variables (MUCGPT_CORE_* for top-level, MUCGPT_CORE_<SECTION>__<FIELD> for nested)
+# 2. YAML configuration file (this file)
+# 3. .env file
+#
+# SECURITY - secrets doctrine:
+# Do NOT store real secrets (passwords, API keys, tokens) in this file.
+# Config files are often mounted as ConfigMaps (leaking values into etcd) or get
+# committed to Git. Provide secrets via environment variables instead - they
+# always override YAML values. The demo values kept below exist only so the
+# local docker-compose demo stack runs out of the box.
+#
 # Note: Use UPPERCASE field names because case_sensitive=False in settings
+# Nested env vars use __ (double underscore) as delimiter, e.g. MUCGPT_CORE_REDIS__HOST
 
 # General settings
 VERSION: "0.7.1"
@@ -41,10 +54,11 @@ XBERG_TIMEOUT: 120.0
 
 # Langfuse Settings (Optional - for LLM observability)
 # Used by core service for tracing and monitoring
-# SECRET_KEY: "<your-secret-key>"  # Use MUCGPT_CORE_LANGFUSE__SECRET_KEY env var for production
+# Provide the secret key via environment variable MUCGPT_CORE_LANGFUSE__SECRET_KEY
+# instead of storing it in this file.
 LANGFUSE:
   HOST: "<your-url>"
-  SECRET_KEY: "<your-sk>"
+  # SECRET_KEY: "<your-sk>"  # Use MUCGPT_CORE_LANGFUSE__SECRET_KEY env var for production
   PUBLIC_KEY: "<your-pk>"
 
 # Prompt settings (optional - nested under PROMPTS key)
@@ -110,9 +124,12 @@ MCP:
       url: "<your-mcp-url>"
       transport: "streamable_http"
       forward_token: true
-      forward_auth_override: "Basic <base64 encoded email:token>"
-      headers:
-        x-litellm-api-key: "<your-api-key>"
+      # Provide tokens/keys via environment variables or a secret manager instead
+      # of storing them in this file (nested env overrides for keyed sources are
+      # impractical; keep such sources in a protected config or inject via env).
+      # forward_auth_override: "Basic <base64 encoded email:token>"
+      # headers:
+      #   x-litellm-api-key: "<your-api-key>"
       group: "name"
       # Example tool description overrides.
       descriptions:
@@ -131,9 +148,11 @@ INTERNET_SEARCH:
   SAFESEARCH: 1
 
 # Models configuration
-# Configure your LLM models here instead of using base64-encoded JSON in environment variables
-# IMPORTANT: Replace placeholder values with your actual configuration
-# Consider using environment variables for sensitive data like API keys
+# Configure your LLM models here instead of using the MUCGPT_CORE_MODELS
+# environment variable (JSON array).
+# IMPORTANT: Do not store real API keys in this file - provide them via the
+# MUCGPT_CORE_MODELS environment variable (JSON array) or protect this file
+# accordingly (api_key cannot be overridden per model via environment variables).
 # Reasoning effort sent to reasoning models when neither the request nor the model's
 # default_reasoning_effort sets one. Set to null to omit it and use the provider default.
 FALLBACK_REASONING_EFFORT: "low"
@@ -142,7 +161,11 @@ MODELS:
     llm_name: "<your-llm-name>"
     deployment: ""
     endpoint: "<your-endpoint>"
-    api_key: "<your-sk>" # IMPORTANT: Replace with actual API key or use MUCGPT_CORE_MODELS env var
+    # api_key: "<your-sk>"
+    # NOTE: api_key cannot be overridden per model via environment variables (lists
+    # cannot be indexed by env vars). Provide the whole MODELS list via the
+    # MUCGPT_CORE_MODELS environment variable (JSON array) instead, or protect
+    # this config file accordingly.
     api_version: ""
     model_info:
       internal_task_model_strength: null  # Optional: "weak" for chat titles, "strong" for assistant drafts
@@ -183,4 +206,6 @@ REDIS:
   HOST: "valkey"
   PORT: 6379
   USERNAME: "default"
+  # Demo value for the local stack only (matches valkey in docker-compose.yml).
+  # For real deployments provide it via MUCGPT_CORE_REDIS__PASSWORD instead of storing it here.
   PASSWORD: "password"

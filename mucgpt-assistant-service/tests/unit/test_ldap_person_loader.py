@@ -17,13 +17,13 @@ class _DummyConnection:
 
 def _build_settings(**kwargs: Any) -> LDAPSettings:
     base = {
-        "ENABLED": True,
-        "HOST": "ldap.example.org",
-        "PORT": 636,
-        "USE_SSL": True,
-        "VERIFY_SSL": False,
-        "SEARCH_BASE": "dc=example,dc=org",
-        "USER_SEARCH_BASE": "ou=People,dc=example,dc=org",
+        "enabled": True,
+        "host": "ldap.example.org",
+        "port": 636,
+        "use_ssl": True,
+        "verify_ssl": False,
+        "search_base": "dc=example,dc=org",
+        "user_search_base": "ou=People,dc=example,dc=org",
     }
     base.update(kwargs)
     return LDAPSettings(**base)
@@ -65,7 +65,7 @@ def test_lookup_maps_and_sanitizes_attributes(monkeypatch: pytest.MonkeyPatch) -
 def test_default_directory_attributes_do_not_assume_a_schema() -> None:
     settings = _build_settings()
 
-    assert settings.REQUIRED_ATTRIBUTES == []
+    assert settings.required_attributes == []
 
 
 def test_lookup_returns_none_when_not_found(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -80,7 +80,7 @@ def test_lookup_returns_none_when_not_found(monkeypatch: pytest.MonkeyPatch) -> 
 
 
 def test_lookup_raises_when_ldap_disabled() -> None:
-    settings = _build_settings(ENABLED=False)
+    settings = _build_settings(enabled=False)
     loader = LDAPPersonLookupLoader(settings)
 
     with pytest.raises(LDAPPersonLookupError, match="disabled"):
@@ -98,7 +98,7 @@ def test_escape_filter_value_special_characters() -> None:
 def test_build_connection_unbinds_when_start_tls_fails(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    settings = _build_settings(START_TLS=True, USE_SSL=False)
+    settings = _build_settings(start_tls=True, use_ssl=False)
     loader = LDAPPersonLookupLoader(settings)
     unbind_calls = {"count": 0}
 
@@ -131,7 +131,7 @@ def test_build_connection_unbinds_when_start_tls_fails(
 def test_build_connection_unbinds_when_bind_returns_false(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    settings = _build_settings(START_TLS=False)
+    settings = _build_settings(start_tls=False)
     loader = LDAPPersonLookupLoader(settings)
     unbind_calls = {"count": 0}
 

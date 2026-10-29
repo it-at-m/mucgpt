@@ -17,14 +17,14 @@ from sqlalchemy.engine import URL
 
 
 class DBConfig(BaseModel):
-    """Database configuration (nested under DB key in YAML)."""
+    """Database configuration (nested under db key in YAML)."""
 
-    HOST: str | None = None
-    PORT: int = 5432
-    NAME: str | None = None
-    USER: str | None = None
-    PASSWORD: SecretStr | None = None
-    SCHEMA: str | None = None
+    host: str | None = None
+    port: int = 5432
+    name: str | None = None
+    user: str | None = None
+    password: SecretStr | None = None
+    schema: str | None = None
 
 
 # ---------------------------------------------------------------------------
@@ -47,10 +47,10 @@ class MigrationSettings(BaseSettings):
     )
 
     # Nested DB configuration
-    DB: DBConfig = DBConfig()
+    db: DBConfig = DBConfig()
 
     # Also support getting the full URL if provided
-    DATABASE_URL: str | None = None
+    database_url: str | None = None
 
     @classmethod
     def settings_customise_sources(
@@ -77,30 +77,30 @@ class MigrationSettings(BaseSettings):
 def get_db_url() -> str | URL:
     settings = MigrationSettings()
 
-    if settings.DATABASE_URL:
-        return settings.DATABASE_URL
+    if settings.database_url:
+        return settings.database_url
 
-    db = settings.DB
-    if not all([db.USER, db.PASSWORD, db.HOST, db.NAME]):
+    db = settings.db
+    if not all([db.user, db.password, db.host, db.name]):
         print(
-            f"Loaded Config: Host={db.HOST}, Port={db.PORT}, User={db.USER}, Name={db.NAME}",
+            f"Loaded Config: Host={db.host}, Port={db.port}, User={db.user}, Name={db.name}",
             file=sys.stderr,
         )
         raise ValueError(
-            "Missing required database configuration (DB.USER, DB.PASSWORD, DB.HOST, DB.NAME)"
+            "Missing required database configuration (db.user, db.password, db.host, db.name)"
         )
 
-    password = db.PASSWORD.get_secret_value() if db.PASSWORD else ""
+    password = db.password.get_secret_value() if db.password else ""
     return URL.create(
         drivername="postgresql+asyncpg",
-        username=db.USER,
+        username=db.user,
         password=password,
-        host=db.HOST,
-        port=db.PORT,
-        database=db.NAME,
+        host=db.host,
+        port=db.port,
+        database=db.name,
     )
 
 
 def get_db_schema() -> str | None:
-    """Return the optional PostgreSQL schema from settings (DB.SCHEMA)."""
-    return MigrationSettings().DB.SCHEMA
+    """Return the optional PostgreSQL schema from settings (db.schema)."""
+    return MigrationSettings().db.schema

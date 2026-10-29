@@ -25,10 +25,10 @@ class TestRedisSettings:
             get_settings.cache_clear()
             get_redis_settings.cache_clear()
             redis = get_redis_settings()
-            assert redis.HOST == "env-redis-assistant"
-            assert redis.PORT == 1111
-            assert redis.USERNAME == "env-user"
-            assert redis.PASSWORD.get_secret_value() == "env-pass"
+            assert redis.host == "env-redis-assistant"
+            assert redis.port == 1111
+            assert redis.username == "env-user"
+            assert redis.password.get_secret_value() == "env-pass"
 
     def test_redis_settings_defaults(self):
         """Test Redis default values."""
@@ -45,10 +45,10 @@ class TestRedisSettings:
             get_settings.cache_clear()
             get_redis_settings.cache_clear()
             redis = get_redis_settings()
-            assert redis.HOST is None
-            assert redis.PORT == 6379
-            assert redis.USERNAME is None
-            assert redis.PASSWORD is None
+            assert redis.host is None
+            assert redis.port == 6379
+            assert redis.username is None
+            assert redis.password is None
 
     def teardown_method(self):
         get_settings.cache_clear()
@@ -69,8 +69,8 @@ class TestSettings:
         ):
             get_settings.cache_clear()
             settings = get_settings()
-            assert settings.SSO.ROLE is None
-            assert settings.SSO.ADMIN_ROLE is None
+            assert settings.sso.role is None
+            assert settings.sso.admin_role is None
 
     def teardown_method(self):
         get_settings.cache_clear()

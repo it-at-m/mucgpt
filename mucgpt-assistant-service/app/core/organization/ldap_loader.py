@@ -27,16 +27,16 @@ class LDAPOrganizationLoader:
     def load_directory(self) -> DepartmentDirectory:
         entries = self._fetch_entries()
         builder = OrganizationTreeBuilder(
-            display_attribute=self.settings.DISPLAY_ATTRIBUTE,
-            shortname_attribute=self.settings.SHORTNAME_ATTRIBUTE,
-            parent_attribute=self.settings.PARENT_ATTRIBUTE,
-            search_base=self.settings.SEARCH_BASE,
-            ignored_suffixes=self.settings.IGNORED_OU_SUFFIXES,
-            ignored_prefixes=self.settings.IGNORED_OU_PREFIXES,
-            ignored_shortname_exceptions=self.settings.IGNORED_OU_SHORTNAME_EXCEPTIONS,
+            display_attribute=self.settings.display_attribute,
+            shortname_attribute=self.settings.shortname_attribute,
+            parent_attribute=self.settings.parent_attribute,
+            search_base=self.settings.search_base,
+            ignored_suffixes=self.settings.ignored_ou_suffixes,
+            ignored_prefixes=self.settings.ignored_ou_prefixes,
+            ignored_shortname_exceptions=self.settings.ignored_ou_shortname_exceptions,
             required_attributes=[
-                *self.settings.REQUIRED_ATTRIBUTES,
-                self.settings.SHORTNAME_ATTRIBUTE,
+                *self.settings.required_attributes,
+                self.settings.shortname_attribute,
             ],
         )
         roots = builder.build(entries)
@@ -45,7 +45,7 @@ class LDAPOrganizationLoader:
         return DepartmentDirectory(roots=roots, source="ldap")
 
     def _fetch_entries(self) -> list[dict[str, Any]]:
-        if not self.settings.SEARCH_BASE:
+        if not self.settings.search_base:
             raise LDAPOrganizationLoaderError(
                 "MUCGPT_LDAP_SEARCH_BASE is not configured"
             )
@@ -63,11 +63,11 @@ class LDAPOrganizationLoader:
     def _build_server(self) -> Server:
         host = self._normalized_host()
         try:
-            port = self._parse_int(self.settings.PORT, "MUCGPT_LDAP_PORT")
+            port = self._parse_int(self.settings.port, "MUCGPT_LDAP_PORT")
         except LDAPOrganizationLoaderError:
             raise
         connect_timeout = self._parse_int(
-            self.settings.CONNECT_TIMEOUT, "MUCGPT_LDAP_CONNECT_TIMEOUT"
+            self.settings.connect_timeout, "MUCGPT_LDAP_CONNECT_TIMEOUT"
         )
 
         tls = self._build_tls_context()
@@ -75,51 +75,51 @@ class LDAPOrganizationLoader:
             "LDAP server config: host=%s port=%s use_ssl=%s start_tls=%s verify_ssl=%s connect_timeout=%s",
             host,
             port,
-            self.settings.USE_SSL,
-            self.settings.START_TLS,
-            self.settings.VERIFY_SSL,
+            self.settings.use_ssl,
+            self.settings.start_tls,
+            self.settings.verify_ssl,
             connect_timeout,
         )
 
         return Server(
             host,
             port=port,
-            use_ssl=self.settings.USE_SSL,
+            use_ssl=self.settings.use_ssl,
             tls=tls,
             connect_timeout=connect_timeout,
         )
 
     def _build_tls_context(self) -> Tls | None:
-        if not self.settings.USE_SSL and not self.settings.START_TLS:
+        if not self.settings.use_ssl and not self.settings.start_tls:
             return None
 
-        validate = ssl.CERT_REQUIRED if self.settings.VERIFY_SSL else ssl.CERT_NONE
-        if not self.settings.CA_CERT_FILE and validate == ssl.CERT_REQUIRED:
+        validate = ssl.CERT_REQUIRED if self.settings.verify_ssl else ssl.CERT_NONE
+        if not self.settings.ca_cert_file and validate == ssl.CERT_REQUIRED:
             raise LDAPOrganizationLoaderError(
-                "VERIFY_SSL is enabled but no CA_CERT_FILE was provided"
+                "verify_ssl is enabled but no ca_cert_file was provided"
             )
 
-        return Tls(validate=validate, ca_certs_file=self.settings.CA_CERT_FILE)
+        return Tls(validate=validate, ca_certs_file=self.settings.ca_cert_file)
 
     def _build_connection(self, server: Server) -> Connection:
         password = (
-            self.settings.BIND_PASSWORD.get_secret_value()
-            if self.settings.BIND_PASSWORD
+            self.settings.bind_password.get_secret_value()
+            if self.settings.bind_password
             else None
         )
         receive_timeout = self._parse_int(
-            self.settings.READ_TIMEOUT, "MUCGPT_LDAP_READ_TIMEOUT"
+            self.settings.read_timeout, "MUCGPT_LDAP_READ_TIMEOUT"
         )
         logger.info(
             "LDAP connection config: bind_dn=%s start_tls=%s read_timeout=%s",
-            self.settings.BIND_DN,
-            self.settings.START_TLS,
+            self.settings.bind_dn,
+            self.settings.start_tls,
             receive_timeout,
         )
         try:
             connection = Connection(
                 server,
-                user=self.settings.BIND_DN,
+                user=self.settings.bind_dn,
                 password=password,
                 receive_timeout=receive_timeout,
                 read_only=True,
@@ -130,7 +130,7 @@ class LDAPOrganizationLoader:
                 raise LDAPOrganizationLoaderError(
                     f"Failed to open LDAP connection (host={server.host}, port={server.port}): {exc}"
                 ) from exc
-            if self.settings.START_TLS:
+            if self.settings.start_tls:
                 connection.start_tls()
             if not connection.bind():
                 raise LDAPOrganizationLoaderError(
@@ -143,11 +143,11 @@ class LDAPOrganizationLoader:
     def _search(self, connection: Connection) -> list[dict[str, Any]]:
         attributes = self._requested_attributes()
         entries: list[dict[str, Any]] = []
-        page_size = self._parse_int(self.settings.PAGE_SIZE, "MUCGPT_LDAP_PAGE_SIZE")
+        page_size = self._parse_int(self.settings.page_size, "MUCGPT_LDAP_PAGE_SIZE")
         try:
             for entry in connection.extend.standard.paged_search(
-                search_base=self.settings.SEARCH_BASE,
-                search_filter=self.settings.SEARCH_FILTER,
+                search_base=self.settings.search_base,
+                search_filter=self.settings.search_filter,
                 search_scope=SUBTREE,
                 attributes=attributes,
                 paged_size=page_size,
@@ -166,19 +166,19 @@ class LDAPOrganizationLoader:
         return entries
 
     def _requested_attributes(self) -> list[str]:
-        attributes: set[str] = {self.settings.DISPLAY_ATTRIBUTE}
-        if self.settings.SHORTNAME_ATTRIBUTE:
-            attributes.add(self.settings.SHORTNAME_ATTRIBUTE)
-        if self.settings.PARENT_ATTRIBUTE:
-            attributes.add(self.settings.PARENT_ATTRIBUTE)
-        if self.settings.ADDITIONAL_ATTRIBUTES:
-            attributes.update(self.settings.ADDITIONAL_ATTRIBUTES)
-        if self.settings.REQUIRED_ATTRIBUTES:
-            attributes.update(self.settings.REQUIRED_ATTRIBUTES)
+        attributes: set[str] = {self.settings.display_attribute}
+        if self.settings.shortname_attribute:
+            attributes.add(self.settings.shortname_attribute)
+        if self.settings.parent_attribute:
+            attributes.add(self.settings.parent_attribute)
+        if self.settings.additional_attributes:
+            attributes.update(self.settings.additional_attributes)
+        if self.settings.required_attributes:
+            attributes.update(self.settings.required_attributes)
         return sorted(attributes)
 
     def _normalized_host(self) -> str:
-        host = (self.settings.HOST or "").strip()
+        host = (self.settings.host or "").strip()
         if not host:
             raise LDAPOrganizationLoaderError("MUCGPT_LDAP_HOST is not configured")
 

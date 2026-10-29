@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from sqlalchemy import delete, func, select
+from sqlalchemy import func, select, update
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -34,7 +34,8 @@ class ConversationRepository:
                     Chat.assistant_id, statement.excluded.assistant_id
                 ),
             },
-            where=Chat.user_id == statement.excluded.user_id,
+            where=(Chat.user_id == statement.excluded.user_id)
+            & Chat.deleted_at.is_(None),
         )
         await self.session.execute(statement)
         return await self.is_user_in_conversation(user_id, conversation_id)
@@ -44,6 +45,7 @@ class ConversationRepository:
             select(Chat.conversation_id).where(
                 Chat.conversation_id == conversation_id,
                 Chat.user_id == user_id,
+                Chat.deleted_at.is_(None),
             )
         )
         return result.scalar_one_or_none() is not None
@@ -57,7 +59,7 @@ class ConversationRepository:
                 Chat.created_at,
                 Chat.updated_at,
             )
-            .where(Chat.user_id == user_id)
+            .where(Chat.user_id == user_id, Chat.deleted_at.is_(None))
             .order_by(Chat.updated_at.desc())
         )
         return [dict(row) for row in result.mappings().all()]
@@ -82,7 +84,8 @@ class ConversationRepository:
                 "chat_title": statement.excluded.chat_title,
                 "updated_at": func.now(),
             },
-            where=Chat.user_id == statement.excluded.user_id,
+            where=(Chat.user_id == statement.excluded.user_id)
+            & Chat.deleted_at.is_(None),
         ).returning(Chat.conversation_id)
         result = await self.session.execute(statement)
         return result.scalar_one_or_none() is not None
@@ -91,7 +94,8 @@ class ConversationRepository:
         self, conversation_id: str, user_id: str
     ) -> bool:
         result = await self.session.execute(
-            delete(Chat)
+            update(Chat)
+            .values(deleted_at=func.now())
             .where(
                 Chat.conversation_id == conversation_id,
                 Chat.user_id == user_id,

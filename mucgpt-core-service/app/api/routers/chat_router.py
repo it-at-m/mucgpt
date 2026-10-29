@@ -20,6 +20,8 @@ from core.auth import authenticate_user
 from core.auth_models import AuthenticationResult
 from core.logtools import getLogger
 from core.persistance_helpers import PersistanceHelpers
+from core.stream_cleanup import close_stream
+from database.fenced_checkpointer import ConversationDeletedError
 from init_app import init_agent
 
 logger = getLogger()
@@ -165,9 +167,12 @@ async def chat_endpoint(
             )
 
             async def sse_generator() -> AsyncGenerator[str]:
-                async for chunk in gen:
-                    yield f"data: {json.dumps(chunk)}\n\n"
-                yield "data: [DONE]\n\n"
+                try:
+                    async for chunk in gen:
+                        yield f"data: {json.dumps(chunk)}\n\n"
+                    yield "data: [DONE]\n\n"
+                finally:
+                    await close_stream(gen)
 
             return StreamingResponse(sse_generator(), media_type="text/event-stream")
 
@@ -223,7 +228,10 @@ async def get_conversation_messages(
     ):
         raise HTTPException(status_code=403, detail="Conversation access denied")
 
-    messages = await PersistanceHelpers.get_conversation_messages(conversation_id)
+    try:
+        messages = await PersistanceHelpers.get_conversation_messages(conversation_id)
+    except ConversationDeletedError as exc:
+        raise HTTPException(status_code=404, detail="Conversation not found") from exc
     if not messages:
         raise HTTPException(status_code=404, detail="Conversation not found")
     return messages
@@ -243,24 +251,11 @@ async def delete_conversation(
     conversation_id: str,
     user_info: Annotated[AuthenticationResult, Depends(authenticate_user)],
 ) -> None:
-    """Delete the conversation: its ownership row and all LangGraph checkpoint state."""
-    if not await PersistanceHelpers.conversation_exists(conversation_id):
-        raise HTTPException(status_code=404, detail="Conversation not found")
-
-    if not await PersistanceHelpers.is_user_in_conversation(
-        user_info.user_id, conversation_id
-    ):
-        raise HTTPException(status_code=403, detail="Conversation access denied")
-
-    checkpointer = PersistanceHelpers.get_checkpointer_if_ready()
-    if checkpointer is None:
-        raise HTTPException(status_code=500, detail="Persistence not initialized")
-
-    # Delete the checkpoint state before the ownership row. If the row went first
-    # and this failed, the orphaned state would be handed to whoever next sends
-    # this conversation_id. Keeping the row on failure lets the owner retry.
+    """Erase checkpoint state and durably retire the ID in one transaction."""
     try:
-        await checkpointer.adelete_thread(conversation_id)
+        result = await PersistanceHelpers.erase_conversation(
+            conversation_id, user_info.user_id
+        )
     except Exception as e:
         logger.exception(
             "Failed to delete checkpoint state for conversation %s", conversation_id
@@ -269,11 +264,10 @@ async def delete_conversation(
             status_code=500, detail="Failed to delete conversation"
         ) from e
 
-    deleted = await PersistanceHelpers.delete_conversation_mapping(
-        conversation_id, user_info.user_id
-    )
-    if not deleted:
+    if result == "missing":
         raise HTTPException(status_code=404, detail="Conversation not found")
+    if result == "forbidden":
+        raise HTTPException(status_code=403, detail="Conversation access denied")
 
 
 @router.post(
@@ -336,7 +330,10 @@ async def ag_ui_chat_endpoint(
     )
 
     async def event_generator() -> AsyncGenerator[str]:
-        async for event in events:
-            yield encoder.encode(event)
+        try:
+            async for event in events:
+                yield encoder.encode(event)
+        finally:
+            await close_stream(events)
 
     return StreamingResponse(event_generator(), media_type=encoder.get_content_type())

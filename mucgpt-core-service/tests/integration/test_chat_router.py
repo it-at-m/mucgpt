@@ -66,6 +66,9 @@ def stub_persistence(monkeypatch: pytest.MonkeyPatch) -> None:
         AsyncMock(return_value=True),
     )
     monkeypatch.setattr(
+        PersistanceHelpers, "erase_conversation", AsyncMock(return_value="deleted")
+    )
+    monkeypatch.setattr(
         PersistanceHelpers,
         "get_checkpointer_if_ready",
         Mock(return_value=Mock(adelete_thread=AsyncMock())),
@@ -405,29 +408,14 @@ class TestChatRouter:
     ) -> None:
         from core.persistance_helpers import PersistanceHelpers
 
-        # Shared parent records the call order across both mocks.
-        calls = Mock()
-        calls.delete_mapping = AsyncMock(return_value=True)
-        calls.adelete_thread = AsyncMock()
-        monkeypatch.setattr(
-            PersistanceHelpers, "delete_conversation_mapping", calls.delete_mapping
-        )
-        monkeypatch.setattr(
-            PersistanceHelpers,
-            "get_checkpointer_if_ready",
-            Mock(return_value=Mock(adelete_thread=calls.adelete_thread)),
-        )
+        erasure = AsyncMock(return_value="deleted")
+        monkeypatch.setattr(PersistanceHelpers, "erase_conversation", erasure)
 
         response = test_client.delete(f"/v1/conversations/{DUMMY_CONVERSATION_ID}")
 
         assert response.status_code == 204, response.text
         assert response.content == b""
-        calls.delete_mapping.assert_awaited_once_with(
-            DUMMY_CONVERSATION_ID, DUMMY_USER_ID
-        )
-        calls.adelete_thread.assert_awaited_once_with(DUMMY_CONVERSATION_ID)
-        # Checkpoint state goes first so a failure never leaves it ownerless.
-        assert [c[0] for c in calls.mock_calls] == ["adelete_thread", "delete_mapping"]
+        erasure.assert_awaited_once_with(DUMMY_CONVERSATION_ID, DUMMY_USER_ID)
 
     def test_delete_conversation_forbidden(
         self, test_client: TestClient, monkeypatch: pytest.MonkeyPatch
@@ -436,8 +424,8 @@ class TestChatRouter:
 
         monkeypatch.setattr(
             PersistanceHelpers,
-            "is_user_in_conversation",
-            AsyncMock(return_value=False),
+            "erase_conversation",
+            AsyncMock(return_value="forbidden"),
         )
 
         response = test_client.delete(f"/v1/conversations/{DUMMY_CONVERSATION_ID}")
@@ -451,8 +439,8 @@ class TestChatRouter:
 
         monkeypatch.setattr(
             PersistanceHelpers,
-            "conversation_exists",
-            AsyncMock(return_value=False),
+            "erase_conversation",
+            AsyncMock(return_value="missing"),
         )
         monkeypatch.setattr(
             PersistanceHelpers,
@@ -471,8 +459,8 @@ class TestChatRouter:
 
         monkeypatch.setattr(
             PersistanceHelpers,
-            "conversation_exists",
-            AsyncMock(return_value=False),
+            "erase_conversation",
+            AsyncMock(return_value="missing"),
         )
         is_user_mock = AsyncMock(return_value=False)
         monkeypatch.setattr(PersistanceHelpers, "is_user_in_conversation", is_user_mock)
@@ -489,8 +477,8 @@ class TestChatRouter:
 
         monkeypatch.setattr(
             PersistanceHelpers,
-            "get_checkpointer_if_ready",
-            Mock(return_value=None),
+            "erase_conversation",
+            AsyncMock(side_effect=RuntimeError("Persistence not initialized")),
         )
 
         response = test_client.delete(f"/v1/conversations/{DUMMY_CONVERSATION_ID}")
@@ -500,26 +488,22 @@ class TestChatRouter:
     def test_delete_conversation_checkpoint_failure_keeps_ownership(
         self, test_client: TestClient, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        """A failed checkpoint delete keeps the ownership row so the owner can retry."""
+        """Router errors propagate; atomic rollback is covered against PostgreSQL."""
         from core.persistance_helpers import PersistanceHelpers
 
-        checkpointer = Mock(
-            adelete_thread=AsyncMock(side_effect=RuntimeError("db down"))
-        )
         mapping_mock = AsyncMock(return_value=True)
         monkeypatch.setattr(
             PersistanceHelpers, "delete_conversation_mapping", mapping_mock
         )
         monkeypatch.setattr(
             PersistanceHelpers,
-            "get_checkpointer_if_ready",
-            Mock(return_value=checkpointer),
+            "erase_conversation",
+            AsyncMock(side_effect=RuntimeError("db down")),
         )
 
         response = test_client.delete(f"/v1/conversations/{DUMMY_CONVERSATION_ID}")
 
         assert response.status_code == 500, response.text
-        checkpointer.adelete_thread.assert_awaited_once_with(DUMMY_CONVERSATION_ID)
         mapping_mock.assert_not_awaited()
 
     @patch("api.routers.chat_router.init_agent", new_callable=AsyncMock)

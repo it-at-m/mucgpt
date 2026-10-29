@@ -15,6 +15,9 @@ class Chat(Base):
 
     conversation_id: Mapped[str] = mapped_column(String, primary_key=True)
     user_id: Mapped[str] = mapped_column(String, nullable=False)
+    deleted_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
     assistant_id: Mapped[str | None] = mapped_column(String, nullable=True)
     chat_title: Mapped[str] = mapped_column(
         String, nullable=False, server_default="New Chat"

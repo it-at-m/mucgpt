@@ -86,6 +86,6 @@ async def test_delete_is_scoped_to_owner() -> None:
     assert await repository.delete_conversation_mapping("conversation", "owner")
 
     sql = _compiled(session.execute.await_args.args[0])
-    assert "DELETE FROM chats" in sql
+    assert "UPDATE chats SET deleted_at=now()" in sql
     assert "chats.conversation_id = 'conversation'" in sql
     assert "chats.user_id = 'owner'" in sql

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from anyio import CancelScope
 from langchain_core.messages import AIMessage, HumanMessage, ToolMessage
 from langgraph.checkpoint.postgres.aio import AsyncPostgresSaver
 from psycopg.rows import dict_row
@@ -18,6 +19,7 @@ from config.settings import Settings, get_settings
 from core.logtools import getLogger
 from database.conversation_repo import ConversationRepository
 from database.database_models import Base, Chat
+from database.fenced_checkpointer import FencedPostgresSaver
 from database.session import create_engine_and_session_factory
 
 logger = getLogger()
@@ -110,20 +112,55 @@ class PersistanceHelpers:
             open=False,
             kwargs=_create_connection_args(settings),
         )
-        await pool.open()
-        checkpointer = AsyncPostgresSaver(conn=pool)
-        await checkpointer.setup()  # creates LangGraph's checkpoint_* tables if missing
-
-        # LangGraph owns message storage. SQLAlchemy owns the application table.
         engine, session_factory = create_engine_and_session_factory(settings)
-        async with engine.begin() as connection:
-            await connection.run_sync(Base.metadata.create_all, tables=[Chat.__table__])
+        try:
+            await pool.open()
+            checkpointer = FencedPostgresSaver(conn=pool)
+            await checkpointer.setup()
+            await PersistanceHelpers._initialize_schema(pool, engine)
+        except BaseException:
+            with CancelScope(shield=True):
+                await pool.close()
+                await engine.dispose()
+            raise
 
         PersistanceHelpers._pool = pool
         PersistanceHelpers._checkpointer = checkpointer
         PersistanceHelpers._engine = engine
         PersistanceHelpers._session_factory = session_factory
         logger.info("PersistanceHelpers initialized")
+
+    @staticmethod
+    async def _initialize_schema(
+        pool: AsyncConnectionPool, engine: AsyncEngine
+    ) -> None:
+        """Migrate retirement metadata and quarantine/erase legacy orphan state."""
+        async with engine.begin() as connection:
+            await connection.run_sync(Base.metadata.create_all, tables=[Chat.__table__])
+
+        # create_all does not alter existing tables. Keep the core's startup
+        # migration idempotent and quarantine pre-fence orphan checkpoint IDs.
+        async with pool.connection() as connection:
+            async with connection.transaction():
+                await connection.execute(
+                    "ALTER TABLE chats ADD COLUMN IF NOT EXISTS deleted_at timestamptz"
+                )
+                await connection.execute(
+                    "INSERT INTO chats (conversation_id, user_id, deleted_at) "
+                    "SELECT thread_id, '', now() FROM ("
+                    "SELECT thread_id FROM checkpoints UNION "
+                    "SELECT thread_id FROM checkpoint_writes UNION "
+                    "SELECT thread_id FROM checkpoint_blobs) AS legacy "
+                    "ON CONFLICT (conversation_id) DO NOTHING"
+                )
+                # Unknown legacy owners cannot authorize cleanup through DELETE.
+                # Startup owns that cleanup; failure aborts startup and retries
+                # on the next initialization without serving unsafe mappings.
+                for table in ("checkpoints", "checkpoint_writes", "checkpoint_blobs"):
+                    await connection.execute(
+                        f"DELETE FROM {table} WHERE thread_id IN "
+                        "(SELECT conversation_id FROM chats WHERE user_id = '' AND deleted_at IS NOT NULL)"
+                    )
 
     @staticmethod
     async def close() -> None:
@@ -292,12 +329,37 @@ class PersistanceHelpers:
 
     @staticmethod
     async def delete_conversation_mapping(conversation_id: str, user_id: str) -> bool:
-        """Delete the conversation mapping row. Returns True if a row was deleted."""
-        factory = PersistanceHelpers._get_session_factory()
-        async with factory.begin() as session:
-            return await ConversationRepository(session).delete_conversation_mapping(
-                conversation_id, user_id
-            )
+        """Erase and retire the ID; ownership mappings must never be removed alone."""
+        return (
+            await PersistanceHelpers.erase_conversation(conversation_id, user_id)
+            == "deleted"
+        )
+
+    @staticmethod
+    async def erase_conversation(conversation_id: str, user_id: str) -> str:
+        """Atomically erase checkpoints and retire the ID, retaining retries on failure."""
+        pool = PersistanceHelpers._pool
+        if pool is None:
+            raise RuntimeError("Persistence not initialized")
+        async with pool.connection() as connection:
+            async with connection.transaction():
+                result = await connection.execute(
+                    "SELECT user_id, deleted_at FROM chats WHERE conversation_id = %s FOR UPDATE",
+                    (conversation_id,),
+                )
+                row = await result.fetchone()
+                if row is None:
+                    return "missing"
+                if row["user_id"] != user_id:
+                    return "forbidden"
+                # Retry physical cleanup even for a previously retired ID.
+                await AsyncPostgresSaver(connection).adelete_thread(conversation_id)
+                await connection.execute(
+                    "UPDATE chats SET deleted_at = COALESCE(deleted_at, now()), "
+                    "chat_title = 'New Chat', assistant_id = NULL WHERE conversation_id = %s",
+                    (conversation_id,),
+                )
+            return "deleted"
 
     @staticmethod
     def _get_session_factory() -> async_sessionmaker[AsyncSession]:

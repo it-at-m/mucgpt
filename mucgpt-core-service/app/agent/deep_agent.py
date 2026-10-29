@@ -21,6 +21,7 @@ from agent.tools.mcp import McpBearerAuthProvider
 from core.auth_models import AuthenticationResult
 from core.lf_prompts import PromptPool
 from core.logtools import getLogger
+from core.stream_cleanup import close_stream
 
 logger = getLogger(name="mucgpt-core-react-agent")
 
@@ -131,15 +132,19 @@ class _ConfiguredLangChainDeepAgentGraph:
         if data_sources:
             input_payload["data_sources"] = data_sources  # type: ignore
 
-        async for item in self.agent.astream(
+        stream = self.agent.astream(
             input_payload,
             stream_mode=stream_mode,
             config=config,
             context=request_context,
             durability=CHECKPOINT_DURABILITY,
             **kwargs,
-        ):
-            yield item
+        )
+        try:
+            async for item in stream:
+                yield item
+        finally:
+            await close_stream(stream)
 
     async def ainvoke(
         self,

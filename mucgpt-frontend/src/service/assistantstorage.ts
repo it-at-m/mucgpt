@@ -142,6 +142,7 @@ export class AssistantStorageService {
         await this.deleteConfigForAssistant(assistant_id);
     }
 
+    /** Remove only the local configuration, propagating storage failures so cleanup can be retried. */
     async deleteConfigForAssistant(assistant_id: string) {
         const id = AssistantStorageService.GENERATE_BOT_CONFIG_ID(assistant_id);
         if (!(await this.storageService.delete(id))) {

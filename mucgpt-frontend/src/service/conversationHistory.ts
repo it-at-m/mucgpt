@@ -14,6 +14,7 @@ interface ChatOptions {
 // chats, settings, names and favourites remain available.
 let pendingSync: Promise<void> | undefined;
 
+/** Share an in-flight metadata sync; a settled failure permits a later retry. */
 export function syncConversationHistory(): Promise<void> {
     pendingSync ??= syncHistory().finally(() => {
         pendingSync = undefined;
@@ -21,6 +22,7 @@ export function syncConversationHistory(): Promise<void> {
     return pendingSync;
 }
 
+/** Reconcile live server metadata while retaining local-only chats and browser preferences. */
 async function syncHistory(): Promise<void> {
     const conversations = await listConversationsApi();
     const chatStorage = new StorageService<ChatResponse, ChatOptions>(CHAT_STORE);
@@ -76,6 +78,7 @@ async function syncHistory(): Promise<void> {
     }
 }
 
+/** Group display messages into browser turns, preserving interrupted questions, usage, and tool activity. */
 export function toChatTurns(messages: ConversationMessage[]): DBMessage<ChatResponse>[] {
     const turns: DBMessage<ChatResponse>[] = [];
     for (const message of messages) {
@@ -107,6 +110,11 @@ export function toChatTurns(messages: ConversationMessage[]): DBMessage<ChatResp
     return turns;
 }
 
+/**
+ * Refresh a transcript from the server and cache it, preserving matching local-only metadata.
+ * A nonempty cache is used on 404, or on 403 only for browser-only chats. Other
+ * failures propagate; known persisted chats never fall back on authorization denial.
+ */
 export async function loadConversation<C>(
     storage: StorageService<ChatResponse, C>,
     id: string,

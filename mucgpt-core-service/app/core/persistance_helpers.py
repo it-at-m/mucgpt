@@ -54,6 +54,7 @@ def _message_content(message: HumanMessage | AIMessage) -> str:
 
 
 def _display_text(value: Any, max_length: int) -> str | None:
+    """Normalize and bound tool details for display, omitting nontext/empty values."""
     if not isinstance(value, str):
         return None
     text = " ".join(value.split())
@@ -63,6 +64,7 @@ def _display_text(value: Any, max_length: int) -> str | None:
 
 
 def _conversation_usage(message: AIMessage) -> ConversationUsage | None:
+    """Restore turn usage, falling back to legacy context counts without inventing totals."""
     snapshot = message.response_metadata.get("mucgpt_usage")
     if isinstance(snapshot, dict):
         try:
@@ -97,6 +99,7 @@ def _conversation_usage(message: AIMessage) -> ConversationUsage | None:
 
 
 class PersistanceHelpers:
+    """Manage ownership metadata and fenced checkpoints for persisted conversations."""
     _pool: AsyncConnectionPool | None = None
     _checkpointer: AsyncPostgresSaver | None = None
     _engine: AsyncEngine | None = None
@@ -104,6 +107,11 @@ class PersistanceHelpers:
 
     @staticmethod
     async def init(settings: Settings) -> None:
+        """Open persistence and migrate legacy state before publishing ready resources.
+
+        Failed initialization closes provisional resources and leaves startup retryable.
+        All old, unfenced writers must be drained before this migration runs.
+        """
         if PersistanceHelpers._pool is not None:
             return
         pool = AsyncConnectionPool(
@@ -164,6 +172,7 @@ class PersistanceHelpers:
 
     @staticmethod
     async def close() -> None:
+        """Close initialized database resources and clear their readiness references."""
         if PersistanceHelpers._pool is not None:
             await PersistanceHelpers._pool.close()
             PersistanceHelpers._pool = None
@@ -175,6 +184,7 @@ class PersistanceHelpers:
 
     @staticmethod
     def get_checkpointer() -> AsyncPostgresSaver:
+        """Return the fenced saver, raising if persistence is not initialized."""
         if PersistanceHelpers._checkpointer is None:
             raise RuntimeError("PersistanceHelpers not initialized")
         return PersistanceHelpers._checkpointer
@@ -204,6 +214,7 @@ class PersistanceHelpers:
         The upsert keeps concurrent first requests for the same conversation_id
         from creating duplicate ownership rows, and the ``user_id`` guard on the
         conflict update stops a foreign conversation_id from being touched.
+        Retired IDs always return False, including for their original owner.
         """
         factory = PersistanceHelpers._get_session_factory()
         async with factory.begin() as session:
@@ -234,7 +245,7 @@ class PersistanceHelpers:
 
     @staticmethod
     async def conversation_exists(conversation_id: str) -> bool:
-        """Check whether a conversation exists without checking its owner."""
+        """Check for any ownership row, including a permanent retirement tombstone."""
         factory = PersistanceHelpers._get_session_factory()
         async with factory() as session:
             return await ConversationRepository(session).conversation_exists(
@@ -320,6 +331,7 @@ class PersistanceHelpers:
         The ``ON CONFLICT`` update is scoped to the owning ``user_id`` so a caller
         cannot rename a conversation that belongs to someone else (the
         ``conversation_id`` is client-generated and therefore guessable).
+        Retired IDs cannot be renamed or revived, even by their original owner.
         """
         factory = PersistanceHelpers._get_session_factory()
         async with factory.begin() as session:
@@ -337,7 +349,13 @@ class PersistanceHelpers:
 
     @staticmethod
     async def erase_conversation(conversation_id: str, user_id: str) -> str:
-        """Atomically erase checkpoints and retire the ID, retaining retries on failure."""
+        """Erase checkpoints and retire the ID under the ownership row's UPDATE lock.
+
+        Return ``deleted`` only after commit, ``missing`` for an absent row, or
+        ``forbidden`` for another owner. Owner retries repeat physical cleanup.
+        Any erasure failure rolls back and propagates, retaining protected state
+        for retry. Tombstones prevent ID reuse and must not be purged.
+        """
         pool = PersistanceHelpers._pool
         if pool is None:
             raise RuntimeError("Persistence not initialized")
@@ -363,6 +381,7 @@ class PersistanceHelpers:
 
     @staticmethod
     def _get_session_factory() -> async_sessionmaker[AsyncSession]:
+        """Return metadata sessions, raising if persistence is not initialized."""
         if PersistanceHelpers._session_factory is None:
             raise RuntimeError("PersistanceHelpers not initialized")
         return PersistanceHelpers._session_factory

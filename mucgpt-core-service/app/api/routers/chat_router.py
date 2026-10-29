@@ -83,6 +83,8 @@ async def get_messages_for_agent(
     persisted conversation is seeded with the full history on its first turn so
     the system prompt and existing browser-held turns are retained; once state
     exists, only the newest user message is appended to avoid duplicating it.
+    Retired/foreign IDs are rejected. This prepares new turns, not replace/resume
+    operations; local history edits do not rewind an existing checkpoint.
     """
     if not request.persist:
         return request.messages
@@ -118,8 +120,10 @@ async def chat_endpoint(
     request: ChatCompletionRequest,
     user_info: Annotated[AuthenticationResult, Depends(authenticate_user)],
 ) -> StreamingResponse | ChatCompletionResponse:
-    """
-    OpenAI-compatible chat completion endpoint (streaming or non-streaming)
+    """Validate and run an OpenAI-compatible completion, streamed or aggregated.
+
+    Model validation precedes ownership creation. Persisted runs append new turns;
+    streaming teardown closes the executor even when response iteration fails.
     """
     if not request.conversation_id:
         raise HTTPException(status_code=400, detail="conversation_id is required")
@@ -167,6 +171,7 @@ async def chat_endpoint(
             )
 
             async def sse_generator() -> AsyncGenerator[str]:
+                """Encode completion chunks as SSE and close the executor on every exit."""
                 try:
                     async for chunk in gen:
                         yield f"data: {json.dumps(chunk)}\n\n"
@@ -251,7 +256,11 @@ async def delete_conversation(
     conversation_id: str,
     user_info: Annotated[AuthenticationResult, Depends(authenticate_user)],
 ) -> None:
-    """Erase checkpoint state and durably retire the ID in one transaction."""
+    """Return 204 after atomic erasure/retirement, including an owner's retry.
+
+    Unknown IDs return 404, other owners receive 403, and cleanup failures return
+    500 with the protected ownership row retained for retry.
+    """
     try:
         result = await PersistanceHelpers.erase_conversation(
             conversation_id, user_info.user_id
@@ -287,6 +296,11 @@ async def ag_ui_chat_endpoint(
     user_info: Annotated[AuthenticationResult, Depends(authenticate_user)],
     request: Request,
 ) -> StreamingResponse:
+    """Validate/authorize a turn and stream AG-UI events, regardless of the stream flag.
+
+    Persistence follows the same append-only preparation as v1. Closing the
+    response iterator also closes the executor during errors or disconnects.
+    """
     if not chat_request.conversation_id:
         raise HTTPException(status_code=400, detail="conversation_id is required")
     if not chat_request.messages:
@@ -330,6 +344,7 @@ async def ag_ui_chat_endpoint(
     )
 
     async def event_generator() -> AsyncGenerator[str]:
+        """Encode AG-UI events and close their source on completion or cancellation."""
         try:
             async for event in events:
                 yield encoder.encode(event)

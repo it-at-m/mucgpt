@@ -33,10 +33,12 @@ export interface ConversationMessage {
     }[];
 }
 
+/** Fetch live conversation metadata for the authenticated user without downloading transcripts. */
 export function listConversationsApi(): Promise<ConversationMetadata[]> {
     return handleApiRequest(() => fetch(API_BASE + "v1/conversations", getConfig()), "Failed to load conversation history");
 }
 
+/** Fetch an authorized server transcript; HTTP and network failures propagate to the cache policy. */
 export async function getConversationMessagesApi(conversationId: string): Promise<ConversationMessage[]> {
     const response = await fetch(API_BASE + "v1/conversations/" + encodeURIComponent(conversationId) + "/messages", getConfig());
     handleRedirect(response);

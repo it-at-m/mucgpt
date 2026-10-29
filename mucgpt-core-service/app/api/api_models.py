@@ -2,7 +2,7 @@ from datetime import datetime
 from decimal import Decimal
 from typing import Any, Final, Literal
 
-from pydantic import BaseModel, ConfigDict, Field, PositiveInt
+from pydantic import BaseModel, ConfigDict, Field, field_validator, PositiveInt
 
 from config.settings import ReasoningEffort
 
@@ -498,6 +498,14 @@ class ConversationMetadata(BaseModel):
         ...,
         description="Last activity on the conversation (new message or title change).",
     )
+
+    @field_validator("title", mode="before")
+    @staticmethod
+    def parse_title(value: str | None) -> str:
+        """Normalize title to a single line with no leading/trailing whitespace and convert None to default title"""
+        if not value:
+            return "Neuer Chat"
+        return value.strip().replace("\n", " ")
 
 
 class ModelsDTO(BaseModel):

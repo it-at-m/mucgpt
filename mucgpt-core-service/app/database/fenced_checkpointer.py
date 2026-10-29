@@ -19,6 +19,7 @@ class FencedPostgresSaver(AsyncPostgresSaver):
 
     @asynccontextmanager
     async def _live_saver(self, thread_id):
+        """Hold a live row's SHARE lock for the connection-bound saver operation."""
         async with self.conn.connection() as connection:
             async with connection.transaction():
                 result = await connection.execute(
@@ -31,18 +32,22 @@ class FencedPostgresSaver(AsyncPostgresSaver):
                 yield AsyncPostgresSaver(connection, serde=self.serde)
 
     async def aput(self, config, checkpoint, metadata, new_versions):
+        """Commit a checkpoint atomically with its live-row fence, or reject retirement."""
         async with self._live_saver(config["configurable"]["thread_id"]) as saver:
             return await saver.aput(config, checkpoint, metadata, new_versions)
 
     async def aput_writes(self, config, writes, task_id, task_path=""):
+        """Save pending task writes while deletion is excluded by the live-row lock."""
         async with self._live_saver(config["configurable"]["thread_id"]) as saver:
             await saver.aput_writes(config, writes, task_id, task_path)
 
     async def aget_tuple(self, config):
+        """Read a checkpoint while its live ownership mapping is locked against erasure."""
         async with self._live_saver(config["configurable"]["thread_id"]) as saver:
             return await saver.aget_tuple(config)
 
     async def alist(self, config, *, filter=None, before=None, limit=None):
+        """Yield one conversation's history under its fence; unscoped listing is denied."""
         if config is None:
             raise ValueError("Conversation-scoped config is required")
         async with self._live_saver(config["configurable"]["thread_id"]) as saver:
@@ -52,6 +57,7 @@ class FencedPostgresSaver(AsyncPostgresSaver):
                 yield checkpoint
 
     async def adelete_thread(self, thread_id):
+        """Reject unfenced deletion; erasure must atomically retire the ownership row."""
         # Erasure must also retire the ownership row atomically. Never expose
         # the base saver's uncoordinated deletion through this application API.
         raise RuntimeError("Use PersistanceHelpers.erase_conversation")

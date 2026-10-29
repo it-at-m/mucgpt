@@ -14,7 +14,6 @@ from config.settings import (
     ParserBackendType,
     Settings,
     enrich_model_metadata,
-    get_langfuse_settings,
     get_mcp_settings,
     get_redis_settings,
     get_settings,
@@ -39,7 +38,7 @@ from config.settings import (
 )
 def test_temperature_capability_configuration(capability_config, expected) -> None:
     config = ModelsConfig(
-        type="OPENAI",
+        type="openai",
         llm_name="test-model",
         endpoint="https://example.test",
         api_key="test",
@@ -58,10 +57,10 @@ class TestSettings:
         # Clear any existing environment variables
         with patch.dict(os.environ, {}, clear=True):
             settings = Settings()
-            assert settings.VERSION == ""
-            assert settings.APP_VERSION == "unknown"
-            assert settings.FRONTEND_VERSION == "unknown"
-            assert settings.ASSISTANT_VERSION == "unknown"
+            assert settings.version == ""
+            assert settings.app_version == "unknown"
+            assert settings.frontend_version == "unknown"
+            assert settings.assistant_version == "unknown"
 
     def test_settings_with_env_variables(self):
         """Test that settings respect environment variables."""
@@ -80,10 +79,10 @@ class TestSettings:
             },
         ):
             settings = Settings()
-            assert settings.VERSION == test_version
-            assert settings.APP_VERSION == test_app_version
-            assert settings.FRONTEND_VERSION == test_frontend_version
-            assert settings.ASSISTANT_VERSION == test_assistant_version
+            assert settings.version == test_version
+            assert settings.app_version == test_app_version
+            assert settings.frontend_version == test_frontend_version
+            assert settings.assistant_version == test_assistant_version
 
     def test_settings_with_version_hash_parsing(self):
         """Test that version strings with @sha256 hashes are parsed correctly."""
@@ -103,10 +102,10 @@ class TestSettings:
         ):
             settings = Settings()
             # Should only parse the version part before the @ symbol
-            assert settings.VERSION == "0.7.1"
-            assert settings.APP_VERSION == "3.0.0"
-            assert settings.FRONTEND_VERSION == "1.2.3"
-            assert settings.ASSISTANT_VERSION == "2.3.4"
+            assert settings.version == "0.7.1"
+            assert settings.app_version == "3.0.0"
+            assert settings.frontend_version == "1.2.3"
+            assert settings.assistant_version == "2.3.4"
 
     def test_get_settings_cached(self):
         """Test that get_settings returns cached instance."""
@@ -122,30 +121,30 @@ class TestSettings:
             settings1 = get_settings()
             settings2 = get_settings()  # Should be the same instance due to caching
             assert settings1 is settings2
-            assert settings1.VERSION == "cached-test-version"
+            assert settings1.version == "cached-test-version"
 
     def test_frontend_config_defaults(self):
         """Test frontend configuration defaults."""
         with patch.dict(os.environ, {}, clear=True):
             settings = Settings()
-            assert settings.ENV_NAME == "MUCGPT"
-            assert settings.ALTERNATIVE_LOGO is False
-            assert settings.FRONTEND_VERSION == "unknown"
-            assert settings.ASSISTANT_VERSION == "unknown"
+            assert settings.env_name == "MUCGPT"
+            assert settings.alternative_logo is False
+            assert settings.frontend_version == "unknown"
+            assert settings.assistant_version == "unknown"
 
     def test_backend_config_defaults(self):
         """Test backend configuration defaults."""
         with patch.dict(os.environ, {}, clear=True):
             settings = Settings()
-            assert len(settings.MODELS) == 0
-            assert settings.UNAUTHORIZED_USER_REDIRECT_URL == ""
+            assert len(settings.models) == 0
+            assert settings.unauthorized_user_redirect_url == ""
 
     def test_sso_role_defaults_are_unset(self):
         """Test SSO role defaults remain open unless explicitly configured."""
         with patch.dict(os.environ, {}, clear=True):
             settings = Settings()
-            assert settings.SSO.ROLE is None
-            assert settings.SSO.ADMIN_ROLE is None
+            assert settings.sso.role is None
+            assert settings.sso.admin_role is None
 
     def test_nested_env_variables(self):
         """Test that nested environment variables work correctly."""
@@ -157,18 +156,163 @@ class TestSettings:
             },
         ):
             settings = Settings()
-            assert settings.ENV_NAME == "TEST_ENV"
-            assert settings.ALTERNATIVE_LOGO is True
+            assert settings.env_name == "TEST_ENV"
+            assert settings.alternative_logo is True
 
-    def test_model_configuration_from_env(self):
-        """Test model configuration from environment variables."""
+    def test_provider_configuration_from_env(self):
+        """Test that provider connection settings come from per-field env vars."""
+        providers_json = json.dumps(
+            {
+                "gateway": {"type": "openai", "endpoint": "https://yaml.test"},
+                "azure": {"type": "azure", "endpoint": "https://azure.test"},
+            }
+        )
+        with patch.dict(
+            os.environ,
+            {
+                "MUCGPT_CORE_PROVIDERS": providers_json,
+                "MUCGPT_CORE_PROVIDERS__GATEWAY__API_KEY": "env-key",
+                "MUCGPT_CORE_PROVIDERS__AZURE__API_KEY": "azure-env-key",
+                "MUCGPT_CORE_PROVIDERS__AZURE__API_VERSION": "2025-04-01-preview",
+                "MUCGPT_CORE_MODELS": "[]",
+            },
+        ):
+            get_settings.cache_clear()
+            settings = Settings()
+
+            assert settings.providers["gateway"].type == "openai"
+            assert settings.providers["gateway"].api_key.get_secret_value() == "env-key"
+            assert str(settings.providers["gateway"].endpoint) == "https://yaml.test/"
+            assert settings.providers["azure"].type == "azure"
+            assert (
+                settings.providers["azure"].api_key.get_secret_value()
+                == "azure-env-key"
+            )
+            assert settings.providers["azure"].api_version == "2025-04-01-preview"
+
+    def test_provider_keys_must_be_lowercase(self):
+        """Uppercase provider keys cannot be matched by env overrides.
+
+        Env-var paths are lowercased by pydantic-settings, so uppercase keys
+        can only appear via YAML or init values - the validator rejects them
+        there.
+        """
+        with pytest.raises(ValidationError, match="lowercase"):
+            Settings(
+                providers={
+                    "MYPROV": {
+                        "type": "openai",
+                        "endpoint": "https://example.test",
+                        "api_key": "env-key",
+                    }
+                }
+            )
+
+    def test_model_resolves_provider_reference(self):
+        """Model entries pull type/endpoint/api_key/api_version from their provider."""
+        providers_json = json.dumps(
+            {
+                "gateway": {
+                    "type": "openai",
+                    "endpoint": "https://gateway.test",
+                    "api_key": "provider-key",
+                }
+            }
+        )
         models_json = json.dumps(
             [
                 {
-                    "type": "AZURE",
+                    "provider": "gateway",
                     "llm_name": "test-model",
+                    "max_output_tokens": 1000,
+                    "max_input_tokens": 2000,
+                    "description": "Test model",
+                }
+            ]
+        )
+        with patch.dict(
+            os.environ,
+            {
+                "MUCGPT_CORE_PROVIDERS": providers_json,
+                "MUCGPT_CORE_MODELS": models_json,
+            },
+        ):
+            get_settings.cache_clear()
+            settings = Settings()
+
+            model = settings.models[0]
+            assert model.provider == "gateway"
+            assert model.type == "openai"
+            assert str(model.endpoint) == "https://gateway.test/"
+            assert model.api_key.get_secret_value() == "provider-key"
+            assert model.llm_name == "test-model"
+
+    def test_model_rejects_inline_provider_fields(self):
+        """Inline type/endpoint/api_key on model entries are rejected (hard cut)."""
+        models_json = json.dumps(
+            [
+                {
+                    "provider": "gateway",
+                    "llm_name": "test-model",
+                    "endpoint": "https://inline.test",
+                    "api_key": "inline-key",
+                }
+            ]
+        )
+        with patch.dict(os.environ, {"MUCGPT_CORE_MODELS": models_json}):
+            get_settings.cache_clear()
+            with pytest.raises(ValidationError, match="provider-level fields"):
+                Settings()
+
+    def test_model_requires_provider_reference(self):
+        """Model entries without a provider reference are rejected."""
+        models_json = json.dumps([{"llm_name": "test-model"}])
+        with patch.dict(os.environ, {"MUCGPT_CORE_MODELS": models_json}):
+            get_settings.cache_clear()
+            with pytest.raises(ValidationError, match="provider"):
+                Settings()
+
+    def test_model_rejects_unknown_provider(self):
+        """Unknown provider references fail with the available providers listed."""
+        providers_json = json.dumps(
+            {
+                "gateway": {
+                    "type": "openai",
+                    "endpoint": "https://gateway.test",
+                    "api_key": "k",
+                }
+            }
+        )
+        models_json = json.dumps([{"provider": "nope", "llm_name": "test-model"}])
+        with patch.dict(
+            os.environ,
+            {
+                "MUCGPT_CORE_PROVIDERS": providers_json,
+                "MUCGPT_CORE_MODELS": models_json,
+            },
+        ):
+            get_settings.cache_clear()
+            with pytest.raises(ValidationError, match="Unknown provider 'nope'"):
+                Settings()
+
+    def test_model_configuration_from_env(self):
+        """Test model configuration from environment variables."""
+        providers_json = json.dumps(
+            {
+                "test-azure": {
+                    "type": "azure",
                     "endpoint": "https://test.example.com",
                     "api_key": "test-key",
+                    "api_version": "2025-04-01-preview",
+                }
+            }
+        )
+        models_json = json.dumps(
+            [
+                {
+                    "provider": "test-azure",
+                    "llm_name": "test-model",
+                    "deployment": "test-deployment",
                     "max_output_tokens": 1000,
                     "max_input_tokens": 2000,
                     "display_name": "  Test Model  ",
@@ -185,17 +329,19 @@ class TestSettings:
         with patch.dict(
             os.environ,
             {
+                "MUCGPT_CORE_PROVIDERS": providers_json,
                 "MUCGPT_CORE_MODELS": models_json,
             },
         ):
             settings = Settings()
 
-            assert len(settings.MODELS) == 1
-            model = settings.MODELS[0]
-            assert model.type == "AZURE"
+            assert len(settings.models) == 1
+            model = settings.models[0]
+            assert model.type == "azure"
             assert model.llm_name == "test-model"
             assert str(model.endpoint) == "https://test.example.com/"
             assert model.api_key.get_secret_value() == "test-key"
+            assert model.api_version == "2025-04-01-preview"
             assert model.max_output_tokens == 1000
             assert model.max_input_tokens == 2000
             assert model.display_name == "Test Model"
@@ -209,13 +355,20 @@ class TestSettings:
             assert model.model_info.auto_enrich_from_model_info_endpoint is True
 
     def test_model_configuration_enriched_from_info_endpoint(self):
+        providers_json = json.dumps(
+            {
+                "gateway": {
+                    "type": "openai",
+                    "endpoint": "https://exampleproxy/v1",
+                    "api_key": "proxy-key",
+                }
+            }
+        )
         models_json = json.dumps(
             [
                 {
-                    "type": "OPENAI",
+                    "provider": "gateway",
                     "llm_name": "gpt-4.1-nano",
-                    "endpoint": "https://exampleproxy/v1",
-                    "api_key": "proxy-key",
                 }
             ]
         )
@@ -249,11 +402,12 @@ class TestSettings:
             with patch.dict(
                 os.environ,
                 {
+                    "MUCGPT_CORE_PROVIDERS": providers_json,
                     "MUCGPT_CORE_MODELS": models_json,
                 },
             ):
                 settings = Settings()
-                model = settings.MODELS[0]
+                model = settings.models[0]
                 enrich_model_metadata(model)
                 assert model.max_output_tokens == 32768
                 assert model.max_input_tokens == 1048576
@@ -273,11 +427,11 @@ class TestSettings:
                 assert model.model_info.auto_enrich_from_model_info_endpoint is True
 
     def test_fallback_reasoning_effort_defaults_to_low_and_is_overridable(self):
-        assert Settings().FALLBACK_REASONING_EFFORT == "low"
+        assert Settings().fallback_reasoning_effort == "low"
         with patch.dict(
             os.environ, {"MUCGPT_CORE_FALLBACK_REASONING_EFFORT": "medium"}
         ):
-            assert Settings().FALLBACK_REASONING_EFFORT == "medium"
+            assert Settings().fallback_reasoning_effort == "medium"
         with patch.dict(
             os.environ, {"MUCGPT_CORE_FALLBACK_REASONING_EFFORT": "extreme"}
         ):
@@ -285,13 +439,20 @@ class TestSettings:
                 Settings()
 
     def test_configured_reasoning_efforts_win_over_info_endpoint(self):
+        providers_json = json.dumps(
+            {
+                "gateway": {
+                    "type": "openai",
+                    "endpoint": "https://exampleproxy/v1",
+                    "api_key": "proxy-key",
+                }
+            }
+        )
         models_json = json.dumps(
             [
                 {
-                    "type": "OPENAI",
+                    "provider": "gateway",
                     "llm_name": "gpt-6",
-                    "endpoint": "https://exampleproxy/v1",
-                    "api_key": "proxy-key",
                     "supported_reasoning_efforts": ["medium", "high"],
                     "default_reasoning_effort": "medium",
                 }
@@ -310,21 +471,34 @@ class TestSettings:
         ]
 
         with patch("config.settings._load_model_info", return_value=info_payload):
-            with patch.dict(os.environ, {"MUCGPT_CORE_MODELS": models_json}):
-                model = Settings().MODELS[0]
+            with patch.dict(
+                os.environ,
+                {
+                    "MUCGPT_CORE_PROVIDERS": providers_json,
+                    "MUCGPT_CORE_MODELS": models_json,
+                },
+            ):
+                model = Settings().models[0]
                 enrich_model_metadata(model)
 
         assert model.model_info.supported_reasoning_efforts == ["medium", "high"]
         assert model.model_info.default_reasoning_effort == "medium"
 
     def test_reasoning_efforts_parsed_from_comma_separated_info(self):
+        providers_json = json.dumps(
+            {
+                "gateway": {
+                    "type": "openai",
+                    "endpoint": "https://exampleproxy/v1",
+                    "api_key": "proxy-key",
+                }
+            }
+        )
         models_json = json.dumps(
             [
                 {
-                    "type": "OPENAI",
+                    "provider": "gateway",
                     "llm_name": "gpt-6",
-                    "endpoint": "https://exampleproxy/v1",
-                    "api_key": "proxy-key",
                 }
             ]
         )
@@ -341,8 +515,14 @@ class TestSettings:
         ]
 
         with patch("config.settings._load_model_info", return_value=info_payload):
-            with patch.dict(os.environ, {"MUCGPT_CORE_MODELS": models_json}):
-                model = Settings().MODELS[0]
+            with patch.dict(
+                os.environ,
+                {
+                    "MUCGPT_CORE_PROVIDERS": providers_json,
+                    "MUCGPT_CORE_MODELS": models_json,
+                },
+            ):
+                model = Settings().models[0]
                 enrich_model_metadata(model)
 
         assert model.model_info.supported_reasoning_efforts == [
@@ -353,13 +533,20 @@ class TestSettings:
         assert model.model_info.default_reasoning_effort is None
 
     def test_model_configuration_missing_metadata_raises_without_info(self):
+        providers_json = json.dumps(
+            {
+                "gateway": {
+                    "type": "openai",
+                    "endpoint": "https://exampleproxy/v1",
+                    "api_key": "proxy-key",
+                }
+            }
+        )
         models_json = json.dumps(
             [
                 {
-                    "type": "OPENAI",
+                    "provider": "gateway",
                     "llm_name": "gpt-4o-mini",
-                    "endpoint": "https://exampleproxy/v1",
-                    "api_key": "proxy-key",
                 }
             ]
         )
@@ -371,24 +558,32 @@ class TestSettings:
             with patch.dict(
                 os.environ,
                 {
+                    "MUCGPT_CORE_PROVIDERS": providers_json,
                     "MUCGPT_CORE_MODELS": models_json,
                 },
             ):
                 settings = Settings()
-                model = settings.MODELS[0]
+                model = settings.models[0]
                 with pytest.raises(ValueError):
                     enrich_model_metadata(model)
 
     def test_model_configuration_auto_enrich_from_model_info_endpoint_disabled_requires_manual_data(
         self,
     ):
+        providers_json = json.dumps(
+            {
+                "gateway": {
+                    "type": "openai",
+                    "endpoint": "https://exampleproxy/v1",
+                    "api_key": "proxy-key",
+                }
+            }
+        )
         models_json = json.dumps(
             [
                 {
-                    "type": "OPENAI",
+                    "provider": "gateway",
                     "llm_name": "gpt-4o-mini",
-                    "endpoint": "https://exampleproxy/v1",
-                    "api_key": "proxy-key",
                     "model_info": {
                         "auto_enrich_from_model_info_endpoint": False,
                         "max_output_tokens": 1000,
@@ -402,6 +597,7 @@ class TestSettings:
             with patch.dict(
                 os.environ,
                 {
+                    "MUCGPT_CORE_PROVIDERS": providers_json,
                     "MUCGPT_CORE_MODELS": models_json,
                 },
             ):
@@ -412,13 +608,20 @@ class TestSettings:
     def test_model_configuration_auto_enrich_from_model_info_endpoint_disabled_with_complete_data(
         self,
     ):
+        providers_json = json.dumps(
+            {
+                "gateway": {
+                    "type": "openai",
+                    "endpoint": "https://exampleproxy/v1",
+                    "api_key": "proxy-key",
+                }
+            }
+        )
         models_json = json.dumps(
             [
                 {
-                    "type": "OPENAI",
+                    "provider": "gateway",
                     "llm_name": "gpt-4o-mini",
-                    "endpoint": "https://exampleproxy/v1",
-                    "api_key": "proxy-key",
                     "model_info": {
                         "auto_enrich_from_model_info_endpoint": False,
                         "max_output_tokens": 1000,
@@ -434,11 +637,12 @@ class TestSettings:
             with patch.dict(
                 os.environ,
                 {
+                    "MUCGPT_CORE_PROVIDERS": providers_json,
                     "MUCGPT_CORE_MODELS": models_json,
                 },
             ):
                 settings = Settings()
-                model = settings.MODELS[0]
+                model = settings.models[0]
                 assert model.max_output_tokens == 1000
                 assert model.max_input_tokens == 2000
                 assert model.description == "Manual"
@@ -447,13 +651,20 @@ class TestSettings:
 
     def test_model_context_usage_thresholds_default(self):
         """Context usage thresholds default to 75/90 when not configured."""
+        providers_json = json.dumps(
+            {
+                "gateway": {
+                    "type": "openai",
+                    "endpoint": "https://exampleproxy/v1",
+                    "api_key": "proxy-key",
+                }
+            }
+        )
         models_json = json.dumps(
             [
                 {
-                    "type": "OPENAI",
+                    "provider": "gateway",
                     "llm_name": "gpt-4o-mini",
-                    "endpoint": "https://exampleproxy/v1",
-                    "api_key": "proxy-key",
                     "model_info": {
                         "auto_enrich_from_model_info_endpoint": False,
                         "max_output_tokens": 1000,
@@ -464,21 +675,34 @@ class TestSettings:
             ]
         )
 
-        with patch.dict(os.environ, {"MUCGPT_CORE_MODELS": models_json}):
+        with patch.dict(
+            os.environ,
+            {
+                "MUCGPT_CORE_PROVIDERS": providers_json,
+                "MUCGPT_CORE_MODELS": models_json,
+            },
+        ):
             settings = Settings()
-            model = settings.MODELS[0]
+            model = settings.models[0]
             assert model.context_warning_threshold_percent == 75
             assert model.context_critical_threshold_percent == 90
 
     def test_model_context_usage_thresholds_configurable_per_model(self):
         """Context usage thresholds can be overridden per model."""
+        providers_json = json.dumps(
+            {
+                "gateway": {
+                    "type": "openai",
+                    "endpoint": "https://exampleproxy/v1",
+                    "api_key": "proxy-key",
+                }
+            }
+        )
         models_json = json.dumps(
             [
                 {
-                    "type": "OPENAI",
+                    "provider": "gateway",
                     "llm_name": "gpt-4o-mini",
-                    "endpoint": "https://exampleproxy/v1",
-                    "api_key": "proxy-key",
                     "model_info": {
                         "auto_enrich_from_model_info_endpoint": False,
                         "max_output_tokens": 1000,
@@ -491,21 +715,34 @@ class TestSettings:
             ]
         )
 
-        with patch.dict(os.environ, {"MUCGPT_CORE_MODELS": models_json}):
+        with patch.dict(
+            os.environ,
+            {
+                "MUCGPT_CORE_PROVIDERS": providers_json,
+                "MUCGPT_CORE_MODELS": models_json,
+            },
+        ):
             settings = Settings()
-            model = settings.MODELS[0]
+            model = settings.models[0]
             assert model.context_warning_threshold_percent == 60
             assert model.context_critical_threshold_percent == 80
 
     def test_model_context_usage_thresholds_reject_warning_above_critical(self):
         """The warning threshold must stay below the critical threshold."""
+        providers_json = json.dumps(
+            {
+                "gateway": {
+                    "type": "openai",
+                    "endpoint": "https://exampleproxy/v1",
+                    "api_key": "proxy-key",
+                }
+            }
+        )
         models_json = json.dumps(
             [
                 {
-                    "type": "OPENAI",
+                    "provider": "gateway",
                     "llm_name": "gpt-4o-mini",
-                    "endpoint": "https://exampleproxy/v1",
-                    "api_key": "proxy-key",
                     "model_info": {
                         "auto_enrich_from_model_info_endpoint": False,
                         "max_output_tokens": 1000,
@@ -518,7 +755,13 @@ class TestSettings:
             ]
         )
 
-        with patch.dict(os.environ, {"MUCGPT_CORE_MODELS": models_json}):
+        with patch.dict(
+            os.environ,
+            {
+                "MUCGPT_CORE_PROVIDERS": providers_json,
+                "MUCGPT_CORE_MODELS": models_json,
+            },
+        ):
             with pytest.raises(ValidationError):
                 Settings()
 
@@ -533,7 +776,7 @@ class TestSettings:
             get_sso_settings.cache_clear()
             get_settings.cache_clear()
             sso_settings = get_sso_settings()
-            assert sso_settings.ROLE == "custom-role"
+            assert sso_settings.role == "custom-role"
 
     def test_sso_settings_default(self):
         """Test SSO settings default values."""
@@ -541,34 +784,7 @@ class TestSettings:
             get_sso_settings.cache_clear()
             get_settings.cache_clear()
             sso_settings = get_sso_settings()
-            assert sso_settings.ROLE is None
-
-    def test_langfuse_settings(self):
-        """Test Langfuse settings configuration via nested env vars."""
-        with patch.dict(
-            os.environ,
-            {
-                "MUCGPT_CORE_LANGFUSE__PUBLIC_KEY": "test-public-key",
-                "MUCGPT_CORE_LANGFUSE__SECRET_KEY": "test-secret-key",
-                "MUCGPT_CORE_LANGFUSE__HOST": "https://langfuse.example.com",
-            },
-        ):
-            get_langfuse_settings.cache_clear()
-            get_settings.cache_clear()
-            langfuse_settings = get_langfuse_settings()
-            assert langfuse_settings.PUBLIC_KEY == "test-public-key"
-            assert langfuse_settings.SECRET_KEY.get_secret_value() == "test-secret-key"
-            assert langfuse_settings.HOST == "https://langfuse.example.com"
-
-    def test_langfuse_settings_default(self):
-        """Test Langfuse settings default values."""
-        with patch.dict(os.environ, {}, clear=True):
-            get_langfuse_settings.cache_clear()
-            get_settings.cache_clear()
-            langfuse_settings = get_langfuse_settings()
-            assert langfuse_settings.PUBLIC_KEY is None
-            assert langfuse_settings.SECRET_KEY is None
-            assert langfuse_settings.HOST is None
+            assert sso_settings.role is None
 
     def test_mcp_settings(self):
         """Test MCP settings configuration via nested env vars."""
@@ -596,25 +812,25 @@ class TestSettings:
             get_mcp_settings.cache_clear()
             get_settings.cache_clear()
             mcp_settings = get_mcp_settings()
-            assert len(mcp_settings.SOURCES.keys()) == 1
-            assert mcp_settings.SOURCES["test"].url == "https://example.com/mcp"
+            assert len(mcp_settings.sources.keys()) == 1
+            assert mcp_settings.sources["test"].url == "https://example.com/mcp"
             assert (
-                mcp_settings.SOURCES["test"].transport is MCPTransport.STREAMABLE_HTTP
+                mcp_settings.sources["test"].transport is MCPTransport.STREAMABLE_HTTP
             )
-            assert mcp_settings.SOURCES["test"].forward_token
+            assert mcp_settings.sources["test"].forward_token
             assert (
-                mcp_settings.SOURCES["test"].forward_auth_override.get_secret_value()
+                mcp_settings.sources["test"].forward_auth_override.get_secret_value()
                 == "Basic dXNlcjpwYXNz"
             )
             assert (
-                mcp_settings.SOURCES["test"].headers["x-api-key"].get_secret_value()
+                mcp_settings.sources["test"].headers["x-api-key"].get_secret_value()
                 == "sk-1234"
             )
             assert (
-                mcp_settings.SOURCES["test"].headers["X-Test"].get_secret_value()
+                mcp_settings.sources["test"].headers["X-Test"].get_secret_value()
                 == "true"
             )
-            assert mcp_settings.CACHE_TTL == 123
+            assert mcp_settings.cache_ttl == 123
 
     def test_mcp_settings_forward_auth_override_requires_forward_token(self):
         """forward_auth_override must not be configured without forward_token=true."""
@@ -646,31 +862,30 @@ class TestSettings:
             get_mcp_settings.cache_clear()
             get_settings.cache_clear()
             mcp_settings = get_mcp_settings()
-            assert mcp_settings.SOURCES is None
-            assert mcp_settings.CACHE_TTL == 43200
+            assert mcp_settings.sources is None
+            assert mcp_settings.cache_ttl == 43200
 
     def test_yaml_configuration_loading(self, monkeypatch):
         """Test that settings can be loaded from YAML configuration file."""
         yaml_content = """
-VERSION: "yaml-test-1.0"
-ENV_NAME: "YAML_TEST"
-ALTERNATIVE_LOGO: true
-SSO:
-  ROLE: "yaml-test-role"
-LANGFUSE:
-  HOST: "https://langfuse.yaml.test"
-  PUBLIC_KEY: "yaml-pub-key"
-  SECRET_KEY: "yaml-secret-key"
-REDIS:
-  HOST: "yaml-redis-host"
-  PORT: 9999
-MCP:
-  CACHE_TTL: 999
-MODELS:
-  - type: "OPENAI"
-    llm_name: "yaml-test-model"
+version: "yaml-test-1.0"
+env_name: "YAML_TEST"
+alternative_logo: true
+sso:
+  role: "yaml-test-role"
+redis:
+  host: "yaml-redis-host"
+  port: 9999
+mcp:
+  cache_ttl: 999
+providers:
+  gateway:
+    type: "openai"
     endpoint: "https://yaml.test.example.com"
     api_key: "yaml-test-key"
+models:
+  - provider: "gateway"
+    llm_name: "yaml-test-model"
     model_info:
       auto_enrich_from_model_info_endpoint: false
       max_output_tokens: 2000
@@ -686,23 +901,18 @@ MODELS:
             # Clear environment variables that might override
             with patch.dict(os.environ, {}, clear=True):
                 settings = Settings()
-                assert settings.VERSION == "yaml-test-1.0"
-                assert settings.ENV_NAME == "YAML_TEST"
-                assert settings.ALTERNATIVE_LOGO is True
+                assert settings.version == "yaml-test-1.0"
+                assert settings.env_name == "YAML_TEST"
+                assert settings.alternative_logo is True
                 # Verify nested configs loaded from YAML
-                assert settings.SSO.ROLE == "yaml-test-role"
-                assert settings.LANGFUSE.HOST == "https://langfuse.yaml.test"
-                assert settings.LANGFUSE.PUBLIC_KEY == "yaml-pub-key"
-                assert (
-                    settings.LANGFUSE.SECRET_KEY.get_secret_value() == "yaml-secret-key"
-                )
-                assert settings.REDIS.HOST == "yaml-redis-host"
-                assert settings.REDIS.PORT == 9999
-                assert settings.MCP.CACHE_TTL == 999
+                assert settings.sso.role == "yaml-test-role"
+                assert settings.redis.host == "yaml-redis-host"
+                assert settings.redis.port == 9999
+                assert settings.mcp.cache_ttl == 999
                 # Verify models
-                assert len(settings.MODELS) == 1
-                model = settings.MODELS[0]
-                assert model.type == "OPENAI"
+                assert len(settings.models) == 1
+                model = settings.models[0]
+                assert model.type == "openai"
                 assert model.llm_name == "yaml-test-model"
                 assert model.max_output_tokens == 2000
                 assert model.max_input_tokens == 4000
@@ -711,8 +921,8 @@ MODELS:
     def test_env_variables_override_yaml(self, monkeypatch):
         """Test that environment variables have priority over YAML configuration."""
         yaml_content = """
-VERSION: "yaml-version"
-ENV_NAME: "YAML_ENV"
+version: "yaml-version"
+env_name: "YAML_ENV"
 """
         with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as tmpdir:
             config_path = Path(tmpdir) / "config.yaml"
@@ -727,15 +937,14 @@ ENV_NAME: "YAML_ENV"
                 },
             ):
                 settings = Settings()
-                assert settings.VERSION == "env-version"  # From env
-                assert settings.ENV_NAME == "YAML_ENV"  # From YAML
+                assert settings.version == "env-version"  # From env
+                assert settings.env_name == "YAML_ENV"  # From YAML
 
     def teardown_method(self):
         """Clean up after each test."""
         # Clear the cache to ensure tests don't interfere with each other
         get_settings.cache_clear()
         get_sso_settings.cache_clear()
-        get_langfuse_settings.cache_clear()
         get_mcp_settings.cache_clear()
         get_redis_settings.cache_clear()
 
@@ -745,14 +954,14 @@ class TestPromptPoolSettings:
 
     def test_defaults(self):
         with patch.dict(os.environ, {}, clear=True):
-            prompts = Settings().PROMPTS
+            prompts = Settings().prompts
 
-        assert prompts.FOLDERS == []
+        assert prompts.folders == []
 
     def test_environment_configuration(self):
         prompt_config = json.dumps(
             {
-                "FOLDERS": [
+                "folders": [
                     {
                         "name": "custom",
                         "prompts": [{"name": "example", "label": "staging"}],
@@ -765,16 +974,16 @@ class TestPromptPoolSettings:
             {"MUCGPT_CORE_PROMPTS": prompt_config},
             clear=True,
         ):
-            prompts = Settings().PROMPTS
+            prompts = Settings().prompts
 
-        assert prompts.FOLDERS[0].name == "custom"
-        assert prompts.FOLDERS[0].prompts[0].name == "example"
-        assert prompts.FOLDERS[0].prompts[0].label == "staging"
+        assert prompts.folders[0].name == "custom"
+        assert prompts.folders[0].prompts[0].name == "example"
+        assert prompts.folders[0].prompts[0].label == "staging"
 
     def test_yaml_configuration(self, monkeypatch):
         yaml_content = """
-PROMPTS:
-  FOLDERS:
+prompts:
+  folders:
     - name: "yaml-folder"
       prompts:
         - name: "yaml-prompt"
@@ -784,11 +993,11 @@ PROMPTS:
             (Path(tmpdir) / "config.yaml").write_text(yaml_content)
             monkeypatch.chdir(tmpdir)
             with patch.dict(os.environ, {}, clear=True):
-                prompts = Settings().PROMPTS
+                prompts = Settings().prompts
 
-        assert prompts.FOLDERS[0].name == "yaml-folder"
-        assert prompts.FOLDERS[0].prompts[0].name == "yaml-prompt"
-        assert prompts.FOLDERS[0].prompts[0].label == "latest"
+        assert prompts.folders[0].name == "yaml-folder"
+        assert prompts.folders[0].prompts[0].name == "yaml-prompt"
+        assert prompts.folders[0].prompts[0].label == "latest"
 
 
 class TestParserSettings:
@@ -798,14 +1007,14 @@ class TestParserSettings:
         """PARSER_BACKEND defaults to 'none'."""
         with patch.dict(os.environ, {}, clear=True):
             settings = Settings()
-            assert settings.PARSER_BACKEND == ParserBackendType.NONE
+            assert settings.parser_backend == ParserBackendType.NONE
 
     def test_xberg_url_and_timeout_defaults(self):
         """XBERG_URL defaults to empty string and XBERG_TIMEOUT to 120.0."""
         with patch.dict(os.environ, {}, clear=True):
             settings = Settings()
-            assert settings.XBERG_URL == ""
-            assert settings.XBERG_TIMEOUT == 120.0
+            assert settings.xberg_url == ""
+            assert settings.xberg_timeout == 120.0
 
 
 class TestComplianceCacheSettings:
@@ -815,7 +1024,7 @@ class TestComplianceCacheSettings:
         """COMPLIANCE_CACHE_TTL_SECONDS defaults correctly and allows positive values."""
         with patch.dict(os.environ, {}, clear=True):
             settings = Settings()
-            assert settings.COMPLIANCE_CACHE_TTL_SECONDS == 1800
+            assert settings.compliance_cache_ttl_seconds == 1800
 
         with patch.dict(
             os.environ,
@@ -824,7 +1033,7 @@ class TestComplianceCacheSettings:
             },
         ):
             settings = Settings()
-            assert settings.COMPLIANCE_CACHE_TTL_SECONDS == 300
+            assert settings.compliance_cache_ttl_seconds == 300
 
     def test_compliance_cache_ttl_rejects_zero_and_negative(self):
         """COMPLIANCE_CACHE_TTL_SECONDS must be strictly positive."""
@@ -849,9 +1058,9 @@ class TestComplianceCacheSettings:
             },
         ):
             settings = Settings()
-            assert settings.PARSER_BACKEND == ParserBackendType.XBERG
-            assert settings.XBERG_URL == "https://xberg.example.com"
-            assert settings.XBERG_TIMEOUT == 60.5
+            assert settings.parser_backend == ParserBackendType.XBERG
+            assert settings.xberg_url == "https://xberg.example.com"
+            assert settings.xberg_timeout == 60.5
 
     def test_parser_backend_none_via_env(self):
         """PARSER_BACKEND can be explicitly set to 'none' via environment variable."""
@@ -862,7 +1071,7 @@ class TestComplianceCacheSettings:
             },
         ):
             settings = Settings()
-            assert settings.PARSER_BACKEND == ParserBackendType.NONE
+            assert settings.parser_backend == ParserBackendType.NONE
 
     def test_parser_backend_invalid_value_raises(self):
         """An invalid PARSER_BACKEND value raises a validation error."""
@@ -878,9 +1087,9 @@ class TestComplianceCacheSettings:
     def test_parser_settings_from_yaml(self, monkeypatch):
         """Parsing settings can be loaded from a YAML configuration file."""
         yaml_content = """
-PARSER_BACKEND: "xberg"
-XBERG_URL: "https://yaml-xberg.example.com"
-XBERG_TIMEOUT: 30.0
+parser_backend: "xberg"
+xberg_url: "https://yaml-xberg.example.com"
+xberg_timeout: 30.0
 """
         with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as tmpdir:
             config_path = Path(tmpdir) / "config.yaml"
@@ -889,16 +1098,16 @@ XBERG_TIMEOUT: 30.0
             monkeypatch.chdir(tmpdir)
             with patch.dict(os.environ, {}, clear=True):
                 settings = Settings()
-                assert settings.PARSER_BACKEND == ParserBackendType.XBERG
-                assert settings.XBERG_URL == "https://yaml-xberg.example.com"
-                assert settings.XBERG_TIMEOUT == 30.0
+                assert settings.parser_backend == ParserBackendType.XBERG
+                assert settings.xberg_url == "https://yaml-xberg.example.com"
+                assert settings.xberg_timeout == 30.0
 
     def test_env_overrides_yaml_for_parser(self, monkeypatch):
         """Environment variables override YAML for parsing settings."""
         yaml_content = """
-PARSER_BACKEND: "xberg"
-XBERG_URL: "https://yaml-xberg.example.com"
-XBERG_TIMEOUT: 30.0
+parser_backend: "xberg"
+xberg_url: "https://yaml-xberg.example.com"
+xberg_timeout: 30.0
 """
         with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as tmpdir:
             config_path = Path(tmpdir) / "config.yaml"
@@ -913,10 +1122,10 @@ XBERG_TIMEOUT: 30.0
                 },
             ):
                 settings = Settings()
-                assert settings.PARSER_BACKEND == ParserBackendType.NONE
-                assert settings.XBERG_TIMEOUT == 999.9
+                assert settings.parser_backend == ParserBackendType.NONE
+                assert settings.xberg_timeout == 999.9
                 assert (
-                    settings.XBERG_URL == "https://yaml-xberg.example.com"
+                    settings.xberg_url == "https://yaml-xberg.example.com"
                 )  # from YAML
 
     def teardown_method(self):
@@ -930,7 +1139,7 @@ class TestTranscriptionSettings:
         """TRANSCRIPTION_ENABLED defaults to False."""
         with patch.dict(os.environ, {}, clear=True):
             settings = Settings()
-            assert settings.TRANSCRIPTION_ENABLED is False
+            assert settings.transcription_enabled is False
 
     def test_transcription_enabled_via_env(self):
         """TRANSCRIPTION_ENABLED can be enabled via environment variable."""
@@ -941,7 +1150,7 @@ class TestTranscriptionSettings:
             },
         ):
             settings = Settings()
-            assert settings.TRANSCRIPTION_ENABLED is True
+            assert settings.transcription_enabled is True
 
     def teardown_method(self):
         get_settings.cache_clear()
@@ -954,7 +1163,7 @@ class TestAiActComplianceCheckSettings:
         """AI_ACT_COMPLIANCE_CHECK_ENABLED defaults to True."""
         with patch.dict(os.environ, {}, clear=True):
             settings = Settings()
-            assert settings.AI_ACT_COMPLIANCE_CHECK_ENABLED is True
+            assert settings.ai_act_compliance_check_enabled is True
 
     def test_ai_act_compliance_check_enabled_via_env(self):
         """AI_ACT_COMPLIANCE_CHECK_ENABLED can be disabled via environment variable."""
@@ -965,7 +1174,7 @@ class TestAiActComplianceCheckSettings:
             },
         ):
             settings = Settings()
-            assert settings.AI_ACT_COMPLIANCE_CHECK_ENABLED is False
+            assert settings.ai_act_compliance_check_enabled is False
 
     def teardown_method(self):
         get_settings.cache_clear()
@@ -988,10 +1197,10 @@ class TestRedisSettings:
             get_settings.cache_clear()
             get_redis_settings.cache_clear()
             redis = get_redis_settings()
-            assert redis.HOST == "env-redis-host"
-            assert redis.PORT == 1234
-            assert redis.USERNAME.get_secret_value() == "env-user"
-            assert redis.PASSWORD.get_secret_value() == "env-pass"
+            assert redis.host == "env-redis-host"
+            assert redis.port == 1234
+            assert redis.username.get_secret_value() == "env-user"
+            assert redis.password.get_secret_value() == "env-pass"
 
     def test_redis_settings_defaults(self):
         """Test Redis default values."""
@@ -999,10 +1208,10 @@ class TestRedisSettings:
             get_settings.cache_clear()
             get_redis_settings.cache_clear()
             redis = get_redis_settings()
-            assert redis.HOST is None
-            assert redis.PORT == 6379
-            assert redis.USERNAME is None
-            assert redis.PASSWORD is None
+            assert redis.host is None
+            assert redis.port == 6379
+            assert redis.username is None
+            assert redis.password is None
 
     def teardown_method(self):
         get_settings.cache_clear()

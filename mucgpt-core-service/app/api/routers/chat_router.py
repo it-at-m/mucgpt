@@ -35,9 +35,9 @@ def get_temperature_from_request(request: ChatCompletionRequest) -> float:
     if request.creativity:
         settings = get_settings()
         # Find the model configuration
-        selected_model_name = request.model or settings.MODELS[0].llm_name
+        selected_model_name = request.model or settings.models[0].llm_name
         model_config = next(
-            (m for m in settings.MODELS if m.llm_name == selected_model_name), None
+            (m for m in settings.models if m.llm_name == selected_model_name), None
         )
 
         if model_config:
@@ -178,7 +178,9 @@ async def ag_ui_chat_endpoint(
     if not chat_request.messages:
         raise HTTPException(status_code=400, detail="messages must not be empty")
     if not chat_request.messages[-1].role == "user":
-        raise HTTPException(status_code=400, detail="Last message must be from the user (role='user')")
+        raise HTTPException(
+            status_code=400, detail="Last message must be from the user (role='user')"
+        )
 
     try:
         ModelRegistry.get_model(chat_request.model)

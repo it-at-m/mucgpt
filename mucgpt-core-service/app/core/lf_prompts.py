@@ -36,7 +36,7 @@ class PromptPool:
         cls._lf_client = lf_client
         cls._prompts = {
             prompt.name: (f"{folder.name.strip('/')}/{prompt.name}", prompt.label)
-            for folder in config.FOLDERS
+            for folder in config.folders
             for prompt in folder.prompts
         }
         cls._folder_prompts = {
@@ -44,7 +44,7 @@ class PromptPool:
                 f"{folder.name.strip('/')}/{prompt.name}",
                 prompt.label,
             )
-            for folder in config.FOLDERS
+            for folder in config.folders
             for prompt in folder.prompts
         }
 

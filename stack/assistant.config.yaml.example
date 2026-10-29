@@ -1,6 +1,18 @@
 # Assistant Service Configuration for Docker Compose Stack
 # This file is mounted into the assistant-service container at /app/config.yaml
 #
+# Priority order (highest to lowest):
+# 1. Environment variables (MUCGPT_ASSISTANT_* for top-level, MUCGPT_ASSISTANT_<SECTION>__<FIELD> for nested)
+# 2. YAML configuration file (this file)
+# 3. .env file
+#
+# SECURITY - secrets doctrine:
+# Do NOT store real secrets (passwords, API keys, tokens) in this file.
+# Config files are often mounted as ConfigMaps (leaking values into etcd) or get
+# committed to Git. Provide secrets via environment variables instead - they
+# always override YAML values. The demo values kept below exist only so the
+# local docker-compose demo stack runs out of the box.
+#
 # Note: Use UPPERCASE field names because case_sensitive=False in settings
 # Nested env vars use __ (double underscore) as delimiter, e.g. MUCGPT_ASSISTANT_DB__HOST
 
@@ -12,7 +24,9 @@ DB:
   PORT: 5432
   NAME: "postgres"
   USER: "admin"
-  PASSWORD: "admin" # Change this for production! Or use MUCGPT_ASSISTANT_DB__PASSWORD env var
+  # Demo value for the local stack only (matches POSTGRES_PASSWORD in docker-compose.yml).
+  # For real deployments provide it via MUCGPT_ASSISTANT_DB__PASSWORD instead of storing it here.
+  PASSWORD: "admin"
   # SCHEMA: "myschema"  # Optional: restrict to a specific PostgreSQL schema (sets search_path)
 
 # Backend settings
@@ -42,6 +56,8 @@ REDIS:
   HOST: "valkey"
   PORT: 6379
   USERNAME: "default"
+  # Demo value for the local stack only (matches valkey in docker-compose.yml).
+  # For real deployments provide it via MUCGPT_ASSISTANT_REDIS__PASSWORD instead of storing it here.
   PASSWORD: "password"
 
 # LDAP Settings (Optional - for organizational directory)
@@ -55,6 +71,7 @@ LDAP:
   VERIFY_SSL: true
   CA_CERT_FILE: null
   BIND_DN: ""
+  # Provide via environment variable MUCGPT_ASSISTANT_LDAP__BIND_PASSWORD instead of storing it here.
   BIND_PASSWORD: ""
   SEARCH_BASE: "dc=example,dc=org"
   SEARCH_FILTER: "(objectClass=organizationalUnit)"

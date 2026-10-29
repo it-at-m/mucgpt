@@ -18,6 +18,24 @@ Each service reads a `config.yaml` mounted into the container. Environment varia
 | assistant-service    | `assistant.config.yaml` | `MUCGPT_ASSISTANT_` |
 | assistant-migrations | `assistant.config.yaml` | `MUCGPT_ASSISTANT_` |
 
+### Secrets
+
+**Never store real secrets (passwords, API keys, tokens) in `config.yaml`.** Config files are typically mounted as ConfigMaps (leaking values into etcd) or risk being committed to Git. Provide secrets via **environment variables** instead — they always override YAML values (see [Configuration Priority](#configuration-priority)).
+
+```bash
+# Core service
+MUCGPT_CORE_REDIS__PASSWORD=secret
+MUCGPT_CORE_LANGFUSE__SECRET_KEY=sk-lf-...
+
+# Assistant service and migrations
+MUCGPT_ASSISTANT_DB__PASSWORD=secret
+MUCGPT_ASSISTANT_LDAP__BIND_PASSWORD=secret
+```
+
+Inject them via Kubernetes Secrets, docker-compose `environment:` entries, or a secret manager — not via the mounted YAML file.
+
+Exception: `MODELS[].api_key` cannot be overridden per model via environment variables (lists cannot be indexed by env vars). Either provide the whole `MODELS` list via the `MUCGPT_CORE_MODELS` environment variable (JSON array, see [below](#models-configuration-environment-variable)) — which can itself be injected as a secret — or protect the config file accordingly.
+
 ### Initial Setup
 
 ```bash
@@ -51,6 +69,8 @@ MODELS:
 ```
 
 See `mucgpt-core-service/config.yaml.example` and `mucgpt-assistant-service/config.yaml.example` for complete examples.
+
+> **Note:** `api_key` cannot be set per model via environment variables — see [Secrets](#secrets) for the recommended alternatives.
 
 ### Prompt Configuration
 
@@ -141,7 +161,7 @@ Settings are loaded in this order (highest priority wins):
 3. **YAML config file** – `config.yaml` mounted into each container
 4. **`.env` file** – lowest priority; values here will **not** override anything set in `config.yaml` or environment variables
 
-This means environment variables always override YAML values, which is useful for injecting secrets in CI/CD.
+This means environment variables always override YAML values. This is the recommended way to provide **secrets** (see [Secrets](#secrets)) and is useful for injecting them in CI/CD without storing them in config files.
 
 ### Data storage overview
 

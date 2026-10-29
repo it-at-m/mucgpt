@@ -7,6 +7,13 @@
 # 2. YAML configuration file (this file, when named config.yaml)
 # 3. .env file
 #
+# SECURITY - secrets doctrine:
+# Do NOT store real secrets (passwords, API keys, tokens) in this file.
+# Config files are often mounted as ConfigMaps (leaking values into etcd) or get
+# committed to Git. Provide secrets via environment variables instead - they
+# always override YAML values (priority 1 above). Secret-bearing fields below are
+# commented out and name the matching environment variable.
+#
 # Note: Because case_sensitive=False in settings, use UPPERCASE field names in YAML
 # Nested env vars use __ (double underscore) as delimiter, e.g. MUCGPT_ASSISTANT_DB__HOST
 
@@ -16,7 +23,8 @@ DB:
   PORT: 5432
   NAME: "postgres"
   USER: "admin"
-  PASSWORD: "admin"
+  # Provide via environment variable MUCGPT_ASSISTANT_DB__PASSWORD instead of storing it here.
+  # PASSWORD: "admin"
   # SCHEMA: "myschema"  # Optional: restrict to a specific PostgreSQL schema (sets search_path)
 
 # Backend settings
@@ -44,7 +52,8 @@ REDIS:
   HOST: "valkey"
   PORT: 6379
   USERNAME: "default"
-  PASSWORD: "password"
+  # Provide via environment variable MUCGPT_ASSISTANT_REDIS__PASSWORD instead of storing it here.
+  # PASSWORD: "password"
 
 # LDAP Settings (nested under LDAP key)
 LDAP:
@@ -56,7 +65,8 @@ LDAP:
   VERIFY_SSL: true
   CA_CERT_FILE: null
   BIND_DN: "cn=mucgpt,ou=service-accounts,dc=example,dc=org"
-  BIND_PASSWORD: "<bind-password>"
+  # Provide via environment variable MUCGPT_ASSISTANT_LDAP__BIND_PASSWORD instead of storing it here.
+  # BIND_PASSWORD: "<bind-password>"
   SEARCH_BASE: "dc=example,dc=org"
   SEARCH_FILTER: "(objectClass=organizationalUnit)"
   DISPLAY_ATTRIBUTE: "ou"

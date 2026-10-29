@@ -13,11 +13,11 @@ class RedisCache:
     @staticmethod
     async def init_redis():
         if RedisCache._redis_client is None:
-            password = RedisCache._redis_settings.PASSWORD
+            password = RedisCache._redis_settings.password
             client = Redis(
-                host=RedisCache._redis_settings.HOST,
-                port=RedisCache._redis_settings.PORT,
-                username=RedisCache._redis_settings.USERNAME,
+                host=RedisCache._redis_settings.host,
+                port=RedisCache._redis_settings.port,
+                username=RedisCache._redis_settings.username,
                 password=password.get_secret_value() if password else None,
             )
             try:

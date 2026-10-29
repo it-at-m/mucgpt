@@ -33,7 +33,7 @@ class ModelRegistry:
                     model=config.llm_name,
                     api_key=config.api_key,
                     base_url=config.endpoint.unicode_string(),
-                    n=1,
+                    use_responses_api=False, # needs to be disabled for now to avoid issues with the non-streaming generations
                     stream_usage=True,
                 )
             if config.type == "AZURE":
@@ -43,7 +43,6 @@ class ModelRegistry:
                     api_key=config.api_key,
                     azure_endpoint=config.endpoint.unicode_string(),
                     api_version=config.api_version,
-                    n=1,
                     openai_api_type="azure",
                     stream_usage=True,
                 )

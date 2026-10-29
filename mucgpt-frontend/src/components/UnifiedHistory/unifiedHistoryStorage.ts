@@ -3,7 +3,8 @@ import { StorageService, type DBObject } from "../../service/storage";
 import { ASSISTANT_STORE, CHAT_STORE } from "../../constants";
 import type { Assistant, ChatResponse } from "../../api";
 import { getOwnedCommunityAssistants } from "../../api/assistant-client";
-import { deleteConversationApi } from "../../api/conversations-client";
+import { deleteConversationApi, renameConversationApi } from "../../api/conversations-client";
+import { ApiError } from "../../api/fetch-utils";
 import { syncConversationHistory } from "../../service/conversationHistory";
 
 interface StoredChatOptions {
@@ -105,6 +106,18 @@ export class UnifiedHistoryStorage {
     }
 
     async renameEntry(entry: UnifiedHistoryEntry, name: string): Promise<void> {
+        const storage = entry.kind === "assistant" ? this.assistantChatStorage : this.chatStorage;
+        const cached = await storage.get(entry.id);
+        const conversationId = entry.assistantId ? entry.id.slice(AssistantStorageService.GENERATE_BOT_CHAT_PREFIX(entry.assistantId).length) : entry.id;
+        try {
+            const result = await renameConversationApi(conversationId, name);
+            name = result.title;
+        } catch (error) {
+            // Legacy browser-only history has no server row to rename.
+            if (!(error instanceof ApiError && error.status === 404 && cached && !cached.backendPersisted)) {
+                throw error;
+            }
+        }
         if (entry.kind === "assistant") {
             const renamed = await this.assistantChatStorage.renameChat(entry.id, name);
             if (!renamed) {

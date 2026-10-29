@@ -76,6 +76,32 @@ async def test_title_upsert_is_guarded_by_owner() -> None:
 
 @pytest.mark.unit
 @pytest.mark.asyncio
+@pytest.mark.parametrize("updated_id", ["conversation", None])
+async def test_manual_rename_only_updates_live_owned_rows(
+    updated_id: str | None,
+) -> None:
+    session = AsyncMock()
+    session.execute.return_value = Mock(
+        scalar_one_or_none=Mock(return_value=updated_id)
+    )
+    repository = ConversationRepository(session)
+
+    assert await repository.rename_conversation(
+        "conversation", "owner", "New title"
+    ) is (updated_id is not None)
+
+    sql = _compiled(session.execute.await_args.args[0])
+    assert sql.startswith("UPDATE chats SET")
+    assert "chat_title='New title'" in sql
+    assert "updated_at=now()" in sql
+    assert "chats.conversation_id = 'conversation'" in sql
+    assert "chats.user_id = 'owner'" in sql
+    assert "chats.deleted_at IS NULL" in sql
+    assert "RETURNING chats.conversation_id" in sql
+
+
+@pytest.mark.unit
+@pytest.mark.asyncio
 async def test_delete_is_scoped_to_owner() -> None:
     session = AsyncMock()
     session.execute.return_value = Mock(

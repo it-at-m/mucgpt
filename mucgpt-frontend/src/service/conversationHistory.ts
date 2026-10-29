@@ -11,7 +11,7 @@ interface ChatOptions {
 }
 
 // Cache metadata without downloading every transcript. Existing browser-only
-// chats, settings, names and favourites remain available.
+// chats, settings and favourites remain available.
 let pendingSync: Promise<void> | undefined;
 
 /** Share an in-flight metadata sync; a settled failure permits a later retry. */
@@ -62,7 +62,7 @@ async function syncHistory(): Promise<void> {
             ...existing,
             id,
             backendPersisted: true,
-            name: existing?.name ?? conversation.title,
+            name: conversation.title,
             favorite: existing?.favorite ?? false,
             messages: existing?.messages ?? [],
             config: existing?.config ?? (isAssistant ? {} : { system: "", creativity: CREATIVITY_LOW }),

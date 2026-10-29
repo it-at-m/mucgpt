@@ -23,13 +23,18 @@ from psycopg_pool import AsyncConnectionPool
 
 from agent.agent_executor import MUCGPTAgentExecutor
 from agent.deep_agent import CHECKPOINT_DURABILITY, _ConfiguredLangChainDeepAgentGraph
-from api.api_models import ChatCompletionMessage, ChatCompletionRequest
+from api.api_models import (
+    ChatCompletionMessage,
+    ChatCompletionRequest,
+    ConversationRenameRequest,
+)
 from api.routers.chat_router import (
     ag_ui_chat_endpoint,
     chat_endpoint,
     delete_conversation,
     get_conversation_messages,
     get_messages_for_agent,
+    rename_conversation,
     router,
 )
 from config.settings import DBConfig, Settings
@@ -109,6 +114,38 @@ class ConversationLifecyclePostgresTests(unittest.IsolatedAsyncioTestCase):
             {"messages": [HumanMessage(content="saved question")]},
             {"configurable": {"thread_id": self.conversation_id}},
             durability=CHECKPOINT_DURABILITY,
+        )
+
+    async def test_manual_rename_persists_and_rejects_foreign_missing_and_retired_ids(
+        self,
+    ):
+        await PersistanceHelpers.verify_user_in_conversation(
+            self.owner.user_id, self.conversation_id, "assistant-123"
+        )
+        request = ConversationRenameRequest(title="Renamed chat")
+        await rename_conversation(self.conversation_id, request, self.owner)
+        rows = await PersistanceHelpers.get_conversations_for_user(self.owner.user_id)
+        self.assertEqual(rows[0]["title"], "Renamed chat")
+        self.assertEqual(rows[0]["assistant_id"], "assistant-123")
+
+        with self.assertRaises(HTTPException) as failure:
+            await rename_conversation(self.conversation_id, request, self.other)
+        self.assertEqual(failure.exception.status_code, 403)
+        rows = await PersistanceHelpers.get_conversations_for_user(self.owner.user_id)
+        self.assertEqual(rows[0]["title"], "Renamed chat")
+
+        missing = uuid4().hex
+        with self.assertRaises(HTTPException) as failure:
+            await rename_conversation(missing, request, self.owner)
+        self.assertEqual(failure.exception.status_code, 404)
+        self.assertFalse(await PersistanceHelpers.conversation_exists(missing))
+
+        await delete_conversation(self.conversation_id, self.owner)
+        with self.assertRaises(HTTPException) as failure:
+            await rename_conversation(self.conversation_id, request, self.owner)
+        self.assertEqual(failure.exception.status_code, 403)
+        self.assertEqual(
+            await PersistanceHelpers.get_conversations_for_user(self.owner.user_id), []
         )
 
     async def test_controlled_exit_write_after_deletion(self):

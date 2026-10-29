@@ -480,6 +480,19 @@ class ChatTitleResult(BaseModel):
     title: str = Field(..., description="Normalized, human-readable chat title.")
 
 
+class ConversationRenameRequest(BaseModel):
+    """A manually supplied conversation title."""
+
+    title: str = Field(min_length=1, description="New human-readable chat title.")
+
+    @field_validator("title", mode="before")
+    @staticmethod
+    def normalize_title(value: object) -> object:
+        if isinstance(value, str):
+            return value.strip().replace("\r", " ").replace("\n", " ")
+        return value
+
+
 class ConversationMetadata(BaseModel):
     """One row of the caller's conversation list (metadata only, no messages)."""
 

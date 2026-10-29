@@ -375,6 +375,64 @@ class TestChatRouter:
         assert response.json()[0]["assistant_id"] == assistant_id
         list_mock.assert_awaited_once_with(DUMMY_USER_ID)
 
+    def test_rename_conversation(
+        self, test_client: TestClient, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        from core.persistance_helpers import PersistanceHelpers
+
+        rename = AsyncMock(return_value=True)
+        monkeypatch.setattr(PersistanceHelpers, "rename_conversation", rename)
+        response = test_client.patch(
+            f"/v1/conversations/{DUMMY_CONVERSATION_ID}",
+            json={"title": "  New\nchat title  "},
+        )
+
+        assert response.status_code == 200, response.text
+        assert response.json() == {"title": "New chat title"}
+        rename.assert_awaited_once_with(
+            DUMMY_CONVERSATION_ID, DUMMY_USER_ID, "New chat title"
+        )
+        PersistanceHelpers.verify_user_in_conversation.assert_not_awaited()
+
+    @pytest.mark.parametrize("exists, status", [(True, 403), (False, 404)])
+    def test_rename_conversation_rejected(
+        self,
+        test_client: TestClient,
+        monkeypatch: pytest.MonkeyPatch,
+        exists: bool,
+        status: int,
+    ) -> None:
+        from core.persistance_helpers import PersistanceHelpers
+
+        monkeypatch.setattr(
+            PersistanceHelpers, "rename_conversation", AsyncMock(return_value=False)
+        )
+        monkeypatch.setattr(
+            PersistanceHelpers, "conversation_exists", AsyncMock(return_value=exists)
+        )
+        response = test_client.patch(
+            f"/v1/conversations/{DUMMY_CONVERSATION_ID}", json={"title": "New title"}
+        )
+        assert response.status_code == status
+        PersistanceHelpers.verify_user_in_conversation.assert_not_awaited()
+
+    @pytest.mark.parametrize(
+        "body",
+        [{}, {"title": ""}, {"title": " \n\t "}, {"title": None}, {"title": 123}],
+    )
+    def test_rename_conversation_invalid_title(
+        self, test_client: TestClient, monkeypatch: pytest.MonkeyPatch, body: dict
+    ) -> None:
+        from core.persistance_helpers import PersistanceHelpers
+
+        rename = AsyncMock()
+        monkeypatch.setattr(PersistanceHelpers, "rename_conversation", rename)
+        response = test_client.patch(
+            f"/v1/conversations/{DUMMY_CONVERSATION_ID}", json=body
+        )
+        assert response.status_code == 422
+        rename.assert_not_awaited()
+
     def test_get_conversation_messages(self, test_client: TestClient) -> None:
         response = test_client.get(
             f"/v1/conversations/{DUMMY_CONVERSATION_ID}/messages"

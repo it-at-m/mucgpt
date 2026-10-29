@@ -341,6 +341,17 @@ class PersistanceHelpers:
             ).set_chat_title_for_conversation(conversation_id, user_id, title)
 
     @staticmethod
+    async def rename_conversation(
+        conversation_id: str, user_id: str, title: str
+    ) -> bool:
+        """Commit a manual title change only for an existing live owned row."""
+        factory = PersistanceHelpers._get_session_factory()
+        async with factory.begin() as session:
+            return await ConversationRepository(session).rename_conversation(
+                conversation_id, user_id, title
+            )
+
+    @staticmethod
     async def delete_conversation_mapping(conversation_id: str, user_id: str) -> bool:
         """Erase and retire the ID; ownership mappings must never be removed alone."""
         return (

@@ -10,8 +10,10 @@ from api.api_models import (
     ChatCompletionMessage,
     ChatCompletionRequest,
     ChatCompletionResponse,
+    ChatTitleResult,
     ConversationMessage,
     ConversationMetadata,
+    ConversationRenameRequest,
 )
 from api.exception import llm_exception_handler
 from config.model_provider import ModelRegistry, ModelsConfigurationException
@@ -240,6 +242,27 @@ async def get_conversation_messages(
     if not messages:
         raise HTTPException(status_code=404, detail="Conversation not found")
     return messages
+
+
+@router.patch(
+    "/conversations/{conversation_id}",
+    summary="Rename conversation",
+    responses={403: {"description": "Forbidden"}, 404: {"description": "Not found"}},
+)
+async def rename_conversation(
+    conversation_id: str,
+    request: ConversationRenameRequest,
+    user_info: Annotated[AuthenticationResult, Depends(authenticate_user)],
+) -> ChatTitleResult:
+    """Persist a manual rename without creating or reviving conversations."""
+    renamed = await PersistanceHelpers.rename_conversation(
+        conversation_id, user_info.user_id, request.title
+    )
+    if not renamed:
+        if await PersistanceHelpers.conversation_exists(conversation_id):
+            raise HTTPException(status_code=403, detail="Conversation access denied")
+        raise HTTPException(status_code=404, detail="Conversation not found")
+    return ChatTitleResult(title=request.title)
 
 
 @router.delete(

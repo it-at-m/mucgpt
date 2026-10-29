@@ -58,8 +58,31 @@ describe("conversation history", () => {
         expect(put).toHaveBeenCalledTimes(1);
         expect(put).toHaveBeenCalledWith(
             ASSISTANT_STORE.objectStore_name,
-            expect.objectContaining({ id: "CHAT_assistant-id_thread", name: "Local title", favorite: true })
+            expect.objectContaining({ id: "CHAT_assistant-id_thread", name: "Server title", favorite: true })
         );
+    });
+
+    it.each([
+        { id: "thread", assistant_id: null, store: CHAT_STORE },
+        { id: "CHAT_assistant-id_thread", assistant_id: "assistant-id", store: ASSISTANT_STORE }
+    ])("refreshes cached titles from server metadata for $id", async ({ id, assistant_id, store }) => {
+        const cached = [{ id, name: "Old title", backendPersisted: true, favorite: true, config: {}, messages: [] }];
+        vi.mocked(StorageService.prototype.getAll)
+            .mockResolvedValueOnce(assistant_id ? [] : cached)
+            .mockResolvedValueOnce(assistant_id ? cached : []);
+        vi.mocked(listConversationsApi).mockResolvedValue([
+            {
+                conversation_id: "thread",
+                assistant_id,
+                title: "Renamed on another device",
+                created_at: "2026-10-20T10:00:00Z",
+                updated_at: "2026-10-20T11:00:00Z"
+            }
+        ]);
+
+        await syncConversationHistory();
+
+        expect(put).toHaveBeenCalledWith(store.objectStore_name, expect.objectContaining({ id, name: "Renamed on another device", favorite: true }));
     });
 
     it("converts messages into turns including multiple assistant messages and an unanswered question", () => {

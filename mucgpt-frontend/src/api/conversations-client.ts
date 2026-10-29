@@ -1,6 +1,6 @@
 import { API_BASE } from "./core-client";
 import type { ChatResponse } from "./models";
-import { ApiError, deleteConfig, getConfig, handleApiRequest, handleRedirect } from "./fetch-utils";
+import { ApiError, deleteConfig, getConfig, handleApiRequest, handleRedirect, patchConfig } from "./fetch-utils";
 
 export interface ConversationMetadata {
     conversation_id: string;
@@ -46,6 +46,14 @@ export async function getConversationMessagesApi(conversationId: string): Promis
         throw new ApiError("Failed to load conversation messages", response.status);
     }
     return response.json();
+}
+
+/** Persist a manual title and return the normalized server value. */
+export function renameConversationApi(conversationId: string, title: string): Promise<{ title: string }> {
+    return handleApiRequest(
+        () => fetch(API_BASE + "v1/conversations/" + encodeURIComponent(conversationId), patchConfig({ title })),
+        "Failed to rename conversation"
+    );
 }
 
 /** Deletes server state; success and 404 complete deletion, while other failures propagate for retry. */

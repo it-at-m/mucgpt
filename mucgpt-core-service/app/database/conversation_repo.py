@@ -95,6 +95,22 @@ class ConversationRepository:
         result = await self.session.execute(statement)
         return result.scalar_one_or_none() is not None
 
+    async def rename_conversation(
+        self, conversation_id: str, user_id: str, title: str
+    ) -> bool:
+        """Rename an existing live owned conversation without claiming a new ID."""
+        result = await self.session.execute(
+            update(Chat)
+            .values(chat_title=title, updated_at=func.now())
+            .where(
+                Chat.conversation_id == conversation_id,
+                Chat.user_id == user_id,
+                Chat.deleted_at.is_(None),
+            )
+            .returning(Chat.conversation_id)
+        )
+        return result.scalar_one_or_none() is not None
+
     async def delete_conversation_mapping(
         self, conversation_id: str, user_id: str
     ) -> bool:

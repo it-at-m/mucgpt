@@ -117,6 +117,55 @@ describe("conversation history", () => {
         expect(StorageService.prototype.delete).toHaveBeenCalledWith("CHAT_assistant-id_deleted-thread");
     });
 
+    it.each(["assistant-id", null])("retains an underscored assistant conversation and its cached metadata (assistant_id: %s)", async assistant_id => {
+        const cached = {
+            id: "CHAT_assistant-id_thread_part",
+            name: "Local title",
+            backendPersisted: true,
+            favorite: true,
+            config: { system: "Cached instructions" },
+            messages: [{ user: "Question", response: { answer: "Cached answer", tokens: 42 } }],
+            _last_edited: Date.parse("2026-10-20T12:00:00Z")
+        };
+        const deleteChat = vi.spyOn(StorageService.prototype, "delete").mockResolvedValue(true);
+        vi.mocked(StorageService.prototype.getAll).mockResolvedValueOnce([]).mockResolvedValueOnce([cached]);
+        vi.mocked(listConversationsApi).mockResolvedValue([
+            {
+                conversation_id: "thread_part",
+                assistant_id,
+                title: "Server title",
+                created_at: "2026-10-20T10:00:00Z",
+                updated_at: "2026-10-20T11:00:00Z"
+            }
+        ]);
+
+        await syncConversationHistory();
+
+        expect(deleteChat).not.toHaveBeenCalled();
+        expect(put).toHaveBeenCalledExactlyOnceWith(ASSISTANT_STORE.objectStore_name, { ...cached, name: "Server title" });
+    });
+
+    it("removes an assistant cache row when the server conversation belongs to another assistant", async () => {
+        const deleteChat = vi.spyOn(StorageService.prototype, "delete").mockResolvedValue(true);
+        vi.mocked(StorageService.prototype.getAll)
+            .mockResolvedValueOnce([])
+            .mockResolvedValueOnce([{ id: "CHAT_other-assistant_thread_part", backendPersisted: true, config: {}, messages: [] }]);
+        vi.mocked(listConversationsApi).mockResolvedValue([
+            {
+                conversation_id: "thread_part",
+                assistant_id: "assistant-id",
+                title: "Server title",
+                created_at: "2026-10-20T10:00:00Z",
+                updated_at: "2026-10-20T11:00:00Z"
+            }
+        ]);
+
+        await syncConversationHistory();
+
+        expect(deleteChat).toHaveBeenCalledExactlyOnceWith("CHAT_other-assistant_thread_part");
+        expect(put).toHaveBeenCalledWith(ASSISTANT_STORE.objectStore_name, expect.objectContaining({ id: "CHAT_assistant-id_thread_part" }));
+    });
+
     it("fetches an assistant transcript using its backend id and caches it with the local prefix", async () => {
         vi.mocked(getConversationMessagesApi).mockResolvedValue([
             { role: "user", content: "Question" },

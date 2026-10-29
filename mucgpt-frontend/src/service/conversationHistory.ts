@@ -41,8 +41,12 @@ async function syncHistory(): Promise<void> {
     }
     for (const chat of assistantChats ?? []) {
         if (!chat.backendPersisted || !chat.id) continue;
-        const conversationId = chat.id.slice(chat.id.lastIndexOf("_") + 1);
-        if (!serverIds.has(conversationId)) {
+        const existsOnServer = conversations.some(conversation =>
+            conversation.assistant_id
+                ? chat.id === AssistantStorageService.GENERATE_BOT_CHAT_ID(conversation.assistant_id, conversation.conversation_id)
+                : chat.id?.startsWith(AssistantStorageService.CHAT_ID) && chat.id.endsWith("_" + conversation.conversation_id)
+        );
+        if (!existsOnServer) {
             await assistantStorage.delete(chat.id);
         }
     }

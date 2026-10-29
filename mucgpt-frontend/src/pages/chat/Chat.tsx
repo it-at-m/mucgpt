@@ -842,7 +842,7 @@ const Chat = () => {
         return (
             <QuestionInput
                 clearOnSend
-                disabled={isLoading || error !== undefined}
+                disabled={isLoading || isStreaming}
                 draftCacheKey="chat-main"
                 skipDraftRestore={!!questionFromUrl || newChatRequested}
                 onSend={(question, datas) => {
@@ -873,6 +873,7 @@ const Chat = () => {
         question,
         t,
         isLoading,
+        isStreaming,
         selectedTools,
         tools,
         uploadedData,

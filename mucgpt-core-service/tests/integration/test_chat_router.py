@@ -685,7 +685,9 @@ class TestChatRouter:
             ModelRegistry,
             "get_model",
             Mock(
-                side_effect=ModelsConfigurationException("Model registry not initialized")
+                side_effect=ModelsConfigurationException(
+                    "Model registry not initialized"
+                )
             ),
         )
         payload_model = ChatCompletionRequest(

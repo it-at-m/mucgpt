@@ -100,6 +100,7 @@ def _conversation_usage(message: AIMessage) -> ConversationUsage | None:
 
 class PersistanceHelpers:
     """Manage ownership metadata and fenced checkpoints for persisted conversations."""
+
     _pool: AsyncConnectionPool | None = None
     _checkpointer: AsyncPostgresSaver | None = None
     _engine: AsyncEngine | None = None

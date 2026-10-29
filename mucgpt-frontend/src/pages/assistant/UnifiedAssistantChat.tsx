@@ -842,7 +842,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                     </div>
                     <QuestionInput
                         clearOnSend
-                        disabled={isLoading || error !== undefined}
+                        disabled={isLoading || isStreaming}
                         draftCacheKey={draftCacheKey}
                         onSend={(question, datas) => {
                             const dataSources = datas
@@ -887,7 +887,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
         return (
             <QuestionInput
                 clearOnSend
-                disabled={isLoading || error !== undefined || isAssistantUnavailable || strategy instanceof DeletedCommunityAssistantStrategy}
+                disabled={isLoading || isStreaming || isAssistantUnavailable || strategy instanceof DeletedCommunityAssistantStrategy}
                 draftCacheKey={draftCacheKey}
                 onSend={(question, datas) => {
                     const dataSources = datas
@@ -939,9 +939,9 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
         assistant_id,
         assistantConfig,
         isLoading,
+        isStreaming,
         callApi,
         question,
-        error,
         selectedTools,
         setSelectedToolsGuarded,
         tools,

@@ -560,6 +560,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
             })
             .catch(err => {
                 setError(err);
+                clearRequestedChatId();
                 showError(t("components.assistant_chat.load_chat_failed"), t("components.assistant_chat.load_chat_failed_message"));
             });
     }, [clearRequestedChatId, getRequestedChatId, loadAssistantChat, location.search]);

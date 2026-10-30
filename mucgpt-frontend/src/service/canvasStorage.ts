@@ -11,7 +11,7 @@ export interface CanvasRevision {
     /** ProseMirror document (editor.getJSON()) */
     doc_json: unknown;
     timestamp: number;
-    source: "agent" | "manual" | "restore";
+    source: "agent" | "manual" | "restore" | "local";
 }
 
 /** Two client-owned FIFO rings; the caps and eviction logic live in the controller. */
@@ -123,31 +123,54 @@ export class CanvasStorage implements CanvasStorageService {
 export const canvasStorage = new CanvasStorage();
 
 /**
- * Canvas content for a conversation: the local IndexedDB record if present,
- * otherwise the server-side copy (device switch / conversation reload).
+ * Reconciled canvas content for a conversation. The server copy is
+ * authoritative when one exists; `supersededLocal` carries the local-only
+ * content that lost that comparison, so the caller can snapshot it into the
+ * revision rings instead of dropping it.
  */
-export async function loadCanvasState(conversationId: string): Promise<string | null> {
-    const local = await canvasStorage.getCanvas(conversationId);
-    if (local !== null) {
-        return local.content;
-    }
-    const server = await getCanvasApi(conversationId).catch(error => {
-        console.error(`Failed to load canvas ${conversationId} from the server`, error);
+export interface LoadedCanvasState {
+    content: string | null;
+    supersededLocal: string | null;
+}
+
+/**
+ * Canvas content for a conversation: the server copy when one exists (the
+ * authoritative state, written with every chat turn from any device), the
+ * local IndexedDB record otherwise. A differing local copy is reported as
+ * superseded so it can be preserved as a revision; a failed IndexedDB read
+ * counts as a cache miss and leaves the server path intact.
+ */
+export async function loadCanvasState(conversationId: string, serverConversationId: string = conversationId): Promise<LoadedCanvasState> {
+    const local = await canvasStorage.getCanvas(conversationId).catch(error => {
+        console.error(`Failed to read canvas ${conversationId} from IndexedDB`, error);
         return null;
     });
-    return server?.content ?? null;
+    const server = await getCanvasApi(serverConversationId).catch(error => {
+        console.error(`Failed to load canvas ${serverConversationId} from the server`, error);
+        return null;
+    });
+    if (server === null) {
+        return { content: local?.content ?? null, supersededLocal: null };
+    }
+    return {
+        content: server.content,
+        supersededLocal: local?.content && local.content !== server.content ? local.content : null
+    };
 }
 
 /**
  * Canvas revision rings for a conversation: local first, server as fallback.
  */
-export async function loadCanvasRevisions(conversationId: string): Promise<CanvasRevisions | null> {
-    const local = await canvasStorage.getRevisions(conversationId);
+export async function loadCanvasRevisions(conversationId: string, serverConversationId: string = conversationId): Promise<CanvasRevisions | null> {
+    const local = await canvasStorage.getRevisions(conversationId).catch(error => {
+        console.error(`Failed to read canvas revisions ${conversationId} from IndexedDB`, error);
+        return null;
+    });
     if (local !== null) {
         return local;
     }
-    return getCanvasRevisionsApi(conversationId).catch(error => {
-        console.error(`Failed to load canvas revisions ${conversationId} from the server`, error);
+    return getCanvasRevisionsApi(serverConversationId).catch(error => {
+        console.error(`Failed to load canvas revisions ${serverConversationId} from the server`, error);
         return null;
     });
 }

@@ -19,11 +19,13 @@ const SAVE_REVISIONS_DEBOUNCE_MS = 1000;
 interface Props {
     controller: CanvasControllerInstance;
     conversationId: string | undefined;
+    /** Backend conversation id for server requests; defaults to conversationId. */
+    serverConversationId?: string;
     onInsertIntoChat?: (markdown: string) => void;
     onAgentRevise?: (markdown: string) => void;
 }
 
-export const CanvasPanel = ({ controller, conversationId, onInsertIntoChat, onAgentRevise }: Props) => {
+export const CanvasPanel = ({ controller, conversationId, serverConversationId, onInsertIntoChat, onAgentRevise }: Props) => {
     const { t } = useTranslation();
     const [isVersionsOpen, setIsVersionsOpen] = useState(false);
     const [isEmpty, setIsEmpty] = useState(true);
@@ -33,6 +35,7 @@ export const CanvasPanel = ({ controller, conversationId, onInsertIntoChat, onAg
     // content over live edits) just because the controller object identity changes.
     const controllerRef = useRef(controller);
     controllerRef.current = controller;
+    const serverId = serverConversationId ?? conversationId;
 
     // Content lifecycle (load/clear on conversation switch) lives in the controller;
     // the panel only persists what the editor emits.
@@ -47,29 +50,29 @@ export const CanvasPanel = ({ controller, conversationId, onInsertIntoChat, onAg
     // Ring changes persist debounced to IndexedDB and (best effort) to the server
     //; the PUT is 404-tolerant for conversations never persisted server-side.
     useEffect(() => {
-        if (!conversationId) return;
+        if (!serverId || !conversationId) return;
         const timer = setTimeout(() => {
             const revisions = controllerRef.current.listRevisions();
             if (revisions.auto.length === 0 && revisions.manual.length === 0) return;
             void canvasStorage.saveRevisions(conversationId, revisions);
-            putCanvasRevisionsApi(conversationId, revisions).catch(error => console.error("Saving canvas revisions to the server failed:", error));
+            putCanvasRevisionsApi(serverId, revisions).catch(error => console.error("Saving canvas revisions to the server failed:", error));
         }, SAVE_REVISIONS_DEBOUNCE_MS);
         return () => clearTimeout(timer);
-    }, [conversationId, controller.revisions]);
+    }, [serverId, conversationId, controller.revisions]);
 
     // Flush the rings on canvas close, conversation switch and unmount so a save
     // inside the debounce window is not lost (mirrors the content subscribe-flush
     // in useCanvasController). Keyed on conversationId only: the cleanup closes over
     // the outgoing id and runs before the controller resets to the new conversation.
     useEffect(() => {
-        if (!conversationId) return;
+        if (!serverId || !conversationId) return;
         return () => {
             const revisions = controllerRef.current.listRevisions();
             if (revisions.auto.length === 0 && revisions.manual.length === 0) return;
             void canvasStorage.saveRevisions(conversationId, revisions);
-            putCanvasRevisionsApi(conversationId, revisions).catch(error => console.error("Saving canvas revisions to the server failed:", error));
+            putCanvasRevisionsApi(serverId, revisions).catch(error => console.error("Saving canvas revisions to the server failed:", error));
         };
-    }, [conversationId]);
+    }, [serverId, conversationId]);
 
     useEffect(() => {
         const updateEmpty = () => setIsEmpty(controllerRef.current.getMarkdown().trim() === "");

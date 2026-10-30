@@ -12,7 +12,7 @@ import { FragmentManager } from "../Fragments/FragmentManager/FragmentManager";
 import { useAllowDrawioRender } from "./drawioRenderContext";
 
 // Constants
-const LANGUAGE_PATTERN = /language-(\w+)/;
+const LANGUAGE_PATTERN = /language-([\w-]+)/;
 const COPY_FEEDBACK_TIMEOUT = 1000;
 const MERMAID_MIN_TEXT_LENGTH = 30;
 

@@ -73,7 +73,13 @@ export const CanvasToolbar = ({ editor, controller, onOpenVersions, disabled }: 
                 italic: ctx.editor.isActive("italic"),
                 bulletList: ctx.editor.isActive("bulletList"),
                 orderedList: ctx.editor.isActive("orderedList"),
-                inTable: ctx.editor.isActive("table")
+                inTable: ctx.editor.isActive("table"),
+                // heading state must ride the selector: caret moves between
+                // headings and paragraphs change none of the values above and
+                // useEditorState's deep-equal would skip the rerender
+                heading1: ctx.editor.isActive("heading", { level: 1 }),
+                heading2: ctx.editor.isActive("heading", { level: 2 }),
+                heading3: ctx.editor.isActive("heading", { level: 3 })
             }
     });
 
@@ -91,13 +97,12 @@ export const CanvasToolbar = ({ editor, controller, onOpenVersions, disabled }: 
         URL.revokeObjectURL(url);
     };
 
-    // backend conversion via /v1/export; all three serializations are sent so
-    // each converter picks the lowest-loss input (pdf←html, docx←markdown, xlsx←html).
+    // backend conversion via /v1/export; the converters consume the HTML serialization
     const downloadExport = async (target: ExportTarget) => {
         if (!editor) return;
         setIsExporting(target);
         try {
-            const blob = await exportCanvasApi(controller.getMarkdown(), editor.getHTML(), JSON.stringify(editor.getJSON()), target);
+            const blob = await exportCanvasApi(controller.getMarkdown(), editor.getHTML(), target);
             const url = URL.createObjectURL(blob);
             const anchor = document.createElement("a");
             anchor.href = url;
@@ -168,20 +173,23 @@ export const CanvasToolbar = ({ editor, controller, onOpenVersions, disabled }: 
 
             <div className={styles.divider} />
 
-            {(["1", "2", "3"] as const).map(level => (
-                <Button
-                    key={level}
-                    appearance="subtle"
-                    size="small"
-                    disabled={disabled}
-                    className={mergeClasses(headingStyles.headingButton, editor?.isActive("heading", { level: Number(level) }) && styles.active)}
-                    onClick={run(chain => chain.toggleHeading({ level: Number(level) as 1 | 2 | 3 }))}
-                    aria-label={t(`canvas.toolbar.heading_${level}`)}
-                    aria-pressed={editor?.isActive("heading", { level: Number(level) })}
-                >
-                    H{level}
-                </Button>
-            ))}
+            {(["1", "2", "3"] as const).map(level => {
+                const active = level === "1" ? state?.heading1 : level === "2" ? state?.heading2 : state?.heading3;
+                return (
+                    <Button
+                        key={level}
+                        appearance="subtle"
+                        size="small"
+                        disabled={disabled}
+                        className={mergeClasses(headingStyles.headingButton, active && styles.active)}
+                        onClick={run(chain => chain.toggleHeading({ level: Number(level) as 1 | 2 | 3 }))}
+                        aria-label={t(`canvas.toolbar.heading_${level}`)}
+                        aria-pressed={active}
+                    >
+                        H{level}
+                    </Button>
+                );
+            })}
 
             <div className={styles.divider} />
 

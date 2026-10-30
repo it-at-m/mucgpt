@@ -31,12 +31,11 @@ export const useSplitView = () => {
             if (width === 0) return percent;
             const minCanvasPercent = (MIN_CANVAS_PX / width) * 100;
             const maxCanvasPercent = ((width - MIN_CHAT_PX) / width) * 100;
-            // On very narrow containers the pixel minimums can exceed the container,
-            // which would otherwise produce a percentage > 100 (and a negative chat
-            // width via calc()). Cap the floor so the returned value stays sane even
-            // if this hook ever runs below the stacking breakpoint.
-            if (maxCanvasPercent <= minCanvasPercent) return Math.min(minCanvasPercent, HARD_MAX_PERCENT);
-            return Math.min(maxCanvasPercent, Math.max(minCanvasPercent, percent));
+            // On very narrow containers the pixel minimums can exceed the container.
+            // The chat pane's minimum wins: the canvas shrinks below its floor (or
+            // away entirely) rather than squeezing the chat below 480px.
+            if (maxCanvasPercent <= minCanvasPercent) return Math.max(maxCanvasPercent, 0);
+            return Math.min(maxCanvasPercent, HARD_MAX_PERCENT, Math.max(minCanvasPercent, percent));
         },
         [containerRef]
     );
@@ -70,6 +69,12 @@ export const useSplitView = () => {
         return () => {
             window.removeEventListener("mousemove", onMove);
             window.removeEventListener("mouseup", onUp);
+            // An unmount mid-drag (conversation switch) must not leave the
+            // col-resize/no-select body state behind until the next drag ends.
+            if (isDraggingRef.current) {
+                isDraggingRef.current = false;
+                document.body.classList.remove("resizing-preview");
+            }
         };
     }, [applyClientX]);
 

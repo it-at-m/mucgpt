@@ -88,6 +88,33 @@ describe("CanvasVersionsDrawer", () => {
         expect(sanitized).toContain('target="_blank"');
     });
 
+    it("hardens the link of a rendered revision preview, not just sanitized strings", () => {
+        const articles = renderDrawer({
+            auto: [
+                {
+                    revision: 1,
+                    doc_json: {
+                        type: "doc",
+                        content: [
+                            {
+                                type: "paragraph",
+                                content: [{ type: "text", text: "link", marks: [{ type: "link", attrs: { href: "https://example.com" } }] }]
+                            }
+                        ]
+                    },
+                    timestamp: 1,
+                    source: "agent"
+                }
+            ],
+            manual: []
+        });
+        expect(articles).toHaveLength(1);
+        const anchor = articles[0].querySelector("a");
+        expect(anchor).not.toBeNull();
+        expect(anchor!.getAttribute("rel")).toBe("noopener noreferrer");
+        expect(anchor!.getAttribute("target")).toBe("_blank");
+    });
+
     it("leaves SVG-namespace anchors untouched by the HTML-only hardening hook", () => {
         const sanitized = DOMPurify.sanitize('<svg xmlns="http://www.w3.org/2000/svg"><a href="https://example.com"><text>x</text></a></svg>', {
             USE_PROFILES: { svg: true }

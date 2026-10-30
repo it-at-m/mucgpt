@@ -47,17 +47,12 @@ export const CanvasContextMenu = ({ editor, containerRef, getSelectionMarkdown, 
         };
 
         editor.on("transaction", update);
+        window.addEventListener("resize", update);
         return () => {
             editor.off("transaction", update);
+            window.removeEventListener("resize", update);
         };
     }, [editor, containerRef]);
-
-    useEffect(() => {
-        if (!position) return;
-        const onResize = () => setPosition(null);
-        window.addEventListener("resize", onResize);
-        return () => window.removeEventListener("resize", onResize);
-    }, [position]);
 
     if (!editor || !position) return null;
 

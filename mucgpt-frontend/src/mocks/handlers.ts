@@ -709,10 +709,15 @@ const MOCK_CANVAS_DOCUMENT =
 
 const CANVAS_STREAM_DELTAS = ["Sehr geehrte Damen und Herren,\n\n", "anbei erhalten Sie ", "**den neuen Bescheid**", "\n\nMit freundlichen Grüßen"];
 
+// The canvas simulation writes into the conversation's stored document; a
+// conversation without one answers the GET with 404 like the real backend.
+const MOCK_CANVAS_STORE = new Map<string, string>();
+
 // Mirrors the real backend (agent_executor.py): the model's own tool-call events
 // carry the raw tool name, while the streamed canvas chunks are forwarded as
 // CustomEvents named "Canvas" whose value is the ToolStreamChunk payload.
-const buildCanvasToolCallEvents = (parentMessageId: string) => {
+const buildCanvasToolCallEvents = (parentMessageId: string, conversationId: string) => {
+    MOCK_CANVAS_STORE.set(conversationId, MOCK_CANVAS_DOCUMENT);
     const toolCallId = crypto.randomUUID();
     const canvasChunk = (chunk: object) => ({
         type: "CUSTOM",
@@ -1159,8 +1164,10 @@ export const handlers = [
                     send({ type: "TOOL_CALL_RESULT", messageId: crypto.randomUUID(), toolCallId, content: "Mock tool result", role: "tool" });
                 }
 
-                if (body.canvas) {
-                    for (const event of buildCanvasToolCallEvents(messageId)) {
+                const wantsCanvasMock = Boolean(body.canvas) && /^\s*canvas-demo\s*$/i.test(latestUserMessage);
+
+                if (wantsCanvasMock) {
+                    for (const event of buildCanvasToolCallEvents(messageId, threadId)) {
                         send(event);
                         await delay(150);
                     }
@@ -1217,7 +1224,7 @@ export const handlers = [
                     // Canvas first: an open canvas means the request carries canvas state,
                     // and the mocked canvas flow must not be shadowed by the tool-specific
                     // demo streams (mindmap/simplify).
-                    if (body.canvas) {
+                    if (body.canvas && /^\s*canvas-demo\s*$/i.test(latestUserMessage)) {
                         // Legacy SSE fallback: the canvas content lands as a
                         // ```MUCGPTCanvas fenced block in the chat answer.
                         chunks = generateChatStreamChunks(
@@ -1663,7 +1670,11 @@ export const handlers = [
     }),
 
     // Canvas handlers
-    http.get("/api/backend/v1/conversations/:id/canvas", () => HttpResponse.json({ content: MOCK_CANVAS_DOCUMENT, updated_at: new Date().toISOString() })),
+    http.get("/api/backend/v1/conversations/:id/canvas", ({ params }) => {
+        const content = MOCK_CANVAS_STORE.get(params.id as string);
+        if (content === undefined) return new HttpResponse(null, { status: 404 });
+        return HttpResponse.json({ content, updated_at: new Date().toISOString() });
+    }),
     http.get("/api/backend/v1/conversations/:id/canvas/revisions", () =>
         HttpResponse.json({
             auto: [

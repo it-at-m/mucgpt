@@ -41,6 +41,7 @@ export const CANVAS_TOOL_IDS = ["canvas_write", "canvas_edit", "canvas_read"] as
 
 type CopyIntoCanvasHandler = (markdown: string) => void;
 let copyIntoCanvasHandler: CopyIntoCanvasHandler | undefined;
+const handlerListeners = new Set<() => void>();
 
 /**
  * Bridge for the legacy fenced fallback: fragments render deep inside answers with
@@ -49,6 +50,18 @@ let copyIntoCanvasHandler: CopyIntoCanvasHandler | undefined;
  */
 export function setCopyIntoCanvasHandler(handler: CopyIntoCanvasHandler | undefined): void {
     copyIntoCanvasHandler = handler;
+    handlerListeners.forEach(listener => listener());
+}
+
+export function hasCopyIntoCanvasHandler(): boolean {
+    return copyIntoCanvasHandler !== undefined;
+}
+
+export function subscribeToCopyIntoCanvasHandler(listener: () => void): () => void {
+    handlerListeners.add(listener);
+    return () => {
+        handlerListeners.delete(listener);
+    };
 }
 
 export function copyIntoCanvas(markdown: string): void {

@@ -13,7 +13,9 @@ import type { CanvasRevisions } from "../service/canvasStorage";
 
 (globalThis as Record<string, unknown>).IS_REACT_ACT_ENVIRONMENT = true;
 
-const loadCanvasStateMock = vi.hoisted(() => vi.fn<(id: string) => Promise<string | null>>());
+const loadCanvasStateMock = vi.hoisted(() =>
+    vi.fn<(id: string, serverId?: string) => Promise<{ content: string | null; supersededLocal: string | null } | null>>()
+);
 const loadCanvasRevisionsMock = vi.hoisted(() => vi.fn<(id: string) => Promise<CanvasRevisions | null>>());
 
 vi.mock("../service/canvasStorage", async importOriginal => {
@@ -274,7 +276,7 @@ describe("loading stored revisions", () => {
 
 describe("conversation id assignment", () => {
     it("restores stored content when a reload assigns the existing conversation id", async () => {
-        loadCanvasStateMock.mockResolvedValue("# Stored");
+        loadCanvasStateMock.mockResolvedValue({ content: "# Stored", supersededLocal: null });
         loadCanvasRevisionsMock.mockResolvedValue(emptyRevisions());
 
         const harness = renderController();
@@ -286,8 +288,40 @@ describe("conversation id assignment", () => {
         expect(harness.current.getMarkdown()).toBe("# Stored");
     });
 
+    it("snapshots a superseded local copy into the auto ring before adopting the server copy", async () => {
+        loadCanvasStateMock.mockResolvedValue({ content: "# Server", supersededLocal: "# Local" });
+        loadCanvasRevisionsMock.mockResolvedValue(emptyRevisions());
+
+        const harness = renderController();
+        harness.render(undefined);
+
+        await harness.rerender("conv-1");
+
+        expect(harness.current.getMarkdown()).toBe("# Server");
+        expect(harness.current.revisions.auto).toHaveLength(1);
+        const snapshot = harness.current.revisions.auto[0];
+        expect(snapshot.source).toBe("local");
+        expect(JSON.stringify(snapshot.doc_json)).toContain("Local");
+    });
+
+    it("snapshots the local copy even when the server canvas is blank", async () => {
+        // A blank server canvas is legitimate (rings synced before content):
+        // the local document must land in the ring instead of being dropped.
+        loadCanvasStateMock.mockResolvedValue({ content: "", supersededLocal: "# Local" });
+        loadCanvasRevisionsMock.mockResolvedValue(emptyRevisions());
+
+        const harness = renderController();
+        harness.render(undefined);
+
+        await harness.rerender("conv-1");
+
+        expect(harness.current.getMarkdown()).toBe("# Local");
+        expect(harness.current.revisions.auto).toHaveLength(1);
+        expect(harness.current.revisions.auto[0].source).toBe("local");
+    });
+
     it("keeps live content when the first prompt of a new chat assigns the id", async () => {
-        loadCanvasStateMock.mockResolvedValue("# Stored");
+        loadCanvasStateMock.mockResolvedValue({ content: "# Stored", supersededLocal: null });
         loadCanvasRevisionsMock.mockResolvedValue(emptyRevisions());
 
         const harness = renderController();
@@ -301,6 +335,25 @@ describe("conversation id assignment", () => {
 
         expect(harness.current.isOpen).toBe(true);
         expect(harness.current.getMarkdown()).toBe("# Mine");
+    });
+
+    it("keeps a pending open request across a fresh-chat reset and reopens for the new chat", async () => {
+        loadCanvasStateMock.mockResolvedValue(null);
+        loadCanvasRevisionsMock.mockResolvedValue(emptyRevisions());
+
+        const harness = renderController();
+        harness.render("old-conv");
+        await harness.rerender("old-conv");
+        act(() => harness.current.requestOpen());
+        expect(harness.current.isOpen).toBe(true);
+
+        // startFreshChat resets the active chat: the switch effect closes the canvas
+        await harness.rerender(undefined);
+        expect(harness.current.isOpen).toBe(false);
+
+        // the fresh chat's first prompt assigns its id: the pending request reopens
+        await harness.rerender("new-conv");
+        expect(harness.current.isOpen).toBe(true);
     });
 });
 

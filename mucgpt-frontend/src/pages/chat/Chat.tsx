@@ -698,7 +698,7 @@ const Chat = () => {
         } else if (questionFromUrl || newChatRequested) {
             lastHandledNewChatTokenRef.current = newChatToken;
             if (newChatRequested && canvasRequested) {
-                canvasRef.current.setIsOpen(true);
+                canvasRef.current.requestOpen();
             }
             setPendingQuestion(questionFromUrl);
             Promise.resolve(
@@ -756,7 +756,7 @@ const Chat = () => {
 
         lastHandledNewChatTokenRef.current = newChatToken;
         if (canvasRequested) {
-            canvasRef.current.setIsOpen(true);
+            canvasRef.current.requestOpen();
         }
         if (isCurrentChatEmpty) {
             clearNavigationQueryParams();

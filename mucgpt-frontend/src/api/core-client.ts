@@ -201,16 +201,14 @@ export type ExportTarget = "pdf" | "docx" | "xlsx";
 
 /**
  * Converts the canvas document to a binary file via the backend export endpoint
- *. All three TipTap serializations are sent so each
- * converter picks the lowest-loss input.
+ * (the converters consume the HTML serialization).
  */
-export async function exportCanvasApi(markdown: string, html: string, docJson: string, target: ExportTarget): Promise<Blob> {
+export async function exportCanvasApi(markdown: string, html: string, target: ExportTarget): Promise<Blob> {
     const response = await fetch(
         API_BASE + "v1/export",
         postConfig({
             markdown,
             html,
-            doc_json: docJson,
             target
         })
     );

@@ -79,9 +79,6 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
 
     // Destructuring for easier access
     const { answers, creativity, systemPrompt, active_chat } = chatState;
-    const canvas = useCanvasController(active_chat);
-    const canvasRef = useRef(canvas);
-    canvasRef.current = canvas;
 
     // References
     const activeChatRef = useRef(active_chat);
@@ -100,6 +97,16 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
     // Parameter from URL
     const { id } = useParams();
     const assistant_id = id || "0";
+    // Assistant chats use a prefixed local id as the storage key; the server
+    // canvas API expects the plain backend conversation id.
+    const canvasServerConversationId = useMemo(() => {
+        if (!active_chat) return undefined;
+        const prefix = AssistantStorageService.GENERATE_BOT_CHAT_PREFIX(assistant_id);
+        return active_chat.startsWith(prefix) ? active_chat.slice(prefix.length) : active_chat;
+    }, [active_chat, assistant_id]);
+    const canvas = useCanvasController(active_chat, canvasServerConversationId);
+    const canvasRef = useRef(canvas);
+    canvasRef.current = canvas;
     const isLegacyAssistant = /^\d+$/.test(assistant_id);
     const draftCacheKey = useMemo(() => `assistant-chat:${assistant_id}`, [assistant_id]);
     const location = useLocation();
@@ -1115,6 +1122,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                 <CanvasSplitView
                     controller={canvas}
                     conversationId={active_chat}
+                    serverConversationId={canvasServerConversationId}
                     onInsertIntoChat={insertCanvasSelectionIntoChat}
                     onAgentRevise={insertCanvasReviseRequest}
                 >

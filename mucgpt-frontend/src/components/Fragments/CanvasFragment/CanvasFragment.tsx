@@ -1,11 +1,12 @@
-import { useCallback } from "react";
+import { useCallback, useSyncExternalStore } from "react";
 import { Button, Tooltip } from "@fluentui/react-components";
 import { Copy24Regular } from "@fluentui/react-icons";
 import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import { useTranslation } from "react-i18next";
 import { BaseFragment } from "../BaseFragment/BaseFragment";
 import { BaseFragmentProps } from "../types";
-import { copyIntoCanvas } from "../../../utils/canvasStream";
+import { copyIntoCanvas, hasCopyIntoCanvasHandler, subscribeToCopyIntoCanvasHandler } from "../../../utils/canvasStream";
 import styles from "./CanvasFragment.module.css";
 
 /**
@@ -15,23 +16,24 @@ import styles from "./CanvasFragment.module.css";
  */
 export const CanvasFragment = ({ content }: BaseFragmentProps) => {
     const { t } = useTranslation();
+    const hasHandler = useSyncExternalStore(subscribeToCopyIntoCanvasHandler, hasCopyIntoCanvasHandler);
 
     const onCopyIntoCanvas = useCallback(() => {
         copyIntoCanvas(content);
     }, [content]);
 
-    const copyAction = (
+    const copyAction = hasHandler ? (
         <Tooltip content={t("canvas.fragment.copy_tooltip")} relationship="description" positioning="above">
             <Button appearance="subtle" icon={<Copy24Regular />} onClick={onCopyIntoCanvas} aria-label={t("canvas.fragment.copy")}>
                 {t("canvas.fragment.copy")}
             </Button>
         </Tooltip>
-    );
+    ) : null;
 
     return (
         <BaseFragment title={t("canvas.fragment.title")} content={content} actions={copyAction}>
             <div className={styles.canvasPreview}>
-                <ReactMarkdown>{content}</ReactMarkdown>
+                <ReactMarkdown remarkPlugins={[remarkGfm]}>{content}</ReactMarkdown>
             </div>
         </BaseFragment>
     );

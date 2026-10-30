@@ -83,6 +83,7 @@ export const CanvasVersionsDrawer = ({ open, onClose, controller }: Props) => {
                                                 appearance="secondary"
                                                 size="small"
                                                 icon={<ArrowUndo24Regular />}
+                                                disabled={controller.isLocked}
                                                 onClick={() => controller.restore(revision.revision)}
                                             >
                                                 {t("canvas.versions.restore")}

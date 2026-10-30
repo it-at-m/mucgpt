@@ -18,6 +18,8 @@ import { canvasExtensions } from "../components/Canvas/canvasExtensions";
 export interface CanvasController {
     isOpen: boolean;
     setIsOpen(open: boolean): void;
+    /** Sets an open request that survives a pending fresh-chat reset. */
+    requestOpen(): void;
     /** True while the agent is writing */
     isLocked: boolean;
     lock(): void;
@@ -112,7 +114,10 @@ export const caretMarkdownOffset = (editor: Editor | null, pos?: number): number
     return prefix.replace(/\n$/, "").length;
 };
 
-export function useCanvasController(conversationId: string | undefined): CanvasControllerInstance {
+export function useCanvasController(conversationId: string | undefined, serverConversationId?: string): CanvasControllerInstance {
+    // Assistant chats keep a prefixed local id as the IndexedDB key but talk to
+    // the server with the plain backend conversation id.
+    const serverId = serverConversationId ?? conversationId;
     const editor = useEditor({
         extensions: canvasExtensions,
         content: ""
@@ -166,6 +171,10 @@ export function useCanvasController(conversationId: string | undefined): CanvasC
     useEffect(() => {
         const previous = prevConversationIdRef.current;
         prevConversationIdRef.current = conversationId;
+        // An open request made before a fresh-chat reset stays pending while the
+        // switch runs; it is consumed as soon as the new chat has an id.
+        const pendingOpen = pendingOpenRef.current;
+        if (conversationId) pendingOpenRef.current = false;
         // The undefined→id transition is ambiguous: either the first prompt of this
         // new chat just got its id (same logical conversation — the canvas is open
         // and/or holds content: keep everything) or a page reload is restoring an
@@ -187,37 +196,80 @@ export function useCanvasController(conversationId: string | undefined): CanvasC
         }
         let cancelled = false;
         if (conversationId) {
-            loadCanvasRevisions(conversationId)
-                .then(stored => {
-                    if (cancelled || !stored) return;
-                    const rings = parseCanvasRevisions(stored);
-                    // Keep the monotonic revision counter ahead of the loaded rings so
-                    // new snapshots never collide with stored revision numbers.
-                    const maxRevision = Math.max(0, ...rings.auto.map(entry => entry.revision), ...rings.manual.map(entry => entry.revision));
-                    nextRevisionRef.current = maxRevision + 1;
-                    setRevisions(rings);
-                })
-                .catch(error => console.error("Loading canvas revisions failed:", error));
-            loadCanvasState(conversationId)
-                .then(stored => {
+            void (async () => {
+                try {
+                    // Rings must be applied before the content load: the load path
+                    // pushes a superseded-local snapshot that must land on top of
+                    // the loaded rings, not be clobbered by a parallel load.
+                    const storedRings = await loadCanvasRevisions(conversationId, serverId);
                     if (cancelled) return;
-                    if (stored === null || !stored.trim()) return;
+                    if (storedRings !== null) {
+                        const rings = parseCanvasRevisions(storedRings);
+                        // Keep the monotonic revision counter ahead of the loaded rings so
+                        // new snapshots never collide with stored revision numbers.
+                        const maxRevision = Math.max(0, ...rings.auto.map(entry => entry.revision), ...rings.manual.map(entry => entry.revision));
+                        nextRevisionRef.current = maxRevision + 1;
+                        setRevisions(rings);
+                    }
+                    const stored = await loadCanvasState(conversationId, serverId);
                     const editor = editorRef.current;
-                    if (!editor) return;
-                    editor.commands.setContent(stored);
+                    if (cancelled || !editor || !stored) {
+                        if (pendingOpen && !cancelled) setIsOpen(true);
+                        return;
+                    }
+                    // The losing local copy is snapshotted before any early
+                    // return: a blank server canvas is a legitimate state
+                    // (rings can sync before any content) and must not
+                    // silently discard the local document.
+                    if (stored.supersededLocal?.trim()) {
+                        // The local copy lost the reconciliation but must stay
+                        // recoverable: snapshot it into the auto ring (source "local")
+                        // so it appears in the Versions drawer and syncs to the server.
+                        // The snapshot data is taken eagerly — the state updater may
+                        // run after the editor already holds the server content.
+                        editor.commands.setContent(stored.supersededLocal);
+                        const supersededSnapshot: CanvasRevision = {
+                            revision: nextRevisionRef.current++,
+                            doc_json: editor.getJSON(),
+                            timestamp: Date.now(),
+                            source: "local"
+                        };
+                        setRevisions(prev => ({
+                            ...prev,
+                            auto: pushCapped(prev.auto, supersededSnapshot, AUTO_RING_CAP)
+                        }));
+                    }
+                    if (!stored.content || !stored.content.trim()) {
+                        // An open request of a fresh chat reopens the canvas even
+                        // when there is nothing to restore yet.
+                        if (pendingOpen && !cancelled) setIsOpen(true);
+                        return;
+                    }
+                    editor.commands.setContent(stored.content);
                     editor.view.dispatch(editor.state.tr.setMeta(CANVAS_PERSISTENCE_RESET, true));
                     setIsOpen(true);
-                })
-                .catch(error => console.error("Loading canvas content failed:", error));
+                } catch (error) {
+                    console.error("Loading canvas failed:", error);
+                }
+            })();
         }
         return () => {
             cancelled = true;
         };
-    }, [conversationId]);
+    }, [conversationId, serverId]);
 
     const setIsOpen = useCallback((open: boolean) => {
         isOpenRef.current = open;
         setIsOpenState(open);
+    }, []);
+
+    // Partnership between the page and the switch effect: a canvas-open request
+    // must survive a pending fresh-chat reset (the switch effect clears the
+    // editor and closes the canvas), then reopen the canvas for the new chat.
+    const pendingOpenRef = useRef(false);
+    const requestOpen = useCallback(() => {
+        pendingOpenRef.current = true;
+        setIsOpen(true);
     }, []);
 
     // Called on RUN_STARTED: the server numbers canvas_revision per run,
@@ -342,6 +394,15 @@ export function useCanvasController(conversationId: string | undefined): CanvasC
             const all = [...revisionsRef.current.auto, ...revisionsRef.current.manual];
             const found = all.find(entry => entry.revision === revision);
             if (!current || !found) return;
+            // Stored doc_json is untrusted (foreign rings, older schema): tiptap's
+            // setContent silently replaces the document with an empty one on
+            // invalid content, which would destroy the live canvas.
+            try {
+                current.schema.nodeFromJSON(found.doc_json).check();
+            } catch (error) {
+                console.error("Canvas revision is not a valid document:", error);
+                return;
+            }
             current.commands.setContent(found.doc_json as Content);
             snapshot("restore");
         },
@@ -352,6 +413,7 @@ export function useCanvasController(conversationId: string | undefined): CanvasC
         () => ({
             isOpen,
             setIsOpen,
+            requestOpen,
             isLocked,
             lock,
             unlock,
@@ -370,6 +432,7 @@ export function useCanvasController(conversationId: string | undefined): CanvasC
         [
             isOpen,
             setIsOpen,
+            requestOpen,
             isLocked,
             lock,
             unlock,

@@ -13,6 +13,8 @@ const NARROW_MEDIA_QUERY = "(max-width: 899px)";
 interface Props {
     controller: CanvasControllerInstance;
     conversationId: string | undefined;
+    /** Backend conversation id for server requests; defaults to conversationId. */
+    serverConversationId?: string;
     children: ReactNode;
     onInsertIntoChat?: (markdown: string) => void;
     onAgentRevise?: (markdown: string) => void;
@@ -29,12 +31,20 @@ const useIsNarrowLayout = () => {
     return isNarrow;
 };
 
-export const CanvasSplitView = ({ controller, conversationId, children, onInsertIntoChat, onAgentRevise }: Props) => {
+export const CanvasSplitView = ({ controller, conversationId, serverConversationId, children, onInsertIntoChat, onAgentRevise }: Props) => {
     const { t } = useTranslation();
     const isNarrow = useIsNarrowLayout();
     const split = useSplitView();
 
-    const panel = <CanvasPanel controller={controller} conversationId={conversationId} onInsertIntoChat={onInsertIntoChat} onAgentRevise={onAgentRevise} />;
+    const panel = (
+        <CanvasPanel
+            controller={controller}
+            conversationId={conversationId}
+            serverConversationId={serverConversationId}
+            onInsertIntoChat={onInsertIntoChat}
+            onAgentRevise={onAgentRevise}
+        />
+    );
 
     // ChatLayout's fixed bars (header, input, scroll-to-bottom) offset their right
     // edge by the pane width while the split is active; the drawer takes no offset.

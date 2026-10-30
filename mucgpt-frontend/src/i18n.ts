@@ -192,7 +192,7 @@ i18n
                         toggle: "Canvas",
                         panel_title: "Canvas",
                         status_writing: "Agent schreibt…",
-                        limit_warning: "Text zu lang: der ausgegraute Bereich wird nicht vom Agenten gelesen und nicht persistiert.",
+                        limit_warning: "Text zu lang: der ausgegraute Bereich wird nicht vom Agenten gelesen, bleibt aber im Chat gespeichert.",
                         limit_paste_clipped: "Der eingefügte Text wurde auf {{limit}} Zeichen begrenzt.",
                         split_divider: "Canvas-Breite anpassen",
                         empty_state: "Leeres Canvas",
@@ -246,7 +246,8 @@ i18n
                             empty: "Noch keine Versionen gespeichert.",
                             source_manual: "Manuell gespeichert",
                             source_agent: "Nach Agent-Bearbeitung",
-                            source_restore: "Wiederhergestellt"
+                            source_restore: "Wiederhergestellt",
+                            source_local: "Nur lokal (überschrieben)"
                         }
                     },
                     version: {
@@ -1192,7 +1193,7 @@ i18n
                         toggle: "Canvas",
                         panel_title: "Canvas",
                         status_writing: "Agent is writing…",
-                        limit_warning: "Text too long: the greyed-out section is not read by the agent and not persisted.",
+                        limit_warning: "Text too long: the greyed-out section is not read by the agent but stays saved with the chat.",
                         limit_paste_clipped: "The pasted text was clipped to {{limit}} characters.",
                         split_divider: "Resize canvas",
                         empty_state: "Empty canvas",
@@ -1246,7 +1247,8 @@ i18n
                             empty: "No versions saved yet.",
                             source_manual: "Manually saved",
                             source_agent: "After agent edit",
-                            source_restore: "Restored"
+                            source_restore: "Restored",
+                            source_local: "Local only (replaced)"
                         }
                     },
                     version: {
@@ -2207,7 +2209,7 @@ i18n
                         toggle: "Canvas",
                         panel_title: "Canvas",
                         status_writing: "Agent schreibt…",
-                        limit_warning: "Text zu lang: da ausgegraute Bereich wird vom Agenten ned glesen und ned gspeichert.",
+                        limit_warning: "Text zu lang: da ausgegraute Bereich wird vom Agenten ned glesen, bleibts aber im Chat gspeichert.",
                         limit_paste_clipped: "Da eingfügte Text is auf {{limit}} Zeichn begrenzt worn.",
                         split_divider: "Canvas-Breit apassn",
                         empty_state: "Loarer Canvas",
@@ -2261,7 +2263,8 @@ i18n
                             empty: "No koane Versionen gspeichert.",
                             source_manual: "Manuell gspeichert",
                             source_agent: "Noch da Agent-Bearbeitung",
-                            source_restore: "Wiedahergstellt"
+                            source_restore: "Wiedahergstellt",
+                            source_local: "Nur lokal (überschrieben)"
                         }
                     },
                     version: {
@@ -3125,7 +3128,7 @@ i18n
                         toggle: "Canvas",
                         panel_title: "Canvas",
                         status_writing: "L'agent écrit…",
-                        limit_warning: "Texte trop long : la partie grisée n'est ni lue par l'agent ni enregistrée.",
+                        limit_warning: "Texte trop long : la partie grisée n'est pas lue par l'agent mais reste enregistrée avec le chat.",
                         limit_paste_clipped: "Le texte collé a été limité à {{limit}} caractères.",
                         split_divider: "Redimensionner le canvas",
                         empty_state: "Canvas vide",
@@ -3179,7 +3182,8 @@ i18n
                             empty: "Aucune version enregistrée pour le moment.",
                             source_manual: "Enregistré manuellement",
                             source_agent: "Après modification par l'agent",
-                            source_restore: "Restauré"
+                            source_restore: "Restauré",
+                            source_local: "Local uniquement (remplacé)"
                         }
                     },
                     version: {
@@ -4085,7 +4089,7 @@ i18n
                         toggle: "Canvas",
                         panel_title: "Canvas",
                         status_writing: "Агент пише…",
-                        limit_warning: "Текст задовгий: сіра частина не читається агентом і не зберігається.",
+                        limit_warning: "Текст задовгий: сіру частину агент не читає, але вона зберігається разом із чатом.",
                         limit_paste_clipped: "Вставлений текст було обрізано до {{limit}} символів.",
                         split_divider: "Змінити ширину canvas",
                         empty_state: "Порожній canvas",
@@ -4139,7 +4143,8 @@ i18n
                             empty: "Ще немає збережених версій.",
                             source_manual: "Збережено вручну",
                             source_agent: "Після редагування агентом",
-                            source_restore: "Відновлено"
+                            source_restore: "Відновлено",
+                            source_local: "Лише локально (перезаписано)"
                         }
                     },
                     version: {

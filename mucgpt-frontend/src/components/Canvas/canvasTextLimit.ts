@@ -14,7 +14,7 @@ import styles from "./CanvasEditor.module.css";
  * - content beyond the warning threshold is greyed out by decoration, the
  *   underlying text stays untouched
  *
- * Both checks count ProseMirror text characters (block separators uncounted),
+ * Both checks count ProseMirror text characters plus block separators ("\\n"),
  * an approximation of the markdown length the backend caps.
  */
 
@@ -87,7 +87,23 @@ export const canvasTextLimit = Extension.create({
                     if (newState.doc.content.size <= CANVAS_EXPORT_LIMIT_CHARS) return null;
                     if (textBetween(newState.doc).length <= CANVAS_EXPORT_LIMIT_CHARS) return null;
 
-                    const clipped = newState.tr.delete(textPosForCharIndex(newState.doc, CANVAS_EXPORT_LIMIT_CHARS), newState.doc.content.size);
+                    // textLength counts block separators while the clip position
+                    // walks text characters; clip repeatedly so the kept prefix
+                    // actually fits instead of undershooting by the separator
+                    // count. The next pass aims below the limit by the current
+                    // overshoot — separators alone can keep the count above it.
+                    let doc = newState.doc;
+                    let target = CANVAS_EXPORT_LIMIT_CHARS;
+                    while (target > 0 && textBetween(doc).length > CANVAS_EXPORT_LIMIT_CHARS) {
+                        const cut = textPosForCharIndex(doc, target);
+                        if (cut === 0 || cut >= doc.content.size) break;
+                        const next = doc.cut(0, cut);
+                        if (next.content.size >= doc.content.size) break;
+                        doc = next;
+                        target = 2 * CANVAS_EXPORT_LIMIT_CHARS - textBetween(doc).length;
+                    }
+                    if (doc === newState.doc) return null;
+                    const clipped = newState.tr.replaceWith(0, newState.doc.content.size, doc);
                     if (transactions.some(tr => tr.getMeta("paste") !== undefined)) {
                         window.dispatchEvent(new CustomEvent(CANVAS_PASTE_CLIPPED_EVENT));
                     }

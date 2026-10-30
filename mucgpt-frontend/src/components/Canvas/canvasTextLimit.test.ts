@@ -25,6 +25,21 @@ describe("canvas text limit", () => {
         editor.destroy();
     });
 
+    it("clips multi-paragraph paste to the limit counting block separators", () => {
+        // One paragraph boundary alone must not overflow, so the paste uses
+        // many short paragraphs: the old single-pass clip undershot by the
+        // separator count and locked the document against further edits.
+        const paragraph = `${"p".repeat(1000)}\n\n`;
+        const editor = editorWith(paragraph.repeat(Math.ceil(CANVAS_EXPORT_LIMIT_CHARS / 1000) + 20));
+
+        expect(textLength(editor.state.doc)).toBeLessThanOrEqual(CANVAS_EXPORT_LIMIT_CHARS);
+        // the clipped document still accepts ordinary deletions (the rejected-edit trap)
+        const before = textLength(editor.state.doc);
+        editor.commands.deleteRange({ from: 1, to: 20 });
+        expect(textLength(editor.state.doc)).toBeLessThan(before);
+        editor.destroy();
+    });
+
     it("fires the paste-clipped event when a paste transaction is clipped", () => {
         const listener = vi.fn();
         window.addEventListener(CANVAS_PASTE_CLIPPED_EVENT, listener);

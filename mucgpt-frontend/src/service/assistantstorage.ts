@@ -1,5 +1,5 @@
 import { StorageService, DBMessage } from "./storage";
-import { Assistant, ChatResponse } from "../api";
+import { Assistant, ChatResponse, deleteConversationApi } from "../api";
 import { v4 as uuid } from "uuid";
 import { IndexedDBStorage } from "./indexedDBStorage";
 
@@ -136,29 +136,46 @@ export class AssistantStorageService {
      * Delete
      ***************************/
 
-    async deleteConfigAndChatsForAssistant(assistant_id: string) {
-        const results = await this._getAllChatsAndConfigs(
-            (id: string) =>
-                id === AssistantStorageService.GENERATE_BOT_CONFIG_ID(assistant_id) ||
-                id.startsWith(AssistantStorageService.GENERATE_BOT_CHAT_PREFIX(assistant_id))
-        );
+    /** Retains configuration until every chat has been erased successfully, allowing failed cleanup to be retried. */
+    async deleteConfigAndChatsForAssistant(assistant_id: string): Promise<void> {
+        await this.deleteChatsForAssistant(assistant_id);
+        await this.deleteConfigForAssistant(assistant_id);
+    }
+
+    /** Remove only the local configuration, propagating storage failures so cleanup can be retried. */
+    async deleteConfigForAssistant(assistant_id: string) {
+        const id = AssistantStorageService.GENERATE_BOT_CONFIG_ID(assistant_id);
+        if (!(await this.storageService.delete(id))) {
+            throw new Error(`Failed to delete assistant configuration "${id}"`);
+        }
+    }
+
+    /** Erases each chat on the server before removing its cache; a failure leaves remaining records retryable. */
+    async deleteChatsForAssistant(assistant_id: string): Promise<void> {
+        const stored = await this.storageService.getAll();
+        if (!stored) {
+            throw new Error(`Failed to load chats for assistant "${assistant_id}"`);
+        }
+        const results = stored.filter(chat => chat.id?.startsWith(AssistantStorageService.GENERATE_BOT_CHAT_PREFIX(assistant_id)));
         for (let i = 0; i < results.length; i++) {
-            if (results[i].id) {
-                await this.storageService.delete(results[i].id ?? "");
+            const id = results[i].id;
+            if (id) {
+                await AssistantStorageService.deleteChatOnServer(assistant_id, id);
+                if (!(await this.storageService.delete(id))) {
+                    throw new Error(`Failed to delete assistant chat "${id}"`);
+                }
             }
         }
     }
 
-    async deleteConfigForAssistant(assistant_id: string) {
-        await this.storageService.delete(AssistantStorageService.GENERATE_BOT_CONFIG_ID(assistant_id));
-    }
-
-    async deleteChatsForAssistant(assistant_id: string) {
-        const results = await this._getAllChatsAndConfigs((id: string) => id.startsWith(AssistantStorageService.GENERATE_BOT_CHAT_PREFIX(assistant_id)));
-        for (let i = 0; i < results.length; i++) {
-            if (results[i].id) {
-                await this.storageService.delete(results[i].id ?? "");
-            }
+    /**
+     * Awaits deletion of an assistant chat's server-side state. The backend
+     * conversation id is the chat UUID without the local assistant prefix.
+     */
+    static async deleteChatOnServer(assistant_id: string, chat_id: string): Promise<void> {
+        const prefix = AssistantStorageService.GENERATE_BOT_CHAT_PREFIX(assistant_id);
+        if (chat_id.startsWith(prefix)) {
+            await deleteConversationApi(chat_id.slice(prefix.length));
         }
     }
 

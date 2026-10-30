@@ -40,6 +40,7 @@ function toChatCompletionBody(options: ChatRequest) {
         ...(options.enabled_tools ? { enabled_tools: options.enabled_tools } : {}),
         ...(options.assistant_id ? { assistant_id: options.assistant_id } : {}),
         ...(options.conversation_id ? { conversation_id: options.conversation_id } : {}),
+        ...(options.persist === false ? { persist: false } : {}),
         ...(options.data_sources ? { data_sources: options.data_sources } : {})
     };
 }
@@ -117,9 +118,10 @@ export async function checkAssistantComplianceApi(input: ComplianceCheckRequest)
     return handleApiRequest(() => fetch(API_BASE + "v1/compliance/check", postConfig(input)), "Failed to run compliance check");
 }
 
-export async function createChatName(query: string, answer: string, system_message: string) {
+export async function createChatName(conversationId: string, query: string, answer: string, system_message: string) {
     const url = API_BASE + "v1/generations/chat-title";
     const body = {
+        conversation_id: conversationId,
         query,
         answer,
         system_message

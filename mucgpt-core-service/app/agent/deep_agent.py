@@ -5,6 +5,8 @@ from langchain_core.language_models import BaseChatModel
 from langchain_core.runnables import RunnableConfig
 from langchain_core.runnables.config import merge_configs
 from langchain_core.tools.base import BaseTool
+from langgraph.checkpoint.postgres.aio import AsyncPostgresSaver
+from langgraph.types import Durability
 
 from agent.middleware import (
     ContextMiddleware,
@@ -19,8 +21,16 @@ from agent.tools.mcp import McpBearerAuthProvider
 from core.auth_models import AuthenticationResult
 from core.lf_prompts import PromptPool
 from core.logtools import getLogger
+from core.stream_cleanup import close_stream
 
 logger = getLogger(name="mucgpt-core-react-agent")
+
+# Write one checkpoint when a run exits instead of one per graph step (LangGraph's
+# "async" default). Only the latest checkpoint is ever read: we don't resume runs
+# mid-way, so per-step checkpoints would only multiply stored message history.
+# The state reached so far is still written if the run fails or is aborted.
+# https://docs.langchain.com/oss/python/langgraph/checkpointers#durability-modes
+CHECKPOINT_DURABILITY: Durability = "exit"
 
 
 class _ConfiguredLangChainDeepAgentGraph:
@@ -32,6 +42,7 @@ class _ConfiguredLangChainDeepAgentGraph:
         tools: list[BaseTool],
         logger,
         debug: bool = True,
+        checkpointer: AsyncPostgresSaver | None = None,
     ):
         self.model = llm
         self.tools = tools
@@ -55,7 +66,7 @@ class _ConfiguredLangChainDeepAgentGraph:
             debug=self.debug,
             state_schema=self.state_schema,
             context_schema=RequestContext,
-            checkpointer=None,
+            checkpointer=checkpointer,
         )
 
     def _prepare_run(
@@ -121,14 +132,19 @@ class _ConfiguredLangChainDeepAgentGraph:
         if data_sources:
             input_payload["data_sources"] = data_sources  # type: ignore
 
-        async for item in self.agent.astream(
+        stream = self.agent.astream(
             input_payload,
             stream_mode=stream_mode,
             config=config,
             context=request_context,
+            durability=CHECKPOINT_DURABILITY,
             **kwargs,
-        ):
-            yield item
+        )
+        try:
+            async for item in stream:
+                yield item
+        finally:
+            await close_stream(stream)
 
     async def ainvoke(
         self,
@@ -150,7 +166,11 @@ class _ConfiguredLangChainDeepAgentGraph:
             input_payload["data_sources"] = data_sources  # type: ignore
 
         return await self.agent.ainvoke(
-            input_payload, config=config, context=request_context, **kwargs
+            input_payload,
+            config=config,
+            context=request_context,
+            durability=CHECKPOINT_DURABILITY,
+            **kwargs,
         )
 
 
@@ -163,6 +183,7 @@ class MUCGPTAgent:
         tools: list[BaseTool],
         logger=None,
         debug: bool = True,
+        checkpointer: AsyncPostgresSaver | None = None,
     ):
         self.logger = logger if logger else getLogger(name="mucgpt-core-react-agent")
         self.model = llm  # required for non-streaming calls, e.g. assisted MUCGPT-Assistant generation.
@@ -171,4 +192,5 @@ class MUCGPTAgent:
             tools=tools,
             logger=self.logger,
             debug=debug,
+            checkpointer=checkpointer,
         )

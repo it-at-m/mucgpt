@@ -22,6 +22,57 @@ from api.api_models import (
 from config.model_provider import ModelRegistry, ModelsConfigurationException
 
 DUMMY_USER_ID = "test_user_123"
+DUMMY_CONVERSATION_ID = "conv-test-1"
+
+
+@pytest.fixture(autouse=True)
+def stub_persistence(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Backend chat persistence needs a live Postgres pool; stub it for router tests."""
+    from core.persistance_helpers import PersistanceHelpers
+
+    monkeypatch.setattr(
+        PersistanceHelpers,
+        "verify_user_in_conversation",
+        AsyncMock(return_value=True),
+    )
+    monkeypatch.setattr(
+        PersistanceHelpers,
+        "is_user_in_conversation",
+        AsyncMock(return_value=True),
+    )
+    monkeypatch.setattr(
+        PersistanceHelpers,
+        "conversation_exists",
+        AsyncMock(return_value=True),
+    )
+    monkeypatch.setattr(
+        PersistanceHelpers,
+        "has_checkpoint",
+        AsyncMock(return_value=False),
+    )
+    monkeypatch.setattr(
+        PersistanceHelpers,
+        "get_conversation_messages",
+        AsyncMock(
+            return_value=[
+                ChatCompletionMessage(role="user", content="Hello"),
+                ChatCompletionMessage(role="assistant", content="Hi"),
+            ]
+        ),
+    )
+    monkeypatch.setattr(
+        PersistanceHelpers,
+        "delete_conversation_mapping",
+        AsyncMock(return_value=True),
+    )
+    monkeypatch.setattr(
+        PersistanceHelpers, "erase_conversation", AsyncMock(return_value="deleted")
+    )
+    monkeypatch.setattr(
+        PersistanceHelpers,
+        "get_checkpointer_if_ready",
+        Mock(return_value=Mock(adelete_thread=AsyncMock())),
+    )
 
 
 @pytest.fixture(autouse=True)
@@ -68,7 +119,7 @@ class TestChatRouter:
         )
         mock_agent_executor = Mock(MUCGPTAgentExecutor)
         mock_agent_executor.run_without_streaming = AsyncMock(
-            return_value=(mock_response.model_dump())
+            return_value=mock_response
         )
         mock_init_agent.return_value = mock_agent_executor
 
@@ -85,6 +136,7 @@ class TestChatRouter:
             max_tokens=10,
             stream=False,
             enabled_tools=["tool1", "tool2"],
+            conversation_id=DUMMY_CONVERSATION_ID,
         )
         payload = payload_model.model_dump()
         resp = test_client.post("/v1/chat/completions", json=payload)
@@ -110,6 +162,407 @@ class TestChatRouter:
         assert response.usage.prompt_tokens > 0
         assert response.usage.completion_tokens > 0
         assert response.usage.total_tokens > 0
+        assert (
+            mock_agent_executor.run_without_streaming.await_args.kwargs["messages"]
+            == payload_model.messages
+        )
+
+    @patch("api.routers.chat_router.init_agent", new_callable=AsyncMock)
+    def test_only_appends_latest_user_message(
+        self,
+        mock_init_agent: AsyncMock,
+        test_client: TestClient,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        """The checkpoint owns history, so the request contributes one new turn."""
+        from core.persistance_helpers import PersistanceHelpers
+
+        monkeypatch.setattr(
+            PersistanceHelpers, "has_checkpoint", AsyncMock(return_value=True)
+        )
+        mock_response = ChatCompletionResponse(
+            id="chatcmpl-test123",
+            object="chat.completion",
+            created=1234567890,
+            choices=[
+                ChatCompletionChoice(
+                    index=0,
+                    message=ChatCompletionMessage(
+                        role="assistant", content="Second response"
+                    ),
+                    finish_reason="stop",
+                )
+            ],
+            usage=Usage(prompt_tokens=10, completion_tokens=2, total_tokens=12),
+        )
+        mock_agent_executor = Mock(MUCGPTAgentExecutor)
+        mock_agent_executor.run_without_streaming = AsyncMock(
+            return_value=mock_response
+        )
+        mock_init_agent.return_value = mock_agent_executor
+        messages = [
+            ChatCompletionMessage(role="system", content="System prompt"),
+            ChatCompletionMessage(role="user", content="First question"),
+            ChatCompletionMessage(role="assistant", content="First response"),
+            ChatCompletionMessage(role="user", content="Second question"),
+        ]
+
+        response = test_client.post(
+            "/v1/chat/completions",
+            json=ChatCompletionRequest(
+                model="gpt-4o-mini",
+                messages=messages,
+                stream=False,
+                conversation_id=DUMMY_CONVERSATION_ID,
+            ).model_dump(),
+        )
+
+        assert response.status_code == 200, response.text
+        assert mock_agent_executor.run_without_streaming.await_args.kwargs[
+            "messages"
+        ] == [messages[-1]]
+
+    @pytest.mark.parametrize("has_checkpoint", [False, True])
+    @patch("api.routers.chat_router.init_agent", new_callable=AsyncMock)
+    def test_stateless_request_skips_persistence(
+        self,
+        mock_init_agent: AsyncMock,
+        has_checkpoint: bool,
+        test_client: TestClient,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        """persist=False runs on the full client history and touches no stored state."""
+        from core.persistance_helpers import PersistanceHelpers
+
+        verify_mock = AsyncMock(return_value=True)
+        has_checkpoint_mock = AsyncMock(return_value=has_checkpoint)
+        monkeypatch.setattr(
+            PersistanceHelpers, "verify_user_in_conversation", verify_mock
+        )
+        monkeypatch.setattr(PersistanceHelpers, "has_checkpoint", has_checkpoint_mock)
+        mock_agent_executor = Mock(MUCGPTAgentExecutor)
+        mock_agent_executor.run_without_streaming = AsyncMock(
+            return_value=ChatCompletionResponse(
+                id="chatcmpl-test123",
+                object="chat.completion",
+                created=1234567890,
+                choices=[
+                    ChatCompletionChoice(
+                        index=0,
+                        message=ChatCompletionMessage(role="assistant", content="Hi"),
+                        finish_reason="stop",
+                    )
+                ],
+                usage=Usage(prompt_tokens=1, completion_tokens=1, total_tokens=2),
+            )
+        )
+        mock_init_agent.return_value = mock_agent_executor
+        messages = [
+            ChatCompletionMessage(role="system", content="Preview prompt"),
+            ChatCompletionMessage(role="user", content="First question"),
+            ChatCompletionMessage(role="assistant", content="First response"),
+            ChatCompletionMessage(role="user", content="Second question"),
+        ]
+
+        response = test_client.post(
+            "/v1/chat/completions",
+            json=ChatCompletionRequest(
+                model="gpt-4o-mini",
+                messages=messages,
+                stream=False,
+                conversation_id=DUMMY_CONVERSATION_ID,
+                persist=False,
+            ).model_dump(),
+        )
+
+        assert response.status_code == 200, response.text
+        verify_mock.assert_not_awaited()
+        has_checkpoint_mock.assert_not_awaited()
+        assert mock_init_agent.await_args.kwargs["persist"] is False
+        assert (
+            mock_agent_executor.run_without_streaming.await_args.kwargs["messages"]
+            == messages
+        )
+
+    @patch("api.routers.chat_router.init_agent", new_callable=AsyncMock)
+    def test_ag_ui_stateless_request_skips_persistence(
+        self,
+        mock_init_agent: AsyncMock,
+        test_client: TestClient,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        from core.persistance_helpers import PersistanceHelpers
+
+        verify_mock = AsyncMock(return_value=True)
+        monkeypatch.setattr(
+            PersistanceHelpers, "verify_user_in_conversation", verify_mock
+        )
+
+        async def no_events():
+            return
+            yield
+
+        mock_agent_executor = Mock(MUCGPTAgentExecutor)
+        mock_agent_executor.run_agui_with_streaming.return_value = no_events()
+        mock_init_agent.return_value = mock_agent_executor
+        messages = [
+            ChatCompletionMessage(role="user", content="First question"),
+            ChatCompletionMessage(role="assistant", content="First response"),
+            ChatCompletionMessage(role="user", content="Second question"),
+        ]
+
+        response = test_client.post(
+            "/v1/chat/v2/completions",
+            json=ChatCompletionRequest(
+                model="gpt-4o-mini",
+                messages=messages,
+                conversation_id=DUMMY_CONVERSATION_ID,
+                persist=False,
+            ).model_dump(),
+        )
+
+        assert response.status_code == 200, response.text
+        verify_mock.assert_not_awaited()
+        assert mock_init_agent.await_args.kwargs["persist"] is False
+        assert (
+            mock_agent_executor.run_agui_with_streaming.call_args.kwargs["messages"]
+            == messages
+        )
+
+    @pytest.mark.asyncio
+    async def test_chat_passes_assistant_association_to_persistence(self) -> None:
+        from api.routers.chat_router import get_messages_for_agent
+        from core.persistance_helpers import PersistanceHelpers
+
+        request = ChatCompletionRequest(
+            model="gpt-4o-mini",
+            messages=[ChatCompletionMessage(role="user", content="Hello")],
+            conversation_id=DUMMY_CONVERSATION_ID,
+            assistant_id="assistant-123",
+        )
+
+        await get_messages_for_agent(request, DUMMY_USER_ID)
+
+        PersistanceHelpers.verify_user_in_conversation.assert_awaited_once_with(
+            DUMMY_USER_ID, DUMMY_CONVERSATION_ID, "assistant-123"
+        )
+
+    @pytest.mark.parametrize("assistant_id", [None, "assistant-123"])
+    def test_list_conversations_includes_assistant_association(
+        self,
+        test_client: TestClient,
+        monkeypatch: pytest.MonkeyPatch,
+        assistant_id: str | None,
+    ) -> None:
+        from core.persistance_helpers import PersistanceHelpers
+
+        list_mock = AsyncMock(
+            return_value=[
+                {
+                    "conversation_id": DUMMY_CONVERSATION_ID,
+                    "title": "Test chat",
+                    "assistant_id": assistant_id,
+                    "created_at": "2026-10-20T10:00:00Z",
+                    "updated_at": "2026-10-20T10:00:00Z",
+                }
+            ]
+        )
+        monkeypatch.setattr(PersistanceHelpers, "get_conversations_for_user", list_mock)
+
+        response = test_client.get("/v1/conversations")
+
+        assert response.status_code == 200, response.text
+        assert response.json()[0]["assistant_id"] == assistant_id
+        list_mock.assert_awaited_once_with(DUMMY_USER_ID)
+
+    def test_rename_conversation(
+        self, test_client: TestClient, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        from core.persistance_helpers import PersistanceHelpers
+
+        rename = AsyncMock(return_value=True)
+        monkeypatch.setattr(PersistanceHelpers, "rename_conversation", rename)
+        response = test_client.patch(
+            f"/v1/conversations/{DUMMY_CONVERSATION_ID}",
+            json={"title": "  New\nchat title  "},
+        )
+
+        assert response.status_code == 200, response.text
+        assert response.json() == {"title": "New chat title"}
+        rename.assert_awaited_once_with(
+            DUMMY_CONVERSATION_ID, DUMMY_USER_ID, "New chat title"
+        )
+        PersistanceHelpers.verify_user_in_conversation.assert_not_awaited()
+
+    @pytest.mark.parametrize("exists, status", [(True, 403), (False, 404)])
+    def test_rename_conversation_rejected(
+        self,
+        test_client: TestClient,
+        monkeypatch: pytest.MonkeyPatch,
+        exists: bool,
+        status: int,
+    ) -> None:
+        from core.persistance_helpers import PersistanceHelpers
+
+        monkeypatch.setattr(
+            PersistanceHelpers, "rename_conversation", AsyncMock(return_value=False)
+        )
+        monkeypatch.setattr(
+            PersistanceHelpers, "conversation_exists", AsyncMock(return_value=exists)
+        )
+        response = test_client.patch(
+            f"/v1/conversations/{DUMMY_CONVERSATION_ID}", json={"title": "New title"}
+        )
+        assert response.status_code == status
+        PersistanceHelpers.verify_user_in_conversation.assert_not_awaited()
+
+    @pytest.mark.parametrize(
+        "body",
+        [{}, {"title": ""}, {"title": " \n\t "}, {"title": None}, {"title": 123}],
+    )
+    def test_rename_conversation_invalid_title(
+        self, test_client: TestClient, monkeypatch: pytest.MonkeyPatch, body: dict
+    ) -> None:
+        from core.persistance_helpers import PersistanceHelpers
+
+        rename = AsyncMock()
+        monkeypatch.setattr(PersistanceHelpers, "rename_conversation", rename)
+        response = test_client.patch(
+            f"/v1/conversations/{DUMMY_CONVERSATION_ID}", json=body
+        )
+        assert response.status_code == 422
+        rename.assert_not_awaited()
+
+    def test_get_conversation_messages(self, test_client: TestClient) -> None:
+        response = test_client.get(
+            f"/v1/conversations/{DUMMY_CONVERSATION_ID}/messages"
+        )
+
+        assert response.status_code == 200
+        assert response.json() == [
+            {"role": "user", "content": "Hello"},
+            {"role": "assistant", "content": "Hi"},
+        ]
+
+    def test_get_conversation_messages_forbidden(
+        self, test_client: TestClient, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        from core.persistance_helpers import PersistanceHelpers
+
+        monkeypatch.setattr(
+            PersistanceHelpers,
+            "is_user_in_conversation",
+            AsyncMock(return_value=False),
+        )
+
+        response = test_client.get(
+            f"/v1/conversations/{DUMMY_CONVERSATION_ID}/messages"
+        )
+
+        assert response.status_code == 403
+
+    def test_delete_conversation(
+        self, test_client: TestClient, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        from core.persistance_helpers import PersistanceHelpers
+
+        erasure = AsyncMock(return_value="deleted")
+        monkeypatch.setattr(PersistanceHelpers, "erase_conversation", erasure)
+
+        response = test_client.delete(f"/v1/conversations/{DUMMY_CONVERSATION_ID}")
+
+        assert response.status_code == 204, response.text
+        assert response.content == b""
+        erasure.assert_awaited_once_with(DUMMY_CONVERSATION_ID, DUMMY_USER_ID)
+
+    def test_delete_conversation_forbidden(
+        self, test_client: TestClient, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        from core.persistance_helpers import PersistanceHelpers
+
+        monkeypatch.setattr(
+            PersistanceHelpers,
+            "erase_conversation",
+            AsyncMock(return_value="forbidden"),
+        )
+
+        response = test_client.delete(f"/v1/conversations/{DUMMY_CONVERSATION_ID}")
+
+        assert response.status_code == 403
+
+    def test_delete_conversation_not_found(
+        self, test_client: TestClient, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        from core.persistance_helpers import PersistanceHelpers
+
+        monkeypatch.setattr(
+            PersistanceHelpers,
+            "erase_conversation",
+            AsyncMock(return_value="missing"),
+        )
+        monkeypatch.setattr(
+            PersistanceHelpers,
+            "delete_conversation_mapping",
+            AsyncMock(return_value=False),
+        )
+
+        response = test_client.delete(f"/v1/conversations/{DUMMY_CONVERSATION_ID}")
+
+        assert response.status_code == 404
+
+    def test_delete_conversation_missing_is_not_forbidden(
+        self, test_client: TestClient, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        from core.persistance_helpers import PersistanceHelpers
+
+        monkeypatch.setattr(
+            PersistanceHelpers,
+            "erase_conversation",
+            AsyncMock(return_value="missing"),
+        )
+        is_user_mock = AsyncMock(return_value=False)
+        monkeypatch.setattr(PersistanceHelpers, "is_user_in_conversation", is_user_mock)
+
+        response = test_client.delete(f"/v1/conversations/{DUMMY_CONVERSATION_ID}")
+
+        assert response.status_code == 404
+        is_user_mock.assert_not_awaited()
+
+    def test_delete_conversation_persistence_not_ready(
+        self, test_client: TestClient, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        from core.persistance_helpers import PersistanceHelpers
+
+        monkeypatch.setattr(
+            PersistanceHelpers,
+            "erase_conversation",
+            AsyncMock(side_effect=RuntimeError("Persistence not initialized")),
+        )
+
+        response = test_client.delete(f"/v1/conversations/{DUMMY_CONVERSATION_ID}")
+
+        assert response.status_code == 500
+
+    def test_delete_conversation_checkpoint_failure_keeps_ownership(
+        self, test_client: TestClient, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """Router errors propagate; atomic rollback is covered against PostgreSQL."""
+        from core.persistance_helpers import PersistanceHelpers
+
+        mapping_mock = AsyncMock(return_value=True)
+        monkeypatch.setattr(
+            PersistanceHelpers, "delete_conversation_mapping", mapping_mock
+        )
+        monkeypatch.setattr(
+            PersistanceHelpers,
+            "erase_conversation",
+            AsyncMock(side_effect=RuntimeError("db down")),
+        )
+
+        response = test_client.delete(f"/v1/conversations/{DUMMY_CONVERSATION_ID}")
+
+        assert response.status_code == 500, response.text
+        mapping_mock.assert_not_awaited()
 
     @patch("api.routers.chat_router.init_agent", new_callable=AsyncMock)
     def test_streaming_completion(self, mock_init_agent, test_client: TestClient):
@@ -176,6 +629,7 @@ class TestChatRouter:
             max_tokens=10,
             stream=True,
             enabled_tools=["tool1", "tool2"],
+            conversation_id=DUMMY_CONVERSATION_ID,
         )
         payload = payload_model.model_dump()
 
@@ -240,27 +694,73 @@ class TestChatRouter:
                 f"Combined content was: {content_buffer}"
             )
 
+    @pytest.mark.parametrize(
+        "endpoint", ["/v1/chat/completions", "/v1/chat/v2/completions"]
+    )
+    @pytest.mark.parametrize("stream", [False, True])
+    @patch("api.routers.chat_router.get_messages_for_agent", new_callable=AsyncMock)
     @patch("api.routers.chat_router.init_agent", new_callable=AsyncMock)
     def test_chat_completion_invalid_model(
-        self, mock_init_agent, test_client: TestClient
-    ):
-        """Test chat completion with invalid model."""
-        mock_agent_executor = Mock(MUCGPTAgentExecutor)
-        mock_agent_executor.run_without_streaming = AsyncMock(
-            side_effect=Exception("Invalid model")
-        )
-        mock_init_agent.return_value = mock_agent_executor
-
-        # Create payload using proper model
+        self,
+        mock_init_agent: AsyncMock,
+        mock_get_messages: AsyncMock,
+        test_client: TestClient,
+        endpoint: str,
+        stream: bool,
+    ) -> None:
+        """Reject unknown models before preparing persistence or initializing an agent."""
         payload_model = ChatCompletionRequest(
             model="invalid-model",
             messages=[ChatCompletionMessage(role="user", content="Hello")],
-            stream=False,
+            stream=stream,
+            conversation_id=DUMMY_CONVERSATION_ID,
         )
-        payload = payload_model.model_dump()
-        resp = test_client.post("/v1/chat/completions", json=payload)
+
+        resp = test_client.post(endpoint, json=payload_model.model_dump())
+
         assert resp.status_code == 400
-        assert "invalid-model" in resp.json()["detail"]
+        assert resp.json() == {
+            "detail": "Model 'invalid-model' not found in the registry"
+        }
+        mock_get_messages.assert_not_called()
+        mock_init_agent.assert_not_called()
+
+    @pytest.mark.parametrize(
+        "endpoint", ["/v1/chat/completions", "/v1/chat/v2/completions"]
+    )
+    @patch("api.routers.chat_router.get_messages_for_agent", new_callable=AsyncMock)
+    @patch("api.routers.chat_router.init_agent", new_callable=AsyncMock)
+    def test_chat_completion_uninitialized_model_registry(
+        self,
+        mock_init_agent: AsyncMock,
+        mock_get_messages: AsyncMock,
+        test_client: TestClient,
+        monkeypatch: pytest.MonkeyPatch,
+        endpoint: str,
+    ) -> None:
+        """An unavailable registry returns 500 without touching persistence or agents."""
+        monkeypatch.setattr(
+            ModelRegistry,
+            "get_model",
+            Mock(
+                side_effect=ModelsConfigurationException(
+                    "Model registry not initialized"
+                )
+            ),
+        )
+        payload_model = ChatCompletionRequest(
+            model="gpt-4o-mini",
+            messages=[ChatCompletionMessage(role="user", content="Hello")],
+            stream=False,
+            conversation_id=DUMMY_CONVERSATION_ID,
+        )
+
+        resp = test_client.post(endpoint, json=payload_model.model_dump())
+
+        assert resp.status_code == 500
+        assert resp.json() == {"detail": "Model registry not initialized"}
+        mock_get_messages.assert_not_called()
+        mock_init_agent.assert_not_called()
 
     def test_chat_completion_missing_messages(self, test_client: TestClient):
         """Test chat completion with missing messages."""
@@ -283,11 +783,16 @@ class TestChatRouter:
 
         # Create payload using proper model
         payload_model = ChatCompletionRequest(
-            model="gpt-4o-mini", messages=[], stream=False
+            model="gpt-4o-mini",
+            messages=[],
+            stream=False,
+            conversation_id=DUMMY_CONVERSATION_ID,
         )
         payload = payload_model.model_dump()
         resp = test_client.post("/v1/chat/completions", json=payload)
-        assert resp.status_code == 500
+        assert resp.status_code == 400
+        assert resp.json() == {"detail": "messages must not be empty"}
+        mock_init_agent.assert_not_awaited()
 
     @patch("api.routers.chat_router.init_agent", new_callable=AsyncMock)
     def test_chat_completion_high_temperature(
@@ -311,7 +816,7 @@ class TestChatRouter:
         )
         mock_agent_executor = Mock(MUCGPTAgentExecutor)
         mock_agent_executor.run_without_streaming = AsyncMock(
-            return_value=mock_response.model_dump()
+            return_value=mock_response
         )
         mock_init_agent.return_value = mock_agent_executor
 
@@ -321,6 +826,7 @@ class TestChatRouter:
             messages=[ChatCompletionMessage(role="user", content="Be creative")],
             temperature=1.5,
             stream=False,
+            conversation_id=DUMMY_CONVERSATION_ID,
         )
         payload = payload_model.model_dump()
         resp = test_client.post("/v1/chat/completions", json=payload)
@@ -348,6 +854,7 @@ class TestChatRouter:
             messages=[ChatCompletionMessage(role="user", content="Hello")],
             max_tokens=0,
             stream=False,
+            conversation_id=DUMMY_CONVERSATION_ID,
         )
         payload = payload_model.model_dump()
         resp = test_client.post("/v1/chat/completions", json=payload)
@@ -370,6 +877,7 @@ class TestChatRouter:
             model="gpt-4o-mini",
             messages=[ChatCompletionMessage(role="user", content="Hello")],
             stream=False,
+            conversation_id=DUMMY_CONVERSATION_ID,
         )
         payload = payload_model.model_dump()
         resp = test_client.post("/v1/chat/completions", json=payload)
@@ -398,7 +906,7 @@ class TestChatRouter:
         )
         mock_agent_executor = Mock(MUCGPTAgentExecutor)
         mock_agent_executor.run_without_streaming = AsyncMock(
-            return_value=mock_response.model_dump()
+            return_value=mock_response
         )
         mock_init_agent.return_value = mock_agent_executor
 
@@ -416,6 +924,7 @@ class TestChatRouter:
                 ChatCompletionMessage(role="user", content="That's okay, thanks."),
             ],
             stream=False,
+            conversation_id=DUMMY_CONVERSATION_ID,
         )
         payload = payload_model.model_dump()
         resp = test_client.post("/v1/chat/completions", json=payload)

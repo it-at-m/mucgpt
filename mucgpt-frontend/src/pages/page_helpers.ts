@@ -14,6 +14,7 @@ import { createChatName, MucgptAgUiAgent } from "../api/core-client";
 import type { BaseEvent } from "@ag-ui/core";
 import { initialRunActivity, reduceRunActivity, type RunActivity } from "../utils/agUiActivity";
 import { scrollIntoNearestContainer } from "../utils/scrollIntoNearestContainer";
+import { getConversationActionCapabilities } from "../utils/conversationActions";
 
 /**
  * @fileoverview Chat page helper functions for managing chat state, API requests, and user interactions.
@@ -156,7 +157,8 @@ export async function handleRollback(
 
 /**
  * Handles regenerating the last assistant response in a chat conversation.
- * Removes the last message from storage and triggers a new API call with the same user question.
+ * For stateless requests, removes the last local message and resends its question.
+ * Persisted requests return before side effects because local edits cannot rewind a checkpoint.
  *
  * @param answers - Current array of chat messages
  * @param dispatch - Function to dispatch state updates
@@ -165,6 +167,7 @@ export async function handleRollback(
  * @param systemPrompt - The system prompt to use for the API call
  * @param callApi - Function to make the API call with question and system prompt
  * @param isLoadingRef - Reference to track loading state
+ * @param persist - Request persistence mode; persisted checkpoints cannot be rewound by local edits
  */
 export async function handleRegenerate(
     answers: any[],
@@ -173,8 +176,11 @@ export async function handleRegenerate(
     storageService: StorageService<any, any>,
     systemPrompt: string,
     callApi: (question: string, ...args: any[]) => Promise<void>,
-    isLoadingRef: RefObject<boolean>
+    isLoadingRef: RefObject<boolean>,
+    persist: boolean = true
 ) {
+    if (!getConversationActionCapabilities(persist).canRegenerate || answers.length === 0) return;
+
     // Remove the last message from storage
     await storageService.popMessage(activeChat);
 
@@ -217,7 +223,7 @@ export async function handleRegenerate(
  * @param enabled_tools - Optional array of enabled tool names
  * @param onToolStatusUpdate - Optional callback for tool status updates
  * @param persist - When false, the answer is streamed and rendered but never written to
- *                  storage or the history list. Used by the ephemeral assistant preview chat.
+ *                  storage, the history list or the backend. Used by the ephemeral assistant preview chat.
  */
 export const makeApiRequest = async (
     answers: any[],
@@ -266,6 +272,7 @@ export const makeApiRequest = async (
         enabled_tools: enabled_tools && enabled_tools.length > 0 ? enabled_tools : undefined,
         assistant_id: assistant_id,
         conversation_id: conversationId,
+        persist,
         data_sources: data_sources && data_sources.length > 0 ? data_sources : undefined
     };
 
@@ -531,7 +538,7 @@ export const makeApiRequest = async (
         if (fetchHistory) fetchHistory();
     } else {
         // Create a new chat with generated name
-        const chatname = await createChatName(question, finalResponse.answer, options.system ?? "");
+        const chatname = await createChatName(conversationId, question, finalResponse.answer, options.system ?? "");
 
         // For assistant chats, keep the assistant-prefixed local storage key while
         // reusing the same canonical conversation id sent to the backend.

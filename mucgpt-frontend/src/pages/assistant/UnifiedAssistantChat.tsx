@@ -14,6 +14,7 @@ import { AnswerList } from "../../components/AnswerList/AnswerList";
 import { StarterPromptList } from "../../components/StarterPrompt";
 import { FollowUpActionContext } from "../../components/FollowUpAction";
 import { getChatReducer, handleRegenerate, handleRollback, makeApiRequest } from "../page_helpers";
+import { getConversationActionCapabilities } from "../../utils/conversationActions";
 import { ChatOptions } from "../chat/Chat";
 import { STORAGE_KEYS } from "../layout/LayoutHelper";
 import { ToolStatus } from "../../utils/ToolStreamHandler";
@@ -48,6 +49,10 @@ import styles from "./UnifiedAssistantChat.module.css";
 import { useUnifiedHistory, useUnifiedHistoryRegistration } from "../../components/UnifiedHistory";
 import { downloadAssistantExport, mapAssistantToExportData } from "../../utils/assistant-export";
 import { scrollIntoNearestContainer } from "../../utils/scrollIntoNearestContainer";
+import { loadConversation } from "../../service/conversationHistory";
+
+const requestPersist = true;
+const conversationActions = getConversationActionCapabilities(requestPersist);
 
 interface UnifiedAssistantChatProps {
     strategy: AssistantStrategy;
@@ -479,7 +484,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                     dataSources,
                     lastAnswerRef,
                     setIsLoadingValue,
-                    true,
+                    requestPersist,
                     agUiEnabled,
                     undefined, // onAgUiEvent — event log is only wired up in the main chat
                     setRunActivity
@@ -525,7 +530,8 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                 return false;
             }
 
-            const chat = await assistantChatStorage.get(id);
+            const prefix = AssistantStorageService.GENERATE_BOT_CHAT_PREFIX(assistant_id);
+            const chat = await loadConversation(assistantChatStorage, id, id.slice(prefix.length), assistantConfig);
             if (!chat) {
                 return false;
             }
@@ -541,7 +547,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
 
             return true;
         },
-        [assistantChatStorage, assistant_id, scrollToBottom, setLastQuestionValue]
+        [assistantChatStorage, assistant_id, assistantConfig, scrollToBottom, setLastQuestionValue]
     );
 
     useEffect(() => {
@@ -550,11 +556,17 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
             return;
         }
 
-        void loadAssistantChat(requestedChatId).then(loaded => {
-            if (!loaded) {
+        void loadAssistantChat(requestedChatId)
+            .then(loaded => {
+                if (!loaded) {
+                    clearRequestedChatId();
+                }
+            })
+            .catch(err => {
+                setError(err);
                 clearRequestedChatId();
-            }
-        });
+                showError(t("components.assistant_chat.load_chat_failed"), t("components.assistant_chat.load_chat_failed_message"));
+            });
     }, [clearRequestedChatId, getRequestedChatId, loadAssistantChat, location.search]);
 
     useEffect(() => {
@@ -610,29 +622,14 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
     // Unsubscribe function for the info sidebar (subscribed, non-owned community assistants only)
     const performUnsubscribeAssistant = useCallback(async () => {
         try {
+            await assistantStorageService.deleteChatsForAssistant(assistant_id);
             await unsubscribeFromAssistantApi(assistant_id);
+            await communityAssistantStorageService.deleteConfigForAssistant(assistant_id);
         } catch (err) {
             console.error("Failed to unsubscribe from assistant:", err);
             showError(t("components.community_assistants.unsubscribe_failed_title"), t("components.community_assistants.unsubscribe_failed_message"));
             return;
         }
-
-        const cleanupTasks: Array<[string, () => Promise<unknown>]> = [
-            ["local chats", () => assistantStorageService.deleteChatsForAssistant(assistant_id)],
-            ["local assistant config", () => communityAssistantStorageService.deleteConfigForAssistant(assistant_id)]
-        ];
-        const results = await Promise.allSettled(cleanupTasks.map(([, task]) => task()));
-        await Promise.all(
-            results.map(async (result, index) => {
-                if (result.status !== "rejected") return;
-                const [label, task] = cleanupTasks[index];
-                try {
-                    await task();
-                } catch (retryErr) {
-                    console.error(`Failed to delete ${label} after unsubscribe (retry failed):`, retryErr);
-                }
-            })
-        );
 
         showSuccess(
             t("components.community_assistants.unsubscribe_success_title"),
@@ -655,16 +652,16 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
 
     // Regenerate-Funktion
     const onRegenerateResponseClicked = useCallback(async () => {
-        if (answers.length === 0 || !activeChatRef.current || isLoading) return;
+        if (!conversationActions.canRegenerate || isDeletedAssistant || answers.length === 0 || !activeChatRef.current || isLoadingRef.current) return;
         try {
             setError(undefined);
             setIsLoadingValue(true);
-            await handleRegenerate(answers, dispatch, activeChatRef.current, assistantChatStorage, systemPrompt, callApi, isLoadingRef);
+            await handleRegenerate(answers, dispatch, activeChatRef.current, assistantChatStorage, systemPrompt, callApi, isLoadingRef, requestPersist);
         } catch (e) {
             setError(e);
             setIsLoadingValue(false);
         }
-    }, [answers, assistantChatStorage, callApi, systemPrompt, isLoading, setIsLoadingValue]);
+    }, [answers, assistantChatStorage, callApi, systemPrompt, isDeletedAssistant, setIsLoadingValue]);
 
     useUnifiedHistoryRegistration(
         useMemo(
@@ -790,14 +787,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
         if (isLegacyAssistant) {
             return (
                 <div className={styles.stateCallout}>
-                    <AssistantStateCallout
-                        state="legacy"
-                        context="chat"
-                        onDelete={async () => {
-                            await assistantStorageService.deleteConfigAndChatsForAssistant(assistant_id);
-                            navigate("/");
-                        }}
-                    />
+                    <AssistantStateCallout state="legacy" context="chat" onDelete={performDeleteAssistant} />
                 </div>
             );
         }
@@ -852,7 +842,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                     </div>
                     <QuestionInput
                         clearOnSend
-                        disabled={isLoading || error !== undefined}
+                        disabled={isLoading || isStreaming}
                         draftCacheKey={draftCacheKey}
                         onSend={(question, datas) => {
                             const dataSources = datas
@@ -897,7 +887,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
         return (
             <QuestionInput
                 clearOnSend
-                disabled={isLoading || error !== undefined || isAssistantUnavailable || strategy instanceof DeletedCommunityAssistantStrategy}
+                disabled={isLoading || isStreaming || isAssistantUnavailable || strategy instanceof DeletedCommunityAssistantStrategy}
                 draftCacheKey={draftCacheKey}
                 onSend={(question, datas) => {
                     const dataSources = datas
@@ -949,9 +939,9 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
         assistant_id,
         assistantConfig,
         isLoading,
+        isStreaming,
         callApi,
         question,
-        error,
         selectedTools,
         setSelectedToolsGuarded,
         tools,
@@ -964,7 +954,8 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
         availableLLMs,
         isLLMLocked,
         LLM.llm_name,
-        onLLMSelectionChange
+        onLLMSelectionChange,
+        performDeleteAssistant
     ]);
 
     // AnswerList component
@@ -982,7 +973,14 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                                     answer={answer.response}
                                     isLatest
                                     isStreaming={isStreaming}
-                                    onRegenerateResponseClicked={isDeletedAssistant ? undefined : onRegenerateResponseClicked}
+                                    onRegenerateResponseClicked={
+                                        conversationActions.canRegenerate && !isDeletedAssistant ? onRegenerateResponseClicked : undefined
+                                    }
+                                    regenerationUnavailableReason={
+                                        !conversationActions.canRegenerate && !isDeletedAssistant
+                                            ? t("components.answer.persisted_actions_unavailable")
+                                            : undefined
+                                    }
                                     onFollowUpActionSend={
                                         isDeletedAssistant
                                             ? undefined
@@ -1003,9 +1001,12 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                 loadingActivity={runActivity}
                 error={error}
                 makeApiRequest={() => {
+                    if (!conversationActions.canRetry || isDeletedAssistant || isLoadingRef.current) return;
                     dispatch({ type: "SET_ANSWERS", payload: answers.slice(0, -1) });
                     callApi(lastQuestion);
                 }}
+                canRetry={conversationActions.canRetry && !isDeletedAssistant}
+                retryUnavailableReason={!conversationActions.canRetry && !isDeletedAssistant ? t("components.answer.persisted_actions_unavailable") : undefined}
                 chatMessageStreamEnd={chatMessageStreamEnd}
                 lastQuestionRef={lastQuestionRef}
                 onRollbackError={() => {
@@ -1030,7 +1031,8 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
             chatMessageStreamEnd,
             lastQuestion,
             lastAnswerRef,
-            setLastQuestionValue
+            setLastQuestionValue,
+            t
         ]
     );
 

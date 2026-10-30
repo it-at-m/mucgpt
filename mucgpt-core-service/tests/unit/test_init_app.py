@@ -4,6 +4,7 @@ import pytest
 from langchain_core.language_models.fake_chat_models import FakeListChatModel
 from langgraph.checkpoint.memory import InMemorySaver
 
+import init_app
 from agent.agent_executor import MUCGPTAgentExecutor
 from agent.deep_agent import MUCGPTAgent
 from agent.tools.tools import ToolCollection
@@ -99,3 +100,54 @@ class TestInitApp:
         # Act & Assert
         with pytest.raises(ValueError, match="Temperature must be between 0 and 1"):
             ModelOptions(temperature=-0.1)
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("failing_component", ["redis", "files", "persistence"])
+async def test_shutdown_attempts_all_resource_cleanup(monkeypatch, failing_component):
+    redis_close = AsyncMock()
+    files_close = AsyncMock()
+    persistence_close = AsyncMock()
+    cleanup = {
+        "redis": redis_close,
+        "files": files_close,
+        "persistence": persistence_close,
+    }
+    cleanup[failing_component].side_effect = RuntimeError("close failed")
+    monkeypatch.setattr(
+        init_app.RedisCache,
+        "get_redis",
+        AsyncMock(return_value=MagicMock(aclose=redis_close)),
+    )
+    monkeypatch.setattr(init_app.FileStoreManager, "close", files_close)
+    monkeypatch.setattr(init_app.PersistanceHelpers, "close", persistence_close)
+
+    await init_app.destroy_app()
+
+    for close in cleanup.values():
+        close.assert_awaited_once()
+
+
+@pytest.mark.asyncio
+async def test_document_store_startup_failure_cleans_up_app(monkeypatch):
+    settings = MagicMock(MODELS=[])
+    monkeypatch.setattr(init_app, "get_settings", lambda: settings)
+    monkeypatch.setattr(init_app, "_initialize_models_metadata", MagicMock())
+    monkeypatch.setattr(init_app.ModelRegistry, "init_models", MagicMock())
+    monkeypatch.setattr(init_app.PromptPool, "init", MagicMock())
+    monkeypatch.setattr(init_app.RedisCache, "init_redis", AsyncMock())
+    persistence_init = AsyncMock()
+    monkeypatch.setattr(init_app.PersistanceHelpers, "init", persistence_init)
+    monkeypatch.setattr(
+        init_app.FileStoreManager,
+        "init",
+        AsyncMock(side_effect=RuntimeError("store setup failed")),
+    )
+    cleanup = AsyncMock()
+    monkeypatch.setattr(init_app, "destroy_app", cleanup)
+
+    with pytest.raises(RuntimeError, match="store setup failed"):
+        await init_app.warmup_app()
+
+    persistence_init.assert_awaited_once_with(settings)
+    cleanup.assert_awaited_once()

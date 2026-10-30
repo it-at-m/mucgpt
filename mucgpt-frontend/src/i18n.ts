@@ -229,7 +229,7 @@ i18n
                             export_word: "Word (.docx)",
                             export_excel: "Excel (.xlsx)",
                             export_failed: "Export fehlgeschlagen",
-                            export_started: "Export erstellt – die Datei wurde in Ihren Downloads gespeichert.",
+                            export_started: "Export erstellt – die Datei wurde in deine Downloads gespeichert.",
                             export_failed_message: "Der Export nach {{target}} ist fehlgeschlagen. Bitte versuche es erneut.",
                             close: "Canvas schließen"
                         },
@@ -2203,6 +2203,67 @@ i18n
                             unauthorized_link_text: "Berechtigung holn"
                         }
                     },
+                    canvas: {
+                        toggle: "Canvas",
+                        panel_title: "Canvas",
+                        status_writing: "Agent schreibt…",
+                        limit_warning: "Text zu lang: da ausgegraute Bereich wird vom Agenten ned glesen und ned gspeichert.",
+                        limit_paste_clipped: "Da eingfügte Text is auf {{limit}} Zeichn begrenzt worn.",
+                        split_divider: "Canvas-Breit apassn",
+                        empty_state: "Loarer Canvas",
+                        empty_state_hint: "Schreib do dein Entwurf hi oda loss den Agenten an easchtn Text macha.",
+                        context_menu: {
+                            open: "Canvas-Aktionen",
+                            insert_into_chat: "In Chat übernehma",
+                            agent_revise: "Agent soi des überarbeite",
+                            agent_revise_template: "Bitte überarbeit da folgende markierte Text aus'm Canvas:\n\n{{selection}}"
+                        },
+                        toolbar: {
+                            label: "Canvas-Werkzeig",
+                            undo: "Rückgängig",
+                            redo: "Wiedaherstejn",
+                            bold: "Fett",
+                            italic: "Kursiv",
+                            heading_1: "Überschrift 1",
+                            heading_2: "Überschrift 2",
+                            heading_3: "Überschrift 3",
+                            bullet_list: "Aufzählung",
+                            ordered_list: "Nummerierte Listn",
+                            insert_table: "Tabelle eifügn",
+                            table_add_row_above: "Zeile obahoib eifügn",
+                            table_add_row_below: "Zeile untahoib eifügn",
+                            table_add_column_before: "Spoidn davoa eifügn",
+                            table_add_column_after: "Spoidn danoch eifügn",
+                            table_delete_row: "Zeile löschn",
+                            table_delete_column: "Spoidn löschn",
+                            table_delete_table: "Tabelle löschn",
+                            save_version: "Version speichan",
+                            export: "Export",
+                            export_md: "Markdown (.md)",
+                            export_pdf: "PDF (.pdf)",
+                            export_word: "Word (.docx)",
+                            export_excel: "Excel (.xlsx)",
+                            export_failed: "Export is feigschlogn",
+                            export_started: "Export erstellt – d'Datei is in deine Downloads gspeichert worn.",
+                            export_failed_message: "Da Export noch {{target}} is feigschlogn. Bitte versuach's no amoi.",
+                            close: "Canvas schließn"
+                        },
+                        fragment: {
+                            title: "Canvas",
+                            copy: "In Canvas übernehma",
+                            copy_tooltip: "Macht den Canvas auf und setzt sein Inhalt auf den Text"
+                        },
+                        versions: {
+                            title: "Versionen",
+                            manual_group: "Gspeicherte Versionen",
+                            auto_group: "Verlauf",
+                            restore: "Wiedaherstejn",
+                            empty: "No koane Versionen gspeichert.",
+                            source_manual: "Manuell gspeichert",
+                            source_agent: "Noch da Agent-Bearbeitung",
+                            source_restore: "Wiedahergstellt"
+                        }
+                    },
                     version: {
                         header: "Wos gibts neis?",
                         added: "Nei",
@@ -2999,6 +3060,7 @@ i18n
                         last_used: "Derniers utilisés",
                         recommended: "Recommandés",
                         chat_header: "Bonjour {{user}}, qu'est-ce que vous prévoyez aujourd'hui ?",
+                        new_chat_with_canvas: "Nouveau chat avec canvas",
                         discover_all: "Découvrir tous les assistants",
                         explore_badge: "Découvrir",
                         discover_all_description: "Découvrez et gérez tous les assistants disponibles.",
@@ -3057,6 +3119,67 @@ i18n
                                 "Formulez votre dernier message en un nouveau texte formel qui présente le contenu original dans un style académique. Ce texte doit avoir une structure claire, utiliser une expression précise et factuelle et offrir au lecteur une expérience de lecture professionnelle",
                             informal_prompt:
                                 "Formulez votre dernier message en un nouveau texte plus informel qui reflète le contenu original dans un style plus décontracté. Ce texte doit offrir au lecteur une expérience de lecture détendue en utilisant un langage facile à comprendre et, le cas échéant, des éléments humoristiques."
+                        }
+                    },
+                    canvas: {
+                        toggle: "Canvas",
+                        panel_title: "Canvas",
+                        status_writing: "L'agent écrit…",
+                        limit_warning: "Texte trop long : la partie grisée n'est ni lue par l'agent ni enregistrée.",
+                        limit_paste_clipped: "Le texte collé a été limité à {{limit}} caractères.",
+                        split_divider: "Redimensionner le canvas",
+                        empty_state: "Canvas vide",
+                        empty_state_hint: "Écrivez votre brouillon ici ou laissez l'agent rédiger le premier texte.",
+                        context_menu: {
+                            open: "Actions du canvas",
+                            insert_into_chat: "Transférer dans le chat",
+                            agent_revise: "Faire réviser par l'agent",
+                            agent_revise_template: "Veuillez réviser le passage suivant sélectionné dans le canvas :\n\n{{selection}}"
+                        },
+                        toolbar: {
+                            label: "Outils du canvas",
+                            undo: "Annuler",
+                            redo: "Rétablir",
+                            bold: "Gras",
+                            italic: "Italique",
+                            heading_1: "Titre 1",
+                            heading_2: "Titre 2",
+                            heading_3: "Titre 3",
+                            bullet_list: "Liste à puces",
+                            ordered_list: "Liste numérotée",
+                            insert_table: "Insérer un tableau",
+                            table_add_row_above: "Insérer une ligne au-dessus",
+                            table_add_row_below: "Insérer une ligne en dessous",
+                            table_add_column_before: "Insérer une colonne avant",
+                            table_add_column_after: "Insérer une colonne après",
+                            table_delete_row: "Supprimer la ligne",
+                            table_delete_column: "Supprimer la colonne",
+                            table_delete_table: "Supprimer le tableau",
+                            save_version: "Enregistrer la version",
+                            export: "Exporter",
+                            export_md: "Markdown (.md)",
+                            export_pdf: "PDF (.pdf)",
+                            export_word: "Word (.docx)",
+                            export_excel: "Excel (.xlsx)",
+                            export_failed: "Échec de l'export",
+                            export_started: "Export créé – le fichier a été enregistré dans vos téléchargements.",
+                            export_failed_message: "L'export vers {{target}} a échoué. Veuillez réessayer.",
+                            close: "Fermer le canvas"
+                        },
+                        fragment: {
+                            title: "Canvas",
+                            copy: "Copier dans le canvas",
+                            copy_tooltip: "Ouvre le canvas et remplace son contenu par ce texte"
+                        },
+                        versions: {
+                            title: "Versions",
+                            manual_group: "Versions enregistrées",
+                            auto_group: "Historique",
+                            restore: "Restaurer",
+                            empty: "Aucune version enregistrée pour le moment.",
+                            source_manual: "Enregistré manuellement",
+                            source_agent: "Après modification par l'agent",
+                            source_restore: "Restauré"
                         }
                     },
                     version: {
@@ -3898,6 +4021,7 @@ i18n
                         last_used: "Останні використані",
                         recommended: "Рекомендовані",
                         chat_header: "Привіт {{user}}, що ти плануєш сьогодні?",
+                        new_chat_with_canvas: "Новий чат із canvas",
                         discover_all: "Переглянути всіх асистентів",
                         explore_badge: "Відкрити",
                         discover_all_description: "Переглядайте та керуйте всіма доступними асистентами.",
@@ -3955,6 +4079,67 @@ i18n
                                 "Сформулюйте ваше останнє повідомлення в новий офіційний текст, який представляє оригінальний зміст у академічному стилі. Цей текст має мати чітку структуру, використовувати точну та фактичну мову та надавати читачеві професійний досвід читання",
                             informal_prompt:
                                 "Сформулюйте ваше останнє повідомлення в новий неофіційний текст, який відображає оригінальний зміст у невимушеному стилі. Цей текст має надавати читачеві розслаблений досвід читання за допомогою легкої та зрозумілої мови та, можливо, гумористичних елементів."
+                        }
+                    },
+                    canvas: {
+                        toggle: "Canvas",
+                        panel_title: "Canvas",
+                        status_writing: "Агент пише…",
+                        limit_warning: "Текст задовгий: сіра частина не читається агентом і не зберігається.",
+                        limit_paste_clipped: "Вставлений текст було обрізано до {{limit}} символів.",
+                        split_divider: "Змінити ширину canvas",
+                        empty_state: "Порожній canvas",
+                        empty_state_hint: "Напишіть тут свою чернетку або доручіть агенту перший текст.",
+                        context_menu: {
+                            open: "Дії з canvas",
+                            insert_into_chat: "Перенести в чат",
+                            agent_revise: "Доручити агенту доопрацювати",
+                            agent_revise_template: "Будь ласка, доопрацюйте наступний виділений текст із canvas:\n\n{{selection}}"
+                        },
+                        toolbar: {
+                            label: "Інструменти canvas",
+                            undo: "Скасувати",
+                            redo: "Повторити",
+                            bold: "Напівжирний",
+                            italic: "Курсив",
+                            heading_1: "Заголовок 1",
+                            heading_2: "Заголовок 2",
+                            heading_3: "Заголовок 3",
+                            bullet_list: "Маркований список",
+                            ordered_list: "Нумерований список",
+                            insert_table: "Вставити таблицю",
+                            table_add_row_above: "Додати рядок вище",
+                            table_add_row_below: "Додати рядок нижче",
+                            table_add_column_before: "Додати стовпець перед",
+                            table_add_column_after: "Додати стовпець після",
+                            table_delete_row: "Видалити рядок",
+                            table_delete_column: "Видалити стовпець",
+                            table_delete_table: "Видалити таблицю",
+                            save_version: "Зберегти версію",
+                            export: "Експорт",
+                            export_md: "Markdown (.md)",
+                            export_pdf: "PDF (.pdf)",
+                            export_word: "Word (.docx)",
+                            export_excel: "Excel (.xlsx)",
+                            export_failed: "Помилка експорту",
+                            export_started: "Експорт створено – файл збережено у ваших завантаженнях.",
+                            export_failed_message: "Не вдалося експортувати в {{target}}. Спробуйте ще раз.",
+                            close: "Закрити canvas"
+                        },
+                        fragment: {
+                            title: "Canvas",
+                            copy: "Копіювати в canvas",
+                            copy_tooltip: "Відкриває canvas і замінює його вміст цим текстом"
+                        },
+                        versions: {
+                            title: "Версії",
+                            manual_group: "Збережені версії",
+                            auto_group: "Історія",
+                            restore: "Відновити",
+                            empty: "Ще немає збережених версій.",
+                            source_manual: "Збережено вручну",
+                            source_agent: "Після редагування агентом",
+                            source_restore: "Відновлено"
                         }
                     },
                     version: {

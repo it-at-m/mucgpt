@@ -25,7 +25,16 @@ import {
     Title1,
     Title3
 } from "@fluentui/react-components";
-import { ArrowResetRegular, ArrowSyncRegular, DismissRegular, Eye24Regular, EyeOff24Regular, People24Regular, PeopleRegular } from "@fluentui/react-icons";
+import {
+    ArrowResetRegular,
+    ArrowSyncRegular,
+    DismissRegular,
+    Eye24Regular,
+    EyeOff24Regular,
+    People24Regular,
+    PeopleRegular,
+    WrenchRegular
+} from "@fluentui/react-icons";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 
@@ -38,12 +47,21 @@ import {
     updateAssistantAdminTagsApi,
     updateAssistantOwnersApi
 } from "../../api/assistant-client";
-import { type AdminTag, type AssistantAuditEvent, type AssistantResponse, type AssistantState, type OwnerDetailsResponse } from "../../api/models";
+import { getAdminTools } from "../../api/core-client";
+import {
+    type AdminTag,
+    type AssistantAuditEvent,
+    type AssistantResponse,
+    type AssistantState,
+    type OwnerDetailsResponse,
+    type ToolInfo
+} from "../../api/models";
 import { ApiError } from "../../api/fetch-utils";
 import { AssistantDetailsSidebar, type AssistantCardData } from "../../components/AssistantDetailsSidebar/AssistantDetailsSidebar";
 import { getPrimaryOwnerDetails, OwnerMetadataLink } from "../../components/OwnerMetadataLink/OwnerMetadataLink";
 import DepartmentTreeDropdown from "../../components/DepartmentTreeDropdown/DepartmentTreeDropdown";
 import { UserContext } from "../layout/UserContextProvider";
+import { AdminToolGrants } from "./AdminToolGrants";
 import styles from "./AdminAssistants.module.css";
 
 const PAGE_SIZE = 50;
@@ -83,6 +101,8 @@ const AdminAssistants = () => {
     const [complianceStatus, setComplianceStatus] = useState<ComplianceStatus | undefined>();
     const [access, setAccess] = useState<AssistantAccessType | undefined>();
     const [departments, setDepartments] = useState<string[]>([]);
+    const [toolGrant, setToolGrant] = useState<string | undefined>();
+    const [restrictedTools, setRestrictedTools] = useState<ToolInfo[]>([]);
     const [sortBy, setSortBy] = useState<NonNullable<AdminAssistantListQueryParams["sort_by"]>>("updated");
     const [sortOrder, setSortOrder] = useState<NonNullable<AdminAssistantListQueryParams["sort_order"]>>("desc");
     const [assistants, setAssistants] = useState<AssistantResponse[]>([]);
@@ -95,6 +115,7 @@ const AdminAssistants = () => {
     const [isDetailsOpen, setIsDetailsOpen] = useState(false);
     const [selectedAssistant, setSelectedAssistant] = useState<AssistantCardData | null>(null);
     const [ownersAssistant, setOwnersAssistant] = useState<AssistantResponse | null>(null);
+    const [toolGrantsAssistant, setToolGrantsAssistant] = useState<AssistantResponse | null>(null);
     const [ownerInput, setOwnerInput] = useState("");
     const [ownerIds, setOwnerIds] = useState<string[]>([]);
     const [isSavingOwners, setIsSavingOwners] = useState(false);
@@ -111,6 +132,7 @@ const AdminAssistants = () => {
         compliance_status: complianceStatus,
         access,
         department: departments[0],
+        tool_grant: toolGrant,
         search: deferredSearch,
         sort_by: sortBy,
         sort_order: sortOrder,
@@ -145,7 +167,22 @@ const AdminAssistants = () => {
             });
 
         return () => controller.abort();
-    }, [access, complianceStatus, departments, deferredSearch, isAdmin, isLoadingUser, navigate, refreshKey, sortBy, sortOrder, state, t]);
+    }, [access, complianceStatus, departments, deferredSearch, isAdmin, isLoadingUser, navigate, refreshKey, sortBy, sortOrder, state, t, toolGrant]);
+
+    useEffect(() => {
+        let cancelled = false;
+        void getAdminTools(i18n.language)
+            .then(response => {
+                if (!cancelled) setRestrictedTools(response.tools.filter(tool => tool.access === "restricted"));
+            })
+            .catch(() => {
+                if (!cancelled) setRestrictedTools([]);
+            });
+
+        return () => {
+            cancelled = true;
+        };
+    }, [i18n.language]);
 
     const loadMore = async () => {
         const currentRequestVersion = requestVersion.current;
@@ -169,11 +206,14 @@ const AdminAssistants = () => {
         setComplianceStatus(undefined);
         setAccess(undefined);
         setDepartments([]);
+        setToolGrant(undefined);
         setSortBy("updated");
         setSortOrder("desc");
     };
 
-    const hasFilters = Boolean(search || state || complianceStatus || access || departments.length > 0 || sortBy !== "updated" || sortOrder !== "desc");
+    const hasFilters = Boolean(
+        search || state || complianceStatus || access || departments.length > 0 || toolGrant || sortBy !== "updated" || sortOrder !== "desc"
+    );
 
     const handleAccessChange = (value: AssistantAccessType | undefined) => {
         setAccess(value);
@@ -322,6 +362,7 @@ const AdminAssistants = () => {
               : complianceStatus === "error"
                 ? t("admin.assistants.compliance_error")
                 : t("admin.assistants.all_compliance");
+    const selectedToolGrantLabel = restrictedTools.find(tool => tool.id === toolGrant)?.name || t("admin.assistants.all_tool_grants");
     const selectedSortByLabel =
         sortBy === "title"
             ? t("admin.assistants.sort_title")
@@ -347,13 +388,32 @@ const AdminAssistants = () => {
                     <section className={styles.filters} aria-label={t("admin.assistants.filters")}>
                         <section className={styles.filterGroup} aria-labelledby="assistant-filter-heading">
                             <Title3 id="assistant-filter-heading">{t("admin.assistants.filters")}</Title3>
-                            <SearchBox
-                                className={styles.search}
-                                value={search}
-                                onChange={(_, data) => setSearch(data.value)}
-                                placeholder={t("admin.assistants.search_placeholder")}
-                                aria-label={t("admin.assistants.search_placeholder")}
-                            />
+                            <div className={styles.primaryFilters}>
+                                <SearchBox
+                                    className={styles.search}
+                                    value={search}
+                                    onChange={(_, data) => setSearch(data.value)}
+                                    placeholder={t("admin.assistants.search_placeholder")}
+                                    aria-label={t("admin.assistants.search_placeholder")}
+                                />
+                                <Dropdown
+                                    value={selectedToolGrantLabel}
+                                    selectedOptions={[toolGrant ?? ""]}
+                                    button={{ children: selectedToolGrantLabel }}
+                                    onOptionSelect={(_, data) => setToolGrant(data.optionValue || undefined)}
+                                    placeholder={t("admin.assistants.all_tool_grants")}
+                                    aria-label={t("admin.assistants.tool_grant_filter_label")}
+                                >
+                                    <Option value="" text={t("admin.assistants.all_tool_grants")}>
+                                        {t("admin.assistants.all_tool_grants")}
+                                    </Option>
+                                    {restrictedTools.map(tool => (
+                                        <Option key={tool.id} value={tool.id} text={tool.name}>
+                                            {tool.name}
+                                        </Option>
+                                    ))}
+                                </Dropdown>
+                            </div>
                             <Dropdown
                                 value={selectedStateLabel}
                                 selectedOptions={[state ?? ""]}
@@ -589,6 +649,13 @@ const AdminAssistants = () => {
                                                         <Button appearance="secondary" icon={<PeopleRegular />} onClick={() => openOwnerDialog(assistant)}>
                                                             {t("admin.assistants.manage_owners", "Manage owners")}
                                                         </Button>
+                                                        <Button
+                                                            appearance="secondary"
+                                                            icon={<WrenchRegular />}
+                                                            onClick={() => setToolGrantsAssistant(assistant)}
+                                                        >
+                                                            {t("admin.assistants.manage_restricted_tools")}
+                                                        </Button>
                                                     </Card>
                                                 );
                                             })}
@@ -681,6 +748,22 @@ const AdminAssistants = () => {
                             </Button>
                             <Button appearance="primary" onClick={() => void saveOwners()} disabled={ownerIds.length === 0 || isSavingOwners}>
                                 {isSavingOwners ? t("common.loading") : t("common.save", "Save")}
+                            </Button>
+                        </DialogActions>
+                    </DialogBody>
+                </DialogSurface>
+            </Dialog>
+            <Dialog open={toolGrantsAssistant !== null} onOpenChange={(_, data) => !data.open && setToolGrantsAssistant(null)}>
+                <DialogSurface className={styles.ownerDialogSurface}>
+                    <DialogBody>
+                        <DialogTitle>{t("admin.assistants.tool_grants_title")}</DialogTitle>
+                        <DialogContent className={styles.ownerDialogContent}>
+                            <Body2>{t("admin.assistants.tool_grants_description")}</Body2>
+                            {toolGrantsAssistant && <AdminToolGrants assistantId={toolGrantsAssistant.id} showHeading={false} />}
+                        </DialogContent>
+                        <DialogActions>
+                            <Button appearance="secondary" onClick={() => setToolGrantsAssistant(null)}>
+                                {t("common.close", "Close")}
                             </Button>
                         </DialogActions>
                     </DialogBody>

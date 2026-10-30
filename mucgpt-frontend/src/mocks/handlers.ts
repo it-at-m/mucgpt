@@ -157,6 +157,7 @@ const CONFIG_RESPONSE: ApplicationConfig = {
 const MOCK_SEED_TIMESTAMP = "2026-01-01T09:00:00.000Z";
 const MOCK_CURRENT_OWNER_ID = "user-mock-123";
 const MOCK_ASSISTANT_SEED: AssistantCreateResponse[] = [];
+const MOCK_TOOL_GRANTS = new Map<string, Array<{ tool_id: string; granted_by: string; granted_at: string; reason?: string }>>();
 
 function buildSeedAssistant(overrides: Partial<AssistantCreateResponse>): AssistantCreateResponse {
     const assistant = buildAssistantCreateResponse(overrides);
@@ -1048,6 +1049,48 @@ export const handlers = [
         const tools = toolsByLanguage[lang] || toolsByLanguage.deutsch;
         return HttpResponse.json({ tools, internal_tool_ids: ["delete", "edit_file", "glob", "grep", "ls", "read_file", "write_file", "write_todos"] });
     }),
+    http.get("/api/backend/v1/admin/tools", ({ request }) => {
+        const lang = new URL(request.url).searchParams.get("lang") || "deutsch";
+        const restrictedTools =
+            lang === "english"
+                ? [
+                      {
+                          id: "jira_search_issues",
+                          name: "Search Issues",
+                          description: "Queries the configured Jira server.",
+                          mcp_source: "jira",
+                          mcp_group: "Jira",
+                          access: "restricted"
+                      },
+                      {
+                          id: "confluence_search",
+                          name: "Search Docs",
+                          description: "Searches accessible Confluence spaces.",
+                          mcp_source: "confluence",
+                          mcp_group: "Confluence",
+                          access: "restricted"
+                      }
+                  ]
+                : [
+                      {
+                          id: "jira_search_issues",
+                          name: "Ticket suchen",
+                          description: "Durchsucht den konfigurierten Jira-Server.",
+                          mcp_source: "jira",
+                          mcp_group: "Jira",
+                          access: "restricted"
+                      },
+                      {
+                          id: "confluence_search",
+                          name: "Doku durchsuchen",
+                          description: "Durchsucht zugängliche Confluence-Bereiche.",
+                          mcp_source: "confluence",
+                          mcp_group: "Confluence",
+                          access: "restricted"
+                      }
+                  ];
+        return HttpResponse.json({ tools: restrictedTools, internal_tool_ids: [] });
+    }),
     http.post("/api/backend/v1/chat/v2/completions", async ({ request }) => {
         const body = (await request.json()) as {
             messages?: { role: string; content: string }[];
@@ -1261,6 +1304,7 @@ export const handlers = [
         const complianceStatus = url.searchParams.get("compliance_status");
         const access = url.searchParams.get("access");
         const department = url.searchParams.get("department")?.trim().toLowerCase();
+        const toolGrant = url.searchParams.get("tool_grant");
         const sortBy = url.searchParams.get("sort_by") || "updated";
         const sortOrder = url.searchParams.get("sort_order") || "desc";
         const offset = Number(url.searchParams.get("offset") || "0");
@@ -1282,6 +1326,7 @@ export const handlers = [
                 matchesAccess &&
                 matchesSearch &&
                 matchesDepartment &&
+                (!toolGrant || (MOCK_TOOL_GRANTS.get(assistant.id) || []).some(grant => grant.tool_id === toolGrant)) &&
                 (!state || version.state === state) &&
                 (!complianceStatus || version.compliance_check_result?.overall_status === complianceStatus)
             );
@@ -1326,6 +1371,37 @@ export const handlers = [
         DYNAMIC_ASSISTANTS[index] = updated;
         saveMockAssistants(DYNAMIC_ASSISTANTS);
         return HttpResponse.json(withMockSubscriptionCount(updated));
+    }),
+
+    http.get("/api/admin/assistant/:id/tool-grants", ({ params }) => {
+        const assistantId = String(params.id);
+        if (!DYNAMIC_ASSISTANTS.some(assistant => assistant.id === assistantId)) return new HttpResponse(null, { status: 404 });
+        return HttpResponse.json(MOCK_TOOL_GRANTS.get(assistantId) || []);
+    }),
+
+    http.put("/api/admin/assistant/:id/tool-grants/:toolId", async ({ params, request }) => {
+        const assistantId = String(params.id);
+        const toolId = String(params.toolId);
+        if (!DYNAMIC_ASSISTANTS.some(assistant => assistant.id === assistantId)) return new HttpResponse(null, { status: 404 });
+        const body = (await request.json()) as { reason?: string };
+        const grants = MOCK_TOOL_GRANTS.get(assistantId) || [];
+        const existing = grants.find(grant => grant.tool_id === toolId);
+        if (existing) return HttpResponse.json(existing);
+        const grant = { tool_id: toolId, granted_by: "demo-admin", granted_at: new Date().toISOString(), reason: body.reason };
+        MOCK_TOOL_GRANTS.set(assistantId, [...grants, grant]);
+        return HttpResponse.json(grant);
+    }),
+
+    http.delete("/api/admin/assistant/:id/tool-grants/:toolId", ({ params }) => {
+        const assistantId = String(params.id);
+        const toolId = String(params.toolId);
+        const grants = MOCK_TOOL_GRANTS.get(assistantId) || [];
+        if (!grants.some(grant => grant.tool_id === toolId)) return new HttpResponse(null, { status: 404 });
+        MOCK_TOOL_GRANTS.set(
+            assistantId,
+            grants.filter(grant => grant.tool_id !== toolId)
+        );
+        return new HttpResponse(null, { status: 204 });
     }),
 
     http.patch("/api/admin/assistant/:id/owners", async ({ params, request }) => {

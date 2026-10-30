@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Response
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -12,11 +12,13 @@ from api.api_models import (
     AssistantResponse,
     AssistantState,
     AssistantStateUpdate,
+    AssistantToolGrantResponse,
+    AssistantToolGrantUpdate,
     ComplianceStatus,
 )
 from api.exceptions import AssistantNotFoundException, VersionConflictException
 from api.routers.users_router import _build_assistant_response_list
-from core.auth import require_admin
+from core.auth import authenticate_user, require_admin
 from core.auth_models import AuthenticationResult
 from core.owner_enrichment import refresh_owner_details
 from database.assistant_repo import AssistantRepository
@@ -37,6 +39,7 @@ async def get_all_assistants(
     compliance_status: ComplianceStatus | None = Query(None),
     access: AssistantAccessType | None = Query(None),
     department: str | None = Query(None),
+    tool_grant: str | None = Query(None),
     search: str | None = Query(None),
     sort_by: AssistantListSortBy = Query("updated"),
     sort_order: AssistantListSortOrder = Query("desc"),
@@ -52,6 +55,7 @@ async def get_all_assistants(
         compliance_status=compliance_status,
         access=access,
         department=department,
+        tool_grant=tool_grant,
         search=search,
         sort_by=sort_by,
         sort_order=sort_order,
@@ -169,6 +173,124 @@ async def update_admin_owners(
     return (
         await _build_assistant_response_list([refreshed_assistant], assistant_repo)
     )[0]
+
+
+@router.get(
+    "/admin/assistant/{assistant_id}/tool-grants",
+    response_model=list[AssistantToolGrantResponse],
+    summary="List restricted tools available to an assistant",
+    tags=["Admin"],
+)
+async def list_tool_grants(
+    assistant_id: str,
+    db: AsyncSession = Depends(get_db_session),
+    user_info: AuthenticationResult = Depends(authenticate_user),
+) -> list[AssistantToolGrantResponse]:
+    """Return active restricted-tool grants to an administrator or assistant owner."""
+    assistant_repo = AssistantRepository(db)
+    if await assistant_repo.get(assistant_id) is None:
+        raise AssistantNotFoundException(assistant_id)
+    if not user_info.is_admin and not await assistant_repo.is_owner(
+        assistant_id, user_info.user_id
+    ):
+        raise HTTPException(
+            status_code=403,
+            detail="Only administrators and assistant owners can view tool grants",
+        )
+    grants = await assistant_repo.list_active_tool_grants(assistant_id)
+    return [AssistantToolGrantResponse.model_validate(grant) for grant in grants]
+
+
+@router.put(
+    "/admin/assistant/{assistant_id}/tool-grants/{tool_id:path}",
+    response_model=AssistantToolGrantResponse,
+    summary="Make a restricted tool available to an assistant",
+    tags=["Admin"],
+)
+async def grant_tool(
+    assistant_id: str,
+    tool_id: str,
+    grant_update: AssistantToolGrantUpdate,
+    db: AsyncSession = Depends(get_db_session),
+    admin: AuthenticationResult = Depends(require_admin),
+) -> AssistantToolGrantResponse:
+    """Grant availability only; assistant owners still choose whether to configure it."""
+    assistant_repo = AssistantRepository(db)
+    if await assistant_repo.get_for_update(assistant_id) is None:
+        raise AssistantNotFoundException(assistant_id)
+
+    grant = await assistant_repo.grant_tool(
+        assistant_id=assistant_id,
+        tool_id=tool_id,
+        granted_by=admin.user_id,
+        reason=grant_update.reason,
+    )
+    response = AssistantToolGrantResponse.model_validate(grant)
+    await db.commit()
+    return response
+
+
+@router.delete(
+    "/admin/assistant/{assistant_id}/tool-grants/{tool_id:path}",
+    status_code=204,
+    summary="Revoke a restricted tool from an assistant",
+    tags=["Admin"],
+)
+async def revoke_tool(
+    assistant_id: str,
+    tool_id: str,
+    db: AsyncSession = Depends(get_db_session),
+    admin: AuthenticationResult = Depends(require_admin),
+) -> Response:
+    """Revoke availability and remove the tool from the latest assistant version."""
+    assistant_repo = AssistantRepository(db)
+    assistant = await assistant_repo.get_for_update(assistant_id)
+    if assistant is None:
+        raise AssistantNotFoundException(assistant_id)
+    if not await assistant_repo.revoke_tool(assistant_id, tool_id, admin.user_id):
+        raise HTTPException(status_code=404, detail="Active tool grant not found")
+
+    latest_version = await assistant_repo.get_latest_version(assistant_id)
+    if latest_version is not None and any(
+        tool.tool_id == tool_id for tool in latest_version.tool_associations
+    ):
+        replacement_version = await assistant_repo.create_assistant_version(
+            assistant=assistant,
+            name=latest_version.name,
+            description=latest_version.description or "",
+            system_prompt=latest_version.system_prompt,
+            creativity=latest_version.creativity,
+            default_model=latest_version.default_model,
+            examples=latest_version.examples or [],
+            quick_prompts=latest_version.quick_prompts or [],
+            tags=latest_version.tags or [],
+            compliance_check_result=latest_version.compliance_check_result,
+            compliance_confirmation=latest_version.compliance_confirmation,
+            state=latest_version.state,
+            state_changed_by=latest_version.state_changed_by,
+            state_change_reason=latest_version.state_change_reason,
+        )
+        for tool in latest_version.tool_associations:
+            if tool.tool_id != tool_id:
+                db.add(
+                    AssistantTool(
+                        assistant_version=replacement_version,
+                        tool_id=tool.tool_id,
+                        config=tool.config,
+                    )
+                )
+        await assistant_repo.record_audit_event(
+            assistant_id=assistant_id,
+            actor_user_id=admin.user_id,
+            actor_name=admin.name,
+            action="tool_revoked",
+            before={"tool_id": tool_id, "version": latest_version.version},
+            after={"tool_id": tool_id, "version": replacement_version.version},
+            assistant_version=replacement_version.version,
+        )
+
+    await db.commit()
+    return Response(status_code=204)
 
 
 @router.patch(

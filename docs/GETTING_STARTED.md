@@ -323,6 +323,11 @@ MCP:
       url: "http://mcpdoc-server:8088/sse"
       forward_token: true
       transport: "sse"
+      access: "public" # default access classification for this source's tools
+      overrides:
+        - name: "search_documents"
+          description: "Search approved internal documents."
+          access: "restricted"
   CACHE_TTL: 43200 # seconds, default: 12h
 ```
 
@@ -335,10 +340,16 @@ MUCGPT_CORE_MCP__CACHE_TTL=43200
 
 - `SOURCES`: Map of MCP source configurations.
   - `<source_id>`: Unique id of one MCP source.
-    - `url`: URL of the MCP endpoint.
-    - `forward_token`: If the OAuth 2.0 JWT token used for authentication should be forwarded to the MCP endpoint.
-    - `transport`: Transport protocol (`"sse"` or `"streamable_http"`), see <https://modelcontextprotocol.io/specification/2025-06-18/basic/transports>
+     - `url`: URL of the MCP endpoint.
+     - `forward_token`: If the OAuth 2.0 JWT token used for authentication should be forwarded to the MCP endpoint.
+     - `transport`: Transport protocol (`"sse"` or `"streamable_http"`), see <https://modelcontextprotocol.io/specification/2025-06-18/basic/transports>
+     - `access`: Default access classification for tools from this source: `"public"` (default) or `"restricted"`. Restricted tools are shown in the administrator tool catalog for assistant availability management.
+     - `overrides`: Optional per-tool metadata overrides. Each entry has a tool `name` and at least one of:
+       - `description`: Replacement description supplied to the agent and frontend.
+       - `access`: `"public"` or `"restricted"`; this takes precedence over the source-level `access` setting.
 - `CACHE_TTL`: Time-to-live of cached MCP tools in seconds (default: 12h).
+
+Use `overrides` for all per-tool MCP metadata. The former `descriptions` setting has been renamed and is no longer supported.
 
 ## 🐋 Run with Docker
 

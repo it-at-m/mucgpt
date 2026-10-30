@@ -554,6 +554,27 @@ class AdminTagsUpdate(BaseModel):
     )
 
 
+class AssistantToolGrantUpdate(BaseModel):
+    """Administrator request to make a restricted tool available to an assistant."""
+
+    reason: str | None = Field(
+        None,
+        max_length=2000,
+        description="Optional reason for granting the restricted tool.",
+    )
+
+
+class AssistantToolGrantResponse(BaseModel):
+    """Active administrator-managed restricted-tool availability for an assistant."""
+
+    tool_id: str
+    granted_by: str
+    granted_at: datetime
+    reason: str | None = None
+
+    model_config = ConfigDict(from_attributes=True)
+
+
 class AdminOwnersUpdate(BaseModel):
     """Complete owner list managed by an administrator."""
 
@@ -635,6 +656,10 @@ class AssistantResponse(BaseModel):
         0,
         description="Number of users subscribed to this assistant",
         example=42,
+    )
+    granted_tool_ids: list[str] | None = Field(
+        None,
+        description="Active restricted-tool grants, returned only to assistant owners and administrators.",
     )
     latest_version: AssistantVersionResponse = Field(
         ..., description="The latest version of the assistant"

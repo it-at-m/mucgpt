@@ -82,6 +82,18 @@ export async function getTools(lang?: string): Promise<ToolListResponse> {
     return handleApiRequest(() => fetch(url, getConfig()), "Failed to get tools");
 }
 
+export async function getToolMetadata(toolIds: string[], lang?: string): Promise<ToolListResponse> {
+    const params = new URLSearchParams();
+    if (lang) params.set("lang", lang);
+    toolIds.forEach(toolId => params.append("tool_id", toolId));
+    return handleApiRequest(() => fetch(`${API_BASE}v1/tools/metadata?${params}`, getConfig()), "Failed to get tool metadata");
+}
+
+export async function getAdminTools(lang?: string): Promise<ToolListResponse> {
+    const url = lang ? `${API_BASE}v1/admin/tools?lang=${encodeURIComponent(lang)}` : `${API_BASE}v1/admin/tools`;
+    return handleApiRequest(() => fetch(url, getConfig()), "Failed to get administrator tool catalog");
+}
+
 export async function chatApi(options: ChatRequest): Promise<Response> {
     const url = API_BASE + "v1/chat/completions";
     return await fetch(url, postConfig(toChatCompletionBody(options)));

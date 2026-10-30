@@ -579,6 +579,7 @@ class TestSettings:
                     "forward_token": True,
                     "forward_auth_override": "Basic dXNlcjpwYXNz",
                     "transport": MCPTransport.STREAMABLE_HTTP.value,
+                    "access": "restricted",
                     "headers": {
                         "x-api-key": "sk-1234",
                         "X-Test": "true",
@@ -602,6 +603,7 @@ class TestSettings:
                 mcp_settings.SOURCES["test"].transport is MCPTransport.STREAMABLE_HTTP
             )
             assert mcp_settings.SOURCES["test"].forward_token
+            assert mcp_settings.SOURCES["test"].access == "restricted"
             assert (
                 mcp_settings.SOURCES["test"].forward_auth_override.get_secret_value()
                 == "Basic dXNlcjpwYXNz"

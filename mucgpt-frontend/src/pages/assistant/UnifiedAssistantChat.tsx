@@ -1,5 +1,5 @@
 import { useRef, useState, useEffect, useContext, useCallback, useReducer, useMemo } from "react";
-import { AskResponse, Assistant, AssistantResponse, ChatResponse, CommunityAssistantSnapshot, DataSource } from "../../api";
+import { AskResponse, Assistant, AssistantResponse, ChatResponse, CommunityAssistantSnapshot, DataSource, ToolInfo } from "../../api";
 import { Answer } from "../../components/Answer";
 import { QuestionInput } from "../../components/QuestionInput";
 import { useTranslation } from "react-i18next";
@@ -19,7 +19,7 @@ import { STORAGE_KEYS } from "../layout/LayoutHelper";
 import { ToolStatus } from "../../utils/ToolStreamHandler";
 import { initialRunActivity, type RunActivity } from "../../utils/agUiActivity";
 import { AssistantStrategy, CommunityAssistantStrategy, DeletedCommunityAssistantStrategy, LocalAssistantStrategy } from "./AssistantStrategy";
-import { chatApi } from "../../api/core-client";
+import { chatApi, getToolMetadata } from "../../api/core-client";
 import { useGlobalToastContext } from "../../components/GlobalToastHandler/GlobalToastContext";
 import { getOwnedCommunityAssistants, getUserSubscriptionsApi, subscribeToAssistantApi, unsubscribeFromAssistantApi } from "../../api/assistant-client";
 import { NotSubscribedDialog } from "../../components/NotSubscribedDialog";
@@ -48,6 +48,9 @@ import styles from "./UnifiedAssistantChat.module.css";
 import { useUnifiedHistory, useUnifiedHistoryRegistration } from "../../components/UnifiedHistory";
 import { downloadAssistantExport, mapAssistantToExportData } from "../../utils/assistant-export";
 import { scrollIntoNearestContainer } from "../../utils/scrollIntoNearestContainer";
+import { mergeRestrictedTools } from "../../utils/tool-catalog";
+import { LanguageContext } from "../../components/LanguageSelector/LanguageContextProvider";
+import { mapContextToBackendLang } from "../../utils/language-utils";
 
 interface UnifiedAssistantChatProps {
     strategy: AssistantStrategy;
@@ -97,6 +100,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
 
     // Context
     const { LLM, setLLM, availableLLMs } = useContext(LLMContext);
+    const { language } = useContext(LanguageContext);
     const { t } = useTranslation();
     const { refreshHistory: refreshUnifiedHistory } = useUnifiedHistory();
     const { setFollowUpActions } = useContext(FollowUpActionContext);
@@ -165,6 +169,29 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
         strategy.canEdit &&
         (strategy instanceof LocalAssistantStrategy || assistantConfig.state === "active" || assistantConfig.state === "pending_legal_review");
     const lockedToolIds = useMemo(() => assistantConfig.tools?.map(tool => tool.id) ?? [], [assistantConfig.tools]);
+    const [lockedToolMetadata, setLockedToolMetadata] = useState<ToolInfo[]>([]);
+
+    useEffect(() => {
+        if (lockedToolIds.length === 0) {
+            setLockedToolMetadata([]);
+            return;
+        }
+
+        let cancelled = false;
+        void getToolMetadata(lockedToolIds, mapContextToBackendLang(language))
+            .then(response => {
+                if (!cancelled) setLockedToolMetadata(response.tools);
+            })
+            .catch(() => {
+                if (!cancelled) setLockedToolMetadata([]);
+            });
+
+        return () => {
+            cancelled = true;
+        };
+    }, [lockedToolIds, language]);
+
+    const assistantTools = tools && mergeRestrictedTools(tools, [...lockedToolMetadata, ...lockedToolIds]);
 
     useEffect(() => {
         if (!isEditMode || isAssistantContentLoading || (canEdit && !isLegacyAssistant)) return;
@@ -876,7 +903,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                         setQuestion={question => setQuestion(question)}
                         selectedTools={selectedTools}
                         setSelectedTools={setSelectedToolsGuarded}
-                        tools={tools}
+                        tools={assistantTools}
                         allowToolSelection={true}
                         lockedToolIds={lockedToolIds}
                         uploadedData={uploadedData}
@@ -921,7 +948,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                 setQuestion={question => setQuestion(question)}
                 selectedTools={selectedTools}
                 setSelectedTools={setSelectedToolsGuarded}
-                tools={tools}
+                tools={assistantTools}
                 allowToolSelection={true}
                 lockedToolIds={lockedToolIds}
                 uploadedData={uploadedData}
@@ -954,7 +981,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
         error,
         selectedTools,
         setSelectedToolsGuarded,
-        tools,
+        assistantTools,
         lockedToolIds,
         draftCacheKey,
         uploadedData,

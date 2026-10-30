@@ -819,9 +819,8 @@ async def get_assistant_configuration_for_use(
     assistant = await assistant_repo.get(id)
     if not assistant:
         raise AssistantNotFoundException(id)
-    if not await assistant.is_allowed_for_user(
-        user_info.department
-    ) and not await assistant_repo.is_owner(id, user_info.user_id):
+    is_owner = await assistant_repo.is_owner(id, user_info.user_id)
+    if not await assistant.is_allowed_for_user(user_info.department) and not is_owner:
         raise NotAllowedToAccessException(id)
 
     latest_version = await assistant_repo.get_latest_version(id)
@@ -997,9 +996,8 @@ async def getAssistant(
         raise AssistantNotFoundException(
             id
         )  # Check if the user is allowed to access this assistant
-    if not await assistant.is_allowed_for_user(
-        user_info.department
-    ) and not await assistant_repo.is_owner(id, user_info.user_id):
+    is_owner = await assistant_repo.is_owner(id, user_info.user_id)
+    if not await assistant.is_allowed_for_user(user_info.department) and not is_owner:
         raise NotAllowedToAccessException(id)
 
     # Get assistant with owners safely
@@ -1031,6 +1029,11 @@ async def getAssistant(
     is_visible: bool = (
         bool(assistant.is_visible) if assistant.is_visible is not None else True
     )
+    granted_tool_ids = None
+    if is_owner or user_info.is_admin:
+        granted_tool_ids = [
+            grant.tool_id for grant in await assistant_repo.list_active_tool_grants(id)
+        ]
 
     # Create explicit response model
     # Build AssistantVersionResponse
@@ -1067,6 +1070,7 @@ async def getAssistant(
         owner_ids=owner_ids,
         owners_detailed=owners_detailed,
         subscriptions_count=getattr(assistant, "subscriptions_count", 0) or 0,
+        granted_tool_ids=granted_tool_ids,
         latest_version=assistant_version_response,
     )
 

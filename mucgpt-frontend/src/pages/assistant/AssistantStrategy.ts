@@ -134,7 +134,8 @@ export class OwnedCommunityAssistantStrategy implements AssistantStrategy {
         const snapshot = mapAssistantResponseToSnapshot(response);
         return {
             ...mapCommunitySnapshotToAssistant(snapshot),
-            owner_ids: response.latest_version.owner_ids || []
+            owner_ids: response.latest_version.owner_ids || [],
+            granted_tool_ids: response.granted_tool_ids || []
         };
     }
 

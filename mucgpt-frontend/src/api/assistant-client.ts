@@ -1,4 +1,4 @@
-import { deleteConfig, getConfig, handleApiRequest, patchConfig, postConfig } from "./fetch-utils";
+import { deleteConfig, getConfig, handleApiRequest, patchConfig, postConfig, putConfig } from "./fetch-utils";
 import {
     Assistant,
     AssistantCreateInput,
@@ -10,6 +10,8 @@ import {
     AdminOwnersUpdateInput,
     AdminTagsUpdateInput,
     AssistantUpdateInput,
+    AssistantToolGrant,
+    AssistantToolGrantUpdateInput,
     CommunityAssistant,
     DirectoryNode
 } from "./models";
@@ -37,6 +39,7 @@ export interface AdminAssistantListQueryParams {
     compliance_status?: ComplianceStatus;
     access?: AssistantAccessType;
     department?: string;
+    tool_grant?: string;
     search?: string;
     sort_by?: AssistantListSortBy;
     sort_order?: AssistantListSortOrder;
@@ -79,6 +82,7 @@ const buildAdminQueryString = (params?: AdminAssistantListQueryParams): string =
     if (params.compliance_status) query.set("compliance_status", params.compliance_status);
     if (params.access) query.set("access", params.access);
     if (params.department?.trim()) query.set("department", params.department.trim());
+    if (params.tool_grant) query.set("tool_grant", params.tool_grant);
     if (params.search?.trim()) query.set("search", params.search.trim());
     if (params.sort_by) query.set("sort_by", params.sort_by);
     if (params.sort_order) query.set("sort_order", params.sort_order);
@@ -174,6 +178,27 @@ export async function updateAssistantStateApi(assistantId: string, input: Assist
 
 export async function updateAssistantAdminTagsApi(assistantId: string, input: AdminTagsUpdateInput): Promise<AssistantResponse> {
     return handleApiRequest(() => fetch(`/api/admin/assistant/${assistantId}/tags`, patchConfig({ ...input })), "Failed to update assistant tags");
+}
+
+export async function getAssistantToolGrantsApi(assistantId: string, options?: AssistantRequestOptions): Promise<AssistantToolGrant[]> {
+    return handleApiRequest(
+        () => fetch(`/api/admin/assistant/${encodeURIComponent(assistantId)}/tool-grants`, { ...getConfig(), signal: options?.signal }),
+        "Failed to get assistant tool grants"
+    );
+}
+
+export async function grantAssistantToolApi(assistantId: string, toolId: string, input: AssistantToolGrantUpdateInput): Promise<AssistantToolGrant> {
+    return handleApiRequest(
+        () => fetch(`/api/admin/assistant/${encodeURIComponent(assistantId)}/tool-grants/${encodeURIComponent(toolId)}`, putConfig({ ...input })),
+        "Failed to grant assistant tool availability"
+    );
+}
+
+export async function revokeAssistantToolApi(assistantId: string, toolId: string): Promise<void> {
+    return handleApiRequest(
+        () => fetch(`/api/admin/assistant/${encodeURIComponent(assistantId)}/tool-grants/${encodeURIComponent(toolId)}`, deleteConfig()),
+        "Failed to revoke assistant tool availability"
+    );
 }
 
 export async function updateAssistantOwnersApi(assistantId: string, input: AdminOwnersUpdateInput): Promise<AssistantResponse> {

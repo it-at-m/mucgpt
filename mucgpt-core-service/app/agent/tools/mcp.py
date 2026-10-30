@@ -316,19 +316,12 @@ class McpLoader:
         source_id: str,
         source_config: MCPSourceConfig,
     ) -> None:
-        """Apply description overrides and group metadata to a wrapped MCP tool in place."""
-        # Attempt to load detailed tool descriptions for this mcp-source
-        # this is optional and only used to enrich the tool metadata with a more detailed description, if available
-        # The idea is that by customizing the mcp tool description files,
-        # we can provide better, e.g. usecase specific, descriptions for the tools
-        # We found that the descriptions provided by the MCP sources themselves are often not sufficient for good performance,
-        # so this is a way to enrich them
-        config_descriptions = source_config.descriptions or []
-        custom_desc_entry = next(
-            (d for d in config_descriptions if d.name == wrapped_tool.name),
+        """Apply configured metadata overrides and group metadata to an MCP tool."""
+        tool_override = next(
+            (o for o in source_config.overrides or [] if o.name == wrapped_tool.name),
             None,
         )
-        custom_desc = custom_desc_entry.description if custom_desc_entry else None
+        custom_desc = tool_override.description if tool_override else None
 
         existing_metadata = dict(getattr(wrapped_tool, "metadata", {}) or {})
         old_description = existing_metadata.pop("description", None)
@@ -348,6 +341,9 @@ class McpLoader:
         elif old_description:
             metadata["description"] = old_description
             wrapped_tool.description = old_description
+
+        if tool_override and tool_override.access:
+            metadata["access"] = tool_override.access
 
         wrapped_tool.metadata = metadata
 

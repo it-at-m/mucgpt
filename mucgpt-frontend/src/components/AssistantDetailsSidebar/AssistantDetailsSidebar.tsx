@@ -211,6 +211,7 @@ interface AssistantDetailsSidebarProps {
     onUnsubscribe?: () => void;
     onMigrateLocal?: () => void;
     hideStartChat?: boolean;
+    supplementaryContent?: ReactNode;
     auditEvents?: AssistantAuditEvent[];
     hasMoreAuditEvents?: boolean;
     isLoadingMoreAuditEvents?: boolean;
@@ -232,6 +233,7 @@ export const AssistantDetailsSidebar = ({
     onUnsubscribe,
     onMigrateLocal,
     hideStartChat,
+    supplementaryContent,
     auditEvents,
     hasMoreAuditEvents = false,
     isLoadingMoreAuditEvents = false,
@@ -437,6 +439,8 @@ export const AssistantDetailsSidebar = ({
                                 </DetailsField>
                             )}
                         </DetailsGroup>
+
+                        {assistant && supplementaryContent}
 
                         {assistant && (
                             <DetailsGroup title={t("components.community_assistants.section_about")}>

@@ -1,6 +1,11 @@
 import pytest
 from fastapi.testclient import TestClient
 
+from api.api_models import ToolInfo, ToolListResponse
+from backend import api_app
+from core.auth import authenticate_user
+from core.auth_models import AuthenticationResult
+
 headers = {
     "Authorization": "Bearer dummy_access_token",
 }
@@ -19,5 +24,92 @@ def test_tools_list(test_client: TestClient):
         "name" in tool
         and "description" in tool
         and "mcp_group" in tool
+        and "access" in tool
         for tool in data["tools"]
     )
+
+
+@pytest.mark.integration
+def test_tools_list_excludes_restricted_tools(
+    test_client: TestClient, monkeypatch: pytest.MonkeyPatch
+):
+    async def list_tools_with_restricted_tool(**_kwargs) -> ToolListResponse:
+        return ToolListResponse(
+            tools=[
+                ToolInfo(id="public", name="Public", description="Public tool"),
+                ToolInfo(
+                    id="restricted",
+                    name="Restricted",
+                    description="Restricted tool",
+                    access="restricted",
+                ),
+            ]
+        )
+
+    monkeypatch.setattr(
+        "api.routers.tools_router.list_tool_metadata", list_tools_with_restricted_tool
+    )
+
+    response = test_client.get("/v1/tools", headers=headers)
+
+    assert response.status_code == 200
+    assert [tool["id"] for tool in response.json()["tools"]] == ["public"]
+
+
+@pytest.mark.integration
+def test_tool_metadata_returns_requested_restricted_tool(
+    test_client: TestClient, monkeypatch: pytest.MonkeyPatch
+):
+    async def list_tools_with_restricted_tool(**_kwargs) -> ToolListResponse:
+        return ToolListResponse(
+            tools=[
+                ToolInfo(id="public", name="Public", description="Public tool"),
+                ToolInfo(
+                    id="restricted",
+                    name="Restricted",
+                    description="Restricted tool",
+                    access="restricted",
+                ),
+            ]
+        )
+
+    monkeypatch.setattr(
+        "api.routers.tools_router.list_tool_metadata", list_tools_with_restricted_tool
+    )
+
+    response = test_client.get("/v1/tools/metadata?tool_id=restricted", headers=headers)
+
+    assert response.status_code == 200
+    assert response.json()["tools"] == [
+        {
+            "id": "restricted",
+            "name": "Restricted",
+            "description": "Restricted tool",
+            "mcp_source": None,
+            "mcp_scope": None,
+            "mcp_group": None,
+            "access": "restricted",
+        }
+    ]
+
+
+@pytest.mark.integration
+def test_admin_tools_list_requires_administrator(test_client: TestClient):
+    response = test_client.get("/v1/admin/tools", headers=headers)
+    assert response.status_code == 403
+
+
+@pytest.mark.integration
+def test_admin_tools_list_returns_tool_access(test_client: TestClient):
+    async def admin_user():
+        return AuthenticationResult(
+            token="dummy_access_token",
+            user_id="test_admin",
+            department="IT-Test-Department",
+            is_admin=True,
+        )
+
+    api_app.dependency_overrides[authenticate_user] = admin_user
+    response = test_client.get("/v1/admin/tools", headers=headers)
+    assert response.status_code == 200
+    assert all("access" in tool for tool in response.json()["tools"])

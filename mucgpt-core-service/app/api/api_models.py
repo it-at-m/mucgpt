@@ -309,6 +309,10 @@ class ToolInfo(BaseModel):
         default=None,
         description="Optional group for grouping tools from this MCP source in the frontend (e.g. jira, confluence).",
     )
+    access: Literal["public", "restricted"] = Field(
+        default="public",
+        description="Whether a tool is generally available or requires an assistant-specific administrator grant.",
+    )
     # Optionally, add more fields like parameters if needed
     model_config = ConfigDict(
         json_schema_extra={
@@ -319,6 +323,7 @@ class ToolInfo(BaseModel):
                 "mcp_source": None,
                 "mcp_scope": None,
                 "mcp_group": None,
+                "access": "public",
             }
         }
     )

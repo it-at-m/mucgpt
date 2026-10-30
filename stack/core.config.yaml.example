@@ -6,7 +6,7 @@
 # General settings
 VERSION: "0.7.1"
 LOG_CONFIG: "logconf.yaml"
-AG_UI_ENABLED: false
+AG_UI_ENABLED: true
 
 # Frontend settings
 ENV_NAME: "MUCGPT🦜"
@@ -96,7 +96,8 @@ MCP:
       transport: "sse"
       forward_token: false
       group: "organization-docs"
-      descriptions:
+      access: "public" # default access classification for this source's tools
+      overrides:
         - name: "fetch_docs"
           description: "Loads information from a specific documentation URL. Always provide the complete URL."
         - name: "list_doc_sources"
@@ -115,7 +116,7 @@ MCP:
         x-litellm-api-key: "<your-api-key>"
       group: "name"
       # Example tool description overrides.
-      descriptions:
+      overrides:
         - name: "tool-name"
           description: "detailed tool description"
         # ...

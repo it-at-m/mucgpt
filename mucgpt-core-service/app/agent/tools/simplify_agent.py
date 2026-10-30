@@ -218,7 +218,6 @@ Revised Text:
 """,
 )
 
-MAX_REVISIONS = 5
 GENERATE_SECTION = "SIMPLIFY_GENERATE"
 CRITIQUE_SECTION = "SIMPLIFY_CRITIQUE"
 REFINE_SECTION = "SIMPLIFY_REFINE"
@@ -274,11 +273,12 @@ class SimplifyAgent:
                 "end": END,
             },
         )
-        workflow.add_edge("refine", "critique")
+        # One quality check and at most one refinement keep reasoning-model latency bounded.
+        workflow.add_edge("refine", END)
 
         return workflow.compile()
 
-    def _generate_node(self, state: ReflectiveSimplificationState):
+    async def _generate_node(self, state: ReflectiveSimplificationState):
         self.logger.info("Generating initial simplification...")
 
         prompt = SIMPLIFY_PROMPT.format(text=state["original_text"])
@@ -287,16 +287,16 @@ class SimplifyAgent:
             HumanMessage(content=prompt),
         ]
 
-        llm = self.model.model_copy(update={"streaming": True})
-
         # Stream the response
         self._start_stream_section(
             section_name=GENERATE_SECTION, revision=state.get("revisions", 0)
         )
         response_content = ""
-        for chunk in llm.stream(messages):
+        async for chunk in self.model.astream(messages):
             if isinstance(chunk, BaseMessage):
-                result = chunk.content
+                result = chunk.text
+                if not result:
+                    continue
                 response_content += result
                 self._stream_update(result, ToolStreamState.APPEND)
 
@@ -307,7 +307,7 @@ class SimplifyAgent:
             "simplified_text": response_content.strip(),
         }
 
-    def _critique_node(self, state: ReflectiveSimplificationState):
+    async def _critique_node(self, state: ReflectiveSimplificationState):
         self.logger.info("Critiquing simplified text...")
 
         prompt = CRITIQUE_PROMPT.format(
@@ -316,17 +316,15 @@ class SimplifyAgent:
             rules=SIMPLFIY_RULES,
         )
 
-        critique_llm = self.model.model_copy(
-            update={"streaming": True}
-        )
-
         critique = ""
         self._start_stream_section(
             section_name=CRITIQUE_SECTION, revision=state.get("revisions", 0)
         )
-        for chunk in critique_llm.stream([HumanMessage(content=prompt)]):
+        async for chunk in self.model.astream([HumanMessage(content=prompt)]):
             if isinstance(chunk, BaseMessage):
-                result = chunk.content
+                result = chunk.text
+                if not result:
+                    continue
                 critique += result
                 self._stream_update(result, ToolStreamState.APPEND)
         self._end_stream_section(section_name=CRITIQUE_SECTION)
@@ -348,23 +346,22 @@ class SimplifyAgent:
             "revisions": state.get("revisions", 0) + 1,
         }
 
-    def _refine_node(self, state: ReflectiveSimplificationState):
+    async def _refine_node(self, state: ReflectiveSimplificationState):
         self.logger.info("Refining text based on critique...")
         prompt = REFINE_PROMPT.format(
             simplified_text=state["simplified_text"],
             critique=state["critique"],
         )
 
-        refine_llm = self.model.model_copy(
-            update={"streaming": True}
-        )
         self._start_stream_section(
             section_name=REFINE_SECTION, revision=state.get("revisions")
         )
         refined_text = ""
-        for chunk in refine_llm.stream([HumanMessage(content=prompt)]):
+        async for chunk in self.model.astream([HumanMessage(content=prompt)]):
             if isinstance(chunk, BaseMessage):
-                result = chunk.content
+                result = chunk.text
+                if not result:
+                    continue
                 refined_text += result
                 self._stream_update(result, ToolStreamState.APPEND)
         self._end_stream_section(section_name=REFINE_SECTION)
@@ -375,22 +372,14 @@ class SimplifyAgent:
 
     def _should_refine(self, state: ReflectiveSimplificationState):
         critique = state["critique"]
-        revisions = state["revisions"]
 
         if "no issues found" in critique.lower():
             self.logger.info("Critique found no issues. Ending.")
             return "end"
-        if revisions >= MAX_REVISIONS:
-            self.logger.warning("Max revisions reached. Ending.")
-            self._stream_update(
-                f"\n\nMaximale Anzahl an Überarbeitungen ({MAX_REVISIONS}) erreicht.",
-                ToolStreamState.APPEND,
-            )
-            return "end"
         self.logger.info("Critique found issues. Refining...")
         return "refine"
 
-    def run(self, original_text: str) -> str:
+    async def run(self, original_text: str) -> str:
         self._stream_update(
             "**Vereinfachungsprozess gestartet.**", ToolStreamState.STARTED
         )
@@ -404,14 +393,14 @@ class SimplifyAgent:
         }
 
         try:
-            final_state = self.graph.invoke(initial_state)
+            final_state = await self.graph.ainvoke(initial_state)
             self._stream_update(
                 "\n\n**Textvereinfachung abgeschlossen.**", ToolStreamState.ENDED
             )
             return final_state["simplified_text"]
         except Exception as e:
             error_message = f"Fehler während der Vereinfachung: {str(e)}"
-            self.logger.error(error_message)
+            self.logger.exception(error_message)
             self._stream_update(
                 f"\n\nFehler beim Vereinfachen: {error_message}",
                 ToolStreamState.ENDED,

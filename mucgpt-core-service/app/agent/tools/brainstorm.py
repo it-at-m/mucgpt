@@ -1,13 +1,15 @@
 import logging
 
+from langchain.tools import ToolRuntime
 from langchain_core.messages import BaseMessage, HumanMessage, SystemMessage
 from langchain_core.prompts import PromptTemplate
 from langchain_core.runnables.base import RunnableSerializable
 from langchain_core.tools import tool
 from langchain_core.tools.base import BaseTool
-from langgraph.config import get_stream_writer
 from langgraph.types import StreamWriter
 
+from agent.middleware import RequestContext
+from agent.tools.model import configure_tool_model
 from agent.tools.spec import LocalTool
 from agent.tools.tool_chunk import ToolStreamChunk, ToolStreamState
 
@@ -104,7 +106,7 @@ def cleanup_mindmap(mindmap_result: str) -> str:
     return text
 
 
-def brainstorming(
+async def brainstorming(
     topic: str,
     context: str | None,
     model: RunnableSerializable,
@@ -161,22 +163,16 @@ def brainstorming(
         user_msg = HumanMessage(content=mindmap_prompt)
         msgs: list[BaseMessage] = [system_msg, user_msg]
 
-        llm = model.model_copy(update={"streaming": False})
         response = ""
-        for chunk in llm.stream(msgs):
+        async for chunk in model.astream(msgs):
             # Some models may stream plain strings, others message objects
             if isinstance(chunk, BaseMessage):
-                result = chunk.content
+                result = chunk.text
             else:
                 result = str(chunk)
+            if not result:
+                continue
             response += result
-            writer(
-                ToolStreamChunk(
-                    state=ToolStreamState.APPEND,
-                    content=result,
-                    tool_name="Brainstorming",
-                ).model_dump_json()
-            )
         mindmap = cleanup_mindmap(response)
         writer(
             ToolStreamChunk(
@@ -187,7 +183,7 @@ def brainstorming(
         )
         return mindmap
     except Exception as e:
-        logger.error("Brainstorm tool error: %s", str(e))
+        logger.exception("Brainstorm tool error: %s", str(e))
         return f"Error brainstorming for '{topic_clean}'"
 
 
@@ -198,13 +194,14 @@ def make_brainstorm_tool(
         "Brainstorming",
         description=BRAINSTORMING_SUMMARY,
     )
-    def brainstorm_tool(
+    async def brainstorm_tool(
         topic: str,
+        runtime: ToolRuntime[RequestContext],
         context: str | None = None,
         existing_mindmap: str | None = None,
         feedback: str | None = None,
     ):
-        writer = get_stream_writer()
+        writer = runtime.stream_writer
         if existing_mindmap:
             writer(
                 ToolStreamChunk(
@@ -221,8 +218,9 @@ def make_brainstorm_tool(
                     tool_name="Brainstorming",
                 ).model_dump_json()
             )
-        result = brainstorming(
-            topic, context, model, logger, writer, existing_mindmap, feedback
+        llm = configure_tool_model(model, "Brainstorming", runtime)
+        result = await brainstorming(
+            topic, context, llm, logger, writer, existing_mindmap, feedback
         )
         writer(
             ToolStreamChunk(

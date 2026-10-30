@@ -28,11 +28,20 @@ configured local tool plus whatever `McpLoader` returns for this user, and
 filters by `enabled_tools` if given. It's constructed fresh per request in
 `init_app.py::init_agent`.
 
-`_bind_model(tool_name)` binds a `MUCGPT_TOOL_NAME:<id>` tag onto the model
-before handing it to a tool factory, purely so Langfuse traces show which
-tool made a given LLM call (Brainstorming and Simplify call the LLM
-themselves, independent of the main agent loop). See "Known gap" below for
-why this is the *only* tag it adds.
+The factories receive the unbound model. When a tool runs, `model.py` uses
+`ToolRuntime.context` to select the current request's model and bind its user,
+temperature, reasoning effort, and extra body. It preserves request metadata
+and adds a `MUCGPT_TOOL_NAME:<id>` tag. Settings pass through
+`ModelRegistry.normalize_model_settings`, just like the main agent's calls,
+so reasoning defaults and supported parameters also apply inside local tools.
+
+Both tools consume async model streams internally. Nested calls are tagged
+`internal` so their text is excluded from user-facing assistant streams.
+Brainstorming's custom events through `ToolRuntime.stream_writer` contain status
+updates and the completed mind map, not partial model output. Simplify retains
+its existing section-based custom progress events.
+Simplify performs one generation, one quality
+check, and at most one refinement (two or three model calls).
 
 **`tool_metadata.py` - `list_tool_metadata`**
 Powers `GET /v1/tools`. For local tools this is pure data lookup -
@@ -89,13 +98,6 @@ pick it up automatically.
   (`init_app.py::init_agent`) never passed them, so this was already dead in
   practice.
 
-  **Known gap / future work:** if Brainstorming/Simplify's own LLM calls
-  should carry the user/assistant tag (today only the main reasoning model
-  does, via `react_agent.py::_prepare_run`), the real fix is to compute
-  `llm_user`/`assistant_id` earlier - in `chat_router.py`, before calling
-  `init_agent()` - bind them once there, and pass the already-bound model
-  into `ToolCollection`. That would also let you delete the duplicate
-  `llm_user`/`_extract_department_prefix` derivation in `agent_executor.py`
-  and the redundant per-turn re-bind in `react_agent.py::_prepare_run`. Not
-  done here - it touches the request pipeline outside `agent/tools/`, and
-  wasn't in scope for this pass.
+  Local tools now receive that request data at execution time through
+  `ToolRuntime.context`, so their nested model calls no longer depend on
+  construction-time bindings.

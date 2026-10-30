@@ -1,5 +1,7 @@
 from typing import Any
 
+from anyio import CancelScope
+
 from agent.agent_executor import MUCGPTAgentExecutor
 from agent.deep_agent import MUCGPTAgent
 from agent.tools.tools import ToolCollection
@@ -16,6 +18,7 @@ from core.cache import RedisCache
 from core.lf_prompts import PromptPool
 from core.logtools import getLogger
 from core.persistance_helpers import PersistanceHelpers
+from core.virtual_file_system_helper import FileStoreManager
 
 logger = getLogger()
 
@@ -65,8 +68,14 @@ async def warmup_app() -> None:
     # init redis
     await RedisCache.init_redis()
 
-    # checkpointer and postgres connection
-    await PersistanceHelpers.init(settings)
+    # Independent PostgreSQL resources for conversation state and documents.
+    try:
+        await PersistanceHelpers.init(settings)
+        await FileStoreManager.init(settings)
+    except BaseException:
+        with CancelScope(shield=True):
+            await destroy_app()
+        raise
     logger.info("App context warmed up")
 
 
@@ -78,6 +87,14 @@ async def destroy_app() -> None:
         await redis.aclose()
     except RuntimeError:
         pass
+    except Exception:
+        logger.exception("Failed to close RedisCache")
+
+    # close document store independently of conversation persistence
+    try:
+        await FileStoreManager.close()
+    except Exception:
+        logger.exception("Failed to close FileStoreManager")
 
     # close postgres connection
     try:

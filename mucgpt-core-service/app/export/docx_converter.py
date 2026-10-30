@@ -102,13 +102,91 @@ def _walk_inline(paragraph: Any, element: Any, **fmt: bool) -> None:
 
 def _render_list(doc: Any, tag: Tag, *, ordered: bool, level: int = 1) -> None:
     style = _LIST_STYLES[(ordered, min(level, 3))]
+    # Each ordered list gets its own numbering instance: the Word list styles
+    # all point at one shared per-document counter, so without an override the
+    # lists continue each other (2., 3., …) instead of restarting. Nested
+    # lists at deeper style levels restart too, which matches their fresh
+    # indentation.
+    numbering_id = (
+        _new_list_number(doc, start=_ordered_list_start(tag)) if ordered else None
+    )
     for item in tag.find_all("li", recursive=False):
-        paragraph = doc.add_paragraph(style=style)
+        paragraph = _add_list_paragraph(doc, style, numbering_id, level)
+        # Content that follows a nested list must not merge into the parent
+        # item's paragraph; it becomes an unnumbered continuation instead.
+        past_nested_list = False
         for child in item.children:
             if isinstance(child, Tag) and child.name in {"ul", "ol"}:
                 _render_list(doc, child, ordered=child.name == "ol", level=level + 1)
+                past_nested_list = True
             else:
+                if past_nested_list:
+                    paragraph = doc.add_paragraph(style=style)
+                    _suppress_numbering(paragraph)
+                    past_nested_list = False
                 _walk_inline(paragraph, child)
+
+
+def _ordered_list_start(tag: Tag) -> int:
+    raw = tag.get("start")
+    try:
+        return max(int(raw), 1) if raw is not None else 1
+    except (TypeError, ValueError):
+        return 1
+
+
+def _add_list_paragraph(
+    doc: Any, style: str, numbering_id: int | None, level: int
+) -> Any:
+    paragraph = doc.add_paragraph(style=style)
+    if numbering_id is not None:
+        container = paragraph._p.get_or_add_pPr().get_or_add_numPr()
+        container.get_or_add_ilvl().val = level - 1
+        container.get_or_add_numId().val = numbering_id
+    return paragraph
+
+
+def _suppress_numbering(paragraph: Any) -> None:
+    container = paragraph._p.get_or_add_pPr().get_or_add_numPr()
+    container.get_or_add_numId().val = 0
+
+
+def _new_list_number(doc: Any, start: int) -> int | None:
+    """Add a numbering instance referencing the `List Number` abstract
+    definition; returns its numId or None when the template lacks it."""
+    try:
+        numbering = doc.part.numbering_part.element
+        style_numbering = (
+            doc.styles["List Number"].element.find(qn("w:pPr")).find(qn("w:numPr"))
+        )
+        style_num_id = int(style_numbering.find(qn("w:numId")).get(qn("w:val")))
+        abstract_id = (
+            numbering.find(f'{qn("w:num")}[@{qn("w:numId")}="{style_num_id}"]')
+            .find(qn("w:abstractNumId"))
+            .get(qn("w:val"))
+        )
+        new_id = (
+            max(
+                (int(el.get(qn("w:numId"))) for el in numbering.findall(qn("w:num"))),
+                default=0,
+            )
+            + 1
+        )
+    except (AttributeError, TypeError, ValueError):
+        return None
+    instance = OxmlElement("w:num")
+    instance.set(qn("w:numId"), str(new_id))
+    reference = OxmlElement("w:abstractNumId")
+    reference.set(qn("w:val"), abstract_id)
+    instance.append(reference)
+    override = OxmlElement("w:lvlOverride")
+    override.set(qn("w:ilvl"), "0")
+    restart = OxmlElement("w:startOverride")
+    restart.set(qn("w:val"), str(start))
+    override.append(restart)
+    instance.append(override)
+    numbering.append(instance)
+    return new_id
 
 
 def _render_blockquote(doc: Any, tag: Tag) -> None:

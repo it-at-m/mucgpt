@@ -5,14 +5,15 @@ from pydantic import BaseModel, Field
 from export.docx_converter import convert_docx
 from export.xlsx_converter import convert_xlsx
 
-# Matches the frontend editor input limit; larger documents are clipped there.
-_MAX_CONTENT_CHARS = 512 * 1024
+# The frontend editor limit counts text characters; the serialized markdown and
+# HTML carry markup and separators on top. Only `html` is consumed, so the caps
+# just bound the request: 4× the editor limit is ample headroom.
+_MAX_CONTENT_CHARS = 4 * 512 * 1024
 
 
 class ExportRequest(BaseModel):
     markdown: str = Field(max_length=_MAX_CONTENT_CHARS)
     html: str = Field(max_length=_MAX_CONTENT_CHARS)
-    doc_json: str = Field(max_length=_MAX_CONTENT_CHARS)
     target: Literal["pdf", "docx", "xlsx"]
 
 

@@ -104,16 +104,24 @@ def test_xlsx_neutralizes_formula_injection() -> None:
 
 @pytest.mark.unit
 def test_export_request_rejects_oversized_fields() -> None:
-    for field in ("markdown", "html", "doc_json"):
+    for field in ("markdown", "html"):
         request = {
             "markdown": "m",
             "html": "h",
-            "doc_json": "{}",
             "target": "pdf",
-            field: "x" * (512 * 1024 + 1),
+            field: "x" * (4 * 512 * 1024 + 1),
         }
         with pytest.raises(ValidationError):
             ExportRequest(**request)
+
+
+@pytest.mark.unit
+def test_export_request_ignores_unknown_fields() -> None:
+    """Older frontends may still send doc_json; nothing consumes it."""
+    request = ExportRequest(
+        markdown="m", html="h", target="pdf", doc_json='{"type":"doc"}'
+    )
+    assert request.markdown == "m"
 
 
 @pytest.mark.unit
@@ -126,7 +134,7 @@ def test_dispatch_returns_mimetype_and_filename(
     monkeypatch.setattr("export.converter.convert_docx", lambda md: b"docx")
     monkeypatch.setattr("export.converter.convert_xlsx", lambda html: b"xlsx")
 
-    request = ExportRequest(markdown="m", html="h", doc_json="{}", target="pdf")
+    request = ExportRequest(markdown="m", html="h", target="pdf")
     data, mimetype, filename = convert_export(request)
     assert data == b"pdf"
     assert mimetype == "application/pdf"
@@ -233,6 +241,63 @@ def test_docx_code_block_preserves_line_breaks() -> None:
     assert paragraph.runs[0].font.name == "Courier New"
 
 
+def _paragraph_num_id(paragraph) -> str | None:
+    from docx.oxml.ns import qn
+
+    num = paragraph._p.get_or_add_pPr().numPr
+    if num is None:
+        return None
+    num_id = num.numId
+    return num_id.get(qn("w:val")) if num_id is not None else None
+
+
+@pytest.mark.unit
+def test_docx_ordered_lists_restart_their_numbering() -> None:
+    """The Word list styles share one per-document counter; each <ol> must get
+    its own numbering instance so it restarts instead of continuing."""
+    document = _load_docx(
+        convert_docx(
+            "<ol><li>eins</li><li>zwei</li></ol><p>Pause</p><ol><li>drei</li></ol>"
+        )
+    )
+    first = document.paragraphs[0]
+    second = document.paragraphs[3]
+    assert first.style.name == second.style.name == "List Number"
+    first_id, second_id = _paragraph_num_id(first), _paragraph_num_id(second)
+    assert first_id is not None and second_id is not None
+    assert first_id != second_id
+
+
+@pytest.mark.unit
+def test_docx_ordered_list_honours_start_attribute() -> None:
+    from docx.oxml.ns import qn
+
+    document = _load_docx(convert_docx('<ol start="4"><li>vier</li></ol>'))
+    (paragraph,) = document.paragraphs
+    num_id = _paragraph_num_id(paragraph)
+    assert num_id is not None
+    numbering = document.part.numbering_part.element
+    instance = numbering.find(f'{qn("w:num")}[@{qn("w:numId")}="{num_id}"]')
+    start_override = instance.find(f"{qn('w:lvlOverride')}/{qn('w:startOverride')}")
+    assert start_override.get(qn("w:val")) == "4"
+
+
+@pytest.mark.unit
+def test_docx_content_after_nested_list_starts_new_paragraph() -> None:
+    """A nested list must not swallow the item's trailing content into the
+    paragraph rendered before it."""
+    document = _load_docx(
+        convert_docx(
+            "<ul><li><p>vorher</p><ul><li><p>kind</p></li></ul><p>nachher</p></li></ul>"
+        )
+    )
+    texts = [p.text for p in document.paragraphs]
+    assert "vorher" in texts and "kind" in texts and "nachher" in texts
+    assert "vorhernachher" not in texts
+    (after,) = [p for p in document.paragraphs if p.text == "nachher"]
+    assert after.style.name == "List Bullet"
+
+
 @pytest.mark.unit
 def test_docx_table_colspan_merges_cells() -> None:
     html = (
@@ -299,6 +364,33 @@ def test_pdf_url_fetcher_allows_only_data_uris() -> None:
     ):
         with pytest.raises(ValueError):
             _url_fetcher.fetch(url)
+
+
+@pytest.mark.unit
+@pytest.mark.skipif(
+    not _weasyprint_available(), reason="weasyprint system libs not available"
+)
+def test_pdf_conversion_uses_the_restricted_fetcher(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Pin the wiring: the restricted fetcher must be passed on the
+    convert_pdf render path itself, not only exercised in a side render."""
+    import export.pdf_converter as pdf_converter
+    from export.pdf_converter import _url_fetcher, convert_pdf
+
+    rendered: dict[str, object] = {"url_fetcher": None}
+
+    class SpyHTML:
+        def __init__(self, **kwargs):
+            rendered.update(kwargs)
+
+        def write_pdf(self) -> bytes:
+            return b"%PDF-"
+
+    monkeypatch.setattr(pdf_converter, "HTML", SpyHTML)
+
+    assert convert_pdf("<p>text</p>") == b"%PDF-"
+    assert rendered["url_fetcher"] is _url_fetcher
 
 
 @pytest.mark.integration

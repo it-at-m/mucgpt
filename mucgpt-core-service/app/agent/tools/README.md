@@ -3,11 +3,11 @@
 This folder builds the tools the agent can call and the metadata the frontend
 uses to let a user pick which tools are enabled. There are two kinds of tools:
 
-- **Local tools** - defined in this repo (`brainstorm.py`, `simplify.py`,
-  `internet_search.py`). Adding one is a code change.
+- **Local tools** - defined in this repo (`brainstorm.py`, `simplify.py`).
+  Adding one is a code change.
 - **MCP tools** - loaded at runtime from configured MCP servers (`mcp.py`).
   Adding one is a config change (`config.yaml` / `MUCGPT_CORE_MCP__...`), not
-  a code change.
+  a code change. Internet search is provided through an MCP server.
 
 ## The pieces
 
@@ -21,8 +21,8 @@ tool picker), `needs_model` (does the factory need a bound LLM?),
 be reported without constructing the tool - see "State schema" below).
 
 **`tools.py` - `LOCAL_TOOLS` and `ToolCollection`**
-`LOCAL_TOOLS` is the list of all local tools (`[brainstorm.TOOL, simplify.TOOL,
-internet_search.TOOL]`). `ToolCollection` is a thin, per-request object:
+`LOCAL_TOOLS` is the list of all local tools (`[brainstorm.TOOL, simplify.TOOL]`).
+`ToolCollection` is a thin, per-request object:
 `ToolCollection(model).get_tools(user_info, enabled_tools=None)` builds every
 configured local tool plus whatever `McpLoader` returns for this user, and
 filters by `enabled_tools` if given. It's constructed fresh per request in
@@ -38,8 +38,7 @@ why this is the *only* tag it adds.
 Powers `GET /v1/tools`. For local tools this is pure data lookup -
 `LocalTool.display(lang)` returns the metadata dict for a language, falling
 back to `"english"` if that tool has no translation for the requested
-language yet (this affects `InternetSearch` for French/Bairisch/Ukrainisch
-today, which only has German/English text). For MCP tools it calls
+language yet. For MCP tools it calls
 `McpLoader.load_mcp_tools` (the exact same call `get_tools` makes) and reads
 each tool's own `name`/`description`/`.metadata`. Nothing here constructs a
 local tool instance or needs a model - the old version did, via a `DummyModel`

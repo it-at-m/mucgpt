@@ -6,7 +6,7 @@ from langchain_core.tools.base import BaseTool
 
 from agent.state_models.default_state import DefaultAgentState
 from agent.state_models.registry import registry as AGENT_STATE_SCHEMA_REGISTRY
-from agent.tools import brainstorm, internet_search, simplify
+from agent.tools import brainstorm, simplify
 from agent.tools.mcp import McpLoader
 from agent.tools.spec import LocalTool
 from core.auth import AuthenticationResult
@@ -15,7 +15,7 @@ from core.logtools import getLogger
 logger = getLogger(name="mucgpt-core-tools-schema")
 
 # Registering a new local tool: add its `TOOL = LocalTool(...)` here.
-LOCAL_TOOLS: list[LocalTool] = [brainstorm.TOOL, simplify.TOOL, internet_search.TOOL]
+LOCAL_TOOLS: list[LocalTool] = [brainstorm.TOOL, simplify.TOOL]
 
 
 def _metadata_value(metadata, key: str, default=None):

@@ -40,6 +40,16 @@ export type DataSource = {
     metadata?: Record<string, string | number | boolean | null | undefined>;
 };
 
+/** Canvas document state sent with each turn when the canvas is open. */
+export type CanvasState = {
+    /** Full GFM markdown document */
+    content: string;
+    /** Serialized markdown of the current selection, if any */
+    selection: string | null;
+    /** Caret position as character offset in the markdown document (selection start when text is selected) */
+    cursor?: number | null;
+};
+
 export type ChatRequest = {
     history: ChatTurn[];
     creativity?: string;
@@ -54,6 +64,7 @@ export type ChatRequest = {
     /** False runs a stateless chat that is not stored server-side (e.g. assistant previews). */
     persist?: boolean;
     data_sources?: DataSource[];
+    canvas?: CanvasState | null;
 };
 
 export type AssistantDraftRequest = {

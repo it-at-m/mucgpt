@@ -1,0 +1,6 @@
+/* Floating selection menu; absolute positioning is intentional (it overlays the document). */
+.wrapper {
+    position: absolute;
+    z-index: 4;
+    width: max-content;
+}

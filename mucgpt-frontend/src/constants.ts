@@ -71,3 +71,9 @@ export const COMMUNITY_ASSISTANT_STORE: IndexedDBStorage = {
     objectStore_name: "assistants",
     db_version: 1
 };
+
+export const CANVAS_STORE: IndexedDBStorage = {
+    db_name: "MUCGPT-CANVAS",
+    objectStore_name: "canvas",
+    db_version: 1
+};

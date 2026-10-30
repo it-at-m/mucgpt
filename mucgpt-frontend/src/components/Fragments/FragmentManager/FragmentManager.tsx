@@ -1,5 +1,6 @@
 import { ReactNode } from "react";
 import { BrainstormFragment } from "../BrainstormFragment/BrainstormFragment";
+import { CanvasFragment } from "../CanvasFragment/CanvasFragment";
 import { SimplifiedTextFragment } from "../SimplifiedTextFragment/SimplifiedTextFragment";
 import { FragmentRegistry } from "../FragmentRegistry";
 
@@ -13,14 +14,21 @@ FragmentRegistry.register({
     type: "brainstorming",
     title: "Brainstorming",
     identifiers: ["mucgptbrainstorming", "mucgpt-brainstorming"],
-    component: BrainstormFragment as any
+    component: BrainstormFragment
 });
 
 FragmentRegistry.register({
     type: "simplify",
     title: "Leichte Sprache",
     identifiers: ["einfachesprache", "leichtesprache", "mucgptsimplify", "mucgpt-simplify"],
-    component: SimplifiedTextFragment as any
+    component: SimplifiedTextFragment
+});
+
+FragmentRegistry.register({
+    type: "canvas",
+    title: "Canvas",
+    identifiers: ["mucgptcanvas", "mucgpt-canvas"],
+    component: CanvasFragment
 });
 
 export const FragmentManager = ({ content, fragmentType }: FragmentManagerProps): ReactNode => {

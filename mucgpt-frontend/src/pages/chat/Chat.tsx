@@ -11,7 +11,7 @@ import { CHAT_STORE, CREATIVITY_LOW } from "../../constants";
 import { DBMessage, StorageService } from "../../service/storage";
 import { AnswerList } from "../../components/AnswerList/AnswerList";
 import { FollowUpActionContext } from "../../components/FollowUpAction";
-import { getChatReducer, handleRegenerate, handleRollback, makeApiRequest } from "../page_helpers";
+import { CanvasWiring, getChatReducer, handleRegenerate, handleRollback, makeApiRequest } from "../page_helpers";
 import { getConversationActionCapabilities } from "../../utils/conversationActions";
 import { STORAGE_KEYS } from "../layout/LayoutHelper";
 import { ToolStatus } from "../../utils/ToolStreamHandler";
@@ -25,6 +25,8 @@ import { ChatSettingsDialog } from "../../components/ChatSettingsDialog/ChatSett
 import { UploadedData, createUploadedDataFromContent } from "../../components/ContextManagerDialog/ContextManagerDialog";
 import { getStoredParsedDocuments } from "../../service/parsedDocumentStorage";
 import { useToolStatusToasts } from "../../hooks/useToolStatusToasts";
+import { useCanvasController } from "../../hooks/useCanvasController";
+import { CanvasSplitView } from "../../components/Canvas/CanvasSplitView";
 import { useUnifiedHistory, useUnifiedHistoryRegistration } from "../../components/UnifiedHistory";
 import { useLocation, useNavigate } from "react-router-dom";
 import { UserContext } from "../layout/UserContextProvider";
@@ -32,6 +34,7 @@ import { useConfigContext } from "../../context/ConfigContext";
 import { AgUiEventDrawer, type AgUiEventLogEntry } from "../../components/AgUiEventDrawer/AgUiEventDrawer";
 import { scrollIntoNearestContainer } from "../../utils/scrollIntoNearestContainer";
 import { loadConversation } from "../../service/conversationHistory";
+import { CANVAS_TOOL_IDS, setCopyIntoCanvasHandler } from "../../utils/canvasStream";
 
 const requestPersist = true;
 const conversationActions = getConversationActionCapabilities(requestPersist);
@@ -141,6 +144,9 @@ const Chat = () => {
 
     // Destructuring for easier access
     const { answers, creativity, systemPrompt, active_chat, allChats } = chatState;
+    const canvas = useCanvasController(active_chat);
+    const canvasRef = useRef(canvas);
+    canvasRef.current = canvas;
     const activeChatName = useMemo(() => allChats.find(chat => chat.id === active_chat)?.name, [active_chat, allChats]);
 
     // Picked once per mount so the greeting doesn't change while the empty state is visible.
@@ -267,6 +273,71 @@ const Chat = () => {
         )
     );
 
+    // Canvas ↔ chat wiring: the request carries the current
+    // canvas state, and stream events + run lifecycle are routed into the editor.
+    // The ref keeps the wiring stable while the controller identity changes.
+    const canvasWiring = useMemo<CanvasWiring>(() => {
+        let runHadCanvasActivity = false;
+        return {
+            getCanvasState: () => canvasRef.current.toCanvasState(),
+            onStreamEvent: event => {
+                const c = canvasRef.current;
+                if (!runHadCanvasActivity && event.state === "STARTED") {
+                    runHadCanvasActivity = true;
+                    // Pre-edit snapshot exactly when the agent starts writing (the
+                    // editor still holds the pre-edit content); runs without canvas
+                    // activity stay out of the revision rings entirely.
+                    if (c.getMarkdown().trim()) c.snapshot("agent");
+                    // The canvas is always editable: an agent change while the
+                    // panel is closed opens the view so the user follows along.
+                    if (!c.isOpen) c.setIsOpen(true);
+                }
+                c.applyStreamEvent(event);
+            },
+            onRunStarted: () => {
+                const c = canvasRef.current;
+                runHadCanvasActivity = false;
+                // An open canvas is sent with the request even when empty, so the
+                // agent may write to it this run. A closed canvas locks when the
+                // first canvas event auto-opens the view.
+                if (c.isOpen) c.lock();
+            },
+            onRunFinished: () => {
+                const c = canvasRef.current;
+                if (runHadCanvasActivity && c.isOpen && c.getMarkdown().trim()) c.snapshot("agent");
+                runHadCanvasActivity = false;
+                c.unlock();
+            }
+        };
+    }, []);
+
+    // "Copy into Canvas" from the legacy fenced fallback: fragments have no
+    // access to the page, so they call through the canvasStream bridge.
+    useEffect(() => {
+        setCopyIntoCanvasHandler(markdown => {
+            canvasRef.current.setMarkdown(markdown);
+            canvasRef.current.setIsOpen(true);
+        });
+        return () => setCopyIntoCanvasHandler(undefined);
+    }, []);
+
+    // Selection context menu: quote the selection into the chat input, or
+    // insert the agent-revise instruction template.
+    const insertCanvasSelectionIntoChat = useCallback((markdown: string) => {
+        const quote =
+            markdown
+                .split("\n")
+                .map(line => `> ${line}`)
+                .join("\n") + "\n\n";
+        setQuestion(prev => (prev ? prev.trimEnd() + "\n\n" : "") + quote);
+    }, []);
+    const insertCanvasReviseRequest = useCallback(
+        (markdown: string) => {
+            setQuestion(t("canvas.context_menu.agent_revise_template", { selection: markdown }));
+        },
+        [t]
+    );
+
     // API Request mit optimiertem State Management
     const callApi = useCallback(
         async (question: string, system?: string, dataSources?: DataSource[]) => {
@@ -303,7 +374,8 @@ const Chat = () => {
                     requestPersist,
                     agUiEnabled,
                     showAgUiEventLog ? handleAgUiEvent : undefined,
-                    setRunActivity
+                    setRunActivity,
+                    canvasWiring
                 );
             } catch (e) {
                 setError(e);
@@ -323,7 +395,8 @@ const Chat = () => {
             setLoadingState,
             agUiEnabled,
             showAgUiEventLog,
-            handleAgUiEvent
+            handleAgUiEvent,
+            canvasWiring
         ]
     );
 
@@ -395,6 +468,7 @@ const Chat = () => {
             hashParams.delete("data");
             hashParams.delete("new");
             hashParams.delete("chatId");
+            hashParams.delete("canvas");
             const newHashQuery = hashParams.toString();
             currentUrl.hash = newHashQuery ? `${hashPath}?${newHashQuery}` : hashPath;
         }
@@ -408,6 +482,7 @@ const Chat = () => {
             searchParams.delete("data");
             searchParams.delete("new");
             searchParams.delete("chatId");
+            searchParams.delete("canvas");
             const newSearch = searchParams.toString();
             currentUrl.search = newSearch ? `?${newSearch}` : "";
         }
@@ -471,6 +546,7 @@ const Chat = () => {
         const dataFromUrl = queryParams.get("data");
         const newChatToken = queryParams.get("new");
         const chatIdFromUrl = queryParams.get("chatId");
+        const canvasRequested = queryParams.get("canvas") !== null;
 
         return {
             questionFromUrl,
@@ -478,7 +554,8 @@ const Chat = () => {
             dataFromUrl,
             newChatRequested: newChatToken !== null,
             newChatToken,
-            chatIdFromUrl
+            chatIdFromUrl,
+            canvasRequested
         };
     }, [location.hash, location.search]);
 
@@ -519,7 +596,10 @@ const Chat = () => {
 
     useEffect(() => {
         try {
-            localStorage.setItem(STORAGE_KEYS.SELECTED_TOOLS, JSON.stringify(selectedTools));
+            // Canvas tool ids never belong to the persisted selection (base tools,
+            // hidden from the selector); filter them out in case stale storage
+            // still contains them from earlier versions.
+            localStorage.setItem(STORAGE_KEYS.SELECTED_TOOLS, JSON.stringify(selectedTools.filter(id => !(CANVAS_TOOL_IDS as readonly string[]).includes(id))));
         } catch {
             // ignore storage errors
         }
@@ -540,7 +620,7 @@ const Chat = () => {
         isLoadingRef.current = true;
 
         // Check URL for question parameter - Handle hash router format
-        const { questionFromUrl, toolsFromUrl, dataFromUrl, newChatRequested, newChatToken, chatIdFromUrl } = getNavigationParams();
+        const { questionFromUrl, toolsFromUrl, dataFromUrl, newChatRequested, newChatToken, chatIdFromUrl, canvasRequested } = getNavigationParams();
 
         // Parse tools from URL if present
         if (toolsFromUrl) {
@@ -617,6 +697,9 @@ const Chat = () => {
                 });
         } else if (questionFromUrl || newChatRequested) {
             lastHandledNewChatTokenRef.current = newChatToken;
+            if (newChatRequested && canvasRequested) {
+                canvasRef.current.requestOpen();
+            }
             setPendingQuestion(questionFromUrl);
             Promise.resolve(
                 newChatRequested
@@ -653,7 +736,7 @@ const Chat = () => {
             return;
         }
 
-        const { chatIdFromUrl, newChatRequested, newChatToken } = getNavigationParams();
+        const { chatIdFromUrl, newChatRequested, newChatToken, canvasRequested } = getNavigationParams();
 
         if (chatIdFromUrl && chatIdFromUrl !== activeChatRef.current) {
             void loadChat(chatIdFromUrl).then(async loaded => {
@@ -672,6 +755,9 @@ const Chat = () => {
         }
 
         lastHandledNewChatTokenRef.current = newChatToken;
+        if (canvasRequested) {
+            canvasRef.current.requestOpen();
+        }
         if (isCurrentChatEmpty) {
             clearNavigationQueryParams();
             return;
@@ -954,7 +1040,16 @@ const Chat = () => {
         ]
     );
 
-    return layout;
+    return (
+        <CanvasSplitView
+            controller={canvas}
+            conversationId={active_chat}
+            onInsertIntoChat={insertCanvasSelectionIntoChat}
+            onAgentRevise={insertCanvasReviseRequest}
+        >
+            {layout}
+        </CanvasSplitView>
+    );
 };
 
 export default Chat;

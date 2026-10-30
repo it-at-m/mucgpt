@@ -157,6 +157,9 @@ notebooks
 .claude/settings.local.json
 **/.claude/settings.local.json
 
+# git worktrees
+.worktrees/
+
 #configs
 config/c.json
 config/k.json

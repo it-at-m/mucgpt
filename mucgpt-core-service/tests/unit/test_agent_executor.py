@@ -1,3 +1,4 @@
+import json
 from contextlib import nullcontext
 from unittest.mock import AsyncMock, MagicMock
 
@@ -7,7 +8,9 @@ from langchain_core.messages import AIMessage, AIMessageChunk, ToolCall
 from agent.agent_executor import MUCGPTAgentExecutor, _ag_ui_usage_from_token_usage
 from agent.middleware import TokenUsage
 from agent.tools.tool_chunk import ToolStreamChunk, ToolStreamState
+from api.api_models import CanvasState
 from api.api_models import ChatCompletionMessage as InputMessage
+from core.auth_models import AuthenticationResult
 
 
 class DummyLLM:
@@ -521,3 +524,76 @@ class TestMUCGPTAgentExecutor:
         assert events[0]["content"] == "hidden"
         assert events[2]["content"]["tool_name"] == "example_tool"
         assert events[3]["content"]["agent"]["messages"][0]["content"] == "done"
+
+
+# longer than the trace-summary preview window, so the full-document
+# suppression in traces is observable
+CANVAS_DOC = "# " + "x" * 250
+
+
+class CanvasCustomGraph:
+    async def astream(self, *_args, **_kwargs):
+        yield (
+            "custom",
+            ToolStreamChunk(
+                state=ToolStreamState.STARTED, content="", tool_name="Canvas"
+            ).model_dump_json(),
+        )
+        yield (
+            "custom",
+            ToolStreamChunk(
+                state=ToolStreamState.UPDATE,
+                content=CANVAS_DOC,
+                tool_name="Canvas",
+                metadata={"canvas_revision": 1},
+            ).model_dump_json(),
+        )
+        yield (
+            "custom",
+            ToolStreamChunk(
+                state=ToolStreamState.APPEND, content="x", tool_name="Brainstorming"
+            ).model_dump_json(),
+        )
+
+
+class CanvasCustomAgent:
+    def __init__(self):
+        self.model = None
+        self.graph = CanvasCustomGraph()
+
+
+@pytest.mark.asyncio
+async def test_run_agui_streams_canvas_chunks_as_custom_events(monkeypatch):
+    langfuse_client = FakeLangfuseClient()
+    monkeypatch.setattr("agent.agent_executor.get_client", lambda: langfuse_client)
+    monkeypatch.setattr(
+        "agent.agent_executor.propagate_attributes",
+        lambda **_kwargs: nullcontext(),
+    )
+    agent = CanvasCustomAgent()
+    runner = MUCGPTAgentExecutor(agent)
+
+    events = []
+    async for event in runner.run_agui_with_streaming(
+        messages=[InputMessage(role="user", content="hi")],
+        temperature=0.5,
+        model=None,
+        user_info=AuthenticationResult(token="t", user_id="u", department="d"),
+        conversation_id="conv-1",
+        enabled_tools=["canvas_write", "canvas_edit", "canvas_read"],
+        canvas=CanvasState(content=CANVAS_DOC, selection=None),
+    ):
+        events.append(event)
+
+    canvas_events = [e for e in events if getattr(e, "name", None) == "Canvas"]
+    assert [e.value["state"] for e in canvas_events] == ["STARTED", "UPDATE"]
+    assert canvas_events[1].value["content"] == CANVAS_DOC
+    assert canvas_events[1].value["metadata"] == {"canvas_revision": 1}
+    # non-canvas custom chunks stay internal (traced only, not streamed)
+    assert not any(getattr(e, "name", None) == "Brainstorming" for e in events)
+
+    # traces summarize canvas chunks: present, but never the full document
+    traced = langfuse_client.spans[0].updates[0]["output"]["events"]
+    traced_custom = [e for e in traced if e["stream"] == "custom"]
+    assert any(e["content"]["tool_name"] == "Canvas" for e in traced_custom)
+    assert CANVAS_DOC not in json.dumps(traced_custom)

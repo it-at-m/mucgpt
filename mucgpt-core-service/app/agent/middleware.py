@@ -27,7 +27,7 @@ from langgraph.types import Command
 
 from agent.state_models.default_state import DefaultAgentState
 from agent.tools.policies import get_policy_for_state
-from api.api_models import ConversationUsage
+from api.api_models import CanvasState, ConversationUsage
 from config.harness_profiles import DEEP_AGENT_BUILTIN_TOOLS
 from config.langfuse_provider import LangfuseProvider
 from config.model_provider import ModelRegistry
@@ -89,6 +89,10 @@ class RequestContext:
     enabled_tools: list[str] | None = None
     token_usage: TokenUsage | None = None
     langfuse_prompt: Any | None = None
+    canvas: CanvasState | None = None
+    # Monotonic within one run; bumped for each canvas_write/canvas_edit call so
+    # the streamed UPDATE chunks carry an ordering key for the editor.
+    canvas_revision: int = 0
 
 
 def _make_scoped_callbacks() -> list:
@@ -257,6 +261,56 @@ def _inject_data_sources(
     return messages_copy
 
 
+def _canvas_from(value: Any) -> CanvasState | None:
+    """Coerce a state/context canvas value into a CanvasState, if possible."""
+    if isinstance(value, CanvasState):
+        return value
+    if isinstance(value, dict):
+        try:
+            return CanvasState.model_validate(value)
+        except Exception:
+            return None
+    return None
+
+
+# The canvas is a base capability of MUCGPT: always offered to the model and
+# hidden from the user-facing tool selectors by the frontend.
+CANVAS_BASE_TOOLS = frozenset({"canvas_write", "canvas_edit", "canvas_read"})
+
+
+def _tool_request_context(request: ToolCallRequest) -> RequestContext | None:
+    runtime_context = getattr(getattr(request, "runtime", None), "context", None)
+    return runtime_context if isinstance(runtime_context, RequestContext) else None
+
+
+def _state_canvas(request: ModelRequest | ToolCallRequest) -> CanvasState | None:
+    state = getattr(request, "state", None)
+    state_canvas = state.get("canvas") if isinstance(state, dict) else None
+    return _canvas_from(state_canvas)
+
+
+def _inject_canvas_state(request: ToolCallRequest) -> ToolCallRequest:
+    """Add the hidden ``canvas_state`` kwarg to canvas_* tool calls.
+
+    The tools also declare the kwarg as ``InjectedState("canvas")``, so the
+    ToolNode strips this caller-supplied value and re-injects the trusted
+    graph-state value at execution time — this hook covers non-ToolNode
+    executors and keeps the anti-forgery re-injection explicit.
+    """
+    name = request.tool_call.get("name") or ""
+    if not name.startswith("canvas_"):
+        return request
+
+    context = _tool_request_context(request)
+    # State first, matching the ToolNode's re-injection: tools update the graph
+    # state's canvas mid-run, so state is the more current source.
+    canvas = _state_canvas(request) or _canvas_from(getattr(context, "canvas", None))
+
+    args = dict(request.tool_call.get("args") or {})
+    args["canvas_state"] = canvas
+    return request.override(tool_call={**request.tool_call, "args": args})
+
+
 def _get_request_context(request: ModelRequest) -> RequestContext | None:
     """Return the runtime context as a ``RequestContext``, coercing a dict if needed."""
     runtime_context = getattr(getattr(request, "runtime", None), "context", None)
@@ -351,7 +405,9 @@ def _filter_request_tools(request: ModelRequest) -> ModelRequest:
         tools=[
             tool
             for tool in request.tools or []
-            if tool.name in DEEP_AGENT_BUILTIN_TOOLS or tool.name in enabled_tools  # type: ignore
+            if tool.name in DEEP_AGENT_BUILTIN_TOOLS  # type: ignore
+            or tool.name in CANVAS_BASE_TOOLS  # type: ignore
+            or tool.name in enabled_tools  # type: ignore
         ]
     )
 
@@ -450,6 +506,20 @@ class ContextMiddleware(AgentMiddleware):
             return await handler(request)
         with propagate_attributes(prompt=runtime_context.langfuse_prompt):
             return await handler(request)
+
+    def wrap_tool_call(
+        self,
+        request: ToolCallRequest,
+        handler: Callable[[ToolCallRequest], ToolMessage | Command],
+    ) -> ToolMessage | Command:
+        return handler(_inject_canvas_state(request))
+
+    async def awrap_tool_call(
+        self,
+        request: ToolCallRequest,
+        handler: Callable[[ToolCallRequest], Awaitable[ToolMessage | Command]],
+    ) -> ToolMessage | Command:
+        return await handler(_inject_canvas_state(request))
 
 
 # Extra argument the model fills on every tool call: a short status line shown to the user

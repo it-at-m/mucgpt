@@ -2,7 +2,7 @@ import { RefObject, Dispatch, SetStateAction } from "react";
 import { DBMessage, StorageService } from "../service/storage";
 import { DBObject } from "../service/storage";
 import { ChatMessage, ChatOptions } from "./chat/Chat";
-import { ChatRequest, ChatResponse, ChatTurn, DataSource, Model } from "../api";
+import { ChatRequest, ChatResponse, CanvasState, ChatTurn, DataSource, Model } from "../api";
 import { ChatCompletionChunk, ChatCompletionChunkChoice } from "../api/models";
 import { ToolStreamHandler, ToolStatus } from "../utils/ToolStreamHandler";
 
@@ -11,8 +11,9 @@ import { AssistantStorageService } from "../service/assistantstorage";
 import { v4 as uuid } from "uuid";
 import { handleRedirect } from "../api/fetch-utils";
 import { createChatName, MucgptAgUiAgent } from "../api/core-client";
-import type { BaseEvent } from "@ag-ui/core";
+import { EventType, type BaseEvent, type CustomEvent } from "@ag-ui/core";
 import { initialRunActivity, reduceRunActivity, type RunActivity } from "../utils/agUiActivity";
+import { isCanvasToolCall, parseCanvasStreamEvent, type CanvasStreamEvent } from "../utils/canvasStream";
 import { scrollIntoNearestContainer } from "../utils/scrollIntoNearestContainer";
 import { getConversationActionCapabilities } from "../utils/conversationActions";
 
@@ -203,6 +204,22 @@ export async function handleRegenerate(
 }
 
 /**
+ * Canvas integration for one chat request: the current
+ * canvas state is attached to the request, and "Canvas" stream events plus the run
+ * lifecycle are routed into the canvas controller.
+ */
+export interface CanvasWiring {
+    /** Current canvas state; null when the canvas is closed or empty */
+    getCanvasState: () => CanvasState | null;
+    /** Applies one streamed canvas chunk (STARTED/APPEND/UPDATE) into the editor */
+    onStreamEvent: (event: CanvasStreamEvent) => void;
+    /** RUN_STARTED: lock the editor and take a pre-run snapshot */
+    onRunStarted: () => void;
+    /** RUN_FINISHED/RUN_ERROR: post-run snapshot and unlock */
+    onRunFinished: () => void;
+}
+
+/**
  * Makes a streaming API request to the chat service and handles the response.
  * Processes Server-Sent Events (SSE) stream, handles tool calls, and updates the UI in real-time.
  * Also manages chat storage and history.
@@ -247,7 +264,8 @@ export const makeApiRequest = async (
     persist: boolean = true,
     agUiEnabled: boolean = false,
     onAgUiEvent?: (event: BaseEvent) => void,
-    onRunActivityChange?: (activity: RunActivity) => void
+    onRunActivityChange?: (activity: RunActivity) => void,
+    canvasWiring?: CanvasWiring
 ) => {
     // Create conversation history for the API request
     const history: ChatTurn[] = answers.map((a: { user: any; response: { answer: any } }) => ({ user: a.user, assistant: a.response.answer }));
@@ -273,7 +291,8 @@ export const makeApiRequest = async (
         assistant_id: assistant_id,
         conversation_id: conversationId,
         persist,
-        data_sources: data_sources && data_sources.length > 0 ? data_sources : undefined
+        data_sources: data_sources && data_sources.length > 0 ? data_sources : undefined,
+        canvas: canvasWiring?.getCanvasState() ?? undefined
     };
 
     // Keep the legacy request behavior unchanged while the AG-UI path is rolled out.
@@ -374,6 +393,30 @@ export const makeApiRequest = async (
         const eventSubscription = agent.subscribe({
             onEvent: ({ event }) => {
                 onAgUiEvent?.(event);
+                if (canvasWiring) {
+                    if (event.type === EventType.CUSTOM) {
+                        // Canvas chunks are forwarded as CustomEvents named "Canvas"
+                        //; the value is the ToolStreamChunk.
+                        const custom = event as CustomEvent;
+                        if (isCanvasToolCall(custom.name)) {
+                            const canvasEvent = parseCanvasStreamEvent(custom.value);
+                            if (canvasEvent) canvasWiring.onStreamEvent(canvasEvent);
+                            // No canvas content in the console: log a shape summary, never the payload.
+                            else {
+                                const value = custom.value;
+                                console.error(
+                                    "Dropped invalid canvas stream event",
+                                    custom.name,
+                                    typeof value === "string" ? `string(len ${value.length})` : typeof value
+                                );
+                            }
+                        }
+                    } else if (event.type === EventType.RUN_STARTED) {
+                        canvasWiring.onRunStarted();
+                    } else if (event.type === EventType.RUN_FINISHED || event.type === EventType.RUN_ERROR) {
+                        canvasWiring.onRunFinished();
+                    }
+                }
                 const nextActivity = reduceRunActivity(runActivity, event);
                 if (nextActivity !== runActivity) {
                     runActivity = nextActivity;
@@ -411,6 +454,9 @@ export const makeApiRequest = async (
             });
         } finally {
             eventSubscription.unsubscribe();
+            // RUN_FINISHED/RUN_ERROR normally unlock; this covers the path where
+            // the run throws before any event is emitted.
+            canvasWiring?.onRunFinished();
         }
         if (runError) throw runError;
     } else {

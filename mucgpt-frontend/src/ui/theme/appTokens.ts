@@ -14,6 +14,7 @@ export interface AppTokens {
     assistantConfigBorderHover: string;
     statusInfoBorder: string;
     progressHighlight: string;
+    canvasSelectionBackground: string;
 }
 
 const lightAppTokens: AppTokens = {
@@ -24,7 +25,8 @@ const lightAppTokens: AppTokens = {
     assistantConfigBorder: "#C7D7F2",
     assistantConfigBorderHover: "#9DB5E8",
     statusInfoBorder: infoRamp.light,
-    progressHighlight: mucgptBrandRamp[90]
+    progressHighlight: mucgptBrandRamp[90],
+    canvasSelectionBackground: mucgptBrandRamp[130]
 };
 
 const darkAppTokens: AppTokens = {
@@ -35,7 +37,8 @@ const darkAppTokens: AppTokens = {
     assistantConfigBorder: "#263653",
     assistantConfigBorderHover: "#3A4D73",
     statusInfoBorder: infoRamp.medium,
-    progressHighlight: mucgptBrandRamp[120]
+    progressHighlight: mucgptBrandRamp[120],
+    canvasSelectionBackground: mucgptBrandRamp[30]
 };
 
 export const getAppTokens = (isLight: boolean): AppTokens => (isLight ? lightAppTokens : darkAppTokens);
@@ -49,6 +52,7 @@ type AppCssVariableName =
     | "--app-assistant-config-border-hover"
     | "--app-status-info-border"
     | "--app-progress-highlight"
+    | "--app-canvas-selection-background"
     | "--app-radius-xsmall"
     | "--app-radius-xxlarge";
 
@@ -64,6 +68,10 @@ export const createAppCssVars = (tokens: AppTokens): AppCssVariables => ({
     "--app-status-info-border": tokens.statusInfoBorder,
     // Light brand blue that sweeps over in-progress status text (the shimmer); never used as a text color on its own.
     "--app-progress-highlight": tokens.progressHighlight,
+    // Visible text-selection tint for the canvas editor's persistent selection/caret
+    // (Fluent's colorNeutralBackground2Selected is remapped to a near-background
+    // tone for control surfaces and is invisible behind editor text).
+    "--app-canvas-selection-background": tokens.canvasSelectionBackground,
     // Chat-bubble geometry: not part of Fluent's radius scale, constant across themes.
     "--app-radius-xsmall": "2px",
     "--app-radius-xxlarge": "24px"

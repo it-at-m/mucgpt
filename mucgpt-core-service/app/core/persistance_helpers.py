@@ -17,8 +17,9 @@ from api.api_models import (
 )
 from config.settings import Settings, get_settings
 from core.logtools import getLogger
+from database.canvas_repo import CanvasRepository
 from database.conversation_repo import ConversationRepository
-from database.database_models import Base, Chat
+from database.database_models import Base, CanvasDocument, Chat
 from database.fenced_checkpointer import FencedPostgresSaver
 from database.session import create_engine_and_session_factory
 
@@ -145,7 +146,10 @@ class PersistanceHelpers:
     ) -> None:
         """Migrate retirement metadata and quarantine/erase legacy orphan state."""
         async with engine.begin() as connection:
-            await connection.run_sync(Base.metadata.create_all, tables=[Chat.__table__])
+            await connection.run_sync(
+                Base.metadata.create_all,
+                tables=[Chat.__table__, CanvasDocument.__table__],
+            )
 
         # create_all does not alter existing tables. Keep the core's startup
         # migration idempotent and quarantine pre-fence orphan checkpoint IDs.
@@ -389,7 +393,47 @@ class PersistanceHelpers:
                     "chat_title = 'New Chat', assistant_id = NULL WHERE conversation_id = %s",
                     (conversation_id,),
                 )
+                # The canvas is personal data of the conversation and must not
+                # outlive its retirement; cascade it inside the same transaction.
+                await connection.execute(
+                    "DELETE FROM canvas_documents WHERE conversation_id = %s",
+                    (conversation_id,),
+                )
             return "deleted"
+
+    @staticmethod
+    async def get_canvas(conversation_id: str) -> CanvasDocument | None:
+        """Return the canvas document for a conversation, or None."""
+        factory = PersistanceHelpers._get_session_factory()
+        async with factory() as session:
+            return await CanvasRepository(session).get_canvas(conversation_id)
+
+    @staticmethod
+    async def upsert_canvas(conversation_id: str, content: str, user_id: str) -> None:
+        """Create or update the canvas content of a conversation owned by user_id."""
+        factory = PersistanceHelpers._get_session_factory()
+        async with factory.begin() as session:
+            await CanvasRepository(session).upsert_canvas(
+                conversation_id, content, user_id
+            )
+
+    @staticmethod
+    async def get_canvas_revisions(conversation_id: str) -> dict | None:
+        """Return the client-owned revision rings, or None when not stored."""
+        factory = PersistanceHelpers._get_session_factory()
+        async with factory() as session:
+            return await CanvasRepository(session).get_canvas_revisions(conversation_id)
+
+    @staticmethod
+    async def upsert_canvas_revisions(
+        conversation_id: str, revisions: dict, user_id: str
+    ) -> None:
+        """Wholesale-overwrite the client-owned revision rings."""
+        factory = PersistanceHelpers._get_session_factory()
+        async with factory.begin() as session:
+            await CanvasRepository(session).upsert_canvas_revisions(
+                conversation_id, revisions, user_id
+            )
 
     @staticmethod
     def _get_session_factory() -> async_sessionmaker[AsyncSession]:

@@ -1,0 +1,181 @@
+.editorScroll {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+}
+
+.editorContainer {
+    position: relative;
+    min-height: 100%;
+    box-sizing: border-box;
+}
+
+/* ProseMirror content styles (feature-local; TipTap renders its own DOM). */
+.editor :global(.ProseMirror) {
+    min-height: 100%;
+    padding: var(--spacingVerticalL) var(--spacingHorizontalXL);
+    box-sizing: border-box;
+    outline: none;
+    background-color: var(--colorNeutralBackground1);
+    color: var(--colorNeutralForeground1);
+    font-family: var(--fontFamilyBase);
+    font-size: var(--fontSizeBase350);
+    line-height: var(--lineHeightBase400);
+    overflow-wrap: break-word;
+}
+
+.editor :global(.ProseMirror) h1,
+.editor :global(.ProseMirror) h2,
+.editor :global(.ProseMirror) h3 {
+    font-weight: var(--fontWeightSemibold);
+    line-height: var(--lineHeightBase500);
+    margin: var(--spacingVerticalL) 0 var(--spacingVerticalS);
+}
+
+.editor :global(.ProseMirror) h1 {
+    font-size: var(--fontSizeBase500);
+}
+
+.editor :global(.ProseMirror) h2 {
+    font-size: var(--fontSizeBase450);
+}
+
+.editor :global(.ProseMirror) h3 {
+    font-size: var(--fontSizeBase400);
+}
+
+.editor :global(.ProseMirror) p {
+    margin: 0 0 var(--spacingVerticalS);
+}
+
+.editor :global(.ProseMirror) ul,
+.editor :global(.ProseMirror) ol {
+    margin: 0 0 var(--spacingVerticalS);
+    padding-inline-start: var(--spacingHorizontalL);
+}
+
+.editor :global(.ProseMirror) blockquote {
+    margin: 0 0 var(--spacingVerticalS);
+    padding: var(--spacingVerticalXXS) var(--spacingHorizontalS);
+    border-inline-start: 3px solid var(--colorNeutralStroke1);
+    color: var(--colorNeutralForeground2);
+}
+
+.editor :global(.ProseMirror) pre {
+    margin: 0 0 var(--spacingVerticalS);
+    padding: var(--spacingVerticalS) var(--spacingHorizontalS);
+    background-color: var(--colorNeutralBackground2);
+    border: 1px solid var(--colorNeutralStroke2);
+    border-radius: var(--borderRadiusMedium);
+    font-family: var(--fontFamilyMonospace);
+    font-size: var(--fontSizeBase300);
+    overflow-x: auto;
+}
+
+.editor :global(.ProseMirror) code {
+    font-family: var(--fontFamilyMonospace);
+    font-size: var(--fontSizeBase300);
+    background-color: var(--colorNeutralBackground2);
+    border-radius: var(--borderRadiusSmall);
+    padding: 0 var(--spacingHorizontalXXS);
+}
+
+.editor :global(.ProseMirror) pre code {
+    background-color: transparent;
+    padding: 0;
+}
+
+.editor :global(.ProseMirror) a {
+    color: var(--colorBrandForeground1);
+}
+
+.editor :global(.ProseMirror) table {
+    border-collapse: collapse;
+    margin: 0 0 var(--spacingVerticalS);
+    width: 100%;
+    table-layout: fixed;
+}
+
+.editor :global(.ProseMirror) th,
+.editor :global(.ProseMirror) td {
+    border: 1px solid var(--colorNeutralStroke1);
+    padding: var(--spacingVerticalXXS) var(--spacingHorizontalS);
+    text-align: start;
+    vertical-align: top;
+}
+
+.editor :global(.ProseMirror) th {
+    background-color: var(--colorNeutralBackground2);
+    font-weight: var(--fontWeightSemibold);
+}
+
+/* Selected-cell affordance: border pairs with the table's internal selection state. */
+.editor :global(.ProseMirror) .selectedCell::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border: 2px solid var(--colorBrandStroke1);
+    pointer-events: none;
+}
+
+.editor :global(.ProseMirror) th,
+.editor :global(.ProseMirror) td {
+    position: relative;
+}
+
+.editor :global(.ProseMirror) hr {
+    border: none;
+    border-top: 1px solid var(--colorNeutralStroke1);
+    margin: var(--spacingVerticalM) 0;
+}
+
+/* Locked state: the document reads as a static surface while the agent writes. */
+.editorScroll[data-locked="true"] :global(.ProseMirror) {
+    background-color: var(--colorNeutralBackground2);
+}
+
+/* Persistent selection/caret (canvasSelectionPersistence): visible only while the
+   editor is unfocused, e.g. while typing in the chat input. Blue tint per DESIGN.md
+   ("blue is reserved for selection"). */
+.editorScroll :global(.canvas-persistent-selection) {
+    background-color: var(--app-canvas-selection-background);
+    border-radius: var(--borderRadiusSmall);
+}
+
+/* The caret marker is a directly-styled inline-block box, not a zero-width
+   ::after: a zero-width inline element's baseline is its bottom edge, which
+   rendered the caret one line below the caret position. */
+.editorScroll :global(.canvas-persistent-caret) {
+    display: inline-block;
+    box-sizing: border-box;
+    width: 4px;
+    height: 1em;
+    margin-inline-end: -4px;
+    vertical-align: text-bottom;
+    border-radius: var(--borderRadiusSmall);
+    background-color: var(--app-canvas-selection-background);
+    border: 1px solid var(--colorBrandStroke1);
+    /* Inline content paints in DOM order: without stacking, the character
+       following the caret is painted over the box's fill. */
+    position: relative;
+    z-index: 1;
+    animation: canvas-caret-blink 1.1s steps(2, start) infinite;
+}
+
+@keyframes canvas-caret-blink {
+    to {
+        visibility: hidden;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .editorScroll :global(.canvas-persistent-caret) {
+        animation: none;
+    }
+}
+
+/* Document content beyond the canvas size warning threshold: readable but
+   greyed out — the agent only reads and persists content up to the limit. */
+.overLimitText {
+    color: var(--colorNeutralForegroundDisabled);
+}

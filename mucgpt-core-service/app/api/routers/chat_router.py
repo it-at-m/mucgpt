@@ -3,10 +3,11 @@ from collections.abc import AsyncGenerator
 from typing import Annotated
 
 from ag_ui.encoder import EventEncoder
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException, Request, Response
 from fastapi.responses import StreamingResponse
 
 from api.api_models import (
+    CanvasResponse,
     ChatCompletionMessage,
     ChatCompletionRequest,
     ChatCompletionResponse,
@@ -28,6 +29,8 @@ from init_app import init_agent
 
 logger = getLogger()
 router = APIRouter(prefix="/v1")
+
+CANVAS_REVISIONS_MAX_BYTES = 512 * 1024
 
 
 def get_temperature_from_request(request: ChatCompletionRequest) -> float:
@@ -101,6 +104,12 @@ async def get_messages_for_agent(
             detail=f"User {user_id} is not authorized to access conversation {request.conversation_id}",
         )
 
+    # The canvas is saved implicitly with every persisted turn.
+    if request.canvas is not None:
+        await PersistanceHelpers.upsert_canvas(
+            request.conversation_id, request.canvas.content, user_id
+        )
+
     if await PersistanceHelpers.has_checkpoint(request.conversation_id):
         return [request.messages[-1]]
     return request.messages
@@ -158,6 +167,7 @@ async def chat_endpoint(
             if request.data_sources
             else None
         )
+        canvas = request.canvas
 
         if request.stream:
             gen = agent.run_with_streaming(
@@ -168,6 +178,7 @@ async def chat_endpoint(
                 enabled_tools=enabled_tools,
                 assistant_id=request.assistant_id,
                 data_sources=data_sources,
+                canvas=canvas,
                 conversation_id=request.conversation_id,
                 reasoning_effort=request.reasoning_effort,
             )
@@ -191,6 +202,7 @@ async def chat_endpoint(
             enabled_tools=enabled_tools,
             assistant_id=request.assistant_id,
             data_sources=data_sources,
+            canvas=canvas,
             conversation_id=request.conversation_id,
             reasoning_effort=request.reasoning_effort,
         )
@@ -282,7 +294,9 @@ async def delete_conversation(
     """Return 204 after atomic erasure/retirement, including an owner's retry.
 
     Unknown IDs return 404, other owners receive 403, and cleanup failures return
-    500 with the protected ownership row retained for retry.
+    500 with the protected ownership row retained for retry. The conversation's
+    canvas row (content plus revision rings) is cascaded inside the same
+    transaction.
     """
     try:
         result = await PersistanceHelpers.erase_conversation(
@@ -300,6 +314,87 @@ async def delete_conversation(
         raise HTTPException(status_code=404, detail="Conversation not found")
     if result == "forbidden":
         raise HTTPException(status_code=403, detail="Conversation access denied")
+
+
+async def _authorize_conversation_access(conversation_id: str, user_id: str) -> None:
+    """404 for missing conversations, 403 for foreign ones."""
+    if not await PersistanceHelpers.conversation_exists(conversation_id):
+        raise HTTPException(status_code=404, detail="Conversation not found")
+    if not await PersistanceHelpers.is_user_in_conversation(user_id, conversation_id):
+        raise HTTPException(status_code=403, detail="Conversation access denied")
+
+
+@router.get(
+    "/conversations/{conversation_id}/canvas",
+    summary="Get conversation canvas",
+    response_model=CanvasResponse,
+    responses={403: {"description": "Forbidden"}, 404: {"description": "Not found"}},
+)
+async def get_conversation_canvas(
+    conversation_id: str,
+    user_info: Annotated[AuthenticationResult, Depends(authenticate_user)],
+) -> CanvasResponse:
+    """Return the canvas document stored for the conversation.
+
+    An empty content means an empty canvas: the row can exist with empty
+    content because revisions are stored before any document, and an open
+    empty editor is a legitimate persisted state.
+    """
+    await _authorize_conversation_access(conversation_id, user_info.user_id)
+
+    canvas = await PersistanceHelpers.get_canvas(conversation_id)
+    if canvas is None:
+        raise HTTPException(status_code=404, detail="Canvas not found")
+    return CanvasResponse(content=canvas.content, updated_at=canvas.updated_at)
+
+
+@router.get(
+    "/conversations/{conversation_id}/canvas/revisions",
+    summary="Get conversation canvas revisions",
+    responses={403: {"description": "Forbidden"}, 404: {"description": "Not found"}},
+)
+async def get_conversation_canvas_revisions(
+    conversation_id: str,
+    user_info: Annotated[AuthenticationResult, Depends(authenticate_user)],
+) -> dict | None:
+    """Return the client-owned revision rings for the conversation's canvas."""
+    await _authorize_conversation_access(conversation_id, user_info.user_id)
+
+    revisions = await PersistanceHelpers.get_canvas_revisions(conversation_id)
+    if revisions is None:
+        raise HTTPException(status_code=404, detail="Canvas revisions not found")
+    return revisions
+
+
+@router.put(
+    "/conversations/{conversation_id}/canvas/revisions",
+    summary="Replace conversation canvas revisions",
+    status_code=204,
+    responses={
+        403: {"description": "Forbidden"},
+        404: {"description": "Not found"},
+        413: {"description": "Revisions payload too large"},
+    },
+)
+async def put_conversation_canvas_revisions(
+    conversation_id: str,
+    request: Request,
+    revisions: dict,
+    user_info: Annotated[AuthenticationResult, Depends(authenticate_user)],
+) -> Response:
+    """Wholesale-overwrite the client-owned revision rings (max 512 KB)."""
+    await _authorize_conversation_access(conversation_id, user_info.user_id)
+
+    if len(await request.body()) > CANVAS_REVISIONS_MAX_BYTES:
+        raise HTTPException(
+            status_code=413,
+            detail="Canvas revisions exceed the maximum payload size of 512 KB",
+        )
+
+    await PersistanceHelpers.upsert_canvas_revisions(
+        conversation_id, revisions, user_info.user_id
+    )
+    return Response(status_code=204)
 
 
 @router.post(
@@ -363,6 +458,7 @@ async def ag_ui_chat_endpoint(
             if chat_request.data_sources
             else None
         ),
+        canvas=chat_request.canvas,
         reasoning_effort=chat_request.reasoning_effort,
     )
 

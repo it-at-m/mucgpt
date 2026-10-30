@@ -37,12 +37,12 @@ def stub_persistence(monkeypatch: pytest.MonkeyPatch) -> None:
     )
     monkeypatch.setattr(
         PersistanceHelpers,
-        "is_user_in_conversation",
+        "conversation_exists",
         AsyncMock(return_value=True),
     )
     monkeypatch.setattr(
         PersistanceHelpers,
-        "conversation_exists",
+        "is_user_in_conversation",
         AsyncMock(return_value=True),
     )
     monkeypatch.setattr(
@@ -59,11 +59,6 @@ def stub_persistence(monkeypatch: pytest.MonkeyPatch) -> None:
                 ChatCompletionMessage(role="assistant", content="Hi"),
             ]
         ),
-    )
-    monkeypatch.setattr(
-        PersistanceHelpers,
-        "delete_conversation_mapping",
-        AsyncMock(return_value=True),
     )
     monkeypatch.setattr(
         PersistanceHelpers, "erase_conversation", AsyncMock(return_value="deleted")
@@ -475,7 +470,7 @@ class TestChatRouter:
         assert response.content == b""
         erasure.assert_awaited_once_with(DUMMY_CONVERSATION_ID, DUMMY_USER_ID)
 
-    def test_delete_conversation_forbidden(
+    def test_delete_conversation_of_foreign_user_is_forbidden(
         self, test_client: TestClient, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         from core.persistance_helpers import PersistanceHelpers
@@ -499,11 +494,6 @@ class TestChatRouter:
             PersistanceHelpers,
             "erase_conversation",
             AsyncMock(return_value="missing"),
-        )
-        monkeypatch.setattr(
-            PersistanceHelpers,
-            "delete_conversation_mapping",
-            AsyncMock(return_value=False),
         )
 
         response = test_client.delete(f"/v1/conversations/{DUMMY_CONVERSATION_ID}")

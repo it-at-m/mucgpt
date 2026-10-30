@@ -101,6 +101,41 @@ class ChatDataSource(BaseModel):
     )
 
 
+CANVAS_CONTENT_MAX_CHARS = 256 * 1024
+# Full canvas reads stop here so the tool result stays inside the model context;
+# the remaining document is reached via canvas_read(around_cursor).
+CANVAS_READ_LIMIT_CHARS = (CANVAS_CONTENT_MAX_CHARS * 95) // 100
+
+
+class CanvasState(BaseModel):
+    """Client-side canvas document state."""
+
+    content: str = Field(
+        ...,
+        max_length=CANVAS_CONTENT_MAX_CHARS,
+        description="Full GFM markdown document",
+    )
+    selection: str | None = Field(
+        None,
+        max_length=CANVAS_CONTENT_MAX_CHARS,
+        description="Serialized markdown of the current selection, if any",
+    )
+    cursor: int | None = Field(
+        None,
+        description=(
+            "Caret position as character offset into the markdown document "
+            "(selection start when text is selected)"
+        ),
+    )
+
+
+class CanvasResponse(BaseModel):
+    """Canvas document retrieval."""
+
+    content: str = Field(..., description="Full GFM markdown document")
+    updated_at: datetime = Field(..., description="Last modification timestamp")
+
+
 class ChatCompletionRequest(BaseModel):
     model: str | None = Field(None, description="The model to use")
     messages: list[ChatCompletionMessage] = Field(
@@ -145,6 +180,10 @@ class ChatCompletionRequest(BaseModel):
     data_sources: list[ChatDataSource] | None = Field(
         None,
         description="Structured document payload with title, content and metadata",
+    )
+    canvas: CanvasState | None = Field(
+        None,
+        description="Canvas document state for the canvas feature",
     )
     model_config = ConfigDict(
         json_schema_extra={

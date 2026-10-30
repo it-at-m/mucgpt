@@ -2,6 +2,7 @@ import { useCallback, useMemo } from "react";
 import { Button, Tooltip } from "@fluentui/react-components";
 import { ArrowDownload24Regular } from "@fluentui/react-icons";
 import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import styles from "./SimplifiedTextFragment.module.css";
 import { BaseFragment } from "../BaseFragment/BaseFragment";
 import { BaseFragmentProps } from "../types";
@@ -114,6 +115,7 @@ export const SimplifiedTextFragment = ({ content }: BaseFragmentProps) => {
                                         </summary>
                                         <div className={styles.sectionBody}>
                                             <ReactMarkdown
+                                                remarkPlugins={[remarkGfm]}
                                                 components={{
                                                     div: props => <div className={styles.processingMarkdown} {...props} />
                                                 }}

@@ -13,7 +13,7 @@ import { StorageService } from "../../service/storage";
 import { AnswerList } from "../../components/AnswerList/AnswerList";
 import { StarterPromptList } from "../../components/StarterPrompt";
 import { FollowUpActionContext } from "../../components/FollowUpAction";
-import { getChatReducer, handleRegenerate, handleRollback, makeApiRequest } from "../page_helpers";
+import { CanvasWiring, getChatReducer, handleRegenerate, handleRollback, makeApiRequest } from "../page_helpers";
 import { getConversationActionCapabilities } from "../../utils/conversationActions";
 import { ChatOptions } from "../chat/Chat";
 import { STORAGE_KEYS } from "../layout/LayoutHelper";
@@ -45,11 +45,14 @@ import { CloseConfirmationDialog } from "../../components/AssistantDialogs/share
 import { UploadedData } from "../../components/ContextManagerDialog/ContextManagerDialog";
 import { useConfigContext } from "../../context/ConfigContext";
 import { useToolStatusToasts } from "../../hooks/useToolStatusToasts";
+import { useCanvasController } from "../../hooks/useCanvasController";
+import { CanvasSplitView } from "../../components/Canvas/CanvasSplitView";
 import styles from "./UnifiedAssistantChat.module.css";
 import { useUnifiedHistory, useUnifiedHistoryRegistration } from "../../components/UnifiedHistory";
 import { downloadAssistantExport, mapAssistantToExportData } from "../../utils/assistant-export";
 import { scrollIntoNearestContainer } from "../../utils/scrollIntoNearestContainer";
 import { loadConversation } from "../../service/conversationHistory";
+import { setCopyIntoCanvasHandler } from "../../utils/canvasStream";
 
 const requestPersist = true;
 const conversationActions = getConversationActionCapabilities(requestPersist);
@@ -94,6 +97,16 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
     // Parameter from URL
     const { id } = useParams();
     const assistant_id = id || "0";
+    // Assistant chats use a prefixed local id as the storage key; the server
+    // canvas API expects the plain backend conversation id.
+    const canvasServerConversationId = useMemo(() => {
+        if (!active_chat) return undefined;
+        const prefix = AssistantStorageService.GENERATE_BOT_CHAT_PREFIX(assistant_id);
+        return active_chat.startsWith(prefix) ? active_chat.slice(prefix.length) : active_chat;
+    }, [active_chat, assistant_id]);
+    const canvas = useCanvasController(active_chat, canvasServerConversationId);
+    const canvasRef = useRef(canvas);
+    canvasRef.current = canvas;
     const isLegacyAssistant = /^\d+$/.test(assistant_id);
     const draftCacheKey = useMemo(() => `assistant-chat:${assistant_id}`, [assistant_id]);
     const location = useLocation();
@@ -233,6 +246,69 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
             });
         },
         [mergeLockedToolIds]
+    );
+
+    // Canvas ↔ chat wiring, mirroring Chat.tsx: request state,
+    // stream events and run lifecycle route into the editor; canvas open auto-enables
+    // the grouped canvas tools ("Canvas" badge, toggleable like other tools).
+    const canvasWiring = useMemo<CanvasWiring>(() => {
+        let runHadCanvasActivity = false;
+        return {
+            getCanvasState: () => canvasRef.current.toCanvasState(),
+            onStreamEvent: event => {
+                const c = canvasRef.current;
+                if (!runHadCanvasActivity && event.state === "STARTED") {
+                    runHadCanvasActivity = true;
+                    // Pre-edit snapshot exactly when the agent starts writing (the
+                    // editor still holds the pre-edit content); runs without canvas
+                    // activity stay out of the revision rings entirely.
+                    if (c.getMarkdown().trim()) c.snapshot("agent");
+                    // The canvas is always editable: an agent change while the
+                    // panel is closed opens the view so the user follows along.
+                    if (!c.isOpen) c.setIsOpen(true);
+                }
+                c.applyStreamEvent(event);
+            },
+            onRunStarted: () => {
+                const c = canvasRef.current;
+                runHadCanvasActivity = false;
+                // An open canvas is sent with the request even when empty, so the
+                // agent may write to it this run. A closed canvas locks when the
+                // first canvas event auto-opens the view.
+                if (c.isOpen) c.lock();
+            },
+            onRunFinished: () => {
+                const c = canvasRef.current;
+                if (runHadCanvasActivity && c.isOpen && c.getMarkdown().trim()) c.snapshot("agent");
+                runHadCanvasActivity = false;
+                c.unlock();
+            }
+        };
+    }, []);
+
+    // "Copy into Canvas" from the legacy fenced fallback reaches the editor through
+    // the canvasStream bridge (fragments have no access to the page).
+    useEffect(() => {
+        setCopyIntoCanvasHandler(markdown => {
+            canvasRef.current.setMarkdown(markdown);
+            canvasRef.current.setIsOpen(true);
+        });
+        return () => setCopyIntoCanvasHandler(undefined);
+    }, []);
+
+    const insertCanvasSelectionIntoChat = useCallback((markdown: string) => {
+        const quote =
+            markdown
+                .split("\n")
+                .map(line => `> ${line}`)
+                .join("\n") + "\n\n";
+        setQuestion(prev => (prev ? prev.trimEnd() + "\n\n" : "") + quote);
+    }, []);
+    const insertCanvasReviseRequest = useCallback(
+        (markdown: string) => {
+            setQuestion(t("canvas.context_menu.agent_revise_template", { selection: markdown }));
+        },
+        [t]
     );
     const resetActiveChatState = useCallback(() => {
         setLastQuestionValue("");
@@ -487,7 +563,8 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                     requestPersist,
                     agUiEnabled,
                     undefined, // onAgUiEvent — event log is only wired up in the main chat
-                    setRunActivity
+                    setRunActivity,
+                    canvasWiring
                 );
             } catch (e) {
                 setError(e);
@@ -509,7 +586,8 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
             setLastQuestionValue,
             isLegacyAssistant,
             isAssistantUnavailable,
-            agUiEnabled
+            agUiEnabled,
+            canvasWiring
         ]
     );
 
@@ -1041,39 +1119,47 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
 
         return (
             <>
-                <ChatLayout
-                    starterPrompts={starterPromptsComponent}
-                    answers={answerList}
-                    input={inputComponent}
-                    showStarterPrompts={!lastQuestion}
-                    header={assistantConfig.title}
-                    welcomeMessage={canChat ? t("chat.header") : undefined}
-                    showDisclaimer={canChat || Boolean(lastQuestion)}
-                    header_as_markdown={false}
-                    messages_description={t("common.messages")}
-                    actions={
-                        <>
-                            {canEdit && !isLegacyAssistant && (
-                                <Button
-                                    appearance="subtle"
-                                    icon={<Settings24Regular />}
-                                    onClick={() => navigate("edit")}
-                                    aria-label={t("components.assistantsettingsdrawer.show_configurations")}
-                                />
-                            )}
-                            {(assistantInfoData || isAssistantInfoLoading) && (
-                                <Button
-                                    appearance="subtle"
-                                    icon={<Info24Regular />}
-                                    onClick={() => setIsInfoDrawerOpen(prev => !prev)}
-                                    aria-label={t("components.community_assistants.about", "About")}
-                                />
-                            )}
-                        </>
-                    }
-                    onHeaderClick={assistantInfoData || isAssistantInfoLoading ? () => setIsInfoDrawerOpen(prev => !prev) : undefined}
-                    infoDrawerOpen={isInfoDrawerOpen}
-                />
+                <CanvasSplitView
+                    controller={canvas}
+                    conversationId={active_chat}
+                    serverConversationId={canvasServerConversationId}
+                    onInsertIntoChat={insertCanvasSelectionIntoChat}
+                    onAgentRevise={insertCanvasReviseRequest}
+                >
+                    <ChatLayout
+                        starterPrompts={starterPromptsComponent}
+                        answers={answerList}
+                        input={inputComponent}
+                        showStarterPrompts={!lastQuestion}
+                        header={assistantConfig.title}
+                        welcomeMessage={canChat ? t("chat.header") : undefined}
+                        showDisclaimer={canChat || Boolean(lastQuestion)}
+                        header_as_markdown={false}
+                        messages_description={t("common.messages")}
+                        actions={
+                            <>
+                                {canEdit && !isLegacyAssistant && (
+                                    <Button
+                                        appearance="subtle"
+                                        icon={<Settings24Regular />}
+                                        onClick={() => navigate("edit")}
+                                        aria-label={t("components.assistantsettingsdrawer.show_configurations")}
+                                    />
+                                )}
+                                {(assistantInfoData || isAssistantInfoLoading) && (
+                                    <Button
+                                        appearance="subtle"
+                                        icon={<Info24Regular />}
+                                        onClick={() => setIsInfoDrawerOpen(prev => !prev)}
+                                        aria-label={t("components.community_assistants.about", "About")}
+                                    />
+                                )}
+                            </>
+                        }
+                        onHeaderClick={assistantInfoData || isAssistantInfoLoading ? () => setIsInfoDrawerOpen(prev => !prev) : undefined}
+                        infoDrawerOpen={isInfoDrawerOpen}
+                    />
+                </CanvasSplitView>
             </>
         );
     }, [
@@ -1088,7 +1174,11 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
         canEdit,
         assistantInfoData,
         isAssistantInfoLoading,
-        isInfoDrawerOpen
+        isInfoDrawerOpen,
+        canvas,
+        active_chat,
+        insertCanvasSelectionIntoChat,
+        insertCanvasReviseRequest
     ]);
 
     const isRequestedChatLoading = Boolean(requestedChatId && requestedChatId !== active_chat);

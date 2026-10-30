@@ -1,4 +1,16 @@
+import re
+from collections.abc import Iterable
+from uuid import UUID
+
 from anyio import CancelScope
+from deepagents import FilesystemPermission
+from deepagents.backends import CompositeBackend, StateBackend, StoreBackend
+from deepagents.backends.protocol import (
+    DeleteResult,
+    EditResult,
+    FileUploadResponse,
+    WriteResult,
+)
 from langgraph.store.postgres import AsyncPostgresStore
 from psycopg_pool import AsyncConnectionPool
 
@@ -7,6 +19,140 @@ from core.logtools import getLogger
 from core.persistance_helpers import _create_connection_args
 
 logger = getLogger()
+
+DOCUMENTS_ROUTE = "/documents/"
+_SAFE_USER_ID = re.compile(r"[A-Za-z0-9\-_.@+:~]+")
+_ENCODED_USER_PREFIX = "utf8:"
+
+
+def get_document_namespace(user_id: str) -> tuple[str, str]:
+    """Scope storage to server-authenticated identity without glob characters.
+
+    Safe IDs are retained verbatim. Other IDs use UTF-8 hex with a reserved
+    prefix; IDs already beginning with that prefix are also encoded to avoid
+    collisions. Identity is never stripped, case-folded, or Unicode-normalized.
+    """
+    if not isinstance(user_id, str) or not user_id.strip():
+        raise ValueError("A nonempty authenticated user ID is required")
+    if not _SAFE_USER_ID.fullmatch(user_id) or user_id.startswith(_ENCODED_USER_PREFIX):
+        user_id = _ENCODED_USER_PREFIX + user_id.encode("utf-8").hex()
+    return ("user_documents", user_id)
+
+
+def get_document_storage_key(document_id: str | UUID) -> str:
+    """Return the canonical UUID key after CompositeBackend strips the mount."""
+    canonical_id = document_id if isinstance(document_id, UUID) else UUID(document_id)
+    return f"/{canonical_id}.txt"
+
+
+def get_document_path(document_id: str | UUID) -> str:
+    """Return a stable public path; filenames and user IDs never enter the path."""
+    return DOCUMENTS_ROUTE.rstrip("/") + get_document_storage_key(document_id)
+
+
+def create_document_backend(user_id: str) -> StoreBackend:
+    """Writable ingestion backend, usable outside graph execution.
+
+    Callers must resolve ownership server-side and use get_document_storage_key.
+    This application backend is not protected by agent filesystem permissions.
+    """
+    namespace = get_document_namespace(user_id)
+    return StoreBackend(
+        store=FileStoreManager.get_store(), namespace=lambda _runtime: namespace
+    )
+
+
+class _ReadOnlyDocumentBackend(StoreBackend):
+    """Close the permission glob's dot-path write gap on the agent mount.
+
+    Reuse StoreBackend reads/searches. All mutations fail at the backend too,
+    including direct uploads and middleware writes outside filesystem tools.
+    """
+
+    def write(self, file_path: str, content: str) -> WriteResult:
+        return WriteResult(error="permission denied: documents are read-only")
+
+    async def awrite(self, file_path: str, content: str) -> WriteResult:
+        return self.write(file_path, content)
+
+    def edit(
+        self,
+        file_path: str,
+        old_string: str,
+        new_string: str,
+        replace_all: bool = False,
+    ) -> EditResult:
+        return EditResult(error="permission denied: documents are read-only")
+
+    async def aedit(
+        self,
+        file_path: str,
+        old_string: str,
+        new_string: str,
+        replace_all: bool = False,
+    ) -> EditResult:
+        return self.edit(file_path, old_string, new_string, replace_all)
+
+    def delete(self, file_path: str) -> DeleteResult:
+        return DeleteResult(error="permission denied: documents are read-only")
+
+    async def adelete(self, file_path: str) -> DeleteResult:
+        return self.delete(file_path)
+
+    def upload_files(self, files: list[tuple[str, bytes]]) -> list[FileUploadResponse]:
+        return [
+            FileUploadResponse(path=path, error="permission_denied")
+            for path, _content in files
+        ]
+
+    async def aupload_files(
+        self, files: list[tuple[str, bytes]]
+    ) -> list[FileUploadResponse]:
+        return self.upload_files(files)
+
+
+def create_backend(user_id: str) -> CompositeBackend:
+    """Build a fresh user-bound agent filesystem with chat-state scratch files."""
+    namespace = get_document_namespace(user_id)
+    return CompositeBackend(
+        default=StateBackend(),
+        routes={
+            DOCUMENTS_ROUTE: _ReadOnlyDocumentBackend(
+                store=FileStoreManager.get_store(), namespace=lambda _runtime: namespace
+            )
+        },
+    )
+
+
+def create_permissions(
+    selected_document_ids: Iterable[str | UUID],
+) -> list[FilesystemPermission]:
+    """Expose only server-verified selected UUID files, keeping scratch access.
+
+    The exact mount-root allowance permits ls/glob/grep before their results
+    are filtered. It does not grant reads to any descendants. With no selected
+    documents the mount is denied and hidden from root listings.
+    """
+    paths = sorted(
+        {get_document_path(document_id) for document_id in selected_document_ids}
+    )
+    rules = []
+    if paths:
+        rules.append(
+            FilesystemPermission(
+                operations=["read"],
+                paths=[DOCUMENTS_ROUTE.rstrip("/"), DOCUMENTS_ROUTE, *paths],
+                mode="allow",
+            )
+        )
+    rules.append(
+        FilesystemPermission(
+            operations=["read", "write"],
+            paths=[DOCUMENTS_ROUTE.rstrip("/"), DOCUMENTS_ROUTE + "**"],
+            mode="deny",
+        )
+    )
+    return rules
 
 
 class FileStoreManager:

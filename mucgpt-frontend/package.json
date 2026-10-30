@@ -51,7 +51,7 @@
         "jsdom": "^29.1.1",
         "msw": "2.12.14",
         "prettier": "3.8.5",
-        "typescript": "6.0.3",
+        "typescript": "7.0.2",
         "vite": "8.1.6",
         "vite-plugin-pwa": "^2.0.0",
         "vitest": "^5.0.0"

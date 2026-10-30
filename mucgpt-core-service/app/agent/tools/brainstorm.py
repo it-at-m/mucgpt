@@ -161,7 +161,7 @@ def brainstorming(
         user_msg = HumanMessage(content=mindmap_prompt)
         msgs: list[BaseMessage] = [system_msg, user_msg]
 
-        llm = model.model_copy(update={"temperature": 0.8, "streaming": False})
+        llm = model.model_copy(update={"streaming": False})
         response = ""
         for chunk in llm.stream(msgs):
             # Some models may stream plain strings, others message objects

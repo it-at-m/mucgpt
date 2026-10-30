@@ -469,16 +469,6 @@ class RedisConfig(BaseModel):
     PASSWORD: SecretStr | None = None
 
 
-class InternetSearchConfig(BaseModel):
-    """Internet search configuration (nested under INTERNET_SEARCH key in YAML)."""
-
-    SEARXNG_URL: str = ""
-    TIMEOUT: float = 10.0
-    MAX_RESULTS: PositiveInt = 5
-    LANGUAGE: str = "de"
-    SAFESEARCH: int = 1
-
-
 class PromptConfig(BaseModel):
     """A prompt inside a Langfuse folder."""
 
@@ -504,7 +494,6 @@ SSOSettings = SSOConfig
 LangfuseSettings = LangfuseConfig
 MCPSettings = MCPConfig
 RedisSettings = RedisConfig
-InternetSearchSettings = InternetSearchConfig
 
 
 class Settings(BaseSettings):
@@ -573,7 +562,6 @@ class Settings(BaseSettings):
     LANGFUSE: LangfuseConfig = Field(default_factory=LangfuseConfig)
     MCP: MCPConfig = Field(default_factory=MCPConfig)
     REDIS: RedisConfig = Field(default_factory=RedisConfig)
-    INTERNET_SEARCH: InternetSearchConfig = Field(default_factory=InternetSearchConfig)
 
     # Customize settings sources to prioritize YAML config
     @classmethod
@@ -936,9 +924,3 @@ def get_mcp_settings() -> MCPConfig:
 def get_redis_settings() -> RedisConfig:
     """Return cached RedisSettings instance."""
     return get_settings().REDIS
-
-
-@lru_cache(maxsize=1)
-def get_internet_search_settings() -> InternetSearchConfig:
-    """Return cached InternetSearchSettings instance."""
-    return get_settings().INTERNET_SEARCH

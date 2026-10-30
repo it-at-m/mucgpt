@@ -1,12 +1,11 @@
 import logging
-from typing import cast
 
 from langchain_core.runnables.base import RunnableSerializable
 from langchain_core.tools.base import BaseTool
 
 from agent.state_models.default_state import DefaultAgentState
 from agent.state_models.registry import registry as AGENT_STATE_SCHEMA_REGISTRY
-from agent.tools import brainstorm, internet_search, simplify
+from agent.tools import brainstorm, simplify
 from agent.tools.mcp import McpLoader
 from agent.tools.spec import LocalTool
 from core.auth import AuthenticationResult
@@ -15,7 +14,7 @@ from core.logtools import getLogger
 logger = getLogger(name="mucgpt-core-tools-schema")
 
 # Registering a new local tool: add its `TOOL = LocalTool(...)` here.
-LOCAL_TOOLS: list[LocalTool] = [brainstorm.TOOL, simplify.TOOL, internet_search.TOOL]
+LOCAL_TOOLS: list[LocalTool] = [brainstorm.TOOL, simplify.TOOL]
 
 
 def _metadata_value(metadata, key: str, default=None):
@@ -78,25 +77,9 @@ class ToolCollection:
         self.model = model
         self.logger = logger or getLogger(name="mucgpt-core-tools")
 
-    def _bind_model(self, tool_name: str) -> RunnableSerializable:
-        """Bind a per-tool Langfuse tag onto the model for tools that call the LLM themselves.
-
-        This used to also bind llm_user/assistant_id, but that data isn't available
-        yet at this point: tools are built in init_agent() before AgentExecutor.
-        run_with_streaming/run_without_streaming ever compute llm_user/assistant_id
-        for the request. See app/agent/tools/README.md for the full story and the
-        proper fix.
-        """
-        return cast(
-            RunnableSerializable,
-            self.model.bind(
-                extra_body={"metadata": {"tags": [f"MUCGPT_TOOL_NAME:{tool_name}"]}}
-            ),
-        )
-
     def _build_tools(self) -> list[BaseTool]:
         return [
-            t.build(self._bind_model(tool_name=t.id), self.logger)
+            t.build(self.model, self.logger)
             for t in LOCAL_TOOLS
             if t.is_configured()
         ]

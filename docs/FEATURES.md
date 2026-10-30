@@ -16,7 +16,7 @@ The chat provides a clear space to work with the underlying language model on al
 Work side by side with the agent: open a rich-text canvas panel next to any chat and draft documents together.
 - Toggle the canvas at any time, mid-conversation; on small screens it opens as an overlay so the chat stays usable.
 - The agent can start or edit the canvas while it is closed: the view opens automatically as soon as the agent writes.
-- Large documents are supported up to a size limit: content beyond the warning threshold is greyed out, is not read by the agent and is not persisted; oversized pastes are clipped to the limit. The export shows progress feedback and confirms completion.
+- Large documents are supported up to a size limit: content beyond the warning threshold is greyed out and is not read by the agent; content up to the hard cap is still saved with the conversation, and oversized pastes are clipped to the limit. The export shows progress feedback and confirms completion.
 - Write and format text yourself (headings, lists, tables, undo/redo). The agent can write and edit the canvas directly — the editor locks while the agent works and changes appear live as they are generated.
 - Select a passage to quote it into the chat or to ask the agent to revise exactly that text.
 - Save versions manually and review an automatic history of agent edits. Restoring an older version is non-destructive and can be undone like any edit.

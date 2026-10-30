@@ -229,24 +229,17 @@ def _initialize_evaluation_context(
 ) -> Langfuse:
     ModelProvider.init_model(models, streaming=False, temperature=0.0)
 
-    langfuse_settings = settings.LANGFUSE
     if not (
-        langfuse_settings.HOST
-        and langfuse_settings.PUBLIC_KEY
-        and langfuse_settings.SECRET_KEY
+        os.environ.get("LANGFUSE_PUBLIC_KEY") and os.environ.get("LANGFUSE_SECRET_KEY")
     ):
         raise RuntimeError(
-            "LANGFUSE HOST, PUBLIC_KEY, and SECRET_KEY must be configured"
+            "LANGFUSE_PUBLIC_KEY and LANGFUSE_SECRET_KEY must be configured "
+            "(set LANGFUSE_HOST for self-hosted instances)"
         )
 
-    LangfuseProvider.init(version=settings.VERSION, langfuse_cfg=langfuse_settings)
-    client = Langfuse(
-        public_key=langfuse_settings.PUBLIC_KEY,
-        secret_key=langfuse_settings.SECRET_KEY.get_secret_value(),
-        host=langfuse_settings.HOST,
-        release=settings.VERSION,
-    )
-    PromptPool.init(client, settings.PROMPTS)
+    LangfuseProvider.init(version=settings.version)
+    client = Langfuse(release=settings.version)
+    PromptPool.init(client, settings.prompts)
     return client
 
 
@@ -255,7 +248,7 @@ async def _run_experiments(args: argparse.Namespace) -> None:
         raise ValueError("--max-concurrency must be at least 1")
 
     settings = _load_settings(args.config)
-    models_by_name = {model.llm_name: model for model in settings.MODELS}
+    models_by_name = {model.llm_name: model for model in settings.models}
     unknown_models = set(args.models) - models_by_name.keys()
     if unknown_models:
         raise ValueError(

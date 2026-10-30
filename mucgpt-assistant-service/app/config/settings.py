@@ -17,63 +17,63 @@ from pydantic_settings import (
 
 
 class SSOConfig(BaseModel):
-    """SSO configuration (nested under SSO key in YAML)."""
+    """SSO configuration (nested under sso key in YAML)."""
 
-    ROLE: str | None = None
-    ADMIN_ROLE: str | None = None
-    USER_ID_CLAIM: str = "user_id"
-    ORGANIZATION_UNIT_CLAIM: str = "organization_unit"
+    role: str | None = None
+    admin_role: str | None = None
+    user_id_claim: str = "user_id"
+    organization_unit_claim: str = "organization_unit"
 
 
 class DBConfig(BaseModel):
-    """Database configuration (nested under DB key in YAML)."""
+    """Database configuration (nested under db key in YAML)."""
 
-    HOST: str
-    PORT: int = 5432
-    NAME: str
-    USER: str
-    PASSWORD: SecretStr
-    SCHEMA: str | None = None
+    host: str
+    port: int = 5432
+    name: str
+    user: str
+    password: SecretStr
+    schema: str | None = None
 
 
 class RedisConfig(BaseModel):
-    """Redis configuration (nested under REDIS key in YAML)."""
+    """Redis configuration (nested under redis key in YAML)."""
 
-    HOST: str | None = None
-    PORT: int = 6379
-    USERNAME: str | None = None
-    PASSWORD: SecretStr | None = None
+    host: str | None = None
+    port: int = 6379
+    username: str | None = None
+    password: SecretStr | None = None
 
 
 class LDAPConfig(BaseModel):
-    """LDAP configuration (nested under LDAP key in YAML)."""
+    """LDAP configuration (nested under ldap key in YAML)."""
 
-    ENABLED: bool = False
-    HOST: str | None = None
-    PORT: int = 636
-    USE_SSL: bool = True
-    START_TLS: bool = False
-    VERIFY_SSL: bool = True
-    CA_CERT_FILE: str | None = None
-    BIND_DN: str | None = None
-    BIND_PASSWORD: SecretStr | None = None
-    SEARCH_BASE: str = "dc=example,dc=org"
-    SEARCH_FILTER: str = "(objectClass=organizationalUnit)"
-    DISPLAY_ATTRIBUTE: str = "ou"
-    SHORTNAME_ATTRIBUTE: str = "departmentCode"
-    PARENT_ATTRIBUTE: str | None = None
-    ADDITIONAL_ATTRIBUTES: list[str] | None = None
-    REQUIRED_ATTRIBUTES: list[str] = Field(default_factory=list)
-    IGNORED_OU_PREFIXES: list[str] = Field(default_factory=lambda: ["_"])
-    IGNORED_OU_SUFFIXES: list[str] = Field(default_factory=lambda: ["-xxx"])
-    IGNORED_OU_SHORTNAME_EXCEPTIONS: list[str] = Field(default_factory=list)
-    CACHE_TTL: int = 14 * 24 * 60 * 60
-    PAGE_SIZE: int = 500
-    CONNECT_TIMEOUT: float = 5.0
-    READ_TIMEOUT: float = 10.0
-    USER_SEARCH_BASE: str | None = None
-    USER_SEARCH_FILTER: str = "(objectClass=person)"
-    USER_SEARCH_ATTRIBUTES: list[str] = Field(
+    enabled: bool = False
+    host: str | None = None
+    port: int = 636
+    use_ssl: bool = True
+    start_tls: bool = False
+    verify_ssl: bool = True
+    ca_cert_file: str | None = None
+    bind_dn: str | None = None
+    bind_password: SecretStr | None = None
+    search_base: str = "dc=example,dc=org"
+    search_filter: str = "(objectClass=organizationalUnit)"
+    display_attribute: str = "ou"
+    shortname_attribute: str = "departmentCode"
+    parent_attribute: str | None = None
+    additional_attributes: list[str] | None = None
+    required_attributes: list[str] = Field(default_factory=list)
+    ignored_ou_prefixes: list[str] = Field(default_factory=lambda: ["_"])
+    ignored_ou_suffixes: list[str] = Field(default_factory=lambda: ["-xxx"])
+    ignored_ou_shortname_exceptions: list[str] = Field(default_factory=list)
+    cache_ttl: int = 14 * 24 * 60 * 60
+    page_size: int = 500
+    connect_timeout: float = 5.0
+    read_timeout: float = 10.0
+    user_search_base: str | None = None
+    user_search_filter: str = "(objectClass=person)"
+    user_search_attributes: list[str] = Field(
         default_factory=lambda: [
             "givenName",
             "sn",
@@ -82,11 +82,11 @@ class LDAPConfig(BaseModel):
             "organizationUnit",
         ]
     )
-    USER_ID_ATTRIBUTE: str = "userId"
-    USER_GIVEN_NAME_ATTRIBUTE: str = "givenName"
-    USER_SURNAME_ATTRIBUTE: str = "sn"
-    USER_MAIL_ATTRIBUTE: str = "mail"
-    USER_ORGANIZATIONAL_UNIT_ATTRIBUTE: str = "organizationUnit"
+    user_id_attribute: str = "userId"
+    user_given_name_attribute: str = "givenName"
+    user_surname_attribute: str = "sn"
+    user_mail_attribute: str = "mail"
+    user_organizational_unit_attribute: str = "organizationUnit"
 
 
 # Backward-compatible aliases so existing imports keep working
@@ -115,17 +115,17 @@ class Settings(BaseSettings):
     )
 
     # General settings
-    UNAUTHORIZED_USER_REDIRECT_URL: str = ""
-    LOG_CONFIG: str = str(Path(__file__).resolve().parent.parent / "logconf.yaml")
-    OWNER_CACHE_REFRESH_ON_READ: bool = False
-    COMPLIANCE_REQUIRE_VERIFICATION: bool = True
-    COMPLIANCE_REQUIRE_LEGAL_REVIEW: bool = True
+    unauthorized_user_redirect_url: str = ""
+    log_config: str = str(Path(__file__).resolve().parent.parent / "logconf.yaml")
+    owner_cache_refresh_on_read: bool = False
+    compliance_require_verification: bool = True
+    compliance_require_legal_review: bool = True
 
     # Nested sub-configurations
-    DB: DBConfig
-    SSO: SSOConfig = Field(default_factory=SSOConfig)
-    REDIS: RedisConfig = Field(default_factory=RedisConfig)
-    LDAP: LDAPConfig = Field(default_factory=LDAPConfig)
+    db: DBConfig
+    sso: SSOConfig = Field(default_factory=SSOConfig)
+    redis: RedisConfig = Field(default_factory=RedisConfig)
+    ldap: LDAPConfig = Field(default_factory=LDAPConfig)
 
     @classmethod
     def settings_customise_sources(
@@ -158,16 +158,16 @@ def get_settings() -> Settings:
 @lru_cache(maxsize=1)
 def get_sso_settings() -> SSOConfig:
     """Return cached SSO Settings instance."""
-    return get_settings().SSO
+    return get_settings().sso
 
 
 @lru_cache(maxsize=1)
 def get_ldap_settings() -> LDAPConfig:
     """Return cached LDAP Settings instance."""
-    return get_settings().LDAP
+    return get_settings().ldap
 
 
 @lru_cache(maxsize=1)
 def get_redis_settings() -> RedisConfig:
     """Return cached Redis Settings instance."""
-    return get_settings().REDIS
+    return get_settings().redis

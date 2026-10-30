@@ -72,7 +72,7 @@ async def list_tool_metadata(
     mcp_tools = await McpLoader.load_mcp_tools(
         user_info=user_info, force_reload=force_reload
     )
-    mcp_source_keys = set((get_mcp_settings().SOURCES or {}).keys())
+    mcp_source_keys = set((get_mcp_settings().sources or {}).keys())
     for tool in mcp_tools:
         runtime_metadata = getattr(tool, "metadata", None) or {}
         mcp_group = runtime_metadata.get("mcp_group")

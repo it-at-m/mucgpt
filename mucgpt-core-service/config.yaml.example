@@ -1,63 +1,86 @@
 # Core Service Configuration
 # This file provides an example YAML configuration for the MUCGPT core service.
-# You can use this instead of environment variables or base64 encoded JSON.
+# You can use this instead of environment variables (e.g. MUCGPT_CORE_MODELS as a
+# JSON array for models).
 #
 # Priority order (highest to lowest):
 # 1. Environment variables (MUCGPT_CORE_* for top-level, MUCGPT_CORE_<SECTION>__<FIELD> for nested)
 # 2. YAML configuration file (this file, when named config.yaml)
 # 3. .env file
 #
-# Note: Because case_sensitive=False in settings, use UPPERCASE field names in YAML
+# YAML keys are lowercase. Legacy UPPERCASE YAML keys are ignored - migrate
+# existing config files. Environment variable names stay UPPERCASE.
+#
+# SECURITY - secrets doctrine:
+# Do NOT store real secrets (passwords, API keys, tokens) in this file.
+# Config files are often mounted as ConfigMaps (leaking values into etcd) or get
+# committed to Git. Provide secrets via environment variables instead - they
+# always override YAML values (priority 1 above). Secret-bearing fields below are
+# commented out and name the matching environment variable.
+#
 # Nested env vars use __ (double underscore) as delimiter, e.g. MUCGPT_CORE_REDIS__HOST
 
 # General settings
-VERSION: "0.0.1"
-LOG_CONFIG: "logconf.yaml"
+version: "0.0.1"
+log_config: "logconf.yaml"
 
 # Frontend settings
-ENV_NAME: "MUCGPT"
-ALTERNATIVE_LOGO: false
+env_name: "MUCGPT"
+alternative_logo: false
 # Enables the browser-based speech-to-text feature. Transcription itself runs fully
 # client-side (models are downloaded and cached by the browser; no audio reaches the backend).
-TRANSCRIPTION_ENABLED: false
+transcription_enabled: false
 # Model id preselected in the transcription settings for first-time users (must match an
 # entry of the frontend's TRANSCRIPTION_MODELS list, e.g. "onnx-community/whisper-small").
 # Unknown ids are ignored; leave unset for the frontend's built-in default.
-TRANSCRIPTION_DEFAULT_MODEL: null
-AI_ACT_COMPLIANCE_CHECK_ENABLED: true
-FRONTEND_VERSION: "unknown"
-ASSISTANT_VERSION: "unknown"
-FOOTER_LINK_URL: ""
-FOOTER_LABEL: ""
-FAQ_URL: ""
-INCIDENT_REPORT_URL: ""
-FEATURE_REQUEST_URL: ""
-CONTACT_MAIL_URL: ""
-AD2IMAGE_URL: "http://localhost:8084"  # Base URL of the ad2image service
-OWNER_PROFILE_URL_TEMPLATE: "https://intranet.example.org/person/{uid}"  # {uid} is replaced with the owner ID
+transcription_default_model: null
+ai_act_compliance_check_enabled: true
+frontend_version: "unknown"
+assistant_version: "unknown"
+footer_link_url: ""
+footer_label: ""
+faq_url: ""
+incident_report_url: ""
+feature_request_url: ""
+contact_mail_url: ""
+ad2image_url: "http://localhost:8084"  # Base URL of the ad2image service
+owner_profile_url_template: "https://intranet.example.org/person/{uid}"  # {uid} is replaced with the owner ID
 
 
 # Backend settings
-UNAUTHORIZED_USER_REDIRECT_URL: ""
+unauthorized_user_redirect_url: ""
 
 # Compliance cache settings
 # If enabled, compliance check results are cached in Redis and can be verified by the assistant service.
-COMPLIANCE_CACHE_ENABLED: true
+compliance_cache_enabled: true
 # Time-to-live for compliance cache entries in seconds (default: 30 minutes)
-COMPLIANCE_CACHE_TTL_SECONDS: 1800
+compliance_cache_ttl_seconds: 1800
+
+# Providers configuration
+# Connection settings (type/endpoint/api_key/api_version) live in this `providers`
+# dict; model entries reference a provider via `provider: <key>`. Provider keys
+# MUST be lowercase: env var name segments are lowercased, so uppercase keys
+# would silently miss their env overrides.
+# Unlike the old per-model api_key, api_key is now per provider and CAN be
+# overridden via environment variables, e.g.:
+#   MUCGPT_CORE_PROVIDERS__MY_GATEWAY__API_KEY
+providers:
+  my_gateway:
+    type: "openai"             # "openai" or "azure"
+    endpoint: "https://your-litellm-gateway.example.org/"
+    # Provide via environment variable MUCGPT_CORE_PROVIDERS__MY_GATEWAY__API_KEY instead of storing it here.
+    # api_key: "<your-sk>"
+    api_version: ""            # only needed for type "azure"
 
 # Models configuration
 # Instead of base64 encoded JSON in environment variables, you can configure models here
 # Reasoning effort sent to reasoning models when neither the request nor the model's
 # default_reasoning_effort sets one. Set to null to omit it and use the provider default.
-FALLBACK_REASONING_EFFORT: "low"
-MODELS:
-  - type: "OPENAI"
-    llm_name: "<your-llm-name>"
-    deployment: ""
-    endpoint: "<your-endpoint>"
-    api_key: "<your-sk>"
-    api_version: ""
+fallback_reasoning_effort: "low"
+models:
+  - provider: "my_gateway"     # required reference into providers
+    llm_name: "gpt-4o"
+    deployment: ""             # only needed for type "azure"
     deep_agent:
       # Built-in tools are disabled unless explicitly enabled for this model.
       enabled_builtin_tools: [
@@ -88,7 +111,7 @@ MODELS:
       output_cost_per_token: 0.00000036
       supports_reasoning: false
       # Optional, usually provided by LiteLLM model_info. Requests are clamped to the
-      # nearest supported effort; without a default, FALLBACK_REASONING_EFFORT applies.
+      # nearest supported effort; without a default, fallback_reasoning_effort applies.
       # supported_reasoning_efforts: [low, medium, high]
       # default_reasoning_effort: low
       # Defaults to true. Set false for models that reject temperature (e.g. GPT-5/GPT-6).
@@ -96,25 +119,26 @@ MODELS:
       supports_temperature: true
       knowledge_cut_off: "2024-07-01"
 
-# SSO Settings (optional - nested under SSO key)
-SSO:
-  ROLE: "mucgpt-user"
-  ADMIN_ROLE: "mucgpt-admin"
-  USER_ID_CLAIM: "user_id"
-  ORGANIZATION_UNIT_CLAIM: "organization_unit"
+# SSO Settings (optional - nested under sso key)
+sso:
+  role: "mucgpt-user"
+  admin_role: "mucgpt-admin"
+  user_id_claim: "user_id"
+  organization_unit_claim: "organization_unit"
 
-# Langfuse Settings (optional - nested under LANGFUSE key)
-LANGFUSE:
-  PUBLIC_KEY: "<your-public-key>"
-  SECRET_KEY: "<your-secret-key>"
-  HOST: "https://langfuse.example.com"
+# Langfuse is configured via the standard environment variables
+# LANGFUSE_PUBLIC_KEY, LANGFUSE_SECRET_KEY and LANGFUSE_HOST; the Langfuse SDK
+# reads them directly.
+# WARNING: MUCGPT_CORE_LANGFUSE__* environment variables are NO LONGER read
+# (silently ignored) - credentials must use the unprefixed standard
+# LANGFUSE_* names.
 
-# Prompt settings (optional - nested under PROMPTS key)
+# Prompt settings (optional - nested under prompts key)
 # Configure prompt names exactly like the local Markdown files in
 # app/agent/prompt_pool/, without the .md suffix. Langfuse is used first;
 # when it is unavailable or a fetch fails, the matching local file is used.
-# PROMPTS:
-#   FOLDERS:
+# prompts:
+#   folders:
 #     - name: "defaults"
 #       prompts:
 #         # General system instructions used for regular chat.
@@ -149,9 +173,9 @@ LANGFUSE:
 #         - name: "education"
 #           label: "production"
 
-# MCP Settings (optional - nested under MCP key)
-MCP:
-  SOURCES:
+# MCP Settings (optional - nested under mcp key)
+mcp:
+  sources:
     "ki in muenchen":
       url: "http://localhost:8088/sse"
       transport: "sse"
@@ -162,27 +186,28 @@ MCP:
       # descriptions:  # optional: overrides for tool descriptions
       #   - name: "searchConfluenceUsingCql"
       #     description: "Search Confluence content using CQL queries. Use for structured or advanced filtering."
-  CACHE_TTL: 43200
+  cache_ttl: 43200
 
 # Internet Search Settings (optional - backed by SearXNG)
 # Configure this to enable the InternetSearch tool.
 # Override via environment variables, e.g.:
 #   MUCGPT_CORE_INTERNET_SEARCH__SEARXNG_URL=https://your-searxng-instance/
-# INTERNET_SEARCH:
-#   SEARXNG_URL: "https://your-searxng-instance/"
-#   TIMEOUT: 10.0
-#   MAX_RESULTS: 5
-#   LANGUAGE: "de"
-#   SAFESEARCH: 1
+# internet_search:
+#   searxng_url: "https://your-searxng-instance/"
+#   timeout: 10.0
+#   max_results: 5
+#   language: "de"
+#   safesearch: 1
 
-# Redis Settings (optional - nested under REDIS key)
+# Redis Settings (optional - nested under redis key)
 # Override individual fields via environment variables, e.g.:
 #   MUCGPT_CORE_REDIS__HOST=my-redis
 #   MUCGPT_CORE_REDIS__PORT=6379
 #   MUCGPT_CORE_REDIS__USERNAME=default
 #   MUCGPT_CORE_REDIS__PASSWORD=secret
-REDIS:
-  HOST: "localhost"
-  PORT: 6379
-  USERNAME: "default"
-  PASSWORD: "<your-password>"
+redis:
+  host: "localhost"
+  port: 6379
+  username: "default"
+  # Provide via environment variable MUCGPT_CORE_REDIS__PASSWORD instead of storing it here.
+  # password: "<your-password>"

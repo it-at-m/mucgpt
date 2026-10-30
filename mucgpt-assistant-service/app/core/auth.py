@@ -169,10 +169,10 @@ def authenticate_user(
     """Dependency to authenticate users based on access token."""  # Load configuration
     logger.debug("Loading configuration for authentication")
     auth_helper = AuthenticationHelper(
-        role=sso_settings.ROLE,
-        admin_role=sso_settings.ADMIN_ROLE,
-        user_id_claim=sso_settings.USER_ID_CLAIM,
-        organization_unit_claim=sso_settings.ORGANIZATION_UNIT_CLAIM,
+        role=sso_settings.role,
+        admin_role=sso_settings.admin_role,
+        user_id_claim=sso_settings.user_id_claim,
+        organization_unit_claim=sso_settings.organization_unit_claim,
     )
 
     try:

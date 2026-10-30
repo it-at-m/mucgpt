@@ -29,12 +29,12 @@ async def test_async_connection():
         logger.error(f"Failed to load settings: {e}")
         return False
 
-    db = settings.DB
-    db_user = db.USER
-    db_password = db.PASSWORD.get_secret_value() if db.PASSWORD else None
-    db_host = db.HOST
-    db_port = db.PORT
-    db_name = db.NAME
+    db = settings.db
+    db_user = db.user
+    db_password = db.password.get_secret_value() if db.password else None
+    db_host = db.host
+    db_port = db.port
+    db_name = db.name
 
     # Get timeout setting
     timeout = float(os.getenv("MIGRATION_DB_TIMEOUT", "30"))
@@ -82,12 +82,12 @@ async def test_sqlalchemy_connection():
         logger.error(f"Failed to load settings: {e}", exc_info=True)
         return False
 
-    db = settings.DB
-    db_user = db.USER
-    db_password = db.PASSWORD.get_secret_value() if db.PASSWORD else None
-    db_host = db.HOST
-    db_port = db.PORT
-    db_name = db.NAME
+    db = settings.db
+    db_user = db.user
+    db_password = db.password.get_secret_value() if db.password else None
+    db_host = db.host
+    db_port = db.port
+    db_name = db.name
 
     # Get timeout setting
     timeout = float(os.getenv("MIGRATION_DB_TIMEOUT", "30"))

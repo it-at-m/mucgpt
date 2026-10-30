@@ -39,12 +39,12 @@ async def lifespan(app: FastAPI):
 
 
 # serves static files and the api
-backend = FastAPI(title="MUCGPT", version=settings.VERSION, lifespan=lifespan)
+backend = FastAPI(title="MUCGPT", version=settings.version, lifespan=lifespan)
 # serves the api
 api_app = FastAPI(
     title="MUCGPT-API",
     description="MUCCGPT core API for AI services",
-    version=settings.VERSION,
+    version=settings.version,
     openapi_tags=[
         {
             "name": "Chat",
@@ -91,12 +91,12 @@ async def auth_exception_handler(request: Request, exc: AuthError):
 
     error_body = AuthErrorResponse(
         message=exc.error,
-        redirect_url=(settings.UNAUTHORIZED_USER_REDIRECT_URL or None),
+        redirect_url=(settings.unauthorized_user_redirect_url or None),
     )
 
     headers = {}
-    if settings.UNAUTHORIZED_USER_REDIRECT_URL:
-        headers["Location"] = settings.UNAUTHORIZED_USER_REDIRECT_URL
+    if settings.unauthorized_user_redirect_url:
+        headers["Location"] = settings.unauthorized_user_redirect_url
 
     return JSONResponse(
         status_code=exc.status_code,

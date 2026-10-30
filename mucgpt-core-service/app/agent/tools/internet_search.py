@@ -35,7 +35,7 @@ INTERNET_SEARCH_METADATA = {
 
 def is_internet_search_configured(settings: InternetSearchConfig | None = None) -> bool:
     settings = settings or get_internet_search_settings()
-    url = settings.SEARXNG_URL.strip()
+    url = settings.searxng_url.strip()
     return bool(url) and not (url.startswith("<") and url.endswith(">"))
 
 
@@ -76,23 +76,23 @@ def internet_search(
     if not is_internet_search_configured(settings):
         return (
             "Internet search is not configured. Set "
-            "INTERNET_SEARCH.SEARXNG_URL or MUCGPT_CORE_INTERNET_SEARCH__SEARXNG_URL."
+            "internet_search.searxng_url or MUCGPT_CORE_INTERNET_SEARCH__SEARXNG_URL."
         )
 
     clean_query = (query or "").strip()
     if not clean_query:
         return "Error: query is required for internet search."
 
-    result_limit = settings.MAX_RESULTS
+    result_limit = settings.max_results
     if max_results is not None:
-        result_limit = max(1, min(int(max_results), settings.MAX_RESULTS))
+        result_limit = max(1, min(int(max_results), settings.max_results))
 
-    search_url = urljoin(settings.SEARXNG_URL.rstrip("/") + "/", "search")
+    search_url = urljoin(settings.searxng_url.rstrip("/") + "/", "search")
     params = {
         "q": clean_query,
         "format": "json",
-        "language": language or settings.LANGUAGE,
-        "safesearch": settings.SAFESEARCH,
+        "language": language or settings.language,
+        "safesearch": settings.safesearch,
     }
 
     try:
@@ -105,7 +105,7 @@ def internet_search(
                 ).model_dump_json()
             )
 
-        with httpx.Client(timeout=settings.TIMEOUT) as client:
+        with httpx.Client(timeout=settings.timeout) as client:
             response = client.get(search_url, params=params)
             response.raise_for_status()
         payload = response.json()

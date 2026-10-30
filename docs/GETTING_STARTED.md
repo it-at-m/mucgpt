@@ -12,11 +12,44 @@ Configuration is done via **YAML configuration files** (primary) with optional *
 
 Each service reads a `config.yaml` mounted into the container. Environment variables can override any YAML setting using a service-specific prefix and `__` (double underscore) as the nested delimiter.
 
+**YAML keys are lowercase** (e.g. `models:`, `redis:`, `host:`, `password:`). Environment variable names stay UPPERCASE — they are matched case-insensitively against the settings, so existing env vars remain valid.
+
 | Service              | YAML file (in `stack/`) | Env Prefix          |
 | -------------------- | ----------------------- | ------------------- |
 | core-service         | `core.config.yaml`      | `MUCGPT_CORE_`      |
 | assistant-service    | `assistant.config.yaml` | `MUCGPT_ASSISTANT_` |
 | assistant-migrations | `assistant.config.yaml` | `MUCGPT_ASSISTANT_` |
+
+> **Migration notes (from older versions):**
+>
+> - **Lowercase your `config.yaml` keys** (e.g. `models:`, `redis:`, `host:`, `password:`). Legacy UPPERCASE YAML keys are ignored — most mistakes fail loudly at startup (missing required database fields, empty models list).
+> - **Move model connection settings into a `providers` section** and reference it from each model via `provider: <key>` (see [Models Configuration](#models-configuration-yaml)). Inline `type`/`endpoint`/`api_key`/`api_version` on `models[]` entries are rejected at startup with a pointer to the new scheme.
+> - **Replace `MUCGPT_CORE_LANGFUSE__*` environment variables with the standard `LANGFUSE_PUBLIC_KEY` / `LANGFUSE_SECRET_KEY` / `LANGFUSE_HOST`** — the old prefixed variables are silently ignored (see [Secrets](#secrets)).
+
+### Secrets
+
+**Never store real secrets (passwords, API keys, tokens) in `config.yaml`.** Config files are typically mounted as ConfigMaps (leaking values into etcd) or risk being committed to Git. Provide secrets via **environment variables** instead — they always override YAML values (see [Configuration Priority](#configuration-priority)).
+
+```bash
+# Core service
+MUCGPT_CORE_REDIS__PASSWORD=secret
+MUCGPT_CORE_PROVIDERS__MY_GATEWAY__API_KEY=sk-...
+
+# Assistant service and migrations
+MUCGPT_ASSISTANT_DB__PASSWORD=secret
+MUCGPT_ASSISTANT_LDAP__BIND_PASSWORD=secret
+
+# Langfuse (standard SDK variables, no MUCGPT_CORE_ prefix)
+LANGFUSE_PUBLIC_KEY=pk-lf-...
+LANGFUSE_SECRET_KEY=sk-lf-...
+LANGFUSE_HOST=https://your-langfuse-host.example.com
+```
+
+Inject them via Kubernetes Secrets, docker-compose `environment:` entries, or a secret manager — not via the mounted YAML file.
+
+Model API keys are configured **per provider** in the `providers` section (see [Models Configuration](#models-configuration-yaml)) and can be overridden per provider via environment variables: `MUCGPT_CORE_PROVIDERS__<PROVIDER>__API_KEY`. The middle segment must mirror the provider key (case-insensitively): provider `my_gateway` maps to `MUCGPT_CORE_PROVIDERS__MY_GATEWAY__API_KEY`. Prefer hyphen-free provider keys so the variable is a valid shell identifier. Whole sections can also be replaced: `MUCGPT_CORE_PROVIDERS` (JSON object) and `MUCGPT_CORE_MODELS` (JSON array, see [below](#models-configuration-environment-variable)) — which can themselves be injected as secrets.
+
+> **Warning:** `MUCGPT_CORE_LANGFUSE__*` environment variables are **no longer read** (silently ignored) — a common migration error. Langfuse is configured exclusively via the standard SDK variables `LANGFUSE_PUBLIC_KEY`, `LANGFUSE_SECRET_KEY`, and `LANGFUSE_HOST` (the host defaults to Langfuse cloud if unset). Tracing degrades gracefully: without credentials the core service logs this and runs with tracing disabled.
 
 ### Initial Setup
 
@@ -29,14 +62,20 @@ cp assistant.config.yaml.example assistant.config.yaml
 
 ### Models Configuration (YAML)
 
-Configure your LLM models in `core.config.yaml`. The placeholder values in this example, as well as any local demo values, must not be used unchanged in production or test environments:
+Configure your LLM models in `core.config.yaml`. Connection settings (type, endpoint, credentials) live in the `providers` section; each model entry references a provider via `provider: <key>`. Provider keys must be lowercase (env-var name segments are lowercased, so uppercase keys would silently miss their env overrides). The placeholder values in this example, as well as any local demo values, must not be used unchanged in production or test environments:
 
 ```yaml
-MODELS:
-  - type: "OPENAI"
+providers:
+  my_gateway:
+    type: "openai"             # "openai" or "azure"
+    endpoint: "https://your-litellm-gateway.example.org/"
+    api_version: ""            # only for azure
+    # Provide api_key via MUCGPT_CORE_PROVIDERS__MY_GATEWAY__API_KEY instead of storing it here.
+
+models:
+  - provider: "my_gateway"     # required reference into providers
     llm_name: "<your-llm-name>"
-    endpoint: "<your-endpoint>"
-    api_key: "<your-sk>"
+    deployment: ""             # only for azure
     model_info:
       auto_enrich_from_model_info_endpoint: true
       max_output_tokens: 16384
@@ -52,13 +91,15 @@ MODELS:
 
 See `mucgpt-core-service/config.yaml.example` and `mucgpt-assistant-service/config.yaml.example` for complete examples.
 
+> **Note:** `api_key` is configured per provider in the `providers` section and — unlike the old per-model key — can be overridden via environment variables; see [Secrets](#secrets).
+
 ### Prompt Configuration
 
 See the [AI governance and compliance checks guide](AI_GOVERNANCE.md) for the
 end-to-end screening flow, version lifecycle, review queue, and operational
 responsibilities.
 
-The optional `PROMPTS` section maps prompt names used by the core service to prompts stored in [langfuse](https://langfuse.com/docs/prompt-management/overview). Configure each prompt under its Langfuse folder with the label to use; folder and prompt names must match Langfuse exactly. See `mucgpt-core-service/config.yaml.example` for the complete YAML structure.
+The optional `prompts` section maps prompt names used by the core service to prompts stored in [langfuse](https://langfuse.com/docs/prompt-management/overview). Each prompt is configured under its Langfuse folder (`prompts.folders`) with the label to use; folder and prompt names must match Langfuse exactly. See `mucgpt-core-service/config.yaml.example` for the complete YAML structure.
 
 - `defaults/default_instructions`: general system instructions for regular chat.
 - `generation_prompts/chat_title`: generates concise chat titles.
@@ -69,30 +110,30 @@ The optional `PROMPTS` section maps prompt names used by the core service to pro
 
 ### Document Parsing Configuration (YAML)
 
-The core service supports extracting text and structure from uploaded documents using an optional parser. Configure the document parser in `core.config.yaml`. By default, document parsing is disabled (`PARSER_BACKEND: "none"`).
+The core service supports extracting text and structure from uploaded documents using an optional parser. Configure the document parser in `core.config.yaml`. By default, document parsing is disabled (`parser_backend: "none"`).
 
 Currently, Xberg is the only supported parser backend. To enable it, set the parser backend to `"xberg"` and configure the URL and timeout:
 
 ```yaml
-PARSER_BACKEND: "xberg" # Default is "none"
-XBERG_URL: "http://xberg-full:8000"
-XBERG_TIMEOUT: 120.0
+parser_backend: "xberg" # Default is "none"
+xberg_url: "http://xberg-full:8000"
+xberg_timeout: 120.0
 ```
 
 Where:
 
-- `PARSER_BACKEND`: Defines the parser used (`none` to disable, or `xberg`).
-- `XBERG_URL`: Points to your Xberg parsing service.
-- `XBERG_TIMEOUT`: Execution timeout in seconds.
+- `parser_backend`: Defines the parser used (`none` to disable, or `xberg`).
+- `xberg_url`: Points to your Xberg parsing service.
+- `xberg_timeout`: Execution timeout in seconds.
 
 ### Transcription Configuration (YAML)
 
-MUCGPT offers browser-based speech-to-text (beta): users can dictate into the chat input, and the audio is transcribed entirely inside their browser. The backend only gates the feature — no audio ever leaves the user's browser; the resulting transcript is placed in the chat input and can be submitted through the normal chat request. It is disabled by default (`TRANSCRIPTION_ENABLED: false`).
+MUCGPT offers browser-based speech-to-text (beta): users can dictate into the chat input, and the audio is transcribed entirely inside their browser. The backend only gates the feature — no audio ever leaves the user's browser; the resulting transcript is placed in the chat input and can be submitted through the normal chat request. It is disabled by default (`transcription_enabled: false`).
 
 To enable it, set the flag in `core.config.yaml`:
 
 ```yaml
-TRANSCRIPTION_ENABLED: true # Default is false
+transcription_enabled: true # Default is false
 ```
 
 Or via environment variable: `MUCGPT_CORE_TRANSCRIPTION_ENABLED=true`
@@ -100,7 +141,7 @@ Or via environment variable: `MUCGPT_CORE_TRANSCRIPTION_ENABLED=true`
 Optionally, preselect a default model for first-time users:
 
 ```yaml
-TRANSCRIPTION_DEFAULT_MODEL: "onnx-community/whisper-small" # Default is null (frontend built-in default)
+transcription_default_model: "onnx-community/whisper-small" # Default is null (frontend built-in default)
 ```
 
 The id must match an entry of the frontend's model list (`mucgpt-frontend/src/config/transcriptionModels.ts`); unknown ids are ignored. The choice applies once — as soon as a user picks a model themselves, it is stored in their browser and later changes to the default do not affect them.
@@ -108,20 +149,26 @@ The id must match an entry of the frontend's model list (`mucgpt-frontend/src/co
 Notes for operators:
 
 - All transcription models (Whisper, NVIDIA Canary/Parakeet) run client-side on WebGPU or WASM; the browser downloads them directly from their model registry (Hugging Face) and caches them locally.
-- Model choice, language support, and hardware requirements are managed in the frontend (`mucgpt-frontend/src/config/transcriptionModels.ts`); the backend cannot define the model inventory or runtime, but it can preselect the default model ID through `TRANSCRIPTION_DEFAULT_MODEL` (applied on first use before the user picks a model).
+- Model choice, language support, and hardware requirements are managed in the frontend (`mucgpt-frontend/src/config/transcriptionModels.ts`); the backend cannot define the model inventory or runtime, but it can preselect the default model ID through `transcription_default_model` (applied on first use before the user picks a model).
 - Users on hardware without WebGPU see a reduced model selection (CPU-based WASM models).
 
 ### Models Configuration (Environment Variable)
 
-Alternatively, models can be configured via the `MUCGPT_CORE_MODELS` environment variable as a JSON array:
+Alternatively, models can be configured via environment variables. Providers are set as a JSON object (`MUCGPT_CORE_PROVIDERS`), models as a JSON array (`MUCGPT_CORE_MODELS`) whose entries reference a provider instead of carrying inline endpoint/credentials:
 
 ```env
+MUCGPT_CORE_PROVIDERS='{
+  "my_gateway": {
+    "type": "openai",
+    "endpoint": "https://your-litellm-gateway.example.org/",
+    "api_key": "<your-sk>"
+  }
+}'
+
 MUCGPT_CORE_MODELS='[
   {
-    "type": "OPENAI",
+    "provider": "my_gateway",
     "llm_name": "<your-llm-name>",
-    "endpoint": "<your-endpoint>",
-    "api_key": "<your-sk>",
     "model_info": {
       "auto_enrich_from_model_info_endpoint": true,
       "max_output_tokens": "<number>",
@@ -141,7 +188,7 @@ Settings are loaded in this order (highest priority wins):
 3. **YAML config file** – `config.yaml` mounted into each container
 4. **`.env` file** – lowest priority; values here will **not** override anything set in `config.yaml` or environment variables
 
-This means environment variables always override YAML values, which is useful for injecting secrets in CI/CD.
+This means environment variables always override YAML values. This is the recommended way to provide **secrets** (see [Secrets](#secrets)) and is useful for injecting them in CI/CD without storing them in config files.
 
 ### Data storage overview
 
@@ -159,9 +206,9 @@ Notes:
 
 - PostgreSQL is the source of truth for assistant and subscription data.
 - Redis/Valkey entries are TTL-based and can expire:
-  - MCP tools: configured via `MCP.CACHE_TTL` (default: 12h)
-  - LDAP directory cache: configured via `LDAP.CACHE_TTL` (default: 14d)
-  - Compliance verification cache: configured via `COMPLIANCE_CACHE_TTL_SECONDS` (default: 30m)
+  - MCP tools: configured via `mcp.cache_ttl` (default: 12h)
+  - LDAP directory cache: configured via `ldap.cache_ttl` (default: 14d)
+  - Compliance verification cache: configured via `compliance_cache_ttl_seconds` (default: 30m)
 
 ### Browser storage (frontend)
 
@@ -187,30 +234,38 @@ Note: Browser storage is client-local and can be cleared by the user/browser.
 
 ### Environment Variable Override Examples
 
-Any YAML setting can be overridden. Nested sections use `__` (double underscore):
+Any YAML setting can be overridden. Nested sections use `__` (double underscore). Env var names stay UPPERCASE and are matched case-insensitively against the lowercase YAML keys:
 
 ```bash
 # Top-level field
-MUCGPT_CORE_VERSION=1.0.0              # → VERSION: "1.0.0"
-MUCGPT_CORE_AI_ACT_COMPLIANCE_CHECK_ENABLED=false  # → AI_ACT_COMPLIANCE_CHECK_ENABLED: false
+MUCGPT_CORE_VERSION=1.0.0              # → version: "1.0.0"
+MUCGPT_CORE_AI_ACT_COMPLIANCE_CHECK_ENABLED=false  # → ai_act_compliance_check_enabled: false
 
 # Nested field (DB section in assistant service)
-MUCGPT_ASSISTANT_DB__HOST=postgres      # → DB: { HOST: "postgres" }
-MUCGPT_ASSISTANT_DB__PASSWORD=secret    # → DB: { PASSWORD: "secret" }
+MUCGPT_ASSISTANT_DB__HOST=postgres      # → db: { host: "postgres" }
+MUCGPT_ASSISTANT_DB__PASSWORD=secret    # → db: { password: "secret" }
 
 # Nested field (Redis section in core service)
-MUCGPT_CORE_REDIS__HOST=valkey          # → REDIS: { HOST: "valkey" }
+MUCGPT_CORE_REDIS__HOST=valkey          # → redis: { host: "valkey" }
 
-# Nested field (Langfuse section)
-MUCGPT_CORE_LANGFUSE__SECRET_KEY=sk-... # → LANGFUSE: { SECRET_KEY: "sk-..." }
+# Provider api_key (keyed by provider name; segment mirrors the provider key)
+MUCGPT_CORE_PROVIDERS__MY_GATEWAY__API_KEY=sk-...  # → providers.my_gateway.api_key
 ```
 
-**Top-level fields:**
+> **Warning:** `MUCGPT_CORE_LANGFUSE__*` environment variables are no longer read (silently ignored). Use the standard `LANGFUSE_PUBLIC_KEY` / `LANGFUSE_SECRET_KEY` / `LANGFUSE_HOST` variables instead — see [Secrets](#secrets).
 
-- `type`: The provider type (e.g., `OPENAI`).
+**Provider fields (`providers.<key>`):**
+
+- `type`: The provider type (`openai` or `azure`).
+- `endpoint`: The API endpoint URL for the provider.
+- `api_key`: The API key or secret for authentication, configured per provider.
+- `api_version`: Azure API version (only needed for `type: "azure"`).
+
+**Model fields (`models[]`):**
+
+- `provider`: Required reference to a key in the `providers` section.
 - `llm_name`: The name or identifier of your LLM model.
-- `endpoint`: The API endpoint URL for the model.
-- `api_key`: The API key or secret for authentication.
+- `deployment`: Azure deployment name (only needed for `type: "azure"`).
 
 **`model_info` fields:**
 
@@ -229,32 +284,33 @@ Replace the placeholder values with your actual model configuration.
 
 ### LDAP integration
 
-Assistants can be published to specific departments. MUCGPT reads the organization’s department tree from the configured LDAP directory, so published assistants are scoped according to that hierarchy. Configure LDAP in `assistant.config.yaml` under the `LDAP` section:
+Assistants can be published to specific departments. MUCGPT reads the organization’s department tree from the configured LDAP directory, so published assistants are scoped according to that hierarchy. Configure LDAP in `assistant.config.yaml` under the `ldap` section:
 
 ```yaml
-LDAP:
-  ENABLED: true
-  HOST: "ldaps://ldap.example.org"
-  PORT: 636
-  USE_SSL: true
-  START_TLS: false
-  VERIFY_SSL: true
-  CA_CERT_FILE: "/path/to/ca-bundle.pem"
-  BIND_DN: "cn=mucgpt,ou=service-accounts,dc=example,dc=org"
-  BIND_PASSWORD: "<secret>"
-  SEARCH_BASE: "dc=example,dc=org"
-  SEARCH_FILTER: "(objectClass=organizationalUnit)"
-  DISPLAY_ATTRIBUTE: "ou"
-  SHORTNAME_ATTRIBUTE: "departmentCode"
-  PARENT_ATTRIBUTE: "parentDepartment" # optional
-  ADDITIONAL_ATTRIBUTES: ["departmentName", "departmentCode"]
-  REQUIRED_ATTRIBUTES: ["departmentName", "departmentCode"]
-  IGNORED_OU_PREFIXES: ["_"]
-  IGNORED_OU_SUFFIXES: ["-xxx"]
-  IGNORED_OU_SHORTNAME_EXCEPTIONS: ["DEPT-EXAMPLE"]
-  PAGE_SIZE: 500
-  CONNECT_TIMEOUT: 5.0
-  READ_TIMEOUT: 10.0
+ldap:
+  enabled: true
+  host: "ldaps://ldap.example.org"
+  port: 636
+  use_ssl: true
+  start_tls: false
+  verify_ssl: true
+  ca_cert_file: "/path/to/ca-bundle.pem"
+  bind_dn: "cn=mucgpt,ou=service-accounts,dc=example,dc=org"
+  # Provide bind_password via MUCGPT_ASSISTANT_LDAP__BIND_PASSWORD instead of storing it here.
+  # bind_password: "<secret>"
+  search_base: "dc=example,dc=org"
+  search_filter: "(objectClass=organizationalUnit)"
+  display_attribute: "ou"
+  shortname_attribute: "departmentCode"
+  parent_attribute: "parentDepartment" # optional
+  additional_attributes: ["departmentName", "departmentCode"]
+  required_attributes: ["departmentName", "departmentCode"]
+  ignored_ou_prefixes: ["_"]
+  ignored_ou_suffixes: ["-xxx"]
+  ignored_ou_shortname_exceptions: ["DEPT-EXAMPLE"]
+  page_size: 500
+  connect_timeout: 5.0
+  read_timeout: 10.0
 ```
 
 Individual fields can be overridden via environment variables using the `MUCGPT_ASSISTANT_LDAP__` prefix:
@@ -265,14 +321,14 @@ MUCGPT_ASSISTANT_LDAP__BIND_PASSWORD=<secret>
 MUCGPT_ASSISTANT_LDAP__IGNORED_OU_SHORTNAME_EXCEPTIONS=["DEPT-EXAMPLE"]
 ```
 
-- `SEARCH_BASE` defines the root of the organization tree.
-- Toggle `USE_SSL` / `START_TLS` / `VERIFY_SSL` depending on your directory security requirements; set `CA_CERT_FILE` if your LDAP server uses a custom CA.
-- `DISPLAY_ATTRIBUTE` (default `ou`) controls the label shown for each organizational unit; `SHORTNAME_ATTRIBUTE` selects its stable identifier; `PARENT_ATTRIBUTE` can be set if your LDAP schema exposes a parent reference.
-- `ADDITIONAL_ATTRIBUTES` fetches extra attributes for display; `REQUIRED_ATTRIBUTES` are enforced during loading. Adapt all attribute names to your LDAP schema.
-- `IGNORED_OU_PREFIXES` / `_SUFFIXES` let you skip placeholder OUs (by default everything starting with `_` or ending with `-xxx`).
-- `IGNORED_OU_SHORTNAME_EXCEPTIONS` allows specific OUs to bypass ignore rules when their configured short-name attribute matches one of the listed values (case-insensitive).
-- Typical use case: keep a business-relevant OU like `_Hidden` by adding its shortname (for example `DEPT-EXAMPLE`) to `IGNORED_OU_SHORTNAME_EXCEPTIONS`.
-- Pagination and robustness: `PAGE_SIZE` (default 500), `CONNECT_TIMEOUT` (default 5s), and `READ_TIMEOUT` (default 10s).
+- `search_base` defines the root of the organization tree.
+- Toggle `use_ssl` / `start_tls` / `verify_ssl` depending on your directory security requirements; set `ca_cert_file` if your LDAP server uses a custom CA.
+- `display_attribute` (default `ou`) controls the label shown for each organizational unit; `shortname_attribute` selects its stable identifier; `parent_attribute` can be set if your LDAP schema exposes a parent reference.
+- `additional_attributes` fetches extra attributes for display; `required_attributes` are enforced during loading. Adapt all attribute names to your LDAP schema.
+- `ignored_ou_prefixes` / `ignored_ou_suffixes` let you skip placeholder OUs (by default everything starting with `_` or ending with `-xxx`).
+- `ignored_ou_shortname_exceptions` allows specific OUs to bypass ignore rules when their configured short-name attribute matches one of the listed values (case-insensitive).
+- Typical use case: keep a business-relevant OU like `_Hidden` by adding its shortname (for example `DEPT-EXAMPLE`) to `ignored_ou_shortname_exceptions`.
+- Pagination and robustness: `page_size` (default 500), `connect_timeout` (default 5s), and `read_timeout` (default 10s).
 
 ### Demo credentials
 
@@ -287,14 +343,14 @@ These credentials are only for the isolated local development stack and must not
 
 Authentication is performed in front of the services through an OpenID Connect-compatible API gateway. MUCGPT only accepts access tokens that contain a configured authorization role and uses a configurable organization claim for authorization checks.
 
-The SSO role is configured in each service's `config.yaml` under the `SSO` section:
+The SSO role is configured in each service's `config.yaml` under the `sso` section:
 
 ```yaml
-SSO:
-  ROLE: "mucgpt-user"
-  ADMIN_ROLE: "mucgpt-admin"
-  USER_ID_CLAIM: "user_id"
-  ORGANIZATION_UNIT_CLAIM: "organization_unit"
+sso:
+  role: "mucgpt-user"
+  admin_role: "mucgpt-admin"
+  user_id_claim: "user_id"
+  organization_unit_claim: "organization_unit"
 ```
 
 Or via environment variable:
@@ -314,16 +370,16 @@ MUCGPT_ASSISTANT_SSO__ROLE=mucgpt-user
 
 Besides static tools, MUCGPT allows configuration of MCP sources, for which tools are fetched and can be called.
 
-Configure MCP in `core.config.yaml` under the `MCP` section:
+Configure MCP in `core.config.yaml` under the `mcp` section:
 
 ```yaml
-MCP:
-  SOURCES:
+mcp:
+  sources:
     "<source_id>":
       url: "http://mcpdoc-server:8088/sse"
       forward_token: true
       transport: "sse"
-  CACHE_TTL: 43200 # seconds, default: 12h
+  cache_ttl: 43200 # seconds, default: 12h
 ```
 
 Or via environment variable:
@@ -333,12 +389,12 @@ MUCGPT_CORE_MCP__SOURCES='{"<source_id>": {"url": "...", "forward_token": true, 
 MUCGPT_CORE_MCP__CACHE_TTL=43200
 ```
 
-- `SOURCES`: Map of MCP source configurations.
+- `sources`: Map of MCP source configurations.
   - `<source_id>`: Unique id of one MCP source.
     - `url`: URL of the MCP endpoint.
     - `forward_token`: If the OAuth 2.0 JWT token used for authentication should be forwarded to the MCP endpoint.
     - `transport`: Transport protocol (`"sse"` or `"streamable_http"`), see <https://modelcontextprotocol.io/specification/2025-06-18/basic/transports>
-- `CACHE_TTL`: Time-to-live of cached MCP tools in seconds (default: 12h).
+- `cache_ttl`: Time-to-live of cached MCP tools in seconds (default: 12h).
 
 ## 🐋 Run with Docker
 

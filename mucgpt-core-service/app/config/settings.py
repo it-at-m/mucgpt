@@ -14,6 +14,7 @@ from pydantic import (
     PrivateAttr,
     SecretStr,
     TypeAdapter,
+    ValidationInfo,
     field_validator,
     model_validator,
 )
@@ -116,7 +117,38 @@ class DeepAgentModelConfig(BaseModel):
     enable_summarization: bool | None = False
 
 
+class ProviderConfig(BaseModel):
+    """Connection settings for one AI provider (gateway, Azure resource, ...)."""
+
+    type: Literal["openai", "azure"]
+    endpoint: HttpUrl
+    api_key: SecretStr
+    api_version: str = ""
+
+    @field_validator("type", mode="before")
+    @staticmethod
+    def normalize_type(value):
+        """Accepts any casing and normalizes the provider type to lowercase."""
+        if isinstance(value, str):
+            return value.strip().lower()
+        return value
+
+    @field_validator("api_key", mode="before")
+    @staticmethod
+    def parse_secret(value):
+        """Coerces plain strings into SecretStr for the api_key field."""
+        if isinstance(value, str):
+            return SecretStr(value)
+        return value
+
+
+# Fields that used to live on each model entry. They are provider-level now and
+# must not be configured per model anymore (see models[].provider).
+_PROVIDER_LEVEL_FIELDS = frozenset({"type", "endpoint", "api_key", "api_version"})
+
+
 class ModelsConfig(BaseModel):
+    provider: str = ""
     deep_agent: DeepAgentModelConfig = Field(default_factory=DeepAgentModelConfig)
     type: str = Field(..., min_length=1)
     llm_name: str = Field(..., min_length=1)
@@ -379,18 +411,10 @@ class ModelsConfig(BaseModel):
 class SSOConfig(BaseModel):
     """SSO configuration (nested under SSO key in YAML)."""
 
-    ROLE: str | None = None
-    ADMIN_ROLE: str | None = None
-    USER_ID_CLAIM: str = "user_id"
-    ORGANIZATION_UNIT_CLAIM: str = "organization_unit"
-
-
-class LangfuseConfig(BaseModel):
-    """Langfuse configuration (nested under LANGFUSE key in YAML)."""
-
-    PUBLIC_KEY: str | None = None
-    SECRET_KEY: SecretStr | None = None
-    HOST: str | None = None
+    role: str | None = None
+    admin_role: str | None = None
+    user_id_claim: str = "user_id"
+    organization_unit_claim: str = "organization_unit"
 
 
 class MCPToolDescription(BaseModel):
@@ -453,9 +477,9 @@ class MCPSourceConfig(BaseModel):
 class MCPConfig(BaseModel):
     """MCP configuration (nested under MCP key in YAML)."""
 
-    SOURCES: dict[str, MCPSourceConfig] | None = None
-    CACHE_TTL: int = 12 * 60 * 60  # 12h in s
-    FORCE_RELOAD: bool = (
+    sources: dict[str, MCPSourceConfig] | None = None
+    cache_ttl: int = 12 * 60 * 60  # 12h in s
+    force_reload: bool = (
         False  # If true, bypass cache reads and refresh tools by default
     )
 
@@ -463,20 +487,20 @@ class MCPConfig(BaseModel):
 class RedisConfig(BaseModel):
     """Redis configuration (nested under REDIS key in YAML)."""
 
-    HOST: str | None = None
-    PORT: int = 6379
-    USERNAME: SecretStr | None = None
-    PASSWORD: SecretStr | None = None
+    host: str | None = None
+    port: int = 6379
+    username: SecretStr | None = None
+    password: SecretStr | None = None
 
 
 class InternetSearchConfig(BaseModel):
     """Internet search configuration (nested under INTERNET_SEARCH key in YAML)."""
 
-    SEARXNG_URL: str = ""
-    TIMEOUT: float = 10.0
-    MAX_RESULTS: PositiveInt = 5
-    LANGUAGE: str = "de"
-    SAFESEARCH: int = 1
+    searxng_url: str = ""
+    timeout: float = 10.0
+    max_results: PositiveInt = 5
+    language: str = "de"
+    safesearch: int = 1
 
 
 class PromptConfig(BaseModel):
@@ -496,12 +520,11 @@ class PromptFolderConfig(BaseModel):
 class PromptPoolConfig(BaseModel):
     """Configured Langfuse prompt folders."""
 
-    FOLDERS: list[PromptFolderConfig] = Field(default_factory=list)
+    folders: list[PromptFolderConfig] = Field(default_factory=list)
 
 
 # Backward-compatible aliases
 SSOSettings = SSOConfig
-LangfuseSettings = LangfuseConfig
 MCPSettings = MCPConfig
 RedisSettings = RedisConfig
 InternetSearchSettings = InternetSearchConfig
@@ -521,59 +544,61 @@ class Settings(BaseSettings):
         yaml_file_encoding="utf-8",
     )
     # General settings
-    VERSION: str = Field(default="")
-    LOG_CONFIG: str = "logconf.yaml"
-    AG_UI_ENABLED: bool = False
+    version: str = Field(default="")
+    log_config: str = "logconf.yaml"
+    ag_ui_enabled: bool = False
 
     # Frontend settings
-    ENV_NAME: str = "MUCGPT"
-    ALTERNATIVE_LOGO: bool = False
-    APP_VERSION: str = "unknown"
-    FRONTEND_VERSION: str = "unknown"
-    ASSISTANT_VERSION: str = "unknown"
-    FOOTER_LINK_URL: str | None = None
-    FOOTER_LABEL: str | None = None
-    FAQ_URL: str | None = None
-    INCIDENT_REPORT_URL: str | None = None
-    FEATURE_REQUEST_URL: str | None = None
-    CONTACT_MAIL_URL: str | None = None
-    AD2IMAGE_URL: str | None = None
-    OWNER_PROFILE_URL_TEMPLATE: str | None = None
+    env_name: str = "MUCGPT"
+    alternative_logo: bool = False
+    app_version: str = "unknown"
+    frontend_version: str = "unknown"
+    assistant_version: str = "unknown"
+    footer_link_url: str | None = None
+    footer_label: str | None = None
+    faq_url: str | None = None
+    incident_report_url: str | None = None
+    feature_request_url: str | None = None
+    contact_mail_url: str | None = None
+    ad2image_url: str | None = None
+    owner_profile_url_template: str | None = None
 
     # Backend settings
-    UNAUTHORIZED_USER_REDIRECT_URL: str = ""
-    MODELS: list[ModelsConfig] = []
+    unauthorized_user_redirect_url: str = ""
+    # Provider-level connection settings (endpoint, credentials). Must be declared
+    # before models so the models validator can resolve provider references.
+    providers: dict[str, ProviderConfig] = Field(default_factory=dict)
+    models: list[ModelsConfig] = []
     # Reasoning effort for reasoning models when neither the request nor the model
     # sets one. None omits the parameter so the provider default applies.
-    FALLBACK_REASONING_EFFORT: ReasoningEffort | None = "low"
-    MEMORY_SERVICE_URL: str = ""
-    PROMPTS: PromptPoolConfig = Field(default_factory=PromptPoolConfig)
+    fallback_reasoning_effort: ReasoningEffort | None = "low"
+    memory_service_url: str = ""
+    prompts: PromptPoolConfig = Field(default_factory=PromptPoolConfig)
 
     # Parsing
-    PARSER_BACKEND: ParserBackendType = ParserBackendType.NONE
-    XBERG_URL: str = ""
-    XBERG_TIMEOUT: float = 120.0
+    parser_backend: ParserBackendType = ParserBackendType.NONE
+    xberg_url: str = ""
+    xberg_timeout: float = 120.0
 
     # Frontend feature flags
     # Enables the browser-based speech-to-text UI. Transcription runs fully
     # client-side; the backend only gates the feature via this flag and serves
     # the model list from the frontend bundle (no audio is uploaded).
-    TRANSCRIPTION_ENABLED: bool = False
+    transcription_enabled: bool = False
     # Hugging Face model id (see the frontend TRANSCRIPTION_MODELS list) that
     # is preselected for users who have not picked a model yet. Unknown ids are
     # ignored by the frontend, which then falls back to its built-in default.
     # None means "use the frontend's built-in default".
-    TRANSCRIPTION_DEFAULT_MODEL: str | None = None
-    AI_ACT_COMPLIANCE_CHECK_ENABLED: bool = True
-    COMPLIANCE_CACHE_ENABLED: bool = True
-    COMPLIANCE_CACHE_TTL_SECONDS: PositiveInt = 30 * 60
+    transcription_default_model: str | None = None
+    ai_act_compliance_check_enabled: bool = True
+    compliance_cache_enabled: bool = True
+    compliance_cache_ttl_seconds: PositiveInt = 30 * 60
 
     # Nested sub-configurations
-    SSO: SSOConfig = Field(default_factory=SSOConfig)
-    LANGFUSE: LangfuseConfig = Field(default_factory=LangfuseConfig)
-    MCP: MCPConfig = Field(default_factory=MCPConfig)
-    REDIS: RedisConfig = Field(default_factory=RedisConfig)
-    INTERNET_SEARCH: InternetSearchConfig = Field(default_factory=InternetSearchConfig)
+    sso: SSOConfig = Field(default_factory=SSOConfig)
+    mcp: MCPConfig = Field(default_factory=MCPConfig)
+    redis: RedisConfig = Field(default_factory=RedisConfig)
+    internet_search: InternetSearchConfig = Field(default_factory=InternetSearchConfig)
 
     # Customize settings sources to prioritize YAML config
     @classmethod
@@ -594,8 +619,73 @@ class Settings(BaseSettings):
             dotenv_settings,
         )
 
+    @field_validator("providers", mode="before")
+    @staticmethod
+    def validate_provider_keys(value):
+        """Rejects provider keys that cannot be matched by env-var overrides.
+
+        pydantic-settings lowercases env-var name segments, so an uppercase
+        YAML key would silently split into a second entry and miss overrides
+        like MUCGPT_CORE_PROVIDERS__<KEY>__API_KEY.
+        """
+        if not isinstance(value, dict):
+            return value
+        offending = [key for key in value if key != key.lower()]
+        if offending:
+            raise ValueError(
+                "provider keys must be lowercase so env overrides "
+                "(MUCGPT_CORE_PROVIDERS__<KEY>__API_KEY) match them: "
+                + ", ".join(offending)
+            )
+        return value
+
+    @field_validator("models", mode="before")
+    @staticmethod
+    def resolve_model_providers(value, info: ValidationInfo):
+        """Resolves provider references and rejects per-model provider fields.
+
+        Connection settings (type/endpoint/api_key/api_version) live in the
+        providers section; model entries reference them via `provider`. This
+        keeps api_key overridable per provider via environment variables
+        (MUCGPT_CORE_PROVIDERS__<KEY>__API_KEY), which is impossible for list
+        entries.
+        """
+        if not isinstance(value, list):
+            return value
+
+        providers = info.data.get("providers") or {}
+        resolved: list[dict[str, Any] | ModelsConfig] = []
+        for entry in value:
+            if not isinstance(entry, dict):
+                resolved.append(entry)
+                continue
+
+            inline = _PROVIDER_LEVEL_FIELDS & entry.keys()
+            if inline:
+                raise ValueError(
+                    "models[] entries must not configure provider-level fields "
+                    f"({', '.join(sorted(inline))}); reference a provider via "
+                    "`provider: <key>` and configure it in the providers section"
+                )
+
+            provider_name = entry.get("provider")
+            if not provider_name:
+                raise ValueError(
+                    "models[] entries require `provider: <key>` referencing the "
+                    "providers section"
+                )
+            provider = providers.get(provider_name)
+            if provider is None:
+                raise ValueError(
+                    f"Unknown provider {provider_name!r} in models[] entry "
+                    f"{entry.get('llm_name', '<unnamed>')!r}. Available providers: "
+                    + (", ".join(sorted(providers)) if providers else "(none)")
+                )
+            resolved.append({**provider.model_dump(), **entry})
+        return resolved
+
     @field_validator(
-        "VERSION", "APP_VERSION", "FRONTEND_VERSION", "ASSISTANT_VERSION", mode="before"
+        "version", "app_version", "frontend_version", "assistant_version", mode="before"
     )
     @staticmethod
     def parse_version(value: str) -> str:
@@ -908,12 +998,6 @@ def _match_model_entry(
 
 
 @lru_cache(maxsize=1)
-def get_langfuse_settings() -> LangfuseConfig:
-    """Return cached Langfuse Settings instance."""
-    return get_settings().LANGFUSE
-
-
-@lru_cache(maxsize=1)
 def get_settings() -> Settings:
     """Return cached Settings instance."""
     settings = Settings()
@@ -923,22 +1007,22 @@ def get_settings() -> Settings:
 @lru_cache(maxsize=1)
 def get_sso_settings() -> SSOConfig:
     """Return cached SSO Settings instance."""
-    return get_settings().SSO
+    return get_settings().sso
 
 
 @lru_cache(maxsize=1)
 def get_mcp_settings() -> MCPConfig:
     """Return cached MCP Settings instance."""
-    return get_settings().MCP
+    return get_settings().mcp
 
 
 @lru_cache(maxsize=1)
 def get_redis_settings() -> RedisConfig:
     """Return cached RedisSettings instance."""
-    return get_settings().REDIS
+    return get_settings().redis
 
 
 @lru_cache(maxsize=1)
 def get_internet_search_settings() -> InternetSearchConfig:
     """Return cached InternetSearchSettings instance."""
-    return get_settings().INTERNET_SEARCH
+    return get_settings().internet_search

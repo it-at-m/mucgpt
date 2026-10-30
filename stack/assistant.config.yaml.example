@@ -1,78 +1,97 @@
 # Assistant Service Configuration for Docker Compose Stack
 # This file is mounted into the assistant-service container at /app/config.yaml
 #
-# Note: Use UPPERCASE field names because case_sensitive=False in settings
+# Priority order (highest to lowest):
+# 1. Environment variables (MUCGPT_ASSISTANT_* for top-level, MUCGPT_ASSISTANT_<SECTION>__<FIELD> for nested)
+# 2. YAML configuration file (this file)
+# 3. .env file
+#
+# YAML keys are lowercase. Legacy UPPERCASE YAML keys are ignored - migrate
+# existing config files. Environment variable names stay UPPERCASE.
+#
+# SECURITY - secrets doctrine:
+# Do NOT store real secrets (passwords, API keys, tokens) in this file.
+# Config files are often mounted as ConfigMaps (leaking values into etcd) or get
+# committed to Git. Provide secrets via environment variables instead - they
+# always override YAML values. The demo values kept below exist only so the
+# local docker-compose demo stack runs out of the box.
+#
 # Nested env vars use __ (double underscore) as delimiter, e.g. MUCGPT_ASSISTANT_DB__HOST
 
 # Database settings
 # Note: For docker-compose stack, these defaults match the postgres service configuration
 # For production, use secure credentials and consider environment variable overrides
-DB:
-  HOST: "postgres"
-  PORT: 5432
-  NAME: "postgres"
-  USER: "admin"
-  PASSWORD: "admin" # Change this for production! Or use MUCGPT_ASSISTANT_DB__PASSWORD env var
-  # SCHEMA: "myschema"  # Optional: restrict to a specific PostgreSQL schema (sets search_path)
+db:
+  host: "postgres"
+  port: 5432
+  name: "postgres"
+  user: "admin"
+  # Demo value for the local stack only (matches POSTGRES_PASSWORD in docker-compose.yml).
+  # For real deployments provide it via MUCGPT_ASSISTANT_DB__PASSWORD instead of storing it here.
+  password: "admin"
+  # schema: "myschema"  # Optional: restrict to a specific PostgreSQL schema (sets search_path)
 
 # Backend settings
-UNAUTHORIZED_USER_REDIRECT_URL: "https://support.example.org/access-request"
-LOG_CONFIG: "logconf.yaml"
+unauthorized_user_redirect_url: "https://support.example.org/access-request"
+log_config: "logconf.yaml"
 # Optional: if true, assistant read endpoints repopulate missing owner cache fields from LDAP
-OWNER_CACHE_REFRESH_ON_READ: false
+owner_cache_refresh_on_read: false
 # Optional: require server-side compliance verification before assistant create/update is accepted
 # Set to false for local setups without Redis-backed compliance cache.
 # Keep this aligned with MUCGPT_CORE_AI_ACT_COMPLIANCE_CHECK_ENABLED.
-COMPLIANCE_REQUIRE_VERIFICATION: false
+compliance_require_verification: false
 # Optional: send high-risk results to the administrator/legal review queue.
 # When false, high-risk results are still persisted, but the assistant remains active.
-COMPLIANCE_REQUIRE_LEGAL_REVIEW: true
+compliance_require_legal_review: true
 
 # SSO Settings (Keycloak)
 # Used by both core and assistant services for authentication
-SSO:
-  ROLE: "mucgpt-user"
-  ADMIN_ROLE: "mucgpt-admin"
-  USER_ID_CLAIM: "user_id"
-  ORGANIZATION_UNIT_CLAIM: "organization_unit"
+sso:
+  role: "mucgpt-user"
+  admin_role: "mucgpt-admin"
+  user_id_claim: "user_id"
+  organization_unit_claim: "organization_unit"
 
 # Redis Settings (Valkey in docker-compose)
 # Used by both core and assistant services for caching
-REDIS:
-  HOST: "valkey"
-  PORT: 6379
-  USERNAME: "default"
-  PASSWORD: "password"
+redis:
+  host: "valkey"
+  port: 6379
+  username: "default"
+  # Demo value for the local stack only (matches valkey in docker-compose.yml).
+  # For real deployments provide it via MUCGPT_ASSISTANT_REDIS__PASSWORD instead of storing it here.
+  password: "password"
 
 # LDAP Settings (Optional - for organizational directory)
 # LDAP remains disabled by default. Configure it in a local, untracked configuration.
-LDAP:
-  ENABLED: false
-  HOST: "ldaps://ldap.example.org"
-  PORT: 636
-  USE_SSL: true
-  START_TLS: false
-  VERIFY_SSL: true
-  CA_CERT_FILE: null
-  BIND_DN: ""
-  BIND_PASSWORD: ""
-  SEARCH_BASE: "dc=example,dc=org"
-  SEARCH_FILTER: "(objectClass=organizationalUnit)"
-  USER_SEARCH_BASE: "dc=example,dc=org"
-  USER_SEARCH_FILTER: "(objectClass=person)"
-  USER_SEARCH_ATTRIBUTES: ["givenName", "sn", "mail", "userId", "organizationUnit"]
-  USER_ID_ATTRIBUTE: "userId"
-  USER_ORGANIZATIONAL_UNIT_ATTRIBUTE: "organizationUnit"
-  DISPLAY_ATTRIBUTE: "ou"
-  SHORTNAME_ATTRIBUTE: "departmentCode"
-  PARENT_ATTRIBUTE: null
-  ADDITIONAL_ATTRIBUTES: ["departmentName", "departmentCode"]
-  REQUIRED_ATTRIBUTES: ["departmentName", "departmentCode"]
-  IGNORED_OU_PREFIXES: ["_"]
-  IGNORED_OU_SUFFIXES: ["-xxx"]
-  # Keep specific OUs even when they match IGNORED_OU_PREFIXES / IGNORED_OU_SUFFIXES.
+ldap:
+  enabled: false
+  host: "ldaps://ldap.example.org"
+  port: 636
+  use_ssl: true
+  start_tls: false
+  verify_ssl: true
+  ca_cert_file: null
+  bind_dn: ""
+  # Provide via environment variable MUCGPT_ASSISTANT_LDAP__BIND_PASSWORD instead of storing it here.
+  bind_password: ""
+  search_base: "dc=example,dc=org"
+  search_filter: "(objectClass=organizationalUnit)"
+  user_search_base: "dc=example,dc=org"
+  user_search_filter: "(objectClass=person)"
+  user_search_attributes: ["givenName", "sn", "mail", "userId", "organizationUnit"]
+  user_id_attribute: "userId"
+  user_organizational_unit_attribute: "organizationUnit"
+  display_attribute: "ou"
+  shortname_attribute: "departmentCode"
+  parent_attribute: null
+  additional_attributes: ["departmentName", "departmentCode"]
+  required_attributes: ["departmentName", "departmentCode"]
+  ignored_ou_prefixes: ["_"]
+  ignored_ou_suffixes: ["-xxx"]
+  # Keep specific OUs even when they match ignored_ou_prefixes / ignored_ou_suffixes.
   # Matching is done against the configured short-name attribute (case-insensitive).
   # Example: keep OU "_Hidden" if its departmentCode is "DEPT-EXAMPLE".
-  IGNORED_OU_SHORTNAME_EXCEPTIONS: ["DEPT-EXAMPLE"]
-  CACHE_TTL: 1800 # 30 minutes
-  PAGE_SIZE: 500
+  ignored_ou_shortname_exceptions: ["DEPT-EXAMPLE"]
+  cache_ttl: 1800 # 30 minutes
+  page_size: 500

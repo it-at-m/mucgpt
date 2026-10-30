@@ -1,58 +1,72 @@
 # Core Service Configuration for Docker Compose Stack
 # This file is mounted into the core-service container at /app/config.yaml
 #
-# Note: Use UPPERCASE field names because case_sensitive=False in settings
+# Priority order (highest to lowest):
+# 1. Environment variables (MUCGPT_CORE_* for top-level, MUCGPT_CORE_<SECTION>__<FIELD> for nested)
+# 2. YAML configuration file (this file)
+# 3. .env file
+#
+# YAML keys are lowercase. Legacy UPPERCASE YAML keys are ignored - migrate
+# existing config files. Environment variable names stay UPPERCASE.
+#
+# SECURITY - secrets doctrine:
+# Do NOT store real secrets (passwords, API keys, tokens) in this file.
+# Config files are often mounted as ConfigMaps (leaking values into etcd) or get
+# committed to Git. Provide secrets via environment variables instead - they
+# always override YAML values. The demo values kept below exist only so the
+# local docker-compose demo stack runs out of the box.
+#
+# Nested env vars use __ (double underscore) as delimiter, e.g. MUCGPT_CORE_REDIS__HOST
 
 # General settings
-VERSION: "0.7.1"
-LOG_CONFIG: "logconf.yaml"
-AG_UI_ENABLED: false
+version: "0.7.1"
+log_config: "logconf.yaml"
+ag_ui_enabled: false
 
 # Frontend settings
-ENV_NAME: "MUCGPT🦜"
-ALTERNATIVE_LOGO: false
+env_name: "MUCGPT🦜"
+alternative_logo: false
 # Enables the browser-based speech-to-text feature. Transcription itself runs fully
 # client-side (models are downloaded and cached by the browser; no audio reaches the backend).
-TRANSCRIPTION_ENABLED: false
+transcription_enabled: false
 # Model id preselected in the transcription settings for first-time users (must match an
 # entry of the frontend's TRANSCRIPTION_MODELS list, e.g. "onnx-community/whisper-small").
 # Unknown ids are ignored; leave unset for the frontend's built-in default.
-TRANSCRIPTION_DEFAULT_MODEL: null
-AI_ACT_COMPLIANCE_CHECK_ENABLED: true
-APP_VERSION: "2.0"
-FRONTEND_VERSION: "0.0.2"
-ASSISTANT_VERSION: "0.0.3"
-OWNER_PROFILE_URL_TEMPLATE: "https://intranet.example.org/person/{uid}"  # {uid} is replaced with the owner ID
+transcription_default_model: null
+ai_act_compliance_check_enabled: true
+app_version: "2.0"
+frontend_version: "0.0.2"
+assistant_version: "0.0.3"
+owner_profile_url_template: "https://intranet.example.org/person/{uid}"  # {uid} is replaced with the owner ID
 
 # Backend settings
-UNAUTHORIZED_USER_REDIRECT_URL: "<your-url>"
-AD2IMAGE_URL: "<your-ad2image-url>"  # Base URL of the ad2image service for avatar images
+unauthorized_user_redirect_url: "<your-url>"
+ad2image_url: "<your-ad2image-url>"  # Base URL of the ad2image service for avatar images
 
 # Compliance cache settings
 # If enabled, compliance check results are cached in Redis and can be verified by the assistant service.
-COMPLIANCE_CACHE_ENABLED: true
+compliance_cache_enabled: true
 # Time-to-live for compliance cache entries in seconds (default: 30 minutes)
-COMPLIANCE_CACHE_TTL_SECONDS: 1800
+compliance_cache_ttl_seconds: 1800
 
 # Parsing settings
-PARSER_BACKEND: "xberg"
-XBERG_URL: "http://xberg-full:8000"
-XBERG_TIMEOUT: 120.0
+parser_backend: "xberg"
+xberg_url: "http://xberg-full:8000"
+xberg_timeout: 120.0
 
-# Langfuse Settings (Optional - for LLM observability)
-# Used by core service for tracing and monitoring
-# SECRET_KEY: "<your-secret-key>"  # Use MUCGPT_CORE_LANGFUSE__SECRET_KEY env var for production
-LANGFUSE:
-  HOST: "<your-url>"
-  SECRET_KEY: "<your-sk>"
-  PUBLIC_KEY: "<your-pk>"
+# Langfuse is configured via the standard environment variables
+# LANGFUSE_PUBLIC_KEY, LANGFUSE_SECRET_KEY and LANGFUSE_HOST; the Langfuse SDK
+# reads them directly.
+# WARNING: MUCGPT_CORE_LANGFUSE__* environment variables are NO LONGER read
+# (silently ignored) - credentials must use the unprefixed standard
+# LANGFUSE_* names.
 
-# Prompt settings (optional - nested under PROMPTS key)
+# Prompt settings (optional - nested under prompts key)
 # Configure prompt names exactly like the local Markdown files in
 # mucgpt-core-service/app/agent/prompt_pool/, without the .md suffix.
 # Langfuse is tried first; local prompt files are the compatibility fallback.
-# PROMPTS:
-#   FOLDERS:
+# prompts:
+#   folders:
 #     - name: "defaults"
 #       prompts:
 #         # General system instructions used for regular chat.
@@ -89,8 +103,8 @@ LANGFUSE:
 
 # MCP Settings (Model Context Protocol)
 # Used by core service for external tool integration
-MCP:
-  SOURCES:
+mcp:
+  sources:
     "organization-docs":
       url: "http://mcpdoc-server:8088/sse"
       transport: "sse"
@@ -110,40 +124,73 @@ MCP:
       url: "<your-mcp-url>"
       transport: "streamable_http"
       forward_token: true
-      forward_auth_override: "Basic <base64 encoded email:token>"
-      headers:
-        x-litellm-api-key: "<your-api-key>"
+      # Provide tokens/keys via environment variables or a secret manager instead
+      # of storing them in this file (nested env overrides for keyed sources are
+      # impractical; keep such sources in a protected config or inject via env).
+      # forward_auth_override: "Basic <base64 encoded email:token>"
+      # headers:
+      #   x-litellm-api-key: "<your-api-key>"
       group: "name"
       # Example tool description overrides.
       descriptions:
         - name: "tool-name"
           description: "detailed tool description"
         # ...
-  CACHE_TTL: 123
+  cache_ttl: 123
 
 # Internet Search Settings (SearXNG)
 # Replace the placeholder URL with your SearXNG instance to enable the InternetSearch tool.
-INTERNET_SEARCH:
-  SEARXNG_URL: "<your-searxng-url>"
-  TIMEOUT: 10.0
-  MAX_RESULTS: 5
-  LANGUAGE: "de"
-  SAFESEARCH: 1
+internet_search:
+  searxng_url: "<your-searxng-url>"
+  timeout: 10.0
+  max_results: 5
+  language: "de"
+  safesearch: 1
+
+# Providers configuration
+# Connection settings (type/endpoint/api_key/api_version) live in this `providers`
+# dict; model entries reference a provider via `provider: <key>`. Provider keys
+# MUST be lowercase: env var name segments are lowercased, so uppercase keys
+# would silently miss their env overrides.
+# Unlike the old per-model api_key, api_key is now per provider and CAN be
+# overridden via environment variables, e.g.:
+#   MUCGPT_CORE_PROVIDERS__MY_GATEWAY__API_KEY
+# Do not store real API keys in this file - provide them via
+# MUCGPT_CORE_PROVIDERS__<KEY>__API_KEY or protect this file accordingly.
+providers:
+  my_gateway:
+    type: "openai"             # "openai" or "azure"
+    endpoint: "https://your-litellm-gateway.example.org/"
+    # Provide via environment variable MUCGPT_CORE_PROVIDERS__MY_GATEWAY__API_KEY instead of storing it here.
+    # api_key: "<your-sk>"
+    api_version: ""            # only needed for type "azure"
 
 # Models configuration
-# Configure your LLM models here instead of using base64-encoded JSON in environment variables
-# IMPORTANT: Replace placeholder values with your actual configuration
-# Consider using environment variables for sensitive data like API keys
+# Configure your LLM models here instead of using the MUCGPT_CORE_MODELS
+# environment variable (JSON array).
 # Reasoning effort sent to reasoning models when neither the request nor the model's
 # default_reasoning_effort sets one. Set to null to omit it and use the provider default.
-FALLBACK_REASONING_EFFORT: "low"
-MODELS:
-  - type: "OPENAI"
-    llm_name: "<your-llm-name>"
-    deployment: ""
-    endpoint: "<your-endpoint>"
-    api_key: "<your-sk>" # IMPORTANT: Replace with actual API key or use MUCGPT_CORE_MODELS env var
-    api_version: ""
+fallback_reasoning_effort: "low"
+models:
+  - provider: "my_gateway"     # required reference into providers
+    llm_name: "gpt-4o"
+    deployment: ""             # only needed for type "azure"
+    deep_agent:
+      # Built-in tools are disabled unless explicitly enabled for this model.
+      enabled_builtin_tools: [
+        "write_todos",
+        "ls",
+        "read_file",
+        "write_file",
+        "edit_file",
+        "delete",
+        "glob",
+        "grep",
+        "execute",
+        "task",
+        ]
+      enable_summarization: true
+      enable_subagents: false
     model_info:
       internal_task_model_strength: null  # Optional: "weak" for chat titles, "strong" for assistant drafts
       auto_enrich_from_model_info_endpoint: true
@@ -156,31 +203,32 @@ MODELS:
       output_cost_per_token: 0.00000036
       supports_reasoning: false
       # Optional, usually provided by LiteLLM model_info. Requests are clamped to the
-      # nearest supported effort; without a default, FALLBACK_REASONING_EFFORT applies.
+      # nearest supported effort; without a default, fallback_reasoning_effort applies.
       # supported_reasoning_efforts: [low, medium, high]
       # default_reasoning_effort: low
       knowledge_cut_off: "2024-07-01"
 
-# Additional models can be added here as list items:
-# - type: "AZURE"
+# Additional models can be added here as list items; they reference a provider:
+# - provider: "my_gateway"
 #   llm_name: "<another-model>"
-#   endpoint: "<another-endpoint>"
-#   api_key: "<another-key>"
+#   deployment: ""             # only needed for type "azure"
 #   model_info:
 #     # ... model info ...
 
 # SSO Settings (Keycloak)
 # Used by both core and assistant services for authentication
-SSO:
-  ROLE: "mucgpt-user"
-  ADMIN_ROLE: "mucgpt-admin"
-  USER_ID_CLAIM: "user_id"
-  ORGANIZATION_UNIT_CLAIM: "organization_unit"
+sso:
+  role: "mucgpt-user"
+  admin_role: "mucgpt-admin"
+  user_id_claim: "user_id"
+  organization_unit_claim: "organization_unit"
 
 # Redis Settings (Valkey in docker-compose)
 # Used by both core and assistant services for caching
-REDIS:
-  HOST: "valkey"
-  PORT: 6379
-  USERNAME: "default"
-  PASSWORD: "password"
+redis:
+  host: "valkey"
+  port: 6379
+  username: "default"
+  # Demo value for the local stack only (matches valkey in docker-compose.yml).
+  # For real deployments provide it via MUCGPT_CORE_REDIS__PASSWORD instead of storing it here.
+  password: "password"

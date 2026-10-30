@@ -33,7 +33,7 @@ async def parse_file(file: UploadFile, user_info=Depends(authenticate_user)) -> 
     """
     Parses a file using the configured backend and returns the extracted text content.
     """
-    if settings.PARSER_BACKEND == ParserBackendType.NONE:
+    if settings.parser_backend == ParserBackendType.NONE:
         raise HTTPException(
             status_code=503, detail="Document processing is not enabled."
         )

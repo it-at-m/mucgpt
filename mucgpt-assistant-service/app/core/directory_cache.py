@@ -24,7 +24,7 @@ _DEFAULT_CACHE_TTL = timedelta(days=14)
 
 def _get_cache_ttl() -> timedelta:
     ldap_settings = get_ldap_settings()
-    cache_ttl_seconds = getattr(ldap_settings, "CACHE_TTL", None)
+    cache_ttl_seconds = getattr(ldap_settings, "cache_ttl", None)
     if isinstance(cache_ttl_seconds, int) and cache_ttl_seconds > 0:
         return timedelta(seconds=cache_ttl_seconds)
     return _DEFAULT_CACHE_TTL
@@ -138,7 +138,7 @@ def _find_node_by_path(
 
 def _load_directory_from_ldap() -> DirectoryTree:
     ldap_settings = get_ldap_settings()
-    if not ldap_settings.ENABLED:
+    if not ldap_settings.enabled:
         logger.error(
             "LDAP directory loading requested but MUCGPT_LDAP_ENABLED is false"
         )
@@ -158,7 +158,7 @@ def _load_directory_from_ldap() -> DirectoryTree:
         ) from exc
 
     raw_nodes = [
-        _simplify_node(root, ldap_settings.SHORTNAME_ATTRIBUTE)
+        _simplify_node(root, ldap_settings.shortname_attribute)
         for root in directory.roots
     ]
     validated_nodes = _TREE_ADAPTER.validate_python(raw_nodes)

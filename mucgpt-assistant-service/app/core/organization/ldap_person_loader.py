@@ -27,19 +27,19 @@ class LDAPPersonLookupLoader:
         if not lookup_value:
             raise LDAPPersonLookupError("user_id must not be empty")
 
-        if not self.settings.ENABLED:
+        if not self.settings.enabled:
             raise LDAPPersonLookupError("LDAP lookup is disabled")
 
         search_base = (
-            self.settings.USER_SEARCH_BASE or self.settings.SEARCH_BASE
+            self.settings.user_search_base or self.settings.search_base
         ).strip()
         if not search_base:
-            raise LDAPPersonLookupError("LDAP USER_SEARCH_BASE is not configured")
+            raise LDAPPersonLookupError("LDAP user_search_base is not configured")
 
-        id_attr = self._normalized_attribute_name(self.settings.USER_ID_ATTRIBUTE)
+        id_attr = self._normalized_attribute_name(self.settings.user_id_attribute)
         escaped_lookup = self._escape_filter_value(lookup_value)
         search_filter = (
-            f"(&{self.settings.USER_SEARCH_FILTER}({id_attr}={escaped_lookup}))"
+            f"(&{self.settings.user_search_filter}({id_attr}={escaped_lookup}))"
         )
         attributes = self._requested_attributes()
 
@@ -67,19 +67,19 @@ class LDAPPersonLookupLoader:
         sanitized = self._sanitize_attributes(attributes)
         return {
             "user_id": self._extract_attribute_value(
-                sanitized, self.settings.USER_ID_ATTRIBUTE
+                sanitized, self.settings.user_id_attribute
             ),
             "givenName": self._extract_attribute_value(
-                sanitized, self.settings.USER_GIVEN_NAME_ATTRIBUTE
+                sanitized, self.settings.user_given_name_attribute
             ),
             "sn": self._extract_attribute_value(
-                sanitized, self.settings.USER_SURNAME_ATTRIBUTE
+                sanitized, self.settings.user_surname_attribute
             ),
             "mail": self._extract_attribute_value(
-                sanitized, self.settings.USER_MAIL_ATTRIBUTE
+                sanitized, self.settings.user_mail_attribute
             ),
             "organizationalunit": self._extract_attribute_value(
-                sanitized, self.settings.USER_ORGANIZATIONAL_UNIT_ATTRIBUTE
+                sanitized, self.settings.user_organizational_unit_attribute
             ),
         }
 
@@ -92,7 +92,7 @@ class LDAPPersonLookupLoader:
     ) -> list[dict[str, Any]]:
         entries: list[dict[str, Any]] = []
         page_size = self._parse_int(
-            self.settings.PAGE_SIZE, "MUCGPT_ASSISTANT_LDAP__PAGE_SIZE"
+            self.settings.page_size, "MUCGPT_ASSISTANT_LDAP__PAGE_SIZE"
         )
         try:
             for entry in connection.extend.standard.paged_search(
@@ -117,26 +117,26 @@ class LDAPPersonLookupLoader:
 
     def _requested_attributes(self) -> list[str]:
         requested = {
-            self._normalized_attribute_name(self.settings.USER_ID_ATTRIBUTE),
-            self._normalized_attribute_name(self.settings.USER_GIVEN_NAME_ATTRIBUTE),
-            self._normalized_attribute_name(self.settings.USER_SURNAME_ATTRIBUTE),
-            self._normalized_attribute_name(self.settings.USER_MAIL_ATTRIBUTE),
+            self._normalized_attribute_name(self.settings.user_id_attribute),
+            self._normalized_attribute_name(self.settings.user_given_name_attribute),
+            self._normalized_attribute_name(self.settings.user_surname_attribute),
+            self._normalized_attribute_name(self.settings.user_mail_attribute),
             self._normalized_attribute_name(
-                self.settings.USER_ORGANIZATIONAL_UNIT_ATTRIBUTE
+                self.settings.user_organizational_unit_attribute
             ),
         }
         requested.update(
             self._normalized_attribute_name(attribute)
-            for attribute in self.settings.USER_SEARCH_ATTRIBUTES
+            for attribute in self.settings.user_search_attributes
             if (attribute or "").strip()
         )
         return sorted(requested)
 
     def _build_server(self) -> Server:
         host = self._normalized_host()
-        port = self._parse_int(self.settings.PORT, "MUCGPT_ASSISTANT_LDAP__PORT")
+        port = self._parse_int(self.settings.port, "MUCGPT_ASSISTANT_LDAP__PORT")
         connect_timeout = self._parse_int(
-            self.settings.CONNECT_TIMEOUT,
+            self.settings.connect_timeout,
             "MUCGPT_ASSISTANT_LDAP__CONNECT_TIMEOUT",
         )
 
@@ -145,37 +145,37 @@ class LDAPPersonLookupLoader:
         return Server(
             host,
             port=port,
-            use_ssl=self.settings.USE_SSL,
+            use_ssl=self.settings.use_ssl,
             tls=tls,
             connect_timeout=connect_timeout,
         )
 
     def _build_tls_context(self) -> Tls | None:
-        if not self.settings.USE_SSL and not self.settings.START_TLS:
+        if not self.settings.use_ssl and not self.settings.start_tls:
             return None
 
-        validate = ssl.CERT_REQUIRED if self.settings.VERIFY_SSL else ssl.CERT_NONE
-        if not self.settings.CA_CERT_FILE and validate == ssl.CERT_REQUIRED:
+        validate = ssl.CERT_REQUIRED if self.settings.verify_ssl else ssl.CERT_NONE
+        if not self.settings.ca_cert_file and validate == ssl.CERT_REQUIRED:
             raise LDAPPersonLookupError(
-                "VERIFY_SSL is enabled but no CA_CERT_FILE was provided"
+                "verify_ssl is enabled but no ca_cert_file was provided"
             )
 
-        return Tls(validate=validate, ca_certs_file=self.settings.CA_CERT_FILE)
+        return Tls(validate=validate, ca_certs_file=self.settings.ca_cert_file)
 
     def _build_connection(self, server: Server) -> Connection:
         password = (
-            self.settings.BIND_PASSWORD.get_secret_value()
-            if self.settings.BIND_PASSWORD
+            self.settings.bind_password.get_secret_value()
+            if self.settings.bind_password
             else None
         )
         receive_timeout = self._parse_int(
-            self.settings.READ_TIMEOUT,
+            self.settings.read_timeout,
             "MUCGPT_ASSISTANT_LDAP__READ_TIMEOUT",
         )
         try:
             connection = Connection(
                 server,
-                user=self.settings.BIND_DN,
+                user=self.settings.bind_dn,
                 password=password,
                 receive_timeout=receive_timeout,
                 read_only=True,
@@ -187,7 +187,7 @@ class LDAPPersonLookupLoader:
                     f"Failed to open LDAP connection (host={server.host}, port={server.port}): {exc}"
                 ) from exc
             try:
-                if self.settings.START_TLS:
+                if self.settings.start_tls:
                     connection.start_tls()
                 if not connection.bind():
                     raise LDAPPersonLookupError(
@@ -240,7 +240,7 @@ class LDAPPersonLookupLoader:
         return str(value)
 
     def _normalized_host(self) -> str:
-        host = (self.settings.HOST or "").strip()
+        host = (self.settings.host or "").strip()
         if not host:
             raise LDAPPersonLookupError("MUCGPT_LDAP_HOST is not configured")
 

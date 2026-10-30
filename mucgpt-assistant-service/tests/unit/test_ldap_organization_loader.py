@@ -10,11 +10,11 @@ from core.organization.ldap_loader import LDAPOrganizationLoader
 
 def test_requested_attributes_include_configured_shortname() -> None:
     settings = LDAPSettings(
-        DISPLAY_ATTRIBUTE="ou",
-        SHORTNAME_ATTRIBUTE="directoryCode",
-        PARENT_ATTRIBUTE="parentUnit",
-        ADDITIONAL_ATTRIBUTES=["departmentName"],
-        REQUIRED_ATTRIBUTES=["departmentCode"],
+        display_attribute="ou",
+        shortname_attribute="directoryCode",
+        parent_attribute="parentUnit",
+        additional_attributes=["departmentName"],
+        required_attributes=["departmentCode"],
     )
 
     assert LDAPOrganizationLoader(settings)._requested_attributes() == [
@@ -29,7 +29,7 @@ def test_requested_attributes_include_configured_shortname() -> None:
 def test_shortname_is_required_for_directory_nodes(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    settings = LDAPSettings(SHORTNAME_ATTRIBUTE="directoryCode")
+    settings = LDAPSettings(shortname_attribute="directoryCode")
     captured: dict[str, object] = {}
 
     class FakeTreeBuilder:

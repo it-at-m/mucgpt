@@ -83,7 +83,11 @@ def make_source(
 
 def make_user(uid: str = "u1", token: str = "user-jwt-token") -> AuthenticationResult:
     return AuthenticationResult(
-        token=token, user_id=uid, department="IT", name="Test User", roles=["mucgpt-user"]
+        token=token,
+        user_id=uid,
+        department="IT",
+        name="Test User",
+        roles=["mucgpt-user"],
     )
 
 
@@ -164,7 +168,9 @@ class TestApplyToolCustomizations:
 
 class TestWrapRawTools:
     def test_skips_source_no_longer_configured(self):
-        raw_by_source = {"stale_source": [MCPTool(name="a", inputSchema={"type": "object"})]}
+        raw_by_source = {
+            "stale_source": [MCPTool(name="a", inputSchema={"type": "object"})]
+        }
 
         tools = McpLoader._wrap_raw_tools(raw_by_source, make_user(), sources={})
 
@@ -173,7 +179,9 @@ class TestWrapRawTools:
     def test_produces_invocable_tool_with_live_auth(self):
         sources = {
             "src": make_source(
-                "http://mcp.example/sse", forward_token=True, headers={"X-Api-Key": "h1"}
+                "http://mcp.example/sse",
+                forward_token=True,
+                headers={"X-Api-Key": "h1"},
             )
         }
         raw_by_source = {"src": [MCPTool(name="a", inputSchema={"type": "object"})]}
@@ -209,13 +217,15 @@ class TestLoadMcpTools:
         monkeypatch.setattr(
             McpLoader,
             "_mcp_settings",
-            MCPConfig(SOURCES={"src": source_cfg}, CACHE_TTL=100),
+            MCPConfig(sources={"src": source_cfg}, cache_ttl=100),
         )
 
         fake_session = FakeSession(
             pages=[[MCPTool(name="a", inputSchema={"type": "object"})]]
         )
-        fake_create_session = make_fake_create_session({"http://mcp.example/sse": fake_session})
+        fake_create_session = make_fake_create_session(
+            {"http://mcp.example/sse": fake_session}
+        )
 
         with (
             patch("agent.tools.mcp.create_session", fake_create_session),
@@ -254,7 +264,7 @@ class TestLoadMcpTools:
         monkeypatch.setattr(
             McpLoader,
             "_mcp_settings",
-            MCPConfig(SOURCES={"good": good, "bad": bad}, CACHE_TTL=100),
+            MCPConfig(sources={"good": good, "bad": bad}, cache_ttl=100),
         )
 
         fake_session = FakeSession(
@@ -287,7 +297,7 @@ class TestLoadMcpTools:
     async def test_all_sources_fail_returns_empty_without_caching(self, monkeypatch):
         bad = make_source("http://bad/sse")
         monkeypatch.setattr(
-            McpLoader, "_mcp_settings", MCPConfig(SOURCES={"bad": bad}, CACHE_TTL=100)
+            McpLoader, "_mcp_settings", MCPConfig(sources={"bad": bad}, cache_ttl=100)
         )
         fake_create_session = make_fake_create_session(
             {}, fail_urls=frozenset({"http://bad/sse"})
@@ -320,7 +330,7 @@ class TestLoadMcpTools:
         monkeypatch.setattr(
             McpLoader,
             "_mcp_settings",
-            MCPConfig(SOURCES={"unsupported": unsupported}, CACHE_TTL=100),
+            MCPConfig(sources={"unsupported": unsupported}, cache_ttl=100),
         )
 
         with (
@@ -340,16 +350,20 @@ class TestLoadMcpTools:
     @pytest.mark.asyncio
     async def test_cache_hit_wraps_without_refetching(self, monkeypatch):
         source_cfg = make_source(
-            "http://mcp.example/sse", forward_token=True, headers={"X-Api-Key": "live-secret"}
+            "http://mcp.example/sse",
+            forward_token=True,
+            headers={"X-Api-Key": "live-secret"},
         )
         monkeypatch.setattr(
             McpLoader,
             "_mcp_settings",
-            MCPConfig(SOURCES={"src": source_cfg}, CACHE_TTL=100),
+            MCPConfig(sources={"src": source_cfg}, cache_ttl=100),
         )
         cached_raw = {"src": [MCPTool(name="a", inputSchema={"type": "object"})]}
 
-        create_session_mock = AsyncMock(side_effect=AssertionError("should not connect"))
+        create_session_mock = AsyncMock(
+            side_effect=AssertionError("should not connect")
+        )
         # Spy on the real _build_connection rather than stubbing it out, so we can
         # prove the live connection/auth is rebuilt fresh on this cache-hit path -
         # never reused or reconstructed from anything that came out of Redis.
@@ -378,7 +392,7 @@ class TestLoadMcpTools:
         monkeypatch.setattr(
             McpLoader,
             "_mcp_settings",
-            MCPConfig(SOURCES={}, CACHE_TTL=100),
+            MCPConfig(sources={}, cache_ttl=100),
         )
         cached_raw = {
             "removed_source": [MCPTool(name="a", inputSchema={"type": "object"})]
@@ -397,12 +411,14 @@ class TestLoadMcpTools:
         monkeypatch.setattr(
             McpLoader,
             "_mcp_settings",
-            MCPConfig(SOURCES={"src": source_cfg}, CACHE_TTL=100),
+            MCPConfig(sources={"src": source_cfg}, cache_ttl=100),
         )
         fake_session = FakeSession(
             pages=[[MCPTool(name="a", inputSchema={"type": "object"})]]
         )
-        fake_create_session = make_fake_create_session({"http://mcp.example/sse": fake_session})
+        fake_create_session = make_fake_create_session(
+            {"http://mcp.example/sse": fake_session}
+        )
 
         from redis.exceptions import LockError
 

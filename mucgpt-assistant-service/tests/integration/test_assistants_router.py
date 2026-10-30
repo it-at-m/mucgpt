@@ -152,7 +152,7 @@ def test_compliance_check_result_is_versioned_and_cleared_for_changed_prompt(
     """Unverified or missing screening results block create/update operations."""
     monkeypatch.setattr(
         assistants_router_module.get_settings(),
-        "COMPLIANCE_REQUIRE_VERIFICATION",
+        "compliance_require_verification",
         True,
     )
 
@@ -186,7 +186,7 @@ def test_create_assistant_with_verified_compliance_result_persists_payload(
     """Create succeeds when compliance payload matches authoritative cached result."""
     monkeypatch.setattr(
         assistants_router_module.get_settings(),
-        "COMPLIANCE_REQUIRE_VERIFICATION",
+        "compliance_require_verification",
         True,
     )
 
@@ -253,7 +253,7 @@ def test_update_assistant_strict_mode_blocks_prompt_change_without_verified_resu
 
     monkeypatch.setattr(
         assistants_router_module.get_settings(),
-        "COMPLIANCE_REQUIRE_VERIFICATION",
+        "compliance_require_verification",
         True,
     )
 
@@ -287,7 +287,7 @@ def test_update_assistant_strict_mode_accepts_verified_prompt_change(
 
     monkeypatch.setattr(
         assistants_router_module.get_settings(),
-        "COMPLIANCE_REQUIRE_VERIFICATION",
+        "compliance_require_verification",
         True,
     )
 
@@ -343,7 +343,7 @@ def test_update_assistant_strict_mode_unchanged_prompt_preserves_compliance_resu
     """An unchanged approved prompt does not depend on the Redis cache."""
     monkeypatch.setattr(
         assistants_router_module.get_settings(),
-        "COMPLIANCE_REQUIRE_VERIFICATION",
+        "compliance_require_verification",
         True,
     )
 
@@ -3595,7 +3595,7 @@ async def test_duplicate_assistant_copies_compliance_review_from_source(
     """Duplicating works in strict mode and inherits the source's review."""
     monkeypatch.setattr(
         assistants_router_module.get_settings(),
-        "COMPLIANCE_REQUIRE_VERIFICATION",
+        "compliance_require_verification",
         True,
     )
     source_result = ComplianceCheckResult(

@@ -66,7 +66,7 @@ class McpLoader:
         rebuilds the live connection/auth via `_build_connection` fresh from current config
         and `user_info` — never from anything that was ever persisted to Redis.
         """
-        sources = McpLoader._mcp_settings.SOURCES
+        sources = McpLoader._mcp_settings.sources
         McpLoader._logger.debug(
             f"Configured MCP sources: {list(sources.keys()) if sources else []}"
         )
@@ -82,7 +82,7 @@ class McpLoader:
 
         # Decide effective force-reload behavior
         effective_force = (
-            McpLoader._mcp_settings.FORCE_RELOAD
+            McpLoader._mcp_settings.force_reload
             if force_reload is None
             else force_reload
         )
@@ -188,7 +188,7 @@ class McpLoader:
                 await RedisCache.set_object(
                     key=cache_key,
                     obj=raw_by_source,
-                    ttl=McpLoader._mcp_settings.CACHE_TTL,
+                    ttl=McpLoader._mcp_settings.cache_ttl,
                 )
                 return McpLoader._wrap_raw_tools(raw_by_source, user_info, sources)
 

@@ -54,12 +54,20 @@ npm run build        # tsc && vite build
 
 ## Configuration model
 
-Each Python service is configured by a **`config.yaml`** (see each service's `config.yaml.example`, and `stack/*.config.yaml.example`). Settings are pydantic-settings with nesting via `__` and a per-service prefix:
+Each Python service is configured by a **`config.yaml`** (see each service's `config.yaml.example`, and `stack/*.config.yaml.example`). **YAML keys are lowercase** (`models:`, `redis:`, `host:`, `password:`); legacy UPPERCASE YAML keys are ignored — existing config files must migrate (mostly fails loudly at startup: missing required db fields, empty models list). Settings are pydantic-settings with nesting via `__` and a per-service prefix; env var names stay UPPERCASE and match case-insensitively:
 
 - core-service: `MUCGPT_CORE_` (e.g. `MUCGPT_CORE_REDIS__HOST=valkey`)
 - assistant-service + migrations: `MUCGPT_ASSISTANT_` (e.g. `MUCGPT_ASSISTANT_DB__PASSWORD=...`)
 
-Source priority (core): constructor/init (tests) > env vars > `config.yaml` > `shared-config.yaml` > `.env`. Core config covers MODELS/Langfuse/MCP/Redis/SSO/INTERNET_SEARCH; assistant config covers DB/Redis/LDAP/SSO.
+Model connection settings live in a **`providers`** section (`type: "openai"|"azure"`, `endpoint`, `api_key`, `api_version`); `models[]` entries only reference a provider via `provider: <key>` (plus `llm_name`, `deployment`, `model_info`) — inline `type`/`endpoint`/`api_key`/`api_version` on model entries are rejected at startup with a migration pointer. Provider keys must be lowercase (env-var name segments are lowercased, so uppercase keys would miss their env overrides). Per-provider env overrides work: `MUCGPT_CORE_PROVIDERS__<PROVIDER>__API_KEY` overrides one provider's api_key; `MUCGPT_CORE_PROVIDERS` (JSON object) / `MUCGPT_CORE_MODELS` (JSON array, entries use `provider` references) replace whole sections.
+
+Langfuse is **not** part of the config: the Langfuse SDK reads the standard `LANGFUSE_PUBLIC_KEY` / `LANGFUSE_SECRET_KEY` / `LANGFUSE_HOST` env vars directly (host defaults to Langfuse cloud if unset). **`MUCGPT_CORE_LANGFUSE__*` env vars are no longer read (silently ignored)** — likely migration error; tracing degrades gracefully (log + disabled) when unset.
+
+Source priority (core): constructor/init (tests) > env vars > `config.yaml` > `shared-config.yaml` > `.env`. Core config covers providers/models/prompts/MCP/Redis/SSO/internet_search; assistant config covers db/redis/ldap/sso.
+
+Secrets doctrine: real secrets (passwords, API keys, tokens) belong in **environment variables** (prefix + `__`), never in `config.yaml` (ConfigMap/etcd/Git leak risk). Provider API keys are configured per provider and are env-overridable via `MUCGPT_CORE_PROVIDERS__<PROVIDER>__API_KEY`; whole sections can be replaced via the `MUCGPT_CORE_PROVIDERS` / `MUCGPT_CORE_MODELS` JSON env vars.
+
+Migration notes for older configs: (a) lowercase the `config.yaml` keys, (b) move model endpoint/api_key into `providers` and reference them via `provider: <key>`, (c) switch `MUCGPT_CORE_LANGFUSE__*` to the standard `LANGFUSE_*` env vars (see `docs/GETTING_STARTED.md`).
 
 ## Core service architecture (`mucgpt-core-service/app/`)
 
@@ -73,11 +81,11 @@ Entry: `app.py` → `backend.py` builds the FastAPI app, mounts `api_app` at `/a
 **Tools** (`agent/tools/`): **read `agent/tools/README.md` first** — it's the authoritative guide.
 - Local tools use the `LocalTool` spec pattern (`spec.py`): add a module with `TOOL = LocalTool(id=..., factory=..., metadata=..., is_configured=...)` and register it in `LOCAL_TOOLS` in `tools.py`; `get_tools()` and `GET /v1/tools` pick it up automatically.
 - MCP tools are a **config change only** (`MCP` settings / `MUCGPT_CORE_MCP__...`), loaded per-user by `mcp.py::McpLoader` and cached in Redis with distributed locking — that caching is load-bearing, don't simplify it away. `McpBearerAuthProvider` forwards the per-user token to MCP servers.
-- `internet_search` is only added when `INTERNET_SEARCH.SEARXNG_URL` is set (`is_configured()`).
+- `internet_search` is only added when `internet_search.searxng_url` is set (`is_configured()`).
 
 **Prompts** are Markdown files in `agent/prompt_pool/` (incl. `generation_prompts/` for assistant title/description/system-prompt generation and `compliance_prompts/`), read at import time — edit the `.md`, not string literals.
 
-**Compliance**: `compliance_router` + `core/compliance.py` screen assistant prompts against EU AI Act high-risk categories (feature flag `AI_ACT_COMPLIANCE_CHECK_ENABLED`). Tuning workflow: `app/scripts/run_compliance_experiment.py` + the repo skill `compliance-prompt-improvement` (`.agents/skills/`).
+**Compliance**: `compliance_router` + `core/compliance.py` screen assistant prompts against EU AI Act high-risk categories (feature flag `ai_act_compliance_check_enabled`). Tuning workflow: `app/scripts/run_compliance_experiment.py` + the repo skill `compliance-prompt-improvement` (`.agents/skills/`).
 
 **Parsing** (`parsing/`): factory pattern; Xberg (`xberg.py`) is the only backend (Kreuzberg is ELv2-licensed, not MIT).
 

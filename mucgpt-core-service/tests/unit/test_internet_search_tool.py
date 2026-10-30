@@ -41,16 +41,16 @@ class FakeClient:
 
 
 def test_internet_search_placeholder_is_not_configured() -> None:
-    settings = InternetSearchConfig(SEARXNG_URL="<your-searxng-url>")
+    settings = InternetSearchConfig(searxng_url="<your-searxng-url>")
 
     assert internet_search.is_internet_search_configured(settings) is False
 
 
 def test_internet_search_returns_sourced_results(monkeypatch: Any) -> None:
     settings = InternetSearchConfig(
-        SEARXNG_URL="https://searxng-test.example.org/",
-        MAX_RESULTS=3,
-        LANGUAGE="de",
+        searxng_url="https://searxng-test.example.org/",
+        max_results=3,
+        language="de",
     )
     monkeypatch.setattr(
         internet_search, "get_internet_search_settings", lambda: settings

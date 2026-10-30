@@ -30,7 +30,7 @@ def getLogger(name: str = "mucgpt-core") -> logging.Logger:
             if not _configured:
                 try:
                     settings = get_settings()
-                    log_config_path = settings.LOG_CONFIG
+                    log_config_path = settings.log_config
                     log_config = load_log_config(log_config_path)
                     logging.config.dictConfig(log_config)
                     _configured = True

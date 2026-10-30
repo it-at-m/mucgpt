@@ -103,15 +103,19 @@ class TestInitApp:
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize("failing_component", ["redis", "files", "persistence"])
+@pytest.mark.parametrize(
+    "failing_component", ["redis", "files", "catalog", "persistence"]
+)
 async def test_shutdown_attempts_all_resource_cleanup(monkeypatch, failing_component):
     redis_close = AsyncMock()
     files_close = AsyncMock()
     persistence_close = AsyncMock()
+    catalog_close = AsyncMock()
     cleanup = {
         "redis": redis_close,
         "files": files_close,
         "persistence": persistence_close,
+        "catalog": catalog_close,
     }
     cleanup[failing_component].side_effect = RuntimeError("close failed")
     monkeypatch.setattr(
@@ -120,6 +124,7 @@ async def test_shutdown_attempts_all_resource_cleanup(monkeypatch, failing_compo
         AsyncMock(return_value=MagicMock(aclose=redis_close)),
     )
     monkeypatch.setattr(init_app.FileStoreManager, "close", files_close)
+    monkeypatch.setattr(init_app.DocumentCatalogManager, "close", catalog_close)
     monkeypatch.setattr(init_app.PersistanceHelpers, "close", persistence_close)
 
     await init_app.destroy_app()
@@ -129,7 +134,8 @@ async def test_shutdown_attempts_all_resource_cleanup(monkeypatch, failing_compo
 
 
 @pytest.mark.asyncio
-async def test_document_store_startup_failure_cleans_up_app(monkeypatch):
+@pytest.mark.parametrize("failing_component", ["files", "catalog"])
+async def test_document_startup_failure_cleans_up_app(monkeypatch, failing_component):
     settings = MagicMock(MODELS=[])
     monkeypatch.setattr(init_app, "get_settings", lambda: settings)
     monkeypatch.setattr(init_app, "_initialize_models_metadata", MagicMock())
@@ -138,16 +144,23 @@ async def test_document_store_startup_failure_cleans_up_app(monkeypatch):
     monkeypatch.setattr(init_app.RedisCache, "init_redis", AsyncMock())
     persistence_init = AsyncMock()
     monkeypatch.setattr(init_app.PersistanceHelpers, "init", persistence_init)
-    monkeypatch.setattr(
-        init_app.FileStoreManager,
-        "init",
-        AsyncMock(side_effect=RuntimeError("store setup failed")),
-    )
+    files_init = AsyncMock()
+    catalog_init = AsyncMock()
+    {"files": files_init, "catalog": catalog_init}[
+        failing_component
+    ].side_effect = RuntimeError("document setup failed")
+    monkeypatch.setattr(init_app.FileStoreManager, "init", files_init)
+    monkeypatch.setattr(init_app.DocumentCatalogManager, "init", catalog_init)
     cleanup = AsyncMock()
     monkeypatch.setattr(init_app, "destroy_app", cleanup)
 
-    with pytest.raises(RuntimeError, match="store setup failed"):
+    with pytest.raises(RuntimeError, match="document setup failed"):
         await init_app.warmup_app()
 
     persistence_init.assert_awaited_once_with(settings)
+    files_init.assert_awaited_once_with(settings)
+    if failing_component == "catalog":
+        catalog_init.assert_awaited_once_with(settings)
+    else:
+        catalog_init.assert_not_awaited()
     cleanup.assert_awaited_once()

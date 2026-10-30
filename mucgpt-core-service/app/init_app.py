@@ -19,6 +19,7 @@ from core.lf_prompts import PromptPool
 from core.logtools import getLogger
 from core.persistance_helpers import PersistanceHelpers
 from core.virtual_file_system_helper import FileStoreManager
+from database.document_catalog import DocumentCatalogManager
 
 logger = getLogger()
 
@@ -72,6 +73,7 @@ async def warmup_app() -> None:
     try:
         await PersistanceHelpers.init(settings)
         await FileStoreManager.init(settings)
+        await DocumentCatalogManager.init(settings)
     except BaseException:
         with CancelScope(shield=True):
             await destroy_app()
@@ -89,6 +91,11 @@ async def destroy_app() -> None:
         pass
     except Exception:
         logger.exception("Failed to close RedisCache")
+
+    try:
+        await DocumentCatalogManager.close()
+    except Exception:
+        logger.exception("Failed to close DocumentCatalogManager")
 
     # close document store independently of conversation persistence
     try:

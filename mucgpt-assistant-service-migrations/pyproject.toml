@@ -20,6 +20,11 @@ dependencies = [
     "sqlalchemy>=2.0.41",
 ]
 
+[dependency-groups]
+dev = [
+    "ty==0.0.92",
+]
+
 [[tool.uv.index]]
 name = "pypy"
 url = "https://pypi.org/simple"

@@ -45,6 +45,7 @@ dev = [
     "ipykernel==7.4.0",
     "pre-commit==4.7.0",
     "ruff==0.17.3",
+    "ty==0.0.92",
     "pytest-env==1.8.2",
     "pytest==9.1.1",
     "pytest-asyncio==1.4.1",
@@ -67,6 +68,9 @@ src = ["app"]
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP"]
 ignore = ["E501", "E701"]      # line too long, multiple statements on one line
+
+[tool.ty.environment]
+root = ["./app"]
 
 [tool.pytest.ini_options]
 addopts = "--strict-markers --strict-config --verbose --tb=short -ra --cov=app"

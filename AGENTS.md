@@ -34,6 +34,7 @@ uv run pytest tests/unit/test_foo.py::test_bar   # single test
 uv run pytest -m "not integration"               # skip integration-marked tests
 uv run ruff check               # lint
 uv run ruff check --fix         # lint + autofix
+uv run ty check                 # type check (ty is configured per service, NOT at the repo root — the root venv has no service deps)
 
 # Frontend (inside mucgpt-frontend/)
 npm run dev          # Vite dev server WITH MSW API mocking (no backend needed)

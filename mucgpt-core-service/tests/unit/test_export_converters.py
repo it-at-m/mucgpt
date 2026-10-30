@@ -211,10 +211,11 @@ def test_docx_blocks_and_inline_formatting() -> None:
 @pytest.mark.unit
 def test_docx_hyperlink_and_tables() -> None:
     document = _load_docx(convert_docx(DOCX_HTML))
-    external = [
-        rel.target_ref for rel in document.part.rels.values() if rel.is_external
-    ]
-    assert "https://example.com" in external
+    assert any(
+        rel.target_ref == "https://example.com"
+        for rel in document.part.rels.values()
+        if rel.is_external
+    )
 
     (table,) = document.tables
     assert table.style.name == "Table Grid"

@@ -2,7 +2,7 @@ import { Button } from "@fluentui/react-components";
 import { Copy24Regular, CheckmarkSquare24Regular } from "@fluentui/react-icons";
 import { ClassAttributes, HTMLAttributes, useState, useCallback, useContext } from "react";
 import { ExtraProps } from "react-markdown";
-import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
+import { Prism as SyntaxHighlighter, SyntaxHighlighterProps } from "react-syntax-highlighter";
 import { dark, duotoneLight } from "react-syntax-highlighter/dist/esm/styles/prism";
 import styles from "./CodeBlockRenderer.module.css";
 import { Mermaid, MermaidProps } from "./Mermaid";
@@ -95,7 +95,7 @@ export default function CodeBlockRenderer(props: CodeBlockRendererProps) {
         return (
             <div className={styles.codeContainer}>
                 <SyntaxHighlighter
-                    {...(rest as any)}
+                    {...(rest as SyntaxHighlighterProps)}
                     children={text.replace(/\n$/, "")}
                     style={isLight ? duotoneLight : dark}
                     language={language}

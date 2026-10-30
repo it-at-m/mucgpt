@@ -192,6 +192,8 @@ i18n
                         toggle: "Canvas",
                         panel_title: "Canvas",
                         status_writing: "Agent schreibt…",
+                        limit_warning: "Text zu lang: der ausgegraute Bereich wird nicht vom Agenten gelesen und nicht persistiert.",
+                        limit_paste_clipped: "Der eingefügte Text wurde auf {{limit}} Zeichen begrenzt.",
                         split_divider: "Canvas-Breite anpassen",
                         empty_state: "Leeres Canvas",
                         empty_state_hint: "Schreibe hier deinen Entwurf oder überlasse dem Agenten den ersten Text.",
@@ -227,6 +229,7 @@ i18n
                             export_word: "Word (.docx)",
                             export_excel: "Excel (.xlsx)",
                             export_failed: "Export fehlgeschlagen",
+                            export_started: "Export erstellt – die Datei wurde in Ihren Downloads gespeichert.",
                             export_failed_message: "Der Export nach {{target}} ist fehlgeschlagen. Bitte versuche es erneut.",
                             close: "Canvas schließen"
                         },
@@ -1189,6 +1192,8 @@ i18n
                         toggle: "Canvas",
                         panel_title: "Canvas",
                         status_writing: "Agent is writing…",
+                        limit_warning: "Text too long: the greyed-out section is not read by the agent and not persisted.",
+                        limit_paste_clipped: "The pasted text was clipped to {{limit}} characters.",
                         split_divider: "Resize canvas",
                         empty_state: "Empty canvas",
                         empty_state_hint: "Write your draft here or let the agent start the first text.",
@@ -1224,6 +1229,7 @@ i18n
                             export_word: "Word (.docx)",
                             export_excel: "Excel (.xlsx)",
                             export_failed: "Export failed",
+                            export_started: "Export created – the file was saved to your downloads.",
                             export_failed_message: "Exporting to {{target}} failed. Please try again.",
                             close: "Close canvas"
                         },

@@ -4,6 +4,12 @@ from pydantic import ValidationError
 from api.api_models import CANVAS_CONTENT_MAX_CHARS, CanvasState, ChatCompletionRequest
 
 
+def test_canvas_limits_are_pinned() -> None:
+    # the numbers are user-facing (banner texts, docs); pin them explicitly
+    assert CANVAS_CONTENT_MAX_CHARS == 256 * 1024
+    assert len("x" * CANVAS_CONTENT_MAX_CHARS) == 262_144
+
+
 class TestCanvasStateSizeLimit:
     def test_rejects_oversized_content(self) -> None:
         with pytest.raises(ValidationError):

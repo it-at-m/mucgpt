@@ -1,13 +1,18 @@
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { MessageBar } from "@fluentui/react-components";
 
 import { canvasStorage } from "../../service/canvasStorage";
 import { putCanvasRevisionsApi } from "../../api/core-client";
 import type { CanvasControllerInstance } from "../../hooks/useCanvasController";
+import { CANVAS_EXPORT_LIMIT_CHARS, CANVAS_WARN_CHARS } from "./canvasLimits";
+import { CANVAS_PASTE_CLIPPED_EVENT } from "./canvasTextLimit";
 import { CanvasEditor } from "./CanvasEditor";
 import { CanvasToolbar } from "./CanvasToolbar";
 import { CanvasVersionsDrawer } from "./CanvasVersionsDrawer";
 import styles from "./CanvasPanel.module.css";
+
+const PASTE_CLIP_NOTICE_MS = 8000;
 
 const SAVE_REVISIONS_DEBOUNCE_MS = 1000;
 
@@ -22,6 +27,8 @@ export const CanvasPanel = ({ controller, conversationId, onInsertIntoChat, onAg
     const { t } = useTranslation();
     const [isVersionsOpen, setIsVersionsOpen] = useState(false);
     const [isEmpty, setIsEmpty] = useState(true);
+    const [overLimit, setOverLimit] = useState(false);
+    const [clipNotice, setClipNotice] = useState(false);
     // Ref keeps effects conversation-scoped: they must not re-run (and re-load stale
     // content over live edits) just because the controller object identity changes.
     const controllerRef = useRef(controller);
@@ -67,12 +74,32 @@ export const CanvasPanel = ({ controller, conversationId, onInsertIntoChat, onAg
     useEffect(() => {
         const updateEmpty = () => setIsEmpty(controllerRef.current.getMarkdown().trim() === "");
         updateEmpty();
-        return controllerRef.current.subscribe(markdown => setIsEmpty(markdown.trim() === ""));
+        return controllerRef.current.subscribe(markdown => {
+            setIsEmpty(markdown.trim() === "");
+            setOverLimit(markdown.length > CANVAS_WARN_CHARS);
+        });
     }, [conversationId, controller.revisions]);
+
+    // Fired by the editor's size guard when pasted content was clipped.
+    useEffect(() => {
+        const timer = { id: undefined as ReturnType<typeof setTimeout> | undefined };
+        const onClipped = () => {
+            setClipNotice(true);
+            clearTimeout(timer.id);
+            timer.id = setTimeout(() => setClipNotice(false), PASTE_CLIP_NOTICE_MS);
+        };
+        window.addEventListener(CANVAS_PASTE_CLIPPED_EVENT, onClipped);
+        return () => {
+            clearTimeout(timer.id);
+            window.removeEventListener(CANVAS_PASTE_CLIPPED_EVENT, onClipped);
+        };
+    }, []);
 
     return (
         <section className={styles.panel} aria-label={t("canvas.panel_title")}>
             <CanvasToolbar editor={controller.editor} controller={controller} onOpenVersions={() => setIsVersionsOpen(true)} disabled={controller.isLocked} />
+            {clipNotice && <MessageBar intent="warning">{t("canvas.limit_paste_clipped", { limit: CANVAS_EXPORT_LIMIT_CHARS.toLocaleString() })}</MessageBar>}
+            {!clipNotice && overLimit && <MessageBar intent="warning">{t("canvas.limit_warning")}</MessageBar>}
             {controller.isLocked && (
                 <div className={styles.statusLine}>
                     <span className={styles.shimmer}>{t("canvas.status_writing")}</span>

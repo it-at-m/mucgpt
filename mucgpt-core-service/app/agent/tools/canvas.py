@@ -12,7 +12,7 @@ from langgraph.types import Command, StreamWriter
 
 from agent.tools.spec import LocalTool
 from agent.tools.tool_chunk import ToolStreamChunk, ToolStreamState
-from api.api_models import CanvasState
+from api.api_models import CANVAS_READ_LIMIT_CHARS, CanvasState
 
 # All canvas chunks stream under this single name so the legacy fence
 # (```MUCGPTCanvas) and the activity timeline stay uniform.
@@ -328,7 +328,17 @@ def _read_result(canvas: CanvasState, around_cursor: bool) -> str:
         lines.append(doc[start:end])
     else:
         lines.append(f"Full document ({len(doc)} characters):")
-        lines.append(doc)
+        if len(doc) > CANVAS_READ_LIMIT_CHARS:
+            lines.append(doc[:CANVAS_READ_LIMIT_CHARS])
+            lines.append(
+                f"[Truncated: the document has {len(doc)} characters; showing "
+                f"the first {CANVAS_READ_LIMIT_CHARS}. To work on a specific "
+                "passage, ask the user to click at that place and use "
+                "canvas_read with around_cursor, or ask them to shorten the "
+                "document.]"
+            )
+        else:
+            lines.append(doc)
     return "\n".join(lines)
 
 

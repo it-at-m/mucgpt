@@ -5,7 +5,8 @@ from pydantic import BaseModel, Field
 from export.docx_converter import convert_docx
 from export.xlsx_converter import convert_xlsx
 
-_MAX_CONTENT_CHARS = 2_000_000
+# Matches the frontend editor input limit; larger documents are clipped there.
+_MAX_CONTENT_CHARS = 512 * 1024
 
 
 class ExportRequest(BaseModel):

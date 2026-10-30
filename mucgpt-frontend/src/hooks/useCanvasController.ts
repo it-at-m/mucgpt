@@ -5,6 +5,7 @@ import type { Node as PMNode } from "@tiptap/pm/model";
 import type { EditorState } from "@tiptap/pm/state";
 
 import type { CanvasState } from "../api/models";
+import { CANVAS_CONTENT_LIMIT_CHARS } from "../components/Canvas/canvasLimits";
 import { loadCanvasRevisions, loadCanvasState, parseCanvasRevisions, type CanvasRevision, type CanvasRevisions } from "../service/canvasStorage";
 import type { CanvasStreamEvent } from "../utils/canvasStream";
 import { CANVAS_PERSISTENCE_RESET, persistentCaret } from "../components/Canvas/canvasSelectionPersistence";
@@ -244,16 +245,20 @@ export function useCanvasController(conversationId: string | undefined): CanvasC
         // sent with the request — panel open or closed — so the agent works on
         // the document the user last saw and the server copy stays in sync. An
         // open empty document still counts as an active canvas the agent may
-        // write into. The caret is the 'here' anchor the agent needs even while
-        // the panel is closed (small screens); the selection is view state and
-        // only meaningful while open.
+        // write into. Beyond the content limit the document is only readable
+        // and exportable: the request carries the clipped content (the backend
+        // caps at the same value), the caret only anchors while it sits in the
+        // readable part, and oversized selections are meaningless to the agent.
         const markdown = getMarkdown();
         if (!isOpen && !markdown?.trim()) return null;
+        const content = markdown.length > CANVAS_CONTENT_LIMIT_CHARS ? markdown.slice(0, CANVAS_CONTENT_LIMIT_CHARS) : markdown;
         const caretPos = persistentCaret(editorRef.current);
+        const cursor = caretPos === null ? null : caretMarkdownOffset(editorRef.current, caretPos);
+        const selection = isOpen ? getSelectionMarkdown() : null;
         return {
-            content: markdown,
-            selection: isOpen ? getSelectionMarkdown() : null,
-            cursor: caretPos === null ? null : caretMarkdownOffset(editorRef.current, caretPos)
+            content,
+            selection: selection !== null && selection.length <= CANVAS_CONTENT_LIMIT_CHARS ? selection : null,
+            cursor: cursor !== null && cursor <= CANVAS_CONTENT_LIMIT_CHARS ? cursor : null
         };
     }, [isOpen, getMarkdown, getSelectionMarkdown]);
 

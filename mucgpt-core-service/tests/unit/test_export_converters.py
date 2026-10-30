@@ -110,7 +110,7 @@ def test_export_request_rejects_oversized_fields() -> None:
             "html": "h",
             "doc_json": "{}",
             "target": "pdf",
-            field: "x" * 2_000_001,
+            field: "x" * (512 * 1024 + 1),
         }
         with pytest.raises(ValidationError):
             ExportRequest(**request)

@@ -6,6 +6,7 @@ import StarterKit from "@tiptap/starter-kit";
 import { Markdown } from "tiptap-markdown";
 
 import { CanvasSelectionPersistence } from "./canvasSelectionPersistence";
+import { canvasTextLimit } from "./canvasTextLimit";
 
 /**
  * Canvas schema. The schema is the gatekeeper: only nodes that
@@ -25,6 +26,7 @@ export const canvasExtensions = [
     TableHeader,
     TableCell,
     CanvasSelectionPersistence,
+    canvasTextLimit,
     Markdown.configure({
         html: false,
         tightLists: true,

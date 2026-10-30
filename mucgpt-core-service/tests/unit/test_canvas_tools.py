@@ -9,7 +9,7 @@ from langgraph.types import Command
 from agent.middleware import RequestContext
 from agent.tools import canvas
 from agent.tools.tool_chunk import ToolStreamChunk, ToolStreamState
-from api.api_models import CanvasState
+from api.api_models import CANVAS_READ_LIMIT_CHARS, CanvasState
 
 
 class RecordingWriter:
@@ -406,6 +406,48 @@ def test_canvas_read_prunes_earlier_read_results() -> None:
     assert replacement.content.startswith("[Canvas content from an earlier read")
     assert fresh.tool_call_id == "call-2"
     assert "# Doc v2" in fresh.content
+
+
+def test_canvas_read_clips_oversized_document_with_note() -> None:
+    tool = canvas.make_canvas_read_tool(_logger())
+    overflow = 5_000
+    # the tail uses distinct characters so the clip assertion cannot match the prefix
+    doc = "a" * CANVAS_READ_LIMIT_CHARS + "y" * overflow
+
+    result = tool.invoke({"canvas_state": CanvasState(content=doc, selection=None)})
+
+    assert f"Full document ({len(doc)} characters)" in result
+    assert doc[:CANVAS_READ_LIMIT_CHARS] in result
+    assert "[Truncated:" in result
+    assert f"has {len(doc)} characters" in result
+    assert "around_cursor" in result
+    # the tail is clipped, the readable prefix stays verbatim
+    assert "yyy" not in result
+
+
+def test_canvas_read_at_read_limit_has_no_truncation_note() -> None:
+    tool = canvas.make_canvas_read_tool(_logger())
+    doc = "a" * CANVAS_READ_LIMIT_CHARS
+
+    result = tool.invoke({"canvas_state": CanvasState(content=doc, selection=None)})
+
+    assert "[Truncated:" not in result
+    assert doc in result
+
+
+def test_canvas_read_around_cursor_is_not_clipped() -> None:
+    tool = canvas.make_canvas_read_tool(_logger())
+    doc = "a" * (CANVAS_READ_LIMIT_CHARS + 10_000)
+
+    result = tool.invoke(
+        {
+            "canvas_state": CanvasState(content=doc, cursor=250_000),
+            "around_cursor": True,
+        }
+    )
+
+    assert "Showing characters " in result
+    assert "[Truncated:" not in result
 
 
 def test_canvas_read_without_canvas_state_errors(monkeypatch: Any) -> None:

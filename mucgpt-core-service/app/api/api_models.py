@@ -101,7 +101,10 @@ class ChatDataSource(BaseModel):
     )
 
 
-CANVAS_CONTENT_MAX_CHARS = 512 * 1024
+CANVAS_CONTENT_MAX_CHARS = 256 * 1024
+# Full canvas reads stop here so the tool result stays inside the model context;
+# the remaining document is reached via canvas_read(around_cursor).
+CANVAS_READ_LIMIT_CHARS = (CANVAS_CONTENT_MAX_CHARS * 95) // 100
 
 
 class CanvasState(BaseModel):

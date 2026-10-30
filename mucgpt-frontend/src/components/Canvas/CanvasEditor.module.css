@@ -173,3 +173,9 @@
         animation: none;
     }
 }
+
+/* Document content beyond the canvas size warning threshold: readable but
+   greyed out — the agent only reads and persists content up to the limit. */
+.overLimitText {
+    color: var(--colorNeutralForegroundDisabled);
+}

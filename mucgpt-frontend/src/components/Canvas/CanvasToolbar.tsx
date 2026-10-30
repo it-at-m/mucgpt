@@ -26,6 +26,7 @@ import { useTranslation } from "react-i18next";
 
 import { exportCanvasApi, type ExportTarget } from "../../api/core-client";
 import { useGlobalToastContext } from "../GlobalToastHandler/GlobalToastContext";
+import { EdelweissSpinner } from "../EdelweissSpinner";
 import type { CanvasController } from "../../hooks/useCanvasController";
 import styles from "./CanvasToolbar.module.css";
 
@@ -58,7 +59,7 @@ const useHeadingStyles = makeStyles({
 
 export const CanvasToolbar = ({ editor, controller, onOpenVersions, disabled }: Props) => {
     const { t } = useTranslation();
-    const { showError } = useGlobalToastContext();
+    const { showError, showSuccess } = useGlobalToastContext();
     const headingStyles = useHeadingStyles();
     const [isExporting, setIsExporting] = useState<ExportTarget | null>(null);
 
@@ -103,6 +104,7 @@ export const CanvasToolbar = ({ editor, controller, onOpenVersions, disabled }: 
             anchor.download = `canvas.${EXPORT_FILE_EXTENSIONS[target]}`;
             anchor.click();
             URL.revokeObjectURL(url);
+            showSuccess(t("canvas.toolbar.export_started"));
         } catch (error) {
             console.error(`Canvas export to ${target} failed:`, error);
             showError(t("canvas.toolbar.export_failed"), t("canvas.toolbar.export_failed_message", { target: target.toUpperCase() }));
@@ -312,7 +314,12 @@ export const CanvasToolbar = ({ editor, controller, onOpenVersions, disabled }: 
 
             <Menu>
                 <MenuTrigger disableButtonEnhancement>
-                    <Button appearance="subtle" size="small" icon={<ArrowDownload24Regular />} aria-label={t("canvas.toolbar.export")}>
+                    <Button
+                        appearance="subtle"
+                        size="small"
+                        icon={isExporting !== null ? <EdelweissSpinner size="tiny" /> : <ArrowDownload24Regular />}
+                        aria-label={t("canvas.toolbar.export")}
+                    >
                         {t("canvas.toolbar.export")}
                     </Button>
                 </MenuTrigger>

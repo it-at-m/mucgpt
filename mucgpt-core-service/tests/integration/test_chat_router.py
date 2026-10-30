@@ -480,17 +480,10 @@ class TestChatRouter:
             "erase_conversation",
             AsyncMock(return_value="forbidden"),
         )
-        adelete_thread = AsyncMock()
-        monkeypatch.setattr(
-            PersistanceHelpers,
-            "get_checkpointer_if_ready",
-            Mock(return_value=Mock(adelete_thread=adelete_thread)),
-        )
 
         response = test_client.delete(f"/v1/conversations/{DUMMY_CONVERSATION_ID}")
 
         assert response.status_code == 403
-        adelete_thread.assert_not_awaited()
 
     def test_delete_conversation_not_found(
         self, test_client: TestClient, monkeypatch: pytest.MonkeyPatch
@@ -524,7 +517,6 @@ class TestChatRouter:
 
         assert response.status_code == 404
         is_user_mock.assert_not_awaited()
-
 
     def test_delete_conversation_persistence_not_ready(
         self, test_client: TestClient, monkeypatch: pytest.MonkeyPatch

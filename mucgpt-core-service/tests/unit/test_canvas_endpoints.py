@@ -238,7 +238,7 @@ class TestCanvasEndpoints:
         )
 
         assert response.status_code == 204, response.text
-        upsert_mock.assert_awaited_once_with(CONVERSATION_ID, rings)
+        upsert_mock.assert_awaited_once_with(CONVERSATION_ID, rings, USER_ID)
 
     def test_put_canvas_revisions_rejects_payloads_above_512_kb(
         self, test_client: TestClient, monkeypatch: pytest.MonkeyPatch
@@ -288,7 +288,6 @@ class TestCanvasEndpoints:
 
         assert response.status_code == 403
 
-
     def test_delete_conversation_canvas_failure_returns_500(
         self, test_client: TestClient, monkeypatch: pytest.MonkeyPatch
     ) -> None:
@@ -318,7 +317,7 @@ class TestCanvasEndpoints:
         response = test_client.post("/v1/chat/completions", json=payload)
 
         assert response.status_code == 200, response.text
-        upsert_mock.assert_awaited_once_with(CONVERSATION_ID, "# Canvas")
+        upsert_mock.assert_awaited_once_with(CONVERSATION_ID, "# Canvas", USER_ID)
 
     def test_persisted_chat_rejects_oversized_canvas(
         self, test_client: TestClient, monkeypatch: pytest.MonkeyPatch

@@ -9,7 +9,11 @@ from langgraph.types import Command
 from agent.middleware import RequestContext
 from agent.tools import canvas
 from agent.tools.tool_chunk import ToolStreamChunk, ToolStreamState
-from api.api_models import CANVAS_READ_LIMIT_CHARS, CanvasState
+from api.api_models import (
+    CANVAS_CONTENT_MAX_CHARS,
+    CANVAS_READ_LIMIT_CHARS,
+    CanvasState,
+)
 
 
 class RecordingWriter:
@@ -132,6 +136,40 @@ def test_canvas_write_rejects_raw_html(monkeypatch: Any) -> None:
     assert writer.chunks == []
 
 
+def test_canvas_write_allows_html_inside_tilde_fence(monkeypatch: Any) -> None:
+    writer = RecordingWriter()
+    monkeypatch.setattr(canvas, "_get_writer", lambda: writer)
+    tool = canvas.make_canvas_write_tool(_logger())
+
+    fenced = "# Config\n\n~~~text\n<div>not html</div>\n~~~"
+    result, updated_canvas = _command_result(
+        tool.invoke(
+            {"content": fenced, "canvas_state": _canvas(), "runtime": _runtime()}
+        )
+    )
+
+    assert result.startswith(CONFIRMATION)
+    assert updated_canvas.content == fenced
+
+
+def test_canvas_write_rejects_oversized_content(monkeypatch: Any) -> None:
+    writer = RecordingWriter()
+    monkeypatch.setattr(canvas, "_get_writer", lambda: writer)
+    tool = canvas.make_canvas_write_tool(_logger())
+
+    result = tool.invoke(
+        {
+            "content": "x" * (CANVAS_CONTENT_MAX_CHARS + 1),
+            "canvas_state": _canvas(),
+            "runtime": _runtime(),
+        }
+    )
+
+    assert result.startswith("Error:")
+    assert str(CANVAS_CONTENT_MAX_CHARS) in result
+    assert writer.chunks == []
+
+
 def test_canvas_write_allows_html_inside_code(monkeypatch: Any) -> None:
     writer = RecordingWriter()
     monkeypatch.setattr(canvas, "_get_writer", lambda: writer)
@@ -223,7 +261,7 @@ def test_canvas_edit_keeps_selection_in_state_update(monkeypatch: Any) -> None:
     _, updated_canvas = _command_result(result)
 
     assert updated_canvas == CanvasState(
-        content="revised text", selection="selected text"
+        content="revised text", selection="revised text"
     )
 
 
@@ -314,6 +352,26 @@ def test_canvas_edit_must_target_active_selection(monkeypatch: Any) -> None:
 
     assert result.startswith("Error:")
     assert "selected" in result
+    assert writer.chunks == []
+
+
+def test_canvas_edit_rejects_result_over_limit(monkeypatch: Any) -> None:
+    writer = RecordingWriter()
+    monkeypatch.setattr(canvas, "_get_writer", lambda: writer)
+    tool = canvas.make_canvas_edit_tool(_logger())
+    padding = CANVAS_CONTENT_MAX_CHARS - len("base ")
+
+    result = tool.invoke(
+        {
+            "old_text": "x" * padding,
+            "new_text": "y" * (padding + 10),
+            "canvas_state": _canvas("base " + "x" * padding),
+            "runtime": _runtime(),
+        }
+    )
+
+    assert result.startswith("Error:")
+    assert str(CANVAS_CONTENT_MAX_CHARS) in result
     assert writer.chunks == []
 
 

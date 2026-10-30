@@ -107,7 +107,7 @@ async def get_messages_for_agent(
     # The canvas is saved implicitly with every persisted turn.
     if request.canvas is not None:
         await PersistanceHelpers.upsert_canvas(
-            request.conversation_id, request.canvas.content
+            request.conversation_id, request.canvas.content, user_id
         )
 
     if await PersistanceHelpers.has_checkpoint(request.conversation_id):
@@ -334,7 +334,12 @@ async def get_conversation_canvas(
     conversation_id: str,
     user_info: Annotated[AuthenticationResult, Depends(authenticate_user)],
 ) -> CanvasResponse:
-    """Return the canvas document stored for the conversation."""
+    """Return the canvas document stored for the conversation.
+
+    An empty content means an empty canvas: the row can exist with empty
+    content because revisions are stored before any document, and an open
+    empty editor is a legitimate persisted state.
+    """
     await _authorize_conversation_access(conversation_id, user_info.user_id)
 
     canvas = await PersistanceHelpers.get_canvas(conversation_id)
@@ -386,7 +391,9 @@ async def put_conversation_canvas_revisions(
             detail="Canvas revisions exceed the maximum payload size of 512 KB",
         )
 
-    await PersistanceHelpers.upsert_canvas_revisions(conversation_id, revisions)
+    await PersistanceHelpers.upsert_canvas_revisions(
+        conversation_id, revisions, user_info.user_id
+    )
     return Response(status_code=204)
 
 

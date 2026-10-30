@@ -12,7 +12,11 @@ from langgraph.types import Command, StreamWriter
 
 from agent.tools.spec import LocalTool
 from agent.tools.tool_chunk import ToolStreamChunk, ToolStreamState
-from api.api_models import CANVAS_READ_LIMIT_CHARS, CanvasState
+from api.api_models import (
+    CANVAS_CONTENT_MAX_CHARS,
+    CANVAS_READ_LIMIT_CHARS,
+    CanvasState,
+)
 
 # All canvas chunks stream under this single name so the legacy fence
 # (```MUCGPTCanvas) and the activity timeline stay uniform.
@@ -107,10 +111,15 @@ _REPLACED_READ_NOTE = (
 # would treat as inline HTML and render as literal text.
 _HTML_TAG = re.compile(r"</?[a-zA-Z][a-zA-Z0-9]*(\s[^<>]*)?/?>")
 
-# Fenced code blocks and inline code spans may legitimately contain angle
-# brackets; strip them before scanning.
+# Fenced code blocks (backtick and tilde fences per CommonMark/GFM) and inline
+# code spans may legitimately contain angle brackets; strip them before scanning.
 _CODE_SPAN = re.compile(r"`[^`]*`")
-_FENCED_BLOCK = re.compile(r"```.*?(?:```|\Z)", re.DOTALL)
+_FENCED_BLOCK = re.compile(r"(`{3,}|~{3,}).*?(?:\1|\Z)", re.DOTALL)
+
+_OVERSIZED_ERROR = (
+    f"Error: canvas content exceeds the {CANVAS_CONTENT_MAX_CHARS} character "
+    "limit and would be rejected by the client; shorten the content."
+)
 
 
 def _contains_html(text: str) -> bool:
@@ -219,6 +228,8 @@ def make_canvas_write_tool(logger: Logger) -> BaseTool:
             return "Error: content is required for canvas_write."
         if _contains_html(content):
             return HTML_NOT_ALLOWED_ERROR
+        if len(content) > CANVAS_CONTENT_MAX_CHARS:
+            return _OVERSIZED_ERROR
 
         writer = _get_writer()
         _emit(writer, ToolStreamState.STARTED, "")
@@ -273,6 +284,16 @@ def make_canvas_edit_tool(logger: Logger) -> BaseTool:
             return HTML_NOT_ALLOWED_ERROR
 
         updated = document.replace(old_text, new_text, 1)
+        if len(updated) > CANVAS_CONTENT_MAX_CHARS:
+            return _OVERSIZED_ERROR
+        # The selection must track the replaced text: the client re-sends the
+        # live selection, but within this run a follow-up edit would otherwise
+        # target a passage that no longer exists.
+        selection = (
+            canvas.selection.replace(old_text, new_text, 1)
+            if canvas.selection is not None
+            else None
+        )
         # Keep the reported caret meaningful across the edit: shift it by the
         # length delta when it sits after the replaced passage, move it to the
         # edit start when it sat inside the passage.
@@ -290,7 +311,7 @@ def make_canvas_edit_tool(logger: Logger) -> BaseTool:
         _emit(writer, ToolStreamState.UPDATE, updated)
         return _tool_result(
             runtime,
-            CanvasState(content=updated, selection=canvas.selection, cursor=cursor),
+            CanvasState(content=updated, selection=selection, cursor=cursor),
         )
 
     canvas_edit.metadata = {"mcp_group": CANVAS_MCP_GROUP}

@@ -409,11 +409,13 @@ class PersistanceHelpers:
             return await CanvasRepository(session).get_canvas(conversation_id)
 
     @staticmethod
-    async def upsert_canvas(conversation_id: str, content: str) -> None:
-        """Create or update the canvas content of a conversation."""
+    async def upsert_canvas(conversation_id: str, content: str, user_id: str) -> None:
+        """Create or update the canvas content of a conversation owned by user_id."""
         factory = PersistanceHelpers._get_session_factory()
         async with factory.begin() as session:
-            await CanvasRepository(session).upsert_canvas(conversation_id, content)
+            await CanvasRepository(session).upsert_canvas(
+                conversation_id, content, user_id
+            )
 
     @staticmethod
     async def get_canvas_revisions(conversation_id: str) -> dict | None:
@@ -423,12 +425,14 @@ class PersistanceHelpers:
             return await CanvasRepository(session).get_canvas_revisions(conversation_id)
 
     @staticmethod
-    async def upsert_canvas_revisions(conversation_id: str, revisions: dict) -> None:
+    async def upsert_canvas_revisions(
+        conversation_id: str, revisions: dict, user_id: str
+    ) -> None:
         """Wholesale-overwrite the client-owned revision rings."""
         factory = PersistanceHelpers._get_session_factory()
         async with factory.begin() as session:
             await CanvasRepository(session).upsert_canvas_revisions(
-                conversation_id, revisions
+                conversation_id, revisions, user_id
             )
 
     @staticmethod

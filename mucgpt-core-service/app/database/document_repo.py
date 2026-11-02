@@ -94,6 +94,16 @@ class DocumentRepository:
         )
         return list(result.scalars().all())
 
+    async def get_document(self, user_id: str, document_id: str) -> Document | None:
+        """Return owned lifecycle metadata; foreign and missing IDs are indistinguishable."""
+        get_document_namespace(user_id)
+        result = await self.session.execute(
+            select(Document)
+            .where(Document.user_id == user_id, Document.id == str(UUID(document_id)))
+            .execution_options(populate_existing=True)
+        )
+        return result.scalar_one_or_none()
+
     async def mark_ready(
         self, user_id: str, document_id: str, *, text_length: int, preview: str
     ) -> bool:
@@ -118,14 +128,19 @@ class DocumentRepository:
         )
         return result.scalar_one_or_none() is not None
 
-    async def mark_deleting(self, user_id: str, document_id: str) -> bool:
+    async def mark_deleting(
+        self, user_id: str, document_id: str, *, allow_processing: bool = True
+    ) -> bool:
         """Make owned metadata unavailable before cleanup; retryable on failure."""
         get_document_namespace(user_id)
+        statement = update(Document).where(
+            Document.id == str(UUID(document_id)), Document.user_id == user_id
+        )
+        if not allow_processing:
+            # Public deletion must not release capacity while ingestion can still write.
+            statement = statement.where(Document.status.in_(("ready", "deleting")))
         result = await self.session.execute(
-            update(Document)
-            .where(Document.id == str(UUID(document_id)), Document.user_id == user_id)
-            .values(status="deleting")
-            .returning(Document.id)
+            statement.values(status="deleting").returning(Document.id)
         )
         return result.scalar_one_or_none() is not None
 

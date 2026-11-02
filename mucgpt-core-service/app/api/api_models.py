@@ -23,6 +23,21 @@ class DocumentMetadata(BaseModel):
     created_at: datetime
 
 
+class DocumentLibraryEntry(BaseModel):
+    """Library metadata, including entries that still occupy a quota slot."""
+
+    id: str
+    filename: str
+    mime_type: str
+    original_size: int = Field(ge=0)
+    status: Literal["processing", "ready", "deleting"]
+    text_length: int | None = Field(default=None, ge=0)
+    preview: str | None = None
+    preview_kind: Literal["initial_excerpt"] | None = None
+    path: str
+    created_at: datetime
+
+
 class SummarizeResult(BaseModel):
     """Result model for the summarize endpoint."""
 

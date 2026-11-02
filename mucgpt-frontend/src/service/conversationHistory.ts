@@ -66,6 +66,7 @@ async function syncHistory(): Promise<void> {
             ...existing,
             id,
             backendPersisted: true,
+            ...(conversation.document_ids !== undefined ? { documentIds: conversation.document_ids } : {}),
             name: conversation.title,
             favorite: existing?.favorite ?? false,
             messages: existing?.messages ?? [],
@@ -138,10 +139,13 @@ export async function loadConversation<C>(
         }
         throw error;
     }
+    const metadata = (await listConversationsApi()).find(conversation => conversation.conversation_id === conversationId);
+    if (!metadata) throw new ApiError("Conversation is unavailable", 404);
     const chat: DBObject<ChatResponse, C> = {
         ...cached,
         id,
         backendPersisted: true,
+        documentIds: metadata.document_ids ?? [],
         messages: toChatTurns(messages).map((turn, index) => {
             const local = cached?.messages[index];
             if (local?.user !== turn.user || local.response.answer !== turn.response.answer) return turn;

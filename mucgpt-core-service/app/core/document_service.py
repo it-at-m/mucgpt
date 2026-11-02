@@ -1,7 +1,7 @@
 from collections.abc import Sequence
 from dataclasses import dataclass
 from datetime import datetime
-from uuid import UUID
+from uuid import UUID, uuid4
 
 from anyio import CancelScope, to_thread
 from fastapi import UploadFile
@@ -17,6 +17,7 @@ from core.virtual_file_system_helper import (
     get_document_storage_key,
 )
 from database.document_catalog import DocumentCatalogManager
+from database.document_lock import document_work_lock
 from database.document_repo import DOCUMENT_LIMIT, DocumentRepository
 from parsing.factory import get_parser
 
@@ -238,67 +239,78 @@ class DocumentIngestionService:
             raise DocumentProcessingDisabledError("Document processing is not enabled")
         original_size = await self._validate_upload_size(file)
 
-        document_id = None
-        write_attempted = False
-        try:
-            # Shield reservation publication so cancellation cannot lose a committed
-            # row's ID before compensation can identify it.
-            with CancelScope(shield=True):
-                async with self.session_factory.begin() as session:
-                    document = await DocumentRepository(session).reserve_document(
-                        user_info.user_id,
-                        filename=filename,
-                        mime_type=mime_type,
-                        original_size=original_size,
-                    )
-                    document_id = document.id
-                    created_at = document.created_at
-
-            text = await parser.parse(file)
-            self._validate_text(text)
-            preview = await to_thread.run_sync(
-                create_initial_excerpt, text, self.settings
-            )
-            backend = create_document_backend(user_info.user_id)
-            write_attempted = True
-            result = await backend.awrite(get_document_storage_key(document_id), text)
-            if result.error:
-                raise DocumentStorageError("Document body could not be stored")
-
-            # Construct metadata before publication: no fallible work after commit.
-            metadata = SelectedDocument(
-                id=document_id,
-                filename=filename,
-                mime_type=mime_type,
-                original_size=original_size,
-                text_length=len(text),
-                preview=preview,
-                preview_kind="initial_excerpt",
-                path=get_document_path(document_id),
-                created_at=created_at,
-            )
-            with CancelScope(shield=True):
-                async with self.session_factory.begin() as session:
-                    if not await DocumentRepository(session).mark_ready(
-                        user_info.user_id,
-                        document_id,
-                        text_length=len(text),
-                        preview=preview,
-                    ):
-                        raise DocumentStorageError("Document could not be marked ready")
-            return metadata
-        except BaseException:
-            if document_id is not None:
+        reserved_id = str(uuid4())
+        # Acquire before publishing processing metadata; keep ownership through
+        # finalization or compensation, including failed/cancelled uploads.
+        async with document_work_lock(self.session_factory, reserved_id) as acquired:
+            if not acquired:
+                raise DocumentStorageError("Document work lock could not be acquired")
+            document_id = None
+            write_attempted = False
+            try:
+                # Shield reservation publication so cancellation cannot lose a committed
+                # row's ID before compensation can identify it.
                 with CancelScope(shield=True):
-                    try:
-                        await self._compensate(
-                            user_info.user_id, document_id, write_attempted
+                    async with self.session_factory.begin() as session:
+                        document = await DocumentRepository(session).reserve_document(
+                            user_info.user_id,
+                            filename=filename,
+                            mime_type=mime_type,
+                            original_size=original_size,
+                            document_id=reserved_id,
                         )
-                    except Exception:
-                        logger.exception(
-                            "Document ingestion cleanup failed for %s", document_id
-                        )
-            raise
+                        document_id = document.id
+                        created_at = document.created_at
+
+                text = await parser.parse(file)
+                self._validate_text(text)
+                preview = await to_thread.run_sync(
+                    create_initial_excerpt, text, self.settings
+                )
+                backend = create_document_backend(user_info.user_id)
+                write_attempted = True
+                result = await backend.awrite(
+                    get_document_storage_key(document_id), text
+                )
+                if result.error:
+                    raise DocumentStorageError("Document body could not be stored")
+
+                # Construct metadata before publication: no fallible work after commit.
+                metadata = SelectedDocument(
+                    id=document_id,
+                    filename=filename,
+                    mime_type=mime_type,
+                    original_size=original_size,
+                    text_length=len(text),
+                    preview=preview,
+                    preview_kind="initial_excerpt",
+                    path=get_document_path(document_id),
+                    created_at=created_at,
+                )
+                with CancelScope(shield=True):
+                    async with self.session_factory.begin() as session:
+                        if not await DocumentRepository(session).mark_ready(
+                            user_info.user_id,
+                            document_id,
+                            text_length=len(text),
+                            preview=preview,
+                        ):
+                            raise DocumentStorageError(
+                                "Document could not be marked ready"
+                            )
+                return metadata
+            except BaseException:
+                if document_id is not None:
+                    with CancelScope(shield=True):
+                        try:
+                            await self._compensate(
+                                user_info.user_id, document_id, write_attempted
+                            )
+                        except Exception:
+                            logger.exception(
+                                "Document ingestion cleanup failed for %s", document_id
+                            )
+                raise
 
     async def _validate_upload_size(self, file: UploadFile) -> int:
         """Count with bounded reads even when the supplied size is absent/inaccurate.

@@ -10,11 +10,13 @@ from uuid import uuid4
 
 import psycopg
 from psycopg import sql
+from sqlalchemy.ext.asyncio import async_sessionmaker
 
 from config.settings import DBConfig, Settings
 from core.auth_models import AuthenticationResult
 from core.document_service import DocumentService
 from database.document_catalog import DocumentCatalogManager
+from database.document_lock import document_work_lock
 from database.document_repo import DocumentQuotaExceededError, DocumentRepository
 
 
@@ -137,3 +139,18 @@ class DocumentCatalogPostgresTests(unittest.IsolatedAsyncioTestCase):
             )
             await session.commit()
             self.assertEqual(await repository.list_documents(self.owner.user_id), [])
+
+    async def test_work_lock_coordinates_independent_instances_until_session_close(
+        self,
+    ):
+        factory = DocumentCatalogManager.get_session_factory()
+        other_factory = async_sessionmaker(factory.kw["bind"], expire_on_commit=False)
+        document_id = str(uuid4())
+        async with document_work_lock(factory, document_id) as acquired:
+            self.assertTrue(acquired)
+            # Committing catalog work does not release the dedicated session lock.
+            await self.reserve()
+            async with document_work_lock(other_factory, document_id) as other_acquired:
+                self.assertFalse(other_acquired)
+        async with document_work_lock(other_factory, document_id) as acquired:
+            self.assertTrue(acquired)

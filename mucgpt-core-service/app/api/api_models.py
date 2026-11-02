@@ -162,6 +162,13 @@ class ChatCompletionRequest(BaseModel):
         None,
         description="Structured document payload with title, content and metadata",
     )
+    document_ids: list[str] = Field(
+        default_factory=list,
+        description=(
+            "IDs of library documents to attach for this turn, authorized server-side. "
+            "Omitted or empty IDs mean no attachments."
+        ),
+    )
     model_config = ConfigDict(
         json_schema_extra={
             "example": {

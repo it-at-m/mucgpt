@@ -22,7 +22,7 @@ dependencies = [
     "langchain-openai>=1.1.12",
     "langsmith>=0.7.31",
     "openai==3.39.0",
-    "joserfc",
+    "joserfc>=1.7.6",
     "uvicorn>=0.44.0",
     "asgi-correlation-id>=4.3.4",
     "pydantic-settings>=2.8.1",
@@ -59,6 +59,7 @@ dev = [
 ]
 
 [tool.uv]
+constraint-dependencies = ["pyasn1>=0.6.5"]
 
 [[tool.uv.index]]
 name = "pypy"

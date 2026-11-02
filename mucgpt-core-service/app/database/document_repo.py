@@ -30,17 +30,26 @@ class DocumentRepository:
         self.session = session
 
     async def reserve_document(
-        self, user_id: str, *, filename: str, mime_type: str, original_size: int
+        self,
+        user_id: str,
+        *,
+        filename: str,
+        mime_type: str,
+        original_size: int,
+        document_id: str | None = None,
     ) -> Document:
         """Allocate a server UUID and a slot using database uniqueness arbitration.
 
         The unique (user_id, slot) index also indexes ownership. Concurrent
         instances cannot allocate the same slot; no count-then-insert is used.
+        Ingestion may preallocate the server UUID to lock it before publication.
         """
         get_document_namespace(user_id)
         if original_size < 0:
             raise ValueError("Original size must be nonnegative")
-        document_id = str(uuid4())
+        document_id = (
+            str(UUID(document_id)) if document_id is not None else str(uuid4())
+        )
         for slot in range(DOCUMENT_LIMIT):
             result = await self.session.execute(
                 insert(Document)

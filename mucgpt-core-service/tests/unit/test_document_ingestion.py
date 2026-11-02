@@ -40,6 +40,7 @@ class CatalogSessions:
         self.phases = 0
         self.fail_commit = None
         self.ambiguous_commit = False
+        self.locked_ids: set[str] = set()
 
     @asynccontextmanager
     async def begin(self):
@@ -89,6 +90,19 @@ def ingestion(monkeypatch):
     engine = create_engine("sqlite://")
     Base.metadata.create_all(engine, tables=[Document.__table__])
     sessions = CatalogSessions(engine)
+
+    @asynccontextmanager
+    async def work_lock(_factory, document_id):
+        if document_id in sessions.locked_ids:
+            yield False
+            return
+        sessions.locked_ids.add(document_id)
+        try:
+            yield True
+        finally:
+            sessions.locked_ids.remove(document_id)
+
+    monkeypatch.setattr(services, "document_work_lock", work_lock)
     store = InMemoryStore()
     monkeypatch.setattr(FileStoreManager, "_file_store", store)
     parser = MagicMock(
@@ -111,6 +125,7 @@ async def test_complete_text_ready_metadata_and_authenticated_namespace(ingestio
         assert (await received.read()) == b"original binary"
         rows = sessions.rows()
         assert len(rows) == 1 and rows[0].status == "processing"
+        assert rows[0].id in sessions.locked_ids
         assert (
             store.get(get_document_namespace(user().user_id), rows[0].storage_key)
             is None
@@ -120,6 +135,7 @@ async def test_complete_text_ready_metadata_and_authenticated_namespace(ingestio
     parser.parse.side_effect = parse
     metadata = await service.ingest_document(user(), file)
     row = sessions.rows()[0]
+    assert sessions.locked_ids == set()
     assert row.status == "ready"
     assert row.user_id == "demo-user-5"
     assert metadata.original_size == len(b"original binary")
@@ -357,6 +373,7 @@ async def test_storage_and_finalization_failures_compensate(
     async def write(path, text):
         assert sessions.active == 0
         assert sessions.rows()[0].status == "processing"
+        assert sessions.rows()[0].id in sessions.locked_ids
         if failure == "before_write":
             raise RuntimeError("write failed")
         result = await real_backend.awrite(path, text)
@@ -384,6 +401,47 @@ async def test_storage_and_finalization_failures_compensate(
     assert store.search(get_document_namespace(user().user_id)) == []
     if failure.startswith("reservation"):
         parser.parse.assert_not_awaited()
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("error_type", [RuntimeError, asyncio.CancelledError])
+async def test_upload_lock_is_held_through_compensation_then_released(
+    ingestion, monkeypatch, error_type
+):
+    service, sessions, _, parser = ingestion
+    compensate = service._compensate
+
+    async def parse(_):
+        document_id = sessions.rows()[0].id
+        async with services.document_work_lock(sessions, document_id) as acquired:
+            assert not acquired  # Another worker cannot claim this processing row.
+        raise error_type("interrupted")
+
+    async def cleanup(owner, document_id, write_attempted):
+        assert document_id in sessions.locked_ids
+        await compensate(owner, document_id, write_attempted)
+
+    parser.parse.side_effect = parse
+    monkeypatch.setattr(service, "_compensate", cleanup)
+    with pytest.raises(error_type, match="interrupted"):
+        await service.ingest_document(user(), upload())
+    assert sessions.rows() == []
+    assert sessions.locked_ids == set()
+
+
+@pytest.mark.asyncio
+async def test_unavailable_work_lock_does_not_reserve_or_parse(ingestion, monkeypatch):
+    service, sessions, _, parser = ingestion
+
+    @asynccontextmanager
+    async def unavailable_lock(_factory, _document_id):
+        yield False
+
+    monkeypatch.setattr(services, "document_work_lock", unavailable_lock)
+    with pytest.raises(services.DocumentStorageError, match="work lock"):
+        await service.ingest_document(user(), upload())
+    assert sessions.phases == 0
+    parser.parse.assert_not_awaited()
 
 
 @pytest.mark.asyncio

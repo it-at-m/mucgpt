@@ -45,6 +45,12 @@ def upload_api(monkeypatch):
     monkeypatch.setattr(FileStoreManager, "_file_store", store)
     parser = MagicMock(parse=AsyncMock(return_value="First line\r\nSecond line\n"))
     monkeypatch.setattr(services, "get_parser", lambda: parser)
+
+    @asynccontextmanager
+    async def work_lock(_factory, _document_id):
+        yield True
+
+    monkeypatch.setattr(services, "document_work_lock", work_lock)
     service = services.DocumentIngestionService(
         MagicMock(begin=begin), DocumentConfig(PREVIEW_MAX_CHARS=10)
     )

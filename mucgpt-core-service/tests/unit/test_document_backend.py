@@ -49,6 +49,97 @@ async def test_selected_read_fetches_only_exact_key(store, asynchronous):
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize("asynchronous", [False, True])
+@pytest.mark.parametrize("line_count", [99, 100, 101, 205])
+async def test_default_read_returns_full_document_or_first_page(
+    store, asynchronous, line_count
+):
+    lines = [f"line {number}\n" for number in range(line_count)]
+    store.put(NAMESPACE, SELECTED_PATH, create_file_data("".join(lines)))
+    backend = DocumentBackend(
+        store=store, namespace=lambda _: NAMESPACE, allowed_paths=[SELECTED_PATH]
+    )
+    result = (
+        await backend.aread(SELECTED_PATH)
+        if asynchronous
+        else backend.read(SELECTED_PATH)
+    )
+    assert result.error is None
+    assert result.file_data["content"] == "".join(lines[:100])
+    assert result.total_lines == line_count
+    assert result.start_line == 1
+    assert result.end_line == min(line_count, 100)
+    assert result.next_offset == (100 if line_count > 100 else None)
+    if asynchronous:
+        store.aget.assert_awaited_once_with(NAMESPACE, SELECTED_PATH)
+        store.get.assert_not_called()
+    else:
+        store.get.assert_called_once_with(NAMESPACE, SELECTED_PATH)
+        store.aget.assert_not_called()
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("asynchronous", [False, True])
+async def test_default_pages_can_resume_without_skipping_document_lines(
+    store, asynchronous
+):
+    text = "".join(f"line {number}\n" for number in range(205))
+    store.put(NAMESPACE, SELECTED_PATH, create_file_data(text))
+    backend = DocumentBackend(
+        store=store, namespace=lambda _: NAMESPACE, allowed_paths=[SELECTED_PATH]
+    )
+    method = backend.aread if asynchronous else backend.read
+    pages = []
+    offset = 0
+    for expected_end in [100, 200, 205]:
+        result = (
+            await method(SELECTED_PATH, offset=offset)
+            if asynchronous
+            else method(SELECTED_PATH, offset=offset)
+        )
+        assert result.error is None
+        assert result.start_line == offset + 1
+        assert result.end_line == expected_end
+        assert result.total_lines == 205
+        assert result.next_offset == (expected_end if expected_end < 205 else None)
+        pages.append(result.file_data["content"])
+        offset = result.next_offset
+    assert "".join(pages) == text
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("asynchronous", [False, True])
+@pytest.mark.parametrize(
+    ("offset", "limit", "start", "end"),
+    [(0, 205, 0, 205), (99, 102, 99, 201), (-1, 1, 0, 1), (10, 0, 10, 10)],
+)
+async def test_explicit_read_bounds_are_preserved(
+    store, asynchronous, offset, limit, start, end
+):
+    lines = [f"line {number}\n" for number in range(205)]
+    store.put(NAMESPACE, SELECTED_PATH, create_file_data("".join(lines)))
+    backend = DocumentBackend(
+        store=store, namespace=lambda _: NAMESPACE, allowed_paths=[SELECTED_PATH]
+    )
+    result = (
+        await backend.aread(SELECTED_PATH, offset=offset, limit=limit)
+        if asynchronous
+        else backend.read(SELECTED_PATH, offset=offset, limit=limit)
+    )
+    assert result.error is None
+    assert result.file_data["content"] == "".join(lines[start:end])
+    if limit == 0:
+        assert result.no_lines_requested is True
+        assert result.start_line is None and result.end_line is None
+        assert result.next_offset is None
+    else:
+        assert result.start_line == start + 1
+        assert result.end_line == end
+        assert result.total_lines == 205
+        assert result.next_offset == (end if end < 205 else None)
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("asynchronous", [False, True])
 @pytest.mark.parametrize(
     "path",
     [OTHER_PATH, "/", "/documents" + SELECTED_PATH, "/../" + SELECTED_PATH[1:]],

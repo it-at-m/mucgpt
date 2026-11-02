@@ -1,6 +1,7 @@
 from unittest.mock import AsyncMock, MagicMock, call
 
 import pytest
+from deepagents.backends import CompositeBackend, StateBackend
 from deepagents.backends.utils import create_file_data
 from langgraph.store.memory import InMemoryStore
 
@@ -205,3 +206,59 @@ async def test_grep_propagates_missing_or_invalid_body(store, asynchronous, body
     )
     result = await backend.agrep("text") if asynchronous else backend.grep("text")
     assert result.error is not None
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("asynchronous", [False, True])
+@pytest.mark.parametrize("operation", ["ls", "glob"])
+@pytest.mark.parametrize("path", ["/", SELECTED_PATH])
+async def test_document_discovery_is_denied_without_store_access(
+    store, asynchronous, operation, path
+):
+    backend = DocumentBackend(
+        store=store, namespace=lambda _: NAMESPACE, allowed_paths=[SELECTED_PATH]
+    )
+    method = getattr(backend, ("a" if asynchronous else "") + operation)
+    kwargs = {"path": path}
+    if operation == "glob":
+        kwargs["pattern"] = "*.txt"
+    result = await method(**kwargs) if asynchronous else method(**kwargs)
+    assert result.error is not None and "disabled" in result.error
+    assert store.mock_calls == []
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("asynchronous", [False, True])
+@pytest.mark.parametrize("operation", ["ls", "glob"])
+async def test_discovery_denial_is_scoped_to_document_mount(
+    store, monkeypatch, asynchronous, operation
+):
+    scratch = StateBackend()
+    monkeypatch.setattr(
+        scratch,
+        "_read_files",
+        lambda: {"/scratch/note.txt": create_file_data("scratch")},
+    )
+    backend = CompositeBackend(
+        default=scratch,
+        routes={
+            "/documents/": DocumentBackend(
+                store=store,
+                namespace=lambda _: NAMESPACE,
+                allowed_paths=[SELECTED_PATH],
+            )
+        },
+    )
+    method = getattr(backend, ("a" if asynchronous else "") + operation)
+    for path in ["/documents/", "/scratch/"]:
+        kwargs = {"path": path}
+        if operation == "glob":
+            kwargs["pattern"] = "*.txt"
+        result = await method(**kwargs) if asynchronous else method(**kwargs)
+        if path == "/documents/":
+            assert result.error is not None
+        else:
+            assert result.error is None
+            entries = result.entries if operation == "ls" else result.matches
+            assert [entry["path"] for entry in entries] == ["/scratch/note.txt"]
+    assert store.mock_calls == []

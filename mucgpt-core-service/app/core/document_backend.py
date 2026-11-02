@@ -5,6 +5,7 @@ from deepagents.backends.protocol import (
     DeleteResult,
     EditResult,
     FileData,
+    FileDownloadResponse,
     FileUploadResponse,
     GlobResult,
     GrepResult,
@@ -171,3 +172,12 @@ class DocumentBackend(StoreBackend):
         self, files: list[tuple[str, bytes]]
     ) -> list[FileUploadResponse]:
         return self.upload_files(files)
+
+    def download_files(self, paths: list[str]) -> list[FileDownloadResponse]:
+        return [
+            FileDownloadResponse(path=path, content=None, error="permission_denied")
+            for path in paths
+        ]
+
+    async def adownload_files(self, paths: list[str]) -> list[FileDownloadResponse]:
+        return self.download_files(paths)

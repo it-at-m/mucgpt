@@ -14,6 +14,7 @@ export interface DBObject<M, C> {
     favorite?: boolean;
     /** This cache entry is backed by a server-side conversation. */
     backendPersisted?: boolean;
+    documentIds?: string[];
     messages: DBMessage<M>[];
     config: C;
 }

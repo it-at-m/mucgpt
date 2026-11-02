@@ -30,6 +30,8 @@ def stub_persistence(monkeypatch: pytest.MonkeyPatch) -> None:
     """Backend chat persistence needs a live Postgres pool; stub it for router tests."""
     from core.persistance_helpers import PersistanceHelpers
 
+    monkeypatch.setattr("api.routers.chat_router._save_document_selection", AsyncMock())
+
     monkeypatch.setattr(
         PersistanceHelpers,
         "verify_user_in_conversation",

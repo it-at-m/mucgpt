@@ -1,6 +1,7 @@
 from datetime import datetime
 
 from sqlalchemy import (
+    JSON,
     CheckConstraint,
     DateTime,
     Integer,
@@ -26,6 +27,9 @@ class Chat(Base):
         DateTime(timezone=True), nullable=True
     )
     assistant_id: Mapped[str | None] = mapped_column(String, nullable=True)
+    document_ids: Mapped[list[str]] = mapped_column(
+        JSON, nullable=False, default=list, server_default="[]"
+    )
     chat_title: Mapped[str] = mapped_column(
         String, nullable=False, server_default="New Chat"
     )

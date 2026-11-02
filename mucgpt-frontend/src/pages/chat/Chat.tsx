@@ -23,7 +23,7 @@ import { Code24Regular, Settings24Regular } from "@fluentui/react-icons";
 import { Button } from "@fluentui/react-components";
 import { ChatSettingsDialog } from "../../components/ChatSettingsDialog/ChatSettingsDialog";
 import { UploadedData, createUploadedDataFromContent, getSelectedDocumentIds } from "../../components/ContextManagerDialog/ContextManagerDialog";
-import { documentToUploadedData } from "../../components/ContextManagerDialog/DocumentLibrary";
+import { documentToUploadedData, restoreDocumentSelection } from "../../components/ContextManagerDialog/DocumentLibrary";
 import { listDocumentsApi } from "../../api/documents-client";
 import { getStoredParsedDocuments } from "../../service/parsedDocumentStorage";
 import { useToolStatusToasts } from "../../hooks/useToolStatusToasts";
@@ -222,11 +222,13 @@ const Chat = () => {
                 setError(undefined);
                 const chat = await loadConversation(storageService, id, id, { system: "", creativity: CREATIVITY_LOW });
                 if (chat) {
+                    const selection = await restoreDocumentSelection(chat.documentIds ?? []);
                     dispatch({ type: "SET_ANSWERS", payload: chat.messages });
                     dispatch({ type: "SET_CREATIVITY", payload: chat.config.creativity });
                     dispatch({ type: "SET_SYSTEM_PROMPT", payload: chat.config.system });
                     dispatch({ type: "SET_ACTIVE_CHAT", payload: id });
                     resetInputState();
+                    setUploadedData(selection);
                     lastQuestionRef.current = chat.messages.length > 0 ? chat.messages[chat.messages.length - 1].user : "";
 
                     // Scroll to bottom after a short delay to ensure DOM is updated
@@ -550,7 +552,7 @@ const Chat = () => {
         // Check URL for question parameter - Handle hash router format
         const { questionFromUrl, toolsFromUrl, dataFromUrl, documentsFromUrl, newChatRequested, newChatToken, chatIdFromUrl } = getNavigationParams();
 
-        if (documentsFromUrl) {
+        if (documentsFromUrl && !chatIdFromUrl) {
             const ids = documentsFromUrl.split(",");
             listDocumentsApi()
                 .then(documents => {

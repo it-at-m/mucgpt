@@ -21,6 +21,16 @@ describe("conversation history", () => {
         vi.spyOn(StorageService.prototype, "connectToDB").mockResolvedValue({ put, close } as never);
         vi.spyOn(StorageService.prototype, "get").mockResolvedValue(undefined);
         vi.spyOn(StorageService.prototype, "getAll").mockResolvedValue([]);
+        vi.mocked(listConversationsApi).mockResolvedValue([
+            {
+                conversation_id: "thread",
+                assistant_id: null,
+                title: "Chat",
+                created_at: "2026-10-20T10:00:00Z",
+                updated_at: "2026-10-20T10:00:00Z",
+                document_ids: []
+            }
+        ]);
     });
 
     it("restores ordinary and assistant metadata in an empty browser without fetching transcripts", async () => {
@@ -178,6 +188,24 @@ describe("conversation history", () => {
         expect(getConversationMessagesApi).toHaveBeenCalledWith("thread");
         expect(chat.messages).toEqual([{ user: "Question", response: { answer: "Answer" } }]);
         expect(put).toHaveBeenCalledWith(ASSISTANT_STORE.objectStore_name, expect.objectContaining({ id: "CHAT_assistant-id_thread" }));
+    });
+
+    it("uses the server selection instead of stale cached document IDs", async () => {
+        vi.mocked(StorageService.prototype.get).mockResolvedValue({ id: "thread", messages: [], config: {}, documentIds: ["stale"] });
+        vi.mocked(getConversationMessagesApi).mockResolvedValue([{ role: "user", content: "Question" }]);
+        vi.mocked(listConversationsApi).mockResolvedValue([
+            {
+                conversation_id: "thread",
+                assistant_id: null,
+                title: "Chat",
+                created_at: "2026-10-20T10:00:00Z",
+                updated_at: "2026-10-20T10:00:00Z",
+                document_ids: ["ready", "deleted"]
+            }
+        ]);
+        const chat = await loadConversation(new StorageService<ChatResponse, object>(CHAT_STORE), "thread", "thread", {});
+        expect(chat.documentIds).toEqual(["ready", "deleted"]);
+        expect(put).toHaveBeenCalledWith(CHAT_STORE.objectStore_name, expect.objectContaining({ documentIds: ["ready", "deleted"] }));
     });
 
     it("restores server tool steps in a fresh browser and keeps them on the correct turn", async () => {

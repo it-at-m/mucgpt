@@ -549,6 +549,10 @@ class ConversationMetadata(BaseModel):
         ...,
         description="Last activity on the conversation (new message or title change).",
     )
+    document_ids: list[str] = Field(
+        default_factory=list,
+        description="Saved document selection, including IDs that may no longer be available.",
+    )
 
     @field_validator("title", mode="before")
     @staticmethod

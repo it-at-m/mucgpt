@@ -127,6 +127,8 @@ async def test_endpoints_resolve_before_persistence_and_pass_authorized_selectio
     monkeypatch.setattr(chat_router.ModelRegistry, "get_model", MagicMock())
     monkeypatch.setattr(chat_router, "get_documents_for_agent", resolve)
     monkeypatch.setattr(chat_router, "get_messages_for_agent", prepare)
+    save = AsyncMock()
+    monkeypatch.setattr(chat_router, "_save_document_selection", save)
     agent = MagicMock(run_without_streaming=AsyncMock(return_value="response"))
     init = AsyncMock(return_value=agent)
     monkeypatch.setattr(chat_router, "init_agent", init)
@@ -143,9 +145,11 @@ async def test_endpoints_resolve_before_persistence_and_pass_authorized_selectio
         assert exc.value.status_code == 404
         assert calls == ["selection"]
         init.assert_not_awaited()
+        save.assert_not_awaited()
     else:
         await result
         assert calls == ["selection", "persistence"]
+        save.assert_awaited_once_with(request, user_info.user_id, ["authorized-id"])
         init.assert_awaited_once_with(
             user_info=user_info,
             model_name=request.model,

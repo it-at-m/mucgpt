@@ -8,6 +8,7 @@ export interface ConversationMetadata {
     title: string;
     created_at: string;
     updated_at: string;
+    document_ids?: string[];
 }
 
 export interface ConversationMessage {

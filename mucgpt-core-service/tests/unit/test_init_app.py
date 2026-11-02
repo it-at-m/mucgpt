@@ -100,7 +100,10 @@ class TestInitApp:
             create_file_data("owner document"),
         )
         read_result = await kwargs["backend"].aread(f"/documents/{document.id}.txt")
-        assert read_result.file_data["content"] == "owner document"
+        if selection_kind == "selected":
+            assert read_result.file_data["content"] == "owner document"
+        else:
+            assert read_result.error == "permission denied: document is not attached"
 
     @pytest.mark.asyncio
     @patch("config.model_provider.ModelRegistry.get_model")

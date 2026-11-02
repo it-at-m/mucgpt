@@ -1,10 +1,15 @@
+from collections.abc import Iterable
+
 from deepagents.backends import StoreBackend
 from deepagents.backends.protocol import (
     DeleteResult,
     EditResult,
     FileUploadResponse,
+    ReadResult,
     WriteResult,
 )
+from deepagents.backends.store import NamespaceFactory
+from langgraph.store.base import BaseStore
 
 
 class DocumentBackend(StoreBackend):
@@ -13,6 +18,29 @@ class DocumentBackend(StoreBackend):
     Reuse StoreBackend reads/searches. All mutations fail at the backend too,
     including direct uploads and middleware writes outside filesystem tools.
     """
+
+    def __init__(
+        self,
+        *,
+        store: BaseStore,
+        namespace: NamespaceFactory,
+        allowed_paths: Iterable[str] = (),
+    ) -> None:
+        super().__init__(store=store, namespace=namespace)
+        # Snapshot storage keys so caller mutation cannot authorize more files.
+        self._allowed_paths = frozenset(allowed_paths)
+
+    def read(self, file_path: str, offset: int = 0, limit: int = 2000) -> ReadResult:
+        if file_path not in self._allowed_paths:
+            return ReadResult(error="permission denied: document is not attached")
+        return super().read(file_path, offset=offset, limit=limit)
+
+    async def aread(
+        self, file_path: str, offset: int = 0, limit: int = 2000
+    ) -> ReadResult:
+        if file_path not in self._allowed_paths:
+            return ReadResult(error="permission denied: document is not attached")
+        return await super().aread(file_path, offset=offset, limit=limit)
 
     def write(self, file_path: str, content: str) -> WriteResult:
         return WriteResult(error="permission denied: documents are read-only")

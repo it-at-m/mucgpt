@@ -151,11 +151,13 @@ async def init_agent(
     try:
         model = ModelRegistry.get_model(model_name)
         tool_collection = ToolCollection(model=model)
-        backend = create_backend(user_id=user_info.user_id)
+        selected_document_ids = [doc.id for doc in document_selection or []]
+        backend = create_backend(
+            user_id=user_info.user_id,
+            selected_document_ids=selected_document_ids,
+        )
         document_permissions = create_permissions(
-            selected_document_ids=[doc.id for doc in document_selection]
-            if document_selection
-            else []
+            selected_document_ids=selected_document_ids
         )
         tools = await tool_collection.get_tools(
             user_info=user_info

@@ -128,7 +128,7 @@ async def test_complete_text_ready_metadata_and_authenticated_namespace(ingestio
     assert text.startswith(metadata.preview)
     assert not hasattr(metadata, "content") and not hasattr(metadata, "user_id")
     assert not file.file.closed
-    result = await create_backend(user().user_id).aread(metadata.path)
+    result = await create_backend(user().user_id, [metadata.id]).aread(metadata.path)
     assert result.error is None
     # StoreBackend retains exact bytes but its line-window reads join lines with LF.
     assert result.file_data["content"] == text.replace("\r\n", "\n")

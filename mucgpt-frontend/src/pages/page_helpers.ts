@@ -296,7 +296,8 @@ export const makeApiRequest = async (
         conversation_id: conversationId,
         persist,
         data_sources: data_sources && data_sources.length > 0 ? data_sources : undefined,
-        canvas: canvasWiring?.getCanvasState() ?? undefined
+        canvas: canvasWiring?.getCanvasState() ?? undefined,
+        document_ids: options.document_ids
     };
 
     // Keep the legacy request behavior unchanged while the AG-UI path is rolled out.

@@ -14,7 +14,7 @@ import {
 import { HttpAgent } from "@ag-ui/client";
 import type { CanvasRevisions } from "../service/canvasStorage";
 
-const PARSE_SERVICE_BASE = "/api/backend/v1/documents";
+const PARSE_SERVICE_BASE = "/api/backend/v1/parse";
 
 export const API_BASE = "/api/backend/";
 
@@ -43,7 +43,8 @@ function toChatCompletionBody(options: ChatRequest) {
         ...(options.conversation_id ? { conversation_id: options.conversation_id } : {}),
         ...(options.persist === false ? { persist: false } : {}),
         ...(options.data_sources ? { data_sources: options.data_sources } : {}),
-        ...(options.canvas ? { canvas: options.canvas } : {})
+        ...(options.canvas ? { canvas: options.canvas } : {}),
+        ...(options.document_ids !== undefined ? { document_ids: options.document_ids } : {})
     };
 }
 

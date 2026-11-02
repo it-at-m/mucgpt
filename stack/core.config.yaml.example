@@ -93,6 +93,9 @@ xberg_timeout: 120.0
 #         # General system instructions used for regular chat.
 #         - name: "default_instructions"
 #           label: "production"
+#         # Instructions for reading selected documents from the virtual filesystem.
+#         - name: "document_instructions"
+#           label: "production"
 #     - name: "generation_prompts"
 #       prompts:
 #         # Generates a concise title for a chat conversation.

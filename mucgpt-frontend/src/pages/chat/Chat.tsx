@@ -22,7 +22,9 @@ import { useToolsContext } from "../../components/ToolsProvider";
 import { Code24Regular, Settings24Regular } from "@fluentui/react-icons";
 import { Button } from "@fluentui/react-components";
 import { ChatSettingsDialog } from "../../components/ChatSettingsDialog/ChatSettingsDialog";
-import { UploadedData, createUploadedDataFromContent } from "../../components/ContextManagerDialog/ContextManagerDialog";
+import { UploadedData, createUploadedDataFromContent, getSelectedDocumentIds } from "../../components/ContextManagerDialog/ContextManagerDialog";
+import { documentToUploadedData } from "../../components/ContextManagerDialog/DocumentLibrary";
+import { listDocumentsApi } from "../../api/documents-client";
 import { getStoredParsedDocuments } from "../../service/parsedDocumentStorage";
 import { useToolStatusToasts } from "../../hooks/useToolStatusToasts";
 import { useCanvasController } from "../../hooks/useCanvasController";
@@ -70,6 +72,7 @@ export type ChatMessage = DBMessage<ChatResponse>;
 export interface ChatOptions {
     system: string;
     creativity: string;
+    document_ids?: string[];
 }
 
 const WELCOME_MESSAGE_KEYS = ["home.chat_header"];
@@ -352,7 +355,8 @@ const Chat = () => {
             const askResponse: ChatResponse = { answer: "", tokens: 0, user_tokens: 0 } as AskResponse;
             const options: ChatOptions = {
                 system: system ?? "",
-                creativity: creativity
+                creativity: creativity,
+                document_ids: getSelectedDocumentIds(uploadedData)
             };
             try {
                 await makeApiRequest(
@@ -399,7 +403,8 @@ const Chat = () => {
             agUiEnabled,
             showAgUiEventLog,
             handleAgUiEvent,
-            canvasWiring
+            canvasWiring,
+            uploadedData
         ]
     );
 
@@ -530,6 +535,7 @@ const Chat = () => {
 
     // State to track if initialization is complete
     const [isInitialized, setIsInitialized] = useState(false);
+    const [isDocumentSelectionReady, setIsDocumentSelectionReady] = useState(false);
     const [pendingQuestion, setPendingQuestion] = useState<string | null>(null);
     // Effect to handle pending question after tools are loaded
     const scheduledQuestionRef = useRef<string | null>(null);
@@ -547,6 +553,7 @@ const Chat = () => {
         const questionFromUrl = queryParams.get("q") || queryParams.get("question");
         const toolsFromUrl = queryParams.get("tools");
         const dataFromUrl = queryParams.get("data");
+        const documentsFromUrl = queryParams.get("documents");
         const newChatToken = queryParams.get("new");
         const chatIdFromUrl = queryParams.get("chatId");
         const canvasRequested = queryParams.get("canvas") !== null;
@@ -555,6 +562,7 @@ const Chat = () => {
             questionFromUrl,
             toolsFromUrl,
             dataFromUrl,
+            documentsFromUrl,
             newChatRequested: newChatToken !== null,
             newChatToken,
             chatIdFromUrl,
@@ -623,7 +631,21 @@ const Chat = () => {
         isLoadingRef.current = true;
 
         // Check URL for question parameter - Handle hash router format
-        const { questionFromUrl, toolsFromUrl, dataFromUrl, newChatRequested, newChatToken, chatIdFromUrl, canvasRequested } = getNavigationParams();
+        const { questionFromUrl, toolsFromUrl, dataFromUrl, documentsFromUrl, newChatRequested, newChatToken, chatIdFromUrl, canvasRequested } = getNavigationParams();
+
+        if (documentsFromUrl) {
+            const ids = documentsFromUrl.split(",");
+            listDocumentsApi()
+                .then(documents => {
+                    const selected = documents.filter(document => ids.includes(document.id) && document.status === "ready");
+                    if (selected.length !== new Set(ids).size) throw new Error("Selected documents are unavailable.");
+                    setUploadedData(previous => [...previous.filter(document => document.source !== "library"), ...selected.map(documentToUploadedData)]);
+                    setIsDocumentSelectionReady(true);
+                })
+                .catch(setError);
+        } else {
+            setIsDocumentSelectionReady(true);
+        }
 
         // Parse tools from URL if present
         if (toolsFromUrl) {
@@ -772,7 +794,7 @@ const Chat = () => {
     }, [clearNavigationQueryParams, fetchHistory, getNavigationParams, isCurrentChatEmpty, isInitialized, loadChat, resetInputState, startFreshChat]);
 
     useEffect(() => {
-        if (!isInitialized || !pendingQuestion || tools === undefined) {
+        if (!isInitialized || !isDocumentSelectionReady || !pendingQuestion || tools === undefined) {
             return;
         }
 
@@ -808,7 +830,7 @@ const Chat = () => {
                 scheduledQuestionRef.current = null;
             }
         };
-    }, [isInitialized, pendingQuestion, tools, uploadedData, uploadedDataToDataSources, systemPrompt, clearNavigationQueryParams]);
+    }, [isInitialized, isDocumentSelectionReady, pendingQuestion, tools, uploadedData, uploadedDataToDataSources, systemPrompt, clearNavigationQueryParams]);
 
     // Set up follow-up actions
     useEffect(() => {

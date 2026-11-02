@@ -1,6 +1,7 @@
 import i18n from "i18next";
 import { initReactI18next } from "react-i18next";
 import { tutorialsTranslations } from "./i18n.tutorials";
+import { documentLibraryTranslations } from "./i18n.documents";
 
 i18n
     // pass the i18n instance to react-i18next.
@@ -16,6 +17,7 @@ i18n
         resources: {
             DE: {
                 translation: {
+                    document_library: documentLibraryTranslations.DE,
                     header: {
                         nutzungsbedingungen: "Nutzungsbedingungen",
                         create_assistant: "Assistent erstellen",
@@ -1000,6 +1002,7 @@ i18n
             },
             EN: {
                 translation: {
+                    document_library: documentLibraryTranslations.EN,
                     header: {
                         nutzungsbedingungen: "Terms of use",
                         create_assistant: "Create assistant",
@@ -1971,6 +1974,7 @@ i18n
             },
             BA: {
                 translation: {
+                    document_library: documentLibraryTranslations.BA,
                     header: {
                         nutzungsbedingungen: "Gebrauchsvorschriftn",
                         create_assistant: "Assistenten erstoin",
@@ -2913,6 +2917,7 @@ i18n
             },
             FR: {
                 translation: {
+                    document_library: documentLibraryTranslations.FR,
                     header: {
                         nutzungsbedingungen: "Conditions d'utilisation",
                         create_assistant: "Créer un assistant",
@@ -3856,6 +3861,7 @@ i18n
             },
             UK: {
                 translation: {
+                    document_library: documentLibraryTranslations.UK,
                     header: {
                         go_to_tutorials_aria: "Перейти до навчальних матеріалів та інструкцій",
                         go_to_tutorials: "Навчальні матеріали",

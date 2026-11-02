@@ -54,8 +54,8 @@ class DocumentStorageError(RuntimeError):
 def create_initial_excerpt(text: str, settings: DocumentConfig) -> str:
     """Return first N characters of the document text to inject into system prompt"""
     candidate = text[: settings.PREVIEW_MAX_CHARS]
-    return candidate 
-    
+    return candidate
+
     # idea: use tiktoken to enforce an actual token limit instead of just a character limit
     # usefulness is questinable, but it is a more accurate representation of what the model will see
     try:
@@ -86,6 +86,10 @@ class DocumentUnavailableError(ValueError):
     """An explicit selection includes an unavailable document, without owner details."""
 
 
+class DocumentProcessingError(ValueError):
+    """Public deletion cannot interrupt an upload that may still write a body."""
+
+
 @dataclass(frozen=True)
 class SelectedDocument:
     id: str
@@ -111,6 +115,82 @@ class DocumentSelection:
     @property
     def allowed_paths(self) -> tuple[str, ...]:
         return tuple(document.path for document in self.documents)
+
+
+@dataclass(frozen=True)
+class LibraryDocument:
+    id: str
+    filename: str
+    mime_type: str
+    original_size: int
+    text_length: int | None
+    preview: str | None
+    preview_kind: str | None
+    path: str
+    status: str
+    created_at: datetime
+
+
+class DocumentLibraryService:
+    """User library operations with independently owned catalog sessions."""
+
+    def __init__(self, session_factory: async_sessionmaker[AsyncSession] | None = None):
+        self.session_factory = (
+            session_factory
+            if session_factory is not None
+            else DocumentCatalogManager.get_session_factory()
+        )
+
+    async def list_documents(
+        self, user_info: AuthenticationResult
+    ) -> list[LibraryDocument]:
+        """List metadata in catalog order without accessing filesystem bodies."""
+        async with self.session_factory() as session:
+            rows = await DocumentRepository(session).list_documents(user_info.user_id)
+            return [
+                LibraryDocument(
+                    id=row.id,
+                    filename=row.filename,
+                    mime_type=row.mime_type,
+                    original_size=row.original_size,
+                    text_length=row.text_length,
+                    preview=row.preview,
+                    preview_kind=row.preview_kind,
+                    path=get_document_path(row.id),
+                    status=row.status,
+                    created_at=row.created_at,
+                )
+                for row in rows
+            ]
+
+    async def delete_document(
+        self, user_info: AuthenticationResult, document_id: str
+    ) -> None:
+        """Hide -> delete exact body -> free slot, retaining deleting rows on failure."""
+        document_id = str(UUID(document_id))
+        # Finish an authorized deletion even if its HTTP caller disconnects.
+        with CancelScope(shield=True):
+            async with self.session_factory.begin() as session:
+                repository = DocumentRepository(session)
+                document = await repository.get_document(user_info.user_id, document_id)
+                if document is None:
+                    raise DocumentUnavailableError("Document is unavailable.")
+                if document.status == "processing":
+                    raise DocumentProcessingError("Document is still processing.")
+                if document.storage_key != get_document_storage_key(document_id):
+                    raise DocumentStorageError("Document storage key is inconsistent")
+                if not await repository.mark_deleting(
+                    user_info.user_id, document_id, allow_processing=False
+                ):
+                    raise DocumentUnavailableError("Document is unavailable.")
+
+            # No database transaction spans the store operation. Missing bodies are
+            # already cleaned up, so retries use the same idempotent exact-key delete.
+            await delete_document_body(user_info.user_id, document_id)
+            async with self.session_factory.begin() as session:
+                await DocumentRepository(session).remove_after_cleanup(
+                    user_info.user_id, document_id
+                )
 
 
 class DocumentIngestionService:

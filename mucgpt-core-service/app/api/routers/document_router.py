@@ -1,18 +1,23 @@
 from typing import Annotated
+from uuid import UUID
 
 import httpx
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 
-from api.api_models import DocumentMetadata
+from api.api_models import DocumentLibraryEntry, DocumentMetadata
 from core.auth import authenticate_user
 from core.auth_models import AuthenticationResult
 from core.document_service import (
     DocumentIngestionService,
+    DocumentLibraryService,
     DocumentProcessingDisabledError,
+    DocumentProcessingError,
     DocumentSizeExceededError,
+    DocumentUnavailableError,
     EmptyDocumentExtractionError,
     InvalidDocumentTextError,
     InvalidDocumentUploadError,
+    LibraryDocument,
     SelectedDocument,
 )
 from core.logtools import getLogger
@@ -20,6 +25,61 @@ from database.document_repo import DocumentQuotaExceededError
 
 logger = getLogger()
 router = APIRouter(prefix="/v1/documents", tags=["Documents"])
+
+
+@router.get(
+    "",
+    response_model=list[DocumentLibraryEntry],
+    summary="List the authenticated user's document library",
+    description=(
+        "Returns metadata and initial excerpts without reading document bodies. "
+        "Processing and deleting entries are included because they occupy quota slots; "
+        "only ready documents can be attached to chats."
+    ),
+    responses={500: {"description": "Document library could not be loaded"}},
+)
+async def list_documents(
+    user_info: Annotated[AuthenticationResult, Depends(authenticate_user)],
+) -> list[LibraryDocument]:
+    try:
+        return await DocumentLibraryService().list_documents(user_info)
+    except Exception as exc:
+        logger.exception("Document library listing failed")
+        raise HTTPException(
+            status_code=500, detail="Document library could not be loaded."
+        ) from exc
+
+
+@router.delete(
+    "/{document_id}",
+    status_code=204,
+    summary="Delete an owned document from the library",
+    description=(
+        "Makes the document unavailable before deleting its extracted text. "
+        "Its quota slot is released only after cleanup succeeds. Failed cleanup "
+        "can be retried; actively processing uploads cannot be deleted."
+    ),
+    responses={
+        404: {"description": "Document unavailable"},
+        409: {"description": "Document still processing"},
+        500: {"description": "Document cleanup failed; deletion can be retried"},
+    },
+)
+async def delete_document(
+    document_id: UUID,
+    user_info: Annotated[AuthenticationResult, Depends(authenticate_user)],
+) -> None:
+    try:
+        await DocumentLibraryService().delete_document(user_info, str(document_id))
+    except DocumentUnavailableError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    except DocumentProcessingError as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
+    except Exception as exc:
+        logger.exception("Document library deletion failed")
+        raise HTTPException(
+            status_code=500, detail="Document could not be deleted. Retry deletion."
+        ) from exc
 
 
 @router.post(

@@ -447,6 +447,7 @@ async def ag_ui_chat_endpoint(
         user_info=user_info,
         model_name=chat_request.model,
         persist=chat_request.persist,
+        document_selection=chat_request.document_selection,
     )
     events = agent.run_agui_with_streaming(
         messages=messages_for_agent,

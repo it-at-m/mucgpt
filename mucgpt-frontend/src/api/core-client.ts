@@ -14,7 +14,7 @@ import {
 import { HttpAgent } from "@ag-ui/client";
 import type { CanvasRevisions } from "../service/canvasStorage";
 
-const PARSE_SERVICE_BASE = "/api/backend/v1/parse";
+const PARSE_SERVICE_BASE = "/api/backend/v1/documents";
 
 export const API_BASE = "/api/backend/";
 

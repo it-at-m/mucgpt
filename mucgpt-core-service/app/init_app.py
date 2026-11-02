@@ -15,10 +15,15 @@ from config.settings import (
 )
 from core.auth_models import AuthenticationResult
 from core.cache import RedisCache
+from core.document_service import SelectedDocument
 from core.lf_prompts import PromptPool
 from core.logtools import getLogger
 from core.persistance_helpers import PersistanceHelpers
-from core.virtual_file_system_helper import FileStoreManager
+from core.virtual_file_system_helper import (
+    FileStoreManager,
+    create_backend,
+    create_permissions,
+)
 from database.document_catalog import DocumentCatalogManager
 
 logger = getLogger()
@@ -130,6 +135,7 @@ async def init_agent(
     user_info: AuthenticationResult,
     model_name: str | None = None,
     persist: bool = True,
+    document_selection: list[SelectedDocument] | None = None,
 ) -> MUCGPTAgentExecutor:
     """Initialize a MUCGPTAgentExecutor with configuration.
 
@@ -137,6 +143,7 @@ async def init_agent(
         user_info: The user to create the Agent for
         model_name: The model to run the agent with (default model if None)
         persist: Attach the checkpointer; False builds a stateless agent
+        document_selection: Server-resolved documents authorized for this run
 
     Returns:
         Configured MUCGPTAgentExecutor
@@ -144,6 +151,12 @@ async def init_agent(
     try:
         model = ModelRegistry.get_model(model_name)
         tool_collection = ToolCollection(model=model)
+        backend = create_backend(user_id=user_info.user_id)
+        document_permissions = create_permissions(
+            selected_document_ids=[doc.id for doc in document_selection]
+            if document_selection
+            else []
+        )
         tools = await tool_collection.get_tools(
             user_info=user_info
         )  # all tools that are available
@@ -154,6 +167,8 @@ async def init_agent(
             llm=model,
             tools=tools,
             debug=False,
+            backend=backend,
+            permissions=document_permissions,
             checkpointer=(
                 PersistanceHelpers.get_checkpointer_if_ready() if persist else None
             ),

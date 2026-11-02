@@ -11,7 +11,7 @@ logger = getLogger()
 settings = get_settings()
 
 router = APIRouter(prefix="/v1")
-_parser: ParserBackend | None = get_parser()
+_PARSER: ParserBackend | None = get_parser()
 
 
 @router.post(
@@ -39,7 +39,7 @@ async def parse_file(file: UploadFile, user_info=Depends(authenticate_user)) -> 
         )
     logger.info(f"Parsing file '{file.filename}' ({file.size} bytes)")
     try:
-        content = await _parser.parse(file)
+        content = await _PARSER.parse(file) # type: ignore
     except httpx.TimeoutException as exc:
         logger.error(
             f"Timeout while parsing file '{file.filename}': {exc}",

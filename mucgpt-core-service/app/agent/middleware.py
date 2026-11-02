@@ -3,7 +3,7 @@ import threading
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Any
+from typing import TYPE_CHECKING, Any
 from xml.sax.saxutils import escape, quoteattr
 from zoneinfo import ZoneInfo
 
@@ -33,7 +33,12 @@ from config.harness_profiles import DEEP_AGENT_BUILTIN_TOOLS
 from config.langfuse_provider import LangfuseProvider
 from config.model_provider import ModelRegistry
 from config.settings import get_settings
+from core.document_context import add_document_context, build_document_context
+from core.lf_prompts import PromptPool
 from core.logtools import getLogger
+
+if TYPE_CHECKING:
+    from core.document_service import SelectedDocument
 
 logger = getLogger(name="agent-middleware")
 
@@ -469,9 +474,20 @@ class ContextMiddleware(AgentMiddleware):
         self,
         state_schema: type = DefaultAgentState,
         data_sources: list[Any] | None = None,
+        document_selection: list["SelectedDocument"] | None = None,
     ):
         self.state_schema = state_schema
         self.data_sources = data_sources or []
+        # Build once from this run's authorized selection, outside checkpoint state.
+        self.document_context = (
+            build_document_context(
+                document_selection,
+                get_settings().DOCUMENTS.PREVIEW_MAX_CHARS,
+                instructions=PromptPool.get_prompt("document_instructions"),
+            )
+            if document_selection
+            else ""
+        )
 
     def wrap_model_call(
         self,
@@ -506,6 +522,13 @@ class ContextMiddleware(AgentMiddleware):
             request = request.override(messages=new_messages)
 
         request = _configure_model_request(request)
+        # override system message to include document context here,
+        # to ensure that if documents change between calls, the system message is updated accordingly
+        request = request.override(
+            system_message=add_document_context(
+                request.system_message, self.document_context
+            )
+        )
         runtime_context = _get_request_context(request)
         if runtime_context is None or runtime_context.langfuse_prompt is None:
             return handler(request)
@@ -545,6 +568,14 @@ class ContextMiddleware(AgentMiddleware):
             request = request.override(messages=new_messages)
 
         request = _configure_model_request(request)
+        # override system message to include document context here,
+        # to ensure that if documents change between calls, 
+        # the system message carries the latest document context
+        request = request.override(
+            system_message=add_document_context(
+                request.system_message, self.document_context
+            )
+        )
         runtime_context = _get_request_context(request)
         if runtime_context is None or runtime_context.langfuse_prompt is None:
             return await handler(request)

@@ -59,7 +59,7 @@ class TestInitApp:
         mock_get_tools.return_value = []
         monkeypatch.setattr(
             "agent.deep_agent.PromptPool.get_resolved_prompt",
-            lambda _name: ResolvedPrompt(content="default instruction"),
+            lambda _name, _folder=None: ResolvedPrompt(content="default instruction"),
         )
         checkpointer = InMemorySaver()
         get_checkpointer = MagicMock(return_value=checkpointer)
@@ -72,6 +72,10 @@ class TestInitApp:
         monkeypatch.setattr(deep_agent, "create_deep_agent", create_agent)
         document = MagicMock(spec=SelectedDocument)
         document.id = "b7d5c05a-f72b-4cbb-9a99-c1d8592e7dd5"
+        document.filename = "Policy.pdf"
+        document.path = f"/documents/{document.id}.txt"
+        document.text_length = 10000
+        document.preview = "Server-resolved initial excerpt"
         selection_kwargs = {
             "omitted": {},
             "empty": {"document_selection": []},
@@ -90,6 +94,12 @@ class TestInitApp:
         get_checkpointer.assert_called_once()
         create_agent.assert_called_once()
         kwargs = create_agent.call_args.kwargs
+        document_context = kwargs["middleware"][0].document_context
+        if selection_kind == "selected":
+            assert document.path in document_context
+            assert document.preview in document_context
+        else:
+            assert document_context == ""
         assert kwargs["checkpointer"] is checkpointer
         assert kwargs["permissions"] == create_permissions(
             [document.id] if selection_kind == "selected" else []
@@ -118,7 +128,7 @@ class TestInitApp:
         mock_get_tools.return_value = []
         monkeypatch.setattr(
             "agent.deep_agent.PromptPool.get_resolved_prompt",
-            lambda _name: ResolvedPrompt(content="default instruction"),
+            lambda _name, _folder=None: ResolvedPrompt(content="default instruction"),
         )
         get_checkpointer = MagicMock(return_value=InMemorySaver())
         monkeypatch.setattr(

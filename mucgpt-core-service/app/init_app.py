@@ -171,6 +171,7 @@ async def init_agent(
             debug=False,
             backend=backend,
             permissions=document_permissions,
+            document_selection=document_selection,
             checkpointer=(
                 PersistanceHelpers.get_checkpointer_if_ready() if persist else None
             ),

@@ -1,4 +1,4 @@
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import AsyncMock, MagicMock, call
 
 import pytest
 from deepagents.backends.utils import create_file_data
@@ -18,6 +18,10 @@ def store():
     store.put(NAMESPACE, OTHER_PATH, create_file_data("private text"))
     recording_store = MagicMock(wraps=store)
     recording_store.aget = AsyncMock(wraps=store.aget)
+    recording_store.search.side_effect = AssertionError("namespace search forbidden")
+    recording_store.asearch = AsyncMock(
+        side_effect=AssertionError("namespace search forbidden")
+    )
     return recording_store
 
 
@@ -83,3 +87,121 @@ def test_missing_or_foreign_body_preserves_not_found_error(store, namespace):
     )
     assert "not found" in backend.read(SELECTED_PATH).error
     store.get.assert_called_once_with(namespace, SELECTED_PATH)
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("asynchronous", [False, True])
+@pytest.mark.parametrize(
+    ("path", "glob", "expected_paths"),
+    [
+        (SELECTED_PATH, None, [SELECTED_PATH]),
+        ("/", None, [SELECTED_PATH, OTHER_PATH]),
+        (None, "123*.txt", [SELECTED_PATH]),
+        ("/", "*.pdf", []),
+    ],
+)
+async def test_grep_fetches_only_selected_candidates(
+    store, asynchronous, path, glob, expected_paths
+):
+    backend = DocumentBackend(
+        store=store,
+        namespace=lambda _: NAMESPACE,
+        allowed_paths=[OTHER_PATH, SELECTED_PATH],
+    )
+    result = (
+        await backend.agrep("text", path, glob)
+        if asynchronous
+        else backend.grep("text", path, glob)
+    )
+    assert result.error is None
+    assert [match["path"] for match in result.matches] == (
+        [OTHER_PATH] if OTHER_PATH in expected_paths else []
+    )
+    expected_calls = [call(NAMESPACE, key) for key in expected_paths]
+    if asynchronous:
+        assert store.aget.await_args_list == expected_calls
+        store.get.assert_not_called()
+    else:
+        assert store.get.call_args_list == expected_calls
+        store.aget.assert_not_called()
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("asynchronous", [False, True])
+async def test_root_grep_excludes_unattached_bodies(store, asynchronous):
+    backend = DocumentBackend(
+        store=store, namespace=lambda _: NAMESPACE, allowed_paths=[SELECTED_PATH]
+    )
+    result = await backend.agrep("private") if asynchronous else backend.grep("private")
+    assert result.error is None and result.matches == []
+    retrieval = store.aget if asynchronous else store.get
+    assert retrieval.call_args_list == [call(NAMESPACE, SELECTED_PATH)]
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("asynchronous", [False, True])
+@pytest.mark.parametrize("path", [OTHER_PATH, "/../" + SELECTED_PATH[1:]])
+async def test_invalid_grep_path_does_not_fetch_bodies(store, asynchronous, path):
+    backend = DocumentBackend(
+        store=store, namespace=lambda _: NAMESPACE, allowed_paths=[SELECTED_PATH]
+    )
+    result = (
+        await backend.agrep("text", path)
+        if asynchronous
+        else backend.grep("text", path)
+    )
+    assert result.error is not None
+    store.get.assert_not_called()
+    store.aget.assert_not_called()
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("asynchronous", [False, True])
+async def test_empty_grep_selection_does_not_fetch_bodies(store, asynchronous):
+    backend = DocumentBackend(store=store, namespace=lambda _: NAMESPACE)
+    result = await backend.agrep("text") if asynchronous else backend.grep("text")
+    assert result.error is None and result.matches == []
+    store.get.assert_not_called()
+    store.aget.assert_not_called()
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("asynchronous", [False, True])
+@pytest.mark.parametrize("max_count", [1, 2])
+async def test_grep_searches_complete_text_and_preserves_limits(
+    store, asynchronous, max_count
+):
+    store.put(
+        NAMESPACE,
+        SELECTED_PATH,
+        create_file_data("plain\n" * 2000 + "needle.*\nneedle.*"),
+    )
+    backend = DocumentBackend(
+        store=store, namespace=lambda _: NAMESPACE, allowed_paths=[SELECTED_PATH]
+    )
+    result = (
+        await backend.agrep("needle.*", max_count=max_count)
+        if asynchronous
+        else backend.grep("needle.*", max_count=max_count)
+    )
+    assert result.error is None
+    assert [match["line"] for match in result.matches] == list(
+        range(2001, 2001 + max_count)
+    )
+    assert all(match["text"] == "needle.*" for match in result.matches)
+    assert result.truncated is (max_count == 1)
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("asynchronous", [False, True])
+@pytest.mark.parametrize("body", [None, {"content": 123}])
+async def test_grep_propagates_missing_or_invalid_body(store, asynchronous, body):
+    if body is None:
+        store.delete(NAMESPACE, SELECTED_PATH)
+    else:
+        store.put(NAMESPACE, SELECTED_PATH, body)
+    backend = DocumentBackend(
+        store=store, namespace=lambda _: NAMESPACE, allowed_paths=[SELECTED_PATH]
+    )
+    result = await backend.agrep("text") if asynchronous else backend.grep("text")
+    assert result.error is not None

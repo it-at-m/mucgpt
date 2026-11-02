@@ -54,6 +54,20 @@ def library_api(monkeypatch):
                 raise
 
     session_factory = MagicMock(side_effect=session_scope, begin=transaction)
+    session_factory.locked_ids = set()
+
+    @asynccontextmanager
+    async def work_lock(_factory, document_id):
+        if document_id in session_factory.locked_ids:
+            yield False
+            return
+        session_factory.locked_ids.add(document_id)
+        try:
+            yield True
+        finally:
+            session_factory.locked_ids.remove(document_id)
+
+    monkeypatch.setattr(services, "document_work_lock", work_lock)
     service = services.DocumentLibraryService(session_factory)
     factory = MagicMock(return_value=service)
     monkeypatch.setattr(document_router, "DocumentLibraryService", factory)
@@ -316,6 +330,7 @@ def test_failed_cleanup_retains_slot_and_unavailable_state_until_retry(
     assert response.json() == {
         "detail": "Document could not be deleted. Retry deletion."
     }
+    assert service.session_factory.locked_ids == set()
     assert len(rows(engine)) == 10
     assert (
         next(row for row in rows(engine) if row.id == document_id).status == "deleting"
@@ -340,6 +355,7 @@ def test_failed_cleanup_retains_slot_and_unavailable_state_until_retry(
     with pytest.raises(DocumentQuotaExceededError):
         run(reserve)
     assert client.delete(f"/api/v1/documents/{document_id}").status_code == 204
+    assert service.session_factory.locked_ids == set()
     assert store._mock_wraps.get(namespace, key) is None
     assert len(rows(engine)) == 9
     replacement_id = run(reserve)
@@ -403,3 +419,58 @@ def test_delete_openapi_has_uuid_path_and_bodyless_success(library_api):
     assert operation["parameters"][0]["schema"]["format"] == "uuid"
     assert "content" not in operation["responses"]["204"]
     assert {"404", "409", "422", "500"} <= operation["responses"].keys()
+
+
+def test_delete_holds_lock_through_cleanup_and_rejects_concurrent_worker(
+    library_api, monkeypatch
+):
+    _, _, service, engine, store, owner, _ = library_api
+    document_id = add_document(engine, owner.user_id)
+    key = get_document_storage_key(document_id)
+    namespace = get_document_namespace(owner.user_id)
+    store._mock_wraps.put(namespace, key, create_file_data("owned text"))
+    original_delete = services.delete_document_body
+    original_mark = DocumentRepository.mark_deleting
+    original_remove = DocumentRepository.remove_after_cleanup
+
+    async def mark(repository, user_id, requested_id, **kwargs):
+        assert requested_id in service.session_factory.locked_ids
+        return await original_mark(repository, user_id, requested_id, **kwargs)
+
+    async def delete(user_id, requested_id):
+        assert requested_id in service.session_factory.locked_ids
+        assert rows(engine)[0].status == "deleting"
+        other_worker = services.DocumentLibraryService(service.session_factory)
+        with pytest.raises(services.DocumentProcessingError, match="busy"):
+            await other_worker.delete_document(owner, document_id)
+        await original_delete(user_id, requested_id)
+
+    async def remove(repository, user_id, requested_id):
+        assert requested_id in service.session_factory.locked_ids
+        return await original_remove(repository, user_id, requested_id)
+
+    monkeypatch.setattr(DocumentRepository, "mark_deleting", mark)
+    monkeypatch.setattr(services, "delete_document_body", delete)
+    monkeypatch.setattr(DocumentRepository, "remove_after_cleanup", remove)
+    run(service.delete_document, owner, document_id)
+    assert service.session_factory.locked_ids == set()
+    assert rows(engine) == []
+    store.adelete.assert_awaited_once_with(namespace, key)
+
+
+@pytest.mark.parametrize("status", ["ready", "deleting", "processing", "foreign"])
+def test_busy_lock_preserves_metadata_body_and_ownership_responses(library_api, status):
+    client, _, service, engine, store, owner, _ = library_api
+    document_id = add_document(
+        engine,
+        "foreign-owner" if status == "foreign" else owner.user_id,
+        status="ready" if status == "foreign" else status,
+    )
+    service.session_factory.locked_ids.add(document_id)
+    response = client.delete(f"/api/v1/documents/{document_id}")
+    assert response.status_code == (404 if status == "foreign" else 409)
+    if status in ("ready", "deleting"):
+        assert response.json() == {"detail": "Document is busy. Retry deletion."}
+    assert len(rows(engine)) == 1
+    assert service.session_factory.locked_ids == {document_id}
+    assert store.mock_calls == []

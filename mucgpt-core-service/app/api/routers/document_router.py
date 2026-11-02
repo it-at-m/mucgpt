@@ -61,7 +61,7 @@ async def list_documents(
     ),
     responses={
         404: {"description": "Document unavailable"},
-        409: {"description": "Document still processing"},
+        409: {"description": "Document busy or still processing"},
         500: {"description": "Document cleanup failed; deletion can be retried"},
     },
 )

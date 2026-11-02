@@ -88,7 +88,7 @@ class DocumentUnavailableError(ValueError):
 
 
 class DocumentProcessingError(ValueError):
-    """Public deletion cannot interrupt an upload that may still write a body."""
+    """Public deletion cannot interrupt processing or another active document operation."""
 
 
 @dataclass(frozen=True)
@@ -171,27 +171,48 @@ class DocumentLibraryService:
         document_id = str(UUID(document_id))
         # Finish an authorized deletion even if its HTTP caller disconnects.
         with CancelScope(shield=True):
-            async with self.session_factory.begin() as session:
-                repository = DocumentRepository(session)
-                document = await repository.get_document(user_info.user_id, document_id)
+            # Check ownership before attempting a lock, so foreign IDs remain
+            # unavailable even when their workers are active.
+            async with self.session_factory() as session:
+                document = await DocumentRepository(session).get_document(
+                    user_info.user_id, document_id
+                )
                 if document is None:
                     raise DocumentUnavailableError("Document is unavailable.")
                 if document.status == "processing":
                     raise DocumentProcessingError("Document is still processing.")
-                if document.storage_key != get_document_storage_key(document_id):
-                    raise DocumentStorageError("Document storage key is inconsistent")
-                if not await repository.mark_deleting(
-                    user_info.user_id, document_id, allow_processing=False
-                ):
-                    raise DocumentUnavailableError("Document is unavailable.")
 
-            # No database transaction spans the store operation. Missing bodies are
-            # already cleaned up, so retries use the same idempotent exact-key delete.
-            await delete_document_body(user_info.user_id, document_id)
-            async with self.session_factory.begin() as session:
-                await DocumentRepository(session).remove_after_cleanup(
-                    user_info.user_id, document_id
-                )
+            async with document_work_lock(
+                self.session_factory, document_id
+            ) as acquired:
+                if not acquired:
+                    raise DocumentProcessingError("Document is busy. Retry deletion.")
+                async with self.session_factory.begin() as session:
+                    repository = DocumentRepository(session)
+                    # Recheck after acquisition: another worker may have finished.
+                    document = await repository.get_document(
+                        user_info.user_id, document_id
+                    )
+                    if document is None:
+                        raise DocumentUnavailableError("Document is unavailable.")
+                    if document.status == "processing":
+                        raise DocumentProcessingError("Document is still processing.")
+                    if document.storage_key != get_document_storage_key(document_id):
+                        raise DocumentStorageError(
+                            "Document storage key is inconsistent"
+                        )
+                    if not await repository.mark_deleting(
+                        user_info.user_id, document_id, allow_processing=False
+                    ):
+                        raise DocumentUnavailableError("Document is unavailable.")
+
+                # No database transaction spans the store operation. Missing bodies are
+                # already cleaned up, so retries use the same idempotent exact-key delete.
+                await delete_document_body(user_info.user_id, document_id)
+                async with self.session_factory.begin() as session:
+                    await DocumentRepository(session).remove_after_cleanup(
+                        user_info.user_id, document_id
+                    )
 
 
 class DocumentIngestionService:

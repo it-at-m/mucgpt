@@ -6,7 +6,9 @@ from deepagents.backends.protocol import (
     EditResult,
     FileData,
     FileUploadResponse,
+    GlobResult,
     GrepResult,
+    LsResult,
     ReadResult,
     WriteResult,
 )
@@ -39,6 +41,18 @@ class DocumentBackend(StoreBackend):
         super().__init__(store=store, namespace=namespace)
         # Snapshot storage keys so caller mutation cannot authorize more files.
         self._allowed_paths = frozenset(allowed_paths)
+
+    def ls(self, path: str) -> LsResult:
+        return LsResult(error="permission denied: document listing is disabled")
+
+    async def als(self, path: str) -> LsResult:
+        return self.ls(path)
+
+    def glob(self, pattern: str, path: str | None = "/") -> GlobResult:
+        return GlobResult(error="permission denied: document glob is disabled")
+
+    async def aglob(self, pattern: str, path: str | None = "/") -> GlobResult:
+        return self.glob(pattern, path)
 
     def read(self, file_path: str, offset: int = 0, limit: int = 2000) -> ReadResult:
         if file_path not in self._allowed_paths:

@@ -130,7 +130,9 @@ async def test_direct_ingestion_and_mounted_reads_share_keys_and_isolate_users(
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize("asynchronous", [False, True])
-async def test_selected_only_reads_and_discovery(document_store, asynchronous):
+async def test_selected_reads_and_search_with_document_discovery_disabled(
+    document_store, asynchronous
+):
     calls = [
         ("read_file", {"file_path": SELECTED_PATH}),
         ("read_file", {"file_path": OTHER_PATH}),
@@ -154,12 +156,13 @@ async def test_selected_only_reads_and_discovery(document_store, asynchronous):
     assert messages[0].status == "success"
     assert "selected text" in messages[0].content
     assert messages[1].status == messages[-1].status == "error"
-    for message in messages[2:-1]:
-        assert message.status == "success"
+    for message in [messages[0], messages[2], *messages[8:10]]:
         assert OTHER_PATH not in message.content
         assert "private text" not in message.content
-        assert "/documents/" in message.content
-    for message in messages[3:10]:
+    assert messages[2].status == "success"
+    assert all(message.status == "error" for message in messages[3:8])
+    for message in messages[8:10]:
+        assert message.status == "success"
         assert SELECTED_PATH in message.content
     assert "/scratch.txt" in messages[2].content
     assert "needle scratch" in messages[8].content
@@ -178,10 +181,10 @@ async def test_empty_selection_hides_mount_and_denies_document_access(
         ("read_file", {"file_path": SELECTED_PATH}),
     ]
     _, messages = await run_tools("owner", [], calls, asynchronous=asynchronous)
-    for message in messages[:3]:
+    for message in [messages[0], messages[2]]:
         assert message.status == "success"
         assert "/documents" not in message.content
-    assert all(message.status == "error" for message in messages[3:])
+    assert all(message.status == "error" for message in [messages[1], *messages[3:]])
 
 
 @pytest.mark.asyncio

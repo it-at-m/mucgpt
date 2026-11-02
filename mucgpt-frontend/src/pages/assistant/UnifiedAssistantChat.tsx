@@ -42,7 +42,7 @@ import {
 import { useDuplicateAssistant } from "../discovery/hooks/useDuplicateAssistant";
 import { useMigrateLocalAssistant } from "../../hooks/useMigrateLocalAssistant";
 import { CloseConfirmationDialog } from "../../components/AssistantDialogs/shared/CloseConfirmationDialog";
-import { UploadedData } from "../../components/ContextManagerDialog/ContextManagerDialog";
+import { UploadedData, getSelectedDocumentIds } from "../../components/ContextManagerDialog/ContextManagerDialog";
 import { useConfigContext } from "../../context/ConfigContext";
 import { useToolStatusToasts } from "../../hooks/useToolStatusToasts";
 import styles from "./UnifiedAssistantChat.module.css";
@@ -462,7 +462,8 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
             const askResponse: AskResponse = {} as AskResponse;
             const options: ChatOptions = {
                 system: systemOverride ?? systemPrompt ?? "",
-                creativity: creativity
+                creativity: creativity,
+                document_ids: getSelectedDocumentIds(uploadedData)
             };
             try {
                 await makeApiRequest(
@@ -509,7 +510,8 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
             setLastQuestionValue,
             isLegacyAssistant,
             isAssistantUnavailable,
-            agUiEnabled
+            agUiEnabled,
+            uploadedData
         ]
     );
 

@@ -478,7 +478,6 @@ class DBConfig(BaseModel):
     USER: str = "admin"
     PASSWORD: SecretStr = SecretStr("admin")
 
-<<<<<<< HEAD
 
 class DocumentConfig(BaseModel):
     """Bounds for the extracted-text document library (not the legacy /parse API)."""
@@ -489,8 +488,6 @@ class DocumentConfig(BaseModel):
     PREVIEW_MAX_CHARS: PositiveInt = 1000
 
 
-=======
->>>>>>> main
 class PromptConfig(BaseModel):
     """A prompt inside a Langfuse folder."""
 

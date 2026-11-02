@@ -273,7 +273,8 @@ export const makeApiRequest = async (
         assistant_id: assistant_id,
         conversation_id: conversationId,
         persist,
-        data_sources: data_sources && data_sources.length > 0 ? data_sources : undefined
+        data_sources: data_sources && data_sources.length > 0 ? data_sources : undefined,
+        document_ids: options.document_ids
     };
 
     // Keep the legacy request behavior unchanged while the AG-UI path is rolled out.

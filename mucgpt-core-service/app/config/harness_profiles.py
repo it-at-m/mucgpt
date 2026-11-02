@@ -96,7 +96,7 @@ def register_model_harness_profile(model_config: ModelsConfig) -> None:
     register_harness_profile(
         f"{model_config.type.lower()}:{model_config.llm_name}",
         HarnessProfile(
-            excluded_tools=DEEP_AGENT_BUILTIN_TOOLS - enabled_tools,
+            #excluded_tools=DEEP_AGENT_BUILTIN_TOOLS - enabled_tools,
             extra_middleware=extra_middleware,
             # Remove only Deep Agents' built-in summarization middleware implementation.
             # The profiles subclass remains, retaining its model, trigger, and keep settings.

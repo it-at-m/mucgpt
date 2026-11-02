@@ -61,6 +61,7 @@ class ConversationRepository:
                 Chat.assistant_id,
                 Chat.created_at,
                 Chat.updated_at,
+                Chat.document_ids,
             )
             .where(Chat.user_id == user_id, Chat.deleted_at.is_(None))
             .order_by(Chat.updated_at.desc())
@@ -71,6 +72,22 @@ class ConversationRepository:
         """Report whether a live or retired ownership mapping exists for the ID."""
         result = await self.session.execute(
             select(Chat.conversation_id).where(Chat.conversation_id == conversation_id)
+        )
+        return result.scalar_one_or_none() is not None
+
+    async def set_document_ids(
+        self, user_id: str, conversation_id: str, document_ids: list[str]
+    ) -> bool:
+        """Replace a live owner's validated selection; retain IDs after document deletion."""
+        result = await self.session.execute(
+            update(Chat)
+            .values(document_ids=document_ids)
+            .where(
+                Chat.conversation_id == conversation_id,
+                Chat.user_id == user_id,
+                Chat.deleted_at.is_(None),
+            )
+            .returning(Chat.conversation_id)
         )
         return result.scalar_one_or_none() is not None
 

@@ -15,7 +15,7 @@ import styles from "./ContextManagerDialog.module.css";
 import { EdelweissSpinner } from "../EdelweissSpinner";
 import { DocumentLibrary } from "./DocumentLibrary";
 
-export type UploadedDataStatus = "pending" | "uploading" | "ready" | "error" | "pending-restore";
+export type UploadedDataStatus = "pending" | "uploading" | "ready" | "error" | "pending-restore" | "unavailable";
 
 export interface UploadedData {
     id: string;
@@ -50,7 +50,9 @@ export const getFileSignature = (file: File) => `${file.name}-${file.size}-${fil
 export const getDataSignature = (data: UploadedData) => (data.file ? getFileSignature(data.file) : data.id);
 
 export const getSelectedDocumentIds = (data: UploadedData[]) =>
-    data.filter(document => document.source === "library" && document.isActive && document.status === "ready").map(document => document.id);
+    data
+        .filter(document => document.source === "library" && document.isActive && (document.status === "ready" || document.status === "unavailable"))
+        .map(document => document.id);
 
 export const createUploadedData = (file: File, status: UploadedDataStatus = "ready", overrides: Partial<UploadedData> = {}): UploadedData => ({
     id: overrides.id ?? generateDataId(),

@@ -25,6 +25,7 @@ from core.logtools import getLogger
 from core.persistance_helpers import PersistanceHelpers
 from core.stream_cleanup import close_stream
 from core.virtual_file_system_helper import get_documents_for_agent
+from database.conversation_repo import ConversationRepository
 from database.fenced_checkpointer import ConversationDeletedError
 from init_app import init_agent
 
@@ -119,6 +120,19 @@ async def get_messages_for_agent(
     return request.messages
 
 
+async def _save_document_selection(
+    request: ChatCompletionRequest, user_id: str, document_ids: list[str]
+) -> None:
+    """Save only validated selections for persisted, live owned conversations."""
+    if not request.persist:
+        return
+    async with PersistanceHelpers._get_session_factory().begin() as session:
+        if not await ConversationRepository(session).set_document_ids(
+            user_id, request.conversation_id, document_ids
+        ):
+            raise HTTPException(status_code=403, detail="Conversation access denied")
+
+
 @router.post(
     "/chat/completions",
     summary="Create chat completion",
@@ -168,6 +182,9 @@ async def chat_endpoint(
             model_name=request.model,
             persist=request.persist,
             document_selection=document_selection,
+        )
+        await _save_document_selection(
+            request, user_info.user_id, [document.id for document in document_selection]
         )
         temperature = get_temperature_from_request(request)
         enabled_tools = request.enabled_tools or []
@@ -456,6 +473,11 @@ async def ag_ui_chat_endpoint(
         model_name=chat_request.model,
         persist=chat_request.persist,
         document_selection=document_selection,
+    )
+    await _save_document_selection(
+        chat_request,
+        user_info.user_id,
+        [document.id for document in document_selection],
     )
     events = agent.run_agui_with_streaming(
         messages=messages_for_agent,

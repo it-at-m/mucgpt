@@ -1,4 +1,4 @@
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, cast
 
 from deepagents import FilesystemPermission, create_deep_agent
 from deepagents.backends.protocol import BackendProtocol
@@ -24,6 +24,9 @@ from core.lf_prompts import PromptPool
 from core.logtools import getLogger
 from core.stream_cleanup import close_stream
 
+if TYPE_CHECKING:
+    from core.document_service import SelectedDocument
+
 logger = getLogger(name="mucgpt-core-react-agent")
 
 # Write one checkpoint when a run exits instead of one per graph step (LangGraph's
@@ -46,6 +49,7 @@ class _ConfiguredLangChainDeepAgentGraph:
         checkpointer: AsyncPostgresSaver | None = None,
         backend: BackendProtocol | None = None,
         permissions: list[FilesystemPermission] | None = None,
+        document_selection: list["SelectedDocument"] | None = None,
     ):
         self.model = llm
         self.tools = tools
@@ -59,7 +63,10 @@ class _ConfiguredLangChainDeepAgentGraph:
             model=cast(Any, self.model),
             tools=self.tools,
             middleware=[
-                ContextMiddleware(state_schema=self.state_schema),
+                ContextMiddleware(
+                    state_schema=self.state_schema,
+                    document_selection=document_selection,
+                ),
                 # After ContextMiddleware: it filters tools as BaseTool objects.
                 ToolStatusMiddleware(),
                 ToolErrorMiddleware(),
@@ -191,6 +198,7 @@ class MUCGPTAgent:
         checkpointer: AsyncPostgresSaver | None = None,
         backend: BackendProtocol | None = None,
         permissions: list[FilesystemPermission] | None = None,
+        document_selection: list["SelectedDocument"] | None = None,
     ):
         self.logger = logger if logger else getLogger(name="mucgpt-core-react-agent")
         self.model = llm  # required for non-streaming calls, e.g. assisted MUCGPT-Assistant generation.
@@ -202,4 +210,5 @@ class MUCGPTAgent:
             checkpointer=checkpointer,
             backend=backend,
             permissions=permissions,
+            document_selection=document_selection,
         )

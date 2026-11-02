@@ -7,6 +7,22 @@ from pydantic import BaseModel, ConfigDict, Field, PositiveInt, field_validator
 from config.settings import ReasoningEffort
 
 
+class DocumentMetadata(BaseModel):
+    """Ready document metadata; excludes extracted bodies and storage ownership."""
+
+    id: str = Field(description="Server-generated document UUID.")
+    filename: str = Field(description="Original filename, for display only.")
+    mime_type: str = Field(description="Upload MIME type; not verified format support.")
+    original_size: int = Field(ge=0, description="Original upload size in bytes.")
+    text_length: int = Field(
+        ge=0, description="Extracted text length in Unicode characters."
+    )
+    preview: str = Field(description="Bounded initial excerpt, not the complete text.")
+    preview_kind: Literal["initial_excerpt"]
+    path: str = Field(description="Stable model-visible document path.")
+    created_at: datetime
+
+
 class SummarizeResult(BaseModel):
     """Result model for the summarize endpoint."""
 

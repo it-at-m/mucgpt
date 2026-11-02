@@ -1,10 +1,14 @@
+from __future__ import annotations
+
 import re
 from collections.abc import Iterable
+from typing import TYPE_CHECKING
 from uuid import UUID
 
 from anyio import CancelScope
 from deepagents import FilesystemPermission
 from deepagents.backends import CompositeBackend, StateBackend, StoreBackend
+from fastapi import HTTPException
 from langgraph.store.postgres import AsyncPostgresStore
 from psycopg_pool import AsyncConnectionPool
 
@@ -12,6 +16,13 @@ from config.settings import Settings
 from core.document_backend import DocumentBackend
 from core.logtools import getLogger
 from core.persistance_helpers import _create_connection_args
+
+# These imports are only for type checkers. Deferred annotations avoid needing
+# them at runtime, where importing the document service would create a cycle.
+if TYPE_CHECKING:
+    from api.api_models import ChatCompletionRequest
+    from core.auth_models import AuthenticationResult
+    from core.document_service import SelectedDocument
 
 logger = getLogger()
 
@@ -67,6 +78,34 @@ async def delete_document_body(user_id: str, document_id: str | UUID) -> None:
     await FileStoreManager.get_store().adelete(
         get_document_namespace(user_id), get_document_storage_key(document_id)
     )
+
+
+async def get_documents_for_agent(
+    request: ChatCompletionRequest, user_info: AuthenticationResult
+) -> list[SelectedDocument]:
+    """Resolve this turn's attachments before any conversation persistence."""
+    if not request.document_ids:
+        return []
+
+    # The service and repository import filesystem helpers themselves.
+    from core.document_service import (
+        DocumentService,
+        DocumentUnavailableError,
+        InvalidDocumentSelectionError,
+    )
+    from database.document_catalog import DocumentCatalogManager
+    from database.document_repo import DocumentRepository
+
+    try:
+        async with DocumentCatalogManager.get_session_factory()() as session:
+            selection = await DocumentService(
+                DocumentRepository(session)
+            ).resolve_selected_documents(user_info, request.document_ids)
+        return list(selection.documents)
+    except InvalidDocumentSelectionError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    except DocumentUnavailableError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
 
 
 def create_backend(

@@ -24,6 +24,7 @@ from core.auth_models import AuthenticationResult
 from core.logtools import getLogger
 from core.persistance_helpers import PersistanceHelpers
 from core.stream_cleanup import close_stream
+from core.virtual_file_system_helper import get_documents_for_agent
 from database.fenced_checkpointer import ConversationDeletedError
 from init_app import init_agent
 
@@ -127,6 +128,7 @@ async def get_messages_for_agent(
         200: {"description": "Successful Response"},
         400: {"description": "Bad Request"},
         403: {"description": "Forbidden"},
+        404: {"description": "Selected documents unavailable"},
         500: {"description": "Internal Server Error"},
     },
 )
@@ -136,7 +138,7 @@ async def chat_endpoint(
 ) -> StreamingResponse | ChatCompletionResponse:
     """Validate and run an OpenAI-compatible completion, streamed or aggregated.
 
-    Model validation precedes ownership creation. Persisted runs append new turns;
+    Model and document validation precede ownership creation. Persisted runs append new turns;
     streaming teardown closes the executor even when response iteration fails.
     """
     if not request.conversation_id:
@@ -158,10 +160,14 @@ async def chat_endpoint(
         raise HTTPException(status_code=status_code, detail=detail) from exc
 
     try:
+        document_selection = await get_documents_for_agent(request, user_info)
         messages_for_agent = await get_messages_for_agent(request, user_info.user_id)
 
         agent = await init_agent(
-            user_info=user_info, model_name=request.model, persist=request.persist
+            user_info=user_info,
+            model_name=request.model,
+            persist=request.persist,
+            document_selection=document_selection,
         )
         temperature = get_temperature_from_request(request)
         enabled_tools = request.enabled_tools or []
@@ -409,6 +415,7 @@ async def put_conversation_canvas_revisions(
         200: {"description": "Successful Response"},
         400: {"description": "Bad Request"},
         403: {"description": "Forbidden"},
+        404: {"description": "Selected documents unavailable"},
         500: {"description": "Internal Server Error"},
     },
 )
@@ -440,6 +447,7 @@ async def ag_ui_chat_endpoint(
             status_code = 500
         raise HTTPException(status_code=status_code, detail=detail) from exc
 
+    document_selection = await get_documents_for_agent(chat_request, user_info)
     messages_for_agent = await get_messages_for_agent(chat_request, user_info.user_id)
 
     encoder = EventEncoder(accept=request.headers.get("accept"))
@@ -447,7 +455,7 @@ async def ag_ui_chat_endpoint(
         user_info=user_info,
         model_name=chat_request.model,
         persist=chat_request.persist,
-        document_selection=chat_request.document_selection,
+        document_selection=document_selection,
     )
     events = agent.run_agui_with_streaming(
         messages=messages_for_agent,

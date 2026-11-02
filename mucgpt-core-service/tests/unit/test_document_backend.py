@@ -262,3 +262,30 @@ async def test_discovery_denial_is_scoped_to_document_mount(
             entries = result.entries if operation == "ls" else result.matches
             assert [entry["path"] for entry in entries] == ["/scratch/note.txt"]
     assert store.mock_calls == []
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("asynchronous", [False, True])
+@pytest.mark.parametrize("mounted", [False, True])
+@pytest.mark.parametrize("empty", [False, True])
+async def test_document_downloads_are_denied_without_store_access(
+    store, asynchronous, mounted, empty
+):
+    backend = DocumentBackend(
+        store=store, namespace=lambda _: NAMESPACE, allowed_paths=[SELECTED_PATH]
+    )
+    paths = [] if empty else [SELECTED_PATH, OTHER_PATH, SELECTED_PATH]
+    if mounted:
+        backend = CompositeBackend(
+            default=StateBackend(), routes={"/documents/": backend}
+        )
+        paths = ["/documents" + path for path in paths]
+    responses = (
+        await backend.adownload_files(paths)
+        if asynchronous
+        else backend.download_files(paths)
+    )
+    assert [response.path for response in responses] == paths
+    assert all(response.error == "permission_denied" for response in responses)
+    assert all(response.content is None for response in responses)
+    assert store.mock_calls == []

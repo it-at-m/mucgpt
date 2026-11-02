@@ -252,6 +252,9 @@ async def test_mounted_backend_denies_direct_mutations_and_transfers(document_st
     files = [(SELECTED_PATH, b"replacement"), ("/documents/.hidden", b"hidden")]
     assert all(response.error for response in backend.upload_files(files))
     assert all(response.error for response in await backend.aupload_files(files))
+    paths = [SELECTED_PATH, OTHER_PATH]
+    assert all(response.error for response in backend.download_files(paths))
+    assert all(response.error for response in await backend.adownload_files(paths))
     assert (
         document_store.get(
             vfs.get_document_namespace("owner"),

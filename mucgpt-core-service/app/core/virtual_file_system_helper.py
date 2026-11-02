@@ -111,6 +111,18 @@ class _ReadOnlyDocumentBackend(StoreBackend):
         return self.upload_files(files)
 
 
+async def delete_document_body(user_id: str, document_id: str | UUID) -> None:
+    """Idempotently delete one canonical key, including an uncertain upload write.
+
+    StoreBackend's recursive delete reports missing files as errors. Compensation
+    instead uses the store's exact-key deletion, which also succeeds when absent.
+    Ownership/lifecycle coordination belongs to the document service.
+    """
+    await FileStoreManager.get_store().adelete(
+        get_document_namespace(user_id), get_document_storage_key(document_id)
+    )
+
+
 def create_backend(user_id: str) -> CompositeBackend:
     """Build a fresh user-bound agent filesystem with chat-state scratch files."""
     namespace = get_document_namespace(user_id)

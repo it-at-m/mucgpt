@@ -22,6 +22,7 @@ from deepagents.backends.utils import (
     grep_matches_from_files,
     validate_path,
 )
+from deepagents.middleware.filesystem import DEFAULT_READ_LIMIT, DEFAULT_READ_OFFSET
 from langgraph.store.base import BaseStore
 
 
@@ -55,13 +56,22 @@ class DocumentBackend(StoreBackend):
     async def aglob(self, pattern: str, path: str | None = "/") -> GlobResult:
         return self.glob(pattern, path)
 
-    def read(self, file_path: str, offset: int = 0, limit: int = 2000) -> ReadResult:
+    def read(
+        self,
+        file_path: str,
+        offset: int = DEFAULT_READ_OFFSET,
+        limit: int = DEFAULT_READ_LIMIT,
+    ) -> ReadResult:
+        """Read the whole document when it fits, otherwise a tool-sized page."""
         if file_path not in self._allowed_paths:
             return ReadResult(error="permission denied: document is not attached")
         return super().read(file_path, offset=offset, limit=limit)
 
     async def aread(
-        self, file_path: str, offset: int = 0, limit: int = 2000
+        self,
+        file_path: str,
+        offset: int = DEFAULT_READ_OFFSET,
+        limit: int = DEFAULT_READ_LIMIT,
     ) -> ReadResult:
         if file_path not in self._allowed_paths:
             return ReadResult(error="permission denied: document is not attached")

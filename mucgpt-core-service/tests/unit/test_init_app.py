@@ -1,16 +1,21 @@
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from deepagents.backends.utils import create_file_data
 from langchain_core.language_models.fake_chat_models import FakeListChatModel
 from langgraph.checkpoint.memory import InMemorySaver
+from langgraph.store.memory import InMemoryStore
 
 import init_app
+from agent import deep_agent
 from agent.agent_executor import MUCGPTAgentExecutor
 from agent.deep_agent import MUCGPTAgent
 from agent.tools.tools import ToolCollection
 from core.auth_models import AuthenticationResult
+from core.document_service import SelectedDocument
 from core.lf_prompts import ResolvedPrompt
 from core.persistance_helpers import PersistanceHelpers
+from core.virtual_file_system_helper import create_permissions
 from init_app import ModelOptions, init_agent
 
 
@@ -24,12 +29,21 @@ class TestInitApp:
         self.mock_agent = MagicMock(spec=MUCGPTAgent)
 
         # mock user
-        self.mock_user = MagicMock(spec=AuthenticationResult)
+        self.mock_user = AuthenticationResult(
+            token="token", user_id="demo-user-5", department="department"
+        )
 
         # mock tool_collection
         self.tool_collection = MagicMock(spec=ToolCollection)
 
+    @pytest.fixture(autouse=True)
+    def document_store(self, monkeypatch):
+        store = InMemoryStore()
+        monkeypatch.setattr(init_app.FileStoreManager, "get_store", lambda: store)
+        return store
+
     @pytest.mark.asyncio
+    @pytest.mark.parametrize("selection_kind", ["omitted", "empty", "selected"])
     @patch("config.model_provider.ModelRegistry.get_model")
     @patch("agent.tools.tools.ToolCollection.get_tools", new_callable=AsyncMock)
     async def test_init_agent_calls_correct_components(
@@ -37,6 +51,8 @@ class TestInitApp:
         mock_get_tools,
         mock_get_model,
         monkeypatch: pytest.MonkeyPatch,
+        document_store,
+        selection_kind,
     ):
         # Arrange
         mock_get_model.return_value = self.mock_model
@@ -52,9 +68,18 @@ class TestInitApp:
             "get_checkpointer_if_ready",
             get_checkpointer,
         )
+        create_agent = MagicMock(wraps=deep_agent.create_deep_agent)
+        monkeypatch.setattr(deep_agent, "create_deep_agent", create_agent)
+        document = MagicMock(spec=SelectedDocument)
+        document.id = "b7d5c05a-f72b-4cbb-9a99-c1d8592e7dd5"
+        selection_kwargs = {
+            "omitted": {},
+            "empty": {"document_selection": []},
+            "selected": {"document_selection": [document]},
+        }[selection_kind]
 
         # Act
-        result = await init_agent(self.mock_user)
+        result = await init_agent(self.mock_user, **selection_kwargs)
 
         # Assert
         mock_get_model.assert_called_once()
@@ -63,6 +88,19 @@ class TestInitApp:
         assert result.agent.model == self.mock_model
         assert isinstance(result, MUCGPTAgentExecutor)
         get_checkpointer.assert_called_once()
+        create_agent.assert_called_once()
+        kwargs = create_agent.call_args.kwargs
+        assert kwargs["checkpointer"] is checkpointer
+        assert kwargs["permissions"] == create_permissions(
+            [document.id] if selection_kind == "selected" else []
+        )
+        await document_store.aput(
+            ("user_documents", "demo-user-5"),
+            f"/{document.id}.txt",
+            create_file_data("owner document"),
+        )
+        read_result = await kwargs["backend"].aread(f"/documents/{document.id}.txt")
+        assert read_result.file_data["content"] == "owner document"
 
     @pytest.mark.asyncio
     @patch("config.model_provider.ModelRegistry.get_model")

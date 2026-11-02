@@ -1,6 +1,7 @@
 from typing import Any, cast
 
-from deepagents import create_deep_agent
+from deepagents import FilesystemPermission, create_deep_agent
+from deepagents.backends.protocol import BackendProtocol
 from langchain_core.language_models import BaseChatModel
 from langchain_core.runnables import RunnableConfig
 from langchain_core.runnables.config import merge_configs
@@ -43,6 +44,8 @@ class _ConfiguredLangChainDeepAgentGraph:
         logger,
         debug: bool = True,
         checkpointer: AsyncPostgresSaver | None = None,
+        backend: BackendProtocol | None = None,
+        permissions: list[FilesystemPermission] | None = None,
     ):
         self.model = llm
         self.tools = tools
@@ -67,6 +70,8 @@ class _ConfiguredLangChainDeepAgentGraph:
             state_schema=self.state_schema,
             context_schema=RequestContext,
             checkpointer=checkpointer,
+            backend=backend,
+            permissions=permissions,
         )
 
     def _prepare_run(
@@ -184,6 +189,8 @@ class MUCGPTAgent:
         logger=None,
         debug: bool = True,
         checkpointer: AsyncPostgresSaver | None = None,
+        backend: BackendProtocol | None = None,
+        permissions: list[FilesystemPermission] | None = None,
     ):
         self.logger = logger if logger else getLogger(name="mucgpt-core-react-agent")
         self.model = llm  # required for non-streaming calls, e.g. assisted MUCGPT-Assistant generation.
@@ -193,4 +200,6 @@ class MUCGPTAgent:
             logger=self.logger,
             debug=debug,
             checkpointer=checkpointer,
+            backend=backend,
+            permissions=permissions,
         )

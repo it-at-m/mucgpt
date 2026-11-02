@@ -13,7 +13,7 @@ import {
 } from "./models";
 import { HttpAgent } from "@ag-ui/client";
 
-const PARSE_SERVICE_BASE = "/api/backend/v1/parse";
+const PARSE_SERVICE_BASE = "/api/backend/v1/documents";
 
 export const API_BASE = "/api/backend/";
 

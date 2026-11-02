@@ -54,7 +54,7 @@ async def run_tools(user_id, selected_ids, calls, *, asynchronous, files=None):
         model=model,
         middleware=[
             FilesystemMiddleware(
-                backend=vfs.create_backend(user_id),
+                backend=vfs.create_backend(user_id, selected_ids),
                 _permissions=vfs.create_permissions(selected_ids),
             )
         ],
@@ -115,7 +115,7 @@ async def test_direct_ingestion_and_mounted_reads_share_keys_and_isolate_users(
 ):
     key = vfs.get_document_storage_key(SELECTED_ID)
     assert document_store.get(vfs.get_document_namespace("owner"), key) is not None
-    owner = vfs.create_backend("owner")
+    owner = vfs.create_backend("owner", [SELECTED_ID])
     assert (await owner.aread(SELECTED_PATH)).file_data[
         "content"
     ] == "needle selected text"

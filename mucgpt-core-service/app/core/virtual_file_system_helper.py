@@ -69,14 +69,21 @@ async def delete_document_body(user_id: str, document_id: str | UUID) -> None:
     )
 
 
-def create_backend(user_id: str) -> CompositeBackend:
+def create_backend(
+    user_id: str, selected_document_ids: Iterable[str | UUID] = ()
+) -> CompositeBackend:
     """Build a fresh user-bound agent filesystem with chat-state scratch files."""
     namespace = get_document_namespace(user_id)
     return CompositeBackend(
         default=StateBackend(),
         routes={
             DOCUMENTS_ROUTE: DocumentBackend(
-                store=FileStoreManager.get_store(), namespace=lambda _runtime: namespace
+                store=FileStoreManager.get_store(),
+                namespace=lambda _runtime: namespace,
+                allowed_paths=[
+                    get_document_storage_key(document_id)
+                    for document_id in selected_document_ids
+                ],
             )
         },
     )

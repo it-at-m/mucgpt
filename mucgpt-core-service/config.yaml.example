@@ -40,6 +40,14 @@ OWNER_PROFILE_URL_TEMPLATE: "https://intranet.example.org/person/{uid}"  # {uid}
 # Backend settings
 UNAUTHORIZED_USER_REDIRECT_URL: ""
 
+# PostgreSQL persistence settings
+DB:
+  HOST: "checkpoint-postgres"
+  PORT: 5432
+  NAME: "checkpoints"
+  USER: "admin"
+  PASSWORD: "admin"
+
 # Compliance cache settings
 # If enabled, compliance check results are cached in Redis and can be verified by the assistant service.
 COMPLIANCE_CACHE_ENABLED: true

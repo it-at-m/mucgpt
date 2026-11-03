@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Button, Checkbox, MessageBar, MessageBarBody, Text, Tooltip } from "@fluentui/react-components";
 import { ArrowClockwise16Regular, ArrowUpload16Regular, Delete16Regular, Dismiss16Regular } from "@fluentui/react-icons";
 import { useTranslation } from "react-i18next";
+import i18next from "i18next";
 import { deleteDocumentApi, listDocumentsApi, uploadDocumentApi } from "../../api/documents-client";
 import type { DocumentLibraryEntry, DocumentMetadata } from "../../api/models";
 import type { UploadedData } from "./ContextManagerDialog";
@@ -20,7 +21,7 @@ export const documentToUploadedData = (document: DocumentMetadata | DocumentLibr
     parsedAt: document.created_at
 });
 
-export async function restoreDocumentSelection(ids: string[]): Promise<UploadedData[]> {
+export async function restoreDocumentSelection(ids: string[], savedNames: Record<string, string> = {}): Promise<UploadedData[]> {
     if (ids.length === 0) return [];
     const documents = await listDocumentsApi();
     return ids.map(id => {
@@ -29,7 +30,7 @@ export async function restoreDocumentSelection(ids: string[]): Promise<UploadedD
             ? documentToUploadedData(document)
             : {
                   id,
-                  name: document?.filename ?? id,
+                  name: document?.filename ?? savedNames[id] ?? i18next.t("document_library.unavailable_name"),
                   size: document?.original_size ?? 0,
                   status: "unavailable",
                   isActive: true,

@@ -28,7 +28,8 @@ it("restores every saved ID without body content or reconstructed Files", async 
         status: "ready"
     };
     vi.mocked(listDocumentsApi).mockResolvedValue([ready, { ...ready, id: "deleting", status: "deleting" }]);
-    const selected = await restoreDocumentSelection(["ready", "deleted", "deleting"]);
+    const selected = await restoreDocumentSelection(["ready", "deleted", "deleting"], { deleted: "Deleted policy.pdf", ready: "Old name.txt" });
+    expect(selected.map(document => document.name)).toEqual(["Policy.txt", "Deleted policy.pdf", "Policy.txt"]);
     expect(selected.map(document => [document.id, document.status])).toEqual([
         ["ready", "ready"],
         ["deleted", "unavailable"],
@@ -50,10 +51,11 @@ it("surfaces a failed library lookup instead of silently restoring no selection"
 
 it("shows an unavailable selection and detaches it without globally deleting a document", async () => {
     vi.mocked(listDocumentsApi).mockResolvedValue([]);
-    const data = await restoreDocumentSelection(["deleted"]);
+    const data = await restoreDocumentSelection(["deleted"], { deleted: "Policy.pdf" });
     const onDataChange = vi.fn();
     render(<DocumentLibrary data={data} onDataChange={onDataChange} />);
     expect(await screen.findByText("document_library.unavailable_selection")).toBeInTheDocument();
+    expect(screen.getByText("Policy.pdf")).toBeInTheDocument();
     const detach = await screen.findByRole("button", { name: "document_library.detach" });
     await waitFor(() => expect(detach).toBeEnabled());
     fireEvent.click(detach);

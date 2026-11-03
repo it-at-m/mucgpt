@@ -162,6 +162,9 @@ class PersistanceHelpers:
                     "ALTER TABLE chats ADD COLUMN IF NOT EXISTS document_ids json NOT NULL DEFAULT '[]'"
                 )
                 await connection.execute(
+                    "ALTER TABLE chats ADD COLUMN IF NOT EXISTS document_names json NOT NULL DEFAULT '{}'"
+                )
+                await connection.execute(
                     "INSERT INTO chats (conversation_id, user_id, deleted_at) "
                     "SELECT thread_id, '', now() FROM ("
                     "SELECT thread_id FROM checkpoints UNION "

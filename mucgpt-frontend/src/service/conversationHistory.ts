@@ -67,6 +67,7 @@ async function syncHistory(): Promise<void> {
             id,
             backendPersisted: true,
             ...(conversation.document_ids !== undefined ? { documentIds: conversation.document_ids } : {}),
+            ...(conversation.document_names !== undefined ? { documentNames: conversation.document_names } : {}),
             name: conversation.title,
             favorite: existing?.favorite ?? false,
             messages: existing?.messages ?? [],
@@ -146,6 +147,7 @@ export async function loadConversation<C>(
         id,
         backendPersisted: true,
         documentIds: metadata.document_ids ?? [],
+        documentNames: metadata.document_names ?? cached?.documentNames ?? {},
         messages: toChatTurns(messages).map((turn, index) => {
             const local = cached?.messages[index];
             if (local?.user !== turn.user || local.response.answer !== turn.response.answer) return turn;

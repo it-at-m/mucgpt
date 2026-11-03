@@ -179,8 +179,6 @@ class DocumentLibraryService:
                 )
                 if document is None:
                     raise DocumentUnavailableError("Document is unavailable.")
-                if document.status == "processing":
-                    raise DocumentProcessingError("Document is still processing.")
 
             async with document_work_lock(
                 self.session_factory, document_id
@@ -195,14 +193,14 @@ class DocumentLibraryService:
                     )
                     if document is None:
                         raise DocumentUnavailableError("Document is unavailable.")
-                    if document.status == "processing":
-                        raise DocumentProcessingError("Document is still processing.")
                     if document.storage_key != get_document_storage_key(document_id):
                         raise DocumentStorageError(
                             "Document storage key is inconsistent"
                         )
+                    # Ingestion holds this lock for its whole lifetime, so a
+                    # processing row seen here is stale (e.g. worker crashed).
                     if not await repository.mark_deleting(
-                        user_info.user_id, document_id, allow_processing=False
+                        user_info.user_id, document_id, allow_processing=True
                     ):
                         raise DocumentUnavailableError("Document is unavailable.")
 

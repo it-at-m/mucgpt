@@ -265,14 +265,16 @@ def test_foreign_and_missing_deletions_are_uniform_and_never_touch_store(
     assert rows(engine)[0].user_id != owner.user_id
 
 
-def test_processing_document_cannot_be_deleted_while_ingestion_may_write(library_api):
+def test_stale_processing_document_without_worker_lock_is_deleted(library_api):
+    # A crashed ingestion leaves a processing row but releases its work lock.
     client, _, _, engine, store, owner, _ = library_api
     document_id = add_document(engine, owner.user_id, status="processing")
     response = client.delete(f"/api/v1/documents/{document_id}")
-    assert response.status_code == 409
-    assert response.json() == {"detail": "Document is still processing."}
-    assert rows(engine)[0].status == "processing"
-    assert store.mock_calls == []
+    assert response.status_code == 204
+    assert rows(engine) == []
+    store.adelete.assert_awaited_once_with(
+        get_document_namespace(owner.user_id), get_document_storage_key(document_id)
+    )
 
 
 @pytest.mark.parametrize("failure", ["body", "catalog_remove", "catalog_commit"])

@@ -28,7 +28,6 @@ dev = [
     "ipykernel==7.4.0",
     "pre-commit==4.7.0",
     "ruff==0.17.2",
-    "ty==0.0.92",
 ]
 
 [[tool.uv.index]]

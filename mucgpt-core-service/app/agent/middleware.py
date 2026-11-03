@@ -498,8 +498,6 @@ class ContextMiddleware(AgentMiddleware):
                 get_settings().DOCUMENTS.PREVIEW_MAX_CHARS,
                 instructions=doc_instructions,
             )
-        else:
-            self.document_context = ""
 
     def wrap_model_call(
         self,

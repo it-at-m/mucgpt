@@ -392,7 +392,8 @@ class PersistanceHelpers:
                 await AsyncPostgresSaver(connection).adelete_thread(conversation_id)
                 await connection.execute(
                     "UPDATE chats SET deleted_at = COALESCE(deleted_at, now()), "
-                    "chat_title = 'New Chat', assistant_id = NULL WHERE conversation_id = %s",
+                    "chat_title = 'New Chat', assistant_id = NULL, "
+                    "document_ids = '[]', document_names = '{}' WHERE conversation_id = %s",
                     (conversation_id,),
                 )
             return "deleted"

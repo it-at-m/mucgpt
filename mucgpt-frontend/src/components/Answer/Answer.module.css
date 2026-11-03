@@ -94,6 +94,7 @@
 
 /* Matches the activity summary header, so the loading line turns into it without shifting. */
 .loadingLine {
+    position: relative;
     padding-block: var(--spacingVerticalXS);
     margin-bottom: var(--spacingVerticalS);
 }

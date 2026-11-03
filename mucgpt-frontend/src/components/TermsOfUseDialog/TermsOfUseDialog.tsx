@@ -86,7 +86,9 @@ export const TermsOfUseDialog = ({ defaultOpen, onAccept, requireAcceptance = tr
                                             </Link>
                                             .
                                         </>
-                                    )}
+                                    )}{" "}
+                                    Diese Verpflichtung gilt nicht, wenn der Inhalt einem Prozess der menschlichen Überprüfung oder redaktionellen Kontrolle
+                                    unterzogen wurde und eine natürliche oder juristische Person redaktionelle Verantwortung für die Veröffentlichung trägt.
                                 </li>
                                 <li>
                                     <strong>Entscheidungsfindung:</strong> MUCGPT darf nicht für abschließende Entscheidungen verwendet werden, die gegenüber

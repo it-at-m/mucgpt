@@ -103,7 +103,24 @@ i18n
                             load_more: "Weitere Assistenten laden",
                             featured: "Empfohlen",
                             remove_featured: "Empfohlen entfernen",
-                            mark_featured: "Als empfohlen markieren"
+                            mark_featured: "Als empfohlen markieren",
+                            manage_owners: "Besitzer verwalten",
+                            owner_hint: "Fügen Sie Besitzer-IDs hinzu oder entfernen Sie sie. Mindestens ein Besitzer ist erforderlich.",
+                            owner_id: "Besitzer-ID",
+                            owner_id_hint: "Geben Sie eine Benutzer-ID ein und fügen Sie sie der Besitzerliste hinzu.",
+                            add_owner: "Hinzufügen",
+                            remove_owner: "Entfernen",
+                            owner_required: "Mindestens ein Besitzer ist erforderlich.",
+                            owner_directory_unavailable: "Keine LDAP-Details verfügbar.",
+                            owners_update_failed: "Die Besitzer konnten nicht aktualisiert werden.",
+                            audit_history: "Aktivitätsverlauf",
+                            audit_actions: {
+                                created: "Erstellt",
+                                version_created: "Version erstellt",
+                                owners_updated: "Besitzer aktualisiert",
+                                admin_tags_updated: "Admin-Tags aktualisiert",
+                                state_updated: "Status aktualisiert"
+                            }
                         }
                     },
                     home: {
@@ -324,6 +341,8 @@ i18n
                         },
                         answer: {
                             regenerate: "Antwort regenerieren",
+                            persisted_actions_unavailable:
+                                "Regenerieren und Wiederholen sind in gespeicherten Chats nicht verfügbar. Sie können eine neue Frage stellen.",
                             copy: "Antwort kopieren",
                             unformat: "Unformatierte Antwort"
                         },
@@ -1023,7 +1042,24 @@ i18n
                             load_more: "Load more assistants",
                             featured: "Featured",
                             remove_featured: "Remove Featured",
-                            mark_featured: "Mark as Featured"
+                            mark_featured: "Mark as Featured",
+                            manage_owners: "Manage owners",
+                            owner_hint: "Add or remove owner user IDs. At least one owner is required.",
+                            owner_id: "Owner user ID",
+                            owner_id_hint: "Enter a user ID and add it to the owner list.",
+                            add_owner: "Add",
+                            remove_owner: "Remove",
+                            owner_required: "At least one owner is required.",
+                            owner_directory_unavailable: "LDAP details unavailable",
+                            owners_update_failed: "The owners could not be updated.",
+                            audit_history: "Activity history",
+                            audit_actions: {
+                                created: "Created",
+                                version_created: "Version created",
+                                owners_updated: "Owners updated",
+                                admin_tags_updated: "Admin tags updated",
+                                state_updated: "State updated"
+                            }
                         }
                     },
                     home: {
@@ -1242,6 +1278,7 @@ i18n
                         },
                         answer: {
                             regenerate: "Regenerate response",
+                            persisted_actions_unavailable: "Regeneration and retry are unavailable in saved chats. You can ask a new question.",
                             copy: "Copy response",
                             unformat: "Unformatted response"
                         },
@@ -2151,7 +2188,8 @@ i18n
                             unformat: "Unformatierte Antwort"
                         },
                         answer: {
-                            regenerate: "No amoi probiern"
+                            regenerate: "No amoi probiern",
+                            persisted_actions_unavailable: "Regeneriern und no amoi probiern geht in gspeicherten Chats ned. Du kannst a neue Frag stelln."
                         },
                         mindmap: {
                             download: "Obalada",
@@ -3049,6 +3087,8 @@ i18n
                         },
                         answer: {
                             regenerate: "Régénérer la réponse",
+                            persisted_actions_unavailable:
+                                "La régénération et les nouvelles tentatives ne sont pas disponibles dans les discussions enregistrées. Vous pouvez poser une nouvelle question.",
                             copy: "Copier la réponse",
                             unformat: "Réponse non formatée"
                         },
@@ -3945,6 +3985,7 @@ i18n
                         },
                         answer: {
                             regenerate: "Регенерувати відповідь",
+                            persisted_actions_unavailable: "Регенерація та повторні спроби недоступні в збережених чатах. Ви можете поставити нове запитання.",
                             copy: "Копіювати відповідь",
                             unformat: "Неформатована відповідь"
                         },

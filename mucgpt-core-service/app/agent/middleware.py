@@ -27,9 +27,11 @@ from langgraph.types import Command
 
 from agent.state_models.default_state import DefaultAgentState
 from agent.tools.policies import get_policy_for_state
+from api.api_models import ConversationUsage
 from config.harness_profiles import DEEP_AGENT_BUILTIN_TOOLS
 from config.langfuse_provider import LangfuseProvider
 from config.model_provider import ModelRegistry
+from config.settings import get_settings
 from core.logtools import getLogger
 
 logger = getLogger(name="agent-middleware")
@@ -505,7 +507,10 @@ def _add_status_arg(request: ModelRequest) -> ModelRequest:
 
 def _strip_status_arg(request: ToolCallRequest) -> ToolCallRequest:
     args = request.tool_call.get("args") or {}
-    logger.debug(f"Tool call args for tool {request.tool_call.get('name')}: ", args if "web_url_read" in request.tool_call.get("name") else "")
+    logger.debug(
+        f"Tool call args for tool {request.tool_call.get('name')}: ",
+        args if "web_url_read" in request.tool_call.get("name") else "",
+    )
     if TOOL_STATUS_ARG not in args or _has_own_status_arg(request.tool):
         return request
     stripped = {key: value for key, value in args.items() if key != TOOL_STATUS_ARG}
@@ -604,6 +609,37 @@ class TokenUsageMiddleware(AgentMiddleware):
             logger.warning("No request-local token usage collector configured.")
             return
         runtime_context.token_usage.add(usage_metadata)
+        usage = runtime_context.token_usage
+        models = get_settings().MODELS
+        model_name = runtime_context.model_name or models[0].llm_name
+        model_config = next(
+            (model for model in models if model.llm_name == model_name), None
+        )
+        snapshot = ConversationUsage(
+            context_tokens=usage.context_tokens,
+            user_tokens=usage.prompt_tokens,
+            tokens=usage.completion_tokens,
+            usage_model=model_name,
+        )
+        if model_config is not None:
+            snapshot.usage_max_input_tokens = model_config.max_input_tokens
+            snapshot.usage_context_warning_threshold_percent = (
+                model_config.context_warning_threshold_percent
+            )
+            snapshot.usage_context_critical_threshold_percent = (
+                model_config.context_critical_threshold_percent
+            )
+            # Match the live UI: cached input has no configured price yet.
+            snapshot.usage_cost = float(
+                max(0, usage.prompt_tokens - usage.cache_read_tokens)
+                * (model_config.input_cost_per_token or 0)
+                + usage.completion_tokens * (model_config.output_cost_per_token or 0)
+            )
+        message = model_response.result[-1]
+        message.response_metadata = {
+            **message.response_metadata,
+            "mucgpt_usage": snapshot.model_dump(exclude_none=True),
+        }
 
     def wrap_model_call(
         self,

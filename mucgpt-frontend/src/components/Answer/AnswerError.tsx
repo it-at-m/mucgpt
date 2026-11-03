@@ -6,10 +6,11 @@ import { useTranslation } from "react-i18next";
 
 interface Props {
     error: string;
-    onRetry: () => void;
+    onRetry?: () => void;
+    retryUnavailableReason?: string;
 }
 
-export const AnswerError = ({ error, onRetry }: Props) => {
+export const AnswerError = ({ error, onRetry, retryUnavailableReason }: Props) => {
     const { t } = useTranslation();
     return (
         <div className={styles.answerContainer}>
@@ -21,9 +22,13 @@ export const AnswerError = ({ error, onRetry }: Props) => {
                 </div>
             </div>
 
-            <Button appearance="primary" onClick={onRetry}>
-                {t("components.answererror.retry")}
-            </Button>
+            {onRetry ? (
+                <Button appearance="primary" onClick={onRetry}>
+                    {t("components.answererror.retry")}
+                </Button>
+            ) : (
+                retryUnavailableReason && <p className={styles.answerText}>{retryUnavailableReason}</p>
+            )}
         </div>
     );
 };

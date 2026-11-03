@@ -123,11 +123,9 @@ export class CommunityAssistantStorageService {
      * @param assistant_id The assistant's ID
      */
     async deleteConfigForAssistant(assistant_id: string) {
-        const results = await this._getAllConfigs((id: string) => id === CommunityAssistantStorageService.GENERATE_COMMUNITY_ASSISTANT_CONFIG_ID(assistant_id));
-        for (let i = 0; i < results.length; i++) {
-            if (results[i].id) {
-                await this.storageService.delete(results[i].id ?? "");
-            }
+        const id = CommunityAssistantStorageService.GENERATE_COMMUNITY_ASSISTANT_CONFIG_ID(assistant_id);
+        if (!(await this.storageService.delete(id))) {
+            throw new Error(`Failed to delete community assistant configuration "${id}"`);
         }
     }
 }

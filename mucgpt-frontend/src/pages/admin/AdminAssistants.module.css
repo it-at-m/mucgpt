@@ -286,6 +286,108 @@
     border-radius: var(--borderRadiusLarge);
 }
 
+.ownerDialogSurface {
+    width: min(100%, 680px);
+}
+
+.ownerDialogContent {
+    display: grid;
+    gap: var(--spacingVerticalM);
+}
+
+.ownerSection {
+    display: grid;
+    gap: var(--spacingVerticalS);
+    min-width: 0;
+}
+
+.ownerSectionHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--spacingHorizontalM);
+}
+
+.ownerSectionCopy {
+    display: flex;
+    align-items: baseline;
+    gap: var(--spacingHorizontalS);
+    min-width: 0;
+}
+
+.ownerList {
+    display: grid;
+    max-height: min(360px, 38vh);
+    overflow-y: auto;
+    border: 1px solid var(--colorNeutralStroke1);
+    border-radius: var(--borderRadiusMedium);
+    background: var(--colorNeutralBackground2);
+}
+
+.ownerRow {
+    display: flex;
+    align-items: center;
+    gap: var(--spacingHorizontalM);
+    min-width: 0;
+    padding: var(--spacingVerticalM) var(--spacingHorizontalM);
+    background: var(--colorNeutralBackground1);
+}
+
+.ownerRow + .ownerRow {
+    border-top: 1px solid var(--colorNeutralStroke2);
+}
+
+.ownerIdentity {
+    display: grid;
+    flex: 1;
+    min-width: 0;
+    gap: var(--spacingVerticalXXS);
+}
+
+.ownerName,
+.ownerMetadata,
+.ownerId {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.ownerMetadata {
+    color: var(--colorNeutralForeground2);
+}
+
+.ownerId {
+    color: var(--colorNeutralForeground3);
+    font-family: var(--fontFamilyMonospace);
+}
+
+.ownerInputRow {
+    display: flex;
+    gap: var(--spacingHorizontalS);
+}
+
+.ownerInputRow > :first-child {
+    flex: 1;
+}
+
+.ownerValidation {
+    color: var(--colorStatusDangerForeground1);
+}
+
+@media (max-width: 520px) {
+    .ownerDialogSurface {
+        width: calc(100% - var(--spacingHorizontalL));
+    }
+
+    .ownerInputRow {
+        flex-direction: column;
+    }
+
+    .ownerInputRow > :first-child {
+        width: 100%;
+    }
+}
+
 @media (max-width: 1200px) {
     .detailsSidebarSlot[data-open="true"] {
         flex-basis: var(--assistantDetailsDrawerCompactWidth);

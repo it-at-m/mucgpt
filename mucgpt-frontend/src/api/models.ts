@@ -51,6 +51,8 @@ export type ChatRequest = {
     enabled_tools?: string[];
     assistant_id?: string;
     conversation_id?: string;
+    /** False runs a stateless chat that is not stored server-side (e.g. assistant previews). */
+    persist?: boolean;
     data_sources?: DataSource[];
 };
 
@@ -286,6 +288,23 @@ export type AdminTag = "featured";
 
 export interface AdminTagsUpdateInput {
     admin_tags: AdminTag[];
+}
+
+export interface AdminOwnersUpdateInput {
+    owner_ids: string[];
+}
+
+export interface AssistantAuditEvent {
+    id: number;
+    assistant_id: string;
+    occurred_at: string;
+    actor_user_id: string;
+    actor_name?: string | null;
+    action: string;
+    before?: Record<string, unknown> | null;
+    after?: Record<string, unknown> | null;
+    reason?: string | null;
+    assistant_version?: number | null;
 }
 
 // Tool info and list response for /tools endpoint

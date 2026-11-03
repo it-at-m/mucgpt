@@ -1,12 +1,20 @@
 import { type TransitionEvent, useContext, useDeferredValue, useEffect, useRef, useState } from "react";
 import {
     Badge,
+    Avatar,
     Body1,
     Body2,
     Button,
     Card,
+    Dialog,
+    DialogActions,
+    DialogBody,
+    DialogContent,
+    DialogSurface,
+    DialogTitle,
     Dropdown,
     Field,
+    Input,
     MessageBar,
     MessageBarBody,
     Option,
@@ -17,7 +25,7 @@ import {
     Title1,
     Title3
 } from "@fluentui/react-components";
-import { ArrowResetRegular, ArrowSyncRegular, Eye24Regular, EyeOff24Regular, People24Regular, PeopleRegular } from "@fluentui/react-icons";
+import { ArrowResetRegular, ArrowSyncRegular, DismissRegular, Eye24Regular, EyeOff24Regular, People24Regular, PeopleRegular } from "@fluentui/react-icons";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 
@@ -26,9 +34,11 @@ import {
     type AssistantAccessType,
     type ComplianceStatus,
     getAdminAssistantsApi,
-    updateAssistantAdminTagsApi
+    getAssistantAuditEventsApi,
+    updateAssistantAdminTagsApi,
+    updateAssistantOwnersApi
 } from "../../api/assistant-client";
-import { type AdminTag, type AssistantResponse, type AssistantState } from "../../api/models";
+import { type AdminTag, type AssistantAuditEvent, type AssistantResponse, type AssistantState, type OwnerDetailsResponse } from "../../api/models";
 import { ApiError } from "../../api/fetch-utils";
 import { AssistantDetailsSidebar, type AssistantCardData } from "../../components/AssistantDetailsSidebar/AssistantDetailsSidebar";
 import { getPrimaryOwnerDetails, OwnerMetadataLink } from "../../components/OwnerMetadataLink/OwnerMetadataLink";
@@ -37,6 +47,7 @@ import { UserContext } from "../layout/UserContextProvider";
 import styles from "./AdminAssistants.module.css";
 
 const PAGE_SIZE = 50;
+const AUDIT_EVENTS_PAGE_SIZE = 100;
 const NO_OWNED_ASSISTANTS = new Set<string>();
 
 const getAccessType = (assistant: AssistantResponse): AssistantAccessType => {
@@ -83,7 +94,17 @@ const AdminAssistants = () => {
     const [refreshKey, setRefreshKey] = useState(0);
     const [isDetailsOpen, setIsDetailsOpen] = useState(false);
     const [selectedAssistant, setSelectedAssistant] = useState<AssistantCardData | null>(null);
+    const [ownersAssistant, setOwnersAssistant] = useState<AssistantResponse | null>(null);
+    const [ownerInput, setOwnerInput] = useState("");
+    const [ownerIds, setOwnerIds] = useState<string[]>([]);
+    const [isSavingOwners, setIsSavingOwners] = useState(false);
+    const [ownerUpdateError, setOwnerUpdateError] = useState<string | null>(null);
+    const [auditEvents, setAuditEvents] = useState<AssistantAuditEvent[]>([]);
+    const [hasMoreAuditEvents, setHasMoreAuditEvents] = useState(false);
+    const [isLoadingMoreAuditEvents, setIsLoadingMoreAuditEvents] = useState(false);
     const requestVersion = useRef(0);
+    const auditRequestVersion = useRef(0);
+    const auditRequestController = useRef<AbortController | null>(null);
 
     const query: AdminAssistantListQueryParams = {
         state,
@@ -159,6 +180,29 @@ const AdminAssistants = () => {
         if (value !== "hierarchical") setDepartments([]);
     };
 
+    const loadAuditEvents = (assistantId: string, offset = 0) => {
+        auditRequestController.current?.abort();
+        const controller = new AbortController();
+        const currentRequestVersion = ++auditRequestVersion.current;
+        auditRequestController.current = controller;
+        setIsLoadingMoreAuditEvents(offset > 0);
+
+        void getAssistantAuditEventsApi(assistantId, { offset, limit: AUDIT_EVENTS_PAGE_SIZE }, { signal: controller.signal })
+            .then(events => {
+                if (auditRequestVersion.current !== currentRequestVersion) return;
+                setAuditEvents(current => (offset === 0 ? events : [...current, ...events]));
+                setHasMoreAuditEvents(events.length === AUDIT_EVENTS_PAGE_SIZE);
+            })
+            .catch(() => {
+                if (controller.signal.aborted || auditRequestVersion.current !== currentRequestVersion) return;
+                if (offset === 0) setAuditEvents([]);
+                setHasMoreAuditEvents(false);
+            })
+            .finally(() => {
+                if (auditRequestVersion.current === currentRequestVersion) setIsLoadingMoreAuditEvents(false);
+            });
+    };
+
     const openDetails = (assistant: AssistantResponse) => {
         const version = assistant.latest_version;
         setSelectedAssistant({
@@ -171,6 +215,9 @@ const AdminAssistants = () => {
             rawData: assistant
         });
         setIsDetailsOpen(true);
+        setAuditEvents([]);
+        setHasMoreAuditEvents(false);
+        loadAuditEvents(assistant.id);
     };
 
     const toggleFeatured = async (assistant: AssistantResponse) => {
@@ -192,7 +239,48 @@ const AdminAssistants = () => {
         }
     };
 
-    const closeDetails = () => setIsDetailsOpen(false);
+    const openOwnerDialog = (assistant: AssistantResponse) => {
+        setOwnersAssistant(assistant);
+        setOwnerIds(assistant.owner_ids || []);
+        setOwnerInput("");
+        setOwnerUpdateError(null);
+    };
+
+    const addOwner = () => {
+        const ownerId = ownerInput.trim();
+        if (!ownerId || ownerIds.includes(ownerId)) return;
+        setOwnerIds(current => [...current, ownerId]);
+        setOwnerInput("");
+    };
+
+    const removeOwner = (ownerId: string) => {
+        setOwnerIds(current => current.filter(id => id !== ownerId));
+    };
+
+    const saveOwners = async () => {
+        if (!ownersAssistant || ownerIds.length === 0) return;
+        setIsSavingOwners(true);
+        setOwnerUpdateError(null);
+        try {
+            const updated = await updateAssistantOwnersApi(ownersAssistant.id, { owner_ids: ownerIds });
+            setAssistants(current => current.map(item => (item.id === updated.id ? updated : item)));
+            setSelectedAssistant(current => (current?.id === updated.id ? { ...current, rawData: updated } : current));
+            setOwnersAssistant(null);
+            if (selectedAssistant?.id === updated.id) loadAuditEvents(updated.id);
+        } catch (updateError) {
+            setOwnerUpdateError(
+                updateError instanceof Error ? updateError.message : t("admin.assistants.owners_update_failed", "The owners could not be updated.")
+            );
+        } finally {
+            setIsSavingOwners(false);
+        }
+    };
+
+    const closeDetails = () => {
+        auditRequestController.current?.abort();
+        auditRequestVersion.current += 1;
+        setIsDetailsOpen(false);
+    };
 
     const handleDetailsSlotTransitionEnd = (event: TransitionEvent<HTMLDivElement>) => {
         if (event.target !== event.currentTarget || event.propertyName !== "flex-basis" || isDetailsOpen) return;
@@ -498,6 +586,9 @@ const AdminAssistants = () => {
                                                                   ? t("admin.assistants.remove_featured", "Remove Featured")
                                                                   : t("admin.assistants.mark_featured", "Mark as Featured")}
                                                         </Button>
+                                                        <Button appearance="secondary" icon={<PeopleRegular />} onClick={() => openOwnerDialog(assistant)}>
+                                                            {t("admin.assistants.manage_owners", "Manage owners")}
+                                                        </Button>
                                                     </Card>
                                                 );
                                             })}
@@ -523,8 +614,107 @@ const AdminAssistants = () => {
                     assistant={selectedAssistant}
                     ownedAssistantIds={NO_OWNED_ASSISTANTS}
                     hideStartChat
+                    auditEvents={auditEvents}
+                    hasMoreAuditEvents={hasMoreAuditEvents}
+                    isLoadingMoreAuditEvents={isLoadingMoreAuditEvents}
+                    onLoadMoreAuditEvents={() => selectedAssistant && loadAuditEvents(selectedAssistant.id, auditEvents.length)}
                 />
             </div>
+            <Dialog open={ownersAssistant !== null} onOpenChange={(_, data) => !data.open && setOwnersAssistant(null)}>
+                <DialogSurface className={styles.ownerDialogSurface}>
+                    <DialogBody>
+                        <DialogTitle>{t("admin.assistants.manage_owners", "Manage owners")}</DialogTitle>
+                        <DialogContent className={styles.ownerDialogContent}>
+                            <Body2>{t("admin.assistants.owner_hint", "Add or remove owner user IDs. At least one owner is required.")}</Body2>
+                            <section className={styles.ownerSection} aria-labelledby="owner-list-title">
+                                <div className={styles.ownerSectionHeader}>
+                                    <div className={styles.ownerSectionCopy}>
+                                        <Title3 id="owner-list-title">{t("community_assistants.owner_details", "Owners")}</Title3>
+                                    </div>
+                                    <Badge appearance="tint">{ownerIds.length}</Badge>
+                                </div>
+                                <div className={styles.ownerList} role="list">
+                                    {ownerIds.map(ownerId => {
+                                        const details = ownersAssistant?.owners_detailed?.find(owner => owner.user_id === ownerId);
+                                        return (
+                                            <OwnerEditorRow
+                                                key={ownerId}
+                                                ownerId={ownerId}
+                                                details={details}
+                                                onRemove={() => removeOwner(ownerId)}
+                                                removeLabel={`${t("admin.assistants.remove_owner", "Remove")}: ${
+                                                    [details?.givenName, details?.sn].filter(Boolean).join(" ") || details?.username || ownerId
+                                                }`}
+                                                directoryUnavailableLabel={t("admin.assistants.owner_directory_unavailable", "LDAP details unavailable")}
+                                            />
+                                        );
+                                    })}
+                                </div>
+                            </section>
+                            <Field
+                                label={t("admin.assistants.owner_id", "Owner user ID")}
+                                hint={t("admin.assistants.owner_id_hint", "Enter a user ID and add it to the owner list.")}
+                            >
+                                <div className={styles.ownerInputRow}>
+                                    <Input
+                                        value={ownerInput}
+                                        onChange={(_, data) => setOwnerInput(data.value)}
+                                        onKeyDown={event => event.key === "Enter" && (event.preventDefault(), addOwner())}
+                                    />
+                                    <Button appearance="secondary" onClick={addOwner} disabled={!ownerInput.trim() || ownerIds.includes(ownerInput.trim())}>
+                                        {t("admin.assistants.add_owner", "Add")}
+                                    </Button>
+                                </div>
+                            </Field>
+                            {ownerIds.length === 0 && (
+                                <Body2 className={styles.ownerValidation}>{t("admin.assistants.owner_required", "At least one owner is required.")}</Body2>
+                            )}
+                            {ownerUpdateError && (
+                                <MessageBar intent="error">
+                                    <MessageBarBody>{ownerUpdateError}</MessageBarBody>
+                                </MessageBar>
+                            )}
+                        </DialogContent>
+                        <DialogActions>
+                            <Button appearance="secondary" onClick={() => setOwnersAssistant(null)}>
+                                {t("common.cancel", "Cancel")}
+                            </Button>
+                            <Button appearance="primary" onClick={() => void saveOwners()} disabled={ownerIds.length === 0 || isSavingOwners}>
+                                {isSavingOwners ? t("common.loading") : t("common.save", "Save")}
+                            </Button>
+                        </DialogActions>
+                    </DialogBody>
+                </DialogSurface>
+            </Dialog>
+        </div>
+    );
+};
+
+const OwnerEditorRow = ({
+    ownerId,
+    details,
+    onRemove,
+    removeLabel,
+    directoryUnavailableLabel
+}: {
+    ownerId: string;
+    details?: OwnerDetailsResponse;
+    onRemove: () => void;
+    removeLabel: string;
+    directoryUnavailableLabel: string;
+}) => {
+    const displayName = [details?.givenName, details?.sn].filter(Boolean).join(" ") || details?.username || ownerId;
+    const directoryMetadata = [details?.mail, details?.organizationalunit].filter(Boolean).join(" · ");
+
+    return (
+        <div className={styles.ownerRow} role="listitem">
+            <Avatar name={displayName} color="brand" size={40} />
+            <div className={styles.ownerIdentity}>
+                <Body1 className={styles.ownerName}>{displayName}</Body1>
+                <Body2 className={styles.ownerMetadata}>{directoryMetadata || directoryUnavailableLabel}</Body2>
+                {details && displayName !== ownerId && <Body2 className={styles.ownerId}>{ownerId}</Body2>}
+            </div>
+            <Button appearance="subtle" icon={<DismissRegular />} onClick={onRemove} aria-label={removeLabel} title={removeLabel}></Button>
         </div>
     );
 };

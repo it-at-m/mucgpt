@@ -6,7 +6,7 @@ export interface ActivityStep {
     toolCallId: string;
     toolName: string;
     status: ActivityStepStatus;
-    startedAt: number;
+    startedAt?: number;
     endedAt?: number;
     /** The model's own one-line description of what it does with this call (its `status_message` argument). */
     description?: string;
@@ -148,7 +148,11 @@ export const getLiveStatus = (activity: RunActivity | undefined, now: number, is
     const steps = activity?.steps.filter(step => isVisibleTool(step.toolName)) ?? [];
     const running = steps.findLast(step => step.status === "running");
     if (running) {
-        return { kind: "tool", step: running, awaitingDescription: !running.description && now - running.startedAt < DESCRIPTION_GRACE_MS };
+        return {
+            kind: "tool",
+            step: running,
+            awaitingDescription: !running.description && running.startedAt !== undefined && now - running.startedAt < DESCRIPTION_GRACE_MS
+        };
     }
     if (steps.length > 0) return { kind: "evaluating" };
     const elapsedSeconds = activity?.startedAt === undefined ? 0 : (now - activity.startedAt) / 1000;
@@ -171,7 +175,8 @@ export const getLiveStatusKey = (status: LiveStatus): string => {
 /** Wall-clock time from the first tool start to the last tool end, in whole seconds. */
 export const getStepsDurationSeconds = (steps: ActivityStep[]): number | undefined => {
     const ended = steps.flatMap(step => (step.endedAt === undefined ? [] : [step.endedAt]));
-    if (steps.length === 0 || ended.length === 0) return undefined;
-    const start = Math.min(...steps.map(step => step.startedAt));
+    const started = steps.flatMap(step => (step.startedAt === undefined ? [] : [step.startedAt]));
+    if (started.length !== steps.length || ended.length !== steps.length || steps.length === 0) return undefined;
+    const start = Math.min(...started);
     return Math.round((Math.max(...ended) - start) / 1000);
 };

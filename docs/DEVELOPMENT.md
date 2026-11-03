@@ -97,7 +97,7 @@ Every release image is also mirrored to the openCode container registry (GitLab 
 - Assistant: `registry.opencode.de/landeshauptstadt-muenchen/mucgpt/mucgpt-assistant`
 - Migrations: `registry.opencode.de/landeshauptstadt-muenchen/mucgpt/mucgpt-assistant-migrations`
 
-Both registries carry the same tags (`<version>` and `latest`) and the same image digest. If the openCode push fails, the GitHub release still succeeds (the mirror step tolerates errors); re-running the release workflow for the same tag retries the mirror.
+Both registries carry the same tags (`<version>` and `latest`) and the same runnable platform images. The openCode mirror omits GHCR-only BuildKit attestations because its registry does not accept them. If the openCode push fails, the GitHub release still succeeds (the mirror step tolerates errors); re-running the release workflow for the same tag retries the mirror.
 
 > Note: A new frontend tag will also create a new github pages deployment with the actual version
 

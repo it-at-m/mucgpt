@@ -49,6 +49,7 @@ from core.llm_helpers import (
     to_langchain_messages,
 )
 from core.logtools import getLogger
+from core.stream_cleanup import close_stream
 
 logger = getLogger(name="mucgpt-core-agent")
 
@@ -261,6 +262,7 @@ class MUCGPTAgentExecutor:
                 self.base_config,
                 RunnableConfig(
                     configurable={
+                        "thread_id": conversation_id,
                         "llm_temperature": temperature,
                         "reasoning_effort": reasoning_effort,
                         "llm": model,
@@ -284,12 +286,13 @@ class MUCGPTAgentExecutor:
                 logger.debug(
                     "Enabled tools for this request: %s", ", ".join(enabled_tools)
                 )
+            graph_stream = self.agent.graph.astream(
+                {"messages": msgs},
+                stream_mode=["messages", "custom", "updates"],
+                config=config,
+            )
             try:
-                async for item in self.agent.graph.astream(
-                    {"messages": msgs},
-                    stream_mode=["messages", "custom", "updates"],
-                    config=config,
-                ):
+                async for item in graph_stream:
                     # item is a tuple of (messages, (message_chunk, meta_data)) or a tool call chunk
                     if not isinstance(item, tuple) or len(item) != 2:
                         logger.error(
@@ -398,6 +401,8 @@ class MUCGPTAgentExecutor:
                     ],
                 ).model_dump()
                 return
+            finally:
+                await close_stream(graph_stream)
 
             logger.debug("Sending end-of-stream signal")
             usage = _usage_from_token_usage(token_usage)
@@ -454,6 +459,7 @@ class MUCGPTAgentExecutor:
             token_usage = TokenUsage()
             request_config = RunnableConfig(
                 configurable={
+                    "thread_id": conversation_id,
                     "llm_temperature": temperature,
                     "reasoning_effort": reasoning_effort,
                     "llm": model,
@@ -606,6 +612,11 @@ class MUCGPTAgentExecutor:
                 ),
             )
 
+            graph_stream = self.agent.graph.astream(
+                {"messages": to_langchain_messages(messages)},
+                stream_mode=["messages", "custom", "updates"],
+                config=config,
+            )
             try:
                 yield RunStartedEvent(
                     type=EventType.RUN_STARTED,
@@ -615,13 +626,9 @@ class MUCGPTAgentExecutor:
 
                 message_id = uuid.uuid4().hex
                 tool_calls: dict[int, tuple[str, str]] = {}
-                async for stream_mode, data in self.agent.graph.astream(
-                    {"messages": to_langchain_messages(messages)},
-                    stream_mode=["messages", "custom", "updates"],
-                    config=config,
-                ):
+                async for stream_mode, data in graph_stream:
                     if stream_mode == "custom":
-                        # Only traced, not streamed (matches run_with_streaming trace).
+                        # Only traced, not streamed.
                         try:
                             trace_events.append(
                                 {
@@ -654,7 +661,9 @@ class MUCGPTAgentExecutor:
                         )
                     )
                     # dont stream summarization chunks or internal chunks
-                    if metadata.get("lc_source") == "summarization" or _is_internal_chunk(metadata):
+                    if metadata.get(
+                        "lc_source"
+                    ) == "summarization" or _is_internal_chunk(metadata):
                         continue
                     if isinstance(chunk, ToolMessage):
                         content = chunk.content
@@ -734,3 +743,5 @@ class MUCGPTAgentExecutor:
                     type=EventType.RUN_ERROR,
                     message=llm_exception_handler(ex=ex, logger=logger),
                 )
+            finally:
+                await close_stream(graph_stream)

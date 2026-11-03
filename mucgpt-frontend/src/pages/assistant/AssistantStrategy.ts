@@ -97,8 +97,8 @@ export class CommunityAssistantStrategy implements AssistantStrategy {
     }
 
     async deleteAssistant(assistantId: string, assistantStorageService: AssistantStorageService): Promise<void> {
-        await unsubscribeFromAssistantApi(assistantId);
         await assistantStorageService.deleteChatsForAssistant(assistantId);
+        await unsubscribeFromAssistantApi(assistantId);
         await this.communityStorageService.deleteConfigForAssistant(assistantId);
     }
 }
@@ -139,9 +139,10 @@ export class OwnedCommunityAssistantStrategy implements AssistantStrategy {
     }
 
     async deleteAssistant(assistantId: string, assistantStorageService: AssistantStorageService): Promise<void> {
+        await assistantStorageService.deleteChatsForAssistant(assistantId);
         await deleteCommunityAssistantApi(assistantId);
         // Also clean up any local copy that may exist from before the assistant was published
-        await assistantStorageService.deleteConfigAndChatsForAssistant(assistantId);
+        await assistantStorageService.deleteConfigForAssistant(assistantId);
     }
 
     async updateAssistant(

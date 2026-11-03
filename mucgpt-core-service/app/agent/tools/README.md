@@ -3,11 +3,11 @@
 This folder builds the tools the agent can call and the metadata the frontend
 uses to let a user pick which tools are enabled. There are two kinds of tools:
 
-- **Local tools** - defined in this repo (`brainstorm.py`, `simplify.py`,
-  `internet_search.py`). Adding one is a code change.
+- **Local tools** - defined in this repo (`brainstorm.py`, `simplify.py`).
+  Adding one is a code change.
 - **MCP tools** - loaded at runtime from configured MCP servers (`mcp.py`).
   Adding one is a config change (`config.yaml` / `MUCGPT_CORE_MCP__...`), not
-  a code change.
+  a code change. Internet search is provided through an MCP server.
 
 ## The pieces
 
@@ -21,25 +21,33 @@ tool picker), `needs_model` (does the factory need a bound LLM?),
 be reported without constructing the tool - see "State schema" below).
 
 **`tools.py` - `LOCAL_TOOLS` and `ToolCollection`**
-`LOCAL_TOOLS` is the list of all local tools (`[brainstorm.TOOL, simplify.TOOL,
-internet_search.TOOL]`). `ToolCollection` is a thin, per-request object:
+`LOCAL_TOOLS` is the list of all local tools (`[brainstorm.TOOL, simplify.TOOL]`).
+`ToolCollection` is a thin, per-request object:
 `ToolCollection(model).get_tools(user_info, enabled_tools=None)` builds every
 configured local tool plus whatever `McpLoader` returns for this user, and
 filters by `enabled_tools` if given. It's constructed fresh per request in
 `init_app.py::init_agent`.
 
-`_bind_model(tool_name)` binds a `MUCGPT_TOOL_NAME:<id>` tag onto the model
-before handing it to a tool factory, purely so Langfuse traces show which
-tool made a given LLM call (Brainstorming and Simplify call the LLM
-themselves, independent of the main agent loop). See "Known gap" below for
-why this is the *only* tag it adds.
+The factories receive the unbound model. When a tool runs, `model.py` uses
+`ToolRuntime.context` to select the current request's model and bind its user,
+temperature, reasoning effort, and extra body. It preserves request metadata
+and adds a `MUCGPT_TOOL_NAME:<id>` tag. Settings pass through
+`ModelRegistry.normalize_model_settings`, just like the main agent's calls,
+so reasoning defaults and supported parameters also apply inside local tools.
+
+Both tools consume async model streams internally. Nested calls are tagged
+`internal` so their text is excluded from user-facing assistant streams.
+Brainstorming's custom events through `ToolRuntime.stream_writer` contain status
+updates and the completed mind map, not partial model output. Simplify retains
+its existing section-based custom progress events.
+Simplify performs one generation, one quality
+check, and at most one refinement (two or three model calls).
 
 **`tool_metadata.py` - `list_tool_metadata`**
 Powers `GET /v1/tools`. For local tools this is pure data lookup -
 `LocalTool.display(lang)` returns the metadata dict for a language, falling
 back to `"english"` if that tool has no translation for the requested
-language yet (this affects `InternetSearch` for French/Bairisch/Ukrainisch
-today, which only has German/English text). For MCP tools it calls
+language yet. For MCP tools it calls
 `McpLoader.load_mcp_tools` (the exact same call `get_tools` makes) and reads
 each tool's own `name`/`description`/`.metadata`. Nothing here constructs a
 local tool instance or needs a model - the old version did, via a `DummyModel`
@@ -90,13 +98,6 @@ pick it up automatically.
   (`init_app.py::init_agent`) never passed them, so this was already dead in
   practice.
 
-  **Known gap / future work:** if Brainstorming/Simplify's own LLM calls
-  should carry the user/assistant tag (today only the main reasoning model
-  does, via `react_agent.py::_prepare_run`), the real fix is to compute
-  `llm_user`/`assistant_id` earlier - in `chat_router.py`, before calling
-  `init_agent()` - bind them once there, and pass the already-bound model
-  into `ToolCollection`. That would also let you delete the duplicate
-  `llm_user`/`_extract_department_prefix` derivation in `agent_executor.py`
-  and the redundant per-turn re-bind in `react_agent.py::_prepare_run`. Not
-  done here - it touches the request pipeline outside `agent/tools/`, and
-  wasn't in scope for this pass.
+  Local tools now receive that request data at execution time through
+  `ToolRuntime.context`, so their nested model calls no longer depend on
+  construction-time bindings.

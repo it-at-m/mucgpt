@@ -238,6 +238,8 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
     const resetActiveChatState = useCallback(() => {
         setLastQuestionValue("");
         setError(undefined);
+        // A new or reset chat must not inherit the previous chat's documents.
+        setUploadedData([]);
         activeChatRef.current = undefined;
         dispatch({ type: "SET_ACTIVE_CHAT", payload: undefined });
         dispatch({ type: "CLEAR_ANSWERS" });

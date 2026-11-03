@@ -9,7 +9,7 @@ import { ToolStreamHandler, ToolStatus } from "../utils/ToolStreamHandler";
 import language from "react-syntax-highlighter/dist/esm/languages/hljs/1c";
 import { AssistantStorageService } from "../service/assistantstorage";
 import { v4 as uuid } from "uuid";
-import { handleRedirect } from "../api/fetch-utils";
+import { ApiError, handleRedirect } from "../api/fetch-utils";
 import { createChatName, MucgptAgUiAgent } from "../api/core-client";
 import type { BaseEvent } from "@ag-ui/core";
 import { initialRunActivity, reduceRunActivity, type RunActivity } from "../utils/agUiActivity";
@@ -281,6 +281,10 @@ export const makeApiRequest = async (
     const legacyResponse = agUiEnabled ? undefined : await chatApi(request);
     if (legacyResponse) {
         handleRedirect(legacyResponse);
+        if (!legacyResponse.ok) {
+            const error = await legacyResponse.json().catch(() => ({}));
+            throw new ApiError(typeof error.detail === "string" ? error.detail : "Chat request failed", legacyResponse.status);
+        }
         if (!legacyResponse.body) throw Error("No response body");
     }
 

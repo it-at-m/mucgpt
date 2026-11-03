@@ -155,6 +155,12 @@ class PersistanceHelpers:
                     "ALTER TABLE chats ADD COLUMN IF NOT EXISTS deleted_at timestamptz"
                 )
                 await connection.execute(
+                    "ALTER TABLE chats ADD COLUMN IF NOT EXISTS document_ids json NOT NULL DEFAULT '[]'"
+                )
+                await connection.execute(
+                    "ALTER TABLE chats ADD COLUMN IF NOT EXISTS document_names json NOT NULL DEFAULT '{}'"
+                )
+                await connection.execute(
                     "INSERT INTO chats (conversation_id, user_id, deleted_at) "
                     "SELECT thread_id, '', now() FROM ("
                     "SELECT thread_id FROM checkpoints UNION "
@@ -386,7 +392,8 @@ class PersistanceHelpers:
                 await AsyncPostgresSaver(connection).adelete_thread(conversation_id)
                 await connection.execute(
                     "UPDATE chats SET deleted_at = COALESCE(deleted_at, now()), "
-                    "chat_title = 'New Chat', assistant_id = NULL WHERE conversation_id = %s",
+                    "chat_title = 'New Chat', assistant_id = NULL, "
+                    "document_ids = '[]', document_names = '{}' WHERE conversation_id = %s",
                     (conversation_id,),
                 )
             return "deleted"

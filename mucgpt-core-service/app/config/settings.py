@@ -478,6 +478,16 @@ class DBConfig(BaseModel):
     USER: str = "admin"
     PASSWORD: SecretStr = SecretStr("admin")
 
+
+class DocumentConfig(BaseModel):
+    """Bounds for the extracted-text document library (not the legacy /parse API)."""
+
+    MAX_UPLOAD_BYTES: PositiveInt = 100 * 1024 * 1024
+    MAX_TEXT_BYTES: PositiveInt = 5 * 1024 * 1024
+    PREVIEW_TOKENS: int = Field(default=250, ge=4)
+    PREVIEW_MAX_CHARS: PositiveInt = 1000
+
+
 class PromptConfig(BaseModel):
     """A prompt inside a Langfuse folder."""
 
@@ -572,6 +582,7 @@ class Settings(BaseSettings):
     MCP: MCPConfig = Field(default_factory=MCPConfig)
     REDIS: RedisConfig = Field(default_factory=RedisConfig)
     DB: DBConfig = Field(default_factory=DBConfig)
+    DOCUMENTS: DocumentConfig = Field(default_factory=DocumentConfig)
 
     # Customize settings sources to prioritize YAML config
     @classmethod

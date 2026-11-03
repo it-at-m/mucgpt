@@ -7,6 +7,37 @@ from pydantic import BaseModel, ConfigDict, Field, PositiveInt, field_validator
 from config.settings import ReasoningEffort
 
 
+class DocumentMetadata(BaseModel):
+    """Ready document metadata; excludes extracted bodies and storage ownership."""
+
+    id: str = Field(description="Server-generated document UUID.")
+    filename: str = Field(description="Original filename, for display only.")
+    mime_type: str = Field(description="Upload MIME type; not verified format support.")
+    original_size: int = Field(ge=0, description="Original upload size in bytes.")
+    text_length: int = Field(
+        ge=0, description="Extracted text length in Unicode characters."
+    )
+    preview: str = Field(description="Bounded initial excerpt, not the complete text.")
+    preview_kind: Literal["initial_excerpt"]
+    path: str = Field(description="Stable model-visible document path.")
+    created_at: datetime
+
+
+class DocumentLibraryEntry(BaseModel):
+    """Library metadata, including entries that still occupy a quota slot."""
+
+    id: str
+    filename: str
+    mime_type: str
+    original_size: int = Field(ge=0)
+    status: Literal["processing", "ready", "deleting"]
+    text_length: int | None = Field(default=None, ge=0)
+    preview: str | None = None
+    preview_kind: Literal["initial_excerpt"] | None = None
+    path: str
+    created_at: datetime
+
+
 class SummarizeResult(BaseModel):
     """Result model for the summarize endpoint."""
 
@@ -145,6 +176,13 @@ class ChatCompletionRequest(BaseModel):
     data_sources: list[ChatDataSource] | None = Field(
         None,
         description="Structured document payload with title, content and metadata",
+    )
+    document_ids: list[str] = Field(
+        default_factory=list,
+        description=(
+            "IDs of library documents to attach for this turn, authorized server-side. "
+            "Omitted or empty IDs mean no attachments."
+        ),
     )
     model_config = ConfigDict(
         json_schema_extra={
@@ -510,6 +548,14 @@ class ConversationMetadata(BaseModel):
     updated_at: datetime = Field(
         ...,
         description="Last activity on the conversation (new message or title change).",
+    )
+    document_ids: list[str] = Field(
+        default_factory=list,
+        description="Saved document selection, including IDs that may no longer be available.",
+    )
+    document_names: dict[str, str] = Field(
+        default_factory=dict,
+        description="Original filenames of selected documents, retained after deletion.",
     )
 
     @field_validator("title", mode="before")

@@ -42,7 +42,8 @@ import {
 import { useDuplicateAssistant } from "../discovery/hooks/useDuplicateAssistant";
 import { useMigrateLocalAssistant } from "../../hooks/useMigrateLocalAssistant";
 import { CloseConfirmationDialog } from "../../components/AssistantDialogs/shared/CloseConfirmationDialog";
-import { UploadedData } from "../../components/ContextManagerDialog/ContextManagerDialog";
+import { UploadedData, getSelectedDocumentIds } from "../../components/ContextManagerDialog/ContextManagerDialog";
+import { restoreDocumentSelection } from "../../components/ContextManagerDialog/DocumentLibrary";
 import { useConfigContext } from "../../context/ConfigContext";
 import { useToolStatusToasts } from "../../hooks/useToolStatusToasts";
 import styles from "./UnifiedAssistantChat.module.css";
@@ -237,6 +238,8 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
     const resetActiveChatState = useCallback(() => {
         setLastQuestionValue("");
         setError(undefined);
+        // A new or reset chat must not inherit the previous chat's documents.
+        setUploadedData([]);
         activeChatRef.current = undefined;
         dispatch({ type: "SET_ACTIVE_CHAT", payload: undefined });
         dispatch({ type: "CLEAR_ANSWERS" });
@@ -462,7 +465,8 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
             const askResponse: AskResponse = {} as AskResponse;
             const options: ChatOptions = {
                 system: systemOverride ?? systemPrompt ?? "",
-                creativity: creativity
+                creativity: creativity,
+                document_ids: getSelectedDocumentIds(uploadedData)
             };
             try {
                 await makeApiRequest(
@@ -509,7 +513,8 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
             setLastQuestionValue,
             isLegacyAssistant,
             isAssistantUnavailable,
-            agUiEnabled
+            agUiEnabled,
+            uploadedData
         ]
     );
 
@@ -535,11 +540,13 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
             if (!chat) {
                 return false;
             }
+            const selection = await restoreDocumentSelection(chat.documentIds ?? [], chat.documentNames);
 
             setError(undefined);
             dispatch({ type: "SET_ANSWERS", payload: chat.messages });
             setLastQuestionValue(chat.messages.length > 0 ? chat.messages[chat.messages.length - 1].user : "");
             dispatch({ type: "SET_ACTIVE_CHAT", payload: id });
+            setUploadedData(selection);
 
             setTimeout(() => {
                 scrollToBottom();

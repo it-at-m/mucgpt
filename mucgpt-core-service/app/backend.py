@@ -8,6 +8,7 @@ from fastapi.responses import JSONResponse
 from api.routers import (
     chat_router,
     compliance_router,
+    document_router,
     generation_router,
     parsing_router,
     system_router,
@@ -63,6 +64,10 @@ api_app = FastAPI(
             "description": "Operations for parsing uploaded files into text",
         },
         {
+            "name": "Documents",
+            "description": "Persistent extracted-text document library",
+        },
+        {
             "name": "Compliance",
             "description": "EU AI Act high-risk screening for assistant prompts",
         },
@@ -79,6 +84,7 @@ api_app.include_router(generation_router.router, prefix="", tags=["Generations"]
 api_app.include_router(system_router.router, prefix="", tags=["System"])
 api_app.include_router(tools_router.router, prefix="", tags=["Tools"])
 api_app.include_router(parsing_router.router, prefix="", tags=["Parsing"])
+api_app.include_router(document_router.router)
 
 
 @api_app.exception_handler(AuthError)

@@ -48,6 +48,14 @@ DB:
   USER: "admin"
   PASSWORD: "admin"
 
+# Document-library ingestion bounds (MUCGPT_CORE_DOCUMENTS__MAX_UPLOAD_BYTES, etc.).
+# Accepted extracted text is retained verbatim; original binaries are not stored.
+DOCUMENTS:
+  MAX_UPLOAD_BYTES: 104857600
+  MAX_TEXT_BYTES: 5242880
+  PREVIEW_TOKENS: 250
+  PREVIEW_MAX_CHARS: 1000
+
 # Compliance cache settings
 # If enabled, compliance check results are cached in Redis and can be verified by the assistant service.
 COMPLIANCE_CACHE_ENABLED: true

@@ -40,6 +40,25 @@ export type DataSource = {
     metadata?: Record<string, string | number | boolean | null | undefined>;
 };
 
+export type DocumentMetadata = {
+    id: string;
+    filename: string;
+    mime_type: string;
+    original_size: number;
+    text_length: number;
+    preview: string;
+    preview_kind: string;
+    path: string;
+    created_at: string;
+};
+
+export type DocumentLibraryEntry = Omit<DocumentMetadata, "text_length" | "preview" | "preview_kind"> & {
+    text_length: number | null;
+    preview: string | null;
+    preview_kind: string | null;
+    status: "processing" | "ready" | "deleting";
+};
+
 export type ChatRequest = {
     history: ChatTurn[];
     creativity?: string;
@@ -54,6 +73,7 @@ export type ChatRequest = {
     /** False runs a stateless chat that is not stored server-side (e.g. assistant previews). */
     persist?: boolean;
     data_sources?: DataSource[];
+    document_ids?: string[];
 };
 
 export type AssistantDraftRequest = {

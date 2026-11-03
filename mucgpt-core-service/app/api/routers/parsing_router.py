@@ -39,7 +39,7 @@ async def parse_file(file: UploadFile, user_info=Depends(authenticate_user)) -> 
         )
     logger.info(f"Parsing file '{file.filename}' ({file.size} bytes)")
     try:
-        content = await _parser.parse(file)
+        content = await _parser.parse(file) # type: ignore
     except httpx.TimeoutException as exc:
         logger.error(
             f"Timeout while parsing file '{file.filename}': {exc}",

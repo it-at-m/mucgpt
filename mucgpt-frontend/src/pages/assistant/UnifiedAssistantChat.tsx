@@ -538,7 +538,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
             if (!chat) {
                 return false;
             }
-            const selection = await restoreDocumentSelection(chat.documentIds ?? []);
+            const selection = await restoreDocumentSelection(chat.documentIds ?? [], chat.documentNames);
 
             setError(undefined);
             dispatch({ type: "SET_ANSWERS", payload: chat.messages });

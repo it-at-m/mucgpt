@@ -222,7 +222,7 @@ const Chat = () => {
                 setError(undefined);
                 const chat = await loadConversation(storageService, id, id, { system: "", creativity: CREATIVITY_LOW });
                 if (chat) {
-                    const selection = await restoreDocumentSelection(chat.documentIds ?? []);
+                    const selection = await restoreDocumentSelection(chat.documentIds ?? [], chat.documentNames);
                     dispatch({ type: "SET_ANSWERS", payload: chat.messages });
                     dispatch({ type: "SET_CREATIVITY", payload: chat.config.creativity });
                     dispatch({ type: "SET_SYSTEM_PROMPT", payload: chat.config.system });

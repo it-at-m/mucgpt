@@ -200,11 +200,13 @@ describe("conversation history", () => {
                 title: "Chat",
                 created_at: "2026-10-20T10:00:00Z",
                 updated_at: "2026-10-20T10:00:00Z",
-                document_ids: ["ready", "deleted"]
+                document_ids: ["ready", "deleted"],
+                document_names: { ready: "Current.pdf", deleted: "Deleted policy.pdf" }
             }
         ]);
         const chat = await loadConversation(new StorageService<ChatResponse, object>(CHAT_STORE), "thread", "thread", {});
         expect(chat.documentIds).toEqual(["ready", "deleted"]);
+        expect(chat.documentNames).toEqual({ ready: "Current.pdf", deleted: "Deleted policy.pdf" });
         expect(put).toHaveBeenCalledWith(CHAT_STORE.objectStore_name, expect.objectContaining({ documentIds: ["ready", "deleted"] }));
     });
 

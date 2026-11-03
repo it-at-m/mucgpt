@@ -13,7 +13,7 @@ from api.api_models import ChatCompletionMessage, ChatCompletionRequest
 from api.routers import chat_router
 from core.auth_models import AuthenticationResult
 from core.persistance_helpers import PersistanceHelpers
-from database.database_models import Chat
+from database.database_models import Chat, Document
 
 
 @pytest.fixture
@@ -68,7 +68,9 @@ def request(conversation_id="owned", *, persist=True, ids=()):
 async def test_both_protocols_save_validated_selection_and_explicit_empty(
     catalog, monkeypatch, protocol, ids
 ):
-    selection = [SimpleNamespace(id=document_id) for document_id in ids]
+    selection = [
+        SimpleNamespace(id=document_id, filename="Policy.pdf") for document_id in ids
+    ]
     monkeypatch.setattr(chat_router.ModelRegistry, "get_model", Mock())
     monkeypatch.setattr(
         chat_router, "get_documents_for_agent", AsyncMock(return_value=selection)
@@ -104,6 +106,9 @@ async def test_both_protocols_save_validated_selection_and_explicit_empty(
         == ids
     )
     with Session(catalog) as session:
+        assert session.get(Chat, "owned").document_names == {
+            document_id: "Policy.pdf" for document_id in ids
+        }
         assert session.get(Chat, "foreign").document_ids == ["previous"]
 
 
@@ -127,3 +132,36 @@ async def test_stateless_request_does_not_change_saved_selection(catalog):
     await chat_router._save_document_selection(request(persist=False), "owner", [])
     with Session(catalog) as session:
         assert session.get(Chat, "owned").document_ids == ["previous"]
+
+
+@pytest.mark.asyncio
+async def test_deleted_document_keeps_filename_until_detached(catalog):
+    Document.__table__.create(catalog)
+    document_id = str(uuid4())
+    with Session(catalog) as session:
+        session.add(
+            Document(
+                id=document_id,
+                user_id="owner",
+                slot=0,
+                filename="Policy.pdf",
+                mime_type="application/pdf",
+                original_size=5,
+                storage_key=f"/{document_id}.txt",
+                status="processing",
+            )
+        )
+        session.commit()
+    await chat_router._save_document_selection(
+        request(), "owner", [document_id], {document_id: "Policy.pdf"}
+    )
+    with Session(catalog) as session:
+        session.delete(session.get(Document, document_id))
+        session.commit()
+    metadata = await PersistanceHelpers.get_conversations_for_user("owner")
+    owned = next(row for row in metadata if row["conversation_id"] == "owned")
+    assert owned["document_ids"] == [document_id]
+    assert owned["document_names"] == {document_id: "Policy.pdf"}
+    await chat_router._save_document_selection(request(), "owner", [])
+    with Session(catalog) as session:
+        assert session.get(Chat, "owned").document_names == {}

@@ -553,6 +553,10 @@ class ConversationMetadata(BaseModel):
         default_factory=list,
         description="Saved document selection, including IDs that may no longer be available.",
     )
+    document_names: dict[str, str] = Field(
+        default_factory=dict,
+        description="Original filenames of selected documents, retained after deletion.",
+    )
 
     @field_validator("title", mode="before")
     @staticmethod

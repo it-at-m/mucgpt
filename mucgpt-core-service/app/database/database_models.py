@@ -30,6 +30,9 @@ class Chat(Base):
     document_ids: Mapped[list[str]] = mapped_column(
         JSON, nullable=False, default=list, server_default="[]"
     )
+    document_names: Mapped[dict[str, str]] = mapped_column(
+        JSON, nullable=False, default=dict, server_default="{}"
+    )
     chat_title: Mapped[str] = mapped_column(
         String, nullable=False, server_default="New Chat"
     )

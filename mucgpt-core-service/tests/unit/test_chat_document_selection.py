@@ -110,7 +110,7 @@ async def test_endpoints_resolve_before_persistence_and_pass_authorized_selectio
     monkeypatch, user_info, endpoint, persist, rejected
 ):
     request = completion_request(document_ids=["requested-id"], persist=persist)
-    documents = [SimpleNamespace(id="authorized-id")]
+    documents = [SimpleNamespace(id="authorized-id", filename="attachment.pdf")]
     calls = []
 
     async def resolve(*args):
@@ -149,7 +149,12 @@ async def test_endpoints_resolve_before_persistence_and_pass_authorized_selectio
     else:
         await result
         assert calls == ["selection", "persistence"]
-        save.assert_awaited_once_with(request, user_info.user_id, ["authorized-id"])
+        save.assert_awaited_once_with(
+            request,
+            user_info.user_id,
+            ["authorized-id"],
+            {"authorized-id": "attachment.pdf"},
+        )
         init.assert_awaited_once_with(
             user_info=user_info,
             model_name=request.model,

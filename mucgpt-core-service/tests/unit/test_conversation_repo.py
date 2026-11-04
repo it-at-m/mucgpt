@@ -102,23 +102,26 @@ async def test_manual_rename_only_updates_live_owned_rows(
 
 @pytest.mark.unit
 @pytest.mark.asyncio
-@pytest.mark.parametrize("updated_id", ["conversation", None])
+@pytest.mark.parametrize(
+    "assistant_id, expected_sql_value",
+    [("assistant-456", "assistant_id='assistant-456'"), (None, "assistant_id=NULL")],
+)
 async def test_assistant_rebind_only_updates_live_owned_rows(
-    updated_id: str | None,
+    assistant_id: str | None, expected_sql_value: str
 ) -> None:
     session = AsyncMock()
     session.execute.return_value = Mock(
-        scalar_one_or_none=Mock(return_value=updated_id)
+        scalar_one_or_none=Mock(return_value="conversation")
     )
     repository = ConversationRepository(session)
 
     assert await repository.set_conversation_assistant(
-        "conversation", "owner", "assistant-456"
-    ) is (updated_id is not None)
+        "conversation", "owner", assistant_id
+    )
 
     sql = _compiled(session.execute.await_args.args[0])
     assert sql.startswith("UPDATE chats SET")
-    assert "assistant_id='assistant-456'" in sql
+    assert expected_sql_value in sql
     assert "updated_at=now()" in sql
     assert "chats.conversation_id = 'conversation'" in sql
     assert "chats.user_id = 'owner'" in sql

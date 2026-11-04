@@ -172,3 +172,76 @@ describe("assistant chat transfer", () => {
         expect(StorageService.prototype.delete).not.toHaveBeenCalled();
     });
 });
+
+describe("assistant chat conversion to normal chats", () => {
+    const service = new AssistantStorageService(ASSISTANT_STORE);
+    const assistantId = "local_assistant";
+    const chatId = "CHAT_local_assistant_thread";
+    const fetchMock = vi.fn<typeof fetch>();
+    const chatRecord = (id: string, backendPersisted?: boolean, config?: object) => ({
+        id,
+        config: config ?? {},
+        messages: [],
+        name: "Mein Chat",
+        backendPersisted
+    });
+
+    beforeEach(() => {
+        vi.restoreAllMocks();
+        vi.stubGlobal("fetch", fetchMock);
+        vi.stubGlobal("document", { cookie: "" });
+        fetchMock.mockReset();
+        fetchMock.mockResolvedValue(new Response(null, { status: 204 }));
+        vi.spyOn(StorageService.prototype, "getAll").mockResolvedValue([chatRecord(chatId, true, { system_message: "Alter Prompt", creativity: "high" })]);
+        vi.spyOn(StorageService.prototype, "delete").mockResolvedValue(true);
+        vi.spyOn(StorageService.prototype, "connectToDB").mockResolvedValue({
+            put: vi.fn().mockResolvedValue(undefined),
+            close: vi.fn().mockResolvedValue(undefined)
+        } as never);
+    });
+
+    afterEach(() => vi.unstubAllGlobals());
+
+    it("detaches persisted chats on the server and re-keys them as normal chats with a mapped config", async () => {
+        await service.convertChatsToNormalChats(assistantId);
+
+        expect(fetchMock).toHaveBeenCalledExactlyOnceWith(
+            "/api/backend/v1/conversations/thread/assistant",
+            expect.objectContaining({ method: "PATCH", body: JSON.stringify({ assistant_id: null }) })
+        );
+        const db = await StorageService.prototype.connectToDB();
+        expect(db.put).toHaveBeenCalledWith(
+            "chat",
+            expect.objectContaining({
+                id: "thread",
+                name: "Mein Chat",
+                config: { system: "Alter Prompt", creativity: "high" }
+            })
+        );
+        expect(StorageService.prototype.delete).toHaveBeenCalledWith(chatId);
+    });
+
+    it("maps a legacy system config and skips the server detach for browser-only chats", async () => {
+        vi.mocked(StorageService.prototype.getAll).mockResolvedValue([chatRecord(chatId, undefined, { system: "Legacy Prompt" })]);
+        await service.convertChatsToNormalChats(assistantId);
+
+        expect(fetchMock).not.toHaveBeenCalled();
+        const db = await StorageService.prototype.connectToDB();
+        expect(db.put).toHaveBeenCalledWith("chat", expect.objectContaining({ id: "thread", config: { system: "Legacy Prompt", creativity: "low" } }));
+    });
+
+    it("tolerates a missing server row (404) but propagates other detach failures without converting", async () => {
+        fetchMock.mockResolvedValueOnce(new Response(null, { status: 404 }));
+        await service.convertChatsToNormalChats(assistantId);
+        expect(StorageService.prototype.delete).toHaveBeenCalledWith(chatId);
+
+        fetchMock.mockReset();
+        fetchMock.mockResolvedValue(new Response(null, { status: 500 }));
+        vi.mocked(StorageService.prototype.delete).mockClear();
+        const db = await StorageService.prototype.connectToDB();
+        vi.mocked(db.put).mockClear();
+        await expect(service.convertChatsToNormalChats(assistantId)).rejects.toMatchObject({ status: 500 });
+        expect(db.put).not.toHaveBeenCalled();
+        expect(StorageService.prototype.delete).not.toHaveBeenCalled();
+    });
+});

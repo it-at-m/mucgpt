@@ -440,7 +440,8 @@ const Discovery = () => {
         if (!selectedAssistant) return;
         try {
             if (selectedAssistant.isLocalAssistant) {
-                // Chats are kept so their history stays reachable; only the local configuration goes away.
+                // Chats are converted into normal chats so the history survives the deletion.
+                await assistantStorageService.convertChatsToNormalChats(selectedAssistant.id);
                 await assistantStorageService.deleteConfigForAssistant(selectedAssistant.id);
             } else if (selectedAssistant.isDeletedSnapshot) {
                 await assistantStorageService.deleteChatsForAssistant(selectedAssistant.id);
@@ -832,7 +833,11 @@ const Discovery = () => {
                 onOpenChange={setShowDeleteConfirm}
                 onConfirmClose={performDelete}
                 title={t("components.assistantsettingsdrawer.deleteDialog.title")}
-                message={t("components.assistantsettingsdrawer.deleteDialog.content")}
+                message={t(
+                    selectedAssistant?.isLocalAssistant
+                        ? "components.community_assistants.local_delete_confirm_message"
+                        : "components.assistantsettingsdrawer.deleteDialog.content"
+                )}
                 confirmLabel={t("components.assistantsettingsdrawer.deleteDialog.confirm")}
             />
             <CloseConfirmationDialog

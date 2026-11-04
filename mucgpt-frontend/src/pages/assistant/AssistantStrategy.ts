@@ -41,8 +41,9 @@ export class LocalAssistantStrategy implements AssistantStrategy {
     }
 
     async deleteAssistant(assistantId: string, assistantStorageService: AssistantStorageService): Promise<void> {
-        // Chats are kept so their history stays viewable and can be attached to
-        // another assistant later; only the local configuration is removed.
+        // The chats are kept: they are converted into normal assistant-less chats so
+        // the conversation history (and its last system prompt) survives the deletion.
+        await assistantStorageService.convertChatsToNormalChats(assistantId);
         await assistantStorageService.deleteConfigForAssistant(assistantId);
     }
 

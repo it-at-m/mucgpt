@@ -23,16 +23,26 @@ describe("assistant deletion strategies", () => {
         vi.spyOn(storage, "deleteChatsForAssistant").mockResolvedValue();
         vi.spyOn(storage, "deleteConfigForAssistant").mockResolvedValue();
         vi.spyOn(storage, "deleteConfigAndChatsForAssistant").mockResolvedValue();
+        vi.spyOn(storage, "convertChatsToNormalChats").mockResolvedValue();
         vi.spyOn(CommunityAssistantStorageService.prototype, "deleteConfigForAssistant").mockResolvedValue();
         vi.mocked(deleteCommunityAssistantApi).mockResolvedValue({ message: "deleted" });
         vi.mocked(unsubscribeFromAssistantApi).mockResolvedValue({ message: "unsubscribed" });
     });
 
-    it("local strategy removes only the configuration and keeps chats, propagating failure", async () => {
-        const failure = new Error("config deletion failed");
-        vi.mocked(storage.deleteConfigForAssistant).mockRejectedValue(failure);
-        await expect(new LocalAssistantStrategy().deleteAssistant("assistant", storage)).rejects.toBe(failure);
+    it("local strategy converts its chats to normal chats before removing the configuration", async () => {
+        await new LocalAssistantStrategy().deleteAssistant("assistant", storage);
+        expect(storage.convertChatsToNormalChats).toHaveBeenCalledWith("assistant");
+        expect(vi.mocked(storage.convertChatsToNormalChats).mock.invocationCallOrder[0]).toBeLessThan(
+            vi.mocked(storage.deleteConfigForAssistant).mock.invocationCallOrder[0]
+        );
         expect(storage.deleteChatsForAssistant).not.toHaveBeenCalled();
+    });
+
+    it("local strategy retains the configuration when the conversion fails", async () => {
+        const failure = new Error("conversion failed");
+        vi.mocked(storage.convertChatsToNormalChats).mockRejectedValue(failure);
+        await expect(new LocalAssistantStrategy().deleteAssistant("assistant", storage)).rejects.toBe(failure);
+        expect(storage.deleteConfigForAssistant).not.toHaveBeenCalled();
     });
 
     it("subscribed strategy only unsubscribes and retains chats and snapshot", async () => {

@@ -1,6 +1,7 @@
 import { StorageService, DBMessage } from "./storage";
 import { Assistant, ChatResponse, deleteConversationApi } from "../api";
 import { rebindConversationAssistantApi } from "../api/conversations-client";
+import { CHAT_STORE, CREATIVITY_LOW } from "../constants";
 import { v4 as uuid } from "uuid";
 import { IndexedDBStorage } from "./indexedDBStorage";
 
@@ -206,6 +207,39 @@ export class AssistantStorageService {
         }
         for (const sourceId of sourceIds) {
             await this.storageService.delete(sourceId);
+        }
+    }
+
+    /**
+     * Converts all chats of an assistant into normal assistant-less chats so they
+     * survive the assistant's deletion: messages, title, and favourites are kept and
+     * the last-used system prompt and creativity become the normal chat's editable
+     * per-chat settings. Persisted conversations are detached from the assistant on
+     * the server first; browser-only chats have no server row, so an ignored 404 is
+     * expected.
+     */
+    async convertChatsToNormalChats(assistant_id: string): Promise<void> {
+        const chats = await this.getAllChatForAssistant(assistant_id);
+        const sourcePrefix = AssistantStorageService.GENERATE_BOT_CHAT_PREFIX(assistant_id);
+        const normalStorage = new StorageService<ChatResponse, { system: string; creativity: string }>(CHAT_STORE);
+        const normalDb = await normalStorage.connectToDB();
+        for (const chat of chats) {
+            if (!chat.id) continue;
+            const chatUuid = chat.id.replace(sourcePrefix, "");
+            const legacyConfig = chat.config as (Partial<Assistant> & { system?: string }) | undefined;
+            const normalChat = {
+                ...chat,
+                id: chatUuid,
+                config: {
+                    system: legacyConfig?.system_message ?? legacyConfig?.system ?? "",
+                    creativity: legacyConfig?.creativity ?? CREATIVITY_LOW
+                }
+            };
+            if (chat.backendPersisted) {
+                await rebindConversationAssistantApi(chatUuid, null);
+            }
+            await normalDb.put(CHAT_STORE.objectStore_name, normalChat);
+            await this.storageService.delete(chat.id);
         }
     }
 }

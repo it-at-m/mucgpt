@@ -56,8 +56,8 @@ export function renameConversationApi(conversationId: string, title: string): Pr
     );
 }
 
-/** Re-bind a persisted conversation to another assistant; never creates or revives conversations. */
-export async function rebindConversationAssistantApi(conversationId: string, assistantId: string): Promise<void> {
+/** Re-bind a persisted conversation to another assistant; null detaches it (plain chat). Never creates or revives conversations. */
+export async function rebindConversationAssistantApi(conversationId: string, assistantId: string | null): Promise<void> {
     const response = await fetch(
         API_BASE + "v1/conversations/" + encodeURIComponent(conversationId) + "/assistant",
         patchConfig({ assistant_id: assistantId })

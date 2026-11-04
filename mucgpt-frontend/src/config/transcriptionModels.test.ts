@@ -12,6 +12,11 @@ describe("TRANSCRIPTION_MODELS", () => {
         expect(TRANSCRIPTION_MODELS.map(m => m.model_id)).toContain(FALLBACK_TRANSCRIPTION_MODEL);
     });
 
+    it("the built-in fallback runs on WASM in every browser (no WebGPU required)", () => {
+        expect(FALLBACK_TRANSCRIPTION_MODEL).toBe("istupakov/canary-180m-flash-onnx");
+        expect(findTranscriptionModel(FALLBACK_TRANSCRIPTION_MODEL)?.webgpu_only).toBeUndefined();
+    });
+
     it("labels and size hints are set for every model", () => {
         for (const model of TRANSCRIPTION_MODELS) {
             expect(model.label.trim().length).toBeGreaterThan(0);

@@ -100,10 +100,10 @@ Or via environment variable: `MUCGPT_CORE_TRANSCRIPTION_ENABLED=true`
 Then choose the single model every user gets:
 
 ```yaml
-TRANSCRIPTION_MODEL: "onnx-community/whisper-small" # Default is "onnx-community/whisper-small"
+TRANSCRIPTION_MODEL: "istupakov/canary-180m-flash-onnx" # Default is "istupakov/canary-180m-flash-onnx"
 ```
 
-The id must match an entry of the frontend's model list (`mucgpt-frontend/src/config/transcriptionModels.ts`); unknown ids disable transcription in the frontend (console warning) instead of silently running a different model. When `TRANSCRIPTION_ENABLED` is turned on without specifying a model, the frontend default ("onnx-community/whisper-small") applies.
+The id must match an entry of the frontend's model list (`mucgpt-frontend/src/config/transcriptionModels.ts`); unknown ids disable transcription in the frontend (console warning) instead of silently running a different model. When `TRANSCRIPTION_ENABLED` is turned on without specifying a model, the frontend default ("istupakov/canary-180m-flash-onnx") applies.
 
 Notes for operators:
 

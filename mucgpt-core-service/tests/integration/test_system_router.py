@@ -146,9 +146,9 @@ def test_transcription_model_reflects_settings(test_client: TestClient):
 
 @pytest.mark.integration
 def test_transcription_model_has_default(test_client: TestClient):
-    """transcription_model falls back to Whisper Small when the setting is unset."""
+    """transcription_model falls back to the CANARY WASM model when the setting is unset."""
     mock_settings = Settings()
     with patch("api.routers.system_router.settings", mock_settings):
         response = test_client.get("/config", headers=headers)
     assert response.status_code == 200
-    assert response.json()["transcription_model"] == "onnx-community/whisper-small"
+    assert response.json()["transcription_model"] == "istupakov/canary-180m-flash-onnx"

@@ -584,7 +584,7 @@ class ConfigResponse(BaseModel):
         description="Whether browser-based audio transcription is enabled in the frontend. Transcription itself runs fully client-side; no audio is sent to the backend.",
     )
     transcription_model: str = Field(
-        "onnx-community/whisper-small",
+        "istupakov/canary-180m-flash-onnx",
         description="The single browser-based transcription model used by all users. The id must match an entry of the frontend's transcription model list; unknown ids disable transcription in the frontend.",
     )
     ai_act_compliance_check_enabled: bool = Field(

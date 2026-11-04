@@ -140,7 +140,7 @@ const CONFIG_RESPONSE: ApplicationConfig = {
     assistant_version: "0.0.1",
     document_processing_enabled: true,
     transcription_enabled: true,
-    transcription_model: "onnx-community/whisper-small",
+    transcription_model: "istupakov/canary-180m-flash-onnx",
     ai_act_compliance_check_enabled: true,
     ag_ui_enabled: true,
     footer_link_url: "https://intranet.example.org",

@@ -583,9 +583,9 @@ class ConfigResponse(BaseModel):
         False,
         description="Whether browser-based audio transcription is enabled in the frontend. Transcription itself runs fully client-side; no audio is sent to the backend.",
     )
-    transcription_model: str = Field(
-        "istupakov/canary-180m-flash-onnx",
-        description="The single browser-based transcription model used by all users. The id must match an entry of the frontend's transcription model list; unknown ids disable transcription in the frontend.",
+    transcription_model: str | None = Field(
+        None,
+        description="The single browser-based transcription model used by all users. The id must match an entry of the frontend's transcription model list; unset or unknown ids disable transcription in the frontend. There is no default — core and frontend are updated in sync.",
     )
     ai_act_compliance_check_enabled: bool = Field(
         True,

@@ -113,13 +113,8 @@ export const TRANSCRIPTION_MODELS: TranscriptionModel[] = [
 ];
 
 /**
- * Model used when the deployment does not announce one (e.g. an older core without the
- * field). Deliberately the NVIDIA Canary Flash export: it runs entirely on WASM, so it
- * works in every browser regardless of WebGPU support.
+ * Looks up the loaded transcription configuration for a configured model id.
  */
-export const FALLBACK_TRANSCRIPTION_MODEL = "istupakov/canary-180m-flash-onnx";
-
-/** Looks up the loaded transcription configuration for a configured model id. */
 export function findTranscriptionModel(modelId: string): TranscriptionModel | undefined {
     return TRANSCRIPTION_MODELS.find(m => m.model_id === modelId);
 }

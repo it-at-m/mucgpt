@@ -1,6 +1,6 @@
 import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { FALLBACK_TRANSCRIPTION_MODEL, findTranscriptionModel, type TranscriptionModel } from "../../config/transcriptionModels";
+import { findTranscriptionModel, type TranscriptionModel } from "../../config/transcriptionModels";
 import { localeToWhisperLang } from "../../config/transcriptionLanguages";
 import { clearModelVerification, deleteModelFromCache, hasModelFiles, isModelDownloaded, markModelVerified } from "../../utils/transcriptionModelCache";
 import { supportsWebGPU } from "../../utils/webgpuSupport";
@@ -90,13 +90,11 @@ interface TranscriptionProviderProps {
 export const TranscriptionProvider = ({ children, transcriptionEnabled, transcriptionModelId }: React.PropsWithChildren<TranscriptionProviderProps>) => {
     const { t, i18n } = useTranslation();
 
-    // Registry lookup: null/undefined falls back to the built-in default (older cores),
-    // an unknown id disables the feature instead of silently running another model.
+    // Registry lookup: an unset id (null) keeps the feature disabled without a
+    // fallback — core and frontend are updated in sync. An unknown id disables
+    // the feature with a warning instead of silently running another model.
     const model = useMemo<TranscriptionModel | null>(() => {
-        if (transcriptionModelId === undefined || transcriptionModelId === null) {
-            const fallback = findTranscriptionModel(FALLBACK_TRANSCRIPTION_MODEL);
-            return fallback ?? null;
-        }
+        if (transcriptionModelId === undefined || transcriptionModelId === null) return null;
         const found = findTranscriptionModel(transcriptionModelId);
         if (!found)
             console.warn(

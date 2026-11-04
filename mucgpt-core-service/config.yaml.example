@@ -21,8 +21,9 @@ ALTERNATIVE_LOGO: false
 # client-side (models are downloaded and cached by the browser; no audio reaches the backend).
 TRANSCRIPTION_ENABLED: false
 # The single model id used for transcription by every user (must match an
-# entry of the frontend's TRANSCRIPTION_MODELS list, e.g. "istupakov/canary-180m-flash-onnx",
-# the WASM default). Unknown ids disable transcription in the frontend.
+# entry of the frontend's TRANSCRIPTION_MODELS list). There is no default —
+# the feature stays disabled while this is unset. Recommended (runs entirely
+# on WASM, no WebGPU needed): "istupakov/canary-180m-flash-onnx".
 TRANSCRIPTION_MODEL: "istupakov/canary-180m-flash-onnx"
 AI_ACT_COMPLIANCE_CHECK_ENABLED: true
 FRONTEND_VERSION: "unknown"

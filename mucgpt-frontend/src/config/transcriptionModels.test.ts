@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { FALLBACK_TRANSCRIPTION_MODEL, TRANSCRIPTION_MODELS, findTranscriptionModel } from "./transcriptionModels";
+import { TRANSCRIPTION_MODELS, findTranscriptionModel } from "./transcriptionModels";
 
 describe("TRANSCRIPTION_MODELS", () => {
     it("contains unique model ids", () => {
@@ -7,14 +7,8 @@ describe("TRANSCRIPTION_MODELS", () => {
         expect(new Set(ids).size).toBe(ids.length);
     });
 
-    it("has a non-empty list with the fallback present", () => {
+    it("has a non-empty registry", () => {
         expect(TRANSCRIPTION_MODELS.length).toBeGreaterThan(0);
-        expect(TRANSCRIPTION_MODELS.map(m => m.model_id)).toContain(FALLBACK_TRANSCRIPTION_MODEL);
-    });
-
-    it("the built-in fallback runs on WASM in every browser (no WebGPU required)", () => {
-        expect(FALLBACK_TRANSCRIPTION_MODEL).toBe("istupakov/canary-180m-flash-onnx");
-        expect(findTranscriptionModel(FALLBACK_TRANSCRIPTION_MODEL)?.webgpu_only).toBeUndefined();
     });
 
     it("labels and size hints are set for every model", () => {
@@ -24,11 +18,11 @@ describe("TRANSCRIPTION_MODELS", () => {
         }
     });
 
-    it("webgpu_only models are marked explicitly and not the fallback", () => {
+    it("webgpu_only models are marked explicitly and none is the recommended WASM default", () => {
         const webgpuOnly = TRANSCRIPTION_MODELS.filter(m => m.webgpu_only);
         expect(webgpuOnly.length).toBeGreaterThan(0);
         for (const model of webgpuOnly) {
-            expect(model.model_id).not.toBe(FALLBACK_TRANSCRIPTION_MODEL);
+            expect(model.model_id).not.toBe("istupakov/canary-180m-flash-onnx");
         }
     });
 
@@ -70,10 +64,6 @@ describe("findTranscriptionModel", () => {
         const model = findTranscriptionModel("istupakov/canary-180m-flash-onnx");
         expect(model?.model_id).toBe("istupakov/canary-180m-flash-onnx");
         expect(model?.label).toBe("NVIDIA Canary 180M Flash");
-    });
-
-    it("resolves the fallback id", () => {
-        expect(findTranscriptionModel(FALLBACK_TRANSCRIPTION_MODEL)).toBeDefined();
     });
 
     it("returns undefined for unknown ids (including prefix collisions)", () => {

@@ -125,6 +125,17 @@ afterEach(() => {
 });
 
 describe("TranscriptionProvider", () => {
+    it("disables transcription silently when no model is configured (null)", async () => {
+        const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+
+        renderProvider(null);
+
+        await waitFor(() => expect(holder.last?.enabled).toBe(false));
+        expect(holder.last?.model).toBeNull();
+        await waitFor(() => expect(FakeWorker.instances).toHaveLength(0));
+        expect(warnSpy).not.toHaveBeenCalled();
+    });
+
     it("disables transcription with a warning for an unknown configured model id", async () => {
         const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => undefined);
 

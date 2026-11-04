@@ -1,5 +1,4 @@
 import { ApplicationConfig } from "./api";
-import { FALLBACK_TRANSCRIPTION_MODEL } from "./config/transcriptionModels";
 import { IndexedDBStorage } from "./service/indexedDBStorage";
 
 //APP Config
@@ -41,7 +40,7 @@ export const DEFAULT_APP_CONFIG: ApplicationConfig = {
     assistant_version: "DEV 1.0.0",
     document_processing_enabled: false,
     transcription_enabled: false,
-    transcription_model: FALLBACK_TRANSCRIPTION_MODEL,
+    transcription_model: null,
     ai_act_compliance_check_enabled: true,
     ag_ui_enabled: false,
     faq_url: "https://ki.muenchen.de",

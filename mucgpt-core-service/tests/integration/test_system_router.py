@@ -1,3 +1,4 @@
+import logging
 from unittest.mock import patch
 
 import pytest
@@ -145,10 +146,24 @@ def test_transcription_model_reflects_settings(test_client: TestClient):
 
 
 @pytest.mark.integration
-def test_transcription_model_has_default(test_client: TestClient):
-    """transcription_model falls back to the CANARY WASM model when the setting is unset."""
+def test_transcription_model_unset_by_default(test_client: TestClient):
+    """transcription_model is None by default — there is no backend or frontend fallback."""
     mock_settings = Settings()
     with patch("api.routers.system_router.settings", mock_settings):
         response = test_client.get("/config", headers=headers)
     assert response.status_code == 200
-    assert response.json()["transcription_model"] == "istupakov/canary-180m-flash-onnx"
+    assert response.json()["transcription_model"] is None
+
+
+@pytest.mark.integration
+def test_enabled_transcription_without_model_stays_disabled_with_warning(test_client, caplog):
+    """TRANSCRIPTION_ENABLED=true without TRANSCRIPTION_MODEL warns and reports the disabled feature."""
+    mock_settings = Settings(TRANSCRIPTION_ENABLED=True)
+    with patch("api.routers.system_router.settings", mock_settings):
+        with caplog.at_level(logging.WARNING, logger="api.routers.system_router"):
+            response = test_client.get("/config", headers=headers)
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["transcription_enabled"] is True
+    assert payload["transcription_model"] is None
+    assert any("TRANSCRIPTION_MODEL is not set" in record.message for record in caplog.records)

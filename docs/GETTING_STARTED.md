@@ -97,13 +97,13 @@ TRANSCRIPTION_ENABLED: true # Default is false
 
 Or via environment variable: `MUCGPT_CORE_TRANSCRIPTION_ENABLED=true`
 
-Then choose the single model every user gets:
+Then set the single model every user gets — there is **no default and no fallback** (core and frontend are released in sync; an unset id keeps the feature disabled):
 
 ```yaml
-TRANSCRIPTION_MODEL: "istupakov/canary-180m-flash-onnx" # Default is "istupakov/canary-180m-flash-onnx"
+TRANSCRIPTION_MODEL: "istupakov/canary-180m-flash-onnx" # Default: unset — feature stays disabled
 ```
 
-The id must match an entry of the frontend's model list (`mucgpt-frontend/src/config/transcriptionModels.ts`); unknown ids disable transcription in the frontend (console warning) instead of silently running a different model. When `TRANSCRIPTION_ENABLED` is turned on without specifying a model, the frontend default ("istupakov/canary-180m-flash-onnx") applies.
+The id must match an entry of the frontend's model list (`mucgpt-frontend/src/config/transcriptionModels.ts`); unknown ids disable transcription in the frontend (console warning) instead of silently running a different model. When `TRANSCRIPTION_ENABLED` is turned on without specifying a model, the backend logs a warning and the feature stays disabled — there is no default.
 
 Notes for operators:
 

@@ -80,8 +80,8 @@ export interface ApplicationConfig {
     assistant_version: string;
     document_processing_enabled: boolean;
     transcription_enabled: boolean;
-    /** The single transcription model used by every user; unknown ids disable the feature. */
-    transcription_model: string;
+    /** The single transcription model used by every user; null (not configured) or unknown ids disable the feature. */
+    transcription_model: string | null;
     ai_act_compliance_check_enabled: boolean;
     ag_ui_enabled: boolean;
     footer_link_url?: string;

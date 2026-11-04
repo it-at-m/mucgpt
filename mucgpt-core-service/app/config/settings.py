@@ -559,12 +559,12 @@ class Settings(BaseSettings):
     # frontend's TRANSCRIPTION_MODELS list (no audio is uploaded).
     TRANSCRIPTION_ENABLED: bool = False
     # The one Hugging Face model id (see the frontend TRANSCRIPTION_MODELS list)
-    # used for transcription by every user. Defaults to the NVIDIA Canary 180M
-    # Flash ONNX export: multilingual (en/de/fr/es), markedly better German WER
-    # than its size suggests and it runs entirely on WASM — no WebGPU needed.
-    # Unknown ids disable the feature in the frontend (with a console warning)
-    # instead of silently running a different model.
-    TRANSCRIPTION_MODEL: str = "istupakov/canary-180m-flash-onnx"
+    # used for transcription by every user. There is no default and no fallback:
+    # core and frontend are updated in sync, and an unset id simply keeps the
+    # feature disabled. Defaults to the NVIDIA Canary 180M Flash ONNX export in
+    # the examples below: multilingual (en/de/fr/es), good German WER, and it
+    # runs entirely on WASM — no WebGPU needed.
+    TRANSCRIPTION_MODEL: str | None = None
     AI_ACT_COMPLIANCE_CHECK_ENABLED: bool = True
     COMPLIANCE_CACHE_ENABLED: bool = True
     COMPLIANCE_CACHE_TTL_SECONDS: PositiveInt = 30 * 60

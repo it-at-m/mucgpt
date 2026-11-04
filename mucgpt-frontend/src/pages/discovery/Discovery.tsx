@@ -22,6 +22,7 @@ import { useUnifiedHistory } from "../../components/UnifiedHistory";
 import { useDuplicateAssistant } from "./hooks/useDuplicateAssistant";
 import { useDiscoveryAssistantLists } from "./hooks/useDiscoveryAssistantLists";
 import { useMigrateLocalAssistant } from "../../hooks/useMigrateLocalAssistant";
+import { useOrphanedAssistantChats } from "../../hooks/useOrphanedAssistantChats";
 import { downloadAssistantExport, mapAssistantToExportData, mapVersionToExportData } from "../../utils/assistant-export";
 import { isCompleteCommunityAssistantSnapshot, mapCommunitySnapshotToAssistant } from "../../utils/community-assistant-snapshots";
 import { getAssistantBadges, isAssistantPrivate } from "../../utils/assistantCardDisplay";
@@ -119,10 +120,12 @@ const Discovery = () => {
         displayedMyAssistants,
         hasHiddenMyAssistants,
         communityAssistants,
+        knownAssistantIds,
         removeYoursAssistant,
         removeSubscribedAssistant,
         removeAssistantFromLists
     } = useDiscoveryAssistantLists({ assistantStorageService, communityAssistantStorageService });
+    const orphans = useOrphanedAssistantChats({ assistantStorageService, excludeIds: knownAssistantIds });
     const {
         assistantToDuplicate,
         showDuplicateConfirm,
@@ -705,6 +708,47 @@ const Discovery = () => {
                                                 </div>
                                             )}
                                         </>
+                                    )}
+
+                                    {!isSearching && myAssistantFilter === "all" && orphans.length > 0 && (
+                                        <div className={styles.assistantSection}>
+                                            <h2 className={styles.sectionTitle}>{t("components.community_assistants.orphaned_chats_heading")}</h2>
+                                            <div
+                                                className={styles.assistantsGrid}
+                                                role="list"
+                                                aria-label={t("components.community_assistants.orphaned_chats_heading")}
+                                            >
+                                                {orphans.map(orphan => (
+                                                    <DiscoveryCard
+                                                        key={orphan.id}
+                                                        id={orphan.id}
+                                                        title={orphan.title ?? t("components.community_assistants.orphaned_deleted_title")}
+                                                        description={
+                                                            orphan.kind === "deleted" || !orphan.description
+                                                                ? t(
+                                                                      orphan.kind === "deleted"
+                                                                          ? "components.community_assistants.orphaned_deleted_description"
+                                                                          : "components.community_assistants.orphaned_unsubscribed_description"
+                                                                  )
+                                                                : orphan.description
+                                                        }
+                                                        badges={
+                                                            orphan.kind === "deleted"
+                                                                ? [
+                                                                      {
+                                                                          label: t("components.community_assistants.deleted_badge"),
+                                                                          tone: "danger"
+                                                                      }
+                                                                  ]
+                                                                : undefined
+                                                        }
+                                                        subscriberCount={0}
+                                                        linkTo={`/${orphan.kind === "deleted" ? "deleted/communityassistant" : "communityassistant"}/${orphan.id}`}
+                                                        role="listitem"
+                                                    />
+                                                ))}
+                                            </div>
+                                        </div>
                                     )}
                                 </section>
 

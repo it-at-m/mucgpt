@@ -35,6 +35,8 @@ interface UseDiscoveryAssistantListsResult {
     displayedMyAssistants: AssistantCardData[];
     hasHiddenMyAssistants: boolean;
     communityAssistants: AssistantCardData[];
+    /** Union of every assistant id that currently surfaces through a list. */
+    knownAssistantIds: Set<string>;
     removeYoursAssistant: (assistantId: string) => void;
     removeSubscribedAssistant: (assistantId: string) => void;
     removeAssistantFromLists: (assistantId: string) => void;
@@ -375,6 +377,11 @@ export const useDiscoveryAssistantLists = ({
         return allAssistants.filter(assistant => !ownedAssistantIds.has(assistant.id) && !subscribedAssistantIds.has(assistant.id));
     }, [allAssistants, ownedAssistantIds, subscribedAssistantIds]);
 
+    const knownAssistantIds = useMemo(
+        () => new Set([...allAssistants, ...yoursAssistants, ...subscribedAssistants].map(assistant => assistant.id)),
+        [allAssistants, yoursAssistants, subscribedAssistants]
+    );
+
     const displayedMyAssistants = useMemo(() => {
         if (isSearching || showAllMyAssistants) return filteredMyAssistants;
         return filteredMyAssistants.slice(0, MY_ASSISTANTS_PREVIEW_LIMIT);
@@ -417,6 +424,7 @@ export const useDiscoveryAssistantLists = ({
         displayedMyAssistants,
         hasHiddenMyAssistants,
         communityAssistants,
+        knownAssistantIds,
         removeYoursAssistant,
         removeSubscribedAssistant,
         removeAssistantFromLists

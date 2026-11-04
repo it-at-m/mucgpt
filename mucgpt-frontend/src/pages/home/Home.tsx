@@ -21,6 +21,7 @@ import { ConfigContext } from "../../context/ConfigContext";
 import { UploadedData } from "../../components/ContextManagerDialog/ContextManagerDialog";
 import { STORAGE_KEYS } from "../layout/LayoutHelper";
 import { getAssistantBadges, isAssistantPrivate } from "../../utils/assistantCardDisplay";
+import { resolveOrphanedAssistantChats } from "../../utils/orphanedAssistantChats";
 
 interface HomeAssistant {
     id: string;
@@ -160,6 +161,7 @@ const Home = () => {
                 }
 
                 const recent: HomeAssistant[] = [];
+                const handledAssistantIds = new Set<string>();
                 for (const [assistantId, lastUsed] of assistantLastUsed) {
                     const own = ownedMap.get(assistantId);
                     if (own) {
@@ -175,15 +177,16 @@ const Home = () => {
                             isOwnedAssistant: true,
                             subscriberCount: own.subscriptions_count || 0
                         });
+                        handledAssistantIds.add(assistantId);
                         continue;
                     }
 
-                    // Subscribed assistants should only be shown if they still exist and are visible.
-                    const community = allCommunityMap.get(assistantId);
-                    if (!community || !community.is_visible) continue;
-
                     const sub = subsMap.get(assistantId);
                     if (sub) {
+                        // Subscribed assistants should only be shown if they still exist and are visible.
+                        const community = allCommunityMap.get(assistantId);
+                        if (!community || !community.is_visible) continue;
+
                         recent.push({
                             id: assistantId,
                             title: sub.title,
@@ -195,7 +198,57 @@ const Home = () => {
                             rawData: community,
                             subscriberCount: community.subscriptions_count || 0
                         });
+                        handledAssistantIds.add(assistantId);
+                        continue;
                     }
+
+                    // Not owned/subscribed: if the assistant still exists and is visible, the user can
+                    // re-subscribe from its chat page, so the recent entry stays reachable.
+                    const community = allCommunityMap.get(assistantId);
+                    if (community && community.is_visible) {
+                        recent.push({
+                            id: assistantId,
+                            title: community.latest_version.name,
+                            description: community.latest_version.description || "",
+                            lastUsed,
+                            linkTo: `/communityassistant/${assistantId}`,
+                            metadataOwner: getPrimaryOwnerDetails(community),
+                            metadataFallbackLabel: t("components.community_assistants.filter_all", "Community"),
+                            rawData: community,
+                            subscriberCount: community.subscriptions_count || 0
+                        });
+                        handledAssistantIds.add(assistantId);
+                        continue;
+                    }
+
+                    if (community) continue;
+                    handledAssistantIds.add(assistantId);
+                }
+
+                // Assistants that no longer surface through any list: keep their chats reachable
+                // by resolving whether they were deleted (404) or just unsubscribed.
+                const orphanCandidateIds = Array.from(assistantLastUsed.keys()).filter(id => !handledAssistantIds.has(id));
+                const resolvedOrphans = await resolveOrphanedAssistantChats(orphanCandidateIds, assistantLastUsed);
+                for (const orphan of resolvedOrphans) {
+                    if (!mounted) {
+                        return;
+                    }
+                    recent.push({
+                        id: orphan.id,
+                        title: orphan.title ?? t("components.community_assistants.orphaned_deleted_title"),
+                        description:
+                            orphan.kind === "unsubscribed" && orphan.description
+                                ? orphan.description
+                                : t(
+                                      orphan.kind === "deleted"
+                                          ? "components.community_assistants.orphaned_deleted_description"
+                                          : "components.community_assistants.orphaned_unsubscribed_description"
+                                  ),
+                        lastUsed: orphan.lastUsed,
+                        linkTo: `/${orphan.kind === "deleted" ? "deleted/communityassistant" : "communityassistant"}/${orphan.id}`,
+                        rawData: {} as AssistantResponse,
+                        subscriberCount: 0
+                    });
                 }
 
                 recent.sort((a, b) => b.lastUsed - a.lastUsed);

@@ -5,41 +5,8 @@
     flex-shrink: 0;
 }
 
-/* Mirrors the LLMSelector trigger: the quiet mic recedes like the model picker
-   next to it instead of competing with the input. */
+/* Mirrors the LLMSelector trigger: the greyed setup mic recedes like the model
+   picker next to it instead of competing with the input. */
 .micButton.busy {
     opacity: 0.6;
-}
-
-/* Lightly pulsating brand ring around the control while transcription runs.
-   Static ring instead of animation under prefers-reduced-motion. */
-.pulsing {
-    position: relative;
-}
-
-.pulsing::after {
-    content: "";
-    position: absolute;
-    inset: -4px;
-    border-radius: var(--borderRadiusMedium);
-    border: 2px solid var(--colorBrandStroke1);
-    pointer-events: none;
-    animation: transcription-pulse 2s ease-in-out infinite;
-}
-
-@keyframes transcription-pulse {
-    0%,
-    100% {
-        opacity: 0.25;
-    }
-    50% {
-        opacity: 0.9;
-    }
-}
-
-@media (prefers-reduced-motion: reduce) {
-    .pulsing::after {
-        animation: none;
-        opacity: 0.7;
-    }
 }

@@ -307,7 +307,7 @@ Good workspace patterns include:
 The composer is a work control, not decorative chatbot chrome.
 
 - The text field grows line by line up to a maximum height and then scrolls.
-- Action bar controls share one size and the default Fluent shape. Only send uses the `primary` appearance; it is disabled while the input is empty.
+- Action bar controls share one size and the default Fluent shape. Send uses the `primary` appearance and is disabled while the input is empty. The transcription microphone matches the composition controls (quiet, regular mic icon) and switches to the send button's `primary` look (brand box, white icon) only while transcription runs — the box color alone signals the active state. In the setup state it stays greyed-out with the muted mic icon.
 - Focus is shown by a stronger neutral stroke on the composer border, and keyboard operation is complete: Enter sends, Shift+Enter adds a line.
 
 ### Assistant configuration

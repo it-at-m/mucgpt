@@ -463,7 +463,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
     const callApi = useCallback(
         /** Sends one question through the strategy (streaming) and dispatches the answers. */
         async (question: string, systemOverride?: string, dataSources?: DataSource[]) => {
-            if (historyReadOnly) {
+            if (isLegacyAssistant || isAssistantUnavailable || historyReadOnly) {
                 console.warn("Interaction blocked: Assistant is read-only.");
                 return;
             }
@@ -521,6 +521,8 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
             selectedTools,
             setIsLoadingValue,
             setLastQuestionValue,
+            isLegacyAssistant,
+            isAssistantUnavailable,
             historyReadOnly,
             agUiEnabled
         ]
@@ -840,7 +842,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
     }, [location.pathname, navigate]);
 
     const starterPromptsComponent = useMemo(() => {
-        if (historyReadOnly) {
+        if (isLegacyAssistant || historyReadOnly) {
             return null;
         }
 
@@ -849,7 +851,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
         } else {
             return null;
         }
-    }, [historyReadOnly, assistantConfig.examples, onStarterPromptClicked]);
+    }, [isLegacyAssistant, historyReadOnly, assistantConfig.examples, onStarterPromptClicked]);
 
     // Text-Input component
     // Only the assistant's default model is selectable; if it no longer exists, the user picks from all models.

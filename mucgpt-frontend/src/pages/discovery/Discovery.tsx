@@ -440,7 +440,8 @@ const Discovery = () => {
         if (!selectedAssistant) return;
         try {
             if (selectedAssistant.isLocalAssistant) {
-                await assistantStorageService.deleteConfigAndChatsForAssistant(selectedAssistant.id);
+                // Chats are kept so their history stays reachable; only the local configuration goes away.
+                await assistantStorageService.deleteConfigForAssistant(selectedAssistant.id);
             } else if (selectedAssistant.isDeletedSnapshot) {
                 await assistantStorageService.deleteChatsForAssistant(selectedAssistant.id);
                 await communityAssistantStorageService.deleteConfigForAssistant(selectedAssistant.id);

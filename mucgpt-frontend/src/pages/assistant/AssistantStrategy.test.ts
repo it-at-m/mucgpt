@@ -28,10 +28,11 @@ describe("assistant deletion strategies", () => {
         vi.mocked(unsubscribeFromAssistantApi).mockResolvedValue({ message: "unsubscribed" });
     });
 
-    it("local strategy awaits combined cleanup and propagates failure", async () => {
-        const failure = new Error("server erasure failed");
-        vi.mocked(storage.deleteConfigAndChatsForAssistant).mockRejectedValue(failure);
+    it("local strategy removes only the configuration and keeps chats, propagating failure", async () => {
+        const failure = new Error("config deletion failed");
+        vi.mocked(storage.deleteConfigForAssistant).mockRejectedValue(failure);
         await expect(new LocalAssistantStrategy().deleteAssistant("assistant", storage)).rejects.toBe(failure);
+        expect(storage.deleteChatsForAssistant).not.toHaveBeenCalled();
     });
 
     it("subscribed strategy only unsubscribes and retains chats and snapshot", async () => {

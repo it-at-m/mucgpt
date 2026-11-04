@@ -115,3 +115,60 @@ describe("assistant cleanup", () => {
         if (target === "chat") expect(StorageService.prototype.delete).not.toHaveBeenCalledWith(configId);
     });
 });
+
+describe("assistant chat transfer", () => {
+    const service = new AssistantStorageService(ASSISTANT_STORE);
+    const sourceAssistantId = "source_assistant";
+    const targetAssistantId = "target_assistant";
+    const chatId = "CHAT_source_assistant_thread";
+    const fetchMock = vi.fn<typeof fetch>();
+    const chatRecord = (id: string, backendPersisted?: boolean) => ({ id, config: {}, messages: [], backendPersisted });
+
+    beforeEach(() => {
+        vi.restoreAllMocks();
+        vi.stubGlobal("fetch", fetchMock);
+        vi.stubGlobal("document", { cookie: "" });
+        fetchMock.mockReset();
+        fetchMock.mockResolvedValue(new Response(null, { status: 204 }));
+        vi.spyOn(StorageService.prototype, "getAll").mockResolvedValue([chatRecord(chatId, true)]);
+        vi.spyOn(StorageService.prototype, "delete").mockResolvedValue(true);
+        vi.spyOn(StorageService.prototype, "connectToDB").mockResolvedValue({
+            put: vi.fn().mockResolvedValue(undefined),
+            close: vi.fn().mockResolvedValue(undefined)
+        } as never);
+    });
+
+    afterEach(() => vi.unstubAllGlobals());
+
+    it("re-binds persisted chats on the server before re-keying them locally", async () => {
+        await service.transferChatsToAssistant(sourceAssistantId, targetAssistantId);
+
+        expect(fetchMock).toHaveBeenCalledExactlyOnceWith(
+            "/api/backend/v1/conversations/thread/assistant",
+            expect.objectContaining({ method: "PATCH", body: JSON.stringify({ assistant_id: targetAssistantId }) })
+        );
+        expect(StorageService.prototype.connectToDB).toHaveBeenCalled();
+        const db = await StorageService.prototype.connectToDB();
+        expect(db.put).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({ id: "CHAT_target_assistant_thread" }));
+        expect(StorageService.prototype.delete).toHaveBeenCalledWith(chatId);
+    });
+
+    it("skips the server re-bind for browser-only chats", async () => {
+        vi.mocked(StorageService.prototype.getAll).mockResolvedValue([chatRecord(chatId)]);
+        await service.transferChatsToAssistant(sourceAssistantId, targetAssistantId);
+        expect(fetchMock).not.toHaveBeenCalled();
+        expect(StorageService.prototype.delete).toHaveBeenCalledWith(chatId);
+    });
+
+    it("tolerates a missing server row (404) but propagates other re-bind failures without touching local records", async () => {
+        fetchMock.mockResolvedValueOnce(new Response(null, { status: 404 }));
+        await service.transferChatsToAssistant(sourceAssistantId, targetAssistantId);
+        expect(StorageService.prototype.delete).toHaveBeenCalledWith(chatId);
+
+        fetchMock.mockReset();
+        fetchMock.mockResolvedValue(new Response(null, { status: 500 }));
+        vi.mocked(StorageService.prototype.delete).mockClear();
+        await expect(service.transferChatsToAssistant(sourceAssistantId, targetAssistantId)).rejects.toMatchObject({ status: 500 });
+        expect(StorageService.prototype.delete).not.toHaveBeenCalled();
+    });
+});

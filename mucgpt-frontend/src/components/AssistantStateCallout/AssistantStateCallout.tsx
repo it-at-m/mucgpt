@@ -69,20 +69,24 @@ export const AssistantStateCallout = ({
     const isOutdated = state === "deleted" || state === "local" || state === "legacy";
     const isUnavailable = state === "pending_legal_review" || state === "inactive";
 
-    const primaryAction =
-        state === "unsubscribed" && onSubscribe ? (
-            <Button appearance="primary" icon={<Add20Regular />} onClick={onSubscribe}>
+    const primaryActions = [
+        state === "unsubscribed" && onSubscribe && (
+            <Button key="subscribe" appearance="primary" icon={<Add20Regular />} onClick={onSubscribe}>
                 {t("components.not_subscribed_dialog.subscribe_button")}
             </Button>
-        ) : state === "deleted" && onDuplicate ? (
-            <Button appearance="primary" icon={<Copy20Regular />} onClick={onDuplicate}>
+        ),
+        state === "deleted" && onDuplicate && (
+            <Button key="duplicate" appearance="primary" icon={<Copy20Regular />} onClick={onDuplicate}>
                 {t("components.community_assistants.deleted_state_save_action")}
             </Button>
-        ) : state === "local" && onMigrateLocal ? (
-            <Button appearance="primary" icon={<ArrowExportUp20Regular />} onClick={onMigrateLocal}>
+        ),
+        state === "local" && onMigrateLocal && (
+            <Button key="migrate" appearance="primary" icon={<ArrowExportUp20Regular />} onClick={onMigrateLocal}>
                 {t("components.community_assistants.local_state_publish_action")}
             </Button>
-        ) : undefined;
+        )
+    ].filter(Boolean);
+    const primaryAction = primaryActions.length > 0 ? <>{primaryActions}</> : undefined;
 
     const secondaryActions = [
         isUnavailable && onEdit && (

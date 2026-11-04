@@ -1,5 +1,6 @@
 import { StorageService, DBMessage } from "./storage";
 import { Assistant, ChatResponse, deleteConversationApi } from "../api";
+import { rebindConversationAssistantApi } from "../api/conversations-client";
 import { v4 as uuid } from "uuid";
 import { IndexedDBStorage } from "./indexedDBStorage";
 
@@ -181,7 +182,8 @@ export class AssistantStorageService {
 
     /**
      * Transfers all chats from one assistant to another by re-creating them under the new assistant's ID prefix
-     * and deleting the originals.
+     * and deleting the originals. Persisted chats are re-bound on the server first, so the
+     * history sync keeps them associated with the new assistant.
      * @param sourceAssistantId - The ID of the source assistant
      * @param targetAssistantId - The ID of the target assistant
      */
@@ -189,9 +191,15 @@ export class AssistantStorageService {
         const chats = await this.getAllChatForAssistant(sourceAssistantId);
         const db = await this.storageService.connectToDB();
         const sourceIds: string[] = [];
+        const sourcePrefix = AssistantStorageService.GENERATE_BOT_CHAT_PREFIX(sourceAssistantId);
         for (const chat of chats) {
             if (!chat.id) continue;
-            const chatUuid = chat.id.replace(AssistantStorageService.GENERATE_BOT_CHAT_PREFIX(sourceAssistantId), "");
+            const chatUuid = chat.id.replace(sourcePrefix, "");
+            // Re-bind server-side before re-keying locally; browser-only chats have no
+            // server row, so an ignored 404 is expected.
+            if (chat.backendPersisted) {
+                await rebindConversationAssistantApi(chatUuid, targetAssistantId);
+            }
             const newId = AssistantStorageService.GENERATE_BOT_CHAT_ID(targetAssistantId, chatUuid);
             await db.put(this.config.objectStore_name, { ...chat, id: newId });
             sourceIds.push(chat.id);

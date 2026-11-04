@@ -286,6 +286,16 @@ i18n
                             no_access_message: "Sie haben keinen Zugriff auf den Assistenten '{{assistantTitle}}'.",
                             no_access_info: "Bitte wenden Sie sich an den Ersteller des Assistenten, um Zugriff zu erhalten."
                         },
+                        assistant_picker_dialog: {
+                            title: "Chats einem Assistenten zuordnen",
+                            message:
+                                "Der ursprüngliche Assistent ist nicht mehr verfügbar. Wähle einen Assistenten aus, um die Chats mit diesem Assistenten fortzusetzen.",
+                            empty: "Keine Assistenten verfügbar.",
+                            attach_success_title: "Chats zugeordnet",
+                            attach_success_message: "Die Chats wurden dem Assistenten '{{title}}' zugeordnet.",
+                            attach_failed_title: "Chats konnten nicht zugeordnet werden",
+                            attach_failed_message: "Beim Zuordnen der Chats ist ein Fehler aufgetreten."
+                        },
                         department_dropdown: {
                             placeholder: "Suche Abteilung...",
                             no_matches: "Keine Treffer",
@@ -922,6 +932,7 @@ i18n
                             deleted_chat_warning:
                                 "Dieser Community-Assistent wurde vom Ersteller gelöscht und ist nicht mehr verfügbar. Diese Version liegt nur noch lokal im Browser und kann verloren gehen. Der Chatverlauf ist schreibgeschützt. Sichern Sie sie als eigenen Assistenten, wenn Sie weiter damit arbeiten möchten.",
                             deleted_state_save_action: "Als eigenen Assistenten speichern",
+                            deleted_state_attach_action: "An anderen Assistenten anhängen",
                             deleted_state_history_action: "Chatverlauf",
                             deleted_state_no_history: "Für diesen Assistenten ist kein lokaler Chatverlauf verfügbar.",
                             legacy_state_title: "Veralteter Community-Assistent",
@@ -1229,6 +1240,15 @@ i18n
                             no_access_title: "No Access",
                             no_access_message: "You do not have access to the assistant '{{assistantTitle}}'.",
                             no_access_info: "Please contact the creator of the assistant to gain access."
+                        },
+                        assistant_picker_dialog: {
+                            title: "Attach chats to an assistant",
+                            message: "The original assistant is no longer available. Choose an assistant to continue the chats with that assistant.",
+                            empty: "No assistants available.",
+                            attach_success_title: "Chats attached",
+                            attach_success_message: "The chats were attached to the assistant '{{title}}'.",
+                            attach_failed_title: "Chats could not be attached",
+                            attach_failed_message: "An error occurred while attaching the chats."
                         },
                         department_dropdown: {
                             placeholder: "Search department...",
@@ -2145,6 +2165,16 @@ i18n
                             no_access_message: "Du hosd koan Zugriff auf'n Assistenten '{{assistantTitle}}'.",
                             no_access_info: "Bitte wend di an'n Ersteller vom Assistenten, damit'd Zugriff kriagst."
                         },
+                        assistant_picker_dialog: {
+                            title: "Chats zuam Assistenten zuordnen",
+                            message:
+                                "Da ursprüngliche Assistent is ned mehr verfuegbar. Such da an Assistentn aus, um de Chats mit dem Assistenten weidazumacha.",
+                            empty: "Koane Assistentn verfuegbar.",
+                            attach_success_title: "Chats zuagordnet",
+                            attach_success_message: "De Chats san dem Assistenten '{{title}}' zuagordnet worn.",
+                            attach_failed_title: "Chats konntn ned zuagordnet werdn",
+                            attach_failed_message: "Beim Zuordnen vo de Chats is a Fehler aufgtretn."
+                        },
                         department_dropdown: {
                             placeholder: "Suach Abteilung...",
                             no_matches: "Koin Treffer",
@@ -3051,6 +3081,15 @@ i18n
                             no_access_message: "Vous n'avez pas accès à l'assistant '{{assistantTitle}}'.",
                             no_access_info: "Veuillez contacter le créateur de l'assistant pour obtenir l'accès."
                         },
+                        assistant_picker_dialog: {
+                            title: "Associer les conversations à un assistant",
+                            message: "L'assistant d'origine n'est plus disponible. Choisissez un assistant pour continuer les conversations avec celui-ci.",
+                            empty: "Aucun assistant disponible.",
+                            attach_success_title: "Conversations associées",
+                            attach_success_message: "Les conversations ont été associées à l'assistant '{{title}}'.",
+                            attach_failed_title: "Impossible d'associer les conversations",
+                            attach_failed_message: "Une erreur est survenue lors de l'association des conversations."
+                        },
                         department_dropdown: {
                             placeholder: "Rechercher un département...",
                             no_matches: "Aucune correspondance",
@@ -3955,6 +3994,15 @@ i18n
                             no_access_title: "Немає доступу",
                             no_access_message: "У вас немає доступу до асистента '{{assistantTitle}}'.",
                             no_access_info: "Будь ласка, зверніться до створювача асистента, щоб отримати доступ."
+                        },
+                        assistant_picker_dialog: {
+                            title: "Прикріпити чати до асистента",
+                            message: "Оригінальний асистент більше недоступний. Виберіть асистента, щоб продовжити чати з ним.",
+                            empty: "Доступних асистентів немає.",
+                            attach_success_title: "Чати прикріплено",
+                            attach_success_message: "Чати було прикріплено до асистента '{{title}}'.",
+                            attach_failed_title: "Не вдалося прикріпити чати",
+                            attach_failed_message: "Під час прикріплення чатів сталася помилка."
                         },
                         department_dropdown: {
                             placeholder: "Пошук відділу...",

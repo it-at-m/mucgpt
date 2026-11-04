@@ -41,7 +41,9 @@ export class LocalAssistantStrategy implements AssistantStrategy {
     }
 
     async deleteAssistant(assistantId: string, assistantStorageService: AssistantStorageService): Promise<void> {
-        await assistantStorageService.deleteConfigAndChatsForAssistant(assistantId);
+        // Chats are kept so their history stays viewable and can be attached to
+        // another assistant later; only the local configuration is removed.
+        await assistantStorageService.deleteConfigForAssistant(assistantId);
     }
 
     async updateAssistant(
@@ -66,7 +68,9 @@ export class LocalAssistantStrategy implements AssistantStrategy {
             compliance_confirmation: newAssistant.compliance_confirmation
         });
 
-        await assistantStorageService.deleteConfigAndChatsForAssistant(assistantId);
+        // Keep chat history: move it to the newly created assistant instead of deleting it.
+        await assistantStorageService.transferChatsToAssistant(assistantId, response.id);
+        await assistantStorageService.deleteConfigForAssistant(assistantId);
         window.location.href = `/#/owned/communityassistant/${response.id}`;
 
         return {

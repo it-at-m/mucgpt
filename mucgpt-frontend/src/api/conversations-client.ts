@@ -56,6 +56,18 @@ export function renameConversationApi(conversationId: string, title: string): Pr
     );
 }
 
+/** Re-bind a persisted conversation to another assistant; never creates or revives conversations. */
+export async function rebindConversationAssistantApi(conversationId: string, assistantId: string): Promise<void> {
+    const response = await fetch(
+        API_BASE + "v1/conversations/" + encodeURIComponent(conversationId) + "/assistant",
+        patchConfig({ assistant_id: assistantId })
+    );
+    handleRedirect(response);
+    if (!response.ok && response.status !== 404) {
+        throw new ApiError("Failed to re-bind conversation to assistant", response.status);
+    }
+}
+
 /** Deletes server state; success and 404 complete deletion, while other failures propagate for retry. */
 export async function deleteConversationApi(conversationId: string): Promise<void> {
     const response = await fetch(API_BASE + "v1/conversations/" + encodeURIComponent(conversationId), deleteConfig());

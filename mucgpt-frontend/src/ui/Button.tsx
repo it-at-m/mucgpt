@@ -3,7 +3,7 @@ import { Button as FluentButton, buttonClassNames, type ButtonProps, makeStyles,
 
 import { AppThemeContext } from "./theme/AppThemeContext";
 
-type ButtonTone = "danger";
+type ButtonTone = "danger" | "muted";
 type MucgptButtonProps = ButtonProps & { tone?: ButtonTone };
 
 const useStyles = makeStyles({
@@ -35,6 +35,20 @@ const useStyles = makeStyles({
                 color: tokens.colorStatusDangerForeground1
             }
         }
+    },
+    // "Temporarily unavailable" action: visually greyed out like disabled, but remains
+    // clickable because the click opens a setup panel (e.g. transcription model download).
+    muted: {
+        color: tokens.colorNeutralForegroundDisabled,
+        [`& .${buttonClassNames.icon}`]: {
+            color: tokens.colorNeutralForegroundDisabled
+        },
+        ":hover, :hover:active": {
+            color: tokens.colorNeutralForegroundDisabled,
+            [`& .${buttonClassNames.icon}`]: {
+                color: tokens.colorNeutralForegroundDisabled
+            }
+        }
     }
 });
 
@@ -51,7 +65,12 @@ export const Button = forwardRef<HTMLButtonElement, MucgptButtonProps>(({ appear
             appearance={appearance}
             disabled={disabled}
             disabledFocusable={disabledFocusable}
-            className={mergeClasses(useDarkSubtleForeground && styles.darkSubtle, isEnabled && tone === "danger" && styles.danger, className)}
+            className={mergeClasses(
+                useDarkSubtleForeground && styles.darkSubtle,
+                isEnabled && tone === "danger" && styles.danger,
+                isEnabled && tone === "muted" && styles.muted,
+                className
+            )}
         />
     );
 });

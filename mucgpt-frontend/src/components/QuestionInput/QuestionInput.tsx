@@ -18,7 +18,7 @@ import { ChatUsageMessageBar } from "../ChatUsageIndicator/ChatUsageMessageBar";
 import { LLMSelector } from "../LLMSelector/LLMSelector";
 import { getContextUsagePercent, getUsageCriticalThreshold, getUsageWarningThreshold } from "../ChatUsageIndicator/chatUsage";
 import { MicrophoneButton } from "../MicrophoneButton/MicrophoneButton";
-import { useTranscription } from "../TranscriptionSettings/TranscriptionSettingsContext";
+import { useTranscription } from "../Transcription/TranscriptionContext";
 
 export type { ChatUsageSummary } from "../ChatUsageIndicator/ChatUsageIndicator";
 
@@ -101,7 +101,7 @@ export const QuestionInput = ({
     const setQuestionRef = useRef(setQuestion);
     const previousUsageConversationKeyRef = useRef<string | undefined>(usageConversationKey);
     const recordingBaseRef = useRef("");
-    const { isModelReady: transcriptionReady, status: transcriptionStatus } = useTranscription();
+    const { status: transcriptionStatus } = useTranscription();
     const isTranscriptionActive = transcriptionStatus === "recording" || transcriptionStatus === "transcribing";
 
     const draftStorageKey = draftCacheKey ? `question-input-draft:${draftCacheKey}` : undefined;
@@ -521,7 +521,7 @@ export const QuestionInput = ({
                                 lockedByAssistant={llmLockedByAssistant}
                             />
                         )}
-                        {allowTranscription && onTranscription && transcriptionReady && (
+                        {allowTranscription && onTranscription && (
                             <MicrophoneButton
                                 onRecordingStart={() => {
                                     recordingBaseRef.current = question;

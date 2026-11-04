@@ -27,7 +27,7 @@ export interface TranscriptionModel {
     file_tree?: string;
 }
 
-/** Model choices offered in the transcription settings dialog, in display order. */
+/** Model choices known to this frontend build, in display order. The configured deployment model must be one of these. */
 export const TRANSCRIPTION_MODELS: TranscriptionModel[] = [
     // Disabled: onnxruntime-web >=1.20 removed Module.MountedFiles, which was the WASM API used to
     // mount .onnx_data external-data files. This repo has no quantised encoder variants, so
@@ -112,19 +112,10 @@ export const TRANSCRIPTION_MODELS: TranscriptionModel[] = [
     }
 ];
 
-/** Model preselected for first-time users (the lightest, most compatible option). */
-export const DEFAULT_TRANSCRIPTION_MODEL = TRANSCRIPTION_MODELS[0].model_id;
+/** Model used when the deployment does not announce one (e.g. an older core without the field). */
+export const FALLBACK_TRANSCRIPTION_MODEL = TRANSCRIPTION_MODELS[0].model_id;
 
-/**
- * Returns the model list with the given default model moved to the front while
- * preserving the relative order of all other entries. Unknown ids (or an id
- * already first) leave the list unchanged.
- */
-export function orderModelsWithDefaultFirst(models: TranscriptionModel[], defaultModelId: string): TranscriptionModel[] {
-    const index = models.findIndex(m => m.model_id === defaultModelId);
-    if (index <= 0) return models;
-    const ordered = models.slice();
-    const [defaultModel] = ordered.splice(index, 1);
-    ordered.unshift(defaultModel);
-    return ordered;
+/** Looks up the loaded transcription configuration for a configured model id. */
+export function findTranscriptionModel(modelId: string): TranscriptionModel | undefined {
+    return TRANSCRIPTION_MODELS.find(m => m.model_id === modelId);
 }

@@ -161,7 +161,7 @@ async function loadModel(request: Extract<WorkerInMessage, { type: "load" }>) {
                     type: "error",
                     requestId,
                     message: "This model requires WebGPU, which is not available in your browser. Try Chrome/Edge 113+ or select Whisper Small.",
-                    messageKey: "transcriptionSettings.webgpu_only_error"
+                    messageKey: "transcription.webgpu_only_error"
                 } satisfies WorkerOutMessage);
                 return;
             }

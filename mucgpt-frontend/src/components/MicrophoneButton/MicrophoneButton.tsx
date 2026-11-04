@@ -1,10 +1,11 @@
-import { Tooltip } from "@fluentui/react-components";
-import { MicRegular, MicRecordRegular, MicSyncRegular, MicOffRegular } from "@fluentui/react-icons";
-import { useTranslation } from "react-i18next";
-import { useCallback, useEffect, useRef } from "react";
 import styles from "./MicrophoneButton.module.css";
+import { Popover, PopoverSurface, PopoverTrigger, Tooltip, mergeClasses } from "@fluentui/react-components";
+import { MicOffRegular, MicRecordRegular, MicRegular, MicSyncRegular } from "@fluentui/react-icons";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Button } from "../../ui/Button";
-import { useTranscription } from "../../hooks/useTranscription";
+import { useTranscription, type TranscriptionModelState } from "../../hooks/useTranscription";
+import { TranscriptionModelContent } from "../Transcription/TranscriptionModelContent";
 
 interface Props {
     onTranscription: (text: string) => void;
@@ -13,9 +14,24 @@ interface Props {
     disabled?: boolean;
 }
 
+/** States in which clicking the mic opens the model panel instead of recording. */
+const PANEL_STATES: ReadonlySet<TranscriptionModelState> = new Set(["missing", "unverified", "unsupported"]);
+/** Live model states; the panel stays open to show the ongoing progress. */
+const PROGRESS_STATES: ReadonlySet<TranscriptionModelState> = new Set(["checking", "loading", "downloading"]);
+
 export const MicrophoneButton = ({ onTranscription, onLiveTranscription, onRecordingStart, disabled = false }: Props) => {
     const { t } = useTranslation();
-    const { status, modelProgress, transcript, startRecording, stopAndTranscribe } = useTranscription();
+    const { status, modelState, modelProgress, transcript, startRecording, stopAndTranscribe } = useTranscription();
+    const [panelOpen, setPanelOpen] = useState(false);
+
+    // Close the panel once the model work it was opened for has settled —
+    // a finished download/load makes the mic record again, failures go grey.
+    const previousModelStateRef = useRef(modelState);
+    useEffect(() => {
+        const wasProgress = PROGRESS_STATES.has(previousModelStateRef.current);
+        previousModelStateRef.current = modelState;
+        if (wasProgress && !PROGRESS_STATES.has(modelState)) setPanelOpen(false);
+    }, [modelState]);
 
     // Forward interim transcript to input while recording
     useEffect(() => {
@@ -56,38 +72,64 @@ export const MicrophoneButton = ({ onTranscription, onLiveTranscription, onRecor
         }
     }, [status, startRecording, stopAndTranscribe, onRecordingStart]);
 
-    const isLoadingModel = status === "loading-model";
-    const isWarmingUp = status === "warming-up";
-    const isModelLoading = isLoadingModel || isWarmingUp;
-    const isRecording = status === "recording";
-    const isBusy = status === "transcribing" || isModelLoading;
+    const opensPanel = PANEL_STATES.has(modelState);
+    // In panel states the click action is the panel itself, so the button stays
+    // enabled (greyed-out styling communicates "not usable for recording");
+    // otherwise it follows the recording lifecycle and the input's disabled state.
+    const buttonDisabled = disabled || (!opensPanel && (status === "transcribing" || PROGRESS_STATES.has(modelState)));
 
     const getIcon = () => {
-        if (disabled) return <MicOffRegular />;
-        if (isModelLoading || isBusy) return <MicSyncRegular />;
-        if (isRecording) return <MicRecordRegular />;
+        if (opensPanel) return <MicOffRegular />;
+        if (PROGRESS_STATES.has(modelState) || status === "transcribing") return <MicSyncRegular />;
+        if (status === "recording") return <MicRecordRegular />;
         return <MicRegular />;
     };
 
     const getTooltipContent = () => {
-        if (isModelLoading)
-            return `${t("components.microphonebutton.loading_model", "Modell wird geladen...")} ${modelProgress > 0 ? `${modelProgress}%` : ""}`;
-        if (isRecording) return t("components.microphonebutton.stop", "Aufnahme beenden");
-        return t("components.microphonebutton.record", "Sprachaufnahme starten");
+        if (PROGRESS_STATES.has(modelState)) return `${t("components.microphonebutton.loading_model")} ${modelProgress > 0 ? `${modelProgress}%` : ""}`;
+        if (opensPanel) return t("components.transcription.setup_tooltip");
+        if (status === "recording") return t("components.microphonebutton.stop");
+        return t("components.microphonebutton.record");
     };
+
+    const buttonClass = mergeClasses(styles.micButton, (PROGRESS_STATES.has(modelState) || status === "transcribing") && styles.busy);
+    const buttonTone = opensPanel ? "muted" : undefined;
 
     return (
         <div className={styles.wrapper}>
-            <Tooltip positioning={"below"} content={getTooltipContent()} relationship="label">
-                <Button
-                    appearance="subtle"
-                    className={`${styles.micButton} ${isBusy ? styles.busy : ""}`}
-                    icon={getIcon()}
-                    aria-label={getTooltipContent()}
-                    disabled={disabled || isBusy}
-                    onClick={handleClick}
-                />
-            </Tooltip>
+            {opensPanel ? (
+                <Popover open={panelOpen} onOpenChange={(_, data) => setPanelOpen(data.open)}>
+                    <PopoverTrigger disableButtonEnhancement>
+                        <Tooltip positioning={"below"} content={getTooltipContent()} relationship="label">
+                            <Button
+                                appearance="subtle"
+                                tone={buttonTone}
+                                className={buttonClass}
+                                icon={getIcon()}
+                                aria-label={getTooltipContent()}
+                                disabled={buttonDisabled}
+                            />
+                        </Tooltip>
+                    </PopoverTrigger>
+                    <PopoverSurface>
+                        <TranscriptionModelContent />
+                    </PopoverSurface>
+                </Popover>
+            ) : (
+                <Tooltip positioning={"below"} content={getTooltipContent()} relationship="label">
+                    <Button
+                        appearance="subtle"
+                        tone={buttonTone}
+                        className={buttonClass}
+                        icon={getIcon()}
+                        aria-label={getTooltipContent()}
+                        disabled={buttonDisabled}
+                        onClick={() => {
+                            void handleClick();
+                        }}
+                    />
+                </Tooltip>
+            )}
         </div>
     );
 };

@@ -91,10 +91,13 @@ export const MicrophoneButton = ({ onTranscription, onLiveTranscription, onRecor
 
     const buttonClass = mergeClasses(styles.micButton, (PROGRESS_STATES.has(modelState) || status === "transcribing") && styles.busy);
     const buttonTone = opensPanel ? "muted" : undefined;
+    // Keep the popover mounted while it shows live progress, even though the mic
+    // itself leaves the muted state as soon as downloading/loading starts.
+    const popoverMode = opensPanel || (panelOpen && PROGRESS_STATES.has(modelState));
 
     return (
         <div className={styles.wrapper}>
-            {opensPanel ? (
+            {popoverMode ? (
                 <Popover open={panelOpen} onOpenChange={(_, data) => setPanelOpen(data.open)}>
                     <PopoverTrigger disableButtonEnhancement>
                         <Tooltip positioning={"below"} content={getTooltipContent()} relationship="label">

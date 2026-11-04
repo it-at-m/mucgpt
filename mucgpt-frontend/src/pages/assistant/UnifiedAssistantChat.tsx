@@ -114,6 +114,8 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
     const [runActivity, setRunActivity] = useState<RunActivity>(initialRunActivity);
     const [showNotSubscribedDialog, setShowNotSubscribedDialog] = useState<boolean>(false);
     const [noAccess, setNoAccess] = useState<boolean>(false);
+    const [isUnsubscribed, setIsUnsubscribed] = useState<boolean>(false);
+    const [isAssistantMissing, setIsAssistantMissing] = useState<boolean>(false);
     const [uploadedData, setUploadedData] = useState<UploadedData[]>([]);
     const [isInfoDrawerOpen, setIsInfoDrawerOpen] = useState<boolean>(false);
     const [assistantInfoData, setAssistantInfoData] = useState<AssistantCardData | null>(null);
@@ -130,6 +132,8 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
     const [showUnsubscribeConfirm, setShowUnsubscribeConfirm] = useState<boolean>(false);
     const isDeletedAssistant = strategy instanceof DeletedCommunityAssistantStrategy;
     const isLocalAssistant = strategy instanceof LocalAssistantStrategy;
+    // Missing config or lapsed subscription: history stays viewable, but the chat is read-only.
+    const historyReadOnly = isDeletedAssistant || isUnsubscribed || isAssistantMissing;
     const { assistantToDuplicate, showDuplicateConfirm, isDuplicating, setShowDuplicateConfirm, requestDuplicateAssistant, confirmDuplicateAssistant } =
         useDuplicateAssistant();
     // Sync info drawer state to body class so Layout.module.css can offset the footer
@@ -253,6 +257,8 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
         const loadData = async () => {
             if (assistant_id) {
                 setDeletedAssistantSnapshot(null);
+                setIsUnsubscribed(false);
+                setIsAssistantMissing(false);
                 setIsOwnershipResolved(!(strategy instanceof CommunityAssistantStrategy));
                 if (error) setError(undefined);
                 setIsLoadingValue(true);
@@ -275,6 +281,8 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                 }
 
                 setIsOwnershipResolved(true);
+                let accessDenied = false;
+                let configMissing = false;
 
                 strategy
                     .loadAssistantConfig(assistant_id, assistantStorageService)
@@ -333,16 +341,21 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                                 showError(t("components.assistant_chat.load_chat_failed"), t("components.assistant_chat.load_chat_failed_message"));
                             });
                         } else {
-                            showError(t("components.assistant_chat.load_assistant_failed"), t("components.assistant_chat.assistant_not_found"));
-                            // wait a moment before redirecting to home
-                            setTimeout(() => {
-                                window.location.href = "/";
-                            }, 2000);
+                            // The assistant is gone (deleted without a local snapshot) — keep the
+                            // chat history reachable in a read-only view instead of stranding it.
+                            setIsAssistantMissing(true);
+                            configMissing = true;
+                            setFollowUpActions([]);
+                            return fetchHistory().catch(err => {
+                                console.error("Error loading chat history:", err);
+                                showError(t("components.assistant_chat.load_chat_failed"), t("components.assistant_chat.load_chat_failed_message"));
+                            });
                         }
                     })
                     .catch(err => {
                         if (err instanceof ApiError && err.status === 403 && notSubscribed) {
                             setNoAccess(true);
+                            accessDenied = true;
                         } else {
                             console.error("Error loading assistant configuration:", err);
                             showError(
@@ -356,7 +369,8 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                         }
                     })
                     .finally(() => {
-                        setShowNotSubscribedDialog(notSubscribed);
+                        setShowNotSubscribedDialog(notSubscribed && accessDenied);
+                        setIsUnsubscribed(notSubscribed && !accessDenied && !configMissing);
                         setIsLoadingValue(false);
                         setIsAssistantContentLoading(false);
                     });
@@ -449,8 +463,8 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
     const callApi = useCallback(
         /** Sends one question through the strategy (streaming) and dispatches the answers. */
         async (question: string, systemOverride?: string, dataSources?: DataSource[]) => {
-            if (isLegacyAssistant || isAssistantUnavailable) {
-                console.warn("Interaction blocked: Assistant is in legacy state and read-only.");
+            if (historyReadOnly) {
+                console.warn("Interaction blocked: Assistant is read-only.");
                 return;
             }
 
@@ -507,8 +521,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
             selectedTools,
             setIsLoadingValue,
             setLastQuestionValue,
-            isLegacyAssistant,
-            isAssistantUnavailable,
+            historyReadOnly,
             agUiEnabled
         ]
     );
@@ -622,9 +635,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
     // Unsubscribe function for the info sidebar (subscribed, non-owned community assistants only)
     const performUnsubscribeAssistant = useCallback(async () => {
         try {
-            await assistantStorageService.deleteChatsForAssistant(assistant_id);
             await unsubscribeFromAssistantApi(assistant_id);
-            await communityAssistantStorageService.deleteConfigForAssistant(assistant_id);
         } catch (err) {
             console.error("Failed to unsubscribe from assistant:", err);
             showError(t("components.community_assistants.unsubscribe_failed_title"), t("components.community_assistants.unsubscribe_failed_message"));
@@ -638,21 +649,82 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
 
         refreshUnifiedHistory();
         navigate("/discovery");
-    }, [
-        assistant_id,
-        assistantConfig.title,
-        assistantStorageService,
-        communityAssistantStorageService,
-        refreshUnifiedHistory,
-        navigate,
-        showSuccess,
-        showError,
-        t
-    ]);
+    }, [assistant_id, assistantConfig.title, refreshUnifiedHistory, navigate, showSuccess, showError, t]);
+
+    // Re-subscribe from the unsubscribed callout (or the no-access dialog)
+    const performSubscribe = useCallback(async () => {
+        try {
+            await subscribeToAssistantApi(assistant_id);
+            const subscribedAssistantResponse = await getCommunityAssistantApi(assistant_id);
+            const subscribedAssistant = {
+                ...mapCommunitySnapshotToAssistant(mapAssistantResponseToSnapshot(subscribedAssistantResponse)),
+                owner_ids: subscribedAssistantResponse.latest_version.owner_ids || []
+            };
+
+            try {
+                await upsertCommunityAssistantSnapshot(
+                    communityAssistantStorageService,
+                    mapAssistantToCommunitySnapshot({ ...subscribedAssistant, id: assistant_id })
+                );
+            } catch (snapshotError) {
+                console.error("Error updating community assistant snapshot:", snapshotError);
+            }
+            setAssistantConfig(subscribedAssistant);
+            dispatch({ type: "SET_SYSTEM_PROMPT", payload: subscribedAssistant.system_message });
+            dispatch({ type: "SET_CREATIVITY", payload: subscribedAssistant.creativity });
+            setFollowUpActions(subscribedAssistant.quick_prompts || []);
+            setSelectedTools(subscribedAssistant.tools ? subscribedAssistant.tools.map(tool => tool.id) : []);
+            setShowNotSubscribedDialog(false);
+            setNoAccess(false);
+            setIsUnsubscribed(false);
+            setIsAssistantMissing(false);
+            showSuccess(
+                t("components.not_subscribed_dialog.subscribe_success"),
+                t("components.not_subscribed_dialog.subscribe_success_message", { assistantTitle: subscribedAssistant.title })
+            );
+        } catch (err) {
+            if (err instanceof ApiError && err.status === 404) {
+                // The assistant was deleted in the meantime — fall back to the read-only missing view.
+                setIsUnsubscribed(false);
+                setIsAssistantMissing(true);
+                setFollowUpActions([]);
+                fetchHistory().catch(historyError => {
+                    console.error("Error loading chat history:", historyError);
+                });
+                return;
+            }
+            console.error("Failed to subscribe to assistant:", err);
+            showError(
+                t("components.community_assistants.subscribe_failed_title", { title: assistantConfig.title }),
+                t("components.community_assistants.subscribe_failed_default")
+            );
+        }
+    }, [assistant_id, assistantConfig.title, communityAssistantStorageService, fetchHistory, setFollowUpActions, showError, showSuccess, t]);
+
+    // Remove leftover chats and the local snapshot of an assistant whose server config is gone
+    const performMissingAssistantCleanup = useCallback(async () => {
+        try {
+            await assistantStorageService.deleteChatsForAssistant(assistant_id);
+            await communityAssistantStorageService.deleteConfigForAssistant(assistant_id);
+        } catch (err) {
+            showError(
+                t("components.assistant_chat.delete_assistant_failed"),
+                err instanceof Error ? err.message : t("components.assistant_chat.delete_assistant_failed_message")
+            );
+            return;
+        }
+
+        showSuccess(
+            t("components.assistant_chat.delete_assistant_success"),
+            t("components.assistant_chat.delete_assistant_success_message", { title: t("components.assistant_chat.assistant_not_found") })
+        );
+        refreshUnifiedHistory();
+        navigate("/discovery");
+    }, [assistant_id, assistantStorageService, communityAssistantStorageService, refreshUnifiedHistory, navigate, showSuccess, showError, t]);
 
     // Regenerate-Funktion
     const onRegenerateResponseClicked = useCallback(async () => {
-        if (!conversationActions.canRegenerate || isDeletedAssistant || answers.length === 0 || !activeChatRef.current || isLoadingRef.current) return;
+        if (!conversationActions.canRegenerate || historyReadOnly || answers.length === 0 || !activeChatRef.current || isLoadingRef.current) return;
         try {
             setError(undefined);
             setIsLoadingValue(true);
@@ -661,7 +733,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
             setError(e);
             setIsLoadingValue(false);
         }
-    }, [answers, assistantChatStorage, callApi, systemPrompt, isDeletedAssistant, setIsLoadingValue]);
+    }, [answers, assistantChatStorage, callApi, systemPrompt, historyReadOnly, setIsLoadingValue]);
 
     useUnifiedHistoryRegistration(
         useMemo(
@@ -768,7 +840,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
     }, [location.pathname, navigate]);
 
     const starterPromptsComponent = useMemo(() => {
-        if (isDeletedAssistant || isLegacyAssistant) {
+        if (historyReadOnly) {
             return null;
         }
 
@@ -777,7 +849,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
         } else {
             return null;
         }
-    }, [isDeletedAssistant, isLegacyAssistant, assistantConfig.examples, onStarterPromptClicked]);
+    }, [historyReadOnly, assistantConfig.examples, onStarterPromptClicked]);
 
     // Text-Input component
     // Only the assistant's default model is selectable; if it no longer exists, the user picks from all models.
@@ -788,6 +860,14 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
             return (
                 <div className={styles.stateCallout}>
                     <AssistantStateCallout state="legacy" context="chat" onDelete={performDeleteAssistant} />
+                </div>
+            );
+        }
+
+        if (isAssistantMissing) {
+            return (
+                <div className={styles.stateCallout}>
+                    <AssistantStateCallout state="deleted" context="chat" onDelete={() => setShowDeleteConfirm(true)} />
                 </div>
             );
         }
@@ -885,57 +965,67 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
         }
 
         return (
-            <QuestionInput
-                clearOnSend
-                disabled={isLoading || isStreaming || isAssistantUnavailable || strategy instanceof DeletedCommunityAssistantStrategy}
-                draftCacheKey={draftCacheKey}
-                onSend={(question, datas) => {
-                    const dataSources = datas
-                        .filter(data => data.isActive !== false && data.status === "ready" && data.fileContent)
-                        .map(data => ({
-                            title: data.name,
-                            content: data.fileContent!,
-                            metadata: {
-                                source: data.source,
-                                mime_type: data.mimeType || data.file?.type || undefined,
-                                size: data.size,
-                                parsed_at: data.parsedAt,
-                                file_signature: data.fileSignature,
-                                stored_document_id: data.storedDocumentId,
-                                status: data.status
-                            }
-                        }));
-                    callApi(question, undefined, dataSources.length > 0 ? dataSources : undefined);
-                }}
-                question={question}
-                setQuestion={question => setQuestion(question)}
-                selectedTools={selectedTools}
-                setSelectedTools={setSelectedToolsGuarded}
-                tools={tools}
-                allowToolSelection={true}
-                lockedToolIds={lockedToolIds}
-                uploadedData={uploadedData}
-                setUploadedData={setUploadedData}
-                usage={usageSummary}
-                onStartNewChat={startNewChatFromUsage}
-                usageConversationKey={`assistant:${assistant_id}:${active_chat ?? "new"}`}
-                hideDisclaimer
-                llmOptions={availableLLMs}
-                selectedLLM={LLM.llm_name}
-                onLLMSelectionChange={onLLMSelectionChange}
-                llmLockedByAssistant={isLLMLocked}
-            />
+            <>
+                {isUnsubscribed && (
+                    <div className={styles.stateCallout}>
+                        <AssistantStateCallout state="unsubscribed" context="chat" onSubscribe={() => void performSubscribe()} />
+                    </div>
+                )}
+                <QuestionInput
+                    clearOnSend
+                    disabled={isLoading || isStreaming || isAssistantUnavailable || isUnsubscribed || strategy instanceof DeletedCommunityAssistantStrategy}
+                    draftCacheKey={draftCacheKey}
+                    onSend={(question, datas) => {
+                        const dataSources = datas
+                            .filter(data => data.isActive !== false && data.status === "ready" && data.fileContent)
+                            .map(data => ({
+                                title: data.name,
+                                content: data.fileContent!,
+                                metadata: {
+                                    source: data.source,
+                                    mime_type: data.mimeType || data.file?.type || undefined,
+                                    size: data.size,
+                                    parsed_at: data.parsedAt,
+                                    file_signature: data.fileSignature,
+                                    stored_document_id: data.storedDocumentId,
+                                    status: data.status
+                                }
+                            }));
+                        callApi(question, undefined, dataSources.length > 0 ? dataSources : undefined);
+                    }}
+                    question={question}
+                    setQuestion={question => setQuestion(question)}
+                    selectedTools={selectedTools}
+                    setSelectedTools={setSelectedToolsGuarded}
+                    tools={tools}
+                    allowToolSelection={true}
+                    lockedToolIds={lockedToolIds}
+                    uploadedData={uploadedData}
+                    setUploadedData={setUploadedData}
+                    usage={usageSummary}
+                    onStartNewChat={startNewChatFromUsage}
+                    usageConversationKey={`assistant:${assistant_id}:${active_chat ?? "new"}`}
+                    hideDisclaimer
+                    llmOptions={availableLLMs}
+                    selectedLLM={LLM.llm_name}
+                    onLLMSelectionChange={onLLMSelectionChange}
+                    llmLockedByAssistant={isLLMLocked}
+                />
+            </>
         );
     }, [
         isLegacyAssistant,
         isDeletedAssistant,
         isLocalAssistant,
         isAssistantUnavailable,
+        isUnsubscribed,
+        isAssistantMissing,
         deletedAssistantSnapshot,
         canEdit,
         navigate,
         setShowLocalMigrateConfirm,
         requestDuplicateAssistant,
+        performSubscribe,
         assistant_id,
         assistantConfig,
         isLoading,
@@ -974,15 +1064,15 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                                     isLatest
                                     isStreaming={isStreaming}
                                     onRegenerateResponseClicked={
-                                        conversationActions.canRegenerate && !isDeletedAssistant ? onRegenerateResponseClicked : undefined
+                                        conversationActions.canRegenerate && !historyReadOnly ? onRegenerateResponseClicked : undefined
                                     }
                                     regenerationUnavailableReason={
-                                        !conversationActions.canRegenerate && !isDeletedAssistant
+                                        !conversationActions.canRegenerate && !historyReadOnly
                                             ? t("components.answer.persisted_actions_unavailable")
                                             : undefined
                                     }
                                     onFollowUpActionSend={
-                                        isDeletedAssistant
+                                        historyReadOnly
                                             ? undefined
                                             : prompt => {
                                                   setLastQuestionValue(prompt);
@@ -996,17 +1086,17 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                         </>
                     );
                 }}
-                onRollbackMessage={isDeletedAssistant ? undefined : onRollbackMessage}
+                onRollbackMessage={historyReadOnly ? undefined : onRollbackMessage}
                 isLoading={isLoading}
                 loadingActivity={runActivity}
                 error={error}
                 makeApiRequest={() => {
-                    if (!conversationActions.canRetry || isDeletedAssistant || isLoadingRef.current) return;
+                    if (!conversationActions.canRetry || historyReadOnly || isLoadingRef.current) return;
                     dispatch({ type: "SET_ANSWERS", payload: answers.slice(0, -1) });
                     callApi(lastQuestion);
                 }}
-                canRetry={conversationActions.canRetry && !isDeletedAssistant}
-                retryUnavailableReason={!conversationActions.canRetry && !isDeletedAssistant ? t("components.answer.persisted_actions_unavailable") : undefined}
+                canRetry={conversationActions.canRetry && !historyReadOnly}
+                retryUnavailableReason={!conversationActions.canRetry && !historyReadOnly ? t("components.answer.persisted_actions_unavailable") : undefined}
                 chatMessageStreamEnd={chatMessageStreamEnd}
                 lastQuestionRef={lastQuestionRef}
                 onRollbackError={() => {
@@ -1020,7 +1110,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
         ),
         [
             answers,
-            isDeletedAssistant,
+            historyReadOnly,
             onRegenerateResponseClicked,
             onRollbackMessage,
             isLoading,
@@ -1037,7 +1127,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
     );
 
     const layout = useMemo(() => {
-        const canChat = !isDeletedAssistant && !isLegacyAssistant && !isAssistantUnavailable;
+        const canChat = !historyReadOnly && !isLegacyAssistant && !isAssistantUnavailable;
 
         return (
             <>
@@ -1046,7 +1136,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                     answers={answerList}
                     input={inputComponent}
                     showStarterPrompts={!lastQuestion}
-                    header={assistantConfig.title}
+                    header={isAssistantMissing ? t("components.assistant_chat.assistant_not_found") : assistantConfig.title}
                     welcomeMessage={canChat ? t("chat.header") : undefined}
                     showDisclaimer={canChat || Boolean(lastQuestion)}
                     header_as_markdown={false}
@@ -1080,12 +1170,14 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
         starterPromptsComponent,
         answerList,
         inputComponent,
-        isDeletedAssistant,
+        historyReadOnly,
+        isAssistantMissing,
         lastQuestion,
         isLegacyAssistant,
         isAssistantUnavailable,
         t,
         canEdit,
+        assistantConfig.title,
         assistantInfoData,
         isAssistantInfoLoading,
         isInfoDrawerOpen
@@ -1136,30 +1228,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                 onOpenChange={setShowNotSubscribedDialog}
                 hasAccess={!noAccess}
                 assistantTitle={assistantConfig.title}
-                onSubscribe={async () => {
-                    await subscribeToAssistantApi(assistant_id);
-                    const subscribedAssistantResponse = await getCommunityAssistantApi(assistant_id);
-                    const subscribedAssistant = {
-                        ...mapCommunitySnapshotToAssistant(mapAssistantResponseToSnapshot(subscribedAssistantResponse)),
-                        owner_ids: subscribedAssistantResponse.latest_version.owner_ids || []
-                    };
-
-                    try {
-                        await upsertCommunityAssistantSnapshot(
-                            communityAssistantStorageService,
-                            mapAssistantToCommunitySnapshot({ ...subscribedAssistant, id: assistant_id })
-                        );
-                    } catch (snapshotError) {
-                        console.error("Error updating community assistant snapshot:", snapshotError);
-                    }
-                    setAssistantConfig(subscribedAssistant);
-                    setShowNotSubscribedDialog(false);
-                    setNoAccess(false);
-                    showSuccess(
-                        t("components.not_subscribed_dialog.subscribe_success"),
-                        t("components.not_subscribed_dialog.subscribe_success_message", { assistantTitle: subscribedAssistant.title })
-                    );
-                }}
+                onSubscribe={performSubscribe}
             />
             <CloseConfirmationDialog
                 open={showLocalMigrateConfirm}
@@ -1186,7 +1255,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
             <CloseConfirmationDialog
                 open={showDeleteConfirm}
                 onOpenChange={setShowDeleteConfirm}
-                onConfirmClose={performDeleteAssistant}
+                onConfirmClose={isAssistantMissing ? performMissingAssistantCleanup : performDeleteAssistant}
                 title={t("components.assistantsettingsdrawer.deleteDialog.title")}
                 message={t("components.assistantsettingsdrawer.deleteDialog.content")}
                 confirmLabel={t("components.assistantsettingsdrawer.deleteDialog.confirm")}

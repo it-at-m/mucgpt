@@ -9,6 +9,7 @@ import {
     updateCommunityAssistantApi
 } from "../../api/assistant-client";
 import { CommunityAssistantStorageService } from "../../service/communityassistantstorage";
+import { ApiError } from "../../api/fetch-utils";
 import {
     mapAssistantResponseToSnapshot,
     mapCommunitySnapshotToAssistant,
@@ -92,14 +93,17 @@ export class CommunityAssistantStrategy implements AssistantStrategy {
                 window.location.href = `/#/deleted/communityassistant/${assistantId}${query}`;
                 return mapCommunitySnapshotToAssistant(snapshot);
             }
+            // A deleted assistant without a local snapshot still has chat history
+            // worth showing; signal the missing config instead of failing the page.
+            if (error instanceof ApiError && error.status === 404) {
+                return undefined;
+            }
             throw error;
         }
     }
 
-    async deleteAssistant(assistantId: string, assistantStorageService: AssistantStorageService): Promise<void> {
-        await assistantStorageService.deleteChatsForAssistant(assistantId);
+    async deleteAssistant(assistantId: string): Promise<void> {
         await unsubscribeFromAssistantApi(assistantId);
-        await this.communityStorageService.deleteConfigForAssistant(assistantId);
     }
 }
 
@@ -139,7 +143,6 @@ export class OwnedCommunityAssistantStrategy implements AssistantStrategy {
     }
 
     async deleteAssistant(assistantId: string, assistantStorageService: AssistantStorageService): Promise<void> {
-        await assistantStorageService.deleteChatsForAssistant(assistantId);
         await deleteCommunityAssistantApi(assistantId);
         // Also clean up any local copy that may exist from before the assistant was published
         await assistantStorageService.deleteConfigForAssistant(assistantId);

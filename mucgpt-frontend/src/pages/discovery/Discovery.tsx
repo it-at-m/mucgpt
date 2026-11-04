@@ -442,7 +442,6 @@ const Discovery = () => {
                 await assistantStorageService.deleteChatsForAssistant(selectedAssistant.id);
                 await communityAssistantStorageService.deleteConfigForAssistant(selectedAssistant.id);
             } else {
-                await assistantStorageService.deleteChatsForAssistant(selectedAssistant.id);
                 await deleteCommunityAssistantApi(selectedAssistant.id);
                 await assistantStorageService.deleteConfigForAssistant(selectedAssistant.id);
             }
@@ -465,9 +464,7 @@ const Discovery = () => {
         if (!selectedAssistant) return;
 
         try {
-            await assistantStorageService.deleteChatsForAssistant(selectedAssistant.id);
             await unsubscribeFromAssistantApi(selectedAssistant.id);
-            await communityAssistantStorageService.deleteConfigForAssistant(selectedAssistant.id);
 
             showSuccess(
                 t("components.community_assistants.unsubscribe_success_title"),

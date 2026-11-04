@@ -87,14 +87,6 @@ services:
       - KC_HEALTH_ENABLED=true
       - KC_HTTP_PORT=8100
       - KC_HTTP_RELATIVE_PATH=/auth
-      # Fix the issuer to a hostname resolvable from the HOST browser, so the
-      # OIDC redirect goes to localhost:8100 instead of keycloak:8100 (which only
-      # resolves inside the podman network and would otherwise require a hosts
-      # entry). With a full URL hostname the /auth relative path must be part of
-      # the URL (Keycloak drops KC_HTTP_RELATIVE_PATH in that mode). Services
-      # inside the compose network reach the same ports via the
-      # "localhost -> host-gateway" extra_host on the gateway.
-      - KC_HOSTNAME=http://localhost:8100/auth
     ports:
       - "8100:8100"
     volumes:
@@ -171,7 +163,7 @@ services:
       - SPRING_CLOUD_GATEWAY_SERVER_WEBFLUX_ROUTES_3_URI=http://frontend:8080/
       - SPRING_CLOUD_GATEWAY_SERVER_WEBFLUX_ROUTES_3_PREDICATES_0=Path=/**
       - SPRING_PROFILES_ACTIVE=hazelcast-local
-      - SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUERURI=http://localhost:8100/auth/realms/local_realm
+      - SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUERURI=http://keycloak:8100/auth/realms/local_realm
       - SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_SSO_ISSUERURI=$${spring.security.oauth2.resourceserver.jwt.issuer-uri}
       - SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_SSO_PROVIDER=sso
       - SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_SSO_CLIENTID=mucgpt
@@ -185,10 +177,6 @@ services:
       - internal
     extra_hosts:
       - "host.docker.internal:host-gateway"
-      # The discovered OIDC issuer (and thus the token endpoint the gateway calls)
-      # is anchored to the host-published Keycloak; map "localhost" (as seen from
-      # inside the container) to the podman host so internal calls still work.
-      - "localhost:host-gateway"
     healthcheck:
       <<: *healthcheck
       test: ["CMD-SHELL", "curl http://localhost:8080/actuator/health/liveness"]

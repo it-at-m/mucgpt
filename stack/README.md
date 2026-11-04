@@ -11,7 +11,6 @@ This directory contains the Docker Compose configuration for running the complet
 **Prerequisites:**
 
 - Podman or Docker installed
-- `keycloak` entry in your `hosts` file (see [RefArch-Docs](https://refarch.oss.muenchen.de/templates/develop.html#container-engine))
 
 **Steps:**
 
@@ -51,7 +50,7 @@ After changing the volume config, recreate it once: `docker volume rm mucgpt-sta
 
 ### WSL2 specifics
 
-The login flow redirects the browser to `http://keycloak:8100`. On WSL2 with the browser running on Windows, add `127.0.0.1 keycloak` to `C:\Windows\System32\drivers\etc\hosts` (as administrator) and run `ipconfig /flushdns`. An entry in the WSL `/etc/hosts` is not enough since WSL auto-creates that file.
+The login flow redirects the browser to `http://localhost:8100` (Keycloak's issuer is pinned to the host-published port via `KC_HOSTNAME`). No `keycloak` hosts entry is needed. On WSL2 with the browser running on Windows, open `http://localhost:8100` from the Windows host instead.
 
 ## Architecture Overview
 

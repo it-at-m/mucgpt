@@ -87,8 +87,13 @@ interface TranscriptionProviderProps {
 }
 
 /** Owns the transcription worker, tracks the configured model's availability and exposes everything through the context. */
+/** Ceiling for a stalling model load: without any result or progress for this long, the load counts as failed. */
+const LOAD_WATCHDOG_MS = 45_000;
+
 export const TranscriptionProvider = ({ children, transcriptionEnabled, transcriptionModelId }: React.PropsWithChildren<TranscriptionProviderProps>) => {
     const { t, i18n } = useTranslation();
+    const translateRef = useRef(t);
+    translateRef.current = t;
 
     // Registry lookup: an unset id (null) keeps the feature disabled without a
     // fallback — core and frontend are updated in sync. An unknown id disables
@@ -292,7 +297,7 @@ export const TranscriptionProvider = ({ children, transcriptionEnabled, transcri
                         setCacheVerified(false);
                         setModelProgress(0);
                     }
-                    setError(msg.messageKey ? t(`components.${msg.messageKey}`, { defaultValue: msg.message }) : msg.message);
+                    setError(msg.messageKey ? translateRef.current(`components.${msg.messageKey}`, { defaultValue: msg.message }) : msg.message);
                     setStatus("error");
                     break;
                 }
@@ -317,8 +322,44 @@ export const TranscriptionProvider = ({ children, transcriptionEnabled, transcri
             workerRef.current = null;
             loadedModelIdRef.current = null;
             setWorkerReady(false);
+            // A dying worker can never deliver its in-flight result: clear busy
+            // state instead of freezing the icon (the cache probe re-runs for the
+            // next worker and reloads a verified model there).
+            const pending = pendingDownloadRef.current;
+            if (pending) {
+                pending.reject(new Error("Transcription worker terminated"));
+                pendingDownloadRef.current = null;
+            }
+            expectedLoadRef.current = null;
+            setStatus(prev => (prev === "loading-model" || prev === "warming-up" ? "error" : prev));
         };
-    }, [enabled, model, sendToWorker, stopRecording, t]);
+    }, [enabled, model, sendToWorker, stopRecording]);
+
+    // Watchdog against silently wedged loads: if a load receives neither a
+    // result nor any progress for LOAD_WATCHDOG_MS, treat it as failed so the UI
+    // can offer a retry instead of spinning forever. Progress messages restart
+    // the timer, so healthy (even long) downloads never trip it.
+    useEffect(() => {
+        if (status !== "loading-model" && status !== "warming-up") return;
+        const timer = setTimeout(() => {
+            const requestId = expectedLoadRef.current?.requestId ?? pendingDownloadRef.current?.requestId;
+            if (requestId === undefined) return;
+            expectedLoadRef.current = null;
+            pendingDownloadRef.current = null;
+            sendToWorker({ type: "abort", requestId });
+            loadedModelIdRef.current = null;
+            setLoadedModelId(null);
+            if (model) {
+                void clearModelVerification(model);
+                void hasModelFiles(model).then(present => setCacheHasFiles(present));
+            }
+            setCacheVerified(false);
+            setModelProgress(0);
+            setError(t("components.transcription.load_timeout"));
+            setStatus("error");
+        }, LOAD_WATCHDOG_MS);
+        return () => clearTimeout(timer);
+    }, [status, modelProgress, sendToWorker, t, model]);
 
     const setLanguage = useCallback(
         (lang: TranscriptionLanguage) => {

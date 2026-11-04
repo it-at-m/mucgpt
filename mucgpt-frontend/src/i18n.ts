@@ -444,6 +444,7 @@ i18n
                             cancel_download: "Download abbrechen",
                             downloading: "Modell wird heruntergeladen ({{progress}} %{{mb}})",
                             loading: "Sprachmodell wird geladen …",
+                            load_timeout: "Sprachmodell konnte nicht geladen werden (Zeitüberschreitung).",
                             not_downloaded_hint: "Läuft lokal im Browser · einmaliger Download nötig",
                             unverified:
                                 "Das Sprachmodell ist bereits vorhanden, konnte aber nicht geladen werden. Der Zwischenspeicher könnte beschädigt sein.",
@@ -1362,6 +1363,7 @@ i18n
                             cancel_download: "Cancel download",
                             downloading: "Model is downloading ({{progress}} %{{mb}})",
                             loading: "Loading speech model …",
+                            load_timeout: "The speech model could not be loaded (timeout).",
                             not_downloaded_hint: "Runs locally in your browser · one-time download required",
                             unverified: "The speech model is already present but could not be loaded. The cache might be corrupted.",
                             webgpu_warning:
@@ -2243,6 +2245,7 @@ i18n
                             cancel_download: "Download obbrecha",
                             downloading: "Modell wiad obaladn ({{progress}} %{{mb}})",
                             loading: "Sprachmodell wiad gladn …",
+                            load_timeout: "Des Sprachmodell kunnt ned gladn wern (Zeitibaschreitung).",
                             not_downloaded_hint: "Lafft komplett im Browser · amoi obagladn nötig",
                             unverified: "Des Sprachmodell is scho do, konnt aber ned gladn wern. Da Zwischaspeicha kunnt beschädigt sei.",
                             webgpu_warning:
@@ -3127,6 +3130,7 @@ i18n
                             cancel_download: "Annuler le téléchargement",
                             downloading: "Téléchargement du modèle ({{progress}} %{{mb}})",
                             loading: "Chargement du modèle vocal …",
+                            load_timeout: "Le modèle vocal n'a pas pu être chargé (délai dépassé).",
                             not_downloaded_hint: "S'exécute entièrement dans votre navigateur · téléchargement unique requis",
                             unverified: "Le modèle vocal est déjà présent mais n'a pas pu être chargé. Le cache est peut-être corrompu.",
                             webgpu_warning:
@@ -4004,6 +4008,7 @@ i18n
                             cancel_download: "Скасувати завантаження",
                             downloading: "Модель завантажується ({{progress}} %{{mb}})",
                             loading: "Завантаження мовної моделі …",
+                            load_timeout: "Мовну модель не вдалося завантажити (перевищено час).",
                             not_downloaded_hint: "Працює повністю у браузері · разове завантаження",
                             unverified: "Мовна модель уже є, але не вдалося її завантажити. Можливо, кеш пошкоджено.",
                             webgpu_warning:

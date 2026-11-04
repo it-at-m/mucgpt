@@ -183,7 +183,9 @@ const Home = () => {
 
                     const sub = subsMap.get(assistantId);
                     if (sub) {
-                        // Subscribed assistants should only be shown if they still exist and are visible.
+                        // Subscribed assistants should only be shown if they still exist and are visible;
+                        // deliberately hidden ones stay suppressed from the recent list either way.
+                        handledAssistantIds.add(assistantId);
                         const community = allCommunityMap.get(assistantId);
                         if (!community || !community.is_visible) continue;
 
@@ -198,7 +200,6 @@ const Home = () => {
                             rawData: community,
                             subscriberCount: community.subscriptions_count || 0
                         });
-                        handledAssistantIds.add(assistantId);
                         continue;
                     }
 
@@ -222,7 +223,6 @@ const Home = () => {
                     }
 
                     if (community) continue;
-                    handledAssistantIds.add(assistantId);
                 }
 
                 // Assistants that no longer surface through any list: keep their chats reachable
@@ -246,6 +246,7 @@ const Home = () => {
                                   ),
                         lastUsed: orphan.lastUsed,
                         linkTo: `/${orphan.kind === "deleted" ? "deleted/communityassistant" : "communityassistant"}/${orphan.id}`,
+                        metadataFallbackLabel: t("components.community_assistants.filter_all", "Community"),
                         rawData: {} as AssistantResponse,
                         subscriberCount: 0
                     });

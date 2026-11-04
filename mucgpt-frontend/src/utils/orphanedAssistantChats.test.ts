@@ -31,6 +31,18 @@ describe("resolveOrphanedAssistantChats", () => {
         expect(orphans).toEqual([{ id: "a1", kind: "deleted", lastUsed: 7 }]);
     });
 
+    it("skips hidden assistants so deliberately suppressed ones stay suppressed", async () => {
+        vi.mocked(getCommunityAssistantApi).mockResolvedValue({
+            id: "a1",
+            is_visible: false,
+            latest_version: { name: "Hidden", description: "" }
+        } as never);
+
+        const orphans = await resolveOrphanedAssistantChats(["a1"], new Map([["a1", 11]]));
+
+        expect(orphans).toEqual([]);
+    });
+
     it("skips assistants on other errors and sorts the rest by last usage", async () => {
         vi.mocked(getCommunityAssistantApi).mockImplementation(id => {
             if (id === "a1") return Promise.resolve({ id, latest_version: { name: "First", description: "" } } as never);

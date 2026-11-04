@@ -9,16 +9,21 @@ interface UseOrphanedAssistantChatsParams {
     assistantStorageService: AssistantStorageService;
     /** Assistant ids that still surface through a list and must not be treated as orphans. */
     excludeIds: Set<string>;
+    /** False while the assistant lists are still loading, so orphan resolution waits for a complete picture. */
+    enabled?: boolean;
 }
 
 /**
  * Surfaces assistants whose chats remain in the browser but that no longer appear
  * in any assistant list (deleted or unsubscribed) so their history stays reachable.
  */
-export const useOrphanedAssistantChats = ({ assistantStorageService, excludeIds }: UseOrphanedAssistantChatsParams): OrphanedAssistant[] => {
+export const useOrphanedAssistantChats = ({ assistantStorageService, excludeIds, enabled = true }: UseOrphanedAssistantChatsParams): OrphanedAssistant[] => {
     const [orphans, setOrphans] = useState<OrphanedAssistant[]>([]);
 
     useEffect(() => {
+        if (!enabled) {
+            return;
+        }
         let cancelled = false;
 
         const resolve = async () => {
@@ -58,7 +63,7 @@ export const useOrphanedAssistantChats = ({ assistantStorageService, excludeIds 
         return () => {
             cancelled = true;
         };
-    }, [assistantStorageService, excludeIds]);
+    }, [assistantStorageService, excludeIds, enabled]);
 
     return orphans;
 };

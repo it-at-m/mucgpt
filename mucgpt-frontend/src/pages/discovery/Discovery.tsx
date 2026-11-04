@@ -125,7 +125,7 @@ const Discovery = () => {
         removeSubscribedAssistant,
         removeAssistantFromLists
     } = useDiscoveryAssistantLists({ assistantStorageService, communityAssistantStorageService });
-    const orphans = useOrphanedAssistantChats({ assistantStorageService, excludeIds: knownAssistantIds });
+    const orphans = useOrphanedAssistantChats({ assistantStorageService, excludeIds: knownAssistantIds, enabled: !isLoading });
     const {
         assistantToDuplicate,
         showDuplicateConfirm,

@@ -1258,11 +1258,17 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                 open={showDeleteConfirm}
                 onOpenChange={setShowDeleteConfirm}
                 onConfirmClose={isAssistantMissing ? performMissingAssistantCleanup : performDeleteAssistant}
-                title={t("components.assistantsettingsdrawer.deleteDialog.title")}
+                title={t(
+                    isAssistantMissing || isDeletedAssistant
+                        ? "components.community_assistants.leftover_chats_cleanup_confirm_title"
+                        : "components.assistantsettingsdrawer.deleteDialog.title"
+                )}
                 message={t(
-                    isLocalAssistant
-                        ? "components.community_assistants.local_delete_confirm_message"
-                        : "components.assistantsettingsdrawer.deleteDialog.content"
+                    isAssistantMissing || isDeletedAssistant
+                        ? "components.community_assistants.leftover_chats_cleanup_confirm_message"
+                        : isLocalAssistant
+                          ? "components.community_assistants.local_delete_confirm_message"
+                          : "components.assistantsettingsdrawer.deleteDialog.content"
                 )}
                 confirmLabel={t("components.assistantsettingsdrawer.deleteDialog.confirm")}
                 confirmIntent="danger"

@@ -832,11 +832,17 @@ const Discovery = () => {
                 open={showDeleteConfirm}
                 onOpenChange={setShowDeleteConfirm}
                 onConfirmClose={performDelete}
-                title={t("components.assistantsettingsdrawer.deleteDialog.title")}
+                title={t(
+                    selectedAssistant?.isDeletedSnapshot
+                        ? "components.community_assistants.leftover_chats_cleanup_confirm_title"
+                        : "components.assistantsettingsdrawer.deleteDialog.title"
+                )}
                 message={t(
-                    selectedAssistant?.isLocalAssistant
-                        ? "components.community_assistants.local_delete_confirm_message"
-                        : "components.assistantsettingsdrawer.deleteDialog.content"
+                    selectedAssistant?.isDeletedSnapshot
+                        ? "components.community_assistants.leftover_chats_cleanup_confirm_message"
+                        : selectedAssistant?.isLocalAssistant
+                          ? "components.community_assistants.local_delete_confirm_message"
+                          : "components.assistantsettingsdrawer.deleteDialog.content"
                 )}
                 confirmLabel={t("components.assistantsettingsdrawer.deleteDialog.confirm")}
             />

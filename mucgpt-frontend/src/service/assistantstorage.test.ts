@@ -194,6 +194,7 @@ describe("assistant chat conversion to normal chats", () => {
         fetchMock.mockResolvedValue(new Response(null, { status: 204 }));
         vi.spyOn(StorageService.prototype, "getAll").mockResolvedValue([chatRecord(chatId, true, { system_message: "Alter Prompt", creativity: "high" })]);
         vi.spyOn(StorageService.prototype, "delete").mockResolvedValue(true);
+        vi.spyOn(StorageService.prototype, "get").mockResolvedValue(undefined);
         vi.spyOn(StorageService.prototype, "connectToDB").mockResolvedValue({
             put: vi.fn().mockResolvedValue(undefined),
             close: vi.fn().mockResolvedValue(undefined)
@@ -228,6 +229,23 @@ describe("assistant chat conversion to normal chats", () => {
         expect(fetchMock).not.toHaveBeenCalled();
         const db = await StorageService.prototype.connectToDB();
         expect(db.put).toHaveBeenCalledWith("chat", expect.objectContaining({ id: "thread", config: { system: "Legacy Prompt", creativity: "low" } }));
+    });
+
+    it("falls back to the assistant configuration for chats without a stored per-chat config", async () => {
+        vi.mocked(StorageService.prototype.getAll).mockResolvedValue([chatRecord(chatId, true)]);
+        vi.mocked(StorageService.prototype.get).mockResolvedValue({ config: { system_message: "Assistent Prompt", creativity: "medium" } } as never);
+        await service.convertChatsToNormalChats(assistantId);
+
+        const db = await StorageService.prototype.connectToDB();
+        expect(db.put).toHaveBeenCalledWith("chat", expect.objectContaining({ id: "thread", config: { system: "Assistent Prompt", creativity: "medium" } }));
+    });
+
+    it("keeps a per-chat system prompt that differs from the assistant configuration", async () => {
+        vi.mocked(StorageService.prototype.get).mockResolvedValue({ config: { system_message: "Assistent Prompt", creativity: "medium" } } as never);
+        await service.convertChatsToNormalChats(assistantId);
+
+        const db = await StorageService.prototype.connectToDB();
+        expect(db.put).toHaveBeenCalledWith("chat", expect.objectContaining({ id: "thread", config: { system: "Alter Prompt", creativity: "high" } }));
     });
 
     it("tolerates a missing server row (404) but propagates other detach failures without converting", async () => {

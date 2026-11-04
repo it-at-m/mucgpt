@@ -214,12 +214,15 @@ export class AssistantStorageService {
      * Converts all chats of an assistant into normal assistant-less chats so they
      * survive the assistant's deletion: messages, title, and favourites are kept and
      * the last-used system prompt and creativity become the normal chat's editable
-     * per-chat settings. Persisted conversations are detached from the assistant on
-     * the server first; browser-only chats have no server row, so an ignored 404 is
-     * expected.
+     * per-chat settings. The prompt falls back to the assistant's configuration
+     * (the caller deletes it only afterwards), then to empty values for chats whose
+     * record was synced without a local config. Persisted conversations are detached
+     * from the assistant on the server first; browser-only chats have no server row,
+     * so an ignored 404 is expected.
      */
     async convertChatsToNormalChats(assistant_id: string): Promise<void> {
         const chats = await this.getAllChatForAssistant(assistant_id);
+        const assistantConfig = await this.getAssistantConfig(assistant_id);
         const sourcePrefix = AssistantStorageService.GENERATE_BOT_CHAT_PREFIX(assistant_id);
         const normalStorage = new StorageService<ChatResponse, { system: string; creativity: string }>(CHAT_STORE);
         const normalDb = await normalStorage.connectToDB();
@@ -231,8 +234,8 @@ export class AssistantStorageService {
                 ...chat,
                 id: chatUuid,
                 config: {
-                    system: legacyConfig?.system_message ?? legacyConfig?.system ?? "",
-                    creativity: legacyConfig?.creativity ?? CREATIVITY_LOW
+                    system: legacyConfig?.system_message ?? legacyConfig?.system ?? assistantConfig?.system_message ?? "",
+                    creativity: legacyConfig?.creativity ?? assistantConfig?.creativity ?? CREATIVITY_LOW
                 }
             };
             if (chat.backendPersisted) {

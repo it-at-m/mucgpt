@@ -24,13 +24,10 @@ export const MicrophoneButton = ({ onTranscription, onLiveTranscription, onRecor
     const { status, modelState, modelProgress, transcript, startRecording, stopAndTranscribe } = useTranscription();
     const [panelOpen, setPanelOpen] = useState(false);
 
-    // Close the panel once the model work it was opened for has settled —
-    // a finished download/load makes the mic record again, failures go grey.
-    const previousModelStateRef = useRef(modelState);
+    // Keep the panel open while it shows live progress or an error with recovery
+    // actions; only a finished (and therefore clickable-again) mic closes it.
     useEffect(() => {
-        const wasProgress = PROGRESS_STATES.has(previousModelStateRef.current);
-        previousModelStateRef.current = modelState;
-        if (wasProgress && !PROGRESS_STATES.has(modelState)) setPanelOpen(false);
+        if (modelState === "ready") setPanelOpen(false);
     }, [modelState]);
 
     // Forward interim transcript to input while recording

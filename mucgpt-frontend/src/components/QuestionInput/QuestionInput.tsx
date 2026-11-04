@@ -81,8 +81,9 @@ export const QuestionInput = ({
 }: Props) => {
     const { t } = useTranslation();
     const config = useConfigContext();
+    const { enabled: transcriptionEnabled, status: transcriptionStatus } = useTranscription();
     const allowFileUpload = allowFileUploadProp ?? config.document_processing_enabled;
-    const allowTranscription = config.transcription_enabled;
+    const allowTranscription = transcriptionEnabled;
     const resolvedPlaceholder = placeholder ?? (allowFileUpload ? t("chat.prompt") : t("chat.prompt_no_upload"));
     const textareaRef = useAutoGrowTextarea(question);
     const uploadButtonRef = useRef<HTMLButtonElement | null>(null);
@@ -101,7 +102,6 @@ export const QuestionInput = ({
     const setQuestionRef = useRef(setQuestion);
     const previousUsageConversationKeyRef = useRef<string | undefined>(usageConversationKey);
     const recordingBaseRef = useRef("");
-    const { status: transcriptionStatus } = useTranscription();
     const isTranscriptionActive = transcriptionStatus === "recording" || transcriptionStatus === "transcribing";
 
     const draftStorageKey = draftCacheKey ? `question-input-draft:${draftCacheKey}` : undefined;

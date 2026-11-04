@@ -285,7 +285,12 @@ export const TranscriptionProvider = ({ children, transcriptionEnabled, transcri
                     // (Session/transcription errors do not touch the marker.)
                     const isLoadError = msg.requestId !== undefined && msg.sessionId === undefined;
                     if (isLoadError) {
-                        if (model) void clearModelVerification(model);
+                        if (model) {
+                            void clearModelVerification(model);
+                            // Re-probe files so the popover can distinguish "missing"
+                            // (fresh download) from "unverified" (cached but broken).
+                            void hasModelFiles(model).then(present => setCacheHasFiles(present));
+                        }
                         setCacheVerified(false);
                         setModelProgress(0);
                     }

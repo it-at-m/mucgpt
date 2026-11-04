@@ -430,7 +430,7 @@ i18n
                             storage_error_other: "{{count}} Dokumente konnten nicht lokal gespeichert werden."
                         },
                         microphonebutton: {
-                            record: "Sprachaufnahme starten",
+                            record: "Spracheingabe starten",
                             stop: "Aufnahme beenden",
                             transcribing: "Transkribiere...",
                             loading_model: "Modell wird geladen..."
@@ -1348,7 +1348,7 @@ i18n
                             storage_error_other: "{{count}} documents could not be saved locally."
                         },
                         microphonebutton: {
-                            record: "Start voice recording",
+                            record: "Start speech input",
                             stop: "Stop recording",
                             transcribing: "Transcribing...",
                             loading_model: "Loading model..."
@@ -2229,7 +2229,7 @@ i18n
                             storage_error: "Dokument hod ned gspeichert wern kenna (Speicher voi)."
                         },
                         microphonebutton: {
-                            record: "Sprachaufnahm starten",
+                            record: "Sprocheingob startn",
                             stop: "Aufnahm beenden",
                             transcribing: "Transkribier...",
                             loading_model: "Modell wead gladn..."
@@ -3113,7 +3113,7 @@ i18n
                             storage_error: "Le document n'a pas pu être enregistré (stockage plein)."
                         },
                         microphonebutton: {
-                            record: "Démarrer l'enregistrement vocal",
+                            record: "Démarrer la saisie vocale",
                             stop: "Arrêter l'enregistrement",
                             transcribing: "Transcription en cours...",
                             loading_model: "Chargement du modèle..."
@@ -3990,7 +3990,7 @@ i18n
                             storage_error: "Документ не вдалося зберегти (сховище переповнене)."
                         },
                         microphonebutton: {
-                            record: "Почати голосовий запис",
+                            record: "Почати мовний ввід",
                             stop: "Зупинити запис",
                             transcribing: "Транскрибування...",
                             loading_model: "Завантаження моделі..."

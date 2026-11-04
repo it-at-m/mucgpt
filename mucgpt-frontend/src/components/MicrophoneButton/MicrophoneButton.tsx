@@ -1,8 +1,9 @@
-import styles from "./MicrophoneButton.module.css";
-import { Popover, PopoverSurface, PopoverTrigger, Tooltip, mergeClasses } from "@fluentui/react-components";
+import { Popover, PopoverSurface, PopoverTrigger, Tooltip, mergeClasses, makeStyles, tokens, type PositioningProps } from "@fluentui/react-components";
 import { MicOffRegular, MicRecordRegular, MicRegular, MicSyncRegular } from "@fluentui/react-icons";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
+
+import styles from "./MicrophoneButton.module.css";
 import { Button } from "../../ui/Button";
 import { useTranscription, type TranscriptionModelState } from "../../hooks/useTranscription";
 import { TranscriptionModelContent } from "../Transcription/TranscriptionModelContent";
@@ -19,9 +20,27 @@ const PANEL_STATES: ReadonlySet<TranscriptionModelState> = new Set(["missing", "
 /** Live model states; the panel stays open to show the ongoing progress. */
 const PROGRESS_STATES: ReadonlySet<TranscriptionModelState> = new Set(["checking", "loading", "downloading"]);
 
+// Mirrors the LLMSelector trigger styling so all chat-input controls look alike:
+// quiet foreground, calm emphasis, reduced trailing gap.
+const useStyles = makeStyles({
+    trigger: {
+        color: tokens.colorNeutralForeground3
+    }
+});
+
+// Anchor/alignment identical to the model picker's popover: right-aligned to the
+// trigger with a small offset and a viewport gutter.
+const POPOVER_POSITIONING: PositioningProps = {
+    position: "above",
+    align: "end",
+    offset: 8,
+    overflowBoundaryPadding: 16
+};
+
 export const MicrophoneButton = ({ onTranscription, onLiveTranscription, onRecordingStart, disabled = false }: Props) => {
     const { t } = useTranslation();
     const { status, modelState, modelProgress, transcript, startRecording, stopAndTranscribe } = useTranscription();
+    const triggerStyles = useStyles();
     const [panelOpen, setPanelOpen] = useState(false);
 
     // Keep the panel open while it shows live progress or an error with recovery
@@ -74,6 +93,8 @@ export const MicrophoneButton = ({ onTranscription, onLiveTranscription, onRecor
     // enabled (greyed-out styling communicates "not usable for recording");
     // otherwise it follows the recording lifecycle and the input's disabled state.
     const buttonDisabled = disabled || (!opensPanel && (status === "transcribing" || PROGRESS_STATES.has(modelState)));
+    // Active transcription gets a lightly pulsating ring around the icon.
+    const isTranscribing = status === "recording" || status === "transcribing";
 
     const getIcon = () => {
         if (opensPanel) return <MicOffRegular />;
@@ -89,16 +110,16 @@ export const MicrophoneButton = ({ onTranscription, onLiveTranscription, onRecor
         return t("components.microphonebutton.record");
     };
 
-    const buttonClass = mergeClasses(styles.micButton, (PROGRESS_STATES.has(modelState) || status === "transcribing") && styles.busy);
+    const buttonClass = mergeClasses(styles.micButton, triggerStyles.trigger, (PROGRESS_STATES.has(modelState) || status === "transcribing") && styles.busy);
     const buttonTone = opensPanel ? "muted" : undefined;
     // Keep the popover mounted while it shows live progress, even though the mic
     // itself leaves the muted state as soon as downloading/loading starts.
     const popoverMode = opensPanel || (panelOpen && PROGRESS_STATES.has(modelState));
 
     return (
-        <div className={styles.wrapper}>
+        <div className={mergeClasses(styles.wrapper, isTranscribing && styles.pulsing)}>
             {popoverMode ? (
-                <Popover open={panelOpen} onOpenChange={(_, data) => setPanelOpen(data.open)}>
+                <Popover open={panelOpen} positioning={POPOVER_POSITIONING} onOpenChange={(_, data) => setPanelOpen(data.open)}>
                     <PopoverTrigger disableButtonEnhancement>
                         <Tooltip positioning={"below"} content={getTooltipContent()} relationship="label">
                             <Button
@@ -119,7 +140,6 @@ export const MicrophoneButton = ({ onTranscription, onLiveTranscription, onRecor
                 <Tooltip positioning={"below"} content={getTooltipContent()} relationship="label">
                     <Button
                         appearance="subtle"
-                        tone={buttonTone}
                         className={buttonClass}
                         icon={getIcon()}
                         aria-label={getTooltipContent()}

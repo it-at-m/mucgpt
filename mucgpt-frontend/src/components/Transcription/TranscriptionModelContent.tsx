@@ -4,29 +4,22 @@ import { useTranslation } from "react-i18next";
 import { useTranscription } from "../../hooks/useTranscription";
 import { EdelweissSpinner } from "../EdelweissSpinner";
 
-/** Maps ISO codes to localized language names for the model hint. */
-function localizedLanguages(t: (key: string) => string, languages: string[]): string {
-    return languages.map(code => t(`components.transcription.languages.${code}`)).join(", ");
-}
-
 const useStyles = makeStyles({
     surface: {
         display: "flex",
         flexDirection: "column",
         gap: tokens.spacingVerticalS,
-        width: "320px",
+        width: "280px",
         padding: `${tokens.spacingVerticalM} ${tokens.spacingHorizontalM}`
     },
-    title: {
+    modelRow: {
         display: "flex",
         alignItems: "center",
         gap: tokens.spacingHorizontalSNudge,
         ...typographyStyles.body1Strong
     },
+    // Match the model picker's secondary facts typography.
     meta: {
-        display: "flex",
-        flexDirection: "column",
-        gap: "2px",
         color: tokens.colorNeutralForeground3,
         ...typographyStyles.caption1
     },
@@ -58,17 +51,13 @@ const useStyles = makeStyles({
         alignItems: "center",
         gap: tokens.spacingHorizontalS,
         justifyContent: "flex-end"
-    },
-    disclaimer: {
-        ...typographyStyles.caption1,
-        color: tokens.colorNeutralForeground3
     }
 });
 
 /**
- * Panel content of the transcription model popover: shows the deployment-configured
- * model and offers the availability-state-specific actions (download, retry,
- * re-download, cancel). Rendered by the microphone while the model is not ready.
+ * Trimmed model panel of the transcription popover: the deployment-configured
+ * model (name, size, one-line status) and the state-specific actions only —
+ * deliberately matching the restraint of the LLM model picker's details panel.
  */
 export const TranscriptionModelContent = () => {
     const { model, modelState, modelProgress, downloadedBytes, totalBytes, error, downloadModel, retryModelLoad, redownloadModel, cancelDownload } =
@@ -90,17 +79,13 @@ export const TranscriptionModelContent = () => {
 
     return (
         <div className={styles.surface}>
-            <span className={styles.title}>
-                {t("components.transcription.title")}
+            <span className={styles.modelRow}>
+                {model.label}
                 <Badge appearance="tint" color="warning">
                     {t("components.transcription.beta")}
                 </Badge>
             </span>
-            <span className={styles.meta}>
-                <span>{model.label}</span>
-                {model.size_hint && <span>{t("components.transcription.size_hint", { size: model.size_hint })}</span>}
-                {model.languages && <span>{t("components.transcription.model_languages", { languages: localizedLanguages(t, model.languages) })}</span>}
-            </span>
+            {model.size_hint && <span className={styles.meta}>{t("components.transcription.size_hint", { size: model.size_hint })}</span>}
 
             {showProgress && <ProgressBar className={styles.progress} value={modelProgress / 100} thickness="medium" />}
 
@@ -154,8 +139,6 @@ export const TranscriptionModelContent = () => {
                     </>
                 )}
             </div>
-
-            <span className={styles.disclaimer}>{t("components.transcription.disclaimer")}</span>
         </div>
     );
 };

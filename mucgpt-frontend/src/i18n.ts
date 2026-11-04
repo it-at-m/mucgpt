@@ -436,7 +436,6 @@ i18n
                             loading_model: "Modell wird geladen..."
                         },
                         transcription: {
-                            title: "Transkription",
                             beta: "Beta",
                             setup_tooltip: "Sprachmodell herunterladen",
                             download: "Modell herunterladen",
@@ -445,23 +444,13 @@ i18n
                             cancel_download: "Download abbrechen",
                             downloading: "Modell wird heruntergeladen ({{progress}} %{{mb}})",
                             loading: "Sprachmodell wird geladen …",
-                            not_downloaded_hint: "Das Sprachmodell läuft vollständig im Browser und muss einmalig heruntergeladen werden.",
+                            not_downloaded_hint: "Läuft lokal im Browser · einmaliger Download nötig",
                             unverified:
                                 "Das Sprachmodell ist bereits vorhanden, konnte aber nicht geladen werden. Der Zwischenspeicher könnte beschädigt sein.",
                             webgpu_warning:
                                 "Für dieses Modell wird WebGPU benötigt, das in deinem Browser nicht verfügbar ist. Die Transkription läuft auf CPU (WebAssembly) und kann deutlich langsamer sein.",
                             webgpu_only_error: "Dieses Modell erfordert WebGPU, das in deinem Browser nicht verfügbar ist.",
-                            size_hint: "Größe: {{size}}",
-                            model_languages: "Sprachen: {{languages}}",
-                            languages: {
-                                de: "Deutsch",
-                                en: "Englisch",
-                                fr: "Französisch",
-                                es: "Spanisch",
-                                uk: "Ukrainisch"
-                            },
-                            disclaimer:
-                                "Beta-Funktion: Die Transkriptionsqualität ist nicht validiert und kann je nach Sprache, Audioqualität und lokaler Hardware variieren. Das Modell läuft vollständig im Browser – keine Audiodaten verlassen dein Gerät."
+                            size_hint: "Größe: {{size}}"
                         },
                         suminput: {
                             tokensused: "Token verbraucht",
@@ -1365,7 +1354,6 @@ i18n
                             loading_model: "Loading model..."
                         },
                         transcription: {
-                            title: "Transcription",
                             beta: "Beta",
                             setup_tooltip: "Download the speech model",
                             download: "Download model",
@@ -1374,22 +1362,12 @@ i18n
                             cancel_download: "Cancel download",
                             downloading: "Model is downloading ({{progress}} %{{mb}})",
                             loading: "Loading speech model …",
-                            not_downloaded_hint: "The speech model runs entirely in your browser and must be downloaded once.",
+                            not_downloaded_hint: "Runs locally in your browser · one-time download required",
                             unverified: "The speech model is already present but could not be loaded. The cache might be corrupted.",
                             webgpu_warning:
                                 "This model requires WebGPU, which is not available in your browser. Transcription will run on CPU (WebAssembly) and may be noticeably slower.",
                             webgpu_only_error: "This model requires WebGPU, which is not available in your browser.",
-                            size_hint: "Size: {{size}}",
-                            model_languages: "Languages: {{languages}}",
-                            languages: {
-                                de: "German",
-                                en: "English",
-                                fr: "French",
-                                es: "Spanish",
-                                uk: "Ukrainian"
-                            },
-                            disclaimer:
-                                "Beta feature: transcription quality is not validated and may vary with language, audio quality, and your local hardware. The model runs fully in your browser – no audio leaves your device."
+                            size_hint: "Size: {{size}}"
                         },
                         suminput: {
                             tokensused: "Token used",
@@ -2257,7 +2235,6 @@ i18n
                             loading_model: "Modell wead gladn..."
                         },
                         transcription: {
-                            title: "Transkription",
                             beta: "Beta",
                             setup_tooltip: "Sprachmodell obaladn",
                             download: "Modell obaladn",
@@ -2266,22 +2243,12 @@ i18n
                             cancel_download: "Download obbrecha",
                             downloading: "Modell wiad obaladn ({{progress}} %{{mb}})",
                             loading: "Sprachmodell wiad gladn …",
-                            not_downloaded_hint: "Des Sprachmodell lafft komplett im Browser und muas amoi obagladn wern.",
+                            not_downloaded_hint: "Lafft komplett im Browser · amoi obagladn nötig",
                             unverified: "Des Sprachmodell is scho do, konnt aber ned gladn wern. Da Zwischaspeicha kunnt beschädigt sei.",
                             webgpu_warning:
                                 "Fia des Modell brauchst WebGPU, des in deim Browser ned verfügbar is. De Transkription lafft auf da CPU und kun netdeitsamer sei.",
                             webgpu_only_error: "Des Modell braucht WebGPU, des in deim Browser ned verfügbar is.",
-                            size_hint: "Greß: {{size}}",
-                            model_languages: "Sprachen: {{languages}}",
-                            languages: {
-                                de: "Deutsch",
-                                en: "Englisch",
-                                fr: "Franzesisch",
-                                es: "Spanisch",
-                                uk: "Ukrainisch"
-                            },
-                            disclaimer:
-                                "Beta-Funktion: De Transkriptionsqualität is ned validiert und kun je noch Sproch, Audioqualität und Hardware vaschiadlich sei. Des Modell lafft komplett im Browser – koane Audiodaten verlassn dein Gerät."
+                            size_hint: "Greß: {{size}}"
                         },
                         suminput: {
                             tokensused: "Token vabrocht",
@@ -3152,7 +3119,6 @@ i18n
                             loading_model: "Chargement du modèle..."
                         },
                         transcription: {
-                            title: "Transcription",
                             beta: "Bêta",
                             setup_tooltip: "Télécharger le modèle vocal",
                             download: "Télécharger le modèle",
@@ -3161,22 +3127,12 @@ i18n
                             cancel_download: "Annuler le téléchargement",
                             downloading: "Téléchargement du modèle ({{progress}} %{{mb}})",
                             loading: "Chargement du modèle vocal …",
-                            not_downloaded_hint: "Le modèle vocal s'exécute entièrement dans votre navigateur et doit être téléchargé une fois.",
+                            not_downloaded_hint: "S'exécute entièrement dans votre navigateur · téléchargement unique requis",
                             unverified: "Le modèle vocal est déjà présent mais n'a pas pu être chargé. Le cache est peut-être corrompu.",
                             webgpu_warning:
                                 "Ce modèle nécessite WebGPU, qui n'est pas disponible dans votre navigateur. La transcription s'exécutera sur le CPU (WebAssembly) et peut être nettement plus lente.",
                             webgpu_only_error: "Ce modèle nécessite WebGPU, qui n'est pas disponible dans votre navigateur.",
-                            size_hint: "Taille : {{size}}",
-                            model_languages: "Langues : {{languages}}",
-                            languages: {
-                                de: "Allemand",
-                                en: "Anglais",
-                                fr: "Français",
-                                es: "Espagnol",
-                                uk: "Ukrainien"
-                            },
-                            disclaimer:
-                                "Fonctionnalité bêta : la qualité de la transcription n'est pas validée et peut varier selon la langue, la qualité audio et votre matériel local. Le modèle s'exécute entièrement dans le navigateur – aucun audio ne quitte votre appareil."
+                            size_hint: "Taille : {{size}}"
                         },
                         suminput: {
                             tokensused: "Tokens utilisés",
@@ -4040,7 +3996,6 @@ i18n
                             loading_model: "Завантаження моделі..."
                         },
                         transcription: {
-                            title: "Транскрипція",
                             beta: "Бета",
                             setup_tooltip: "Завантажити мовну модель",
                             download: "Завантажити модель",
@@ -4049,22 +4004,12 @@ i18n
                             cancel_download: "Скасувати завантаження",
                             downloading: "Модель завантажується ({{progress}} %{{mb}})",
                             loading: "Завантаження мовної моделі …",
-                            not_downloaded_hint: "Мовна модель працює повністю у браузері та потребує одноразового завантаження.",
+                            not_downloaded_hint: "Працює повністю у браузері · разове завантаження",
                             unverified: "Мовна модель уже є, але не вдалося її завантажити. Можливо, кеш пошкоджено.",
                             webgpu_warning:
                                 "Для цієї моделі потрібне WebGPU, яке недоступне у вашому браузері. Транскрипція виконуватиметься на CPU (WebAssembly) і може бути помітно повільнішою.",
                             webgpu_only_error: "Ця модель потребує WebGPU, яке недоступне у вашому браузері.",
-                            size_hint: "Розмір: {{size}}",
-                            model_languages: "Мови: {{languages}}",
-                            languages: {
-                                de: "Німецька",
-                                en: "Англійська",
-                                fr: "Французька",
-                                es: "Іспанська",
-                                uk: "Українська"
-                            },
-                            disclaimer:
-                                "Бета-функція: якість транскрипції не перевірена і може залежати від мови, якості звуку та локального обладнання. Модель працює повністю у браузері – аудіо не залишає ваш пристрій."
+                            size_hint: "Розмір: {{size}}"
                         },
                         suminput: {
                             tokensused: "Використано токени",

@@ -5,7 +5,7 @@ import { useTranslation } from "react-i18next";
 import { Button } from "../../ui/Button";
 import { Callout } from "../../ui/Callout";
 
-export type AssistantCalloutState = "deleted" | "unsubscribed" | "local" | "legacy" | "pending_legal_review" | "inactive";
+export type AssistantCalloutState = "deleted" | "missing" | "unsubscribed" | "local" | "legacy" | "pending_legal_review" | "inactive";
 
 interface AssistantStateCalloutProps {
     state: AssistantCalloutState;
@@ -38,6 +38,11 @@ export const AssistantStateCallout = ({
             title: t("components.community_assistants.deleted_state_title"),
             hint: isChat ? t("components.community_assistants.deleted_chat_warning") : t("components.community_assistants.discovery_deleted_hint")
         },
+        missing: {
+            intent: "error",
+            title: t("components.community_assistants.missing_state_title"),
+            hint: t("components.community_assistants.missing_chat_warning")
+        },
         unsubscribed: {
             intent: "warning",
             title: t("components.community_assistants.unsubscribed_state_title"),
@@ -66,7 +71,7 @@ export const AssistantStateCallout = ({
     };
     const { intent, title, hint } = content[state];
 
-    const isOutdated = state === "deleted" || state === "local" || state === "legacy";
+    const isOutdated = state === "deleted" || state === "missing" || state === "local" || state === "legacy";
     const isUnavailable = state === "pending_legal_review" || state === "inactive";
 
     const primaryActions = [

@@ -286,16 +286,6 @@ i18n
                             no_access_message: "Sie haben keinen Zugriff auf den Assistenten '{{assistantTitle}}'.",
                             no_access_info: "Bitte wenden Sie sich an den Ersteller des Assistenten, um Zugriff zu erhalten."
                         },
-                        assistant_picker_dialog: {
-                            title: "Chats einem Assistenten zuordnen",
-                            message:
-                                "Der ursprüngliche Assistent ist nicht mehr verfügbar. Wähle einen Assistenten aus, um die Chats mit diesem Assistenten fortzusetzen.",
-                            empty: "Keine Assistenten verfügbar.",
-                            attach_success_title: "Chats zugeordnet",
-                            attach_success_message: "Die Chats wurden dem Assistenten '{{title}}' zugeordnet.",
-                            attach_failed_title: "Chats konnten nicht zugeordnet werden",
-                            attach_failed_message: "Beim Zuordnen der Chats ist ein Fehler aufgetreten."
-                        },
                         department_dropdown: {
                             placeholder: "Suche Abteilung...",
                             no_matches: "Keine Treffer",
@@ -930,9 +920,11 @@ i18n
                             discovery_deleted_hint:
                                 "Dieser Community-Assistent wurde vom Ersteller gelöscht. Er ist nicht mehr verfügbar. Die letzte Version liegt nur noch lokal im Browser und kann verloren gehen. Sichern Sie sie jetzt als eigenen Assistenten oder sehen Sie nur den alten Chatverlauf an.",
                             deleted_chat_warning:
-                                "Dieser Community-Assistent wurde vom Ersteller gelöscht und ist nicht mehr verfügbar. Diese Version liegt nur noch lokal im Browser und kann verloren gehen. Der Chatverlauf ist schreibgeschützt. Sichern Sie sie als eigenen Assistenten, wenn Sie weiter damit arbeiten möchten.",
+                                "Dieser Assistent wurde gelöscht. Die letzte Version liegt nur noch lokal im Browser und kann verloren gehen. Der Chatverlauf ist schreibgeschützt. Sichere die lokale Version als eigenen Assistenten, wenn du damit weiterarbeiten möchtest.",
                             deleted_state_save_action: "Als eigenen Assistenten speichern",
-                            deleted_state_attach_action: "An anderen Assistenten anhängen",
+                            missing_state_title: "Dieser Assistent ist nicht mehr verfügbar",
+                            missing_chat_warning:
+                                "Der Assistent wurde gelöscht. Dein Chatverlauf bleibt erhalten und kann eingesehen werden. Wenn du ihn nicht mehr brauchst, kannst du ihn löschen.",
                             deleted_state_history_action: "Chatverlauf",
                             deleted_state_no_history: "Für diesen Assistenten ist kein lokaler Chatverlauf verfügbar.",
                             legacy_state_title: "Veralteter Community-Assistent",
@@ -1240,15 +1232,6 @@ i18n
                             no_access_title: "No Access",
                             no_access_message: "You do not have access to the assistant '{{assistantTitle}}'.",
                             no_access_info: "Please contact the creator of the assistant to gain access."
-                        },
-                        assistant_picker_dialog: {
-                            title: "Attach chats to an assistant",
-                            message: "The original assistant is no longer available. Choose an assistant to continue the chats with that assistant.",
-                            empty: "No assistants available.",
-                            attach_success_title: "Chats attached",
-                            attach_success_message: "The chats were attached to the assistant '{{title}}'.",
-                            attach_failed_title: "Chats could not be attached",
-                            attach_failed_message: "An error occurred while attaching the chats."
                         },
                         department_dropdown: {
                             placeholder: "Search department...",
@@ -1874,8 +1857,11 @@ i18n
                             discovery_deleted_hint:
                                 "This community assistant was deleted by its creator and is no longer available. The last version only exists locally in this browser and may be lost. Save it now as your own assistant, or only view the old chat history.",
                             deleted_chat_warning:
-                                "This community assistant was deleted by its creator and is no longer available. This version only exists locally in this browser and may be lost. The chat history is read-only. Save it as your own assistant if you want to keep using it.",
+                                "This assistant was deleted. The latest version only exists locally in this browser and may be lost. The chat history is read-only. Save the local version as your own assistant if you want to keep working with it.",
                             deleted_state_save_action: "Save as own assistant",
+                            missing_state_title: "This assistant is no longer available",
+                            missing_chat_warning:
+                                "The assistant was deleted. Your chat history is preserved and can still be viewed. If you no longer need it, you can delete it.",
                             deleted_state_history_action: "Chat history",
                             deleted_state_no_history: "No local chat history is available for this assistant.",
                             legacy_state_title: "Deprecated Community Assistant",
@@ -2164,16 +2150,6 @@ i18n
                             no_access_title: "Koa Zugriff",
                             no_access_message: "Du hosd koan Zugriff auf'n Assistenten '{{assistantTitle}}'.",
                             no_access_info: "Bitte wend di an'n Ersteller vom Assistenten, damit'd Zugriff kriagst."
-                        },
-                        assistant_picker_dialog: {
-                            title: "Chats zuam Assistenten zuordnen",
-                            message:
-                                "Da ursprüngliche Assistent is ned mehr verfuegbar. Such da an Assistentn aus, um de Chats mit dem Assistenten weidazumacha.",
-                            empty: "Koane Assistentn verfuegbar.",
-                            attach_success_title: "Chats zuagordnet",
-                            attach_success_message: "De Chats san dem Assistenten '{{title}}' zuagordnet worn.",
-                            attach_failed_title: "Chats konntn ned zuagordnet werdn",
-                            attach_failed_message: "Beim Zuordnen vo de Chats is a Fehler aufgtretn."
                         },
                         department_dropdown: {
                             placeholder: "Suach Abteilung...",
@@ -2787,8 +2763,11 @@ i18n
                             discovery_deleted_hint:
                                 "Der Community-Assistent is vom Ersteller glascht worn und nimmer verfuegbar. De letzte Version liegt bloß no lokal im Browser und ko verloren geh. Sicherst as jetz ois eigenen Assistenten oder schaust bloß den oidn Chatverlauf o.",
                             deleted_chat_warning:
-                                "Der Community-Assistent is vom Ersteller glascht worn und nimmer verfuegbar. De Version liegt bloß no lokal im Browser und ko verloren geh. Der Chatverlauf is nur lesend. Sicherst as ois eigenen Assistenten, wennst weitermacha mogst.",
+                                "Da Assistent is glascht worn. De letzte Version liegt bloß no lokal im Browser und ko verloren geh. Da Chatverlauf is nur lesend. Sichere de lokale Version ois eigenen Assistentn, wennst damit weidamocha mogst.",
                             deleted_state_save_action: "Ois eigenen Assistenten speichern",
+                            missing_state_title: "Da Assistent is nimma verfuegbar",
+                            missing_chat_warning:
+                                "Da Assistent is glascht worn. Dei Chatverlauf bleibt erhaltn und ko ogschaut wern. Wennst en nimma brauchst, koanst en leschn.",
                             deleted_state_history_action: "Chatverlauf",
                             deleted_state_no_history: "Fuer den Assistenten gibt's koan lokalen Chatverlauf.",
                             legacy_state_title: "Veralteter Community-Assistent",
@@ -3080,15 +3059,6 @@ i18n
                             no_access_title: "Aucun accès",
                             no_access_message: "Vous n'avez pas accès à l'assistant '{{assistantTitle}}'.",
                             no_access_info: "Veuillez contacter le créateur de l'assistant pour obtenir l'accès."
-                        },
-                        assistant_picker_dialog: {
-                            title: "Associer les conversations à un assistant",
-                            message: "L'assistant d'origine n'est plus disponible. Choisissez un assistant pour continuer les conversations avec celui-ci.",
-                            empty: "Aucun assistant disponible.",
-                            attach_success_title: "Conversations associées",
-                            attach_success_message: "Les conversations ont été associées à l'assistant '{{title}}'.",
-                            attach_failed_title: "Impossible d'associer les conversations",
-                            attach_failed_message: "Une erreur est survenue lors de l'association des conversations."
                         },
                         department_dropdown: {
                             placeholder: "Rechercher un département...",
@@ -3701,8 +3671,11 @@ i18n
                             discovery_deleted_hint:
                                 "Cet assistant communautaire a été supprimé par son créateur et n'est plus disponible. La dernière version n'existe plus que localement dans ce navigateur et peut être perdue. Enregistrez-la maintenant comme votre propre assistant, ou consultez seulement l'ancien historique de chat.",
                             deleted_chat_warning:
-                                "Cet assistant communautaire a été supprimé par son créateur et n'est plus disponible. Cette version n'existe plus que localement dans ce navigateur et peut être perdue. L'historique du chat est en lecture seule. Enregistrez-la comme votre propre assistant si vous voulez continuer à l'utiliser.",
+                                "Cet assistant a été supprimé. La dernière version n'existe plus que localement dans ce navigateur et peut être perdue. L'historique du chat est en lecture seule. Enregistrez la version locale comme votre propre assistant si vous voulez continuer à l'utiliser.",
                             deleted_state_save_action: "Enregistrer comme assistant personnel",
+                            missing_state_title: "Cet assistant n'est plus disponible",
+                            missing_chat_warning:
+                                "L'assistant a été supprimé. Votre historique des conversations est conservé et reste consultable. Si vous n'en avez plus besoin, vous pouvez le supprimer.",
                             deleted_state_history_action: "Historique",
                             deleted_state_no_history: "Aucun historique de chat local n'est disponible pour cet assistant.",
                             legacy_state_title: "Assistant communautaire obsolète",
@@ -3994,15 +3967,6 @@ i18n
                             no_access_title: "Немає доступу",
                             no_access_message: "У вас немає доступу до асистента '{{assistantTitle}}'.",
                             no_access_info: "Будь ласка, зверніться до створювача асистента, щоб отримати доступ."
-                        },
-                        assistant_picker_dialog: {
-                            title: "Прикріпити чати до асистента",
-                            message: "Оригінальний асистент більше недоступний. Виберіть асистента, щоб продовжити чати з ним.",
-                            empty: "Доступних асистентів немає.",
-                            attach_success_title: "Чати прикріплено",
-                            attach_success_message: "Чати було прикріплено до асистента '{{title}}'.",
-                            attach_failed_title: "Не вдалося прикріпити чати",
-                            attach_failed_message: "Під час прикріплення чатів сталася помилка."
                         },
                         department_dropdown: {
                             placeholder: "Пошук відділу...",
@@ -4618,8 +4582,11 @@ i18n
                             discovery_deleted_hint:
                                 "Цей асистент спільноти був видалений автором і більше недоступний. Остання версія зберігається лише локально в цьому браузері й може бути втрачена. Збережіть її зараз як власного асистента або лише перегляньте стару історію чату.",
                             deleted_chat_warning:
-                                "Цей асистент спільноти був видалений автором і більше недоступний. Ця версія зберігається лише локально в цьому браузері й може бути втрачена. Історія чату доступна лише для читання. Збережіть її як власного асистента, якщо хочете й далі нею користуватися.",
+                                "Цей асистент було видалено. Остання версія зберігається лише локально в цьому браузері й може бути втрачена. Історія чату доступна лише для читання. Збережіть локальну версію як власного асистента, якщо хочете й далі з нею працювати.",
                             deleted_state_save_action: "Зберегти як власного асистента",
+                            missing_state_title: "Цей асистент більше недоступний",
+                            missing_chat_warning:
+                                "Асистента було видалено. Вашу історію чатів збережено, її можна переглядати. Якщо він вам більше не потрібен, ви можете його видалити.",
                             deleted_state_history_action: "Історія чату",
                             deleted_state_no_history: "Для цього асистента немає локальної історії чату.",
                             legacy_state_title: "Застарілий Асистент Спільноти",

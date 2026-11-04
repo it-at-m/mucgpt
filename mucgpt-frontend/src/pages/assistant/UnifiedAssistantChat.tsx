@@ -867,7 +867,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
         if (isAssistantMissing) {
             return (
                 <div className={styles.stateCallout}>
-                    <AssistantStateCallout state="deleted" context="chat" onDelete={() => setShowDeleteConfirm(true)} />
+                    <AssistantStateCallout state="missing" context="chat" onDelete={() => setShowDeleteConfirm(true)} />
                 </div>
             );
         }

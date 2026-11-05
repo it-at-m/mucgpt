@@ -27,6 +27,7 @@ async def get_config(user_info=Depends(authenticate_user)) -> ConfigResponse:
         core_version=settings.VERSION,
         frontend_version=settings.FRONTEND_VERSION,
         assistant_version=settings.ASSISTANT_VERSION,
+        release_notes=[note.model_dump() for note in settings.RELEASE_NOTES],
         document_processing_enabled=settings.PARSER_BACKEND != ParserBackendType.NONE,
         transcription_enabled=settings.TRANSCRIPTION_ENABLED,
         transcription_default_model=settings.TRANSCRIPTION_DEFAULT_MODEL,
@@ -40,7 +41,7 @@ async def get_config(user_info=Depends(authenticate_user)) -> ConfigResponse:
         admin_role=settings.SSO.ADMIN_ROLE,
         ad2image_url=settings.AD2IMAGE_URL,
         owner_profile_url_template=settings.OWNER_PROFILE_URL_TEMPLATE,
-        ag_ui_enabled=settings.AG_UI_ENABLED
+        ag_ui_enabled=settings.AG_UI_ENABLED,
     )
 
     models = settings.MODELS

@@ -4,8 +4,19 @@ export type RecordingState = "idle" | "recording";
 
 export interface UseAudioRecorderReturn {
     recordingState: RecordingState;
-    startRecording: (onFrame: (frame: Float32Array) => void) => Promise<void>;
+    /**
+     * Starts the capture pipeline. Rejects with the signal's reason (a standard
+     * AbortError by default) when `signal` is aborted before or while the setup
+     * runs — the stream, context and worklet are then fully torn down, no frame
+     * is ever forwarded, and `recordingState` stays `idle`.
+     */
+    startRecording: (onFrame: (frame: Float32Array) => void, signal?: AbortSignal) => Promise<void>;
     stopRecording: () => void;
+}
+
+/** Standard rejection reason for an aborted start (falls back to the spec's default). */
+export function abortReason(signal: AbortSignal): unknown {
+    return signal.reason ?? new DOMException("The pending microphone start was aborted.", "AbortError");
 }
 
 // Inlined AudioWorklet processor — runs in the audio rendering thread.
@@ -102,8 +113,26 @@ export function useAudioRecorder(): UseAudioRecorderReturn {
     const sourceRef = useRef<MediaStreamAudioSourceNode | null>(null);
     const streamRef = useRef<MediaStream | null>(null);
 
+    /** Closes worklet, source, stream and audio context. Idempotent; all refs are nulled. */
+    const closeCapturePipeline = useCallback(() => {
+        workletNodeRef.current?.port.close();
+        workletNodeRef.current?.disconnect();
+        workletNodeRef.current = null;
+        sourceRef.current?.disconnect();
+        sourceRef.current = null;
+        streamRef.current?.getTracks().forEach(t => t.stop());
+        streamRef.current = null;
+        audioContextRef.current?.close();
+        audioContextRef.current = null;
+    }, []);
+
+    const stopRecording = useCallback(() => {
+        closeCapturePipeline();
+        setRecordingState("idle");
+    }, [closeCapturePipeline]);
+
     const startRecording = useCallback(
-        async (onFrame: (frame: Float32Array) => void) => {
+        async (onFrame: (frame: Float32Array) => void, signal?: AbortSignal) => {
             if (recordingState === "recording") return;
 
             const stream = await navigator.mediaDevices.getUserMedia({
@@ -116,6 +145,13 @@ export function useAudioRecorder(): UseAudioRecorderReturn {
                 },
                 video: false
             });
+            // The caller may have lost interest while the permission dialog was
+            // open — release the mic immediately instead of building a pipeline
+            // for a page that has already moved on.
+            if (signal?.aborted) {
+                stream.getTracks().forEach(t => t.stop());
+                throw abortReason(signal);
+            }
 
             // Use the browser's native context rate and resample explicitly in the
             // worklet so VAD and Whisper always receive 16 kHz audio.
@@ -124,49 +160,49 @@ export function useAudioRecorder(): UseAudioRecorderReturn {
             const url = URL.createObjectURL(blob);
             try {
                 await audioCtx.audioWorklet.addModule(url);
+                URL.revokeObjectURL(url);
+
+                // Every step below bails out into the shared cleanup when the
+                // start was cancelled in the meantime — a partially built
+                // pipeline (stream, context, source or worklet) must never leak.
+                if (signal?.aborted) throw abortReason(signal);
+
+                streamRef.current = stream;
+                audioContextRef.current = audioCtx;
+
+                const source = audioCtx.createMediaStreamSource(stream);
+                sourceRef.current = source;
+
+                // numberOfOutputs: 0 marks this as a pure sink — no audio is routed
+                // to speakers and the node stays alive as long as it has an input.
+                const workletNode = new AudioWorkletNode(audioCtx, "pcm-processor", {
+                    numberOfOutputs: 0
+                });
+                workletNodeRef.current = workletNode;
+
+                workletNode.port.onmessage = (event: MessageEvent<Float32Array>) => {
+                    // An abort landing between the last check and the connect must
+                    // not let a stray frame reach the (possibly unmounted) consumer.
+                    if (signal?.aborted) return;
+                    onFrame(event.data);
+                };
+
+                if (signal?.aborted) throw abortReason(signal);
+
+                source.connect(workletNode);
             } catch (err) {
                 URL.revokeObjectURL(url);
+                // The local `stream` also covers aborts that happened before the
+                // ref assignment; closeCapturePipeline covers everything after.
                 stream.getTracks().forEach(t => t.stop());
+                closeCapturePipeline();
                 await audioCtx.close();
                 throw err;
             }
-            URL.revokeObjectURL(url);
-
-            streamRef.current = stream;
-            audioContextRef.current = audioCtx;
-
-            const source = audioCtx.createMediaStreamSource(stream);
-            sourceRef.current = source;
-
-            // numberOfOutputs: 0 marks this as a pure sink — no audio is routed
-            // to speakers and the node stays alive as long as it has an input.
-            const workletNode = new AudioWorkletNode(audioCtx, "pcm-processor", {
-                numberOfOutputs: 0
-            });
-            workletNodeRef.current = workletNode;
-
-            workletNode.port.onmessage = (event: MessageEvent<Float32Array>) => {
-                onFrame(event.data);
-            };
-
-            source.connect(workletNode);
             setRecordingState("recording");
         },
         [recordingState]
     );
-
-    const stopRecording = useCallback(() => {
-        workletNodeRef.current?.port.close();
-        workletNodeRef.current?.disconnect();
-        workletNodeRef.current = null;
-        sourceRef.current?.disconnect();
-        sourceRef.current = null;
-        streamRef.current?.getTracks().forEach(t => t.stop());
-        streamRef.current = null;
-        audioContextRef.current?.close();
-        audioContextRef.current = null;
-        setRecordingState("idle");
-    }, []);
 
     useEffect(() => {
         return () => {

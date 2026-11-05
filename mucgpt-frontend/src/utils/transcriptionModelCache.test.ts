@@ -113,6 +113,17 @@ describe("hasModelFiles / isModelVerified", () => {
         expect(await hasModelFiles(turbo)).toBe(true);
     });
 
+    it("maps the q8 dtype to the _quantized filenames transformers stores", async () => {
+        const cache = await (caches as unknown as { open: (name: string) => Promise<Cache> }).open("transformers-cache");
+        const q8Model: TranscriptionModel = { model_id: "some/whisper-q8", label: "Whisper Q8", dtype: "q8" };
+        // @huggingface/transformers stores q8 weights as <layer>_quantized.onnx,
+        // not <layer>_q8.onnx — a cached _q8 file must not count as downloaded.
+        await cache.put(`https://huggingface.co/some/whisper-q8/resolve/main/onnx/encoder_model_quantized.onnx`, new Response("ok"));
+        expect(await hasModelFiles(q8Model)).toBe(false);
+        await cache.put(`https://huggingface.co/some/whisper-q8/resolve/main/onnx/decoder_model_merged_quantized.onnx`, new Response("ok"));
+        expect(await hasModelFiles(q8Model)).toBe(true);
+    });
+
     it("falls back to any cached repo entry when the dtype is unknown", async () => {
         const cache = await (caches as unknown as { open: (name: string) => Promise<Cache> }).open("transformers-cache");
         const untyped: TranscriptionModel = { model_id: "some/whisper", label: "Whisper" };

@@ -39,19 +39,30 @@ const POPOVER_POSITIONING: PositioningProps = {
 
 export const MicrophoneButton = ({ onTranscription, onLiveTranscription, onRecordingStart, disabled = false }: Props) => {
     const { t } = useTranslation();
-    const { status, modelState, modelProgress, transcript, startRecording, stopAndTranscribe } = useTranscription();
+    const { status, modelState, modelProgress, transcript, startRecording, cancelPendingStart, stopAndTranscribe } = useTranscription();
     const triggerStyles = useStyles();
     const [panelOpen, setPanelOpen] = useState(false);
     // Only the instance that started the current recording may forward its
     // transcript: a QuestionInput mounted later on another route would
     // otherwise adopt the live/final transcript into its own draft.
     const ownsRecordingRef = useRef(false);
+    // Set while this instance's startRecording is still acquiring the microphone.
+    // The provider cannot know which button began the start, so the instance
+    // marks its own pending window and aborts it if it is unmounted meanwhile.
+    const pendingOwnStartRef = useRef(false);
     const statusRef = useRef(status);
-    statusRef.current = status;
     // Latest action handle for the unmount cleanup below (the mount-time
     // closure would otherwise capture a stale, idle recordingState).
     const stopAndTranscribeRef = useRef(stopAndTranscribe);
-    stopAndTranscribeRef.current = stopAndTranscribe;
+    // Ref writes must happen in effects, not render: React can replay or discard
+    // render work, so a render-time write could leak from a render that never
+    // commits. On unmount the refs still hold the latest committed values.
+    useEffect(() => {
+        statusRef.current = status;
+    }, [status]);
+    useEffect(() => {
+        stopAndTranscribeRef.current = stopAndTranscribe;
+    }, [stopAndTranscribe]);
 
     // Keep the panel open while it shows live progress or an error with recovery
     // actions; only a finished (and therefore clickable-again) mic closes it.
@@ -67,6 +78,10 @@ export const MicrophoneButton = ({ onTranscription, onLiveTranscription, onRecor
             if (ownsRecordingRef.current && statusRef.current === "recording") {
                 ownsRecordingRef.current = false;
                 void stopAndTranscribeRef.current();
+            } else if (pendingOwnStartRef.current) {
+                // The start never completed: abort the pending microphone setup so
+                // the capture cannot silently begin after this page is gone.
+                cancelPendingStart();
             }
         };
     }, []);
@@ -98,16 +113,22 @@ export const MicrophoneButton = ({ onTranscription, onLiveTranscription, onRecor
         if (status === "idle" || status === "error") {
             onRecordingStart?.();
             try {
+                pendingOwnStartRef.current = true;
                 await startRecording();
                 // Claim ownership only once the capture actually started, so a
                 // rejected start can never make this instance forward a
                 // recording it does not own.
                 ownsRecordingRef.current = true;
             } catch (error) {
+                // A start aborted by our own unmount is not a failure: the page
+                // is gone and the provider already returned everything to idle.
+                if (error instanceof Error && error.name === "AbortError") return;
                 console.error("Failed to start recording:", error);
                 // A rejected start (e.g. unsupported language) carries its message
                 // in the provider's error state — open the panel so it is visible.
                 setPanelOpen(true);
+            } finally {
+                pendingOwnStartRef.current = false;
             }
         } else if (status === "recording") {
             try {

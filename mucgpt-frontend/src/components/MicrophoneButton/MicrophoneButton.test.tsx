@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 import { fireEvent, render, screen } from "@testing-library/react";
+import { act } from "react";
 import { describe, expect, it, vi } from "vitest";
 import { MicrophoneButton } from "./MicrophoneButton";
 import { TranscriptionContext, type ITranscription, type TranscriptionModelState } from "../Transcription/TranscriptionContext";
@@ -41,25 +42,31 @@ const setup = ({ modelState, overrides = {}, disabled = false, onLiveTranscripti
         cancelDownload: vi.fn(),
         deleteModel: vi.fn().mockResolvedValue(undefined),
         startRecording: vi.fn().mockResolvedValue(undefined),
+        cancelPendingStart: vi.fn(),
         stopAndTranscribe: vi.fn().mockResolvedValue(undefined),
         ...overrides
     };
-    render(
+    const renderResult = render(
         <TranscriptionContext.Provider value={context}>
             <MicrophoneButton onTranscription={onTranscriptionSpy} onLiveTranscription={onLiveTranscription} disabled={disabled} />
         </TranscriptionContext.Provider>
     );
-    return context as ITranscription & {
-        downloadModel: ReturnType<typeof vi.fn>;
-        startRecording: ReturnType<typeof vi.fn>;
-        redownloadModel: ReturnType<typeof vi.fn>;
-        retryModelLoad: ReturnType<typeof vi.fn>;
+    return {
+        ...renderResult,
+        context: context as ITranscription & {
+            downloadModel: ReturnType<typeof vi.fn>;
+            startRecording: ReturnType<typeof vi.fn>;
+            cancelPendingStart: ReturnType<typeof vi.fn>;
+            redownloadModel: ReturnType<typeof vi.fn>;
+            retryModelLoad: ReturnType<typeof vi.fn>;
+            stopAndTranscribe: ReturnType<typeof vi.fn>;
+        }
     };
 };
 
 describe("MicrophoneButton", () => {
     it("opens the model panel with a download action when the model is missing", async () => {
-        const context = setup({ modelState: "missing" });
+        const { context } = setup({ modelState: "missing" });
 
         const mic = screen.getAllByRole("button")[0];
         expect(mic).toHaveAccessibleName("components.transcription.setup_tooltip");
@@ -81,7 +88,7 @@ describe("MicrophoneButton", () => {
     });
 
     it("opens the panel with retry and re-download actions when the cached model is unverified", () => {
-        const context = setup({ modelState: "unverified", overrides: { error: "boom" } });
+        const { context } = setup({ modelState: "unverified", overrides: { error: "boom" } });
 
         fireEvent.click(screen.getAllByRole("button")[0]);
         expect(screen.getByText("components.transcription.retry")).toBeInTheDocument();
@@ -119,12 +126,55 @@ describe("MicrophoneButton", () => {
     });
 
     it("records in the ready state without a panel", () => {
-        const context = setup({ modelState: "ready" });
+        const { context } = setup({ modelState: "ready" });
 
         const mic = screen.getAllByRole("button")[0];
         expect(mic).toHaveAccessibleName("components.microphonebutton.record");
         fireEvent.click(mic);
         expect(context.startRecording).toHaveBeenCalledTimes(1);
+    });
+
+    it("aborts a pending start when unmounted mid-setup", () => {
+        // The start hangs (permission dialog / audio setup in flight) and is
+        // never claimed as owned.
+        const { context, unmount } = setup({
+            modelState: "ready",
+            overrides: { startRecording: vi.fn(() => new Promise<void>(() => {})) }
+        });
+
+        fireEvent.click(screen.getAllByRole("button")[0]);
+        expect(context.startRecording).toHaveBeenCalledTimes(1);
+
+        unmount();
+        expect(context.cancelPendingStart).toHaveBeenCalledTimes(1);
+        expect(context.stopAndTranscribe).not.toHaveBeenCalled();
+    });
+
+    it("aborts nothing when unmounted while idle", () => {
+        const { context, unmount } = setup({ modelState: "ready" });
+
+        unmount();
+        expect(context.cancelPendingStart).not.toHaveBeenCalled();
+        expect(context.stopAndTranscribe).not.toHaveBeenCalled();
+    });
+
+    it("stops a running recording on unmount instead of cancelling", async () => {
+        const { context, rerender, unmount } = setup({ modelState: "ready" });
+
+        await act(async () => {
+            fireEvent.click(screen.getAllByRole("button")[0]);
+        });
+        // The provider flipped to "recording" — reflect it in the context value.
+        rerender(
+            <TranscriptionContext.Provider value={{ ...context, status: "recording" }}>
+                <MicrophoneButton onTranscription={onTranscriptionSpy} />
+            </TranscriptionContext.Provider>
+        );
+
+        unmount();
+        // The instance owns the recording: the graceful stop path runs, not the abort.
+        expect(context.stopAndTranscribe).toHaveBeenCalledTimes(1);
+        expect(context.cancelPendingStart).not.toHaveBeenCalled();
     });
 
     it("respects the input's disabled state in every state", () => {

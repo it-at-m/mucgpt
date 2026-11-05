@@ -5,7 +5,7 @@ import { localeToWhisperLang, modelSupportsLanguage } from "../../config/transcr
 import { clearModelVerification, deleteModelFromCache, hasModelFiles, isModelDownloaded, markModelVerified } from "../../utils/transcriptionModelCache";
 import { supportsWebGPU } from "../../utils/webgpuSupport";
 import type { WorkerInMessage, WorkerOutMessage } from "../../workers/transcription.worker";
-import { useAudioRecorder } from "../../hooks/useAudioRecorder";
+import { abortReason, useAudioRecorder } from "../../hooks/useAudioRecorder";
 import { fetchModelFileSizes } from "../../utils/modelSizeUtils";
 
 /** Lifecycle of the transcription UI, mirrored to the worker status handling. */
@@ -49,6 +49,8 @@ export interface ITranscription {
     /** Clears the cache entry and verification marker (used by the popover's cleanup action). */
     deleteModel: () => Promise<void>;
     startRecording: () => Promise<void>;
+    /** Aborts a pending (not yet started) microphone capture; a no-op when nothing is pending. */
+    cancelPendingStart: () => void;
     stopAndTranscribe: () => Promise<void>;
 }
 
@@ -70,6 +72,7 @@ const defaultValue: ITranscription = {
     cancelDownload: () => {},
     deleteModel: async () => {},
     startRecording: async () => {},
+    cancelPendingStart: () => {},
     stopAndTranscribe: async () => {}
 };
 
@@ -138,8 +141,8 @@ export const TranscriptionProvider = ({ children, transcriptionEnabled, transcri
     const pendingDownloadRef = useRef<{ requestId: number; resolve: () => void; reject: (err: Error) => void } | null>(null);
     /** Timestamp of the last worker progress message — keeps the load watchdog from aborting healthy downloads. */
     const lastProgressAtRef = useRef(0);
-    /** Guards against concurrent mic starts while microphone acquisition / AudioContext setup is still in flight. */
-    const pendingStartRef = useRef(false);
+    /** The in-flight mic start, if any — its abort signal lets the triggering button cancel a setup that has not produced a capture yet. */
+    const pendingStartRef = useRef<AbortController | null>(null);
     /** When the worker must be replaced (stuck load, dead script), bumping this recreates it via the worker effect. */
     const [workerEpoch, setWorkerEpoch] = useState(0);
     const lastWorkerRecreateAtRef = useRef(0);
@@ -532,13 +535,18 @@ export const TranscriptionProvider = ({ children, transcriptionEnabled, transcri
         if (model && !modelSupportsLanguage(model.languages, languageRef.current)) {
             // Refuse before any capture starts: the configured model cannot
             // transcribe the active interface language (e.g. Ukrainian on Canary).
-            setError(translateRef.current("components.transcription.language_unsupported"));
-            throw new Error(translateRef.current("components.transcription.language_unsupported"));
+            // status must leave "idle" here (same as the catch below), or the
+            // mic button renders no error popover and the refusal is invisible.
+            const message = translateRef.current("components.transcription.language_unsupported");
+            setError(message);
+            setStatus("error");
+            throw new Error(message);
         }
         setError(null);
         setTranscript("");
 
-        pendingStartRef.current = true;
+        const pendingStart = new AbortController();
+        pendingStartRef.current = pendingStart;
         try {
             // Sync language before frames start arriving
             sendToWorker({ type: "set-language", language: languageRef.current });
@@ -549,16 +557,46 @@ export const TranscriptionProvider = ({ children, transcriptionEnabled, transcri
             await startAudioRecording((frame: Float32Array) => {
                 // Transfer ownership of the buffer to avoid a copy on every frame.
                 sendToWorker({ type: "audio-frame", sessionId, buffer: frame }, [frame.buffer]);
-            });
+            }, pendingStart.signal);
+
+            // The start may have been cancelled while the hook was handing control
+            // back — the hook has no check after its final step, so the brand-new
+            // capture is torn down here instead of flipping to "recording" for
+            // nobody. The catch below retracts the worker session.
+            if (pendingStart.signal.aborted) {
+                stopRecording();
+                throw abortReason(pendingStart.signal);
+            }
             setStatus("recording");
         } catch (err) {
+            // A cancelled start is not an error: the initiating button unmounted
+            // and aborted the pending setup, so nobody is left to show a message
+            // to. Retract the worker session and reject with the abort reason —
+            // the capture itself was already torn down by the hook (or above).
+            if (pendingStart.signal.aborted) {
+                const pendingSession = activeRecordingSessionIdRef.current;
+                if (pendingSession !== null) {
+                    sendToWorker({ type: "stop-recording", sessionId: pendingSession });
+                    activeRecordingSessionIdRef.current = null;
+                }
+                throw abortReason(pendingStart.signal);
+            }
             setError(err instanceof Error ? err.message : String(err));
             setStatus("error");
             throw err;
         } finally {
-            pendingStartRef.current = false;
+            if (pendingStartRef.current === pendingStart) pendingStartRef.current = null;
         }
-    }, [status, recordingState, enabled, model, startAudioRecording, sendToWorker]);
+    }, [status, recordingState, enabled, model, startAudioRecording, stopRecording, sendToWorker]);
+
+    /**
+     * Aborts a still-pending microphone start. Used when the button that began
+     * the start unmounts — without this, the capture would silently begin after
+     * the page that asked for it is gone. No-op when nothing is pending.
+     */
+    const cancelPendingStart = useCallback(() => {
+        pendingStartRef.current?.abort();
+    }, []);
 
     const stopAndTranscribe = useCallback(async () => {
         if (recordingState !== "recording") return;
@@ -596,6 +634,7 @@ export const TranscriptionProvider = ({ children, transcriptionEnabled, transcri
             cancelDownload,
             deleteModel,
             startRecording,
+            cancelPendingStart,
             stopAndTranscribe
         }),
         [
@@ -616,6 +655,7 @@ export const TranscriptionProvider = ({ children, transcriptionEnabled, transcri
             cancelDownload,
             deleteModel,
             startRecording,
+            cancelPendingStart,
             stopAndTranscribe
         ]
     );

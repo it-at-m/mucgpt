@@ -25,7 +25,10 @@ vi.mock("react-i18next", () => ({
 
 const stableRecorder = { recordingState: "idle", startRecording: vi.fn(), stopRecording: vi.fn() };
 vi.mock("../../hooks/useAudioRecorder", () => ({
-    useAudioRecorder: () => stableRecorder
+    useAudioRecorder: () => stableRecorder,
+    // The provider imports this helper from the hook module — the factory replaces
+    // the whole module, so it must be provided here as well.
+    abortReason: (signal: AbortSignal) => signal.reason ?? new DOMException("aborted", "AbortError")
 }));
 
 vi.mock("../../utils/modelSizeUtils", () => ({ fetchModelFileSizes: vi.fn().mockResolvedValue({ "onnx/encoder_model_q4.onnx": 100 }) }));
@@ -124,6 +127,8 @@ beforeEach(() => {
     vi.stubGlobal("Worker", FakeWorker);
     FakeWorker.instances = [];
     holder.last = null;
+    stableRecorder.startRecording.mockReset();
+    stableRecorder.stopRecording.mockClear();
 });
 
 afterEach(() => {
@@ -175,6 +180,126 @@ describe("TranscriptionProvider", () => {
 
         const context = await waitForModelState("ready");
         expect(context.enabled).toBe(true);
+    });
+
+    it("refuses to start with a visible error when the model cannot transcribe the UI language", async () => {
+        // The distil-whisper registry entry only declares German and stores its
+        // decoder with the q8 dtype (→ decoder_model_merged_quantized.onnx).
+        const distil: TranscriptionModel = {
+            model_id: "flackzz/distil-whisper-large-v3-german_timestamped-ONNX",
+            label: "Distil-Whisper Large v3 German",
+            dtype: { encoder_model: "q4", decoder_model_merged: "q8" },
+            languages: ["de"]
+        };
+        await markModelVerified(distil);
+        const transformers = await store.open("transformers-cache");
+        await transformers.put(`https://huggingface.co/${distil.model_id}/resolve/main/onnx/encoder_model_q4.onnx`, new Response("ok"));
+        await transformers.put(`https://huggingface.co/${distil.model_id}/resolve/main/onnx/decoder_model_merged_quantized.onnx`, new Response("ok"));
+
+        renderProvider(distil.model_id);
+        await waitForModelState("loading");
+        const worker = FakeWorker.instances[0]!;
+        worker.reply({ type: "ready", requestId: worker.latestLoad!.requestId, modelId: distil.model_id });
+        await waitForModelState("ready");
+
+        // A language the German-only model cannot transcribe (the
+        // Ukrainian-UI scenario): the start must reject AND move out of
+        // "idle", or the mic button's reopened panel renders no error and
+        // the refusal is invisible.
+        holder.last!.setLanguage("uk");
+        await waitFor(() => expect(holder.last?.language).toBe("uk"));
+        await expect(holder.last!.startRecording()).rejects.toThrow();
+        await waitFor(() => expect(holder.last?.status).toBe("error"));
+        expect(holder.last?.error).toBe("components.transcription.language_unsupported");
+        // The refusal happens before any capture starts.
+        expect(FakeWorker.instances[0]!.sent.some(m => m.type === "start-recording")).toBe(false);
+    });
+
+    /** Boots the whisper fixture to the `ready` state and returns the worker double. */
+    async function readyProvider(): Promise<FakeWorker> {
+        await markModelVerified(whisper);
+        await seedWhisperCache();
+        renderProvider(whisper.model_id);
+        await waitForModelState("loading");
+        const worker = FakeWorker.instances[0]!;
+        worker.reply({ type: "ready", requestId: worker.latestLoad!.requestId, modelId: whisper.model_id });
+        await waitForModelState("ready");
+        return worker;
+    }
+
+    it("retracts a pending start silently when it is cancelled mid-setup", async () => {
+        const worker = await readyProvider();
+
+        // The audio hook hangs on its setup (a permission dialog nobody answers)
+        // and then rejects because its signal was aborted meanwhile.
+        let capturedSignal: AbortSignal | undefined;
+        let rejectHook!: (reason: unknown) => void;
+        stableRecorder.startRecording.mockImplementation(
+            (_onFrame: (frame: Float32Array) => void, signal: AbortSignal) =>
+                new Promise<void>((_resolve, reject) => {
+                    capturedSignal = signal;
+                    rejectHook = reason => reject(reason);
+                })
+        );
+
+        const start = holder.last!.startRecording();
+        await waitFor(() => expect(capturedSignal).toBeDefined());
+        holder.last!.cancelPendingStart();
+        rejectHook(capturedSignal!.reason);
+
+        await expect(start).rejects.toMatchObject({ name: "AbortError" });
+        // A cancelled start is not an error: no message, status back to idle.
+        expect(holder.last?.status).toBe("idle");
+        expect(holder.last?.error).toBeNull();
+        // The worker session opened before the abort is retracted afterwards.
+        const sent = worker.sent.map(m => m.type);
+        expect(sent).toContain("start-recording");
+        expect(sent.indexOf("stop-recording")).toBeGreaterThan(sent.indexOf("start-recording"));
+    });
+
+    it("tears down a brand-new capture when the cancellation lands as the hook resolves", async () => {
+        const worker = await readyProvider();
+
+        // The hook finishes successfully — the abort arrives while it hands the
+        // fresh capture back, a race the hook itself cannot observe.
+        let capturedSignal: AbortSignal | undefined;
+        let releaseHook!: () => void;
+        stableRecorder.startRecording.mockImplementation(
+            (_onFrame: (frame: Float32Array) => void, signal: AbortSignal) =>
+                new Promise<void>(resolve => {
+                    capturedSignal = signal;
+                    releaseHook = resolve;
+                })
+        );
+
+        const start = holder.last!.startRecording();
+        await waitFor(() => expect(capturedSignal).toBeDefined());
+        holder.last!.cancelPendingStart();
+        releaseHook();
+
+        await expect(start).rejects.toMatchObject({ name: "AbortError" });
+        // The provider closed the fresh capture itself ...
+        expect(stableRecorder.stopRecording).toHaveBeenCalled();
+        // ... and never signalled "recording" to the UI.
+        expect(holder.last?.status).toBe("idle");
+        expect(holder.last?.error).toBeNull();
+        expect(worker.sent.map(m => m.type)).toContain("stop-recording");
+    });
+
+    it("keeps forwarding audio frames to the worker while the capture runs", async () => {
+        await readyProvider();
+
+        let forwardFrame!: (frame: Float32Array) => void;
+        stableRecorder.startRecording.mockImplementation((onFrame: (frame: Float32Array) => void) => {
+            forwardFrame = onFrame;
+            return Promise.resolve();
+        });
+
+        await holder.last!.startRecording();
+        await waitFor(() => expect(holder.last?.status).toBe("recording"));
+
+        forwardFrame(new Float32Array(512));
+        expect(FakeWorker.instances[0]!.sent.some(m => m.type === "audio-frame")).toBe(true);
     });
 
     it("reports missing for a never-downloaded model and downloads on demand", async () => {

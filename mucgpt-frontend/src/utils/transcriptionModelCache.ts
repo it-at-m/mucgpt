@@ -22,11 +22,19 @@ export function isModelCacheKey(url: string, modelId: string): boolean {
     return new RegExp(`/${escapeRegExp(modelId)}/resolve/`).test(url);
 }
 
+/** Cache filename suffix per dtype, mirroring @huggingface/transformers'
+ * DEFAULT_DTYPE_SUFFIX_MAPPING: fp32 has no suffix and q8 is stored as
+ * `_quantized`; every other dtype becomes `_<dtype>`. */
+const DTYPE_FILE_SUFFIXES: Record<string, string> = {
+    fp32: "",
+    q8: "_quantized"
+};
+
 /**
  * ONNX weight files a Transformers (Whisper) registry entry needs, derived from
  * its dtype configuration — the same name scheme @huggingface/transformers uses
- * (`onnx/<layer>_<dtype>.onnx`, a string dtype applies to every layer). An empty
- * result means the required set is unknown and any repo entry counts as present.
+ * (`onnx/<layer><dtype-suffix>.onnx`, a string dtype applies to every layer). An
+ * empty result means the required set is unknown and any repo entry counts as present.
  */
 function requiredTransformersFiles(model: TranscriptionModel): string[] {
     const dtype = model.dtype;
@@ -38,7 +46,10 @@ function requiredTransformersFiles(model: TranscriptionModel): string[] {
                   ["decoder_model_merged", dtype]
               ]
             : Object.entries(dtype);
-    return layers.map(([layer, quantization]) => `onnx/${layer}_${quantization}.onnx`);
+    return layers.map(([layer, quantization]) => {
+        const suffix = DTYPE_FILE_SUFFIXES[quantization] ?? `_${quantization}`;
+        return `onnx/${layer}${suffix}.onnx`;
+    });
 }
 
 /**

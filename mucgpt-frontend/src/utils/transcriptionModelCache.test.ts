@@ -32,25 +32,32 @@ const canary: TranscriptionModel = {
 /** Minimal Cache double keyed by URL string, backed by a plain map that survives across opens. */
 function createFakeCacheStore() {
     const stores = new Map<string, Map<string, Request>>();
+    const cachesByName = new Map<string, Cache>();
     const open = vi.fn(async (name: string) => {
         if (!stores.has(name)) stores.set(name, new Map());
-        const entries = stores.get(name)!;
-        return {
-            match: async (request: RequestInfo | URL) => {
-                const url = typeof request === "string" ? request : request instanceof URL ? request.href : request.url;
-                return entries.has(url) ? new Response("cached") : undefined;
-            },
-            put: async (request: RequestInfo | URL, response: Response) => {
-                const url = typeof request === "string" ? request : request instanceof URL ? request.href : request.url;
-                entries.set(url, new Request(url));
-                void response;
-            },
-            delete: async (request: RequestInfo | URL) => {
-                const url = typeof request === "string" ? request : request instanceof URL ? request.href : request.url;
-                return entries.delete(url);
-            },
-            keys: async () => [...entries.values()]
-        };
+        // Stable object identity per store so tests can spy on cache methods.
+        let cache = cachesByName.get(name);
+        if (!cache) {
+            const entries = stores.get(name)!;
+            cache = {
+                match: async (request: RequestInfo | URL) => {
+                    const url = typeof request === "string" ? request : request instanceof URL ? request.href : request.url;
+                    return entries.has(url) ? new Response("cached") : undefined;
+                },
+                put: async (request: RequestInfo | URL, response: Response) => {
+                    const url = typeof request === "string" ? request : request instanceof URL ? request.href : request.url;
+                    entries.set(url, new Request(url));
+                    void response;
+                },
+                delete: async (request: RequestInfo | URL) => {
+                    const url = typeof request === "string" ? request : request instanceof URL ? request.href : request.url;
+                    return entries.delete(url);
+                },
+                keys: async () => [...entries.values()]
+            } as unknown as Cache;
+            cachesByName.set(name, cache);
+        }
+        return cache;
     });
     return { open, stores };
 }
@@ -97,10 +104,20 @@ describe("hasModelFiles / isModelVerified", () => {
         expect(await hasModelFiles(turbo)).toBe(false);
     });
 
-    it("detects a transformers model by any cached repo entry", async () => {
+    it("requires every ONNX weight derived from the dtype for transformers models", async () => {
         const cache = await (caches as unknown as { open: (name: string) => Promise<Cache> }).open("transformers-cache");
+        // encoder only — a partially deleted cache is not a downloaded model
         await cache.put(`https://huggingface.co/${turbo.model_id}/resolve/main/onnx/encoder_model_q4.onnx`, new Response("ok"));
+        expect(await hasModelFiles(turbo)).toBe(false);
+        await cache.put(`https://huggingface.co/${turbo.model_id}/resolve/main/onnx/decoder_model_merged_int8.onnx`, new Response("ok"));
         expect(await hasModelFiles(turbo)).toBe(true);
+    });
+
+    it("falls back to any cached repo entry when the dtype is unknown", async () => {
+        const cache = await (caches as unknown as { open: (name: string) => Promise<Cache> }).open("transformers-cache");
+        const untyped: TranscriptionModel = { model_id: "some/whisper", label: "Whisper" };
+        await cache.put(`https://huggingface.co/some/whisper/resolve/main/config.json`, new Response("ok"));
+        expect(await hasModelFiles(untyped)).toBe(true);
     });
 
     it("requires every NeMo file to be cached", async () => {
@@ -149,14 +166,31 @@ describe("deleteModelFromCache", () => {
         await markModelVerified(turbo);
         const transformersCache = await (caches as unknown as { open: (name: string) => Promise<Cache> }).open("transformers-cache");
         await transformersCache.put(`https://huggingface.co/${turbo.model_id}/resolve/main/onnx/encoder_model_q4.onnx`, new Response("ok"));
+        await transformersCache.put(`https://huggingface.co/${turbo.model_id}/resolve/main/onnx/decoder_model_merged_int8.onnx`, new Response("ok"));
         await transformersCache.put("https://huggingface.co/onnx-community/silero-vad/resolve/main/onnx/model.onnx", new Response("ok"));
 
         await deleteModelFromCache(turbo);
 
         expect(await hasModelFiles(turbo)).toBe(false);
         expect(await isModelVerified(turbo)).toBe(false);
-        // Shared artifacts of other repos survive
-        expect(await hasModelFiles({ ...turbo, model_id: "onnx-community/silero-vad" } as TranscriptionModel)).toBe(true);
+        // Shared artifacts of other repos survive (no dtype -> any-entry fallback)
+        expect(await hasModelFiles({ model_id: "onnx-community/silero-vad", label: "VAD" })).toBe(true);
+    });
+
+    it("clears the verification marker even when a cache delete rejects", async () => {
+        await markModelVerified(turbo);
+        const transformersCache = await (caches as unknown as { open: (name: string) => Promise<Cache> }).open("transformers-cache");
+        await transformersCache.put(`https://huggingface.co/${turbo.model_id}/resolve/main/onnx/encoder_model_q4.onnx`, new Response("ok"));
+        const originalDelete = transformersCache.delete.bind(transformersCache);
+        vi.spyOn(transformersCache, "delete").mockImplementation((request: RequestInfo | URL) => {
+            const url = typeof request === "string" ? request : request instanceof URL ? request.href : request.url;
+            if (url.includes("/onnx/encoder_model_q4.onnx")) return Promise.reject(new Error("delete failed"));
+            return originalDelete(request);
+        });
+
+        await deleteModelFromCache(turbo);
+
+        expect(await isModelVerified(turbo)).toBe(false);
     });
 
     it("removes NeMo files and the marker", async () => {

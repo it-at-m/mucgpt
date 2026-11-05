@@ -23,6 +23,25 @@ export function isModelCacheKey(url: string, modelId: string): boolean {
 }
 
 /**
+ * ONNX weight files a Transformers (Whisper) registry entry needs, derived from
+ * its dtype configuration — the same name scheme @huggingface/transformers uses
+ * (`onnx/<layer>_<dtype>.onnx`, a string dtype applies to every layer). An empty
+ * result means the required set is unknown and any repo entry counts as present.
+ */
+function requiredTransformersFiles(model: TranscriptionModel): string[] {
+    const dtype = model.dtype;
+    if (!dtype) return [];
+    const layers =
+        typeof dtype === "string"
+            ? [
+                  ["encoder_model", dtype],
+                  ["decoder_model_merged", dtype]
+              ]
+            : Object.entries(dtype);
+    return layers.map(([layer, quantization]) => `onnx/${layer}_${quantization}.onnx`);
+}
+
+/**
  * Deterministic verification-marker key. It encodes the model id plus the runtime
  * and dtype from the registry, so changing a model's configuration invalidates
  * the marker instead of falsely reporting a stale download as ready.
@@ -51,6 +70,15 @@ export async function hasModelFiles(model: TranscriptionModel): Promise<boolean>
             return true;
         }
         const transformersCache = await caches.open(TRANSFORMERS_CACHE_NAME);
+        // A partially evicted cache (e.g. a delete that failed halfway) must not
+        // count as downloaded: require every ONNX weight derived from the dtype.
+        const required = requiredTransformersFiles(model);
+        if (required.length > 0) {
+            for (const file of required) {
+                if (!(await transformersCache.match(`https://huggingface.co/${model.model_id}/resolve/main/${file}`))) return false;
+            }
+            return true;
+        }
         const keys = await transformersCache.keys();
         return keys.some(request => isModelCacheKey(request.url, model.model_id));
     } catch {
@@ -103,12 +131,15 @@ export async function deleteModelFromCache(model: TranscriptionModel): Promise<v
     const fileUrls = model.files ? Object.values(model.files) : [];
     if (fileUrls.length > 0) {
         const nemoCache = await caches.open(MODEL_CACHE_NAME);
-        await Promise.all(fileUrls.map(url => nemoCache.delete(url)));
+        await Promise.allSettled(fileUrls.map(url => nemoCache.delete(url)));
     }
 
     const transformersCache = await caches.open(TRANSFORMERS_CACHE_NAME);
     const keys = await transformersCache.keys();
-    await Promise.all(keys.filter(request => isModelCacheKey(request.url, model.model_id)).map(request => transformersCache.delete(request)));
+    // allSettled: a single failing delete must not strand the other files or —
+    // worse — skip the marker cleanup below, which would present a half-deleted
+    // cache as a verified download on the next visit.
+    await Promise.allSettled(keys.filter(request => isModelCacheKey(request.url, model.model_id)).map(request => transformersCache.delete(request)));
 
     await clearModelVerification(model);
 }

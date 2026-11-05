@@ -106,7 +106,7 @@ export const AssistantStateCallout = ({
         ),
         isOutdated && onDelete && (
             <Button key="delete" appearance="outline" tone="danger" icon={<Delete20Regular />} onClick={onDelete}>
-                {t("common.delete")}
+                {t(state === "deleted" || state === "missing" ? "components.community_assistants.delete_chats_action" : "common.delete")}
             </Button>
         )
     ].filter(Boolean);

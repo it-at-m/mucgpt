@@ -78,6 +78,7 @@ export interface ApplicationConfig {
     core_version: string;
     frontend_version: string;
     assistant_version: string;
+    release_notes: ReleaseNote[];
     document_processing_enabled: boolean;
     transcription_enabled: boolean;
     /** The single transcription model used by every user; null (not configured) or unknown ids disable the feature. */
@@ -93,6 +94,11 @@ export interface ApplicationConfig {
     admin_role?: string;
     ad2image_url?: string;
     owner_profile_url_template?: string;
+}
+
+export interface ReleaseNote {
+    version: string;
+    content: string;
 }
 
 export interface Model {

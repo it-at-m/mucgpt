@@ -564,6 +564,13 @@ class ModelsDTO(BaseModel):
     )
 
 
+class ReleaseNoteDTO(BaseModel):
+    """A release note exposed to the frontend."""
+
+    version: str
+    content: str
+
+
 class ConfigResponse(BaseModel):
     env_name: str = "MUCGPT"
     alternative_logo: bool = False
@@ -575,6 +582,10 @@ class ConfigResponse(BaseModel):
     core_version: str
     frontend_version: str
     assistant_version: str
+    release_notes: list[ReleaseNoteDTO] = Field(
+        default_factory=list,
+        description="Configured release notes, ordered from newest to oldest.",
+    )
     document_processing_enabled: bool = Field(
         False,
         description="Whether document upload and parsing is enabled. True when a parser backend (e.g. Xberg) is configured.",

@@ -17,6 +17,7 @@ import {
     buildChatMessage,
     buildDrawioChatMessage,
     buildInvalidDrawioChatMessage,
+    buildRichMarkdownChatMessage,
     generateChatStreamChunks,
     generateMindmapStreamChunks,
     generateSimplifyStreamChunks
@@ -138,6 +139,12 @@ const CONFIG_RESPONSE: ApplicationConfig = {
     core_version: "0.0.1",
     frontend_version: "0.0.1",
     assistant_version: "0.0.1",
+    release_notes: [
+        {
+            version: "2.0.x",
+            content: "## AGI reached\n\nPls don't tell anybody"
+        }
+    ],
     document_processing_enabled: true,
     transcription_enabled: true,
     transcription_model: "istupakov/canary-180m-flash-onnx",
@@ -1090,7 +1097,8 @@ export const handlers = [
                     send({ type: "TOOL_CALL_RESULT", messageId: crypto.randomUUID(), toolCallId, content: "Mock tool result", role: "tool" });
                 }
 
-                const chunks = buildChatMessage().match(/[\s\S]{1,40}/g) ?? [];
+                const wantsRichMarkdownMock = /^\s*rich\s*$/i.test(latestUserMessage);
+                const chunks = (wantsRichMarkdownMock ? buildRichMarkdownChatMessage() : buildChatMessage()).match(/[\s\S]{1,40}/g) ?? [];
                 for (const delta of chunks) {
                     send({ type: "TEXT_MESSAGE_CHUNK", messageId, role: "assistant", delta });
                     await delay(50);
@@ -1127,6 +1135,7 @@ export const handlers = [
                 .reverse()
                 .find(m => m.role === "user")?.content || "";
         // E2E demos (tools off): exact phrases only. A ```drawio fence must NOT trigger this.
+        const wantsRichMarkdownMock = /^\s*rich\s*$/i.test(latestUserMessage);
         const wantsValidDrawioMock = /^\s*valid-drawio\s*$/i.test(latestUserMessage);
         const wantsInvalidDrawioMock = /^\s*invalid-drawio\s*$/i.test(latestUserMessage);
 
@@ -1142,6 +1151,8 @@ export const handlers = [
                         chunks = generateMindmapStreamChunks(topic, forcedContextTokens);
                     } else if (streamType === "simplify") {
                         chunks = generateSimplifyStreamChunks(forcedContextTokens);
+                    } else if (wantsRichMarkdownMock) {
+                        chunks = generateChatStreamChunks(buildRichMarkdownChatMessage(), forcedContextTokens);
                     } else if (wantsValidDrawioMock) {
                         chunks = generateChatStreamChunks(buildDrawioChatMessage(), forcedContextTokens);
                     } else if (wantsInvalidDrawioMock) {
@@ -1182,7 +1193,13 @@ export const handlers = [
                     index: 0,
                     message: {
                         role: "assistant",
-                        content: wantsValidDrawioMock ? buildDrawioChatMessage() : wantsInvalidDrawioMock ? buildInvalidDrawioChatMessage() : buildChatMessage()
+                        content: wantsRichMarkdownMock
+                            ? buildRichMarkdownChatMessage()
+                            : wantsValidDrawioMock
+                              ? buildDrawioChatMessage()
+                              : wantsInvalidDrawioMock
+                                ? buildInvalidDrawioChatMessage()
+                                : buildChatMessage()
                     },
                     finish_reason: "stop"
                 }

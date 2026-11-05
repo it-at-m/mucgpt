@@ -88,7 +88,7 @@ def register_model_harness_profile(model_config: ModelsConfig) -> None:
     # as per documentation, this is sets the default harness profile for the given model type and name, which can NOT be overridden by a middleware override.
     enabled_tools = model_config.deep_agent.enabled_builtin_tools
     register_harness_profile(
-        f"{model_config.type.lower()}:{model_config.llm_name}",
+        f"{model_config.type.lower()}:{model_config.id}",
         HarnessProfile(
             excluded_tools=DEEP_AGENT_BUILTIN_TOOLS - enabled_tools,
             extra_middleware=extra_middleware,
@@ -111,6 +111,6 @@ def register_model_harness_profile(model_config: ModelsConfig) -> None:
     logger.debug(
         "Registered Deep Agents profile %s:%s with enabled built-ins %s; ",
         model_config.type.lower(),
-        model_config.llm_name,
+        model_config.id,
         sorted(enabled_tools),
     )

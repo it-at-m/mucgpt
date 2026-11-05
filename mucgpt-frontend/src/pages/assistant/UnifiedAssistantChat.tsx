@@ -309,7 +309,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
 
                             // If assistant has a default model, check if it's available
                             if (assistant.default_model) {
-                                const defaultModelConfig = availableLLMs.find(m => m.llm_name === assistant.default_model);
+                                const defaultModelConfig = availableLLMs.find(m => m.id === assistant.default_model);
                                 if (defaultModelConfig) {
                                     setLLM(defaultModelConfig);
                                 } else {
@@ -726,7 +726,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
     // Handler for LLM selection
     const onLLMSelectionChange = useCallback(
         (nextLLM: string) => {
-            const found = availableLLMs.find(m => m.llm_name === nextLLM);
+            const found = availableLLMs.find(m => m.id === nextLLM);
             if (found) {
                 setLLM(found);
                 //don't update, if we have a default model
@@ -781,7 +781,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
 
     // Text-Input component
     // Only the assistant's default model is selectable; if it no longer exists, the user picks from all models.
-    const isLLMLocked = Boolean(assistantConfig.default_model && availableLLMs.some(m => m.llm_name === assistantConfig.default_model));
+    const isLLMLocked = Boolean(assistantConfig.default_model && availableLLMs.some(m => m.id === assistantConfig.default_model));
 
     const inputComponent = useMemo(() => {
         if (isLegacyAssistant) {
@@ -876,7 +876,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                         usageConversationKey={`assistant:${assistant_id}:${active_chat ?? "new"}`}
                         hideDisclaimer
                         llmOptions={availableLLMs}
-                        selectedLLM={LLM.llm_name}
+                        selectedLLM={LLM.id}
                         onLLMSelectionChange={onLLMSelectionChange}
                         llmLockedByAssistant={isLLMLocked}
                     />
@@ -921,7 +921,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                 usageConversationKey={`assistant:${assistant_id}:${active_chat ?? "new"}`}
                 hideDisclaimer
                 llmOptions={availableLLMs}
-                selectedLLM={LLM.llm_name}
+                selectedLLM={LLM.id}
                 onLLMSelectionChange={onLLMSelectionChange}
                 llmLockedByAssistant={isLLMLocked}
             />
@@ -953,7 +953,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
         startNewChatFromUsage,
         availableLLMs,
         isLLMLocked,
-        LLM.llm_name,
+        LLM.id,
         onLLMSelectionChange,
         performDeleteAssistant
     ]);

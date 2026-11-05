@@ -74,13 +74,13 @@ providers:
 
 models:
   - provider: "my_gateway"     # required reference into providers
-    llm_name: "<your-llm-name>"
+    id: "<your-llm-name>"
     deployment: ""             # only for azure
     model_info:
       auto_enrich_from_model_info_endpoint: true
       max_output_tokens: 16384
       max_input_tokens: 128000
-      display_name: "<human-readable name>"  # Optional: shown instead of llm_name
+      display_name: "<human-readable name>"  # Optional: shown instead of id
       description: "<description>"
       short_description: "<one-line summary>"
       input_cost_per_token: 0.00000009
@@ -168,7 +168,7 @@ MUCGPT_CORE_PROVIDERS='{
 MUCGPT_CORE_MODELS='[
   {
     "provider": "my_gateway",
-    "llm_name": "<your-llm-name>",
+    "id": "<your-llm-name>",
     "model_info": {
       "auto_enrich_from_model_info_endpoint": true,
       "max_output_tokens": "<number>",
@@ -264,7 +264,7 @@ MUCGPT_CORE_PROVIDERS__MY_GATEWAY__API_KEY=sk-...  # → providers.my_gateway.ap
 **Model fields (`models[]`):**
 
 - `provider`: Required reference to a key in the `providers` section.
-- `llm_name`: The name or identifier of your LLM model.
+- `id`: The identifier of your LLM model. Used in requests and as reference; also sent to the provider.
 - `deployment`: Azure deployment name (only needed for `type: "azure"`).
 
 **`model_info` fields:**
@@ -272,7 +272,7 @@ MUCGPT_CORE_PROVIDERS__MY_GATEWAY__API_KEY=sk-...  # → providers.my_gateway.ap
 - `auto_enrich_from_model_info_endpoint`: If `true` (default), missing metadata is fetched from `<endpoint>/model/info` (as it is available in litellm). Set to `false` to require manual values.
 - `max_output_tokens`: Maximum number of tokens the model can generate in a response.
 - `max_input_tokens`: Maximum number of tokens accepted as input.
-- `display_name`: Optional human-readable name shown in the UI. `llm_name` stays the technical identifier used in requests and saved assistants; without `display_name` the UI shows `llm_name`.
+- `display_name`: Optional human-readable name shown in the UI. `id` stays the technical identifier used in requests and saved assistants; without `display_name` the UI shows `id`.
 - `description`: A human-readable description of the model, shown in the model picker.
 - `short_description`: One-line summary of what the model is best suited for, shown in the model picker.
 - `knowledge_cut_off`: Optional ISO date string describing the model's latest training data cutoff.

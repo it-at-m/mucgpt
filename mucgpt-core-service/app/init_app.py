@@ -95,7 +95,7 @@ def _initialize_models_metadata(cfg: Settings) -> None:
         except ValueError as exc:
             logger.error(
                 "Unable to prepare model %s for %s: %s",
-                getattr(model, "llm_name", "<unknown>"),
+                getattr(model, "id", "<unknown>"),
                 cfg.env_name,
                 exc,
             )

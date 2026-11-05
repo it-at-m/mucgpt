@@ -96,7 +96,7 @@ export interface ApplicationConfig {
 }
 
 export interface Model {
-    llm_name: string;
+    id: string;
     display_name?: string | null;
     max_input_tokens?: number | null;
     context_warning_threshold_percent?: number;

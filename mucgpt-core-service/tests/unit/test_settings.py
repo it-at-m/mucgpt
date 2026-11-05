@@ -39,7 +39,7 @@ from config.settings import (
 def test_temperature_capability_configuration(capability_config, expected) -> None:
     config = ModelsConfig(
         type="openai",
-        llm_name="test-model",
+        id="test-model",
         endpoint="https://example.test",
         api_key="test",
         **capability_config,
@@ -247,7 +247,7 @@ class TestSettings:
             [
                 {
                     "provider": ["gateway"],
-                    "llm_name": "test-model",
+                    "id": "test-model",
                 }
             ]
         )
@@ -293,7 +293,7 @@ class TestSettings:
             [
                 {
                     "provider": "gateway",
-                    "llm_name": "test-model",
+                    "id": "test-model",
                     "max_output_tokens": 1000,
                     "max_input_tokens": 2000,
                     "description": "Test model",
@@ -315,7 +315,7 @@ class TestSettings:
             assert model.type == "openai"
             assert str(model.endpoint) == "https://gateway.test/"
             assert model.api_key.get_secret_value() == "provider-key"
-            assert model.llm_name == "test-model"
+            assert model.id == "test-model"
 
     def test_model_rejects_inline_provider_fields(self):
         """Inline type/endpoint/api_key on model entries are rejected (hard cut)."""
@@ -323,7 +323,7 @@ class TestSettings:
             [
                 {
                     "provider": "gateway",
-                    "llm_name": "test-model",
+                    "id": "test-model",
                     "endpoint": "https://inline.test",
                     "api_key": "inline-key",
                 }
@@ -336,10 +336,25 @@ class TestSettings:
 
     def test_model_requires_provider_reference(self):
         """Model entries without a provider reference are rejected."""
-        models_json = json.dumps([{"llm_name": "test-model"}])
+        models_json = json.dumps([{"id": "test-model"}])
         with patch.dict(os.environ, {"MUCGPT_CORE_MODELS": models_json}):
             get_settings.cache_clear()
             with pytest.raises(ValidationError, match="provider"):
+                Settings()
+
+    def test_model_rejects_legacy_llm_name_key(self):
+        """The renamed `llm_name` key is rejected with a migration pointer."""
+        models_json = json.dumps(
+            [
+                {
+                    "provider": "gateway",
+                    "llm_name": "test-model",
+                }
+            ]
+        )
+        with patch.dict(os.environ, {"MUCGPT_CORE_MODELS": models_json}):
+            get_settings.cache_clear()
+            with pytest.raises(ValidationError, match="renamed from `llm_name`"):
                 Settings()
 
     def test_model_rejects_unknown_provider(self):
@@ -353,7 +368,7 @@ class TestSettings:
                 }
             }
         )
-        models_json = json.dumps([{"provider": "nope", "llm_name": "test-model"}])
+        models_json = json.dumps([{"provider": "nope", "id": "test-model"}])
         with patch.dict(
             os.environ,
             {
@@ -381,7 +396,7 @@ class TestSettings:
             [
                 {
                     "provider": "test-azure",
-                    "llm_name": "test-model",
+                    "id": "test-model",
                     "deployment": "test-deployment",
                     "max_output_tokens": 1000,
                     "max_input_tokens": 2000,
@@ -408,7 +423,7 @@ class TestSettings:
             assert len(settings.models) == 1
             model = settings.models[0]
             assert model.type == "azure"
-            assert model.llm_name == "test-model"
+            assert model.id == "test-model"
             assert str(model.endpoint) == "https://test.example.com/"
             assert model.api_key.get_secret_value() == "test-key"
             assert model.api_version == "2025-04-01-preview"
@@ -438,7 +453,7 @@ class TestSettings:
             [
                 {
                     "provider": "gateway",
-                    "llm_name": "gpt-4.1-nano",
+                    "id": "gpt-4.1-nano",
                 }
             ]
         )
@@ -522,7 +537,7 @@ class TestSettings:
             [
                 {
                     "provider": "gateway",
-                    "llm_name": "gpt-6",
+                    "id": "gpt-6",
                     "supported_reasoning_efforts": ["medium", "high"],
                     "default_reasoning_effort": "medium",
                 }
@@ -568,7 +583,7 @@ class TestSettings:
             [
                 {
                     "provider": "gateway",
-                    "llm_name": "gpt-6",
+                    "id": "gpt-6",
                 }
             ]
         )
@@ -616,7 +631,7 @@ class TestSettings:
             [
                 {
                     "provider": "gateway",
-                    "llm_name": "gpt-4o-mini",
+                    "id": "gpt-4o-mini",
                 }
             ]
         )
@@ -653,7 +668,7 @@ class TestSettings:
             [
                 {
                     "provider": "gateway",
-                    "llm_name": "gpt-4o-mini",
+                    "id": "gpt-4o-mini",
                     "model_info": {
                         "auto_enrich_from_model_info_endpoint": False,
                         "max_output_tokens": 1000,
@@ -691,7 +706,7 @@ class TestSettings:
             [
                 {
                     "provider": "gateway",
-                    "llm_name": "gpt-4o-mini",
+                    "id": "gpt-4o-mini",
                     "model_info": {
                         "auto_enrich_from_model_info_endpoint": False,
                         "max_output_tokens": 1000,
@@ -734,7 +749,7 @@ class TestSettings:
             [
                 {
                     "provider": "gateway",
-                    "llm_name": "gpt-4o-mini",
+                    "id": "gpt-4o-mini",
                     "model_info": {
                         "auto_enrich_from_model_info_endpoint": False,
                         "max_output_tokens": 1000,
@@ -772,7 +787,7 @@ class TestSettings:
             [
                 {
                     "provider": "gateway",
-                    "llm_name": "gpt-4o-mini",
+                    "id": "gpt-4o-mini",
                     "model_info": {
                         "auto_enrich_from_model_info_endpoint": False,
                         "max_output_tokens": 1000,
@@ -812,7 +827,7 @@ class TestSettings:
             [
                 {
                     "provider": "gateway",
-                    "llm_name": "gpt-4o-mini",
+                    "id": "gpt-4o-mini",
                     "model_info": {
                         "auto_enrich_from_model_info_endpoint": False,
                         "max_output_tokens": 1000,
@@ -955,7 +970,7 @@ providers:
     api_key: "yaml-test-key"
 models:
   - provider: "gateway"
-    llm_name: "yaml-test-model"
+    id: "yaml-test-model"
     model_info:
       auto_enrich_from_model_info_endpoint: false
       max_output_tokens: 2000
@@ -983,7 +998,7 @@ models:
                 assert len(settings.models) == 1
                 model = settings.models[0]
                 assert model.type == "openai"
-                assert model.llm_name == "yaml-test-model"
+                assert model.id == "yaml-test-model"
                 assert model.max_output_tokens == 2000
                 assert model.max_input_tokens == 4000
                 assert model.description == "YAML test model"

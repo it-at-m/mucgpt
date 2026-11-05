@@ -43,6 +43,15 @@ describe("resolveOrphanedAssistantChats", () => {
         expect(orphans).toEqual([]);
     });
 
+    it("skips legacy numeric ids that the assistant API cannot resolve", async () => {
+        vi.mocked(getCommunityAssistantApi).mockResolvedValue({ id: "123", latest_version: { name: "Legacy", description: "" } } as never);
+
+        const orphans = await resolveOrphanedAssistantChats(["123"], new Map([["123", 4]]));
+
+        expect(orphans).toEqual([]);
+        expect(getCommunityAssistantApi).not.toHaveBeenCalled();
+    });
+
     it("skips assistants on other errors and sorts the rest by last usage", async () => {
         vi.mocked(getCommunityAssistantApi).mockImplementation(id => {
             if (id === "a1") return Promise.resolve({ id, latest_version: { name: "First", description: "" } } as never);

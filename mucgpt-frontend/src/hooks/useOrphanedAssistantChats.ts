@@ -1,9 +1,7 @@
 import { useEffect, useState } from "react";
 
 import { AssistantStorageService } from "../service/assistantstorage";
-import { resolveOrphanedAssistantChats, type OrphanedAssistant } from "../utils/orphanedAssistantChats";
-
-const LEGACY_ASSISTANT_ID_PATTERN = /^\d+$/;
+import { LEGACY_ASSISTANT_ID_PATTERN, resolveOrphanedAssistantChats, type OrphanedAssistant } from "../utils/orphanedAssistantChats";
 
 interface UseOrphanedAssistantChatsParams {
     assistantStorageService: AssistantStorageService;

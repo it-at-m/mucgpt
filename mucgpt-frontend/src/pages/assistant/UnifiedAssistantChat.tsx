@@ -864,7 +864,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
         if (isLegacyAssistant) {
             return (
                 <div className={styles.stateCallout}>
-                    <AssistantStateCallout state="legacy" context="chat" onDelete={performDeleteAssistant} />
+                    <AssistantStateCallout state="legacy" context="chat" onDelete={() => void performDeleteAssistant(true)} />
                 </div>
             );
         }

@@ -10,7 +10,6 @@ const Version = () => {
     const { t } = useTranslation();
     const navigate = useNavigate();
     const { release_notes: releaseNotes } = useConfigContext();
-
     return (
         <div className={styles.container}>
             <div className={styles.commandsContainer}>

@@ -564,6 +564,13 @@ class ModelsDTO(BaseModel):
     )
 
 
+class ReleaseNoteDTO(BaseModel):
+    """A release note exposed to the frontend."""
+
+    version: str
+    content: str
+
+
 class ConfigResponse(BaseModel):
     env_name: str = "MUCGPT"
     alternative_logo: bool = False
@@ -575,7 +582,7 @@ class ConfigResponse(BaseModel):
     core_version: str
     frontend_version: str
     assistant_version: str
-    release_notes: list[dict[str, str]] = Field(
+    release_notes: list[ReleaseNoteDTO] = Field(
         default_factory=list,
         description="Configured release notes, ordered from newest to oldest.",
     )

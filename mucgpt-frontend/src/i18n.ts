@@ -340,6 +340,8 @@ i18n
                         },
                         answer: {
                             regenerate: "Antwort regenerieren",
+                            persisted_actions_unavailable:
+                                "Regenerieren und Wiederholen sind in gespeicherten Chats nicht verfügbar. Sie können eine neue Frage stellen.",
                             copy: "Antwort kopieren",
                             unformat: "Unformatierte Antwort"
                         },
@@ -1274,6 +1276,7 @@ i18n
                         },
                         answer: {
                             regenerate: "Regenerate response",
+                            persisted_actions_unavailable: "Regeneration and retry are unavailable in saved chats. You can ask a new question.",
                             copy: "Copy response",
                             unformat: "Unformatted response"
                         },
@@ -2182,7 +2185,8 @@ i18n
                             unformat: "Unformatierte Antwort"
                         },
                         answer: {
-                            regenerate: "No amoi probiern"
+                            regenerate: "No amoi probiern",
+                            persisted_actions_unavailable: "Regeneriern und no amoi probiern geht in gspeicherten Chats ned. Du kannst a neue Frag stelln."
                         },
                         mindmap: {
                             download: "Obalada",
@@ -3079,6 +3083,8 @@ i18n
                         },
                         answer: {
                             regenerate: "Régénérer la réponse",
+                            persisted_actions_unavailable:
+                                "La régénération et les nouvelles tentatives ne sont pas disponibles dans les discussions enregistrées. Vous pouvez poser une nouvelle question.",
                             copy: "Copier la réponse",
                             unformat: "Réponse non formatée"
                         },
@@ -3974,6 +3980,7 @@ i18n
                         },
                         answer: {
                             regenerate: "Регенерувати відповідь",
+                            persisted_actions_unavailable: "Регенерація та повторні спроби недоступні в збережених чатах. Ви можете поставити нове запитання.",
                             copy: "Копіювати відповідь",
                             unformat: "Неформатована відповідь"
                         },

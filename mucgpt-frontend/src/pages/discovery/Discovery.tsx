@@ -439,10 +439,12 @@ const Discovery = () => {
             if (selectedAssistant.isLocalAssistant) {
                 await assistantStorageService.deleteConfigAndChatsForAssistant(selectedAssistant.id);
             } else if (selectedAssistant.isDeletedSnapshot) {
-                await communityAssistantStorageService.deleteConfigForAssistant(selectedAssistant.id);
                 await assistantStorageService.deleteChatsForAssistant(selectedAssistant.id);
+                await communityAssistantStorageService.deleteConfigForAssistant(selectedAssistant.id);
             } else {
+                await assistantStorageService.deleteChatsForAssistant(selectedAssistant.id);
                 await deleteCommunityAssistantApi(selectedAssistant.id);
+                await assistantStorageService.deleteConfigForAssistant(selectedAssistant.id);
             }
             showSuccess(
                 t("components.assistant_chat.delete_assistant_success"),
@@ -463,7 +465,9 @@ const Discovery = () => {
         if (!selectedAssistant) return;
 
         try {
+            await assistantStorageService.deleteChatsForAssistant(selectedAssistant.id);
             await unsubscribeFromAssistantApi(selectedAssistant.id);
+            await communityAssistantStorageService.deleteConfigForAssistant(selectedAssistant.id);
 
             showSuccess(
                 t("components.community_assistants.unsubscribe_success_title"),
@@ -472,13 +476,6 @@ const Discovery = () => {
             removeSubscribedAssistant(selectedAssistant.id);
             refreshUnifiedHistory();
             closeDrawer();
-
-            try {
-                await assistantStorageService.deleteChatsForAssistant(selectedAssistant.id);
-                await communityAssistantStorageService.deleteConfigForAssistant(selectedAssistant.id);
-            } catch (cleanupError) {
-                console.error("Failed to clean up local assistant data after unsubscribe:", cleanupError);
-            }
         } catch (err) {
             console.error("Failed to unsubscribe from assistant:", err);
             showError(t("components.community_assistants.unsubscribe_failed_title"), t("components.community_assistants.unsubscribe_failed_message"));

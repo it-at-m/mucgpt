@@ -13,6 +13,8 @@ import { AnswerActivity } from "../AnswerActivity/AnswerActivity";
 interface Props {
     answer: ChatResponse;
     onRegenerateResponseClicked?: () => void;
+    /** Accessible explanation when regeneration is unavailable for this request mode. */
+    regenerationUnavailableReason?: string;
     onFollowUpActionSend?: (prompt: string) => void;
     /** Whether this is the newest answer in the chat. Latest answers keep their actions permanently visible; older ones reveal them on hover. */
     isLatest?: boolean;
@@ -20,7 +22,14 @@ interface Props {
     isStreaming?: boolean;
 }
 
-export const Answer = ({ answer, onRegenerateResponseClicked, onFollowUpActionSend, isLatest = false, isStreaming = false }: Props) => {
+export const Answer = ({
+    answer,
+    onRegenerateResponseClicked,
+    regenerationUnavailableReason,
+    onFollowUpActionSend,
+    isLatest = false,
+    isStreaming = false
+}: Props) => {
     const { t } = useTranslation();
 
     const [copied, setCopied] = useState<boolean>(false);
@@ -94,20 +103,22 @@ export const Answer = ({ answer, onRegenerateResponseClicked, onFollowUpActionSe
                         ></Button>
                     </Tooltip>
 
-                    {onRegenerateResponseClicked && (
-                        <Tooltip content={t("components.answer.regenerate")} relationship="description" positioning="above">
+                    {(onRegenerateResponseClicked || regenerationUnavailableReason) && (
+                        <Tooltip content={regenerationUnavailableReason ?? t("components.answer.regenerate")} relationship="description" positioning="above">
                             <Button
                                 appearance="subtle"
                                 aria-label={t("components.answer.regenerate")}
                                 icon={<ArrowSync24Regular />}
-                                onClick={() => onRegenerateResponseClicked()}
+                                disabled={!onRegenerateResponseClicked || Boolean(regenerationUnavailableReason)}
+                                aria-description={regenerationUnavailableReason}
+                                onClick={onRegenerateResponseClicked}
                                 size="small"
                             ></Button>
                         </Tooltip>
                     )}
                 </div>
             )}
-            {onRegenerateResponseClicked && onFollowUpActionSend && !isStreaming && (
+            {onFollowUpActionSend && !isStreaming && (
                 <div className={styles.followUpActionsBelow}>
                     <FollowUpActionList onSend={onFollowUpActionSend} />
                 </div>

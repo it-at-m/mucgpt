@@ -1,7 +1,8 @@
+from datetime import datetime
 from decimal import Decimal
 from typing import Any, Final, Literal
 
-from pydantic import BaseModel, ConfigDict, Field, PositiveInt
+from pydantic import BaseModel, ConfigDict, Field, PositiveInt, field_validator
 
 from config.settings import ReasoningEffort
 
@@ -60,6 +61,38 @@ class ChatCompletionMessage(BaseModel):
     )
 
 
+class ConversationActivityStep(BaseModel):
+    """Display metadata reconstructed from a checkpoint, without raw tool results."""
+
+    tool_call_id: str
+    tool_name: str
+    status: Literal["done", "error"]
+    description: str | None = None
+    detail: str | None = None
+
+
+class ConversationUsage(BaseModel):
+    """Usage of a turn, using the same fields as the live frontend response."""
+
+    context_tokens: int | None = Field(default=None, ge=0)
+    user_tokens: int | None = Field(default=None, ge=0)
+    tokens: int | None = Field(default=None, ge=0)
+    usage_cost: float | None = Field(default=None, ge=0)
+    usage_model: str | None = None
+    usage_max_input_tokens: int | None = Field(default=None, gt=0)
+    usage_context_warning_threshold_percent: int | None = Field(
+        default=None, ge=1, le=100
+    )
+    usage_context_critical_threshold_percent: int | None = Field(
+        default=None, ge=1, le=100
+    )
+
+
+class ConversationMessage(ChatCompletionMessage):
+    activity_steps: list[ConversationActivityStep] = Field(default_factory=list)
+    usage: ConversationUsage | None = None
+
+
 class ChatDataSource(BaseModel):
     title: str = Field(..., description="Document title")
     content: str = Field(..., description="Document content to inject")
@@ -100,7 +133,14 @@ class ChatCompletionRequest(BaseModel):
     )
     conversation_id: str | None = Field(
         None,
-        description="Stable client-generated id for this conversation. Accepted but not yet used server-side.",
+        description="Stable client-generated id used as the LangGraph checkpoint thread id.",
+    )
+    persist: bool = Field(
+        True,
+        description=(
+            "Store the conversation server-side. If false, the chat runs statelessly "
+            "on the full client history and nothing is persisted (e.g. assistant previews)."
+        ),
     )
     data_sources: list[ChatDataSource] | None = Field(
         None,
@@ -420,6 +460,10 @@ class ComplianceCheckResponse(BaseModel):
 class ChatTitleRequest(BaseModel):
     """Request model for generating a chat title based on the last turn."""
 
+    conversation_id: str = Field(
+        ...,
+        description="Stable client-generated id used as the LangGraph checkpoint thread id.",
+    )
     query: str = Field(
         ..., description="The user's last question or message in the chat."
     )
@@ -434,6 +478,47 @@ class ChatTitleResult(BaseModel):
     """Result model for chat title generation."""
 
     title: str = Field(..., description="Normalized, human-readable chat title.")
+
+
+class ConversationRenameRequest(BaseModel):
+    """A manually supplied conversation title."""
+
+    title: str = Field(min_length=1, description="New human-readable chat title.")
+
+    @field_validator("title", mode="before")
+    @staticmethod
+    def normalize_title(value: object) -> object:
+        if isinstance(value, str):
+            return value.strip().replace("\r", " ").replace("\n", " ")
+        return value
+
+
+class ConversationMetadata(BaseModel):
+    """One row of the caller's conversation list (metadata only, no messages)."""
+
+    assistant_id: str | None = Field(
+        default=None,
+        description="Assistant associated with this conversation, or null for ordinary chats.",
+    )
+    conversation_id: str = Field(
+        ..., description="LangGraph checkpoint thread id for the conversation."
+    )
+    title: str = Field(..., description="Human-readable chat title.")
+    created_at: datetime = Field(
+        ..., description="When the conversation row was first created."
+    )
+    updated_at: datetime = Field(
+        ...,
+        description="Last activity on the conversation (new message or title change).",
+    )
+
+    @field_validator("title", mode="before")
+    @staticmethod
+    def parse_title(value: str | None) -> str:
+        """Normalize title to a single line with no leading/trailing whitespace and convert None to default title"""
+        if not value:
+            return "Neuer Chat"
+        return value.strip().replace("\n", " ")
 
 
 class ModelsDTO(BaseModel):

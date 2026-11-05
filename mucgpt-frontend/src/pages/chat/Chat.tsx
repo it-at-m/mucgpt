@@ -12,6 +12,7 @@ import { DBMessage, StorageService } from "../../service/storage";
 import { AnswerList } from "../../components/AnswerList/AnswerList";
 import { FollowUpActionContext } from "../../components/FollowUpAction";
 import { getChatReducer, handleRegenerate, handleRollback, makeApiRequest } from "../page_helpers";
+import { getConversationActionCapabilities } from "../../utils/conversationActions";
 import { STORAGE_KEYS } from "../layout/LayoutHelper";
 import { ToolStatus } from "../../utils/ToolStreamHandler";
 import { initialRunActivity, type RunActivity } from "../../utils/agUiActivity";
@@ -30,6 +31,10 @@ import { UserContext } from "../layout/UserContextProvider";
 import { useConfigContext } from "../../context/ConfigContext";
 import { AgUiEventDrawer, type AgUiEventLogEntry } from "../../components/AgUiEventDrawer/AgUiEventDrawer";
 import { scrollIntoNearestContainer } from "../../utils/scrollIntoNearestContainer";
+import { loadConversation } from "../../service/conversationHistory";
+
+const requestPersist = true;
+const conversationActions = getConversationActionCapabilities(requestPersist);
 
 /**
  * Creates a debounced function that delays invoking the provided function
@@ -212,7 +217,7 @@ const Chat = () => {
         async (id: string) => {
             try {
                 setError(undefined);
-                const chat = await storageService.get(id);
+                const chat = await loadConversation(storageService, id, id, { system: "", creativity: CREATIVITY_LOW });
                 if (chat) {
                     dispatch({ type: "SET_ANSWERS", payload: chat.messages });
                     dispatch({ type: "SET_CREATIVITY", payload: chat.config.creativity });
@@ -295,7 +300,7 @@ const Chat = () => {
                     dataSources,
                     lastAnswerRef,
                     setLoadingState,
-                    true,
+                    requestPersist,
                     agUiEnabled,
                     showAgUiEventLog ? handleAgUiEvent : undefined,
                     setRunActivity
@@ -324,10 +329,10 @@ const Chat = () => {
 
     // Regenerate-Funktion
     const onRegenerateResponseClicked = useCallback(async () => {
-        if (answers.length === 0 || !activeChatRef.current || isLoadingRef.current) return;
+        if (!conversationActions.canRegenerate || answers.length === 0 || !activeChatRef.current || isLoadingRef.current) return;
 
         try {
-            await handleRegenerate(answers, dispatch, activeChatRef.current, storageService, systemPrompt, callApi, isLoadingRef);
+            await handleRegenerate(answers, dispatch, activeChatRef.current, storageService, systemPrompt, callApi, isLoadingRef, requestPersist);
         } catch (e) {
             setError(e);
         }
@@ -754,7 +759,10 @@ const Chat = () => {
                                     answer={answer.response}
                                     isLatest
                                     isStreaming={isStreaming}
-                                    onRegenerateResponseClicked={onRegenerateResponseClicked}
+                                    onRegenerateResponseClicked={conversationActions.canRegenerate ? onRegenerateResponseClicked : undefined}
+                                    regenerationUnavailableReason={
+                                        !conversationActions.canRegenerate ? t("components.answer.persisted_actions_unavailable") : undefined
+                                    }
                                     onFollowUpActionSend={prompt => callApi(prompt, systemPrompt)}
                                 />
                             )}
@@ -767,9 +775,12 @@ const Chat = () => {
                 loadingActivity={runActivity}
                 error={error}
                 makeApiRequest={() => {
+                    if (!conversationActions.canRetry || isLoadingRef.current) return;
                     dispatch({ type: "SET_ANSWERS", payload: answers.slice(0, -1) });
                     callApi(lastQuestionRef.current, systemPrompt);
                 }}
+                canRetry={conversationActions.canRetry}
+                retryUnavailableReason={!conversationActions.canRetry ? t("components.answer.persisted_actions_unavailable") : undefined}
                 chatMessageStreamEnd={chatMessageStreamEnd}
                 lastQuestionRef={lastQuestionRef}
                 onRollbackError={() => {
@@ -793,7 +804,8 @@ const Chat = () => {
             isStreaming,
             lastQuestionRef,
             chatMessageStreamEnd,
-            lastAnswerRef
+            lastAnswerRef,
+            t
         ]
     );
 
@@ -830,7 +842,7 @@ const Chat = () => {
         return (
             <QuestionInput
                 clearOnSend
-                disabled={isLoading || error !== undefined}
+                disabled={isLoading || isStreaming}
                 draftCacheKey="chat-main"
                 skipDraftRestore={!!questionFromUrl || newChatRequested}
                 onSend={(question, datas) => {
@@ -861,6 +873,7 @@ const Chat = () => {
         question,
         t,
         isLoading,
+        isStreaming,
         selectedTools,
         tools,
         uploadedData,

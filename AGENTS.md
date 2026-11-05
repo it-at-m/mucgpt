@@ -59,7 +59,7 @@ Each Python service is configured by a **`config.yaml`** (see each service's `co
 - core-service: `MUCGPT_CORE_` (e.g. `MUCGPT_CORE_REDIS__HOST=valkey`)
 - assistant-service + migrations: `MUCGPT_ASSISTANT_` (e.g. `MUCGPT_ASSISTANT_DB__PASSWORD=...`)
 
-Source priority (core): constructor/init (tests) > env vars > `config.yaml` > `shared-config.yaml` > `.env`. Core config covers MODELS/Langfuse/MCP/Redis/SSO/INTERNET_SEARCH; assistant config covers DB/Redis/LDAP/SSO.
+Source priority (core): constructor/init (tests) > env vars > `config.yaml` > `shared-config.yaml` > `.env`. Core config covers MODELS/Langfuse/MCP/Redis/SSO; assistant config covers DB/Redis/LDAP/SSO.
 
 ## Core service architecture (`mucgpt-core-service/app/`)
 
@@ -73,7 +73,7 @@ Entry: `app.py` → `backend.py` builds the FastAPI app, mounts `api_app` at `/a
 **Tools** (`agent/tools/`): **read `agent/tools/README.md` first** — it's the authoritative guide.
 - Local tools use the `LocalTool` spec pattern (`spec.py`): add a module with `TOOL = LocalTool(id=..., factory=..., metadata=..., is_configured=...)` and register it in `LOCAL_TOOLS` in `tools.py`; `get_tools()` and `GET /v1/tools` pick it up automatically.
 - MCP tools are a **config change only** (`MCP` settings / `MUCGPT_CORE_MCP__...`), loaded per-user by `mcp.py::McpLoader` and cached in Redis with distributed locking — that caching is load-bearing, don't simplify it away. `McpBearerAuthProvider` forwards the per-user token to MCP servers.
-- `internet_search` is only added when `INTERNET_SEARCH.SEARXNG_URL` is set (`is_configured()`).
+- Internet search is provided through a configured MCP server, not a local tool.
 
 **Prompts** are Markdown files in `agent/prompt_pool/` (incl. `generation_prompts/` for assistant title/description/system-prompt generation and `compliance_prompts/`), read at import time — edit the `.md`, not string literals.
 

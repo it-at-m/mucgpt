@@ -581,7 +581,7 @@ class ConfigResponse(BaseModel):
     )
     transcription_enabled: bool = Field(
         False,
-        description="Whether browser-based audio transcription is enabled in the frontend. Transcription itself runs fully client-side; no audio is sent to the backend.",
+        description="Whether browser-based audio transcription is available in the frontend. Only true when TRANSCRIPTION_ENABLED is set and a TRANSCRIPTION_MODEL is configured. Transcription itself runs fully client-side; no audio is sent to the backend.",
     )
     transcription_model: str | None = Field(
         None,

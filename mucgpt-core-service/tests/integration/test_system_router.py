@@ -97,8 +97,11 @@ def test_document_processing_disabled_when_no_parser_backend(test_client):
 
 @pytest.mark.integration
 def test_transcription_enabled_reflects_settings(test_client):
-    """transcription_enabled follows the TRANSCRIPTION_ENABLED setting."""
-    mock_settings = Settings(TRANSCRIPTION_ENABLED=True)
+    """transcription_enabled is true when the flag is set and a model is configured."""
+    mock_settings = Settings(
+        TRANSCRIPTION_ENABLED=True,
+        TRANSCRIPTION_MODEL="istupakov/canary-180m-flash-onnx",
+    )
     with patch("api.routers.system_router.settings", mock_settings):
         response = test_client.get("/config", headers=headers)
     assert response.status_code == 200
@@ -138,17 +141,23 @@ def test_ai_act_compliance_check_disabled_reflects_settings(test_client):
 @pytest.mark.integration
 def test_transcription_model_reflects_settings(test_client: TestClient):
     """transcription_model follows the TRANSCRIPTION_MODEL setting."""
-    mock_settings = Settings(TRANSCRIPTION_MODEL="efederici/parakeet-tdt-0.6b-v3-onnx-int4")
+    mock_settings = Settings(
+        TRANSCRIPTION_MODEL="efederici/parakeet-tdt-0.6b-v3-onnx-int4"
+    )
     with patch("api.routers.system_router.settings", mock_settings):
         response = test_client.get("/config", headers=headers)
     assert response.status_code == 200
-    assert response.json()["transcription_model"] == "efederici/parakeet-tdt-0.6b-v3-onnx-int4"
+    assert (
+        response.json()["transcription_model"]
+        == "efederici/parakeet-tdt-0.6b-v3-onnx-int4"
+    )
 
 
 @pytest.mark.integration
 def test_transcription_model_unset_by_default(test_client: TestClient):
     """transcription_model is None by default — there is no backend or frontend fallback."""
-    mock_settings = Settings()
+    # Explicit None so the assertion holds regardless of env vars or config.yaml.
+    mock_settings = Settings(TRANSCRIPTION_MODEL=None)
     with patch("api.routers.system_router.settings", mock_settings):
         response = test_client.get("/config", headers=headers)
     assert response.status_code == 200
@@ -156,14 +165,21 @@ def test_transcription_model_unset_by_default(test_client: TestClient):
 
 
 @pytest.mark.integration
-def test_enabled_transcription_without_model_stays_disabled_with_warning(test_client, caplog):
+def test_enabled_transcription_without_model_stays_disabled_with_warning(
+    test_client, caplog
+):
     """TRANSCRIPTION_ENABLED=true without TRANSCRIPTION_MODEL warns and reports the disabled feature."""
-    mock_settings = Settings(TRANSCRIPTION_ENABLED=True)
+    # Explicit None so the test exercises the unset-model behavior even when
+    # environment variables or a working-directory config.yaml set a model.
+    mock_settings = Settings(TRANSCRIPTION_ENABLED=True, TRANSCRIPTION_MODEL=None)
     with patch("api.routers.system_router.settings", mock_settings):
         with caplog.at_level(logging.WARNING, logger="api.routers.system_router"):
             response = test_client.get("/config", headers=headers)
     assert response.status_code == 200
     payload = response.json()
-    assert payload["transcription_enabled"] is True
+    # The endpoint reports effective availability: without a model there is no transcription.
+    assert payload["transcription_enabled"] is False
     assert payload["transcription_model"] is None
-    assert any("TRANSCRIPTION_MODEL is not set" in record.message for record in caplog.records)
+    assert any(
+        "TRANSCRIPTION_MODEL is not set" in record.message for record in caplog.records
+    )

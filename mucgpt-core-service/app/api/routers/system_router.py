@@ -36,7 +36,9 @@ async def get_config(user_info=Depends(authenticate_user)) -> ConfigResponse:
         frontend_version=settings.FRONTEND_VERSION,
         assistant_version=settings.ASSISTANT_VERSION,
         document_processing_enabled=settings.PARSER_BACKEND != ParserBackendType.NONE,
-        transcription_enabled=settings.TRANSCRIPTION_ENABLED,
+        # Effective availability: a flag without a model cannot offer transcription.
+        transcription_enabled=settings.TRANSCRIPTION_ENABLED
+        and bool(settings.TRANSCRIPTION_MODEL),
         transcription_model=settings.TRANSCRIPTION_MODEL,
         ai_act_compliance_check_enabled=settings.AI_ACT_COMPLIANCE_CHECK_ENABLED,
         footer_link_url=settings.FOOTER_LINK_URL,
@@ -48,7 +50,7 @@ async def get_config(user_info=Depends(authenticate_user)) -> ConfigResponse:
         admin_role=settings.SSO.ADMIN_ROLE,
         ad2image_url=settings.AD2IMAGE_URL,
         owner_profile_url_template=settings.OWNER_PROFILE_URL_TEMPLATE,
-        ag_ui_enabled=settings.AG_UI_ENABLED
+        ag_ui_enabled=settings.AG_UI_ENABLED,
     )
 
     models = settings.MODELS

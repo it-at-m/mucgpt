@@ -45,13 +45,24 @@ class FakeWorkletNode {
 }
 class FakeAudioContext {
     static instances: FakeAudioContext[] = [];
+    /** Makes the next created context's createMediaStreamSource throw (to exercise the cleanup path). */
+    static failNextSource = false;
     audioWorklet = new FakeAudioWorklet();
     closed = false;
-    createMediaStreamSource = vi.fn(() => ({ connect: vi.fn(), disconnect: vi.fn() }));
+    failSource: boolean;
+    createMediaStreamSource = vi.fn(() => {
+        if (this.failSource) throw new Error("source boom");
+        return { connect: vi.fn(), disconnect: vi.fn() };
+    });
+    // Mirrors the spec for AudioContext being lenient, but simulates browsers
+    // that reject a repeated close() — the cleanup must survive either.
     close = vi.fn(async () => {
+        if (this.closed) throw new DOMException("InvalidStateError", "InvalidStateError");
         this.closed = true;
     });
     constructor() {
+        this.failSource = FakeAudioContext.failNextSource;
+        FakeAudioContext.failNextSource = false;
         FakeAudioContext.instances.push(this);
     }
 }
@@ -180,6 +191,25 @@ describe("useAudioRecorder", () => {
 
         expect(failure).toBeInstanceOf(Error);
         expect((failure as Error).message).toBe("load failed");
+        expect(lastStream.tracks[0].stopped).toBe(true);
+        expect(FakeAudioContext.instances[0]!.closed).toBe(true);
+        expect(hook.result.current.recordingState).toBe("idle");
+    });
+
+    it("keeps the original cause when a cleanup close rejects", async () => {
+        stubWebAudio();
+        FakeAudioContext.failNextSource = true;
+        const hook = renderHook(() => useAudioRecorder());
+
+        const start = hook.result.current.startRecording(vi.fn());
+        let failure: unknown;
+        await act(async () => {
+            failure = await start.catch(error => error);
+        });
+
+        // The failing source creation is the cause — not the close() of the
+        // already-closing context during cleanup.
+        expect((failure as Error).message).toBe("source boom");
         expect(lastStream.tracks[0].stopped).toBe(true);
         expect(FakeAudioContext.instances[0]!.closed).toBe(true);
         expect(hook.result.current.recordingState).toBe("idle");

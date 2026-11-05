@@ -134,6 +134,22 @@ describe("MicrophoneButton", () => {
         expect(context.startRecording).toHaveBeenCalledTimes(1);
     });
 
+    it("ignores a second click while this instance's start is pending", () => {
+        const { context } = setup({
+            modelState: "ready",
+            overrides: { startRecording: vi.fn(() => new Promise<void>(() => {})) }
+        });
+
+        const mic = screen.getAllByRole("button")[0];
+        fireEvent.click(mic);
+        fireEvent.click(mic);
+
+        // The provider would no-op the duplicate start — the button must not call
+        // it again: a resolved duplicate would steal the ownership claim and clear
+        // the pending marker the unmount cleanup relies on.
+        expect(context.startRecording).toHaveBeenCalledTimes(1);
+    });
+
     it("aborts a pending start when unmounted mid-setup", () => {
         // The start hangs (permission dialog / audio setup in flight) and is
         // never claimed as owned.

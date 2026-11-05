@@ -122,7 +122,9 @@ export function useAudioRecorder(): UseAudioRecorderReturn {
         sourceRef.current = null;
         streamRef.current?.getTracks().forEach(t => t.stop());
         streamRef.current = null;
-        audioContextRef.current?.close();
+        // Fire-and-forget teardown: a rejection here (e.g. a repeated close on a
+        // deviating browser) must not become an unhandled rejection.
+        audioContextRef.current?.close().catch(() => undefined);
         audioContextRef.current = null;
     }, []);
 
@@ -196,7 +198,11 @@ export function useAudioRecorder(): UseAudioRecorderReturn {
                 // ref assignment; closeCapturePipeline covers everything after.
                 stream.getTracks().forEach(t => t.stop());
                 closeCapturePipeline();
-                await audioCtx.close();
+                // Cleanup must never replace the original cause: the context may
+                // already be closing via closeCapturePipeline (and close() on a
+                // closing context rejects in some browsers), so swallow any
+                // rejection from this cleanup close.
+                await audioCtx.close().catch(() => undefined);
                 throw err;
             }
             setRecordingState("recording");

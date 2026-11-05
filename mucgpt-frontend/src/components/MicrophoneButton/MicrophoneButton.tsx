@@ -111,6 +111,11 @@ export const MicrophoneButton = ({ onTranscription, onLiveTranscription, onRecor
 
     const handleClick = useCallback(async () => {
         if (status === "idle" || status === "error") {
+            // Ignore further clicks while this instance's start is still pending:
+            // the provider no-ops the duplicate, which would resolve immediately,
+            // steal the ownership claim and clear the pending marker that the
+            // unmount cleanup relies on to cancel the real start.
+            if (pendingOwnStartRef.current) return;
             onRecordingStart?.();
             try {
                 pendingOwnStartRef.current = true;

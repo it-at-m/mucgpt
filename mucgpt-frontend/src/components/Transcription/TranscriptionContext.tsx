@@ -98,7 +98,11 @@ const WORKER_RECREATE_MIN_INTERVAL_MS = 5_000;
 export const TranscriptionProvider = ({ children, transcriptionEnabled, transcriptionModelId }: React.PropsWithChildren<TranscriptionProviderProps>) => {
     const { t, i18n } = useTranslation();
     const translateRef = useRef(t);
-    translateRef.current = t;
+    // Ref writes must happen in effects, not render (React can replay or discard
+    // render work); every reader here runs after commit, so this is equivalent.
+    useEffect(() => {
+        translateRef.current = t;
+    }, [t]);
 
     // Registry lookup: an unset id (null) keeps the feature disabled without a
     // fallback — core and frontend are updated in sync. An unknown id disables

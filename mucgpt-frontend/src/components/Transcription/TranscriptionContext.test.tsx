@@ -6,13 +6,20 @@ import { TranscriptionProvider, TranscriptionContext, type ITranscription, type 
 import type { WorkerInMessage, WorkerOutMessage } from "../../workers/transcription.worker";
 import type { TranscriptionModel } from "../../config/transcriptionModels";
 import { markModelVerified, isModelDownloaded } from "../../utils/transcriptionModelCache";
+import { LOAD_WATCHDOG_MS } from "./TranscriptionContext";
 
 const stableT = (key: string, options?: { defaultValue?: string }) => options?.defaultValue ?? key;
 
+/** Mutable so tests can simulate an interface language switch mid-flight. */
+const i18nMock = vi.hoisted(() => ({
+    language: "DE",
+    t: (key: string, options?: { defaultValue?: string }) => options?.defaultValue ?? key
+}));
+
 vi.mock("react-i18next", () => ({
     useTranslation: () => ({
-        t: stableT,
-        i18n: { language: "DE" }
+        t: i18nMock.t,
+        i18n: { language: i18nMock.language }
     })
 }));
 
@@ -120,9 +127,17 @@ beforeEach(() => {
 });
 
 afterEach(() => {
+    vi.useRealTimers();
     vi.unstubAllGlobals();
     vi.restoreAllMocks();
 });
+
+/** Seeds both ONNX weights the registry's dtype requires for the whisper fixture. */
+async function seedWhisperCache() {
+    const transformers = await store.open("transformers-cache");
+    await transformers.put(`https://huggingface.co/${whisper.model_id}/resolve/main/onnx/encoder_model_q4.onnx`, new Response("ok"));
+    await transformers.put(`https://huggingface.co/${whisper.model_id}/resolve/main/onnx/decoder_model_merged_int8.onnx`, new Response("ok"));
+}
 
 describe("TranscriptionProvider", () => {
     it("disables transcription silently when no model is configured (null)", async () => {
@@ -148,8 +163,7 @@ describe("TranscriptionProvider", () => {
 
     it("auto-loads a verified download on boot and recovers `ready` on load", async () => {
         await markModelVerified(whisper);
-        const transformers = await store.open("transformers-cache");
-        await transformers.put(`https://huggingface.co/${whisper.model_id}/resolve/main/onnx/encoder_model_q4.onnx`, new Response("ok"));
+        await seedWhisperCache();
 
         renderProvider(whisper.model_id);
 
@@ -174,16 +188,67 @@ describe("TranscriptionProvider", () => {
         const worker = FakeWorker.instances[0]!;
         expect(worker.latestLoad?.modelId).toBe(whisper.model_id);
 
+        // The cached files must exist before `ready` so the persisted marker
+        // reflects a genuinely complete download.
+        await seedWhisperCache();
         worker.reply({ type: "ready", requestId: worker.latestLoad!.requestId, modelId: whisper.model_id });
         await download;
         const ready = await waitForModelState("ready");
         expect(ready.enabled).toBe(true);
+        // The verification marker was written on `ready`.
+        await waitFor(async () => expect(await isModelDownloaded(whisper)).toBe(true));
+    });
+
+    it("keeps the same worker and finishes the load when the interface language switches mid-load", async () => {
+        renderProvider(whisper.model_id);
+        const context = await waitForModelState("missing");
+
+        const download = context.downloadModel();
+        await waitFor(() => expect(holder.last?.modelState).toBe("downloading"));
+
+        // Switch the interface language and the translation function while the
+        // model loads — neither must tear down or replace the worker.
+        i18nMock.language = "EN";
+        i18nMock.t = (key: string) => `switched:${key}`;
+
+        const worker = FakeWorker.instances[0]!;
+        worker.reply({ type: "progress", progress: 50 });
+        await waitFor(() => expect(holder.last?.modelProgress).toBe(50));
+
+        await seedWhisperCache();
+        worker.reply({ type: "ready", requestId: worker.latestLoad!.requestId, modelId: whisper.model_id });
+        await download;
+        await waitForModelState("ready");
+
+        expect(FakeWorker.instances).toHaveLength(1);
+        i18nMock.language = "DE";
+        i18nMock.t = stableT;
+    });
+
+    it("times out a stalled load: settles the download, reports the error and replaces the worker", async () => {
+        vi.useFakeTimers({ shouldAdvanceTime: true });
+        renderProvider(whisper.model_id);
+        const context = await waitForModelState("missing");
+
+        const download = context.downloadModel();
+        await waitFor(() => expect(holder.last?.modelState).toBe("downloading"));
+        // Attach the rejection expectation before the watchdog fires so the
+        // rejection never counts as unhandled.
+        const rejection = expect(download).rejects.toThrow("Model load timed out");
+
+        // No progress message ever arrives — the watchdog must fire.
+        await vi.advanceTimersByTimeAsync(LOAD_WATCHDOG_MS + 1);
+
+        await rejection;
+        await waitFor(() => expect(holder.last?.error).toBe("components.transcription.load_timeout"));
+        await waitForModelState("missing");
+        // The stuck worker was replaced so a retry starts on a fresh instance.
+        await waitFor(() => expect(FakeWorker.instances).toHaveLength(2));
     });
 
     it("falls back to unverified after a failed load so the popover can offer recovery", async () => {
         await markModelVerified(whisper);
-        const transformers = await store.open("transformers-cache");
-        await transformers.put(`https://huggingface.co/${whisper.model_id}/resolve/main/onnx/encoder_model_q4.onnx`, new Response("stale"));
+        await seedWhisperCache();
 
         renderProvider(whisper.model_id);
         await waitForModelState("loading");

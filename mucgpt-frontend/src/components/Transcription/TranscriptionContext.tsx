@@ -1,7 +1,7 @@
 import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { findTranscriptionModel, type TranscriptionModel } from "../../config/transcriptionModels";
-import { localeToWhisperLang } from "../../config/transcriptionLanguages";
+import { localeToWhisperLang, modelSupportsLanguage } from "../../config/transcriptionLanguages";
 import { clearModelVerification, deleteModelFromCache, hasModelFiles, isModelDownloaded, markModelVerified } from "../../utils/transcriptionModelCache";
 import { supportsWebGPU } from "../../utils/webgpuSupport";
 import type { WorkerInMessage, WorkerOutMessage } from "../../workers/transcription.worker";
@@ -88,7 +88,9 @@ interface TranscriptionProviderProps {
 
 /** Owns the transcription worker, tracks the configured model's availability and exposes everything through the context. */
 /** Ceiling for a stalling model load: without any result or progress for this long, the load counts as failed. */
-const LOAD_WATCHDOG_MS = 45_000;
+export const LOAD_WATCHDOG_MS = 45_000;
+/** Minimum spacing between worker replacements triggered by worker errors, so a permanently broken script cannot loop. */
+const WORKER_RECREATE_MIN_INTERVAL_MS = 5_000;
 
 export const TranscriptionProvider = ({ children, transcriptionEnabled, transcriptionModelId }: React.PropsWithChildren<TranscriptionProviderProps>) => {
     const { t, i18n } = useTranslation();
@@ -134,6 +136,13 @@ export const TranscriptionProvider = ({ children, transcriptionEnabled, transcri
     const recordingSessionIdRef = useRef(0);
     const activeRecordingSessionIdRef = useRef<number | null>(null);
     const pendingDownloadRef = useRef<{ requestId: number; resolve: () => void; reject: (err: Error) => void } | null>(null);
+    /** Timestamp of the last worker progress message — keeps the load watchdog from aborting healthy downloads. */
+    const lastProgressAtRef = useRef(0);
+    /** Guards against concurrent mic starts while microphone acquisition / AudioContext setup is still in flight. */
+    const pendingStartRef = useRef(false);
+    /** When the worker must be replaced (stuck load, dead script), bumping this recreates it via the worker effect. */
+    const [workerEpoch, setWorkerEpoch] = useState(0);
+    const lastWorkerRecreateAtRef = useRef(0);
 
     const { recordingState, startRecording: startAudioRecording, stopRecording } = useAudioRecorder();
 
@@ -163,6 +172,9 @@ export const TranscriptionProvider = ({ children, transcriptionEnabled, transcri
             if (!model) return undefined;
             const requestId = ++loadRequestIdRef.current;
             expectedLoadRef.current = { requestId, modelId: model.model_id };
+            // Every load starts its own watchdog window, even before the first
+            // progress message arrives.
+            lastProgressAtRef.current = Date.now();
             sendToWorker({
                 type: "load",
                 requestId,
@@ -228,6 +240,8 @@ export const TranscriptionProvider = ({ children, transcriptionEnabled, transcri
             const msg = event.data;
             switch (msg.type) {
                 case "progress":
+                    // Byte-level updates count as activity too, not only rounded percent jumps.
+                    lastProgressAtRef.current = Date.now();
                     if (msg.progress >= 0) setModelProgress(Math.round(msg.progress));
                     if (msg.downloadedBytes !== undefined) setDownloadedBytes(msg.downloadedBytes);
                     if (msg.totalBytes !== undefined) setTotalBytes(msg.totalBytes);
@@ -243,7 +257,14 @@ export const TranscriptionProvider = ({ children, transcriptionEnabled, transcri
                         pendingDownloadRef.current = null;
                     }
                     // A successful load proves the cached bytes are intact.
-                    if (model) void markModelVerified(model);
+                    if (model) {
+                        markModelVerified(model).catch(err => {
+                            // A failed marker write must not present the model as
+                            // verified on the next visit; the running session stays usable.
+                            console.warn("[Transcription] Failed to persist verification marker:", err);
+                            setCacheVerified(false);
+                        });
+                    }
                     setCacheVerified(true);
                     setCacheHasFiles(true);
                     setModelProgress(100);
@@ -280,7 +301,12 @@ export const TranscriptionProvider = ({ children, transcriptionEnabled, transcri
                         pendingDownloadRef.current = null;
                     }
                     if (msg.requestId !== undefined) expectedLoadRef.current = null;
-                    if (msg.sessionId !== undefined) activeRecordingSessionIdRef.current = null;
+                    if (msg.sessionId !== undefined) {
+                        activeRecordingSessionIdRef.current = null;
+                        // A session error ends the recording: release the microphone,
+                        // otherwise it stays captured with a dead session.
+                        stopRecording();
+                    }
                     loadedModelIdRef.current = null;
                     setLoadedModelId(null);
                     // A failed model load invalidates the verification; the cached files
@@ -309,10 +335,23 @@ export const TranscriptionProvider = ({ children, transcriptionEnabled, transcri
             const pending = pendingDownloadRef.current;
             pending?.reject(new Error(event.message));
             pendingDownloadRef.current = null;
+            expectedLoadRef.current = null;
+            if (activeRecordingSessionIdRef.current !== null) {
+                activeRecordingSessionIdRef.current = null;
+                stopRecording();
+            }
             loadedModelIdRef.current = null;
             setLoadedModelId(null);
             setError(`Worker error: ${event.message}`);
             setStatus("error");
+            // After a script-load failure the worker is dead and ignores every
+            // message — retries would each run into the load timeout. Replace it
+            // via the worker effect; the interval guard keeps a permanently
+            // broken script from looping worker creation.
+            if (Date.now() - lastWorkerRecreateAtRef.current >= WORKER_RECREATE_MIN_INTERVAL_MS) {
+                lastWorkerRecreateAtRef.current = Date.now();
+                setWorkerEpoch(epoch => epoch + 1);
+            }
         };
 
         workerRef.current = worker;
@@ -331,35 +370,55 @@ export const TranscriptionProvider = ({ children, transcriptionEnabled, transcri
                 pendingDownloadRef.current = null;
             }
             expectedLoadRef.current = null;
+            // Whatever killed this worker must not leave the microphone captured.
+            stopRecording();
             setStatus(prev => (prev === "loading-model" || prev === "warming-up" ? "error" : prev));
         };
-    }, [enabled, model, sendToWorker, stopRecording]);
+    }, [enabled, model, sendToWorker, stopRecording, workerEpoch]);
 
     // Watchdog against silently wedged loads: if a load receives neither a
     // result nor any progress for LOAD_WATCHDOG_MS, treat it as failed so the UI
-    // can offer a retry instead of spinning forever. Progress messages restart
-    // the timer, so healthy (even long) downloads never trip it.
+    // can offer a retry instead of spinning forever. The timer re-arms itself
+    // while progress messages keep arriving (byte-level activity counts, not
+    // only rounded percent steps), so healthy — even long — downloads never trip it.
     useEffect(() => {
         if (status !== "loading-model" && status !== "warming-up") return;
-        const timer = setTimeout(() => {
-            const requestId = expectedLoadRef.current?.requestId ?? pendingDownloadRef.current?.requestId;
-            if (requestId === undefined) return;
-            expectedLoadRef.current = null;
-            pendingDownloadRef.current = null;
-            sendToWorker({ type: "abort", requestId });
-            loadedModelIdRef.current = null;
-            setLoadedModelId(null);
-            if (model) {
-                void clearModelVerification(model);
-                void hasModelFiles(model).then(present => setCacheHasFiles(present));
-            }
-            setCacheVerified(false);
-            setModelProgress(0);
-            setError(t("components.transcription.load_timeout"));
-            setStatus("error");
-        }, LOAD_WATCHDOG_MS);
+        let timer: ReturnType<typeof setTimeout> | undefined;
+        const armWatchdog = () => {
+            timer = setTimeout(() => {
+                if (Date.now() - lastProgressAtRef.current < LOAD_WATCHDOG_MS) {
+                    armWatchdog();
+                    return;
+                }
+                const requestId = expectedLoadRef.current?.requestId ?? pendingDownloadRef.current?.requestId;
+                if (requestId === undefined) return;
+                expectedLoadRef.current = null;
+                const pending = pendingDownloadRef.current;
+                pendingDownloadRef.current = null;
+                // Settle the download promise — every other path that clears the
+                // ref does, and an unsettled caller would await forever.
+                pending?.reject(new Error("Model load timed out"));
+                sendToWorker({ type: "abort", requestId });
+                loadedModelIdRef.current = null;
+                setLoadedModelId(null);
+                // A wedged load cannot recover in place: the worker stays busy
+                // until the pending load returns, so a retry would queue behind
+                // it and be dropped at the next timeout. Replace the worker so
+                // the retry starts on a fresh, idle instance.
+                setWorkerEpoch(epoch => epoch + 1);
+                if (model) {
+                    void clearModelVerification(model);
+                    void hasModelFiles(model).then(present => setCacheHasFiles(present));
+                }
+                setCacheVerified(false);
+                setModelProgress(0);
+                setError(t("components.transcription.load_timeout"));
+                setStatus("error");
+            }, LOAD_WATCHDOG_MS);
+        };
+        armWatchdog();
         return () => clearTimeout(timer);
-    }, [status, modelProgress, sendToWorker, t, model]);
+    }, [status, sendToWorker, t, model]);
 
     const setLanguage = useCallback(
         (lang: TranscriptionLanguage) => {
@@ -389,7 +448,12 @@ export const TranscriptionProvider = ({ children, transcriptionEnabled, transcri
             // is skipped to avoid an unnecessary request with an incompatible URL.
             const isNemo = model.runtime === "canary" || model.runtime === "parakeet";
             const startLoad = (fileSizes?: Record<string, number>) => {
-                if (downloadGeneration !== downloadGenerationRef.current) return;
+                if (downloadGeneration !== downloadGenerationRef.current) {
+                    // This download was superseded (cancel or a newer call) while
+                    // the file-size lookup was in flight — settle the promise.
+                    reject(new Error("Superseded by newer download"));
+                    return;
+                }
                 const requestId = requestModelLoad(fileSizes);
                 if (requestId === undefined) {
                     reject(new Error("Transcription is disabled"));
@@ -457,14 +521,24 @@ export const TranscriptionProvider = ({ children, transcriptionEnabled, transcri
     }, [model, sendToWorker]);
 
     const startRecording = useCallback(async () => {
-        if (status === "recording" || recordingState === "recording") return;
+        // A second click while the first start is still acquiring the microphone
+        // or building the AudioContext must not spawn a second capture that
+        // overwrites the recorder refs and leaks the first stream.
+        if (pendingStartRef.current || status === "recording" || recordingState === "recording") return;
         if (!enabled || loadedModelIdRef.current !== model?.model_id) {
             setError("Transcription model not ready");
             return;
         }
+        if (model && !modelSupportsLanguage(model.languages, languageRef.current)) {
+            // Refuse before any capture starts: the configured model cannot
+            // transcribe the active interface language (e.g. Ukrainian on Canary).
+            setError(translateRef.current("components.transcription.language_unsupported"));
+            throw new Error(translateRef.current("components.transcription.language_unsupported"));
+        }
         setError(null);
         setTranscript("");
 
+        pendingStartRef.current = true;
         try {
             // Sync language before frames start arriving
             sendToWorker({ type: "set-language", language: languageRef.current });
@@ -480,8 +554,11 @@ export const TranscriptionProvider = ({ children, transcriptionEnabled, transcri
         } catch (err) {
             setError(err instanceof Error ? err.message : String(err));
             setStatus("error");
+            throw err;
+        } finally {
+            pendingStartRef.current = false;
         }
-    }, [status, recordingState, enabled, model?.model_id, startAudioRecording, sendToWorker]);
+    }, [status, recordingState, enabled, model, startAudioRecording, sendToWorker]);
 
     const stopAndTranscribe = useCallback(async () => {
         if (recordingState !== "recording") return;

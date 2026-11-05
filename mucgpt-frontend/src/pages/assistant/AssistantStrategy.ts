@@ -19,7 +19,7 @@ import {
 
 export interface AssistantStrategy {
     loadAssistantConfig(assistantId: string, assistantStorageService: AssistantStorageService): Promise<Assistant | undefined>;
-    deleteAssistant(assistantId: string, assistantStorageService: AssistantStorageService): Promise<void>;
+    deleteAssistant(assistantId: string, assistantStorageService: AssistantStorageService, keepChats?: boolean): Promise<void>;
     updateAssistant?(
         assistantId: string,
         newAssistant: Assistant
@@ -40,10 +40,14 @@ export class LocalAssistantStrategy implements AssistantStrategy {
         return await assistantStorageService.getAssistantConfig(assistantId);
     }
 
-    async deleteAssistant(assistantId: string, assistantStorageService: AssistantStorageService): Promise<void> {
-        // The chats are kept: they are converted into normal assistant-less chats so
-        // the conversation history (and its last system prompt) survives the deletion.
-        await assistantStorageService.convertChatsToNormalChats(assistantId);
+    async deleteAssistant(assistantId: string, assistantStorageService: AssistantStorageService, keepChats = true): Promise<void> {
+        if (keepChats) {
+            // The chats are kept: they are converted into normal assistant-less chats so
+            // the conversation history (and its last system prompt) survives the deletion.
+            await assistantStorageService.convertChatsToNormalChats(assistantId);
+        } else {
+            await assistantStorageService.deleteChatsForAssistant(assistantId);
+        }
         await assistantStorageService.deleteConfigForAssistant(assistantId);
     }
 
@@ -147,7 +151,12 @@ export class OwnedCommunityAssistantStrategy implements AssistantStrategy {
         };
     }
 
-    async deleteAssistant(assistantId: string, assistantStorageService: AssistantStorageService): Promise<void> {
+    async deleteAssistant(assistantId: string, assistantStorageService: AssistantStorageService, keepChats = true): Promise<void> {
+        if (keepChats) {
+            await assistantStorageService.convertChatsToNormalChats(assistantId);
+        } else {
+            await assistantStorageService.deleteChatsForAssistant(assistantId);
+        }
         await deleteCommunityAssistantApi(assistantId);
         // Also clean up any local copy that may exist from before the assistant was published
         await assistantStorageService.deleteConfigForAssistant(assistantId);

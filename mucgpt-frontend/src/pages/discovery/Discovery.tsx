@@ -6,7 +6,7 @@ import { Add24Regular, ArrowResetRegular, DocumentArrowUpRegular, LibraryRegular
 import { useTranslation } from "react-i18next";
 
 import styles from "./Discovery.module.css";
-import { getCommunityAssistantApi, deleteCommunityAssistantApi, unsubscribeFromAssistantApi } from "../../api/assistant-client";
+import { getCommunityAssistantApi, unsubscribeFromAssistantApi } from "../../api/assistant-client";
 import { Assistant, AssistantResponse, CommunityAssistantSnapshot, ToolBase } from "../../api/models";
 import { AssistantStorageService } from "../../service/assistantstorage";
 import { CommunityAssistantStorageService } from "../../service/communityassistantstorage";
@@ -23,6 +23,7 @@ import { useDuplicateAssistant } from "./hooks/useDuplicateAssistant";
 import { useDiscoveryAssistantLists } from "./hooks/useDiscoveryAssistantLists";
 import { useMigrateLocalAssistant } from "../../hooks/useMigrateLocalAssistant";
 import { useOrphanedAssistantChats } from "../../hooks/useOrphanedAssistantChats";
+import { LocalAssistantStrategy, OwnedCommunityAssistantStrategy } from "../assistant/AssistantStrategy";
 import { downloadAssistantExport, mapAssistantToExportData, mapVersionToExportData } from "../../utils/assistant-export";
 import { isCompleteCommunityAssistantSnapshot, mapCommunitySnapshotToAssistant } from "../../utils/community-assistant-snapshots";
 import { getAssistantBadges, isAssistantPrivate } from "../../utils/assistantCardDisplay";
@@ -436,19 +437,16 @@ const Discovery = () => {
         });
     };
 
-    const performDelete = async () => {
+    const performDelete = async (keepChats: boolean) => {
         if (!selectedAssistant) return;
         try {
-            if (selectedAssistant.isLocalAssistant) {
-                // Chats are converted into normal chats so the history survives the deletion.
-                await assistantStorageService.convertChatsToNormalChats(selectedAssistant.id);
-                await assistantStorageService.deleteConfigForAssistant(selectedAssistant.id);
-            } else if (selectedAssistant.isDeletedSnapshot) {
+            if (selectedAssistant.isDeletedSnapshot) {
                 await assistantStorageService.deleteChatsForAssistant(selectedAssistant.id);
                 await communityAssistantStorageService.deleteConfigForAssistant(selectedAssistant.id);
+            } else if (selectedAssistant.isLocalAssistant) {
+                await new LocalAssistantStrategy().deleteAssistant(selectedAssistant.id, assistantStorageService, keepChats);
             } else {
-                await deleteCommunityAssistantApi(selectedAssistant.id);
-                await assistantStorageService.deleteConfigForAssistant(selectedAssistant.id);
+                await new OwnedCommunityAssistantStrategy().deleteAssistant(selectedAssistant.id, assistantStorageService, keepChats);
             }
             showSuccess(
                 t("components.assistant_chat.delete_assistant_success"),
@@ -831,7 +829,7 @@ const Discovery = () => {
             <CloseConfirmationDialog
                 open={showDeleteConfirm}
                 onOpenChange={setShowDeleteConfirm}
-                onConfirmClose={performDelete}
+                onConfirmClose={() => void performDelete(true)}
                 title={t(
                     selectedAssistant?.isDeletedSnapshot
                         ? "components.community_assistants.leftover_chats_cleanup_confirm_title"
@@ -840,11 +838,18 @@ const Discovery = () => {
                 message={t(
                     selectedAssistant?.isDeletedSnapshot
                         ? "components.community_assistants.leftover_chats_cleanup_confirm_message"
-                        : selectedAssistant?.isLocalAssistant
-                          ? "components.community_assistants.local_delete_confirm_message"
-                          : "components.assistantsettingsdrawer.deleteDialog.content"
+                        : "components.community_assistants.assistant_delete_chats_choice_message"
                 )}
-                confirmLabel={t("components.assistantsettingsdrawer.deleteDialog.confirm")}
+                confirmLabel={t(
+                    selectedAssistant?.isDeletedSnapshot
+                        ? "components.assistantsettingsdrawer.deleteDialog.confirm"
+                        : "components.community_assistants.keep_chats_action"
+                )}
+                secondaryAction={
+                    selectedAssistant?.isDeletedSnapshot
+                        ? undefined
+                        : { label: t("components.community_assistants.delete_chats_action"), onClick: () => void performDelete(false) }
+                }
             />
             <CloseConfirmationDialog
                 open={showUnsubscribeConfirm}

@@ -617,22 +617,25 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
     }, [assistantConfig, showError, showSuccess, t]);
 
     // Delete function for the info sidebar (owner only)
-    const performDeleteAssistant = useCallback(async () => {
-        try {
-            await strategy.deleteAssistant(assistant_id, assistantStorageService);
-            showSuccess(
-                t("components.assistant_chat.delete_assistant_success"),
-                t("components.assistant_chat.delete_assistant_success_message", { title: assistantConfig.title })
-            );
-            refreshUnifiedHistory();
-            navigate("/discovery");
-        } catch (err) {
-            showError(
-                t("components.assistant_chat.delete_assistant_failed"),
-                err instanceof Error ? err.message : t("components.assistant_chat.delete_assistant_failed_message")
-            );
-        }
-    }, [strategy, assistant_id, assistantStorageService, assistantConfig.title, refreshUnifiedHistory, navigate, showSuccess, showError, t]);
+    const performDeleteAssistant = useCallback(
+        async (keepChats: boolean = true) => {
+            try {
+                await strategy.deleteAssistant(assistant_id, assistantStorageService, keepChats);
+                showSuccess(
+                    t("components.assistant_chat.delete_assistant_success"),
+                    t("components.assistant_chat.delete_assistant_success_message", { title: assistantConfig.title })
+                );
+                refreshUnifiedHistory();
+                navigate("/discovery");
+            } catch (err) {
+                showError(
+                    t("components.assistant_chat.delete_assistant_failed"),
+                    err instanceof Error ? err.message : t("components.assistant_chat.delete_assistant_failed_message")
+                );
+            }
+        },
+        [strategy, assistant_id, assistantStorageService, assistantConfig.title, refreshUnifiedHistory, navigate, showSuccess, showError, t]
+    );
 
     // Unsubscribe function for the info sidebar (subscribed, non-owned community assistants only)
     const performUnsubscribeAssistant = useCallback(async () => {
@@ -1257,7 +1260,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
             <CloseConfirmationDialog
                 open={showDeleteConfirm}
                 onOpenChange={setShowDeleteConfirm}
-                onConfirmClose={isAssistantMissing ? performMissingAssistantCleanup : performDeleteAssistant}
+                onConfirmClose={isAssistantMissing ? performMissingAssistantCleanup : () => void performDeleteAssistant(true)}
                 title={t(
                     isAssistantMissing || isDeletedAssistant
                         ? "components.community_assistants.leftover_chats_cleanup_confirm_title"
@@ -1266,12 +1269,19 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                 message={t(
                     isAssistantMissing || isDeletedAssistant
                         ? "components.community_assistants.leftover_chats_cleanup_confirm_message"
-                        : isLocalAssistant
-                          ? "components.community_assistants.local_delete_confirm_message"
-                          : "components.assistantsettingsdrawer.deleteDialog.content"
+                        : "components.community_assistants.assistant_delete_chats_choice_message"
                 )}
-                confirmLabel={t("components.assistantsettingsdrawer.deleteDialog.confirm")}
-                confirmIntent="danger"
+                confirmLabel={t(
+                    isAssistantMissing || isDeletedAssistant
+                        ? "components.assistantsettingsdrawer.deleteDialog.confirm"
+                        : "components.community_assistants.keep_chats_action"
+                )}
+                confirmIntent={isAssistantMissing || isDeletedAssistant ? "danger" : "default"}
+                secondaryAction={
+                    isAssistantMissing || isDeletedAssistant
+                        ? undefined
+                        : { label: t("components.community_assistants.delete_chats_action"), onClick: () => void performDeleteAssistant(false) }
+                }
             />
             <CloseConfirmationDialog
                 open={showUnsubscribeConfirm}

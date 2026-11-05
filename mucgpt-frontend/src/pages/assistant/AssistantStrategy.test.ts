@@ -29,13 +29,22 @@ describe("assistant deletion strategies", () => {
         vi.mocked(unsubscribeFromAssistantApi).mockResolvedValue({ message: "unsubscribed" });
     });
 
-    it("local strategy converts its chats to normal chats before removing the configuration", async () => {
-        await new LocalAssistantStrategy().deleteAssistant("assistant", storage);
+    it("local strategy converts its chats to normal chats before removing the configuration when chats are kept", async () => {
+        await new LocalAssistantStrategy().deleteAssistant("assistant", storage, true);
         expect(storage.convertChatsToNormalChats).toHaveBeenCalledWith("assistant");
         expect(vi.mocked(storage.convertChatsToNormalChats).mock.invocationCallOrder[0]).toBeLessThan(
             vi.mocked(storage.deleteConfigForAssistant).mock.invocationCallOrder[0]
         );
         expect(storage.deleteChatsForAssistant).not.toHaveBeenCalled();
+    });
+
+    it("local strategy deletes its chats instead of converting them when chats are not kept", async () => {
+        await new LocalAssistantStrategy().deleteAssistant("assistant", storage, false);
+        expect(storage.deleteChatsForAssistant).toHaveBeenCalledWith("assistant");
+        expect(vi.mocked(storage.deleteChatsForAssistant).mock.invocationCallOrder[0]).toBeLessThan(
+            vi.mocked(storage.deleteConfigForAssistant).mock.invocationCallOrder[0]
+        );
+        expect(storage.convertChatsToNormalChats).not.toHaveBeenCalled();
     });
 
     it("local strategy retains the configuration when the conversion fails", async () => {
@@ -52,12 +61,26 @@ describe("assistant deletion strategies", () => {
         expect(CommunityAssistantStorageService.prototype.deleteConfigForAssistant).not.toHaveBeenCalled();
     });
 
-    it("owned strategy deletes the assistant and removes local configuration without touching chats", async () => {
-        await new OwnedCommunityAssistantStrategy().deleteAssistant("assistant", storage);
+    it("owned strategy converts its chats before deleting the assistant when chats are kept", async () => {
+        await new OwnedCommunityAssistantStrategy().deleteAssistant("assistant", storage, true);
+        expect(storage.convertChatsToNormalChats).toHaveBeenCalledWith("assistant");
         expect(deleteCommunityAssistantApi).toHaveBeenCalledWith("assistant");
         expect(storage.deleteChatsForAssistant).not.toHaveBeenCalled();
+        expect(vi.mocked(storage.convertChatsToNormalChats).mock.invocationCallOrder[0]).toBeLessThan(
+            vi.mocked(deleteCommunityAssistantApi).mock.invocationCallOrder[0]
+        );
         expect(vi.mocked(deleteCommunityAssistantApi).mock.invocationCallOrder[0]).toBeLessThan(
             vi.mocked(storage.deleteConfigForAssistant).mock.invocationCallOrder[0]
+        );
+    });
+
+    it("owned strategy deletes its chats before deleting the assistant when chats are not kept", async () => {
+        await new OwnedCommunityAssistantStrategy().deleteAssistant("assistant", storage, false);
+        expect(storage.deleteChatsForAssistant).toHaveBeenCalledWith("assistant");
+        expect(deleteCommunityAssistantApi).toHaveBeenCalledWith("assistant");
+        expect(storage.convertChatsToNormalChats).not.toHaveBeenCalled();
+        expect(vi.mocked(storage.deleteChatsForAssistant).mock.invocationCallOrder[0]).toBeLessThan(
+            vi.mocked(deleteCommunityAssistantApi).mock.invocationCallOrder[0]
         );
     });
 

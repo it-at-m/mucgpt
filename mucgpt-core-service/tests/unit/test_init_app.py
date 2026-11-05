@@ -2,12 +2,14 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from langchain_core.language_models.fake_chat_models import FakeListChatModel
+from langgraph.checkpoint.memory import InMemorySaver
 
 from agent.agent_executor import MUCGPTAgentExecutor
 from agent.deep_agent import MUCGPTAgent
 from agent.tools.tools import ToolCollection
 from core.auth_models import AuthenticationResult
 from core.lf_prompts import ResolvedPrompt
+from core.persistance_helpers import PersistanceHelpers
 from init_app import ModelOptions, init_agent
 
 
@@ -42,6 +44,13 @@ class TestInitApp:
             "agent.deep_agent.PromptPool.get_resolved_prompt",
             lambda _name: ResolvedPrompt(content="default instruction"),
         )
+        checkpointer = InMemorySaver()
+        get_checkpointer = MagicMock(return_value=checkpointer)
+        monkeypatch.setattr(
+            PersistanceHelpers,
+            "get_checkpointer_if_ready",
+            get_checkpointer,
+        )
 
         # Act
         result = await init_agent(self.mock_user)
@@ -52,6 +61,32 @@ class TestInitApp:
 
         assert result.agent.model == self.mock_model
         assert isinstance(result, MUCGPTAgentExecutor)
+        get_checkpointer.assert_called_once()
+
+    @pytest.mark.asyncio
+    @patch("config.model_provider.ModelRegistry.get_model")
+    @patch("agent.tools.tools.ToolCollection.get_tools", new_callable=AsyncMock)
+    async def test_init_agent_without_persistence_skips_checkpointer(
+        self,
+        mock_get_tools,
+        mock_get_model,
+        monkeypatch: pytest.MonkeyPatch,
+    ):
+        mock_get_model.return_value = self.mock_model
+        mock_get_tools.return_value = []
+        monkeypatch.setattr(
+            "agent.deep_agent.PromptPool.get_resolved_prompt",
+            lambda _name: ResolvedPrompt(content="default instruction"),
+        )
+        get_checkpointer = MagicMock(return_value=InMemorySaver())
+        monkeypatch.setattr(
+            PersistanceHelpers, "get_checkpointer_if_ready", get_checkpointer
+        )
+
+        result = await init_agent(self.mock_user, persist=False)
+
+        assert isinstance(result, MUCGPTAgentExecutor)
+        get_checkpointer.assert_not_called()
 
     def test_model_options_validates_temperature_too_high(self):
         """Test that ModelOptions validates temperature is not too high."""

@@ -1,11 +1,13 @@
 import logging
 
+from langchain.tools import ToolRuntime
 from langchain_core.runnables.base import RunnableSerializable
 from langchain_core.tools import tool
 from langchain_core.tools.base import BaseTool
-from langgraph.config import get_stream_writer
 from langgraph.types import StreamWriter
 
+from agent.middleware import RequestContext
+from agent.tools.model import configure_tool_model
 from agent.tools.simplify_agent import SimplifyAgent
 from agent.tools.spec import LocalTool
 from agent.tools.tool_chunk import ToolStreamChunk, ToolStreamState
@@ -40,21 +42,21 @@ SIMPLIFY_METADATA = {
 }
 
 
-def simplify(
+async def simplify(
     text: str,
     model: RunnableSerializable,
     logger: logging.Logger,
-    writer: StreamWriter = None,
+    writer: StreamWriter | None = None,
 ) -> str:
     """Simplify complex text using a reflective agent with LangGraph."""
 
     try:
         # Create a SimplifyAgent instance with the writer and run the simplification workflow
         agent = SimplifyAgent(model=model, logger=logger, writer=writer)
-        simplified_text = agent.run(original_text=text)
+        simplified_text = await agent.run(original_text=text)
         return simplified_text
     except Exception as e:
-        logger.error("Simplify tool error: %s", str(e))
+        logger.exception("Simplify tool error: %s", str(e))
         if writer:
             writer(
                 ToolStreamChunk(
@@ -71,9 +73,10 @@ def make_simplify_tool(model: RunnableSerializable, logger: logging.Logger) -> B
         "Vereinfachen",
         description=SIMPLIFY_SUMMARY,
     )
-    def simplify_tool(text: str):
-        writer = get_stream_writer()
-        result = simplify(text, model, logger, writer=writer)
+    async def simplify_tool(text: str, runtime: ToolRuntime[RequestContext]):
+        writer = runtime.stream_writer
+        llm = configure_tool_model(model, "Vereinfachen", runtime)
+        result = await simplify(text, llm, logger, writer=writer)
         return result
 
     return simplify_tool

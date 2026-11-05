@@ -27,7 +27,27 @@ const Version = () => {
 
             <div className={styles.versionRoot}>
                 <h1 className={styles.header}>{t("version.header")}</h1>
-                <Accordion multiple collapsible defaultOpenItems="2.0.2">
+                <Accordion multiple collapsible defaultOpenItems="2.0.3">
+                    <AccordionItem value="2.0.3">
+                        <AccordionHeader>[2.0.3]</AccordionHeader>
+                        <AccordionPanel>
+                            <div className={styles.panel}>
+                                <p>
+                                    <strong>Prüfung von Assistenten auf Hochrisiko-Zwecke</strong> MUCGPT hilft beim Formulieren und Erklären – Entscheidungen
+                                    oder Bewertungen in sensiblen Bereichen dürfen Sie MUCGPT jedoch nicht treffen oder wesentlich beeinflussen lassen. Welche
+                                    Verwendungszwecke unter das Hochrisiko-Verbot fallen, legt die KI-Verordnung fest. Mehr dazu im{" "}
+                                    <a href="#/tutorials/high-risk" target="_blank" rel="noopener noreferrer">
+                                        Hochrisiko-Tutorial
+                                    </a>
+                                    .
+                                </p>
+                                <p>
+                                    <strong>Anpassung der Nutzungsbedingungen</strong> Der Abschnitt "Nicht erlaubte Nutzung" wurde um Hochrisiko-Zwecke
+                                    ergänzt.
+                                </p>
+                            </div>
+                        </AccordionPanel>
+                    </AccordionItem>
                     <AccordionItem value="2.0.21">
                         <AccordionHeader>Änderung der Kennzeichnungsplicht</AccordionHeader>
                         <AccordionPanel>

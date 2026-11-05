@@ -493,14 +493,14 @@ class RedisConfig(BaseModel):
     password: SecretStr | None = None
 
 
-class InternetSearchConfig(BaseModel):
-    """Internet search configuration (nested under INTERNET_SEARCH key in YAML)."""
+class DBConfig(BaseModel):
+    """PostgreSQL configuration (nested under db key in YAML)."""
 
-    searxng_url: str = ""
-    timeout: float = 10.0
-    max_results: PositiveInt = 5
-    language: str = "de"
-    safesearch: int = 1
+    host: str = "checkpoint-postgres"
+    port: int = 5432
+    name: str = "checkpoints"
+    user: str = "admin"
+    password: SecretStr = SecretStr("admin")
 
 
 class PromptConfig(BaseModel):
@@ -527,7 +527,6 @@ class PromptPoolConfig(BaseModel):
 SSOSettings = SSOConfig
 MCPSettings = MCPConfig
 RedisSettings = RedisConfig
-InternetSearchSettings = InternetSearchConfig
 
 
 class Settings(BaseSettings):
@@ -598,7 +597,7 @@ class Settings(BaseSettings):
     sso: SSOConfig = Field(default_factory=SSOConfig)
     mcp: MCPConfig = Field(default_factory=MCPConfig)
     redis: RedisConfig = Field(default_factory=RedisConfig)
-    internet_search: InternetSearchConfig = Field(default_factory=InternetSearchConfig)
+    db: DBConfig = Field(default_factory=DBConfig)
 
     @model_validator(mode="before")
     @classmethod
@@ -1045,9 +1044,3 @@ def get_mcp_settings() -> MCPConfig:
 def get_redis_settings() -> RedisConfig:
     """Return cached RedisSettings instance."""
     return get_settings().redis
-
-
-@lru_cache(maxsize=1)
-def get_internet_search_settings() -> InternetSearchConfig:
-    """Return cached InternetSearchSettings instance."""
-    return get_settings().internet_search

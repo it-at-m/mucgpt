@@ -44,6 +44,16 @@ owner_profile_url_template: "https://intranet.example.org/person/{uid}"  # {uid}
 unauthorized_user_redirect_url: "<your-url>"
 ad2image_url: "<your-ad2image-url>"  # Base URL of the ad2image service for avatar images
 
+# PostgreSQL persistence settings
+db:
+  host: "checkpoint-postgres"
+  port: 5432
+  name: "checkpoints"
+  user: "admin"
+  # Demo value for the local stack only (matches POSTGRES_PASSWORD in docker-compose.yml).
+  # For real deployments provide it via MUCGPT_CORE_DB__PASSWORD instead of storing it here.
+  password: "admin"
+
 # Compliance cache settings
 # If enabled, compliance check results are cached in Redis and can be verified by the assistant service.
 compliance_cache_enabled: true
@@ -138,15 +148,6 @@ mcp:
           description: "detailed tool description"
         # ...
   cache_ttl: 123
-
-# Internet Search Settings (SearXNG)
-# Replace the placeholder URL with your SearXNG instance to enable the InternetSearch tool.
-internet_search:
-  searxng_url: "<your-searxng-url>"
-  timeout: 10.0
-  max_results: 5
-  language: "de"
-  safesearch: 1
 
 # Providers configuration
 # Connection settings (type/endpoint/api_key/api_version) live in this `providers`

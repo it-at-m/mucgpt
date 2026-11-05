@@ -15,6 +15,7 @@ from core.auth_models import AuthenticationResult
 from core.cache import RedisCache
 from core.lf_prompts import PromptPool
 from core.logtools import getLogger
+from core.persistance_helpers import PersistanceHelpers
 
 logger = getLogger()
 
@@ -63,6 +64,9 @@ async def warmup_app() -> None:
     PromptPool.init(lf_client, settings.prompts)
     # init redis
     await RedisCache.init_redis()
+
+    # checkpointer and postgres connection
+    await PersistanceHelpers.init(settings)
     logger.info("App context warmed up")
 
 
@@ -74,6 +78,12 @@ async def destroy_app() -> None:
         await redis.aclose()
     except RuntimeError:
         pass
+
+    # close postgres connection
+    try:
+        await PersistanceHelpers.close()
+    except Exception:
+        logger.exception("Failed to close PersistanceHelpers")
 
 
 def _initialize_models_metadata(cfg: Settings) -> None:
@@ -93,13 +103,16 @@ def _initialize_models_metadata(cfg: Settings) -> None:
 
 
 async def init_agent(
-    user_info: AuthenticationResult, model_name: str | None = None
+    user_info: AuthenticationResult,
+    model_name: str | None = None,
+    persist: bool = True,
 ) -> MUCGPTAgentExecutor:
     """Initialize a MUCGPTAgentExecutor with configuration.
 
     Args:
-        cfg: Backend configuration
         user_info: The user to create the Agent for
+        model_name: The model to run the agent with (default model if None)
+        persist: Attach the checkpointer; False builds a stateless agent
 
     Returns:
         Configured MUCGPTAgentExecutor
@@ -113,7 +126,14 @@ async def init_agent(
         logger.debug(
             f"Initializing MUCGPTAgent with tools: {[tool.name for tool in tools]}"
         )
-        agent = MUCGPTAgent(llm=model, tools=tools, debug=False)
+        agent = MUCGPTAgent(
+            llm=model,
+            tools=tools,
+            debug=False,
+            checkpointer=(
+                PersistanceHelpers.get_checkpointer_if_ready() if persist else None
+            ),
+        )
     except Exception as e:
         logger.error("Failed to initialize MUCGPTAgent: %s", e)
         raise

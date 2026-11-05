@@ -15,7 +15,10 @@ interface Props {
     onRollbackMessage?: (index: number) => void;
     isLoading: boolean;
     error: unknown;
-    makeApiRequest: () => void;
+    makeApiRequest?: () => void;
+    /** Explicit request-mode capability; a cached persistence flag is not sufficient. */
+    canRetry?: boolean;
+    retryUnavailableReason?: string;
     chatMessageStreamEnd: React.MutableRefObject<HTMLDivElement | null>;
     lastQuestionRef: React.MutableRefObject<string>;
     onRollbackError?: () => void;
@@ -31,6 +34,8 @@ export const AnswerList = ({
     isLoading,
     error,
     makeApiRequest,
+    canRetry = true,
+    retryUnavailableReason,
     chatMessageStreamEnd,
     lastQuestionRef,
     onRollbackError,
@@ -121,7 +126,13 @@ export const AnswerList = ({
                         usermsg={<UserChatMessage message={lastQuestionRef.current} onRollbackMessage={onRollbackError} />}
                         usermsglabel={t("components.usericon.label") + " " + (answers.length + 1).toString()}
                         assistantmsglabel={t("components.answericon.label") + " " + (answers.length + 1).toString()}
-                        assistantmsg={<AnswerError error={error.toString()} onRetry={makeApiRequest} />}
+                        assistantmsg={
+                            <AnswerError
+                                error={error.toString()}
+                                onRetry={canRetry ? makeApiRequest : undefined}
+                                retryUnavailableReason={retryUnavailableReason}
+                            />
+                        }
                     ></ChatTurnComponent>
                 ) : (
                     <div></div>
@@ -151,6 +162,8 @@ export const AnswerList = ({
         lastQuestionRef,
         onRollbackError,
         makeApiRequest,
+        canRetry,
+        retryUnavailableReason,
         answers.length,
         isLoading,
         chatMessageStreamEnd,

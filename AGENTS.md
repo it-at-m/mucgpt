@@ -34,6 +34,7 @@ uv run pytest tests/unit/test_foo.py::test_bar   # single test
 uv run pytest -m "not integration"               # skip integration-marked tests
 uv run ruff check               # lint
 uv run ruff check --fix         # lint + autofix
+uv run ty check                 # type check (ty is configured per service, NOT at the repo root — the root venv has no service deps)
 
 # Frontend (inside mucgpt-frontend/)
 npm run dev          # Vite dev server WITH MSW API mocking (no backend needed)
@@ -59,11 +60,11 @@ Each Python service is configured by a **`config.yaml`** (see each service's `co
 - core-service: `MUCGPT_CORE_` (e.g. `MUCGPT_CORE_REDIS__HOST=valkey`)
 - assistant-service + migrations: `MUCGPT_ASSISTANT_` (e.g. `MUCGPT_ASSISTANT_DB__PASSWORD=...`)
 
-Model connection settings live in a **`providers`** section (`type: "openai"|"azure"`, `endpoint`, `api_key`, `api_version`); `models[]` entries only reference a provider via `provider: <key>` (plus `llm_name`, `deployment`, `model_info`) — inline `type`/`endpoint`/`api_key`/`api_version` on model entries are rejected at startup with a migration pointer. Provider keys must be lowercase (env-var name segments are lowercased, so uppercase keys would miss their env overrides). Per-provider env overrides work: `MUCGPT_CORE_PROVIDERS__<PROVIDER>__API_KEY` overrides one provider's api_key; `MUCGPT_CORE_PROVIDERS` (JSON object) / `MUCGPT_CORE_MODELS` (JSON array, entries use `provider` references) replace whole sections.
+Model connection settings live in a **`providers`** section (`type: "openai"|"azure"`, `endpoint`, `api_key`, `api_version`); `models[]` entries only reference a provider via `provider: <key>` (plus `llm_name`, `deployment`, `model_info`) — inline `type`/`endpoint`/`api_key`/`api_version` on model entries are rejected at startup with a migration pointer. Provider keys must be lowercase and must not contain `__` (env-var name segments are lowercased and split on `__`, so other keys would miss their env overrides). Per-provider env overrides work: `MUCGPT_CORE_PROVIDERS__<PROVIDER>__API_KEY` overrides one provider's api_key; `MUCGPT_CORE_PROVIDERS` (JSON object) / `MUCGPT_CORE_MODELS` (JSON array, entries use `provider` references) replace whole sections.
 
 Langfuse is **not** part of the config: the Langfuse SDK reads the standard `LANGFUSE_PUBLIC_KEY` / `LANGFUSE_SECRET_KEY` / `LANGFUSE_HOST` env vars directly (host defaults to Langfuse cloud if unset). **`MUCGPT_CORE_LANGFUSE__*` env vars are no longer read (silently ignored)** — likely migration error; tracing degrades gracefully (log + disabled) when unset.
 
-Source priority (core): constructor/init (tests) > env vars > `config.yaml` > `shared-config.yaml` > `.env`. Core config covers providers/models/prompts/MCP/Redis/SSO/internet_search; assistant config covers db/redis/ldap/sso.
+Source priority (core): constructor/init (tests) > env vars > `config.yaml` > `shared-config.yaml` > `.env`. Core config covers providers/models/prompts/MCP/Redis/SSO/db; assistant config covers db/redis/ldap/sso.
 
 Secrets doctrine: real secrets (passwords, API keys, tokens) belong in **environment variables** (prefix + `__`), never in `config.yaml` (ConfigMap/etcd/Git leak risk). Provider API keys are configured per provider and are env-overridable via `MUCGPT_CORE_PROVIDERS__<PROVIDER>__API_KEY`; whole sections can be replaced via the `MUCGPT_CORE_PROVIDERS` / `MUCGPT_CORE_MODELS` JSON env vars.
 
@@ -81,7 +82,7 @@ Entry: `app.py` → `backend.py` builds the FastAPI app, mounts `api_app` at `/a
 **Tools** (`agent/tools/`): **read `agent/tools/README.md` first** — it's the authoritative guide.
 - Local tools use the `LocalTool` spec pattern (`spec.py`): add a module with `TOOL = LocalTool(id=..., factory=..., metadata=..., is_configured=...)` and register it in `LOCAL_TOOLS` in `tools.py`; `get_tools()` and `GET /v1/tools` pick it up automatically.
 - MCP tools are a **config change only** (`MCP` settings / `MUCGPT_CORE_MCP__...`), loaded per-user by `mcp.py::McpLoader` and cached in Redis with distributed locking — that caching is load-bearing, don't simplify it away. `McpBearerAuthProvider` forwards the per-user token to MCP servers.
-- `internet_search` is only added when `internet_search.searxng_url` is set (`is_configured()`).
+- Internet search is provided through a configured MCP server, not a local tool.
 
 **Prompts** are Markdown files in `agent/prompt_pool/` (incl. `generation_prompts/` for assistant title/description/system-prompt generation and `compliance_prompts/`), read at import time — edit the `.md`, not string literals.
 

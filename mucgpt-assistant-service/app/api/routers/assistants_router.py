@@ -69,7 +69,7 @@ def _state_from_compliance_result(
         compliance_result
         and compliance_result.get("overall_status") == "high_risk_detected"
     ):
-        if get_settings().COMPLIANCE_REQUIRE_LEGAL_REVIEW:
+        if get_settings().compliance_require_legal_review:
             return AssistantState.PENDING_LEGAL_REVIEW
     return AssistantState.ACTIVE
 
@@ -143,7 +143,7 @@ async def _require_verified_compliance_result(
     candidate: ComplianceCheckResult | None,
 ) -> dict[str, object]:
     settings = get_settings()
-    if not settings.COMPLIANCE_REQUIRE_VERIFICATION:
+    if not settings.compliance_require_verification:
         if candidate is None:
             return {}
         return candidate.model_dump()
@@ -590,7 +590,7 @@ async def updateAssistant(
         )
     elif system_prompt_changed:
         settings = get_settings()
-        if settings.COMPLIANCE_REQUIRE_VERIFICATION:
+        if settings.compliance_require_verification:
             raise ComplianceVerificationFailedException(
                 "A verified compliance result is required when changing the system prompt"
             )
@@ -1009,7 +1009,7 @@ async def getAssistant(
     owner_ids = [owner.user_id for owner in assistant_with_owners.owners]
 
     settings = get_settings()
-    if settings.OWNER_CACHE_REFRESH_ON_READ:
+    if settings.owner_cache_refresh_on_read:
         missing_owner_ids = get_missing_owner_cache_ids(
             owner_ids,
             assistant_with_owners.owners,
@@ -1124,7 +1124,7 @@ async def get_assistant_version(
     owner_ids = [owner.user_id for owner in assistant_with_owners.owners]
 
     settings = get_settings()
-    if settings.OWNER_CACHE_REFRESH_ON_READ:
+    if settings.owner_cache_refresh_on_read:
         missing_owner_ids = get_missing_owner_cache_ids(
             owner_ids,
             assistant_with_owners.owners,

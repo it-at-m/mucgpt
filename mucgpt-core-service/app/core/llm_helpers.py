@@ -69,7 +69,7 @@ def extract_message_content(content: Any) -> str:
 def get_internal_task_model(settings: Settings, strength: str) -> str:
     """Return the preferred configured model for an internal LLM task."""
 
-    if not settings.MODELS:
+    if not settings.models:
         logger.error("No models configured for internal generation tasks")
         raise HTTPException(
             status_code=500,
@@ -79,10 +79,10 @@ def get_internal_task_model(settings: Settings, strength: str) -> str:
     model = next(
         (
             configured_model
-            for configured_model in settings.MODELS
+            for configured_model in settings.models
             if configured_model.model_info.internal_task_model_strength == strength
         ),
-        settings.MODELS[0],
+        settings.models[0],
     )
     return model.llm_name
 

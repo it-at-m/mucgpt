@@ -110,7 +110,7 @@ async def test_missing_checkpoint_history_is_empty(monkeypatch, checkpoint):
 async def test_history_restores_latest_usage_per_turn_and_legacy_context(monkeypatch):
     from config.settings import get_settings
 
-    model = get_settings().MODELS[0]
+    model = get_settings().models[0]
     snapshot = {
         "context_tokens": 240,
         "user_tokens": 300,

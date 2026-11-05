@@ -610,7 +610,7 @@ class TokenUsageMiddleware(AgentMiddleware):
             return
         runtime_context.token_usage.add(usage_metadata)
         usage = runtime_context.token_usage
-        models = get_settings().MODELS
+        models = get_settings().models
         model_name = runtime_context.model_name or models[0].llm_name
         model_config = next(
             (model for model in models if model.llm_name == model_name), None

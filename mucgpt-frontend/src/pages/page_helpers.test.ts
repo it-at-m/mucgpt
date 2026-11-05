@@ -22,7 +22,7 @@ describe("request-mode conversation actions", () => {
             "Follow-up question",
             dispatch,
             chatApi,
-            { llm_name: "test-model" } as Model,
+            { id: "test-model" } as Model,
             { current: "thread" },
             storage,
             { system: "", creativity: "low" },

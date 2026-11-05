@@ -39,7 +39,7 @@ def test_config_endpoint_includes_admin_role(test_client):
 
 @pytest.mark.integration
 def test_config_endpoint_includes_model_display_name(test_client):
-    """Models expose their configured display_name next to the llm_name identifier."""
+    """Models expose their configured display_name next to the id identifier."""
     mock_settings = Settings(
         providers={
             "gateway": {
@@ -51,7 +51,7 @@ def test_config_endpoint_includes_model_display_name(test_client):
         models=[
             {
                 "provider": "gateway",
-                "llm_name": "gpt-5.6-terra",
+                "id": "gpt-5.6-terra",
                 "display_name": "GPT-5.6 Terra",
                 "max_output_tokens": 1000,
                 "max_input_tokens": 2000,
@@ -60,7 +60,7 @@ def test_config_endpoint_includes_model_display_name(test_client):
             },
             {
                 "provider": "gateway",
-                "llm_name": "mistral-large-3",
+                "id": "mistral-large-3",
                 "max_output_tokens": 1000,
                 "max_input_tokens": 2000,
                 "description": "Test model",
@@ -71,7 +71,7 @@ def test_config_endpoint_includes_model_display_name(test_client):
     with patch("api.routers.system_router.settings", mock_settings):
         response = test_client.get("/config", headers=headers)
     assert response.status_code == 200
-    models = {m["llm_name"]: m for m in response.json()["models"]}
+    models = {m["id"]: m for m in response.json()["models"]}
     assert models["gpt-5.6-terra"]["display_name"] == "GPT-5.6 Terra"
     assert models["mistral-large-3"]["display_name"] is None
 

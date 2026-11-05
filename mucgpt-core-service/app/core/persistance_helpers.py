@@ -84,10 +84,10 @@ def _conversation_usage(message: AIMessage) -> ConversationUsage | None:
     usage = ConversationUsage(context_tokens=context_tokens)
     model_name = message.response_metadata.get("model_name")
     model = next(
-        (model for model in get_settings().models if model.llm_name == model_name), None
+        (model for model in get_settings().models if model.id == model_name), None
     )
     if model is not None:
-        usage.usage_model = model.llm_name
+        usage.usage_model = model.id
         usage.usage_max_input_tokens = model.max_input_tokens
         usage.usage_context_warning_threshold_percent = (
             model.context_warning_threshold_percent

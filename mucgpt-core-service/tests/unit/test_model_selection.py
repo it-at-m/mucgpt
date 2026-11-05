@@ -33,7 +33,7 @@ def _initialize_model(config: ModelsConfig, monkeypatch: pytest.MonkeyPatch):
     ):
         monkeypatch.setattr(ModelRegistry, field, getattr(ModelRegistry, field))
     ModelRegistry.init_models([config])
-    return ModelRegistry.get_model(config.llm_name)
+    return ModelRegistry.get_model(config.id)
 
 
 def _freeze_current_date(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -206,7 +206,7 @@ def test_wrap_model_call_omits_unsupported_temperature(
     _initialize_model(
         ModelsConfig(
             type="openai",
-            llm_name="gpt-6",
+            id="gpt-6",
             endpoint="https://example.test",
             api_key="test",
             model_info={"supports_temperature": False},
@@ -301,7 +301,7 @@ def test_usage_snapshot_preserves_selected_model_settings_and_cached_cost(monkey
     models = [
         {
             "provider": "gateway",
-            "llm_name": name,
+            "id": name,
             "model_info": {
                 "auto_enrich_from_model_info_endpoint": False,
                 "description": "Usage snapshot test model",
@@ -375,7 +375,7 @@ def test_normalize_model_settings_preserves_unknown_model_temperature() -> None:
 def test_initialized_model_uses_request_scoped_streaming_and_temperature() -> None:
     config = ModelsConfig(
         type="openai",
-        llm_name="gpt-5",
+        id="gpt-5",
         endpoint="https://example.test",
         api_key="test",
         model_info={
@@ -398,7 +398,7 @@ def test_initialized_model_uses_request_scoped_streaming_and_temperature() -> No
 def test_azure_model_alias_uses_configured_temperature_capability(monkeypatch) -> None:
     config = ModelsConfig(
         type="azure",
-        llm_name="gpt-5",
+        id="gpt-5",
         deployment="production-chat",
         endpoint="https://example.openai.azure.com",
         api_key="test",
@@ -433,7 +433,7 @@ def test_temperature_filtering_is_configuration_driven(
     model = _initialize_model(
         ModelsConfig(
             type="openai",
-            llm_name=model_name,
+            id=model_name,
             endpoint="https://example.test",
             api_key="test",
             model_info=model_info,
@@ -459,7 +459,7 @@ def test_reasoning_models_omit_temperature_and_keep_reasoning_effort(
     model = _initialize_model(
         ModelsConfig(
             type="openai",
-            llm_name="reasoning-model",
+            id="reasoning-model",
             endpoint="https://example.test",
             api_key="test",
             model_info={
@@ -482,7 +482,7 @@ def _reasoning_model(monkeypatch: pytest.MonkeyPatch, **reasoning_info):
     return _initialize_model(
         ModelsConfig(
             type="openai",
-            llm_name="reasoning-model",
+            id="reasoning-model",
             endpoint="https://example.test",
             api_key="test",
             model_info={"supports_reasoning": True, **reasoning_info},
@@ -563,7 +563,7 @@ def test_configured_fallback_reasoning_effort(
         [
             ModelsConfig(
                 type="openai",
-                llm_name="reasoning-model",
+                id="reasoning-model",
                 endpoint="https://example.test",
                 api_key="test",
                 model_info={"supports_reasoning": True, **reasoning_info},
@@ -594,7 +594,7 @@ def test_model_without_reasoning_info_never_gets_reasoning_effort(
     model = _initialize_model(
         ModelsConfig(
             type="openai",
-            llm_name="gpt-4.1-mini",
+            id="gpt-4.1-mini",
             endpoint="https://example.test",
             api_key="test",
             model_info={
@@ -616,7 +616,7 @@ def test_model_without_reasoning_info_never_gets_reasoning_effort(
 def test_reinitializing_registry_resets_temperature_capability(monkeypatch) -> None:
     config = ModelsConfig(
         type="openai",
-        llm_name="custom-proxy-model",
+        id="custom-proxy-model",
         endpoint="https://example.test",
         api_key="test",
         model_info={"supports_temperature": False},

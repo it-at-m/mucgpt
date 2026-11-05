@@ -659,12 +659,31 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
     // Re-subscribe from the unsubscribed callout (or the no-access dialog)
     const performSubscribe = useCallback(async () => {
         try {
-            await subscribeToAssistantApi(assistant_id);
+            try {
+                await subscribeToAssistantApi(assistant_id);
+            } catch (subscribeError) {
+                if (subscribeError instanceof ApiError && subscribeError.status === 409) {
+                    // Already subscribed (e.g. a retried click) — continue with the assistant fetch.
+                } else {
+                    throw subscribeError;
+                }
+            }
             const subscribedAssistantResponse = await getCommunityAssistantApi(assistant_id);
             const subscribedAssistant = {
                 ...mapCommunitySnapshotToAssistant(mapAssistantResponseToSnapshot(subscribedAssistantResponse)),
                 owner_ids: subscribedAssistantResponse.latest_version.owner_ids || []
             };
+            if (subscribedAssistant.default_model) {
+                const defaultModelConfig = availableLLMs.find(m => m.llm_name === subscribedAssistant.default_model);
+                if (defaultModelConfig) {
+                    setLLM(defaultModelConfig);
+                } else {
+                    showError(
+                        t("components.assistant_chat.default_model_unavailable"),
+                        t("components.assistant_chat.default_model_unavailable_message", { modelName: subscribedAssistant.default_model })
+                    );
+                }
+            }
 
             try {
                 await upsertCommunityAssistantSnapshot(
@@ -704,7 +723,18 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                 t("components.community_assistants.subscribe_failed_default")
             );
         }
-    }, [assistant_id, assistantConfig.title, communityAssistantStorageService, fetchHistory, setFollowUpActions, showError, showSuccess, t]);
+    }, [
+        assistant_id,
+        assistantConfig.title,
+        availableLLMs,
+        communityAssistantStorageService,
+        fetchHistory,
+        setFollowUpActions,
+        setLLM,
+        showError,
+        showSuccess,
+        t
+    ]);
 
     // Remove leftover chats and the local snapshot of an assistant whose server config is gone
     const performMissingAssistantCleanup = useCallback(async () => {

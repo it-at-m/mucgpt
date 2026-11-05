@@ -116,6 +116,7 @@ const Discovery = () => {
         setMyAssistantFilter,
         setShowAllMyAssistants,
         ownedAssistantIds,
+        hasLoadedSuccessfully,
         isSearching,
         filteredMyAssistants,
         displayedMyAssistants,
@@ -126,7 +127,7 @@ const Discovery = () => {
         removeSubscribedAssistant,
         removeAssistantFromLists
     } = useDiscoveryAssistantLists({ assistantStorageService, communityAssistantStorageService });
-    const orphans = useOrphanedAssistantChats({ assistantStorageService, excludeIds: knownAssistantIds, enabled: !isLoading });
+    const orphans = useOrphanedAssistantChats({ assistantStorageService, excludeIds: knownAssistantIds, enabled: hasLoadedSuccessfully });
     const {
         assistantToDuplicate,
         showDuplicateConfirm,

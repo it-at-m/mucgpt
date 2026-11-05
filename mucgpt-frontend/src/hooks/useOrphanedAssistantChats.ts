@@ -31,7 +31,9 @@ export const useOrphanedAssistantChats = ({ assistantStorageService, excludeIds,
             const lastUsedById = new Map<string, number>();
             for (const record of records ?? []) {
                 if (!record.id || !record.id.startsWith(AssistantStorageService.CHAT_ID) || !record._last_edited) continue;
-                if (!Array.isArray(record.messages) || record.messages.length === 0) continue;
+                // Synced conversations may never have been opened in this browser and carry
+                // empty message arrays — they still count as orphaned-chat candidates.
+                if (!Array.isArray(record.messages)) continue;
 
                 const withoutPrefix = record.id.substring(AssistantStorageService.CHAT_ID.length);
                 const lastUnderscore = withoutPrefix.lastIndexOf("_");

@@ -30,6 +30,8 @@ interface UseDiscoveryAssistantListsResult {
     setMyAssistantFilter: Dispatch<SetStateAction<MyAssistantFilter>>;
     setShowAllMyAssistants: Dispatch<SetStateAction<boolean>>;
     ownedAssistantIds: Set<string>;
+    /** True once an assistant-list fetch completed successfully; failed loads leave the lists empty. */
+    hasLoadedSuccessfully: boolean;
     isSearching: boolean;
     filteredMyAssistants: AssistantCardData[];
     displayedMyAssistants: AssistantCardData[];
@@ -97,6 +99,7 @@ export const useDiscoveryAssistantLists = ({
     communityAssistantStorageService
 }: UseDiscoveryAssistantListsParams): UseDiscoveryAssistantListsResult => {
     const hasLoadedOnceRef = useRef(false);
+    const [hasLoadedSuccessfully, setHasLoadedSuccessfully] = useState<boolean>(false);
     const [allAssistants, setAllAssistants] = useState<AssistantCardData[]>([]);
     const [yoursAssistants, setYoursAssistants] = useState<AssistantCardData[]>([]);
     const [subscribedAssistants, setSubscribedAssistants] = useState<AssistantCardData[]>([]);
@@ -304,6 +307,7 @@ export const useDiscoveryAssistantLists = ({
                 ];
                 setSubscribedAssistants(subscribedData);
                 hasLoadedOnceRef.current = true;
+                setHasLoadedSuccessfully(true);
             } catch (error) {
                 if (error instanceof Error && error.name === "AbortError") {
                     return;
@@ -419,6 +423,7 @@ export const useDiscoveryAssistantLists = ({
         setMyAssistantFilter,
         setShowAllMyAssistants,
         ownedAssistantIds,
+        hasLoadedSuccessfully,
         isSearching,
         filteredMyAssistants,
         displayedMyAssistants,

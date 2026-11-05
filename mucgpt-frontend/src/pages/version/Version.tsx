@@ -27,17 +27,21 @@ const Version = () => {
 
             <div className={styles.versionRoot}>
                 <h1 className={styles.header}>{t("version.header")}</h1>
-                <Accordion multiple collapsible defaultOpenItems={releaseNotes[0]?.version}>
-                    {releaseNotes.map(releaseNote => (
-                        <AccordionItem key={releaseNote.version} value={releaseNote.version}>
-                            <AccordionHeader>[{releaseNote.version}]</AccordionHeader>
-                            <AccordionPanel>
-                                <div className={styles.panel}>
-                                    <MarkdownRenderer>{releaseNote.content}</MarkdownRenderer>
-                                </div>
-                            </AccordionPanel>
-                        </AccordionItem>
-                    ))}
+                <Accordion multiple collapsible defaultOpenItems={releaseNotes[0] ? `${releaseNotes[0].version}-0` : undefined}>
+                    {releaseNotes.map((releaseNote, index) => {
+                        const itemId = `${releaseNote.version}-${index}`;
+
+                        return (
+                            <AccordionItem key={itemId} value={itemId}>
+                                <AccordionHeader>[{releaseNote.version}]</AccordionHeader>
+                                <AccordionPanel>
+                                    <div className={styles.panel}>
+                                        <MarkdownRenderer>{releaseNote.content}</MarkdownRenderer>
+                                    </div>
+                                </AccordionPanel>
+                            </AccordionItem>
+                        );
+                    })}
                 </Accordion>
             </div>
         </div>

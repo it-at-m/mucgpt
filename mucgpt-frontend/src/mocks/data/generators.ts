@@ -191,7 +191,7 @@ export function buildRichMarkdownChatMessage() {
         "",
         "```js",
         "const sum = (a, b) => a + b;",
-        "console.log(\"Summe: \" + sum(40, 2));",
+        'console.log("Summe: " + sum(40, 2));',
         "```",
         "",
         "Eine Formel als Display-Math:",

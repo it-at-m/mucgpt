@@ -876,7 +876,7 @@ i18n
                             unsubscribed_state_title: "Assistent nicht abonniert",
                             unsubscribed_state_hint:
                                 "Dein Chatverlauf bleibt erhalten und kann eingesehen werden. Abonniere den Assistenten erneut, um ihn weiterzuverwenden.",
-                            orphaned_chats_heading: "Chats ohne Assistenten",
+                            orphaned_chats_heading: "Nicht mehr verfügbare Assistenten",
                             orphaned_deleted_title: "Gelöschter Assistent",
                             orphaned_deleted_description: "Der Assistent existiert nicht mehr. Dein Chatverlauf bleibt erhalten und kann eingesehen werden.",
                             orphaned_unsubscribed_description: "Der Assistent ist nicht mehr abonniert. Abonniere ihn erneut, um weiterzuarbeiten.",
@@ -1820,7 +1820,7 @@ i18n
                             unsubscribed_state_title: "Assistant not subscribed",
                             unsubscribed_state_hint:
                                 "Your chat history is preserved and can still be viewed. Subscribe to the assistant again to continue using it.",
-                            orphaned_chats_heading: "Chats without an assistant",
+                            orphaned_chats_heading: "Assistants no longer available",
                             orphaned_deleted_title: "Deleted assistant",
                             orphaned_deleted_description: "The assistant no longer exists. The chat history is preserved and can still be viewed.",
                             orphaned_unsubscribed_description: "The assistant is no longer subscribed. Subscribe to it again to continue working with it.",
@@ -2727,7 +2727,7 @@ i18n
                             unsubscribe_failed_message: "Beim Entfernen vom Abo is a Fehler aufgetreten.",
                             unsubscribed_state_title: "Assistent ned abonniert",
                             unsubscribed_state_hint: "Dei Chatverlauf bleibt erhaltn und ko ogschaut wern. Abonniere den Assistentn wieder, um weitazumacha.",
-                            orphaned_chats_heading: "Chats ohne Assistentn",
+                            orphaned_chats_heading: "Assistentn, de nimmer verfuegbar san",
                             orphaned_deleted_title: "Glöschter Assistent",
                             orphaned_deleted_description: "Da Assistent exisdiert ned mehr. Dei Chatverlauf bleibt erhaltn und ko ogschaut wern.",
                             orphaned_unsubscribed_description: "Da Assistent is nimma abonniert. Abonniere ihn wieder, um weidazumacha.",
@@ -3643,7 +3643,7 @@ i18n
                             unsubscribed_state_title: "Assistant non abonné",
                             unsubscribed_state_hint:
                                 "Votre historique de conversation est conservé et reste consultable. Abonnez-vous à nouveau à l'assistant pour continuer à l'utiliser.",
-                            orphaned_chats_heading: "Conversations sans assistant",
+                            orphaned_chats_heading: "Assistants indisponibles",
                             orphaned_deleted_title: "Assistant supprimé",
                             orphaned_deleted_description: "L'assistant n'existe plus. L'historique des conversations est conservé et reste consultable.",
                             orphaned_unsubscribed_description: "L'assistant n'est plus abonné. Abonnez-vous à nouveau pour continuer à l'utiliser.",
@@ -4558,7 +4558,7 @@ i18n
                             unsubscribed_state_title: "Асистента не підписано",
                             unsubscribed_state_hint:
                                 "Вашу історію чатів збережено, її можна переглядати. Оформіть підписку на асистента знову, щоб продовжити користуватися.",
-                            orphaned_chats_heading: "Чати без асистента",
+                            orphaned_chats_heading: "Асистенти, які більше недоступні",
                             orphaned_deleted_title: "Видалений асистент",
                             orphaned_deleted_description: "Асистента більше не існує. Історію чатів збережено, її можна переглядати.",
                             orphaned_unsubscribed_description: "Підписку на асистента скасовано. Оформіть підписку знову, щоб продовжити роботу.",

@@ -537,20 +537,7 @@ class Settings(BaseSettings):
     APP_VERSION: str = "unknown"
     FRONTEND_VERSION: str = "unknown"
     ASSISTANT_VERSION: str = "unknown"
-    RELEASE_NOTES: list[ReleaseNoteConfig] = Field(
-        default_factory=lambda: [
-            ReleaseNoteConfig(
-                version="2.0.3",
-                content="""## Prüfung von Assistenten auf Hochrisiko-Zwecke
-
-MUCGPT hilft beim Formulieren und Erklären. Entscheidungen oder Bewertungen in sensiblen Bereichen dürfen Sie MUCGPT jedoch nicht treffen oder wesentlich beeinflussen lassen. Mehr dazu im Hochrisiko-Tutorial.
-
-## Anpassung der Nutzungsbedingungen
-
-Der Abschnitt \"Nicht erlaubte Nutzung\" wurde um Hochrisiko-Zwecke ergänzt.""",
-            )
-        ]
-    )
+    RELEASE_NOTES: list[ReleaseNoteConfig] = Field(default_factory=list)
     FOOTER_LINK_URL: str | None = None
     FOOTER_LABEL: str | None = None
     FAQ_URL: str | None = None

@@ -51,4 +51,36 @@ describe("serializeForClipboard", () => {
         expect(html).not.toContain("copy");
         expect(element.querySelector("button")).not.toBeNull();
     });
+
+    it("removes nested clipboard-only controls such as diagram toolbars", () => {
+        document.body.innerHTML =
+            '<div id="answer"><div class="diagram"><svg /></div><div class="controls" data-clipboard-ignore="true"><span>100%</span><button>zoom</button></div></div>';
+        const element = document.getElementById("answer") as HTMLElement;
+
+        const html = serializeForClipboard(element);
+
+        expect(html).toContain("<svg");
+        expect(html).not.toContain("100%");
+        expect(html).not.toContain("zoom");
+    });
+
+    it("resolves relative link and image URLs against the document base", () => {
+        document.body.innerHTML = '<div id="answer"><a href="pfad/dok.pdf">link</a><img src="bilder/bild.png" alt="" /></div>';
+        const element = document.getElementById("answer") as HTMLElement;
+
+        const html = serializeForClipboard(element);
+
+        expect(html).toContain(`href="${new URL("pfad/dok.pdf", document.baseURI).href}"`);
+        expect(html).toContain(`src="${new URL("bilder/bild.png", document.baseURI).href}"`);
+    });
+
+    it("keeps absolute and non-parsable URLs unchanged", () => {
+        document.body.innerHTML = '<div id="answer"><a href="https://example.org/x">a</a><a href="http://[">b</a></div>';
+        const element = document.getElementById("answer") as HTMLElement;
+
+        const html = serializeForClipboard(element);
+
+        expect(html).toContain('href="https://example.org/x"');
+        expect(html).toContain('href="http://["');
+    });
 });

@@ -139,6 +139,12 @@ const CONFIG_RESPONSE: ApplicationConfig = {
     core_version: "0.0.1",
     frontend_version: "0.0.1",
     assistant_version: "0.0.1",
+    release_notes: [
+        {
+            version: "2.0.x",
+            content: "## AGI reached\n\nPls don't tell anybody"
+        }
+    ],
     document_processing_enabled: true,
     transcription_enabled: true,
     transcription_default_model: "onnx-community/whisper-small",

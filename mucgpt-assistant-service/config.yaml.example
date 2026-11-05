@@ -7,7 +7,8 @@
 # 2. YAML configuration file (this file, when named config.yaml)
 # 3. .env file
 #
-# YAML keys are lowercase. Legacy UPPERCASE YAML keys are ignored - migrate
+# YAML keys are lowercase. Legacy UPPERCASE YAML keys are ignored (legacy SSO
+# keys fail startup validation) - migrate
 # existing config files. Environment variable names stay UPPERCASE.
 #
 # SECURITY - secrets doctrine:

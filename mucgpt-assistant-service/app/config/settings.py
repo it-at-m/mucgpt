@@ -3,7 +3,7 @@ from __future__ import annotations
 from functools import lru_cache
 from pathlib import Path
 
-from pydantic import BaseModel, Field, SecretStr
+from pydantic import BaseModel, Field, SecretStr, model_validator
 from pydantic_settings import (
     BaseSettings,
     PydanticBaseSettingsSource,
@@ -126,6 +126,27 @@ class Settings(BaseSettings):
     sso: SSOConfig = Field(default_factory=SSOConfig)
     redis: RedisConfig = Field(default_factory=RedisConfig)
     ldap: LDAPConfig = Field(default_factory=LDAPConfig)
+
+    @model_validator(mode="before")
+    @classmethod
+    def reject_legacy_sso_keys(cls, data):
+        """Fails startup on legacy uppercase SSO keys instead of ignoring them.
+
+        Uppercase keys are silently dropped by the lowercase rename, which
+        would leave sso.role/admin_role unset and silently skip the role
+        check in authenticate(). Rejecting them enforces the migration.
+        """
+        if not isinstance(data, dict):
+            return data
+        if "SSO" in data:
+            raise ValueError("Top-level 'SSO' is no longer read. Rename it to 'sso'.")
+        sso = data.get("sso")
+        if isinstance(sso, dict) and ("ROLE" in sso or "ADMIN_ROLE" in sso):
+            raise ValueError(
+                "Keys 'ROLE' and 'ADMIN_ROLE' under 'sso' are no longer read. "
+                "Rename them to 'role' and 'admin_role'."
+            )
+        return data
 
     @classmethod
     def settings_customise_sources(

@@ -51,7 +51,10 @@ dev = [
     "pytest-snapshot",
     "pytest-mock==3.17.0",
     "coverage==7.17.0",
-    "pytest-cov==7.1.0"
+    "pytest-cov==7.1.0",
+    # zoneinfo (used by app/agent/middleware.py) needs this on Windows;
+    # Linux/Docker images provide the tz database via the OS.
+    "tzdata==2026.6"
 ]
 
 [tool.uv]

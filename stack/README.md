@@ -26,6 +26,14 @@ This directory contains the Docker Compose configuration for running the complet
    # Edit .env for proxy/SSL settings (if needed)
    ```
 
+   **Required before the first start:** add the provider API key to `.env`
+   (the `providers.my_gateway` entry in `core.config.yaml` has no `api_key`,
+   so the core service fails settings validation without it):
+
+   ```powershell
+   echo MUCGPT_CORE_PROVIDERS__MY_GATEWAY__API_KEY=sk-your-key >> .env
+   ```
+
 2. Start the stack:
 
    ```powershell
@@ -247,7 +255,7 @@ The stack uses **YAML configuration files** as the primary configuration source,
           transport: "sse"
    ```
 
-   > **Note:** The `api_key` value above is a placeholder. In production, provide it via environment variables (see [Environment Variable Overrides](#environment-variable-overrides)) instead of storing it in `config.yaml`: `api_key` is configured **per provider** and can be overridden per provider via `MUCGPT_CORE_PROVIDERS__<PROVIDER>__API_KEY`, or the whole sections can be replaced via `MUCGPT_CORE_PROVIDERS` (JSON object) and `MUCGPT_CORE_MODELS` (JSON array).
+   > **Note:** The `api_key` value above is a placeholder. `api_key` is **required**: provide it via environment variables (see [Environment Variable Overrides](#environment-variable-overrides)) instead of storing it in `config.yaml` — set `MUCGPT_CORE_PROVIDERS__MY_GATEWAY__API_KEY` in `.env` before the first start, otherwise the core service fails settings validation. `api_key` is configured **per provider** and can be overridden per provider via `MUCGPT_CORE_PROVIDERS__<PROVIDER>__API_KEY`, or the whole sections can be replaced via `MUCGPT_CORE_PROVIDERS` (JSON object) and `MUCGPT_CORE_MODELS` (JSON array).
 
    Langfuse is not configured in this file: the Langfuse SDK reads the standard environment variables `LANGFUSE_PUBLIC_KEY`, `LANGFUSE_SECRET_KEY`, and `LANGFUSE_HOST` directly. `MUCGPT_CORE_LANGFUSE__*` variables are no longer read (silently ignored).
 

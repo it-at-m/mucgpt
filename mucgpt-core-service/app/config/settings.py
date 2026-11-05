@@ -600,6 +600,27 @@ class Settings(BaseSettings):
     redis: RedisConfig = Field(default_factory=RedisConfig)
     internet_search: InternetSearchConfig = Field(default_factory=InternetSearchConfig)
 
+    @model_validator(mode="before")
+    @classmethod
+    def reject_legacy_sso_keys(cls, data):
+        """Fails startup on legacy uppercase SSO keys instead of ignoring them.
+
+        Uppercase keys are silently dropped by the lowercase rename, which
+        would leave sso.role/admin_role unset and silently skip the role
+        check in authenticate(). Rejecting them enforces the migration.
+        """
+        if not isinstance(data, dict):
+            return data
+        if "SSO" in data:
+            raise ValueError("Top-level 'SSO' is no longer read. Rename it to 'sso'.")
+        sso = data.get("sso")
+        if isinstance(sso, dict) and ("ROLE" in sso or "ADMIN_ROLE" in sso):
+            raise ValueError(
+                "Keys 'ROLE' and 'ADMIN_ROLE' under 'sso' are no longer read. "
+                "Rename them to 'role' and 'admin_role'."
+            )
+        return data
+
     # Customize settings sources to prioritize YAML config
     @classmethod
     def settings_customise_sources(
@@ -630,12 +651,16 @@ class Settings(BaseSettings):
         """
         if not isinstance(value, dict):
             return value
-        offending = [key for key in value if key != key.lower()]
+        offending = [
+            key
+            for key in value
+            if not isinstance(key, str) or key != key.lower() or "__" in key
+        ]
         if offending:
             raise ValueError(
-                "provider keys must be lowercase so env overrides "
-                "(MUCGPT_CORE_PROVIDERS__<KEY>__API_KEY) match them: "
-                + ", ".join(offending)
+                "provider keys must be lowercase strings without '__' so env "
+                "overrides (MUCGPT_CORE_PROVIDERS__<KEY>__API_KEY) match them: "
+                + ", ".join(str(key) for key in offending)
             )
         return value
 
@@ -669,7 +694,7 @@ class Settings(BaseSettings):
                 )
 
             provider_name = entry.get("provider")
-            if not provider_name:
+            if not isinstance(provider_name, str) or not provider_name:
                 raise ValueError(
                     "models[] entries require `provider: <key>` referencing the "
                     "providers section"

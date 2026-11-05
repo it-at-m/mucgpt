@@ -19,7 +19,7 @@ from config.settings import Settings, get_settings
 from core.logtools import getLogger
 from database.canvas_repo import CanvasRepository
 from database.conversation_repo import ConversationRepository
-from database.database_models import Base, CanvasDocument, Chat
+from database.database_models import CanvasDocument
 from database.fenced_checkpointer import FencedPostgresSaver
 from database.session import create_engine_and_session_factory
 
@@ -127,7 +127,6 @@ class PersistanceHelpers:
             await pool.open()
             checkpointer = FencedPostgresSaver(conn=pool)
             await checkpointer.setup()
-            await PersistanceHelpers._initialize_schema(pool, engine)
         except BaseException:
             with CancelScope(shield=True):
                 await pool.close()
@@ -139,41 +138,6 @@ class PersistanceHelpers:
         PersistanceHelpers._engine = engine
         PersistanceHelpers._session_factory = session_factory
         logger.info("PersistanceHelpers initialized")
-
-    @staticmethod
-    async def _initialize_schema(
-        pool: AsyncConnectionPool, engine: AsyncEngine
-    ) -> None:
-        """Migrate retirement metadata and quarantine/erase legacy orphan state."""
-        async with engine.begin() as connection:
-            await connection.run_sync(
-                Base.metadata.create_all,
-                tables=[Chat.__table__, CanvasDocument.__table__],
-            )
-
-        # create_all does not alter existing tables. Keep the core's startup
-        # migration idempotent and quarantine pre-fence orphan checkpoint IDs.
-        async with pool.connection() as connection:
-            async with connection.transaction():
-                await connection.execute(
-                    "ALTER TABLE chats ADD COLUMN IF NOT EXISTS deleted_at timestamptz"
-                )
-                await connection.execute(
-                    "INSERT INTO chats (conversation_id, user_id, deleted_at) "
-                    "SELECT thread_id, '', now() FROM ("
-                    "SELECT thread_id FROM checkpoints UNION "
-                    "SELECT thread_id FROM checkpoint_writes UNION "
-                    "SELECT thread_id FROM checkpoint_blobs) AS legacy "
-                    "ON CONFLICT (conversation_id) DO NOTHING"
-                )
-                # Unknown legacy owners cannot authorize cleanup through DELETE.
-                # Startup owns that cleanup; failure aborts startup and retries
-                # on the next initialization without serving unsafe mappings.
-                for table in ("checkpoints", "checkpoint_writes", "checkpoint_blobs"):
-                    await connection.execute(
-                        f"DELETE FROM {table} WHERE thread_id IN "
-                        "(SELECT conversation_id FROM chats WHERE user_id = '' AND deleted_at IS NOT NULL)"
-                    )
 
     @staticmethod
     async def close() -> None:

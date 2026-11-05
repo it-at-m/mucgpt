@@ -30,7 +30,7 @@ interface UseDiscoveryAssistantListsResult {
     setMyAssistantFilter: Dispatch<SetStateAction<MyAssistantFilter>>;
     setShowAllMyAssistants: Dispatch<SetStateAction<boolean>>;
     ownedAssistantIds: Set<string>;
-    /** True once an assistant-list fetch completed successfully; failed loads leave the lists empty. */
+    /** True while the current lists form a complete, unfiltered picture of the user's assistants. */
     hasLoadedSuccessfully: boolean;
     isSearching: boolean;
     filteredMyAssistants: AssistantCardData[];
@@ -307,7 +307,9 @@ export const useDiscoveryAssistantLists = ({
                 ];
                 setSubscribedAssistants(subscribedData);
                 hasLoadedOnceRef.current = true;
-                setHasLoadedSuccessfully(true);
+                // Only an unfiltered fetch yields a complete knownAssistantIds picture;
+                // filtered runs keep the last correct orphan result in place.
+                setHasLoadedSuccessfully(!debouncedNormalizedSearchText && myAssistantFilter === "all");
             } catch (error) {
                 if (error instanceof Error && error.name === "AbortError") {
                     return;

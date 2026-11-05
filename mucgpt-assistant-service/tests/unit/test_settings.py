@@ -1,6 +1,9 @@
 import os
 from unittest.mock import patch
 
+import pytest
+from pydantic import ValidationError
+
 from config.settings import get_redis_settings, get_settings
 
 
@@ -49,6 +52,81 @@ class TestRedisSettings:
             assert redis.port == 6379
             assert redis.username is None
             assert redis.password is None
+
+    def test_redis_settings_loaded_from_lowercase_yaml(self, tmp_path, monkeypatch):
+        """Test that a lowercase config.yaml populates the Redis settings."""
+        (tmp_path / "config.yaml").write_text(
+            "db:\n"
+            "  host: localhost\n"
+            "  name: test\n"
+            "  user: test\n"
+            "  password: test\n"
+            "redis:\n"
+            "  host: yaml-redis\n"
+            "  port: 2222\n"
+        )
+        monkeypatch.chdir(tmp_path)
+        with patch.dict(os.environ, {}, clear=True):
+            get_settings.cache_clear()
+            get_redis_settings.cache_clear()
+            redis = get_redis_settings()
+            assert redis.host == "yaml-redis"
+            assert redis.port == 2222
+
+    def test_yaml_config_beats_env_file(self, tmp_path, monkeypatch):
+        """Test that config.yaml wins over .env for the same key."""
+        (tmp_path / "config.yaml").write_text(
+            "db:\n"
+            "  host: localhost\n"
+            "  name: test\n"
+            "  user: test\n"
+            "  password: test\n"
+            "redis:\n"
+            "  host: yaml-redis\n"
+        )
+        (tmp_path / ".env").write_text("MUCGPT_ASSISTANT_REDIS__HOST=dotenv-redis\n")
+        monkeypatch.chdir(tmp_path)
+        with patch.dict(os.environ, {}, clear=True):
+            get_settings.cache_clear()
+            get_redis_settings.cache_clear()
+            redis = get_redis_settings()
+            assert redis.host == "yaml-redis"
+
+    def test_legacy_uppercase_sso_keys_fail_startup(self, tmp_path, monkeypatch):
+        """Legacy uppercase SSO keys must abort startup, not be ignored."""
+
+        (tmp_path / "config.yaml").write_text(
+            "db:\n"
+            "  host: localhost\n"
+            "  name: test\n"
+            "  user: test\n"
+            "  password: test\n"
+            "SSO:\n"
+            "  ROLE: mucgpt-user\n"
+        )
+        monkeypatch.chdir(tmp_path)
+        with patch.dict(os.environ, {}, clear=True):
+            get_settings.cache_clear()
+            with pytest.raises(ValidationError, match="'SSO' is no longer read"):
+                get_settings()
+
+    def test_legacy_uppercase_role_keys_fail_startup(self, tmp_path, monkeypatch):
+        """Uppercase ROLE/ADMIN_ROLE under sso must abort startup, not be ignored."""
+
+        (tmp_path / "config.yaml").write_text(
+            "db:\n"
+            "  host: localhost\n"
+            "  name: test\n"
+            "  user: test\n"
+            "  password: test\n"
+            "sso:\n"
+            "  ROLE: mucgpt-user\n"
+        )
+        monkeypatch.chdir(tmp_path)
+        with patch.dict(os.environ, {}, clear=True):
+            get_settings.cache_clear()
+            with pytest.raises(ValidationError, match="no longer read"):
+                get_settings()
 
     def teardown_method(self):
         get_settings.cache_clear()

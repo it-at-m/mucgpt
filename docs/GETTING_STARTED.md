@@ -22,7 +22,7 @@ Each service reads a `config.yaml` mounted into the container. Environment varia
 
 > **Migration notes (from older versions):**
 >
-> - **Lowercase your `config.yaml` keys** (e.g. `models:`, `redis:`, `host:`, `password:`). Legacy UPPERCASE YAML keys are ignored — most mistakes fail loudly at startup (missing required database fields, empty models list).
+> - **Lowercase your `config.yaml` keys** (e.g. `models:`, `redis:`, `host:`, `password:`). Most legacy UPPERCASE YAML keys are ignored — but a top-level `SSO:` section and `ROLE`/`ADMIN_ROLE` under `sso` **fail startup validation** with an actionable error, because silently ignoring them would disable the SSO role check. Other mistakes also fail loudly at startup (missing required database fields, empty models list).
 > - **Move model connection settings into a `providers` section** and reference it from each model via `provider: <key>` (see [Models Configuration](#models-configuration-yaml)). Inline `type`/`endpoint`/`api_key`/`api_version` on `models[]` entries are rejected at startup with a pointer to the new scheme.
 > - **Replace `MUCGPT_CORE_LANGFUSE__*` environment variables with the standard `LANGFUSE_PUBLIC_KEY` / `LANGFUSE_SECRET_KEY` / `LANGFUSE_HOST`** — the old prefixed variables are silently ignored (see [Secrets](#secrets)).
 

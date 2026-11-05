@@ -6,7 +6,8 @@
 # 2. YAML configuration file (this file)
 # 3. .env file
 #
-# YAML keys are lowercase. Legacy UPPERCASE YAML keys are ignored - migrate
+# YAML keys are lowercase. Legacy UPPERCASE YAML keys are ignored (legacy SSO
+# keys fail startup validation) - migrate
 # existing config files. Environment variable names stay UPPERCASE.
 #
 # SECURITY - secrets doctrine:
@@ -152,8 +153,10 @@ mcp:
 # dict; model entries reference a provider via `provider: <key>`. Provider keys
 # MUST be lowercase: env var name segments are lowercased, so uppercase keys
 # would silently miss their env overrides.
-# Unlike the old per-model api_key, api_key is now per provider and CAN be
-# overridden via environment variables, e.g.:
+# Unlike the old per-model api_key, api_key is now per provider and MUST be
+# provided via environment variables (ProviderConfig requires api_key, so the
+# stack fails settings validation without it). Set this in .env BEFORE the
+# first start:
 #   MUCGPT_CORE_PROVIDERS__MY_GATEWAY__API_KEY
 # Do not store real API keys in this file - provide them via
 # MUCGPT_CORE_PROVIDERS__<KEY>__API_KEY or protect this file accordingly.
@@ -161,7 +164,7 @@ providers:
   my_gateway:
     type: "openai"             # "openai" or "azure"
     endpoint: "https://your-litellm-gateway.example.org/"
-    # Provide via environment variable MUCGPT_CORE_PROVIDERS__MY_GATEWAY__API_KEY instead of storing it here.
+    # Required: set MUCGPT_CORE_PROVIDERS__MY_GATEWAY__API_KEY in .env before the first start.
     # api_key: "<your-sk>"
     api_version: ""            # only needed for type "azure"
 

@@ -208,6 +208,76 @@ class TestSettings:
                 }
             )
 
+    def test_provider_keys_must_not_contain_double_underscore(self):
+        """Keys containing '__' cannot be reached by env overrides.
+
+        pydantic-settings splits MUCGPT_CORE_PROVIDERS__MY__GATEWAY__API_KEY
+        into `my` and `gateway`, so an override would never reach `my__gateway`
+        and the split `my` entry would fail validation.
+        """
+        with pytest.raises(ValidationError, match="lowercase"):
+            Settings(
+                providers={
+                    "my__gateway": {
+                        "type": "openai",
+                        "endpoint": "https://example.test",
+                        "api_key": "env-key",
+                    }
+                }
+            )
+
+    def test_non_string_provider_keys_are_rejected(self):
+        """Non-string provider keys (e.g. numeric YAML keys) fail validation
+        instead of raising an opaque AttributeError on .lower()."""
+        with pytest.raises(ValidationError, match="lowercase"):
+            Settings(
+                providers={
+                    123: {
+                        "type": "openai",
+                        "endpoint": "https://example.test",
+                        "api_key": "env-key",
+                    }
+                }
+            )
+
+    def test_non_string_provider_reference_is_rejected(self):
+        """A list/mapping `provider` value must fail validation cleanly,
+        not raise TypeError from dict.get()."""
+        models_json = json.dumps(
+            [
+                {
+                    "provider": ["gateway"],
+                    "llm_name": "test-model",
+                }
+            ]
+        )
+        with patch.dict(
+            os.environ,
+            {
+                "MUCGPT_CORE_PROVIDERS": json.dumps(
+                    {
+                        "gateway": {
+                            "type": "openai",
+                            "endpoint": "https://gateway.test",
+                            "api_key": "provider-key",
+                        }
+                    }
+                ),
+                "MUCGPT_CORE_MODELS": models_json,
+            },
+        ):
+            with pytest.raises(ValidationError, match="provider: <key>"):
+                Settings()
+
+    def test_legacy_uppercase_sso_keys_fail_startup(self):
+        """Legacy top-level SSO and uppercase ROLE/ADMIN_ROLE abort startup."""
+        with pytest.raises(ValidationError, match="'SSO' is no longer read"):
+            Settings(**{"SSO": {"ROLE": "mucgpt-user"}})
+
+    def test_legacy_uppercase_role_keys_under_sso_fail_startup(self):
+        with pytest.raises(ValidationError, match="no longer read"):
+            Settings(sso={"ROLE": "mucgpt-user"})
+
     def test_model_resolves_provider_reference(self):
         """Model entries pull type/endpoint/api_key/api_version from their provider."""
         providers_json = json.dumps(
@@ -939,6 +1009,39 @@ env_name: "YAML_ENV"
                 settings = Settings()
                 assert settings.version == "env-version"  # From env
                 assert settings.env_name == "YAML_ENV"  # From YAML
+
+    def test_yaml_provider_type_and_endpoint_survive_env_api_key_merge(
+        self, monkeypatch
+    ):
+        """A YAML provider keeps type/endpoint when only its api_key comes from env.
+
+        Guards the YAML/env merge for providers: a regression that drops the
+        YAML provider `type` and `endpoint` while merging the per-field env
+        override (MUCGPT_CORE_PROVIDERS__<KEY>__API_KEY) must fail here.
+        """
+        yaml_content = """
+providers:
+  gateway:
+    type: "openai"
+    endpoint: "https://yaml.test.example.com"
+"""
+        with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as tmpdir:
+            config_path = Path(tmpdir) / "config.yaml"
+            config_path.write_text(yaml_content)
+
+            monkeypatch.chdir(tmpdir)
+            with patch.dict(
+                os.environ,
+                {
+                    "MUCGPT_CORE_PROVIDERS__GATEWAY__API_KEY": "env-key",
+                    "MUCGPT_CORE_MODELS": "[]",
+                },
+            ):
+                settings = Settings()
+                provider = settings.providers["gateway"]
+                assert provider.type == "openai"
+                assert str(provider.endpoint) == "https://yaml.test.example.com/"
+                assert provider.api_key.get_secret_value() == "env-key"
 
     def teardown_method(self):
         """Clean up after each test."""

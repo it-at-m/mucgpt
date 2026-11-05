@@ -36,17 +36,19 @@ const useStyles = makeStyles({
             }
         }
     },
-    // "Temporarily unavailable" action: visually greyed out like disabled, but remains
+    // "Temporarily unavailable" action: recedes like a disabled control but remains
     // clickable because the click opens a setup panel (e.g. transcription model download).
+    // NeutralForeground3 (instead of the disabled token) keeps the unlabeled icon at
+    // sufficient contrast under the busy opacity in both themes.
     muted: {
-        color: tokens.colorNeutralForegroundDisabled,
+        color: tokens.colorNeutralForeground3,
         [`& .${buttonClassNames.icon}`]: {
-            color: tokens.colorNeutralForegroundDisabled
+            color: tokens.colorNeutralForeground3
         },
         ":hover, :hover:active": {
-            color: tokens.colorNeutralForegroundDisabled,
+            color: tokens.colorNeutralForeground3,
             [`& .${buttonClassNames.icon}`]: {
-                color: tokens.colorNeutralForegroundDisabled
+                color: tokens.colorNeutralForeground3
             }
         }
     }

@@ -42,6 +42,16 @@ export const MicrophoneButton = ({ onTranscription, onLiveTranscription, onRecor
     const { status, modelState, modelProgress, transcript, startRecording, stopAndTranscribe } = useTranscription();
     const triggerStyles = useStyles();
     const [panelOpen, setPanelOpen] = useState(false);
+    // Only the instance that started the current recording may forward its
+    // transcript: a QuestionInput mounted later on another route would
+    // otherwise adopt the live/final transcript into its own draft.
+    const ownsRecordingRef = useRef(false);
+    const statusRef = useRef(status);
+    statusRef.current = status;
+    // Latest action handle for the unmount cleanup below (the mount-time
+    // closure would otherwise capture a stale, idle recordingState).
+    const stopAndTranscribeRef = useRef(stopAndTranscribe);
+    stopAndTranscribeRef.current = stopAndTranscribe;
 
     // Keep the panel open while it shows live progress or an error with recovery
     // actions; only a finished (and therefore clickable-again) mic closes it.
@@ -49,9 +59,21 @@ export const MicrophoneButton = ({ onTranscription, onLiveTranscription, onRecor
         if (modelState === "ready") setPanelOpen(false);
     }, [modelState]);
 
+    // Stop the recording when the page that started it goes away — the provider
+    // outlives the input, and an orphaned capture would keep the mic busy.
+    // Mount/unmount lifecycle only (the react-hooks lint plugin is not enabled here).
+    useEffect(() => {
+        return () => {
+            if (ownsRecordingRef.current && statusRef.current === "recording") {
+                ownsRecordingRef.current = false;
+                void stopAndTranscribeRef.current();
+            }
+        };
+    }, []);
+
     // Forward interim transcript to input while recording
     useEffect(() => {
-        if (status === "recording" && transcript) {
+        if (ownsRecordingRef.current && status === "recording" && transcript) {
             onLiveTranscription?.(transcript);
         }
     }, [transcript, status, onLiveTranscription]);
@@ -60,9 +82,10 @@ export const MicrophoneButton = ({ onTranscription, onLiveTranscription, onRecor
     const lastForwardedRef = useRef("");
     const prevStatusRef = useRef(status);
     useEffect(() => {
-        if (prevStatusRef.current !== "idle" && status === "idle" && transcript && transcript !== lastForwardedRef.current) {
+        if (ownsRecordingRef.current && prevStatusRef.current !== "idle" && status === "idle" && transcript && transcript !== lastForwardedRef.current) {
             lastForwardedRef.current = transcript;
             onTranscription(transcript);
+            ownsRecordingRef.current = false;
         }
         prevStatusRef.current = status;
     }, [status, transcript, onTranscription]);
@@ -76,8 +99,15 @@ export const MicrophoneButton = ({ onTranscription, onLiveTranscription, onRecor
             onRecordingStart?.();
             try {
                 await startRecording();
+                // Claim ownership only once the capture actually started, so a
+                // rejected start can never make this instance forward a
+                // recording it does not own.
+                ownsRecordingRef.current = true;
             } catch (error) {
                 console.error("Failed to start recording:", error);
+                // A rejected start (e.g. unsupported language) carries its message
+                // in the provider's error state — open the panel so it is visible.
+                setPanelOpen(true);
             }
         } else if (status === "recording") {
             try {
@@ -113,13 +143,17 @@ export const MicrophoneButton = ({ onTranscription, onLiveTranscription, onRecor
     const buttonClass = mergeClasses(styles.micButton, opensPanel && styles.busy, opensPanel && triggerStyles.trigger);
     const buttonTone = opensPanel ? "muted" : undefined;
     // Keep the popover mounted while it shows live progress, even though the mic
-    // itself leaves the muted state as soon as downloading/loading starts.
-    const popoverMode = opensPanel || (panelOpen && PROGRESS_STATES.has(modelState));
+    // itself leaves the muted state as soon as downloading/loading starts. A
+    // user-initiated download always keeps its panel — with the cancel action —
+    // reachable instead of stranding the user on a disabled standalone trigger;
+    // a rejected start reopens the panel to surface the error message.
+    const isDownloading = modelState === "downloading";
+    const popoverMode = opensPanel || isDownloading || (panelOpen && (PROGRESS_STATES.has(modelState) || status === "error"));
 
     return (
         <div className={styles.wrapper}>
             {popoverMode ? (
-                <Popover open={panelOpen} positioning={POPOVER_POSITIONING} onOpenChange={(_, data) => setPanelOpen(data.open)}>
+                <Popover open={panelOpen || isDownloading} positioning={POPOVER_POSITIONING} onOpenChange={(_, data) => setPanelOpen(data.open)}>
                     <PopoverTrigger disableButtonEnhancement>
                         <Tooltip positioning={"below"} content={getTooltipContent()} relationship="label">
                             <Button

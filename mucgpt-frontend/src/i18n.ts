@@ -448,10 +448,10 @@ i18n
                             not_downloaded_hint: "Läuft lokal im Browser · einmaliger Download nötig",
                             unverified:
                                 "Das Sprachmodell ist bereits vorhanden, konnte aber nicht geladen werden. Der Zwischenspeicher könnte beschädigt sein.",
-                            webgpu_warning:
-                                "Für dieses Modell wird WebGPU benötigt, das in deinem Browser nicht verfügbar ist. Die Transkription läuft auf CPU (WebAssembly) und kann deutlich langsamer sein.",
                             webgpu_only_error: "Dieses Modell erfordert WebGPU, das in deinem Browser nicht verfügbar ist.",
-                            size_hint: "Größe: {{size}}"
+                            language_unsupported: "Die ausgewählte Sprache wird von diesem Sprachmodell nicht unterstützt.",
+                            size_hint: "Größe: {{size}}",
+                            delete_model: "Modell löschen"
                         },
                         suminput: {
                             tokensused: "Token verbraucht",
@@ -1366,10 +1366,10 @@ i18n
                             load_timeout: "The speech model could not be loaded (timeout).",
                             not_downloaded_hint: "Runs locally in your browser · one-time download required",
                             unverified: "The speech model is already present but could not be loaded. The cache might be corrupted.",
-                            webgpu_warning:
-                                "This model requires WebGPU, which is not available in your browser. Transcription will run on CPU (WebAssembly) and may be noticeably slower.",
                             webgpu_only_error: "This model requires WebGPU, which is not available in your browser.",
-                            size_hint: "Size: {{size}}"
+                            language_unsupported: "The selected language is not supported by this speech model.",
+                            size_hint: "Size: {{size}}",
+                            delete_model: "Delete model"
                         },
                         suminput: {
                             tokensused: "Token used",
@@ -2248,10 +2248,10 @@ i18n
                             load_timeout: "Des Sprachmodell kunnt ned gladn wern (Zeitibaschreitung).",
                             not_downloaded_hint: "Lafft komplett im Browser · amoi obagladn nötig",
                             unverified: "Des Sprachmodell is scho do, konnt aber ned gladn wern. Da Zwischaspeicha kunnt beschädigt sei.",
-                            webgpu_warning:
-                                "Fia des Modell brauchst WebGPU, des in deim Browser ned verfügbar is. De Transkription lafft auf da CPU und kun netdeitsamer sei.",
                             webgpu_only_error: "Des Modell braucht WebGPU, des in deim Browser ned verfügbar is.",
-                            size_hint: "Greß: {{size}}"
+                            language_unsupported: "De auswohde Sproch werd von dem Sprachmodell ned unterstützt.",
+                            size_hint: "Greß: {{size}}",
+                            delete_model: "Modell löschn"
                         },
                         suminput: {
                             tokensused: "Token vabrocht",
@@ -3133,10 +3133,10 @@ i18n
                             load_timeout: "Le modèle vocal n'a pas pu être chargé (délai dépassé).",
                             not_downloaded_hint: "S'exécute entièrement dans votre navigateur · téléchargement unique requis",
                             unverified: "Le modèle vocal est déjà présent mais n'a pas pu être chargé. Le cache est peut-être corrompu.",
-                            webgpu_warning:
-                                "Ce modèle nécessite WebGPU, qui n'est pas disponible dans votre navigateur. La transcription s'exécutera sur le CPU (WebAssembly) et peut être nettement plus lente.",
                             webgpu_only_error: "Ce modèle nécessite WebGPU, qui n'est pas disponible dans votre navigateur.",
-                            size_hint: "Taille : {{size}}"
+                            language_unsupported: "La langue sélectionnée n'est pas prise en charge par ce modèle vocal.",
+                            size_hint: "Taille : {{size}}",
+                            delete_model: "Supprimer le modèle"
                         },
                         suminput: {
                             tokensused: "Tokens utilisés",
@@ -4011,10 +4011,10 @@ i18n
                             load_timeout: "Мовну модель не вдалося завантажити (перевищено час).",
                             not_downloaded_hint: "Працює повністю у браузері · разове завантаження",
                             unverified: "Мовна модель уже є, але не вдалося її завантажити. Можливо, кеш пошкоджено.",
-                            webgpu_warning:
-                                "Для цієї моделі потрібне WebGPU, яке недоступне у вашому браузері. Транскрипція виконуватиметься на CPU (WebAssembly) і може бути помітно повільнішою.",
                             webgpu_only_error: "Ця модель потребує WebGPU, яке недоступне у вашому браузері.",
-                            size_hint: "Розмір: {{size}}"
+                            language_unsupported: "Обрана мова не підтримується цією мовною моделлю.",
+                            size_hint: "Розмір: {{size}}",
+                            delete_model: "Видалити модель"
                         },
                         suminput: {
                             tokensused: "Використано токени",

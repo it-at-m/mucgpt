@@ -19,9 +19,10 @@ interface SetupOptions {
     modelState: TranscriptionModelState;
     overrides?: Partial<ITranscription>;
     disabled?: boolean;
+    onLiveTranscription?: (text: string) => void;
 }
 
-const setup = ({ modelState, overrides = {}, disabled = false }: SetupOptions) => {
+const setup = ({ modelState, overrides = {}, disabled = false, onLiveTranscription }: SetupOptions) => {
     const context: ITranscription = {
         enabled: true,
         model: whisper,
@@ -35,7 +36,7 @@ const setup = ({ modelState, overrides = {}, disabled = false }: SetupOptions) =
         language: undefined,
         setLanguage: () => {},
         downloadModel: vi.fn().mockResolvedValue(undefined),
-        retryModelLoad: () => {},
+        retryModelLoad: vi.fn(),
         redownloadModel: vi.fn().mockResolvedValue(undefined),
         cancelDownload: vi.fn(),
         deleteModel: vi.fn().mockResolvedValue(undefined),
@@ -45,7 +46,7 @@ const setup = ({ modelState, overrides = {}, disabled = false }: SetupOptions) =
     };
     render(
         <TranscriptionContext.Provider value={context}>
-            <MicrophoneButton onTranscription={onTranscriptionSpy} disabled={disabled} />
+            <MicrophoneButton onTranscription={onTranscriptionSpy} onLiveTranscription={onLiveTranscription} disabled={disabled} />
         </TranscriptionContext.Provider>
     );
     return context as ITranscription & {
@@ -87,16 +88,33 @@ describe("MicrophoneButton", () => {
 
         fireEvent.click(screen.getByText("components.transcription.retry"));
         expect(context.downloadModel).not.toHaveBeenCalled();
+        expect(context.retryModelLoad).toHaveBeenCalledTimes(1);
 
         fireEvent.click(screen.getByText("components.transcription.redownload"));
         expect(context.redownloadModel).toHaveBeenCalledTimes(1);
+    });
+
+    it("keeps the panel with the cancel action reachable while a download runs", () => {
+        setup({ modelState: "downloading", overrides: { modelProgress: 42 } });
+
+        // The panel is mounted (forced open) so the user can always cancel.
+        expect(screen.getByText("components.transcription.cancel_download")).toBeInTheDocument();
+    });
+
+    it("does not forward a transcript it did not start recording", () => {
+        const liveSpy = vi.fn();
+        setup({ modelState: "ready", overrides: { status: "recording", transcript: "leftover" }, onLiveTranscription: liveSpy });
+
+        // A mic button mounted while a recording from elsewhere is running must
+        // not adopt the transcript into its input's draft.
+        expect(liveSpy).not.toHaveBeenCalled();
     });
 
     it("shows a warning without download actions when the browser cannot run the model", () => {
         setup({ modelState: "unsupported" });
 
         fireEvent.click(screen.getAllByRole("button")[0]);
-        expect(screen.getByText("components.transcription.webgpu_warning")).toBeInTheDocument();
+        expect(screen.getByText("components.transcription.webgpu_only_error")).toBeInTheDocument();
         expect(screen.queryByRole("button", { name: "components.transcription.download" })).not.toBeInTheDocument();
     });
 

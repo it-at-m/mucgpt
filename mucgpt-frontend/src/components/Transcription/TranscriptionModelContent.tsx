@@ -1,5 +1,5 @@
-import { Badge, Button, makeStyles, ProgressBar, tokens, typographyStyles } from "@fluentui/react-components";
-import { Warning20Filled } from "@fluentui/react-icons";
+import { Badge, Button, makeStyles, ProgressBar, tokens, typographyStyles, useId } from "@fluentui/react-components";
+import { Delete20Regular, Warning20Filled } from "@fluentui/react-icons";
 import { useTranslation } from "react-i18next";
 import { useTranscription } from "../../hooks/useTranscription";
 import { EdelweissSpinner } from "../EdelweissSpinner";
@@ -60,10 +60,24 @@ const useStyles = makeStyles({
  * deliberately matching the restraint of the LLM model picker's details panel.
  */
 export const TranscriptionModelContent = () => {
-    const { model, modelState, modelProgress, downloadedBytes, totalBytes, error, downloadModel, retryModelLoad, redownloadModel, cancelDownload } =
-        useTranscription();
+    const {
+        model,
+        modelState,
+        modelProgress,
+        downloadedBytes,
+        totalBytes,
+        error,
+        downloadModel,
+        retryModelLoad,
+        redownloadModel,
+        cancelDownload,
+        deleteModel
+    } = useTranscription();
     const { t } = useTranslation();
     const styles = useStyles();
+    // Names the progress bar for screen readers; the referenced status text is
+    // rendered whenever the bar itself is shown.
+    const statusId = useId("transcription-model-status");
 
     if (!model) return null;
 
@@ -87,10 +101,10 @@ export const TranscriptionModelContent = () => {
             </span>
             {model.size_hint && <span className={styles.meta}>{t("components.transcription.size_hint", { size: model.size_hint })}</span>}
 
-            {showProgress && <ProgressBar className={styles.progress} value={modelProgress / 100} thickness="medium" />}
+            {showProgress && <ProgressBar className={styles.progress} value={modelProgress / 100} thickness="medium" aria-labelledby={statusId} />}
 
             {isDownloading && (
-                <span className={styles.statusRow}>
+                <span id={statusId} className={styles.statusRow}>
                     {t("components.transcription.downloading", {
                         progress: modelProgress,
                         mb: downloadedBytes && totalBytes ? ` · ${downloadedBytes} / ${totalBytes} MB` : ""
@@ -98,7 +112,7 @@ export const TranscriptionModelContent = () => {
                 </span>
             )}
             {isLoading && (
-                <span className={styles.statusRow}>
+                <span id={statusId} className={styles.statusRow}>
                     <EdelweissSpinner size="tiny" />
                     {t("components.transcription.loading")}
                 </span>
@@ -106,7 +120,7 @@ export const TranscriptionModelContent = () => {
 
             {modelState === "missing" && <span className={styles.meta}>{t("components.transcription.not_downloaded_hint")}</span>}
 
-            {modelState === "unverified" && (
+            {(modelState === "missing" || modelState === "unverified") && (error || modelState === "unverified") && (
                 <span className={styles.error} role="alert">
                     {error ?? t("components.transcription.unverified")}
                 </span>
@@ -115,7 +129,15 @@ export const TranscriptionModelContent = () => {
             {modelState === "unsupported" && (
                 <span className={styles.warning} role="alert">
                     <Warning20Filled aria-hidden />
-                    <span>{t("components.transcription.webgpu_warning")}</span>
+                    <span>{t("components.transcription.webgpu_only_error")}</span>
+                </span>
+            )}
+
+            {/* A rejected start (e.g. unsupported language) surfaces here because
+            the mic reopens the panel for it even though the model is ready. */}
+            {modelState === "ready" && error && (
+                <span className={styles.error} role="alert">
+                    {error}
                 </span>
             )}
 
@@ -135,6 +157,17 @@ export const TranscriptionModelContent = () => {
                             <Button appearance="primary" size="small" disabled={isLoading} onClick={modelState === "unverified" ? onRetry : onDownload}>
                                 {modelState === "unverified" ? t("components.transcription.retry") : t("components.transcription.download")}
                             </Button>
+                        )}
+                        {modelState === "unverified" && (
+                            <Button
+                                appearance="subtle"
+                                size="small"
+                                icon={<Delete20Regular />}
+                                aria-label={t("components.transcription.delete_model")}
+                                title={t("components.transcription.delete_model")}
+                                disabled={isLoading}
+                                onClick={() => void deleteModel()}
+                            />
                         )}
                     </>
                 )}

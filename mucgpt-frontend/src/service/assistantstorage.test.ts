@@ -153,10 +153,11 @@ describe("assistant chat transfer", () => {
         expect(StorageService.prototype.delete).toHaveBeenCalledWith(chatId);
     });
 
-    it("skips the server re-bind for browser-only chats", async () => {
+    it("re-binds browser-only chats too, tolerating a missing server row", async () => {
         vi.mocked(StorageService.prototype.getAll).mockResolvedValue([chatRecord(chatId)]);
+        fetchMock.mockResolvedValueOnce(new Response(null, { status: 404 }));
         await service.transferChatsToAssistant(sourceAssistantId, targetAssistantId);
-        expect(fetchMock).not.toHaveBeenCalled();
+        expect(fetchMock).toHaveBeenCalledExactlyOnceWith("/api/backend/v1/conversations/thread/assistant", expect.objectContaining({ method: "PATCH" }));
         expect(StorageService.prototype.delete).toHaveBeenCalledWith(chatId);
     });
 
@@ -203,7 +204,7 @@ describe("assistant chat conversion to normal chats", () => {
 
     afterEach(() => vi.unstubAllGlobals());
 
-    it("detaches persisted chats on the server and re-keys them as normal chats with a mapped config", async () => {
+    it("detaches chats on the server and re-keys them as normal chats with a mapped config", async () => {
         await service.convertChatsToNormalChats(assistantId);
 
         expect(fetchMock).toHaveBeenCalledExactlyOnceWith(
@@ -222,18 +223,50 @@ describe("assistant chat conversion to normal chats", () => {
         expect(StorageService.prototype.delete).toHaveBeenCalledWith(chatId);
     });
 
-    it("maps a legacy system config and skips the server detach for browser-only chats", async () => {
+    it("maps a legacy system config and also detaches browser-only chats", async () => {
         vi.mocked(StorageService.prototype.getAll).mockResolvedValue([chatRecord(chatId, undefined, { system: "Legacy Prompt" })]);
+        fetchMock.mockResolvedValueOnce(new Response(null, { status: 404 }));
         await service.convertChatsToNormalChats(assistantId);
 
-        expect(fetchMock).not.toHaveBeenCalled();
+        expect(fetchMock).toHaveBeenCalledExactlyOnceWith(
+            "/api/backend/v1/conversations/thread/assistant",
+            expect.objectContaining({ method: "PATCH", body: JSON.stringify({ assistant_id: null }) })
+        );
         const db = await StorageService.prototype.connectToDB();
         expect(db.put).toHaveBeenCalledWith("chat", expect.objectContaining({ id: "thread", config: { system: "Legacy Prompt", creativity: "low" } }));
     });
 
+    it("preserves an existing normal chat record instead of overwriting it during conversion", async () => {
+        vi.mocked(StorageService.prototype.get).mockImplementation(async (id: string) =>
+            id === "thread" ? { id: "thread", config: { system: "Newer Prompt" }, messages: [] } : undefined
+        );
+        await service.convertChatsToNormalChats(assistantId);
+
+        const db = await StorageService.prototype.connectToDB();
+        expect(db.put).not.toHaveBeenCalled();
+        expect(StorageService.prototype.delete).toHaveBeenCalledWith(chatId);
+    });
+
+    it("aborts when the local chat read fails", async () => {
+        vi.mocked(StorageService.prototype.getAll).mockResolvedValue(undefined);
+        await expect(service.convertChatsToNormalChats(assistantId)).rejects.toThrow("Failed to load chats");
+        expect(fetchMock).not.toHaveBeenCalled();
+        expect(StorageService.prototype.delete).not.toHaveBeenCalled();
+    });
+
+    it("aborts when removing the converted chat record fails, retaining the conversion", async () => {
+        vi.mocked(StorageService.prototype.delete).mockResolvedValue(false as never);
+        await expect(service.convertChatsToNormalChats(assistantId)).rejects.toThrow("Failed to delete assistant chat");
+        const db = await StorageService.prototype.connectToDB();
+        expect(db.put).toHaveBeenCalled();
+        expect(StorageService.prototype.get).toHaveBeenCalled();
+    });
+
     it("falls back to the assistant configuration for chats without a stored per-chat config", async () => {
         vi.mocked(StorageService.prototype.getAll).mockResolvedValue([chatRecord(chatId, true)]);
-        vi.mocked(StorageService.prototype.get).mockResolvedValue({ config: { system_message: "Assistent Prompt", creativity: "medium" } } as never);
+        vi.mocked(StorageService.prototype.get).mockImplementation(async (id: string) =>
+            id.startsWith("BOTCONFIG") ? { config: { system_message: "Assistent Prompt", creativity: "medium" }, messages: [] } : undefined
+        );
         await service.convertChatsToNormalChats(assistantId);
 
         const db = await StorageService.prototype.connectToDB();
@@ -241,7 +274,9 @@ describe("assistant chat conversion to normal chats", () => {
     });
 
     it("keeps a per-chat system prompt that differs from the assistant configuration", async () => {
-        vi.mocked(StorageService.prototype.get).mockResolvedValue({ config: { system_message: "Assistent Prompt", creativity: "medium" } } as never);
+        vi.mocked(StorageService.prototype.get).mockImplementation(async (id: string) =>
+            id.startsWith("BOTCONFIG") ? { config: { system_message: "Assistent Prompt", creativity: "medium" }, messages: [] } : undefined
+        );
         await service.convertChatsToNormalChats(assistantId);
 
         const db = await StorageService.prototype.connectToDB();

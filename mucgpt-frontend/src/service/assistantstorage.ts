@@ -196,11 +196,11 @@ export class AssistantStorageService {
         for (const chat of chats) {
             if (!chat.id) continue;
             const chatUuid = chat.id.replace(sourcePrefix, "");
-            // Re-bind server-side before re-keying locally; browser-only chats have no
-            // server row, so an ignored 404 is expected.
-            if (chat.backendPersisted) {
-                await rebindConversationAssistantApi(chatUuid, targetAssistantId);
-            }
+            // Re-bind server-side before re-keying locally, regardless of the backendPersisted
+            // flag: chats created during this session are persisted server-side but only get
+            // the local flag from a later history sync. Browser-only chats have no server row,
+            // so an ignored 404 is expected.
+            await rebindConversationAssistantApi(chatUuid, targetAssistantId);
             const newId = AssistantStorageService.GENERATE_BOT_CHAT_ID(targetAssistantId, chatUuid);
             await db.put(this.config.objectStore_name, { ...chat, id: newId });
             sourceIds.push(chat.id);
@@ -217,13 +217,18 @@ export class AssistantStorageService {
      * per-chat settings. The prompt falls back to the assistant's configuration
      * (the caller deletes it only afterwards), then to empty values for chats whose
      * record was synced without a local config. Persisted conversations are detached
-     * from the assistant on the server first; browser-only chats have no server row,
-     * so an ignored 404 is expected.
+     * from the assistant on the server first (see transferChatsToAssistant for the
+     * backendPersisted caveat); an existing normal-chats record is preserved so a
+     * retried conversion cannot lose newer messages.
      */
     async convertChatsToNormalChats(assistant_id: string): Promise<void> {
-        const chats = await this.getAllChatForAssistant(assistant_id);
-        const assistantConfig = await this.getAssistantConfig(assistant_id);
+        const stored = await this.storageService.getAll();
+        if (!stored) {
+            throw new Error(`Failed to load chats for assistant "${assistant_id}"`);
+        }
         const sourcePrefix = AssistantStorageService.GENERATE_BOT_CHAT_PREFIX(assistant_id);
+        const chats = stored.filter(chat => !!chat.id && !chat.id.startsWith(AssistantStorageService.CONFIG_ID) && chat.id.startsWith(sourcePrefix));
+        const assistantConfig = await this.getAssistantConfig(assistant_id);
         const normalStorage = new StorageService<ChatResponse, { system: string; creativity: string }>(CHAT_STORE);
         const normalDb = await normalStorage.connectToDB();
         for (const chat of chats) {
@@ -238,11 +243,15 @@ export class AssistantStorageService {
                     creativity: legacyConfig?.creativity ?? assistantConfig?.creativity ?? CREATIVITY_LOW
                 }
             };
-            if (chat.backendPersisted) {
-                await rebindConversationAssistantApi(chatUuid, null);
+            await rebindConversationAssistantApi(chatUuid, null);
+            const existing = await normalStorage.get(chatUuid);
+            if (!existing) {
+                await normalDb.put(CHAT_STORE.objectStore_name, normalChat);
             }
-            await normalDb.put(CHAT_STORE.objectStore_name, normalChat);
-            await this.storageService.delete(chat.id);
+            const deleted = await this.storageService.delete(chat.id);
+            if (!deleted) {
+                throw new Error(`Failed to delete assistant chat "${chat.id}"`);
+            }
         }
     }
 }

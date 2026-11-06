@@ -1036,20 +1036,21 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
     const isLLMLocked = Boolean(assistantConfig.default_model && availableLLMs.some(m => m.llm_name === assistantConfig.default_model));
 
     const inputComponent = useMemo(() => {
-        if (isLegacyAssistant) {
-            return (
-                <div className={styles.stateCallout}>
-                    {/* Legacy chat ids are excluded from orphan resolution, so kept chats could
-                        never be reached again; legacy deletion therefore always removes them. */}
-                    <AssistantStateCallout state="legacy" context="chat" onDelete={() => void performDeleteAssistant(false)} />
-                </div>
-            );
-        }
-
+        // A numeric-id assistant whose local configuration is gone (deleted, or opened
+        // via a community route) shows the missing view — the legacy callout must not
+        // shadow it, or cleanup would run against the wrong strategy.
         if (isAssistantMissing) {
             return (
                 <div className={styles.stateCallout}>
                     <AssistantStateCallout state="missing" context="chat" onDelete={() => setShowDeleteConfirm(true)} />
+                </div>
+            );
+        }
+
+        if (isLegacyAssistant) {
+            return (
+                <div className={styles.stateCallout}>
+                    <AssistantStateCallout state="legacy" context="chat" onDelete={() => setShowDeleteConfirm(true)} />
                 </div>
             );
         }

@@ -209,6 +209,22 @@ class TestApplyToolCustomizations:
         assert tool.description == "original description"
         assert tool.metadata["mcp_group"] == "search-group"
 
+    def test_override_group_rejects_whitespace_but_allows_empty(self):
+        source_config = MCPSourceConfig(
+            url="http://x",
+            transport=MCPTransport.SSE,
+            overrides=[{"name": "search_docs", "group": ""}],
+        )
+
+        assert source_config.overrides[0].group == ""
+
+        with pytest.raises(ValidationError, match="only whitespace"):
+            MCPSourceConfig(
+                url="http://x",
+                transport=MCPTransport.SSE,
+                overrides=[{"name": "search_docs", "group": "   "}],
+            )
+
     @pytest.mark.parametrize("legacy_key", ["descriptions", "tool_groups"])
     def test_legacy_customization_keys_are_rejected(self, legacy_key: str):
         with pytest.raises(ValidationError, match=legacy_key):

@@ -4,7 +4,7 @@ import { MessageBar } from "@fluentui/react-components";
 
 import { putCanvasRevisionsApi } from "../../api/core-client";
 import type { CanvasControllerInstance } from "../../hooks/useCanvasController";
-import { CANVAS_EXPORT_LIMIT_CHARS, CANVAS_WARN_CHARS } from "./canvasLimits";
+import { useCanvasLimits } from "./canvasLimits";
 import { CANVAS_PASTE_CLIPPED_EVENT } from "./canvasTextLimit";
 import { CanvasEditor } from "./CanvasEditor";
 import { CanvasToolbar } from "./CanvasToolbar";
@@ -35,6 +35,7 @@ export const CanvasPanel = ({ controller, conversationId, serverConversationId, 
     const controllerRef = useRef(controller);
     controllerRef.current = controller;
     const serverId = serverConversationId ?? conversationId;
+    const limits = useCanvasLimits();
 
     // Content lifecycle (load/clear on conversation switch) lives in the controller;
     // the panel only persists revision rings to the server — the backend is the
@@ -70,9 +71,9 @@ export const CanvasPanel = ({ controller, conversationId, serverConversationId, 
         updateEmpty();
         return controllerRef.current.subscribe(markdown => {
             setIsEmpty(markdown.trim() === "");
-            setOverLimit(markdown.length > CANVAS_WARN_CHARS);
+            setOverLimit(markdown.length > limits.warnChars);
         });
-    }, [conversationId, controller.revisions]);
+    }, [conversationId, controller.revisions, limits.warnChars]);
 
     // Fired by the editor's size guard when pasted content was clipped.
     useEffect(() => {
@@ -92,7 +93,7 @@ export const CanvasPanel = ({ controller, conversationId, serverConversationId, 
     return (
         <section className={styles.panel} aria-label={t("canvas.panel_title")}>
             <CanvasToolbar editor={controller.editor} controller={controller} onOpenVersions={() => setIsVersionsOpen(true)} disabled={controller.isLocked} />
-            {clipNotice && <MessageBar intent="warning">{t("canvas.limit_paste_clipped", { limit: CANVAS_EXPORT_LIMIT_CHARS.toLocaleString() })}</MessageBar>}
+            {clipNotice && <MessageBar intent="warning">{t("canvas.limit_paste_clipped", { limit: limits.editorLimitChars.toLocaleString() })}</MessageBar>}
             {!clipNotice && overLimit && <MessageBar intent="warning">{t("canvas.limit_warning")}</MessageBar>}
             {controller.isLocked && (
                 <div className={styles.statusLine}>

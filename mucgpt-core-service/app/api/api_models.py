@@ -4,7 +4,7 @@ from typing import Any, Final, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, PositiveInt, field_validator
 
-from config.settings import ReasoningEffort
+from config.settings import ReasoningEffort, get_settings
 
 
 class SummarizeResult(BaseModel):
@@ -101,7 +101,12 @@ class ChatDataSource(BaseModel):
     )
 
 
-CANVAS_CONTENT_MAX_CHARS = 256 * 1024
+_canvas_settings = get_settings()
+
+# Maximum persisted canvas content length (mirrored by the editor input limit
+# CANVAS_EDITOR_MAX_CHARS, which the export endpoint grows by 4× headroom).
+CANVAS_CONTENT_MAX_CHARS = _canvas_settings.CANVAS_CONTENT_MAX_CHARS
+CANVAS_EDITOR_MAX_CHARS = _canvas_settings.CANVAS_EDITOR_MAX_CHARS
 # Full canvas reads stop here so the tool result stays inside the model context;
 # the remaining document is reached via canvas_read(around_cursor).
 CANVAS_READ_LIMIT_CHARS = (CANVAS_CONTENT_MAX_CHARS * 95) // 100
@@ -669,4 +674,12 @@ class ConfigResponse(BaseModel):
     ag_ui_enabled: bool = Field(
         False,
         description="Whether the AG UI is enabled.",
+    )
+    canvas_content_max_chars: int = Field(
+        default=CANVAS_CONTENT_MAX_CHARS,
+        description="Maximum persisted canvas content length in characters.",
+    )
+    canvas_editor_max_chars: int = Field(
+        default=CANVAS_EDITOR_MAX_CHARS,
+        description="Maximum canvas editor input length in characters.",
     )

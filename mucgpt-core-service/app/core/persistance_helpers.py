@@ -395,6 +395,9 @@ class PersistanceHelpers:
                 )
                 # The canvas is personal data of the conversation and must not
                 # outlive its retirement; cascade it inside the same transaction.
+                # Deliberately raw SQL instead of CanvasRepository.delete_canvas():
+                # the repository needs its own AsyncSession/transaction, which
+                # would break the atomicity lock_live_canvas_access relies on.
                 await connection.execute(
                     "DELETE FROM canvas_documents WHERE conversation_id = %s",
                     (conversation_id,),

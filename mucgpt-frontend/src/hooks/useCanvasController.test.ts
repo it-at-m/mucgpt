@@ -8,7 +8,7 @@ import { Editor } from "@tiptap/core";
 import { canvasExtensions } from "../components/Canvas/canvasExtensions";
 import { caretMarkdownOffset, markdownStorage, tableSelectionMarkdown, useCanvasController, type CanvasControllerInstance } from "./useCanvasController";
 import { CANVAS_STREAM_CONTENT_LIMIT, parseCanvasStreamEvent } from "../utils/canvasStream";
-import { CANVAS_CONTENT_LIMIT_CHARS } from "../components/Canvas/canvasLimits";
+import { DEFAULT_APP_CONFIG } from "../constants";
 import type { CanvasRevisions } from "../service/canvasStorage";
 
 (globalThis as Record<string, unknown>).IS_REACT_ACT_ENVIRONMENT = true;
@@ -54,7 +54,7 @@ const renderController = () => {
     };
 };
 
-const editorFor = (markdown: string) => new Editor({ extensions: canvasExtensions, content: markdown });
+const editorFor = (markdown: string) => new Editor({ extensions: canvasExtensions(), content: markdown });
 
 const posOf = (editor: Editor, needle: string) => {
     let found: number | undefined;
@@ -395,14 +395,14 @@ describe("cursor anchor sampling", () => {
     it("clips oversized documents and drops the caret beyond the clip point", () => {
         const harness = renderController();
         harness.render(undefined);
-        const big = "x".repeat(CANVAS_CONTENT_LIMIT_CHARS + 10_000);
+        const big = "x".repeat(DEFAULT_APP_CONFIG.canvas_content_max_chars + 10_000);
         act(() => {
             harness.current.setMarkdown(big);
             harness.current.editor!.chain().setTextSelection(harness.current.editor!.state.doc.content.size).run();
         });
 
         const state = harness.current.toCanvasState();
-        expect(state?.content).toBe(big.slice(0, CANVAS_CONTENT_LIMIT_CHARS));
+        expect(state?.content).toBe(big.slice(0, DEFAULT_APP_CONFIG.canvas_content_max_chars));
         expect(state?.cursor).toBeNull();
         expect(state?.selection).toBeNull();
     });

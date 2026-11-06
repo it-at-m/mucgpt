@@ -95,6 +95,10 @@ export interface ApplicationConfig {
     transcription_default_model: string | null;
     ai_act_compliance_check_enabled: boolean;
     ag_ui_enabled: boolean;
+    /** Maximum persisted canvas content length (characters). */
+    canvas_content_max_chars: number;
+    /** Maximum canvas editor input length (characters). */
+    canvas_editor_max_chars: number;
     footer_link_url?: string;
     footer_label?: string;
     faq_url?: string;

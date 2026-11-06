@@ -48,7 +48,7 @@ export const CanvasVersionsDrawer = ({ open, onClose, controller }: Props) => {
 
     const previewHtml = (docJson: unknown) => {
         try {
-            return DOMPurify.sanitize(generateHTML(docJson as Parameters<typeof generateHTML>[0], canvasExtensions), { USE_PROFILES: { html: true } });
+            return DOMPurify.sanitize(generateHTML(docJson as Parameters<typeof generateHTML>[0], canvasExtensions()), { USE_PROFILES: { html: true } });
         } catch (error) {
             console.error("Canvas revision preview failed:", error);
             return "";

@@ -61,7 +61,7 @@ const serialize = (editor: Editor): string => {
 describe("markdown round trip", () => {
     for (const fixture of FIXTURES) {
         it(`is idempotent for: ${fixture.name}`, () => {
-            const editor = new Editor({ extensions: canvasExtensions, content: fixture.markdown });
+            const editor = new Editor({ extensions: canvasExtensions(), content: fixture.markdown });
             try {
                 const first = serialize(editor);
                 editor.commands.setContent(first);

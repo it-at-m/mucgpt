@@ -5,7 +5,7 @@ import type { Node as PMNode } from "@tiptap/pm/model";
 import type { EditorState } from "@tiptap/pm/state";
 
 import type { CanvasState } from "../api/models";
-import { CANVAS_CONTENT_LIMIT_CHARS } from "../components/Canvas/canvasLimits";
+import { useCanvasLimits } from "../components/Canvas/canvasLimits";
 import { loadCanvasRevisions, loadCanvasState, parseCanvasRevisions, type CanvasRevision, type CanvasRevisions } from "../service/canvasStorage";
 import type { CanvasStreamEvent } from "../utils/canvasStream";
 import { CANVAS_PERSISTENCE_RESET, persistentCaret } from "../components/Canvas/canvasSelectionPersistence";
@@ -118,10 +118,16 @@ export function useCanvasController(conversationId: string | undefined, serverCo
     // Assistant chats keep a prefixed local id for their chat history but talk
     // to the canvas endpoints with the plain backend conversation id.
     const serverId = serverConversationId ?? conversationId;
-    const editor = useEditor({
-        extensions: canvasExtensions,
-        content: ""
-    });
+    const limits = useCanvasLimits();
+    const editor = useEditor(
+        {
+            extensions: canvasExtensions({ exportLimitChars: limits.editorLimitChars, warnChars: limits.warnChars }),
+            content: ""
+        },
+        // Recreate when the backend limits arrive so the plugin uses the
+        // configured values instead of the fallback defaults.
+        [limits.editorLimitChars, limits.warnChars]
+    );
     const editorRef = useRef<Editor | null>(editor);
     editorRef.current = editor;
 
@@ -279,16 +285,16 @@ export function useCanvasController(conversationId: string | undefined, serverCo
         // readable part, and oversized selections are meaningless to the agent.
         const markdown = getMarkdown();
         if (!isOpen && !markdown?.trim()) return null;
-        const content = markdown.length > CANVAS_CONTENT_LIMIT_CHARS ? markdown.slice(0, CANVAS_CONTENT_LIMIT_CHARS) : markdown;
+        const content = markdown.length > limits.contentLimitChars ? markdown.slice(0, limits.contentLimitChars) : markdown;
         const caretPos = persistentCaret(editorRef.current);
         const cursor = caretPos === null ? null : caretMarkdownOffset(editorRef.current, caretPos);
         const selection = isOpen ? getSelectionMarkdown() : null;
         return {
             content,
-            selection: selection !== null && selection.length <= CANVAS_CONTENT_LIMIT_CHARS ? selection : null,
-            cursor: cursor !== null && cursor <= CANVAS_CONTENT_LIMIT_CHARS ? cursor : null
+            selection: selection !== null && selection.length <= limits.contentLimitChars ? selection : null,
+            cursor: cursor !== null && cursor <= limits.contentLimitChars ? cursor : null
         };
-    }, [isOpen, getMarkdown, getSelectionMarkdown]);
+    }, [isOpen, getMarkdown, getSelectionMarkdown, limits]);
 
     const applyStreamEvent = useCallback((ev: CanvasStreamEvent) => {
         const current = editorRef.current;

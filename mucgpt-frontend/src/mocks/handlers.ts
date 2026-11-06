@@ -145,6 +145,8 @@ const CONFIG_RESPONSE: ApplicationConfig = {
     transcription_default_model: "onnx-community/whisper-small",
     ai_act_compliance_check_enabled: true,
     ag_ui_enabled: true,
+    canvas_content_max_chars: 256 * 1024,
+    canvas_editor_max_chars: 512 * 1024,
     footer_link_url: "https://intranet.example.org",
     footer_label: "Example Organization",
     faq_url: "https://intranet.example.org/help",

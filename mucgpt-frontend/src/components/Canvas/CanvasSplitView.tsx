@@ -50,49 +50,47 @@ export const CanvasSplitView = ({ controller, conversationId, serverConversation
     // edge by the pane width while the split is active; the drawer takes no offset.
     const containerStyle = { "--canvasPaneWidth": controller.isOpen && !isNarrow ? `${split.canvasWidthPx}px` : "0px" } as CSSProperties;
 
-    if (!controller.isOpen) {
-        return (
-            <div className={styles.full} ref={split.attachContainer} style={containerStyle}>
-                {children}
-                <Button appearance="secondary" className={styles.floatingToggle} icon={<PanelRight24Regular />} onClick={() => controller.setIsOpen(true)}>
-                    {t("canvas.toggle")}
-                </Button>
-            </div>
-        );
-    }
-
-    if (isNarrow) {
-        return (
-            <div className={styles.full} ref={split.attachContainer} style={containerStyle}>
-                {children}
-                {/* <900px: the canvas opens as a Fluent OverlayDrawer (modal by Fluent design). */}
+    // The chat always lives in the same tree position (div.chatPane as the
+    // container's first child): switching between closed, drawer and split must
+    // not remount the chat subtree, which would reset scroll position, input
+    // state, focus and rendered answers — e.g. when the canvas auto-opens on
+    // the first canvas event of a running stream.
+    const isSplit = controller.isOpen && !isNarrow;
+    return (
+        <div className={isSplit ? styles.split : styles.full} ref={split.attachContainer} style={containerStyle}>
+            <div className={styles.chatPane}>{children}</div>
+            {isSplit && (
+                <>
+                    <div
+                        role="separator"
+                        aria-orientation="vertical"
+                        aria-label={t("canvas.split_divider")}
+                        aria-valuenow={Math.round(split.canvasPercent)}
+                        aria-valuemin={0}
+                        aria-valuemax={100}
+                        tabIndex={0}
+                        className={styles.divider}
+                        onMouseDown={split.onDividerMouseDown}
+                        onKeyDown={split.onDividerKeyDown}
+                    >
+                        <span className={styles.dividerHandle} />
+                    </div>
+                    <div className={styles.canvasPane} style={{ width: `${split.canvasPercent}%` }}>
+                        {panel}
+                    </div>
+                </>
+            )}
+            {controller.isOpen && isNarrow && (
+                // <900px: the canvas opens as a Fluent OverlayDrawer (modal by Fluent design).
                 <OverlayDrawer position="end" size="medium" open onOpenChange={(_, data) => !data.open && controller.setIsOpen(false)}>
                     {panel}
                 </OverlayDrawer>
-            </div>
-        );
-    }
-
-    return (
-        <div className={styles.split} ref={split.attachContainer} style={containerStyle}>
-            <div className={styles.chatPane}>{children}</div>
-            <div
-                role="separator"
-                aria-orientation="vertical"
-                aria-label={t("canvas.split_divider")}
-                aria-valuenow={Math.round(split.canvasPercent)}
-                aria-valuemin={0}
-                aria-valuemax={100}
-                tabIndex={0}
-                className={styles.divider}
-                onMouseDown={split.onDividerMouseDown}
-                onKeyDown={split.onDividerKeyDown}
-            >
-                <span className={styles.dividerHandle} />
-            </div>
-            <div className={styles.canvasPane} style={{ width: `${split.canvasPercent}%` }}>
-                {panel}
-            </div>
+            )}
+            {!controller.isOpen && (
+                <Button appearance="secondary" className={styles.floatingToggle} icon={<PanelRight24Regular />} onClick={() => controller.setIsOpen(true)}>
+                    {t("canvas.toggle")}
+                </Button>
+            )}
         </div>
     );
 };

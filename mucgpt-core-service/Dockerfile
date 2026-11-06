@@ -18,6 +18,11 @@ COPY pyproject.toml uv.lock .python-version ./
 # Install build dependencies for packages with C extensions
 RUN microdnf install -y gcc python3-devel
 
+# System packages for the PDF export converter (WeasyPrint needs pango/cairo,
+# plus a sans/serif font family for readable output).
+RUN microdnf install -y pango cairo gdk-pixbuf2 fontconfig dejavu-sans-fonts dejavu-serif-fonts && \
+    microdnf clean all
+
 # Install dependencies
 RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --no-dev --locked --no-install-project

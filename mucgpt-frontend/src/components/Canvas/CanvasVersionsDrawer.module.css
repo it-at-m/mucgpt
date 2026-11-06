@@ -1,0 +1,89 @@
+.group {
+    margin-bottom: var(--spacingVerticalL);
+}
+
+.groupTitle {
+    font-size: var(--fontSizeBase350);
+    font-weight: var(--fontWeightSemibold);
+    line-height: var(--lineHeightBase400);
+    color: var(--colorNeutralForeground2);
+    margin: 0 0 var(--spacingVerticalS);
+}
+
+.empty {
+    color: var(--colorNeutralForeground3);
+}
+
+.revision {
+    border: 1px solid var(--colorNeutralStroke2);
+    border-radius: var(--borderRadiusMedium);
+    margin-bottom: var(--spacingVerticalS);
+    overflow: hidden;
+}
+
+.revisionHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: var(--spacingHorizontalS);
+    padding: var(--spacingVerticalS) var(--spacingHorizontalS) 0;
+}
+
+.timestamp {
+    color: var(--colorNeutralForeground1);
+    font-variant-numeric: tabular-nums;
+}
+
+.source {
+    color: var(--colorNeutralForeground3);
+    font-size: var(--fontSizeBase300);
+}
+
+.preview {
+    margin: var(--spacingVerticalS);
+    padding: var(--spacingVerticalS) var(--spacingHorizontalS);
+    background-color: var(--colorNeutralBackground2);
+    border: 1px solid var(--colorNeutralStroke3);
+    border-radius: var(--borderRadiusMedium);
+    font-size: var(--fontSizeBase300);
+    line-height: var(--lineHeightBase300);
+    max-height: 140px;
+    overflow-y: auto;
+    overflow-wrap: break-word;
+}
+
+.preview :global(p) {
+    margin: 0 0 var(--spacingVerticalXXS);
+}
+
+.preview :global(h1),
+.preview :global(h2),
+.preview :global(h3) {
+    font-size: var(--fontSizeBase300);
+    font-weight: var(--fontWeightSemibold);
+    margin: var(--spacingVerticalXXS) 0;
+}
+
+.preview :global(ul),
+.preview :global(ol) {
+    margin: 0 0 var(--spacingVerticalXXS);
+    padding-inline-start: var(--spacingHorizontalL);
+}
+
+.preview :global(table) {
+    border-collapse: collapse;
+    margin: var(--spacingVerticalXXS) 0;
+}
+
+.preview :global(th),
+.preview :global(td) {
+    border: 1px solid var(--colorNeutralStroke1);
+    padding: 0 var(--spacingHorizontalXXS);
+    text-align: start;
+}
+
+.revisionActions {
+    display: flex;
+    justify-content: flex-end;
+    padding: 0 var(--spacingHorizontalS) var(--spacingVerticalS);
+}

@@ -1,0 +1,29 @@
+.toolbar {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: var(--spacingHorizontalXS);
+    padding: var(--spacingVerticalXS) var(--spacingHorizontalS);
+    background-color: var(--colorNeutralBackground1);
+    border-bottom: 1px solid var(--colorNeutralStroke2);
+}
+
+.divider {
+    align-self: stretch;
+    width: 1px;
+    background-color: var(--colorNeutralStroke2);
+}
+
+.spacer {
+    flex: 1;
+}
+
+/* Matching the selected state of the surrounding buttons: a distinct pressed surface,
+   paired with aria-pressed so state never relies on color alone. */
+.active {
+    background-color: var(--colorNeutralBackground3);
+}
+
+.active:hover {
+    background-color: var(--colorNeutralBackground3Hover);
+}

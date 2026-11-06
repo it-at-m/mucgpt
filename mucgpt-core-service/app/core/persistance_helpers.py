@@ -356,6 +356,17 @@ class PersistanceHelpers:
             )
 
     @staticmethod
+    async def set_conversation_assistant(
+        conversation_id: str, user_id: str, assistant_id: str
+    ) -> bool:
+        """Re-bind a live owned conversation to another assistant without reviving it."""
+        factory = PersistanceHelpers._get_session_factory()
+        async with factory.begin() as session:
+            return await ConversationRepository(session).set_conversation_assistant(
+                conversation_id, user_id, assistant_id
+            )
+
+    @staticmethod
     async def delete_conversation_mapping(conversation_id: str, user_id: str) -> bool:
         """Erase and retire the ID; ownership mappings must never be removed alone."""
         return (

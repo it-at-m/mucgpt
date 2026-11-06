@@ -112,10 +112,10 @@ export const caretMarkdownOffset = (editor: Editor | null, pos?: number): number
     const { doc, selection } = editor.state;
     const at = pos ?? selection.from;
     if (at >= doc.content.size) {
-        return markdownStorage(editor).serializer.serialize(doc).length;
+        return markdownStorage(editor)?.serializer.serialize(doc).length ?? null;
     }
-    const prefix = markdownStorage(editor).serializer.serialize(doc.cut(0, at));
-    return prefix.replace(/\n$/, "").length;
+    const prefix = markdownStorage(editor)?.serializer.serialize(doc.cut(0, at));
+    return prefix === undefined ? null : prefix.replace(/\n$/, "").length;
 };
 
 export function useCanvasController(conversationId: string | undefined, serverConversationId?: string): CanvasControllerInstance {
@@ -155,7 +155,10 @@ export function useCanvasController(conversationId: string | undefined, serverCo
     const getMarkdown = useCallback((): string => {
         const current = editorRef.current;
         if (!current) return "";
-        return markdownStorage(current).serializer.serialize(current.state.doc);
+        // The editor can be mid-recreation (limits load, conversation switch) and
+        // temporarily lack its markdown storage — degrade to empty instead of
+        // crashing the chat page render.
+        return markdownStorage(current)?.serializer.serialize(current.state.doc) ?? "";
     }, []);
 
     const notifySubscribers = useCallback(() => {
@@ -274,7 +277,7 @@ export function useCanvasController(conversationId: string | undefined, serverCo
         if (!current) return null;
         const { from, to, empty } = current.state.selection;
         if (empty) return null;
-        return tableSelectionMarkdown(current.state) ?? markdownStorage(current).serializer.serialize(current.state.doc.cut(from, to));
+        return tableSelectionMarkdown(current.state) ?? markdownStorage(current)?.serializer.serialize(current.state.doc.cut(from, to)) ?? null;
     }, []);
 
     const setMarkdown = useCallback((md: string) => {

@@ -153,6 +153,30 @@ describe("assistant chat transfer", () => {
         expect(StorageService.prototype.delete).toHaveBeenCalledWith(chatId);
     });
 
+    it("removes each source record right after its successful transfer, so a mid-loop failure leaves no duplicated chats", async () => {
+        const firstChat = chatRecord("CHAT_source_assistant_first", true);
+        const secondChat = chatRecord("CHAT_source_assistant_second", true);
+        vi.mocked(StorageService.prototype.getAll).mockResolvedValue([firstChat, secondChat]);
+        const deletedIds: string[] = [];
+        vi.mocked(StorageService.prototype.delete).mockImplementation(async id => {
+            deletedIds.push(String(id));
+            return true;
+        });
+        fetchMock.mockImplementation(input => {
+            const conversationId = String(input).split("/conversations/")[1]?.split("/")[0];
+            return Promise.resolve(new Response(null, { status: conversationId === "first" ? 204 : 500 }));
+        });
+
+        await expect(service.transferChatsToAssistant(sourceAssistantId, targetAssistantId)).rejects.toMatchObject({ status: 500 });
+
+        // The first chat is fully moved (put + source delete) before the second
+        // one fails, so the failure never leaves it under both assistant ids.
+        expect(deletedIds).toEqual(["CHAT_source_assistant_first"]);
+        const db = await StorageService.prototype.connectToDB();
+        expect(db.put).toHaveBeenCalledTimes(1);
+        expect(db.put).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({ id: "CHAT_target_assistant_first" }));
+    });
+
     it("re-binds browser-only chats too, tolerating a missing server row", async () => {
         vi.mocked(StorageService.prototype.getAll).mockResolvedValue([chatRecord(chatId)]);
         fetchMock.mockResolvedValueOnce(new Response(null, { status: 404 }));

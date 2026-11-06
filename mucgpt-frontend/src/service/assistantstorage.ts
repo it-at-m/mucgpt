@@ -191,7 +191,6 @@ export class AssistantStorageService {
     async transferChatsToAssistant(sourceAssistantId: string, targetAssistantId: string) {
         const chats = await this.getAllChatForAssistant(sourceAssistantId);
         const db = await this.storageService.connectToDB();
-        const sourceIds: string[] = [];
         const sourcePrefix = AssistantStorageService.GENERATE_BOT_CHAT_PREFIX(sourceAssistantId);
         for (const chat of chats) {
             if (!chat.id) continue;
@@ -210,10 +209,10 @@ export class AssistantStorageService {
             }
             const newId = AssistantStorageService.GENERATE_BOT_CHAT_ID(targetAssistantId, chatUuid);
             await db.put(this.config.objectStore_name, { ...chat, id: newId });
-            sourceIds.push(chat.id);
-        }
-        for (const sourceId of sourceIds) {
-            await this.storageService.delete(sourceId);
+            // Remove the source record immediately after its successful re-put so a
+            // mid-loop failure never duplicates a chat under both assistant ids: the
+            // moved chats stay moved, the remaining ones stay orphaned and retryable.
+            await this.storageService.delete(chat.id);
         }
     }
 }

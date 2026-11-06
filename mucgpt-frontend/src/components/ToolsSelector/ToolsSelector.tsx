@@ -3,6 +3,7 @@ import { ToolListResponse, ToolInfo } from "../../api/models";
 import { Dialog, DialogSurface, DialogTitle, DialogBody, DialogContent, Button, Text, Checkbox } from "@fluentui/react-components";
 import { useTranslation } from "react-i18next";
 import styles from "./ToolsSelector.module.css";
+import { buildToolEntries, ToolEntry } from "../../utils/toolGroups";
 
 interface ToolsSelectorContentProps {
     tools?: ToolListResponse;
@@ -30,13 +31,15 @@ export const ToolsSelectorContent: React.FC<ToolsSelectorContentProps> = ({
         }
     }, [selectedTools]);
 
-    const handleToggle = (tool: ToolInfo) => {
+    const toolEntries = React.useMemo(() => buildToolEntries(tools?.tools ?? []), [tools]);
+
+    const handleToggle = (entry: ToolEntry) => {
         setSelected(prev => {
             const next = new Set(prev);
-            if (next.has(tool.id)) {
-                next.delete(tool.id);
+            if (entry.toolIds.some(id => next.has(id))) {
+                entry.toolIds.forEach(id => next.delete(id));
             } else {
-                next.add(tool.id);
+                entry.toolIds.forEach(id => next.add(id));
             }
 
             // Notify parent of change
@@ -69,17 +72,17 @@ export const ToolsSelectorContent: React.FC<ToolsSelectorContentProps> = ({
                         </div>
                     )}
                     <div className={styles.toolCardsContainer}>
-                        {tools.tools.map((tool: ToolInfo) => (
-                            <div key={tool.id} className={styles.toolCard}>
+                        {toolEntries.map(entry => (
+                            <div key={entry.id} className={styles.toolCard}>
                                 <span className={styles.toolCardHeader}>
-                                    <span className={styles.toolName}>{tool.name}</span>
-                                    <span className={styles.toolDescription}>{tool.description}</span>
+                                    <span className={styles.toolName}>{entry.name}</span>
+                                    {entry.description && <span className={styles.toolDescription}>{entry.description}</span>}
                                 </span>
                                 <Checkbox
-                                    checked={selected.has(tool.id)}
-                                    onChange={() => handleToggle(tool)}
+                                    checked={entry.toolIds.some(id => selected.has(id))}
+                                    onChange={() => handleToggle(entry)}
                                     className={styles.toolCardCheckbox}
-                                    aria-label={tool.name}
+                                    aria-label={entry.name}
                                 />
                             </div>
                         ))}

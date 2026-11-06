@@ -38,6 +38,7 @@ import { Button } from "../../ui/Button";
 import { MenuItem } from "../../ui/MenuItem";
 import { EdelweissSpinner } from "../EdelweissSpinner";
 import { CREATIVITY_MEDIUM } from "../../constants";
+import { useToolDisplayName } from "../../hooks/useToolDisplayName";
 import { getCreativityOption } from "../../utils/creativityOptions";
 import { getModelDisplayName } from "../../utils/modelDisplayName";
 import { LLMContext } from "../LLMSelector/LLMContextProvider";
@@ -240,6 +241,7 @@ export const AssistantDetailsSidebar = ({
     const { t, i18n } = useTranslation();
     const { showSuccess, showError } = useGlobalToastContext();
     const { availableLLMs } = useContext(LLMContext);
+    const getToolDisplayName = useToolDisplayName();
     const [systemPromptCopied, setSystemPromptCopied] = useState<boolean>(false);
     const responseData = assistant?.rawData && "latest_version" in assistant.rawData ? assistant.rawData : undefined;
     const latestVersion = responseData?.latest_version;
@@ -254,6 +256,7 @@ export const AssistantDetailsSidebar = ({
     // Every persisted tool entry represents a tool selected for this assistant.
     // `config` only holds tool-specific options and does not contain an `enabled` flag.
     const enabledTools = latestVersion?.tools || snapshot?.tools || [];
+    const enabledToolNames = Array.from(new Set(enabledTools.map((tool: ToolBase) => getToolDisplayName(tool.id))));
     const systemPrompt = latestVersion?.system_prompt || snapshot?.system_message;
     const defaultModel = latestVersion?.default_model || snapshot?.default_model;
     const starterPrompts = latestVersion?.examples || snapshot?.examples || [];
@@ -426,10 +429,10 @@ export const AssistantDetailsSidebar = ({
                             {enabledTools.length > 0 && (
                                 <DetailsField label={t("components.assistant_editor.section_tools")}>
                                     <ul className={styles.chipList}>
-                                        {enabledTools.map((tool: ToolBase) => (
-                                            <li key={tool.id} className={styles.chipItem}>
+                                        {enabledToolNames.map(toolName => (
+                                            <li key={toolName} className={styles.chipItem}>
                                                 <Badge tone="neutral" size="large" shape="circular">
-                                                    {tool.id}
+                                                    {toolName}
                                                 </Badge>
                                             </li>
                                         ))}

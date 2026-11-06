@@ -1,4 +1,32 @@
-from api.api_models import ChatCompletionRequest
+import pytest
+from pydantic import ValidationError
+
+from api.api_models import CANVAS_CONTENT_MAX_CHARS, CanvasState, ChatCompletionRequest
+
+
+def test_canvas_limits_are_pinned() -> None:
+    # the numbers are user-facing (banner texts, docs); pin them explicitly
+    assert CANVAS_CONTENT_MAX_CHARS == 256 * 1024
+    assert len("x" * CANVAS_CONTENT_MAX_CHARS) == 262_144
+
+
+class TestCanvasStateSizeLimit:
+    def test_rejects_oversized_content(self) -> None:
+        with pytest.raises(ValidationError):
+            CanvasState(content="x" * (CANVAS_CONTENT_MAX_CHARS + 1))
+
+    def test_rejects_oversized_selection(self) -> None:
+        with pytest.raises(ValidationError):
+            CanvasState(content="ok", selection="x" * (CANVAS_CONTENT_MAX_CHARS + 1))
+
+    def test_accepts_fields_at_the_limit(self) -> None:
+        canvas = CanvasState(
+            content="x" * CANVAS_CONTENT_MAX_CHARS,
+            selection="y" * CANVAS_CONTENT_MAX_CHARS,
+        )
+
+        assert len(canvas.content) == CANVAS_CONTENT_MAX_CHARS
+        assert len(canvas.selection) == CANVAS_CONTENT_MAX_CHARS
 
 
 class TestChatCompletionRequestConversationId:

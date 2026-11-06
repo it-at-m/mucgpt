@@ -20,6 +20,9 @@ TRANSCRIPTION_ENABLED: false
 # on WASM, no WebGPU needed): "istupakov/canary-180m-flash-onnx".
 TRANSCRIPTION_MODEL: "istupakov/canary-180m-flash-onnx"
 AI_ACT_COMPLIANCE_CHECK_ENABLED: true
+# Canvas limits (characters); exposed to the frontend via /config
+CANVAS_CONTENT_MAX_CHARS: 262144
+CANVAS_EDITOR_MAX_CHARS: 524288
 APP_VERSION: "2.0"
 FRONTEND_VERSION: "0.0.2"
 ASSISTANT_VERSION: "0.0.3"

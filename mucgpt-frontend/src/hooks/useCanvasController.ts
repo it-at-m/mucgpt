@@ -115,8 +115,8 @@ export const caretMarkdownOffset = (editor: Editor | null, pos?: number): number
 };
 
 export function useCanvasController(conversationId: string | undefined, serverConversationId?: string): CanvasControllerInstance {
-    // Assistant chats keep a prefixed local id as the IndexedDB key but talk to
-    // the server with the plain backend conversation id.
+    // Assistant chats keep a prefixed local id for their chat history but talk
+    // to the canvas endpoints with the plain backend conversation id.
     const serverId = serverConversationId ?? conversationId;
     const editor = useEditor({
         extensions: canvasExtensions,
@@ -196,12 +196,10 @@ export function useCanvasController(conversationId: string | undefined, serverCo
         }
         let cancelled = false;
         if (conversationId) {
+            const loadedServerId = serverConversationId ?? conversationId;
             void (async () => {
                 try {
-                    // Rings must be applied before the content load: the load path
-                    // pushes a superseded-local snapshot that must land on top of
-                    // the loaded rings, not be clobbered by a parallel load.
-                    const storedRings = await loadCanvasRevisions(conversationId, serverId);
+                    const storedRings = await loadCanvasRevisions(loadedServerId);
                     if (cancelled) return;
                     if (storedRings !== null) {
                         const rings = parseCanvasRevisions(storedRings);
@@ -211,41 +209,19 @@ export function useCanvasController(conversationId: string | undefined, serverCo
                         nextRevisionRef.current = maxRevision + 1;
                         setRevisions(rings);
                     }
-                    const stored = await loadCanvasState(conversationId, serverId);
+                    const stored = await loadCanvasState(loadedServerId);
                     const editor = editorRef.current;
                     if (cancelled || !editor || !stored) {
                         if (pendingOpen && !cancelled) setIsOpen(true);
                         return;
                     }
-                    // The losing local copy is snapshotted before any early
-                    // return: a blank server canvas is a legitimate state
-                    // (rings can sync before any content) and must not
-                    // silently discard the local document.
-                    if (stored.supersededLocal?.trim()) {
-                        // The local copy lost the reconciliation but must stay
-                        // recoverable: snapshot it into the auto ring (source "local")
-                        // so it appears in the Versions drawer and syncs to the server.
-                        // The snapshot data is taken eagerly — the state updater may
-                        // run after the editor already holds the server content.
-                        editor.commands.setContent(stored.supersededLocal);
-                        const supersededSnapshot: CanvasRevision = {
-                            revision: nextRevisionRef.current++,
-                            doc_json: editor.getJSON(),
-                            timestamp: Date.now(),
-                            source: "local"
-                        };
-                        setRevisions(prev => ({
-                            ...prev,
-                            auto: pushCapped(prev.auto, supersededSnapshot, AUTO_RING_CAP)
-                        }));
-                    }
-                    if (!stored.content || !stored.content.trim()) {
+                    if (!stored.trim()) {
                         // An open request of a fresh chat reopens the canvas even
                         // when there is nothing to restore yet.
                         if (pendingOpen && !cancelled) setIsOpen(true);
                         return;
                     }
-                    editor.commands.setContent(stored.content);
+                    editor.commands.setContent(stored);
                     editor.view.dispatch(editor.state.tr.setMeta(CANVAS_PERSISTENCE_RESET, true));
                     setIsOpen(true);
                 } catch (error) {

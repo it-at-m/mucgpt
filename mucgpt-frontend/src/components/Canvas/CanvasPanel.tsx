@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { MessageBar } from "@fluentui/react-components";
 
-import { canvasStorage } from "../../service/canvasStorage";
 import { putCanvasRevisionsApi } from "../../api/core-client";
 import type { CanvasControllerInstance } from "../../hooks/useCanvasController";
 import { CANVAS_EXPORT_LIMIT_CHARS, CANVAS_WARN_CHARS } from "./canvasLimits";
@@ -38,38 +37,30 @@ export const CanvasPanel = ({ controller, conversationId, serverConversationId, 
     const serverId = serverConversationId ?? conversationId;
 
     // Content lifecycle (load/clear on conversation switch) lives in the controller;
-    // the panel only persists what the editor emits.
+    // the panel only persists revision rings to the server — the backend is the
+    // single source of truth for canvas content, so nothing is mirrored locally.
 
-    useEffect(() => {
-        if (!conversationId) return;
-        return controllerRef.current.subscribe(markdown => {
-            void canvasStorage.saveCanvas(conversationId, markdown);
-        });
-    }, [conversationId]);
-
-    // Ring changes persist debounced to IndexedDB and (best effort) to the server
-    //; the PUT is 404-tolerant for conversations never persisted server-side.
+    // Ring changes persist debounced to the server; the PUT is 404-tolerant for
+    // conversations never persisted server-side.
     useEffect(() => {
         if (!serverId || !conversationId) return;
         const timer = setTimeout(() => {
             const revisions = controllerRef.current.listRevisions();
             if (revisions.auto.length === 0 && revisions.manual.length === 0) return;
-            void canvasStorage.saveRevisions(conversationId, revisions);
             putCanvasRevisionsApi(serverId, revisions).catch(error => console.error("Saving canvas revisions to the server failed:", error));
         }, SAVE_REVISIONS_DEBOUNCE_MS);
         return () => clearTimeout(timer);
     }, [serverId, conversationId, controller.revisions]);
 
     // Flush the rings on canvas close, conversation switch and unmount so a save
-    // inside the debounce window is not lost (mirrors the content subscribe-flush
-    // in useCanvasController). Keyed on conversationId only: the cleanup closes over
-    // the outgoing id and runs before the controller resets to the new conversation.
+    // inside the debounce window is not lost. Keyed on conversationId only: the
+    // cleanup closes over the outgoing id and runs before the controller resets
+    // to the new conversation.
     useEffect(() => {
         if (!serverId || !conversationId) return;
         return () => {
             const revisions = controllerRef.current.listRevisions();
             if (revisions.auto.length === 0 && revisions.manual.length === 0) return;
-            void canvasStorage.saveRevisions(conversationId, revisions);
             putCanvasRevisionsApi(serverId, revisions).catch(error => console.error("Saving canvas revisions to the server failed:", error));
         };
     }, [serverId, conversationId]);

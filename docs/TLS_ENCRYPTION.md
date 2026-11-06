@@ -43,10 +43,11 @@ The Compose stack can run fully TLS-encrypted via the override file
 # 1. Generate a local development CA and leaf certificates
 bash stack/tls/generate-dev-certs.sh
 
-# 2. Trust the dev CA (stack/tls/certs/ca.crt) in your browser/OS,
+# 2. Build the gateway JVM truststore (see "JVM default truststore" below)
+# 3. Trust the dev CA (stack/tls/certs/ca.crt) in your browser/OS,
 #    and make sure your hosts file contains: 127.0.0.1 keycloak
 
-# 3. Start the stack with the TLS override
+# 4. Start the stack with the TLS override
 cd stack
 podman compose -f docker-compose.yml -f docker-compose.tls.yml up -d --build
 ```
@@ -112,6 +113,28 @@ env-var binding keeps the name intact):
 SPRING_SSL_BUNDLE_PEM_INTERNALCA_TRUSTSTORE_CERTIFICATE=file:/etc/certs/ca.crt
 SPRING_CLOUD_GATEWAY_SERVER_WEBFLUX_HTTPCLIENT_SSL_SSLBUNDLE=internalca
 ```
+
+**JVM default truststore:** the SSL bundle only covers the gateway's route httpclient.
+Other JVM-level HTTPS calls — most importantly the OAuth2 OpenID-Connect discovery fetch
+against the Keycloak issuer at startup — use the JVM default truststore
+(`/etc/pki/java/cacerts` on the UBI image). Mount a truststore copy containing the
+internal CA over that path (read-only, works without root — the image runs as uid 185):
+
+```bash
+# one-shot generation using the gateway image (keytool included there)
+podman run --name cacerts-gen -v "$(pwd)/tls/certs:/work:ro,Z" \
+  --entrypoint sh ghcr.io/it-at-m/refarch/refarch-gateway:<version> \
+  -c 'cp /etc/pki/java/cacerts /tmp/gc && chmod 644 /tmp/gc \
+      && keytool -importcert -noprompt -alias mucgpt-internal-ca \
+         -file /work/ca.crt -keystore /tmp/gc -storepass changeit'
+podman cp cacerts-gen:/tmp/gc tls/certs/gateway-cacerts && podman rm cacerts-gen
+
+# compose mount (see docker-compose.tls.yml):
+#   - ./tls/certs/gateway-cacerts:/etc/pki/java/cacerts:ro,Z
+```
+
+For production, the platform-provided CA bundle should be applied the same way (or via
+the cluster's trust-anchor injection mechanism).
 
 All routes then point at `https://` upstreams:
 
@@ -248,6 +271,12 @@ podman exec mucgpt-stack-refarch-gateway-1 \
 
 All requests must succeed **without** `-k`/`--insecure`. If a hop only works with
 `-k`, its trust chain is broken.
+
+> **Windows note:** the Windows curl build uses schannel, which fails revocation checks
+> for private dev CAs. Add `--ssl-no-revoke` for local verification:
+> `curl --ssl-no-revoke --cacert stack/tls/certs/ca.crt https://localhost:9443/`.
+> Git Bash additionally rewrites absolute paths like `/etc/certs/ca.crt` in
+> `podman exec` arguments — prefix such commands with `MSYS_NO_PATHCONV=1`.
 
 ## Known limitations
 

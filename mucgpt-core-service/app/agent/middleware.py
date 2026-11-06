@@ -1,6 +1,7 @@
 import copy
+import threading
 from collections.abc import Awaitable, Callable
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Any
 from xml.sax.saxutils import escape, quoteattr
@@ -93,6 +94,17 @@ class RequestContext:
     # Monotonic within one run; bumped for each canvas_write/canvas_edit call so
     # the streamed UPDATE chunks carry an ordering key for the editor.
     canvas_revision: int = 0
+    # Run-scoped authoritative working canvas for chained mutations: parallel
+    # canvas tool calls apply in receival order on this copy instead of each
+    # deriving from the same frozen state snapshot (which would raise the
+    # LastValue reducer's one-update-per-step error on canvas).
+    canvas_working: CanvasState | None = None
+    canvas_lock: threading.Lock = field(default_factory=threading.Lock)
+    # Error of the first failed canvas mutation in the current model step:
+    # further canvas mutations in the same step skip execution so the model
+    # sees the failure and can retry against the current document. The gate
+    # resets with each model call.
+    canvas_batch_failed: str | None = None
 
 
 def _make_scoped_callbacks() -> list:
@@ -311,6 +323,18 @@ def _inject_canvas_state(request: ToolCallRequest) -> ToolCallRequest:
     return request.override(tool_call={**request.tool_call, "args": args})
 
 
+def _reset_canvas_batch_gate(request: ModelRequest) -> None:
+    """Start a fresh canvas-mutation batch: every model call resets the gate.
+
+    A failed parallel canvas mutation blocks the remaining mutations of the
+    same step; the model sees the stored error together with the skipped
+    results and retries against the current working canvas in the next step.
+    """
+    context = _get_request_context(request)
+    if context is not None:
+        context.canvas_batch_failed = None
+
+
 def _get_request_context(request: ModelRequest) -> RequestContext | None:
     """Return the runtime context as a ``RequestContext``, coercing a dict if needed."""
     runtime_context = getattr(getattr(request, "runtime", None), "context", None)
@@ -439,6 +463,7 @@ class ContextMiddleware(AgentMiddleware):
         # infer policy from state type and apply to request
         policy = get_policy_for_state(self.state_schema)
 
+        _reset_canvas_batch_gate(request)
         # Fresh CallbackHandler inherits the current OTel context (active agent trace),
         # so any LLM calls inside infer_scope are nested under the parent trace.
         # inference_callbacks = _make_scoped_callbacks()
@@ -477,6 +502,7 @@ class ContextMiddleware(AgentMiddleware):
         # infer policy from state type and apply to request
         policy = get_policy_for_state(self.state_schema)
 
+        _reset_canvas_batch_gate(request)
         # Fresh CallbackHandler inherits the current OTel context (active agent trace),
         # so any LLM calls inside ainfer_scope are nested under the parent trace.
         # inference_callbacks = _make_scoped_callbacks()

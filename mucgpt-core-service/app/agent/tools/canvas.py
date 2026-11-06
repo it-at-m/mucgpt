@@ -148,7 +148,8 @@ _CANVAS_STATE_ARG = Annotated[CanvasState | None, InjectedState("canvas")]
 def _get_writer() -> StreamWriter | None:
     try:
         return get_stream_writer()
-    except RuntimeError:
+    except (RuntimeError, KeyError):
+        # KeyError: no active pregel runtime config (direct tool invocation)
         return None
 
 
@@ -163,43 +164,55 @@ def _ensure_canvas(value: Any) -> CanvasState | None:
     return None
 
 
-def _next_revision(runtime: ToolRuntime | None) -> int:
+def _next_revision(context: Any) -> int:
     """Bump and return the run-scoped canvas revision counter."""
-    context = getattr(runtime, "context", None)
     if context is None or not hasattr(context, "canvas_revision"):
         return 0
     context.canvas_revision += 1
     return context.canvas_revision
 
 
-def _tool_result(
-    runtime: ToolRuntime | None,
-    updated_canvas: CanvasState,
-) -> Command:
-    """Wrap a mutating tool's result so the updated canvas lands in graph state.
+def _effective_canvas(
+    runtime: ToolRuntime | None, canvas_state: Any
+) -> CanvasState | None:
+    """Return the canvas the tool operates on.
 
-    The ToolMessage carries only a short confirmation, not the full document:
-    it is persisted per tool call in the LangGraph checkpoint, while the next
-    model call re-injects the fresh document from graph state anyway.
-
-    The Command must carry the terminating ToolMessage bound to the tool call
-    id (what the model sees); the ``canvas`` update keeps later tool calls and
-    the next model call in the same run on fresh content.
+    The run-scoped working canvas wins: chained (and especially parallel)
+    mutations must build on each other in receival order, while the graph
+    state's canvas snapshot stays frozen between model steps — writing every
+    mutation back to the state channel would raise the LastValue reducer's
+    one-update-per-step error when two canvas calls run concurrently.
     """
-    confirmation = (
-        f"Canvas document updated ({len(updated_canvas.content)} characters)."
-    )
-    return Command(
-        update={
-            "canvas": updated_canvas,
-            "messages": [
-                ToolMessage(
-                    content=confirmation,
-                    tool_call_id=getattr(runtime, "tool_call_id", None) or "",
-                )
-            ],
-        }
-    )
+    context = _tool_context(runtime)
+    working = getattr(context, "canvas_working", None)
+    if working is not None:
+        return working
+    return _ensure_canvas(canvas_state)
+
+
+def _tool_context(runtime: ToolRuntime | None) -> Any:
+    return getattr(runtime, "context", None)
+
+
+def _fail(context: Any, error: str) -> str:
+    """Record a failed canvas mutation so the remaining calls of the same
+    model step skip execution (the model sees the error and can retry on the
+    current document afterwards)."""
+    if context is not None and hasattr(context, "canvas_batch_failed"):
+        context.canvas_batch_failed = error
+    return error
+
+
+def _batch_gate(context: Any) -> str | None:
+    """Return the stored failure of this batch, if any."""
+    failed = getattr(context, "canvas_batch_failed", None)
+    if failed:
+        return (
+            "Skipped: an earlier canvas call in this step failed, so this call "
+            "was not executed against the changed document. Review the error "
+            "and retry in the next step:\n" + failed
+        )
+    return None
 
 
 def _emit(
@@ -238,26 +251,39 @@ def make_canvas_write_tool(logger: Logger) -> BaseTool:
         # conversation yet, canvas_write creates one.
         if not content or not content.strip():
             return "Error: content is required for canvas_write."
-        canvas = _ensure_canvas(canvas_state)
-        if canvas is not None and canvas.truncated:
-            return _TRUNCATED_ERROR
-        if _contains_html(content):
-            return HTML_NOT_ALLOWED_ERROR
-        if len(content) > CANVAS_CONTENT_MAX_CHARS:
-            return _OVERSIZED_ERROR
+        context = _tool_context(runtime)
+        lock = getattr(context, "canvas_lock", None)
+        if lock is not None:
+            lock.acquire()
+        try:
+            gate = _batch_gate(context)
+            if gate is not None:
+                return gate
+            canvas = _effective_canvas(runtime, canvas_state)
+            if canvas is not None and canvas.truncated:
+                return _fail(context, _TRUNCATED_ERROR)
+            if _contains_html(content):
+                return _fail(context, HTML_NOT_ALLOWED_ERROR)
+            if len(content) > CANVAS_CONTENT_MAX_CHARS:
+                return _fail(context, _OVERSIZED_ERROR)
 
-        writer = _get_writer()
-        _emit(writer, ToolStreamState.STARTED, "")
-        for chunk in _iter_markdown_chunks(content):
-            _emit(writer, ToolStreamState.APPEND, chunk)
-        _emit(
-            writer,
-            ToolStreamState.UPDATE,
-            content,
-            metadata={"canvas_revision": _next_revision(runtime)},
-        )
-        # A full replace clears the selection (mirrors the client's setMarkdown).
-        return _tool_result(runtime, CanvasState(content=content, selection=None))
+            writer = _get_writer()
+            _emit(writer, ToolStreamState.STARTED, "")
+            for chunk in _iter_markdown_chunks(content):
+                _emit(writer, ToolStreamState.APPEND, chunk)
+            _emit(
+                writer,
+                ToolStreamState.UPDATE,
+                content,
+                metadata={"canvas_revision": _next_revision(context)},
+            )
+            # A full replace clears the selection (mirrors the client's setMarkdown).
+            if context is not None and hasattr(context, "canvas_working"):
+                context.canvas_working = CanvasState(content=content, selection=None)
+            return f"Canvas document updated ({len(content)} characters)."
+        finally:
+            if lock is not None:
+                lock.release()
 
     canvas_write.metadata = {"mcp_group": CANVAS_MCP_GROUP}
     return canvas_write
@@ -271,65 +297,82 @@ def make_canvas_edit_tool(logger: Logger) -> BaseTool:
         canvas_state: _CANVAS_STATE_ARG = None,
         runtime: ToolRuntime = None,
     ) -> str:
-        canvas = _ensure_canvas(canvas_state)
-        if canvas is None:
-            return NO_CANVAS_ERROR
-        if canvas.truncated:
-            return _TRUNCATED_ERROR
         if not old_text:
             return "Error: old_text is required for canvas_edit."
+        context = _tool_context(runtime)
+        lock = getattr(context, "canvas_lock", None)
+        if lock is not None:
+            lock.acquire()
+        try:
+            gate = _batch_gate(context)
+            if gate is not None:
+                return gate
+            canvas = _effective_canvas(runtime, canvas_state)
+            if canvas is None:
+                return _fail(context, NO_CANVAS_ERROR)
+            if canvas.truncated:
+                return _fail(context, _TRUNCATED_ERROR)
 
-        document = canvas.content
-        occurrences = document.count(old_text)
-        if occurrences == 0:
-            return (
-                "Error: old_text was not found in the canvas document. "
-                "Copy old_text verbatim from the current document "
-                "(canvas_read returns it) and retry."
-            )
-        if occurrences > 1:
-            return (
-                f"Error: old_text occurs {occurrences} times in the canvas document. "
-                "Extend old_text with surrounding context so it matches exactly one passage."
-            )
-        if canvas.selection and old_text not in canvas.selection:
-            return (
-                "Error: a passage is selected in the canvas; "
-                "old_text must be part of the selected text."
-            )
-        if _contains_html(new_text):
-            return HTML_NOT_ALLOWED_ERROR
+            document = canvas.content
+            occurrences = document.count(old_text)
+            if occurrences == 0:
+                return _fail(
+                    context,
+                    "Error: old_text was not found in the canvas document. "
+                    "Copy old_text verbatim from the current document "
+                    "(canvas_read returns it) and retry.",
+                )
+            if occurrences > 1:
+                return _fail(
+                    context,
+                    "Error: old_text occurs "
+                    f"{occurrences} times in the canvas document. "
+                    "Extend old_text with surrounding context so it matches "
+                    "exactly one passage.",
+                )
+            if canvas.selection and old_text not in canvas.selection:
+                return _fail(
+                    context,
+                    "Error: a passage is selected in the canvas; "
+                    "old_text must be part of the selected text.",
+                )
+            if _contains_html(new_text):
+                return _fail(context, HTML_NOT_ALLOWED_ERROR)
 
-        updated = document.replace(old_text, new_text, 1)
-        if len(updated) > CANVAS_CONTENT_MAX_CHARS:
-            return _OVERSIZED_ERROR
-        # The selection must track the replaced text: the client re-sends the
-        # live selection, but within this run a follow-up edit would otherwise
-        # target a passage that no longer exists.
-        selection = (
-            canvas.selection.replace(old_text, new_text, 1)
-            if canvas.selection is not None
-            else None
-        )
-        # Keep the reported caret meaningful across the edit: shift it by the
-        # length delta when it sits after the replaced passage, move it to the
-        # edit start when it sat inside the passage.
-        cursor = canvas.cursor
-        if cursor is not None:
-            start = document.find(old_text)
-            if cursor >= start + len(old_text):
-                cursor += len(new_text) - len(old_text)
-            elif cursor > start:
-                cursor = start
-        writer = _get_writer()
-        _emit(writer, ToolStreamState.STARTED, "")
-        # Only canvas_write's UPDATE carries revision metadata; canvas_edit's
-        # final UPDATE carries none so the editor always applies it.
-        _emit(writer, ToolStreamState.UPDATE, updated)
-        return _tool_result(
-            runtime,
-            CanvasState(content=updated, selection=selection, cursor=cursor),
-        )
+            updated = document.replace(old_text, new_text, 1)
+            if len(updated) > CANVAS_CONTENT_MAX_CHARS:
+                return _fail(context, _OVERSIZED_ERROR)
+            # The selection must track the replaced text: the client re-sends the
+            # live selection, but within this run a follow-up edit would otherwise
+            # target a passage that no longer exists.
+            selection = (
+                canvas.selection.replace(old_text, new_text, 1)
+                if canvas.selection is not None
+                else None
+            )
+            # Keep the reported caret meaningful across the edit: shift it by the
+            # length delta when it sits after the replaced passage, move it to the
+            # edit start when it sat inside the passage.
+            cursor = canvas.cursor
+            if cursor is not None:
+                start = document.find(old_text)
+                if cursor >= start + len(old_text):
+                    cursor += len(new_text) - len(old_text)
+                elif cursor > start:
+                    cursor = start
+            writer = _get_writer()
+            _emit(writer, ToolStreamState.STARTED, "")
+            # Only canvas_write's UPDATE carries revision metadata; canvas_edit's
+            # final UPDATE carries none so the editor always applies it.
+            _emit(writer, ToolStreamState.UPDATE, updated)
+            if context is not None and hasattr(context, "canvas_working"):
+                context.canvas_working = CanvasState(
+                    content=updated, selection=selection, cursor=cursor
+                )
+            return f"Canvas document updated ({len(updated)} characters)."
+        finally:
+            if lock is not None:
+                lock.release()
 
     canvas_edit.metadata = {"mcp_group": CANVAS_MCP_GROUP}
     return canvas_edit
@@ -406,13 +449,21 @@ def make_canvas_read_tool(logger: Logger) -> BaseTool:
         messages: Annotated[list | None, InjectedState("messages")] = None,
         runtime: ToolRuntime = None,
     ) -> str | Command:
-        canvas = _ensure_canvas(canvas_state)
-        if canvas is None:
-            return NO_CANVAS_ERROR
-        if canvas.truncated:
-            return _TRUNCATED_ERROR
+        context = _tool_context(runtime)
+        lock = getattr(context, "canvas_lock", None)
+        if lock is not None:
+            lock.acquire()
+        try:
+            canvas = _effective_canvas(runtime, canvas_state)
+            if canvas is None:
+                return NO_CANVAS_ERROR
+            if canvas.truncated:
+                return _TRUNCATED_ERROR
 
-        result = _read_result(canvas, around_cursor)
+            result = _read_result(canvas, around_cursor)
+        finally:
+            if lock is not None:
+                lock.release()
         replacements = _stale_read_replacements(messages or [])
         if not replacements:
             return result

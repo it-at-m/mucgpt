@@ -439,6 +439,21 @@ class MCPSourceConfig(BaseModel):
                 parsed[key] = SecretStr(str(header_value))
         return parsed
 
+    @field_validator("tool_groups", mode="after")
+    @staticmethod
+    def validate_tool_groups(value: dict[str, str] | None) -> dict[str, str] | None:
+        """Rejects empty group names, which would expose matching tools without a group."""
+        if value is None:
+            return None
+        empty_prefixes = [
+            prefix for prefix, group in value.items() if not group.strip()
+        ]
+        if empty_prefixes:
+            raise ValueError(
+                f"tool_groups entries need a non-empty group name: {empty_prefixes}"
+            )
+        return value
+
     @model_validator(mode="after")
     @staticmethod
     def validate_forward_auth_config(source: "MCPSourceConfig") -> "MCPSourceConfig":

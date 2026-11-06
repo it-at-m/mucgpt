@@ -167,3 +167,6 @@ stack/ca-bundle.crt
 stack/assistant.config.yaml
 stack/core.config.yaml
 mucgpt-assistant-service/debug_ldap.py
+
+# generated dev TLS certificates (stack/tls/generate-dev-certs.sh)
+stack/tls/certs/

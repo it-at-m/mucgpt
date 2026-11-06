@@ -14,18 +14,24 @@ export function isCanvasToolCall(name: string): boolean {
 }
 
 const CANVAS_STREAM_STATES: ReadonlySet<string> = new Set(["STARTED", "UPDATE", "APPEND", "ENDED"]);
+/** Fallback payload cap when no configured limit is supplied. */
 export const CANVAS_STREAM_CONTENT_LIMIT = 512 * 1024;
 
 /**
  * Streamed events originate from the backend response, so they are untrusted:
  * non-string content would throw inside the stream subscription and huge
  * payloads would freeze the tab during the synchronous markdown/ProseMirror parse.
+ *
+ * `contentLimit` is the configured editor limit (canvas_editor_max_chars from
+ * the /config endpoint): the backend tools accept content up to the configured
+ * CANVAS_CONTENT_MAX_CHARS, so a hardcoded cap would silently drop legitimate
+ * full-document UPDATE events from operators who raised the limit.
  */
-export function parseCanvasStreamEvent(value: unknown): CanvasStreamEvent | null {
+export function parseCanvasStreamEvent(value: unknown, contentLimit: number = CANVAS_STREAM_CONTENT_LIMIT): CanvasStreamEvent | null {
     if (typeof value !== "object" || value === null) return null;
     const { state, content, metadata } = value as Record<string, unknown>;
     if (typeof state !== "string" || !CANVAS_STREAM_STATES.has(state)) return null;
-    if (typeof content !== "string" || content.length > CANVAS_STREAM_CONTENT_LIMIT) return null;
+    if (typeof content !== "string" || content.length > contentLimit) return null;
     // metadata: null is the backend's serialization of "no metadata" (e.g. every
     // canvas_edit UPDATE), so it must be treated like an absent field.
     if (metadata !== undefined && metadata !== null) {

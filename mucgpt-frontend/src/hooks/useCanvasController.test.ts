@@ -169,6 +169,17 @@ describe("parseCanvasStreamEvent", () => {
         expect(parseCanvasStreamEvent({ state: "APPEND", content: "A".repeat(CANVAS_STREAM_CONTENT_LIMIT + 1) })).toBeNull();
     });
 
+    it("honours a configured content limit instead of the hardcoded default", () => {
+        // The backend tools accept content up to the configured
+        // CANVAS_CONTENT_MAX_CHARS; a raised limit must not silently drop
+        // legitimate full-document UPDATE events.
+        const limit = CANVAS_STREAM_CONTENT_LIMIT + 4096;
+        const big = { state: "UPDATE", content: "A".repeat(CANVAS_STREAM_CONTENT_LIMIT + 1024), metadata: { canvas_revision: 1 } };
+        expect(parseCanvasStreamEvent(big)).toBeNull();
+        expect(parseCanvasStreamEvent(big, limit)).not.toBeNull();
+        expect(parseCanvasStreamEvent({ state: "APPEND", content: "x".repeat(limit + 1) }, limit)).toBeNull();
+    });
+
     it("treats null metadata like absent metadata (canvas_edit UPDATE wire shape)", () => {
         expect(parseCanvasStreamEvent({ state: "UPDATE", content: "x", metadata: null })).toEqual({
             state: "UPDATE",

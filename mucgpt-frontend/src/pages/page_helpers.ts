@@ -211,6 +211,10 @@ export async function handleRegenerate(
 export interface CanvasWiring {
     /** Current canvas state; null when the canvas is closed or empty */
     getCanvasState: () => CanvasState | null;
+    /** Configured editor limit (canvas_editor_max_chars): bounds the canvas
+     * stream-event payload guard, since the backend tools accept content up to
+     * the configured CANVAS_CONTENT_MAX_CHARS. */
+    streamContentLimit: number;
     /** Applies one streamed canvas chunk (STARTED/APPEND/UPDATE) into the editor */
     onStreamEvent: (event: CanvasStreamEvent) => void;
     /** RUN_STARTED: lock the editor and take a pre-run snapshot */
@@ -399,7 +403,7 @@ export const makeApiRequest = async (
                         //; the value is the ToolStreamChunk.
                         const custom = event as CustomEvent;
                         if (isCanvasToolCall(custom.name)) {
-                            const canvasEvent = parseCanvasStreamEvent(custom.value);
+                            const canvasEvent = parseCanvasStreamEvent(custom.value, canvasWiring.streamContentLimit);
                             if (canvasEvent) canvasWiring.onStreamEvent(canvasEvent);
                             // No canvas content in the console: log a shape summary, never the payload.
                             else {

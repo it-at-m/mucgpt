@@ -8,8 +8,9 @@ import { CompassNorthwest24Regular, PanelRight24Regular } from "@fluentui/react-
 import { useCallback, useContext, useEffect, useMemo, useState } from "react";
 
 import { AssistantStorageService } from "../../service/assistantstorage";
-import { AssistantResponse, CommunityAssistant, Model, OwnerDetailsResponse } from "../../api/models";
-import { ASSISTANT_STORE } from "../../constants";
+import { CommunityAssistantStorageService } from "../../service/communityassistantstorage";
+import { Assistant, AssistantResponse, CommunityAssistant, CommunityAssistantSnapshot, Model, OwnerDetailsResponse } from "../../api/models";
+import { ASSISTANT_STORE, COMMUNITY_ASSISTANT_STORE } from "../../constants";
 import { UserContext } from "../layout/UserContextProvider";
 import { QuestionInput } from "../../components/QuestionInput/QuestionInput";
 import { LLMContext } from "../../components/LLMSelector/LLMContextProvider";
@@ -31,7 +32,8 @@ interface HomeAssistant {
     linkTo: string;
     metadataOwner?: OwnerDetailsResponse;
     metadataFallbackLabel?: string;
-    rawData: AssistantResponse;
+    rawData: AssistantResponse | CommunityAssistantSnapshot | CommunityAssistant | Assistant;
+    isLocalAssistant?: boolean;
     isOwnedAssistant?: boolean;
     subscriberCount: number;
 }
@@ -118,11 +120,13 @@ const Home = () => {
         (async () => {
             try {
                 const assistantStorageService = new AssistantStorageService(ASSISTANT_STORE);
+                const communityAssistantStorageService = new CommunityAssistantStorageService(COMMUNITY_ASSISTANT_STORE);
 
-                const [subs, owned, allCommunity] = await Promise.all([
+                const [subs, owned, allCommunity, localAssistants] = await Promise.all([
                     getUserSubscriptionsApi(),
                     getOwnedCommunityAssistants(),
-                    getAllCommunityAssistantsApi()
+                    getAllCommunityAssistantsApi(),
+                    assistantStorageService.getAllAssistantConfigs()
                 ]);
                 const recommendedCommunity = await getAllCommunityAssistantsApi({
                     limit: MAX_CARDS,
@@ -163,6 +167,25 @@ const Home = () => {
                 const recent: HomeAssistant[] = [];
                 const handledAssistantIds = new Set<string>();
                 for (const [assistantId, lastUsed] of assistantLastUsed) {
+                    // Local assistants only exist in the browser; they are never orphans
+                    // even though no server list contains them.
+                    const localConfig = localAssistants?.find(config => config.id === assistantId);
+                    if (localConfig) {
+                        handledAssistantIds.add(assistantId);
+                        recent.push({
+                            id: assistantId,
+                            title: localConfig.title || assistantId,
+                            description: localConfig.description || "",
+                            lastUsed,
+                            linkTo: `/assistant/${assistantId}`,
+                            metadataFallbackLabel: t("components.community_assistants.metadata_you", "Du"),
+                            rawData: localConfig,
+                            isLocalAssistant: true,
+                            subscriberCount: 0
+                        });
+                        continue;
+                    }
+
                     const own = ownedMap.get(assistantId);
                     if (own) {
                         recent.push({
@@ -226,9 +249,9 @@ const Home = () => {
                 }
 
                 // Assistants that no longer surface through any list: keep their chats reachable
-                // by resolving whether they were deleted (404) or just unsubscribed.
+                // by resolving whether they were deleted (404), lost access (403), or just unsubscribed.
                 const orphanCandidateIds = Array.from(assistantLastUsed.keys()).filter(id => !handledAssistantIds.has(id));
-                const resolvedOrphans = await resolveOrphanedAssistantChats(orphanCandidateIds, assistantLastUsed);
+                const resolvedOrphans = await resolveOrphanedAssistantChats(orphanCandidateIds, assistantLastUsed, communityAssistantStorageService);
                 for (const orphan of resolvedOrphans) {
                     if (!mounted) {
                         return;
@@ -237,17 +260,19 @@ const Home = () => {
                         id: orphan.id,
                         title: orphan.title ?? t("components.community_assistants.orphaned_deleted_title"),
                         description:
-                            orphan.kind === "unsubscribed" && orphan.description
-                                ? orphan.description
-                                : t(
+                            orphan.kind === "deleted" || !orphan.description
+                                ? t(
                                       orphan.kind === "deleted"
                                           ? "components.community_assistants.orphaned_deleted_description"
-                                          : "components.community_assistants.orphaned_unsubscribed_description"
-                                  ),
+                                          : orphan.kind === "revoked"
+                                            ? "components.community_assistants.orphaned_revoked_description"
+                                            : "components.community_assistants.orphaned_unsubscribed_description"
+                                  )
+                                : orphan.description,
                         lastUsed: orphan.lastUsed,
                         linkTo: `/${orphan.kind === "deleted" ? "deleted/communityassistant" : "communityassistant"}/${orphan.id}`,
                         metadataFallbackLabel: t("components.community_assistants.filter_all", "Community"),
-                        rawData: {} as AssistantResponse,
+                        rawData: (orphan.snapshot ?? {}) as AssistantResponse,
                         subscriberCount: 0
                     });
                 }

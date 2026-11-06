@@ -54,13 +54,26 @@ describe("resolveOrphanedAssistantChats", () => {
         expect(orphans).toEqual([{ id: "a1", kind: "deleted", lastUsed: 7 }]);
     });
 
+    it("marks a 404 as deleted and adds the snapshot details when a local snapshot exists", async () => {
+        vi.mocked(getCommunityAssistantApi).mockRejectedValue(new ApiError("not found", 404));
+        const communityAssistantStorageService = storageWithSnapshot();
+
+        const orphans = await resolveOrphanedAssistantChats(["a3"], new Map([["a3", 21]]), communityAssistantStorageService);
+
+        expect(orphans).toEqual([
+            { id: "a3", kind: "deleted", title: "Verweigert", description: "Kein Zugriff mehr", snapshot: revokedSnapshot, lastUsed: 21 }
+        ]);
+    });
+
     it("marks a 403 as revoked and takes title and description from the local snapshot", async () => {
         vi.mocked(getCommunityAssistantApi).mockRejectedValue(new ApiError("forbidden", 403));
         const communityAssistantStorageService = storageWithSnapshot();
 
         const orphans = await resolveOrphanedAssistantChats(["a3"], new Map([["a3", 21]]), communityAssistantStorageService);
 
-        expect(orphans).toEqual([{ id: "a3", kind: "revoked", title: "Verweigert", description: "Kein Zugriff mehr", lastUsed: 21 }]);
+        expect(orphans).toEqual([
+            { id: "a3", kind: "revoked", title: "Verweigert", description: "Kein Zugriff mehr", snapshot: revokedSnapshot, lastUsed: 21 }
+        ]);
     });
 
     it("marks a 403 as revoked without snapshot details when no storage service is given", async () => {

@@ -161,6 +161,17 @@ describe("assistant chat transfer", () => {
         expect(StorageService.prototype.delete).toHaveBeenCalledWith(chatId);
     });
 
+    it("tolerates a retired conversation row (403) and keeps the local transfer going", async () => {
+        vi.mocked(StorageService.prototype.getAll).mockResolvedValue([chatRecord(chatId)]);
+        fetchMock.mockResolvedValueOnce(new Response(null, { status: 403 }));
+        await service.transferChatsToAssistant(sourceAssistantId, targetAssistantId);
+
+        expect(StorageService.prototype.connectToDB).toHaveBeenCalled();
+        const db = await StorageService.prototype.connectToDB();
+        expect(db.put).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({ id: "CHAT_target_assistant_thread" }));
+        expect(StorageService.prototype.delete).toHaveBeenCalledWith(chatId);
+    });
+
     it("tolerates a missing server row (404) but propagates other re-bind failures without touching local records", async () => {
         fetchMock.mockResolvedValueOnce(new Response(null, { status: 404 }));
         await service.transferChatsToAssistant(sourceAssistantId, targetAssistantId);

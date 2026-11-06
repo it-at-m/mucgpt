@@ -41,7 +41,7 @@ dependencies = [
     "asyncpg>=0.31.0",
     "ag-ui-langgraph[fastapi]==0.0.47",
     "ag-ui-protocol==1.0.0",
-    "mcp>=1.30,<2.0",
+    "mcp>=2.3,<2.4",
     "weasyprint>=63.0",
     "openpyxl>=3.1.5",
     "beautifulsoup4>=4.13",

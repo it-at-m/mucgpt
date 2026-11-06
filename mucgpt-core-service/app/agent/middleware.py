@@ -350,7 +350,7 @@ def _filter_request_tools(request: ModelRequest) -> ModelRequest:
 
     Users select tool groups as a whole, so enabling one tool of a group enables the
     entire group. This keeps stored selections valid when a group gains tools or is
-    split via ``tool_groups``.
+    split via per-tool group overrides.
     """
     runtime_context = _get_request_context(request)
     if runtime_context is None or runtime_context.enabled_tools is None:

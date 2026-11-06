@@ -166,12 +166,10 @@ MCP:
       # Users only see and select tool groups, never single tools. Enabling a group
       # enables all of its tools. The group name is shown to users as is (not translated).
       # group: "Wissensdatenbank"  # optional: group for all tools of this server (default: the source id)
-      # tool_groups:               # optional: split one server into several groups by tool name prefix (overrides group)
-      #   "kb_hr_": "Wissen Personal"
-      #   "kb_bau_": "Wissen Bau"
-      # descriptions:  # optional: overrides for tool descriptions
-      #   - name: "searchConfluenceUsingCql"
-      #     description: "Search Confluence content using CQL queries. Use for structured or advanced filtering."
+       # overrides:  # optional: customize a tool's description and/or group
+       #   - name: "searchConfluenceUsingCql"
+       #     description: "Search Confluence content using CQL queries. Use for structured or advanced filtering."
+       #     group: "Wissen Personal"
   CACHE_TTL: 43200
 
 # Redis Settings (optional - nested under REDIS key)

@@ -8,6 +8,7 @@ from urllib.parse import urljoin
 import httpx
 from pydantic import (
     BaseModel,
+    ConfigDict,
     Field,
     HttpUrl,
     PositiveInt,
@@ -393,15 +394,26 @@ class LangfuseConfig(BaseModel):
     HOST: str | None = None
 
 
-class MCPToolDescription(BaseModel):
-    """Configuration for overriding an MCP tool's description."""
+class MCPToolOverride(BaseModel):
+    """Configuration for overriding an individual MCP tool's metadata."""
 
     name: str
-    description: str
+    description: str | None = None
+    group: str | None = None
+
+    @field_validator("group")
+    @staticmethod
+    def validate_group(value: str | None) -> str | None:
+        """Reject empty group names, which would expose tools without a group."""
+        if value is not None and not value.strip():
+            raise ValueError("group needs a non-empty name")
+        return value
 
 
 class MCPSourceConfig(BaseModel):
     """Single MCP source configuration."""
+
+    model_config = ConfigDict(extra="forbid")
 
     url: str
     transport: MCPTransport
@@ -409,8 +421,7 @@ class MCPSourceConfig(BaseModel):
     forward_auth_override: SecretStr | None = None
     headers: dict[str, SecretStr] | None = None
     group: str | None = None
-    tool_groups: dict[str, str] | None = None
-    descriptions: list[MCPToolDescription] | None = None
+    overrides: list[MCPToolOverride] | None = None
 
     @field_validator("forward_auth_override", mode="before")
     @staticmethod
@@ -438,21 +449,6 @@ class MCPSourceConfig(BaseModel):
             else:
                 parsed[key] = SecretStr(str(header_value))
         return parsed
-
-    @field_validator("tool_groups", mode="after")
-    @staticmethod
-    def validate_tool_groups(value: dict[str, str] | None) -> dict[str, str] | None:
-        """Rejects empty group names, which would expose matching tools without a group."""
-        if value is None:
-            return None
-        empty_prefixes = [
-            prefix for prefix, group in value.items() if not group.strip()
-        ]
-        if empty_prefixes:
-            raise ValueError(
-                f"tool_groups entries need a non-empty group name: {empty_prefixes}"
-            )
-        return value
 
     @model_validator(mode="after")
     @staticmethod

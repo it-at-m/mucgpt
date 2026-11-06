@@ -839,7 +839,9 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
             );
         } catch (err) {
             if (err instanceof ApiError && err.status === 404) {
-                // The assistant was deleted in the meantime — fall back to the read-only missing view.
+                // The assistant was deleted in the meantime — fall back to the read-only
+                // missing view and close a subscribe dialog that can no longer succeed.
+                setShowNotSubscribedDialog(false);
                 setIsUnsubscribed(false);
                 setIsAssistantMissing(true);
                 setFollowUpActions([]);
@@ -1037,7 +1039,9 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
         if (isLegacyAssistant) {
             return (
                 <div className={styles.stateCallout}>
-                    <AssistantStateCallout state="legacy" context="chat" onDelete={() => void performDeleteAssistant(true)} />
+                    {/* Legacy chat ids are excluded from orphan resolution, so kept chats could
+                        never be reached again; legacy deletion therefore always removes them. */}
+                    <AssistantStateCallout state="legacy" context="chat" onDelete={() => void performDeleteAssistant(false)} />
                 </div>
             );
         }

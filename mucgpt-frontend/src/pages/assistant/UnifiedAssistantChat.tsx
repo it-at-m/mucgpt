@@ -296,11 +296,24 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                 setIsOwnershipResolved(true);
                 let accessDenied = false;
                 let configMissing = false;
+                // A first-time visitor without chat history gets the subscribe dialog; the
+                // read-only callout stays for users with retained chats from a lapsed subscription.
+                let hasLocalChats = true;
 
                 strategy
                     .loadAssistantConfig(assistant_id, assistantStorageService)
                     .then(async assistant => {
                         if (assistant) {
+                            if (notSubscribed) {
+                                try {
+                                    const newestChat = await assistantStorageService.getNewestChatForAssistant(assistant_id);
+                                    hasLocalChats = Boolean(newestChat?.id);
+                                } catch (chatError) {
+                                    console.error("Error checking for retained chats of the assistant:", chatError);
+                                    hasLocalChats = true;
+                                }
+                            }
+
                             if (isDeletedAssistant) {
                                 try {
                                     const snapshot = await communityAssistantStorageService.getAssistantConfig(assistant_id);
@@ -417,8 +430,8 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                         }
                     })
                     .finally(() => {
-                        setShowNotSubscribedDialog(notSubscribed && accessDenied);
-                        setIsUnsubscribed(notSubscribed && !accessDenied && !configMissing);
+                        setShowNotSubscribedDialog(notSubscribed && (accessDenied || !hasLocalChats));
+                        setIsUnsubscribed(notSubscribed && !accessDenied && !configMissing && hasLocalChats);
                         setIsLoadingValue(false);
                         setIsAssistantContentLoading(false);
                     });

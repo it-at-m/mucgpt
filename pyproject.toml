@@ -3,7 +3,7 @@ name = "MUCGPT"
 version = "2.0.2"
 description = "a web interface for large language models for the public administration"
 readme = "README.md"
-requires-python= ">=3.13"
+requires-python= "==3.15.2"
 authors = [
     { name = "Michael Jaumann", email = "michael.jaumann@muenchen.de" },
     { name = "Paul Ilitz", email = "paul.ilitz@muenchen.de" },

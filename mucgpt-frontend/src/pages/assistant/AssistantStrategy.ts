@@ -41,11 +41,7 @@ export class LocalAssistantStrategy implements AssistantStrategy {
     }
 
     async deleteAssistant(assistantId: string, assistantStorageService: AssistantStorageService, keepChats = true): Promise<void> {
-        if (keepChats) {
-            // The chats are kept: they are converted into normal assistant-less chats so
-            // the conversation history (and its last system prompt) survives the deletion.
-            await assistantStorageService.convertChatsToNormalChats(assistantId);
-        } else {
+        if (!keepChats) {
             await assistantStorageService.deleteChatsForAssistant(assistantId);
         }
         await assistantStorageService.deleteConfigForAssistant(assistantId);
@@ -152,9 +148,7 @@ export class OwnedCommunityAssistantStrategy implements AssistantStrategy {
     }
 
     async deleteAssistant(assistantId: string, assistantStorageService: AssistantStorageService, keepChats = true): Promise<void> {
-        if (keepChats) {
-            await assistantStorageService.convertChatsToNormalChats(assistantId);
-        } else {
+        if (!keepChats) {
             await assistantStorageService.deleteChatsForAssistant(assistantId);
         }
         await deleteCommunityAssistantApi(assistantId);

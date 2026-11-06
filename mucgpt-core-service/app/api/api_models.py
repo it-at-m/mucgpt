@@ -549,14 +549,10 @@ class ConversationRenameRequest(BaseModel):
 class ConversationAssistantRebindRequest(BaseModel):
     """Target assistant for re-binding an existing conversation."""
 
-    # Required so an empty body cannot silently detach the conversation.
-    assistant_id: str | None = Field(
+    assistant_id: str = Field(
         ...,
         min_length=1,
-        description=(
-            "ID of the assistant the conversation should be associated with. "
-            "Null detaches the conversation from any assistant (plain chat)."
-        ),
+        description="ID of the assistant the conversation should be associated with.",
     )
 
 

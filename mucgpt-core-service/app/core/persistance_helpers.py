@@ -357,12 +357,9 @@ class PersistanceHelpers:
 
     @staticmethod
     async def set_conversation_assistant(
-        conversation_id: str, user_id: str, assistant_id: str | None
+        conversation_id: str, user_id: str, assistant_id: str
     ) -> bool:
-        """Re-bind a live owned conversation to another assistant without reviving it.
-
-        ``None`` detaches the conversation from any assistant (plain chat).
-        """
+        """Re-bind a live owned conversation to another assistant without reviving it."""
         factory = PersistanceHelpers._get_session_factory()
         async with factory.begin() as session:
             return await ConversationRepository(session).set_conversation_assistant(

@@ -112,14 +112,14 @@ class ConversationRepository:
         return result.scalar_one_or_none() is not None
 
     async def set_conversation_assistant(
-        self, conversation_id: str, user_id: str, assistant_id: str | None
+        self, conversation_id: str, user_id: str, assistant_id: str
     ) -> bool:
         """Re-bind an existing live owned conversation to another assistant.
 
-        Used when chats move to a different assistant; ``None`` detaches the
-        conversation from any assistant (plain chat). Unlike the upsert paths,
-        an explicit re-bind intentionally overrides the preserved original
-        association. Never claims, revives, or retires the conversation.
+        Used when chats move to a different assistant. Unlike the upsert
+        paths, an explicit re-bind intentionally overrides the preserved
+        original association. Never claims, revives, or retires the
+        conversation.
         """
         result = await self.session.execute(
             update(Chat)

@@ -1,7 +1,6 @@
 import { StorageService, DBMessage } from "./storage";
 import { Assistant, ChatResponse, deleteConversationApi } from "../api";
 import { rebindConversationAssistantApi } from "../api/conversations-client";
-import { CHAT_STORE, CREATIVITY_LOW } from "../constants";
 import { v4 as uuid } from "uuid";
 import { IndexedDBStorage } from "./indexedDBStorage";
 
@@ -207,51 +206,6 @@ export class AssistantStorageService {
         }
         for (const sourceId of sourceIds) {
             await this.storageService.delete(sourceId);
-        }
-    }
-
-    /**
-     * Converts all chats of an assistant into normal assistant-less chats so they
-     * survive the assistant's deletion: messages, title, and favourites are kept and
-     * the last-used system prompt and creativity become the normal chat's editable
-     * per-chat settings. The prompt falls back to the assistant's configuration
-     * (the caller deletes it only afterwards), then to empty values for chats whose
-     * record was synced without a local config. Persisted conversations are detached
-     * from the assistant on the server first (see transferChatsToAssistant for the
-     * backendPersisted caveat); an existing normal-chats record is preserved so a
-     * retried conversion cannot lose newer messages.
-     */
-    async convertChatsToNormalChats(assistant_id: string): Promise<void> {
-        const stored = await this.storageService.getAll();
-        if (!stored) {
-            throw new Error(`Failed to load chats for assistant "${assistant_id}"`);
-        }
-        const sourcePrefix = AssistantStorageService.GENERATE_BOT_CHAT_PREFIX(assistant_id);
-        const chats = stored.filter(chat => !!chat.id && !chat.id.startsWith(AssistantStorageService.CONFIG_ID) && chat.id.startsWith(sourcePrefix));
-        const assistantConfig = await this.getAssistantConfig(assistant_id);
-        const normalStorage = new StorageService<ChatResponse, { system: string; creativity: string }>(CHAT_STORE);
-        const normalDb = await normalStorage.connectToDB();
-        for (const chat of chats) {
-            if (!chat.id) continue;
-            const chatUuid = chat.id.replace(sourcePrefix, "");
-            const legacyConfig = chat.config as (Partial<Assistant> & { system?: string }) | undefined;
-            const normalChat = {
-                ...chat,
-                id: chatUuid,
-                config: {
-                    system: legacyConfig?.system_message ?? legacyConfig?.system ?? assistantConfig?.system_message ?? "",
-                    creativity: legacyConfig?.creativity ?? assistantConfig?.creativity ?? CREATIVITY_LOW
-                }
-            };
-            await rebindConversationAssistantApi(chatUuid, null);
-            const existing = await normalStorage.get(chatUuid);
-            if (!existing) {
-                await normalDb.put(CHAT_STORE.objectStore_name, normalChat);
-            }
-            const deleted = await this.storageService.delete(chat.id);
-            if (!deleted) {
-                throw new Error(`Failed to delete assistant chat "${chat.id}"`);
-            }
         }
     }
 }

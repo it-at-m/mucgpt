@@ -38,6 +38,7 @@ export const DEFAULT_APP_CONFIG: ApplicationConfig = {
     core_version: "DEV 1.0.0",
     frontend_version: "DEV 1.0.0",
     assistant_version: "DEV 1.0.0",
+    release_notes: [],
     document_processing_enabled: false,
     transcription_enabled: false,
     transcription_default_model: null,

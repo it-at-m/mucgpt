@@ -469,6 +469,16 @@ class RedisConfig(BaseModel):
     PASSWORD: SecretStr | None = None
 
 
+class DBConfig(BaseModel):
+    """PostgreSQL configuration (nested under DB key in YAML)."""
+
+    HOST: str = "checkpoint-postgres"
+    PORT: int = 5432
+    NAME: str = "checkpoints"
+    USER: str = "admin"
+    PASSWORD: SecretStr = SecretStr("admin")
+
+
 class PromptConfig(BaseModel):
     """A prompt inside a Langfuse folder."""
 
@@ -487,6 +497,13 @@ class PromptPoolConfig(BaseModel):
     """Configured Langfuse prompt folders."""
 
     FOLDERS: list[PromptFolderConfig] = Field(default_factory=list)
+
+
+class ReleaseNoteConfig(BaseModel):
+    """A release-note entry shown by the frontend."""
+
+    version: str = Field(..., min_length=1)
+    content: str = Field(..., min_length=1)
 
 
 # Backward-compatible aliases
@@ -520,6 +537,7 @@ class Settings(BaseSettings):
     APP_VERSION: str = "unknown"
     FRONTEND_VERSION: str = "unknown"
     ASSISTANT_VERSION: str = "unknown"
+    RELEASE_NOTES: list[ReleaseNoteConfig] = Field(default_factory=list)
     FOOTER_LINK_URL: str | None = None
     FOOTER_LABEL: str | None = None
     FAQ_URL: str | None = None
@@ -562,6 +580,7 @@ class Settings(BaseSettings):
     LANGFUSE: LangfuseConfig = Field(default_factory=LangfuseConfig)
     MCP: MCPConfig = Field(default_factory=MCPConfig)
     REDIS: RedisConfig = Field(default_factory=RedisConfig)
+    DB: DBConfig = Field(default_factory=DBConfig)
 
     # Customize settings sources to prioritize YAML config
     @classmethod

@@ -104,8 +104,11 @@ async def get_messages_for_agent(
             detail=f"User {user_id} is not authorized to access conversation {request.conversation_id}",
         )
 
-    # The canvas is saved implicitly with every persisted turn.
-    if request.canvas is not None:
+    # The canvas is saved implicitly with every persisted turn. A truncated
+    # canvas (editor document beyond the persistence limit) carries only the
+    # beginning of the document: persisting it would silently destroy the tail,
+    # so the stored copy is left untouched.
+    if request.canvas is not None and not request.canvas.truncated:
         await PersistanceHelpers.upsert_canvas(
             request.conversation_id, request.canvas.content, user_id
         )

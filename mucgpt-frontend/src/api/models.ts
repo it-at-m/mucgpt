@@ -48,6 +48,10 @@ export type CanvasState = {
     selection: string | null;
     /** Caret position as character offset in the markdown document (selection start when text is selected) */
     cursor?: number | null;
+    /** True when the editor document exceeds the persistence limit and content
+     * is only its beginning: the backend then skips persistence and the canvas
+     * tools refuse the partial document. */
+    truncated?: boolean;
 };
 
 export type ChatRequest = {

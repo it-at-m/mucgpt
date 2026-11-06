@@ -132,6 +132,15 @@ class CanvasState(BaseModel):
             "(selection start when text is selected)"
         ),
     )
+    truncated: bool = Field(
+        False,
+        description=(
+            "True when the client's editor document exceeds the persistence "
+            "limit and `content` is only its beginning. The stored canvas is "
+            "then not overwritten, and the canvas tools refuse to operate on "
+            "the partial document."
+        ),
+    )
 
 
 class CanvasResponse(BaseModel):

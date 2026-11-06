@@ -85,6 +85,18 @@ NO_CANVAS_ERROR = (
     "Error: no canvas exists in this conversation yet. Use canvas_write to create one."
 )
 
+# The client flags a canvas whose editor document exceeds the persistence limit:
+# the state carries only the beginning of the document, so operating on it
+# would mislead the model and any resulting UPDATE would destroy the user's
+# full document in the editor.
+_TRUNCATED_ERROR = (
+    "Error: the canvas document exceeds the client's persistence limit, so its "
+    "full text is not available to the canvas tools and any change would "
+    "destroy the user's document. Advise the user to reduce the canvas content "
+    "below the limit (or move the relevant passages into the chat); the canvas "
+    "tools become available again afterwards."
+)
+
 HTML_NOT_ALLOWED_ERROR = (
     "Error: canvas content must be GitHub-Flavored Markdown without raw HTML tags "
     "(e.g. <b> or <u>). Use GFM formatting instead (e.g. **bold**)."
@@ -226,6 +238,9 @@ def make_canvas_write_tool(logger: Logger) -> BaseTool:
         # conversation yet, canvas_write creates one.
         if not content or not content.strip():
             return "Error: content is required for canvas_write."
+        canvas = _ensure_canvas(canvas_state)
+        if canvas is not None and canvas.truncated:
+            return _TRUNCATED_ERROR
         if _contains_html(content):
             return HTML_NOT_ALLOWED_ERROR
         if len(content) > CANVAS_CONTENT_MAX_CHARS:
@@ -259,6 +274,8 @@ def make_canvas_edit_tool(logger: Logger) -> BaseTool:
         canvas = _ensure_canvas(canvas_state)
         if canvas is None:
             return NO_CANVAS_ERROR
+        if canvas.truncated:
+            return _TRUNCATED_ERROR
         if not old_text:
             return "Error: old_text is required for canvas_edit."
 
@@ -392,6 +409,8 @@ def make_canvas_read_tool(logger: Logger) -> BaseTool:
         canvas = _ensure_canvas(canvas_state)
         if canvas is None:
             return NO_CANVAS_ERROR
+        if canvas.truncated:
+            return _TRUNCATED_ERROR
 
         result = _read_result(canvas, around_cursor)
         replacements = _stale_read_replacements(messages or [])

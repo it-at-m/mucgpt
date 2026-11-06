@@ -193,6 +193,8 @@ i18n
                         status_writing: "Agent schreibt…",
                         limit_warning: "Text zu lang: der ausgegraute Bereich wird nicht vom Agenten gelesen, bleibt aber im Chat gespeichert.",
                         limit_paste_clipped: "Der eingefügte Text wurde auf {{limit}} Zeichen begrenzt.",
+                        limit_persist_notice:
+                            "Das Dokument übersteigt das Speichern-Limit. Es bleibt lesbar und exportierbar, aber der Agent bearbeitet es nicht — verkleinere den Inhalt, um die Bearbeitung wieder zu aktivieren.",
                         split_divider: "Canvas-Breite anpassen",
                         empty_state: "Leeres Canvas",
                         empty_state_hint: "Schreibe hier deinen Entwurf oder überlasse dem Agenten den ersten Text.",
@@ -1193,6 +1195,8 @@ i18n
                         status_writing: "Agent is writing…",
                         limit_warning: "Text too long: the greyed-out section is not read by the agent but stays saved with the chat.",
                         limit_paste_clipped: "The pasted text was clipped to {{limit}} characters.",
+                        limit_persist_notice:
+                            "The document exceeds the persistence limit. It stays readable and exportable, but the agent will not edit it — reduce the content to re-enable agent editing.",
                         split_divider: "Resize canvas",
                         empty_state: "Empty canvas",
                         empty_state_hint: "Write your draft here or let the agent start the first text.",
@@ -2208,6 +2212,8 @@ i18n
                         status_writing: "Agent schreibt…",
                         limit_warning: "Text zu lang: da ausgegraute Bereich wird vom Agenten ned glesen, bleibts aber im Chat gspeichert.",
                         limit_paste_clipped: "Da eingfügte Text is auf {{limit}} Zeichn begrenzt worn.",
+                        limit_persist_notice:
+                            "Des Dokument is gräßer wias Speichan-Limit. Es bleibd lesbar und exportierbar, oba da Agent bearbatd es ned — mach an Inhalt kleana, damid da Agent wida bearbatn ko.",
                         split_divider: "Canvas-Breit apassn",
                         empty_state: "Loarer Canvas",
                         empty_state_hint: "Schreib do dein Entwurf hi oda loss den Agenten an easchtn Text macha.",
@@ -3126,6 +3132,8 @@ i18n
                         status_writing: "L'agent écrit…",
                         limit_warning: "Texte trop long : la partie grisée n'est pas lue par l'agent mais reste enregistrée avec le chat.",
                         limit_paste_clipped: "Le texte collé a été limité à {{limit}} caractères.",
+                        limit_persist_notice:
+                            "Le document dépasse la limite de persistance. Il reste lisible et exportable, mais l'agent ne le modifiera pas — réduisez le contenu pour réactiver l'édition par l'agent.",
                         split_divider: "Redimensionner le canvas",
                         empty_state: "Canvas vide",
                         empty_state_hint: "Écrivez votre brouillon ici ou laissez l'agent rédiger le premier texte.",
@@ -4086,6 +4094,8 @@ i18n
                         status_writing: "Агент пише…",
                         limit_warning: "Текст задовгий: сіру частину агент не читає, але вона зберігається разом із чатом.",
                         limit_paste_clipped: "Вставлений текст було обрізано до {{limit}} символів.",
+                        limit_persist_notice:
+                            "Документ перевищує ліміт збереження. Він залишається доступним для читання та експорту, але агент не редагуватиме його — зменшіть вміст, щоб знову увімкнути редагування агентом.",
                         split_divider: "Змінити ширину canvas",
                         empty_state: "Порожній canvas",
                         empty_state_hint: "Напишіть тут свою чернетку або доручіть агенту перший текст.",

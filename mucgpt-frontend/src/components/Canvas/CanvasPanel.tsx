@@ -29,6 +29,7 @@ export const CanvasPanel = ({ controller, conversationId, serverConversationId, 
     const [isVersionsOpen, setIsVersionsOpen] = useState(false);
     const [isEmpty, setIsEmpty] = useState(true);
     const [overLimit, setOverLimit] = useState(false);
+    const [overPersistLimit, setOverPersistLimit] = useState(false);
     const [clipNotice, setClipNotice] = useState(false);
     // Ref keeps effects conversation-scoped: they must not re-run (and re-load stale
     // content over live edits) just because the controller object identity changes.
@@ -72,8 +73,9 @@ export const CanvasPanel = ({ controller, conversationId, serverConversationId, 
         return controllerRef.current.subscribe(markdown => {
             setIsEmpty(markdown.trim() === "");
             setOverLimit(markdown.length > limits.warnChars);
+            setOverPersistLimit(markdown.length > limits.contentLimitChars);
         });
-    }, [conversationId, controller.revisions, limits.warnChars]);
+    }, [conversationId, controller.revisions, limits.warnChars, limits.contentLimitChars]);
 
     // Fired by the editor's size guard when pasted content was clipped.
     useEffect(() => {
@@ -95,6 +97,7 @@ export const CanvasPanel = ({ controller, conversationId, serverConversationId, 
             <CanvasToolbar editor={controller.editor} controller={controller} onOpenVersions={() => setIsVersionsOpen(true)} disabled={controller.isLocked} />
             {clipNotice && <MessageBar intent="warning">{t("canvas.limit_paste_clipped", { limit: limits.editorLimitChars.toLocaleString() })}</MessageBar>}
             {!clipNotice && overLimit && <MessageBar intent="warning">{t("canvas.limit_warning")}</MessageBar>}
+            {overPersistLimit && <MessageBar intent="warning">{t("canvas.limit_persist_notice")}</MessageBar>}
             {controller.isLocked && (
                 <div className={styles.statusLine}>
                     <span className={styles.shimmer}>{t("canvas.status_writing")}</span>

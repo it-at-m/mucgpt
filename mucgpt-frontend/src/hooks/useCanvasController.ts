@@ -286,20 +286,27 @@ export function useCanvasController(conversationId: string | undefined, serverCo
         // sent with the request — panel open or closed — so the agent works on
         // the document the user last saw and the server copy stays in sync. An
         // open empty document still counts as an active canvas the agent may
-        // write into. Beyond the content limit the document is only readable
-        // and exportable: the request carries the clipped content (the backend
-        // caps at the same value), the caret only anchors while it sits in the
-        // readable part, and oversized selections are meaningless to the agent.
+        // write into.
+        //
+        // Beyond the content limit the document exceeds what the backend can
+        // persist, so the request carries the truncated beginning plus the
+        // `truncated` flag: the backend then skips persistence (the stored
+        // copy is never clobbered) and the canvas tools refuse the partial
+        // document with guidance instead of destroying the tail. The document
+        // itself stays readable and exportable in the editor up to the editor
+        // limit.
         const markdown = getMarkdown();
         if (!isOpen && !markdown?.trim()) return null;
-        const content = markdown.length > limits.contentLimitChars ? markdown.slice(0, limits.contentLimitChars) : markdown;
+        const truncated = markdown.length > limits.contentLimitChars;
+        const content = truncated ? markdown.slice(0, limits.contentLimitChars) : markdown;
         const caretPos = persistentCaret(editorRef.current);
         const cursor = caretPos === null ? null : caretMarkdownOffset(editorRef.current, caretPos);
         const selection = isOpen ? getSelectionMarkdown() : null;
         return {
             content,
             selection: selection !== null && selection.length <= limits.contentLimitChars ? selection : null,
-            cursor: cursor !== null && cursor <= limits.contentLimitChars ? cursor : null
+            cursor: cursor !== null && cursor <= limits.contentLimitChars ? cursor : null,
+            truncated: truncated || undefined
         };
     }, [isOpen, getMarkdown, getSelectionMarkdown, limits]);
 

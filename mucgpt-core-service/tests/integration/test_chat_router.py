@@ -10,6 +10,7 @@ from langchain_core.language_models.fake_chat_models import FakeListChatModel
 
 from agent.agent_executor import MUCGPTAgentExecutor
 from api.api_models import (
+    CanvasState,
     ChatCompletionChoice,
     ChatCompletionChunk,
     ChatCompletionChunkChoice,
@@ -49,6 +50,11 @@ def stub_persistence(monkeypatch: pytest.MonkeyPatch) -> None:
         PersistanceHelpers,
         "has_checkpoint",
         AsyncMock(return_value=False),
+    )
+    monkeypatch.setattr(
+        PersistanceHelpers,
+        "upsert_canvas",
+        AsyncMock(),
     )
     monkeypatch.setattr(
         PersistanceHelpers,
@@ -216,6 +222,59 @@ class TestChatRouter:
         assert mock_agent_executor.run_without_streaming.await_args.kwargs[
             "messages"
         ] == [messages[-1]]
+
+    @pytest.mark.parametrize("truncated", [False, True])
+    @patch("api.routers.chat_router.init_agent", new_callable=AsyncMock)
+    def test_truncated_canvas_skips_persistence(
+        self,
+        mock_init_agent: AsyncMock,
+        truncated: bool,
+        test_client: TestClient,
+    ) -> None:
+        """A truncated canvas (editor document beyond the persistence limit)
+        carries only the beginning of the document: persisting it would
+        silently destroy the stored tail, so the stored copy is untouched."""
+        from core.persistance_helpers import PersistanceHelpers
+
+        mock_agent_executor = Mock(MUCGPTAgentExecutor)
+        mock_agent_executor.run_without_streaming = AsyncMock(
+            return_value=ChatCompletionResponse(
+                id="chatcmpl-test123",
+                object="chat.completion",
+                created=1234567890,
+                choices=[
+                    ChatCompletionChoice(
+                        index=0,
+                        message=ChatCompletionMessage(role="assistant", content="Hi"),
+                        finish_reason="stop",
+                    )
+                ],
+                usage=Usage(prompt_tokens=1, completion_tokens=1, total_tokens=2),
+            )
+        )
+        mock_init_agent.return_value = mock_agent_executor
+
+        response = test_client.post(
+            "/v1/chat/completions",
+            json=ChatCompletionRequest(
+                model="gpt-4o-mini",
+                messages=[ChatCompletionMessage(role="user", content="Hello")],
+                stream=False,
+                conversation_id=DUMMY_CONVERSATION_ID,
+                canvas=CanvasState(
+                    content="beginning", selection=None, truncated=truncated
+                ),
+            ).model_dump(),
+        )
+
+        assert response.status_code == 200, response.text
+        upsert_mock = PersistanceHelpers.upsert_canvas
+        if truncated:
+            upsert_mock.assert_not_awaited()
+        else:
+            upsert_mock.assert_awaited_once_with(
+                DUMMY_CONVERSATION_ID, "beginning", DUMMY_USER_ID
+            )
 
     @pytest.mark.parametrize("has_checkpoint", [False, True])
     @patch("api.routers.chat_router.init_agent", new_callable=AsyncMock)

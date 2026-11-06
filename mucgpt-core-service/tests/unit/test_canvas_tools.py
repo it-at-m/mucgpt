@@ -541,3 +541,53 @@ def test_canvas_read_is_hidden_from_activity_ui() -> None:
     assert "canvas_read" in DEEP_AGENT_INTERNAL_TOOLS
     assert "canvas_write" not in DEEP_AGENT_INTERNAL_TOOLS
     assert "canvas_edit" not in DEEP_AGENT_INTERNAL_TOOLS
+
+
+def _truncated(content: str = "beginning of a huge document") -> CanvasState:
+    return CanvasState(content=content, truncated=True)
+
+
+def test_canvas_write_refuses_truncated_canvas(monkeypatch: Any) -> None:
+    """A truncated canvas only carries the document's beginning: any write
+    would replace the user's full document in the editor."""
+    writer = RecordingWriter()
+    monkeypatch.setattr(canvas, "_get_writer", lambda: writer)
+    tool = canvas.make_canvas_write_tool(_logger())
+
+    result = tool.invoke(
+        {"content": "# Title", "canvas_state": _truncated(), "runtime": _runtime()}
+    )
+
+    text, updated_canvas = _command_result(result)
+    assert text.startswith("Error:")
+    assert "persistence limit" in text
+    assert updated_canvas is None
+    assert writer.chunks == []
+
+
+def test_canvas_edit_refuses_truncated_canvas() -> None:
+    tool = canvas.make_canvas_edit_tool(_logger())
+
+    result = tool.invoke(
+        {
+            "old_text": "beginning",
+            "new_text": "replacement",
+            "canvas_state": _truncated(),
+            "runtime": _runtime(),
+        }
+    )
+
+    text, _ = _command_result(result)
+    assert text.startswith("Error:")
+    assert "persistence limit" in text
+
+
+def test_canvas_read_refuses_truncated_canvas() -> None:
+    """A partial read would present the beginning as the whole document."""
+    tool = canvas.make_canvas_read_tool(_logger())
+
+    result = tool.invoke({"canvas_state": _truncated(), "runtime": _runtime()})
+
+    text, _ = _command_result(result)
+    assert text.startswith("Error:")
+    assert "persistence limit" in text

@@ -435,7 +435,20 @@ describe("cursor anchor sampling", () => {
 
         const state = harness.current.toCanvasState();
         expect(state?.content).toBe(big.slice(0, DEFAULT_APP_CONFIG.canvas_content_max_chars));
+        expect(state?.truncated).toBe(true);
         expect(state?.cursor).toBeNull();
         expect(state?.selection).toBeNull();
+    });
+
+    it("does not flag content within the persistence limit as truncated", () => {
+        const harness = renderController();
+        harness.render(undefined);
+        const small = "x".repeat(DEFAULT_APP_CONFIG.canvas_content_max_chars - 1);
+        act(() => {
+            harness.current.setMarkdown(small);
+        });
+        const state = harness.current.toCanvasState();
+        expect(state?.truncated).toBeUndefined();
+        expect(state?.content).toBe(small);
     });
 });

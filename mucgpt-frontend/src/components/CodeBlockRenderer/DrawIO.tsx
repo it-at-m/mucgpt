@@ -251,7 +251,7 @@ export const DrawIO: React.FC<DrawIOProps> = ({ text, darkTheme }) => {
         <div className={`${styles.diagramContainer} ${darkTheme ? styles.dark : ""}`}>
             {/* Empty on purpose: GraphViewer mutates this node; output is sanitized afterward. */}
             <div className={styles.diagramWrapper} ref={containerRef} />
-            <div className={styles.footer}>
+            <div className={styles.footer} data-clipboard-ignore="true">
                 <div className={styles.downloadContainer}>
                     <span className={styles.drawioLabel}>drawio</span>
                     <Tooltip content={t("components.drawio.download")} relationship="description" positioning="above">

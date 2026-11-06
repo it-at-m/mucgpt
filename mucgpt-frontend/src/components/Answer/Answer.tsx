@@ -9,6 +9,7 @@ import { Button, Tooltip } from "@fluentui/react-components";
 import { FollowUpActionList } from "../FollowUpAction";
 import { MarkdownRenderer } from "../MarkdownRenderer/MarkdownRenderer";
 import { AnswerActivity } from "../AnswerActivity/AnswerActivity";
+import { copyRichText, serializeForClipboard } from "../../utils/clipboard";
 
 interface Props {
     answer: ChatResponse;
@@ -35,15 +36,21 @@ export const Answer = ({
     const [copied, setCopied] = useState<boolean>(false);
     const [formatted, setFormatted] = useState<boolean>(true);
     const [ref, setRef] = useState<HTMLElement | null>();
+    const [answerBody, setAnswerBody] = useState<HTMLDivElement | null>(null);
 
     const [processedText, setProcessedText] = useState<string>("");
     const oncopy = useCallback(() => {
         setCopied(true);
-        navigator.clipboard.writeText(answer.answer);
+        const html = formatted && answerBody?.innerHTML ? serializeForClipboard(answerBody) : null;
+        if (html) {
+            void copyRichText(html, answer.answer);
+        } else {
+            void navigator.clipboard.writeText(answer.answer);
+        }
         setTimeout(() => {
             setCopied(false);
         }, 1000);
-    }, [navigator.clipboard, answer.answer]);
+    }, [formatted, answerBody, answer.answer]);
 
     useEffect(() => {
         if (answer.answer === "" || answer.answer === undefined) {
@@ -65,7 +72,7 @@ export const Answer = ({
                 <div className={styles.growItem}>
                     {answer.activitySteps && answer.activitySteps.length > 0 && <AnswerActivity steps={answer.activitySteps} />}
                     {formatted && (
-                        <div className={styles.answerText}>
+                        <div ref={setAnswerBody} className={styles.answerText}>
                             <MarkdownRenderer allowDrawio isStreaming={isStreaming}>
                                 {processedText}
                             </MarkdownRenderer>

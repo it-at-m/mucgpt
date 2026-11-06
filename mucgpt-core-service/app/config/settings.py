@@ -499,6 +499,13 @@ class PromptPoolConfig(BaseModel):
     FOLDERS: list[PromptFolderConfig] = Field(default_factory=list)
 
 
+class ReleaseNoteConfig(BaseModel):
+    """A release-note entry shown by the frontend."""
+
+    version: str = Field(..., min_length=1)
+    content: str = Field(..., min_length=1)
+
+
 # Backward-compatible aliases
 SSOSettings = SSOConfig
 LangfuseSettings = LangfuseConfig
@@ -530,6 +537,7 @@ class Settings(BaseSettings):
     APP_VERSION: str = "unknown"
     FRONTEND_VERSION: str = "unknown"
     ASSISTANT_VERSION: str = "unknown"
+    RELEASE_NOTES: list[ReleaseNoteConfig] = Field(default_factory=list)
     FOOTER_LINK_URL: str | None = None
     FOOTER_LABEL: str | None = None
     FAQ_URL: str | None = None

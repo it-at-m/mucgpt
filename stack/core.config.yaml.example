@@ -25,6 +25,12 @@ CANVAS_EDITOR_MAX_CHARS: 524288
 APP_VERSION: "2.0"
 FRONTEND_VERSION: "0.0.2"
 ASSISTANT_VERSION: "0.0.3"
+RELEASE_NOTES:
+  - version: "2.0.x"
+    content: |
+      ## AGI reached
+
+      Pls don't tell anybody
 OWNER_PROFILE_URL_TEMPLATE: "https://intranet.example.org/person/{uid}"  # {uid} is replaced with the owner ID
 
 # Backend settings

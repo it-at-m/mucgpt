@@ -248,9 +248,26 @@ const Home = () => {
                     if (community) continue;
                 }
 
+                // Synced-but-unopened chats (empty message arrays) anchor an assistant to
+                // its history just the same: include them as orphan candidates so lapsed
+                // assistants surface on the start page like in Discovery, without
+                // entering the recent list.
+                const syncedAssistantIds = new Set<string>();
+                for (const record of allRecords || []) {
+                    if (!record.id || !record.id.startsWith(AssistantStorageService.CHAT_ID) || !record._last_edited || !Array.isArray(record.messages))
+                        continue;
+                    const withoutPrefix = record.id.substring(AssistantStorageService.CHAT_ID.length);
+                    const lastUnderscore = withoutPrefix.lastIndexOf("_");
+                    if (lastUnderscore === -1) continue;
+                    const assistantId = withoutPrefix.substring(0, lastUnderscore);
+                    if (assistantId && !assistantLastUsed.has(assistantId)) {
+                        syncedAssistantIds.add(assistantId);
+                    }
+                }
+
                 // Assistants that no longer surface through any list: keep their chats reachable
                 // by resolving whether they were deleted (404), lost access (403), or just unsubscribed.
-                const orphanCandidateIds = Array.from(assistantLastUsed.keys()).filter(id => !handledAssistantIds.has(id));
+                const orphanCandidateIds = Array.from(new Set([...assistantLastUsed.keys(), ...syncedAssistantIds])).filter(id => !handledAssistantIds.has(id));
                 const resolvedOrphans = await resolveOrphanedAssistantChats(orphanCandidateIds, assistantLastUsed, communityAssistantStorageService);
                 for (const orphan of resolvedOrphans) {
                     if (!mounted) {

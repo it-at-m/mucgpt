@@ -187,6 +187,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
     const isAssistantUnavailable = assistantConfig.state === "pending_legal_review" || assistantConfig.state === "inactive";
     const canEdit =
         strategy.canEdit &&
+        !isAssistantMissing &&
         (strategy instanceof LocalAssistantStrategy || assistantConfig.state === "active" || assistantConfig.state === "pending_legal_review");
     const lockedToolIds = useMemo(() => assistantConfig.tools?.map(tool => tool.id) ?? [], [assistantConfig.tools]);
 
@@ -327,6 +328,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
     }, [setLastQuestionValue]);
 
     // useEffect to load the assistant config and chat history
+    const loadDataRunIdRef = useRef(0);
     useEffect(() => {
         // Claim synchronously so the dedicated new-chat effect below skips this token
         // when the assistant also changes at the same time.
@@ -336,6 +338,8 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
         /** Loads or initializes the chat and assistant data for the current route. */
         const loadData = async () => {
             if (assistant_id) {
+                const runId = ++loadDataRunIdRef.current;
+                const isStale = () => loadDataRunIdRef.current !== runId;
                 setAssistantSnapshot(null);
                 setIsUnsubscribed(false);
                 setIsAssistantMissing(false);
@@ -347,6 +351,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                 let notSubscribed = false;
                 if (strategy instanceof CommunityAssistantStrategy) {
                     const owned = await getOwnedCommunityAssistants();
+                    if (isStale()) return;
                     const userIsOwner = owned.some(assistant => assistant.id === assistant_id);
 
                     if (userIsOwner) {
@@ -354,6 +359,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                         return;
                     } else {
                         const subscriptions = await getUserSubscriptionsApi();
+                        if (isStale()) return;
                         const isSubscribed = subscriptions && subscriptions.length > 0 && subscriptions.some(sub => sub.id === assistant_id);
                         if (!isSubscribed) {
                             notSubscribed = true;
@@ -371,10 +377,12 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                 strategy
                     .loadAssistantConfig(assistant_id, assistantStorageService)
                     .then(async assistant => {
+                        if (isStale()) return;
                         if (assistant) {
                             if (notSubscribed) {
                                 try {
                                     const newestChat = await assistantStorageService.getNewestChatForAssistant(assistant_id);
+                                    if (isStale()) return;
                                     hasLocalChats = Boolean(newestChat?.id);
                                 } catch (chatError) {
                                     console.error("Error checking for retained chats of the assistant:", chatError);
@@ -385,6 +393,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                             if (isDeletedAssistant) {
                                 try {
                                     const snapshot = await communityAssistantStorageService.getAssistantConfig(assistant_id);
+                                    if (isStale()) return;
                                     setAssistantSnapshot(isCompleteCommunityAssistantSnapshot(snapshot) ? snapshot : null);
                                 } catch (snapshotError) {
                                     console.error("Error loading deleted assistant snapshot:", snapshotError);
@@ -398,6 +407,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                                         communityAssistantStorageService,
                                         mapAssistantToCommunitySnapshot({ ...assistant, id: assistant_id })
                                     );
+                                    if (isStale()) return;
                                 } catch (snapshotError) {
                                     console.error("Error updating community assistant snapshot:", snapshotError);
                                 }
@@ -447,12 +457,14 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                         }
                     })
                     .catch(async err => {
+                        if (isStale()) return;
                         if (err instanceof ApiError && err.status === 403) {
                             // Access to a still-existing assistant was revoked. The locally stored
                             // snapshot keeps the chat reachable in a read-only view; without a
                             // snapshot the previous behavior applies.
                             try {
                                 const snapshot = await communityAssistantStorageService.getAssistantConfig(assistant_id);
+                                if (isStale()) return;
                                 if (isCompleteCommunityAssistantSnapshot(snapshot)) {
                                     const assistant = mapCommunitySnapshotToAssistant(snapshot);
                                     setAssistantSnapshot(snapshot);
@@ -482,6 +494,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                                 );
                                 // wait a moment before redirecting to home
                                 setTimeout(() => {
+                                    if (isStale()) return;
                                     window.location.href = "/";
                                 }, 2000);
                             }
@@ -493,11 +506,13 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                             );
                             // wait a moment before redirecting to home
                             setTimeout(() => {
+                                if (isStale()) return;
                                 window.location.href = "/";
                             }, 2000);
                         }
                     })
                     .finally(() => {
+                        if (isStale()) return;
                         setShowNotSubscribedDialog(notSubscribed && (accessDenied || !hasLocalChats));
                         setIsUnsubscribed(notSubscribed && !accessDenied && !configMissing && hasLocalChats);
                         setIsLoadingValue(false);

@@ -3,9 +3,11 @@ from fastapi import APIRouter, Depends
 from api.api_models import ConfigResponse, ModelsDTO
 from config.settings import ParserBackendType, get_settings
 from core.auth import authenticate_user
+from core.logtools import getLogger
 
 router = APIRouter()
 settings = get_settings()
+logger = getLogger(__name__)
 
 
 @router.get(
@@ -40,6 +42,12 @@ settings = get_settings()
 )
 async def get_config(user_info=Depends(authenticate_user)) -> ConfigResponse:
     """Builds the application config response (feature flags, versions, links and model list)."""
+    if settings.TRANSCRIPTION_ENABLED and not settings.TRANSCRIPTION_MODEL:
+        logger.warning(
+            "TRANSCRIPTION_ENABLED is turned on but TRANSCRIPTION_MODEL is not set; "
+            "transcription is disabled. There is no default — set TRANSCRIPTION_MODEL to an id "
+            "from the frontend's transcription model list."
+        )
     response = ConfigResponse(
         env_name=settings.ENV_NAME,
         alternative_logo=settings.ALTERNATIVE_LOGO,
@@ -50,8 +58,10 @@ async def get_config(user_info=Depends(authenticate_user)) -> ConfigResponse:
         # Keep the configured order: the frontend opens the first note by default.
         release_notes=[note.model_dump() for note in settings.RELEASE_NOTES],
         document_processing_enabled=settings.PARSER_BACKEND != ParserBackendType.NONE,
-        transcription_enabled=settings.TRANSCRIPTION_ENABLED,
-        transcription_default_model=settings.TRANSCRIPTION_DEFAULT_MODEL,
+        # Effective availability: a flag without a model cannot offer transcription.
+        transcription_enabled=settings.TRANSCRIPTION_ENABLED
+        and bool(settings.TRANSCRIPTION_MODEL),
+        transcription_model=settings.TRANSCRIPTION_MODEL,
         ai_act_compliance_check_enabled=settings.AI_ACT_COMPLIANCE_CHECK_ENABLED,
         footer_link_url=settings.FOOTER_LINK_URL,
         footer_label=settings.FOOTER_LABEL,

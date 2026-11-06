@@ -5,6 +5,8 @@
     flex-shrink: 0;
 }
 
+/* Mirrors the LLMSelector trigger: the greyed setup mic recedes like the model
+   picker next to it instead of competing with the input. */
 .micButton.busy {
     opacity: 0.6;
 }

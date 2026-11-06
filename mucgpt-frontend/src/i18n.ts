@@ -492,45 +492,28 @@ i18n
                             storage_error_other: "{{count}} Dokumente konnten nicht lokal gespeichert werden."
                         },
                         microphonebutton: {
-                            record: "Sprachaufnahme starten",
+                            record: "Spracheingabe starten",
                             stop: "Aufnahme beenden",
                             transcribing: "Transkribiere...",
                             loading_model: "Modell wird geladen..."
                         },
-                        transcriptionSettings: {
-                            title: "Transkription",
+                        transcription: {
                             beta: "Beta",
-                            open_tooltip: "Transkriptionseinstellungen öffnen",
-                            disclaimer:
-                                "Beta-Funktion: Die Transkriptionsqualität ist nicht validiert und kann je nach Sprache, Audioqualität und lokaler Hardware variieren. Das Modell läuft vollständig im Browser – keine Audiodaten verlassen dein Gerät.",
-                            webgpu_warning:
-                                "Dein Browser unterstützt kein WebGPU. Die Transkription läuft auf CPU (WebAssembly) und kann deutlich langsamer sein. Für beste Leistung verwende Chrome oder Edge (Version 113+).",
-                            webgpu_only_error:
-                                "Dieses Modell erfordert WebGPU, das in deinem Browser nicht verfügbar ist. Verwende Chrome oder Edge (Version 113+) oder wähle Whisper Small.",
-                            enable_label: "Transkription aktivieren",
-                            enable_hint: "Ist diese Option aktiv und ein Modell heruntergeladen, erscheint im Chat ein Mikrofon-Button.",
-                            model_label: "Modell",
-                            model_languages: "Sprachen: {{languages}}",
-                            languages: {
-                                de: "Deutsch",
-                                en: "Englisch",
-                                fr: "Französisch",
-                                es: "Spanisch",
-                                uk: "Ukrainisch"
-                            },
-                            model_ready: "bereit",
-                            downloading: "Modell wird heruntergeladen",
-                            cancel_download: "Download abbrechen",
+                            setup_tooltip: "Sprachmodell herunterladen",
                             download: "Modell herunterladen",
-                            recommended: "empfohlen",
-                            delete_model: "Modell löschen",
-                            clear_models: "Heruntergeladene Modelle löschen",
-                            clear_models_confirm_title: "Modelle löschen?",
-                            clear_models_confirm_message:
-                                "Alle heruntergeladenen Modelle werden von diesem Gerät entfernt. Zur weiteren Nutzung müssen sie erneut heruntergeladen werden.",
-                            confirm: "Löschen",
-                            cancel: "Abbrechen",
-                            close: "Schließen"
+                            retry: "Erneut versuchen",
+                            redownload: "Neu herunterladen",
+                            cancel_download: "Download abbrechen",
+                            downloading: "Modell wird heruntergeladen ({{progress}} %{{mb}})",
+                            loading: "Sprachmodell wird geladen …",
+                            load_timeout: "Sprachmodell konnte nicht geladen werden (Zeitüberschreitung).",
+                            not_downloaded_hint: "Läuft lokal im Browser · einmaliger Download nötig",
+                            unverified:
+                                "Das Sprachmodell ist bereits vorhanden, konnte aber nicht geladen werden. Der Zwischenspeicher könnte beschädigt sein.",
+                            webgpu_only_error: "Dieses Modell erfordert WebGPU, das in deinem Browser nicht verfügbar ist.",
+                            language_unsupported: "Die ausgewählte Sprache wird von diesem Sprachmodell nicht unterstützt.",
+                            size_hint: "Größe: {{size}}",
+                            delete_model: "Modell löschen"
                         },
                         suminput: {
                             tokensused: "Token verbraucht",
@@ -1490,45 +1473,27 @@ i18n
                             storage_error_other: "{{count}} documents could not be saved locally."
                         },
                         microphonebutton: {
-                            record: "Start voice recording",
+                            record: "Start speech input",
                             stop: "Stop recording",
                             transcribing: "Transcribing...",
                             loading_model: "Loading model..."
                         },
-                        transcriptionSettings: {
-                            title: "Transcription",
+                        transcription: {
                             beta: "Beta",
-                            open_tooltip: "Open transcription settings",
-                            disclaimer:
-                                "Beta feature: transcription quality is not validated and may vary with language, audio quality, and your local hardware. The model runs fully in your browser – no audio leaves your device.",
-                            webgpu_warning:
-                                "Your browser does not support WebGPU. Transcription will run on CPU (WebAssembly) and may be noticeably slower. For best performance, use Chrome or Edge (version 113+).",
-                            webgpu_only_error:
-                                "This model requires WebGPU, which is not available in your browser. Try Chrome or Edge (version 113+) or select Whisper Small.",
-                            enable_label: "Enable transcription",
-                            enable_hint: "When enabled and a model is downloaded, a microphone button appears in the chat.",
-                            model_label: "Model",
-                            model_languages: "Languages: {{languages}}",
-                            languages: {
-                                de: "German",
-                                en: "English",
-                                fr: "French",
-                                es: "Spanish",
-                                uk: "Ukrainian"
-                            },
-                            model_ready: "ready",
-                            downloading: "Model is downloading",
-                            cancel_download: "Cancel download",
+                            setup_tooltip: "Download the speech model",
                             download: "Download model",
-                            recommended: "Recommended",
-                            delete_model: "Delete model",
-                            clear_models: "Delete downloaded models",
-                            clear_models_confirm_title: "Delete models?",
-                            clear_models_confirm_message:
-                                "All downloaded models will be removed from this device. They must be downloaded again before they can be used.",
-                            confirm: "Delete",
-                            cancel: "Cancel",
-                            close: "Close"
+                            retry: "Try again",
+                            redownload: "Download again",
+                            cancel_download: "Cancel download",
+                            downloading: "Model is downloading ({{progress}} %{{mb}})",
+                            loading: "Loading speech model …",
+                            load_timeout: "The speech model could not be loaded (timeout).",
+                            not_downloaded_hint: "Runs locally in your browser · one-time download required",
+                            unverified: "The speech model is already present but could not be loaded. The cache might be corrupted.",
+                            webgpu_only_error: "This model requires WebGPU, which is not available in your browser.",
+                            language_unsupported: "The selected language is not supported by this speech model.",
+                            size_hint: "Size: {{size}}",
+                            delete_model: "Delete model"
                         },
                         suminput: {
                             tokensused: "Token used",
@@ -2452,44 +2417,27 @@ i18n
                             storage_error: "Dokument hod ned gspeichert wern kenna (Speicher voi)."
                         },
                         microphonebutton: {
-                            record: "Sprachaufnahm starten",
+                            record: "Sprocheingob startn",
                             stop: "Aufnahm beenden",
                             transcribing: "Transkribier...",
                             loading_model: "Modell wead gladn..."
                         },
-                        transcriptionSettings: {
-                            title: "Transkription",
+                        transcription: {
                             beta: "Beta",
-                            open_tooltip: "Transkriptions-Einstellunga aufmacha",
-                            disclaimer:
-                                "Beta-Funktion: D'Transkriptionsqualität is ned validiert und ko je noch Sproch, Audioqualität und lokala Hardware variiern. S'Modell läuft kompled im Browser – koa Audiodaten varoaßn dei Gerät.",
-                            webgpu_warning:
-                                "Dei Browser ko koa WebGPU. D'Transkription lafft afm CPU (WebAssembly) und ko deitli langsamer sei. Für de beste Leistung nimm Chrome oder Edge (Version 113+).",
-                            webgpu_only_error:
-                                "Des Modell braucht WebGPU, des in deim Browser ned verfügbar is. Nimm Chrome oder Edge (Version 113+) oder wähl Whisper Small.",
-                            enable_label: "Transkription aktivieren",
-                            enable_hint: "Is des aktiv und a Modell obagladn, erscheint im Ratsch a Mikrofon-Knopf.",
-                            model_label: "Modell",
-                            model_languages: "Sprachen: {{languages}}",
-                            languages: {
-                                de: "Deutsch",
-                                en: "Englisch",
-                                fr: "Französisch",
-                                es: "Spanisch",
-                                uk: "Ukrainisch"
-                            },
-                            model_ready: "bereit",
-                            downloading: "Modell wird heruntergeladen",
-                            cancel_download: "Download abbrecha",
+                            setup_tooltip: "Sprachmodell obaladn",
                             download: "Modell obaladn",
-                            recommended: "Empfohln",
-                            delete_model: "Modell wegdoa",
-                            clear_models: "Obaglane Modell wegdoa",
-                            clear_models_confirm_title: "Modell wegdoa?",
-                            clear_models_confirm_message: "Olle obaglanen Modell wern vo dem Gerät entfernt. Zum Nutzn miasn's wieda obagladn wern.",
-                            confirm: "Wegdoa",
-                            cancel: "Obbrecha",
-                            close: "Zuamacha"
+                            retry: "No amoi vasuacha",
+                            redownload: "Nei obaladn",
+                            cancel_download: "Download obbrecha",
+                            downloading: "Modell wiad obaladn ({{progress}} %{{mb}})",
+                            loading: "Sprachmodell wiad gladn …",
+                            load_timeout: "Des Sprachmodell kunnt ned gladn wern (Zeitibaschreitung).",
+                            not_downloaded_hint: "Lafft komplett im Browser · amoi obagladn nötig",
+                            unverified: "Des Sprachmodell is scho do, konnt aber ned gladn wern. Da Zwischaspeicha kunnt beschädigt sei.",
+                            webgpu_only_error: "Des Modell braucht WebGPU, des in deim Browser ned verfügbar is.",
+                            language_unsupported: "De auswohde Sproch werd von dem Sprachmodell ned unterstützt.",
+                            size_hint: "Greß: {{size}}",
+                            delete_model: "Modell löschn"
                         },
                         suminput: {
                             tokensused: "Token vabrocht",
@@ -3416,45 +3364,27 @@ i18n
                             storage_error: "Le document n'a pas pu être enregistré (stockage plein)."
                         },
                         microphonebutton: {
-                            record: "Démarrer l'enregistrement vocal",
+                            record: "Démarrer la saisie vocale",
                             stop: "Arrêter l'enregistrement",
                             transcribing: "Transcription en cours...",
                             loading_model: "Chargement du modèle..."
                         },
-                        transcriptionSettings: {
-                            title: "Transcription",
+                        transcription: {
                             beta: "Bêta",
-                            open_tooltip: "Ouvrir les paramètres de transcription",
-                            disclaimer:
-                                "Fonctionnalité bêta : la qualité de la transcription n'est pas validée et peut varier selon la langue, la qualité audio et votre matériel local. Le modèle s'exécute entièrement dans le navigateur – aucun audio ne quitte votre appareil.",
-                            webgpu_warning:
-                                "Votre navigateur ne prend pas en charge WebGPU. La transcription s'exécutera sur le CPU (WebAssembly) et peut être nettement plus lente. Pour de meilleures performances, utilisez Chrome ou Edge (version 113+).",
-                            webgpu_only_error:
-                                "Ce modèle nécessite WebGPU, qui n'est pas disponible dans votre navigateur. Utilisez Chrome ou Edge (version 113+) ou sélectionnez Whisper Small.",
-                            enable_label: "Activer la transcription",
-                            enable_hint: "Lorsque l'option est activée et qu'un modèle est téléchargé, un bouton microphone apparaît dans le chat.",
-                            model_label: "Modèle",
-                            model_ready: "prêt",
-                            downloading: "Téléchargement du modèle",
-                            cancel_download: "Annuler le téléchargement",
-                            model_languages: "Langues : {{languages}}",
-                            languages: {
-                                de: "Allemand",
-                                en: "Anglais",
-                                fr: "Français",
-                                es: "Espagnol",
-                                uk: "Ukrainien"
-                            },
+                            setup_tooltip: "Télécharger le modèle vocal",
                             download: "Télécharger le modèle",
-                            recommended: "Recommandé",
-                            delete_model: "Supprimer le modèle",
-                            clear_models: "Supprimer les modèles téléchargés",
-                            clear_models_confirm_title: "Supprimer les modèles ?",
-                            clear_models_confirm_message:
-                                "Tous les modèles téléchargés seront supprimés de cet appareil. Ils devront être téléchargés à nouveau pour être utilisés.",
-                            confirm: "Supprimer",
-                            cancel: "Annuler",
-                            close: "Fermer"
+                            retry: "Réessayer",
+                            redownload: "Télécharger à nouveau",
+                            cancel_download: "Annuler le téléchargement",
+                            downloading: "Téléchargement du modèle ({{progress}} %{{mb}})",
+                            loading: "Chargement du modèle vocal …",
+                            load_timeout: "Le modèle vocal n'a pas pu être chargé (délai dépassé).",
+                            not_downloaded_hint: "S'exécute entièrement dans votre navigateur · téléchargement unique requis",
+                            unverified: "Le modèle vocal est déjà présent mais n'a pas pu être chargé. Le cache est peut-être corrompu.",
+                            webgpu_only_error: "Ce modèle nécessite WebGPU, qui n'est pas disponible dans votre navigateur.",
+                            language_unsupported: "La langue sélectionnée n'est pas prise en charge par ce modèle vocal.",
+                            size_hint: "Taille : {{size}}",
+                            delete_model: "Supprimer le modèle"
                         },
                         suminput: {
                             tokensused: "Tokens utilisés",
@@ -4374,45 +4304,27 @@ i18n
                             storage_error: "Документ не вдалося зберегти (сховище переповнене)."
                         },
                         microphonebutton: {
-                            record: "Почати голосовий запис",
+                            record: "Почати мовний ввід",
                             stop: "Зупинити запис",
                             transcribing: "Транскрибування...",
                             loading_model: "Завантаження моделі..."
                         },
-                        transcriptionSettings: {
-                            title: "Транскрипція",
+                        transcription: {
                             beta: "Бета",
-                            open_tooltip: "Відкрити налаштування транскрипції",
-                            disclaimer:
-                                "Бета-функція: якість транскрипції не перевірена і може залежати від мови, якості звуку та локального обладнання. Модель працює повністю у браузері – аудіо не залишає ваш пристрій.",
-                            webgpu_warning:
-                                "Ваш браузер не підтримує WebGPU. Транскрипція виконуватиметься на CPU (WebAssembly) і може бути помітно повільнішою. Для найкращої продуктивності використовуйте Chrome або Edge (версія 113+).",
-                            webgpu_only_error:
-                                "Ця модель потребує WebGPU, яке недоступне у вашому браузері. Спробуйте Chrome або Edge (версія 113+) або виберіть Whisper Small.",
-                            enable_label: "Увімкнути транскрипцію",
-                            enable_hint: "Якщо увімкнено й модель завантажено, у чаті з'явиться кнопка мікрофона.",
-                            model_label: "Модель",
-                            model_ready: "готова",
-                            downloading: "Модель завантажується",
-                            cancel_download: "Скасувати завантаження",
+                            setup_tooltip: "Завантажити мовну модель",
                             download: "Завантажити модель",
-                            recommended: "Рекомендовано",
-                            delete_model: "Видалити модель",
-                            clear_models: "Видалити завантажені моделі",
-                            clear_models_confirm_title: "Видалити моделі?",
-                            clear_models_confirm_message:
-                                "Усі завантажені моделі буде видалено з цього пристрою. Щоб скористатися ними, потрібно завантажити їх знову.",
-                            confirm: "Видалити",
-                            cancel: "Скасувати",
-                            model_languages: "Мови: {{languages}}",
-                            languages: {
-                                de: "Німецька",
-                                en: "Англійська",
-                                fr: "Французька",
-                                es: "Іспанська",
-                                uk: "Українська"
-                            },
-                            close: "Закрити"
+                            retry: "Спробувати знову",
+                            redownload: "Завантажити знову",
+                            cancel_download: "Скасувати завантаження",
+                            downloading: "Модель завантажується ({{progress}} %{{mb}})",
+                            loading: "Завантаження мовної моделі …",
+                            load_timeout: "Мовну модель не вдалося завантажити (перевищено час).",
+                            not_downloaded_hint: "Працює повністю у браузері · разове завантаження",
+                            unverified: "Мовна модель уже є, але не вдалося її завантажити. Можливо, кеш пошкоджено.",
+                            webgpu_only_error: "Ця модель потребує WebGPU, яке недоступне у вашому браузері.",
+                            language_unsupported: "Обрана мова не підтримується цією мовною моделлю.",
+                            size_hint: "Розмір: {{size}}",
+                            delete_model: "Видалити модель"
                         },
                         suminput: {
                             tokensused: "Використано токени",

@@ -41,7 +41,7 @@ export const DEFAULT_APP_CONFIG: ApplicationConfig = {
     release_notes: [],
     document_processing_enabled: false,
     transcription_enabled: false,
-    transcription_default_model: null,
+    transcription_model: null,
     ai_act_compliance_check_enabled: true,
     ag_ui_enabled: false,
     canvas_content_max_chars: 256 * 1024,

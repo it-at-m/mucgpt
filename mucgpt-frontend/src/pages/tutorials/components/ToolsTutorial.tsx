@@ -113,6 +113,7 @@ const TutorialQuestionInput = ({
                 selectedTools={selectedTools}
                 setSelectedTools={setSelectedTools}
                 tools={tools}
+                transcriptionDisabled
             />
         </>
     );

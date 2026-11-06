@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { DEFAULT_TRANSCRIPTION_MODEL, TRANSCRIPTION_MODELS, orderModelsWithDefaultFirst } from "./transcriptionModels";
+import { TRANSCRIPTION_MODELS, findTranscriptionModel } from "./transcriptionModels";
 
 describe("TRANSCRIPTION_MODELS", () => {
     it("contains unique model ids", () => {
@@ -7,9 +7,8 @@ describe("TRANSCRIPTION_MODELS", () => {
         expect(new Set(ids).size).toBe(ids.length);
     });
 
-    it("has a non-empty list with the browser default present", () => {
+    it("has a non-empty registry", () => {
         expect(TRANSCRIPTION_MODELS.length).toBeGreaterThan(0);
-        expect(TRANSCRIPTION_MODELS.map(m => m.model_id)).toContain(DEFAULT_TRANSCRIPTION_MODEL);
     });
 
     it("labels and size hints are set for every model", () => {
@@ -19,11 +18,11 @@ describe("TRANSCRIPTION_MODELS", () => {
         }
     });
 
-    it("webgpu_only models are marked explicitly and not the default", () => {
+    it("webgpu_only models are marked explicitly and none is the recommended WASM default", () => {
         const webgpuOnly = TRANSCRIPTION_MODELS.filter(m => m.webgpu_only);
         expect(webgpuOnly.length).toBeGreaterThan(0);
         for (const model of webgpuOnly) {
-            expect(model.model_id).not.toBe(DEFAULT_TRANSCRIPTION_MODEL);
+            expect(model.model_id).not.toBe("istupakov/canary-180m-flash-onnx");
         }
     });
 
@@ -60,19 +59,15 @@ describe("TRANSCRIPTION_MODELS", () => {
     });
 });
 
-describe("orderModelsWithDefaultFirst", () => {
-    it("moves the given model to the front and keeps the remaining order stable", () => {
-        const defaultId = "istupakov/canary-180m-flash-onnx";
-        const ordered = orderModelsWithDefaultFirst(TRANSCRIPTION_MODELS, defaultId);
-        expect(ordered[0].model_id).toBe(defaultId);
-        expect(ordered.map(m => m.model_id).sort()).toEqual(TRANSCRIPTION_MODELS.map(m => m.model_id).sort());
-        const expectedRest = TRANSCRIPTION_MODELS.filter(m => m.model_id !== defaultId).map(m => m.model_id);
-        expect(ordered.slice(1).map(m => m.model_id)).toEqual(expectedRest);
-        expect(ordered).not.toBe(TRANSCRIPTION_MODELS);
+describe("findTranscriptionModel", () => {
+    it("finds entries by their exact id", () => {
+        const model = findTranscriptionModel("istupakov/canary-180m-flash-onnx");
+        expect(model?.model_id).toBe("istupakov/canary-180m-flash-onnx");
+        expect(model?.label).toBe("NVIDIA Canary 180M Flash");
     });
 
-    it("leaves the list untouched for an unknown or already-first default", () => {
-        expect(orderModelsWithDefaultFirst(TRANSCRIPTION_MODELS, "does/not-exist")).toBe(TRANSCRIPTION_MODELS);
-        expect(orderModelsWithDefaultFirst(TRANSCRIPTION_MODELS, DEFAULT_TRANSCRIPTION_MODEL)).toBe(TRANSCRIPTION_MODELS);
+    it("returns undefined for unknown ids (including prefix collisions)", () => {
+        expect(findTranscriptionModel("does/not-exist")).toBeUndefined();
+        expect(findTranscriptionModel("onnx-community/whisper-large-v3-turbo-german-ONNX-exist")).toBeUndefined();
     });
 });

@@ -340,7 +340,6 @@ const Home = () => {
                         setSelectedTools={setSelectedTools}
                         tools={tools}
                         question={question}
-                        onTranscription={text => setQuestion(text)}
                         llmOptions={availableLLMs}
                         selectedLLM={LLM.llm_name}
                         onLLMSelectionChange={onLLMSelectionChange}

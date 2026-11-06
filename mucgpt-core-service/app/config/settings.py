@@ -574,14 +574,17 @@ class Settings(BaseSettings):
 
     # Frontend feature flags
     # Enables the browser-based speech-to-text UI. Transcription runs fully
-    # client-side; the backend only gates the feature via this flag and serves
-    # the model list from the frontend bundle (no audio is uploaded).
+    # client-side; the backend only gates the feature via this flag and announces
+    # the single transcription model, whose id must match an entry of the
+    # frontend's TRANSCRIPTION_MODELS list (no audio is uploaded).
     TRANSCRIPTION_ENABLED: bool = False
-    # Hugging Face model id (see the frontend TRANSCRIPTION_MODELS list) that
-    # is preselected for users who have not picked a model yet. Unknown ids are
-    # ignored by the frontend, which then falls back to its built-in default.
-    # None means "use the frontend's built-in default".
-    TRANSCRIPTION_DEFAULT_MODEL: str | None = None
+    # The one Hugging Face model id (see the frontend TRANSCRIPTION_MODELS list)
+    # used for transcription by every user. There is no default and no fallback:
+    # core and frontend are updated in sync, and an unset id simply keeps the
+    # feature disabled. Defaults to the NVIDIA Canary 180M Flash ONNX export in
+    # the examples below: multilingual (en/de/fr/es), good German WER, and it
+    # runs entirely on WASM — no WebGPU needed.
+    TRANSCRIPTION_MODEL: str | None = None
     AI_ACT_COMPLIANCE_CHECK_ENABLED: bool = True
     COMPLIANCE_CACHE_ENABLED: bool = True
     COMPLIANCE_CACHE_TTL_SECONDS: PositiveInt = 30 * 60

@@ -564,8 +564,6 @@ class CanvasCustomAgent:
 
 @pytest.mark.asyncio
 async def test_run_agui_streams_canvas_chunks_as_custom_events(monkeypatch):
-@pytest.mark.asyncio
-async def test_agui_stream_hides_internal_model_calls(monkeypatch):
     langfuse_client = FakeLangfuseClient()
     monkeypatch.setattr("agent.agent_executor.get_client", lambda: langfuse_client)
     monkeypatch.setattr(
@@ -599,6 +597,16 @@ async def test_agui_stream_hides_internal_model_calls(monkeypatch):
     traced_custom = [e for e in traced if e["stream"] == "custom"]
     assert any(e["content"]["tool_name"] == "Canvas" for e in traced_custom)
     assert CANVAS_DOC not in json.dumps(traced_custom)
+
+
+@pytest.mark.asyncio
+async def test_agui_stream_hides_internal_model_calls(monkeypatch):
+    langfuse_client = FakeLangfuseClient()
+    monkeypatch.setattr("agent.agent_executor.get_client", lambda: langfuse_client)
+    monkeypatch.setattr(
+        "agent.agent_executor.propagate_attributes",
+        lambda **_kwargs: nullcontext(),
+    )
     runner = MUCGPTAgentExecutor(StreamingAgent())
 
     events = [

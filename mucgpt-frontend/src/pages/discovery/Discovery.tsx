@@ -19,6 +19,7 @@ import { OwnerMetadataLink, getPrimaryOwnerDetails } from "../../components/Owne
 import { AssistantDetailsSidebar, AssistantCardData } from "../../components/AssistantDetailsSidebar/AssistantDetailsSidebar";
 import { CloseConfirmationDialog } from "../../components/AssistantDialogs/shared/CloseConfirmationDialog";
 import { PendingCreateDraftConfirmDialog } from "../../components/AssistantDialogs/shared/PendingCreateDraftConfirmDialog";
+import { clearPendingAfterCreateAction } from "../../components/AssistantDialogs/shared/afterCreateAction";
 import { useUnifiedHistory } from "../../components/UnifiedHistory";
 import { useDuplicateAssistant } from "./hooks/useDuplicateAssistant";
 import { useDiscoveryAssistantLists } from "./hooks/useDiscoveryAssistantLists";
@@ -230,6 +231,9 @@ const Discovery = () => {
 
     const openImportedDraft = useCallback(
         (draft: CreateAssistantDraftValues) => {
+            // The imported draft replaces any previous create draft, so its pending
+            // after-create action must not survive into the import flow.
+            clearPendingAfterCreateAction();
             if (!saveCreateAssistantDraft(draft)) {
                 showError(t("components.import_assistant.import_error"), t("components.import_assistant.import_failed"));
                 return;

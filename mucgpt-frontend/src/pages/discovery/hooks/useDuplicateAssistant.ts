@@ -122,6 +122,13 @@ export const useDuplicateAssistant = () => {
         setPendingDeletedSnapshot(null);
     }, [pendingDeletedSnapshot, startDeletedAssistantDraft]);
 
+    const handleDraftOverwriteChange = useCallback((open: boolean) => {
+        setShowDraftOverwriteConfirm(open);
+        if (!open) {
+            setPendingDeletedSnapshot(null);
+        }
+    }, []);
+
     const openExistingDraft = useCallback(() => {
         setPendingDeletedSnapshot(null);
         navigate("/assistant/create");
@@ -185,7 +192,7 @@ export const useDuplicateAssistant = () => {
         confirmDuplicateAssistant,
         resolveAssistantData,
         showDraftOverwriteConfirm,
-        setShowDraftOverwriteConfirm,
+        setShowDraftOverwriteConfirm: handleDraftOverwriteChange,
         confirmDraftOverwrite,
         openExistingDraft
     };

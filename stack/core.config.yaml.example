@@ -104,7 +104,7 @@ MCP:
       transport: "sse"
       forward_token: false
       group: "organization-docs"
-      descriptions:
+      overrides:
         - name: "fetch_docs"
           description: "Loads information from a specific documentation URL. Always provide the complete URL."
         - name: "list_doc_sources"
@@ -123,9 +123,10 @@ MCP:
         x-litellm-api-key: "<your-api-key>"
       group: "name"
       # Example tool description overrides.
-      descriptions:
+      overrides:
         - name: "tool-name"
           description: "detailed tool description"
+          group: "extra group in ui"
         # ...
   CACHE_TTL: 123
 

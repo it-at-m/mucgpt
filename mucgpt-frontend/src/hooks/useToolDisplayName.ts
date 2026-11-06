@@ -3,7 +3,7 @@ import { useToolsContext } from "../components/ToolsProvider";
 
 /**
  * Maps a tool call name (the tool id) to the name shown to users.
- * MCP tools use their group from the core config (MCP.SOURCES.<source>.group / tool_groups),
+ * MCP tools use their group from the core config (MCP.SOURCES.<source>.group / overrides),
  * since raw MCP tool names like "searxng_web_search" are not meant for users.
  * Local tools keep their localized name. Unknown tools fall back to the id.
  */

@@ -189,7 +189,6 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
         if (!isEditMode || isAssistantContentLoading || (canEdit && !isLegacyAssistant)) return;
         navigate(location.pathname.replace(/\/edit$/, ""), { replace: true });
     }, [isEditMode, isAssistantContentLoading, canEdit, isLegacyAssistant, navigate, location.pathname]);
-    const mergeLockedToolIds = useCallback((toolIds: string[]) => Array.from(new Set([...lockedToolIds, ...toolIds])), [lockedToolIds]);
     const setLastQuestionValue = useCallback((value: string) => {
         lastQuestionRef.current = value;
         setLastQuestion(value);
@@ -238,15 +237,11 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
         );
     }, [navigate]);
     const setSelectedToolsGuarded = useCallback(
-        (value: React.SetStateAction<string[]>) => {
-            setSelectedTools(prev => {
-                const next = typeof value === "function" ? value(prev) : value;
-                const merged = mergeLockedToolIds(next);
-
-                return merged.length === prev.length && merged.every((toolId, index) => toolId === prev[index]) ? prev : merged;
-            });
+        (_value: React.SetStateAction<string[]>) => {
+            void _value;
+            setSelectedTools(lockedToolIds);
         },
-        [mergeLockedToolIds]
+        [lockedToolIds]
     );
 
     // Canvas ↔ chat wiring, mirroring Chat.tsx: request state,
@@ -558,7 +553,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                     isLoadingRef,
                     fetchHistory,
                     assistant_id,
-                    selectedTools,
+                    lockedToolIds,
                     setToolStatuses,
                     dataSources,
                     lastAnswerRef,
@@ -584,7 +579,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
             fetchHistory,
             systemPrompt,
             creativity,
-            selectedTools,
+            lockedToolIds,
             setIsLoadingValue,
             setLastQuestionValue,
             isLegacyAssistant,
@@ -948,7 +943,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                         selectedTools={selectedTools}
                         setSelectedTools={setSelectedToolsGuarded}
                         tools={tools}
-                        allowToolSelection={true}
+                        allowToolSelection={false}
                         lockedToolIds={lockedToolIds}
                         uploadedData={uploadedData}
                         setUploadedData={setUploadedData}
@@ -993,7 +988,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                 selectedTools={selectedTools}
                 setSelectedTools={setSelectedToolsGuarded}
                 tools={tools}
-                allowToolSelection={true}
+                allowToolSelection={false}
                 lockedToolIds={lockedToolIds}
                 uploadedData={uploadedData}
                 setUploadedData={setUploadedData}

@@ -40,7 +40,10 @@ interface Props {
     setUploadedData?: Dispatch<SetStateAction<UploadedData[]>>;
     draftCacheKey?: string;
     skipDraftRestore?: boolean;
+    /** Optional notification callback for a final transcript. The transcript itself is merged into `question` automatically. */
     onTranscription?: (text: string) => void;
+    /** Explicitly hides the microphone on inputs where speech input makes no sense (e.g. demo/tutorial inputs). */
+    transcriptionDisabled?: boolean;
     usage?: ChatUsageSummary;
     onStartNewChat?: () => void;
     usageConversationKey?: string;
@@ -70,6 +73,7 @@ export const QuestionInput = ({
     draftCacheKey,
     skipDraftRestore = false,
     onTranscription,
+    transcriptionDisabled = false,
     usage,
     onStartNewChat,
     usageConversationKey,
@@ -521,7 +525,7 @@ export const QuestionInput = ({
                                 lockedByAssistant={llmLockedByAssistant}
                             />
                         )}
-                        {allowTranscription && onTranscription && (
+                        {allowTranscription && !transcriptionDisabled && (
                             <MicrophoneButton
                                 onRecordingStart={() => {
                                     recordingBaseRef.current = question;
@@ -529,12 +533,12 @@ export const QuestionInput = ({
                                 onLiveTranscription={text => {
                                     const full = recordingBaseRef.current ? `${recordingBaseRef.current} ${text}` : text;
                                     setQuestion(full);
-                                    onTranscription(full);
+                                    onTranscription?.(full);
                                 }}
                                 onTranscription={text => {
                                     const full = recordingBaseRef.current ? `${recordingBaseRef.current} ${text}` : text;
                                     setQuestion(full);
-                                    onTranscription(full);
+                                    onTranscription?.(full);
                                 }}
                                 disabled={disabled}
                             />

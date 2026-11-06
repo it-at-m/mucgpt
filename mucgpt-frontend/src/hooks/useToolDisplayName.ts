@@ -13,7 +13,7 @@ export const useToolDisplayName = () => {
         (toolId: string) => {
             const tool = tools?.tools.find(candidate => candidate.id === toolId);
             if (!tool) return toolId;
-            return (tool.mcp_source && tool.mcp_group) || tool.name;
+            return tool.mcp_group || tool.name;
         },
         [tools]
     );

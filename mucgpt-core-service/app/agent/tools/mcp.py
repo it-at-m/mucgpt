@@ -338,6 +338,7 @@ class McpLoader:
             "mcp_source": source_id,
             "mcp_group": McpLoader._resolve_group(
                 tool_name=wrapped_tool.name,
+                source_id=source_id,
                 source_config=source_config,
             ),
         }
@@ -397,15 +398,20 @@ class McpLoader:
         return tools
 
     @staticmethod
-    def _resolve_group(tool_name: str, source_config: MCPSourceConfig) -> str | None:
-        """Resolve the group for a tool: check tool_groups prefixes first, fall back to group."""
+    def _resolve_group(
+        tool_name: str, source_id: str, source_config: MCPSourceConfig
+    ) -> str:
+        """Resolve the group for a tool: tool_groups prefixes first, then group, then the source id.
+
+        Every MCP tool belongs to a group because users only ever see and select groups.
+        """
         tool_groups = getattr(source_config, "tool_groups", None)
         if tool_groups:
             lowered = tool_name.lower()
             for prefix, group in tool_groups.items():
                 if lowered.startswith(prefix.lower()):
                     return group
-        return getattr(source_config, "group", None)
+        return getattr(source_config, "group", None) or source_id
 
 
 class McpBearerAuthProvider(Auth):

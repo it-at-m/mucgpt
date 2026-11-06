@@ -95,6 +95,8 @@ LANGFUSE:
 
 # MCP Settings (Model Context Protocol)
 # Used by core service for external tool integration
+# Users only see and select tool groups (group / tool_groups, default: the source id).
+# Enabling a group enables all of its tools.
 MCP:
   SOURCES:
     "organization-docs":

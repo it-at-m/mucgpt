@@ -18,6 +18,7 @@ import { StarterPromptModel } from "../../components/StarterPrompt";
 import { OwnerMetadataLink, getPrimaryOwnerDetails } from "../../components/OwnerMetadataLink/OwnerMetadataLink";
 import { AssistantDetailsSidebar, AssistantCardData } from "../../components/AssistantDetailsSidebar/AssistantDetailsSidebar";
 import { CloseConfirmationDialog } from "../../components/AssistantDialogs/shared/CloseConfirmationDialog";
+import { PendingCreateDraftConfirmDialog } from "../../components/AssistantDialogs/shared/PendingCreateDraftConfirmDialog";
 import { useUnifiedHistory } from "../../components/UnifiedHistory";
 import { useDuplicateAssistant } from "./hooks/useDuplicateAssistant";
 import { useDiscoveryAssistantLists } from "./hooks/useDiscoveryAssistantLists";
@@ -135,7 +136,11 @@ const Discovery = () => {
         setShowDuplicateConfirm,
         requestDuplicateAssistant,
         confirmDuplicateAssistant,
-        resolveAssistantData
+        resolveAssistantData,
+        showDraftOverwriteConfirm,
+        setShowDraftOverwriteConfirm,
+        confirmDraftOverwrite,
+        openExistingDraft
     } = useDuplicateAssistant();
 
     const {
@@ -875,22 +880,22 @@ const Discovery = () => {
                 )}
                 confirmLabel={t("components.community_assistants.duplicate_confirm_action")}
             />
-            <CloseConfirmationDialog
+            <PendingCreateDraftConfirmDialog
+                open={showDraftOverwriteConfirm}
+                onOpenChange={setShowDraftOverwriteConfirm}
+                onOverwrite={confirmDraftOverwrite}
+                onOpenExistingDraft={openExistingDraft}
+                message={t("components.community_assistants.draft_overwrite_message")}
+            />
+            <PendingCreateDraftConfirmDialog
                 open={pendingImportDraft !== null}
                 onOpenChange={open => {
                     if (!open) setPendingImportDraft(null);
                 }}
-                onConfirmClose={() => {
+                onOverwrite={() => {
                     if (pendingImportDraft) openImportedDraft(pendingImportDraft);
                 }}
-                title={t("components.import_assistant.draft_exists_title")}
-                message={t("components.import_assistant.draft_exists_message")}
-                confirmLabel={t("components.import_assistant.draft_exists_overwrite")}
-                confirmIntent="danger"
-                secondaryAction={{
-                    label: t("components.import_assistant.draft_exists_open"),
-                    onClick: () => navigate("/assistant/create")
-                }}
+                onOpenExistingDraft={() => navigate("/assistant/create")}
             />
             {isMockMode && (
                 <CloseConfirmationDialog

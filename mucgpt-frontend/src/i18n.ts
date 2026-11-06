@@ -894,6 +894,8 @@ i18n
                             duplicate_confirm_message_deleted:
                                 'Der ursprüngliche Assistent "{{title}}" ist nicht mehr verfügbar. Wenn du weiter damit arbeiten möchtest, kannst du jetzt eine eigene Kopie aus der zuletzt gespeicherten Version erstellen.',
                             duplicate_confirm_action: "Kopie erstellen",
+                            draft_overwrite_message:
+                                "Du hast bereits einen ungespeicherten Assistenten-Entwurf. Wenn du fortfährst, wird dieser Entwurf überschrieben.",
                             duplicate_success_title: "Assistent dupliziert",
                             duplicate_success_message: 'Der Assistent "{{title}}" wurde erfolgreich dupliziert.',
                             duplicate_failed_title: "Assistent konnte nicht dupliziert werden",
@@ -1837,6 +1839,7 @@ i18n
                             duplicate_confirm_message_deleted:
                                 'The original assistant "{{title}}" is no longer available. If you want to keep using it, you can create your own copy now from the last cached version.',
                             duplicate_confirm_action: "Create copy",
+                            draft_overwrite_message: "You already have an unsaved assistant draft. If you continue, this draft will be overwritten.",
                             duplicate_success_title: "Assistant duplicated",
                             duplicate_success_message: 'The assistant "{{title}}" was duplicated successfully.',
                             duplicate_failed_title: "Assistant could not be duplicated",
@@ -2745,6 +2748,7 @@ i18n
                             duplicate_confirm_message_deleted:
                                 'Da ursprüngliche Assistent "{{title}}" is nimmer verfuegbar. Wennst weitermacha mogst, koanst jetz a eigene Kopie aus da zletzt gspeicherten Version erstoin.',
                             duplicate_confirm_action: "Kopie erstoin",
+                            draft_overwrite_message: "Du host scho an ungspeichertn Assistentn-Entwurf. Wenn du weidamachst, wead der Entwurf überschriebn.",
                             duplicate_success_title: "Assistent dupliziert",
                             duplicate_success_message: 'Da Assistent "{{title}}" is erfolgreich dupliziert worn.',
                             duplicate_failed_title: "Assistent hod ned dupliziert wern kina",
@@ -3659,6 +3663,7 @@ i18n
                             duplicate_confirm_message: `Vous pouvez continuer à utiliser "{{title}}" sans créer votre propre copie. Voulez-vous quand même en créer une ? Les modifications futures de l'assistant d'origine ne seront pas appliquées à votre copie.`,
                             duplicate_confirm_message_deleted: `L'assistant d'origine "{{title}}" n'est plus disponible. Si vous voulez continuer à l'utiliser, vous pouvez créer maintenant votre propre copie à partir de la dernière version en cache.`,
                             duplicate_confirm_action: "Créer la copie",
+                            draft_overwrite_message: "Vous avez déjà un brouillon d'assistant non enregistré. Si vous continuez, ce brouillon sera écrasé.",
                             duplicate_success_title: "Assistant dupliqué",
                             duplicate_success_message: `L'assistant "{{title}}" a été dupliqué avec succès.`,
                             duplicate_failed_title: "L'assistant n'a pas pu être dupliqué",
@@ -4575,6 +4580,7 @@ i18n
                             duplicate_confirm_message_deleted:
                                 'Оригінальний асистент "{{title}}" більше недоступний. Якщо ви хочете й далі ним користуватися, зараз можна створити власну копію з останньої кешованої версії.',
                             duplicate_confirm_action: "Створити копію",
+                            draft_overwrite_message: "У вас вже є незбережена чернетка асистента. Якщо продовжите, цю чернетку буде перезаписано.",
                             duplicate_success_title: "Асистента дубльовано",
                             duplicate_success_message: 'Асистента "{{title}}" успішно дубльовано.',
                             duplicate_failed_title: "Не вдалося дублювати асистента",

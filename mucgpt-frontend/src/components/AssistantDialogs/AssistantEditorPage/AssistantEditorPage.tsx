@@ -50,7 +50,10 @@ import {
     VisibilitySection,
     ReviewSection,
     ExpandableTextarea,
-    CloseConfirmationDialog
+    CloseConfirmationDialog,
+    clearPendingAfterCreateAction,
+    consumePendingAfterCreateAction,
+    executeAfterCreateAction
 } from "../shared";
 import { AssistantStrategy } from "../../../pages/assistant/AssistantStrategy";
 import { CREATIVITY_LOW } from "../../../constants";
@@ -391,7 +394,10 @@ export const AssistantEditorPage = (props: AssistantEditorPageProps) => {
             setDiscardTarget("back");
             setDiscardOpen(true);
         } else {
-            if (isCreate) createState.resetAll();
+            if (isCreate) {
+                createState.resetAll();
+                clearPendingAfterCreateAction();
+            }
             navigate(-1);
         }
     }, [isCreate, createState.hasChanges, createState.resetAll, editState.hasChanged, navigate]);
@@ -400,6 +406,7 @@ export const AssistantEditorPage = (props: AssistantEditorPageProps) => {
         setDiscardOpen(false);
         if (isCreate) {
             createState.resetAll();
+            clearPendingAfterCreateAction();
         } else {
             editState.resetToOriginal();
         }
@@ -472,6 +479,18 @@ export const AssistantEditorPage = (props: AssistantEditorPageProps) => {
                 }
 
                 if (response?.id) {
+                    // An optional pending after-create action (e.g. re-attaching the chats of a deleted
+                    // assistant) runs best-effort: on failure the chats simply stay orphaned and visible
+                    // in Discovery, so it must not block the created assistant.
+                    const afterCreateAction = consumePendingAfterCreateAction();
+                    if (afterCreateAction) {
+                        try {
+                            await executeAfterCreateAction(afterCreateAction, response.id);
+                        } catch (reAttachError) {
+                            console.error("Failed to run the pending after-create action", reAttachError);
+                        }
+                    }
+
                     showSuccess(
                         t("components.assistant_editor.assistant_saved_success"),
                         t("components.assistant_editor.assistant_saved_message", { title: assistantTitle })

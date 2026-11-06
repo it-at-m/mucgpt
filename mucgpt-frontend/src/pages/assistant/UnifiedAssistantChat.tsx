@@ -42,6 +42,7 @@ import {
 import { useDuplicateAssistant } from "../discovery/hooks/useDuplicateAssistant";
 import { useMigrateLocalAssistant } from "../../hooks/useMigrateLocalAssistant";
 import { CloseConfirmationDialog } from "../../components/AssistantDialogs/shared/CloseConfirmationDialog";
+import { PendingCreateDraftConfirmDialog } from "../../components/AssistantDialogs/shared/PendingCreateDraftConfirmDialog";
 import { UploadedData } from "../../components/ContextManagerDialog/ContextManagerDialog";
 import { useConfigContext } from "../../context/ConfigContext";
 import { useToolStatusToasts } from "../../hooks/useToolStatusToasts";
@@ -134,8 +135,18 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
     const isLocalAssistant = strategy instanceof LocalAssistantStrategy;
     // Missing config or lapsed subscription: history stays viewable, but the chat is read-only.
     const historyReadOnly = isDeletedAssistant || isUnsubscribed || isAssistantMissing;
-    const { assistantToDuplicate, showDuplicateConfirm, isDuplicating, setShowDuplicateConfirm, requestDuplicateAssistant, confirmDuplicateAssistant } =
-        useDuplicateAssistant();
+    const {
+        assistantToDuplicate,
+        showDuplicateConfirm,
+        isDuplicating,
+        setShowDuplicateConfirm,
+        requestDuplicateAssistant,
+        confirmDuplicateAssistant,
+        showDraftOverwriteConfirm,
+        setShowDraftOverwriteConfirm,
+        confirmDraftOverwrite,
+        openExistingDraft
+    } = useDuplicateAssistant();
     // Sync info drawer state to body class so Layout.module.css can offset the footer
     useEffect(() => {
         document.body.classList.toggle("info-drawer-open", isInfoDrawerOpen);
@@ -1286,6 +1297,13 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                     { title: assistantToDuplicate?.title ?? "" }
                 )}
                 confirmLabel={t("components.community_assistants.duplicate_confirm_action")}
+            />
+            <PendingCreateDraftConfirmDialog
+                open={showDraftOverwriteConfirm}
+                onOpenChange={setShowDraftOverwriteConfirm}
+                onOverwrite={confirmDraftOverwrite}
+                onOpenExistingDraft={openExistingDraft}
+                message={t("components.community_assistants.draft_overwrite_message")}
             />
             <CloseConfirmationDialog
                 open={showDeleteConfirm}

@@ -1,47 +1,55 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useContext, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { createCommunityAssistantApi, duplicateCommunityAssistantApi, getCommunityAssistantApi } from "../../../api/assistant-client";
+import { duplicateCommunityAssistantApi, getCommunityAssistantApi } from "../../../api/assistant-client";
 import { AssistantResponse, CommunityAssistantSnapshot } from "../../../api/models";
 import { ApiError } from "../../../api/fetch-utils";
 import { useGlobalToastContext } from "../../../components/GlobalToastHandler/GlobalToastContext";
-import { ASSISTANT_STORE, COMMUNITY_ASSISTANT_STORE } from "../../../constants";
-import { AssistantStorageService } from "../../../service/assistantstorage";
+import { LLMContext } from "../../../components/LLMSelector/LLMContextProvider";
+import { useToolsContext } from "../../../components/ToolsProvider";
+import { hasCreateAssistantDraft, saveCreateAssistantDraft } from "../../../components/AssistantDialogs/shared/hooks/useCreateAssistantState";
+import { buildCreateDraftFromDeletedSnapshot } from "../../../components/AssistantDialogs/shared/deletedAssistantDraft";
+import { setPendingAfterCreateAction, clearPendingAfterCreateAction } from "../../../components/AssistantDialogs/shared/afterCreateAction";
+import { ConfigContext } from "../../../context/ConfigContext";
+import { COMMUNITY_ASSISTANT_STORE } from "../../../constants";
 import { CommunityAssistantStorageService } from "../../../service/communityassistantstorage";
-import {
-    isCompleteCommunityAssistantSnapshot,
-    mapCommunityConfigToAssistantCreateInput,
-    mapCommunitySnapshotToCommunityConfig,
-    resolveDeletedCommunityAssistantSnapshot
-} from "../../../utils/community-assistant-snapshots";
+import { isCompleteCommunityAssistantSnapshot, resolveDeletedCommunityAssistantSnapshot } from "../../../utils/community-assistant-snapshots";
 
 export interface DuplicateAssistantCandidate {
     id: string;
     title: string;
     rawData?: AssistantResponse | CommunityAssistantSnapshot;
-    isDeletedSnapshot?: boolean;
+    /** True when the source is a locally stored snapshot (deleted or inaccessible assistant) instead of a live assistant. */
+    isLocalSnapshot?: boolean;
+    /** Why the source is only available as a local snapshot; selects the confirm-dialog message. */
+    snapshotReason?: "deleted" | "revoked";
 }
+
+/** Selects the i18n key for the duplicate-confirm dialog message based on the candidate's source. */
+export const duplicateConfirmMessageKey = (candidate: DuplicateAssistantCandidate | null): string =>
+    candidate?.isLocalSnapshot
+        ? candidate.snapshotReason === "revoked"
+            ? "components.community_assistants.duplicate_confirm_message_revoked"
+            : "components.community_assistants.duplicate_confirm_message_deleted"
+        : "components.community_assistants.duplicate_confirm_message";
 
 const isAssistantResponse = (data: AssistantResponse | CommunityAssistantSnapshot): data is AssistantResponse =>
     "latest_version" in data && data.latest_version != null && typeof (data as AssistantResponse).latest_version.name === "string";
-
-const DUPLICATE_TITLE_SUFFIX = "[Kopie]";
-
-const buildDuplicatedAssistantTitle = (title: string): string => {
-    const trimmedTitle = title.trim();
-    return trimmedTitle ? `${trimmedTitle} ${DUPLICATE_TITLE_SUFFIX}` : title;
-};
 
 export const useDuplicateAssistant = () => {
     const { t } = useTranslation();
     const navigate = useNavigate();
     const { showError, showSuccess } = useGlobalToastContext();
+    const { tools } = useToolsContext();
+    const { availableLLMs } = useContext(LLMContext);
+    const isComplianceCheckEnabled = useContext(ConfigContext).ai_act_compliance_check_enabled;
     const communityAssistantStorageService = useMemo(() => new CommunityAssistantStorageService(COMMUNITY_ASSISTANT_STORE), []);
-    const assistantStorageService = useMemo(() => new AssistantStorageService(ASSISTANT_STORE), []);
 
     const [showDuplicateConfirm, setShowDuplicateConfirm] = useState(false);
     const [assistantToDuplicate, setAssistantToDuplicate] = useState<DuplicateAssistantCandidate | null>(null);
     const [isDuplicating, setIsDuplicating] = useState(false);
+    const [showDraftOverwriteConfirm, setShowDraftOverwriteConfirm] = useState(false);
+    const pendingDeletedSnapshotRef = useRef<CommunityAssistantSnapshot | null>(null);
 
     const resolveAssistantData = useCallback(
         async (assistantId: string, fallbackData?: AssistantResponse | CommunityAssistantSnapshot): Promise<AssistantResponse | CommunityAssistantSnapshot> => {
@@ -84,6 +92,30 @@ export const useDuplicateAssistant = () => {
         [communityAssistantStorageService]
     );
 
+    // A locally stored snapshot is always preferred over a server round trip: for a
+    // deleted assistant it avoids the request, and for a revoked one the server
+    // answers 403 although the browser still holds the full configuration.
+    const resolveLocalSnapshotCandidateData = useCallback(
+        async (candidate: DuplicateAssistantCandidate): Promise<AssistantResponse | CommunityAssistantSnapshot> => {
+            const cached = candidate.rawData;
+            if (candidate.isLocalSnapshot && isCompleteCommunityAssistantSnapshot(cached)) {
+                return cached;
+            }
+            try {
+                return await resolveAssistantData(candidate.id, cached);
+            } catch (resolveError) {
+                if (candidate.isLocalSnapshot && resolveError instanceof ApiError && resolveError.status === 403) {
+                    const snapshot = await communityAssistantStorageService.getAssistantConfig(candidate.id);
+                    if (isCompleteCommunityAssistantSnapshot(snapshot)) {
+                        return snapshot;
+                    }
+                }
+                throw resolveError;
+            }
+        },
+        [communityAssistantStorageService, resolveAssistantData]
+    );
+
     const requestDuplicateAssistant = useCallback(
         (assistant: DuplicateAssistantCandidate | null) => {
             if (!assistant || isDuplicating) {
@@ -96,6 +128,58 @@ export const useDuplicateAssistant = () => {
         [isDuplicating]
     );
 
+    // Forwards a deleted assistant's snapshot to the create-assistant mask, so the user reviews it in the
+    // editor (including the compliance review) instead of creating a server-side copy directly.
+    const startDeletedAssistantDraft = useCallback(
+        (snapshot: CommunityAssistantSnapshot) => {
+            const availableToolIds = new Set((tools?.tools ?? []).map(tool => tool.id));
+            const availableLLMNames = new Set(availableLLMs.map(model => model.llm_name));
+            const draft = buildCreateDraftFromDeletedSnapshot(snapshot, availableToolIds, availableLLMNames);
+
+            // Write the after-create action BEFORE the draft: a freshly saved draft must
+            // never end up paired with an action of an earlier copy attempt, and if the
+            // action cannot be persisted any stale leftover is dropped instead.
+            if (
+                !setPendingAfterCreateAction({
+                    type: "reattachDeletedAssistantChats",
+                    sourceAssistantId: snapshot.id,
+                    expectedDraftTitle: draft.title
+                })
+            ) {
+                console.error("Failed to persist the after-create re-attach action for assistant", snapshot.id);
+                clearPendingAfterCreateAction();
+            }
+
+            if (!saveCreateAssistantDraft(draft)) {
+                showError(t("components.import_assistant.import_error"), t("components.import_assistant.import_failed"));
+                return;
+            }
+
+            navigate(isComplianceCheckEnabled ? "/assistant/create#compliance-review" : "/assistant/create");
+        },
+        [availableLLMs, isComplianceCheckEnabled, navigate, showError, t, tools]
+    );
+
+    const confirmDraftOverwrite = useCallback(() => {
+        const snapshot = pendingDeletedSnapshotRef.current;
+        if (snapshot) {
+            startDeletedAssistantDraft(snapshot);
+        }
+        pendingDeletedSnapshotRef.current = null;
+    }, [startDeletedAssistantDraft]);
+
+    const handleDraftOverwriteChange = useCallback((open: boolean) => {
+        setShowDraftOverwriteConfirm(open);
+        if (!open) {
+            pendingDeletedSnapshotRef.current = null;
+        }
+    }, []);
+
+    const openExistingDraft = useCallback(() => {
+        pendingDeletedSnapshotRef.current = null;
+        navigate("/assistant/create");
+    }, [navigate]);
+
     const confirmDuplicateAssistant = useCallback(async () => {
         if (!assistantToDuplicate || isDuplicating) {
             return;
@@ -103,21 +187,23 @@ export const useDuplicateAssistant = () => {
 
         setIsDuplicating(true);
         try {
-            const assistantData = await resolveAssistantData(assistantToDuplicate.id, assistantToDuplicate.rawData);
+            const assistantData = await resolveLocalSnapshotCandidateData(assistantToDuplicate);
             const assistantTitle = isAssistantResponse(assistantData) ? assistantData.latest_version.name : assistantData.title;
-            const duplicatedAssistant = isAssistantResponse(assistantData)
-                ? await duplicateCommunityAssistantApi(assistantToDuplicate.id)
-                : await createCommunityAssistantApi({
-                      ...mapCommunityConfigToAssistantCreateInput(mapCommunitySnapshotToCommunityConfig(assistantData)),
-                      name: buildDuplicatedAssistantTitle(assistantTitle),
-                      is_visible: false,
-                      hierarchical_access: []
-                  });
 
-            if (assistantToDuplicate.isDeletedSnapshot) {
-                await assistantStorageService.transferChatsToAssistant(assistantToDuplicate.id, duplicatedAssistant.id);
-                await communityAssistantStorageService.deleteConfigForAssistant(assistantToDuplicate.id);
+            if (assistantToDuplicate.isLocalSnapshot && !isAssistantResponse(assistantData)) {
+                setShowDuplicateConfirm(false);
+
+                if (hasCreateAssistantDraft()) {
+                    pendingDeletedSnapshotRef.current = assistantData;
+                    setShowDraftOverwriteConfirm(true);
+                    return;
+                }
+
+                startDeletedAssistantDraft(assistantData);
+                return;
             }
+
+            const duplicatedAssistant = await duplicateCommunityAssistantApi(assistantToDuplicate.id);
 
             setShowDuplicateConfirm(false);
             showSuccess(
@@ -141,17 +227,7 @@ export const useDuplicateAssistant = () => {
         } finally {
             setIsDuplicating(false);
         }
-    }, [
-        assistantToDuplicate,
-        assistantStorageService,
-        communityAssistantStorageService,
-        isDuplicating,
-        navigate,
-        resolveAssistantData,
-        showError,
-        showSuccess,
-        t
-    ]);
+    }, [assistantToDuplicate, isDuplicating, navigate, resolveLocalSnapshotCandidateData, showError, showSuccess, startDeletedAssistantDraft, t]);
 
     return {
         assistantToDuplicate,
@@ -160,6 +236,10 @@ export const useDuplicateAssistant = () => {
         setShowDuplicateConfirm,
         requestDuplicateAssistant,
         confirmDuplicateAssistant,
-        resolveAssistantData
+        resolveAssistantData,
+        showDraftOverwriteConfirm,
+        onDraftOverwriteChange: handleDraftOverwriteChange,
+        confirmDraftOverwrite,
+        openExistingDraft
     };
 };

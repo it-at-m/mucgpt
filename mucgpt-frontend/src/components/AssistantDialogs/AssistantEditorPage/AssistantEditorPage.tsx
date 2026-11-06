@@ -50,7 +50,10 @@ import {
     VisibilitySection,
     ReviewSection,
     ExpandableTextarea,
-    CloseConfirmationDialog
+    CloseConfirmationDialog,
+    clearPendingAfterCreateAction,
+    consumePendingAfterCreateAction,
+    executeAfterCreateAction
 } from "../shared";
 import { AssistantStrategy } from "../../../pages/assistant/AssistantStrategy";
 import { CREATIVITY_LOW } from "../../../constants";
@@ -391,7 +394,10 @@ export const AssistantEditorPage = (props: AssistantEditorPageProps) => {
             setDiscardTarget("back");
             setDiscardOpen(true);
         } else {
-            if (isCreate) createState.resetAll();
+            if (isCreate) {
+                createState.resetAll();
+                clearPendingAfterCreateAction();
+            }
             navigate(-1);
         }
     }, [isCreate, createState.hasChanges, createState.resetAll, editState.hasChanged, navigate]);
@@ -400,6 +406,7 @@ export const AssistantEditorPage = (props: AssistantEditorPageProps) => {
         setDiscardOpen(false);
         if (isCreate) {
             createState.resetAll();
+            clearPendingAfterCreateAction();
         } else {
             editState.resetToOriginal();
         }
@@ -472,6 +479,29 @@ export const AssistantEditorPage = (props: AssistantEditorPageProps) => {
                 }
 
                 if (response?.id) {
+                    // An optional pending after-create action (re-attaching the chats of the
+                    // copied deleted/revoked assistant) runs best-effort: on failure the chats
+                    // simply stay orphaned and visible in Discovery, so it must not block the
+                    // created assistant. A draft whose title no longer matches the copy
+                    // prefill (e.g. reworked via the AI-generate flow) is not paired with the
+                    // chats: the action is skipped before any wrong attachments happen.
+                    const afterCreateAction = consumePendingAfterCreateAction();
+                    if (afterCreateAction) {
+                        if (afterCreateAction.expectedDraftTitle !== undefined && afterCreateAction.expectedDraftTitle !== assistantTitle) {
+                            console.error(
+                                "Skipping the after-create re-attach: the created assistant does not match the copy draft",
+                                afterCreateAction.expectedDraftTitle,
+                                assistantTitle
+                            );
+                        } else {
+                            try {
+                                await executeAfterCreateAction(afterCreateAction, response.id);
+                            } catch (reAttachError) {
+                                console.error("Failed to run the pending after-create action", reAttachError);
+                            }
+                        }
+                    }
+
                     showSuccess(
                         t("components.assistant_editor.assistant_saved_success"),
                         t("components.assistant_editor.assistant_saved_message", { title: assistantTitle })

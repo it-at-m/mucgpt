@@ -448,9 +448,9 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                     })
                     .catch(async err => {
                         if (err instanceof ApiError && err.status === 403) {
-                            // Access to a still-existing assistant was revoked. The locally stored snapshot
-                            // keeps the chat reachable read-only and allows saving an own copy from it;
-                            // without a snapshot the previous behavior applies.
+                            // Access to a still-existing assistant was revoked. The locally stored
+                            // snapshot keeps the chat reachable in a read-only view; without a
+                            // snapshot the previous behavior applies.
                             try {
                                 const snapshot = await communityAssistantStorageService.getAssistantConfig(assistant_id);
                                 if (isCompleteCommunityAssistantSnapshot(snapshot)) {

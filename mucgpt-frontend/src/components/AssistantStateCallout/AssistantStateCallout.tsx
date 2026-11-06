@@ -87,7 +87,7 @@ export const AssistantStateCallout = ({
                 {t("components.not_subscribed_dialog.subscribe_button")}
             </Button>
         ),
-        (state === "deleted" || isRevoked) && onDuplicate && (
+        state === "deleted" && onDuplicate && (
             <Button key="duplicate" appearance="primary" icon={<Copy20Regular />} onClick={onDuplicate}>
                 {t("components.community_assistants.deleted_state_save_action")}
             </Button>

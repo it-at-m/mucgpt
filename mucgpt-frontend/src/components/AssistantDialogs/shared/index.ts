@@ -10,10 +10,3 @@ export { useCreateAssistantState } from "./hooks/useCreateAssistantState";
 export { ExpandableTextarea } from "./ExpandableTextarea";
 export { CloseConfirmationDialog } from "./CloseConfirmationDialog";
 export { PendingCreateDraftConfirmDialog } from "./PendingCreateDraftConfirmDialog";
-export {
-    setPendingAfterCreateAction,
-    consumePendingAfterCreateAction,
-    clearPendingAfterCreateAction,
-    executeAfterCreateAction,
-    type AfterCreateAction
-} from "./afterCreateAction";

@@ -39,10 +39,9 @@ import {
     mapCommunitySnapshotToAssistant,
     upsertCommunityAssistantSnapshot
 } from "../../utils/community-assistant-snapshots";
-import { useDuplicateAssistant, duplicateConfirmMessageKey } from "../discovery/hooks/useDuplicateAssistant";
+import { useDuplicateAssistant } from "../discovery/hooks/useDuplicateAssistant";
 import { useMigrateLocalAssistant } from "../../hooks/useMigrateLocalAssistant";
 import { CloseConfirmationDialog } from "../../components/AssistantDialogs/shared/CloseConfirmationDialog";
-import { PendingCreateDraftConfirmDialog } from "../../components/AssistantDialogs/shared/PendingCreateDraftConfirmDialog";
 import { UploadedData } from "../../components/ContextManagerDialog/ContextManagerDialog";
 import { useConfigContext } from "../../context/ConfigContext";
 import { useToolStatusToasts } from "../../hooks/useToolStatusToasts";
@@ -150,18 +149,8 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
     const isLocalAssistant = strategy instanceof LocalAssistantStrategy;
     // Missing config, lapsed subscription, or revoked access: history stays viewable, but the chat is read-only.
     const historyReadOnly = isDeletedAssistant || isUnsubscribed || isAssistantMissing || isAccessRevoked;
-    const {
-        assistantToDuplicate,
-        showDuplicateConfirm,
-        isDuplicating,
-        setShowDuplicateConfirm,
-        requestDuplicateAssistant,
-        confirmDuplicateAssistant,
-        showDraftOverwriteConfirm,
-        setShowDraftOverwriteConfirm,
-        confirmDraftOverwrite,
-        openExistingDraft
-    } = useDuplicateAssistant();
+    const { assistantToDuplicate, showDuplicateConfirm, isDuplicating, setShowDuplicateConfirm, requestDuplicateAssistant, confirmDuplicateAssistant } =
+        useDuplicateAssistant();
     // Sync info drawer state to body class so Layout.module.css can offset the footer
     useEffect(() => {
         document.body.classList.toggle("info-drawer-open", isInfoDrawerOpen);
@@ -1076,8 +1065,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                                           id: assistant_id,
                                           title: duplicateCandidateSnapshot.title,
                                           rawData: duplicateCandidateSnapshot,
-                                          isLocalSnapshot: true,
-                                          snapshotReason: "deleted"
+                                          isDeletedSnapshot: true
                                       })
                                 : undefined
                         }
@@ -1088,27 +1076,9 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
         }
 
         if (isAccessRevoked) {
-            const duplicateCandidateSnapshot = assistantSnapshot;
-
             return (
                 <div className={styles.stateCallout}>
-                    <AssistantStateCallout
-                        state="revoked_access"
-                        context="chat"
-                        onDuplicate={
-                            duplicateCandidateSnapshot
-                                ? () =>
-                                      requestDuplicateAssistant({
-                                          id: assistant_id,
-                                          title: duplicateCandidateSnapshot.title,
-                                          rawData: duplicateCandidateSnapshot,
-                                          isLocalSnapshot: true,
-                                          snapshotReason: "revoked"
-                                      })
-                                : undefined
-                        }
-                        onDelete={() => setShowDeleteConfirm(true)}
-                    />
+                    <AssistantStateCallout state="revoked_access" context="chat" onDelete={() => setShowDeleteConfirm(true)} />
                 </div>
             );
         }
@@ -1473,15 +1443,13 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                 onConfirmClose={confirmDuplicateAssistant}
                 confirmDisabled={isDuplicating}
                 title={t("components.community_assistants.duplicate_confirm_title")}
-                message={t(duplicateConfirmMessageKey(assistantToDuplicate), { title: assistantToDuplicate?.title ?? "" })}
+                message={t(
+                    assistantToDuplicate?.isDeletedSnapshot
+                        ? "components.community_assistants.duplicate_confirm_message_deleted"
+                        : "components.community_assistants.duplicate_confirm_message",
+                    { title: assistantToDuplicate?.title ?? "" }
+                )}
                 confirmLabel={t("components.community_assistants.duplicate_confirm_action")}
-            />
-            <PendingCreateDraftConfirmDialog
-                open={showDraftOverwriteConfirm}
-                onOpenChange={setShowDraftOverwriteConfirm}
-                onOverwrite={confirmDraftOverwrite}
-                onOpenExistingDraft={openExistingDraft}
-                message={t("components.community_assistants.draft_overwrite_message")}
             />
             <CloseConfirmationDialog
                 open={showDeleteConfirm}

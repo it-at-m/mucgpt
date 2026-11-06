@@ -942,7 +942,7 @@ i18n
                                 "Dein Chatverlauf bleibt erhalten und kann eingesehen werden. Abonniere den Assistenten erneut, um ihn weiterzuverwenden.",
                             revoked_state_title: "Kein Zugriff mehr auf diesen Assistenten",
                             revoked_state_hint:
-                                "Der Assistent ist noch vorhanden, aber du hast keinen Zugriff mehr darauf. Dein Chatverlauf bleibt erhalten und kann eingesehen werden. Du kannst eine eigene Kopie aus der zuletzt gespeicherten Version erstellen.",
+                                "Der Assistent ist noch vorhanden, aber du hast keinen Zugriff mehr darauf. Dein Chatverlauf bleibt erhalten und kann eingesehen werden.",
                             orphaned_chats_heading: "Nicht mehr verfügbare Assistenten",
                             orphaned_deleted_title: "Gelöschter Assistent",
                             orphaned_deleted_description: "Der Assistent existiert nicht mehr. Dein Chatverlauf bleibt erhalten und kann eingesehen werden.",
@@ -962,11 +962,7 @@ i18n
                                 'Du kannst "{{title}}" auch ohne eigene Kopie weiter verwenden. Möchtest du trotzdem eine eigene Kopie erstellen? Spätere Änderungen des ursprünglichen Assistenten werden nicht auf deine Kopie übernommen.',
                             duplicate_confirm_message_deleted:
                                 'Der ursprüngliche Assistent "{{title}}" ist nicht mehr verfügbar. Wenn du weiter damit arbeiten möchtest, kannst du jetzt eine eigene Kopie aus der zuletzt gespeicherten Version erstellen.',
-                            duplicate_confirm_message_revoked:
-                                'Du hast keinen Zugriff mehr auf den ursprünglichen Assistenten "{{title}}". Du kannst jetzt eine eigene Kopie aus der zuletzt gespeicherten Version erstellen.',
                             duplicate_confirm_action: "Kopie erstellen",
-                            draft_overwrite_message:
-                                "Du hast bereits einen ungespeicherten Assistenten-Entwurf. Wenn du fortfährst, wird dieser Entwurf überschrieben.",
                             duplicate_success_title: "Assistent dupliziert",
                             duplicate_success_message: 'Der Assistent "{{title}}" wurde erfolgreich dupliziert.',
                             duplicate_failed_title: "Assistent konnte nicht dupliziert werden",
@@ -1959,7 +1955,7 @@ i18n
                                 "Your chat history is preserved and can still be viewed. Subscribe to the assistant again to continue using it.",
                             revoked_state_title: "No more access to this assistant",
                             revoked_state_hint:
-                                "The assistant still exists, but you no longer have access to it. Your chat history is preserved and can still be viewed. You can create your own copy from the last saved version.",
+                                "The assistant still exists, but you no longer have access to it. Your chat history is preserved and can still be viewed.",
                             orphaned_chats_heading: "Assistants no longer available",
                             orphaned_deleted_title: "Deleted assistant",
                             orphaned_deleted_description: "The assistant no longer exists. The chat history is preserved and can still be viewed.",
@@ -1978,10 +1974,7 @@ i18n
                                 'You can keep using "{{title}}" without creating your own copy. Do you still want to create one? Future changes to the original assistant will not be applied to your copy.',
                             duplicate_confirm_message_deleted:
                                 'The original assistant "{{title}}" is no longer available. If you want to keep using it, you can create your own copy now from the last cached version.',
-                            duplicate_confirm_message_revoked:
-                                'You no longer have access to the original assistant "{{title}}". You can create your own copy now from the last cached version.',
                             duplicate_confirm_action: "Create copy",
-                            draft_overwrite_message: "You already have an unsaved assistant draft. If you continue, this draft will be overwritten.",
                             duplicate_success_title: "Assistant duplicated",
                             duplicate_success_message: 'The assistant "{{title}}" was duplicated successfully.',
                             duplicate_failed_title: "Assistant could not be duplicated",
@@ -2938,7 +2931,7 @@ i18n
                             unsubscribed_state_hint: "Dei Chatverlauf bleibt erhaltn und ko ogschaut wern. Abonniere den Assistentn wieder, um weitazumacha.",
                             revoked_state_title: "Koa Zugriff mehr auf den Assistentn",
                             revoked_state_hint:
-                                "Da Assistent exisdiert noch, aber du host koan Zugriff mehr darauf. Dei Chatverlauf bleibt erhaltn und ko ogschaut wern. Du koanst a eigene Kopie aus da zletzt gspeicherten Version erstoin.",
+                                "Da Assistent exisdiert noch, aber du host koan Zugriff mehr darauf. Dei Chatverlauf bleibt erhaltn und ko ogschaut wern.",
                             orphaned_chats_heading: "Assistentn, de nimmer verfuegbar san",
                             orphaned_deleted_title: "Glöschter Assistent",
                             orphaned_deleted_description: "Da Assistent exisdiert ned mehr. Dei Chatverlauf bleibt erhaltn und ko ogschaut wern.",
@@ -2958,10 +2951,7 @@ i18n
                                 'Du konnst "{{title}}" aa ohne eigene Kopie weiternutzn. Magst trotzdem a eigene Kopie erstoin? Spätere Änderungen vom ursprünglichen Assistentn wearn ned auf dei Kopie übernomma.',
                             duplicate_confirm_message_deleted:
                                 'Da ursprüngliche Assistent "{{title}}" is nimmer verfuegbar. Wennst weitermacha mogst, koanst jetz a eigene Kopie aus da zletzt gspeicherten Version erstoin.',
-                            duplicate_confirm_message_revoked:
-                                'Du host koan Zugriff mehr auf\'m ursprünglichen Assistentn "{{title}}". Du koanst jetz a eigene Kopie aus da zletzt gspeicherten Version erstoin.',
                             duplicate_confirm_action: "Kopie erstoin",
-                            draft_overwrite_message: "Du host scho an ungspeichertn Assistentn-Entwurf. Wenn du weidamachst, wead der Entwurf überschriebn.",
                             duplicate_success_title: "Assistent dupliziert",
                             duplicate_success_message: 'Da Assistent "{{title}}" is erfolgreich dupliziert worn.',
                             duplicate_failed_title: "Assistent hod ned dupliziert wern kina",
@@ -3926,7 +3916,7 @@ i18n
                                 "Votre historique de conversation est conservé et reste consultable. Abonnez-vous à nouveau à l'assistant pour continuer à l'utiliser.",
                             revoked_state_title: "Vous n'avez plus accès à cet assistant",
                             revoked_state_hint:
-                                "L'assistant existe toujours, mais vous n'avez plus accès à celui-ci. Votre historique de conversation est conservé et reste consultable. Vous pouvez créer votre propre copie à partir de la dernière version enregistrée.",
+                                "L'assistant existe toujours, mais vous n'avez plus accès à celui-ci. Votre historique de conversation est conservé et reste consultable.",
                             orphaned_chats_heading: "Assistants indisponibles",
                             orphaned_deleted_title: "Assistant supprimé",
                             orphaned_deleted_description: "L'assistant n'existe plus. L'historique des conversations est conservé et reste consultable.",
@@ -3944,9 +3934,7 @@ i18n
                             duplicate_confirm_title: "Créer votre propre copie privée",
                             duplicate_confirm_message: `Vous pouvez continuer à utiliser "{{title}}" sans créer votre propre copie. Voulez-vous quand même en créer une ? Les modifications futures de l'assistant d'origine ne seront pas appliquées à votre copie.`,
                             duplicate_confirm_message_deleted: `L'assistant d'origine "{{title}}" n'est plus disponible. Si vous voulez continuer à l'utiliser, vous pouvez créer maintenant votre propre copie à partir de la dernière version en cache.`,
-                            duplicate_confirm_message_revoked: `Vous n'avez plus accès à l'assistant d'origine "{{title}}". Vous pouvez créer maintenant votre propre copie à partir de la dernière version en cache.`,
                             duplicate_confirm_action: "Créer la copie",
-                            draft_overwrite_message: "Vous avez déjà un brouillon d'assistant non enregistré. Si vous continuez, ce brouillon sera écrasé.",
                             duplicate_success_title: "Assistant dupliqué",
                             duplicate_success_message: `L'assistant "{{title}}" a été dupliqué avec succès.`,
                             duplicate_failed_title: "L'assistant n'a pas pu être dupliqué",
@@ -4912,7 +4900,7 @@ i18n
                                 "Вашу історію чатів збережено, її можна переглядати. Оформіть підписку на асистента знову, щоб продовжити користуватися.",
                             revoked_state_title: "Більше немає доступу до цього асистента",
                             revoked_state_hint:
-                                "Асистента ще існує, але ви більше не маєте до нього доступу. Вашу історію чатів збережено, її можна переглядати. Ви можете створити власну копію з останньої збереженої версії.",
+                                "Асистента ще існує, але ви більше не маєте до нього доступу. Вашу історію чатів збережено, її можна переглядати.",
                             orphaned_chats_heading: "Асистенти, які більше недоступні",
                             orphaned_deleted_title: "Видалений асистент",
                             orphaned_deleted_description: "Асистента більше не існує. Історію чатів збережено, її можна переглядати.",
@@ -4931,10 +4919,7 @@ i18n
                                 'Ви можете й далі користуватися "{{title}}" без створення власної копії. Усе ж хочете створити її? Майбутні зміни в оригінальному асистенті не будуть застосовані до вашої копії.',
                             duplicate_confirm_message_deleted:
                                 'Оригінальний асистент "{{title}}" більше недоступний. Якщо ви хочете й далі ним користуватися, зараз можна створити власну копію з останньої кешованої версії.',
-                            duplicate_confirm_message_revoked:
-                                'У вас більше немає доступу до оригінального асистента "{{title}}". Зараз можна створити власну копію з останньої кешованої версії.',
                             duplicate_confirm_action: "Створити копію",
-                            draft_overwrite_message: "У вас вже є незбережена чернетка асистента. Якщо продовжите, цю чернетку буде перезаписано.",
                             duplicate_success_title: "Асистента дубльовано",
                             duplicate_success_message: 'Асистента "{{title}}" успішно дубльовано.',
                             duplicate_failed_title: "Не вдалося дублювати асистента",

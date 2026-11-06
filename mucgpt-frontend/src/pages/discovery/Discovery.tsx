@@ -19,9 +19,8 @@ import { OwnerMetadataLink, getPrimaryOwnerDetails } from "../../components/Owne
 import { AssistantDetailsSidebar, AssistantCardData } from "../../components/AssistantDetailsSidebar/AssistantDetailsSidebar";
 import { CloseConfirmationDialog } from "../../components/AssistantDialogs/shared/CloseConfirmationDialog";
 import { PendingCreateDraftConfirmDialog } from "../../components/AssistantDialogs/shared/PendingCreateDraftConfirmDialog";
-import { clearPendingAfterCreateAction } from "../../components/AssistantDialogs/shared/afterCreateAction";
 import { useUnifiedHistory } from "../../components/UnifiedHistory";
-import { useDuplicateAssistant, duplicateConfirmMessageKey } from "./hooks/useDuplicateAssistant";
+import { useDuplicateAssistant } from "./hooks/useDuplicateAssistant";
 import { useDiscoveryAssistantLists } from "./hooks/useDiscoveryAssistantLists";
 import { useMigrateLocalAssistant } from "../../hooks/useMigrateLocalAssistant";
 import { useOrphanedAssistantChats } from "../../hooks/useOrphanedAssistantChats";
@@ -142,11 +141,7 @@ const Discovery = () => {
         setShowDuplicateConfirm,
         requestDuplicateAssistant,
         confirmDuplicateAssistant,
-        resolveAssistantData,
-        showDraftOverwriteConfirm,
-        setShowDraftOverwriteConfirm,
-        confirmDraftOverwrite,
-        openExistingDraft
+        resolveAssistantData
     } = useDuplicateAssistant();
 
     const {
@@ -236,9 +231,6 @@ const Discovery = () => {
 
     const openImportedDraft = useCallback(
         (draft: CreateAssistantDraftValues) => {
-            // The imported draft replaces any previous create draft, so its pending
-            // after-create action must not survive into the import flow.
-            clearPendingAfterCreateAction();
             if (!saveCreateAssistantDraft(draft)) {
                 showError(t("components.import_assistant.import_error"), t("components.import_assistant.import_failed"));
                 return;
@@ -831,8 +823,7 @@ const Discovery = () => {
                                 id: selectedAssistant.id,
                                 title: selectedAssistant.title,
                                 rawData: selectedAssistant.rawData as AssistantResponse | CommunityAssistantSnapshot,
-                                isLocalSnapshot: selectedAssistant.isDeletedSnapshot,
-                                snapshotReason: "deleted"
+                                isDeletedSnapshot: selectedAssistant.isDeletedSnapshot
                             });
                         }}
                         onExport={exportAssistant}
@@ -891,15 +882,13 @@ const Discovery = () => {
                 onConfirmClose={confirmDuplicateAssistant}
                 confirmDisabled={isDuplicating}
                 title={t("components.community_assistants.duplicate_confirm_title")}
-                message={t(duplicateConfirmMessageKey(assistantToDuplicate), { title: assistantToDuplicate?.title ?? "" })}
+                message={t(
+                    assistantToDuplicate?.isDeletedSnapshot
+                        ? "components.community_assistants.duplicate_confirm_message_deleted"
+                        : "components.community_assistants.duplicate_confirm_message",
+                    { title: assistantToDuplicate?.title ?? "" }
+                )}
                 confirmLabel={t("components.community_assistants.duplicate_confirm_action")}
-            />
-            <PendingCreateDraftConfirmDialog
-                open={showDraftOverwriteConfirm}
-                onOpenChange={setShowDraftOverwriteConfirm}
-                onOverwrite={confirmDraftOverwrite}
-                onOpenExistingDraft={openExistingDraft}
-                message={t("components.community_assistants.draft_overwrite_message")}
             />
             <PendingCreateDraftConfirmDialog
                 open={pendingImportDraft !== null}

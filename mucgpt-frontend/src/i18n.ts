@@ -1,7 +1,6 @@
 import i18n from "i18next";
 import { initReactI18next } from "react-i18next";
 import { tutorialsTranslations } from "./i18n.tutorials";
-import { versionTranslations } from "./i18n.version";
 
 i18n
     // pass the i18n instance to react-i18next.
@@ -341,6 +340,8 @@ i18n
                         },
                         answer: {
                             regenerate: "Antwort regenerieren",
+                            persisted_actions_unavailable:
+                                "Regenerieren und Wiederholen sind in gespeicherten Chats nicht verfügbar. Sie können eine neue Frage stellen.",
                             copy: "Antwort kopieren",
                             unformat: "Unformatierte Antwort"
                         },
@@ -946,8 +947,7 @@ i18n
                         reset_mock_data_confirm_message:
                             "Die Mock-Assistenten und Szenario-Daten werden auf den Ausgangszustand zurückgesetzt. Deine übrigen lokalen Assistenten und Chats bleiben erhalten."
                     },
-                    ...tutorialsTranslations.DE,
-                    ...versionTranslations.DE
+                    ...tutorialsTranslations.DE
                 }
             },
             EN: {
@@ -1274,6 +1274,7 @@ i18n
                         },
                         answer: {
                             regenerate: "Regenerate response",
+                            persisted_actions_unavailable: "Regeneration and retry are unavailable in saved chats. You can ask a new question.",
                             copy: "Copy response",
                             unformat: "Unformatted response"
                         },
@@ -1870,8 +1871,7 @@ i18n
                         reset_mock_data_confirm_message:
                             "The mock assistants and scenario data will be restored to their initial state. Your other local assistants and chats are kept."
                     },
-                    ...tutorialsTranslations.EN,
-                    ...versionTranslations.EN
+                    ...tutorialsTranslations.EN
                 }
             },
             BA: {
@@ -2181,7 +2181,8 @@ i18n
                             unformat: "Unformatierte Antwort"
                         },
                         answer: {
-                            regenerate: "No amoi probiern"
+                            regenerate: "No amoi probiern",
+                            persisted_actions_unavailable: "Regeneriern und no amoi probiern geht in gspeicherten Chats ned. Du kannst a neue Frag stelln."
                         },
                         mindmap: {
                             download: "Obalada",
@@ -2764,8 +2765,7 @@ i18n
                         reset_mock_data_confirm_message:
                             "De Mock-Assistentn und Szenario-Datn wern auf an Ausgangszustand zruckgsetzt. Deine andern lokaln Assistentn und Chats bleibn erhaltn."
                     },
-                    ...tutorialsTranslations.BA,
-                    ...versionTranslations.BA
+                    ...tutorialsTranslations.BA
                 }
             },
             FR: {
@@ -3077,6 +3077,8 @@ i18n
                         },
                         answer: {
                             regenerate: "Régénérer la réponse",
+                            persisted_actions_unavailable:
+                                "La régénération et les nouvelles tentatives ne sont pas disponibles dans les discussions enregistrées. Vous pouvez poser une nouvelle question.",
                             copy: "Copier la réponse",
                             unformat: "Réponse non formatée"
                         },
@@ -3659,8 +3661,7 @@ i18n
                         reset_mock_data_confirm_message:
                             "Les assistants fictifs et les données de scénario seront restaurés à leur état initial. Vos autres assistants et conversations locaux sont conservés."
                     },
-                    ...tutorialsTranslations.FR,
-                    ...versionTranslations.FR
+                    ...tutorialsTranslations.FR
                 }
             },
             UK: {
@@ -3971,6 +3972,7 @@ i18n
                         },
                         answer: {
                             regenerate: "Регенерувати відповідь",
+                            persisted_actions_unavailable: "Регенерація та повторні спроби недоступні в збережених чатах. Ви можете поставити нове запитання.",
                             copy: "Копіювати відповідь",
                             unformat: "Неформатована відповідь"
                         },
@@ -4556,8 +4558,7 @@ i18n
                         reset_mock_data_confirm_message:
                             "Тестових асистентів і дані сценаріїв буде відновлено до початкового стану. Інші ваші локальні асистенти та чати збережуться."
                     },
-                    ...tutorialsTranslations.UK,
-                    ...versionTranslations.UK
+                    ...tutorialsTranslations.UK
                 }
             }
         }

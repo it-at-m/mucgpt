@@ -260,6 +260,7 @@ async def test_token_usage_middleware_accumulates_calls_and_keeps_latest_context
     request = _model_request(RequestContext(token_usage=token_usage))
     middleware = TokenUsageMiddleware()
 
+    snapshots = []
     for input_tokens, output_tokens in ((10, 2), (20, 4)):
         response = ModelResponse(
             result=[
@@ -282,10 +283,75 @@ async def test_token_usage_middleware_accumulates_calls_and_keeps_latest_context
             result = middleware.wrap_model_call(request, handler)
             handler.assert_called_once_with(request)
         assert result is response
+        snapshots.append(result.result[-1].response_metadata["mucgpt_usage"])
 
     assert token_usage.prompt_tokens == 30
     assert token_usage.completion_tokens == 6
     assert token_usage.context_tokens == 24
+    assert snapshots[0]["context_tokens"] == 12
+    assert snapshots[0]["user_tokens"] == 10
+    assert snapshots[1]["context_tokens"] == 24
+    assert snapshots[1]["user_tokens"] == 30
+    assert snapshots[1]["tokens"] == 6
+
+
+def test_usage_snapshot_preserves_selected_model_settings_and_cached_cost(monkeypatch):
+    from config.settings import Settings
+
+    models = [
+        ModelsConfig(
+            type="OPENAI",
+            llm_name=name,
+            endpoint="https://example.test",
+            api_key="test",
+            model_info={
+                "auto_enrich_from_model_info_endpoint": False,
+                "description": "Usage snapshot test model",
+                "max_input_tokens": limit,
+                "max_output_tokens": 1000,
+                "input_cost_per_token": "0.01",
+                "output_cost_per_token": "0.02",
+                "context_warning_threshold_percent": 60,
+                "context_critical_threshold_percent": 80,
+            },
+        )
+        for name, limit in (("first", 10000), ("second", 20000))
+    ]
+    monkeypatch.setattr(
+        "agent.middleware.get_settings", lambda: Settings(MODELS=models)
+    )
+    request = _model_request(
+        RequestContext(model_name="second", token_usage=TokenUsage())
+    )
+    response = ModelResponse(
+        result=[
+            AIMessage(
+                content="answer",
+                response_metadata={"provider": "preserved"},
+                usage_metadata={
+                    "input_tokens": 100,
+                    "output_tokens": 20,
+                    "total_tokens": 120,
+                    "input_token_details": {"cache_read": 40},
+                },
+            )
+        ]
+    )
+
+    TokenUsageMiddleware().wrap_model_call(request, MagicMock(return_value=response))
+
+    metadata = response.result[0].response_metadata
+    assert metadata["provider"] == "preserved"
+    assert metadata["mucgpt_usage"] == {
+        "context_tokens": 120,
+        "user_tokens": 100,
+        "tokens": 20,
+        "usage_cost": 1.0,
+        "usage_model": "second",
+        "usage_max_input_tokens": 20000,
+        "usage_context_warning_threshold_percent": 60,
+        "usage_context_critical_threshold_percent": 80,
+    }
 
 
 def test_normalize_model_settings_preserves_unknown_model_temperature() -> None:

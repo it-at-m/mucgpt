@@ -166,6 +166,42 @@ export function buildChatMessage() {
     return randomOf(messages);
 }
 
+/** Rich markdown showcase — exercises headings, tables, code blocks, lists, quotes and LaTeX math (trigger: `rich`). */
+export function buildRichMarkdownChatMessage() {
+    return [
+        "## Projektstatus Q3",
+        "",
+        "Hier ist eine **kompakte** Übersicht mit *Formatierung*, `Inline-Code` und einem [Link zur Stadt München](https://www.muenchen.de).",
+        "",
+        "| Meilenstein | Zuständig | Status | Fortschritt |",
+        "| :---------- | :-------- | :----: | ----------: |",
+        "| Lastenheft | Team A | erledigt | 100 % |",
+        "| Prototyp | Team B | in Arbeit | 65 % |",
+        "| Abnahme | Fachbereich | offen | 0 % |",
+        "",
+        "### Wichtiger Hinweis",
+        "",
+        "> Zitate werden als Blockquote gerendert und behalten auch beim Kopieren ihre Struktur.",
+        "",
+        "1. Erster Punkt mit **Fett**",
+        "2. Zweiter Punkt mit `Code`",
+        "3. Dritter Punkt",
+        "",
+        "Ein Codeblock mit Syntax-Highlighting:",
+        "",
+        "```js",
+        "const sum = (a, b) => a + b;",
+        'console.log("Summe: " + sum(40, 2));',
+        "```",
+        "",
+        "Eine Formel als Display-Math:",
+        "",
+        "\\[ E = mc^2 \\]",
+        "",
+        "und eine inline: \\( a^2 + b^2 = c^2 \\)."
+    ].join("\n");
+}
+
 /** Complete draw.io fence — happy-path E2E (trigger: `valid-drawio`). */
 export function buildDrawioChatMessage() {
     return [

@@ -51,6 +51,8 @@ export type ChatRequest = {
     enabled_tools?: string[];
     assistant_id?: string;
     conversation_id?: string;
+    /** False runs a stateless chat that is not stored server-side (e.g. assistant previews). */
+    persist?: boolean;
     data_sources?: DataSource[];
 };
 
@@ -76,6 +78,7 @@ export interface ApplicationConfig {
     core_version: string;
     frontend_version: string;
     assistant_version: string;
+    release_notes: ReleaseNote[];
     document_processing_enabled: boolean;
     transcription_enabled: boolean;
     /** Model id preselected for first-time users; null = frontend built-in default. */
@@ -91,6 +94,11 @@ export interface ApplicationConfig {
     admin_role?: string;
     ad2image_url?: string;
     owner_profile_url_template?: string;
+}
+
+export interface ReleaseNote {
+    version: string;
+    content: string;
 }
 
 export interface Model {

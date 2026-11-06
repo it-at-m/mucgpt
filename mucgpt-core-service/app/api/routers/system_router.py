@@ -14,7 +14,27 @@ settings = get_settings()
     description="This endpoint returns the configuration of the application.",
     response_model=ConfigResponse,
     responses={
-        200: {"description": "Successful Response"},
+        200: {
+            "description": "Successful Response. RELEASE_NOTES must be configured newest to oldest; the version page opens the first entry by default.",
+            "content": {
+                "application/json": {
+                    "examples": {
+                        "populated": {
+                            "summary": "Newest release note first",
+                            "value": {
+                                "release_notes": [
+                                    {"version": "2.0.3", "content": "Latest changes"}
+                                ]
+                            },
+                        },
+                        "empty": {
+                            "summary": "No release notes",
+                            "value": {"release_notes": []},
+                        },
+                    }
+                }
+            },
+        },
         401: {"description": "Unauthorized"},
     },
 )
@@ -27,6 +47,8 @@ async def get_config(user_info=Depends(authenticate_user)) -> ConfigResponse:
         core_version=settings.VERSION,
         frontend_version=settings.FRONTEND_VERSION,
         assistant_version=settings.ASSISTANT_VERSION,
+        # Keep the configured order: the frontend opens the first note by default.
+        release_notes=[note.model_dump() for note in settings.RELEASE_NOTES],
         document_processing_enabled=settings.PARSER_BACKEND != ParserBackendType.NONE,
         transcription_enabled=settings.TRANSCRIPTION_ENABLED,
         transcription_default_model=settings.TRANSCRIPTION_DEFAULT_MODEL,
@@ -40,7 +62,7 @@ async def get_config(user_info=Depends(authenticate_user)) -> ConfigResponse:
         admin_role=settings.SSO.ADMIN_ROLE,
         ad2image_url=settings.AD2IMAGE_URL,
         owner_profile_url_template=settings.OWNER_PROFILE_URL_TEMPLATE,
-        ag_ui_enabled=settings.AG_UI_ENABLED
+        ag_ui_enabled=settings.AG_UI_ENABLED,
     )
 
     models = settings.MODELS

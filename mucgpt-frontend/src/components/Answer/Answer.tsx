@@ -9,10 +9,13 @@ import { Button, Tooltip } from "@fluentui/react-components";
 import { FollowUpActionList } from "../FollowUpAction";
 import { MarkdownRenderer } from "../MarkdownRenderer/MarkdownRenderer";
 import { AnswerActivity } from "../AnswerActivity/AnswerActivity";
+import { copyRichText, serializeForClipboard } from "../../utils/clipboard";
 
 interface Props {
     answer: ChatResponse;
     onRegenerateResponseClicked?: () => void;
+    /** Accessible explanation when regeneration is unavailable for this request mode. */
+    regenerationUnavailableReason?: string;
     onFollowUpActionSend?: (prompt: string) => void;
     /** Whether this is the newest answer in the chat. Latest answers keep their actions permanently visible; older ones reveal them on hover. */
     isLatest?: boolean;
@@ -20,21 +23,34 @@ interface Props {
     isStreaming?: boolean;
 }
 
-export const Answer = ({ answer, onRegenerateResponseClicked, onFollowUpActionSend, isLatest = false, isStreaming = false }: Props) => {
+export const Answer = ({
+    answer,
+    onRegenerateResponseClicked,
+    regenerationUnavailableReason,
+    onFollowUpActionSend,
+    isLatest = false,
+    isStreaming = false
+}: Props) => {
     const { t } = useTranslation();
 
     const [copied, setCopied] = useState<boolean>(false);
     const [formatted, setFormatted] = useState<boolean>(true);
     const [ref, setRef] = useState<HTMLElement | null>();
+    const [answerBody, setAnswerBody] = useState<HTMLDivElement | null>(null);
 
     const [processedText, setProcessedText] = useState<string>("");
     const oncopy = useCallback(() => {
         setCopied(true);
-        navigator.clipboard.writeText(answer.answer);
+        const html = formatted && answerBody?.innerHTML ? serializeForClipboard(answerBody) : null;
+        if (html) {
+            void copyRichText(html, answer.answer);
+        } else {
+            void navigator.clipboard.writeText(answer.answer);
+        }
         setTimeout(() => {
             setCopied(false);
         }, 1000);
-    }, [navigator.clipboard, answer.answer]);
+    }, [formatted, answerBody, answer.answer]);
 
     useEffect(() => {
         if (answer.answer === "" || answer.answer === undefined) {
@@ -56,7 +72,7 @@ export const Answer = ({ answer, onRegenerateResponseClicked, onFollowUpActionSe
                 <div className={styles.growItem}>
                     {answer.activitySteps && answer.activitySteps.length > 0 && <AnswerActivity steps={answer.activitySteps} />}
                     {formatted && (
-                        <div className={styles.answerText}>
+                        <div ref={setAnswerBody} className={styles.answerText}>
                             <MarkdownRenderer allowDrawio isStreaming={isStreaming}>
                                 {processedText}
                             </MarkdownRenderer>
@@ -94,20 +110,22 @@ export const Answer = ({ answer, onRegenerateResponseClicked, onFollowUpActionSe
                         ></Button>
                     </Tooltip>
 
-                    {onRegenerateResponseClicked && (
-                        <Tooltip content={t("components.answer.regenerate")} relationship="description" positioning="above">
+                    {(onRegenerateResponseClicked || regenerationUnavailableReason) && (
+                        <Tooltip content={regenerationUnavailableReason ?? t("components.answer.regenerate")} relationship="description" positioning="above">
                             <Button
                                 appearance="subtle"
                                 aria-label={t("components.answer.regenerate")}
                                 icon={<ArrowSync24Regular />}
-                                onClick={() => onRegenerateResponseClicked()}
+                                disabled={!onRegenerateResponseClicked || Boolean(regenerationUnavailableReason)}
+                                aria-description={regenerationUnavailableReason}
+                                onClick={onRegenerateResponseClicked}
                                 size="small"
                             ></Button>
                         </Tooltip>
                     )}
                 </div>
             )}
-            {onRegenerateResponseClicked && onFollowUpActionSend && !isStreaming && (
+            {onFollowUpActionSend && !isStreaming && (
                 <div className={styles.followUpActionsBelow}>
                     <FollowUpActionList onSend={onFollowUpActionSend} />
                 </div>

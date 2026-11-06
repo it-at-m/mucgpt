@@ -35,6 +35,7 @@ import { AgUiEventDrawer, type AgUiEventLogEntry } from "../../components/AgUiEv
 import { scrollIntoNearestContainer } from "../../utils/scrollIntoNearestContainer";
 import { loadConversation } from "../../service/conversationHistory";
 import { CANVAS_TOOL_IDS, setCopyIntoCanvasHandler } from "../../utils/canvasStream";
+import { useCanvasLimits } from "../../components/Canvas/canvasLimits";
 
 const requestPersist = true;
 const conversationActions = getConversationActionCapabilities(requestPersist);
@@ -276,10 +277,12 @@ const Chat = () => {
     // Canvas ↔ chat wiring: the request carries the current
     // canvas state, and stream events + run lifecycle are routed into the editor.
     // The ref keeps the wiring stable while the controller identity changes.
+    const canvasLimits = useCanvasLimits();
     const canvasWiring = useMemo<CanvasWiring>(() => {
         let runHadCanvasActivity = false;
         return {
             getCanvasState: () => canvasRef.current.toCanvasState(),
+            streamContentLimit: canvasLimits.editorLimitChars,
             onStreamEvent: event => {
                 const c = canvasRef.current;
                 if (!runHadCanvasActivity && event.state === "STARTED") {
@@ -297,10 +300,10 @@ const Chat = () => {
             onRunStarted: () => {
                 const c = canvasRef.current;
                 runHadCanvasActivity = false;
-                // An open canvas is sent with the request even when empty, so the
-                // agent may write to it this run. A closed canvas locks when the
-                // first canvas event auto-opens the view.
-                if (c.isOpen) c.lock();
+                // The guard reset and lock must run for every run: even a closed
+                // canvas is sent with the request (its content rides along), so
+                // the agent may write — the first canvas event auto-opens the view.
+                c.beginRun();
             },
             onRunFinished: () => {
                 const c = canvasRef.current;

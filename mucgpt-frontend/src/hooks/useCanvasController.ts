@@ -22,7 +22,6 @@ export interface CanvasController {
     requestOpen(): void;
     /** True while the agent is writing */
     isLocked: boolean;
-    lock(): void;
     unlock(): void;
     getMarkdown(): string;
     getSelectionMarkdown(): string | null;
@@ -32,6 +31,11 @@ export interface CanvasController {
     toCanvasState(): CanvasState | null;
     /** APPEND → live insert; UPDATE → replace doc */
     applyStreamEvent(ev: CanvasStreamEvent): void;
+    /** At RUN_STARTED: resets the stream revision guard and locks the editor.
+     * Must run for every run — even with the canvas closed, its content is sent
+     * with the request and the agent may write (the first canvas event
+     * auto-opens the view). */
+    beginRun(): void;
     /** Debounced; used for autosave */
     subscribe(cb: (markdown: string) => void): () => void;
     /** PM-JSON snapshot into the revision rings */
@@ -256,7 +260,10 @@ export function useCanvasController(conversationId: string | undefined, serverCo
 
     // Called on RUN_STARTED: the server numbers canvas_revision per run,
     // so the monotonicity guard must reset per run, not per conversation.
-    const lock = useCallback(() => {
+    // Locking is unconditional: even a closed canvas is sent with the request
+    // (its content rides along), and the first canvas event auto-opens the
+    // view — which must then already be protected from user edits.
+    const beginRun = useCallback(() => {
         lastStreamRevisionRef.current = -1;
         setIsLocked(true);
     }, []);
@@ -397,7 +404,7 @@ export function useCanvasController(conversationId: string | undefined, serverCo
             setIsOpen,
             requestOpen,
             isLocked,
-            lock,
+            beginRun,
             unlock,
             getMarkdown,
             getSelectionMarkdown,
@@ -416,7 +423,7 @@ export function useCanvasController(conversationId: string | undefined, serverCo
             setIsOpen,
             requestOpen,
             isLocked,
-            lock,
+            beginRun,
             unlock,
             getMarkdown,
             getSelectionMarkdown,

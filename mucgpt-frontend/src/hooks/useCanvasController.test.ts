@@ -214,11 +214,11 @@ describe("applyStreamEvent", () => {
         expect(harness.current.getMarkdown()).toBe("newest");
     });
 
-    it("applies a first-of-run UPDATE with canvas_revision 0 after lock()", () => {
+    it("applies a first-of-run UPDATE with canvas_revision 0 after beginRun()", () => {
         const harness = renderController();
         harness.render(undefined);
         act(() => {
-            harness.current.lock();
+            harness.current.beginRun();
             harness.current.applyStreamEvent({ state: "UPDATE", content: "zeroth", metadata: { canvas_revision: 0 } });
         });
         expect(harness.current.getMarkdown()).toBe("zeroth");
@@ -226,6 +226,27 @@ describe("applyStreamEvent", () => {
             harness.current.applyStreamEvent({ state: "UPDATE", content: "replayed", metadata: { canvas_revision: 0 } });
         });
         expect(harness.current.getMarkdown()).toBe("zeroth");
+    });
+
+    it("beginRun resets the revision guard and locks even with the canvas closed", () => {
+        // Regression: a run starting with a closed canvas previously kept the
+        // guard from the previous run, so the new run's revision-1 UPDATE was
+        // dropped and the auto-opened canvas stayed unlocked.
+        const harness = renderController();
+        harness.render(undefined);
+        act(() => {
+            harness.current.beginRun();
+            harness.current.applyStreamEvent({ state: "UPDATE", content: "run one", metadata: { canvas_revision: 1 } });
+        });
+        expect(harness.current.getMarkdown()).toBe("run one");
+        act(() => {
+            harness.current.unlock();
+            // Canvas never opened; a new run starts.
+            harness.current.beginRun();
+            harness.current.applyStreamEvent({ state: "UPDATE", content: "run two doc", metadata: { canvas_revision: 1 } });
+        });
+        expect(harness.current.getMarkdown()).toBe("run two doc");
+        expect(harness.current.isLocked).toBe(true);
     });
 
     it("applies a canvas_edit UPDATE whose metadata serialized as null", () => {

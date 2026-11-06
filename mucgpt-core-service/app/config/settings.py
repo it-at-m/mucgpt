@@ -404,9 +404,9 @@ class MCPToolOverride(BaseModel):
     @field_validator("group")
     @staticmethod
     def validate_group(value: str | None) -> str | None:
-        """Reject empty group names, which would expose tools without a group."""
-        if value is not None and not value.strip():
-            raise ValueError("group needs a non-empty name")
+        """Reject whitespace-only group names while allowing empty fallback values."""
+        if value and not value.strip():
+            raise ValueError("group cannot contain only whitespace")
         return value
 
 

@@ -1,0 +1,79 @@
+.panel {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    min-width: 0;
+    background-color: var(--colorNeutralBackground1);
+    border-left: 1px solid var(--colorNeutralStroke2);
+}
+
+/* "Agent schreibt…" progress line: muted text with the shared slow shimmer (DESIGN.md §9). */
+.statusLine {
+    padding: var(--spacingVerticalXXS) var(--spacingHorizontalL);
+    border-bottom: 1px solid var(--colorNeutralStroke3);
+}
+
+.shimmer {
+    /* One full sweep; slow enough to read as calm background activity. */
+    --canvas-shimmer-period: 2s;
+    color: var(--colorNeutralForeground3);
+    font-size: var(--fontSizeBase300);
+    line-height: var(--lineHeightBase300);
+    background: linear-gradient(
+            90deg,
+            var(--colorNeutralForeground3) 0%,
+            var(--colorNeutralForeground3) 32%,
+            var(--app-progress-highlight) 46%,
+            var(--app-progress-highlight) 54%,
+            var(--colorNeutralForeground3) 68%,
+            var(--colorNeutralForeground3) 100%
+        )
+        0 0 / 200% 100%;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: canvas-progress-shimmer var(--canvas-shimmer-period) var(--curveEasyEase) infinite alternate;
+}
+
+@keyframes canvas-progress-shimmer {
+    from {
+        background-position: 100% 0;
+    }
+    to {
+        background-position: 0% 0;
+    }
+}
+
+.emptyState {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -60%);
+    text-align: center;
+    max-width: 280px;
+    pointer-events: none;
+    color: var(--colorNeutralForeground3);
+}
+
+.emptyTitle {
+    color: var(--colorNeutralForeground2);
+    font-size: var(--fontSizeBase400);
+    line-height: var(--lineHeightBase400);
+    margin: 0 0 var(--spacingVerticalXXS);
+}
+
+.emptyHint {
+    color: var(--colorNeutralForeground3);
+    font-size: var(--fontSizeBase300);
+    line-height: var(--lineHeightBase300);
+    margin: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .shimmer {
+        background: none;
+        color: var(--colorNeutralForeground2);
+        -webkit-text-fill-color: currentColor;
+        animation: none;
+    }
+}

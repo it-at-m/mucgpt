@@ -63,6 +63,8 @@ async def get_config(user_info=Depends(authenticate_user)) -> ConfigResponse:
         ad2image_url=settings.AD2IMAGE_URL,
         owner_profile_url_template=settings.OWNER_PROFILE_URL_TEMPLATE,
         ag_ui_enabled=settings.AG_UI_ENABLED,
+        canvas_content_max_chars=settings.CANVAS_CONTENT_MAX_CHARS,
+        canvas_editor_max_chars=settings.CANVAS_EDITOR_MAX_CHARS,
     )
 
     models = settings.MODELS

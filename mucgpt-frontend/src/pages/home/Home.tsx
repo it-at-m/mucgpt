@@ -4,7 +4,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Button, Tab, TabList } from "@fluentui/react-components";
 import type { SelectTabData, SelectTabEvent } from "@fluentui/react-components";
-import { CompassNorthwest24Regular } from "@fluentui/react-icons";
+import { CompassNorthwest24Regular, PanelRight24Regular } from "@fluentui/react-icons";
 import { useCallback, useContext, useEffect, useMemo, useState } from "react";
 
 import { AssistantStorageService } from "../../service/assistantstorage";
@@ -319,6 +319,14 @@ const Home = () => {
     return (
         <div className={styles.pageContainer}>
             <section className={styles.chatstartercontainer} aria-labelledby="chat-header">
+                <Button
+                    className={styles.canvasChatButton}
+                    appearance="secondary"
+                    icon={<PanelRight24Regular aria-hidden />}
+                    onClick={() => navigate(`/chat?new=${Date.now()}&canvas=1`)}
+                >
+                    {t("home.new_chat_with_canvas")}
+                </Button>
                 <h1 id="chat-header" className={styles.heading}>
                     {t("home.chat_header", { user: username, defaultValue: "Hallo {{user}}, was hast du heute vor?" })}{" "}
                 </h1>

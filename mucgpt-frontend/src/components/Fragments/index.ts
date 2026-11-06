@@ -1,6 +1,7 @@
 export { BaseFragment } from "./BaseFragment/BaseFragment";
 export type { FragmentProps } from "./BaseFragment/BaseFragment";
 export { BrainstormFragment } from "./BrainstormFragment/BrainstormFragment";
+export { CanvasFragment } from "./CanvasFragment/CanvasFragment";
 export { SimplifiedTextFragment } from "./SimplifiedTextFragment/SimplifiedTextFragment";
 export { FragmentManager } from "./FragmentManager/FragmentManager";
 export type { FragmentManagerProps } from "./FragmentManager/FragmentManager";

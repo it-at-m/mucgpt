@@ -478,6 +478,7 @@ class DBConfig(BaseModel):
     USER: str = "admin"
     PASSWORD: SecretStr = SecretStr("admin")
 
+
 class PromptConfig(BaseModel):
     """A prompt inside a Langfuse folder."""
 
@@ -496,6 +497,13 @@ class PromptPoolConfig(BaseModel):
     """Configured Langfuse prompt folders."""
 
     FOLDERS: list[PromptFolderConfig] = Field(default_factory=list)
+
+
+class ReleaseNoteConfig(BaseModel):
+    """A release-note entry shown by the frontend."""
+
+    version: str = Field(..., min_length=1)
+    content: str = Field(..., min_length=1)
 
 
 # Backward-compatible aliases
@@ -529,6 +537,7 @@ class Settings(BaseSettings):
     APP_VERSION: str = "unknown"
     FRONTEND_VERSION: str = "unknown"
     ASSISTANT_VERSION: str = "unknown"
+    RELEASE_NOTES: list[ReleaseNoteConfig] = Field(default_factory=list)
     FOOTER_LINK_URL: str | None = None
     FOOTER_LABEL: str | None = None
     FAQ_URL: str | None = None
@@ -565,6 +574,14 @@ class Settings(BaseSettings):
     AI_ACT_COMPLIANCE_CHECK_ENABLED: bool = True
     COMPLIANCE_CACHE_ENABLED: bool = True
     COMPLIANCE_CACHE_TTL_SECONDS: PositiveInt = 30 * 60
+
+    # Canvas
+    # Maximum persisted canvas content length (characters); the agent tools and
+    # the CanvasState request model derive their caps from this.
+    CANVAS_CONTENT_MAX_CHARS: PositiveInt = 256 * 1024
+    # Editor input limit (characters). The export endpoint caps the serialized
+    # markdown/html at 4× this to leave headroom for markup and separators.
+    CANVAS_EDITOR_MAX_CHARS: PositiveInt = 512 * 1024
 
     # Nested sub-configurations
     SSO: SSOConfig = Field(default_factory=SSOConfig)

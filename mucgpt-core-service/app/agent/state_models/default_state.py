@@ -2,6 +2,8 @@ from typing import Any
 
 from langchain.agents.middleware import AgentState
 
+from api.api_models import CanvasState
+
 
 class DefaultAgentState(AgentState):
     """Default agent state for generic chats without domain-specific routing.
@@ -11,3 +13,4 @@ class DefaultAgentState(AgentState):
     """
 
     data_sources: list[Any] | None
+    canvas: CanvasState | None

@@ -486,7 +486,7 @@ export const Mermaid: React.FC<MermaidProps> = ({ text, darkTheme }) => {
                         dangerouslySetInnerHTML={{ __html: diagram ?? "" }}
                     />
                 </div>
-                <div className={styles.controlsContainer}>
+                <div className={styles.controlsContainer} data-clipboard-ignore="true">
                     <div className={styles.zoomControls}>
                         <div className={styles.zoomButtons}>
                             <Tooltip content={t("components.mermaid.zoomOut", "Zoom Out (Ctrl + -)")} relationship="description" positioning="above">

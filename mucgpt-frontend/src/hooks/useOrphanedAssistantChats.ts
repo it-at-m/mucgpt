@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 
 import { AssistantStorageService } from "../service/assistantstorage";
 import { CommunityAssistantStorageService } from "../service/communityassistantstorage";
-import { LEGACY_ASSISTANT_ID_PATTERN, resolveOrphanedAssistantChats, type OrphanedAssistant } from "../utils/orphanedAssistantChats";
+import { resolveOrphanedAssistantChats, type OrphanedAssistant } from "../utils/orphanedAssistantChats";
 
 interface UseOrphanedAssistantChatsParams {
     assistantStorageService: AssistantStorageService;
@@ -48,7 +48,7 @@ export const useOrphanedAssistantChats = ({
                 if (lastUnderscore === -1) continue;
 
                 const assistantId = withoutPrefix.substring(0, lastUnderscore);
-                if (!assistantId || excludeIds.has(assistantId) || LEGACY_ASSISTANT_ID_PATTERN.test(assistantId)) continue;
+                if (!assistantId || excludeIds.has(assistantId)) continue;
 
                 if (record._last_edited > (lastUsedById.get(assistantId) ?? 0)) {
                     lastUsedById.set(assistantId, record._last_edited);

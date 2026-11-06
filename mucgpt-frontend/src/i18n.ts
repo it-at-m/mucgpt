@@ -1004,7 +1004,7 @@ i18n
                             deleted_state_no_history: "Für diesen Assistenten ist kein lokaler Chatverlauf verfügbar.",
                             legacy_state_title: "Veralteter Community-Assistent",
                             legacy_state_hint:
-                                "Dieser Community-Assistent wird nicht mehr unterstützt. Alte Chatverläufe können weiterhin eingesehen werden. Bitte löschen Sie diesen Assistenten und abonnieren Sie ihn im Bereich 'Community' neu."
+                                "Dieser Community-Assistent wird nicht mehr unterstützt. Alte Chatverläufe können weiterhin eingesehen werden. Bitte lösche diesen Assistenten, wenn du ihn nicht mehr brauchst."
                         },
                         toolsselector: {
                             title: "Verfügbare Werkzeuge",
@@ -2015,7 +2015,7 @@ i18n
                             deleted_state_no_history: "No local chat history is available for this assistant.",
                             legacy_state_title: "Deprecated Community Assistant",
                             legacy_state_hint:
-                                "This community assistant is no longer supported. Past chat histories can still be viewed. Please delete this assistant and subscribe to it again in the Community section."
+                                "This community assistant is no longer supported. Past chat histories can still be viewed. Please delete this assistant if you no longer need it."
                         },
                         toolsselector: {
                             title: "Available tools",
@@ -2996,7 +2996,7 @@ i18n
                             deleted_state_no_history: "Fuer den Assistenten gibt's koan lokalen Chatverlauf.",
                             legacy_state_title: "Veralteter Community-Assistent",
                             legacy_state_hint:
-                                "Der Community-Assistent werd nimmer unterstuetzt. Oide Chatverlauf ko mo weiterhin aschaugn. Bitte loesch den Assistenten und abonnier ean in da 'Community' nei."
+                                "Der Community-Assistent werd nimmer unterstuetzt. Oide Chatverlauf ko mo weiterhin aschaugn. Bitte loesch den Assistenten, wennst en nimma brauchst."
                         },
                         toolsselector: {
                             title: "Verfügbare Werkzeig",
@@ -3979,7 +3979,7 @@ i18n
                             deleted_state_no_history: "Aucun historique de chat local n'est disponible pour cet assistant.",
                             legacy_state_title: "Assistant communautaire obsolète",
                             legacy_state_hint:
-                                "Cet assistant communautaire n'est plus pris en charge. Les anciens historiques de chat peuvent toujours être consultés. Veuillez supprimer cet assistant et vous y réabonner dans la section 'Communauté'."
+                                "Cet assistant communautaire n'est plus pris en charge. Les anciens historiques de chat peuvent toujours être consultés. Veuillez supprimer cet assistant si vous n'en avez plus besoin."
                         },
                         toolsselector: {
                             title: "Outils disponibles",
@@ -4964,7 +4964,7 @@ i18n
                             deleted_state_no_history: "Для цього асистента немає локальної історії чату.",
                             legacy_state_title: "Застарілий Асистент Спільноти",
                             legacy_state_hint:
-                                "Цей асистент спільноти більше не підтримується. Старі історії чатів все ще можна переглянути. Будь ласка, видаліть цього асистента та підпишіться на нього знову в розділі 'Спільнота'."
+                                "Цей асистент спільноти більше не підтримується. Старі історії чатів все ще можна переглянути. Будь ласка, видаліть цього асистента, якщо він вам більше не потрібен."
                         },
                         toolsselector: {
                             title: "Доступні інструменти",

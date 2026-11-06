@@ -39,7 +39,7 @@ import {
     mapCommunitySnapshotToAssistant,
     upsertCommunityAssistantSnapshot
 } from "../../utils/community-assistant-snapshots";
-import { useDuplicateAssistant } from "../discovery/hooks/useDuplicateAssistant";
+import { useDuplicateAssistant, duplicateConfirmMessageKey } from "../discovery/hooks/useDuplicateAssistant";
 import { useMigrateLocalAssistant } from "../../hooks/useMigrateLocalAssistant";
 import { CloseConfirmationDialog } from "../../components/AssistantDialogs/shared/CloseConfirmationDialog";
 import { PendingCreateDraftConfirmDialog } from "../../components/AssistantDialogs/shared/PendingCreateDraftConfirmDialog";
@@ -117,12 +117,13 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
     const [noAccess, setNoAccess] = useState<boolean>(false);
     const [isUnsubscribed, setIsUnsubscribed] = useState<boolean>(false);
     const [isAssistantMissing, setIsAssistantMissing] = useState<boolean>(false);
+    const [isAccessRevoked, setIsAccessRevoked] = useState<boolean>(false);
     const [uploadedData, setUploadedData] = useState<UploadedData[]>([]);
     const [isInfoDrawerOpen, setIsInfoDrawerOpen] = useState<boolean>(false);
     const [assistantInfoData, setAssistantInfoData] = useState<AssistantCardData | null>(null);
     const [isAssistantInfoLoading, setIsAssistantInfoLoading] = useState<boolean>(false);
     const [isOwnershipResolved, setIsOwnershipResolved] = useState<boolean>(!(strategy instanceof CommunityAssistantStrategy));
-    const [deletedAssistantSnapshot, setDeletedAssistantSnapshot] = useState<CommunityAssistantSnapshot | null>(null);
+    const [assistantSnapshot, setAssistantSnapshot] = useState<CommunityAssistantSnapshot | null>(null);
     const [lastQuestion, setLastQuestion] = useState<string>("");
     const [isLoading, setIsLoading] = useState<boolean>(false);
     // True from request start until the answer has fully finished streaming (see the same flag in Chat.tsx).
@@ -133,8 +134,8 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
     const [showUnsubscribeConfirm, setShowUnsubscribeConfirm] = useState<boolean>(false);
     const isDeletedAssistant = strategy instanceof DeletedCommunityAssistantStrategy;
     const isLocalAssistant = strategy instanceof LocalAssistantStrategy;
-    // Missing config or lapsed subscription: history stays viewable, but the chat is read-only.
-    const historyReadOnly = isDeletedAssistant || isUnsubscribed || isAssistantMissing;
+    // Missing config, lapsed subscription, or revoked access: history stays viewable, but the chat is read-only.
+    const historyReadOnly = isDeletedAssistant || isUnsubscribed || isAssistantMissing || isAccessRevoked;
     const {
         assistantToDuplicate,
         showDuplicateConfirm,
@@ -267,9 +268,10 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
         /** Loads or initializes the chat and assistant data for the current route. */
         const loadData = async () => {
             if (assistant_id) {
-                setDeletedAssistantSnapshot(null);
+                setAssistantSnapshot(null);
                 setIsUnsubscribed(false);
                 setIsAssistantMissing(false);
+                setIsAccessRevoked(false);
                 setIsOwnershipResolved(!(strategy instanceof CommunityAssistantStrategy));
                 if (error) setError(undefined);
                 setIsLoadingValue(true);
@@ -302,10 +304,10 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                             if (isDeletedAssistant) {
                                 try {
                                     const snapshot = await communityAssistantStorageService.getAssistantConfig(assistant_id);
-                                    setDeletedAssistantSnapshot(isCompleteCommunityAssistantSnapshot(snapshot) ? snapshot : null);
+                                    setAssistantSnapshot(isCompleteCommunityAssistantSnapshot(snapshot) ? snapshot : null);
                                 } catch (snapshotError) {
                                     console.error("Error loading deleted assistant snapshot:", snapshotError);
-                                    setDeletedAssistantSnapshot(null);
+                                    setAssistantSnapshot(null);
                                 }
                             }
 
@@ -363,10 +365,45 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                             });
                         }
                     })
-                    .catch(err => {
-                        if (err instanceof ApiError && err.status === 403 && notSubscribed) {
-                            setNoAccess(true);
-                            accessDenied = true;
+                    .catch(async err => {
+                        if (err instanceof ApiError && err.status === 403) {
+                            // Access to a still-existing assistant was revoked. The locally stored snapshot
+                            // keeps the chat reachable read-only and allows saving an own copy from it;
+                            // without a snapshot the previous behavior applies.
+                            try {
+                                const snapshot = await communityAssistantStorageService.getAssistantConfig(assistant_id);
+                                if (isCompleteCommunityAssistantSnapshot(snapshot)) {
+                                    const assistant = mapCommunitySnapshotToAssistant(snapshot);
+                                    setAssistantSnapshot(snapshot);
+                                    setIsAccessRevoked(true);
+                                    configMissing = true;
+                                    setAssistantConfig(assistant);
+                                    dispatch({ type: "SET_SYSTEM_PROMPT", payload: assistant.system_message });
+                                    dispatch({ type: "SET_CREATIVITY", payload: assistant.creativity });
+                                    setFollowUpActions([]);
+                                    return fetchHistory().catch(fetchError => {
+                                        console.error("Error loading chat history:", fetchError);
+                                        showError(t("components.assistant_chat.load_chat_failed"), t("components.assistant_chat.load_chat_failed_message"));
+                                    });
+                                }
+                            } catch (snapshotError) {
+                                console.error("Error loading local snapshot of an inaccessible assistant:", snapshotError);
+                            }
+
+                            if (notSubscribed) {
+                                setNoAccess(true);
+                                accessDenied = true;
+                            } else {
+                                console.error("Error loading assistant configuration:", err);
+                                showError(
+                                    t("components.assistant_chat.load_assistant_failed"),
+                                    err instanceof Error ? err.message : t("components.assistant_chat.load_assistant_failed_message")
+                                );
+                                // wait a moment before redirecting to home
+                                setTimeout(() => {
+                                    window.location.href = "/";
+                                }, 2000);
+                            }
                         } else {
                             console.error("Error loading assistant configuration:", err);
                             showError(
@@ -762,11 +799,23 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
 
         showSuccess(
             t("components.assistant_chat.delete_assistant_success"),
-            t("components.assistant_chat.delete_assistant_success_message", { title: t("components.assistant_chat.assistant_not_found") })
+            t("components.assistant_chat.delete_assistant_success_message", {
+                title: assistantConfig.title || t("components.assistant_chat.assistant_not_found")
+            })
         );
         refreshUnifiedHistory();
         navigate("/discovery");
-    }, [assistant_id, assistantStorageService, communityAssistantStorageService, refreshUnifiedHistory, navigate, showSuccess, showError, t]);
+    }, [
+        assistant_id,
+        assistantConfig.title,
+        assistantStorageService,
+        communityAssistantStorageService,
+        refreshUnifiedHistory,
+        navigate,
+        showSuccess,
+        showError,
+        t
+    ]);
 
     // Regenerate-Funktion
     const onRegenerateResponseClicked = useCallback(async () => {
@@ -919,7 +968,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
         }
 
         if (isDeletedAssistant) {
-            const duplicateCandidateSnapshot = deletedAssistantSnapshot;
+            const duplicateCandidateSnapshot = assistantSnapshot;
 
             return (
                 <div className={styles.stateCallout}>
@@ -933,7 +982,34 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                                           id: assistant_id,
                                           title: duplicateCandidateSnapshot.title,
                                           rawData: duplicateCandidateSnapshot,
-                                          isDeletedSnapshot: true
+                                          isLocalSnapshot: true,
+                                          snapshotReason: "deleted"
+                                      })
+                                : undefined
+                        }
+                        onDelete={() => setShowDeleteConfirm(true)}
+                    />
+                </div>
+            );
+        }
+
+        if (isAccessRevoked) {
+            const duplicateCandidateSnapshot = assistantSnapshot;
+
+            return (
+                <div className={styles.stateCallout}>
+                    <AssistantStateCallout
+                        state="revoked_access"
+                        context="chat"
+                        onDuplicate={
+                            duplicateCandidateSnapshot
+                                ? () =>
+                                      requestDuplicateAssistant({
+                                          id: assistant_id,
+                                          title: duplicateCandidateSnapshot.title,
+                                          rawData: duplicateCandidateSnapshot,
+                                          isLocalSnapshot: true,
+                                          snapshotReason: "revoked"
                                       })
                                 : undefined
                         }
@@ -1062,11 +1138,12 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
     }, [
         isLegacyAssistant,
         isDeletedAssistant,
+        isAccessRevoked,
         isLocalAssistant,
         isAssistantUnavailable,
         isUnsubscribed,
         isAssistantMissing,
-        deletedAssistantSnapshot,
+        assistantSnapshot,
         canEdit,
         navigate,
         setShowLocalMigrateConfirm,
@@ -1290,12 +1367,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                 onConfirmClose={confirmDuplicateAssistant}
                 confirmDisabled={isDuplicating}
                 title={t("components.community_assistants.duplicate_confirm_title")}
-                message={t(
-                    assistantToDuplicate?.isDeletedSnapshot
-                        ? "components.community_assistants.duplicate_confirm_message_deleted"
-                        : "components.community_assistants.duplicate_confirm_message",
-                    { title: assistantToDuplicate?.title ?? "" }
-                )}
+                message={t(duplicateConfirmMessageKey(assistantToDuplicate), { title: assistantToDuplicate?.title ?? "" })}
                 confirmLabel={t("components.community_assistants.duplicate_confirm_action")}
             />
             <PendingCreateDraftConfirmDialog
@@ -1308,25 +1380,25 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
             <CloseConfirmationDialog
                 open={showDeleteConfirm}
                 onOpenChange={setShowDeleteConfirm}
-                onConfirmClose={isAssistantMissing ? performMissingAssistantCleanup : () => void performDeleteAssistant(true)}
+                onConfirmClose={isAssistantMissing || isAccessRevoked ? performMissingAssistantCleanup : () => void performDeleteAssistant(true)}
                 title={t(
-                    isAssistantMissing || isDeletedAssistant
+                    isAssistantMissing || isDeletedAssistant || isAccessRevoked
                         ? "components.community_assistants.leftover_chats_cleanup_confirm_title"
                         : "components.assistantsettingsdrawer.deleteDialog.title"
                 )}
                 message={t(
-                    isAssistantMissing || isDeletedAssistant
+                    isAssistantMissing || isDeletedAssistant || isAccessRevoked
                         ? "components.community_assistants.leftover_chats_cleanup_confirm_message"
                         : "components.community_assistants.assistant_delete_chats_choice_message"
                 )}
                 confirmLabel={t(
-                    isAssistantMissing || isDeletedAssistant
+                    isAssistantMissing || isDeletedAssistant || isAccessRevoked
                         ? "components.assistantsettingsdrawer.deleteDialog.confirm"
                         : "components.community_assistants.keep_chats_action"
                 )}
-                confirmIntent={isAssistantMissing || isDeletedAssistant ? "danger" : "default"}
+                confirmIntent={isAssistantMissing || isDeletedAssistant || isAccessRevoked ? "danger" : "default"}
                 secondaryAction={
-                    isAssistantMissing || isDeletedAssistant
+                    isAssistantMissing || isDeletedAssistant || isAccessRevoked
                         ? undefined
                         : { label: t("components.community_assistants.delete_chats_action"), onClick: () => void performDeleteAssistant(false) }
                 }

@@ -5,7 +5,7 @@ import { useTranslation } from "react-i18next";
 import { Button } from "../../ui/Button";
 import { Callout } from "../../ui/Callout";
 
-export type AssistantCalloutState = "deleted" | "missing" | "unsubscribed" | "local" | "legacy" | "pending_legal_review" | "inactive";
+export type AssistantCalloutState = "deleted" | "missing" | "unsubscribed" | "revoked_access" | "local" | "legacy" | "pending_legal_review" | "inactive";
 
 interface AssistantStateCalloutProps {
     state: AssistantCalloutState;
@@ -48,6 +48,11 @@ export const AssistantStateCallout = ({
             title: t("components.community_assistants.unsubscribed_state_title"),
             hint: t("components.community_assistants.unsubscribed_state_hint")
         },
+        revoked_access: {
+            intent: "warning",
+            title: t("components.community_assistants.revoked_state_title"),
+            hint: t("components.community_assistants.revoked_state_hint")
+        },
         local: {
             intent: "warning",
             title: t("components.community_assistants.local_state_title"),
@@ -73,6 +78,8 @@ export const AssistantStateCallout = ({
 
     const isOutdated = state === "deleted" || state === "missing" || state === "local" || state === "legacy";
     const isUnavailable = state === "pending_legal_review" || state === "inactive";
+    const isRevoked = state === "revoked_access";
+    const offersChatCleanup = isOutdated || isRevoked;
 
     const primaryActions = [
         state === "unsubscribed" && onSubscribe && (
@@ -80,7 +87,7 @@ export const AssistantStateCallout = ({
                 {t("components.not_subscribed_dialog.subscribe_button")}
             </Button>
         ),
-        state === "deleted" && onDuplicate && (
+        (state === "deleted" || isRevoked) && onDuplicate && (
             <Button key="duplicate" appearance="primary" icon={<Copy20Regular />} onClick={onDuplicate}>
                 {t("components.community_assistants.deleted_state_save_action")}
             </Button>
@@ -104,9 +111,9 @@ export const AssistantStateCallout = ({
                 {t("components.community_assistants.deleted_state_history_action")}
             </Button>
         ),
-        isOutdated && onDelete && (
+        offersChatCleanup && onDelete && (
             <Button key="delete" appearance="outline" tone="danger" icon={<Delete20Regular />} onClick={onDelete}>
-                {t(state === "deleted" || state === "missing" ? "components.community_assistants.delete_chats_action" : "common.delete")}
+                {t(state === "deleted" || state === "missing" || isRevoked ? "components.community_assistants.delete_chats_action" : "common.delete")}
             </Button>
         )
     ].filter(Boolean);

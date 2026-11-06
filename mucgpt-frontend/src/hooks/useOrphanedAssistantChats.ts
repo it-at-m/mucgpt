@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 
 import { AssistantStorageService } from "../service/assistantstorage";
+import { CommunityAssistantStorageService } from "../service/communityassistantstorage";
 import { LEGACY_ASSISTANT_ID_PATTERN, resolveOrphanedAssistantChats, type OrphanedAssistant } from "../utils/orphanedAssistantChats";
 
 interface UseOrphanedAssistantChatsParams {
@@ -9,13 +10,20 @@ interface UseOrphanedAssistantChatsParams {
     excludeIds: Set<string>;
     /** False while the assistant lists are still loading, so orphan resolution waits for a complete picture. */
     enabled?: boolean;
+    /** Optional source for the locally stored snapshots of inaccessible assistants. */
+    communityAssistantStorageService?: CommunityAssistantStorageService;
 }
 
 /**
  * Surfaces assistants whose chats remain in the browser but that no longer appear
- * in any assistant list (deleted or unsubscribed) so their history stays reachable.
+ * in any assistant list (deleted, revoked access, or unsubscribed) so their history stays reachable.
  */
-export const useOrphanedAssistantChats = ({ assistantStorageService, excludeIds, enabled = true }: UseOrphanedAssistantChatsParams): OrphanedAssistant[] => {
+export const useOrphanedAssistantChats = ({
+    assistantStorageService,
+    excludeIds,
+    enabled = true,
+    communityAssistantStorageService
+}: UseOrphanedAssistantChatsParams): OrphanedAssistant[] => {
     const [orphans, setOrphans] = useState<OrphanedAssistant[]>([]);
 
     useEffect(() => {
@@ -47,7 +55,7 @@ export const useOrphanedAssistantChats = ({ assistantStorageService, excludeIds,
                 }
             }
 
-            const resolved = await resolveOrphanedAssistantChats(Array.from(lastUsedById.keys()), lastUsedById);
+            const resolved = await resolveOrphanedAssistantChats(Array.from(lastUsedById.keys()), lastUsedById, communityAssistantStorageService);
             if (!cancelled) {
                 setOrphans(resolved);
             }
@@ -63,7 +71,7 @@ export const useOrphanedAssistantChats = ({ assistantStorageService, excludeIds,
         return () => {
             cancelled = true;
         };
-    }, [assistantStorageService, excludeIds, enabled]);
+    }, [assistantStorageService, communityAssistantStorageService, excludeIds, enabled]);
 
     return orphans;
 };

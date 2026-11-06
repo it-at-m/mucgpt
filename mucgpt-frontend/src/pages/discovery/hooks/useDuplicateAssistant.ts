@@ -19,8 +19,19 @@ export interface DuplicateAssistantCandidate {
     id: string;
     title: string;
     rawData?: AssistantResponse | CommunityAssistantSnapshot;
-    isDeletedSnapshot?: boolean;
+    /** True when the source is a locally stored snapshot (deleted or inaccessible assistant) instead of a live assistant. */
+    isLocalSnapshot?: boolean;
+    /** Why the source is only available as a local snapshot; selects the confirm-dialog message. */
+    snapshotReason?: "deleted" | "revoked";
 }
+
+/** Selects the i18n key for the duplicate-confirm dialog message based on the candidate's source. */
+export const duplicateConfirmMessageKey = (candidate: DuplicateAssistantCandidate | null): string =>
+    candidate?.isLocalSnapshot
+        ? candidate.snapshotReason === "revoked"
+            ? "components.community_assistants.duplicate_confirm_message_revoked"
+            : "components.community_assistants.duplicate_confirm_message_deleted"
+        : "components.community_assistants.duplicate_confirm_message";
 
 const isAssistantResponse = (data: AssistantResponse | CommunityAssistantSnapshot): data is AssistantResponse =>
     "latest_version" in data && data.latest_version != null && typeof (data as AssistantResponse).latest_version.name === "string";
@@ -144,7 +155,7 @@ export const useDuplicateAssistant = () => {
             const assistantData = await resolveAssistantData(assistantToDuplicate.id, assistantToDuplicate.rawData);
             const assistantTitle = isAssistantResponse(assistantData) ? assistantData.latest_version.name : assistantData.title;
 
-            if (assistantToDuplicate.isDeletedSnapshot && !isAssistantResponse(assistantData)) {
+            if (assistantToDuplicate.isLocalSnapshot && !isAssistantResponse(assistantData)) {
                 setShowDuplicateConfirm(false);
 
                 if (hasCreateAssistantDraft()) {

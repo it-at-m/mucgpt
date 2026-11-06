@@ -1,11 +1,34 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { getCommunityAssistantApi } from "../api/assistant-client";
 import { ApiError } from "../api/fetch-utils";
+import { CommunityAssistantStorageService } from "../service/communityassistantstorage";
+import { CommunityAssistantSnapshot } from "../api/models";
 import { resolveOrphanedAssistantChats } from "./orphanedAssistantChats";
 
 vi.mock("../api/assistant-client", () => ({
     getCommunityAssistantApi: vi.fn()
 }));
+
+const revokedSnapshot: Partial<CommunityAssistantSnapshot> = {
+    snapshot_version: 1,
+    id: "a3",
+    version: "1",
+    title: "Verweigert",
+    description: "Kein Zugriff mehr",
+    system_message: "Prompt",
+    creativity: "low",
+    examples: [],
+    quick_prompts: [],
+    tags: [],
+    hierarchical_access: [],
+    tools: [],
+    is_visible: true
+};
+
+const storageWithSnapshot = () =>
+    ({
+        getAssistantConfig: vi.fn().mockResolvedValue(revokedSnapshot)
+    }) as unknown as CommunityAssistantStorageService;
 
 describe("resolveOrphanedAssistantChats", () => {
     beforeEach(() => {
@@ -29,6 +52,23 @@ describe("resolveOrphanedAssistantChats", () => {
         const orphans = await resolveOrphanedAssistantChats(["a1"], new Map([["a1", 7]]));
 
         expect(orphans).toEqual([{ id: "a1", kind: "deleted", lastUsed: 7 }]);
+    });
+
+    it("marks a 403 as revoked and takes title and description from the local snapshot", async () => {
+        vi.mocked(getCommunityAssistantApi).mockRejectedValue(new ApiError("forbidden", 403));
+        const communityAssistantStorageService = storageWithSnapshot();
+
+        const orphans = await resolveOrphanedAssistantChats(["a3"], new Map([["a3", 21]]), communityAssistantStorageService);
+
+        expect(orphans).toEqual([{ id: "a3", kind: "revoked", title: "Verweigert", description: "Kein Zugriff mehr", lastUsed: 21 }]);
+    });
+
+    it("marks a 403 as revoked without snapshot details when no storage service is given", async () => {
+        vi.mocked(getCommunityAssistantApi).mockRejectedValue(new ApiError("forbidden", 403));
+
+        const orphans = await resolveOrphanedAssistantChats(["a3"], new Map([["a3", 21]]));
+
+        expect(orphans).toEqual([{ id: "a3", kind: "revoked", lastUsed: 21 }]);
     });
 
     it("skips hidden assistants so deliberately suppressed ones stay suppressed", async () => {

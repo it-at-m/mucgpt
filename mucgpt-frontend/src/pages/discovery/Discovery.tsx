@@ -21,7 +21,7 @@ import { CloseConfirmationDialog } from "../../components/AssistantDialogs/share
 import { PendingCreateDraftConfirmDialog } from "../../components/AssistantDialogs/shared/PendingCreateDraftConfirmDialog";
 import { clearPendingAfterCreateAction } from "../../components/AssistantDialogs/shared/afterCreateAction";
 import { useUnifiedHistory } from "../../components/UnifiedHistory";
-import { useDuplicateAssistant } from "./hooks/useDuplicateAssistant";
+import { useDuplicateAssistant, duplicateConfirmMessageKey } from "./hooks/useDuplicateAssistant";
 import { useDiscoveryAssistantLists } from "./hooks/useDiscoveryAssistantLists";
 import { useMigrateLocalAssistant } from "../../hooks/useMigrateLocalAssistant";
 import { useOrphanedAssistantChats } from "../../hooks/useOrphanedAssistantChats";
@@ -129,7 +129,12 @@ const Discovery = () => {
         removeSubscribedAssistant,
         removeAssistantFromLists
     } = useDiscoveryAssistantLists({ assistantStorageService, communityAssistantStorageService });
-    const orphans = useOrphanedAssistantChats({ assistantStorageService, excludeIds: knownAssistantIds, enabled: hasLoadedSuccessfully });
+    const orphans = useOrphanedAssistantChats({
+        assistantStorageService,
+        excludeIds: knownAssistantIds,
+        enabled: hasLoadedSuccessfully,
+        communityAssistantStorageService
+    });
     const {
         assistantToDuplicate,
         showDuplicateConfirm,
@@ -738,7 +743,9 @@ const Discovery = () => {
                                                                 ? t(
                                                                       orphan.kind === "deleted"
                                                                           ? "components.community_assistants.orphaned_deleted_description"
-                                                                          : "components.community_assistants.orphaned_unsubscribed_description"
+                                                                          : orphan.kind === "revoked"
+                                                                            ? "components.community_assistants.orphaned_revoked_description"
+                                                                            : "components.community_assistants.orphaned_unsubscribed_description"
                                                                   )
                                                                 : orphan.description
                                                         }
@@ -750,7 +757,14 @@ const Discovery = () => {
                                                                           tone: "danger"
                                                                       }
                                                                   ]
-                                                                : undefined
+                                                                : orphan.kind === "revoked"
+                                                                  ? [
+                                                                        {
+                                                                            label: t("components.community_assistants.revoked_badge"),
+                                                                            tone: "warning"
+                                                                        }
+                                                                    ]
+                                                                  : undefined
                                                         }
                                                         subscriberCount={0}
                                                         linkTo={`/${orphan.kind === "deleted" ? "deleted/communityassistant" : "communityassistant"}/${orphan.id}`}
@@ -817,7 +831,8 @@ const Discovery = () => {
                                 id: selectedAssistant.id,
                                 title: selectedAssistant.title,
                                 rawData: selectedAssistant.rawData as AssistantResponse | CommunityAssistantSnapshot,
-                                isDeletedSnapshot: selectedAssistant.isDeletedSnapshot
+                                isLocalSnapshot: selectedAssistant.isDeletedSnapshot,
+                                snapshotReason: "deleted"
                             });
                         }}
                         onExport={exportAssistant}
@@ -876,12 +891,7 @@ const Discovery = () => {
                 onConfirmClose={confirmDuplicateAssistant}
                 confirmDisabled={isDuplicating}
                 title={t("components.community_assistants.duplicate_confirm_title")}
-                message={t(
-                    assistantToDuplicate?.isDeletedSnapshot
-                        ? "components.community_assistants.duplicate_confirm_message_deleted"
-                        : "components.community_assistants.duplicate_confirm_message",
-                    { title: assistantToDuplicate?.title ?? "" }
-                )}
+                message={t(duplicateConfirmMessageKey(assistantToDuplicate), { title: assistantToDuplicate?.title ?? "" })}
                 confirmLabel={t("components.community_assistants.duplicate_confirm_action")}
             />
             <PendingCreateDraftConfirmDialog

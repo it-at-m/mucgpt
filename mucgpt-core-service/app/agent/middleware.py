@@ -314,8 +314,9 @@ def _inject_canvas_state(request: ToolCallRequest) -> ToolCallRequest:
         return request
 
     context = _tool_request_context(request)
-    # State first, matching the ToolNode's re-injection: tools update the graph
-    # state's canvas mid-run, so state is the more current source.
+    # State first, matching the ToolNode's re-injection. Mutating tools prefer
+    # the run-scoped working canvas (context.canvas_working) over whatever is
+    # injected here; this value only seeds the first mutation of a run.
     canvas = _state_canvas(request) or _canvas_from(getattr(context, "canvas", None))
 
     args = dict(request.tool_call.get("args") or {})

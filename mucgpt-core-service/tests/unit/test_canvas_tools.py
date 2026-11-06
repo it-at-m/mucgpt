@@ -39,11 +39,16 @@ def _runtime(revision: int = 0, tool_call_id: str = "call-1") -> ToolRuntime:
     )
 
 
-def _command_result(result: Any) -> tuple[str, CanvasState]:
-    """Extract (tool-result text, updated canvas) from a tool invocation."""
+def _command_result(result: Any) -> tuple[str, CanvasState | None]:
+    """Extract (tool-result text, updated canvas) from a tool invocation.
+
+    Mutating tools return plain strings and apply their change to the
+    run-scoped working canvas (see the runtime's context); canvas_read's
+    stale-read Command carries only messages, so the canvas is None there.
+    """
     if isinstance(result, Command):
         [message] = result.update["messages"]
-        return message.content, result.update["canvas"]
+        return message.content, result.update.get("canvas")
     return result, None
 
 

@@ -204,7 +204,11 @@ def _fail(context: Any, error: str) -> str:
 
 
 def _batch_gate(context: Any) -> str | None:
-    """Return the stored failure of this batch, if any."""
+    """Return the stored failure of this batch, if any.
+
+    Only consulted by the mutating tools: a failed mutation leaves the working
+    canvas unchanged, so reads stay safe and are deliberately not gated.
+    """
     failed = getattr(context, "canvas_batch_failed", None)
     if failed:
         return (
@@ -249,6 +253,9 @@ def make_canvas_write_tool(logger: Logger) -> BaseTool:
     ) -> str:
         # The canvas is always editable: when no canvas exists in this
         # conversation yet, canvas_write creates one.
+        # Shape validation stays before the batch gate: an empty-argument call
+        # never touches the canvas, so it must not fail the batch for the
+        # other parallel calls.
         if not content or not content.strip():
             return "Error: content is required for canvas_write."
         context = _tool_context(runtime)
@@ -297,6 +304,9 @@ def make_canvas_edit_tool(logger: Logger) -> BaseTool:
         canvas_state: _CANVAS_STATE_ARG = None,
         runtime: ToolRuntime = None,
     ) -> str:
+        # Shape validation stays before the batch gate: an empty-argument call
+        # never touches the canvas, so it must not fail the batch for the
+        # other parallel calls.
         if not old_text:
             return "Error: old_text is required for canvas_edit."
         context = _tool_context(runtime)

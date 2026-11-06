@@ -68,13 +68,16 @@ export const CanvasPanel = ({ controller, conversationId, serverConversationId, 
     }, [serverId, conversationId]);
 
     useEffect(() => {
-        const updateEmpty = () => setIsEmpty(controllerRef.current.getMarkdown().trim() === "");
-        updateEmpty();
-        return controllerRef.current.subscribe(markdown => {
+        // Evaluated immediately (not only on the debounced update callback), so
+        // a freshly mounted panel shows the correct state for already-loaded
+        // content — e.g. the persistent notice for a restored oversized doc.
+        const update = (markdown: string) => {
             setIsEmpty(markdown.trim() === "");
             setOverLimit(markdown.length > limits.warnChars);
             setOverPersistLimit(markdown.length > limits.contentLimitChars);
-        });
+        };
+        update(controllerRef.current.getMarkdown());
+        return controllerRef.current.subscribe(update);
     }, [conversationId, controller.revisions, limits.warnChars, limits.contentLimitChars]);
 
     // Fired by the editor's size guard when pasted content was clipped.

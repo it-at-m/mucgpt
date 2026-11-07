@@ -332,7 +332,7 @@ export const AssistantEditorPage = (props: AssistantEditorPageProps) => {
             quick_prompts: [],
             starterPrompts: [],
             creativity: CREATIVITY_LOW,
-            default_model: LLM.llm_name,
+            default_model: LLM.id,
             tools: [],
             publish: false,
             owner_ids: [],
@@ -341,7 +341,7 @@ export const AssistantEditorPage = (props: AssistantEditorPageProps) => {
             is_visible: false,
             version: "0"
         }),
-        [LLM.llm_name]
+        [LLM.id]
     );
     const editState = useAssistantState(editAssistant ?? emptyAssistant);
 

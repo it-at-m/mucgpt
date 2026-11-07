@@ -286,7 +286,7 @@ class TestLoadMcpTools:
         monkeypatch.setattr(
             McpLoader,
             "_mcp_settings",
-            MCPConfig(SOURCES={"src": source_cfg}, CACHE_TTL=100),
+            MCPConfig(sources={"src": source_cfg}, cache_ttl=100),
         )
 
         fake_session = FakeSession(
@@ -333,7 +333,7 @@ class TestLoadMcpTools:
         monkeypatch.setattr(
             McpLoader,
             "_mcp_settings",
-            MCPConfig(SOURCES={"good": good, "bad": bad}, CACHE_TTL=100),
+            MCPConfig(sources={"good": good, "bad": bad}, cache_ttl=100),
         )
 
         fake_session = FakeSession(
@@ -366,7 +366,7 @@ class TestLoadMcpTools:
     async def test_all_sources_fail_returns_empty_without_caching(self, monkeypatch):
         bad = make_source("http://bad/sse")
         monkeypatch.setattr(
-            McpLoader, "_mcp_settings", MCPConfig(SOURCES={"bad": bad}, CACHE_TTL=100)
+            McpLoader, "_mcp_settings", MCPConfig(sources={"bad": bad}, cache_ttl=100)
         )
         fake_create_session = make_fake_create_session(
             {}, fail_urls=frozenset({"http://bad/sse"})
@@ -399,7 +399,7 @@ class TestLoadMcpTools:
         monkeypatch.setattr(
             McpLoader,
             "_mcp_settings",
-            MCPConfig(SOURCES={"unsupported": unsupported}, CACHE_TTL=100),
+            MCPConfig(sources={"unsupported": unsupported}, cache_ttl=100),
         )
 
         with (
@@ -426,7 +426,7 @@ class TestLoadMcpTools:
         monkeypatch.setattr(
             McpLoader,
             "_mcp_settings",
-            MCPConfig(SOURCES={"src": source_cfg}, CACHE_TTL=100),
+            MCPConfig(sources={"src": source_cfg}, cache_ttl=100),
         )
         cached_raw = {"src": [MCPTool(name="a", inputSchema={"type": "object"})]}
 
@@ -461,7 +461,7 @@ class TestLoadMcpTools:
         monkeypatch.setattr(
             McpLoader,
             "_mcp_settings",
-            MCPConfig(SOURCES={}, CACHE_TTL=100),
+            MCPConfig(sources={}, cache_ttl=100),
         )
         cached_raw = {
             "removed_source": [MCPTool(name="a", inputSchema={"type": "object"})]
@@ -480,7 +480,7 @@ class TestLoadMcpTools:
         monkeypatch.setattr(
             McpLoader,
             "_mcp_settings",
-            MCPConfig(SOURCES={"src": source_cfg}, CACHE_TTL=100),
+            MCPConfig(sources={"src": source_cfg}, cache_ttl=100),
         )
         fake_session = FakeSession(
             pages=[[MCPTool(name="a", inputSchema={"type": "object"})]]

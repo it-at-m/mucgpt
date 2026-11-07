@@ -27,7 +27,7 @@ def _build_compliance_cache_key(prompt_hash: str) -> str:
 
 async def _cache_compliance_result(result: ComplianceCheckResponse) -> None:
     settings = get_settings()
-    if not settings.COMPLIANCE_CACHE_ENABLED:
+    if not settings.compliance_cache_enabled:
         return
     if not result.prompt_hash:
         return
@@ -36,7 +36,7 @@ async def _cache_compliance_result(result: ComplianceCheckResponse) -> None:
         await RedisCache.set_object(
             _build_compliance_cache_key(result.prompt_hash),
             result.model_dump(),
-            ttl=settings.COMPLIANCE_CACHE_TTL_SECONDS,
+            ttl=settings.compliance_cache_ttl_seconds,
         )
     except Exception:
         logger.warning(

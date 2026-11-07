@@ -165,11 +165,9 @@ export const LLMSelector = ({
         else itemRefs.current.delete(value);
     };
 
-    const visibleModels = lockedByAssistant ? options.filter(model => model.llm_name === selectedLLM) : options;
+    const visibleModels = lockedByAssistant ? options.filter(model => model.id === selectedLLM) : options;
     const previewModel =
-        previewLLM === NONE_VALUE
-            ? undefined
-            : (visibleModels.find(model => model.llm_name === previewLLM) ?? visibleModels.find(model => model.llm_name === selectedLLM));
+        previewLLM === NONE_VALUE ? undefined : (visibleModels.find(model => model.id === previewLLM) ?? visibleModels.find(model => model.id === selectedLLM));
     const title = t("components.llmSelector.title");
 
     const renderDetails = (model: Model, active: boolean) => {
@@ -180,8 +178,8 @@ export const LLMSelector = ({
         const ratingLabel = (label: string, value: number) => `${label}: ${t("components.llmSelector.rating", { value, max: RATING_STEPS })}`;
 
         return (
-            <div key={model.llm_name} className={styles.details} data-active={active}>
-                <Body1Strong>{getModelDisplayName(model.llm_name, options)}</Body1Strong>
+            <div key={model.id} className={styles.details} data-active={active}>
+                <Body1Strong>{getModelDisplayName(model.id, options)}</Body1Strong>
                 {(knowledge || priceRating !== null || contextRating !== null) && (
                     <dl className={styles.facts}>
                         {priceRating !== null && (
@@ -215,14 +213,14 @@ export const LLMSelector = ({
         const shortDescription = model.short_description?.trim();
         return (
             <MenuItemRadio
-                key={model.llm_name}
-                ref={registerItem(model.llm_name)}
+                key={model.id}
+                ref={registerItem(model.id)}
                 name={MODEL_GROUP}
-                value={model.llm_name}
+                value={model.id}
                 subText={shortDescription ? { children: shortDescription, className: classes.subText } : undefined}
-                onFocus={() => setPreviewLLM(model.llm_name)}
+                onFocus={() => setPreviewLLM(model.id)}
             >
-                {getModelDisplayName(model.llm_name, options)}
+                {getModelDisplayName(model.id, options)}
             </MenuItemRadio>
         );
     });
@@ -283,7 +281,7 @@ export const LLMSelector = ({
                                 {noneOption.description && <Body1 className={styles.description}>{noneOption.description}</Body1>}
                             </div>
                         )}
-                        {visibleModels.map(model => renderDetails(model, model.llm_name === previewModel?.llm_name))}
+                        {visibleModels.map(model => renderDetails(model, model.id === previewModel?.id))}
                     </div>
                 </div>
             </MenuPopover>

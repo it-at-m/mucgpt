@@ -13,11 +13,11 @@ maintainers = [
 ]
 requires-python = ">=3.13"
 dependencies = [
-    "alembic==1.18.5",
-    "asyncpg==0.31.0",
+    "alembic==1.20.1",
+    "asyncpg==0.32.0",
     "psycopg2-binary==2.9.13",
-    "pydantic-settings[yaml]==2.14.2",
-    "sqlalchemy==2.0.57",
+    "pydantic-settings[yaml]==2.16.2",
+    "sqlalchemy==2.1.8",
 ]
 
 [dependency-groups]

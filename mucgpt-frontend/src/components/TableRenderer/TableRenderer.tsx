@@ -79,7 +79,7 @@ export default function TableRenderer(props: TableRendererProps) {
                     {children}
                 </table>
             </div>
-            <div className={styles.actions}>
+            <div className={styles.actions} data-clipboard-ignore="true">
                 <Tooltip content={t("components.table_renderer.download_csv")} relationship="description">
                     <Button
                         appearance="subtle"

@@ -90,18 +90,13 @@ export class UnifiedHistoryStorage {
     async deleteEntry(entry: UnifiedHistoryEntry): Promise<void> {
         const conversationId = entry.assistantId ? entry.id.slice(AssistantStorageService.GENERATE_BOT_CHAT_PREFIX(entry.assistantId).length) : entry.id;
         await deleteConversationApi(conversationId);
-        if (entry.kind === "assistant") {
-            const deleted = await this.assistantChatStorage.delete(entry.id);
-            if (!deleted) {
-                throw new Error(`Failed to delete assistant history entry "${entry.id}"`);
-            }
-            return;
-        }
-
-        const deleted = await this.chatStorage.delete(entry.id);
+        const storage = entry.kind === "assistant" ? this.assistantChatStorage : this.chatStorage;
+        const deleted = await storage.delete(entry.id);
         if (!deleted) {
-            throw new Error(`Failed to delete chat history entry "${entry.id}"`);
+            throw new Error(`Failed to delete ${entry.kind} history entry "${entry.id}"`);
         }
+        // The server-side canvas (content and revision rings) rides along: the
+        // conversation delete's canvas cascade removes it.
     }
 
     async renameEntry(entry: UnifiedHistoryEntry, name: string): Promise<void> {

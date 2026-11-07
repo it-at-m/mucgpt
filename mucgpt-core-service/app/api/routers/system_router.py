@@ -14,7 +14,27 @@ settings = get_settings()
     description="This endpoint returns the configuration of the application.",
     response_model=ConfigResponse,
     responses={
-        200: {"description": "Successful Response"},
+        200: {
+            "description": "Successful Response. RELEASE_NOTES must be configured newest to oldest; the version page opens the first entry by default.",
+            "content": {
+                "application/json": {
+                    "examples": {
+                        "populated": {
+                            "summary": "Newest release note first",
+                            "value": {
+                                "release_notes": [
+                                    {"version": "2.0.3", "content": "Latest changes"}
+                                ]
+                            },
+                        },
+                        "empty": {
+                            "summary": "No release notes",
+                            "value": {"release_notes": []},
+                        },
+                    }
+                }
+            },
+        },
         401: {"description": "Unauthorized"},
     },
 )
@@ -27,6 +47,8 @@ async def get_config(user_info=Depends(authenticate_user)) -> ConfigResponse:
         core_version=settings.version,
         frontend_version=settings.frontend_version,
         assistant_version=settings.assistant_version,
+        # Keep the configured order: the frontend opens the first note by default.
+        release_notes=[note.model_dump() for note in settings.release_notes],
         document_processing_enabled=settings.parser_backend != ParserBackendType.NONE,
         transcription_enabled=settings.transcription_enabled,
         transcription_default_model=settings.transcription_default_model,
@@ -41,6 +63,8 @@ async def get_config(user_info=Depends(authenticate_user)) -> ConfigResponse:
         ad2image_url=settings.ad2image_url,
         owner_profile_url_template=settings.owner_profile_url_template,
         ag_ui_enabled=settings.ag_ui_enabled,
+        canvas_content_max_chars=settings.canvas_content_max_chars,
+        canvas_editor_max_chars=settings.canvas_editor_max_chars,
     )
 
     models = settings.models

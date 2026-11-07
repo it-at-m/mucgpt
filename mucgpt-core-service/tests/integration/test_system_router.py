@@ -20,11 +20,31 @@ def test_config_endpoint(test_client):
     assert "core_version" in data
     assert "frontend_version" in data  # Note: typo in API model
     assert "assistant_version" in data
+    assert "release_notes" in data
     assert "env_name" in data
     assert "alternative_logo" in data
     assert "admin_role" in data
     assert "models" in data
     assert isinstance(data["models"], list)
+
+
+@pytest.mark.integration
+def test_config_endpoint_includes_release_notes(test_client):
+    """Release notes are exposed in the configured order."""
+    mock_settings = Settings(
+        release_notes=[
+            {"version": "2.0.3", "content": "Latest changes"},
+            {"version": "2.0.2", "content": "Previous changes"},
+        ]
+    )
+    with patch("api.routers.system_router.settings", mock_settings):
+        response = test_client.get("/config", headers=headers)
+
+    assert response.status_code == 200
+    assert response.json()["release_notes"] == [
+        {"version": "2.0.3", "content": "Latest changes"},
+        {"version": "2.0.2", "content": "Previous changes"},
+    ]
 
 
 @pytest.mark.integration

@@ -13,7 +13,12 @@ from mcp.types import Tool as MCPTool
 from redis.asyncio import Redis
 from redis.exceptions import LockError
 
-from config.settings import MCPSourceConfig, MCPTransport, get_mcp_settings
+from config.settings import (
+    MCPSourceConfig,
+    MCPToolOverride,
+    MCPTransport,
+    get_mcp_settings,
+)
 from core.auth_models import AuthenticationResult
 from core.cache import RedisCache
 from core.logtools import getLogger
@@ -317,18 +322,15 @@ class McpLoader:
         source_config: MCPSourceConfig,
     ) -> None:
         """Apply description overrides and group metadata to a wrapped MCP tool in place."""
-        # Attempt to load detailed tool descriptions for this mcp-source
-        # this is optional and only used to enrich the tool metadata with a more detailed description, if available
-        # The idea is that by customizing the mcp tool description files,
-        # we can provide better, e.g. usecase specific, descriptions for the tools
-        # We found that the descriptions provided by the MCP sources themselves are often not sufficient for good performance,
-        # so this is a way to enrich them
-        config_descriptions = source_config.descriptions or []
-        custom_desc_entry = next(
-            (d for d in config_descriptions if d.name == wrapped_tool.name),
+        tool_override = next(
+            (
+                override
+                for override in source_config.overrides or []
+                if override.name == wrapped_tool.name
+            ),
             None,
         )
-        custom_desc = custom_desc_entry.description if custom_desc_entry else None
+        custom_desc = tool_override.description if tool_override else None
 
         existing_metadata = dict(getattr(wrapped_tool, "metadata", {}) or {})
         old_description = existing_metadata.pop("description", None)
@@ -337,8 +339,9 @@ class McpLoader:
             **existing_metadata,
             "mcp_source": source_id,
             "mcp_group": McpLoader._resolve_group(
-                tool_name=wrapped_tool.name,
+                source_id=source_id,
                 source_config=source_config,
+                tool_override=tool_override,
             ),
         }
 
@@ -397,15 +400,17 @@ class McpLoader:
         return tools
 
     @staticmethod
-    def _resolve_group(tool_name: str, source_config: MCPSourceConfig) -> str | None:
-        """Resolve the group for a tool: check tool_groups prefixes first, fall back to group."""
-        tool_groups = getattr(source_config, "tool_groups", None)
-        if tool_groups:
-            lowered = tool_name.lower()
-            for prefix, group in tool_groups.items():
-                if lowered.startswith(prefix.lower()):
-                    return group
-        return getattr(source_config, "group", None)
+    def _resolve_group(
+        source_id: str,
+        source_config: MCPSourceConfig,
+        tool_override: MCPToolOverride | None,
+    ) -> str:
+        """Resolve a tool group: its override, then the source group, then the source id.
+
+        Every MCP tool belongs to a group because users only ever see and select groups.
+        """
+        override_group = getattr(tool_override, "group", None)
+        return override_group or source_config.group or source_id
 
 
 class McpBearerAuthProvider(Auth):

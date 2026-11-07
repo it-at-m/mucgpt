@@ -4,7 +4,7 @@ from typing import Any, Final, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, PositiveInt, field_validator
 
-from config.settings import ReasoningEffort
+from config.settings import ReasoningEffort, get_settings
 
 
 class SummarizeResult(BaseModel):
@@ -101,6 +101,55 @@ class ChatDataSource(BaseModel):
     )
 
 
+_canvas_settings = get_settings()
+
+# Maximum persisted canvas content length (mirrored by the editor input limit
+# CANVAS_EDITOR_MAX_CHARS, which the export endpoint grows by 4× headroom).
+CANVAS_CONTENT_MAX_CHARS = _canvas_settings.canvas_content_max_chars
+CANVAS_EDITOR_MAX_CHARS = _canvas_settings.canvas_editor_max_chars
+# Full canvas reads stop here so the tool result stays inside the model context;
+# the remaining document is reached via canvas_read(around_cursor).
+CANVAS_READ_LIMIT_CHARS = (CANVAS_CONTENT_MAX_CHARS * 95) // 100
+
+
+class CanvasState(BaseModel):
+    """Client-side canvas document state."""
+
+    content: str = Field(
+        ...,
+        max_length=CANVAS_CONTENT_MAX_CHARS,
+        description="Full GFM markdown document",
+    )
+    selection: str | None = Field(
+        None,
+        max_length=CANVAS_CONTENT_MAX_CHARS,
+        description="Serialized markdown of the current selection, if any",
+    )
+    cursor: int | None = Field(
+        None,
+        description=(
+            "Caret position as character offset into the markdown document "
+            "(selection start when text is selected)"
+        ),
+    )
+    truncated: bool = Field(
+        False,
+        description=(
+            "True when the client's editor document exceeds the persistence "
+            "limit and `content` is only its beginning. The stored canvas is "
+            "then not overwritten, and the canvas tools refuse to operate on "
+            "the partial document."
+        ),
+    )
+
+
+class CanvasResponse(BaseModel):
+    """Canvas document retrieval."""
+
+    content: str = Field(..., description="Full GFM markdown document")
+    updated_at: datetime = Field(..., description="Last modification timestamp")
+
+
 class ChatCompletionRequest(BaseModel):
     model: str | None = Field(None, description="The model to use")
     messages: list[ChatCompletionMessage] = Field(
@@ -145,6 +194,10 @@ class ChatCompletionRequest(BaseModel):
     data_sources: list[ChatDataSource] | None = Field(
         None,
         description="Structured document payload with title, content and metadata",
+    )
+    canvas: CanvasState | None = Field(
+        None,
+        description="Canvas document state for the canvas feature",
     )
     model_config = ConfigDict(
         json_schema_extra={
@@ -564,6 +617,13 @@ class ModelsDTO(BaseModel):
     )
 
 
+class ReleaseNoteDTO(BaseModel):
+    """A release note exposed to the frontend."""
+
+    version: str
+    content: str
+
+
 class ConfigResponse(BaseModel):
     env_name: str = "MUCGPT"
     alternative_logo: bool = False
@@ -575,6 +635,10 @@ class ConfigResponse(BaseModel):
     core_version: str
     frontend_version: str
     assistant_version: str
+    release_notes: list[ReleaseNoteDTO] = Field(
+        default_factory=list,
+        description="Configured release notes, ordered from newest to oldest.",
+    )
     document_processing_enabled: bool = Field(
         False,
         description="Whether document upload and parsing is enabled. True when a parser backend (e.g. Xberg) is configured.",
@@ -630,4 +694,12 @@ class ConfigResponse(BaseModel):
     ag_ui_enabled: bool = Field(
         False,
         description="Whether the AG UI is enabled.",
+    )
+    canvas_content_max_chars: int = Field(
+        default=CANVAS_CONTENT_MAX_CHARS,
+        description="Maximum persisted canvas content length in characters.",
+    )
+    canvas_editor_max_chars: int = Field(
+        default=CANVAS_EDITOR_MAX_CHARS,
+        description="Maximum canvas editor input length in characters.",
     )

@@ -6,6 +6,7 @@ import cloudpickle
 import pytest
 from mcp.types import ListToolsResult
 from mcp.types import Tool as MCPTool
+from pydantic import ValidationError
 
 from agent.tools.mcp import McpBearerAuthProvider, McpLoader
 from config.settings import MCPConfig, MCPSourceConfig, MCPTransport
@@ -139,16 +140,19 @@ class TestBuildConnection:
 
 
 class TestApplyToolCustomizations:
-    def test_custom_description_overrides_and_group_is_resolved(self):
+    def test_override_applies_description_and_group(self):
         from langchain_core.tools import StructuredTool
 
         source_cfg = MCPSourceConfig(
             url="http://x",
             transport=MCPTransport.SSE,
             group="default-group",
-            tool_groups={"search_": "search-group"},
-            descriptions=[
-                {"name": "search_docs", "description": "Custom enriched description"}
+            overrides=[
+                {
+                    "name": "search_docs",
+                    "description": "Custom enriched description",
+                    "group": "search-group",
+                }
             ],
         )
         tool = StructuredTool(
@@ -164,6 +168,71 @@ class TestApplyToolCustomizations:
         assert tool.metadata["description"] == "Custom enriched description"
         assert tool.metadata["mcp_group"] == "search-group"
         assert tool.metadata["mcp_source"] == "src"
+
+    def test_override_without_group_uses_source_group(self):
+        from langchain_core.tools import StructuredTool
+
+        source_cfg = MCPSourceConfig(
+            url="http://x",
+            transport=MCPTransport.SSE,
+            group="default-group",
+            overrides=[{"name": "search_docs", "description": "Custom description"}],
+        )
+        tool = StructuredTool(
+            name="search_docs",
+            description="original description",
+            args_schema={"type": "object", "properties": {}},
+            coroutine=AsyncMock(),
+        )
+
+        McpLoader._apply_tool_customizations(tool, "src", source_cfg)
+
+        assert tool.metadata["mcp_group"] == "default-group"
+
+    def test_override_without_description_keeps_tool_description(self):
+        from langchain_core.tools import StructuredTool
+
+        source_cfg = MCPSourceConfig(
+            url="http://x",
+            transport=MCPTransport.SSE,
+            overrides=[{"name": "search_docs", "group": "search-group"}],
+        )
+        tool = StructuredTool(
+            name="search_docs",
+            description="original description",
+            args_schema={"type": "object", "properties": {}},
+            coroutine=AsyncMock(),
+        )
+
+        McpLoader._apply_tool_customizations(tool, "src", source_cfg)
+
+        assert tool.description == "original description"
+        assert tool.metadata["mcp_group"] == "search-group"
+
+    def test_override_group_rejects_whitespace_but_allows_empty(self):
+        source_config = MCPSourceConfig(
+            url="http://x",
+            transport=MCPTransport.SSE,
+            overrides=[{"name": "search_docs", "group": ""}],
+        )
+
+        assert source_config.overrides[0].group == ""
+
+        with pytest.raises(ValidationError, match="only whitespace"):
+            MCPSourceConfig(
+                url="http://x",
+                transport=MCPTransport.SSE,
+                overrides=[{"name": "search_docs", "group": "   "}],
+            )
+
+    @pytest.mark.parametrize("legacy_key", ["descriptions", "tool_groups"])
+    def test_legacy_customization_keys_are_rejected(self, legacy_key: str):
+        with pytest.raises(ValidationError, match=legacy_key):
+            MCPSourceConfig(
+                url="http://x",
+                transport=MCPTransport.SSE,
+                **{legacy_key: []},
+            )
 
 
 class TestWrapRawTools:

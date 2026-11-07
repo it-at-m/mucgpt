@@ -5,7 +5,7 @@ from langchain_core.tools.base import BaseTool
 
 from agent.state_models.default_state import DefaultAgentState
 from agent.state_models.registry import registry as AGENT_STATE_SCHEMA_REGISTRY
-from agent.tools import brainstorm, simplify
+from agent.tools import brainstorm, canvas, simplify
 from agent.tools.mcp import McpLoader
 from agent.tools.spec import LocalTool
 from core.auth import AuthenticationResult
@@ -14,7 +14,11 @@ from core.logtools import getLogger
 logger = getLogger(name="mucgpt-core-tools-schema")
 
 # Registering a new local tool: add its `TOOL = LocalTool(...)` here.
-LOCAL_TOOLS: list[LocalTool] = [brainstorm.TOOL, simplify.TOOL]
+LOCAL_TOOLS: list[LocalTool] = [
+    brainstorm.TOOL,
+    simplify.TOOL,
+    *canvas.TOOLS,
+]
 
 
 def _metadata_value(metadata, key: str, default=None):
@@ -30,7 +34,9 @@ def select_agent_state_schema(tools: list[BaseTool]) -> type[DefaultAgentState]:
     for tool in tools:
         metadata = getattr(tool, "metadata", None)
         if metadata:
-            group = _metadata_value(metadata, "mcp_group", "default") or "default" # if mcp_group has been set to none or empty string, treat it as "default" group
+            group = (
+                _metadata_value(metadata, "mcp_group", "default") or "default"
+            )  # if mcp_group has been set to none or empty string, treat it as "default" group
             source = _metadata_value(metadata, "mcp_source", "unknown-source")
 
             tool_groups.add(group)
@@ -44,7 +50,9 @@ def select_agent_state_schema(tools: list[BaseTool]) -> type[DefaultAgentState]:
         return DefaultAgentState
 
     if len(tool_groups) > 1:
-        logger.warning(
+        # Routine since canvas tools carry their own group: e.g. "Canvas" plus any
+        # ungrouped or MCP tools is the normal mixed selection, not a misconfiguration.
+        logger.debug(
             "Schema decision: DefaultAgentState because multiple mcp_group values were detected: %s. Tool/group mapping: %s",
             sorted(tool_groups),
             ", ".join(tool_group_details),

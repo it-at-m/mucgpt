@@ -8,6 +8,7 @@ from urllib.parse import urljoin
 import httpx
 from pydantic import (
     BaseModel,
+    ConfigDict,
     Field,
     HttpUrl,
     PositiveInt,
@@ -417,15 +418,26 @@ class SSOConfig(BaseModel):
     organization_unit_claim: str = "organization_unit"
 
 
-class MCPToolDescription(BaseModel):
-    """Configuration for overriding an MCP tool's description."""
+class MCPToolOverride(BaseModel):
+    """Configuration for overriding an individual MCP tool's metadata."""
 
     name: str
-    description: str
+    description: str | None = None
+    group: str | None = None
+
+    @field_validator("group")
+    @staticmethod
+    def validate_group(value: str | None) -> str | None:
+        """Reject whitespace-only group names while allowing empty fallback values."""
+        if value and not value.strip():
+            raise ValueError("group cannot contain only whitespace")
+        return value
 
 
 class MCPSourceConfig(BaseModel):
     """Single MCP source configuration."""
+
+    model_config = ConfigDict(extra="forbid")
 
     url: str
     transport: MCPTransport
@@ -433,8 +445,7 @@ class MCPSourceConfig(BaseModel):
     forward_auth_override: SecretStr | None = None
     headers: dict[str, SecretStr] | None = None
     group: str | None = None
-    tool_groups: dict[str, str] | None = None
-    descriptions: list[MCPToolDescription] | None = None
+    overrides: list[MCPToolOverride] | None = None
 
     @field_validator("forward_auth_override", mode="before")
     @staticmethod
@@ -503,6 +514,7 @@ class DBConfig(BaseModel):
     password: SecretStr = SecretStr("admin")
 
 
+
 class PromptConfig(BaseModel):
     """A prompt inside a Langfuse folder."""
 
@@ -521,6 +533,13 @@ class PromptPoolConfig(BaseModel):
     """Configured Langfuse prompt folders."""
 
     folders: list[PromptFolderConfig] = Field(default_factory=list)
+
+
+class ReleaseNoteConfig(BaseModel):
+    """A release-note entry shown by the frontend."""
+
+    version: str = Field(..., min_length=1)
+    content: str = Field(..., min_length=1)
 
 
 # Backward-compatible aliases
@@ -553,6 +572,8 @@ class Settings(BaseSettings):
     app_version: str = "unknown"
     frontend_version: str = "unknown"
     assistant_version: str = "unknown"
+    # Keep the configured order: the frontend opens the first note by default.
+    release_notes: list[ReleaseNoteConfig] = Field(default_factory=list)
     footer_link_url: str | None = None
     footer_label: str | None = None
     faq_url: str | None = None
@@ -592,6 +613,14 @@ class Settings(BaseSettings):
     ai_act_compliance_check_enabled: bool = True
     compliance_cache_enabled: bool = True
     compliance_cache_ttl_seconds: PositiveInt = 30 * 60
+
+    # Canvas
+    # Maximum persisted canvas content length (characters); the agent tools and
+    # the CanvasState request model derive their caps from this.
+    canvas_content_max_chars: PositiveInt = 256 * 1024
+    # Editor input limit (characters). The export endpoint caps the serialized
+    # markdown/html at 4× this to leave headroom for markup and separators.
+    canvas_editor_max_chars: PositiveInt = 512 * 1024
 
     # Nested sub-configurations
     sso: SSOConfig = Field(default_factory=SSOConfig)

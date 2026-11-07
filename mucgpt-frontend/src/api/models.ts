@@ -40,6 +40,20 @@ export type DataSource = {
     metadata?: Record<string, string | number | boolean | null | undefined>;
 };
 
+/** Canvas document state sent with each turn when the canvas is open. */
+export type CanvasState = {
+    /** Full GFM markdown document */
+    content: string;
+    /** Serialized markdown of the current selection, if any */
+    selection: string | null;
+    /** Caret position as character offset in the markdown document (selection start when text is selected) */
+    cursor?: number | null;
+    /** True when the editor document exceeds the persistence limit and content
+     * is only its beginning: the backend then skips persistence and the canvas
+     * tools refuse the partial document. */
+    truncated?: boolean;
+};
+
 export type ChatRequest = {
     history: ChatTurn[];
     creativity?: string;
@@ -54,6 +68,7 @@ export type ChatRequest = {
     /** False runs a stateless chat that is not stored server-side (e.g. assistant previews). */
     persist?: boolean;
     data_sources?: DataSource[];
+    canvas?: CanvasState | null;
 };
 
 export type AssistantDraftRequest = {
@@ -78,12 +93,17 @@ export interface ApplicationConfig {
     core_version: string;
     frontend_version: string;
     assistant_version: string;
+    release_notes: ReleaseNote[];
     document_processing_enabled: boolean;
     transcription_enabled: boolean;
     /** Model id preselected for first-time users; null = frontend built-in default. */
     transcription_default_model: string | null;
     ai_act_compliance_check_enabled: boolean;
     ag_ui_enabled: boolean;
+    /** Maximum persisted canvas content length (characters). */
+    canvas_content_max_chars: number;
+    /** Maximum canvas editor input length (characters). */
+    canvas_editor_max_chars: number;
     footer_link_url?: string;
     footer_label?: string;
     faq_url?: string;
@@ -93,6 +113,11 @@ export interface ApplicationConfig {
     admin_role?: string;
     ad2image_url?: string;
     owner_profile_url_template?: string;
+}
+
+export interface ReleaseNote {
+    version: string;
+    content: string;
 }
 
 export interface Model {

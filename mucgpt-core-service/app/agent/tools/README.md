@@ -78,6 +78,18 @@ pick it up automatically.
 
 **MCP tool:** add the server to MCP config. No code change.
 
+## Tool groups
+
+Users only see and select tool groups, never single MCP tools. Every MCP tool
+gets an `mcp_group` from `McpLoader._resolve_group`: a matching per-tool
+`overrides` entry's `group`, else the source's `group`, else the source id.
+Local tools have no group and stay individual entries.
+
+Requests still carry single tool ids in `enabled_tools`. The tool filter in
+`middleware.py` (`_filter_request_tools`) enables the whole group as soon as one
+of its tools is enabled, so stored assistant selections keep working when a
+group gains tools or is split via per-tool group overrides.
+
 ## What used to be here, and why it's gone
 
 - **`ToolCollection.add_instructions`** - injected a system message describing

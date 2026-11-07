@@ -353,6 +353,49 @@ describe("conversation id assignment", () => {
         await harness.rerender("new-conv");
         expect(harness.current.isOpen).toBe(true);
     });
+
+    it("clears a canvas holding only a horizontal rule when switching conversations", async () => {
+        loadCanvasStateMock.mockResolvedValue(null);
+        loadCanvasRevisionsMock.mockResolvedValue(emptyRevisions());
+
+        const harness = renderController();
+        harness.render("old-conv");
+        await harness.rerender("old-conv");
+        act(() => harness.current.setMarkdown("---"));
+
+        // A horizontal-rule-only document has no textContent; it must still not
+        // leak into the next conversation.
+        await harness.rerender("new-conv");
+
+        expect(harness.current.getMarkdown().trim()).toBe("");
+    });
+
+    it("clears a canvas holding an empty code block when switching conversations", async () => {
+        loadCanvasStateMock.mockResolvedValue(null);
+        loadCanvasRevisionsMock.mockResolvedValue(emptyRevisions());
+
+        const harness = renderController();
+        harness.render("old-conv");
+        await harness.rerender("old-conv");
+        act(() => harness.current.setMarkdown("```\n```"));
+
+        await harness.rerender("new-conv");
+
+        expect(harness.current.getMarkdown().trim()).toBe("");
+    });
+
+    it("keeps a closed canvas with a horizontal rule when the first prompt assigns the id", async () => {
+        loadCanvasStateMock.mockResolvedValue(null);
+        loadCanvasRevisionsMock.mockResolvedValue(emptyRevisions());
+
+        const harness = renderController();
+        harness.render(undefined);
+        act(() => harness.current.setMarkdown("---"));
+
+        await harness.rerender("conv-1");
+
+        expect(harness.current.getMarkdown().trim()).not.toBe("");
+    });
 });
 
 describe("cursor anchor sampling", () => {

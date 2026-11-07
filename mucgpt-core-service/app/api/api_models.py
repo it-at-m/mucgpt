@@ -575,9 +575,15 @@ class ConversationMetadata(BaseModel):
 
 
 class ModelsDTO(BaseModel):
-    llm_name: str = Field(..., description="Identifier of the model/deployment")
+    id: str = Field(..., description="Identifier of the model/deployment")
+    # Deprecated transition alias of `id`, kept so frontends cached by the
+    # service worker keep working against a updated core. Remove once old
+    # frontends are no longer in circulation.
+    llm_name: str | None = Field(
+        None, description="Deprecated alias of `id`", deprecated=True
+    )
     display_name: str | None = Field(
-        None, description="Human-readable model name; clients fall back to llm_name"
+        None, description="Human-readable model name; clients fall back to id"
     )
     max_output_tokens: PositiveInt | None = Field(
         None, description="Maximum tokens the model can generate"

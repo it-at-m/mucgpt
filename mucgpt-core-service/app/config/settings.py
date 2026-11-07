@@ -152,7 +152,10 @@ class ModelsConfig(BaseModel):
     provider: str = ""
     deep_agent: DeepAgentModelConfig = Field(default_factory=DeepAgentModelConfig)
     type: str = Field(..., min_length=1)
-    llm_name: str = Field(..., min_length=1)
+    # Identifier used for requests (chat request `model` field) and internal
+    # references; it is also the model string sent to the provider. The
+    # human-readable counterpart for the frontend is model_info.display_name.
+    id: str = Field(..., min_length=1)
     deployment: str = ""
     endpoint: HttpUrl
     api_key: SecretStr
@@ -721,6 +724,12 @@ class Settings(BaseSettings):
                     "`provider: <key>` and configure it in the providers section"
                 )
 
+            if "llm_name" in entry:
+                raise ValueError(
+                    "models[] entries use `id` (renamed from `llm_name`). "
+                    "Rename the key to `id`."
+                )
+
             provider_name = entry.get("provider")
             if not isinstance(provider_name, str) or not provider_name:
                 raise ValueError(
@@ -731,7 +740,7 @@ class Settings(BaseSettings):
             if provider is None:
                 raise ValueError(
                     f"Unknown provider {provider_name!r} in models[] entry "
-                    f"{entry.get('llm_name', '<unnamed>')!r}. Available providers: "
+                    f"{entry.get('id', '<unnamed>')!r}. Available providers: "
                     + (", ".join(sorted(providers)) if providers else "(none)")
                 )
             resolved.append({**provider.model_dump(), **entry})
@@ -777,7 +786,7 @@ def enrich_model_metadata(model: ModelsConfig) -> None:
 
     if entry is None:
         raise ValueError(
-            f"Model {model.llm_name} not found in info endpoint at {model.endpoint}. "
+            f"Model {model.id} not found in info endpoint at {model.endpoint}. "
             "Provide the missing metadata directly."
         )
 
@@ -872,7 +881,7 @@ def _apply_model_info(model: ModelsConfig, entry: dict[str, Any]) -> None:
         info.display_name = _coerce_str(model_info.get("display_name"))
 
     if not (info.description or "").strip():
-        info.description = _build_description(entry, model.llm_name)
+        info.description = _build_description(entry, model.id)
 
     if not (info.short_description or "").strip():
         info.short_description = _coerce_str(model_info.get("short_description"))
@@ -1013,10 +1022,10 @@ def _load_model_info(
 def _match_model_entry(
     payload: list[dict[str, Any]], model: ModelsConfig
 ) -> dict[str, Any] | None:
-    """Picks the payload entry matching llm_name/deployment (exact, then substring)."""
+    """Picks the payload entry matching id/deployment (exact, then substring)."""
     desired_names = {
         name.lower()
-        for name in [model.llm_name, model.deployment]
+        for name in [model.id, model.deployment]
         if isinstance(name, str) and name
     }
 

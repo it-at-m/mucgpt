@@ -101,7 +101,7 @@ export async function countTokensAPI(options: CountTokenRequest): Promise<CountT
                 API_BASE + "counttokens",
                 postConfig({
                     text: options.text,
-                    model: options.model.llm_name
+                    model: options.model.id
                 })
             ),
         "Failed to count tokens"

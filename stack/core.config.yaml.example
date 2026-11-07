@@ -218,10 +218,11 @@ models:
       input_cost_per_token: 0.00000009
       output_cost_per_token: 0.00000036
       supports_reasoning: false
-      # Optional, usually provided by LiteLLM model_info. Requests are clamped to the
-      # nearest supported effort; without a default, fallback_reasoning_effort applies.
-      # supported_reasoning_efforts: [low, medium, high]
-      # default_reasoning_effort: low
+      # Optional, usually provided by LiteLLM model_info. Valid levels: none, minimal,
+      # low, medium, high, max (e.g. privatemode.ai GLM models accept max). Requests are
+      # clamped to the nearest supported effort; without a default, fallback_reasoning_effort applies.
+      # supported_reasoning_efforts: [none, low, high, max]
+      # default_reasoning_effort: max
       knowledge_cut_off: "2024-07-01"
 
 # Additional models can be added here as list items; they reference a provider:

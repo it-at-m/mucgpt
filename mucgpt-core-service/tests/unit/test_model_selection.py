@@ -504,6 +504,15 @@ def _reasoning_model(monkeypatch: pytest.MonkeyPatch, **reasoning_info):
             },
             "medium",
         ),
+        # Privatemode-style GLM models: default effort can be "max" itself.
+        ({"default_reasoning_effort": "max"}, "max"),
+        (
+            {
+                "supported_reasoning_efforts": ["none", "low", "high", "max"],
+                "default_reasoning_effort": "max",
+            },
+            "max",
+        ),
     ],
 )
 def test_reasoning_effort_defaults_when_not_requested(
@@ -526,6 +535,13 @@ def test_reasoning_effort_defaults_when_not_requested(
         (["none", "low"], "minimal", "low"),
         (["high"], "none", "high"),
         (["none", "minimal"], "high", "minimal"),
+        # Privatemode-style GLM models support "max" as the top level.
+        (["none", "low", "high", "max"], "max", "max"),
+        # "max" requested beyond the model's ladder clamps to the nearest,
+        # preferring the higher side of a tie.
+        (["low", "medium", "high"], "max", "high"),
+        (["none", "low", "high"], "max", "high"),
+        (["medium", "max"], "high", "max"),  # tie prefers the higher effort
     ],
 )
 def test_reasoning_effort_clamped_to_supported_efforts(

@@ -654,6 +654,19 @@ class Settings(BaseSettings):
 
     # Customize settings sources to prioritize YAML config
     @classmethod
+    def _settings_build_values(
+        cls,
+        sources: tuple[PydanticBaseSettingsSource, ...],
+        init_kwargs: dict[str, Any],
+    ) -> dict[str, Any]:
+        if "SSO" in init_kwargs or any(
+            isinstance(s, YamlConfigSettingsSource) and "SSO" in s.yaml_data
+            for s in sources
+        ):
+            return {"SSO": {}}
+        return super()._settings_build_values(sources, init_kwargs)
+
+    @classmethod
     def settings_customise_sources(
         cls,
         settings_cls: type[BaseSettings],

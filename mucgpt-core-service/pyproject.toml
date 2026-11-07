@@ -37,7 +37,7 @@ dependencies = [
     "deepagents==0.7.34",
     "langgraph-checkpoint-postgres==3.2.0",
     "psycopg[binary]==3.3.8",
-    "sqlalchemy==2.1.8",
+    "sqlalchemy[asyncio]==2.1.8",
     "asyncpg==0.32.0",
     "ag-ui-langgraph[fastapi]==0.0.47",
     "ag-ui-protocol==1.0.0",

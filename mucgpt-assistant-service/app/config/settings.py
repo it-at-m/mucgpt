@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from functools import lru_cache
 from pathlib import Path
+from typing import Any
 
 from pydantic import BaseModel, Field, SecretStr, model_validator
 from pydantic_settings import (
@@ -147,6 +148,19 @@ class Settings(BaseSettings):
                 "Rename them to 'role' and 'admin_role'."
             )
         return data
+
+    @classmethod
+    def _settings_build_values(
+        cls,
+        sources: tuple[PydanticBaseSettingsSource, ...],
+        init_kwargs: dict[str, Any],
+    ) -> dict[str, Any]:
+        if "SSO" in init_kwargs or any(
+            isinstance(s, YamlConfigSettingsSource) and "SSO" in s.yaml_data
+            for s in sources
+        ):
+            return {"SSO": {}}
+        return super()._settings_build_values(sources, init_kwargs)
 
     @classmethod
     def settings_customise_sources(

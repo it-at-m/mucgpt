@@ -16,7 +16,7 @@ from api.api_models import (
     ConversationMetadata,
     ConversationRenameRequest,
 )
-from api.exception import llm_exception_handler
+from api.exception import llm_error_payload, payload_to_message
 from config.model_provider import ModelRegistry, ModelsConfigurationException
 from config.settings import get_settings
 from core.auth import authenticate_user
@@ -215,8 +215,8 @@ async def chat_endpoint(
         raise
     except Exception as e:
         logger.exception("Exception in /chat/completions")
-        msg = llm_exception_handler(ex=e, logger=logger)
-        raise HTTPException(status_code=500, detail=msg) from e
+        payload = llm_error_payload(ex=e, logger=logger)
+        raise HTTPException(status_code=500, detail=payload_to_message(payload)) from e
 
 
 @router.get(

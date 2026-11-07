@@ -160,7 +160,12 @@ export function useCanvasController(conversationId: string | undefined, serverCo
 
     const hasCanvasContent = useCallback(() => {
         const current = editorRef.current;
-        return Boolean(current?.state.doc.textContent.trim());
+        if (!current) return false;
+        // The empty-document comparison also sees textless nodes (horizontal rule,
+        // empty code block, table with only empty cells) that textContent misses,
+        // without touching the Markdown serializer (not available on every
+        // editor instance — see the conversation-switch callers below).
+        return !current.state.doc.eq(current.schema.topNodeType.createAndFill()!);
     }, []);
 
     const notifySubscribers = useCallback(() => {

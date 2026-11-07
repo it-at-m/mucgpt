@@ -14,6 +14,7 @@ import { createChatName, MucgptAgUiAgent } from "../api/core-client";
 import { EventType, type BaseEvent, type CustomEvent } from "@ag-ui/core";
 import { initialRunActivity, reduceRunActivity, type RunActivity } from "../utils/agUiActivity";
 import { isCanvasToolCall, parseCanvasStreamEvent, type CanvasStreamEvent } from "../utils/canvasStream";
+import { fromAgUiRunError, fromChunk, toChatProviderError, type ChatProviderError } from "../utils/providerError";
 import { scrollIntoNearestContainer } from "../utils/scrollIntoNearestContainer";
 import { getConversationActionCapabilities } from "../utils/conversationActions";
 
@@ -303,6 +304,12 @@ export const makeApiRequest = async (
     const legacyResponse = agUiEnabled ? undefined : await chatApi(request);
     if (legacyResponse) {
         handleRedirect(legacyResponse);
+        if (!legacyResponse.ok) {
+            // Pre-stream failure (validation/config/auth): the backend returns
+            // a JSON error body instead of an SSE stream.
+            const body = (await legacyResponse.json().catch(() => undefined)) as unknown;
+            throw toChatProviderError(body ?? { code: "unknown", detail: "" });
+        }
         if (!legacyResponse.body) throw Error("No response body");
     }
 
@@ -390,7 +397,7 @@ export const makeApiRequest = async (
     };
 
     if (agUiEnabled) {
-        let runError: Error | undefined;
+        let runError: ChatProviderError | undefined;
         // Tool progress is shown through the run activity (loading indicator and answer steps), not toasts.
         onRunActivityChange?.(runActivity);
         const agent = new MucgptAgUiAgent(request);
@@ -439,7 +446,9 @@ export const makeApiRequest = async (
                 },
                 onRunErrorEvent: ({ event }) => {
                     showInitialMessage();
-                    runError = new Error(event.message);
+                    // Structured error: code maps to the i18n message,
+                    // message/metadata.detail keep the technical detail.
+                    runError = fromAgUiRunError(event);
                 },
                 onRunFinishedEvent: ({ event }) => {
                     showInitialMessage();
@@ -504,6 +513,14 @@ export const makeApiRequest = async (
                         if (choice.finish_reason === "stop") {
                             streamDone = true;
                             break;
+                        }
+
+                        if (choice.finish_reason === "error") {
+                            // The backend signals a failed run in-band; the
+                            // (empty) content and the structured error must not
+                            // end up in the answer text buffer.
+                            streamDone = true;
+                            throw fromChunk(chunk);
                         }
 
                         if (choice.delta?.tool_calls) {

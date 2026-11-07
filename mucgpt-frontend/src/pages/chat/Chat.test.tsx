@@ -100,7 +100,8 @@ describe("chat error recovery", () => {
         await act(async () => {});
         expect(screen.getByRole("textbox", { name: "Message" })).toBeDisabled();
         await act(async () => failRequest());
-        await screen.findByText(/Failed run/);
+        await screen.findByText("common.errors.provider.unknown");
+        expect(screen.queryByText(/Failed run/)).not.toBeInTheDocument();
         expect(screen.getByRole("textbox", { name: "Message" })).toBeEnabled();
         expect(screen.queryByRole("button", { name: "components.answererror.retry" })).not.toBeInTheDocument();
 

@@ -54,20 +54,16 @@ export const getStoredParsedDocuments = (): StoredParsedDocument[] => {
 
         return parsed
             .filter(doc => doc && typeof doc === "object" && typeof doc.id === "string" && typeof doc.content === "string")
-            .map(
-                (doc): StoredParsedDocument => ({
-                    id: String(doc.id),
-                    name: String(doc.name ?? "Unnamed document"),
-                    size: Number(doc.size ?? 0),
-                    mimeType: String(doc.mimeType ?? "application/octet-stream"),
-                    lastModified: Number(doc.lastModified ?? 0),
-                    fileSignature: String(
-                        doc.fileSignature ?? buildFileSignature(String(doc.name ?? ""), Number(doc.size ?? 0), Number(doc.lastModified ?? 0))
-                    ),
-                    parsedAt: String(doc.parsedAt ?? new Date(0).toISOString()),
-                    content: String(doc.content ?? "")
-                })
-            )
+            .map((doc): StoredParsedDocument => ({
+                id: String(doc.id),
+                name: String(doc.name ?? "Unnamed document"),
+                size: Number(doc.size ?? 0),
+                mimeType: String(doc.mimeType ?? "application/octet-stream"),
+                lastModified: Number(doc.lastModified ?? 0),
+                fileSignature: String(doc.fileSignature ?? buildFileSignature(String(doc.name ?? ""), Number(doc.size ?? 0), Number(doc.lastModified ?? 0))),
+                parsedAt: String(doc.parsedAt ?? new Date(0).toISOString()),
+                content: String(doc.content ?? "")
+            }))
             .sort((a, b) => Date.parse(b.parsedAt) - Date.parse(a.parsedAt));
     } catch (error) {
         console.error("Failed to read parsed documents from localStorage", error);

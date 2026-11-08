@@ -1,4 +1,4 @@
-FROM node:24.22.1-alpine@sha256:06d7adf3e0ef61a13f1d28682726366f97a15aa1888c934d3ecec86c33918b53 AS builder
+FROM node:24.22.2-alpine@sha256:a34ab6d7f6f4813f4d0c5469d74685604b962fbdbf5793a7bc7b4998ecb867c8 AS builder
 
 ARG HTTP_PROXY
 ARG HTTPS_PROXY
@@ -41,7 +41,7 @@ COPY src/ ./src/
 RUN --mount=type=cache,target=/build/node_modules/.vite \
     npm run build
 
-FROM registry.access.redhat.com/ubi9/nginx-124:9.8-1793031939@sha256:d1eb117322c0374e286f73d6f67912c1171c605eb34cd5dd33005375747c77a5
+FROM registry.access.redhat.com/ubi9/nginx-124:9.8-1793639597@sha256:d5cec86a9adf972dbfa0d87b134e7c404706cc1920fc2e6a2b146e290276f219
 
 # Copy built web application
 COPY --from=builder /build/dist ./

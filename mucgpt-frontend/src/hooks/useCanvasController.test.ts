@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { act } from "react";
 import { createElement } from "react";
 import { createRoot, type Root } from "react-dom/client";
@@ -54,7 +54,22 @@ const renderController = () => {
     };
 };
 
-const editorFor = (markdown: string) => new Editor({ extensions: canvasExtensions(), content: markdown });
+// Buttons every editor created in this file, so any editor a test forgot to
+// destroy is torn down in afterEach — a leaked editor's prosemirror DOMObserver
+// keeps a timer alive and fires after the file's jsdom teardown with
+// "ReferenceError: document is not defined".
+const createdEditors: Editor[] = [];
+const editorFor = (markdown: string): Editor => {
+    const editor = new Editor({ extensions: canvasExtensions(), content: markdown });
+    createdEditors.push(editor);
+    return editor;
+};
+
+afterEach(() => {
+    for (const editor of createdEditors.splice(0)) {
+        if (!editor.isDestroyed) editor.destroy();
+    }
+});
 
 const posOf = (editor: Editor, needle: string) => {
     let found: number | undefined;

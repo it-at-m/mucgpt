@@ -877,7 +877,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                         selectedTools={selectedTools}
                         setSelectedTools={setSelectedToolsGuarded}
                         tools={tools}
-                        allowToolSelection={true}
+                        allowToolSelection={lockedToolIds.length === 0}
                         lockedToolIds={lockedToolIds}
                         uploadedData={uploadedData}
                         setUploadedData={setUploadedData}
@@ -922,7 +922,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                 selectedTools={selectedTools}
                 setSelectedTools={setSelectedToolsGuarded}
                 tools={tools}
-                allowToolSelection={true}
+                allowToolSelection={lockedToolIds.length === 0}
                 lockedToolIds={lockedToolIds}
                 uploadedData={uploadedData}
                 setUploadedData={setUploadedData}

@@ -30,7 +30,7 @@ class ModelRegistry:
             if config.type == "openai":
                 return ChatOpenAI(
                     default_headers={"extra-parameters": "drop"},
-                    model=config.llm_name,
+                    model=config.id,
                     api_key=config.api_key,
                     base_url=config.endpoint.unicode_string(),
                     stream_usage=True,
@@ -39,7 +39,7 @@ class ModelRegistry:
             if config.type == "azure":
                 return AzureChatOpenAI(
                     azure_deployment=config.deployment,
-                    model=config.llm_name,
+                    model=config.id,
                     api_key=config.api_key,
                     azure_endpoint=config.endpoint.unicode_string(),
                     api_version=config.api_version,
@@ -54,7 +54,7 @@ class ModelRegistry:
             if isinstance(exc, ModelsConfigurationException):
                 raise
             raise ModelsConfigurationException(
-                f"Failed to initialize chat model {config.llm_name}: {exc}"
+                f"Failed to initialize chat model {config.id}: {exc}"
             ) from exc
 
     @classmethod
@@ -126,31 +126,31 @@ class ModelRegistry:
             raise ModelsConfigurationException(
                 "No models found in the configuration.json"
             )
-        model_names = [config.llm_name for config in models_config]
+        model_names = [config.id for config in models_config]
         if len(model_names) != len(set(model_names)):
-            raise ModelsConfigurationException("Model names must be unique")
+            raise ModelsConfigurationException("Model ids must be unique")
 
         _logger = logger or logging.getLogger(__name__)
         cls._reasoning_models = {
-            config.llm_name
+            config.id
             for config in models_config
             if config.model_info.supports_reasoning
         }
         cls._supported_reasoning_efforts = {
-            config.llm_name: tuple(config.model_info.supported_reasoning_efforts)
+            config.id: tuple(config.model_info.supported_reasoning_efforts)
             for config in models_config
             if config.model_info.supports_reasoning
             and config.model_info.supported_reasoning_efforts
         }
         cls._fallback_reasoning_effort = fallback_reasoning_effort
         cls._default_reasoning_efforts = {
-            config.llm_name: config.model_info.default_reasoning_effort
+            config.id: config.model_info.default_reasoning_effort
             for config in models_config
             if config.model_info.supports_reasoning
             and config.model_info.default_reasoning_effort
         }
         cls._models_without_temperature = {
-            config.llm_name
+            config.id
             for config in models_config
             if not config.model_info.supports_temperature
         }
@@ -170,17 +170,15 @@ class ModelRegistry:
                 f"Failed to initialize default model: {exc}"
             ) from exc
 
-        models = {default_config.llm_name: default_model}
+        models = {default_config.id: default_model}
         for config in models_config:
             if config is default_config:
                 continue
 
             try:
-                models[config.llm_name] = cls.init_chat_model(config)
+                models[config.id] = cls.init_chat_model(config)
             except ModelsConfigurationException as exc:
-                _logger.warning(
-                    "Failed to initialize model %s: %s", config.llm_name, exc
-                )
+                _logger.warning("Failed to initialize model %s: %s", config.id, exc)
 
         cls._models = models
         cls._default_model = default_model

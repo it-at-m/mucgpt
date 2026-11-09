@@ -248,7 +248,7 @@ async def _run_experiments(args: argparse.Namespace) -> None:
         raise ValueError("--max-concurrency must be at least 1")
 
     settings = _load_settings(args.config)
-    models_by_name = {model.llm_name: model for model in settings.models}
+    models_by_name = {model.id: model for model in settings.models}
     unknown_models = set(args.models) - models_by_name.keys()
     if unknown_models:
         raise ValueError(

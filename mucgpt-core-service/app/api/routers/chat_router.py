@@ -35,9 +35,9 @@ def get_temperature_from_request(request: ChatCompletionRequest) -> float:
     if request.creativity:
         settings = get_settings()
         # Find the model configuration
-        selected_model_name = request.model or settings.models[0].llm_name
+        selected_model_name = request.model or settings.models[0].id
         model_config = next(
-            (m for m in settings.models if m.llm_name == selected_model_name), None
+            (m for m in settings.models if m.id == selected_model_name), None
         )
 
         if model_config:

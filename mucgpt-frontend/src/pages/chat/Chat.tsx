@@ -413,7 +413,7 @@ const Chat = () => {
     // Handler for LLM selection
     const onLLMSelectionChange = useCallback(
         (nextLLM: string) => {
-            const found = availableLLMs.find((m: Model) => m.llm_name === nextLLM);
+            const found = availableLLMs.find((m: Model) => m.id === nextLLM);
             if (found) {
                 setLLM(found);
                 try {
@@ -504,13 +504,13 @@ const Chat = () => {
 
         const storedLLM = localStorage.getItem(STORAGE_KEYS.SETTINGS_LLM);
         if (storedLLM) {
-            const preferredModel = availableLLMs.find(m => m.llm_name === storedLLM);
-            if (preferredModel && preferredModel.llm_name !== LLM.llm_name) {
+            const preferredModel = availableLLMs.find(m => m.id === storedLLM);
+            if (preferredModel && preferredModel.id !== LLM.id) {
                 setLLM(preferredModel);
             }
         }
         hasRestoredLLMRef.current = true;
-    }, [availableLLMs, setLLM, LLM.llm_name]);
+    }, [availableLLMs, setLLM, LLM.id]);
 
     useEffect(() => {
         try {
@@ -850,7 +850,7 @@ const Chat = () => {
                 usageConversationKey={`chat:${active_chat ?? "new"}`}
                 hideDisclaimer
                 llmOptions={availableLLMs}
-                selectedLLM={LLM.llm_name}
+                selectedLLM={LLM.id}
                 onLLMSelectionChange={onLLMSelectionChange}
             />
         );
@@ -869,7 +869,7 @@ const Chat = () => {
         startNewChatFromUsage,
         usageSummary,
         availableLLMs,
-        LLM.llm_name,
+        LLM.id,
         onLLMSelectionChange
     ]);
 

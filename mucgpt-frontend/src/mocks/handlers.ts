@@ -98,7 +98,7 @@ function findNode(pathSegments: string[]) {
 const CONFIG_RESPONSE: ApplicationConfig = {
     models: [
         {
-            llm_name: "example-model",
+            id: "example-model",
             max_input_tokens: 128000,
             max_output_tokens: 12000,
             description: "GPT build by KIES",
@@ -109,7 +109,7 @@ const CONFIG_RESPONSE: ApplicationConfig = {
             supports_reasoning: true
         },
         {
-            llm_name: "unknown-gpt",
+            id: "unknown-gpt",
             display_name: "UnknownGPT",
             max_input_tokens: 128000,
             max_output_tokens: 128000,
@@ -121,7 +121,7 @@ const CONFIG_RESPONSE: ApplicationConfig = {
             supports_reasoning: false
         },
         {
-            llm_name: "AnnonymGPT",
+            id: "AnnonymGPT",
             display_name: "AnnonymGPT",
             max_input_tokens: 500000,
             max_output_tokens: 12000,
@@ -685,7 +685,7 @@ function resolveForcedContextTokens(userMessage: string, modelName: string | und
     if (!forcedUsage) return undefined;
 
     const targetPercent = Math.min(100, Math.max(0, Number(forcedUsage[1])));
-    const model = CONFIG_RESPONSE.models.find(m => m.llm_name === modelName) ?? CONFIG_RESPONSE.models[0];
+    const model = CONFIG_RESPONSE.models.find(m => m.id === modelName) ?? CONFIG_RESPONSE.models[0];
     const maxInputTokens = model.max_input_tokens ?? 128000;
     return Math.round((targetPercent / 100) * maxInputTokens);
 }

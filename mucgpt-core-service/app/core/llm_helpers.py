@@ -84,7 +84,7 @@ def get_internal_task_model(settings: Settings, strength: str) -> str:
         ),
         settings.models[0],
     )
-    return model.llm_name
+    return model.id
 
 
 def read_prompt_file(filename: str, folder_name: str | None = None) -> str:

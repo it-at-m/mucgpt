@@ -233,13 +233,13 @@ The stack uses **YAML configuration files** as the primary configuration source,
 
    models:
      - provider: "my_gateway"     # required reference into providers
-       llm_name: "gpt-4.1"
+       id: "gpt-4.1"
        model_info:
          auto_enrich_from_model_info_endpoint: true
          internal_task_model_strength: "strong"
 
      - provider: "my_gateway"
-       llm_name: "gpt-4.1-nano"
+       id: "gpt-4.1-nano"
        model_info:
          auto_enrich_from_model_info_endpoint: true
          internal_task_model_strength: "weak"
@@ -278,12 +278,12 @@ providers:
 
 models:
   - provider: "my_gateway"
-    llm_name: "gpt-4.1-mini"
+    id: "gpt-4.1-mini"
     model_info:
       internal_task_model_strength: "strong"
 
   - provider: "my_gateway"
-    llm_name: "gpt-4.1-nano"
+    id: "gpt-4.1-nano"
     model_info:
       internal_task_model_strength: "weak"
 ```

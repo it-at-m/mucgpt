@@ -68,7 +68,8 @@ async def get_config(user_info=Depends(authenticate_user)) -> ConfigResponse:
     models = settings.models
     for model in models:
         dto = ModelsDTO(
-            llm_name=model.llm_name,
+            id=model.id,
+            llm_name=model.id,
             display_name=model.display_name,
             max_output_tokens=model.max_output_tokens,
             max_input_tokens=model.max_input_tokens,

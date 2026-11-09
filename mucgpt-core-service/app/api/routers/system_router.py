@@ -2,12 +2,25 @@ from fastapi import APIRouter, Depends
 
 from api.api_models import ConfigResponse, ModelsDTO
 from config.settings import ParserBackendType, get_settings
+from config.transcription_models import KNOWN_TRANSCRIPTION_MODEL_IDS
 from core.auth import authenticate_user
 from core.logtools import getLogger
 
 router = APIRouter()
 settings = get_settings()
 logger = getLogger(__name__)
+
+# Warnings about transcription misconfiguration must not repeat on every
+# /config request; two states exist (missing model, unknown model id).
+_warned_transcription: set[str] = set()
+
+
+def _warn_transcription_once(key: str, message: str) -> None:
+    """Logs a transcription configuration warning only once per process."""
+    if key in _warned_transcription:
+        return
+    _warned_transcription.add(key)
+    logger.warning(message)
 
 
 @router.get(
@@ -42,11 +55,24 @@ logger = getLogger(__name__)
 )
 async def get_config(user_info=Depends(authenticate_user)) -> ConfigResponse:
     """Builds the application config response (feature flags, versions, links and model list)."""
+    # Availability is evaluated against the frontend's model registry: a set but
+    # unknown id would otherwise announce a model the frontend refuses to run.
     if settings.transcription_enabled and not settings.transcription_model:
-        logger.warning(
+        _warn_transcription_once(
+            "missing-model",
             "transcription_enabled is turned on but transcription_model is not set; "
             "transcription is disabled. There is no default — set transcription_model to an id "
-            "from the frontend's transcription model list."
+            "from the frontend's transcription model list.",
+        )
+    elif (
+        settings.transcription_enabled
+        and settings.transcription_model not in KNOWN_TRANSCRIPTION_MODEL_IDS
+    ):
+        _warn_transcription_once(
+            f"unknown-model:{settings.transcription_model}",
+            f"transcription_model '{settings.transcription_model}' is not a known model of the "
+            "frontend's transcription model list; transcription is disabled. "
+            "Set transcription_model to a known id.",
         )
     response = ConfigResponse(
         env_name=settings.env_name,
@@ -58,9 +84,12 @@ async def get_config(user_info=Depends(authenticate_user)) -> ConfigResponse:
         # Keep the configured order: the frontend opens the first note by default.
         release_notes=[note.model_dump() for note in settings.release_notes],
         document_processing_enabled=settings.parser_backend != ParserBackendType.NONE,
-        # Effective availability: a flag without a model cannot offer transcription.
-        transcription_enabled=settings.transcription_enabled
-        and bool(settings.transcription_model),
+        # Effective availability: the flag needs a known model id (registry-checked).
+        transcription_enabled=(
+            settings.transcription_enabled
+            and settings.transcription_model is not None
+            and settings.transcription_model in KNOWN_TRANSCRIPTION_MODEL_IDS
+        ),
         transcription_model=settings.transcription_model,
         ai_act_compliance_check_enabled=settings.ai_act_compliance_check_enabled,
         footer_link_url=settings.footer_link_url,

@@ -138,19 +138,19 @@ transcription_enabled: true # Default is false
 
 Or via environment variable: `MUCGPT_CORE_TRANSCRIPTION_ENABLED=true`
 
-Optionally, preselect a default model for first-time users:
+Then set the single model every user gets — there is **no default and no fallback** (core and frontend are released in sync; an unset id keeps the feature disabled):
 
 ```yaml
-transcription_default_model: "onnx-community/whisper-small" # Default is null (frontend built-in default)
+transcription_model: "istupakov/canary-180m-flash-onnx" # Default: unset — feature stays disabled
 ```
 
-The id must match an entry of the frontend's model list (`mucgpt-frontend/src/config/transcriptionModels.ts`); unknown ids are ignored. The choice applies once — as soon as a user picks a model themselves, it is stored in their browser and later changes to the default do not affect them.
+The id must match an entry of the frontend's model list (`mucgpt-frontend/src/config/transcriptionModels.ts`); unknown ids disable transcription in the frontend (console warning) instead of silently running a different model. When `TRANSCRIPTION_ENABLED` is turned on without specifying a model, the backend logs a warning and the feature stays disabled — there is no default.
 
 Notes for operators:
 
 - All transcription models (Whisper, NVIDIA Canary/Parakeet) run client-side on WebGPU or WASM; the browser downloads them directly from their model registry (Hugging Face) and caches them locally.
-- Model choice, language support, and hardware requirements are managed in the frontend (`mucgpt-frontend/src/config/transcriptionModels.ts`); the backend cannot define the model inventory or runtime, but it can preselect the default model ID through `transcription_default_model` (applied on first use before the user picks a model).
-- Users on hardware without WebGPU see a reduced model selection (CPU-based WASM models).
+- The model choice is deployment-wide: users do not pick a model. The available models, their language support, and their hardware requirements are managed in the frontend registry (`mucgpt-frontend/src/config/transcriptionModels.ts`).
+- WebGPU is required for some larger models; a WebGPU-only model stays greyed out on hardware without WebGPU and explains this in its model panel.
 
 ### Models Configuration (Environment Variable)
 
@@ -221,10 +221,10 @@ In addition to backend storage, the frontend uses browser storage for UX state a
 - localStorage:
   - UI/user preferences (for example language, theme, selected tools, selected model)
   - Parsed document history/content cache (`MUCGPT_PARSED_DOCUMENTS_V1`)
-  - Transcription settings: enabled flag, selected model, downloaded model list (`SETTINGS_TRANSCRIPTION_*`)
 - Cache API (browser):
   - NeMo transcription model files (Canary/Parakeet encoder/decoder/vocab, cache name `mucgpt-nemo-models-v1`)
   - Whisper transcription model files (cached by transformers.js)
+  - Transcription model verification markers (cache name `mucgpt-transcription-meta-v1`)
 - sessionStorage:
   - Route-local draft text in the question input
 - Cookies:

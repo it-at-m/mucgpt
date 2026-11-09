@@ -96,8 +96,8 @@ export interface ApplicationConfig {
     release_notes: ReleaseNote[];
     document_processing_enabled: boolean;
     transcription_enabled: boolean;
-    /** Model id preselected for first-time users; null = frontend built-in default. */
-    transcription_default_model: string | null;
+    /** The single transcription model used by every user; null (not configured) or unknown ids disable the feature. */
+    transcription_model: string | null;
     ai_act_compliance_check_enabled: boolean;
     ag_ui_enabled: boolean;
     /** Maximum persisted canvas content length (characters). */

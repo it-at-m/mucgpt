@@ -30,10 +30,11 @@ alternative_logo: false
 # Enables the browser-based speech-to-text feature. Transcription itself runs fully
 # client-side (models are downloaded and cached by the browser; no audio reaches the backend).
 transcription_enabled: false
-# Model id preselected in the transcription settings for first-time users (must match an
-# entry of the frontend's TRANSCRIPTION_MODELS list, e.g. "onnx-community/whisper-small").
-# Unknown ids are ignored; leave unset for the frontend's built-in default.
-transcription_default_model: null
+# The single model id used for transcription by every user (must match an
+# entry of the frontend's TRANSCRIPTION_MODELS list). There is no default —
+# the feature stays disabled while this is unset. Recommended (runs entirely
+# on WASM, no WebGPU needed): "istupakov/canary-180m-flash-onnx".
+transcription_model: "istupakov/canary-180m-flash-onnx"
 ai_act_compliance_check_enabled: true
 # Canvas limits (characters); exposed to the frontend via /config
 canvas_content_max_chars: 262144

@@ -945,7 +945,6 @@ const Chat = () => {
                 tools={tools}
                 uploadedData={uploadedData}
                 setUploadedData={setUploadedData}
-                onTranscription={text => setQuestion(text)}
                 usage={usageSummary}
                 onStartNewChat={startNewChatFromUsage}
                 usageConversationKey={`chat:${active_chat ?? "new"}`}

@@ -35,8 +35,7 @@ import { configApi } from "../../api/core-client";
 import { ApiError } from "../../api/fetch-utils";
 import { useGlobalToastContext } from "../../components/GlobalToastHandler/GlobalToastContext";
 import GlobalToastHandler from "../../components/GlobalToastHandler/GlobalToastHandler";
-import { TranscriptionSettingsButton } from "../../components/TranscriptionSettings/TranscriptionSettingsButton";
-import { TranscriptionSettingsProvider } from "../../components/TranscriptionSettings/TranscriptionSettingsContext";
+import { TranscriptionProvider } from "../../components/Transcription/TranscriptionContext";
 import { ToolsProvider } from "../../components/ToolsProvider";
 import Unauthorized from "../Unauthorized";
 import { ConfigContext } from "../../context/ConfigContext";
@@ -129,7 +128,6 @@ const AppShell = ({
     const utilitiesContent = (
         <>
             <LanguageSelector defaultlang={languagePreference} onSelectionChange={onLanguageSelectionChanged} />
-            {config.transcription_enabled && <TranscriptionSettingsButton />}
             <ThemeSelector themePreference={themePreference} onThemePreferenceChange={onThemePreferenceChange} />
             <MenuDivider />
             <MenuItem icon={<Book24Regular />} onClick={() => navigate("/tutorials")}>
@@ -366,7 +364,7 @@ export const Layout = () => {
                         ) : isUnauthorized ? (
                             <Unauthorized redirectUrl={unauthorizedRedirectUrl} />
                         ) : (
-                            <TranscriptionSettingsProvider deploymentEnabled={config.transcription_enabled} defaultModelId={config.transcription_default_model}>
+                            <TranscriptionProvider transcriptionEnabled={config.transcription_enabled} transcriptionModelId={config.transcription_model}>
                                 <ToolsProvider>
                                     <UnifiedHistoryProvider>
                                         <AppShell
@@ -381,7 +379,7 @@ export const Layout = () => {
                                         />
                                     </UnifiedHistoryProvider>
                                 </ToolsProvider>
-                            </TranscriptionSettingsProvider>
+                            </TranscriptionProvider>
                         )}
                         <GlobalToastHandler />
                     </UserContextProvider>

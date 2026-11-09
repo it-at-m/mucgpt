@@ -149,7 +149,7 @@ const CONFIG_RESPONSE: ApplicationConfig = {
     ],
     document_processing_enabled: true,
     transcription_enabled: true,
-    transcription_default_model: "onnx-community/whisper-small",
+    transcription_model: "istupakov/canary-180m-flash-onnx",
     ai_act_compliance_check_enabled: true,
     ag_ui_enabled: true,
     canvas_content_max_chars: 256 * 1024,

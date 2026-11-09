@@ -48,6 +48,12 @@ const renderController = () => {
                 root?.render(createElement(Probe, { id }));
             });
         },
+        async dispose() {
+            await act(async () => {
+                root?.unmount();
+                await new Promise(resolve => setTimeout(resolve, 5));
+            });
+        },
         get current(): CanvasControllerInstance {
             return latest!;
         }
@@ -320,6 +326,20 @@ describe("loading stored revisions", () => {
 });
 
 describe("conversation id assignment", () => {
+    it("does not crash when the editor is destroyed during a conversation switch", async () => {
+        loadCanvasRevisionsMock.mockResolvedValue(emptyRevisions());
+        loadCanvasStateMock.mockResolvedValue(null);
+        const harness = renderController();
+
+        harness.render(undefined);
+        harness.current.editor?.destroy();
+
+        await harness.rerender("conv-1");
+
+        expect(harness.current.isOpen).toBe(false);
+        await harness.dispose();
+    });
+
     it("restores stored content when a reload assigns the existing conversation id", async () => {
         loadCanvasStateMock.mockResolvedValue("# Stored");
         loadCanvasRevisionsMock.mockResolvedValue(emptyRevisions());

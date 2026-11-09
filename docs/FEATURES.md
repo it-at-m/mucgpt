@@ -66,11 +66,11 @@ Choose from available models and adjust creativity to fit the task. Model choice
 Dictate directly into the chat input: a microphone button appears next to the input field once speech-to-text is enabled. Transcribed text is appended to what you have already typed, so typing and dictation can be freely combined.
 
 - **Runs entirely on your device.** Audio is transcribed locally in your browser — no microphone input leaves your device. The resulting transcript is placed in the chat input and can be submitted through the normal chat request.
-- **Model choice with language hints.** The settings dialog lists every model with its download size and supported languages, so you can pick the right one at a glance. Models download once and are cached in the browser.
+- **One deployment-wide model.** Your administrator selects the transcription model (including its download size and supported languages); there is no per-user model choice. If the model is not downloaded yet, the microphone stays greyed out and offers to download it. Models download once and are cached in the browser.
 - **Language follows the interface language.** German interface → German transcription, with automatic language detection where the model supports it.
 - **Voice activity detection.** Recording stops automatically after a pause; segments are transcribed live while you speak.
 
-Available models (lineup grows over time):
+Available models (deployments select exactly one — the line-up grows over time):
 
 | Model | Languages | Requirements |
 |---|---|---|

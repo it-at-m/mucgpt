@@ -160,7 +160,9 @@ export function useCanvasController(conversationId: string | undefined, serverCo
 
     const hasCanvasContent = useCallback(() => {
         const current = editorRef.current;
-        if (!current) return false;
+        // Tiptap can expose a destroyed editor briefly while recreating it.
+        // destroy() clears the schema, so treat that lifecycle state as empty.
+        if (!current || current.isDestroyed || !current.schema) return false;
         // The empty-document comparison also sees textless nodes (horizontal rule,
         // empty code block, table with only empty cells) that textContent misses,
         // without touching the Markdown serializer (not available on every

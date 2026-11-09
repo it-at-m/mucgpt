@@ -209,6 +209,7 @@ Generated with `huggingface_hub v2.4.0`. Run `hf skills add --force` to regenera
 
 ### `hf webhooks` — Manage webhooks on the Hub.
 
+> The `discussion` webhook domain requires huggingface_hub v2.4.0 or later — run `hf update` to upgrade an older CLI before using it.
 - `hf webhooks create --watch TEXT` — Create a new webhook. `[--url TEXT --job-id TEXT --domain [repo|discussion] --secret TEXT --secrets TEXT --secrets-file TEXT --format [auto|human|agent|json|quiet]]`
 - `hf webhooks delete WEBHOOK_ID` — Delete a webhook permanently. `[--yes --format [auto|human|agent|json|quiet]]`
 - `hf webhooks disable WEBHOOK_ID` — Disable an active webhook. `[--format [auto|human|agent|json|quiet]]`

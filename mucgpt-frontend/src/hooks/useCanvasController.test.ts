@@ -48,6 +48,12 @@ const renderController = () => {
                 root?.render(createElement(Probe, { id }));
             });
         },
+        async dispose() {
+            await act(async () => {
+                root?.unmount();
+                await new Promise(resolve => setTimeout(resolve, 5));
+            });
+        },
         get current(): CanvasControllerInstance {
             return latest!;
         }
@@ -331,6 +337,7 @@ describe("conversation id assignment", () => {
         await harness.rerender("conv-1");
 
         expect(harness.current.isOpen).toBe(false);
+        await harness.dispose();
     });
 
     it("restores stored content when a reload assigns the existing conversation id", async () => {

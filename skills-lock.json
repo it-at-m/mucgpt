@@ -5,25 +5,19 @@
       "source": "fastapi/fastapi",
       "sourceType": "github",
       "skillPath": "fastapi/.agents/skills/fastapi/SKILL.md",
-      "computedHash": "2f0ff30756b435168276e1a7eb78c07856118575ea174535de7ed86dc88c9be4"
+      "computedHash": "7ca975c93b0a2f93eb5337e93dde4cf70ec24fcb154f28c388a087ce9b1e033b"
     },
     "find-skills": {
       "source": "vercel-labs/skills",
       "sourceType": "github",
       "skillPath": "skills/find-skills/SKILL.md",
-      "computedHash": "b146008599c31057cef1c145774cea5d5afb30e8f43fa802e47a4b461419aaaf"
-    },
-    "framework-selection": {
-      "source": "langchain-ai/langchain-skills",
-      "sourceType": "github",
-      "skillPath": "config/skills/framework-selection/SKILL.md",
-      "computedHash": "70355c49d4ea25553a67306ce07ad2b808b85d917bb310fe12a76abf1d7b880b"
+      "computedHash": "913b9d37d0d54047dd65222bb8c67b2bf04e3cb87dcad1729068d7a8b2c8c396"
     },
     "hf-cli": {
       "source": "huggingface/skills",
       "sourceType": "github",
       "skillPath": "skills/hf-cli/SKILL.md",
-      "computedHash": "455a5d7ffb745b07c7e6cd398ce844385af6f7cfa51f80dc9c4c0731f85d2c78"
+      "computedHash": "78ed13a0095b1c7a9820e31274118f289e23bc24012915e6380a7645fc906d03"
     },
     "langchain-fundamentals": {
       "source": "langchain-ai/langchain-skills",
@@ -41,7 +35,7 @@
       "source": "langfuse/skills",
       "sourceType": "github",
       "skillPath": "skills/langfuse/SKILL.md",
-      "computedHash": "ff5c606d22961ae0c70968e8944c73ce576a3a0a8422415861d6d7839a45539d"
+      "computedHash": "c1dc8c4e847791c62a3145894be9ec318220e76fdf0ee1a13422842f9908a48b"
     },
     "langgraph-docs": {
       "source": "langchain-ai/deepagents",
@@ -60,6 +54,12 @@
       "sourceType": "github",
       "skillPath": "skills/transformers-js/SKILL.md",
       "computedHash": "f61c531d0cc9ee4cb714b5a651f4a7a939ce127f70333d44af179cbbb1663de1"
+    },
+    "web-design-guidelines": {
+      "source": "vercel-labs/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/web-design-guidelines/SKILL.md",
+      "computedHash": "a6a44d5498f7e8f68289902f3dedfc6f38ae0cee1e96527c80724cf27f727c2a"
     }
   }
 }

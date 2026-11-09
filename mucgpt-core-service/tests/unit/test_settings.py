@@ -617,6 +617,73 @@ class TestSettings:
         ]
         assert model.model_info.default_reasoning_effort is None
 
+    def test_max_reasoning_effort_supported_for_privatemode_style_models(self):
+        providers_json = json.dumps(
+            {
+                "gateway": {
+                    "type": "openai",
+                    "endpoint": "https://exampleproxy/v1",
+                    "api_key": "proxy-key",
+                }
+            }
+        )
+        models_json = json.dumps(
+            [
+                {
+                    "provider": "gateway",
+                    "id": "glm-5.3",
+                    "supported_reasoning_efforts": ["none", "low", "high", "max"],
+                    "default_reasoning_effort": "max",
+                }
+            ]
+        )
+        info_payload = [
+            {
+                "model_name": "glm-5.3",
+                "model_info": {
+                    "max_output_tokens": 1000,
+                    "max_input_tokens": 2000,
+                    "supported_reasoning_efforts": "none, low, high, max",
+                    "default_reasoning_effort": "max",
+                },
+            }
+        ]
+
+        with patch("config.settings._load_model_info", return_value=info_payload):
+            with patch.dict(
+                os.environ,
+                {
+                    "MUCGPT_CORE_PROVIDERS": providers_json,
+                    "MUCGPT_CORE_MODELS": models_json,
+                },
+            ):
+                model = Settings().models[0]
+                enrich_model_metadata(model)
+
+        assert model.model_info.supported_reasoning_efforts == [
+            "none",
+            "low",
+            "high",
+            "max",
+        ]
+        assert model.model_info.default_reasoning_effort == "max"
+
+    def test_unknown_reasoning_efforts_still_rejected(self):
+        """Configured reasoning efforts are validated; "max" is valid, "extreme" is not."""
+        models_json = json.dumps(
+            [
+                {
+                    "provider": "gateway",
+                    "id": "gpt-6",
+                    "supported_reasoning_efforts": ["medium", "extreme"],
+                    "default_reasoning_effort": "extreme",
+                }
+            ]
+        )
+
+        with pytest.raises(ValidationError):
+            ModelsConfig.model_validate(json.loads(models_json)[0])
+
     def test_model_configuration_missing_metadata_raises_without_info(self):
         providers_json = json.dumps(
             {

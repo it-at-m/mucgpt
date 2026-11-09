@@ -44,7 +44,7 @@ class InternalTaskModelStrength(StrEnum):
     STRONG = "strong"
 
 
-ReasoningEffort = Literal["none", "minimal", "low", "medium", "high"]
+ReasoningEffort = Literal["none", "minimal", "low", "medium", "high", "max"]
 # Ascending order; used to clamp a requested effort to the nearest supported one.
 REASONING_EFFORT_ORDER: tuple[ReasoningEffort, ...] = (
     "none",
@@ -52,6 +52,7 @@ REASONING_EFFORT_ORDER: tuple[ReasoningEffort, ...] = (
     "low",
     "medium",
     "high",
+    "max",
 )
 
 

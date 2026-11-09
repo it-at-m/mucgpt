@@ -48,3 +48,22 @@ class TestChatCompletionRequestConversationId:
         )
 
         assert request.conversation_id == "6f3a1e2c-9b7d-4a3f-9e3a-2c1b9d8f6a10"
+
+
+class TestChatCompletionRequestReasoningEffort:
+    """reasoning_effort accepts the full ladder including "max" (#1408)."""
+
+    def test_reasoning_effort_max_is_accepted(self) -> None:
+        """Privatemode-style GLM models accept reasoning_effort "max" (#1408)."""
+        request = ChatCompletionRequest(
+            messages=[{"role": "user", "content": "hi"}],
+            reasoning_effort="max",
+        )
+
+        assert request.reasoning_effort == "max"
+
+    def test_reasoning_effort_unknown_value_is_rejected(self) -> None:
+        with pytest.raises(ValidationError):
+            ChatCompletionRequest.model_validate(
+                {"messages": [{"role": "user", "content": "hi"}], "reasoning_effort": "extreme"}
+            )

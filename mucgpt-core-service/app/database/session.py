@@ -13,14 +13,14 @@ from config.settings import Settings
 
 def create_database_url(settings: Settings) -> URL:
     """Create the async SQLAlchemy URL without interpolating credentials."""
-    db = settings.DB
+    db = settings.db
     return URL.create(
         drivername="postgresql+asyncpg",
-        username=db.USER,
-        password=db.PASSWORD.get_secret_value(),
-        host=db.HOST,
-        port=db.PORT,
-        database=db.NAME,
+        username=db.user,
+        password=db.password.get_secret_value(),
+        host=db.host,
+        port=db.port,
+        database=db.name,
     )
 
 

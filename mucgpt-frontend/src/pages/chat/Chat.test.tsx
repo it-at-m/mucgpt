@@ -7,7 +7,11 @@ import Chat from "./Chat";
 
 vi.mock("react-i18next", () => ({ useTranslation: () => ({ t: (key: string) => key }) }));
 vi.mock("react-router-dom", () => ({ useLocation: () => ({ hash: "", search: "" }), useNavigate: () => vi.fn() }));
-vi.mock("../../api/core-client", () => ({ chatApi: vi.fn(), createChatName: vi.fn().mockResolvedValue("Chat") }));
+vi.mock("../../api/core-client", () => ({
+    chatApi: vi.fn(),
+    createChatName: vi.fn().mockResolvedValue("Chat"),
+    getCanvasRevisionsApi: vi.fn().mockResolvedValue(null)
+}));
 vi.mock("../../service/storage", () => ({
     StorageService: class {
         getAll = vi.fn().mockResolvedValue([]);

@@ -105,8 +105,8 @@ _canvas_settings = get_settings()
 
 # Maximum persisted canvas content length (mirrored by the editor input limit
 # CANVAS_EDITOR_MAX_CHARS, which the export endpoint grows by 4× headroom).
-CANVAS_CONTENT_MAX_CHARS = _canvas_settings.CANVAS_CONTENT_MAX_CHARS
-CANVAS_EDITOR_MAX_CHARS = _canvas_settings.CANVAS_EDITOR_MAX_CHARS
+CANVAS_CONTENT_MAX_CHARS = _canvas_settings.canvas_content_max_chars
+CANVAS_EDITOR_MAX_CHARS = _canvas_settings.canvas_editor_max_chars
 # Full canvas reads stop here so the tool result stays inside the model context;
 # the remaining document is reached via canvas_read(around_cursor).
 CANVAS_READ_LIMIT_CHARS = (CANVAS_CONTENT_MAX_CHARS * 95) // 100
@@ -585,9 +585,15 @@ class ConversationMetadata(BaseModel):
 
 
 class ModelsDTO(BaseModel):
-    llm_name: str = Field(..., description="Identifier of the model/deployment")
+    id: str = Field(..., description="Identifier of the model/deployment")
+    # Deprecated transition alias of `id`, kept so frontends cached by the
+    # service worker keep working against a updated core. Remove once old
+    # frontends are no longer in circulation.
+    llm_name: str | None = Field(
+        None, description="Deprecated alias of `id`", deprecated=True
+    )
     display_name: str | None = Field(
-        None, description="Human-readable model name; clients fall back to llm_name"
+        None, description="Human-readable model name; clients fall back to id"
     )
     max_output_tokens: PositiveInt | None = Field(
         None, description="Maximum tokens the model can generate"
@@ -655,11 +661,11 @@ class ConfigResponse(BaseModel):
     )
     transcription_enabled: bool = Field(
         False,
-        description="Whether browser-based audio transcription is enabled in the frontend. Transcription itself runs fully client-side; no audio is sent to the backend.",
+        description="Whether browser-based audio transcription is available in the frontend. Only true when TRANSCRIPTION_ENABLED is set and a TRANSCRIPTION_MODEL is configured. Transcription itself runs fully client-side; no audio is sent to the backend.",
     )
-    transcription_default_model: str | None = Field(
+    transcription_model: str | None = Field(
         None,
-        description="Model id preselected in the transcription settings for users who have not picked a model yet. Unknown ids are ignored; null uses the frontend's built-in default.",
+        description="The single browser-based transcription model used by all users. The id must match an entry of the frontend's transcription model list; unset or unknown ids disable transcription in the frontend. There is no default — core and frontend are updated in sync.",
     )
     ai_act_compliance_check_enabled: bool = Field(
         True,

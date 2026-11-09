@@ -419,20 +419,37 @@ def _configure_model_request(request: ModelRequest) -> ModelRequest:
     )
 
 
+def _get_tool_group(tool: BaseTool) -> str | None:
+    metadata = getattr(tool, "metadata", None) or {}
+    return metadata.get("mcp_group")
+
+
 def _filter_request_tools(request: ModelRequest) -> ModelRequest:
-    """Restrict registered tools to the request-scoped allowlist."""
+    """Restrict registered tools to the request-scoped allowlist.
+
+    Users select tool groups as a whole, so enabling one tool of a group enables the
+    entire group. This keeps stored selections valid when a group gains tools or is
+    split via per-tool group overrides.
+    """
     runtime_context = _get_request_context(request)
     if runtime_context is None or runtime_context.enabled_tools is None:
         return request
 
+    tools = request.tools or []
     enabled_tools = set(runtime_context.enabled_tools)
+    enabled_groups = {
+        group
+        for tool in tools
+        if tool.name in enabled_tools and (group := _get_tool_group(tool))  # type: ignore
+    }
     return request.override(
         tools=[
             tool
-            for tool in request.tools or []
+            for tool in tools
             if tool.name in DEEP_AGENT_BUILTIN_TOOLS  # type: ignore
             or tool.name in CANVAS_BASE_TOOLS  # type: ignore
             or tool.name in enabled_tools  # type: ignore
+            or _get_tool_group(tool) in enabled_groups  # type: ignore
         ]
     )
 
@@ -707,10 +724,10 @@ class TokenUsageMiddleware(AgentMiddleware):
             return
         runtime_context.token_usage.add(usage_metadata)
         usage = runtime_context.token_usage
-        models = get_settings().MODELS
-        model_name = runtime_context.model_name or models[0].llm_name
+        models = get_settings().models
+        model_name = runtime_context.model_name or models[0].id
         model_config = next(
-            (model for model in models if model.llm_name == model_name), None
+            (model for model in models if model.id == model_name), None
         )
         snapshot = ConversationUsage(
             context_tokens=usage.context_tokens,

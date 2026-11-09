@@ -63,7 +63,7 @@ async def test_public_access_filter_uses_postgresql_json_array_length() -> None:
 def test_high_risk_assistant_is_pending_legal_review(
     admin_client: TestClient, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    monkeypatch.setattr(get_settings(), "COMPLIANCE_REQUIRE_LEGAL_REVIEW", True)
+    monkeypatch.setattr(get_settings(), "compliance_require_legal_review", True)
     result = ComplianceCheckResult(
         overall_status="high_risk_detected",
         results=[
@@ -121,7 +121,7 @@ def test_high_risk_assistant_is_pending_legal_review(
 def test_high_risk_assistant_remains_active_when_legal_review_is_disabled(
     test_client: TestClient, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    monkeypatch.setattr(get_settings(), "COMPLIANCE_REQUIRE_LEGAL_REVIEW", False)
+    monkeypatch.setattr(get_settings(), "compliance_require_legal_review", False)
     high_risk_result = ComplianceCheckResult(
         overall_status="high_risk_detected",
         results=[

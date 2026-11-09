@@ -27,7 +27,7 @@ class TestDatabaseSession:
     ) -> Settings:
         """Helper to create Settings with nested DB config."""
         return Settings(
-            DB=DBConfig(HOST=host, PORT=port, NAME=name, USER=user, PASSWORD=password)
+            db=DBConfig(host=host, port=port, name=name, user=user, password=password)
         )
 
     def test_create_database_url_simple_password(self):

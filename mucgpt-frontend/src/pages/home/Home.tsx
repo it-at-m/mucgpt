@@ -356,7 +356,7 @@ const Home = () => {
 
     const onLLMSelectionChange = useCallback(
         (nextLLM: string) => {
-            const found = availableLLMs.find((m: Model) => m.llm_name === nextLLM);
+            const found = availableLLMs.find((m: Model) => m.id === nextLLM);
             if (found) {
                 setLLM(found);
                 try {
@@ -436,9 +436,8 @@ const Home = () => {
                         setSelectedTools={setSelectedTools}
                         tools={tools}
                         question={question}
-                        onTranscription={text => setQuestion(text)}
                         llmOptions={availableLLMs}
-                        selectedLLM={LLM.llm_name}
+                        selectedLLM={LLM.id}
                         onLLMSelectionChange={onLLMSelectionChange}
                     />
                 </div>

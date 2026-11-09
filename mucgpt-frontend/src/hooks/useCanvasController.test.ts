@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { act } from "react";
 import { createElement } from "react";
 import { createRoot, type Root } from "react-dom/client";
@@ -48,13 +48,34 @@ const renderController = () => {
                 root?.render(createElement(Probe, { id }));
             });
         },
+        async dispose() {
+            await act(async () => {
+                root?.unmount();
+                await new Promise(resolve => setTimeout(resolve, 5));
+            });
+        },
         get current(): CanvasControllerInstance {
             return latest!;
         }
     };
 };
 
-const editorFor = (markdown: string) => new Editor({ extensions: canvasExtensions(), content: markdown });
+// Buttons every editor created in this file, so any editor a test forgot to
+// destroy is torn down in afterEach — a leaked editor's prosemirror DOMObserver
+// keeps a timer alive and fires after the file's jsdom teardown with
+// "ReferenceError: document is not defined".
+const createdEditors: Editor[] = [];
+const editorFor = (markdown: string): Editor => {
+    const editor = new Editor({ extensions: canvasExtensions(), content: markdown });
+    createdEditors.push(editor);
+    return editor;
+};
+
+afterEach(() => {
+    for (const editor of createdEditors.splice(0)) {
+        if (!editor.isDestroyed) editor.destroy();
+    }
+});
 
 const posOf = (editor: Editor, needle: string) => {
     let found: number | undefined;
@@ -305,6 +326,20 @@ describe("loading stored revisions", () => {
 });
 
 describe("conversation id assignment", () => {
+    it("does not crash when the editor is destroyed during a conversation switch", async () => {
+        loadCanvasRevisionsMock.mockResolvedValue(emptyRevisions());
+        loadCanvasStateMock.mockResolvedValue(null);
+        const harness = renderController();
+
+        harness.render(undefined);
+        harness.current.editor?.destroy();
+
+        await harness.rerender("conv-1");
+
+        expect(harness.current.isOpen).toBe(false);
+        await harness.dispose();
+    });
+
     it("restores stored content when a reload assigns the existing conversation id", async () => {
         loadCanvasStateMock.mockResolvedValue("# Stored");
         loadCanvasRevisionsMock.mockResolvedValue(emptyRevisions());
@@ -352,6 +387,49 @@ describe("conversation id assignment", () => {
         // the fresh chat's first prompt assigns its id: the pending request reopens
         await harness.rerender("new-conv");
         expect(harness.current.isOpen).toBe(true);
+    });
+
+    it("clears a canvas holding only a horizontal rule when switching conversations", async () => {
+        loadCanvasStateMock.mockResolvedValue(null);
+        loadCanvasRevisionsMock.mockResolvedValue(emptyRevisions());
+
+        const harness = renderController();
+        harness.render("old-conv");
+        await harness.rerender("old-conv");
+        act(() => harness.current.setMarkdown("---"));
+
+        // A horizontal-rule-only document has no textContent; it must still not
+        // leak into the next conversation.
+        await harness.rerender("new-conv");
+
+        expect(harness.current.getMarkdown().trim()).toBe("");
+    });
+
+    it("clears a canvas holding an empty code block when switching conversations", async () => {
+        loadCanvasStateMock.mockResolvedValue(null);
+        loadCanvasRevisionsMock.mockResolvedValue(emptyRevisions());
+
+        const harness = renderController();
+        harness.render("old-conv");
+        await harness.rerender("old-conv");
+        act(() => harness.current.setMarkdown("```\n```"));
+
+        await harness.rerender("new-conv");
+
+        expect(harness.current.getMarkdown().trim()).toBe("");
+    });
+
+    it("keeps a closed canvas with a horizontal rule when the first prompt assigns the id", async () => {
+        loadCanvasStateMock.mockResolvedValue(null);
+        loadCanvasRevisionsMock.mockResolvedValue(emptyRevisions());
+
+        const harness = renderController();
+        harness.render(undefined);
+        act(() => harness.current.setMarkdown("---"));
+
+        await harness.rerender("conv-1");
+
+        expect(harness.current.getMarkdown().trim()).not.toBe("");
     });
 });
 

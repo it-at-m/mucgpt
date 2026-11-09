@@ -123,7 +123,6 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
 
     const [error, setError] = useState<unknown>();
     const [question, setQuestion] = useState<string>("");
-    const [selectedTools, setSelectedTools] = useState<string[]>([]);
     const [toolStatuses, setToolStatuses] = useState<ToolStatus[]>([]);
     const [runActivity, setRunActivity] = useState<RunActivity>(initialRunActivity);
     const [showNotSubscribedDialog, setShowNotSubscribedDialog] = useState<boolean>(false);
@@ -195,7 +194,6 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
         if (!isEditMode || isAssistantContentLoading || (canEdit && !isLegacyAssistant)) return;
         navigate(location.pathname.replace(/\/edit$/, ""), { replace: true });
     }, [isEditMode, isAssistantContentLoading, canEdit, isLegacyAssistant, navigate, location.pathname]);
-    const mergeLockedToolIds = useCallback((toolIds: string[]) => Array.from(new Set([...lockedToolIds, ...toolIds])), [lockedToolIds]);
     const setLastQuestionValue = useCallback((value: string) => {
         lastQuestionRef.current = value;
         setLastQuestion(value);
@@ -243,17 +241,10 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
             { replace: true }
         );
     }, [navigate]);
-    const setSelectedToolsGuarded = useCallback(
-        (value: React.SetStateAction<string[]>) => {
-            setSelectedTools(prev => {
-                const next = typeof value === "function" ? value(prev) : value;
-                const merged = mergeLockedToolIds(next);
-
-                return merged.length === prev.length && merged.every((toolId, index) => toolId === prev[index]) ? prev : merged;
-            });
-        },
-        [mergeLockedToolIds]
-    );
+    // Tool selection is locked to the assistant's configured tools: selection
+    // changes are ignored, and lockedToolIds drives both the request and the
+    // (disabled) selector display.
+    const setSelectedToolsNoop = useCallback(() => undefined, []);
 
     // Canvas ↔ chat wiring, mirroring Chat.tsx: request state,
     // stream events and run lifecycle route into the editor; canvas open auto-enables
@@ -417,11 +408,10 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                             dispatch({ type: "SET_SYSTEM_PROMPT", payload: assistant.system_message });
                             dispatch({ type: "SET_CREATIVITY", payload: assistant.creativity });
                             setFollowUpActions(assistant.quick_prompts || []);
-                            setSelectedTools(assistant.tools ? assistant.tools.map(tool => tool.id) : []);
 
                             // If assistant has a default model, check if it's available
                             if (assistant.default_model) {
-                                const defaultModelConfig = availableLLMs.find(m => m.llm_name === assistant.default_model);
+                                const defaultModelConfig = availableLLMs.find(m => m.id === assistant.default_model);
                                 if (defaultModelConfig) {
                                     setLLM(defaultModelConfig);
                                 } else {
@@ -539,14 +529,6 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
         assistantChatStorage
     ]);
 
-    useEffect(() => {
-        if (lockedToolIds.length === 0) {
-            return;
-        }
-
-        setSelectedToolsGuarded(prev => prev);
-    }, [lockedToolIds, setSelectedToolsGuarded]);
-
     // Load info data for the assistant details sidebar (shown to owners and non-owners alike)
     useEffect(() => {
         setAssistantInfoData(null);
@@ -637,7 +619,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                     isLoadingRef,
                     fetchHistory,
                     assistant_id,
-                    selectedTools,
+                    lockedToolIds,
                     setToolStatuses,
                     dataSources,
                     lastAnswerRef,
@@ -663,7 +645,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
             fetchHistory,
             systemPrompt,
             creativity,
-            selectedTools,
+            lockedToolIds,
             setIsLoadingValue,
             setLastQuestionValue,
             isLegacyAssistant,
@@ -820,7 +802,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                 owner_ids: subscribedAssistantResponse.latest_version.owner_ids || []
             };
             if (subscribedAssistant.default_model) {
-                const defaultModelConfig = availableLLMs.find(m => m.llm_name === subscribedAssistant.default_model);
+                const defaultModelConfig = availableLLMs.find(m => m.id === subscribedAssistant.default_model);
                 if (defaultModelConfig) {
                     setLLM(defaultModelConfig);
                 } else {
@@ -843,7 +825,6 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
             dispatch({ type: "SET_SYSTEM_PROMPT", payload: subscribedAssistant.system_message });
             dispatch({ type: "SET_CREATIVITY", payload: subscribedAssistant.creativity });
             setFollowUpActions(subscribedAssistant.quick_prompts || []);
-            setSelectedTools(subscribedAssistant.tools ? subscribedAssistant.tools.map(tool => tool.id) : []);
             setShowNotSubscribedDialog(false);
             setNoAccess(false);
             setIsUnsubscribed(false);
@@ -993,7 +974,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
     // Handler for LLM selection
     const onLLMSelectionChange = useCallback(
         (nextLLM: string) => {
-            const found = availableLLMs.find(m => m.llm_name === nextLLM);
+            const found = availableLLMs.find(m => m.id === nextLLM);
             if (found) {
                 setLLM(found);
                 //don't update, if we have a default model
@@ -1048,7 +1029,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
 
     // Text-Input component
     // Only the assistant's default model is selectable; if it no longer exists, the user picks from all models.
-    const isLLMLocked = Boolean(assistantConfig.default_model && availableLLMs.some(m => m.llm_name === assistantConfig.default_model));
+    const isLLMLocked = Boolean(assistantConfig.default_model && availableLLMs.some(m => m.id === assistantConfig.default_model));
 
     const inputComponent = useMemo(() => {
         // A numeric-id assistant whose local configuration is gone (deleted, or opened
@@ -1150,10 +1131,10 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                         }}
                         question={question}
                         setQuestion={question => setQuestion(question)}
-                        selectedTools={selectedTools}
-                        setSelectedTools={setSelectedToolsGuarded}
+                        selectedTools={lockedToolIds}
+                        setSelectedTools={setSelectedToolsNoop}
                         tools={tools}
-                        allowToolSelection={true}
+                        allowToolSelection={false}
                         lockedToolIds={lockedToolIds}
                         uploadedData={uploadedData}
                         setUploadedData={setUploadedData}
@@ -1162,7 +1143,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                         usageConversationKey={`assistant:${assistant_id}:${active_chat ?? "new"}`}
                         hideDisclaimer
                         llmOptions={availableLLMs}
-                        selectedLLM={LLM.llm_name}
+                        selectedLLM={LLM.id}
                         onLLMSelectionChange={onLLMSelectionChange}
                         llmLockedByAssistant={isLLMLocked}
                     />
@@ -1201,10 +1182,10 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                     }}
                     question={question}
                     setQuestion={question => setQuestion(question)}
-                    selectedTools={selectedTools}
-                    setSelectedTools={setSelectedToolsGuarded}
+                    selectedTools={lockedToolIds}
+                    setSelectedTools={setSelectedToolsNoop}
                     tools={tools}
-                    allowToolSelection={true}
+                    allowToolSelection={false}
                     lockedToolIds={lockedToolIds}
                     uploadedData={uploadedData}
                     setUploadedData={setUploadedData}
@@ -1213,7 +1194,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                     usageConversationKey={`assistant:${assistant_id}:${active_chat ?? "new"}`}
                     hideDisclaimer
                     llmOptions={availableLLMs}
-                    selectedLLM={LLM.llm_name}
+                    selectedLLM={LLM.id}
                     onLLMSelectionChange={onLLMSelectionChange}
                     llmLockedByAssistant={isLLMLocked}
                 />
@@ -1239,10 +1220,9 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
         isStreaming,
         callApi,
         question,
-        selectedTools,
-        setSelectedToolsGuarded,
         tools,
         lockedToolIds,
+        setSelectedToolsNoop,
         draftCacheKey,
         uploadedData,
         usageSummary,
@@ -1250,7 +1230,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
         startNewChatFromUsage,
         availableLLMs,
         isLLMLocked,
-        LLM.llm_name,
+        LLM.id,
         onLLMSelectionChange,
         performDeleteAssistant
     ]);

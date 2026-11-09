@@ -33,7 +33,7 @@ def _initialize_model(config: ModelsConfig, monkeypatch: pytest.MonkeyPatch):
     ):
         monkeypatch.setattr(ModelRegistry, field, getattr(ModelRegistry, field))
     ModelRegistry.init_models([config])
-    return ModelRegistry.get_model(config.llm_name)
+    return ModelRegistry.get_model(config.id)
 
 
 def _freeze_current_date(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -205,8 +205,8 @@ def test_wrap_model_call_omits_unsupported_temperature(
 ) -> None:
     _initialize_model(
         ModelsConfig(
-            type="OPENAI",
-            llm_name="gpt-6",
+            type="openai",
+            id="gpt-6",
             endpoint="https://example.test",
             api_key="test",
             model_info={"supports_temperature": False},
@@ -299,12 +299,10 @@ def test_usage_snapshot_preserves_selected_model_settings_and_cached_cost(monkey
     from config.settings import Settings
 
     models = [
-        ModelsConfig(
-            type="OPENAI",
-            llm_name=name,
-            endpoint="https://example.test",
-            api_key="test",
-            model_info={
+        {
+            "provider": "gateway",
+            "id": name,
+            "model_info": {
                 "auto_enrich_from_model_info_endpoint": False,
                 "description": "Usage snapshot test model",
                 "max_input_tokens": limit,
@@ -314,11 +312,21 @@ def test_usage_snapshot_preserves_selected_model_settings_and_cached_cost(monkey
                 "context_warning_threshold_percent": 60,
                 "context_critical_threshold_percent": 80,
             },
-        )
+        }
         for name, limit in (("first", 10000), ("second", 20000))
     ]
     monkeypatch.setattr(
-        "agent.middleware.get_settings", lambda: Settings(MODELS=models)
+        "agent.middleware.get_settings",
+        lambda: Settings(
+            providers={
+                "gateway": {
+                    "type": "openai",
+                    "endpoint": "https://example.test",
+                    "api_key": "test",
+                }
+            },
+            models=models,
+        ),
     )
     request = _model_request(
         RequestContext(model_name="second", token_usage=TokenUsage())
@@ -366,8 +374,8 @@ def test_normalize_model_settings_preserves_unknown_model_temperature() -> None:
 
 def test_initialized_model_uses_request_scoped_streaming_and_temperature() -> None:
     config = ModelsConfig(
-        type="OPENAI",
-        llm_name="gpt-5",
+        type="openai",
+        id="gpt-5",
         endpoint="https://example.test",
         api_key="test",
         model_info={
@@ -389,8 +397,8 @@ def test_initialized_model_uses_request_scoped_streaming_and_temperature() -> No
 
 def test_azure_model_alias_uses_configured_temperature_capability(monkeypatch) -> None:
     config = ModelsConfig(
-        type="AZURE",
-        llm_name="gpt-5",
+        type="azure",
+        id="gpt-5",
         deployment="production-chat",
         endpoint="https://example.openai.azure.com",
         api_key="test",
@@ -424,8 +432,8 @@ def test_temperature_filtering_is_configuration_driven(
         model_info["supports_temperature"] = supports_temperature
     model = _initialize_model(
         ModelsConfig(
-            type="OPENAI",
-            llm_name=model_name,
+            type="openai",
+            id=model_name,
             endpoint="https://example.test",
             api_key="test",
             model_info=model_info,
@@ -450,8 +458,8 @@ def test_reasoning_models_omit_temperature_and_keep_reasoning_effort(
 ) -> None:
     model = _initialize_model(
         ModelsConfig(
-            type="OPENAI",
-            llm_name="reasoning-model",
+            type="openai",
+            id="reasoning-model",
             endpoint="https://example.test",
             api_key="test",
             model_info={
@@ -473,8 +481,8 @@ def test_reasoning_models_omit_temperature_and_keep_reasoning_effort(
 def _reasoning_model(monkeypatch: pytest.MonkeyPatch, **reasoning_info):
     return _initialize_model(
         ModelsConfig(
-            type="OPENAI",
-            llm_name="reasoning-model",
+            type="openai",
+            id="reasoning-model",
             endpoint="https://example.test",
             api_key="test",
             model_info={"supports_reasoning": True, **reasoning_info},
@@ -495,6 +503,15 @@ def _reasoning_model(monkeypatch: pytest.MonkeyPatch, **reasoning_info):
                 "default_reasoning_effort": "high",
             },
             "medium",
+        ),
+        # Privatemode-style GLM models: default effort can be "max" itself.
+        ({"default_reasoning_effort": "max"}, "max"),
+        (
+            {
+                "supported_reasoning_efforts": ["none", "low", "high", "max"],
+                "default_reasoning_effort": "max",
+            },
+            "max",
         ),
     ],
 )
@@ -518,6 +535,13 @@ def test_reasoning_effort_defaults_when_not_requested(
         (["none", "low"], "minimal", "low"),
         (["high"], "none", "high"),
         (["none", "minimal"], "high", "minimal"),
+        # Privatemode-style GLM models support "max" as the top level.
+        (["none", "low", "high", "max"], "max", "max"),
+        # "max" requested beyond the model's ladder clamps to the nearest,
+        # preferring the higher side of a tie.
+        (["low", "medium", "high"], "max", "high"),
+        (["none", "low", "high"], "max", "high"),
+        (["medium", "max"], "high", "max"),  # tie prefers the higher effort
     ],
 )
 def test_reasoning_effort_clamped_to_supported_efforts(
@@ -554,8 +578,8 @@ def test_configured_fallback_reasoning_effort(
     ModelRegistry.init_models(
         [
             ModelsConfig(
-                type="OPENAI",
-                llm_name="reasoning-model",
+                type="openai",
+                id="reasoning-model",
                 endpoint="https://example.test",
                 api_key="test",
                 model_info={"supports_reasoning": True, **reasoning_info},
@@ -585,8 +609,8 @@ def test_model_without_reasoning_info_never_gets_reasoning_effort(
 ) -> None:
     model = _initialize_model(
         ModelsConfig(
-            type="OPENAI",
-            llm_name="gpt-4.1-mini",
+            type="openai",
+            id="gpt-4.1-mini",
             endpoint="https://example.test",
             api_key="test",
             model_info={
@@ -607,8 +631,8 @@ def test_model_without_reasoning_info_never_gets_reasoning_effort(
 
 def test_reinitializing_registry_resets_temperature_capability(monkeypatch) -> None:
     config = ModelsConfig(
-        type="OPENAI",
-        llm_name="custom-proxy-model",
+        type="openai",
+        id="custom-proxy-model",
         endpoint="https://example.test",
         api_key="test",
         model_info={"supports_temperature": False},

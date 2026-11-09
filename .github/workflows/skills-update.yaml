@@ -1,0 +1,75 @@
+name: Agent skills update
+
+# Keeps `.agents/skills/` and `skills-lock.json` up to date without a manual dev action:
+# a scheduled run refreshes the installed skills via the skills CLI and opens a PR with
+# the diff (verified content, no diff => no PR). Review the PR like any dependency bump.
+#
+# Note: Renovate does not support skills-lock.json yet (see
+# renovatebot/renovate discussion #41861) - hash-only lockfile, no version to match.
+
+permissions:
+  contents: read
+
+on:
+  schedule:
+    # Every Monday at 6 AM UTC
+    - cron: "0 6 * * 1"
+  workflow_dispatch:
+
+jobs:
+  update_skills:
+    name: Update agent skills and open PR
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: write # push the chore/agent-skills-upgrade branch
+      pull-requests: write # create the PR
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Setup Node
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+
+      - name: Update skills
+        run: |
+          npx -y skills update -p -y
+
+      - name: Build PR body from the diff
+        id: diff
+        run: |
+          if git diff --quiet -- .agents/skills skills-lock.json; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          {
+            echo "changed=true"
+            echo "body<<EOF"
+            echo "## Agent skills update"
+            echo ""
+            echo "Automated run of \`npx skills update -p -y\` (see .github/workflows/skills-update.yaml)."
+            echo "Content is generated from the actual git diff: if \`skills update\` had not"
+            echo "touched files, no PR would have been created. Review and merge like a"
+            echo "dependency bump."
+            echo ""
+            echo '```diff'
+            git diff --stat -- .agents/skills skills-lock.json
+            echo '```'
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+          echo "PR body:" | tee -a "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+          git diff --stat -- .agents/skills skills-lock.json >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Create Pull Request
+        if: steps.diff.outputs.changed == 'true'
+        uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1 # v8.1.1
+        with:
+          commit-message: "⬆️ update agent skills"
+          branch: chore/agent-skills-upgrade
+          delete-branch: true
+          title: "⬆️ update agent skills"
+          body: ${{ steps.diff.outputs.body }}
+          labels: |
+            dependencies

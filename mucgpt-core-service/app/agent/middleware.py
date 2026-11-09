@@ -724,10 +724,10 @@ class TokenUsageMiddleware(AgentMiddleware):
             return
         runtime_context.token_usage.add(usage_metadata)
         usage = runtime_context.token_usage
-        models = get_settings().MODELS
-        model_name = runtime_context.model_name or models[0].llm_name
+        models = get_settings().models
+        model_name = runtime_context.model_name or models[0].id
         model_config = next(
-            (model for model in models if model.llm_name == model_name), None
+            (model for model in models if model.id == model_name), None
         )
         snapshot = ConversationUsage(
             context_tokens=usage.context_tokens,

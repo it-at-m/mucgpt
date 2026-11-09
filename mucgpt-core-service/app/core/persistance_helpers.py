@@ -28,13 +28,13 @@ logger = getLogger()
 
 def _create_connection_args(settings: Settings) -> dict[str, Any]:
     """Create PostgreSQL connection parameters from settings."""
-    db = settings.DB
+    db = settings.db
     return {
-        "host": db.HOST,
-        "port": db.PORT,
-        "dbname": db.NAME,
-        "user": db.USER,
-        "password": db.PASSWORD.get_secret_value(),
+        "host": db.host,
+        "port": db.port,
+        "dbname": db.name,
+        "user": db.user,
+        "password": db.password.get_secret_value(),
         "autocommit": True,
         "prepare_threshold": 0,
         # Return rows as dicts so queries can read columns by name. The
@@ -85,10 +85,10 @@ def _conversation_usage(message: AIMessage) -> ConversationUsage | None:
     usage = ConversationUsage(context_tokens=context_tokens)
     model_name = message.response_metadata.get("model_name")
     model = next(
-        (model for model in get_settings().MODELS if model.llm_name == model_name), None
+        (model for model in get_settings().models if model.id == model_name), None
     )
     if model is not None:
-        usage.usage_model = model.llm_name
+        usage.usage_model = model.id
         usage.usage_max_input_tokens = model.max_input_tokens
         usage.usage_context_warning_threshold_percent = (
             model.context_warning_threshold_percent

@@ -114,10 +114,10 @@ export const AssistantPreviewChat = ({
     // against the model the user sees — otherwise the dropdown would show the default
     // while callApi still sent requests with whatever LLM was previously in context.
     useEffect(() => {
-        if (!defaultModel || LLM.llm_name === defaultModel) return;
-        const defaultModelConfig = availableLLMs.find(m => m.llm_name === defaultModel);
+        if (!defaultModel || LLM.id === defaultModel) return;
+        const defaultModelConfig = availableLLMs.find(m => m.id === defaultModel);
         if (defaultModelConfig) setLLM(defaultModelConfig);
-    }, [defaultModel, availableLLMs, LLM.llm_name, setLLM]);
+    }, [defaultModel, availableLLMs, LLM.id, setLLM]);
 
     useEffect(() => {
         const element = previewInputRef.current;
@@ -277,13 +277,13 @@ export const AssistantPreviewChat = ({
 
     const onLLMSelectionChange = useCallback(
         (nextLLM: string) => {
-            const found = availableLLMs.find(m => m.llm_name === nextLLM);
+            const found = availableLLMs.find(m => m.id === nextLLM);
             if (found) setLLM(found);
         },
         [availableLLMs, setLLM]
     );
 
-    const isLLMLocked = Boolean(defaultModel && availableLLMs.some(m => m.llm_name === defaultModel));
+    const isLLMLocked = Boolean(defaultModel && availableLLMs.some(m => m.id === defaultModel));
 
     const usageSummary = useMemo(() => {
         let totalCost = 0;
@@ -418,7 +418,7 @@ export const AssistantPreviewChat = ({
                     allowFileUpload={false}
                     usage={usageSummary}
                     llmOptions={availableLLMs}
-                    selectedLLM={LLM.llm_name}
+                    selectedLLM={LLM.id}
                     onLLMSelectionChange={onLLMSelectionChange}
                     llmLockedByAssistant={isLLMLocked}
                 />

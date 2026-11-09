@@ -6,11 +6,11 @@ from config.settings import get_settings
 from export.docx_converter import convert_docx
 from export.xlsx_converter import convert_xlsx
 
-# The editor limit (settings.CANVAS_EDITOR_MAX_CHARS) counts text characters;
+# The editor limit (settings.canvas_editor_max_chars) counts text characters;
 # the serialized markdown and HTML carry markup and separators on top. Only
 # `html` is consumed, so the caps just bound the request: 4× the editor limit
 # is ample headroom.
-_MAX_CONTENT_CHARS = 4 * get_settings().CANVAS_EDITOR_MAX_CHARS
+_MAX_CONTENT_CHARS = 4 * get_settings().canvas_editor_max_chars
 
 
 class ExportRequest(BaseModel):

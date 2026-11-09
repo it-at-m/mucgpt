@@ -158,6 +158,18 @@ export function useCanvasController(conversationId: string | undefined, serverCo
         return markdownStorage(current).serializer.serialize(current.state.doc);
     }, []);
 
+    const hasCanvasContent = useCallback(() => {
+        const current = editorRef.current;
+        // Tiptap can expose a destroyed editor briefly while recreating it.
+        // destroy() clears the schema, so treat that lifecycle state as empty.
+        if (!current || current.isDestroyed || !current.schema) return false;
+        // The empty-document comparison also sees textless nodes (horizontal rule,
+        // empty code block, table with only empty cells) that textContent misses,
+        // without touching the Markdown serializer (not available on every
+        // editor instance — see the conversation-switch callers below).
+        return !current.state.doc.eq(current.schema.topNodeType.createAndFill()!);
+    }, []);
+
     const notifySubscribers = useCallback(() => {
         if (notifyTimerRef.current) clearTimeout(notifyTimerRef.current);
         notifyTimerRef.current = setTimeout(() => {
@@ -191,7 +203,7 @@ export function useCanvasController(conversationId: string | undefined, serverCo
         // existing conversation (fresh controller, canvas closed and empty: run the
         // load path below to restore the stored canvas before an empty canvas state
         // is sent and overwrites it server-side).
-        if (previous === undefined && conversationId !== undefined && (isOpenRef.current || getMarkdown().trim())) return;
+        if (previous === undefined && conversationId !== undefined && (isOpenRef.current || hasCanvasContent())) return;
 
         lastStreamRevisionRef.current = -1;
         nextRevisionRef.current = 1;
@@ -199,7 +211,7 @@ export function useCanvasController(conversationId: string | undefined, serverCo
         setIsOpen(false);
         setRevisions(emptyRevisions());
         const current = editorRef.current;
-        if (current && getMarkdown().trim()) {
+        if (current && hasCanvasContent()) {
             current.commands.setContent("");
             // A stale caret/selection must not leak into another conversation's document.
             current.view.dispatch(current.state.tr.setMeta(CANVAS_PERSISTENCE_RESET, true));
@@ -242,7 +254,7 @@ export function useCanvasController(conversationId: string | undefined, serverCo
         return () => {
             cancelled = true;
         };
-    }, [conversationId, serverId]);
+    }, [conversationId, hasCanvasContent, serverId]);
 
     const setIsOpen = useCallback((open: boolean) => {
         isOpenRef.current = open;

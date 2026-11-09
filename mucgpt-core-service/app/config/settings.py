@@ -15,6 +15,7 @@ from pydantic import (
     PrivateAttr,
     SecretStr,
     TypeAdapter,
+    ValidationInfo,
     field_validator,
     model_validator,
 )
@@ -43,7 +44,7 @@ class InternalTaskModelStrength(StrEnum):
     STRONG = "strong"
 
 
-ReasoningEffort = Literal["none", "minimal", "low", "medium", "high"]
+ReasoningEffort = Literal["none", "minimal", "low", "medium", "high", "max"]
 # Ascending order; used to clamp a requested effort to the nearest supported one.
 REASONING_EFFORT_ORDER: tuple[ReasoningEffort, ...] = (
     "none",
@@ -51,6 +52,7 @@ REASONING_EFFORT_ORDER: tuple[ReasoningEffort, ...] = (
     "low",
     "medium",
     "high",
+    "max",
 )
 
 
@@ -117,10 +119,44 @@ class DeepAgentModelConfig(BaseModel):
     enable_summarization: bool | None = False
 
 
+class ProviderConfig(BaseModel):
+    """Connection settings for one AI provider (gateway, Azure resource, ...)."""
+
+    type: Literal["openai", "azure"]
+    endpoint: HttpUrl
+    api_key: SecretStr
+    api_version: str = ""
+
+    @field_validator("type", mode="before")
+    @staticmethod
+    def normalize_type(value):
+        """Accepts any casing and normalizes the provider type to lowercase."""
+        if isinstance(value, str):
+            return value.strip().lower()
+        return value
+
+    @field_validator("api_key", mode="before")
+    @staticmethod
+    def parse_secret(value):
+        """Coerces plain strings into SecretStr for the api_key field."""
+        if isinstance(value, str):
+            return SecretStr(value)
+        return value
+
+
+# Fields that used to live on each model entry. They are provider-level now and
+# must not be configured per model anymore (see models[].provider).
+_PROVIDER_LEVEL_FIELDS = frozenset({"type", "endpoint", "api_key", "api_version"})
+
+
 class ModelsConfig(BaseModel):
+    provider: str = ""
     deep_agent: DeepAgentModelConfig = Field(default_factory=DeepAgentModelConfig)
     type: str = Field(..., min_length=1)
-    llm_name: str = Field(..., min_length=1)
+    # Identifier used for requests (chat request `model` field) and internal
+    # references; it is also the model string sent to the provider. The
+    # human-readable counterpart for the frontend is model_info.display_name.
+    id: str = Field(..., min_length=1)
     deployment: str = ""
     endpoint: HttpUrl
     api_key: SecretStr
@@ -380,18 +416,10 @@ class ModelsConfig(BaseModel):
 class SSOConfig(BaseModel):
     """SSO configuration (nested under SSO key in YAML)."""
 
-    ROLE: str | None = None
-    ADMIN_ROLE: str | None = None
-    USER_ID_CLAIM: str = "user_id"
-    ORGANIZATION_UNIT_CLAIM: str = "organization_unit"
-
-
-class LangfuseConfig(BaseModel):
-    """Langfuse configuration (nested under LANGFUSE key in YAML)."""
-
-    PUBLIC_KEY: str | None = None
-    SECRET_KEY: SecretStr | None = None
-    HOST: str | None = None
+    role: str | None = None
+    admin_role: str | None = None
+    user_id_claim: str = "user_id"
+    organization_unit_claim: str = "organization_unit"
 
 
 class MCPToolOverride(BaseModel):
@@ -464,9 +492,9 @@ class MCPSourceConfig(BaseModel):
 class MCPConfig(BaseModel):
     """MCP configuration (nested under MCP key in YAML)."""
 
-    SOURCES: dict[str, MCPSourceConfig] | None = None
-    CACHE_TTL: int = 12 * 60 * 60  # 12h in s
-    FORCE_RELOAD: bool = (
+    sources: dict[str, MCPSourceConfig] | None = None
+    cache_ttl: int = 12 * 60 * 60  # 12h in s
+    force_reload: bool = (
         False  # If true, bypass cache reads and refresh tools by default
     )
 
@@ -474,20 +502,20 @@ class MCPConfig(BaseModel):
 class RedisConfig(BaseModel):
     """Redis configuration (nested under REDIS key in YAML)."""
 
-    HOST: str | None = None
-    PORT: int = 6379
-    USERNAME: SecretStr | None = None
-    PASSWORD: SecretStr | None = None
+    host: str | None = None
+    port: int = 6379
+    username: SecretStr | None = None
+    password: SecretStr | None = None
 
 
 class DBConfig(BaseModel):
-    """PostgreSQL configuration (nested under DB key in YAML)."""
+    """PostgreSQL configuration (nested under db key in YAML)."""
 
-    HOST: str = "checkpoint-postgres"
-    PORT: int = 5432
-    NAME: str = "checkpoints"
-    USER: str = "admin"
-    PASSWORD: SecretStr = SecretStr("admin")
+    host: str = "checkpoint-postgres"
+    port: int = 5432
+    name: str = "checkpoints"
+    user: str = "admin"
+    password: SecretStr = SecretStr("admin")
 
 
 class PromptConfig(BaseModel):
@@ -507,7 +535,7 @@ class PromptFolderConfig(BaseModel):
 class PromptPoolConfig(BaseModel):
     """Configured Langfuse prompt folders."""
 
-    FOLDERS: list[PromptFolderConfig] = Field(default_factory=list)
+    folders: list[PromptFolderConfig] = Field(default_factory=list)
 
 
 class ReleaseNoteConfig(BaseModel):
@@ -519,7 +547,6 @@ class ReleaseNoteConfig(BaseModel):
 
 # Backward-compatible aliases
 SSOSettings = SSOConfig
-LangfuseSettings = LangfuseConfig
 MCPSettings = MCPConfig
 RedisSettings = RedisConfig
 
@@ -538,73 +565,110 @@ class Settings(BaseSettings):
         yaml_file_encoding="utf-8",
     )
     # General settings
-    VERSION: str = Field(default="")
-    LOG_CONFIG: str = "logconf.yaml"
-    AG_UI_ENABLED: bool = False
+    version: str = Field(default="")
+    log_config: str = "logconf.yaml"
+    ag_ui_enabled: bool = False
 
     # Frontend settings
-    ENV_NAME: str = "MUCGPT"
-    ALTERNATIVE_LOGO: bool = False
-    APP_VERSION: str = "unknown"
-    FRONTEND_VERSION: str = "unknown"
-    ASSISTANT_VERSION: str = "unknown"
-    RELEASE_NOTES: list[ReleaseNoteConfig] = Field(default_factory=list)
-    FOOTER_LINK_URL: str | None = None
-    FOOTER_LABEL: str | None = None
-    FAQ_URL: str | None = None
-    INCIDENT_REPORT_URL: str | None = None
-    FEATURE_REQUEST_URL: str | None = None
-    CONTACT_MAIL_URL: str | None = None
-    AD2IMAGE_URL: str | None = None
-    OWNER_PROFILE_URL_TEMPLATE: str | None = None
+    env_name: str = "MUCGPT"
+    alternative_logo: bool = False
+    app_version: str = "unknown"
+    frontend_version: str = "unknown"
+    assistant_version: str = "unknown"
+    # Keep the configured order: the frontend opens the first note by default.
+    release_notes: list[ReleaseNoteConfig] = Field(default_factory=list)
+    footer_link_url: str | None = None
+    footer_label: str | None = None
+    faq_url: str | None = None
+    incident_report_url: str | None = None
+    feature_request_url: str | None = None
+    contact_mail_url: str | None = None
+    ad2image_url: str | None = None
+    owner_profile_url_template: str | None = None
 
     # Backend settings
-    UNAUTHORIZED_USER_REDIRECT_URL: str = ""
-    MODELS: list[ModelsConfig] = []
+    unauthorized_user_redirect_url: str = ""
+    # Provider-level connection settings (endpoint, credentials). Must be declared
+    # before models so the models validator can resolve provider references.
+    providers: dict[str, ProviderConfig] = Field(default_factory=dict)
+    models: list[ModelsConfig] = []
     # Reasoning effort for reasoning models when neither the request nor the model
     # sets one. None omits the parameter so the provider default applies.
-    FALLBACK_REASONING_EFFORT: ReasoningEffort | None = "low"
-    MEMORY_SERVICE_URL: str = ""
-    PROMPTS: PromptPoolConfig = Field(default_factory=PromptPoolConfig)
+    fallback_reasoning_effort: ReasoningEffort | None = "low"
+    memory_service_url: str = ""
+    prompts: PromptPoolConfig = Field(default_factory=PromptPoolConfig)
 
     # Parsing
-    PARSER_BACKEND: ParserBackendType = ParserBackendType.NONE
-    XBERG_URL: str = ""
-    XBERG_TIMEOUT: float = 120.0
+    parser_backend: ParserBackendType = ParserBackendType.NONE
+    xberg_url: str = ""
+    xberg_timeout: float = 120.0
 
     # Frontend feature flags
     # Enables the browser-based speech-to-text UI. Transcription runs fully
     # client-side; the backend only gates the feature via this flag and announces
     # the single transcription model, whose id must match an entry of the
     # frontend's TRANSCRIPTION_MODELS list (no audio is uploaded).
-    TRANSCRIPTION_ENABLED: bool = False
+    transcription_enabled: bool = False
     # The one Hugging Face model id (see the frontend TRANSCRIPTION_MODELS list)
     # used for transcription by every user. There is no default and no fallback:
     # core and frontend are updated in sync, and an unset id simply keeps the
     # feature disabled. Defaults to the NVIDIA Canary 180M Flash ONNX export in
     # the examples below: multilingual (en/de/fr/es), good German WER, and it
     # runs entirely on WASM — no WebGPU needed.
-    TRANSCRIPTION_MODEL: str | None = None
-    AI_ACT_COMPLIANCE_CHECK_ENABLED: bool = True
-    COMPLIANCE_CACHE_ENABLED: bool = True
-    COMPLIANCE_CACHE_TTL_SECONDS: PositiveInt = 30 * 60
+    transcription_model: str | None = None
+    ai_act_compliance_check_enabled: bool = True
+    compliance_cache_enabled: bool = True
+    compliance_cache_ttl_seconds: PositiveInt = 30 * 60
 
     # Canvas
     # Maximum persisted canvas content length (characters); the agent tools and
     # the CanvasState request model derive their caps from this.
-    CANVAS_CONTENT_MAX_CHARS: PositiveInt = 256 * 1024
+    canvas_content_max_chars: PositiveInt = 256 * 1024
     # Editor input limit (characters). The export endpoint caps the serialized
     # markdown/html at 4× this to leave headroom for markup and separators.
-    CANVAS_EDITOR_MAX_CHARS: PositiveInt = 512 * 1024
+    canvas_editor_max_chars: PositiveInt = 512 * 1024
 
     # Nested sub-configurations
-    SSO: SSOConfig = Field(default_factory=SSOConfig)
-    LANGFUSE: LangfuseConfig = Field(default_factory=LangfuseConfig)
-    MCP: MCPConfig = Field(default_factory=MCPConfig)
-    REDIS: RedisConfig = Field(default_factory=RedisConfig)
-    DB: DBConfig = Field(default_factory=DBConfig)
+    sso: SSOConfig = Field(default_factory=SSOConfig)
+    mcp: MCPConfig = Field(default_factory=MCPConfig)
+    redis: RedisConfig = Field(default_factory=RedisConfig)
+    db: DBConfig = Field(default_factory=DBConfig)
+
+    @model_validator(mode="before")
+    @classmethod
+    def reject_legacy_sso_keys(cls, data):
+        """Fails startup on legacy uppercase SSO keys instead of ignoring them.
+
+        Uppercase keys are silently dropped by the lowercase rename, which
+        would leave sso.role/admin_role unset and silently skip the role
+        check in authenticate(). Rejecting them enforces the migration.
+        """
+        if not isinstance(data, dict):
+            return data
+        if "SSO" in data:
+            raise ValueError("Top-level 'SSO' is no longer read. Rename it to 'sso'.")
+        sso = data.get("sso")
+        if isinstance(sso, dict) and ("ROLE" in sso or "ADMIN_ROLE" in sso):
+            raise ValueError(
+                "Keys 'ROLE' and 'ADMIN_ROLE' under 'sso' are no longer read. "
+                "Rename them to 'role' and 'admin_role'."
+            )
+        return data
 
     # Customize settings sources to prioritize YAML config
+    @classmethod
+    def _settings_build_values(
+        cls,
+        sources: tuple[PydanticBaseSettingsSource, ...],
+        init_kwargs: dict[str, Any],
+    ) -> dict[str, Any]:
+        if "SSO" in init_kwargs or any(
+            isinstance(s, YamlConfigSettingsSource) and "SSO" in s.yaml_data
+            for s in sources
+        ):
+            return {"SSO": {}}
+        return super()._settings_build_values(sources, init_kwargs)
+
     @classmethod
     def settings_customise_sources(
         cls,
@@ -623,8 +687,83 @@ class Settings(BaseSettings):
             dotenv_settings,
         )
 
+    @field_validator("providers", mode="before")
+    @staticmethod
+    def validate_provider_keys(value):
+        """Rejects provider keys that cannot be matched by env-var overrides.
+
+        pydantic-settings lowercases env-var name segments, so an uppercase
+        YAML key would silently split into a second entry and miss overrides
+        like MUCGPT_CORE_PROVIDERS__<KEY>__API_KEY.
+        """
+        if not isinstance(value, dict):
+            return value
+        offending = [
+            key
+            for key in value
+            if not isinstance(key, str) or key != key.lower() or "__" in key
+        ]
+        if offending:
+            raise ValueError(
+                "provider keys must be lowercase strings without '__' so env "
+                "overrides (MUCGPT_CORE_PROVIDERS__<KEY>__API_KEY) match them: "
+                + ", ".join(str(key) for key in offending)
+            )
+        return value
+
+    @field_validator("models", mode="before")
+    @staticmethod
+    def resolve_model_providers(value, info: ValidationInfo):
+        """Resolves provider references and rejects per-model provider fields.
+
+        Connection settings (type/endpoint/api_key/api_version) live in the
+        providers section; model entries reference them via `provider`. This
+        keeps api_key overridable per provider via environment variables
+        (MUCGPT_CORE_PROVIDERS__<KEY>__API_KEY), which is impossible for list
+        entries.
+        """
+        if not isinstance(value, list):
+            return value
+
+        providers = info.data.get("providers") or {}
+        resolved: list[dict[str, Any] | ModelsConfig] = []
+        for entry in value:
+            if not isinstance(entry, dict):
+                resolved.append(entry)
+                continue
+
+            inline = _PROVIDER_LEVEL_FIELDS & entry.keys()
+            if inline:
+                raise ValueError(
+                    "models[] entries must not configure provider-level fields "
+                    f"({', '.join(sorted(inline))}); reference a provider via "
+                    "`provider: <key>` and configure it in the providers section"
+                )
+
+            if "llm_name" in entry:
+                raise ValueError(
+                    "models[] entries use `id` (renamed from `llm_name`). "
+                    "Rename the key to `id`."
+                )
+
+            provider_name = entry.get("provider")
+            if not isinstance(provider_name, str) or not provider_name:
+                raise ValueError(
+                    "models[] entries require `provider: <key>` referencing the "
+                    "providers section"
+                )
+            provider = providers.get(provider_name)
+            if provider is None:
+                raise ValueError(
+                    f"Unknown provider {provider_name!r} in models[] entry "
+                    f"{entry.get('id', '<unnamed>')!r}. Available providers: "
+                    + (", ".join(sorted(providers)) if providers else "(none)")
+                )
+            resolved.append({**provider.model_dump(), **entry})
+        return resolved
+
     @field_validator(
-        "VERSION", "APP_VERSION", "FRONTEND_VERSION", "ASSISTANT_VERSION", mode="before"
+        "version", "app_version", "frontend_version", "assistant_version", mode="before"
     )
     @staticmethod
     def parse_version(value: str) -> str:
@@ -663,7 +802,7 @@ def enrich_model_metadata(model: ModelsConfig) -> None:
 
     if entry is None:
         raise ValueError(
-            f"Model {model.llm_name} not found in info endpoint at {model.endpoint}. "
+            f"Model {model.id} not found in info endpoint at {model.endpoint}. "
             "Provide the missing metadata directly."
         )
 
@@ -758,7 +897,7 @@ def _apply_model_info(model: ModelsConfig, entry: dict[str, Any]) -> None:
         info.display_name = _coerce_str(model_info.get("display_name"))
 
     if not (info.description or "").strip():
-        info.description = _build_description(entry, model.llm_name)
+        info.description = _build_description(entry, model.id)
 
     if not (info.short_description or "").strip():
         info.short_description = _coerce_str(model_info.get("short_description"))
@@ -899,10 +1038,10 @@ def _load_model_info(
 def _match_model_entry(
     payload: list[dict[str, Any]], model: ModelsConfig
 ) -> dict[str, Any] | None:
-    """Picks the payload entry matching llm_name/deployment (exact, then substring)."""
+    """Picks the payload entry matching id/deployment (exact, then substring)."""
     desired_names = {
         name.lower()
-        for name in [model.llm_name, model.deployment]
+        for name in [model.id, model.deployment]
         if isinstance(name, str) and name
     }
 
@@ -937,12 +1076,6 @@ def _match_model_entry(
 
 
 @lru_cache(maxsize=1)
-def get_langfuse_settings() -> LangfuseConfig:
-    """Return cached Langfuse Settings instance."""
-    return get_settings().LANGFUSE
-
-
-@lru_cache(maxsize=1)
 def get_settings() -> Settings:
     """Return cached Settings instance."""
     settings = Settings()
@@ -952,16 +1085,16 @@ def get_settings() -> Settings:
 @lru_cache(maxsize=1)
 def get_sso_settings() -> SSOConfig:
     """Return cached SSO Settings instance."""
-    return get_settings().SSO
+    return get_settings().sso
 
 
 @lru_cache(maxsize=1)
 def get_mcp_settings() -> MCPConfig:
     """Return cached MCP Settings instance."""
-    return get_settings().MCP
+    return get_settings().mcp
 
 
 @lru_cache(maxsize=1)
 def get_redis_settings() -> RedisConfig:
     """Return cached RedisSettings instance."""
-    return get_settings().REDIS
+    return get_settings().redis

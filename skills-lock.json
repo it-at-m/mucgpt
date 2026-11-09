@@ -5,7 +5,7 @@
       "source": "fastapi/fastapi",
       "sourceType": "github",
       "skillPath": "fastapi/.agents/skills/fastapi/SKILL.md",
-      "computedHash": "2f0ff30756b435168276e1a7eb78c07856118575ea174535de7ed86dc88c9be4"
+      "computedHash": "7ca975c93b0a2f93eb5337e93dde4cf70ec24fcb154f28c388a087ce9b1e033b"
     },
     "find-skills": {
       "source": "vercel-labs/skills",
@@ -35,7 +35,7 @@
       "source": "langfuse/skills",
       "sourceType": "github",
       "skillPath": "skills/langfuse/SKILL.md",
-      "computedHash": "ff5c606d22961ae0c70968e8944c73ce576a3a0a8422415861d6d7839a45539d"
+      "computedHash": "c1dc8c4e847791c62a3145894be9ec318220e76fdf0ee1a13422842f9908a48b"
     },
     "langgraph-docs": {
       "source": "langchain-ai/deepagents",

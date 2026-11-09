@@ -105,8 +105,8 @@ _canvas_settings = get_settings()
 
 # Maximum persisted canvas content length (mirrored by the editor input limit
 # CANVAS_EDITOR_MAX_CHARS, which the export endpoint grows by 4× headroom).
-CANVAS_CONTENT_MAX_CHARS = _canvas_settings.CANVAS_CONTENT_MAX_CHARS
-CANVAS_EDITOR_MAX_CHARS = _canvas_settings.CANVAS_EDITOR_MAX_CHARS
+CANVAS_CONTENT_MAX_CHARS = _canvas_settings.canvas_content_max_chars
+CANVAS_EDITOR_MAX_CHARS = _canvas_settings.canvas_editor_max_chars
 # Full canvas reads stop here so the tool result stays inside the model context;
 # the remaining document is reached via canvas_read(around_cursor).
 CANVAS_READ_LIMIT_CHARS = (CANVAS_CONTENT_MAX_CHARS * 95) // 100
@@ -575,9 +575,15 @@ class ConversationMetadata(BaseModel):
 
 
 class ModelsDTO(BaseModel):
-    llm_name: str = Field(..., description="Identifier of the model/deployment")
+    id: str = Field(..., description="Identifier of the model/deployment")
+    # Deprecated transition alias of `id`, kept so frontends cached by the
+    # service worker keep working against a updated core. Remove once old
+    # frontends are no longer in circulation.
+    llm_name: str | None = Field(
+        None, description="Deprecated alias of `id`", deprecated=True
+    )
     display_name: str | None = Field(
-        None, description="Human-readable model name; clients fall back to llm_name"
+        None, description="Human-readable model name; clients fall back to id"
     )
     max_output_tokens: PositiveInt | None = Field(
         None, description="Maximum tokens the model can generate"

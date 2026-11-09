@@ -42,45 +42,46 @@ logger = getLogger(__name__)
 )
 async def get_config(user_info=Depends(authenticate_user)) -> ConfigResponse:
     """Builds the application config response (feature flags, versions, links and model list)."""
-    if settings.TRANSCRIPTION_ENABLED and not settings.TRANSCRIPTION_MODEL:
+    if settings.transcription_enabled and not settings.transcription_model:
         logger.warning(
-            "TRANSCRIPTION_ENABLED is turned on but TRANSCRIPTION_MODEL is not set; "
-            "transcription is disabled. There is no default — set TRANSCRIPTION_MODEL to an id "
+            "transcription_enabled is turned on but transcription_model is not set; "
+            "transcription is disabled. There is no default — set transcription_model to an id "
             "from the frontend's transcription model list."
         )
     response = ConfigResponse(
-        env_name=settings.ENV_NAME,
-        alternative_logo=settings.ALTERNATIVE_LOGO,
-        app_version=settings.APP_VERSION,
-        core_version=settings.VERSION,
-        frontend_version=settings.FRONTEND_VERSION,
-        assistant_version=settings.ASSISTANT_VERSION,
+        env_name=settings.env_name,
+        alternative_logo=settings.alternative_logo,
+        app_version=settings.app_version,
+        core_version=settings.version,
+        frontend_version=settings.frontend_version,
+        assistant_version=settings.assistant_version,
         # Keep the configured order: the frontend opens the first note by default.
-        release_notes=[note.model_dump() for note in settings.RELEASE_NOTES],
-        document_processing_enabled=settings.PARSER_BACKEND != ParserBackendType.NONE,
+        release_notes=[note.model_dump() for note in settings.release_notes],
+        document_processing_enabled=settings.parser_backend != ParserBackendType.NONE,
         # Effective availability: a flag without a model cannot offer transcription.
-        transcription_enabled=settings.TRANSCRIPTION_ENABLED
-        and bool(settings.TRANSCRIPTION_MODEL),
-        transcription_model=settings.TRANSCRIPTION_MODEL,
-        ai_act_compliance_check_enabled=settings.AI_ACT_COMPLIANCE_CHECK_ENABLED,
-        footer_link_url=settings.FOOTER_LINK_URL,
-        footer_label=settings.FOOTER_LABEL,
-        faq_url=settings.FAQ_URL,
-        incident_report_url=settings.INCIDENT_REPORT_URL,
-        feature_request_url=settings.FEATURE_REQUEST_URL,
-        contact_mail_url=settings.CONTACT_MAIL_URL,
-        admin_role=settings.SSO.ADMIN_ROLE,
-        ad2image_url=settings.AD2IMAGE_URL,
-        owner_profile_url_template=settings.OWNER_PROFILE_URL_TEMPLATE,
-        ag_ui_enabled=settings.AG_UI_ENABLED,
-        canvas_content_max_chars=settings.CANVAS_CONTENT_MAX_CHARS,
-        canvas_editor_max_chars=settings.CANVAS_EDITOR_MAX_CHARS,
+        transcription_enabled=settings.transcription_enabled
+        and bool(settings.transcription_model),
+        transcription_model=settings.transcription_model,
+        ai_act_compliance_check_enabled=settings.ai_act_compliance_check_enabled,
+        footer_link_url=settings.footer_link_url,
+        footer_label=settings.footer_label,
+        faq_url=settings.faq_url,
+        incident_report_url=settings.incident_report_url,
+        feature_request_url=settings.feature_request_url,
+        contact_mail_url=settings.contact_mail_url,
+        admin_role=settings.sso.admin_role,
+        ad2image_url=settings.ad2image_url,
+        owner_profile_url_template=settings.owner_profile_url_template,
+        ag_ui_enabled=settings.ag_ui_enabled,
+        canvas_content_max_chars=settings.canvas_content_max_chars,
+        canvas_editor_max_chars=settings.canvas_editor_max_chars,
     )
 
-    models = settings.MODELS
+    models = settings.models
     for model in models:
         dto = ModelsDTO(
-            llm_name=model.llm_name,
+            id=model.id,
+            llm_name=model.id,
             display_name=model.display_name,
             max_output_tokens=model.max_output_tokens,
             max_input_tokens=model.max_input_tokens,

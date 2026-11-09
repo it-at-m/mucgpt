@@ -281,7 +281,7 @@ export const Layout = () => {
 
     const termsOfUseRead = localStorage.getItem(STORAGE_KEYS.TERMS_OF_USE_READ) === formatDate(new Date());
     const [languagePreference, setLanguagePreference] = useState<string>(() => localStorage.getItem(STORAGE_KEYS.SETTINGS_LANGUAGE) || DEFAULTLANG);
-    const [llmPreference] = useState<string>(() => localStorage.getItem(STORAGE_KEYS.SETTINGS_LLM) || config.models?.[0]?.llm_name || DEFAULTLLM);
+    const [llmPreference] = useState<string>(() => localStorage.getItem(STORAGE_KEYS.SETTINGS_LLM) || config.models?.[0]?.id || DEFAULTLLM);
 
     const fontScalingPreference = Number(localStorage.getItem(STORAGE_KEYS.SETTINGS_FONT_SCALING)) || 1;
     const [fontscaling] = useState<number>(fontScalingPreference);
@@ -312,7 +312,7 @@ export const Layout = () => {
                     console.error("Keine Modelle vorhanden");
                 }
                 setAvailableLLMs(models);
-                const preferredModel = models.find(model => model.llm_name === llmPreference) || models[0];
+                const preferredModel = models.find(model => model.id === llmPreference) || models[0];
                 if (preferredModel) {
                     setLLM(preferredModel);
                 }

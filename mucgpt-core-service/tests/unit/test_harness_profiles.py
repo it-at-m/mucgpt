@@ -97,7 +97,7 @@ def test_disabled_summarization_does_not_construct_or_enable_a_summarizer(
     monkeypatch.setattr("config.harness_profiles.ModelRegistry.get_model", get_model)
     model_config = ModelsConfig.model_construct(
         type="OPENAI",
-        llm_name="test-model",
+        id="test-model",
         deep_agent=DeepAgentModelConfig(
             enabled_builtin_tools={"read_file", "grep"},
             enable_summarization=enable_summarization,

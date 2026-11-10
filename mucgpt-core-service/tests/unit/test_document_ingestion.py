@@ -284,7 +284,7 @@ async def test_empty_xberg_response_releases_reservation(
 ):
     service, sessions, store, _ = ingestion
     settings = services.get_settings().model_copy(
-        update={"XBERG_URL": "http://xberg.test"}
+        update={"xberg_url": "http://xberg.test"}
     )
     monkeypatch.setattr(xberg, "get_settings", lambda: settings)
     parser = xberg.XbergBackend()

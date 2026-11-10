@@ -16,6 +16,7 @@ from core.virtual_file_system_helper import (
     get_document_path,
     get_document_storage_key,
 )
+from database.database_models import Document
 from database.document_catalog import DocumentCatalogManager
 from database.document_lock import document_work_lock
 from database.document_repo import DOCUMENT_LIMIT, DocumentRepository
@@ -132,6 +133,23 @@ class LibraryDocument:
     created_at: datetime
 
 
+def _selected_document(row: Document) -> SelectedDocument:
+    """Build the selected-document contract from a ready catalog row."""
+    if row.text_length is None or row.preview is None or row.preview_kind is None:
+        raise DocumentStorageError("Ready document metadata is incomplete")
+    return SelectedDocument(
+        id=row.id,
+        filename=row.filename,
+        mime_type=row.mime_type,
+        original_size=row.original_size,
+        text_length=row.text_length,
+        preview=row.preview,
+        preview_kind=row.preview_kind,
+        path=get_document_path(row.id),
+        created_at=row.created_at,
+    )
+
+
 class DocumentLibraryService:
     """User library operations with independently owned catalog sessions."""
 
@@ -231,7 +249,7 @@ class DocumentIngestionService:
             if session_factory is not None
             else DocumentCatalogManager.get_session_factory()
         )
-        self.settings = settings if settings is not None else get_settings().DOCUMENTS
+        self.settings = settings if settings is not None else get_settings().documents
 
     async def ingest_document(
         self, user_info: AuthenticationResult, file: UploadFile
@@ -280,6 +298,11 @@ class DocumentIngestionService:
                         )
                         document_id = document.id
                         created_at = document.created_at
+
+                if document_id is None:
+                    raise DocumentStorageError(
+                        "Document reservation was not published"
+                    )
 
                 text = await parser.parse(file)
                 self._validate_text(text)
@@ -443,17 +466,7 @@ class DocumentService:
                 "One or more selected documents are unavailable"
             )
         documents = tuple(
-            SelectedDocument(
-                id=row.id,
-                filename=row.filename,
-                mime_type=row.mime_type,
-                original_size=row.original_size,
-                text_length=row.text_length,
-                preview=row.preview,
-                preview_kind=row.preview_kind,
-                path=get_document_path(row.id),
-                created_at=row.created_at,
-            )
+            _selected_document(row)
             for document_id in ids
             if (row := ready.get(document_id)) is not None
         )

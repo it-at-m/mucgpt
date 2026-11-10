@@ -22,7 +22,7 @@ class DocumentCatalogManager:
                 # Explicitly initialize the new table on existing deployments;
                 # conversation startup intentionally creates only the chats table.
                 await connection.run_sync(
-                    Base.metadata.create_all, tables=[Document.__table__]
+                    Base.metadata.create_all, tables=[Document.__table__]  # ty: ignore[invalid-argument-type]
                 )
         except BaseException:
             with CancelScope(shield=True):

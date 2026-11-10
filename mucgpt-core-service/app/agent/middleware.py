@@ -495,7 +495,7 @@ class ContextMiddleware(AgentMiddleware):
                 )
             self.document_context = build_document_context(
                 document_selection,
-                get_settings().DOCUMENTS.PREVIEW_MAX_CHARS,
+                get_settings().documents.PREVIEW_MAX_CHARS,
                 instructions=doc_instructions,
             )
 

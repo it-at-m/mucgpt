@@ -129,9 +129,16 @@ async def _save_document_selection(
     """Save only validated selections for persisted, live owned conversations."""
     if not request.persist:
         return
+    conversation_id = request.conversation_id
+    # Omitted document_ids means "no document feature"; an explicitly empty list
+    # means "detach all previously selected documents".
+    if conversation_id is None:
+        return
+    if "document_ids" not in request.model_fields_set and not document_ids:
+        return
     async with PersistanceHelpers._get_session_factory().begin() as session:
         if not await ConversationRepository(session).set_document_ids(
-            user_id, request.conversation_id, document_ids, document_names
+            user_id, conversation_id, document_ids, document_names
         ):
             raise HTTPException(status_code=403, detail="Conversation access denied")
 

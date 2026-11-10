@@ -633,7 +633,8 @@ const Chat = () => {
         isLoadingRef.current = true;
 
         // Check URL for question parameter - Handle hash router format
-        const { questionFromUrl, toolsFromUrl, dataFromUrl, documentsFromUrl, newChatRequested, newChatToken, chatIdFromUrl, canvasRequested } = getNavigationParams();
+        const { questionFromUrl, toolsFromUrl, dataFromUrl, documentsFromUrl, newChatRequested, newChatToken, chatIdFromUrl, canvasRequested } =
+            getNavigationParams();
 
         if (documentsFromUrl && !chatIdFromUrl) {
             const ids = documentsFromUrl.split(",");

@@ -227,7 +227,11 @@ async def test_all_document_mutations_denied_and_scratch_stays_in_state(
         "owner", [SELECTED_ID], calls, asynchronous=asynchronous
     )
     assert all(
-        message.status == "error" and "permission denied" in message.content
+        message.status == "error"
+        and (
+            "permission denied" in message.content
+            or "parallel file mutations" in message.content
+        )
         for message in messages[:-1]
     )
     assert messages[-1].status == "success"

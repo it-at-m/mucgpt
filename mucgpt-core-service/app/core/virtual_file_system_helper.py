@@ -179,7 +179,7 @@ class FileStoreManager:
         )
         try:
             await pool.open()
-            store = AsyncPostgresStore(conn=pool)
+            store = AsyncPostgresStore(conn=pool)  # ty: ignore[invalid-argument-type]
             await store.setup()
         except BaseException:
             with CancelScope(shield=True):

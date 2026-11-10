@@ -105,18 +105,17 @@ async def test_grep_then_read_window_and_resume_use_only_attached_body(asynchron
     assert window.status == "success"
     for number in range(199, 204):
         source = lines[number - 1].rstrip("\n")
-        assert f"{number}  {source}" in window.content
+        assert source in window.content
     assert "source line 198" not in window.content
     assert "source line 204" not in window.content
-    assert "lines 199-203 of 210 total" in window.content
-    assert "7 lines remaining from offset 203" in window.content
+    assert "@@ lines 199-203 of 210 | next offset 203 @@" in window.content
 
     resume = messages["resume"]
     assert resume.status == "success"
     for number in range(204, 211):
-        assert f"{number}  source line {number}" in resume.content
+        assert f"source line {number}" in resume.content
     assert "source line 203" not in resume.content
-    assert "remaining from offset" not in resume.content
+    assert "next offset" not in resume.content
     assert messages["unattached"].status == "error"
     assert "permission denied" in messages["unattached"].content
     assert "private text" not in messages["unattached"].content

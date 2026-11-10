@@ -34,6 +34,7 @@ describe("providerError", () => {
             const error = toChatProviderError({ code: "authentication", detail: "status: 401", status_code: 401 });
             expect(error.code).toBe("authentication");
             expect(error.detail).toBe("status: 401");
+            expect(error.statusCode).toBe(401);
         });
 
         it("wraps plain errors as unknown and keeps their text as detail", () => {
@@ -41,6 +42,37 @@ describe("providerError", () => {
             expect(error.code).toBe("unknown");
             expect(error.detail).toBe("Failed to fetch");
             expect(error.message).toBe("Failed to fetch");
+        });
+
+        it("falls back to an empty detail for non-string messages", () => {
+            const error = toChatProviderError({ message: { body: "not a string" } });
+            expect(error.code).toBe("unknown");
+            expect(error.detail).toBe("");
+            expect(() => error.detail.trim()).not.toThrow();
+        });
+
+        it("prefers a string detail and only uses a string message fallback", () => {
+            expect(toChatProviderError({ detail: "technical detail", message: { body: true } }).detail).toBe("technical detail");
+            expect(toChatProviderError({ detail: { body: true }, message: "technical message" }).detail).toBe("technical message");
+        });
+
+        it("uses the HTTP status as a code fallback when the body has no status", () => {
+            const error = toChatProviderError({ code: "unknown", detail: "gateway rejected the request" }, 429);
+            expect(error.code).toBe("rate_limited");
+            expect(error.statusCode).toBe(429);
+            expect(error.detail).toContain("gateway");
+        });
+
+        it("maps unambiguous gateway statuses only when no explicit code exists", () => {
+            expect(toChatProviderError({ detail: "unauthorized" }, 401).code).toBe("authentication");
+            expect(toChatProviderError({ detail: "forbidden" }, 403).code).toBe("permission_denied");
+            expect(toChatProviderError({ detail: "too many requests" }, 429).code).toBe("rate_limited");
+            expect(toChatProviderError({ detail: "validation failed" }, 400).code).toBe("unknown");
+        });
+
+        it("keeps an explicit provider code instead of classifying the HTTP status", () => {
+            const error = toChatProviderError({ code: "connection_error", detail: "upstream unavailable" }, 429);
+            expect(error.code).toBe("connection_error");
         });
 
         it("lifts a trailing code from HTTP detail phrases", () => {

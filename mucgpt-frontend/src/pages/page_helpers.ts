@@ -14,7 +14,8 @@ import { createChatName, MucgptAgUiAgent } from "../api/core-client";
 import { EventType, type BaseEvent, type CustomEvent } from "@ag-ui/core";
 import { initialRunActivity, reduceRunActivity, type RunActivity } from "../utils/agUiActivity";
 import { isCanvasToolCall, parseCanvasStreamEvent, type CanvasStreamEvent } from "../utils/canvasStream";
-import { fromAgUiRunError, fromChunk, toChatProviderError, type ChatProviderError } from "../utils/providerError";
+import { fromAgUiRunError, fromChunk, toChatProviderError, ChatProviderError } from "../utils/providerError";
+import { deleteConversationApi } from "../api/conversations-client";
 import { scrollIntoNearestContainer } from "../utils/scrollIntoNearestContainer";
 import { getConversationActionCapabilities } from "../utils/conversationActions";
 
@@ -283,6 +284,37 @@ export const makeApiRequest = async (
             ? activeChatRef.current.slice(AssistantStorageService.GENERATE_BOT_CHAT_PREFIX(assistant_id).length)
             : activeChatRef.current
         : uuid();
+    // The backend creates history metadata before the first turn runs. If that
+    // first persisted turn fails, it would otherwise remain as an orphaned
+    // "New Chat" and a later attempt would create a second conversation.
+    const isNewPersistedConversation = persist && !activeChatRef.current;
+
+    /** Fails the request, discarding an orphaned first persisted conversation. */
+    const abortRequest = async (error: unknown): Promise<never> => {
+        if (isNewPersistedConversation) {
+            let serverConversationDeleted = false;
+            try {
+                await deleteConversationApi(conversationId);
+                serverConversationDeleted = true;
+            } catch (cleanupError) {
+                console.error("Failed to clean up the failed conversation on the server:", cleanupError);
+            }
+            if (serverConversationDeleted) {
+                const localId = assistant_id ? AssistantStorageService.GENERATE_BOT_CHAT_ID(assistant_id, conversationId) : conversationId;
+                try {
+                    await storageService.delete(localId);
+                } catch (cleanupError) {
+                    console.error("Failed to clean up the failed conversation locally:", cleanupError);
+                }
+            }
+            try {
+                await fetchHistory?.();
+            } catch (cleanupError) {
+                console.error("Failed to refresh history after a failed new conversation:", cleanupError);
+            }
+        }
+        throw error;
+    };
 
     // Build the API request object
     const request: ChatRequest = {
@@ -301,16 +333,16 @@ export const makeApiRequest = async (
     };
 
     // Keep the legacy request behavior unchanged while the AG-UI path is rolled out.
-    const legacyResponse = agUiEnabled ? undefined : await chatApi(request);
+    const legacyResponse = agUiEnabled ? undefined : await chatApi(request).catch(abortRequest);
     if (legacyResponse) {
         handleRedirect(legacyResponse);
         if (!legacyResponse.ok) {
             // Pre-stream failure (validation/config/auth): the backend returns
             // a JSON error body instead of an SSE stream.
             const body = (await legacyResponse.json().catch(() => undefined)) as unknown;
-            throw toChatProviderError(body ?? { code: "unknown", detail: "" });
+            await abortRequest(toChatProviderError(body ?? { code: "unknown", detail: "" }, legacyResponse.status));
         }
-        if (!legacyResponse.body) throw Error("No response body");
+        if (!legacyResponse.body) await abortRequest(Error("No response body"));
     }
 
     // Initialize token counters for usage tracking
@@ -465,13 +497,25 @@ export const makeApiRequest = async (
                     }
                 }
             });
+        } catch (error) {
+            if (updateTimer) {
+                clearTimeout(updateTimer);
+                updateTimer = null;
+            }
+            await abortRequest(error);
         } finally {
             eventSubscription.unsubscribe();
             // RUN_FINISHED/RUN_ERROR normally unlock; this covers the path where
             // the run throws before any event is emitted.
             canvasWiring?.onRunFinished();
         }
-        if (runError) throw runError;
+        if (runError) {
+            if (updateTimer) {
+                clearTimeout(updateTimer);
+                updateTimer = null;
+            }
+            await abortRequest(runError);
+        }
     } else {
         const reader = legacyResponse!.body!.getReader();
         const decoder = new TextDecoder();
@@ -538,10 +582,19 @@ export const makeApiRequest = async (
                             scheduleUpdate();
                         }
                     } catch (parseError) {
+                        if (parseError instanceof ChatProviderError) {
+                            if (updateTimer) {
+                                clearTimeout(updateTimer);
+                                updateTimer = null;
+                            }
+                            throw parseError;
+                        }
                         console.warn("Failed to parse SSE data:", data, parseError);
                     }
                 }
             }
+        } catch (error) {
+            await abortRequest(error);
         } finally {
             reader.releaseLock();
         }

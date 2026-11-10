@@ -23,12 +23,14 @@ export type ProviderErrorCode = (typeof PROVIDER_ERROR_CODES)[number];
 export class ChatProviderError extends Error {
     readonly code: ProviderErrorCode;
     readonly detail: string;
+    readonly statusCode: number | null;
 
-    constructor(code: ProviderErrorCode, detail: string, message?: string) {
+    constructor(code: ProviderErrorCode, detail: string, message?: string, statusCode?: number | null) {
         super(message ?? code);
         this.name = "ChatProviderError";
         this.code = code;
         this.detail = detail;
+        this.statusCode = statusCode ?? null;
     }
 }
 
@@ -44,7 +46,7 @@ export function providerErrorCodeToI18nKey(code: string): string {
 
 function parsePayload(raw: unknown): ProviderErrorPayload {
     if (isRecord(raw)) {
-        const detail = typeof raw.detail === "string" ? raw.detail : ((raw.message as string) ?? "");
+        const detail = typeof raw.detail === "string" ? raw.detail : typeof raw.message === "string" ? raw.message : "";
         let code = typeof raw.code === "string" ? (raw.code as ProviderErrorCode) : "unknown";
         if (!(PROVIDER_ERROR_CODES as readonly string[]).includes(code)) {
             code = "unknown";
@@ -63,18 +65,34 @@ function parsePayload(raw: unknown): ProviderErrorPayload {
     return { code: "unknown", detail: raw === undefined ? "" : String(raw), status_code: null };
 }
 
+/** Fills an unknown provider code from unambiguous HTTP gateway statuses. */
+function codeFromHttpFallback(code: ProviderErrorCode, status_code: number | null): ProviderErrorCode {
+    if (code !== "unknown" || status_code === null) return code;
+    if (status_code === 401) return "authentication";
+    if (status_code === 403) return "permission_denied";
+    if (status_code === 429) return "rate_limited";
+    return code;
+}
+
 /**
  * Normalizes anything caught in a chat request into a ChatProviderError.
  * - ChatProviderError passes through
  * - structured payloads (chunk.error, RUN_ERROR code/metadata) map to code+detail
  * - plain Errors become `unknown` (full text kept as technical detail)
+ * - `httpStatusCode` fills the status when the body has none
  */
-export function toChatProviderError(error: unknown): ChatProviderError {
+export function toChatProviderError(error: unknown, httpStatusCode?: number): ChatProviderError {
     if (error instanceof ChatProviderError) {
         return error;
     }
     const payload = parsePayload(error);
-    return new ChatProviderError(payload.code as ProviderErrorCode, payload.detail, error instanceof Error ? error.message : undefined);
+    const statusCode = payload.status_code ?? httpStatusCode ?? null;
+    return new ChatProviderError(
+        codeFromHttpFallback(payload.code as ProviderErrorCode, statusCode),
+        payload.detail,
+        error instanceof Error ? error.message : undefined,
+        statusCode
+    );
 }
 
 /** Reads the structured error off a v1 SSE chunk (if any). */

@@ -1,5 +1,5 @@
 import type { MessageBarIntent } from "@fluentui/react-components";
-import { Add20Regular, ArrowExportUp20Regular, Chat20Regular, Copy20Regular, Delete20Regular, Edit20Regular } from "@fluentui/react-icons";
+import { Add20Regular, ArrowExportUp20Regular, Chat20Regular, Delete20Regular, Edit20Regular } from "@fluentui/react-icons";
 import { useTranslation } from "react-i18next";
 
 import { Button } from "../../ui/Button";
@@ -12,23 +12,13 @@ interface AssistantStateCalloutProps {
     /** The details sidebar stacks its actions; the chat shows them inline above the composer. */
     context: "details" | "chat";
     onSubscribe?: () => void;
-    onDuplicate?: () => void;
     onMigrateLocal?: () => void;
     onOpenChatHistory?: () => void;
     onEdit?: () => void;
     onDelete?: () => void;
 }
 
-export const AssistantStateCallout = ({
-    state,
-    context,
-    onSubscribe,
-    onDuplicate,
-    onMigrateLocal,
-    onOpenChatHistory,
-    onEdit,
-    onDelete
-}: AssistantStateCalloutProps) => {
+export const AssistantStateCallout = ({ state, context, onSubscribe, onMigrateLocal, onOpenChatHistory, onEdit, onDelete }: AssistantStateCalloutProps) => {
     const { t } = useTranslation();
     const isChat = context === "chat";
 
@@ -85,11 +75,6 @@ export const AssistantStateCallout = ({
         state === "unsubscribed" && onSubscribe && (
             <Button key="subscribe" appearance="primary" icon={<Add20Regular />} onClick={onSubscribe}>
                 {t("components.not_subscribed_dialog.subscribe_button")}
-            </Button>
-        ),
-        state === "deleted" && onDuplicate && (
-            <Button key="duplicate" appearance="primary" icon={<Copy20Regular />} onClick={onDuplicate}>
-                {t("components.community_assistants.deleted_state_save_action")}
             </Button>
         ),
         state === "local" && onMigrateLocal && (

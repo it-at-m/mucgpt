@@ -1052,26 +1052,9 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
         }
 
         if (isDeletedAssistant) {
-            const duplicateCandidateSnapshot = assistantSnapshot;
-
             return (
                 <div className={styles.stateCallout}>
-                    <AssistantStateCallout
-                        state="deleted"
-                        context="chat"
-                        onDuplicate={
-                            duplicateCandidateSnapshot
-                                ? () =>
-                                      requestDuplicateAssistant({
-                                          id: assistant_id,
-                                          title: duplicateCandidateSnapshot.title,
-                                          rawData: duplicateCandidateSnapshot,
-                                          isDeletedSnapshot: true
-                                      })
-                                : undefined
-                        }
-                        onDelete={() => setShowDeleteConfirm(true)}
-                    />
+                    <AssistantStateCallout state="deleted" context="chat" onDelete={() => setShowDeleteConfirm(true)} />
                 </div>
             );
         }

@@ -360,7 +360,6 @@ export const AssistantDetailsSidebar = ({
                             <AssistantStateCallout
                                 state={calloutState}
                                 context="details"
-                                onDuplicate={onDuplicate}
                                 onMigrateLocal={onMigrateLocal}
                                 onOpenChatHistory={onOpenChatHistory}
                                 onEdit={canEdit ? onEdit : undefined}

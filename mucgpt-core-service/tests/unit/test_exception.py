@@ -176,12 +176,14 @@ class TestTaxonomy:
 
 class TestDetail:
     @pytest.mark.unit
-    def test_detail_contains_key_facts(self) -> None:
+    def test_client_detail_contains_safe_key_facts_only(self) -> None:
         ex = _status_error(
             openai.BadRequestError,
             "The response was filtered",
             400,
-            body={"error": {"code": "content_filter"}},
+            body={
+                "error": {"code": "content_filter", "message": "filtered and echoed"}
+            },
         )
         ex.request_id = "req-123"
         detail = _payload(ex).detail
@@ -190,14 +192,44 @@ class TestDetail:
         assert "status: 400" in detail
         assert "provider code: content_filter" in detail
         assert "request_id: req-123" in detail
-        assert "message: The response was filtered" in detail
+        assert "message:" not in detail
+        assert "body:" not in detail
+        assert "filtered and echoed" not in detail
 
     @pytest.mark.unit
-    def test_detail_truncated_at_limit(self) -> None:
+    def test_secret_like_provider_data_is_logged_but_not_sent_to_client(self) -> None:
+        ex = _status_error(
+            openai.AuthenticationError,
+            "Invalid key sk-proj-secret-value",
+            401,
+            body={
+                "error": {
+                    "code": "invalid_api_key",
+                    "message": "api-key: client-secret",
+                }
+            },
+        )
+        logger = _logger()
+        payload = llm_error_payload(ex, logger=logger)
+
+        assert "sk-proj-secret-value" not in payload.detail
+        assert "client-secret" not in payload.detail
+        logged_detail = logger.calls[0][0][1]
+        assert isinstance(logged_detail, str)
+        assert "sk-proj-secret-value" in logged_detail
+        assert "client-secret" in logged_detail
+
+    @pytest.mark.unit
+    def test_full_logged_detail_is_truncated(self) -> None:
         ex = RuntimeError("x" * 50000)
-        detail = _payload(ex).detail
-        assert len(detail) <= 2000 + len(" …(truncated)")
-        assert detail.endswith("…(truncated)")
+        logger = _logger()
+        payload = llm_error_payload(ex, logger=logger)
+
+        logged_detail = logger.calls[0][0][1]
+        assert isinstance(logged_detail, str)
+        assert len(logged_detail) <= 2000 + len(" …(truncated)")
+        assert logged_detail.endswith("…(truncated)")
+        assert payload.detail == "exception: builtins.RuntimeError"
 
 
 class TestHandlerRobustness:

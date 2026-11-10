@@ -1155,11 +1155,11 @@ export const handlers = [
                 send({ type: "RUN_STARTED", threadId, runId });
                 await delay(100);
 
-                if (/^\s*agui-error\s*$/i.test(latestUserMessage)) {
+                if (/^\s*agui-error(?:\s+\S+)?\s*$/i.test(latestUserMessage)) {
                     // Error variants: "agui-error", "agui-error rate_limited",
                     // "agui-error content_filter", … exercise the i18n mapping.
                     const requestedCode = latestUserMessage
-                        .replace(/^agui-error/i, "")
+                        .replace(/^\s*agui-error/i, "")
                         .trim()
                         .toLowerCase();
                     const code: ProviderErrorCode = (PROVIDER_ERROR_CODES as readonly string[]).includes(requestedCode)

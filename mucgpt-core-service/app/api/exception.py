@@ -137,8 +137,8 @@ def _error_code(ex: Exception) -> str:
     return UNKNOWN
 
 
-def _detail(ex: Exception) -> str:
-    """Build the technical detail string shown only in the details view."""
+def _diagnostic_detail(ex: Exception) -> str:
+    """Build the full diagnostic string for server logs only."""
     lines: list[str] = []
     lines.append(f"exception: {type(ex).__module__}.{type(ex).__qualname__}")
     status = _status_code(ex)
@@ -159,16 +159,40 @@ def _detail(ex: Exception) -> str:
             lines.append(f"body: {json.dumps(body, default=str)}")
         except Exception:  # pragma: no cover - defensive, bodies are JSON-like
             lines.append(f"body: {body!r}")
-    text = "\n".join(line for line in lines if line)
+    return _truncate_detail("\n".join(line for line in lines if line))
+
+
+def _client_detail(ex: Exception) -> str:
+    """Build a safe diagnostic string for the client-facing details view.
+
+    Exception messages and provider bodies can contain endpoints, credential
+    fragments, or echoed prompt content. Keep those in server logs only; the
+    client sees safe diagnostic fields.
+    """
+    lines: list[str] = [f"exception: {type(ex).__module__}.{type(ex).__qualname__}"]
+    status = _status_code(ex)
+    if status is not None:
+        lines.append(f"status: {status}")
+    provider_code = _provider_code(ex)
+    if provider_code:
+        lines.append(f"provider code: {provider_code}")
+    request_id = getattr(ex, "request_id", None)
+    if isinstance(request_id, str) and request_id:
+        lines.append(f"request_id: {request_id}")
+    return _truncate_detail("\n".join(lines))
+
+
+def _truncate_detail(text: str) -> str:
+    """Cap a diagnostic string so logs and client payloads stay bounded."""
     if len(text) > _DETAIL_MAX_LENGTH:
-        text = text[:_DETAIL_MAX_LENGTH] + " …(truncated)"
+        return text[:_DETAIL_MAX_LENGTH] + " …(truncated)"
     return text
 
 
-def _fallback_detail(nested: Exception) -> ProviderErrorPayload:
+def _fallback_detail(_nested: Exception) -> ProviderErrorPayload:
     return ProviderErrorPayload(
         code=UNKNOWN,
-        detail=f"internal error while mapping the exception: {nested}",
+        detail="internal error while mapping the exception",
         status_code=None,
     )
 
@@ -184,13 +208,13 @@ def llm_error_payload(ex: Exception, logger: logging.Logger) -> ProviderErrorPay
         ProviderErrorPayload: stable error contract for the frontend
     """
     try:
-        payload = ProviderErrorPayload(
+        # Log the full diagnostic before building the safe client payload.
+        logger.error("Provider error details: %s", _diagnostic_detail(ex))
+        return ProviderErrorPayload(
             code=_error_code(ex),
-            detail=_detail(ex),
+            detail=_client_detail(ex),
             status_code=_status_code(ex),
         )
-        logger.error("Provider error details: %s", payload.detail)
-        return payload
     except Exception as nested:  # pragma: no cover - defensive
         logger.error("Error while handling exception: %s", nested)
         return _fallback_detail(nested)

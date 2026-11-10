@@ -323,6 +323,36 @@ describe("loading stored revisions", () => {
             manual: []
         });
     });
+
+    it("restores the newest revision when the current canvas is empty", async () => {
+        loadCanvasStateMock.mockResolvedValue("");
+        loadCanvasRevisionsMock.mockResolvedValue({
+            auto: [
+                {
+                    revision: 1,
+                    doc_json: { type: "doc", content: [{ type: "paragraph", content: [{ type: "text", text: "Older" }] }] },
+                    timestamp: 1,
+                    source: "agent"
+                },
+                {
+                    revision: 2,
+                    doc_json: { type: "doc", content: [{ type: "paragraph", content: [{ type: "text", text: "Newest" }] }] },
+                    timestamp: 2,
+                    source: "agent"
+                }
+            ],
+            manual: []
+        });
+
+        const harness = renderController();
+        harness.render(undefined);
+
+        await harness.rerender("conv-1");
+        await new Promise(resolve => setTimeout(resolve, 0));
+
+        expect(harness.current.isOpen).toBe(true);
+        expect(harness.current.getMarkdown()).toBe("Newest");
+    });
 });
 
 describe("conversation id assignment", () => {

@@ -15,6 +15,7 @@ interface Props {
     conversationId: string | undefined;
     /** Backend conversation id for server requests; defaults to conversationId. */
     serverConversationId?: string;
+    readOnly?: boolean;
     children: ReactNode;
     onInsertIntoChat?: (markdown: string) => void;
     onAgentRevise?: (markdown: string) => void;
@@ -31,7 +32,7 @@ const useIsNarrowLayout = () => {
     return isNarrow;
 };
 
-export const CanvasSplitView = ({ controller, conversationId, serverConversationId, children, onInsertIntoChat, onAgentRevise }: Props) => {
+export const CanvasSplitView = ({ controller, conversationId, serverConversationId, readOnly = false, children, onInsertIntoChat, onAgentRevise }: Props) => {
     const { t } = useTranslation();
     const isNarrow = useIsNarrowLayout();
     const split = useSplitView();
@@ -41,6 +42,7 @@ export const CanvasSplitView = ({ controller, conversationId, serverConversation
             controller={controller}
             conversationId={conversationId}
             serverConversationId={serverConversationId}
+            readOnly={readOnly}
             onInsertIntoChat={onInsertIntoChat}
             onAgentRevise={onAgentRevise}
         />

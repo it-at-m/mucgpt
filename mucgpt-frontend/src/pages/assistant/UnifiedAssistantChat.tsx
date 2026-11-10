@@ -878,12 +878,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
             return;
         }
 
-        showSuccess(
-            t("components.assistant_chat.delete_assistant_success"),
-            t("components.assistant_chat.delete_assistant_success_message", {
-                title: assistantConfig.title || t("components.assistant_chat.assistant_not_found")
-            })
-        );
+        showSuccess(t("components.history.delete_chats_success_title"), t("components.history.delete_chats_success_message"));
         refreshUnifiedHistory();
         navigate("/discovery");
     }, [
@@ -1305,6 +1300,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                     controller={canvas}
                     conversationId={active_chat}
                     serverConversationId={canvasServerConversationId}
+                    readOnly={historyReadOnly}
                     onInsertIntoChat={insertCanvasSelectionIntoChat}
                     onAgentRevise={insertCanvasReviseRequest}
                 >

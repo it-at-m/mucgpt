@@ -456,8 +456,13 @@ const Discovery = () => {
                 await new OwnedCommunityAssistantStrategy().deleteAssistant(selectedAssistant.id, assistantStorageService, keepChats);
             }
             showSuccess(
-                t("components.assistant_chat.delete_assistant_success"),
-                t("components.assistant_chat.delete_assistant_success_message", { title: selectedAssistant.title })
+                t(selectedAssistant.isDeletedSnapshot ? "components.history.delete_chats_success_title" : "components.assistant_chat.delete_assistant_success"),
+                t(
+                    selectedAssistant.isDeletedSnapshot
+                        ? "components.history.delete_chats_success_message"
+                        : "components.assistant_chat.delete_assistant_success_message",
+                    selectedAssistant.isDeletedSnapshot ? undefined : { title: selectedAssistant.title }
+                )
             );
             removeAssistantFromLists(selectedAssistant.id);
             refreshUnifiedHistory();

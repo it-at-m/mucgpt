@@ -977,9 +977,7 @@ i18n
                                 "Wenn Sie mit dieser Konfiguration weiterarbeiten möchten, speichern Sie sie als eigenen Assistenten. Frühere Chats können Sie weiterhin nur lesend ansehen.",
                             discovery_deleted_hint:
                                 "Dieser Community-Assistent wurde vom Ersteller gelöscht. Er ist nicht mehr verfügbar. Die letzte Version liegt nur noch lokal im Browser und kann verloren gehen. Sichern Sie sie jetzt als eigenen Assistenten oder sehen Sie nur den alten Chatverlauf an.",
-                            deleted_chat_warning:
-                                "Dieser Assistent wurde gelöscht. Die letzte Version liegt nur noch lokal im Browser und kann verloren gehen. Der Chatverlauf ist schreibgeschützt. Sichere die lokale Version als eigenen Assistenten, wenn du damit weiterarbeiten möchtest.",
-                            deleted_state_save_action: "Als eigenen Assistenten speichern",
+                            deleted_chat_warning: "Dieser Assistent wurde gelöscht. Der Chatverlauf ist schreibgeschützt.",
                             missing_state_title: "Dieser Assistent ist nicht mehr verfügbar",
                             missing_chat_warning:
                                 "Der Assistent wurde gelöscht. Dein Chatverlauf bleibt erhalten und kann eingesehen werden. Wenn du ihn nicht mehr brauchst, kannst du ihn löschen.",
@@ -1970,9 +1968,7 @@ i18n
                                 "If you want to keep using this setup, save it as your own assistant. You can still inspect previous chats in read-only mode.",
                             discovery_deleted_hint:
                                 "This community assistant was deleted by its creator and is no longer available. The last version only exists locally in this browser and may be lost. Save it now as your own assistant, or only view the old chat history.",
-                            deleted_chat_warning:
-                                "This assistant was deleted. The latest version only exists locally in this browser and may be lost. The chat history is read-only. Save the local version as your own assistant if you want to keep working with it.",
-                            deleted_state_save_action: "Save as own assistant",
+                            deleted_chat_warning: "This assistant was deleted. The chat history is read-only.",
                             missing_state_title: "This assistant is no longer available",
                             missing_chat_warning:
                                 "The assistant was deleted. Your chat history is preserved and can still be viewed. If you no longer need it, you can delete it.",
@@ -2934,9 +2930,7 @@ i18n
                                 "Wennst mit dera Konfiguration weitermacha mogst, speicherst as ois dein eigenen Assistenten. Fruahere Chats koanst weiterhin nur lesend anschaugn.",
                             discovery_deleted_hint:
                                 "Der Community-Assistent is vom Ersteller glascht worn und nimmer verfuegbar. De letzte Version liegt bloß no lokal im Browser und ko verloren geh. Sicherst as jetz ois eigenen Assistenten oder schaust bloß den oidn Chatverlauf o.",
-                            deleted_chat_warning:
-                                "Da Assistent is glascht worn. De letzte Version liegt bloß no lokal im Browser und ko verloren geh. Da Chatverlauf is nur lesend. Sichere de lokale Version ois eigenen Assistentn, wennst damit weidamocha mogst.",
-                            deleted_state_save_action: "Ois eigenen Assistenten speichern",
+                            deleted_chat_warning: "Da Assistent is glascht worn. Da Chatverlauf is nur lesend.",
                             missing_state_title: "Da Assistent is nimma verfuegbar",
                             missing_chat_warning:
                                 "Da Assistent is glascht worn. Dei Chatverlauf bleibt erhaltn und ko ogschaut wern. Wennst en nimma brauchst, koanst en leschn.",
@@ -3899,9 +3893,7 @@ i18n
                                 "Si vous voulez continuer avec cette configuration, enregistrez-la comme votre propre assistant. Vous pouvez encore consulter les anciens chats en lecture seule.",
                             discovery_deleted_hint:
                                 "Cet assistant communautaire a été supprimé par son créateur et n'est plus disponible. La dernière version n'existe plus que localement dans ce navigateur et peut être perdue. Enregistrez-la maintenant comme votre propre assistant, ou consultez seulement l'ancien historique de chat.",
-                            deleted_chat_warning:
-                                "Cet assistant a été supprimé. La dernière version n'existe plus que localement dans ce navigateur et peut être perdue. L'historique du chat est en lecture seule. Enregistrez la version locale comme votre propre assistant si vous voulez continuer à l'utiliser.",
-                            deleted_state_save_action: "Enregistrer comme assistant personnel",
+                            deleted_chat_warning: "Cet assistant a été supprimé. L'historique du chat est en lecture seule.",
                             missing_state_title: "Cet assistant n'est plus disponible",
                             missing_chat_warning:
                                 "L'assistant a été supprimé. Votre historique des conversations est conservé et reste consultable. Si vous n'en avez plus besoin, vous pouvez le supprimer.",
@@ -4866,9 +4858,7 @@ i18n
                                 "Якщо ви хочете й надалі користуватися цією конфігурацією, збережіть її як власного асистента. Попередні чати все ще можна переглядати лише для читання.",
                             discovery_deleted_hint:
                                 "Цей асистент спільноти був видалений автором і більше недоступний. Остання версія зберігається лише локально в цьому браузері й може бути втрачена. Збережіть її зараз як власного асистента або лише перегляньте стару історію чату.",
-                            deleted_chat_warning:
-                                "Цей асистент було видалено. Остання версія зберігається лише локально в цьому браузері й може бути втрачена. Історія чату доступна лише для читання. Збережіть локальну версію як власного асистента, якщо хочете й далі з нею працювати.",
-                            deleted_state_save_action: "Зберегти як власного асистента",
+                            deleted_chat_warning: "Цей асистент було видалено. Історія чату доступна лише для читання.",
                             missing_state_title: "Цей асистент більше недоступний",
                             missing_chat_warning:
                                 "Асистента було видалено. Вашу історію чатів збережено, її можна переглядати. Якщо він вам більше не потрібен, ви можете його видалити.",

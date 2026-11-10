@@ -1,5 +1,5 @@
 import { useRef, useState, useEffect, useContext, useCallback, useReducer, useMemo } from "react";
-import { AskResponse, Assistant, AssistantResponse, ChatResponse, CommunityAssistantSnapshot, DataSource } from "../../api";
+import { AskResponse, Assistant, AssistantResponse, ChatResponse, DataSource } from "../../api";
 import { Answer } from "../../components/Answer";
 import { QuestionInput } from "../../components/QuestionInput";
 import { useTranslation } from "react-i18next";
@@ -135,7 +135,6 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
     const [assistantInfoData, setAssistantInfoData] = useState<AssistantCardData | null>(null);
     const [isAssistantInfoLoading, setIsAssistantInfoLoading] = useState<boolean>(false);
     const [isOwnershipResolved, setIsOwnershipResolved] = useState<boolean>(!(strategy instanceof CommunityAssistantStrategy));
-    const [assistantSnapshot, setAssistantSnapshot] = useState<CommunityAssistantSnapshot | null>(null);
     const [lastQuestion, setLastQuestion] = useState<string>("");
     const [isLoading, setIsLoading] = useState<boolean>(false);
     // True from request start until the answer has fully finished streaming (see the same flag in Chat.tsx).
@@ -331,7 +330,6 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
             if (assistant_id) {
                 const runId = ++loadDataRunIdRef.current;
                 const isStale = () => loadDataRunIdRef.current !== runId;
-                setAssistantSnapshot(null);
                 setIsUnsubscribed(false);
                 setIsAssistantMissing(false);
                 setIsAccessRevoked(false);
@@ -378,17 +376,6 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                                 } catch (chatError) {
                                     console.error("Error checking for retained chats of the assistant:", chatError);
                                     hasLocalChats = true;
-                                }
-                            }
-
-                            if (isDeletedAssistant) {
-                                try {
-                                    const snapshot = await communityAssistantStorageService.getAssistantConfig(assistant_id);
-                                    if (isStale()) return;
-                                    setAssistantSnapshot(isCompleteCommunityAssistantSnapshot(snapshot) ? snapshot : null);
-                                } catch (snapshotError) {
-                                    console.error("Error loading deleted assistant snapshot:", snapshotError);
-                                    setAssistantSnapshot(null);
                                 }
                             }
 
@@ -457,7 +444,6 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                                 if (isStale()) return;
                                 if (isCompleteCommunityAssistantSnapshot(snapshot)) {
                                     const assistant = mapCommunitySnapshotToAssistant(snapshot);
-                                    setAssistantSnapshot(snapshot);
                                     setIsAccessRevoked(true);
                                     configMissing = true;
                                     setAssistantConfig(assistant);
@@ -1186,7 +1172,6 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
         isAssistantUnavailable,
         isUnsubscribed,
         isAssistantMissing,
-        assistantSnapshot,
         canEdit,
         navigate,
         setShowLocalMigrateConfirm,

@@ -510,7 +510,7 @@ export const AssistantDetailsSidebar = ({
                             </MenuTrigger>
                             <MenuPopover>
                                 <MenuList>
-                                    {onDuplicate && (
+                                    {onDuplicate && !isDeletedSnapshot && (
                                         <MenuItem icon={<Copy20Regular />} onClick={onDuplicate}>
                                             {t("components.community_assistants.duplicate")}
                                         </MenuItem>

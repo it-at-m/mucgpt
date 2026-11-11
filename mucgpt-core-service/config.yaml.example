@@ -144,6 +144,11 @@ models:
       # Defaults to true. Set false for models that reject temperature (e.g. GPT-5/GPT-6).
       # This explicit setting controls filtering; model names/profiles are not consulted.
       supports_temperature: true
+      # Explicit data-protection opt-in for image input (defaults to false).
+      # Set true only for models where sending images has been approved; the
+      # flag is never inferred from the model name and never auto-enabled by
+      # LiteLLM metadata enrichment.
+      supports_vision: false
       knowledge_cut_off: "2024-07-01"
 
 # SSO Settings (optional - nested under sso key)

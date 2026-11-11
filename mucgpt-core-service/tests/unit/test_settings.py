@@ -49,6 +49,35 @@ def test_temperature_capability_configuration(capability_config, expected) -> No
     assert config.supports_temperature is expected
 
 
+@pytest.mark.parametrize(
+    ("capability_config", "expected"),
+    [
+        ({}, False),
+        ({"supports_vision": True}, True),
+        ({"model_info": {"supports_vision": True}}, True),
+        (
+            {
+                "supports_vision": True,
+                "model_info": {"supports_vision": False},
+            },
+            False,
+        ),
+    ],
+)
+def test_vision_capability_configuration(capability_config, expected) -> None:
+    """Vision is an explicit per-model opt-in; the default must deny images."""
+    config = ModelsConfig(
+        type="openai",
+        id="test-model",
+        endpoint="https://example.test",
+        api_key="test",
+        **capability_config,
+    )
+
+    assert config.model_info.supports_vision is expected
+    assert config.supports_vision is expected
+
+
 class TestSettings:
     """Test cases for the Settings class and environment variable handling."""
 
@@ -407,6 +436,7 @@ class TestSettings:
                     "output_cost_per_token": 3.6e-7,
                     "supports_reasoning": False,
                     "supports_temperature": False,
+                    "supports_vision": True,
                     "knowledge_cut_off": "2023-09-01",
                 }
             ]
@@ -436,6 +466,7 @@ class TestSettings:
             assert model.output_cost_per_token == Decimal("3.6e-7")
             assert model.supports_reasoning is False
             assert model.supports_temperature is False
+            assert model.supports_vision is True
             assert model.knowledge_cut_off == "2023-09-01"
             assert model.model_info.auto_enrich_from_model_info_endpoint is True
 
@@ -472,6 +503,9 @@ class TestSettings:
                     "supports_reasoning": True,
                     "supported_reasoning_efforts": ["low", "Medium", "bogus", "high"],
                     "default_reasoning_effort": "low",
+                    # Even if a remote info endpoint advertises vision, MUCGPT's
+                    # explicit local opt-in must stay disabled.
+                    "supports_vision": True,
                     "input_cost_per_token": 9e-8,
                     "output_cost_per_token": 3.6e-7,
                     "knowledge_cut_off": "2024-07-01",
@@ -500,6 +534,8 @@ class TestSettings:
                 assert model.display_name == "GPT-4.1 nano"
                 assert model.short_description == "Fast everyday model"
                 assert model.supports_reasoning is True
+                # Remote metadata must never enable the data-protection opt-in.
+                assert model.supports_vision is False
                 assert model.input_cost_per_token == Decimal("9e-8")
                 assert model.output_cost_per_token == Decimal("3.6e-7")
                 assert model.knowledge_cut_off == "2024-07-01"

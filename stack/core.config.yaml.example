@@ -228,6 +228,11 @@ models:
       input_cost_per_token: 0.00000009
       output_cost_per_token: 0.00000036
       supports_reasoning: false
+      # Explicit data-protection opt-in for image input (defaults to false).
+      # Set true only for models where sending images has been approved; the
+      # flag is never inferred from the model name and never auto-enabled by
+      # LiteLLM metadata enrichment.
+      supports_vision: false
       # Optional, usually provided by LiteLLM model_info. Valid levels: none, minimal,
       # low, medium, high, max (e.g. privatemode.ai GLM models accept max). Requests are
       # clamped to the nearest supported effort; without a default, fallback_reasoning_effort applies.

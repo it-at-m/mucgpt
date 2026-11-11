@@ -363,6 +363,16 @@ class ModelsConfig(BaseModel):
         self.model_info.supports_temperature = value
 
     @property
+    def supports_vision(self) -> bool:
+        """Delegates the explicit image-input capability to the model info."""
+        return self.model_info.supports_vision
+
+    @supports_vision.setter
+    def supports_vision(self, value: bool) -> None:
+        """Stores the explicit image-input capability in the model info."""
+        self.model_info.supports_vision = value
+
+    @property
     def knowledge_cut_off(self) -> str | None:
         """Delegates the knowledge cutoff date to the nested model info."""
         return self.model_info.knowledge_cut_off

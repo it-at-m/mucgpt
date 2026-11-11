@@ -122,6 +122,7 @@ async def get_config(user_info=Depends(authenticate_user)) -> ConfigResponse:
             supports_reasoning=model.supports_reasoning,
             supported_reasoning_efforts=model.model_info.supported_reasoning_efforts,
             default_reasoning_effort=model.model_info.default_reasoning_effort,
+            supports_vision=model.supports_vision,
             knowledge_cut_off=model.knowledge_cut_off,
         )
         response.models.append(dto)

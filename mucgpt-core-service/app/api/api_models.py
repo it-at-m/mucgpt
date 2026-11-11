@@ -724,6 +724,14 @@ class ModelsDTO(BaseModel):
     default_reasoning_effort: ReasoningEffort | None = Field(
         None, description="Reasoning effort used when a request sets none"
     )
+    supports_vision: bool = Field(
+        False,
+        description=(
+            "Whether image input is explicitly enabled for this model. Operators "
+            "opt in per model for data-protection reasons; the flag is never "
+            "inferred or auto-enabled."
+        ),
+    )
     knowledge_cut_off: str | None = Field(
         None, description="Last known training data cutoff for the model"
     )

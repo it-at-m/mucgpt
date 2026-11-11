@@ -37,6 +37,10 @@ class ImageSizeExceededError(ValueError):
     """The upload exceeds the configured image byte bound."""
 
 
+class InvalidImageUploadError(ValueError):
+    """The upload metadata is invalid (e.g. missing or oversized filename)."""
+
+
 @dataclass(frozen=True)
 class UploadedImage:
     """Managed metadata returned to the frontend after a successful upload."""
@@ -91,7 +95,7 @@ class ImageIngestionService:
         """
         filename = file.filename
         if not filename or not filename.strip() or len(filename) > 255:
-            raise InvalidImageError(
+            raise InvalidImageUploadError(
                 "A filename of at most 255 characters is required"
             )
         display_mime = (file.content_type or "").split(";", 1)[0].strip().lower()

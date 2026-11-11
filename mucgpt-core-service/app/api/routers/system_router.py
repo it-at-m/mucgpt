@@ -1,9 +1,10 @@
 from fastapi import APIRouter, Depends
 
-from api.api_models import ConfigResponse, ModelsDTO
+from api.api_models import ConfigResponse, ImageInputDTO, ModelsDTO
 from config.settings import ParserBackendType, get_settings
 from config.transcription_models import KNOWN_TRANSCRIPTION_MODEL_IDS
 from core.auth import authenticate_user
+from core.image_validation import ALLOWED_IMAGE_MIME_TYPES
 from core.logtools import getLogger
 
 router = APIRouter()
@@ -103,6 +104,12 @@ async def get_config(user_info=Depends(authenticate_user)) -> ConfigResponse:
         owner_profile_url_template=settings.owner_profile_url_template,
         canvas_content_max_chars=settings.canvas_content_max_chars,
         canvas_editor_max_chars=settings.canvas_editor_max_chars,
+        image_input=ImageInputDTO(
+            enabled=settings.image_input.enabled,
+            max_upload_bytes=settings.image_input.max_upload_bytes,
+            max_pixels=settings.image_input.max_pixels,
+            allowed_mime_types=list(ALLOWED_IMAGE_MIME_TYPES),
+        ),
     )
 
     models = settings.models

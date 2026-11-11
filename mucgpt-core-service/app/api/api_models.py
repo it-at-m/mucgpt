@@ -13,6 +13,8 @@ from pydantic import (
 
 from api.exception import ProviderErrorPayload
 from config.settings import ReasoningEffort, get_settings
+from core.image_refs import parse_managed_image_url
+from core.image_validation import ALLOWED_IMAGE_MIME_TYPES
 
 
 class DocumentMetadata(BaseModel):
@@ -737,6 +739,53 @@ class ModelsDTO(BaseModel):
     )
 
 
+class ImageInputDTO(BaseModel):
+    """Image-input availability and bounds exposed to the frontend.
+
+    The frontend uses these for pre-validation only; the core service enforces
+    them again. Per-model availability additionally requires
+    ``Model.supports_vision``.
+    """
+
+    enabled: bool = Field(
+        False,
+        description="Whether image upload is enabled (requires object storage).",
+    )
+    max_upload_bytes: PositiveInt = Field(
+        10 * 1024 * 1024, description="Maximum image size in bytes."
+    )
+    max_pixels: PositiveInt = Field(
+        20_000_000, description="Maximum decoded pixels (decompression-bomb bound)."
+    )
+    allowed_mime_types: list[str] = Field(
+        default_factory=lambda: list(ALLOWED_IMAGE_MIME_TYPES),
+        description="MIME types accepted for image uploads.",
+    )
+
+
+class UploadedImageDTO(BaseModel):
+    """Managed metadata for one uploaded chat image (upload and history)."""
+
+    id: str = Field(..., description="Managed image id (UUID).")
+    filename: str = Field(..., description="Original upload filename.")
+    mime_type: str = Field(..., description="Verified MIME type of the bytes.")
+    size_bytes: int = Field(..., ge=0, description="Size in bytes.")
+    width: int | None = Field(None, description="Decoded width in pixels.")
+    height: int | None = Field(None, description="Decoded height in pixels.")
+    created_at: datetime = Field(..., description="Upload timestamp.")
+    expires_at: datetime | None = Field(
+        None,
+        description="Expiry for unbound draft uploads; bound images never expire.",
+    )
+    managed_url: str = Field(
+        ...,
+        description=(
+            "Managed mucgpt-image:// reference for message content parts; "
+            "not a public URL."
+        ),
+    )
+
+
 class ReleaseNoteDTO(BaseModel):
     """A release note exposed to the frontend."""
 
@@ -818,4 +867,8 @@ class ConfigResponse(BaseModel):
     canvas_editor_max_chars: int = Field(
         default=CANVAS_EDITOR_MAX_CHARS,
         description="Maximum canvas editor input length in characters.",
+    )
+    image_input: ImageInputDTO = Field(
+        default_factory=ImageInputDTO,
+        description="Image upload availability and limits for pre-validation.",
     )

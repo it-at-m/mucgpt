@@ -202,7 +202,7 @@ async def test_store_failure_compensates_the_reservation(service):
 async def test_missing_filename_is_rejected(service):
     ingestion, sessions, _ = service
 
-    with pytest.raises(InvalidImageError):
+    with pytest.raises(services.InvalidImageUploadError):
         await ingestion.ingest_image(user(), upload(image_bytes(), filename=""))
 
     assert sessions.rows() == []

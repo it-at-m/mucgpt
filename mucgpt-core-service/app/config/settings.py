@@ -549,6 +549,51 @@ class DocumentConfig(BaseModel):
     preview_max_chars: PositiveInt = 1000
 
 
+class ImageStorageConfig(BaseModel):
+    """S3-compatible object storage for chat image bytes (nested under s3 key)."""
+
+    bucket: str = ""
+    endpoint_url: HttpUrl | None = None
+    region: str | None = None
+    key_prefix: str = "chat-images/"
+    force_path_style: bool = False
+    access_key_id: str | None = None
+    secret_access_key: SecretStr | None = None
+
+    @model_validator(mode="after")
+    def check_credential_pair(self) -> "ImageStorageConfig":
+        """Static credentials must be supplied as a pair."""
+        if (self.access_key_id is None) != (self.secret_access_key is None):
+            raise ValueError(
+                "image_input.s3 requires both access_key_id and secret_access_key "
+                "or neither (environment credential chain)"
+            )
+        return self
+
+
+class ImageConfig(BaseModel):
+    """Image input bounds and storage (nested under image_input key).
+
+    Disabled by default; enabling requires an S3-compatible bucket. Per-model
+    availability additionally requires ``model_info.supports_vision``.
+    """
+
+    enabled: bool = False
+    max_upload_bytes: PositiveInt = 10 * 1024 * 1024
+    max_pixels: PositiveInt = 20_000_000
+    unbound_expiry_seconds: PositiveInt = 24 * 60 * 60
+    s3: ImageStorageConfig | None = None
+
+    @model_validator(mode="after")
+    def check_enabled_requires_storage(self) -> "ImageConfig":
+        """Fail startup loudly instead of silently dropping uploads."""
+        if self.enabled and (self.s3 is None or not self.s3.bucket):
+            raise ValueError(
+                "image_input.enabled requires image_input.s3.bucket"
+            )
+        return self
+
+
 class PromptConfig(BaseModel):
     """A prompt inside a Langfuse folder."""
 
@@ -664,6 +709,7 @@ class Settings(BaseSettings):
     redis: RedisConfig = Field(default_factory=RedisConfig)
     db: DBConfig = Field(default_factory=DBConfig)
     documents: DocumentConfig = Field(default_factory=DocumentConfig)
+    image_input: ImageConfig = Field(default_factory=ImageConfig)
 
     @model_validator(mode="before")
     @classmethod

@@ -9,6 +9,8 @@ import pytest
 from pydantic import ValidationError
 
 from config.settings import (
+    ImageConfig,
+    ImageStorageConfig,
     MCPTransport,
     ModelsConfig,
     ParserBackendType,
@@ -76,6 +78,71 @@ def test_vision_capability_configuration(capability_config, expected) -> None:
 
     assert config.model_info.supports_vision is expected
     assert config.supports_vision is expected
+
+
+class TestImageSettings:
+    """Image input is disabled by default and validates its storage config."""
+
+    def test_defaults_are_disabled_without_storage(self):
+        config = ImageConfig()
+
+        assert config.enabled is False
+        assert config.max_upload_bytes == 10 * 1024 * 1024
+        assert config.max_pixels == 20_000_000
+        assert config.unbound_expiry_seconds == 24 * 60 * 60
+        assert config.s3 is None
+        assert Settings().image_input.enabled is False
+
+    def test_storage_defaults(self):
+        config = ImageStorageConfig()
+
+        assert config.bucket == ""
+        assert config.endpoint_url is None
+        assert config.key_prefix == "chat-images/"
+        assert config.force_path_style is False
+        assert config.access_key_id is None
+        assert config.secret_access_key is None
+
+    def test_enabled_requires_a_bucket(self):
+        with pytest.raises(ValidationError):
+            ImageConfig(enabled=True)
+        with pytest.raises(ValidationError):
+            ImageConfig(enabled=True, s3=ImageStorageConfig())
+        assert ImageConfig(
+            enabled=True, s3=ImageStorageConfig(bucket="bucket")
+        ).enabled is True
+
+    def test_static_credentials_must_be_a_pair(self):
+        with pytest.raises(ValidationError):
+            ImageStorageConfig(bucket="b", access_key_id="ak")
+        with pytest.raises(ValidationError):
+            ImageStorageConfig(bucket="b", secret_access_key="sk")
+        assert ImageStorageConfig(bucket="b").access_key_id is None
+        assert ImageStorageConfig(
+            bucket="b", access_key_id="ak", secret_access_key="sk"
+        ).secret_access_key.get_secret_value() == "sk"
+
+    def test_nested_environment_overrides(self):
+        with patch.dict(
+            os.environ,
+            {
+                "MUCGPT_CORE_IMAGE_INPUT__ENABLED": "true",
+                "MUCGPT_CORE_IMAGE_INPUT__MAX_UPLOAD_BYTES": "1024",
+                "MUCGPT_CORE_IMAGE_INPUT__S3__BUCKET": "env-bucket",
+                "MUCGPT_CORE_IMAGE_INPUT__S3__FORCE_PATH_STYLE": "true",
+                "MUCGPT_CORE_IMAGE_INPUT__S3__ACCESS_KEY_ID": "env-ak",
+                "MUCGPT_CORE_IMAGE_INPUT__S3__SECRET_ACCESS_KEY": "env-sk",
+            },
+        ):
+            settings = Settings()
+            image_input = settings.image_input
+
+            assert image_input.enabled is True
+            assert image_input.max_upload_bytes == 1024
+            assert image_input.s3.bucket == "env-bucket"
+            assert image_input.s3.force_path_style is True
+            assert image_input.s3.access_key_id == "env-ak"
+            assert image_input.s3.secret_access_key.get_secret_value() == "env-sk"
 
 
 class TestSettings:

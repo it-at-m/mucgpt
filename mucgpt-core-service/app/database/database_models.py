@@ -63,6 +63,58 @@ class CanvasDocument(Base):
     )
 
 
+class ChatImage(Base):
+    """Metadata for one uploaded chat image; bytes live in object storage.
+
+    Rows start ``uploading`` before the object exists, become ``ready`` only
+    after a successful upload, and become ``deleting`` when cleanup starts.
+    A bound image belongs to exactly one conversation; reusing it elsewhere is
+    rejected in favor of re-uploading. Never store image bytes or public URLs.
+    """
+
+    __tablename__ = "chat_images"
+    __table_args__ = (
+        # Keep the S3 object key unique so a single object maps to one row.
+        # The bucket column exists for multi-bucket lifecycles and is verified
+        # against settings on every read.
+        UniqueConstraint("bucket", "object_key", name="uq_chat_images_object"),
+        CheckConstraint(
+            "status IN ('uploading', 'ready', 'deleting')",
+            name="ck_chat_images_status",
+        ),
+        CheckConstraint("size_bytes >= 0", name="ck_chat_images_size"),
+        CheckConstraint(
+            "conversation_id IS NULL OR bound_at IS NOT NULL",
+            name="ck_chat_images_binding",
+        ),
+    )
+
+    id: Mapped[str] = mapped_column(String, primary_key=True)
+    owner_user_id: Mapped[str] = mapped_column(String, nullable=False, index=True)
+    bucket: Mapped[str] = mapped_column(String, nullable=False)
+    object_key: Mapped[str] = mapped_column(String, nullable=False)
+    mime_type: Mapped[str] = mapped_column(String, nullable=False)
+    size_bytes: Mapped[int] = mapped_column(Integer, nullable=False)
+    sha256: Mapped[str] = mapped_column(String, nullable=False)
+    original_filename: Mapped[str] = mapped_column(String, nullable=False)
+    width: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    height: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    status: Mapped[str] = mapped_column(String, nullable=False)
+    conversation_id: Mapped[str | None] = mapped_column(String, nullable=True, index=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+    ready_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    expires_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    bound_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+
+
 class Document(Base):
     """Owned catalog metadata; extracted bodies live in the filesystem store.
 

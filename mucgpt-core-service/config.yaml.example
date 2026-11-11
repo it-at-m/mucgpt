@@ -158,6 +158,24 @@ sso:
   user_id_claim: "user_id"
   organization_unit_claim: "organization_unit"
 
+# Image input (optional - nested under image_input key)
+# Disabled by default. Enabling requires an S3-compatible bucket; per-model
+# availability additionally requires model_info.supports_vision. Secrets go
+# into environment variables, e.g. MUCGPT_CORE_IMAGE_INPUT__S3__SECRET_ACCESS_KEY.
+# image_input:
+#   enabled: false
+#   max_upload_bytes: 10485760        # 10 MiB per image
+#   max_pixels: 20000000              # decompression-bomb bound
+#   unbound_expiry_seconds: 86400     # draft uploads expire after 24h
+#   s3:
+#     bucket: "mucgpt-chat-images"
+#     endpoint_url: "http://rustfs:9000"  # omit for AWS
+#     region: null
+#     key_prefix: "chat-images/"
+#     force_path_style: true           # required for self-hosted S3-compatible stores
+#     # access_key_id/secret_access_key are optional; without them boto3 uses
+#     # the environment credential chain. Secrets must use env overrides.
+
 # Langfuse is configured via the standard environment variables
 # LANGFUSE_PUBLIC_KEY, LANGFUSE_SECRET_KEY and LANGFUSE_HOST; the Langfuse SDK
 # reads them directly.

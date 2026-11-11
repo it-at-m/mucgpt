@@ -5,7 +5,8 @@ permissions:
 on:
   push:
     tags:
-      - "mucgpt-core-*" # Triggers only on mucgpt-core tags
+      - "mucgpt-core-[0-9]*" # Excludes mucgpt-core-migrations tags
+      - "mucgpt-core-latest"
   workflow_dispatch: # Allows manual triggering of the workflow
     inputs:
       tag:

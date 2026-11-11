@@ -1,0 +1,40 @@
+FROM registry.access.redhat.com/ubi10/ubi-minimal:latest@sha256:c3fe95ec9f53a3888c47314eb4d08bde09ebde646a428137b445091afe1daf89
+
+COPY --from=ghcr.io/astral-sh/uv:latest@sha256:96f40d3904aad8d0bd010539001d36c8e2188b981e1334471a90c4a1d93bb490 /uv /uvx /bin/
+
+ENV UV_COMPILE_BYTECODE=1 UV_LINK_MODE=copy UV_CACHE_DIR=/app/.cache/uv
+WORKDIR /app
+
+COPY pyproject.toml uv.lock .python-version ./
+RUN microdnf install -y gcc python3-devel && \
+    uv sync --no-dev --locked --no-install-project
+
+COPY app /app/app
+COPY migrations /app/migrations
+COPY alembic.ini /app/alembic.ini
+
+RUN uv sync --no-dev --locked && \
+    microdnf remove -y gcc python3-devel && \
+    microdnf clean all
+
+ARG IMAGE_CREATED="unknown"
+ARG IMAGE_REVISION="unknown"
+ARG IMAGE_VERSION="unknown"
+LABEL org.opencontainers.image.authors='Landeshauptstadt München <opensource@muenchen.de>' \
+    org.opencontainers.image.vendor='Landeshauptstadt München' \
+    org.opencontainers.image.created="$IMAGE_CREATED" \
+    org.opencontainers.image.revision="$IMAGE_REVISION" \
+    org.opencontainers.image.version="$IMAGE_VERSION" \
+    org.opencontainers.image.url='ghcr.io/it-at-m/mucgpt/mucgpt-assistant-migrations' \
+    org.opencontainers.image.documentation='https://github.com/it-at-m/mucgpt/blob/main/README.md' \
+    org.opencontainers.image.source='https://github.com/it-at-m/mucgpt' \
+    org.opencontainers.image.licenses='MIT' \
+    org.opencontainers.image.title='mucgpt-assistant-migrations' \
+    org.opencontainers.image.description='Database migration service for MUCGPT assistants.'
+
+RUN chown -R root:0 /app && chmod -R g=u /app
+
+ENV PATH="/app/.venv/bin:$PATH" PYTHONWARNINGS="ignore"
+USER 1001
+
+CMD ["python", "-m", "migrations.run_migrations"]

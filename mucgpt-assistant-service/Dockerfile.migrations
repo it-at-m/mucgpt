@@ -10,6 +10,7 @@ RUN microdnf install -y gcc python3-devel && \
     uv sync --no-dev --locked --no-install-project
 
 COPY app /app/app
+COPY app/logconf.yaml /app/logconf.yaml
 COPY migrations /app/migrations
 COPY alembic.ini /app/alembic.ini
 

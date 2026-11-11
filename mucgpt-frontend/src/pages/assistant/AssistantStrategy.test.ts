@@ -3,7 +3,8 @@ import { CommunityAssistantStrategy, DeletedCommunityAssistantStrategy, LocalAss
 import { AssistantStorageService } from "../../service/assistantstorage";
 import { CommunityAssistantStorageService } from "../../service/communityassistantstorage";
 import { ASSISTANT_STORE } from "../../constants";
-import { deleteCommunityAssistantApi, unsubscribeFromAssistantApi } from "../../api/assistant-client";
+import { deleteCommunityAssistantApi, getCommunityAssistantApi, unsubscribeFromAssistantApi } from "../../api/assistant-client";
+import { ApiError } from "../../api/fetch-utils";
 
 vi.mock("../../api/assistant-client", () => ({
     createCommunityAssistantApi: vi.fn(),
@@ -27,55 +28,77 @@ describe("assistant deletion strategies", () => {
         vi.mocked(unsubscribeFromAssistantApi).mockResolvedValue({ message: "unsubscribed" });
     });
 
-    it.each([new CommunityAssistantStrategy(), new DeletedCommunityAssistantStrategy(), new OwnedCommunityAssistantStrategy()])(
-        "%s propagates chat cleanup failure and retains configuration and assistant membership",
-        async strategy => {
-            const failure = new Error("server erasure failed");
-            vi.mocked(storage.deleteChatsForAssistant).mockRejectedValue(failure);
-
-            await expect(strategy.deleteAssistant("assistant", storage)).rejects.toBe(failure);
-            expect(storage.deleteConfigForAssistant).not.toHaveBeenCalled();
-            expect(CommunityAssistantStorageService.prototype.deleteConfigForAssistant).not.toHaveBeenCalled();
-            expect(deleteCommunityAssistantApi).not.toHaveBeenCalled();
-            expect(unsubscribeFromAssistantApi).not.toHaveBeenCalled();
-        }
-    );
-
-    it("local strategy awaits combined cleanup and propagates failure", async () => {
-        const failure = new Error("server erasure failed");
-        vi.mocked(storage.deleteConfigAndChatsForAssistant).mockRejectedValue(failure);
-        await expect(new LocalAssistantStrategy().deleteAssistant("assistant", storage)).rejects.toBe(failure);
+    it("local strategy keeps its chats read-only and removes only the configuration when chats are kept", async () => {
+        await new LocalAssistantStrategy().deleteAssistant("assistant", storage, true);
+        expect(storage.deleteChatsForAssistant).not.toHaveBeenCalled();
+        expect(storage.deleteConfigForAssistant).toHaveBeenCalledWith("assistant");
     });
 
-    it("subscribed strategy cleans chats before unsubscribing and removes the snapshot last", async () => {
-        await new CommunityAssistantStrategy().deleteAssistant("assistant", storage);
+    it("local strategy deletes chats and configuration when chats are not kept", async () => {
+        await new LocalAssistantStrategy().deleteAssistant("assistant", storage, false);
         expect(storage.deleteChatsForAssistant).toHaveBeenCalledWith("assistant");
-        expect(unsubscribeFromAssistantApi).toHaveBeenCalledWith("assistant");
-        expect(CommunityAssistantStorageService.prototype.deleteConfigForAssistant).toHaveBeenCalledWith("assistant");
         expect(vi.mocked(storage.deleteChatsForAssistant).mock.invocationCallOrder[0]).toBeLessThan(
-            vi.mocked(unsubscribeFromAssistantApi).mock.invocationCallOrder[0]
-        );
-        expect(vi.mocked(unsubscribeFromAssistantApi).mock.invocationCallOrder[0]).toBeLessThan(
-            vi.mocked(CommunityAssistantStorageService.prototype.deleteConfigForAssistant).mock.invocationCallOrder[0]
+            vi.mocked(storage.deleteConfigForAssistant).mock.invocationCallOrder[0]
         );
     });
 
-    it("owned strategy cleans chats before deleting the assistant and removes local configuration last", async () => {
-        await new OwnedCommunityAssistantStrategy().deleteAssistant("assistant", storage);
-        expect(vi.mocked(storage.deleteChatsForAssistant).mock.invocationCallOrder[0]).toBeLessThan(
-            vi.mocked(deleteCommunityAssistantApi).mock.invocationCallOrder[0]
-        );
+    it("subscribed strategy only unsubscribes and retains chats and snapshot", async () => {
+        await new CommunityAssistantStrategy().deleteAssistant("assistant");
+        expect(unsubscribeFromAssistantApi).toHaveBeenCalledWith("assistant");
+        expect(storage.deleteChatsForAssistant).not.toHaveBeenCalled();
+        expect(CommunityAssistantStorageService.prototype.deleteConfigForAssistant).not.toHaveBeenCalled();
+    });
+
+    it("owned strategy keeps its chats read-only and deletes the assistant when chats are kept", async () => {
+        await new OwnedCommunityAssistantStrategy().deleteAssistant("assistant", storage, true);
+        expect(deleteCommunityAssistantApi).toHaveBeenCalledWith("assistant");
+        expect(storage.deleteChatsForAssistant).not.toHaveBeenCalled();
         expect(vi.mocked(deleteCommunityAssistantApi).mock.invocationCallOrder[0]).toBeLessThan(
             vi.mocked(storage.deleteConfigForAssistant).mock.invocationCallOrder[0]
         );
     });
 
-    it.each([new CommunityAssistantStrategy(), new OwnedCommunityAssistantStrategy()])("%s retains configuration on assistant API failure", async strategy => {
+    it("owned strategy deletes its chats before deleting the assistant when chats are not kept", async () => {
+        await new OwnedCommunityAssistantStrategy().deleteAssistant("assistant", storage, false);
+        expect(storage.deleteChatsForAssistant).toHaveBeenCalledWith("assistant");
+        expect(deleteCommunityAssistantApi).toHaveBeenCalledWith("assistant");
+        expect(vi.mocked(storage.deleteChatsForAssistant).mock.invocationCallOrder[0]).toBeLessThan(
+            vi.mocked(deleteCommunityAssistantApi).mock.invocationCallOrder[0]
+        );
+    });
+
+    it("deleted snapshot strategy cleans chats before removing the snapshot and propagates chat cleanup failure", async () => {
+        await new DeletedCommunityAssistantStrategy().deleteAssistant("assistant", storage);
+        expect(storage.deleteChatsForAssistant).toHaveBeenCalledWith("assistant");
+        expect(CommunityAssistantStorageService.prototype.deleteConfigForAssistant).toHaveBeenCalledWith("assistant");
+        expect(vi.mocked(storage.deleteChatsForAssistant).mock.invocationCallOrder[0]).toBeLessThan(
+            vi.mocked(CommunityAssistantStorageService.prototype.deleteConfigForAssistant).mock.invocationCallOrder[0]
+        );
+
+        const failure = new Error("server erasure failed");
+        vi.mocked(storage.deleteChatsForAssistant).mockRejectedValue(failure);
+        vi.mocked(CommunityAssistantStorageService.prototype.deleteConfigForAssistant).mockClear();
+        await expect(new DeletedCommunityAssistantStrategy().deleteAssistant("assistant", storage)).rejects.toBe(failure);
+        expect(CommunityAssistantStorageService.prototype.deleteConfigForAssistant).not.toHaveBeenCalled();
+    });
+
+    it("subscribed strategy retains nothing to clean up on unsubscribe failure", async () => {
         const failure = new Error("assistant API failed");
         vi.mocked(unsubscribeFromAssistantApi).mockRejectedValue(failure);
-        vi.mocked(deleteCommunityAssistantApi).mockRejectedValue(failure);
-        await expect(strategy.deleteAssistant("assistant", storage)).rejects.toBe(failure);
-        expect(storage.deleteConfigForAssistant).not.toHaveBeenCalled();
+        await expect(new CommunityAssistantStrategy().deleteAssistant("assistant")).rejects.toBe(failure);
         expect(CommunityAssistantStorageService.prototype.deleteConfigForAssistant).not.toHaveBeenCalled();
+    });
+
+    it("owned strategy retains local configuration on delete failure", async () => {
+        const failure = new Error("assistant API failed");
+        vi.mocked(deleteCommunityAssistantApi).mockRejectedValue(failure);
+        await expect(new OwnedCommunityAssistantStrategy().deleteAssistant("assistant", storage)).rejects.toBe(failure);
+        expect(storage.deleteConfigForAssistant).not.toHaveBeenCalled();
+    });
+
+    it("subscribed strategy signals a missing config on 404 without a local snapshot", async () => {
+        vi.mocked(getCommunityAssistantApi).mockRejectedValue(new ApiError("not found", 404));
+        const config = await new CommunityAssistantStrategy().loadAssistantConfig("assistant");
+        expect(config).toBeUndefined();
     });
 });

@@ -360,7 +360,6 @@ export const AssistantDetailsSidebar = ({
                             <AssistantStateCallout
                                 state={calloutState}
                                 context="details"
-                                onDuplicate={onDuplicate}
                                 onMigrateLocal={onMigrateLocal}
                                 onOpenChatHistory={onOpenChatHistory}
                                 onEdit={canEdit ? onEdit : undefined}
@@ -511,7 +510,7 @@ export const AssistantDetailsSidebar = ({
                             </MenuTrigger>
                             <MenuPopover>
                                 <MenuList>
-                                    {onDuplicate && (
+                                    {onDuplicate && !isDeletedSnapshot && (
                                         <MenuItem icon={<Copy20Regular />} onClick={onDuplicate}>
                                             {t("components.community_assistants.duplicate")}
                                         </MenuItem>

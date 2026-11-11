@@ -20,11 +20,12 @@ interface Props {
     conversationId: string | undefined;
     /** Backend conversation id for server requests; defaults to conversationId. */
     serverConversationId?: string;
+    readOnly?: boolean;
     onInsertIntoChat?: (markdown: string) => void;
     onAgentRevise?: (markdown: string) => void;
 }
 
-export const CanvasPanel = ({ controller, conversationId, serverConversationId, onInsertIntoChat, onAgentRevise }: Props) => {
+export const CanvasPanel = ({ controller, conversationId, serverConversationId, readOnly = false, onInsertIntoChat, onAgentRevise }: Props) => {
     const { t } = useTranslation();
     const [isVersionsOpen, setIsVersionsOpen] = useState(false);
     const [isEmpty, setIsEmpty] = useState(true);
@@ -37,6 +38,7 @@ export const CanvasPanel = ({ controller, conversationId, serverConversationId, 
     controllerRef.current = controller;
     const serverId = serverConversationId ?? conversationId;
     const limits = useCanvasLimits();
+    const isLocked = controller.isLocked || readOnly;
 
     // Content lifecycle (load/clear on conversation switch) lives in the controller;
     // the panel only persists revision rings to the server — the backend is the
@@ -45,27 +47,27 @@ export const CanvasPanel = ({ controller, conversationId, serverConversationId, 
     // Ring changes persist debounced to the server; the PUT is 404-tolerant for
     // conversations never persisted server-side.
     useEffect(() => {
-        if (!serverId || !conversationId) return;
+        if (readOnly || !serverId || !conversationId) return;
         const timer = setTimeout(() => {
             const revisions = controllerRef.current.listRevisions();
             if (revisions.auto.length === 0 && revisions.manual.length === 0) return;
             putCanvasRevisionsApi(serverId, revisions).catch(error => console.error("Saving canvas revisions to the server failed:", error));
         }, SAVE_REVISIONS_DEBOUNCE_MS);
         return () => clearTimeout(timer);
-    }, [serverId, conversationId, controller.revisions]);
+    }, [readOnly, serverId, conversationId, controller.revisions]);
 
     // Flush the rings on canvas close, conversation switch and unmount so a save
     // inside the debounce window is not lost. Keyed on conversationId only: the
     // cleanup closes over the outgoing id and runs before the controller resets
     // to the new conversation.
     useEffect(() => {
-        if (!serverId || !conversationId) return;
+        if (readOnly || !serverId || !conversationId) return;
         return () => {
             const revisions = controllerRef.current.listRevisions();
             if (revisions.auto.length === 0 && revisions.manual.length === 0) return;
             putCanvasRevisionsApi(serverId, revisions).catch(error => console.error("Saving canvas revisions to the server failed:", error));
         };
-    }, [serverId, conversationId]);
+    }, [readOnly, serverId, conversationId]);
 
     useEffect(() => {
         // Evaluated immediately (not only on the debounced update callback), so
@@ -97,7 +99,7 @@ export const CanvasPanel = ({ controller, conversationId, serverConversationId, 
 
     return (
         <section className={styles.panel} aria-label={t("canvas.panel_title")}>
-            <CanvasToolbar editor={controller.editor} controller={controller} onOpenVersions={() => setIsVersionsOpen(true)} disabled={controller.isLocked} />
+            <CanvasToolbar editor={controller.editor} controller={controller} onOpenVersions={() => setIsVersionsOpen(true)} disabled={isLocked} />
             {clipNotice && <MessageBar intent="warning">{t("canvas.limit_paste_clipped", { limit: limits.editorLimitChars.toLocaleString() })}</MessageBar>}
             {!clipNotice && overLimit && <MessageBar intent="warning">{t("canvas.limit_warning")}</MessageBar>}
             {overPersistLimit && <MessageBar intent="warning">{t("canvas.limit_persist_notice")}</MessageBar>}
@@ -114,12 +116,12 @@ export const CanvasPanel = ({ controller, conversationId, serverConversationId, 
             )}
             <CanvasEditor
                 editor={controller.editor}
-                isLocked={controller.isLocked}
+                isLocked={isLocked}
                 getSelectionMarkdown={controller.getSelectionMarkdown}
                 onInsertIntoChat={onInsertIntoChat}
                 onAgentRevise={onAgentRevise}
             />
-            <CanvasVersionsDrawer open={isVersionsOpen} onClose={() => setIsVersionsOpen(false)} controller={controller} />
+            <CanvasVersionsDrawer open={isVersionsOpen} onClose={() => setIsVersionsOpen(false)} controller={controller} disabled={controller.isLocked} />
         </section>
     );
 };

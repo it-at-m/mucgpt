@@ -1337,6 +1337,11 @@ export const handlers = [
 
     http.get("/api/backend/v1/conversations/:conversationId/messages", () => new HttpResponse(null, { status: 404 })),
 
+    http.patch("/api/backend/v1/conversations/:conversationId/assistant", async () => {
+        await delay(100);
+        return new HttpResponse(null, { status: 204 });
+    }),
+
     http.delete("/api/backend/v1/conversations/:conversationId", async () => {
         await delay(100);
         return new HttpResponse(null, { status: 204 });

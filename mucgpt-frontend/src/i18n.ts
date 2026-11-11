@@ -575,6 +575,8 @@ i18n
                             delete_confirm_message: 'Möchten Sie "{{name}}" wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden.',
                             delete_success_title: "Chat gelöscht",
                             delete_success_message: '"{{name}}" wurde gelöscht.',
+                            delete_chats_success_title: "Chats gelöscht",
+                            delete_chats_success_message: "Die Chats des Assistenten wurden gelöscht.",
                             delete_failed_title: "Chat konnte nicht gelöscht werden",
                             delete_failed_message: '"{{name}}" konnte nicht gelöscht werden. Bitte versuchen Sie es erneut.',
                             rename_failed_title: "Chat konnte nicht umbenannt werden",
@@ -915,11 +917,29 @@ i18n
                             unsubscribe: "Abonnement entfernen",
                             unsubscribe_confirm_title: "Abonnement entfernen?",
                             unsubscribe_confirm_message:
-                                "Möchten Sie das Abonnement für „{{title}}“ entfernen? Lokale Chats mit diesem Assistenten werden ebenfalls gelöscht.",
+                                "Möchtest du das Abonnement für „{{title}}“ entfernen? Deine Chats mit diesem Assistenten bleiben erhalten.",
                             unsubscribe_success_title: "Abonnement entfernt",
                             unsubscribe_success_message: "Das Abonnement für „{{title}}“ wurde entfernt.",
                             unsubscribe_failed_title: "Abonnement konnte nicht entfernt werden",
                             unsubscribe_failed_message: "Beim Entfernen des Abonnements ist ein Fehler aufgetreten.",
+                            unsubscribed_state_title: "Assistent nicht abonniert",
+                            unsubscribed_state_hint:
+                                "Dein Chatverlauf bleibt erhalten und kann eingesehen werden. Abonniere den Assistenten erneut, um ihn weiterzuverwenden.",
+                            revoked_state_title: "Kein Zugriff mehr auf diesen Assistenten",
+                            revoked_state_hint:
+                                "Der Assistent ist noch vorhanden, aber du hast keinen Zugriff mehr darauf. Dein Chatverlauf bleibt erhalten und kann eingesehen werden.",
+                            orphaned_chats_heading: "Nicht mehr verfügbare Assistenten",
+                            orphaned_deleted_title: "Gelöschter Assistent",
+                            orphaned_deleted_description: "Der Assistent existiert nicht mehr. Dein Chatverlauf bleibt erhalten und kann eingesehen werden.",
+                            orphaned_unsubscribed_description: "Der Assistent ist nicht mehr abonniert. Abonniere ihn erneut, um weiterzuarbeiten.",
+                            orphaned_revoked_description: "Du hast keinen Zugriff mehr auf diesen Assistenten. Dein Chatverlauf bleibt erhalten.",
+                            revoked_badge: "Kein Zugriff",
+                            leftover_chats_cleanup_confirm_title: "Chats löschen",
+                            leftover_chats_cleanup_confirm_message:
+                                "Willst du alle verbleibenden Chats dieses Assistenten löschen? Dies kann nicht rückgängig gemacht werden.",
+                            assistant_delete_chats_choice_message: "Der Assistent wird gelöscht. Was soll mit den Chats dieses Assistenten passieren?",
+                            keep_chats_action: "Seine Chats behalten",
+                            delete_chats_action: "Seine Chats löschen",
                             more_options: "Weitere Optionen",
                             duplicate: "Private Kopie erstellen",
                             duplicate_confirm_title: "Eigene private Kopie erstellen",
@@ -959,14 +979,15 @@ i18n
                                 "Wenn Sie mit dieser Konfiguration weiterarbeiten möchten, speichern Sie sie als eigenen Assistenten. Frühere Chats können Sie weiterhin nur lesend ansehen.",
                             discovery_deleted_hint:
                                 "Dieser Community-Assistent wurde vom Ersteller gelöscht. Er ist nicht mehr verfügbar. Die letzte Version liegt nur noch lokal im Browser und kann verloren gehen. Sichern Sie sie jetzt als eigenen Assistenten oder sehen Sie nur den alten Chatverlauf an.",
-                            deleted_chat_warning:
-                                "Dieser Community-Assistent wurde vom Ersteller gelöscht und ist nicht mehr verfügbar. Diese Version liegt nur noch lokal im Browser und kann verloren gehen. Der Chatverlauf ist schreibgeschützt. Sichern Sie sie als eigenen Assistenten, wenn Sie weiter damit arbeiten möchten.",
-                            deleted_state_save_action: "Als eigenen Assistenten speichern",
+                            deleted_chat_warning: "Dieser Assistent wurde gelöscht. Der Chatverlauf ist schreibgeschützt.",
+                            missing_state_title: "Dieser Assistent ist nicht mehr verfügbar",
+                            missing_chat_warning:
+                                "Der Assistent wurde gelöscht. Dein Chatverlauf bleibt erhalten und kann eingesehen werden. Wenn du ihn nicht mehr brauchst, kannst du ihn löschen.",
                             deleted_state_history_action: "Chatverlauf",
                             deleted_state_no_history: "Für diesen Assistenten ist kein lokaler Chatverlauf verfügbar.",
                             legacy_state_title: "Veralteter Community-Assistent",
                             legacy_state_hint:
-                                "Dieser Community-Assistent wird nicht mehr unterstützt. Alte Chatverläufe können weiterhin eingesehen werden. Bitte löschen Sie diesen Assistenten und abonnieren Sie ihn im Bereich 'Community' neu."
+                                "Dieser Community-Assistent wird nicht mehr unterstützt. Alte Chatverläufe können weiterhin eingesehen werden. Bitte lösche diesen Assistenten, wenn du ihn nicht mehr brauchst."
                         },
                         toolsselector: {
                             title: "Verfügbare Werkzeuge",
@@ -1556,6 +1577,8 @@ i18n
                             delete_confirm_message: 'Do you really want to delete "{{name}}"? This action cannot be undone.',
                             delete_success_title: "Chat deleted",
                             delete_success_message: '"{{name}}" was deleted.',
+                            delete_chats_success_title: "Chats deleted",
+                            delete_chats_success_message: "The assistant's chats were deleted.",
                             delete_failed_title: "Chat could not be deleted",
                             delete_failed_message: '"{{name}}" could not be deleted. Please try again.',
                             rename_failed_title: "Chat could not be renamed",
@@ -1888,12 +1911,28 @@ i18n
                             subscribed_assistant: "Subscribed",
                             unsubscribe: "Remove subscription",
                             unsubscribe_confirm_title: "Remove subscription?",
-                            unsubscribe_confirm_message:
-                                'Do you want to remove the subscription for "{{title}}"? Local chats with this assistant will also be deleted.',
+                            unsubscribe_confirm_message: 'Do you want to remove the subscription for "{{title}}"? Your chats with this assistant will be kept.',
                             unsubscribe_success_title: "Subscription removed",
                             unsubscribe_success_message: 'The subscription for "{{title}}" was removed.',
                             unsubscribe_failed_title: "Subscription could not be removed",
                             unsubscribe_failed_message: "An error occurred while removing the subscription.",
+                            unsubscribed_state_title: "Assistant not subscribed",
+                            unsubscribed_state_hint:
+                                "Your chat history is preserved and can still be viewed. Subscribe to the assistant again to continue using it.",
+                            revoked_state_title: "No more access to this assistant",
+                            revoked_state_hint:
+                                "The assistant still exists, but you no longer have access to it. Your chat history is preserved and can still be viewed.",
+                            orphaned_chats_heading: "Assistants no longer available",
+                            orphaned_deleted_title: "Deleted assistant",
+                            orphaned_deleted_description: "The assistant no longer exists. The chat history is preserved and can still be viewed.",
+                            orphaned_unsubscribed_description: "The assistant is no longer subscribed. Subscribe to it again to continue working with it.",
+                            orphaned_revoked_description: "You no longer have access to this assistant. Your chat history is preserved.",
+                            revoked_badge: "No access",
+                            leftover_chats_cleanup_confirm_title: "Delete chats",
+                            leftover_chats_cleanup_confirm_message: "Do you want to delete all remaining chats of this assistant? This cannot be undone.",
+                            assistant_delete_chats_choice_message: "The assistant will be deleted. What should happen to its chats?",
+                            keep_chats_action: "Keep its chats",
+                            delete_chats_action: "Delete its chats",
                             more_options: "More options",
                             duplicate: "Create private copy",
                             duplicate_confirm_title: "Create your own private copy",
@@ -1932,14 +1971,15 @@ i18n
                                 "If you want to keep using this setup, save it as your own assistant. You can still inspect previous chats in read-only mode.",
                             discovery_deleted_hint:
                                 "This community assistant was deleted by its creator and is no longer available. The last version only exists locally in this browser and may be lost. Save it now as your own assistant, or only view the old chat history.",
-                            deleted_chat_warning:
-                                "This community assistant was deleted by its creator and is no longer available. This version only exists locally in this browser and may be lost. The chat history is read-only. Save it as your own assistant if you want to keep using it.",
-                            deleted_state_save_action: "Save as own assistant",
+                            deleted_chat_warning: "This assistant was deleted. The chat history is read-only.",
+                            missing_state_title: "This assistant is no longer available",
+                            missing_chat_warning:
+                                "The assistant was deleted. Your chat history is preserved and can still be viewed. If you no longer need it, you can delete it.",
                             deleted_state_history_action: "Chat history",
                             deleted_state_no_history: "No local chat history is available for this assistant.",
                             legacy_state_title: "Deprecated Community Assistant",
                             legacy_state_hint:
-                                "This community assistant is no longer supported. Past chat histories can still be viewed. Please delete this assistant and subscribe to it again in the Community section."
+                                "This community assistant is no longer supported. Past chat histories can still be viewed. Please delete this assistant if you no longer need it."
                         },
                         toolsselector: {
                             title: "Available tools",
@@ -2501,6 +2541,8 @@ i18n
                             delete_confirm_message: 'Mogst "{{name}}" wirklich löschen? Des ko ned rückgängig gmacht werdn.',
                             delete_success_title: "Chat glöscht",
                             delete_success_message: '"{{name}}" is glöscht wordn.',
+                            delete_chats_success_title: "Chats san glöscht wordn",
+                            delete_chats_success_message: "De Chats vom Assistentn san glöscht wordn.",
                             delete_failed_title: "Chat konnt ned glöscht werdn",
                             delete_failed_message: '"{{name}}" konnt ned glöscht werdn. Probier es bitte no amoi.',
                             rename_failed_title: "Chat konnt ned umbenannt werdn",
@@ -2828,11 +2870,28 @@ i18n
                             subscribed_assistant: "Abonniert",
                             unsubscribe: "Abo entfernen",
                             unsubscribe_confirm_title: "Abo entfernen?",
-                            unsubscribe_confirm_message: "Wuißt du des Abo für „{{title}}“ entfernen? Lokale Chats mit dem Assistenten werdn aa glöscht.",
+                            unsubscribe_confirm_message: "Wuißt du des Abo für „{{title}}“ entfernen? Dei Chats mit dem Assistenten bleim erhaltn.",
                             unsubscribe_success_title: "Abo entfernt",
                             unsubscribe_success_message: "Des Abo für „{{title}}“ is entfernt worn.",
                             unsubscribe_failed_title: "Abo konnt ned entfernt werdn",
                             unsubscribe_failed_message: "Beim Entfernen vom Abo is a Fehler aufgetreten.",
+                            unsubscribed_state_title: "Assistent ned abonniert",
+                            unsubscribed_state_hint: "Dei Chatverlauf bleibt erhaltn und ko ogschaut wern. Abonniere den Assistentn wieder, um weitazumacha.",
+                            revoked_state_title: "Koa Zugriff mehr auf den Assistentn",
+                            revoked_state_hint:
+                                "Da Assistent exisdiert noch, aber du host koan Zugriff mehr darauf. Dei Chatverlauf bleibt erhaltn und ko ogschaut wern.",
+                            orphaned_chats_heading: "Assistentn, de nimmer verfuegbar san",
+                            orphaned_deleted_title: "Glöschter Assistent",
+                            orphaned_deleted_description: "Da Assistent exisdiert ned mehr. Dei Chatverlauf bleibt erhaltn und ko ogschaut wern.",
+                            orphaned_unsubscribed_description: "Da Assistent is nimma abonniert. Abonniere ihn wieder, um weidazumacha.",
+                            orphaned_revoked_description: "Du host koan Zugriff mehr auf den Assistentn. Dei Chatverlauf bleibt erhaltn.",
+                            revoked_badge: "Koa Zugriff",
+                            leftover_chats_cleanup_confirm_title: "Chats leschn",
+                            leftover_chats_cleanup_confirm_message:
+                                "Wuißt du olle verbleibenden Chats von dem Assistenten leschn? Des ko ned rückgängig gmacht werdn.",
+                            assistant_delete_chats_choice_message: "Da Assistent wird glöscht. Wos soll mit de Chats von dem Assistentn passiern?",
+                            keep_chats_action: "Sei Chats behaltn",
+                            delete_chats_action: "Sei Chats leschn",
                             more_options: "Weitere Optionen",
                             duplicate: "Private Kopie erstoin",
                             duplicate_confirm_title: "Eigene private Kopie erstoin",
@@ -2875,14 +2934,15 @@ i18n
                                 "Wennst mit dera Konfiguration weitermacha mogst, speicherst as ois dein eigenen Assistenten. Fruahere Chats koanst weiterhin nur lesend anschaugn.",
                             discovery_deleted_hint:
                                 "Der Community-Assistent is vom Ersteller glascht worn und nimmer verfuegbar. De letzte Version liegt bloß no lokal im Browser und ko verloren geh. Sicherst as jetz ois eigenen Assistenten oder schaust bloß den oidn Chatverlauf o.",
-                            deleted_chat_warning:
-                                "Der Community-Assistent is vom Ersteller glascht worn und nimmer verfuegbar. De Version liegt bloß no lokal im Browser und ko verloren geh. Der Chatverlauf is nur lesend. Sicherst as ois eigenen Assistenten, wennst weitermacha mogst.",
-                            deleted_state_save_action: "Ois eigenen Assistenten speichern",
+                            deleted_chat_warning: "Da Assistent is glascht worn. Da Chatverlauf is nur lesend.",
+                            missing_state_title: "Da Assistent is nimma verfuegbar",
+                            missing_chat_warning:
+                                "Da Assistent is glascht worn. Dei Chatverlauf bleibt erhaltn und ko ogschaut wern. Wennst en nimma brauchst, koanst en leschn.",
                             deleted_state_history_action: "Chatverlauf",
                             deleted_state_no_history: "Fuer den Assistenten gibt's koan lokalen Chatverlauf.",
                             legacy_state_title: "Veralteter Community-Assistent",
                             legacy_state_hint:
-                                "Der Community-Assistent werd nimmer unterstuetzt. Oide Chatverlauf ko mo weiterhin aschaugn. Bitte loesch den Assistenten und abonnier ean in da 'Community' nei."
+                                "Der Community-Assistent werd nimmer unterstuetzt. Oide Chatverlauf ko mo weiterhin aschaugn. Bitte loesch den Assistenten, wennst en nimma brauchst."
                         },
                         toolsselector: {
                             title: "Verfügbare Werkzeig",
@@ -3449,6 +3509,8 @@ i18n
                             delete_confirm_message: 'Voulez-vous vraiment supprimer "{{name}}" ? Cette action est irréversible.',
                             delete_success_title: "Chat supprimé",
                             delete_success_message: '"{{name}}" a été supprimé.',
+                            delete_chats_success_title: "Conversations supprimées",
+                            delete_chats_success_message: "Les conversations de l'assistant ont été supprimées.",
                             delete_failed_title: "Le chat n'a pas pu être supprimé",
                             delete_failed_message: '"{{name}}" n\'a pas pu être supprimé. Veuillez réessayer.',
                             rename_failed_title: "Le chat n'a pas pu être renommé",
@@ -3773,11 +3835,29 @@ i18n
                             unsubscribe: "Supprimer l'abonnement",
                             unsubscribe_confirm_title: "Supprimer l'abonnement ?",
                             unsubscribe_confirm_message:
-                                'Voulez-vous supprimer l’abonnement à "{{title}}" ? Les conversations locales avec cet assistant seront également supprimées.',
+                                'Voulez-vous supprimer l’abonnement à "{{title}}" ? Vos conversations avec cet assistant seront conservées.',
                             unsubscribe_success_title: "Abonnement supprimé",
                             unsubscribe_success_message: 'L’abonnement à "{{title}}" a été supprimé.',
                             unsubscribe_failed_title: "L'abonnement n'a pas pu être supprimé",
                             unsubscribe_failed_message: "Une erreur est survenue lors de la suppression de l'abonnement.",
+                            unsubscribed_state_title: "Assistant non abonné",
+                            unsubscribed_state_hint:
+                                "Votre historique de conversation est conservé et reste consultable. Abonnez-vous à nouveau à l'assistant pour continuer à l'utiliser.",
+                            revoked_state_title: "Vous n'avez plus accès à cet assistant",
+                            revoked_state_hint:
+                                "L'assistant existe toujours, mais vous n'avez plus accès à celui-ci. Votre historique de conversation est conservé et reste consultable.",
+                            orphaned_chats_heading: "Assistants indisponibles",
+                            orphaned_deleted_title: "Assistant supprimé",
+                            orphaned_deleted_description: "L'assistant n'existe plus. L'historique des conversations est conservé et reste consultable.",
+                            orphaned_unsubscribed_description: "L'assistant n'est plus abonné. Abonnez-vous à nouveau pour continuer à l'utiliser.",
+                            orphaned_revoked_description: "Vous n'avez plus accès à cet assistant. Votre historique de conversation est conservé.",
+                            revoked_badge: "Sans accès",
+                            leftover_chats_cleanup_confirm_title: "Supprimer les conversations",
+                            leftover_chats_cleanup_confirm_message:
+                                "Voulez-vous supprimer toutes les conversations restantes de cet assistant ? Cette action est irréversible.",
+                            assistant_delete_chats_choice_message: "L'assistant sera supprimé. Que faire de ses conversations ?",
+                            keep_chats_action: "Garder ses conversations",
+                            delete_chats_action: "Supprimer ses conversations",
                             more_options: "Plus d'options",
                             duplicate: "Créer une copie privée",
                             duplicate_confirm_title: "Créer votre propre copie privée",
@@ -3818,14 +3898,15 @@ i18n
                                 "Si vous voulez continuer avec cette configuration, enregistrez-la comme votre propre assistant. Vous pouvez encore consulter les anciens chats en lecture seule.",
                             discovery_deleted_hint:
                                 "Cet assistant communautaire a été supprimé par son créateur et n'est plus disponible. La dernière version n'existe plus que localement dans ce navigateur et peut être perdue. Enregistrez-la maintenant comme votre propre assistant, ou consultez seulement l'ancien historique de chat.",
-                            deleted_chat_warning:
-                                "Cet assistant communautaire a été supprimé par son créateur et n'est plus disponible. Cette version n'existe plus que localement dans ce navigateur et peut être perdue. L'historique du chat est en lecture seule. Enregistrez-la comme votre propre assistant si vous voulez continuer à l'utiliser.",
-                            deleted_state_save_action: "Enregistrer comme assistant personnel",
+                            deleted_chat_warning: "Cet assistant a été supprimé. L'historique du chat est en lecture seule.",
+                            missing_state_title: "Cet assistant n'est plus disponible",
+                            missing_chat_warning:
+                                "L'assistant a été supprimé. Votre historique des conversations est conservé et reste consultable. Si vous n'en avez plus besoin, vous pouvez le supprimer.",
                             deleted_state_history_action: "Historique",
                             deleted_state_no_history: "Aucun historique de chat local n'est disponible pour cet assistant.",
                             legacy_state_title: "Assistant communautaire obsolète",
                             legacy_state_hint:
-                                "Cet assistant communautaire n'est plus pris en charge. Les anciens historiques de chat peuvent toujours être consultés. Veuillez supprimer cet assistant et vous y réabonner dans la section 'Communauté'."
+                                "Cet assistant communautaire n'est plus pris en charge. Les anciens historiques de chat peuvent toujours être consultés. Veuillez supprimer cet assistant si vous n'en avez plus besoin."
                         },
                         toolsselector: {
                             title: "Outils disponibles",
@@ -4390,6 +4471,8 @@ i18n
                             delete_confirm_message: 'Ви дійсно хочете видалити "{{name}}"? Цю дію не можна скасувати.',
                             delete_success_title: "Чат видалено",
                             delete_success_message: '"{{name}}" видалено.',
+                            delete_chats_success_title: "Чати видалено",
+                            delete_chats_success_message: "Чати асистента видалено.",
                             delete_failed_title: "Не вдалося видалити чат",
                             delete_failed_message: '"{{name}}" не вдалося видалити. Спробуйте ще раз.',
                             rename_failed_title: "Не вдалося перейменувати чат",
@@ -4717,11 +4800,28 @@ i18n
                             subscribed_assistant: "Підписаний",
                             unsubscribe: "Скасувати підписку",
                             unsubscribe_confirm_title: "Скасувати підписку?",
-                            unsubscribe_confirm_message: 'Ви хочете скасувати підписку на "{{title}}"? Локальні чати з цим асистентом також буде видалено.',
+                            unsubscribe_confirm_message: 'Ви хочете скасувати підписку на "{{title}}"? Ваші чати з цим асистентом залишаться збереженими.',
                             unsubscribe_success_title: "Підписку скасовано",
                             unsubscribe_success_message: 'Підписку на "{{title}}" було скасовано.',
                             unsubscribe_failed_title: "Не вдалося скасувати підписку",
                             unsubscribe_failed_message: "Під час скасування підписки сталася помилка.",
+                            unsubscribed_state_title: "Асистента не підписано",
+                            unsubscribed_state_hint:
+                                "Вашу історію чатів збережено, її можна переглядати. Оформіть підписку на асистента знову, щоб продовжити користуватися.",
+                            revoked_state_title: "Більше немає доступу до цього асистента",
+                            revoked_state_hint:
+                                "Асистента ще існує, але ви більше не маєте до нього доступу. Вашу історію чатів збережено, її можна переглядати.",
+                            orphaned_chats_heading: "Асистенти, які більше недоступні",
+                            orphaned_deleted_title: "Видалений асистент",
+                            orphaned_deleted_description: "Асистента більше не існує. Історію чатів збережено, її можна переглядати.",
+                            orphaned_unsubscribed_description: "Підписку на асистента скасовано. Оформіть підписку знову, щоб продовжити роботу.",
+                            orphaned_revoked_description: "У вас більше немає доступу до цього асистента. Вашу історію чатів збережено.",
+                            revoked_badge: "Немає доступу",
+                            leftover_chats_cleanup_confirm_title: "Видалити чати",
+                            leftover_chats_cleanup_confirm_message: "Ви хочете видалити всі чати цього асистента, що залишилися? Цю дію неможливо скасувати.",
+                            assistant_delete_chats_choice_message: "Асистента буде видалено. Що зробити з його чатами?",
+                            keep_chats_action: "Зберегти його чати",
+                            delete_chats_action: "Видалити його чати",
                             more_options: "Додаткові параметри",
                             duplicate: "Створити приватну копію",
                             duplicate_confirm_title: "Створити власну приватну копію",
@@ -4764,14 +4864,15 @@ i18n
                                 "Якщо ви хочете й надалі користуватися цією конфігурацією, збережіть її як власного асистента. Попередні чати все ще можна переглядати лише для читання.",
                             discovery_deleted_hint:
                                 "Цей асистент спільноти був видалений автором і більше недоступний. Остання версія зберігається лише локально в цьому браузері й може бути втрачена. Збережіть її зараз як власного асистента або лише перегляньте стару історію чату.",
-                            deleted_chat_warning:
-                                "Цей асистент спільноти був видалений автором і більше недоступний. Ця версія зберігається лише локально в цьому браузері й може бути втрачена. Історія чату доступна лише для читання. Збережіть її як власного асистента, якщо хочете й далі нею користуватися.",
-                            deleted_state_save_action: "Зберегти як власного асистента",
+                            deleted_chat_warning: "Цей асистент було видалено. Історія чату доступна лише для читання.",
+                            missing_state_title: "Цей асистент більше недоступний",
+                            missing_chat_warning:
+                                "Асистента було видалено. Вашу історію чатів збережено, її можна переглядати. Якщо він вам більше не потрібен, ви можете його видалити.",
                             deleted_state_history_action: "Історія чату",
                             deleted_state_no_history: "Для цього асистента немає локальної історії чату.",
                             legacy_state_title: "Застарілий Асистент Спільноти",
                             legacy_state_hint:
-                                "Цей асистент спільноти більше не підтримується. Старі історії чатів все ще можна переглянути. Будь ласка, видаліть цього асистента та підпишіться на нього знову в розділі 'Спільнота'."
+                                "Цей асистент спільноти більше не підтримується. Старі історії чатів все ще можна переглянути. Будь ласка, видаліть цього асистента, якщо він вам більше не потрібен."
                         },
                         toolsselector: {
                             title: "Доступні інструменти",

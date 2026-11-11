@@ -157,7 +157,7 @@ export const DocumentLibrary = ({ data, onDataChange }: { data: UploadedData[]; 
                             <Button
                                 icon={<Delete16Regular />}
                                 appearance="subtle"
-                                disabled={busy || document.status === "processing"}
+                                disabled={busy}
                                 aria-label={t("document_library.delete", { name: document.filename })}
                                 onClick={() =>
                                     void updateLibrary(async () => {

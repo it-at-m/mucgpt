@@ -74,7 +74,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
         allChats: []
     });
 
-    const { showError, showSuccess } = useGlobalToastContext();
+    const { showError, showSuccess, showWarning } = useGlobalToastContext();
 
     // Destructuring for easier access
     const { answers, creativity, systemPrompt, active_chat } = chatState;
@@ -663,7 +663,15 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
             if (!chat) {
                 return false;
             }
-            const selection = await restoreDocumentSelection(chat.documentIds ?? [], chat.documentNames);
+            // The transcript must load even when the document library is
+            // unreachable: fall back to an empty selection with a warning.
+            let selection: UploadedData[] = [];
+            try {
+                selection = await restoreDocumentSelection(chat.documentIds ?? [], chat.documentNames);
+            } catch (restoreError) {
+                console.error("Could not restore document selection:", restoreError);
+                showWarning(t("document_library.restore_failed_title"), t("document_library.restore_failed_message"));
+            }
 
             setError(undefined);
             dispatch({ type: "SET_ANSWERS", payload: chat.messages });
@@ -677,7 +685,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
 
             return true;
         },
-        [assistantChatStorage, assistant_id, assistantConfig, scrollToBottom, setLastQuestionValue]
+        [assistantChatStorage, assistant_id, assistantConfig, scrollToBottom, setLastQuestionValue, showWarning, t]
     );
 
     useEffect(() => {

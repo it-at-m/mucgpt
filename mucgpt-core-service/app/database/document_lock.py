@@ -33,7 +33,8 @@ async def document_work_lock(
             "SELECT pg_try_advisory_lock(hashtextextended(%s, 0))", (key,)
         )
         row = await cursor.fetchone()
-        assert row is not None
+        if row is None:  # a SELECT always yields a row; fail loudly if not
+            raise RuntimeError("Advisory lock query returned no row")
         yield row[0]
     finally:
         with CancelScope(shield=True):

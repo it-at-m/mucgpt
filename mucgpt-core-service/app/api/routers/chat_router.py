@@ -124,7 +124,12 @@ async def _save_document_selection(
     document_ids: list[str],
     document_names: dict[str, str] | None = None,
 ) -> None:
-    """Save only validated selections for persisted, live owned conversations."""
+    """Save only validated selections for persisted, live owned conversations.
+
+    The selection is saved on every persisted turn: the per-turn agent mount is
+    built from the request field alone, while this record only restores the
+    selection when the chat is reopened.
+    """
     if not request.persist:
         return
     conversation_id = request.conversation_id

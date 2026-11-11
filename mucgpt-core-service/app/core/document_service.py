@@ -55,29 +55,7 @@ class DocumentStorageError(RuntimeError):
 
 def create_initial_excerpt(text: str, settings: DocumentConfig) -> str:
     """Return first N characters of the document text to inject into system prompt"""
-    candidate = text[: settings.PREVIEW_MAX_CHARS]
-    return candidate
-
-    # idea: use tiktoken to enforce an actual token limit instead of just a character limit
-    # usefulness is questinable, but it is a more accurate representation of what the model will see
-    try:
-        import tiktoken
-
-        encoding = tiktoken.get_encoding("cl100k_base")
-        tokens = encoding.encode_ordinary(candidate)
-        excerpt = encoding.decode_bytes(tokens[: settings.PREVIEW_TOKENS]).decode(
-            "utf-8", errors="ignore"
-        )
-        # Trimming an incomplete UTF-8 sequence may change boundary tokenization.
-        while (
-            excerpt and len(encoding.encode_ordinary(excerpt)) > settings.PREVIEW_TOKENS
-        ):
-            excerpt = excerpt[:-1]
-        return excerpt
-    except Exception:
-        return candidate.encode("utf-8")[: settings.PREVIEW_TOKENS].decode(
-            "utf-8", errors="ignore"
-        )
+    return text[: settings.PREVIEW_MAX_CHARS]
 
 
 class InvalidDocumentSelectionError(ValueError):

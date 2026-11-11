@@ -18,6 +18,7 @@ import {
     buildChatMessage,
     buildDrawioChatMessage,
     buildInvalidDrawioChatMessage,
+    buildRichMarkdownChatMessage,
     generateChatStreamChunks,
     generateMindmapStreamChunks,
     generateSimplifyStreamChunks
@@ -99,7 +100,7 @@ function findNode(pathSegments: string[]) {
 const CONFIG_RESPONSE: ApplicationConfig = {
     models: [
         {
-            llm_name: "example-model",
+            id: "example-model",
             max_input_tokens: 128000,
             max_output_tokens: 12000,
             description: "GPT build by KIES",
@@ -110,7 +111,7 @@ const CONFIG_RESPONSE: ApplicationConfig = {
             supports_reasoning: true
         },
         {
-            llm_name: "unknown-gpt",
+            id: "unknown-gpt",
             display_name: "UnknownGPT",
             max_input_tokens: 128000,
             max_output_tokens: 128000,
@@ -122,7 +123,7 @@ const CONFIG_RESPONSE: ApplicationConfig = {
             supports_reasoning: false
         },
         {
-            llm_name: "AnnonymGPT",
+            id: "AnnonymGPT",
             display_name: "AnnonymGPT",
             max_input_tokens: 500000,
             max_output_tokens: 12000,
@@ -140,11 +141,19 @@ const CONFIG_RESPONSE: ApplicationConfig = {
     core_version: "0.0.1",
     frontend_version: "0.0.1",
     assistant_version: "0.0.1",
+    release_notes: [
+        {
+            version: "2.0.x",
+            content: "## AGI reached\n\nPls don't tell anybody"
+        }
+    ],
     document_processing_enabled: true,
     transcription_enabled: true,
-    transcription_default_model: "onnx-community/whisper-small",
+    transcription_model: "istupakov/canary-180m-flash-onnx",
     ai_act_compliance_check_enabled: true,
     ag_ui_enabled: true,
+    canvas_content_max_chars: 256 * 1024,
+    canvas_editor_max_chars: 512 * 1024,
     footer_link_url: "https://intranet.example.org",
     footer_label: "Example Organization",
     faq_url: "https://intranet.example.org/help",
@@ -680,7 +689,7 @@ function resolveForcedContextTokens(userMessage: string, modelName: string | und
     if (!forcedUsage) return undefined;
 
     const targetPercent = Math.min(100, Math.max(0, Number(forcedUsage[1])));
-    const model = CONFIG_RESPONSE.models.find(m => m.llm_name === modelName) ?? CONFIG_RESPONSE.models[0];
+    const model = CONFIG_RESPONSE.models.find(m => m.id === modelName) ?? CONFIG_RESPONSE.models[0];
     const maxInputTokens = model.max_input_tokens ?? 128000;
     return Math.round((targetPercent / 100) * maxInputTokens);
 }
@@ -780,39 +789,39 @@ export const handlers = [
         const lang = url.searchParams.get("lang") || "deutsch";
         const toolsByLanguage: Record<string, any[]> = {
             deutsch: [
-                // ── Gruppe: Jira ──────────────────────────────────────────────
+                // ── Gruppe: Wissensdatenbank ──
                 {
-                    id: "jira_search_issues",
-                    name: "Ticket suchen",
-                    long_description: "Durchsucht den konfigurierten Jira-Server und gibt passende Tickets mit Status, Priorität und Zuweisung zurück.",
+                    id: "knowledge_search",
+                    name: "Artikel suchen",
+                    long_description: "Durchsucht die Wissensdatenbank und gibt passende Artikel mit Titel, Kategorie und Datum zurück.",
                     lang: "deutsch",
                     config: { enabled: true },
-                    mcp_group: "Jira"
+                    mcp_group: "Wissensdatenbank"
                 },
                 {
-                    id: "jira_create_issue",
-                    name: "Ticket erstellen",
-                    long_description: "Legt ein neues Issue im angegebenen Projekt an und gibt die Ticket-ID zurück.",
+                    id: "knowledge_create_article",
+                    name: "Artikel erstellen",
+                    long_description: "Legt einen neuen Artikel in der angegebenen Kategorie an und gibt dessen Link zurück.",
                     lang: "deutsch",
                     config: { enabled: true },
-                    mcp_group: "Jira"
+                    mcp_group: "Wissensdatenbank"
                 },
-                // ── Gruppe: Confluence ────────────────────────────────────────
+                // ── Gruppe: Raumbuchung ──
                 {
-                    id: "confluence_search",
-                    name: "Doku durchsuchen",
-                    long_description: "Volltext-Suche über alle zugänglichen Confluence-Bereiche mit Ranking nach Relevanz.",
+                    id: "rooms_search",
+                    name: "Räume suchen",
+                    long_description: "Findet freie Besprechungsräume nach Datum, Uhrzeit, Größe und Ausstattung.",
                     lang: "deutsch",
                     config: { enabled: true },
-                    mcp_group: "Confluence"
+                    mcp_group: "Raumbuchung"
                 },
                 {
-                    id: "confluence_create_page",
-                    name: "Seite erstellen",
-                    long_description: "Erstellt eine formatierte Wiki-Seite und gibt die URL der neuen Seite zurück.",
+                    id: "rooms_book",
+                    name: "Raum buchen",
+                    long_description: "Reserviert einen Raum für den gewünschten Zeitraum und gibt die Buchungsbestätigung zurück.",
                     lang: "deutsch",
                     config: { enabled: true },
-                    mcp_group: "Confluence"
+                    mcp_group: "Raumbuchung"
                 },
                 // ── Allgemeine Tools (ohne Gruppe) ────────────────────────────
                 {
@@ -832,48 +841,48 @@ export const handlers = [
                     mcp_group: null
                 },
                 {
-                    id: "WebSuche",
-                    name: "Web Suche",
-                    long_description: "Führt eine Websuche durch und fasst die wichtigsten Ergebnisse übersichtlich zusammen.",
+                    id: "Internetsuche",
+                    name: "Internetsuche",
+                    long_description: "Führt eine Internetsuche durch und fasst die wichtigsten Ergebnisse übersichtlich zusammen.",
                     lang: "deutsch",
                     config: { enabled: true },
                     mcp_group: null
                 }
             ],
             english: [
-                // ── Group: Jira ───────────────────────────────────────────────
+                // ── Group: Wissensdatenbank ──
                 {
-                    id: "jira_search_issues",
-                    name: "Search Issues",
-                    long_description: "Queries the configured Jira server and returns matching issues with status, priority, and assignee.",
+                    id: "knowledge_search",
+                    name: "Search Articles",
+                    long_description: "Searches the knowledge base and returns matching articles with title, category, and date.",
                     lang: "english",
                     config: { enabled: true },
-                    mcp_group: "Jira"
+                    mcp_group: "Wissensdatenbank"
                 },
                 {
-                    id: "jira_create_issue",
-                    name: "Create Issue",
-                    long_description: "Opens a new issue in the specified project and returns the created ticket ID.",
+                    id: "knowledge_create_article",
+                    name: "Create Article",
+                    long_description: "Creates a new article in the given category and returns its link.",
                     lang: "english",
                     config: { enabled: true },
-                    mcp_group: "Jira"
+                    mcp_group: "Wissensdatenbank"
                 },
-                // ── Group: Confluence ─────────────────────────────────────────
+                // ── Group: Raumbuchung ──
                 {
-                    id: "confluence_search",
-                    name: "Search Docs",
-                    long_description: "Full-text search across all accessible Confluence spaces, ranked by relevance.",
+                    id: "rooms_search",
+                    name: "Search Rooms",
+                    long_description: "Finds available meeting rooms by date, time, capacity, and equipment.",
                     lang: "english",
                     config: { enabled: true },
-                    mcp_group: "Confluence"
+                    mcp_group: "Raumbuchung"
                 },
                 {
-                    id: "confluence_create_page",
-                    name: "Create Page",
-                    long_description: "Creates a formatted wiki page and returns the URL of the newly created page.",
+                    id: "rooms_book",
+                    name: "Book Room",
+                    long_description: "Reserves a room for the requested time slot and returns the booking confirmation.",
                     lang: "english",
                     config: { enabled: true },
-                    mcp_group: "Confluence"
+                    mcp_group: "Raumbuchung"
                 },
                 // ── General tools (ungrouped) ─────────────────────────────────
                 {
@@ -893,8 +902,8 @@ export const handlers = [
                     mcp_group: null
                 },
                 {
-                    id: "WebSuche",
-                    name: "Web Search",
+                    id: "Internetsuche",
+                    name: "Internet Search",
                     long_description: "Performs a live web search and summarises the most relevant results.",
                     lang: "english",
                     config: { enabled: true },
@@ -902,39 +911,39 @@ export const handlers = [
                 }
             ],
             français: [
-                // ── Groupe : Jira ─────────────────────────────────────────────
+                // ── Groupe : Wissensdatenbank ──
                 {
-                    id: "jira_search_issues",
-                    name: "Rechercher un ticket",
-                    long_description: "Interroge le serveur Jira configuré et renvoie les tickets correspondants avec statut, priorité et responsable.",
+                    id: "knowledge_search",
+                    name: "Rechercher des articles",
+                    long_description: "Recherche dans la base de connaissances et renvoie les articles correspondants avec titre, catégorie et date.",
                     lang: "français",
                     config: { enabled: true },
-                    mcp_group: "Jira"
+                    mcp_group: "Wissensdatenbank"
                 },
                 {
-                    id: "jira_create_issue",
-                    name: "Créer un ticket",
-                    long_description: "Ouvre un nouveau ticket dans le projet spécifié et retourne l'identifiant créé.",
+                    id: "knowledge_create_article",
+                    name: "Créer un article",
+                    long_description: "Crée un nouvel article dans la catégorie indiquée et renvoie son lien.",
                     lang: "français",
                     config: { enabled: true },
-                    mcp_group: "Jira"
+                    mcp_group: "Wissensdatenbank"
                 },
-                // ── Groupe : Confluence ───────────────────────────────────────
+                // ── Groupe : Raumbuchung ──
                 {
-                    id: "confluence_search",
-                    name: "Rechercher la doc",
-                    long_description: "Recherche plein texte dans tous les espaces Confluence accessibles, classée par pertinence.",
+                    id: "rooms_search",
+                    name: "Rechercher des salles",
+                    long_description: "Trouve des salles de réunion disponibles selon la date, l'heure, la capacité et l'équipement.",
                     lang: "français",
                     config: { enabled: true },
-                    mcp_group: "Confluence"
+                    mcp_group: "Raumbuchung"
                 },
                 {
-                    id: "confluence_create_page",
-                    name: "Créer une page",
-                    long_description: "Génère une page wiki formatée et retourne l'URL de la page créée.",
+                    id: "rooms_book",
+                    name: "Réserver une salle",
+                    long_description: "Réserve une salle pour le créneau demandé et renvoie la confirmation.",
                     lang: "français",
                     config: { enabled: true },
-                    mcp_group: "Confluence"
+                    mcp_group: "Raumbuchung"
                 },
                 // ── Outils généraux (sans groupe) ─────────────────────────────
                 {
@@ -954,8 +963,8 @@ export const handlers = [
                     mcp_group: null
                 },
                 {
-                    id: "WebSuche",
-                    name: "Recherche Web",
+                    id: "Internetsuche",
+                    name: "Recherche Internet",
                     long_description: "Lance une recherche en ligne et résume les résultats les plus importants.",
                     lang: "français",
                     config: { enabled: true },
@@ -963,39 +972,39 @@ export const handlers = [
                 }
             ],
             bairisch: [
-                // ── Grupp: Jira ───────────────────────────────────────────────
+                // ── Grupp: Wissensdatenbank ──
                 {
-                    id: "jira_search_issues",
-                    name: "Ticket suachn",
-                    long_description: "Fragt den Jira-Server o und gibt passende Tickets mit Status und Priorität zruck.",
+                    id: "knowledge_search",
+                    name: "Artikel suachn",
+                    long_description: "Duachsuacht d'Wissensdatenbank und gibt passende Artikel mit Titel, Kategorie und Datum zruck.",
                     lang: "bairisch",
                     config: { enabled: true },
-                    mcp_group: "Jira"
+                    mcp_group: "Wissensdatenbank"
                 },
                 {
-                    id: "jira_create_issue",
-                    name: "Ticket anlegn",
-                    long_description: "Macht a neies Issue im Projekt auf und gibt d'Ticket-ID zruck.",
+                    id: "knowledge_create_article",
+                    name: "Artikel schreim",
+                    long_description: "Legt an neia Artikel in da Kategorie o und gibt an Link zruck.",
                     lang: "bairisch",
                     config: { enabled: true },
-                    mcp_group: "Jira"
+                    mcp_group: "Wissensdatenbank"
                 },
-                // ── Grupp: Confluence ─────────────────────────────────────────
+                // ── Grupp: Raumbuchung ──
                 {
-                    id: "confluence_search",
-                    name: "Doku durchsuachn",
-                    long_description: "Volltext-Suche über alle Confluence-Bereiche mit Ranking nach Relevanz.",
+                    id: "rooms_search",
+                    name: "Räum suachn",
+                    long_description: "Findt freie Besprechungsräum nach Datum, Uhrzeit und Größ.",
                     lang: "bairisch",
                     config: { enabled: true },
-                    mcp_group: "Confluence"
+                    mcp_group: "Raumbuchung"
                 },
                 {
-                    id: "confluence_create_page",
-                    name: "Seitn erstölln",
-                    long_description: "Erstellt a Wiki-Seitn und gibt d'URL zruck.",
+                    id: "rooms_book",
+                    name: "Raum buacha",
+                    long_description: "Reserviert an Raum für d'gwünschte Zeit und gibt d'Bestätigung zruck.",
                     lang: "bairisch",
                     config: { enabled: true },
-                    mcp_group: "Confluence"
+                    mcp_group: "Raumbuchung"
                 },
                 // ── Allgmeine Werkzeig (ohne Grupp) ──────────────────────────
                 {
@@ -1015,48 +1024,48 @@ export const handlers = [
                     mcp_group: null
                 },
                 {
-                    id: "WebSuche",
+                    id: "Internetsuche",
                     name: "Internet-Suach",
-                    long_description: "Macht a Websuche und fasst d'wichtigsten Ergebnisse zamm.",
+                    long_description: "Macht a Internetsuach und fasst d'wichtigsten Ergebnisse zamm.",
                     lang: "bairisch",
                     config: { enabled: true },
                     mcp_group: null
                 }
             ],
             українська: [
-                // ── Група: Jira ───────────────────────────────────────────────
+                // ── Група: Wissensdatenbank ──
                 {
-                    id: "jira_search_issues",
-                    name: "Пошук тікетів",
-                    long_description: "Запитує налаштований Jira-сервер і повертає відповідні тікети зі статусом, пріоритетом та виконавцем.",
+                    id: "knowledge_search",
+                    name: "Пошук статей",
+                    long_description: "Шукає в базі знань і повертає відповідні статті з назвою, категорією та датою.",
                     lang: "українська",
                     config: { enabled: true },
-                    mcp_group: "Jira"
+                    mcp_group: "Wissensdatenbank"
                 },
                 {
-                    id: "jira_create_issue",
-                    name: "Створити тікет",
-                    long_description: "Відкриває нове завдання у вказаному проєкті та повертає ID створеного тікета.",
+                    id: "knowledge_create_article",
+                    name: "Створити статтю",
+                    long_description: "Створює нову статтю у вказаній категорії та повертає посилання на неї.",
                     lang: "українська",
                     config: { enabled: true },
-                    mcp_group: "Jira"
+                    mcp_group: "Wissensdatenbank"
                 },
-                // ── Група: Confluence ─────────────────────────────────────────
+                // ── Група: Raumbuchung ──
                 {
-                    id: "confluence_search",
-                    name: "Пошук документації",
-                    long_description: "Повнотекстовий пошук по всіх доступних просторах Confluence з ранжуванням за релевантністю.",
+                    id: "rooms_search",
+                    name: "Пошук кімнат",
+                    long_description: "Знаходить вільні переговорні кімнати за датою, часом, місткістю та обладнанням.",
                     lang: "українська",
                     config: { enabled: true },
-                    mcp_group: "Confluence"
+                    mcp_group: "Raumbuchung"
                 },
                 {
-                    id: "confluence_create_page",
-                    name: "Створити сторінку",
-                    long_description: "Генерує відформатовану вікі-сторінку та повертає URL новоствореної сторінки.",
+                    id: "rooms_book",
+                    name: "Забронювати кімнату",
+                    long_description: "Бронює кімнату на потрібний час і повертає підтвердження.",
                     lang: "українська",
                     config: { enabled: true },
-                    mcp_group: "Confluence"
+                    mcp_group: "Raumbuchung"
                 },
                 // ── Загальні інструменти (без групи) ─────────────────────────
                 {
@@ -1076,8 +1085,8 @@ export const handlers = [
                     mcp_group: null
                 },
                 {
-                    id: "WebSuche",
-                    name: "Веб-пошук",
+                    id: "Internetsuche",
+                    name: "Пошук в інтернеті",
                     long_description: "Виконує пошук в мережі та стисло підсумовує найважливіші результати.",
                     lang: "українська",
                     config: { enabled: true },
@@ -1164,6 +1173,7 @@ export const handlers = [
                     send({ type: "TOOL_CALL_RESULT", messageId: crypto.randomUUID(), toolCallId, content: "Mock tool result", role: "tool" });
                 }
 
+                const wantsRichMarkdownMock = /^\s*rich\s*$/i.test(latestUserMessage);
                 const wantsCanvasMock = Boolean(body.canvas) && /^\s*canvas-demo\s*$/i.test(latestUserMessage);
 
                 if (wantsCanvasMock) {
@@ -1173,7 +1183,7 @@ export const handlers = [
                     }
                 }
 
-                const chunks = buildChatMessage().match(/[\s\S]{1,40}/g) ?? [];
+                const chunks = (wantsRichMarkdownMock ? buildRichMarkdownChatMessage() : buildChatMessage()).match(/[\s\S]{1,40}/g) ?? [];
                 for (const delta of chunks) {
                     send({ type: "TEXT_MESSAGE_CHUNK", messageId, role: "assistant", delta });
                     await delay(50);
@@ -1211,6 +1221,7 @@ export const handlers = [
                 .reverse()
                 .find(m => m.role === "user")?.content || "";
         // E2E demos (tools off): exact phrases only. A ```drawio fence must NOT trigger this.
+        const wantsRichMarkdownMock = /^\s*rich\s*$/i.test(latestUserMessage);
         const wantsValidDrawioMock = /^\s*valid-drawio\s*$/i.test(latestUserMessage);
         const wantsInvalidDrawioMock = /^\s*invalid-drawio\s*$/i.test(latestUserMessage);
 
@@ -1236,6 +1247,8 @@ export const handlers = [
                         chunks = generateMindmapStreamChunks(topic, forcedContextTokens);
                     } else if (streamType === "simplify") {
                         chunks = generateSimplifyStreamChunks(forcedContextTokens);
+                    } else if (wantsRichMarkdownMock) {
+                        chunks = generateChatStreamChunks(buildRichMarkdownChatMessage(), forcedContextTokens);
                     } else if (wantsValidDrawioMock) {
                         chunks = generateChatStreamChunks(buildDrawioChatMessage(), forcedContextTokens);
                     } else if (wantsInvalidDrawioMock) {
@@ -1276,7 +1289,13 @@ export const handlers = [
                     index: 0,
                     message: {
                         role: "assistant",
-                        content: wantsValidDrawioMock ? buildDrawioChatMessage() : wantsInvalidDrawioMock ? buildInvalidDrawioChatMessage() : buildChatMessage()
+                        content: wantsRichMarkdownMock
+                            ? buildRichMarkdownChatMessage()
+                            : wantsValidDrawioMock
+                              ? buildDrawioChatMessage()
+                              : wantsInvalidDrawioMock
+                                ? buildInvalidDrawioChatMessage()
+                                : buildChatMessage()
                     },
                     finish_reason: "stop"
                 }
@@ -1317,6 +1336,11 @@ export const handlers = [
     http.get("/api/backend/v1/conversations", () => HttpResponse.json([])),
 
     http.get("/api/backend/v1/conversations/:conversationId/messages", () => new HttpResponse(null, { status: 404 })),
+
+    http.patch("/api/backend/v1/conversations/:conversationId/assistant", async () => {
+        await delay(100);
+        return new HttpResponse(null, { status: 204 });
+    }),
 
     http.delete("/api/backend/v1/conversations/:conversationId", async () => {
         await delay(100);

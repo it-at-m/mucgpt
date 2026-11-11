@@ -1,28 +1,8 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { describe, expect, it, vi, beforeEach } from "vitest";
 
-type CanvasDBRecord = {
-    conversation_id: string;
-    content: string;
-    updated_at: number;
-    revisions: unknown;
-};
-
-const { idbStore, getCanvasApiMock, getCanvasRevisionsApiMock } = vi.hoisted(() => ({
-    idbStore: new Map<string, CanvasDBRecord>(),
+const { getCanvasApiMock, getCanvasRevisionsApiMock } = vi.hoisted(() => ({
     getCanvasApiMock: vi.fn(),
     getCanvasRevisionsApiMock: vi.fn()
-}));
-
-vi.mock("idb", () => ({
-    openDB: async () => ({
-        get: async (_storeName: string, key: string) => idbStore.get(key),
-        put: async (_storeName: string, value: CanvasDBRecord) => {
-            idbStore.set(value.conversation_id, value);
-        },
-        delete: async (_storeName: string, key: string) => {
-            idbStore.delete(key);
-        }
-    })
 }));
 
 vi.mock("../api/core-client", () => ({
@@ -30,107 +10,73 @@ vi.mock("../api/core-client", () => ({
     getCanvasRevisionsApi: (...args: unknown[]) => getCanvasRevisionsApiMock(...args)
 }));
 
-import { canvasStorage, loadCanvasRevisions, loadCanvasState, parseCanvasRevisions } from "./canvasStorage";
+import { loadCanvasRevisions, loadCanvasState, parseCanvasRevisions } from "./canvasStorage";
 
 describe("loadCanvasState", () => {
     beforeEach(() => {
-        idbStore.clear();
         getCanvasApiMock.mockReset();
         getCanvasRevisionsApiMock.mockReset();
     });
 
-    it("lets the server copy win and reports a differing local copy as superseded", async () => {
-        await canvasStorage.saveCanvas("conv-1", "local content");
+    it("returns the server copy as the single source of truth", async () => {
         getCanvasApiMock.mockResolvedValue({ content: "server content", updated_at: "2026-01-01T00:00:00Z" });
 
-        expect(await loadCanvasState("conv-1")).toEqual({ content: "server content", supersededLocal: "local content" });
+        expect(await loadCanvasState("conv-1")).toBe("server content");
         expect(getCanvasApiMock).toHaveBeenCalledWith("conv-1");
+        expect(getCanvasRevisionsApiMock).not.toHaveBeenCalled();
     });
 
-    it("falls back to the local record when the server has no canvas", async () => {
-        await canvasStorage.saveCanvas("conv-1", "local content");
+    it("returns null when the server has no canvas", async () => {
         getCanvasApiMock.mockResolvedValue(null);
 
-        expect(await loadCanvasState("conv-1")).toEqual({ content: "local content", supersededLocal: null });
+        expect(await loadCanvasState("conv-2")).toBeNull();
     });
 
-    it("keeps the local key separate from the server conversation id", async () => {
-        await canvasStorage.saveCanvas("CHAT_5_local", "local content");
-        getCanvasApiMock.mockResolvedValue({ content: "server content", updated_at: "2026-01-01T00:00:00Z" });
+    it("treats a blank server canvas as legitimate content", async () => {
+        getCanvasApiMock.mockResolvedValue({ content: "", updated_at: "2026-01-01T00:00:00Z" });
 
-        expect(await loadCanvasState("CHAT_5_local", "backend-uuid")).toEqual({
-            content: "server content",
-            supersededLocal: "local content"
-        });
-        expect(getCanvasApiMock).toHaveBeenCalledWith("backend-uuid");
+        expect(await loadCanvasState("conv-3")).toBe("");
     });
 
-    it("updates nothing when the local copy matches the server", async () => {
-        await canvasStorage.saveCanvas("conv-1", "same content");
-        getCanvasApiMock.mockResolvedValue({ content: "same content", updated_at: "2026-01-01T00:00:00Z" });
-
-        expect(await loadCanvasState("conv-1")).toEqual({ content: "same content", supersededLocal: null });
-    });
-
-    it("treats an IndexedDB read failure as a cache miss and still uses the server", async () => {
-        getCanvasApiMock.mockResolvedValue({ content: "server content", updated_at: "2026-01-01T00:00:00Z" });
-        const consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
-        const broken = vi.spyOn(canvasStorage, "getCanvas").mockRejectedValue(new Error("quota exceeded"));
-        try {
-            expect(await loadCanvasState("conv-2")).toEqual({ content: "server content", supersededLocal: null });
-        } finally {
-            broken.mockRestore();
-            consoleError.mockRestore();
-        }
-    });
-
-    it("returns null when local and server fail", async () => {
+    it("returns null when the server request fails", async () => {
         getCanvasApiMock.mockRejectedValue(new Error("server down"));
-
-        expect(await loadCanvasState("conv-3")).toEqual({ content: null, supersededLocal: null });
+        vi.spyOn(console, "error").mockImplementation(() => {});
+        try {
+            expect(await loadCanvasState("conv-4")).toBeNull();
+        } finally {
+            vi.restoreAllMocks();
+        }
     });
 });
 
 describe("loadCanvasRevisions", () => {
     beforeEach(() => {
-        idbStore.clear();
         getCanvasApiMock.mockReset();
         getCanvasRevisionsApiMock.mockReset();
     });
 
-    it("prefers the local rings and does not hit the server", async () => {
+    it("returns the rings from the server", async () => {
         const rings = { auto: [{ revision: 1, doc_json: {}, timestamp: 1, source: "agent" as const }], manual: [] };
-        await canvasStorage.saveRevisions("conv-1", rings);
-
-        expect(await loadCanvasRevisions("conv-1")).toEqual(rings);
-        expect(getCanvasRevisionsApiMock).not.toHaveBeenCalled();
-    });
-
-    it("falls back to the server when no local record exists", async () => {
-        const rings = { auto: [], manual: [] };
         getCanvasRevisionsApiMock.mockResolvedValue(rings);
 
         expect(await loadCanvasRevisions("conv-2")).toEqual(rings);
         expect(getCanvasRevisionsApiMock).toHaveBeenCalledWith("conv-2");
     });
 
-    it("treats an IndexedDB read failure as a cache miss and still uses the server", async () => {
-        const rings = { auto: [], manual: [] };
-        getCanvasRevisionsApiMock.mockResolvedValue(rings);
-        const consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
-        const broken = vi.spyOn(canvasStorage, "getRevisions").mockRejectedValue(new Error("quota exceeded"));
-        try {
-            expect(await loadCanvasRevisions("conv-2")).toEqual(rings);
-        } finally {
-            broken.mockRestore();
-            consoleError.mockRestore();
-        }
+    it("returns null when none are stored", async () => {
+        getCanvasRevisionsApiMock.mockResolvedValue(null);
+
+        expect(await loadCanvasRevisions("conv-5")).toBeNull();
     });
 
-    it("returns null when local and server fail", async () => {
+    it("returns null when the server request fails", async () => {
         getCanvasRevisionsApiMock.mockRejectedValue(new Error("server down"));
-
-        expect(await loadCanvasRevisions("conv-3")).toBeNull();
+        vi.spyOn(console, "error").mockImplementation(() => {});
+        try {
+            expect(await loadCanvasRevisions("conv-3")).toBeNull();
+        } finally {
+            vi.restoreAllMocks();
+        }
     });
 });
 

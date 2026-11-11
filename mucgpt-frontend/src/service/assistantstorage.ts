@@ -1,5 +1,7 @@
 import { StorageService, DBMessage } from "./storage";
 import { Assistant, ChatResponse, deleteConversationApi } from "../api";
+import { rebindConversationAssistantApi } from "../api/conversations-client";
+import { ApiError } from "../api/fetch-utils";
 import { v4 as uuid } from "uuid";
 import { IndexedDBStorage } from "./indexedDBStorage";
 
@@ -181,7 +183,8 @@ export class AssistantStorageService {
 
     /**
      * Transfers all chats from one assistant to another by re-creating them under the new assistant's ID prefix
-     * and deleting the originals.
+     * and deleting the originals. Persisted chats are re-bound on the server first, so the
+     * history sync keeps them associated with the new assistant.
      * @param sourceAssistantId - The ID of the source assistant
      * @param targetAssistantId - The ID of the target assistant
      */
@@ -189,9 +192,22 @@ export class AssistantStorageService {
         const chats = await this.getAllChatForAssistant(sourceAssistantId);
         const db = await this.storageService.connectToDB();
         const sourceIds: string[] = [];
+        const sourcePrefix = AssistantStorageService.GENERATE_BOT_CHAT_PREFIX(sourceAssistantId);
         for (const chat of chats) {
             if (!chat.id) continue;
-            const chatUuid = chat.id.replace(AssistantStorageService.GENERATE_BOT_CHAT_PREFIX(sourceAssistantId), "");
+            const chatUuid = chat.id.replace(sourcePrefix, "");
+            // Re-bind server-side before re-keying locally, regardless of the backendPersisted
+            // flag: chats created during this session are persisted server-side but only get
+            // the local flag from a later history sync. Browser-only chats have no server
+            // row (404), and a conversation retired on another device answers 403 — the
+            // rebind is never allowed to revive it, so both keep the local transfer going.
+            try {
+                await rebindConversationAssistantApi(chatUuid, targetAssistantId);
+            } catch (error) {
+                if (!(error instanceof ApiError) || (error.status !== 404 && error.status !== 403)) {
+                    throw error;
+                }
+            }
             const newId = AssistantStorageService.GENERATE_BOT_CHAT_ID(targetAssistantId, chatUuid);
             await db.put(this.config.objectStore_name, { ...chat, id: newId });
             sourceIds.push(chat.id);

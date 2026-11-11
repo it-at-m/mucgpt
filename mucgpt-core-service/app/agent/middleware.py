@@ -1,6 +1,7 @@
 import copy
+import threading
 from collections.abc import Awaitable, Callable
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Any
 from xml.sax.saxutils import escape, quoteattr
@@ -93,6 +94,17 @@ class RequestContext:
     # Monotonic within one run; bumped for each canvas_write/canvas_edit call so
     # the streamed UPDATE chunks carry an ordering key for the editor.
     canvas_revision: int = 0
+    # Run-scoped authoritative working canvas for chained mutations: parallel
+    # canvas tool calls apply in receival order on this copy instead of each
+    # deriving from the same frozen state snapshot (which would raise the
+    # LastValue reducer's one-update-per-step error on canvas).
+    canvas_working: CanvasState | None = None
+    canvas_lock: threading.Lock = field(default_factory=threading.Lock)
+    # Error of the first failed canvas mutation in the current model step:
+    # further canvas mutations in the same step skip execution so the model
+    # sees the failure and can retry against the current document. The gate
+    # resets with each model call.
+    canvas_batch_failed: str | None = None
 
 
 def _make_scoped_callbacks() -> list:
@@ -302,13 +314,26 @@ def _inject_canvas_state(request: ToolCallRequest) -> ToolCallRequest:
         return request
 
     context = _tool_request_context(request)
-    # State first, matching the ToolNode's re-injection: tools update the graph
-    # state's canvas mid-run, so state is the more current source.
+    # State first, matching the ToolNode's re-injection. Mutating tools prefer
+    # the run-scoped working canvas (context.canvas_working) over whatever is
+    # injected here; this value only seeds the first mutation of a run.
     canvas = _state_canvas(request) or _canvas_from(getattr(context, "canvas", None))
 
     args = dict(request.tool_call.get("args") or {})
     args["canvas_state"] = canvas
     return request.override(tool_call={**request.tool_call, "args": args})
+
+
+def _reset_canvas_batch_gate(request: ModelRequest) -> None:
+    """Start a fresh canvas-mutation batch: every model call resets the gate.
+
+    A failed parallel canvas mutation blocks the remaining mutations of the
+    same step; the model sees the stored error together with the skipped
+    results and retries against the current working canvas in the next step.
+    """
+    context = _get_request_context(request)
+    if context is not None:
+        context.canvas_batch_failed = None
 
 
 def _get_request_context(request: ModelRequest) -> RequestContext | None:
@@ -394,20 +419,37 @@ def _configure_model_request(request: ModelRequest) -> ModelRequest:
     )
 
 
+def _get_tool_group(tool: BaseTool) -> str | None:
+    metadata = getattr(tool, "metadata", None) or {}
+    return metadata.get("mcp_group")
+
+
 def _filter_request_tools(request: ModelRequest) -> ModelRequest:
-    """Restrict registered tools to the request-scoped allowlist."""
+    """Restrict registered tools to the request-scoped allowlist.
+
+    Users select tool groups as a whole, so enabling one tool of a group enables the
+    entire group. This keeps stored selections valid when a group gains tools or is
+    split via per-tool group overrides.
+    """
     runtime_context = _get_request_context(request)
     if runtime_context is None or runtime_context.enabled_tools is None:
         return request
 
+    tools = request.tools or []
     enabled_tools = set(runtime_context.enabled_tools)
+    enabled_groups = {
+        group
+        for tool in tools
+        if tool.name in enabled_tools and (group := _get_tool_group(tool))  # type: ignore
+    }
     return request.override(
         tools=[
             tool
-            for tool in request.tools or []
+            for tool in tools
             if tool.name in DEEP_AGENT_BUILTIN_TOOLS  # type: ignore
             or tool.name in CANVAS_BASE_TOOLS  # type: ignore
             or tool.name in enabled_tools  # type: ignore
+            or _get_tool_group(tool) in enabled_groups  # type: ignore
         ]
     )
 
@@ -439,6 +481,7 @@ class ContextMiddleware(AgentMiddleware):
         # infer policy from state type and apply to request
         policy = get_policy_for_state(self.state_schema)
 
+        _reset_canvas_batch_gate(request)
         # Fresh CallbackHandler inherits the current OTel context (active agent trace),
         # so any LLM calls inside infer_scope are nested under the parent trace.
         # inference_callbacks = _make_scoped_callbacks()
@@ -477,6 +520,7 @@ class ContextMiddleware(AgentMiddleware):
         # infer policy from state type and apply to request
         policy = get_policy_for_state(self.state_schema)
 
+        _reset_canvas_batch_gate(request)
         # Fresh CallbackHandler inherits the current OTel context (active agent trace),
         # so any LLM calls inside ainfer_scope are nested under the parent trace.
         # inference_callbacks = _make_scoped_callbacks()
@@ -680,10 +724,10 @@ class TokenUsageMiddleware(AgentMiddleware):
             return
         runtime_context.token_usage.add(usage_metadata)
         usage = runtime_context.token_usage
-        models = get_settings().MODELS
-        model_name = runtime_context.model_name or models[0].llm_name
+        models = get_settings().models
+        model_name = runtime_context.model_name or models[0].id
         model_config = next(
-            (model for model in models if model.llm_name == model_name), None
+            (model for model in models if model.id == model_name), None
         )
         snapshot = ConversationUsage(
             context_tokens=usage.context_tokens,

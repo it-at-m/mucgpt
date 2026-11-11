@@ -4,7 +4,7 @@ from typing import Any, Final, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, PositiveInt, field_validator
 
-from config.settings import ReasoningEffort
+from config.settings import ReasoningEffort, get_settings
 
 
 class SummarizeResult(BaseModel):
@@ -101,7 +101,12 @@ class ChatDataSource(BaseModel):
     )
 
 
-CANVAS_CONTENT_MAX_CHARS = 256 * 1024
+_canvas_settings = get_settings()
+
+# Maximum persisted canvas content length (mirrored by the editor input limit
+# CANVAS_EDITOR_MAX_CHARS, which the export endpoint grows by 4× headroom).
+CANVAS_CONTENT_MAX_CHARS = _canvas_settings.canvas_content_max_chars
+CANVAS_EDITOR_MAX_CHARS = _canvas_settings.canvas_editor_max_chars
 # Full canvas reads stop here so the tool result stays inside the model context;
 # the remaining document is reached via canvas_read(around_cursor).
 CANVAS_READ_LIMIT_CHARS = (CANVAS_CONTENT_MAX_CHARS * 95) // 100
@@ -125,6 +130,15 @@ class CanvasState(BaseModel):
         description=(
             "Caret position as character offset into the markdown document "
             "(selection start when text is selected)"
+        ),
+    )
+    truncated: bool = Field(
+        False,
+        description=(
+            "True when the client's editor document exceeds the persistence "
+            "limit and `content` is only its beginning. The stored canvas is "
+            "then not overwritten, and the canvas tools refuse to operate on "
+            "the partial document."
         ),
     )
 
@@ -532,6 +546,16 @@ class ConversationRenameRequest(BaseModel):
         return value
 
 
+class ConversationAssistantRebindRequest(BaseModel):
+    """Target assistant for re-binding an existing conversation."""
+
+    assistant_id: str = Field(
+        ...,
+        min_length=1,
+        description="ID of the assistant the conversation should be associated with.",
+    )
+
+
 class ConversationMetadata(BaseModel):
     """One row of the caller's conversation list (metadata only, no messages)."""
 
@@ -561,9 +585,15 @@ class ConversationMetadata(BaseModel):
 
 
 class ModelsDTO(BaseModel):
-    llm_name: str = Field(..., description="Identifier of the model/deployment")
+    id: str = Field(..., description="Identifier of the model/deployment")
+    # Deprecated transition alias of `id`, kept so frontends cached by the
+    # service worker keep working against a updated core. Remove once old
+    # frontends are no longer in circulation.
+    llm_name: str | None = Field(
+        None, description="Deprecated alias of `id`", deprecated=True
+    )
     display_name: str | None = Field(
-        None, description="Human-readable model name; clients fall back to llm_name"
+        None, description="Human-readable model name; clients fall back to id"
     )
     max_output_tokens: PositiveInt | None = Field(
         None, description="Maximum tokens the model can generate"
@@ -603,6 +633,13 @@ class ModelsDTO(BaseModel):
     )
 
 
+class ReleaseNoteDTO(BaseModel):
+    """A release note exposed to the frontend."""
+
+    version: str
+    content: str
+
+
 class ConfigResponse(BaseModel):
     env_name: str = "MUCGPT"
     alternative_logo: bool = False
@@ -614,17 +651,21 @@ class ConfigResponse(BaseModel):
     core_version: str
     frontend_version: str
     assistant_version: str
+    release_notes: list[ReleaseNoteDTO] = Field(
+        default_factory=list,
+        description="Configured release notes, ordered from newest to oldest.",
+    )
     document_processing_enabled: bool = Field(
         False,
         description="Whether document upload and parsing is enabled. True when a parser backend (e.g. Xberg) is configured.",
     )
     transcription_enabled: bool = Field(
         False,
-        description="Whether browser-based audio transcription is enabled in the frontend. Transcription itself runs fully client-side; no audio is sent to the backend.",
+        description="Whether browser-based audio transcription is available in the frontend. Only true when TRANSCRIPTION_ENABLED is set and a TRANSCRIPTION_MODEL is configured. Transcription itself runs fully client-side; no audio is sent to the backend.",
     )
-    transcription_default_model: str | None = Field(
+    transcription_model: str | None = Field(
         None,
-        description="Model id preselected in the transcription settings for users who have not picked a model yet. Unknown ids are ignored; null uses the frontend's built-in default.",
+        description="The single browser-based transcription model used by all users. The id must match an entry of the frontend's transcription model list; unset or unknown ids disable transcription in the frontend. There is no default — core and frontend are updated in sync.",
     )
     ai_act_compliance_check_enabled: bool = Field(
         True,
@@ -669,4 +710,12 @@ class ConfigResponse(BaseModel):
     ag_ui_enabled: bool = Field(
         False,
         description="Whether the AG UI is enabled.",
+    )
+    canvas_content_max_chars: int = Field(
+        default=CANVAS_CONTENT_MAX_CHARS,
+        description="Maximum persisted canvas content length in characters.",
+    )
+    canvas_editor_max_chars: int = Field(
+        default=CANVAS_EDITOR_MAX_CHARS,
+        description="Maximum canvas editor input length in characters.",
     )

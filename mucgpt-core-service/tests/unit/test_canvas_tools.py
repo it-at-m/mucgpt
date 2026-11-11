@@ -39,11 +39,16 @@ def _runtime(revision: int = 0, tool_call_id: str = "call-1") -> ToolRuntime:
     )
 
 
-def _command_result(result: Any) -> tuple[str, CanvasState]:
-    """Extract (tool-result text, updated canvas) from a tool invocation."""
+def _command_result(result: Any) -> tuple[str, CanvasState | None]:
+    """Extract (tool-result text, updated canvas) from a tool invocation.
+
+    Mutating tools return plain strings and apply their change to the
+    run-scoped working canvas (see the runtime's context); canvas_read's
+    stale-read Command carries only messages, so the canvas is None there.
+    """
     if isinstance(result, Command):
         [message] = result.update["messages"]
-        return message.content, result.update["canvas"]
+        return message.content, result.update.get("canvas")
     return result, None
 
 
@@ -60,20 +65,21 @@ def test_canvas_write_replaces_document_and_streams(monkeypatch: Any) -> None:
     monkeypatch.setattr(canvas, "_get_writer", lambda: writer)
     tool = canvas.make_canvas_write_tool(_logger())
 
+    runtime = _runtime()
     result = tool.invoke(
         {
             "content": "# Title\n\nBody text",
             "canvas_state": _canvas("old content"),
-            "runtime": _runtime(),
+            "runtime": runtime,
         }
     )
 
-    result, updated_canvas = _command_result(result)
-
     # short confirmation only — the full document must not be duplicated into
-    # the persisted ToolMessage (state injection refreshes it next model call)
+    # the persisted ToolMessage (the working canvas refreshes the next call)
     assert result.startswith(CONFIRMATION)
-    assert updated_canvas == CanvasState(content="# Title\n\nBody text", selection=None)
+    assert runtime.context.canvas_working == CanvasState(
+        content="# Title\n\nBody text", selection=None
+    )
     states = [chunk.state for chunk in writer.chunks]
     assert states[0] == ToolStreamState.STARTED
     assert states[-1] == ToolStreamState.UPDATE
@@ -96,12 +102,13 @@ def test_canvas_write_creates_canvas_without_prior_state(monkeypatch: Any) -> No
     monkeypatch.setattr(canvas, "_get_writer", lambda: writer)
     tool = canvas.make_canvas_write_tool(_logger())
 
-    result, updated_canvas = _command_result(
-        tool.invoke({"content": "# Title", "runtime": _runtime()})
-    )
+    runtime = _runtime()
+    result = tool.invoke({"content": "# Title", "runtime": runtime})
 
     assert result.startswith(CONFIRMATION)
-    assert updated_canvas == CanvasState(content="# Title", selection=None)
+    assert runtime.context.canvas_working == CanvasState(
+        content="# Title", selection=None
+    )
     states = [chunk.state for chunk in writer.chunks]
     assert states[0] == ToolStreamState.STARTED
     assert states[-1] == ToolStreamState.UPDATE
@@ -142,14 +149,14 @@ def test_canvas_write_allows_html_inside_tilde_fence(monkeypatch: Any) -> None:
     tool = canvas.make_canvas_write_tool(_logger())
 
     fenced = "# Config\n\n~~~text\n<div>not html</div>\n~~~"
-    result, updated_canvas = _command_result(
-        tool.invoke(
-            {"content": fenced, "canvas_state": _canvas(), "runtime": _runtime()}
-        )
+    runtime = _runtime()
+    result = tool.invoke(
+        {"content": fenced, "canvas_state": _canvas(), "runtime": runtime}
     )
 
     assert result.startswith(CONFIRMATION)
-    assert updated_canvas.content == fenced
+    assert runtime.context.canvas_working is not None
+    assert runtime.context.canvas_working.content == fenced
 
 
 def test_canvas_write_rejects_oversized_content(monkeypatch: Any) -> None:
@@ -176,23 +183,21 @@ def test_canvas_write_allows_html_inside_code(monkeypatch: Any) -> None:
     tool = canvas.make_canvas_write_tool(_logger())
 
     fenced = "# Config\n\n```text\n<div>not html</div>\n```"
-    result, updated_canvas = _command_result(
-        tool.invoke(
-            {"content": fenced, "canvas_state": _canvas(), "runtime": _runtime()}
-        )
+    runtime = _runtime()
+    result = tool.invoke(
+        {"content": fenced, "canvas_state": _canvas(), "runtime": runtime}
     )
 
     assert result.startswith(CONFIRMATION)
-    assert updated_canvas.content == fenced
+    assert runtime.context.canvas_working is not None
+    assert runtime.context.canvas_working.content == fenced
     inline = "use `a < b` comparisons"
-    result, _ = _command_result(
-        tool.invoke(
-            {
-                "content": inline,
-                "canvas_state": updated_canvas,
-                "runtime": _runtime(revision=1),
-            }
-        )
+    result = tool.invoke(
+        {
+            "content": inline,
+            "canvas_state": runtime.context.canvas_working,
+            "runtime": _runtime(revision=1),
+        }
     )
 
     assert result.startswith(CONFIRMATION)
@@ -222,19 +227,20 @@ def test_canvas_edit_replaces_first_occurrence_and_streams(monkeypatch: Any) -> 
     monkeypatch.setattr(canvas, "_get_writer", lambda: writer)
     tool = canvas.make_canvas_edit_tool(_logger())
 
+    runtime = _runtime(revision=1)
     result = tool.invoke(
         {
             "old_text": "world",
             "new_text": "there",
             "canvas_state": _canvas("Hello world"),
-            "runtime": _runtime(revision=1),
+            "runtime": runtime,
         }
     )
 
-    result, updated_canvas = _command_result(result)
-
     assert result.startswith(CONFIRMATION)
-    assert updated_canvas == CanvasState(content="Hello there", selection=None)
+    assert runtime.context.canvas_working == CanvasState(
+        content="Hello there", selection=None
+    )
     assert [chunk.state for chunk in writer.chunks] == [
         ToolStreamState.STARTED,
         ToolStreamState.UPDATE,
@@ -249,50 +255,49 @@ def test_canvas_edit_keeps_selection_in_state_update(monkeypatch: Any) -> None:
     monkeypatch.setattr(canvas, "_get_writer", lambda: writer)
     tool = canvas.make_canvas_edit_tool(_logger())
 
-    result = tool.invoke(
+    runtime = _runtime()
+    tool.invoke(
         {
             "old_text": "selected text",
             "new_text": "revised text",
             "canvas_state": _canvas("selected text", selection="selected text"),
-            "runtime": _runtime(),
+            "runtime": runtime,
         }
     )
 
-    _, updated_canvas = _command_result(result)
-
-    assert updated_canvas == CanvasState(
+    assert runtime.context.canvas_working == CanvasState(
         content="revised text", selection="revised text"
     )
 
 
 def test_canvas_write_then_edit_build_on_previous_update(monkeypatch: Any) -> None:
-    """The state update of call 1 must feed call 2 — chained calls within one run."""
+    """The working canvas of call 1 must feed call 2 — chained calls within one run."""
     writer = RecordingWriter()
     monkeypatch.setattr(canvas, "_get_writer", lambda: writer)
     write = canvas.make_canvas_write_tool(_logger())
     edit = canvas.make_canvas_edit_tool(_logger())
+    runtime = _runtime()
 
-    first = write.invoke(
+    result = write.invoke(
         {
             "content": "Hello world",
             "canvas_state": _canvas("old content"),
-            "runtime": _runtime(),
+            "runtime": runtime,
         }
     )
-    _, updated_canvas = _command_result(first)
+    assert result.startswith(CONFIRMATION)
 
-    second = edit.invoke(
+    # the edit ignores the (stale) injected state and builds on the working canvas
+    result = edit.invoke(
         {
             "old_text": "world",
             "new_text": "there",
-            "canvas_state": updated_canvas,
-            "runtime": _runtime(),
+            "canvas_state": _canvas("stale"),
+            "runtime": runtime,
         }
     )
-    result, updated_canvas = _command_result(second)
-
     assert result.startswith(CONFIRMATION)
-    assert updated_canvas.content == "Hello there"
+    assert runtime.context.canvas_working.content == "Hello there"
     updates = [
         chunk for chunk in writer.chunks if chunk.state == ToolStreamState.UPDATE
     ]
@@ -541,3 +546,161 @@ def test_canvas_read_is_hidden_from_activity_ui() -> None:
     assert "canvas_read" in DEEP_AGENT_INTERNAL_TOOLS
     assert "canvas_write" not in DEEP_AGENT_INTERNAL_TOOLS
     assert "canvas_edit" not in DEEP_AGENT_INTERNAL_TOOLS
+
+
+def _truncated(content: str = "beginning of a huge document") -> CanvasState:
+    return CanvasState(content=content, truncated=True)
+
+
+def test_canvas_write_refuses_truncated_canvas(monkeypatch: Any) -> None:
+    """A truncated canvas only carries the document's beginning: any write
+    would replace the user's full document in the editor."""
+    writer = RecordingWriter()
+    monkeypatch.setattr(canvas, "_get_writer", lambda: writer)
+    tool = canvas.make_canvas_write_tool(_logger())
+
+    result = tool.invoke(
+        {"content": "# Title", "canvas_state": _truncated(), "runtime": _runtime()}
+    )
+
+    text, updated_canvas = _command_result(result)
+    assert text.startswith("Error:")
+    assert "persistence limit" in text
+    assert updated_canvas is None
+    assert writer.chunks == []
+
+
+def test_canvas_edit_refuses_truncated_canvas() -> None:
+    tool = canvas.make_canvas_edit_tool(_logger())
+
+    result = tool.invoke(
+        {
+            "old_text": "beginning",
+            "new_text": "replacement",
+            "canvas_state": _truncated(),
+            "runtime": _runtime(),
+        }
+    )
+
+    text, _ = _command_result(result)
+    assert text.startswith("Error:")
+    assert "persistence limit" in text
+
+
+def test_canvas_read_refuses_truncated_canvas() -> None:
+    """A partial read would present the beginning as the whole document."""
+    tool = canvas.make_canvas_read_tool(_logger())
+
+    result = tool.invoke({"canvas_state": _truncated(), "runtime": _runtime()})
+
+    text, _ = _command_result(result)
+    assert text.startswith("Error:")
+    assert "persistence limit" in text
+
+
+def test_parallel_canvas_edits_chain_in_receival_order() -> None:
+    """Two canvas edits in one model step must not crash the run: they apply
+    sequentially on the run-scoped working canvas instead of both writing the
+    state channel (LastValue one-update-per-step)."""
+    import concurrent.futures
+
+    write = canvas.make_canvas_write_tool(_logger())
+    edit = canvas.make_canvas_edit_tool(_logger())
+    context = RequestContext()
+    runtimes = [
+        ToolRuntime(
+            state={},
+            context=context,
+            config={},
+            stream_writer=None,
+            tool_call_id="call-1",
+            store=None,
+        ),
+        ToolRuntime(
+            state={},
+            context=context,
+            config={},
+            stream_writer=None,
+            tool_call_id="call-2",
+            store=None,
+        ),
+    ]
+
+    def call(index: int) -> str:
+        invoke_write = index == 0
+        payload = (
+            {"content": "Hello world", "runtime": runtimes[index]}
+            if invoke_write
+            else {
+                "old_text": "world",
+                "new_text": "there",
+                "runtime": runtimes[index],
+            }
+        )
+        return edit.invoke(payload) if not invoke_write else write.invoke(payload)
+
+    with concurrent.futures.ThreadPoolExecutor(max_workers=2) as pool:
+        results = list(pool.map(call, range(2)))
+
+    assert all(result.startswith(CONFIRMATION) for result in results)
+    # receival order: the write lands first, the edit builds on it
+    assert context.canvas_working == CanvasState(content="Hello there", selection=None)
+    assert context.canvas_batch_failed is None
+
+
+def test_failed_canvas_edit_skips_the_rest_of_the_batch() -> None:
+    """A failed mutation gates the remaining canvas calls of the same step;
+    the next step (after the gate reset) can retry on the current document."""
+    edit = canvas.make_canvas_edit_tool(_logger())
+    context = RequestContext()
+    first = ToolRuntime(
+        state={},
+        context=context,
+        config={},
+        stream_writer=None,
+        tool_call_id="call-1",
+        store=None,
+    )
+    second = ToolRuntime(
+        state={},
+        context=context,
+        config={},
+        stream_writer=None,
+        tool_call_id="call-2",
+        store=None,
+    )
+
+    result = edit.invoke(
+        {
+            "old_text": "missing",
+            "new_text": "x",
+            "canvas_state": _canvas("Hello world"),
+            "runtime": first,
+        }
+    )
+    assert result.startswith("Error: old_text was not found")
+    assert context.canvas_batch_failed == result
+
+    result = edit.invoke(
+        {
+            "old_text": "Hello",
+            "new_text": "Hi",
+            "canvas_state": _canvas("Hello world"),
+            "runtime": second,
+        }
+    )
+    assert result.startswith("Skipped:")
+    assert "old_text was not found" in result
+
+    # the next model call resets the gate; a retry works on the unchanged canvas
+    context.canvas_batch_failed = None
+    result = edit.invoke(
+        {
+            "old_text": "Hello",
+            "new_text": "Hi",
+            "canvas_state": _canvas("Hello world"),
+            "runtime": second,
+        }
+    )
+    assert result.startswith(CONFIRMATION)
+    assert context.canvas_working.content == "Hi world"

@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { act } from "react";
 import { createElement } from "react";
 import { createRoot, type Root } from "react-dom/client";
@@ -8,14 +8,12 @@ import { Editor } from "@tiptap/core";
 import { canvasExtensions } from "../components/Canvas/canvasExtensions";
 import { caretMarkdownOffset, markdownStorage, tableSelectionMarkdown, useCanvasController, type CanvasControllerInstance } from "./useCanvasController";
 import { CANVAS_STREAM_CONTENT_LIMIT, parseCanvasStreamEvent } from "../utils/canvasStream";
-import { CANVAS_CONTENT_LIMIT_CHARS } from "../components/Canvas/canvasLimits";
+import { DEFAULT_APP_CONFIG } from "../constants";
 import type { CanvasRevisions } from "../service/canvasStorage";
 
 (globalThis as Record<string, unknown>).IS_REACT_ACT_ENVIRONMENT = true;
 
-const loadCanvasStateMock = vi.hoisted(() =>
-    vi.fn<(id: string, serverId?: string) => Promise<{ content: string | null; supersededLocal: string | null } | null>>()
-);
+const loadCanvasStateMock = vi.hoisted(() => vi.fn<(id: string) => Promise<string | null>>());
 const loadCanvasRevisionsMock = vi.hoisted(() => vi.fn<(id: string) => Promise<CanvasRevisions | null>>());
 
 vi.mock("../service/canvasStorage", async importOriginal => {
@@ -30,6 +28,7 @@ vi.mock("../service/canvasStorage", async importOriginal => {
 const emptyRevisions = (): CanvasRevisions => ({ auto: [], manual: [] });
 
 // Minimal renderHook replacement — @testing-library/react is not a project dependency.
+const createdRoots: Root[] = [];
 const renderController = () => {
     let latest: CanvasControllerInstance;
     let root: Root | undefined;
@@ -41,7 +40,10 @@ const renderController = () => {
     return {
         render(id: string | undefined) {
             act(() => {
-                if (!root) root = createRoot(container);
+                if (!root) {
+                    root = createRoot(container);
+                    createdRoots.push(root);
+                }
                 root.render(createElement(Probe, { id }));
             });
         },
@@ -50,13 +52,46 @@ const renderController = () => {
                 root?.render(createElement(Probe, { id }));
             });
         },
+        async dispose() {
+            const current = root;
+            await act(async () => {
+                current?.unmount();
+                await new Promise(resolve => setTimeout(resolve, 5));
+            });
+            const index = current ? createdRoots.indexOf(current) : -1;
+            if (index >= 0) createdRoots.splice(index, 1);
+        },
         get current(): CanvasControllerInstance {
             return latest!;
         }
     };
 };
 
-const editorFor = (markdown: string) => new Editor({ extensions: canvasExtensions, content: markdown });
+// Buttons every editor created in this file, so any editor a test forgot to
+// destroy is torn down in afterEach — a leaked editor's prosemirror DOMObserver
+// keeps a timer alive and fires after the file's jsdom teardown with
+// "ReferenceError: document is not defined".
+const createdEditors: Editor[] = [];
+const editorFor = (markdown: string): Editor => {
+    const editor = new Editor({ extensions: canvasExtensions(), content: markdown });
+    createdEditors.push(editor);
+    return editor;
+};
+
+afterEach(async () => {
+    for (const editor of createdEditors.splice(0)) {
+        if (!editor.isDestroyed) editor.destroy();
+    }
+    // A leaked React root keeps the hook's tiptap editor (and its prosemirror
+    // DOMObserver timer) alive past this file's jsdom teardown, producing an
+    // unhandled "document is not defined" error that fails the whole run.
+    for (const root of createdRoots.splice(0)) {
+        await act(async () => {
+            root.unmount();
+        });
+        await new Promise(resolve => setTimeout(resolve, 5));
+    }
+});
 
 const posOf = (editor: Editor, needle: string) => {
     let found: number | undefined;
@@ -171,6 +206,17 @@ describe("parseCanvasStreamEvent", () => {
         expect(parseCanvasStreamEvent({ state: "APPEND", content: "A".repeat(CANVAS_STREAM_CONTENT_LIMIT + 1) })).toBeNull();
     });
 
+    it("honours a configured content limit instead of the hardcoded default", () => {
+        // The backend tools accept content up to the configured
+        // CANVAS_CONTENT_MAX_CHARS; a raised limit must not silently drop
+        // legitimate full-document UPDATE events.
+        const limit = CANVAS_STREAM_CONTENT_LIMIT + 4096;
+        const big = { state: "UPDATE", content: "A".repeat(CANVAS_STREAM_CONTENT_LIMIT + 1024), metadata: { canvas_revision: 1 } };
+        expect(parseCanvasStreamEvent(big)).toBeNull();
+        expect(parseCanvasStreamEvent(big, limit)).not.toBeNull();
+        expect(parseCanvasStreamEvent({ state: "APPEND", content: "x".repeat(limit + 1) }, limit)).toBeNull();
+    });
+
     it("treats null metadata like absent metadata (canvas_edit UPDATE wire shape)", () => {
         expect(parseCanvasStreamEvent({ state: "UPDATE", content: "x", metadata: null })).toEqual({
             state: "UPDATE",
@@ -216,11 +262,11 @@ describe("applyStreamEvent", () => {
         expect(harness.current.getMarkdown()).toBe("newest");
     });
 
-    it("applies a first-of-run UPDATE with canvas_revision 0 after lock()", () => {
+    it("applies a first-of-run UPDATE with canvas_revision 0 after beginRun()", () => {
         const harness = renderController();
         harness.render(undefined);
         act(() => {
-            harness.current.lock();
+            harness.current.beginRun();
             harness.current.applyStreamEvent({ state: "UPDATE", content: "zeroth", metadata: { canvas_revision: 0 } });
         });
         expect(harness.current.getMarkdown()).toBe("zeroth");
@@ -228,6 +274,27 @@ describe("applyStreamEvent", () => {
             harness.current.applyStreamEvent({ state: "UPDATE", content: "replayed", metadata: { canvas_revision: 0 } });
         });
         expect(harness.current.getMarkdown()).toBe("zeroth");
+    });
+
+    it("beginRun resets the revision guard and locks even with the canvas closed", () => {
+        // Regression: a run starting with a closed canvas previously kept the
+        // guard from the previous run, so the new run's revision-1 UPDATE was
+        // dropped and the auto-opened canvas stayed unlocked.
+        const harness = renderController();
+        harness.render(undefined);
+        act(() => {
+            harness.current.beginRun();
+            harness.current.applyStreamEvent({ state: "UPDATE", content: "run one", metadata: { canvas_revision: 1 } });
+        });
+        expect(harness.current.getMarkdown()).toBe("run one");
+        act(() => {
+            harness.current.unlock();
+            // Canvas never opened; a new run starts.
+            harness.current.beginRun();
+            harness.current.applyStreamEvent({ state: "UPDATE", content: "run two doc", metadata: { canvas_revision: 1 } });
+        });
+        expect(harness.current.getMarkdown()).toBe("run two doc");
+        expect(harness.current.isLocked).toBe(true);
     });
 
     it("applies a canvas_edit UPDATE whose metadata serialized as null", () => {
@@ -272,11 +339,55 @@ describe("loading stored revisions", () => {
             manual: []
         });
     });
+
+    it("restores the newest revision when the current canvas is empty", async () => {
+        loadCanvasStateMock.mockResolvedValue("");
+        loadCanvasRevisionsMock.mockResolvedValue({
+            auto: [
+                {
+                    revision: 1,
+                    doc_json: { type: "doc", content: [{ type: "paragraph", content: [{ type: "text", text: "Older" }] }] },
+                    timestamp: 1,
+                    source: "agent"
+                },
+                {
+                    revision: 2,
+                    doc_json: { type: "doc", content: [{ type: "paragraph", content: [{ type: "text", text: "Newest" }] }] },
+                    timestamp: 2,
+                    source: "agent"
+                }
+            ],
+            manual: []
+        });
+
+        const harness = renderController();
+        harness.render(undefined);
+
+        await harness.rerender("conv-1");
+        await new Promise(resolve => setTimeout(resolve, 0));
+
+        expect(harness.current.isOpen).toBe(true);
+        expect(harness.current.getMarkdown()).toBe("Newest");
+    });
 });
 
 describe("conversation id assignment", () => {
+    it("does not crash when the editor is destroyed during a conversation switch", async () => {
+        loadCanvasRevisionsMock.mockResolvedValue(emptyRevisions());
+        loadCanvasStateMock.mockResolvedValue(null);
+        const harness = renderController();
+
+        harness.render(undefined);
+        harness.current.editor?.destroy();
+
+        await harness.rerender("conv-1");
+
+        expect(harness.current.isOpen).toBe(false);
+        await harness.dispose();
+    });
+
     it("restores stored content when a reload assigns the existing conversation id", async () => {
-        loadCanvasStateMock.mockResolvedValue({ content: "# Stored", supersededLocal: null });
+        loadCanvasStateMock.mockResolvedValue("# Stored");
         loadCanvasRevisionsMock.mockResolvedValue(emptyRevisions());
 
         const harness = renderController();
@@ -288,40 +399,8 @@ describe("conversation id assignment", () => {
         expect(harness.current.getMarkdown()).toBe("# Stored");
     });
 
-    it("snapshots a superseded local copy into the auto ring before adopting the server copy", async () => {
-        loadCanvasStateMock.mockResolvedValue({ content: "# Server", supersededLocal: "# Local" });
-        loadCanvasRevisionsMock.mockResolvedValue(emptyRevisions());
-
-        const harness = renderController();
-        harness.render(undefined);
-
-        await harness.rerender("conv-1");
-
-        expect(harness.current.getMarkdown()).toBe("# Server");
-        expect(harness.current.revisions.auto).toHaveLength(1);
-        const snapshot = harness.current.revisions.auto[0];
-        expect(snapshot.source).toBe("local");
-        expect(JSON.stringify(snapshot.doc_json)).toContain("Local");
-    });
-
-    it("snapshots the local copy even when the server canvas is blank", async () => {
-        // A blank server canvas is legitimate (rings synced before content):
-        // the local document must land in the ring instead of being dropped.
-        loadCanvasStateMock.mockResolvedValue({ content: "", supersededLocal: "# Local" });
-        loadCanvasRevisionsMock.mockResolvedValue(emptyRevisions());
-
-        const harness = renderController();
-        harness.render(undefined);
-
-        await harness.rerender("conv-1");
-
-        expect(harness.current.getMarkdown()).toBe("# Local");
-        expect(harness.current.revisions.auto).toHaveLength(1);
-        expect(harness.current.revisions.auto[0].source).toBe("local");
-    });
-
     it("keeps live content when the first prompt of a new chat assigns the id", async () => {
-        loadCanvasStateMock.mockResolvedValue({ content: "# Stored", supersededLocal: null });
+        loadCanvasStateMock.mockResolvedValue("# Stored");
         loadCanvasRevisionsMock.mockResolvedValue(emptyRevisions());
 
         const harness = renderController();
@@ -354,6 +433,49 @@ describe("conversation id assignment", () => {
         // the fresh chat's first prompt assigns its id: the pending request reopens
         await harness.rerender("new-conv");
         expect(harness.current.isOpen).toBe(true);
+    });
+
+    it("clears a canvas holding only a horizontal rule when switching conversations", async () => {
+        loadCanvasStateMock.mockResolvedValue(null);
+        loadCanvasRevisionsMock.mockResolvedValue(emptyRevisions());
+
+        const harness = renderController();
+        harness.render("old-conv");
+        await harness.rerender("old-conv");
+        act(() => harness.current.setMarkdown("---"));
+
+        // A horizontal-rule-only document has no textContent; it must still not
+        // leak into the next conversation.
+        await harness.rerender("new-conv");
+
+        expect(harness.current.getMarkdown().trim()).toBe("");
+    });
+
+    it("clears a canvas holding an empty code block when switching conversations", async () => {
+        loadCanvasStateMock.mockResolvedValue(null);
+        loadCanvasRevisionsMock.mockResolvedValue(emptyRevisions());
+
+        const harness = renderController();
+        harness.render("old-conv");
+        await harness.rerender("old-conv");
+        act(() => harness.current.setMarkdown("```\n```"));
+
+        await harness.rerender("new-conv");
+
+        expect(harness.current.getMarkdown().trim()).toBe("");
+    });
+
+    it("keeps a closed canvas with a horizontal rule when the first prompt assigns the id", async () => {
+        loadCanvasStateMock.mockResolvedValue(null);
+        loadCanvasRevisionsMock.mockResolvedValue(emptyRevisions());
+
+        const harness = renderController();
+        harness.render(undefined);
+        act(() => harness.current.setMarkdown("---"));
+
+        await harness.rerender("conv-1");
+
+        expect(harness.current.getMarkdown().trim()).not.toBe("");
     });
 });
 
@@ -429,15 +551,28 @@ describe("cursor anchor sampling", () => {
     it("clips oversized documents and drops the caret beyond the clip point", () => {
         const harness = renderController();
         harness.render(undefined);
-        const big = "x".repeat(CANVAS_CONTENT_LIMIT_CHARS + 10_000);
+        const big = "x".repeat(DEFAULT_APP_CONFIG.canvas_content_max_chars + 10_000);
         act(() => {
             harness.current.setMarkdown(big);
             harness.current.editor!.chain().setTextSelection(harness.current.editor!.state.doc.content.size).run();
         });
 
         const state = harness.current.toCanvasState();
-        expect(state?.content).toBe(big.slice(0, CANVAS_CONTENT_LIMIT_CHARS));
+        expect(state?.content).toBe(big.slice(0, DEFAULT_APP_CONFIG.canvas_content_max_chars));
+        expect(state?.truncated).toBe(true);
         expect(state?.cursor).toBeNull();
         expect(state?.selection).toBeNull();
+    });
+
+    it("does not flag content within the persistence limit as truncated", () => {
+        const harness = renderController();
+        harness.render(undefined);
+        const small = "x".repeat(DEFAULT_APP_CONFIG.canvas_content_max_chars - 1);
+        act(() => {
+            harness.current.setMarkdown(small);
+        });
+        const state = harness.current.toCanvasState();
+        expect(state?.truncated).toBeUndefined();
+        expect(state?.content).toBe(small);
     });
 });

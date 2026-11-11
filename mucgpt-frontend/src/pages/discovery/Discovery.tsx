@@ -6,7 +6,7 @@ import { Add24Regular, ArrowResetRegular, DocumentArrowUpRegular, LibraryRegular
 import { useTranslation } from "react-i18next";
 
 import styles from "./Discovery.module.css";
-import { getCommunityAssistantApi, deleteCommunityAssistantApi, unsubscribeFromAssistantApi } from "../../api/assistant-client";
+import { getCommunityAssistantApi, unsubscribeFromAssistantApi } from "../../api/assistant-client";
 import { Assistant, AssistantResponse, CommunityAssistantSnapshot, ToolBase } from "../../api/models";
 import { AssistantStorageService } from "../../service/assistantstorage";
 import { CommunityAssistantStorageService } from "../../service/communityassistantstorage";
@@ -18,10 +18,13 @@ import { StarterPromptModel } from "../../components/StarterPrompt";
 import { OwnerMetadataLink, getPrimaryOwnerDetails } from "../../components/OwnerMetadataLink/OwnerMetadataLink";
 import { AssistantDetailsSidebar, AssistantCardData } from "../../components/AssistantDetailsSidebar/AssistantDetailsSidebar";
 import { CloseConfirmationDialog } from "../../components/AssistantDialogs/shared/CloseConfirmationDialog";
+import { PendingCreateDraftConfirmDialog } from "../../components/AssistantDialogs/shared/PendingCreateDraftConfirmDialog";
 import { useUnifiedHistory } from "../../components/UnifiedHistory";
 import { useDuplicateAssistant } from "./hooks/useDuplicateAssistant";
 import { useDiscoveryAssistantLists } from "./hooks/useDiscoveryAssistantLists";
 import { useMigrateLocalAssistant } from "../../hooks/useMigrateLocalAssistant";
+import { useOrphanedAssistantChats } from "../../hooks/useOrphanedAssistantChats";
+import { LocalAssistantStrategy, OwnedCommunityAssistantStrategy } from "../assistant/AssistantStrategy";
 import { downloadAssistantExport, mapAssistantToExportData, mapVersionToExportData } from "../../utils/assistant-export";
 import { isCompleteCommunityAssistantSnapshot, mapCommunitySnapshotToAssistant } from "../../utils/community-assistant-snapshots";
 import { getAssistantBadges, isAssistantPrivate } from "../../utils/assistantCardDisplay";
@@ -114,15 +117,23 @@ const Discovery = () => {
         setMyAssistantFilter,
         setShowAllMyAssistants,
         ownedAssistantIds,
+        hasLoadedSuccessfully,
         isSearching,
         filteredMyAssistants,
         displayedMyAssistants,
         hasHiddenMyAssistants,
         communityAssistants,
+        knownAssistantIds,
         removeYoursAssistant,
         removeSubscribedAssistant,
         removeAssistantFromLists
     } = useDiscoveryAssistantLists({ assistantStorageService, communityAssistantStorageService });
+    const orphans = useOrphanedAssistantChats({
+        assistantStorageService,
+        excludeIds: knownAssistantIds,
+        enabled: hasLoadedSuccessfully,
+        communityAssistantStorageService
+    });
     const {
         assistantToDuplicate,
         showDuplicateConfirm,
@@ -433,22 +444,25 @@ const Discovery = () => {
         });
     };
 
-    const performDelete = async () => {
+    const performDelete = async (keepChats: boolean) => {
         if (!selectedAssistant) return;
         try {
-            if (selectedAssistant.isLocalAssistant) {
-                await assistantStorageService.deleteConfigAndChatsForAssistant(selectedAssistant.id);
-            } else if (selectedAssistant.isDeletedSnapshot) {
+            if (selectedAssistant.isDeletedSnapshot) {
                 await assistantStorageService.deleteChatsForAssistant(selectedAssistant.id);
                 await communityAssistantStorageService.deleteConfigForAssistant(selectedAssistant.id);
+            } else if (selectedAssistant.isLocalAssistant) {
+                await new LocalAssistantStrategy().deleteAssistant(selectedAssistant.id, assistantStorageService, keepChats);
             } else {
-                await assistantStorageService.deleteChatsForAssistant(selectedAssistant.id);
-                await deleteCommunityAssistantApi(selectedAssistant.id);
-                await assistantStorageService.deleteConfigForAssistant(selectedAssistant.id);
+                await new OwnedCommunityAssistantStrategy().deleteAssistant(selectedAssistant.id, assistantStorageService, keepChats);
             }
             showSuccess(
-                t("components.assistant_chat.delete_assistant_success"),
-                t("components.assistant_chat.delete_assistant_success_message", { title: selectedAssistant.title })
+                t(selectedAssistant.isDeletedSnapshot ? "components.history.delete_chats_success_title" : "components.assistant_chat.delete_assistant_success"),
+                t(
+                    selectedAssistant.isDeletedSnapshot
+                        ? "components.history.delete_chats_success_message"
+                        : "components.assistant_chat.delete_assistant_success_message",
+                    selectedAssistant.isDeletedSnapshot ? undefined : { title: selectedAssistant.title }
+                )
             );
             removeAssistantFromLists(selectedAssistant.id);
             refreshUnifiedHistory();
@@ -465,9 +479,7 @@ const Discovery = () => {
         if (!selectedAssistant) return;
 
         try {
-            await assistantStorageService.deleteChatsForAssistant(selectedAssistant.id);
             await unsubscribeFromAssistantApi(selectedAssistant.id);
-            await communityAssistantStorageService.deleteConfigForAssistant(selectedAssistant.id);
 
             showSuccess(
                 t("components.community_assistants.unsubscribe_success_title"),
@@ -709,6 +721,56 @@ const Discovery = () => {
                                             )}
                                         </>
                                     )}
+
+                                    {!isSearching && myAssistantFilter === "all" && orphans.length > 0 && (
+                                        <div className={styles.assistantSection}>
+                                            <h2 className={styles.sectionTitle}>{t("components.community_assistants.orphaned_chats_heading")}</h2>
+                                            <div
+                                                className={styles.assistantsGrid}
+                                                role="list"
+                                                aria-label={t("components.community_assistants.orphaned_chats_heading")}
+                                            >
+                                                {orphans.map(orphan => (
+                                                    <DiscoveryCard
+                                                        key={orphan.id}
+                                                        id={orphan.id}
+                                                        title={orphan.title ?? t("components.community_assistants.orphaned_deleted_title")}
+                                                        description={
+                                                            orphan.kind === "deleted" || !orphan.description
+                                                                ? t(
+                                                                      orphan.kind === "deleted"
+                                                                          ? "components.community_assistants.orphaned_deleted_description"
+                                                                          : orphan.kind === "revoked"
+                                                                            ? "components.community_assistants.orphaned_revoked_description"
+                                                                            : "components.community_assistants.orphaned_unsubscribed_description"
+                                                                  )
+                                                                : orphan.description
+                                                        }
+                                                        badges={
+                                                            orphan.kind === "deleted"
+                                                                ? [
+                                                                      {
+                                                                          label: t("components.community_assistants.deleted_badge"),
+                                                                          tone: "danger"
+                                                                      }
+                                                                  ]
+                                                                : orphan.kind === "revoked"
+                                                                  ? [
+                                                                        {
+                                                                            label: t("components.community_assistants.revoked_badge"),
+                                                                            tone: "warning"
+                                                                        }
+                                                                    ]
+                                                                  : undefined
+                                                        }
+                                                        subscriberCount={0}
+                                                        linkTo={`/${orphan.kind === "deleted" ? "deleted/communityassistant" : "communityassistant"}/${orphan.id}`}
+                                                        role="listitem"
+                                                    />
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
                                 </section>
 
                                 <section className={styles.assistantSection} aria-labelledby="community-assistants-heading">
@@ -788,10 +850,27 @@ const Discovery = () => {
             <CloseConfirmationDialog
                 open={showDeleteConfirm}
                 onOpenChange={setShowDeleteConfirm}
-                onConfirmClose={performDelete}
-                title={t("components.assistantsettingsdrawer.deleteDialog.title")}
-                message={t("components.assistantsettingsdrawer.deleteDialog.content")}
-                confirmLabel={t("components.assistantsettingsdrawer.deleteDialog.confirm")}
+                onConfirmClose={() => void performDelete(true)}
+                title={t(
+                    selectedAssistant?.isDeletedSnapshot
+                        ? "components.community_assistants.leftover_chats_cleanup_confirm_title"
+                        : "components.assistantsettingsdrawer.deleteDialog.title"
+                )}
+                message={t(
+                    selectedAssistant?.isDeletedSnapshot
+                        ? "components.community_assistants.leftover_chats_cleanup_confirm_message"
+                        : "components.community_assistants.assistant_delete_chats_choice_message"
+                )}
+                confirmLabel={t(
+                    selectedAssistant?.isDeletedSnapshot
+                        ? "components.assistantsettingsdrawer.deleteDialog.confirm"
+                        : "components.community_assistants.keep_chats_action"
+                )}
+                secondaryAction={
+                    selectedAssistant?.isDeletedSnapshot
+                        ? undefined
+                        : { label: t("components.community_assistants.delete_chats_action"), onClick: () => void performDelete(false) }
+                }
             />
             <CloseConfirmationDialog
                 open={showUnsubscribeConfirm}
@@ -816,22 +895,15 @@ const Discovery = () => {
                 )}
                 confirmLabel={t("components.community_assistants.duplicate_confirm_action")}
             />
-            <CloseConfirmationDialog
+            <PendingCreateDraftConfirmDialog
                 open={pendingImportDraft !== null}
                 onOpenChange={open => {
                     if (!open) setPendingImportDraft(null);
                 }}
-                onConfirmClose={() => {
+                onOverwrite={() => {
                     if (pendingImportDraft) openImportedDraft(pendingImportDraft);
                 }}
-                title={t("components.import_assistant.draft_exists_title")}
-                message={t("components.import_assistant.draft_exists_message")}
-                confirmLabel={t("components.import_assistant.draft_exists_overwrite")}
-                confirmIntent="danger"
-                secondaryAction={{
-                    label: t("components.import_assistant.draft_exists_open"),
-                    onClick: () => navigate("/assistant/create")
-                }}
+                onOpenExistingDraft={() => navigate("/assistant/create")}
             />
             {isMockMode && (
                 <CloseConfirmationDialog

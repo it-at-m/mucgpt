@@ -70,124 +70,6 @@
     text-overflow: ellipsis;
 }
 
-/* --- Group badge --- */
-
-.groupBadgeLabel {
-    flex: 1;
-    display: inline-flex !important;
-    align-items: center !important;
-    justify-content: flex-start !important;
-    gap: 4px;
-    margin: 0 !important;
-    padding: 0 !important;
-    cursor: pointer;
-    color: var(--colorBrandBackground) !important;
-    font-size: inherit;
-    font-weight: inherit;
-    min-width: 0 !important;
-}
-
-.groupBadgeCount {
-    font-weight: var(--fontWeightRegular);
-    opacity: 0.75;
-}
-
-.dismissTrigger {
-    flex-shrink: 0;
-    width: 0 !important;
-    max-width: 0;
-    min-width: 0 !important;
-    padding-inline: 0 !important;
-    color: var(--colorBrandBackground) !important;
-    opacity: 0;
-    pointer-events: none;
-    overflow: hidden;
-    transition:
-        width 0.15s ease,
-        max-width 0.15s ease,
-        opacity 0.15s ease;
-}
-
-.activeBadge:hover .dismissTrigger,
-.activeBadge:focus-within .dismissTrigger {
-    width: 20px !important;
-    max-width: 20px;
-    opacity: 1;
-    pointer-events: auto;
-}
-
-@media (hover: none), (pointer: coarse) {
-    .dismissTrigger {
-        width: 20px !important;
-        max-width: 20px;
-        opacity: 1;
-        pointer-events: auto;
-    }
-}
-
-/* --- Group badge popover --- */
-
-.groupHoverSurface {
-    padding: 8px !important;
-    border-radius: 12px !important;
-    min-width: 240px;
-    max-width: 320px;
-    display: flex !important;
-    flex-direction: column;
-    gap: 4px;
-}
-
-.groupHoverHeaderRow {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 8px;
-    padding: 0 4px 8px 4px;
-    border-bottom: 1px solid var(--colorNeutralStroke1);
-    margin-bottom: 2px;
-}
-
-.groupHoverPopoverHeader {
-    font-size: var(--fontSizeBase100);
-    font-weight: var(--fontWeightSemibold);
-    color: var(--colorNeutralForeground3);
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    min-width: 0;
-}
-
-.groupHoverToolList {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-}
-
-.accordionGroupHeader .groupHeaderActionButton {
-    position: absolute;
-    right: 28px;
-    top: 50%;
-    transform: translateY(-50%);
-    z-index: 1;
-}
-
-.groupDetailDialog {
-    max-width: min(560px, calc(100vw - 24px));
-}
-
-.groupDetailDialogBody {
-    gap: 0;
-}
-
-.groupDetailDialogContent {
-    padding-top: 0;
-}
-
-.groupDialogTitleActions {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
 /* --- Overflow and add-tool badges --- */
 
 .overflowBadge {
@@ -249,115 +131,6 @@
     text-transform: uppercase;
     letter-spacing: 0.08em;
     padding: 4px 4px 0 4px;
-}
-
-.lockedToolSection {
-    border: 1px solid var(--colorNeutralStroke1);
-    border-radius: 12px;
-    overflow: hidden;
-}
-
-.lockedToolSectionHeader {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 10px 12px 0 12px;
-}
-
-/* --- Accordion groups inside popover --- */
-
-.groupAccordion {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-}
-
-.accordionGroup {
-    border: 1px solid var(--colorNeutralStroke1);
-    border-radius: 12px;
-    overflow: hidden;
-}
-
-.accordionGroupHeader {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 0 12px;
-    position: relative;
-    user-select: none;
-}
-
-.accordionGroupHeader:hover {
-    background-color: var(--colorNeutralBackground2Hover);
-}
-
-.accordionHeader {
-    flex: 1;
-    min-width: 0;
-}
-
-.accordionHeader :global(.fui-AccordionHeader__button) {
-    position: relative;
-    width: 100%;
-    min-width: 0;
-    padding: 10px 132px 10px 0;
-    color: inherit;
-    border-radius: 4px;
-}
-
-.accordionHeader :global(.fui-AccordionHeader__button):focus-visible {
-    outline: 2px solid var(--colorBrandBackground);
-    outline-offset: 2px;
-}
-
-.accordionHeader :global(.fui-AccordionHeader__expandIcon) {
-    position: absolute;
-    right: 0;
-    top: 50%;
-    transform: translateY(-50%);
-    color: var(--colorNeutralForeground3);
-}
-
-.accordionPanel {
-    padding: 0;
-    margin: 0;
-}
-
-.groupAccordionHeaderContent {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    width: 100%;
-    min-width: 0;
-}
-
-.groupTitleBlock {
-    flex: 1;
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    min-width: 0;
-}
-
-.groupName {
-    font-weight: var(--fontWeightSemibold);
-    font-size: var(--fontSizeBase300);
-    min-width: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-.groupCount {
-    font-size: var(--fontSizeBase200);
-    color: var(--colorNeutralForeground3);
-}
-
-.groupToolsList {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    padding: 8px;
 }
 
 /* --- Tool items inside popover --- */
@@ -529,7 +302,7 @@
     background-color: var(--colorNeutralBackground3Hover) !important;
 }
 
-.ungroupedList {
+.toolList {
     display: flex;
     flex-direction: column;
     gap: 6px;
@@ -570,44 +343,12 @@
         max-width: calc(100vw - 16px);
         padding: 14px 10px;
     }
-
-    .groupHoverSurface {
-        min-width: min(240px, calc(100vw - 16px));
-        max-width: calc(100vw - 16px);
-    }
 }
 
 @media (max-width: 420px) {
     .toolSelectorRow {
         gap: 4px;
         padding: 6px 0 10px 0;
-    }
-
-    .accordionGroupHeader {
-        flex-wrap: wrap;
-        align-items: center;
-        padding: 8px 10px;
-        gap: 4px;
-    }
-
-    .accordionHeader {
-        flex-basis: 100%;
-    }
-
-    .accordionGroupHeader .groupHeaderActionButton {
-        position: static;
-        right: auto;
-        top: auto;
-        transform: none;
-        margin-left: 18px;
-    }
-
-    .accordionHeader :global(.fui-AccordionHeader__button) {
-        padding: 8px 28px 8px 0;
-    }
-
-    .groupToolsList {
-        padding: 6px;
     }
 
     .toolItemMain {

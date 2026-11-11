@@ -104,12 +104,14 @@ def test_xlsx_neutralizes_formula_injection() -> None:
 
 @pytest.mark.unit
 def test_export_request_rejects_oversized_fields() -> None:
+    from api.api_models import CANVAS_EDITOR_MAX_CHARS
+
     for field in ("markdown", "html"):
         request = {
             "markdown": "m",
             "html": "h",
             "target": "pdf",
-            field: "x" * (4 * 512 * 1024 + 1),
+            field: "x" * (4 * CANVAS_EDITOR_MAX_CHARS + 1),
         }
         with pytest.raises(ValidationError):
             ExportRequest(**request)

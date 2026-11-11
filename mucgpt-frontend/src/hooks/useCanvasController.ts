@@ -5,7 +5,7 @@ import type { Node as PMNode } from "@tiptap/pm/model";
 import type { EditorState } from "@tiptap/pm/state";
 
 import type { CanvasState } from "../api/models";
-import { CANVAS_CONTENT_LIMIT_CHARS } from "../components/Canvas/canvasLimits";
+import { useCanvasLimits } from "../components/Canvas/canvasLimits";
 import { loadCanvasRevisions, loadCanvasState, parseCanvasRevisions, type CanvasRevision, type CanvasRevisions } from "../service/canvasStorage";
 import type { CanvasStreamEvent } from "../utils/canvasStream";
 import { CANVAS_PERSISTENCE_RESET, persistentCaret } from "../components/Canvas/canvasSelectionPersistence";
@@ -22,7 +22,6 @@ export interface CanvasController {
     requestOpen(): void;
     /** True while the agent is writing */
     isLocked: boolean;
-    lock(): void;
     unlock(): void;
     getMarkdown(): string;
     getSelectionMarkdown(): string | null;
@@ -32,6 +31,11 @@ export interface CanvasController {
     toCanvasState(): CanvasState | null;
     /** APPEND → live insert; UPDATE → replace doc */
     applyStreamEvent(ev: CanvasStreamEvent): void;
+    /** At RUN_STARTED: resets the stream revision guard and locks the editor.
+     * Must run for every run — even with the canvas closed, its content is sent
+     * with the request and the agent may write (the first canvas event
+     * auto-opens the view). */
+    beginRun(): void;
     /** Debounced; used for autosave */
     subscribe(cb: (markdown: string) => void): () => void;
     /** PM-JSON snapshot into the revision rings */
@@ -108,20 +112,26 @@ export const caretMarkdownOffset = (editor: Editor | null, pos?: number): number
     const { doc, selection } = editor.state;
     const at = pos ?? selection.from;
     if (at >= doc.content.size) {
-        return markdownStorage(editor).serializer.serialize(doc).length;
+        return markdownStorage(editor)?.serializer.serialize(doc).length ?? null;
     }
-    const prefix = markdownStorage(editor).serializer.serialize(doc.cut(0, at));
-    return prefix.replace(/\n$/, "").length;
+    const prefix = markdownStorage(editor)?.serializer.serialize(doc.cut(0, at));
+    return prefix === undefined ? null : prefix.replace(/\n$/, "").length;
 };
 
 export function useCanvasController(conversationId: string | undefined, serverConversationId?: string): CanvasControllerInstance {
-    // Assistant chats keep a prefixed local id as the IndexedDB key but talk to
-    // the server with the plain backend conversation id.
+    // Assistant chats keep a prefixed local id for their chat history but talk
+    // to the canvas endpoints with the plain backend conversation id.
     const serverId = serverConversationId ?? conversationId;
-    const editor = useEditor({
-        extensions: canvasExtensions,
-        content: ""
-    });
+    const limits = useCanvasLimits();
+    const editor = useEditor(
+        {
+            extensions: canvasExtensions({ exportLimitChars: limits.editorLimitChars, warnChars: limits.warnChars }),
+            content: ""
+        },
+        // Recreate when the backend limits arrive so the plugin uses the
+        // configured values instead of the fallback defaults.
+        [limits.editorLimitChars, limits.warnChars]
+    );
     const editorRef = useRef<Editor | null>(editor);
     editorRef.current = editor;
 
@@ -145,7 +155,22 @@ export function useCanvasController(conversationId: string | undefined, serverCo
     const getMarkdown = useCallback((): string => {
         const current = editorRef.current;
         if (!current) return "";
-        return markdownStorage(current).serializer.serialize(current.state.doc);
+        // The editor can be mid-recreation (limits load, conversation switch) and
+        // temporarily lack its markdown storage — degrade to empty instead of
+        // crashing the chat page render.
+        return markdownStorage(current)?.serializer.serialize(current.state.doc) ?? "";
+    }, []);
+
+    const hasCanvasContent = useCallback(() => {
+        const current = editorRef.current;
+        // Tiptap can expose a destroyed editor briefly while recreating it.
+        // destroy() clears the schema, so treat that lifecycle state as empty.
+        if (!current || current.isDestroyed || !current.schema) return false;
+        // The empty-document comparison also sees textless nodes (horizontal rule,
+        // empty code block, table with only empty cells) that textContent misses,
+        // without touching the Markdown serializer (not available on every
+        // editor instance — see the conversation-switch callers below).
+        return !current.state.doc.eq(current.schema.topNodeType.createAndFill()!);
     }, []);
 
     const notifySubscribers = useCallback(() => {
@@ -181,7 +206,7 @@ export function useCanvasController(conversationId: string | undefined, serverCo
         // existing conversation (fresh controller, canvas closed and empty: run the
         // load path below to restore the stored canvas before an empty canvas state
         // is sent and overwrites it server-side).
-        if (previous === undefined && conversationId !== undefined && (isOpenRef.current || getMarkdown().trim())) return;
+        if (previous === undefined && conversationId !== undefined && (isOpenRef.current || hasCanvasContent())) return;
 
         lastStreamRevisionRef.current = -1;
         nextRevisionRef.current = 1;
@@ -189,63 +214,47 @@ export function useCanvasController(conversationId: string | undefined, serverCo
         setIsOpen(false);
         setRevisions(emptyRevisions());
         const current = editorRef.current;
-        if (current && getMarkdown().trim()) {
+        if (current && hasCanvasContent()) {
             current.commands.setContent("");
             // A stale caret/selection must not leak into another conversation's document.
             current.view.dispatch(current.state.tr.setMeta(CANVAS_PERSISTENCE_RESET, true));
         }
         let cancelled = false;
         if (conversationId) {
+            const loadedServerId = serverConversationId ?? conversationId;
             void (async () => {
                 try {
-                    // Rings must be applied before the content load: the load path
-                    // pushes a superseded-local snapshot that must land on top of
-                    // the loaded rings, not be clobbered by a parallel load.
-                    const storedRings = await loadCanvasRevisions(conversationId, serverId);
+                    const storedRings = await loadCanvasRevisions(loadedServerId);
                     if (cancelled) return;
+                    let rings = emptyRevisions();
                     if (storedRings !== null) {
-                        const rings = parseCanvasRevisions(storedRings);
+                        rings = parseCanvasRevisions(storedRings);
                         // Keep the monotonic revision counter ahead of the loaded rings so
                         // new snapshots never collide with stored revision numbers.
                         const maxRevision = Math.max(0, ...rings.auto.map(entry => entry.revision), ...rings.manual.map(entry => entry.revision));
                         nextRevisionRef.current = maxRevision + 1;
                         setRevisions(rings);
                     }
-                    const stored = await loadCanvasState(conversationId, serverId);
+                    const stored = await loadCanvasState(loadedServerId);
                     const editor = editorRef.current;
-                    if (cancelled || !editor || !stored) {
+                    if (cancelled || !editor || stored === null) {
                         if (pendingOpen && !cancelled) setIsOpen(true);
                         return;
                     }
-                    // The losing local copy is snapshotted before any early
-                    // return: a blank server canvas is a legitimate state
-                    // (rings can sync before any content) and must not
-                    // silently discard the local document.
-                    if (stored.supersededLocal?.trim()) {
-                        // The local copy lost the reconciliation but must stay
-                        // recoverable: snapshot it into the auto ring (source "local")
-                        // so it appears in the Versions drawer and syncs to the server.
-                        // The snapshot data is taken eagerly — the state updater may
-                        // run after the editor already holds the server content.
-                        editor.commands.setContent(stored.supersededLocal);
-                        const supersededSnapshot: CanvasRevision = {
-                            revision: nextRevisionRef.current++,
-                            doc_json: editor.getJSON(),
-                            timestamp: Date.now(),
-                            source: "local"
-                        };
-                        setRevisions(prev => ({
-                            ...prev,
-                            auto: pushCapped(prev.auto, supersededSnapshot, AUTO_RING_CAP)
-                        }));
-                    }
-                    if (!stored.content || !stored.content.trim()) {
+                    if (!stored.trim()) {
+                        const latestRevision = [...rings.auto, ...rings.manual].sort((left, right) => right.revision - left.revision)[0];
+                        if (latestRevision) {
+                            editor.commands.setContent(latestRevision.doc_json as Content);
+                            editor.view.dispatch(editor.state.tr.setMeta(CANVAS_PERSISTENCE_RESET, true));
+                            setIsOpen(true);
+                            return;
+                        }
                         // An open request of a fresh chat reopens the canvas even
                         // when there is nothing to restore yet.
                         if (pendingOpen && !cancelled) setIsOpen(true);
                         return;
                     }
-                    editor.commands.setContent(stored.content);
+                    editor.commands.setContent(stored);
                     editor.view.dispatch(editor.state.tr.setMeta(CANVAS_PERSISTENCE_RESET, true));
                     setIsOpen(true);
                 } catch (error) {
@@ -256,7 +265,7 @@ export function useCanvasController(conversationId: string | undefined, serverCo
         return () => {
             cancelled = true;
         };
-    }, [conversationId, serverId]);
+    }, [conversationId, hasCanvasContent, serverId]);
 
     const setIsOpen = useCallback((open: boolean) => {
         isOpenRef.current = open;
@@ -274,7 +283,10 @@ export function useCanvasController(conversationId: string | undefined, serverCo
 
     // Called on RUN_STARTED: the server numbers canvas_revision per run,
     // so the monotonicity guard must reset per run, not per conversation.
-    const lock = useCallback(() => {
+    // Locking is unconditional: even a closed canvas is sent with the request
+    // (its content rides along), and the first canvas event auto-opens the
+    // view — which must then already be protected from user edits.
+    const beginRun = useCallback(() => {
         lastStreamRevisionRef.current = -1;
         setIsLocked(true);
     }, []);
@@ -285,7 +297,7 @@ export function useCanvasController(conversationId: string | undefined, serverCo
         if (!current) return null;
         const { from, to, empty } = current.state.selection;
         if (empty) return null;
-        return tableSelectionMarkdown(current.state) ?? markdownStorage(current).serializer.serialize(current.state.doc.cut(from, to));
+        return tableSelectionMarkdown(current.state) ?? markdownStorage(current)?.serializer.serialize(current.state.doc.cut(from, to)) ?? null;
     }, []);
 
     const setMarkdown = useCallback((md: string) => {
@@ -297,22 +309,29 @@ export function useCanvasController(conversationId: string | undefined, serverCo
         // sent with the request — panel open or closed — so the agent works on
         // the document the user last saw and the server copy stays in sync. An
         // open empty document still counts as an active canvas the agent may
-        // write into. Beyond the content limit the document is only readable
-        // and exportable: the request carries the clipped content (the backend
-        // caps at the same value), the caret only anchors while it sits in the
-        // readable part, and oversized selections are meaningless to the agent.
+        // write into.
+        //
+        // Beyond the content limit the document exceeds what the backend can
+        // persist, so the request carries the truncated beginning plus the
+        // `truncated` flag: the backend then skips persistence (the stored
+        // copy is never clobbered) and the canvas tools refuse the partial
+        // document with guidance instead of destroying the tail. The document
+        // itself stays readable and exportable in the editor up to the editor
+        // limit.
         const markdown = getMarkdown();
         if (!isOpen && !markdown?.trim()) return null;
-        const content = markdown.length > CANVAS_CONTENT_LIMIT_CHARS ? markdown.slice(0, CANVAS_CONTENT_LIMIT_CHARS) : markdown;
+        const truncated = markdown.length > limits.contentLimitChars;
+        const content = truncated ? markdown.slice(0, limits.contentLimitChars) : markdown;
         const caretPos = persistentCaret(editorRef.current);
         const cursor = caretPos === null ? null : caretMarkdownOffset(editorRef.current, caretPos);
         const selection = isOpen ? getSelectionMarkdown() : null;
         return {
             content,
-            selection: selection !== null && selection.length <= CANVAS_CONTENT_LIMIT_CHARS ? selection : null,
-            cursor: cursor !== null && cursor <= CANVAS_CONTENT_LIMIT_CHARS ? cursor : null
+            selection: selection !== null && selection.length <= limits.contentLimitChars ? selection : null,
+            cursor: cursor !== null && cursor <= limits.contentLimitChars ? cursor : null,
+            truncated: truncated || undefined
         };
-    }, [isOpen, getMarkdown, getSelectionMarkdown]);
+    }, [isOpen, getMarkdown, getSelectionMarkdown, limits]);
 
     const applyStreamEvent = useCallback((ev: CanvasStreamEvent) => {
         const current = editorRef.current;
@@ -415,7 +434,7 @@ export function useCanvasController(conversationId: string | undefined, serverCo
             setIsOpen,
             requestOpen,
             isLocked,
-            lock,
+            beginRun,
             unlock,
             getMarkdown,
             getSelectionMarkdown,
@@ -434,7 +453,7 @@ export function useCanvasController(conversationId: string | undefined, serverCo
             setIsOpen,
             requestOpen,
             isLocked,
-            lock,
+            beginRun,
             unlock,
             getMarkdown,
             getSelectionMarkdown,

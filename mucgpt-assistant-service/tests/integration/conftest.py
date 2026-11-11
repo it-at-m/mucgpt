@@ -153,7 +153,7 @@ def disable_compliance_verification_by_default(monkeypatch: pytest.MonkeyPatch):
     """Keep existing integration tests stable unless a test explicitly enables strict compliance verification."""
 
     settings = get_settings()
-    monkeypatch.setattr(settings, "COMPLIANCE_REQUIRE_VERIFICATION", False)
+    monkeypatch.setattr(settings, "compliance_require_verification", False)
 
 
 @pytest.fixture(scope="session", autouse=True)

@@ -1,6 +1,6 @@
 [project]
 name = "mucgpt-core-service"
-version = "0.22.3"
+version = "1.5.0"
 description = "a web interface for large language models for the public administration"
 readme = "README.md"
 requires-python= ">=3.13"
@@ -15,55 +15,60 @@ maintainers = [
 ]
 
 dependencies = [
-    "fastapi[standard]>=0.135.3",
-    "langchain>=1.3.9",
-    "langchain-core>=1.2.31",
-    "langchain_community>=0.4.1",
-    "langchain-openai>=1.1.12",
-    "langsmith>=0.7.31",
-    "openai==3.39.0",
-    "joserfc",
-    "uvicorn>=0.44.0",
-    "asgi-correlation-id>=4.3.4",
-    "pydantic-settings>=2.8.1",
-    "langgraph>=1.1.6",
-    "truststore>=0.10.4",
-    "langfuse>=4.14.0",
-    "httpx>=0.28.1",
-    "langchain-mcp-adapters>=0.2.2",
-    "redis>=7.3.0",
-    "cloudpickle>=3.1.2",
-    "python-multipart>=0.0.5",
-    "deepagents>=0.7.6",
-    "langgraph-checkpoint-postgres>=3.2.0",
+    "fastapi[standard]==0.162.2",
+    "langchain==1.4.9",
+    "langchain-core==1.7.6",
+    "langchain_community==0.4.2",
+    "langchain-openai==1.7.4",
+    "langsmith==0.14.17",
+    "openai==3.46.0",
+    "joserfc==1.8.0",
+    "uvicorn==0.54.0",
+    "asgi-correlation-id==4.3.4",
+    "pydantic-settings==2.16.2",
+    "langgraph==1.2.20",
+    "truststore==0.10.5",
+    "langfuse==4.18.0",
+    "httpx==0.28.1",
+    "langchain-mcp-adapters==0.3.2",
+    "redis==7.4.1",
+    "cloudpickle==3.1.2",
+    "python-multipart==0.0.33",
+    "deepagents==0.7.34",
+    "langgraph-checkpoint-postgres==3.2.0",
     "alembic>=1.14.0",
-    "psycopg[binary]>=3.2",
-    "sqlalchemy>=2.0",
-    "asyncpg>=0.31.0",
+    "psycopg[binary]==3.3.8",
+    "sqlalchemy[asyncio]==2.1.8",
+    "asyncpg==0.32.0",
     "ag-ui-langgraph[fastapi]==0.0.47",
     "ag-ui-protocol==1.0.0",
-    "mcp>=1.30,<2.0",
-    "weasyprint>=63.0",
-    "openpyxl>=3.1.5",
-    "beautifulsoup4>=4.13",
-    "python-docx>=1.2.0",
+    "mcp==1.30.0",
+    "weasyprint==70.0",
+    "openpyxl==3.1.5",
+    "beautifulsoup4==4.15.0",
+    "python-docx==1.2.0",
 ]
 
 [dependency-groups]
 dev = [
     "ipykernel==7.4.0",
     "pre-commit==4.7.0",
-    "ruff==0.17.3",
-    "pytest-env==1.8.2",
-    "pytest==9.1.1",
-    "pytest-asyncio==1.4.1",
+    "ruff==0.17.4",
+    "ty==0.0.99",
+    "pytest-env==1.8.5",
+    "pytest==9.2.0",
+    "pytest-asyncio==1.4.1.post1",
     "pytest-snapshot",
     "pytest-mock==3.17.0",
-    "coverage==7.17.0",
-    "pytest-cov==7.1.0"
+    "coverage==7.17.2",
+    "pytest-cov==7.1.0",
+    # zoneinfo (used by app/agent/middleware.py) needs this on Windows;
+    # Linux/Docker images provide the tz database via the OS.
+    "tzdata==2026.6"
 ]
 
 [tool.uv]
+constraint-dependencies = ["pyasn1>=0.6.5"]
 
 [[tool.uv.index]]
 name = "pypy"
@@ -76,6 +81,9 @@ src = ["app"]
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP"]
 ignore = ["E501", "E701"]      # line too long, multiple statements on one line
+
+[tool.ty.environment]
+root = ["./app"]
 
 [tool.pytest.ini_options]
 addopts = "--strict-markers --strict-config --verbose --tb=short -ra --cov=app"
@@ -90,7 +98,8 @@ env = [
     "MUCGPT_CORE_LOG_CONFIG=app/logconf.yaml",
     "MUCGPT_CORE_VERSION=0.0",
     "MUCGPT_CORE_COMMIT=12012lf",
-    '''MUCGPT_CORE_MODELS=[{{"type": "AZURE", "llm_name": "mucgpt-test-model", "deployment": "mucgpt-test-model", "endpoint": "https://testprovider.api", "api_key": "blub", "max_output_tokens": 16384, "max_input_tokens": 128000, "description": "Example test model."}}]''',
+    '''MUCGPT_CORE_PROVIDERS={{"testprovider": {{"type": "azure", "endpoint": "https://testprovider.api", "api_key": "blub"}}}}''',
+    '''MUCGPT_CORE_MODELS=[{{"provider": "testprovider", "id": "mucgpt-test-model", "deployment": "mucgpt-test-model", "max_output_tokens": 16384, "max_input_tokens": 128000, "description": "Example test model."}}]''',
     "GIT_PYTHON_REFRESH=quiet",
 ]
 

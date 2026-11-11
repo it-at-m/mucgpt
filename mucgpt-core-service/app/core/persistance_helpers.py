@@ -28,13 +28,13 @@ logger = getLogger()
 
 def _create_connection_args(settings: Settings) -> dict[str, Any]:
     """Create PostgreSQL connection parameters from settings."""
-    db = settings.DB
+    db = settings.db
     return {
-        "host": db.HOST,
-        "port": db.PORT,
-        "dbname": db.NAME,
-        "user": db.USER,
-        "password": db.PASSWORD.get_secret_value(),
+        "host": db.host,
+        "port": db.port,
+        "dbname": db.name,
+        "user": db.user,
+        "password": db.password.get_secret_value(),
         "autocommit": True,
         "prepare_threshold": 0,
         # Return rows as dicts so queries can read columns by name. The
@@ -85,10 +85,10 @@ def _conversation_usage(message: AIMessage) -> ConversationUsage | None:
     usage = ConversationUsage(context_tokens=context_tokens)
     model_name = message.response_metadata.get("model_name")
     model = next(
-        (model for model in get_settings().MODELS if model.llm_name == model_name), None
+        (model for model in get_settings().models if model.id == model_name), None
     )
     if model is not None:
-        usage.usage_model = model.llm_name
+        usage.usage_model = model.id
         usage.usage_max_input_tokens = model.max_input_tokens
         usage.usage_context_warning_threshold_percent = (
             model.context_warning_threshold_percent
@@ -320,6 +320,17 @@ class PersistanceHelpers:
             )
 
     @staticmethod
+    async def set_conversation_assistant(
+        conversation_id: str, user_id: str, assistant_id: str
+    ) -> bool:
+        """Re-bind a live owned conversation to another assistant without reviving it."""
+        factory = PersistanceHelpers._get_session_factory()
+        async with factory.begin() as session:
+            return await ConversationRepository(session).set_conversation_assistant(
+                conversation_id, user_id, assistant_id
+            )
+
+    @staticmethod
     async def delete_conversation_mapping(conversation_id: str, user_id: str) -> bool:
         """Erase and retire the ID; ownership mappings must never be removed alone."""
         return (
@@ -359,6 +370,9 @@ class PersistanceHelpers:
                 )
                 # The canvas is personal data of the conversation and must not
                 # outlive its retirement; cascade it inside the same transaction.
+                # Deliberately raw SQL instead of CanvasRepository.delete_canvas():
+                # the repository needs its own AsyncSession/transaction, which
+                # would break the atomicity lock_live_canvas_access relies on.
                 await connection.execute(
                     "DELETE FROM canvas_documents WHERE conversation_id = %s",
                     (conversation_id,),

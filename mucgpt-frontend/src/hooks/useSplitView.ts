@@ -91,8 +91,9 @@ export const useSplitView = () => {
         measureCanvasWidth();
     }, [canvasPercent, measureCanvasWidth]);
 
-    // Callback ref: the split view swaps the container element when the canvas
-    // opens/closes, so the observer must re-attach to whatever node is current.
+    // Callback ref: the container element is stable across canvas open/close
+    // (CanvasSplitView keeps one root), so the observer attaches once and keeps
+    // measuring the same node across layout toggles.
     const attachContainer = useCallback(
         (node: HTMLElement | null) => {
             containerRef.current = node;

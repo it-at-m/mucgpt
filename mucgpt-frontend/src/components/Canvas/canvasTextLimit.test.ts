@@ -1,19 +1,33 @@
 // @vitest-environment jsdom
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { Editor } from "@tiptap/core";
 
-import { CANVAS_EXPORT_LIMIT_CHARS, CANVAS_WARN_CHARS } from "./canvasLimits";
+import { fallbackCanvasLimits } from "./canvasLimits";
 import { CANVAS_PASTE_CLIPPED_EVENT, canvasTextLimitKey, textLength, textPosForCharIndex } from "./canvasTextLimit";
 import { canvasExtensions } from "./canvasExtensions";
+
+const { editorLimitChars: CANVAS_EXPORT_LIMIT_CHARS, warnChars: CANVAS_WARN_CHARS } = fallbackCanvasLimits();
 
 // The initial editor content bypasses transactions, so the guard only sees
 // content that arrives via setContent/insert — exactly like the production
 // controller, which creates the editor empty and loads documents afterwards.
+// Tracks every editor created in this file, so any editor a test forgot to
+// destroy is torn down in afterEach — a leaked editor's prosemirror DOMObserver
+// keeps a timer alive and fires after the file's jsdom teardown with
+// "ReferenceError: document is not defined".
+const createdEditors: Editor[] = [];
 const editorWith = (markdown: string): Editor => {
-    const editor = new Editor({ extensions: canvasExtensions, content: "" });
+    const editor = new Editor({ extensions: canvasExtensions(), content: "" });
+    createdEditors.push(editor);
     editor.commands.setContent(markdown);
     return editor;
 };
+
+afterEach(() => {
+    for (const editor of createdEditors.splice(0)) {
+        if (!editor.isDestroyed) editor.destroy();
+    }
+});
 
 const docText = (editor: Editor): string => editor.state.doc.textBetween(0, editor.state.doc.content.size, "\n", "\n");
 

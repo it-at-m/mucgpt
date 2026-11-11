@@ -14,10 +14,12 @@ export async function fetchModelFileSizes(modelId: string, treePath = "onnx"): P
             headers: { Accept: "application/json" },
             signal: controller.signal
         });
-        clearTimeout(timer);
         if (!response.ok) throw new Error(`HF API error: ${response.status}`);
 
         const data = (await response.json()) as Array<{ type: "file" | "dir"; path: string; size?: number }>;
+        // Clear the timeout only after the body was read: a stalled body would
+        // otherwise hang the lookup forever and block downloadModel's startLoad.
+        clearTimeout(timer);
         const sizes: Record<string, number> = {};
         for (const entry of data) {
             if (entry.type === "file" && entry.size) {

@@ -24,6 +24,7 @@ interface Props {
     open: boolean;
     onClose: () => void;
     controller: CanvasControllerInstance;
+    disabled?: boolean;
 }
 
 interface RevisionGroup {
@@ -37,7 +38,7 @@ const buildGroups = (revisions: { auto: CanvasRevision[]; manual: CanvasRevision
     { key: "auto", title: t("canvas.versions.auto_group"), revisions: [...revisions.auto].reverse() }
 ];
 
-export const CanvasVersionsDrawer = ({ open, onClose, controller }: Props) => {
+export const CanvasVersionsDrawer = ({ open, onClose, controller, disabled = false }: Props) => {
     const { t, i18n } = useTranslation();
     const groups = buildGroups(controller.revisions, t);
 
@@ -48,7 +49,7 @@ export const CanvasVersionsDrawer = ({ open, onClose, controller }: Props) => {
 
     const previewHtml = (docJson: unknown) => {
         try {
-            return DOMPurify.sanitize(generateHTML(docJson as Parameters<typeof generateHTML>[0], canvasExtensions), { USE_PROFILES: { html: true } });
+            return DOMPurify.sanitize(generateHTML(docJson as Parameters<typeof generateHTML>[0], canvasExtensions()), { USE_PROFILES: { html: true } });
         } catch (error) {
             console.error("Canvas revision preview failed:", error);
             return "";
@@ -83,7 +84,7 @@ export const CanvasVersionsDrawer = ({ open, onClose, controller }: Props) => {
                                                 appearance="secondary"
                                                 size="small"
                                                 icon={<ArrowUndo24Regular />}
-                                                disabled={controller.isLocked}
+                                                disabled={disabled}
                                                 onClick={() => controller.restore(revision.revision)}
                                             >
                                                 {t("canvas.versions.restore")}

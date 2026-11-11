@@ -8,15 +8,19 @@ import asyncio
 import json
 import os
 import unittest
+from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, Mock, patch
 from uuid import uuid4
 
 import psycopg
+from alembic import command
+from alembic.config import Config
 from fastapi import FastAPI, HTTPException, Request
 from langchain_core.messages import AIMessage, HumanMessage
 from langgraph.checkpoint.postgres.aio import AsyncPostgresSaver
 from langgraph.graph import END, START, MessagesState, StateGraph
+from migrations.settings import get_migration_settings
 from psycopg import sql
 from psycopg.rows import dict_row
 from psycopg_pool import AsyncConnectionPool
@@ -69,6 +73,7 @@ class ConversationLifecyclePostgresTests(unittest.IsolatedAsyncioTestCase):
                 NAME=self.database,
             )
         )
+        await self.migrate_database()
         await PersistanceHelpers.init(self.settings)
         self.addAsyncCleanup(PersistanceHelpers.close)
         self.conversation_id = uuid4().hex
@@ -88,6 +93,21 @@ class ConversationLifecyclePostgresTests(unittest.IsolatedAsyncioTestCase):
                     sql.Identifier(self.database)
                 )
             )
+
+    async def migrate_database(self):
+        """Apply the same schema migration that production runs before core starts."""
+        migration_env = {
+            "MUCGPT_CORE_DB__HOST": self.connection_args["host"],
+            "MUCGPT_CORE_DB__PORT": str(self.connection_args["port"]),
+            "MUCGPT_CORE_DB__NAME": self.database,
+            "MUCGPT_CORE_DB__USER": self.connection_args["user"],
+            "MUCGPT_CORE_DB__PASSWORD": self.connection_args["password"],
+        }
+        with patch.dict(os.environ, migration_env):
+            get_migration_settings.cache_clear()
+            config = Config(str(Path(__file__).parents[2] / "alembic.ini"))
+            await asyncio.to_thread(command.upgrade, config, "head")
+        get_migration_settings.cache_clear()
 
     def request(self):
         return ChatCompletionRequest(

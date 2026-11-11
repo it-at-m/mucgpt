@@ -8,11 +8,13 @@ from sqlalchemy import pool, text
 from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import async_engine_from_config
 
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, project_root)
+sys.path.insert(0, os.path.join(project_root, "app"))
 
-from config.settings import get_settings  # noqa: E402
+from migrations.settings import get_migration_settings  # noqa: E402
+
 from database.database_models import Base  # noqa: E402
-from database.session import create_database_url  # noqa: E402
 
 config = context.config
 if config.config_file_name is not None:
@@ -22,7 +24,7 @@ target_metadata = Base.metadata
 
 
 def get_database_url() -> str:
-    return create_database_url(get_settings()).render_as_string(hide_password=False)
+    return get_migration_settings().database_url().render_as_string(hide_password=False)
 
 
 def run_migrations_offline() -> None:
@@ -40,6 +42,11 @@ def do_run_migrations(connection: Connection) -> None:
     context.configure(connection=connection, target_metadata=target_metadata)
     # Serialize migration workloads even if the deployment accidentally starts
     # more than one migration job for the same database.
+    lock_timeout = config.get_main_option("mucgpt.migration_lock_timeout", "30")
+    connection.execute(
+        text("SELECT set_config('lock_timeout', :timeout, false)"),
+        {"timeout": f"{lock_timeout}s"},
+    )
     connection.execute(
         text("SELECT pg_advisory_lock(hashtext('mucgpt-core-migrations'))")
     )
@@ -55,6 +62,9 @@ def do_run_migrations(connection: Connection) -> None:
 async def run_async_migrations() -> None:
     configuration = config.get_section(config.config_ini_section, {})
     configuration["sqlalchemy.url"] = get_database_url()
+    configuration["sqlalchemy.connect_args"] = {
+        "timeout": int(config.get_main_option("mucgpt.migration_db_timeout", "30"))
+    }
     connectable = async_engine_from_config(
         configuration,
         prefix="sqlalchemy.",

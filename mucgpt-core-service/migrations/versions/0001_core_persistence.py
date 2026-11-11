@@ -1,4 +1,4 @@
-"""Create core-owned persistence tables and retire legacy orphan state."""
+"""Create core-owned persistence and LangGraph checkpoint tables."""
 
 from collections.abc import Sequence
 
@@ -68,7 +68,91 @@ def upgrade() -> None:
             "chats", sa.Column("deleted_at", sa.DateTime(timezone=True), nullable=True)
         )
 
+    # This is the schema supplied by langgraph-checkpoint-postgres 3.2.0.
+    # Keep it in Alembic so runtime Pods only need data access privileges.
+    if "checkpoint_migrations" not in tables:
+        op.create_table(
+            "checkpoint_migrations",
+            sa.Column("v", sa.Integer(), nullable=False),
+            sa.PrimaryKeyConstraint("v"),
+        )
+    if "checkpoints" not in tables:
+        op.create_table(
+            "checkpoints",
+            sa.Column("thread_id", sa.Text(), nullable=False),
+            sa.Column("checkpoint_ns", sa.Text(), server_default="", nullable=False),
+            sa.Column("checkpoint_id", sa.Text(), nullable=False),
+            sa.Column("parent_checkpoint_id", sa.Text(), nullable=True),
+            sa.Column("type", sa.Text(), nullable=True),
+            sa.Column("checkpoint", postgresql.JSONB(), nullable=False),
+            sa.Column(
+                "metadata", postgresql.JSONB(), server_default="{}", nullable=False
+            ),
+            sa.PrimaryKeyConstraint("thread_id", "checkpoint_ns", "checkpoint_id"),
+        )
+    if "checkpoint_blobs" not in tables:
+        op.create_table(
+            "checkpoint_blobs",
+            sa.Column("thread_id", sa.Text(), nullable=False),
+            sa.Column("checkpoint_ns", sa.Text(), server_default="", nullable=False),
+            sa.Column("channel", sa.Text(), nullable=False),
+            sa.Column("version", sa.Text(), nullable=False),
+            sa.Column("type", sa.Text(), nullable=False),
+            sa.Column("blob", sa.LargeBinary(), nullable=True),
+            sa.PrimaryKeyConstraint("thread_id", "checkpoint_ns", "channel", "version"),
+        )
+    if "checkpoint_writes" not in tables:
+        op.create_table(
+            "checkpoint_writes",
+            sa.Column("thread_id", sa.Text(), nullable=False),
+            sa.Column("checkpoint_ns", sa.Text(), server_default="", nullable=False),
+            sa.Column("checkpoint_id", sa.Text(), nullable=False),
+            sa.Column("task_id", sa.Text(), nullable=False),
+            sa.Column("idx", sa.Integer(), nullable=False),
+            sa.Column("channel", sa.Text(), nullable=False),
+            sa.Column("type", sa.Text(), nullable=True),
+            sa.Column("blob", sa.LargeBinary(), nullable=False),
+            sa.Column("task_path", sa.Text(), server_default="", nullable=False),
+            sa.PrimaryKeyConstraint(
+                "thread_id", "checkpoint_ns", "checkpoint_id", "task_id", "idx"
+            ),
+        )
+
     checkpoint_tables = {"checkpoints", "checkpoint_writes", "checkpoint_blobs"}
+    checkpoint_write_columns = {
+        column["name"] for column in sa.inspect(bind).get_columns("checkpoint_writes")
+    }
+    if "task_path" not in checkpoint_write_columns:
+        op.add_column(
+            "checkpoint_writes",
+            sa.Column("task_path", sa.Text(), server_default="", nullable=False),
+        )
+
+    # PostgreSQL requires concurrent index creation outside a transaction.
+    with op.get_context().autocommit_block():
+        op.execute(
+            "CREATE INDEX CONCURRENTLY IF NOT EXISTS checkpoints_thread_id_idx "
+            "ON checkpoints(thread_id)"
+        )
+        op.execute(
+            "CREATE INDEX CONCURRENTLY IF NOT EXISTS checkpoint_blobs_thread_id_idx "
+            "ON checkpoint_blobs(thread_id)"
+        )
+        op.execute(
+            "CREATE INDEX CONCURRENTLY IF NOT EXISTS checkpoint_writes_thread_id_idx "
+            "ON checkpoint_writes(thread_id)"
+        )
+
+    # AsyncPostgresSaver.setup() uses this table to track the vendor migrations.
+    # Mark the schema above as complete so a third-party caller cannot rerun it.
+    for version in range(10):
+        op.execute(
+            sa.text(
+                "INSERT INTO checkpoint_migrations (v) VALUES (:version) "
+                "ON CONFLICT (v) DO NOTHING"
+            ).bindparams(version=version)
+        )
+
     if checkpoint_tables.issubset(set(sa.inspect(bind).get_table_names())):
         op.execute(
             "INSERT INTO chats (conversation_id, user_id, deleted_at) "
@@ -86,5 +170,9 @@ def upgrade() -> None:
 
 
 def downgrade() -> None:
+    op.drop_table("checkpoint_writes")
+    op.drop_table("checkpoint_blobs")
+    op.drop_table("checkpoints")
+    op.drop_table("checkpoint_migrations")
     op.drop_table("canvas_documents")
     op.drop_table("chats")

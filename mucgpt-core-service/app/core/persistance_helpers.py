@@ -109,7 +109,7 @@ class PersistanceHelpers:
 
     @staticmethod
     async def init(settings: Settings) -> None:
-        """Open persistence and migrate legacy state before publishing ready resources.
+        """Open persistence resources before publishing them as ready.
 
         Failed initialization closes provisional resources and leaves startup retryable.
         All old, unfenced writers must be drained before this migration runs.
@@ -126,7 +126,6 @@ class PersistanceHelpers:
         try:
             await pool.open()
             checkpointer = FencedPostgresSaver(conn=pool)
-            await checkpointer.setup()
         except BaseException:
             with CancelScope(shield=True):
                 await pool.close()

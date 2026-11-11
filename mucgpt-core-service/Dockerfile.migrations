@@ -21,4 +21,4 @@ ENV PATH="/app/.venv/bin:$PATH"
 ENV PYTHONWARNINGS="ignore"
 USER 1001
 
-CMD ["alembic", "upgrade", "head"]
+CMD ["python", "migrations/run_migrations.py"]

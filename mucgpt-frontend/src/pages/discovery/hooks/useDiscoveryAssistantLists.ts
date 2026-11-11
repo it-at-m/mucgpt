@@ -30,11 +30,15 @@ interface UseDiscoveryAssistantListsResult {
     setMyAssistantFilter: Dispatch<SetStateAction<MyAssistantFilter>>;
     setShowAllMyAssistants: Dispatch<SetStateAction<boolean>>;
     ownedAssistantIds: Set<string>;
+    /** True while the current lists form a complete, unfiltered picture of the user's assistants. */
+    hasLoadedSuccessfully: boolean;
     isSearching: boolean;
     filteredMyAssistants: AssistantCardData[];
     displayedMyAssistants: AssistantCardData[];
     hasHiddenMyAssistants: boolean;
     communityAssistants: AssistantCardData[];
+    /** Union of every assistant id that currently surfaces through a list. */
+    knownAssistantIds: Set<string>;
     removeYoursAssistant: (assistantId: string) => void;
     removeSubscribedAssistant: (assistantId: string) => void;
     removeAssistantFromLists: (assistantId: string) => void;
@@ -95,6 +99,7 @@ export const useDiscoveryAssistantLists = ({
     communityAssistantStorageService
 }: UseDiscoveryAssistantListsParams): UseDiscoveryAssistantListsResult => {
     const hasLoadedOnceRef = useRef(false);
+    const [hasLoadedSuccessfully, setHasLoadedSuccessfully] = useState<boolean>(false);
     const [allAssistants, setAllAssistants] = useState<AssistantCardData[]>([]);
     const [yoursAssistants, setYoursAssistants] = useState<AssistantCardData[]>([]);
     const [subscribedAssistants, setSubscribedAssistants] = useState<AssistantCardData[]>([]);
@@ -302,6 +307,9 @@ export const useDiscoveryAssistantLists = ({
                 ];
                 setSubscribedAssistants(subscribedData);
                 hasLoadedOnceRef.current = true;
+                // Only an unfiltered fetch yields a complete knownAssistantIds picture;
+                // filtered runs keep the last correct orphan result in place.
+                setHasLoadedSuccessfully(!debouncedNormalizedSearchText && myAssistantFilter === "all");
             } catch (error) {
                 if (error instanceof Error && error.name === "AbortError") {
                     return;
@@ -375,6 +383,11 @@ export const useDiscoveryAssistantLists = ({
         return allAssistants.filter(assistant => !ownedAssistantIds.has(assistant.id) && !subscribedAssistantIds.has(assistant.id));
     }, [allAssistants, ownedAssistantIds, subscribedAssistantIds]);
 
+    const knownAssistantIds = useMemo(
+        () => new Set([...allAssistants, ...yoursAssistants, ...subscribedAssistants].map(assistant => assistant.id)),
+        [allAssistants, yoursAssistants, subscribedAssistants]
+    );
+
     const displayedMyAssistants = useMemo(() => {
         if (isSearching || showAllMyAssistants) return filteredMyAssistants;
         return filteredMyAssistants.slice(0, MY_ASSISTANTS_PREVIEW_LIMIT);
@@ -412,11 +425,13 @@ export const useDiscoveryAssistantLists = ({
         setMyAssistantFilter,
         setShowAllMyAssistants,
         ownedAssistantIds,
+        hasLoadedSuccessfully,
         isSearching,
         filteredMyAssistants,
         displayedMyAssistants,
         hasHiddenMyAssistants,
         communityAssistants,
+        knownAssistantIds,
         removeYoursAssistant,
         removeSubscribedAssistant,
         removeAssistantFromLists

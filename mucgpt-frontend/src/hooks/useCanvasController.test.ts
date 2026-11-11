@@ -28,6 +28,7 @@ vi.mock("../service/canvasStorage", async importOriginal => {
 const emptyRevisions = (): CanvasRevisions => ({ auto: [], manual: [] });
 
 // Minimal renderHook replacement — @testing-library/react is not a project dependency.
+const createdRoots: Root[] = [];
 const renderController = () => {
     let latest: CanvasControllerInstance;
     let root: Root | undefined;
@@ -39,7 +40,10 @@ const renderController = () => {
     return {
         render(id: string | undefined) {
             act(() => {
-                if (!root) root = createRoot(container);
+                if (!root) {
+                    root = createRoot(container);
+                    createdRoots.push(root);
+                }
                 root.render(createElement(Probe, { id }));
             });
         },
@@ -49,10 +53,13 @@ const renderController = () => {
             });
         },
         async dispose() {
+            const current = root;
             await act(async () => {
-                root?.unmount();
+                current?.unmount();
                 await new Promise(resolve => setTimeout(resolve, 5));
             });
+            const index = current ? createdRoots.indexOf(current) : -1;
+            if (index >= 0) createdRoots.splice(index, 1);
         },
         get current(): CanvasControllerInstance {
             return latest!;
@@ -71,9 +78,18 @@ const editorFor = (markdown: string): Editor => {
     return editor;
 };
 
-afterEach(() => {
+afterEach(async () => {
     for (const editor of createdEditors.splice(0)) {
         if (!editor.isDestroyed) editor.destroy();
+    }
+    // A leaked React root keeps the hook's tiptap editor (and its prosemirror
+    // DOMObserver timer) alive past this file's jsdom teardown, producing an
+    // unhandled "document is not defined" error that fails the whole run.
+    for (const root of createdRoots.splice(0)) {
+        await act(async () => {
+            root.unmount();
+        });
+        await new Promise(resolve => setTimeout(resolve, 5));
     }
 });
 
@@ -322,6 +338,36 @@ describe("loading stored revisions", () => {
             auto: [{ revision: 2, doc_json: { type: "doc" }, timestamp: 2, source: "agent" }],
             manual: []
         });
+    });
+
+    it("restores the newest revision when the current canvas is empty", async () => {
+        loadCanvasStateMock.mockResolvedValue("");
+        loadCanvasRevisionsMock.mockResolvedValue({
+            auto: [
+                {
+                    revision: 1,
+                    doc_json: { type: "doc", content: [{ type: "paragraph", content: [{ type: "text", text: "Older" }] }] },
+                    timestamp: 1,
+                    source: "agent"
+                },
+                {
+                    revision: 2,
+                    doc_json: { type: "doc", content: [{ type: "paragraph", content: [{ type: "text", text: "Newest" }] }] },
+                    timestamp: 2,
+                    source: "agent"
+                }
+            ],
+            manual: []
+        });
+
+        const harness = renderController();
+        harness.render(undefined);
+
+        await harness.rerender("conv-1");
+        await new Promise(resolve => setTimeout(resolve, 0));
+
+        expect(harness.current.isOpen).toBe(true);
+        expect(harness.current.getMarkdown()).toBe("Newest");
     });
 });
 

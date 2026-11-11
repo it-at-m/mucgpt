@@ -9,6 +9,7 @@ import {
     updateCommunityAssistantApi
 } from "../../api/assistant-client";
 import { CommunityAssistantStorageService } from "../../service/communityassistantstorage";
+import { ApiError } from "../../api/fetch-utils";
 import {
     mapAssistantResponseToSnapshot,
     mapCommunitySnapshotToAssistant,
@@ -18,7 +19,7 @@ import {
 
 export interface AssistantStrategy {
     loadAssistantConfig(assistantId: string, assistantStorageService: AssistantStorageService): Promise<Assistant | undefined>;
-    deleteAssistant(assistantId: string, assistantStorageService: AssistantStorageService): Promise<void>;
+    deleteAssistant(assistantId: string, assistantStorageService: AssistantStorageService, keepChats?: boolean): Promise<void>;
     updateAssistant?(
         assistantId: string,
         newAssistant: Assistant
@@ -39,8 +40,11 @@ export class LocalAssistantStrategy implements AssistantStrategy {
         return await assistantStorageService.getAssistantConfig(assistantId);
     }
 
-    async deleteAssistant(assistantId: string, assistantStorageService: AssistantStorageService): Promise<void> {
-        await assistantStorageService.deleteConfigAndChatsForAssistant(assistantId);
+    async deleteAssistant(assistantId: string, assistantStorageService: AssistantStorageService, keepChats = true): Promise<void> {
+        if (!keepChats) {
+            await assistantStorageService.deleteChatsForAssistant(assistantId);
+        }
+        await assistantStorageService.deleteConfigForAssistant(assistantId);
     }
 
     async updateAssistant(
@@ -65,7 +69,9 @@ export class LocalAssistantStrategy implements AssistantStrategy {
             compliance_confirmation: newAssistant.compliance_confirmation
         });
 
-        await assistantStorageService.deleteConfigAndChatsForAssistant(assistantId);
+        // Keep chat history: move it to the newly created assistant instead of deleting it.
+        await assistantStorageService.transferChatsToAssistant(assistantId, response.id);
+        await assistantStorageService.deleteConfigForAssistant(assistantId);
         window.location.href = `/#/owned/communityassistant/${response.id}`;
 
         return {
@@ -92,14 +98,17 @@ export class CommunityAssistantStrategy implements AssistantStrategy {
                 window.location.href = `/#/deleted/communityassistant/${assistantId}${query}`;
                 return mapCommunitySnapshotToAssistant(snapshot);
             }
+            // A deleted assistant without a local snapshot still has chat history
+            // worth showing; signal the missing config instead of failing the page.
+            if (error instanceof ApiError && error.status === 404) {
+                return undefined;
+            }
             throw error;
         }
     }
 
-    async deleteAssistant(assistantId: string, assistantStorageService: AssistantStorageService): Promise<void> {
-        await assistantStorageService.deleteChatsForAssistant(assistantId);
+    async deleteAssistant(assistantId: string): Promise<void> {
         await unsubscribeFromAssistantApi(assistantId);
-        await this.communityStorageService.deleteConfigForAssistant(assistantId);
     }
 }
 
@@ -138,8 +147,10 @@ export class OwnedCommunityAssistantStrategy implements AssistantStrategy {
         };
     }
 
-    async deleteAssistant(assistantId: string, assistantStorageService: AssistantStorageService): Promise<void> {
-        await assistantStorageService.deleteChatsForAssistant(assistantId);
+    async deleteAssistant(assistantId: string, assistantStorageService: AssistantStorageService, keepChats = true): Promise<void> {
+        if (!keepChats) {
+            await assistantStorageService.deleteChatsForAssistant(assistantId);
+        }
         await deleteCommunityAssistantApi(assistantId);
         // Also clean up any local copy that may exist from before the assistant was published
         await assistantStorageService.deleteConfigForAssistant(assistantId);

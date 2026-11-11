@@ -546,6 +546,16 @@ class ConversationRenameRequest(BaseModel):
         return value
 
 
+class ConversationAssistantRebindRequest(BaseModel):
+    """Target assistant for re-binding an existing conversation."""
+
+    assistant_id: str = Field(
+        ...,
+        min_length=1,
+        description="ID of the assistant the conversation should be associated with.",
+    )
+
+
 class ConversationMetadata(BaseModel):
     """One row of the caller's conversation list (metadata only, no messages)."""
 

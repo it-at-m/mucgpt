@@ -9,3 +9,4 @@ export { useCreateAssistantState } from "./hooks/useCreateAssistantState";
 
 export { ExpandableTextarea } from "./ExpandableTextarea";
 export { CloseConfirmationDialog } from "./CloseConfirmationDialog";
+export { PendingCreateDraftConfirmDialog } from "./PendingCreateDraftConfirmDialog";

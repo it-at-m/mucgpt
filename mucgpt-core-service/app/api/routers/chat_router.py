@@ -12,6 +12,7 @@ from api.api_models import (
     ChatCompletionRequest,
     ChatCompletionResponse,
     ChatTitleResult,
+    ConversationAssistantRebindRequest,
     ConversationMessage,
     ConversationMetadata,
     ConversationRenameRequest,
@@ -278,6 +279,31 @@ async def rename_conversation(
             raise HTTPException(status_code=403, detail="Conversation access denied")
         raise HTTPException(status_code=404, detail="Conversation not found")
     return ChatTitleResult(title=request.title)
+
+
+@router.patch(
+    "/conversations/{conversation_id}/assistant",
+    summary="Re-bind conversation to an assistant",
+    status_code=204,
+    responses={403: {"description": "Forbidden"}, 404: {"description": "Not found"}},
+)
+async def rebind_conversation_assistant(
+    conversation_id: str,
+    request: ConversationAssistantRebindRequest,
+    user_info: Annotated[AuthenticationResult, Depends(authenticate_user)],
+) -> None:
+    """Point an existing conversation's assistant association at another assistant.
+
+    Used when chats move to a different assistant; never creates or revives
+    conversations.
+    """
+    rebound = await PersistanceHelpers.set_conversation_assistant(
+        conversation_id, user_info.user_id, request.assistant_id
+    )
+    if not rebound:
+        if await PersistanceHelpers.conversation_exists(conversation_id):
+            raise HTTPException(status_code=403, detail="Conversation access denied")
+        raise HTTPException(status_code=404, detail="Conversation not found")
 
 
 @router.delete(

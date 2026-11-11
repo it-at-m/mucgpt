@@ -487,6 +487,66 @@ class TestChatRouter:
         assert response.status_code == 422
         rename.assert_not_awaited()
 
+    def test_rebind_conversation_assistant(
+        self, test_client: TestClient, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        from core.persistance_helpers import PersistanceHelpers
+
+        rebind = AsyncMock(return_value=True)
+        monkeypatch.setattr(PersistanceHelpers, "set_conversation_assistant", rebind)
+        response = test_client.patch(
+            f"/v1/conversations/{DUMMY_CONVERSATION_ID}/assistant",
+            json={"assistant_id": "assistant-456"},
+        )
+
+        assert response.status_code == 204, response.text
+        rebind.assert_awaited_once_with(
+            DUMMY_CONVERSATION_ID, DUMMY_USER_ID, "assistant-456"
+        )
+        PersistanceHelpers.verify_user_in_conversation.assert_not_awaited()
+
+    @pytest.mark.parametrize("exists, status", [(True, 403), (False, 404)])
+    def test_rebind_conversation_assistant_rejected(
+        self,
+        test_client: TestClient,
+        monkeypatch: pytest.MonkeyPatch,
+        exists: bool,
+        status: int,
+    ) -> None:
+        from core.persistance_helpers import PersistanceHelpers
+
+        monkeypatch.setattr(
+            PersistanceHelpers,
+            "set_conversation_assistant",
+            AsyncMock(return_value=False),
+        )
+        monkeypatch.setattr(
+            PersistanceHelpers, "conversation_exists", AsyncMock(return_value=exists)
+        )
+        response = test_client.patch(
+            f"/v1/conversations/{DUMMY_CONVERSATION_ID}/assistant",
+            json={"assistant_id": "assistant-456"},
+        )
+        assert response.status_code == status
+        PersistanceHelpers.verify_user_in_conversation.assert_not_awaited()
+
+    @pytest.mark.parametrize(
+        "body",
+        [{}, {"assistant_id": ""}, {"assistant_id": None}, {"assistant_id": 123}],
+    )
+    def test_rebind_conversation_assistant_invalid_body(
+        self, test_client: TestClient, monkeypatch: pytest.MonkeyPatch, body: dict
+    ) -> None:
+        from core.persistance_helpers import PersistanceHelpers
+
+        rebind = AsyncMock()
+        monkeypatch.setattr(PersistanceHelpers, "set_conversation_assistant", rebind)
+        response = test_client.patch(
+            f"/v1/conversations/{DUMMY_CONVERSATION_ID}/assistant", json=body
+        )
+        assert response.status_code == 422
+        rebind.assert_not_awaited()
+
     def test_get_conversation_messages(self, test_client: TestClient) -> None:
         response = test_client.get(
             f"/v1/conversations/{DUMMY_CONVERSATION_ID}/messages"

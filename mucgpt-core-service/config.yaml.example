@@ -169,6 +169,12 @@ sso:
 #   max_pixels: 20000000              # decompression-bomb bound
 #   max_hydration_bytes: 41943040     # total image bytes hydrated per model call (40 MiB)
 #   unbound_expiry_seconds: 86400     # draft uploads expire after 24h
+#   # Separate tracing opt-in (process-wide): when false (default), no image
+#   # bytes reach Langfuse traces. When true, model generations carry native
+#   # Langfuse media references; self-hosted Langfuse then requires its own
+#   # media object storage (LANGFUSE_S3_MEDIA_UPLOAD_*), and deleted
+#   # conversations do not delete that second media copy.
+#   langfuse_media_enabled: false
 #   s3:
 #     bucket: "mucgpt-chat-images"
 #     endpoint_url: "http://rustfs:9000"  # omit for AWS

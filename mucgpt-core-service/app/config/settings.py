@@ -584,6 +584,12 @@ class ImageConfig(BaseModel):
     max_pixels: PositiveInt = 20_000_000
     max_hydration_bytes: PositiveInt = 40 * 1024 * 1024
     unbound_expiry_seconds: PositiveInt = 24 * 60 * 60
+    # Separate data-protection opt-in: when false (default), image media is
+    # never uploaded to or rendered in Langfuse traces. When true, model
+    # generations use native Langfuse media references (requires self-hosted
+    # Langfuse media object storage or Langfuse Cloud, and creates a second
+    # media copy with its own retention policy).
+    langfuse_media_enabled: bool = False
     s3: ImageStorageConfig | None = None
 
     @model_validator(mode="after")

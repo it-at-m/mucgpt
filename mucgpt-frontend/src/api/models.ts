@@ -152,6 +152,8 @@ export interface Model {
     input_cost_per_token?: number | null;
     output_cost_per_token?: number | null;
     supports_reasoning?: boolean | null;
+    /** Explicit per-model opt-in for image input; absent means false (fail closed). */
+    supports_vision?: boolean;
 }
 
 export interface Labels {

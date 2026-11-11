@@ -99,7 +99,10 @@ const CONFIG_RESPONSE: ApplicationConfig = {
             knowledge_cut_off: "2024-07-01",
             input_cost_per_token: 3e-7,
             output_cost_per_token: 9e-7,
-            supports_reasoning: true
+            supports_reasoning: true,
+            // One vision and one non-vision model in the mock; AnnonymGPT
+            // intentionally omits the flag to exercise fail-closed behavior.
+            supports_vision: true
         },
         {
             id: "unknown-gpt",
@@ -111,7 +114,8 @@ const CONFIG_RESPONSE: ApplicationConfig = {
             knowledge_cut_off: "2024-07-01",
             input_cost_per_token: 1.71e-6,
             output_cost_per_token: 6.84e-6,
-            supports_reasoning: false
+            supports_reasoning: false,
+            supports_vision: false
         },
         {
             id: "AnnonymGPT",

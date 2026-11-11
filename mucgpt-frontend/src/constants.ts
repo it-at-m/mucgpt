@@ -11,7 +11,8 @@ export const DEFAULT_APP_CONFIG: ApplicationConfig = {
             knowledge_cut_off: "",
             input_cost_per_token: 1,
             output_cost_per_token: 1,
-            supports_reasoning: null
+            supports_reasoning: null,
+            supports_vision: false
         },
         {
             id: "UnknownGPT",
@@ -20,7 +21,8 @@ export const DEFAULT_APP_CONFIG: ApplicationConfig = {
             knowledge_cut_off: "",
             input_cost_per_token: 1,
             output_cost_per_token: 1,
-            supports_reasoning: null
+            supports_reasoning: null,
+            supports_vision: false
         },
         {
             id: "AnnonymGPT",
@@ -29,7 +31,8 @@ export const DEFAULT_APP_CONFIG: ApplicationConfig = {
             knowledge_cut_off: "",
             input_cost_per_token: 1,
             output_cost_per_token: 1,
-            supports_reasoning: null
+            supports_reasoning: null,
+            supports_vision: false
         }
     ],
     env_name: "MUC tschibidi-C",

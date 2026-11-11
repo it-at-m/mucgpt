@@ -107,6 +107,7 @@ async def get_config(user_info=Depends(authenticate_user)) -> ConfigResponse:
         image_input=ImageInputDTO(
             enabled=settings.image_input.enabled,
             max_upload_bytes=settings.image_input.max_upload_bytes,
+            max_images_per_message=settings.image_input.max_images_per_message,
             max_pixels=settings.image_input.max_pixels,
             allowed_mime_types=list(ALLOWED_IMAGE_MIME_TYPES),
         ),

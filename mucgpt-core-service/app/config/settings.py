@@ -580,7 +580,9 @@ class ImageConfig(BaseModel):
 
     enabled: bool = False
     max_upload_bytes: PositiveInt = 10 * 1024 * 1024
+    max_images_per_message: PositiveInt = 5
     max_pixels: PositiveInt = 20_000_000
+    max_hydration_bytes: PositiveInt = 40 * 1024 * 1024
     unbound_expiry_seconds: PositiveInt = 24 * 60 * 60
     s3: ImageStorageConfig | None = None
 
@@ -590,6 +592,16 @@ class ImageConfig(BaseModel):
         if self.enabled and (self.s3 is None or not self.s3.bucket):
             raise ValueError(
                 "image_input.enabled requires image_input.s3.bucket"
+            )
+        return self
+
+    @model_validator(mode="after")
+    def check_hydration_budget(self) -> "ImageConfig":
+        """The per-run hydration budget must cover at least one image."""
+        if self.max_hydration_bytes < self.max_upload_bytes:
+            raise ValueError(
+                "image_input.max_hydration_bytes must be at least "
+                "image_input.max_upload_bytes"
             )
         return self
 

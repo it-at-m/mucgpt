@@ -165,7 +165,9 @@ sso:
 # image_input:
 #   enabled: false
 #   max_upload_bytes: 10485760        # 10 MiB per image
+#   max_images_per_message: 5
 #   max_pixels: 20000000              # decompression-bomb bound
+#   max_hydration_bytes: 41943040     # total image bytes hydrated per model call (40 MiB)
 #   unbound_expiry_seconds: 86400     # draft uploads expire after 24h
 #   s3:
 #     bucket: "mucgpt-chat-images"

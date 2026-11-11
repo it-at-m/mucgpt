@@ -13,7 +13,6 @@ from pydantic import (
 
 from api.exception import ProviderErrorPayload
 from config.settings import ReasoningEffort, get_settings
-from core.image_refs import parse_managed_image_url
 from core.image_validation import ALLOWED_IMAGE_MIME_TYPES
 
 
@@ -753,6 +752,9 @@ class ImageInputDTO(BaseModel):
     )
     max_upload_bytes: PositiveInt = Field(
         10 * 1024 * 1024, description="Maximum image size in bytes."
+    )
+    max_images_per_message: PositiveInt = Field(
+        5, description="Maximum images per user message."
     )
     max_pixels: PositiveInt = Field(
         20_000_000, description="Maximum decoded pixels (decompression-bomb bound)."

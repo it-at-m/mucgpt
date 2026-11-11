@@ -54,6 +54,48 @@ def test_prepare_run_uses_default_langfuse_prompt_unless_overridden(
     assert override_context.langfuse_prompt is override
 
 
+def test_prepare_run_builds_image_hydrator_only_for_managed_images(
+    monkeypatch: pytest.MonkeyPatch,
+    user_info: AuthenticationResult,
+    default_prompt: ResolvedPrompt,
+) -> None:
+    from core.image_hydration import ImageHydrator
+
+    monkeypatch.setattr("agent.deep_agent.create_deep_agent", MagicMock())
+    built = MagicMock(return_value=MagicMock(spec=ImageHydrator))
+    monkeypatch.setattr("agent.deep_agent.build_image_hydrator", built)
+    monkeypatch.setattr(
+        "agent.deep_agent.contains_managed_images",
+        lambda messages: any("image" in str(message) for message in messages),
+    )
+    graph = _ConfiguredLangChainDeepAgentGraph(
+        llm=FakeListChatModel(responses=["response"]),
+        tools=[],
+        logger=MagicMock(),
+    )
+
+    managed_messages = ["message with image"]
+    messages, _, context = graph._prepare_run(
+        {"messages": managed_messages},
+        config={
+            "configurable": {
+                "user_info": user_info,
+                "thread_id": "conv-1",
+            }
+        },
+    )
+    built.assert_called_once_with(user_info, "conv-1", False)
+    assert context.image_hydrator is built.return_value
+
+    built.reset_mock()
+    _, _, context = graph._prepare_run(
+        {"messages": ["plain text"]},
+        config={"configurable": {"user_info": user_info}},
+    )
+    built.assert_not_called()
+    assert context.image_hydrator is None
+
+
 @pytest.mark.asyncio
 async def test_ainvoke_reuses_compiled_agent_for_tool_changes(
     monkeypatch: pytest.MonkeyPatch,

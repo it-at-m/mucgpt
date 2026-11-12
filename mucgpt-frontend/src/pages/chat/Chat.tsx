@@ -164,6 +164,7 @@ const Chat = () => {
     const lastAnswerRef = useRef<HTMLDivElement | null>(null);
     const isFirstRender = useRef(true);
     const activeChatRef = useRef(active_chat);
+    const documentSelectionRequestTokenRef = useRef(0);
     const isLoadingRef = useRef(false);
 
     const setLoadingState = useCallback((nextLoading: boolean) => {
@@ -178,6 +179,7 @@ const Chat = () => {
     // Update activeChatRef whenever active_chat changes
     useEffect(() => {
         activeChatRef.current = active_chat;
+        documentSelectionRequestTokenRef.current += 1;
     }, [active_chat]);
 
     // Storage Service mit useMemo
@@ -225,6 +227,7 @@ const Chat = () => {
     const loadChat = useCallback(
         async (id: string) => {
             try {
+                ++documentSelectionRequestTokenRef.current;
                 setError(undefined);
                 const chat = await loadConversation(storageService, id, id, { system: "", creativity: CREATIVITY_LOW });
                 if (chat) {
@@ -480,6 +483,7 @@ const Chat = () => {
             hashParams.delete("question");
             hashParams.delete("tools");
             hashParams.delete("data");
+            hashParams.delete("documents");
             hashParams.delete("new");
             hashParams.delete("chatId");
             hashParams.delete("canvas");
@@ -494,6 +498,7 @@ const Chat = () => {
             searchParams.delete("question");
             searchParams.delete("tools");
             searchParams.delete("data");
+            searchParams.delete("documents");
             searchParams.delete("new");
             searchParams.delete("chatId");
             searchParams.delete("canvas");
@@ -642,14 +647,17 @@ const Chat = () => {
 
         if (documentsFromUrl && !chatIdFromUrl) {
             const ids = documentsFromUrl.split(",");
+            const documentSelectionRequestToken = documentSelectionRequestTokenRef.current;
             listDocumentsApi()
                 .then(documents => {
+                    if (documentSelectionRequestToken !== documentSelectionRequestTokenRef.current) return;
                     const selected = documents.filter(document => ids.includes(document.id) && document.status === "ready");
                     if (selected.length !== new Set(ids).size) throw new Error("Selected documents are unavailable.");
                     setUploadedData(previous => [...previous.filter(document => document.source !== "library"), ...selected.map(documentToUploadedData)]);
                     setIsDocumentSelectionReady(true);
                 })
                 .catch(error => {
+                    if (documentSelectionRequestToken !== documentSelectionRequestTokenRef.current) return;
                     // The pending question must not stall forever: proceed without
                     // documents and surface why the selection was not applied.
                     setError(error);

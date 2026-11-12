@@ -1,5 +1,5 @@
 import { API_BASE } from "./core-client";
-import type { ChatResponse } from "./models";
+import type { ChatContentPart, ChatResponse } from "./models";
 import { ApiError, deleteConfig, getConfig, handleApiRequest, handleRedirect, patchConfig } from "./fetch-utils";
 
 export interface ConversationMetadata {
@@ -14,7 +14,8 @@ export interface ConversationMetadata {
 
 export interface ConversationMessage {
     role: "system" | "user" | "assistant";
-    content: string;
+    /** Text, or text/image content parts for image-bearing user turns. */
+    content: string | ChatContentPart[];
     usage?: Pick<
         ChatResponse,
         | "context_tokens"

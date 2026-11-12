@@ -575,6 +575,9 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
         });
     }, [assistantStorageService, assistant_id, refreshUnifiedHistory]);
 
+    // Images of the in-flight turn, shown in loading/error states (#1398).
+    const lastImagesRef = useRef<ImageAttachment[] | undefined>(undefined);
+
     // callApi-Funktion
     const callApi = useCallback(
         /** Sends one question through the strategy (streaming) and dispatches the answers. */
@@ -585,6 +588,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
             }
 
             setLastQuestionValue(question);
+            lastImagesRef.current = images && images.length > 0 ? images : undefined;
             if (error) setError(undefined);
             setIsLoadingValue(true);
             setIsStreaming(true);
@@ -1266,6 +1270,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                 retryUnavailableReason={!conversationActions.canRetry && !historyReadOnly ? t("components.answer.persisted_actions_unavailable") : undefined}
                 chatMessageStreamEnd={chatMessageStreamEnd}
                 lastQuestionRef={lastQuestionRef}
+                lastImagesRef={lastImagesRef}
                 onRollbackError={() => {
                     setQuestion(lastQuestion);
                     setError(undefined);

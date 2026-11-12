@@ -361,10 +361,14 @@ const Chat = () => {
         [t]
     );
 
+    // Images of the in-flight turn, shown in loading/error states (#1398).
+    const lastImagesRef = useRef<ImageAttachment[] | undefined>(undefined);
+
     // API Request mit optimiertem State Management
     const callApi = useCallback(
         async (question: string, system?: string, dataSources?: DataSource[]) => {
             lastQuestionRef.current = question;
+            lastImagesRef.current = images && images.length > 0 ? images : undefined;
             setError(undefined);
             setLoadingState(true);
             setIsStreaming(true);
@@ -922,6 +926,7 @@ const Chat = () => {
                 retryUnavailableReason={!conversationActions.canRetry ? t("components.answer.persisted_actions_unavailable") : undefined}
                 chatMessageStreamEnd={chatMessageStreamEnd}
                 lastQuestionRef={lastQuestionRef}
+                lastImagesRef={lastImagesRef}
                 onRollbackError={() => {
                     setQuestion(lastQuestionRef.current);
                     setError(undefined);

@@ -40,6 +40,13 @@ export type DataSource = {
     metadata?: Record<string, string | number | boolean | null | undefined>;
 };
 
+/**
+ * OpenAI-style content parts as returned by the conversation-history API for
+ * image-bearing user turns (#1398). Managed image references use
+ * mucgpt-image:// URLs; no bytes or foreign URLs are ever emitted.
+ */
+export type ChatContentPart = { type: "text"; text: string } | { type: "image_url"; image_url: { url: string; detail?: string } };
+
 /** Managed metadata of one uploaded chat image (server-generated id). */
 export type UploadedImage = {
     id: string;

@@ -104,6 +104,8 @@ def test_create_assistant_success(sample_assistant_create, test_client):
     )
 
     # Check examples with proper model access
+    assert assistant_response.latest_version.examples is not None
+    assert sample_assistant_create.examples is not None
     assert len(assistant_response.latest_version.examples) == len(
         sample_assistant_create.examples
     )
@@ -116,6 +118,8 @@ def test_create_assistant_success(sample_assistant_create, test_client):
         assert example.value == expected_example.value
 
     # Check quick_prompts with proper model access
+    assert assistant_response.latest_version.quick_prompts is not None
+    assert sample_assistant_create.quick_prompts is not None
     assert len(assistant_response.latest_version.quick_prompts) == len(
         sample_assistant_create.quick_prompts
     )
@@ -618,6 +622,8 @@ def test_create_assistant_with_multiple_examples(test_client):
     response_data = response.json()
     assistant_response = AssistantResponse.model_validate(response_data)
 
+    assert assistant_response.latest_version.examples is not None
+    assert assistant_data.examples is not None
     assert len(assistant_response.latest_version.examples) == 3
     for i, example in enumerate(assistant_response.latest_version.examples):
         expected_example = assistant_data.examples[i]
@@ -660,6 +666,8 @@ def test_create_assistant_with_multiple_quick_prompts(test_client):
     response_data = response.json()
     assistant_response = AssistantResponse.model_validate(response_data)
 
+    assert assistant_response.latest_version.quick_prompts is not None
+    assert assistant_data.quick_prompts is not None
     assert len(assistant_response.latest_version.quick_prompts) == 3
     for i, qp in enumerate(assistant_response.latest_version.quick_prompts):
         expected_qp = assistant_data.quick_prompts[i]
@@ -783,10 +791,12 @@ def test_create_assistant_hierarchical_access_inheritance(test_client):
     response_data = response.json()
     assistant_response = AssistantResponse.model_validate(response_data)
 
+    assert assistant_response.hierarchical_access is not None
+    assert assistant_data.hierarchical_access is not None
     assert set(assistant_response.hierarchical_access) == set(
         assistant_data.hierarchical_access
     )
-    assert set(assistant_response.latest_version.hierarchical_access) == set(
+    assert set(assistant_response.latest_version.hierarchical_access or []) == set(
         assistant_data.hierarchical_access
     )
 
@@ -810,6 +820,7 @@ def test_create_assistant_owner_auto_inclusion(test_client):
 
     # The creating user should be automatically added to owners
     # Assuming the test user has some identifier - adjust based on your test setup
+    assert assistant_response.owner_ids is not None
     assert len(assistant_response.owner_ids) >= 1
     assert "other_user_456" in assistant_response.owner_ids
 
@@ -1333,6 +1344,7 @@ def test_update_assistant_with_examples(created_assistant_for_update, test_clien
     updated_response = AssistantResponse.model_validate(response_data)
 
     # Verify examples were updated
+    assert updated_response.latest_version.examples is not None
     assert len(updated_response.latest_version.examples) == 2
     assert updated_response.latest_version.examples[0].text == "New Example 1"
     assert updated_response.latest_version.examples[1].text == "New Example 2"
@@ -1369,6 +1381,7 @@ def test_update_assistant_with_quick_prompts(created_assistant_for_update, test_
     updated_response = AssistantResponse.model_validate(response_data)
 
     # Verify quick prompts were updated
+    assert updated_response.latest_version.quick_prompts is not None
     assert len(updated_response.latest_version.quick_prompts) == 2
     assert updated_response.latest_version.quick_prompts[0].label == "Summarize"
     assert updated_response.latest_version.quick_prompts[1].label == "Explain"
@@ -1396,8 +1409,12 @@ def test_update_assistant_hierarchical_access(
     updated_response = AssistantResponse.model_validate(response_data)
 
     # Verify hierarchical access was updated
-    assert set(updated_response.hierarchical_access) == {"HR", "MANAGEMENT", "FINANCE"}
-    assert set(updated_response.latest_version.hierarchical_access) == {
+    assert set(updated_response.hierarchical_access or []) == {
+        "HR",
+        "MANAGEMENT",
+        "FINANCE",
+    }
+    assert set(updated_response.latest_version.hierarchical_access or []) == {
         "HR",
         "MANAGEMENT",
         "FINANCE",
@@ -1424,6 +1441,7 @@ def test_update_assistant_owner_ids(created_assistant_for_update, test_client):
     updated_response = AssistantResponse.model_validate(response_data)
 
     # Verify owner IDs were updated (note: current user should still be included)
+    assert updated_response.owner_ids is not None
     assert "new_owner_123" in updated_response.owner_ids
     assert "another_owner_456" in updated_response.owner_ids
 
@@ -2128,6 +2146,7 @@ async def test_update_assistant_modify_owners(test_client, test_db_session):
 
     # Verify initial owners
     initial_owners = await assistant_repo.get_with_owners(assistant.id)
+    assert initial_owners is not None
     initial_owner_ids = [owner.user_id for owner in initial_owners.owners]
     assert "test_user_123" in initial_owner_ids
     assert "initial_owner_1" in initial_owner_ids
@@ -2158,6 +2177,7 @@ async def test_update_assistant_modify_owners(test_client, test_db_session):
 
     # Verify owners were updated (note: current user should still be included)
     updated_owner_ids = updated_response.owner_ids
+    assert updated_owner_ids is not None
     assert "test_user_123" in updated_owner_ids
     assert "initial_owner_1" in updated_owner_ids
     assert "new_owner_3" in updated_owner_ids
@@ -2224,6 +2244,7 @@ async def test_update_assistant_multiple_owners_can_update(
     assert updated_response_1.latest_version.version == 2
 
     # Verify all owners are still preserved
+    assert updated_response_1.owner_ids is not None
     assert len(updated_response_1.owner_ids) == 3
     assert "test_user_123" in updated_response_1.owner_ids
     assert "owner_2" in updated_response_1.owner_ids
@@ -2309,6 +2330,7 @@ async def test_get_all_assistants_single_assistant(test_client, test_db_session)
     assert assistant_response.id == assistant.id
     assert assistant_response.latest_version.name == "Single Test Assistant"
     assert assistant_response.latest_version.version == 1
+    assert assistant_response.owner_ids is not None
     assert "test_user_123" in assistant_response.owner_ids
 
 
@@ -2559,6 +2581,7 @@ async def test_get_all_assistants_with_complex_data(test_client, test_db_session
     # Check basic info
     assert assistant_response.latest_version.name == "Complex Assistant"
     assert assistant_response.latest_version.creativity == "high"
+    assert assistant_response.latest_version.examples is not None
     assert len(assistant_response.latest_version.examples) == 3
     example_texts = [ex.text for ex in assistant_response.latest_version.examples]
     assert "Example 1" in example_texts
@@ -2566,21 +2589,25 @@ async def test_get_all_assistants_with_complex_data(test_client, test_db_session
     assert "Example 3" in example_texts
 
     # Check quick prompts
+    assert assistant_response.latest_version.quick_prompts is not None
     assert len(assistant_response.latest_version.quick_prompts) == 2
     prompt_labels = [qp.label for qp in assistant_response.latest_version.quick_prompts]
     assert "Summarize" in prompt_labels
     assert "Explain" in prompt_labels  # Check tags
+    assert assistant_response.latest_version.tags is not None
     assert len(assistant_response.latest_version.tags) == 4
     assert "complex" in assistant_response.latest_version.tags
     assert "feature-rich" in assistant_response.latest_version.tags
 
     # Check tools
+    assert assistant_response.latest_version.tools is not None
     assert len(assistant_response.latest_version.tools) == 2
     tool_ids = {tool.id for tool in assistant_response.latest_version.tools}
     assert "WEB_SEARCH" in tool_ids
     assert "CALCULATOR" in tool_ids
 
     # Check owners
+    assert assistant_response.owner_ids is not None
     assert len(assistant_response.owner_ids) == 2
     assert "test_user_123" in assistant_response.owner_ids
     assert "co_owner" in assistant_response.owner_ids
@@ -2758,20 +2785,25 @@ def test_get_assistant_success(test_client):
     assert assistant_response.latest_version.creativity == "medium"
 
     # Verify complex data
+    assert assistant_response.latest_version.examples is not None
     assert len(assistant_response.latest_version.examples) == 1
     assert assistant_response.latest_version.examples[0].text == "Example"
 
+    assert assistant_response.latest_version.quick_prompts is not None
     assert len(assistant_response.latest_version.quick_prompts) == 1
     assert assistant_response.latest_version.quick_prompts[0].label == "Test"
 
+    assert assistant_response.latest_version.tags is not None
     assert len(assistant_response.latest_version.tags) == 2
     assert "get-test" in assistant_response.latest_version.tags
 
     # Verify tool
+    assert assistant_response.latest_version.tools is not None
     assert len(assistant_response.latest_version.tools) == 1
     assert assistant_response.latest_version.tools[0].id == "WEB_SEARCH"
 
     # Verify owner (the test user should be automatically added as owner)
+    assert assistant_response.owner_ids is not None
     assert len(assistant_response.owner_ids) >= 1
 
 
@@ -2843,12 +2875,16 @@ def test_get_assistant_with_unicode_content(test_client):
     assert (
         "Vous êtes très utile! 您好!" in assistant_response.latest_version.system_prompt
     )
+    assert assistant_response.latest_version.description is not None
     assert (
         "émojis and spëcial characters: 中文"
         in assistant_response.latest_version.description
     )
+    assert assistant_response.latest_version.examples is not None
     assert assistant_response.latest_version.examples[0].text == "Beispiel 🔍"
+    assert assistant_response.latest_version.quick_prompts is not None
     assert assistant_response.latest_version.quick_prompts[0].label == "翻译"
+    assert assistant_response.latest_version.tags is not None
     assert "🌍" in assistant_response.latest_version.tags
 
 
@@ -3059,8 +3095,10 @@ def test_get_assistant_version_success(assistant_with_multiple_versions, test_cl
     assert version_response.description == "Original description"
     assert version_response.system_prompt == "You are version 1 assistant."
     assert version_response.creativity == "medium"
+    assert version_response.examples is not None
     assert len(version_response.examples) == 1
     assert version_response.examples[0].text == "V1 Example"
+    assert version_response.quick_prompts is not None
     assert len(version_response.quick_prompts) == 1
     assert version_response.quick_prompts[0].label == "V1 Prompt"
     assert version_response.tags == ["v1", "original"]
@@ -3099,9 +3137,12 @@ def test_get_assistant_version_specific_versions(
     assert version_v3.description == "Final description for version 3"
     assert version_v3.system_prompt == "You are version 3 assistant."
     assert version_v3.creativity == "high"
+    assert version_v3.examples is not None
     assert len(version_v3.examples) == 2
+    assert version_v3.quick_prompts is not None
     assert len(version_v3.quick_prompts) == 2
     assert version_v3.tags == ["v3", "final"]
+    assert version_v3.tools is not None
     assert len(version_v3.tools) == 2
 
 
@@ -3217,6 +3258,7 @@ def test_get_assistant_version_with_tools(
     version_response = AssistantVersionResponse.model_validate(
         response.json()
     )  # Verify tools are present and correctly configured
+    assert version_response.tools is not None
     assert len(version_response.tools) == 2
 
     tool_ids = [tool.id for tool in version_response.tools]
@@ -3227,12 +3269,14 @@ def test_get_assistant_version_with_tools(
     web_search_tool = next(
         tool for tool in version_response.tools if tool.id == "WEB_SEARCH"
     )
+    assert web_search_tool.config is not None
     assert web_search_tool.config["max_results"] == 10
 
     # Find and verify CALCULATOR tool configuration
     calculator_tool = next(
         tool for tool in version_response.tools if tool.id == "CALCULATOR"
     )
+    assert calculator_tool.config is not None
     assert calculator_tool.config["precision"] == 4
 
 
@@ -3250,6 +3294,7 @@ def test_get_assistant_version_with_examples_and_prompts(
     version_response = AssistantVersionResponse.model_validate(
         response.json()
     )  # Verify examples
+    assert version_response.examples is not None
     assert len(version_response.examples) == 2
     assert version_response.examples[0].text == "V3 Example 1"
     assert version_response.examples[0].value == "Version 3 example 1"
@@ -3257,6 +3302,7 @@ def test_get_assistant_version_with_examples_and_prompts(
     assert version_response.examples[1].value == "Version 3 example 2"
 
     # Verify quick prompts
+    assert version_response.quick_prompts is not None
     assert len(version_response.quick_prompts) == 2
     assert version_response.quick_prompts[0].label == "V3 Prompt 1"
     assert version_response.quick_prompts[0].prompt == "Version 3 prompt 1"
@@ -3279,6 +3325,7 @@ def test_get_assistant_version_owner_information(
     version_response = AssistantVersionResponse.model_validate(response.json())
 
     # Verify owner_ids is present and not empty
+    assert version_response.owner_ids is not None
     assert len(version_response.owner_ids) >= 1
     # The creating user should be included as owner
     # Note: The exact owner_id depends on your test authentication setup
@@ -3457,16 +3504,21 @@ def test_get_assistant_owner_access_without_hierarchical_permission(test_client)
     assert assistant_response.hierarchical_access == ["HR-Department"]
 
     # Verify the user is listed as an owner
+    assert assistant_response.owner_ids is not None
     assert len(assistant_response.owner_ids) >= 1
 
     # Verify all the data is accessible
     assert assistant_response.latest_version.creativity == "medium"
+    assert assistant_response.latest_version.examples is not None
     assert len(assistant_response.latest_version.examples) == 1
     assert assistant_response.latest_version.examples[0].text == "Owner Example"
+    assert assistant_response.latest_version.quick_prompts is not None
     assert len(assistant_response.latest_version.quick_prompts) == 1
     assert assistant_response.latest_version.quick_prompts[0].label == "Owner Prompt"
+    assert assistant_response.latest_version.tags is not None
     assert len(assistant_response.latest_version.tags) == 2
     assert "owner-only" in assistant_response.latest_version.tags
+    assert assistant_response.latest_version.tools is not None
     assert len(assistant_response.latest_version.tools) == 1
     assert assistant_response.latest_version.tools[0].id == "WEB_SEARCH"
 
@@ -3630,13 +3682,16 @@ async def test_duplicate_assistant_copies_compliance_review_from_source(
     assert version.system_prompt == "Source System Prompt"
     assert version.creativity == "high"
     assert version.default_model == "gpt-4"
+    assert version.examples is not None
     assert [example.model_dump() for example in version.examples] == [
         {"text": "Example", "value": "Example value"}
     ]
+    assert version.quick_prompts is not None
     assert [prompt.model_dump() for prompt in version.quick_prompts] == [
         {"label": "Quick", "prompt": "Quick prompt", "tooltip": "Tip"}
     ]
     assert version.tags == ["source"]
+    assert version.tools is not None
     assert [(tool.id, tool.config) for tool in version.tools] == [
         ("WEB_SEARCH", {"max_results": 5})
     ]

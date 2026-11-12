@@ -33,7 +33,8 @@ def _load_production_path_matcher():
         def _get_logger(name: str):
             return logging.getLogger(name)
 
-        logtools_shim.getLogger = _get_logger
+        # types.ModuleType allows dynamic attribute assignment only via setattr
+        setattr(logtools_shim, "getLogger", _get_logger)
         sys.modules["core.logtools"] = logtools_shim
 
     if "core.directory_cache" not in sys.modules:
@@ -42,7 +43,7 @@ def _load_production_path_matcher():
         async def _dummy_get_simplified_directory_tree():
             return None
 
-        shim.get_simplified_directory_tree = _dummy_get_simplified_directory_tree
+        setattr(shim, "get_simplified_directory_tree", _dummy_get_simplified_directory_tree)
         sys.modules["core.directory_cache"] = shim
 
     from database import path_matcher as prod_path_matcher

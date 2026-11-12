@@ -1,3 +1,6 @@
+from collections.abc import Sequence
+from typing import Any
+
 import pytest
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
@@ -170,7 +173,9 @@ async def test_refresh_owner_details_retries_after_integrity_error(
     original_flush = db_session.flush
     raised = {"value": False}
 
-    async def flaky_flush(*args: object, **kwargs: object) -> object:
+    async def flaky_flush(
+        *args: Sequence[Any] | None, **kwargs: object
+    ) -> object:
         if not raised["value"]:
             raised["value"] = True
             raise IntegrityError("INSERT INTO owners ...", {}, Exception("duplicate"))

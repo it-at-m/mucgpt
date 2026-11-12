@@ -31,7 +31,8 @@ class TestRedisSettings:
             assert redis.host == "env-redis-assistant"
             assert redis.port == 1111
             assert redis.username == "env-user"
-            assert redis.password.get_secret_value() == "env-pass"
+            assert redis.password is not None
+        assert redis.password.get_secret_value() == "env-pass"
 
     def test_redis_settings_defaults(self):
         """Test Redis default values."""

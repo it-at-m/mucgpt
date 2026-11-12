@@ -60,6 +60,11 @@ ignore = ["E501", "E701"] # line too long, multiple statements on one line
 [tool.ty.environment]
 root = ["./app", "."]
 
+[tool.ty.src]
+# Alembic infrastructure files (not pytest-collected, not part of the service
+# runtime); alembic itself is intentionally not a dependency of this service.
+exclude = ["tests/database/env.py", "tests/database/versions/*.py"]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 python_files = "test_*.py"

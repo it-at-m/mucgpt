@@ -54,6 +54,8 @@ interface Props {
     selectedLLM?: string;
     onLLMSelectionChange?: (nextLLM: string) => void;
     llmLockedByAssistant?: boolean;
+    /** Ready attachments seeded once (e.g. restored from the Home handoff). */
+    initialImages?: ImageAttachment[];
 }
 
 /** One staged image in the composer; only ready drafts are sendable. */
@@ -96,7 +98,8 @@ export const QuestionInput = ({
     llmOptions,
     selectedLLM,
     onLLMSelectionChange,
-    llmLockedByAssistant
+    llmLockedByAssistant,
+    initialImages
 }: Props) => {
     const { t } = useTranslation();
     const config = useConfigContext();
@@ -298,6 +301,28 @@ export const QuestionInput = ({
     useEffect(() => {
         questionValueRef.current = question;
     }, [question]);
+
+    // Seed restored attachments once; consumed as ready drafts so the send
+    // flow and staged-image guards treat them like freshly uploaded images.
+    const consumedInitialImagesRef = useRef<ImageAttachment[] | undefined>(undefined);
+    useEffect(() => {
+        if (!initialImages || initialImages.length === 0) {
+            return;
+        }
+        if (consumedInitialImagesRef.current === initialImages) {
+            return;
+        }
+        consumedInitialImagesRef.current = initialImages;
+        setImageDrafts(
+            initialImages.map(attachment => ({
+                id: attachment.id,
+                filename: attachment.filename ?? "image",
+                status: "ready" as const,
+                previewUrl: attachment.displayUrl,
+                attachment
+            }))
+        );
+    }, [initialImages]);
 
     // Revoke local preview object URLs so they never outlive the composer.
     const revokeImagePreviews = useCallback((drafts: ImageDraft[]) => {

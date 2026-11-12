@@ -19,7 +19,7 @@ def configure_logging() -> None:
     log_config = load_log_config(str(config_path))
     migration_log_level = os.getenv("MIGRATION_LOG_LEVEL")
     if migration_log_level is not None:
-        log_config["loggers"]["mucgpt.core.migrations"]["level"] = (
-            migration_log_level.upper()
-        )
+        loggers = log_config.setdefault("loggers", {})
+        logger_config = loggers.setdefault("mucgpt.core.migrations", {})
+        logger_config["level"] = migration_log_level.upper()
     logging.config.dictConfig(log_config)

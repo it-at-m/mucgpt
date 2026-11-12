@@ -68,9 +68,12 @@ class ConversationLifecyclePostgresTests(unittest.IsolatedAsyncioTestCase):
             )
         self.addAsyncCleanup(self.drop_database)
         self.settings = Settings(
-            DB=DBConfig(
-                **{k.upper(): v for k, v in self.connection_args.items()},
-                NAME=self.database,
+            db=DBConfig(
+                host=self.connection_args["host"],
+                port=self.connection_args["port"],
+                user=self.connection_args["user"],
+                password=self.connection_args["password"],
+                name=self.database,
             )
         )
         self.conversation_id = uuid4().hex
@@ -142,7 +145,7 @@ class ConversationLifecyclePostgresTests(unittest.IsolatedAsyncioTestCase):
             durability=CHECKPOINT_DURABILITY,
         )
 
-    async def create_legacy_schema(self):
+    async def create_legacy_schema(self) -> None:
         """Create the pre-Alembic schema used by the migration adoption tests."""
         async with await psycopg.AsyncConnection.connect(
             **self.connection_args, dbname=self.database, autocommit=True
@@ -161,7 +164,7 @@ class ConversationLifecyclePostgresTests(unittest.IsolatedAsyncioTestCase):
             )
             await AsyncPostgresSaver(connection).setup()
 
-    async def seed_legacy_history(self, *, orphan: bool = False):
+    async def seed_legacy_history(self, *, orphan: bool = False) -> None:
         """Seed checkpoint state before Alembic adopts the legacy schema."""
         async with await psycopg.AsyncConnection.connect(
             **self.connection_args, dbname=self.database, autocommit=True

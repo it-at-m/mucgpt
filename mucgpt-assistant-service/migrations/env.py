@@ -75,7 +75,9 @@ async def run_async_migrations() -> None:
         "timeout": int(config.get_main_option("mucgpt.migration_db_timeout", "30"))
     }
     if schema:
-        connect_args["server_settings"] = {"search_path": schema}
+        connect_args["server_settings"] = {
+            "search_path": f'"{schema.replace(chr(34), chr(34) * 2)}"',
+        }
     configuration["sqlalchemy.connect_args"] = connect_args
     connectable = async_engine_from_config(
         configuration,

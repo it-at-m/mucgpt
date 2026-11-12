@@ -60,9 +60,12 @@ def _configure_logging() -> None:
 def _alembic_config(db_timeout: int, lock_timeout: int) -> Config:
     root = Path(__file__).resolve().parent.parent
     config = Config(str(root / "alembic.ini"))
+    database_url = (
+        get_migration_settings().database_url().render_as_string(hide_password=False)
+    )
     config.set_main_option(
         "sqlalchemy.url",
-        get_migration_settings().database_url().render_as_string(hide_password=False),
+        database_url.replace("%", "%%"),
     )
     config.set_main_option("mucgpt.migration_db_timeout", str(db_timeout))
     config.set_main_option("mucgpt.migration_lock_timeout", str(lock_timeout))

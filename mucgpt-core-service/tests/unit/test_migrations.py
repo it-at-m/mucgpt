@@ -32,6 +32,19 @@ def test_migration_settings_reject_incomplete_database_configuration() -> None:
         MigrationSettings(db={}).database_url()
 
 
+def test_alembic_config_escapes_special_characters_in_database_url(monkeypatch) -> None:
+    monkeypatch.setenv("MUCGPT_CORE_DB__HOST", "postgres")
+    monkeypatch.setenv("MUCGPT_CORE_DB__NAME", "mucgpt")
+    monkeypatch.setenv("MUCGPT_CORE_DB__USER", "migrator")
+    monkeypatch.setenv("MUCGPT_CORE_DB__PASSWORD", "p@ss/w%rd")
+
+    config = run_migrations._alembic_config(db_timeout=30, lock_timeout=30)
+
+    assert config.get_main_option("sqlalchemy.url") == (
+        "postgresql+asyncpg://migrator:p%40ss%2Fw%25rd@postgres:5432/mucgpt"
+    )
+
+
 def test_runner_retries_transient_connection_failures(monkeypatch) -> None:
     monkeypatch.setenv("MIGRATION_DB_RETRIES", "2")
     monkeypatch.setenv("MIGRATION_DB_RETRY_DELAY", "1")

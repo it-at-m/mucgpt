@@ -518,6 +518,14 @@ class DBConfig(BaseModel):
     password: SecretStr = SecretStr("admin")
 
 
+class DocumentConfig(BaseModel):
+    """Bounds for the extracted-text document library (not the legacy /parse API)."""
+
+    max_upload_bytes: PositiveInt = 100 * 1024 * 1024
+    max_text_bytes: PositiveInt = 5 * 1024 * 1024
+    preview_max_chars: PositiveInt = 1000
+
+
 class PromptConfig(BaseModel):
     """A prompt inside a Langfuse folder."""
 
@@ -632,6 +640,7 @@ class Settings(BaseSettings):
     mcp: MCPConfig = Field(default_factory=MCPConfig)
     redis: RedisConfig = Field(default_factory=RedisConfig)
     db: DBConfig = Field(default_factory=DBConfig)
+    documents: DocumentConfig = Field(default_factory=DocumentConfig)
 
     @model_validator(mode="before")
     @classmethod

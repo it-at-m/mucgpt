@@ -18,6 +18,8 @@ DUMMY_CONVERSATION_ID = "conv-test-1"
 def stub_persistence(monkeypatch: pytest.MonkeyPatch) -> None:
     from core.persistance_helpers import PersistanceHelpers
 
+    monkeypatch.setattr("api.routers.chat_router._save_document_selection", AsyncMock())
+
     monkeypatch.setattr(
         PersistanceHelpers, "verify_user_in_conversation", AsyncMock(return_value=True)
     )

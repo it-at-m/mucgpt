@@ -19,7 +19,7 @@ import { DiscoveryCard } from "../../components/DiscoveryCard";
 import { OwnerMetadataLink, getPrimaryOwnerDetails } from "../../components/OwnerMetadataLink/OwnerMetadataLink";
 import { useToolsContext } from "../../components/ToolsProvider";
 import { ConfigContext } from "../../context/ConfigContext";
-import { UploadedData } from "../../components/ContextManagerDialog/ContextManagerDialog";
+import { UploadedData, getSelectedDocumentIds } from "../../components/ContextManagerDialog/ContextManagerDialog";
 import { STORAGE_KEYS } from "../layout/LayoutHelper";
 import { getAssistantBadges, isAssistantPrivate } from "../../utils/assistantCardDisplay";
 import { resolveOrphanedAssistantChats } from "../../utils/orphanedAssistantChats";
@@ -373,7 +373,9 @@ const Home = () => {
         const uploadedFileIds = Array.from(
             new Set(
                 uploadedFiles
-                    .filter(file => file.isActive !== false && file.status === "ready" && typeof file.storedDocumentId === "string")
+                    .filter(
+                        file => file.source !== "library" && file.isActive !== false && file.status === "ready" && typeof file.storedDocumentId === "string"
+                    )
                     .map(file => file.storedDocumentId!)
             )
         );
@@ -386,6 +388,8 @@ const Home = () => {
 
         const params = new URLSearchParams();
         params.set("q", nextQuestion);
+        const documentIds = getSelectedDocumentIds(uploadedFiles);
+        if (documentIds.length > 0) params.set("documents", documentIds.join(","));
         if (selectedTools.length > 0) {
             params.set("tools", selectedTools.join(","));
         }

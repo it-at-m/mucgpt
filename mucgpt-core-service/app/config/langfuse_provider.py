@@ -1,7 +1,8 @@
 import os
 
-from langfuse import Langfuse
+from langfuse import Langfuse, get_client
 from langfuse.langchain import CallbackHandler
+from truststore import inject_into_ssl
 
 from core.logtools import getLogger
 
@@ -29,7 +30,11 @@ class LangfuseProvider:
             )
             return None
         try:
-            lf_client = Langfuse(release=version)
+            # Langfuse initializes its OTLP exporter in its constructor. Ensure it
+            # uses the host certificate store before the exporter is created.
+            inject_into_ssl()
+            os.environ.setdefault("LANGFUSE_RELEASE", version)
+            lf_client = get_client()
             lf_client.auth_check()
             LangfuseProvider._langfuse_callback = CallbackHandler()
             return lf_client

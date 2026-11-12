@@ -21,9 +21,12 @@ import { useToolsContext } from "../../components/ToolsProvider";
 import { Code24Regular, Settings24Regular } from "@fluentui/react-icons";
 import { Button } from "@fluentui/react-components";
 import { ChatSettingsDialog } from "../../components/ChatSettingsDialog/ChatSettingsDialog";
-import { UploadedData, createUploadedDataFromContent } from "../../components/ContextManagerDialog/ContextManagerDialog";
+import { UploadedData, createUploadedDataFromContent, getSelectedDocumentIds } from "../../components/ContextManagerDialog/ContextManagerDialog";
+import { documentToUploadedData, restoreDocumentSelection } from "../../components/ContextManagerDialog/DocumentLibrary";
+import { listDocumentsApi } from "../../api/documents-client";
 import { getStoredParsedDocuments } from "../../service/parsedDocumentStorage";
 import { useToolStatusToasts } from "../../hooks/useToolStatusToasts";
+import { useGlobalToastContext } from "../../components/GlobalToastHandler/GlobalToastContext";
 import { useCanvasController } from "../../hooks/useCanvasController";
 import { CanvasSplitView } from "../../components/Canvas/CanvasSplitView";
 import { useUnifiedHistory, useUnifiedHistoryRegistration } from "../../components/UnifiedHistory";
@@ -68,6 +71,7 @@ export type ChatMessage = DBMessage<ChatResponse>;
 export interface ChatOptions {
     system: string;
     creativity: string;
+    document_ids?: string[];
 }
 
 const WELCOME_MESSAGE_KEYS = ["home.chat_header"];
@@ -130,6 +134,7 @@ const Chat = () => {
     const [agUiEvents, setAgUiEvents] = useState<AgUiEventLogEntry[]>([]);
 
     useToolStatusToasts(toolStatuses);
+    const { showWarning } = useGlobalToastContext();
 
     // Related states with useReducer
     const [chatState, dispatch] = useReducer(chatReducer, {
@@ -159,6 +164,7 @@ const Chat = () => {
     const lastAnswerRef = useRef<HTMLDivElement | null>(null);
     const isFirstRender = useRef(true);
     const activeChatRef = useRef(active_chat);
+    const documentSelectionRequestTokenRef = useRef(0);
     const isLoadingRef = useRef(false);
 
     const setLoadingState = useCallback((nextLoading: boolean) => {
@@ -173,6 +179,7 @@ const Chat = () => {
     // Update activeChatRef whenever active_chat changes
     useEffect(() => {
         activeChatRef.current = active_chat;
+        documentSelectionRequestTokenRef.current += 1;
     }, [active_chat]);
 
     // Storage Service mit useMemo
@@ -220,14 +227,25 @@ const Chat = () => {
     const loadChat = useCallback(
         async (id: string) => {
             try {
+                ++documentSelectionRequestTokenRef.current;
                 setError(undefined);
                 const chat = await loadConversation(storageService, id, id, { system: "", creativity: CREATIVITY_LOW });
                 if (chat) {
+                    // The transcript must load even when the document library is
+                    // unreachable: fall back to an empty selection with a warning.
+                    let selection: UploadedData[] = [];
+                    try {
+                        selection = await restoreDocumentSelection(chat.documentIds ?? [], chat.documentNames);
+                    } catch (restoreError) {
+                        console.error("Could not restore document selection:", restoreError);
+                        showWarning(t("document_library.restore_failed_title"), t("document_library.restore_failed_message"));
+                    }
                     dispatch({ type: "SET_ANSWERS", payload: chat.messages });
                     dispatch({ type: "SET_CREATIVITY", payload: chat.config.creativity });
                     dispatch({ type: "SET_SYSTEM_PROMPT", payload: chat.config.system });
                     dispatch({ type: "SET_ACTIVE_CHAT", payload: id });
                     resetInputState();
+                    setUploadedData(selection);
                     lastQuestionRef.current = chat.messages.length > 0 ? chat.messages[chat.messages.length - 1].user : "";
 
                     // Scroll to bottom after a short delay to ensure DOM is updated
@@ -244,7 +262,7 @@ const Chat = () => {
                 return false;
             }
         },
-        [storageService, scrollToBottom, resetInputState]
+        [storageService, scrollToBottom, resetInputState, showWarning, t]
     );
 
     // Clear chat state
@@ -349,7 +367,8 @@ const Chat = () => {
             const askResponse: ChatResponse = { answer: "", tokens: 0, user_tokens: 0 } as AskResponse;
             const options: ChatOptions = {
                 system: system ?? "",
-                creativity: creativity
+                creativity: creativity,
+                document_ids: getSelectedDocumentIds(uploadedData)
             };
             try {
                 await makeApiRequest(
@@ -393,7 +412,8 @@ const Chat = () => {
             setLoadingState,
             showAgUiEventLog,
             handleAgUiEvent,
-            canvasWiring
+            canvasWiring,
+            uploadedData
         ]
     );
 
@@ -463,6 +483,7 @@ const Chat = () => {
             hashParams.delete("question");
             hashParams.delete("tools");
             hashParams.delete("data");
+            hashParams.delete("documents");
             hashParams.delete("new");
             hashParams.delete("chatId");
             hashParams.delete("canvas");
@@ -477,6 +498,7 @@ const Chat = () => {
             searchParams.delete("question");
             searchParams.delete("tools");
             searchParams.delete("data");
+            searchParams.delete("documents");
             searchParams.delete("new");
             searchParams.delete("chatId");
             searchParams.delete("canvas");
@@ -524,6 +546,7 @@ const Chat = () => {
 
     // State to track if initialization is complete
     const [isInitialized, setIsInitialized] = useState(false);
+    const [isDocumentSelectionReady, setIsDocumentSelectionReady] = useState(false);
     const [pendingQuestion, setPendingQuestion] = useState<string | null>(null);
     // Effect to handle pending question after tools are loaded
     const scheduledQuestionRef = useRef<string | null>(null);
@@ -541,6 +564,7 @@ const Chat = () => {
         const questionFromUrl = queryParams.get("q") || queryParams.get("question");
         const toolsFromUrl = queryParams.get("tools");
         const dataFromUrl = queryParams.get("data");
+        const documentsFromUrl = queryParams.get("documents");
         const newChatToken = queryParams.get("new");
         const chatIdFromUrl = queryParams.get("chatId");
         const canvasRequested = queryParams.get("canvas") !== null;
@@ -549,6 +573,7 @@ const Chat = () => {
             questionFromUrl,
             toolsFromUrl,
             dataFromUrl,
+            documentsFromUrl,
             newChatRequested: newChatToken !== null,
             newChatToken,
             chatIdFromUrl,
@@ -617,7 +642,30 @@ const Chat = () => {
         isLoadingRef.current = true;
 
         // Check URL for question parameter - Handle hash router format
-        const { questionFromUrl, toolsFromUrl, dataFromUrl, newChatRequested, newChatToken, chatIdFromUrl, canvasRequested } = getNavigationParams();
+        const { questionFromUrl, toolsFromUrl, dataFromUrl, documentsFromUrl, newChatRequested, newChatToken, chatIdFromUrl, canvasRequested } =
+            getNavigationParams();
+
+        if (documentsFromUrl && !chatIdFromUrl) {
+            const ids = documentsFromUrl.split(",");
+            const documentSelectionRequestToken = documentSelectionRequestTokenRef.current;
+            listDocumentsApi()
+                .then(documents => {
+                    if (documentSelectionRequestToken !== documentSelectionRequestTokenRef.current) return;
+                    const selected = documents.filter(document => ids.includes(document.id) && document.status === "ready");
+                    if (selected.length !== new Set(ids).size) throw new Error("Selected documents are unavailable.");
+                    setUploadedData(previous => [...previous.filter(document => document.source !== "library"), ...selected.map(documentToUploadedData)]);
+                    setIsDocumentSelectionReady(true);
+                })
+                .catch(() => {
+                    if (documentSelectionRequestToken !== documentSelectionRequestTokenRef.current) return;
+                    // The pending question must not stall forever: proceed without
+                    // documents and surface why the selection was not applied.
+                    showWarning(t("document_library.restore_failed_title"), t("document_library.restore_failed_message"));
+                    setIsDocumentSelectionReady(true);
+                });
+        } else {
+            setIsDocumentSelectionReady(true);
+        }
 
         // Parse tools from URL if present
         if (toolsFromUrl) {
@@ -766,7 +814,7 @@ const Chat = () => {
     }, [clearNavigationQueryParams, fetchHistory, getNavigationParams, isCurrentChatEmpty, isInitialized, loadChat, resetInputState, startFreshChat]);
 
     useEffect(() => {
-        if (!isInitialized || !pendingQuestion || tools === undefined) {
+        if (!isInitialized || !isDocumentSelectionReady || !pendingQuestion || tools === undefined) {
             return;
         }
 
@@ -802,7 +850,7 @@ const Chat = () => {
                 scheduledQuestionRef.current = null;
             }
         };
-    }, [isInitialized, pendingQuestion, tools, uploadedData, uploadedDataToDataSources, systemPrompt, clearNavigationQueryParams]);
+    }, [isInitialized, isDocumentSelectionReady, pendingQuestion, tools, uploadedData, uploadedDataToDataSources, systemPrompt, clearNavigationQueryParams]);
 
     // Set up follow-up actions
     useEffect(() => {

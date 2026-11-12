@@ -1,10 +1,12 @@
 import hashlib
-from unittest.mock import AsyncMock, patch
+from contextlib import nullcontext
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from fastapi.testclient import TestClient
 
 from api.api_models import ComplianceCategoryResult
+from core.llm_helpers import hash_user_id
 
 
 @pytest.fixture(autouse=True)
@@ -14,10 +16,25 @@ def disable_compliance_cache(monkeypatch: pytest.MonkeyPatch) -> None:
     )
 
 
+@pytest.fixture
+def langfuse_root(monkeypatch: pytest.MonkeyPatch):
+    client = MagicMock()
+    client.create_trace_id.return_value = "b" * 32
+    observation = (
+        client.start_as_current_observation.return_value.__enter__.return_value
+    )
+    propagate_attributes = MagicMock(side_effect=lambda **_kwargs: nullcontext())
+    monkeypatch.setattr("api.routers.compliance_router.get_client", lambda: client)
+    monkeypatch.setattr(
+        "api.routers.compliance_router.propagate_attributes", propagate_attributes
+    )
+    return client, observation, propagate_attributes
+
+
 @pytest.mark.integration
 @patch("core.compliance._check_category", new_callable=AsyncMock)
 def test_check_assistant_compliance_aggregates_category_results(
-    mock_check_category, test_client: TestClient
+    mock_check_category, test_client: TestClient, langfuse_root
 ) -> None:
     system_prompt = "Bewerte Bewerbungen und erstelle eine Rangliste."
     results = {
@@ -69,6 +86,18 @@ def test_check_assistant_compliance_aggregates_category_results(
         "hr_employment",
         "education",
     }
+    client, observation, propagate_attributes = langfuse_root
+    client.start_as_current_observation.assert_called_once_with(
+        name="assistant-compliance-check",
+        input=system_prompt,
+        trace_context={"trace_id": "b" * 32},
+    )
+    propagate_attributes.assert_called_once_with(
+        user_id=hash_user_id("test_user_123"),
+        tags=["assistant-compliance"],
+        trace_name="assistant-compliance-check",
+    )
+    observation.update.assert_called_once_with(output=body)
 
 
 @pytest.mark.integration

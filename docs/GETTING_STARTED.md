@@ -126,6 +126,37 @@ Where:
 - `xberg_url`: Points to your Xberg parsing service.
 - `xberg_timeout`: Execution timeout in seconds.
 
+### Virtual filesystem for selected documents
+
+After a document is uploaded and parsed, its extracted text is stored in the
+core service's PostgreSQL-backed file store. When a chat request selects one or
+more documents, the agent receives them through a read-only `/documents/`
+filesystem mount. The mount does not support `ls` or `glob` for path discovery.
+The model must use the document paths supplied in the prompt; `read_file` and
+`grep` work only with those supplied paths. The mount is scoped to the
+authenticated user and to the documents selected for that request; it is not a
+general document search or a writable filesystem.
+
+The filesystem tools are Deep Agents built-ins and must be enabled for every
+model that should read attachments. Add them under that model's
+`deep_agent.enabled_builtin_tools` configuration:
+
+```yaml
+models:
+  - id: "<model-id>"
+    provider: "<provider-key>"
+    deep_agent:
+      enabled_builtin_tools:
+        - write_todos
+        - ls
+        - read_file
+        - glob
+        - grep
+```
+
+If these tools are omitted, documents can still be uploaded and their excerpts
+can appear in the prompt, but the model cannot access the virtual filesystem.
+
 ### Transcription Configuration (YAML)
 
 MUCGPT offers browser-based speech-to-text (beta): users can dictate into the chat input, and the audio is transcribed entirely inside their browser. The backend only gates the feature — no audio ever leaves the user's browser; the resulting transcript is placed in the chat input and can be submitted through the normal chat request. It is disabled by default (`transcription_enabled: false`).

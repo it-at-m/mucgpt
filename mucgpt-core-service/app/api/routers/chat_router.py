@@ -1,9 +1,11 @@
+import asyncio
 from collections.abc import AsyncGenerator
 from typing import Annotated
 
 from ag_ui.encoder import EventEncoder
 from fastapi import APIRouter, Depends, HTTPException, Request, Response
 from fastapi.responses import StreamingResponse
+from langfuse import get_client, propagate_attributes
 
 from api.api_models import (
     CanvasResponse,
@@ -19,9 +21,12 @@ from config.model_provider import ModelRegistry, ModelsConfigurationException
 from config.settings import get_settings
 from core.auth import authenticate_user
 from core.auth_models import AuthenticationResult
+from core.llm_helpers import hash_user_id
 from core.logtools import getLogger
 from core.persistance_helpers import PersistanceHelpers
 from core.stream_cleanup import close_stream
+from core.virtual_file_system_helper import get_documents_for_agent
+from database.conversation_repo import ConversationRepository
 from database.fenced_checkpointer import ConversationDeletedError
 from init_app import init_agent
 
@@ -114,6 +119,34 @@ async def get_messages_for_agent(
     if await PersistanceHelpers.has_checkpoint(request.conversation_id):
         return [request.messages[-1]]
     return request.messages
+
+
+async def _save_document_selection(
+    request: ChatCompletionRequest,
+    user_id: str,
+    document_ids: list[str],
+    document_names: dict[str, str] | None = None,
+) -> None:
+    """Save only validated selections for persisted, live owned conversations.
+
+    The selection is saved on every persisted turn: the per-turn agent mount is
+    built from the request field alone, while this record only restores the
+    selection when the chat is reopened.
+    """
+    if not request.persist:
+        return
+    conversation_id = request.conversation_id
+    # Omitted document_ids means "no document feature"; an explicitly empty list
+    # means "detach all previously selected documents".
+    if conversation_id is None:
+        return
+    if "document_ids" not in request.model_fields_set and not document_ids:
+        return
+    async with PersistanceHelpers._get_session_factory().begin() as session:
+        if not await ConversationRepository(session).set_document_ids(
+            user_id, conversation_id, document_ids, document_names
+        ):
+            raise HTTPException(status_code=403, detail="Conversation access denied")
 
 
 @router.get(
@@ -331,6 +364,7 @@ async def put_conversation_canvas_revisions(
         200: {"description": "Successful Response"},
         400: {"description": "Bad Request"},
         403: {"description": "Forbidden"},
+        404: {"description": "Selected documents unavailable"},
         500: {"description": "Internal Server Error"},
     },
 )
@@ -362,6 +396,7 @@ async def ag_ui_chat_endpoint(
             status_code = 500
         raise HTTPException(status_code=status_code, detail=detail) from exc
 
+    document_selection = await get_documents_for_agent(chat_request, user_info)
     messages_for_agent = await get_messages_for_agent(chat_request, user_info.user_id)
 
     encoder = EventEncoder(accept=request.headers.get("accept"))
@@ -369,6 +404,13 @@ async def ag_ui_chat_endpoint(
         user_info=user_info,
         model_name=chat_request.model,
         persist=chat_request.persist,
+        document_selection=document_selection,
+    )
+    await _save_document_selection(
+        chat_request,
+        user_info.user_id,
+        [document.id for document in document_selection],
+        {document.id: document.filename for document in document_selection},
     )
     events = agent.run_agui_with_streaming(
         messages=messages_for_agent,
@@ -389,10 +431,31 @@ async def ag_ui_chat_endpoint(
 
     async def event_generator() -> AsyncGenerator[str]:
         """Encode AG-UI events and close their source on completion or cancellation."""
+        langfuse = get_client()
+        tags = (
+            [f"assistant-{chat_request.assistant_id}"]
+            if chat_request.assistant_id is not None
+            else ["default-assistant"]
+        )
+        trace_id = langfuse.create_trace_id()
         try:
-            async for event in events:
-                yield encoder.encode(event)
+            with langfuse.start_as_current_observation(
+                name="Agent",
+                as_type="agent",
+                input=messages_for_agent[-1].content,
+                trace_context={"trace_id": trace_id},
+            ):
+                with propagate_attributes(
+                    user_id=hash_user_id(user_info.user_id),
+                    tags=tags,
+                    session_id=chat_request.conversation_id,
+                    trace_name="Agent",
+                ):
+                    async for event in events:
+                        yield encoder.encode(event)
         finally:
             await close_stream(events)
+            # The root observation must end before its completed span can be flushed.
+            await asyncio.to_thread(langfuse.flush)
 
     return StreamingResponse(event_generator(), media_type=encoder.get_content_type())

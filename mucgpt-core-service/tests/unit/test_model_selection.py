@@ -3,7 +3,7 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 from langchain.agents.middleware import ModelRequest, ModelResponse
 from langchain_core.language_models.fake_chat_models import FakeListChatModel
-from langchain_core.messages import AIMessage, SystemMessage
+from langchain_core.messages import AIMessage, SystemMessage, ToolCall
 from langchain_core.tools import tool
 from langchain_openai import ChatOpenAI
 from langgraph.runtime import Runtime
@@ -162,6 +162,30 @@ def test_wrap_model_call_preserves_deep_agent_builtin_tools(monkeypatch) -> None
     ContextMiddleware().wrap_model_call(request, handler)
 
     assert handler.call_args.args[0].tools == [builtin_tool]
+
+
+def test_wrap_model_call_normalizes_empty_assistant_message(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(
+        ModelRegistry,
+        "get_model",
+        lambda _name=None: FakeListChatModel(responses=["selected"]),
+    )
+    empty_assistant = AIMessage(content="")
+    tool_assistant = AIMessage(
+        content="",
+        tool_calls=[ToolCall(name="first_tool", args={}, id="call-1")],
+    )
+    request = _model_request(RequestContext()).override(
+        messages=[empty_assistant, tool_assistant]
+    )
+    handler = MagicMock(return_value=ModelResponse(result=[]))
+
+    ContextMiddleware().wrap_model_call(request, handler)
+
+    normalized_messages = handler.call_args.args[0].messages
+    assert normalized_messages == [tool_assistant]
 
 
 @pytest.mark.asyncio

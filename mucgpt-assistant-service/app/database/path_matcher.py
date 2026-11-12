@@ -30,6 +30,7 @@ from datetime import UTC, datetime, timedelta
 from typing import Any
 
 from core import directory_cache
+from core.directory_cache import DirectoryTree
 from core.logtools import getLogger
 
 logger = getLogger(__name__)
@@ -218,7 +219,7 @@ async def _get_directory_index(
     if cached is not None and isinstance(expires_at, datetime) and now < expires_at:
         return cached
 
-    tree: list[dict[str, Any]] | None = None
+    tree: DirectoryTree | None = None
     try:
         tree = await directory_cache.get_simplified_directory_tree()
     except Exception:

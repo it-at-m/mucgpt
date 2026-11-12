@@ -9,6 +9,7 @@ from zoneinfo import ZoneInfo
 
 from langchain.agents.middleware import (
     AgentMiddleware,
+    AgentState,
     ModelRequest,
     ModelResponse,
     ToolCallRequest,
@@ -490,11 +491,11 @@ class ContextMiddleware(AgentMiddleware):
     Additional state types can be registered in ``agent.tools.policies``.
     """
 
-    state_schema: type = DefaultAgentState
+    state_schema: type[AgentState[Any]] = DefaultAgentState
 
     def __init__(
         self,
-        state_schema: type = DefaultAgentState,
+        state_schema: type[AgentState[Any]] = DefaultAgentState,
         data_sources: list[Any] | None = None,
         document_selection: list["SelectedDocument"] | None = None,
     ):

@@ -34,7 +34,7 @@ class DBConfig(BaseModel):
     name: str
     user: str
     password: SecretStr
-    schema: str | None = None
+    schema: str | None = None  # ty: ignore[invalid-attribute-override]
 
 
 class RedisConfig(BaseModel):

@@ -1,13 +1,14 @@
+from collections.abc import Sequence
 from typing import TYPE_CHECKING, Any, cast
 
-from deepagents import FilesystemPermission, create_deep_agent
+from deepagents import DeepAgentState, FilesystemPermission, create_deep_agent
 from deepagents.backends.protocol import BackendProtocol
 from langchain_core.language_models import BaseChatModel
 from langchain_core.runnables import RunnableConfig
 from langchain_core.runnables.config import merge_configs
 from langchain_core.tools.base import BaseTool
 from langgraph.checkpoint.postgres.aio import AsyncPostgresSaver
-from langgraph.types import Durability
+from langgraph.types import Durability, StreamMode
 
 from agent.middleware import (
     ContextMiddleware,
@@ -74,7 +75,10 @@ class _ConfiguredLangChainDeepAgentGraph:
             ],  # type: ignore
             system_prompt=default_prompt.content,
             debug=self.debug,
-            state_schema=self.state_schema,
+            # DefaultAgentState is a sibling of DeepAgentState (both extend
+            # langchain's AgentState); deepagents only accepts a compiled
+            # TypedDict as schema, so widen the annotation at this boundary.
+            state_schema=cast("type[DeepAgentState]", self.state_schema),
             context_schema=RequestContext,
             checkpointer=checkpointer,
             backend=backend,
@@ -144,13 +148,15 @@ class _ConfiguredLangChainDeepAgentGraph:
 
         input_payload = {"messages": messages}
         if data_sources:
-            input_payload["data_sources"] = data_sources  # type: ignore
+            input_payload["data_sources"] = data_sources
         if request_context.canvas:
-            input_payload["canvas"] = request_context.canvas  # type: ignore
+            input_payload["canvas"] = request_context.canvas
 
         stream = self.agent.astream(
             input_payload,
-            stream_mode=stream_mode,
+            # langgraph stubs narrow stream_mode to its literal values; callers
+            # pass validated mode names, so widen at this boundary.
+            stream_mode=cast("StreamMode | Sequence[StreamMode] | None", stream_mode),
             config=config,
             context=request_context,
             durability=CHECKPOINT_DURABILITY,
@@ -179,9 +185,9 @@ class _ConfiguredLangChainDeepAgentGraph:
 
         input_payload = {"messages": messages}
         if data_sources:
-            input_payload["data_sources"] = data_sources  # type: ignore
+            input_payload["data_sources"] = data_sources
         if request_context.canvas:
-            input_payload["canvas"] = request_context.canvas  # type: ignore
+            input_payload["canvas"] = request_context.canvas
 
         return await self.agent.ainvoke(
             input_payload,

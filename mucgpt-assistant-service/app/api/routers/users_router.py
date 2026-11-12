@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+from typing import Any, cast
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -45,7 +46,7 @@ async def _build_assistant_response_list(
     This centralizes the logic and avoids code duplication.
     """
     response_list: list[AssistantResponse] = []
-    owner_lookup_cache: dict[str, dict[str, object]] = {}
+    owner_lookup_cache: dict[str, dict[str, Any] | None] = {}
     for assistant in assistants:
         assistant_id = str(assistant.id)
         latest_version = assistant.versions[0] if assistant.versions else None
@@ -305,7 +306,7 @@ async def get_user_subscriptions(
 
     # Build simplified response with only ID and name
     response_list = []
-    owner_lookup_cache: dict[str, dict[str, object]] = {}
+    owner_lookup_cache: dict[str, dict[str, Any] | None] = {}
     for assistant in assistants:
         assistant_id = str(assistant.id)
         latest_version = assistant.versions[0] if assistant.versions else None
@@ -375,4 +376,4 @@ async def lookup_user_by_user_id(
             detail="LDAP response did not include required user_id attribute",
         )
 
-    return UserLookupResponse(**payload)
+    return UserLookupResponse(**cast("dict[str, Any]", payload))

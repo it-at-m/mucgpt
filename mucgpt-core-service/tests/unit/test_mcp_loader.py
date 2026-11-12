@@ -4,7 +4,7 @@ from unittest.mock import AsyncMock, patch
 
 import cloudpickle
 import pytest
-from mcp.types import ListToolsResult
+from mcp.types import ListToolsResult, PaginatedRequestParams
 from mcp.types import Tool as MCPTool
 from pydantic import ValidationError
 
@@ -24,7 +24,10 @@ class FakeSession:
     async def initialize(self) -> None:
         return None
 
-    async def list_tools(self, cursor: str | None = None) -> ListToolsResult:
+    async def list_tools(
+        self, params: PaginatedRequestParams | None = None
+    ) -> ListToolsResult:
+        cursor = params.cursor if params is not None else None
         index = int(cursor) if cursor else 0
         page = self._pages[index]
         next_cursor = str(index + 1) if index + 1 < len(self._pages) else None

@@ -1,4 +1,5 @@
 import asyncio
+from typing import Any
 
 from httpx import Auth, Request
 from langchain_core.tools import BaseTool
@@ -9,6 +10,7 @@ from langchain_mcp_adapters.sessions import (
 )
 from langchain_mcp_adapters.tools import convert_mcp_tool_to_langchain_tool
 from mcp import ClientSession
+from mcp.types import PaginatedRequestParams
 from mcp.types import Tool as MCPTool
 from redis.asyncio import Redis
 from redis.exceptions import LockError
@@ -242,7 +244,11 @@ class McpLoader:
                     f"Reached max of {_MAX_LIST_TOOLS_ITERATIONS} iterations while listing tools."
                 )
 
-            list_tools_page_result = await session.list_tools(cursor=current_cursor)
+            list_tools_page_result = await session.list_tools(
+                params=PaginatedRequestParams(cursor=current_cursor)
+                if current_cursor is not None
+                else None
+            )
 
             if list_tools_page_result.tools:
                 all_tools.extend(list_tools_page_result.tools)
@@ -284,16 +290,17 @@ class McpLoader:
             )
             return None
 
-        con["headers"] = {}
+        headers: dict[str, Any] = {}
 
         if source_cfg.headers:
-            con["headers"].update(
+            headers.update(
                 {
                     header_name: header_value.get_secret_value()
                     for header_name, header_value in source_cfg.headers.items()
                     if header_name.lower() != "authorization"
                 }
             )
+        con["headers"] = headers
 
         if source_cfg.forward_token:
             auth_override = (
@@ -308,7 +315,7 @@ class McpLoader:
                 auth_override=auth_override,
             )
 
-        header_names = sorted(con["headers"].keys())
+        header_names = sorted(headers.keys())
         McpLoader._logger.debug(
             f"Header names configured for source '{source_id}': {header_names}"
         )

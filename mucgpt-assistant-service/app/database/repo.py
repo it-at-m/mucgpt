@@ -25,7 +25,7 @@ class Repository[ModelType: Base]:
     async def get(self, id_value) -> ModelType | None:
         # Assuming the primary key column is named 'id'
         result = await self.session.execute(
-            select(self.model).filter(self.model.id == id_value)
+            select(self.model).filter_by(id=id_value)
         )
         return result.scalars().first()
 

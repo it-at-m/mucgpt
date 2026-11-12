@@ -129,9 +129,11 @@ def _render_list(doc: Any, tag: Tag, *, ordered: bool, level: int = 1) -> None:
 
 def _ordered_list_start(tag: Tag) -> int:
     raw = tag.get("start")
+    if not isinstance(raw, str):
+        return 1
     try:
-        return max(int(raw), 1) if raw is not None else 1
-    except (TypeError, ValueError):
+        return max(int(raw), 1)
+    except ValueError:
         return 1
 
 

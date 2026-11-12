@@ -3,6 +3,7 @@
 from contextlib import asynccontextmanager
 
 from langgraph.checkpoint.postgres.aio import AsyncPostgresSaver
+from psycopg_pool import AsyncConnectionPool
 
 
 class ConversationDeletedError(RuntimeError):
@@ -20,7 +21,10 @@ class FencedPostgresSaver(AsyncPostgresSaver):
     @asynccontextmanager
     async def _live_saver(self, thread_id):
         """Hold a live row's SHARE lock for the connection-bound saver operation."""
-        async with self.conn.connection() as connection:
+        conn = self.conn
+        if not isinstance(conn, AsyncConnectionPool):
+            raise RuntimeError("FencedPostgresSaver requires a connection pool")
+        async with conn.connection() as connection:
             async with connection.transaction():
                 result = await connection.execute(
                     "SELECT conversation_id FROM chats "

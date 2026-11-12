@@ -7,7 +7,7 @@ services:
   postgres:
     image: postgres:18.1-alpine3.21@sha256:44d837eb4c2ed263474a95f0cc24745413c50924df60dd73ed6c4c3e36b84259
     environment:
-      - POSTGRES_DB=postgres
+      - POSTGRES_DB=assistants
       - POSTGRES_USER=admin
       - POSTGRES_PASSWORD=admin
       - POSTGRES_HOST_AUTH_METHOD=trust
@@ -15,7 +15,7 @@ services:
     ports:
       - "5432:5432"
     healthcheck: &healthcheck
-      test: ["CMD-SHELL", "pg_isready -d postgres -U admin"]
+      test: ["CMD-SHELL", "pg_isready -d assistants -U admin"]
       interval: 30s
       timeout: 60s
       retries: 3
@@ -61,6 +61,7 @@ services:
       - "5050:5050"
     depends_on:
       - postgres
+      - checkpoint-postgres
     healthcheck:
       <<: *healthcheck
       test: ["CMD", "wget", "-O", "-", "http://localhost:5050/misc/ping"]

@@ -311,7 +311,7 @@ The optional `prompts` section in `core.config.yaml` maps core-service prompt na
    db:
      host: "postgres"
      port: 5432
-     name: "postgres"
+     name: "assistants"
      user: "admin"
      # Provide password via MUCGPT_ASSISTANT_DB__PASSWORD instead of storing it here.
      # password: "admin"

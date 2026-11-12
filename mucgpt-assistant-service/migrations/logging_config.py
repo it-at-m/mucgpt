@@ -24,4 +24,10 @@ def configure_logging() -> None:
             ),
         )
     )
-    logging.config.dictConfig(load_log_config(str(config_path)))
+    log_config = load_log_config(str(config_path))
+    migration_log_level = os.getenv("MIGRATION_LOG_LEVEL")
+    if migration_log_level is not None:
+        log_config["loggers"]["mucgpt.assistant.migrations"]["level"] = (
+            migration_log_level.upper()
+        )
+    logging.config.dictConfig(log_config)

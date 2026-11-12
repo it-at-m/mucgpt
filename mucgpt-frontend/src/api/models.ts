@@ -40,6 +40,36 @@ export type DataSource = {
     metadata?: Record<string, string | number | boolean | null | undefined>;
 };
 
+/** Managed metadata of one uploaded chat image (server-generated id). */
+export type UploadedImage = {
+    id: string;
+    filename: string;
+    mime_type: string;
+    size_bytes: number;
+    width?: number | null;
+    height?: number | null;
+    created_at: string;
+    expires_at?: string | null;
+    /** Managed mucgpt-image:// reference for chat message content parts; not a public URL. */
+    managed_url: string;
+};
+
+/**
+ * Image attachment carried inside a user turn: the managed reference plus
+ * safe display metadata. Never contains image bytes, base64, or public URLs.
+ */
+export type ImageAttachment = {
+    /** Server-generated image id; part of the managed mucgpt-image:// reference. */
+    id: string;
+    /** Authenticated core endpoint serving the bytes for display. */
+    displayUrl: string;
+    filename?: string;
+    mime_type?: string;
+    size_bytes?: number;
+    width?: number | null;
+    height?: number | null;
+};
+
 /** Canvas document state sent with each turn when the canvas is open. */
 export type CanvasState = {
     /** Full GFM markdown document */
@@ -105,6 +135,15 @@ export type ChatTitleResponse = {
     title: string;
 };
 
+/** Image-input availability and bounds exposed for frontend pre-validation. */
+export type ImageInputConfig = {
+    enabled: boolean;
+    max_upload_bytes: number;
+    max_images_per_message: number;
+    max_pixels: number;
+    allowed_mime_types: string[];
+};
+
 export interface ApplicationConfig {
     models: Model[];
     alternative_logo: boolean;
@@ -123,6 +162,8 @@ export interface ApplicationConfig {
     canvas_content_max_chars: number;
     /** Maximum canvas editor input length (characters). */
     canvas_editor_max_chars: number;
+    /** Image upload availability and limits; absent means disabled (fail closed). */
+    image_input?: ImageInputConfig;
     footer_link_url?: string;
     footer_label?: string;
     faq_url?: string;

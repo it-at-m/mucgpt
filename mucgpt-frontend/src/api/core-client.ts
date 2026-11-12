@@ -1,4 +1,4 @@
-import { getConfig, getHeaders, handleApiRequest, handleRedirect, postConfig, postFormDataConfig, putConfig } from "./fetch-utils";
+import { deleteConfig, getConfig, getHeaders, handleApiRequest, handleRedirect, postConfig, postFormDataConfig, putConfig } from "./fetch-utils";
 import {
     ApplicationConfig,
     AssistantDraftRequest,
@@ -9,7 +9,8 @@ import {
     ComplianceCheckResponse,
     CountTokenRequest,
     CountTokenResponse,
-    ToolListResponse
+    ToolListResponse,
+    UploadedImage
 } from "./models";
 import { HttpAgent } from "@ag-ui/client";
 import type { Message } from "@ag-ui/core";
@@ -167,6 +168,39 @@ export async function uploadFileApi(file: File): Promise<string> {
         const response = await fetch(`${PARSE_SERVICE_BASE}`, postFormDataConfig(formData));
         return response;
     }, "Failed to upload file");
+}
+
+const IMAGE_SERVICE_BASE = "/api/backend/v1/images";
+
+/**
+ * Uploads one image for a vision-enabled chat model and returns managed
+ * metadata. The upload target model must be explicitly vision-enabled;
+ * validation happens server-side on the actual bytes.
+ */
+export async function uploadImageApi(file: File, model: string): Promise<UploadedImage> {
+    const formData = new FormData();
+    formData.append("model", model);
+    formData.append("file", file);
+
+    return handleApiRequest(async () => {
+        const response = await fetch(IMAGE_SERVICE_BASE, postFormDataConfig(formData));
+        return response;
+    }, "Failed to upload image");
+}
+
+/** Authenticated endpoint serving image bytes for display (no public URLs exist). */
+export function imageContentUrl(imageId: string): string {
+    return `${IMAGE_SERVICE_BASE}/${encodeURIComponent(imageId)}/content`;
+}
+
+/** Restores safe image display metadata (owner-scoped). */
+export async function getImageMetadataApi(imageId: string): Promise<UploadedImage> {
+    return handleApiRequest(() => fetch(`${imageContentUrl(imageId).replace(/\/content$/, "/metadata")}`, getConfig()), "Failed to get image metadata");
+}
+
+/** Deletes an unbound draft image; bound images are rejected server-side (409). */
+export async function deleteImageApi(imageId: string): Promise<void> {
+    await handleApiRequest(() => fetch(`${IMAGE_SERVICE_BASE}/${encodeURIComponent(imageId)}`, deleteConfig()), "Failed to delete image");
 }
 
 export interface CanvasContentResponse {

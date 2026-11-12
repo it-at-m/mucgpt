@@ -94,7 +94,7 @@ class ConversationLifecyclePostgresTests(unittest.IsolatedAsyncioTestCase):
                 )
             )
 
-    async def migrate_database(self):
+    async def migrate_database(self) -> None:
         """Apply the same schema migration that production runs before core starts."""
         migration_env = {
             "MUCGPT_CORE_DB__HOST": self.connection_args["host"],

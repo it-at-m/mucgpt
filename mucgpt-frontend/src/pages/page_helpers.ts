@@ -311,6 +311,25 @@ export const makeApiRequest = async (
         throw error;
     };
 
+    const normalizeTransportError = (error: unknown): unknown => {
+        if (!error || typeof error !== "object" || !("status" in error) || !("payload" in error)) {
+            return error;
+        }
+
+        const transportError = error as { status: unknown; payload: unknown };
+        if (typeof transportError.status !== "number") return error;
+
+        const payload = transportError.payload;
+        if (payload && typeof payload === "object" && !Array.isArray(payload)) {
+            return { ...payload, status_code: transportError.status };
+        }
+
+        return {
+            detail: typeof payload === "string" ? payload : error instanceof Error ? error.message : String(payload),
+            status_code: transportError.status
+        };
+    };
+
     // Build the API request object
     const request: ChatRequest = {
         history: [...history, { user: question, assistant: undefined }],
@@ -338,6 +357,8 @@ export const makeApiRequest = async (
     const activeToolStatuses: ToolStatus[] = [];
     let runActivity: RunActivity = { ...initialRunActivity, startedAt: Date.now() };
     const activitySteps = () => (runActivity.steps.length > 0 ? runActivity.steps : undefined);
+    let runStarted = false;
+    let runTerminal = false;
 
     // Add an empty initial message to the chat
     const initialMessage = {
@@ -414,6 +435,8 @@ export const makeApiRequest = async (
         const eventSubscription = agent.subscribe({
             onEvent: ({ event }) => {
                 onAgUiEvent?.(event);
+                if (event.type === EventType.RUN_STARTED) runStarted = true;
+                if (event.type === EventType.RUN_FINISHED || event.type === EventType.RUN_ERROR) runTerminal = true;
                 if (canvasWiring) {
                     if (event.type === EventType.CUSTOM) {
                         // Canvas chunks are forwarded as CustomEvents named "Canvas"
@@ -480,7 +503,8 @@ export const makeApiRequest = async (
                 clearTimeout(updateTimer);
                 updateTimer = null;
             }
-            await abortRequest(error);
+            if (runStarted && !runTerminal && !initialMessageAdded) showInitialMessage();
+            await abortRequest(normalizeTransportError(error));
         } finally {
             eventSubscription.unsubscribe();
             // RUN_FINISHED/RUN_ERROR normally unlock; this covers the path where

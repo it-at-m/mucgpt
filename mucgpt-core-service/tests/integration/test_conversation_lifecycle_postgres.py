@@ -386,10 +386,10 @@ class ConversationLifecyclePostgresTests(unittest.IsolatedAsyncioTestCase):
         await PersistanceHelpers.init(self.settings)
         await self.assert_retired()
 
-    async def test_ag_ui_endpoint_success_failure_and_disconnect(self):
+    async def test_ag_ui_endpoint_success_failure_disconnect_and_cancel(self):
         """Real executors/graphs/persistence; inject only model/agent construction."""
         for stream in (False, True):
-            for outcome in ("success", "failure", "disconnect"):
+            for outcome in ("success", "failure", "disconnect", "cancel"):
                 with self.subTest(stream=stream, outcome=outcome):
                     self.conversation_id = uuid4().hex
                     saver = PersistanceHelpers.get_checkpointer()
@@ -504,7 +504,7 @@ class ConversationLifecyclePostgresTests(unittest.IsolatedAsyncioTestCase):
                             await delete_conversation(self.conversation_id, self.owner)
                             if outcome == "disconnect":
                                 await disconnect.put({"type": "http.disconnect"})
-                            elif outcome == "disconnect":
+                            elif outcome == "cancel":
                                 task.cancel()
                             resume.set()
                             result = await asyncio.wait_for(
@@ -519,7 +519,7 @@ class ConversationLifecyclePostgresTests(unittest.IsolatedAsyncioTestCase):
                                         for chunk in chunks
                                     )
                                 )
-                            elif outcome == "disconnect":
+                            elif outcome == "cancel":
                                 self.assertIsInstance(result[0], asyncio.CancelledError)
                             else:
                                 self.assertTrue(

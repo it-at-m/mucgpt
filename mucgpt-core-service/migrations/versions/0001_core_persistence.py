@@ -170,9 +170,13 @@ def upgrade() -> None:
 
 
 def downgrade() -> None:
-    op.drop_table("checkpoint_writes")
-    op.drop_table("checkpoint_blobs")
-    op.drop_table("checkpoints")
-    op.drop_table("checkpoint_migrations")
-    op.drop_table("canvas_documents")
-    op.drop_table("chats")
+    raise RuntimeError(
+        "Cannot safely downgrade core persistence: this migration adopts "
+        "pre-Alembic tables but does not record table ownership."
+    )
+    # op.drop_table("checkpoint_writes")
+    # op.drop_table("checkpoint_blobs")
+    # op.drop_table("checkpoints")
+    # op.drop_table("checkpoint_migrations")
+    # op.drop_table("canvas_documents")
+    # op.drop_table("chats")

@@ -518,7 +518,6 @@ class DBConfig(BaseModel):
     password: SecretStr = SecretStr("admin")
 
 
-
 class DocumentConfig(BaseModel):
     """Bounds for the extracted-text document library (not the legacy /parse API)."""
 
@@ -577,7 +576,6 @@ class Settings(BaseSettings):
     # General settings
     version: str = Field(default="")
     log_config: str = "logconf.yaml"
-    ag_ui_enabled: bool = False
 
     # Frontend settings
     env_name: str = "MUCGPT"

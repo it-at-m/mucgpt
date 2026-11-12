@@ -17,7 +17,6 @@ import { STORAGE_KEYS } from "../layout/LayoutHelper";
 import { ToolStatus } from "../../utils/ToolStreamHandler";
 import { initialRunActivity, type RunActivity } from "../../utils/agUiActivity";
 import { Model } from "../../api";
-import { chatApi } from "../../api/core-client";
 import { useToolsContext } from "../../components/ToolsProvider";
 import { Code24Regular, Settings24Regular } from "@fluentui/react-icons";
 import { Button } from "@fluentui/react-components";
@@ -32,7 +31,6 @@ import { CanvasSplitView } from "../../components/Canvas/CanvasSplitView";
 import { useUnifiedHistory, useUnifiedHistoryRegistration } from "../../components/UnifiedHistory";
 import { useLocation, useNavigate } from "react-router-dom";
 import { UserContext } from "../layout/UserContextProvider";
-import { useConfigContext } from "../../context/ConfigContext";
 import { AgUiEventDrawer, type AgUiEventLogEntry } from "../../components/AgUiEventDrawer/AgUiEventDrawer";
 import { scrollIntoNearestContainer } from "../../utils/scrollIntoNearestContainer";
 import { loadConversation } from "../../service/conversationHistory";
@@ -108,9 +106,8 @@ const Chat = () => {
     const { setFollowUpActions } = useContext(FollowUpActionContext);
     const { tools } = useToolsContext();
     const { user } = useContext(UserContext);
-    const { ag_ui_enabled: agUiEnabled } = useConfigContext();
     // The raw AG-UI event log is a debugging aid; users see the run activity instead.
-    const showAgUiEventLog = import.meta.env.DEV && agUiEnabled;
+    const showAgUiEventLog = import.meta.env.DEV;
 
     // Independent states
     const [error, setError] = useState<unknown>();
@@ -365,7 +362,6 @@ const Chat = () => {
                     answers,
                     question,
                     dispatch,
-                    chatApi,
                     LLM,
                     activeChatRef,
                     storageService,
@@ -381,7 +377,6 @@ const Chat = () => {
                     lastAnswerRef,
                     setLoadingState,
                     requestPersist,
-                    agUiEnabled,
                     showAgUiEventLog ? handleAgUiEvent : undefined,
                     setRunActivity,
                     canvasWiring
@@ -402,7 +397,6 @@ const Chat = () => {
             selectedTools,
             setToolStatuses,
             setLoadingState,
-            agUiEnabled,
             showAgUiEventLog,
             handleAgUiEvent,
             canvasWiring,

@@ -119,7 +119,6 @@ export interface ApplicationConfig {
     /** The single transcription model used by every user; null (not configured) or unknown ids disable the feature. */
     transcription_model: string | null;
     ai_act_compliance_check_enabled: boolean;
-    ag_ui_enabled: boolean;
     /** Maximum persisted canvas content length (characters). */
     canvas_content_max_chars: number;
     /** Maximum canvas editor input length (characters). */
@@ -173,6 +172,13 @@ export interface ChatCompletionDelta {
     tool_calls?: ToolCall[];
 }
 
+/** Structured provider error (contract with mucgpt-core-service `ProviderErrorPayload`). */
+export interface ProviderErrorPayload {
+    code: string;
+    detail: string;
+    status_code?: number | null;
+}
+
 export interface ChatCompletionChunkChoice {
     delta: ChatCompletionDelta;
     index: number;
@@ -185,6 +191,7 @@ export interface ChatCompletionChunk {
     created: number;
     choices: ChatCompletionChunkChoice[];
     usage?: { prompt_tokens?: number; completion_tokens?: number; total_tokens?: number; cache_read_tokens?: number; context_tokens?: number | null } | null;
+    error?: ProviderErrorPayload | null;
 }
 
 export type CountTokenRequest = {

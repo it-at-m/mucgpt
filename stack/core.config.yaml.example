@@ -22,7 +22,6 @@
 # General settings
 version: "0.7.1"
 log_config: "logconf.yaml"
-ag_ui_enabled: false
 
 # Frontend settings
 env_name: "MUCGPT🦜"

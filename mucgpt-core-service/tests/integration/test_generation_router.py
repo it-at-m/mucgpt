@@ -184,4 +184,7 @@ def test_generate_assistant_draft_error_mapping(
 
     assert resp.status_code == 500
     detail = resp.json().get("detail", "")
-    assert "Fehler" in detail or "Ein Fehler" in detail
+    # Human-readable phrase, no raw exception body, plus the stable error code.
+    assert "An unexpected error occurred" in detail
+    assert "(unknown)" in detail
+    assert "boom" not in detail

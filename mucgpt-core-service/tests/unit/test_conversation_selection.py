@@ -63,10 +63,9 @@ def request(conversation_id="owned", *, persist=True, ids=()):
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize("protocol", ["legacy", "agui"])
 @pytest.mark.parametrize("ids", [[], [str(uuid4())]])
-async def test_both_protocols_save_validated_selection_and_explicit_empty(
-    catalog, monkeypatch, protocol, ids
+async def test_agui_saves_validated_selection_and_explicit_empty(
+    catalog, monkeypatch, ids
 ):
     selection = [
         SimpleNamespace(id=document_id, filename="Policy.pdf") for document_id in ids
@@ -92,12 +91,9 @@ async def test_both_protocols_save_validated_selection_and_explicit_empty(
     )
     monkeypatch.setattr(chat_router, "init_agent", AsyncMock(return_value=agent))
     owner = AuthenticationResult(user_id="owner", token="test", department="test")
-    if protocol == "legacy":
-        await chat_router.chat_endpoint(request(ids=ids), owner)
-    else:
-        await chat_router.ag_ui_chat_endpoint(
-            request(ids=ids), owner, Request({"type": "http", "headers": []})
-        )
+    await chat_router.ag_ui_chat_endpoint(
+        request(ids=ids), owner, Request({"type": "http", "headers": []})
+    )
     metadata = await PersistanceHelpers.get_conversations_for_user("owner")
     assert (
         next(row for row in metadata if row["conversation_id"] == "owned")[

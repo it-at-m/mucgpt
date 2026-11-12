@@ -3,17 +3,17 @@ import { DBMessage, StorageService } from "../service/storage";
 import { DBObject } from "../service/storage";
 import { ChatMessage, ChatOptions } from "./chat/Chat";
 import { ChatRequest, ChatResponse, CanvasState, ChatTurn, DataSource, Model } from "../api";
-import { ChatCompletionChunk, ChatCompletionChunkChoice } from "../api/models";
 import { ToolStreamHandler, ToolStatus } from "../utils/ToolStreamHandler";
 
 import language from "react-syntax-highlighter/dist/esm/languages/hljs/1c";
 import { AssistantStorageService } from "../service/assistantstorage";
 import { v4 as uuid } from "uuid";
-import { ApiError, handleRedirect } from "../api/fetch-utils";
 import { createChatName, MucgptAgUiAgent } from "../api/core-client";
 import { EventType, type BaseEvent, type CustomEvent } from "@ag-ui/core";
 import { initialRunActivity, reduceRunActivity, type RunActivity } from "../utils/agUiActivity";
 import { isCanvasToolCall, parseCanvasStreamEvent, type CanvasStreamEvent } from "../utils/canvasStream";
+import { fromAgUiRunError, ChatProviderError } from "../utils/providerError";
+import { deleteConversationApi } from "../api/conversations-client";
 import { scrollIntoNearestContainer } from "../utils/scrollIntoNearestContainer";
 import { getConversationActionCapabilities } from "../utils/conversationActions";
 
@@ -231,7 +231,6 @@ export interface CanvasWiring {
  * @param answers - Current array of chat messages
  * @param question - The user's question/input
  * @param dispatch - Function to dispatch state updates
- * @param chatApi - API function for making chat requests
  * @param LLM - Language model configuration object
  * @param activeChatRef - Reference to the currently active chat ID
  * @param storageService - Service for managing chat storage operations
@@ -250,7 +249,6 @@ export const makeApiRequest = async (
     answers: any[],
     question: string,
     dispatch: Dispatch<any>,
-    chatApi: (options: ChatRequest) => Promise<Response>,
     LLM: Model,
     activeChatRef: RefObject<string | undefined>,
     storageService: StorageService<any, any>,
@@ -266,7 +264,6 @@ export const makeApiRequest = async (
     answerTopRef?: RefObject<HTMLElement | null>,
     onLoadingChange?: (isLoading: boolean) => void,
     persist: boolean = true,
-    agUiEnabled: boolean = false,
     onAgUiEvent?: (event: BaseEvent) => void,
     onRunActivityChange?: (activity: RunActivity) => void,
     canvasWiring?: CanvasWiring
@@ -282,6 +279,56 @@ export const makeApiRequest = async (
             ? activeChatRef.current.slice(AssistantStorageService.GENERATE_BOT_CHAT_PREFIX(assistant_id).length)
             : activeChatRef.current
         : uuid();
+    // The backend creates history metadata before the first turn runs. If that
+    // first persisted turn fails, it would otherwise remain as an orphaned
+    // "New Chat" and a later attempt would create a second conversation.
+    const isNewPersistedConversation = persist && !activeChatRef.current;
+
+    /** Fails the request, discarding an orphaned first persisted conversation. */
+    const abortRequest = async (error: unknown): Promise<never> => {
+        if (isNewPersistedConversation) {
+            let serverConversationDeleted = false;
+            try {
+                await deleteConversationApi(conversationId);
+                serverConversationDeleted = true;
+            } catch (cleanupError) {
+                console.error("Failed to clean up the failed conversation on the server:", cleanupError);
+            }
+            if (serverConversationDeleted) {
+                const localId = assistant_id ? AssistantStorageService.GENERATE_BOT_CHAT_ID(assistant_id, conversationId) : conversationId;
+                try {
+                    await storageService.delete(localId);
+                } catch (cleanupError) {
+                    console.error("Failed to clean up the failed conversation locally:", cleanupError);
+                }
+            }
+            try {
+                await fetchHistory?.();
+            } catch (cleanupError) {
+                console.error("Failed to refresh history after a failed new conversation:", cleanupError);
+            }
+        }
+        throw error;
+    };
+
+    const normalizeTransportError = (error: unknown): unknown => {
+        if (!error || typeof error !== "object" || !("status" in error) || !("payload" in error)) {
+            return error;
+        }
+
+        const transportError = error as { status: unknown; payload: unknown };
+        if (typeof transportError.status !== "number") return error;
+
+        const payload = transportError.payload;
+        if (payload && typeof payload === "object" && !Array.isArray(payload)) {
+            return { ...payload, status_code: transportError.status };
+        }
+
+        return {
+            detail: typeof payload === "string" ? payload : error instanceof Error ? error.message : String(payload),
+            status_code: transportError.status
+        };
+    };
 
     // Build the API request object
     const request: ChatRequest = {
@@ -300,17 +347,6 @@ export const makeApiRequest = async (
         document_ids: options.document_ids
     };
 
-    // Keep the legacy request behavior unchanged while the AG-UI path is rolled out.
-    const legacyResponse = agUiEnabled ? undefined : await chatApi(request);
-    if (legacyResponse) {
-        handleRedirect(legacyResponse);
-        if (!legacyResponse.ok) {
-            const error = await legacyResponse.json().catch(() => ({}));
-            throw new ApiError(typeof error.detail === "string" ? error.detail : "Chat request failed", legacyResponse.status);
-        }
-        if (!legacyResponse.body) throw Error("No response body");
-    }
-
     // Initialize token counters for usage tracking
     let user_tokens = 0;
     let cache_read_tokens = 0;
@@ -319,9 +355,11 @@ export const makeApiRequest = async (
 
     // Initialize tool stream handler for processing tool calls
     const toolStreamHandler = new ToolStreamHandler();
-    let activeToolStatuses: ToolStatus[] = [];
+    const activeToolStatuses: ToolStatus[] = [];
     let runActivity: RunActivity = { ...initialRunActivity, startedAt: Date.now() };
     const activitySteps = () => (runActivity.steps.length > 0 ? runActivity.steps : undefined);
+    let runStarted = false;
+    let runTerminal = false;
 
     // Add an empty initial message to the chat
     const initialMessage = {
@@ -336,10 +374,6 @@ export const makeApiRequest = async (
         onLoadingChange?.(false);
         dispatch({ type: "ADD_ANSWER", payload: initialMessage });
     };
-
-    // The legacy fetch has already received its response headers. AG-UI keeps
-    // the loading indicator visible until the first displayable event arrives.
-    if (!agUiEnabled) showInitialMessage();
 
     // Ensure the currently generating answer placeholder is brought into view
     // immediately after submit. We retry because the ref may not be attached
@@ -394,14 +428,16 @@ export const makeApiRequest = async (
         }, 100);
     };
 
-    if (agUiEnabled) {
-        let runError: Error | undefined;
+    {
+        let runError: ChatProviderError | undefined;
         // Tool progress is shown through the run activity (loading indicator and answer steps), not toasts.
         onRunActivityChange?.(runActivity);
         const agent = new MucgptAgUiAgent(request);
         const eventSubscription = agent.subscribe({
             onEvent: ({ event }) => {
                 onAgUiEvent?.(event);
+                if (event.type === EventType.RUN_STARTED) runStarted = true;
+                if (event.type === EventType.RUN_FINISHED || event.type === EventType.RUN_ERROR) runTerminal = true;
                 if (canvasWiring) {
                     if (event.type === EventType.CUSTOM) {
                         // Canvas chunks are forwarded as CustomEvents named "Canvas"
@@ -444,7 +480,9 @@ export const makeApiRequest = async (
                 },
                 onRunErrorEvent: ({ event }) => {
                     showInitialMessage();
-                    runError = new Error(event.message);
+                    // Structured error: code maps to the i18n message,
+                    // message/metadata.detail keep the technical detail.
+                    runError = fromAgUiRunError(event);
                 },
                 onRunFinishedEvent: ({ event }) => {
                     showInitialMessage();
@@ -461,77 +499,25 @@ export const makeApiRequest = async (
                     }
                 }
             });
+        } catch (error) {
+            if (updateTimer) {
+                clearTimeout(updateTimer);
+                updateTimer = null;
+            }
+            if (runStarted && !runTerminal && !initialMessageAdded) showInitialMessage();
+            await abortRequest(normalizeTransportError(error));
         } finally {
             eventSubscription.unsubscribe();
             // RUN_FINISHED/RUN_ERROR normally unlock; this covers the path where
             // the run throws before any event is emitted.
             canvasWiring?.onRunFinished();
         }
-        if (runError) throw runError;
-    } else {
-        const reader = legacyResponse!.body!.getReader();
-        const decoder = new TextDecoder();
-        let streamBuffer = "";
-        let streamDone = false;
-
-        try {
-            while (!streamDone) {
-                const { done, value } = await reader.read();
-                if (done) break;
-
-                streamBuffer += decoder.decode(value, { stream: true });
-                const lines = streamBuffer.split("\n");
-                streamBuffer = lines.pop() || "";
-
-                for (const line of lines) {
-                    if (!line.startsWith("data: ")) continue;
-                    const data = line.slice(6).trim();
-                    if (data === "[DONE]") {
-                        streamDone = true;
-                        break;
-                    }
-
-                    try {
-                        const chunk = JSON.parse(data) as ChatCompletionChunk;
-                        const choice: ChatCompletionChunkChoice | undefined = chunk.choices?.[0];
-                        if (!choice) continue;
-
-                        if (chunk.usage) {
-                            user_tokens += chunk.usage.prompt_tokens || 0;
-                            cache_read_tokens += chunk.usage.cache_read_tokens ?? 0;
-                            streamed_tokens += chunk.usage.completion_tokens || 0;
-                            context_tokens =
-                                chunk.usage.context_tokens ??
-                                chunk.usage.total_tokens ??
-                                (chunk.usage.prompt_tokens || 0) + (chunk.usage.completion_tokens || 0);
-                        }
-
-                        if (choice.finish_reason === "stop") {
-                            streamDone = true;
-                            break;
-                        }
-
-                        if (choice.delta?.tool_calls) {
-                            for (const toolCall of choice.delta.tool_calls) {
-                                const { statusChange } = toolStreamHandler.handleToolCall(toolCall);
-                                if (statusChange) {
-                                    activeToolStatuses = toolStreamHandler.getActiveToolStatuses();
-                                    onToolStatusUpdate?.(activeToolStatuses);
-                                    includeActiveToolsInUpdate = true;
-                                }
-                                scheduleUpdate();
-                            }
-                        } else if (choice.delta?.content) {
-                            textBuffer += choice.delta.content;
-                            scheduleUpdate();
-                        }
-                    } catch (parseError) {
-                        console.warn("Failed to parse SSE data:", data, parseError);
-                    }
-                }
+        if (runError) {
+            if (updateTimer) {
+                clearTimeout(updateTimer);
+                updateTimer = null;
             }
-        } finally {
-            reader.releaseLock();
+            await abortRequest(runError);
         }
     }
 

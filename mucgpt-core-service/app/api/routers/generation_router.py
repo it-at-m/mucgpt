@@ -11,7 +11,7 @@ from api.api_models import (
     ChatTitleRequest,
     ChatTitleResult,
 )
-from api.exception import llm_exception_handler
+from api.exception import llm_error_payload, payload_to_message
 from config.settings import InternalTaskModelStrength, get_settings
 from core.auth import authenticate_user
 from core.auth_models import AuthenticationResult
@@ -166,8 +166,8 @@ async def generate_assistant_draft(
         )
     except Exception as e:  # pragma: no cover - integration
         logger.exception("Exception in /generations/assistant-draft")
-        msg = llm_exception_handler(ex=e, logger=logger)
-        raise HTTPException(status_code=500, detail=msg)
+        payload = llm_error_payload(ex=e, logger=logger)
+        raise HTTPException(status_code=500, detail=payload_to_message(payload))
 
 
 @router.post(
@@ -240,5 +240,5 @@ async def generate_chat_title(
         raise
     except Exception as e:  # pragma: no cover - integration
         logger.exception("Exception in /generations/chat-title")
-        msg = llm_exception_handler(ex=e, logger=logger)
-        raise HTTPException(status_code=500, detail=msg)
+        payload = llm_error_payload(ex=e, logger=logger)
+        raise HTTPException(status_code=500, detail=payload_to_message(payload))

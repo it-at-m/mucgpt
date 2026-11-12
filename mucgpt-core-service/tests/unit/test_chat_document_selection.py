@@ -103,11 +103,10 @@ async def test_selection_uses_authenticated_service_and_closes_session(
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize("endpoint", ["v1", "v2"])
 @pytest.mark.parametrize("persist", [False, True])
 @pytest.mark.parametrize("rejected", [False, True])
-async def test_endpoints_resolve_before_persistence_and_pass_authorized_selection(
-    monkeypatch, user_info, endpoint, persist, rejected
+async def test_agui_resolves_before_persistence_and_passes_authorized_selection(
+    monkeypatch, user_info, persist, rejected
 ):
     request = completion_request(document_ids=["requested-id"], persist=persist)
     documents = [SimpleNamespace(id="authorized-id", filename="attachment.pdf")]
@@ -129,15 +128,12 @@ async def test_endpoints_resolve_before_persistence_and_pass_authorized_selectio
     monkeypatch.setattr(chat_router, "get_messages_for_agent", prepare)
     save = AsyncMock()
     monkeypatch.setattr(chat_router, "_save_document_selection", save)
-    agent = MagicMock(run_without_streaming=AsyncMock(return_value="response"))
+    agent = MagicMock()
     init = AsyncMock(return_value=agent)
     monkeypatch.setattr(chat_router, "init_agent", init)
-    if endpoint == "v1":
-        result = chat_router.chat_endpoint(request, user_info)
-    else:
-        result = chat_router.ag_ui_chat_endpoint(
-            request, user_info, Request({"type": "http", "headers": []})
-        )
+    result = chat_router.ag_ui_chat_endpoint(
+        request, user_info, Request({"type": "http", "headers": []})
+    )
 
     if rejected:
         with pytest.raises(HTTPException) as exc:

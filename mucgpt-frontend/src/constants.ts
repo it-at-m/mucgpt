@@ -43,7 +43,6 @@ export const DEFAULT_APP_CONFIG: ApplicationConfig = {
     transcription_enabled: false,
     transcription_model: null,
     ai_act_compliance_check_enabled: true,
-    ag_ui_enabled: false,
     canvas_content_max_chars: 256 * 1024,
     canvas_editor_max_chars: 512 * 1024,
     faq_url: "https://ki.muenchen.de",

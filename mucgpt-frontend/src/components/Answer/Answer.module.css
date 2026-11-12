@@ -85,6 +85,25 @@
     margin-bottom: 8px;
 }
 
+.errorDetailsButton {
+    justify-self: start;
+    margin-top: var(--spacingVerticalXXS);
+}
+
+.errorDetailsContent {
+    overflow: hidden;
+}
+
+.errorDetails {
+    font-size: var(--fontSizeBase300);
+    line-height: 1.4;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    max-height: 50vh;
+    overflow: auto;
+    margin: 0;
+}
+
 @media (max-width: 650px) {
     .answerWithActions .answerActionsBelow {
         opacity: 1;

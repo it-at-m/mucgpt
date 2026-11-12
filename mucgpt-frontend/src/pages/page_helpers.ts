@@ -11,9 +11,11 @@ import { AssistantStorageService } from "../service/assistantstorage";
 import { v4 as uuid } from "uuid";
 import { handleRedirect } from "../api/fetch-utils";
 import { createChatName, MucgptAgUiAgent } from "../api/core-client";
-import { EventType, type BaseEvent, type CustomEvent } from "@ag-ui/core";
-import { initialRunActivity, reduceRunActivity, type RunActivity } from "../utils/agUiActivity";
+import type { AgentSubscriber } from "@ag-ui/client";
+import { EventType, type BaseEvent, type CustomEvent, type ResumeEntry } from "@ag-ui/core";
+import { applyToolDecisions, initialRunActivity, reduceRunActivity, type RunActivity } from "../utils/agUiActivity";
 import { isCanvasToolCall, parseCanvasStreamEvent, type CanvasStreamEvent } from "../utils/canvasStream";
+import { buildToolApprovalResume, toToolApprovalRequests, type ToolApprovalHandler } from "../utils/toolApproval";
 import { scrollIntoNearestContainer } from "../utils/scrollIntoNearestContainer";
 import { getConversationActionCapabilities } from "../utils/conversationActions";
 
@@ -269,7 +271,8 @@ export const makeApiRequest = async (
     agUiEnabled: boolean = false,
     onAgUiEvent?: (event: BaseEvent) => void,
     onRunActivityChange?: (activity: RunActivity) => void,
-    canvasWiring?: CanvasWiring
+    canvasWiring?: CanvasWiring,
+    onToolApproval?: ToolApprovalHandler
 ) => {
     // Create conversation history for the API request
     const history: ChatTurn[] = answers.map((a: { user: any; response: { answer: any } }) => ({ user: a.user, assistant: a.response.answer }));
@@ -430,32 +433,55 @@ export const makeApiRequest = async (
                 }
             }
         });
-        try {
-            await agent.runAgent(undefined, {
-                onTextMessageContentEvent: ({ event }) => {
-                    showInitialMessage();
-                    textBuffer += event.delta;
-                    scheduleUpdate();
-                },
-                onRunErrorEvent: ({ event }) => {
-                    showInitialMessage();
-                    runError = new Error(event.message);
-                },
-                onRunFinishedEvent: ({ event }) => {
-                    showInitialMessage();
-                    for (const usage of event.usage ?? []) {
-                        user_tokens += usage.inputTokens ?? 0;
-                        cache_read_tokens += usage.cachedInputTokens ?? 0;
-                        streamed_tokens += usage.outputTokens ?? 0;
-                    }
-
-                    const metadata = event.metadata as { mucgpt?: { contextTokens?: unknown } } | undefined;
-                    const reportedContextTokens = metadata?.mucgpt?.contextTokens;
-                    if (typeof reportedContextTokens === "number") {
-                        context_tokens = reportedContextTokens;
-                    }
+        const runSubscriber: AgentSubscriber = {
+            onTextMessageContentEvent: ({ event }) => {
+                showInitialMessage();
+                textBuffer += event.delta;
+                scheduleUpdate();
+            },
+            onRunErrorEvent: ({ event }) => {
+                showInitialMessage();
+                runError = new Error(event.message);
+            },
+            onRunFinishedEvent: ({ event }) => {
+                showInitialMessage();
+                for (const usage of event.usage ?? []) {
+                    user_tokens += usage.inputTokens ?? 0;
+                    cache_read_tokens += usage.cachedInputTokens ?? 0;
+                    streamed_tokens += usage.outputTokens ?? 0;
                 }
-            });
+
+                const metadata = event.metadata as { mucgpt?: { contextTokens?: unknown } } | undefined;
+                const reportedContextTokens = metadata?.mucgpt?.contextTokens;
+                if (typeof reportedContextTokens === "number") {
+                    context_tokens = reportedContextTokens;
+                }
+            }
+        };
+        try {
+            let resume: ResumeEntry[] | undefined;
+            for (;;) {
+                await agent.runAgent(resume ? { resume } : undefined, runSubscriber);
+                const interrupts = agent.pendingInterrupts;
+                if (runError || interrupts.length === 0) break;
+
+                scheduleUpdate();
+                const requests = toToolApprovalRequests(interrupts);
+                isLoadingRef.current = true;
+                const decisions = onToolApproval ? await onToolApproval(requests) : null;
+                isLoadingRef.current = false;
+                if (!decisions) {
+                    eventSubscription.unsubscribe();
+                    if (updateTimer) clearTimeout(updateTimer);
+                    return;
+                }
+                resume = buildToolApprovalResume(interrupts, decisions);
+
+                if (textBuffer) textBuffer += "\n\n";
+                runActivity = applyToolDecisions(runActivity, decisions);
+                onRunActivityChange?.(runActivity);
+                scheduleUpdate();
+            }
         } finally {
             eventSubscription.unsubscribe();
             // RUN_FINISHED/RUN_ERROR normally unlock; this covers the path where

@@ -1,6 +1,16 @@
-import { EventType, type BaseEvent, type ToolCallArgsEvent, type ToolCallEndEvent, type ToolCallResultEvent, type ToolCallStartEvent } from "@ag-ui/core";
+import {
+    EventType,
+    type BaseEvent,
+    type RunFinishedEvent,
+    type ToolCallArgsEvent,
+    type ToolCallEndEvent,
+    type ToolCallResultEvent,
+    type ToolCallStartEvent
+} from "@ag-ui/core";
 
-export type ActivityStepStatus = "running" | "done" | "error";
+import type { ToolDecisions } from "./toolApproval";
+
+export type ActivityStepStatus = "running" | "awaiting_approval" | "done" | "rejected" | "error";
 
 export interface ActivityStep {
     toolCallId: string;
@@ -18,7 +28,7 @@ export interface ActivityStep {
 
 /** User-facing view of an AG-UI run: what the agent is doing right now and which tool steps it took. */
 export interface RunActivity {
-    phase: "idle" | "thinking" | "answering" | "finished" | "error";
+    phase: "idle" | "thinking" | "resuming" | "answering" | "finished" | "error";
     steps: ActivityStep[];
     /** When the run started; drives the elapsed-time counter while the user waits for the answer. */
     startedAt?: number;
@@ -89,6 +99,7 @@ const finishRunningSteps = (steps: ActivityStep[], status: ActivityStepStatus, n
 export const reduceRunActivity = (state: RunActivity, event: BaseEvent, now: number = Date.now()): RunActivity => {
     switch (event.type) {
         case EventType.RUN_STARTED:
+            if (state.phase === "resuming") return state;
             // Keep a start time set when the request was sent: that is the wait the user feels.
             return { phase: "thinking", steps: [], startedAt: state.startedAt ?? now };
         case EventType.TOOL_CALL_START: {
@@ -124,6 +135,12 @@ export const reduceRunActivity = (state: RunActivity, event: BaseEvent, now: num
         case EventType.TEXT_MESSAGE_CHUNK:
             return state.phase === "answering" ? state : { ...state, phase: "answering" };
         case EventType.RUN_FINISHED:
+            if ((event as RunFinishedEvent).outcome?.type === "interrupt") {
+                return {
+                    ...state,
+                    steps: state.steps.map(step => (step.status === "running" ? settleArgs({ ...step, status: "awaiting_approval" }) : step))
+                };
+            }
             return { ...state, phase: "finished", steps: finishRunningSteps(state.steps, "done", now) };
         case EventType.RUN_ERROR:
             return { ...state, phase: "error", steps: finishRunningSteps(state.steps, "error", now) };
@@ -131,6 +148,17 @@ export const reduceRunActivity = (state: RunActivity, event: BaseEvent, now: num
             return state;
     }
 };
+
+export const applyToolDecisions = (state: RunActivity, decisions: ToolDecisions, now: number = Date.now()): RunActivity => ({
+    ...state,
+    phase: "resuming",
+    steps: state.steps.map(step => {
+        if (step.status !== "awaiting_approval") return step;
+        return decisions[step.toolCallId] === "reject"
+            ? { ...step, status: "rejected", startedAt: now, endedAt: now }
+            : { ...step, status: "running", startedAt: now };
+    })
+});
 
 /** The tool step the agent is currently waiting on, if any (the most recently started one). */
 export const getRunningStep = (activity: RunActivity): ActivityStep | undefined => activity.steps.findLast(step => step.status === "running");

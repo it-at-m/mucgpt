@@ -11,7 +11,7 @@ import {
     CountTokenResponse,
     ToolListResponse
 } from "./models";
-import { HttpAgent } from "@ag-ui/client";
+import { HttpAgent, type RunAgentInput } from "@ag-ui/client";
 import type { CanvasRevisions } from "../service/canvasStorage";
 
 const PARSE_SERVICE_BASE = "/api/backend/v1/parse";
@@ -64,13 +64,13 @@ export class MucgptAgUiAgent extends HttpAgent {
         });
     }
 
-    protected override requestInit(): RequestInit {
+    protected override requestInit(input: RunAgentInput): RequestInit {
         const headers = getHeaders();
         headers.set("Accept", "text/event-stream");
 
         return {
             method: "POST",
-            body: JSON.stringify(toChatCompletionBody(this.request)),
+            body: JSON.stringify({ ...toChatCompletionBody(this.request), ...(input.resume ? { resume: input.resume } : {}) }),
             headers,
             mode: "cors",
             credentials: "same-origin",

@@ -24,6 +24,7 @@ import { Button } from "@fluentui/react-components";
 import { ChatSettingsDialog } from "../../components/ChatSettingsDialog/ChatSettingsDialog";
 import { UploadedData, createUploadedDataFromContent } from "../../components/ContextManagerDialog/ContextManagerDialog";
 import { getStoredParsedDocuments } from "../../service/parsedDocumentStorage";
+import { useToolApproval } from "../../hooks/useToolApproval";
 import { useToolStatusToasts } from "../../hooks/useToolStatusToasts";
 import { useCanvasController } from "../../hooks/useCanvasController";
 import { CanvasSplitView } from "../../components/Canvas/CanvasSplitView";
@@ -133,6 +134,8 @@ const Chat = () => {
     const [agUiEvents, setAgUiEvents] = useState<AgUiEventLogEntry[]>([]);
 
     useToolStatusToasts(toolStatuses);
+    const toolApproval = useToolApproval();
+    const { requestApproval: requestToolApproval, cancel: cancelToolApproval } = toolApproval;
 
     // Related states with useReducer
     const [chatState, dispatch] = useReducer(chatReducer, {
@@ -223,6 +226,7 @@ const Chat = () => {
     const loadChat = useCallback(
         async (id: string) => {
             try {
+                cancelToolApproval();
                 setError(undefined);
                 const chat = await loadConversation(storageService, id, id, { system: "", creativity: CREATIVITY_LOW });
                 if (chat) {
@@ -247,16 +251,17 @@ const Chat = () => {
                 return false;
             }
         },
-        [storageService, scrollToBottom, resetInputState]
+        [storageService, scrollToBottom, resetInputState, cancelToolApproval]
     );
 
     // Clear chat state
     const clearChat = useCallback(() => {
+        cancelToolApproval();
         lastQuestionRef.current = "";
         setError(undefined);
         dispatch({ type: "SET_ACTIVE_CHAT", payload: undefined });
         dispatch({ type: "CLEAR_ANSWERS" });
-    }, [lastQuestionRef.current]);
+    }, [lastQuestionRef.current, cancelToolApproval]);
 
     useUnifiedHistoryRegistration(
         useMemo(
@@ -378,7 +383,8 @@ const Chat = () => {
                     agUiEnabled,
                     showAgUiEventLog ? handleAgUiEvent : undefined,
                     setRunActivity,
-                    canvasWiring
+                    canvasWiring,
+                    requestToolApproval
                 );
             } catch (e) {
                 setError(e);
@@ -399,7 +405,8 @@ const Chat = () => {
             agUiEnabled,
             showAgUiEventLog,
             handleAgUiEvent,
-            canvasWiring
+            canvasWiring,
+            requestToolApproval
         ]
     );
 
@@ -862,6 +869,7 @@ const Chat = () => {
                 onRollbackMessage={onRollbackMessage}
                 isLoading={isLoading}
                 loadingActivity={runActivity}
+                toolApproval={toolApproval}
                 error={error}
                 makeApiRequest={() => {
                     if (!conversationActions.canRetry || isLoadingRef.current) return;
@@ -890,6 +898,7 @@ const Chat = () => {
             systemPrompt,
             isLoading,
             runActivity,
+            toolApproval,
             isStreaming,
             lastQuestionRef,
             chatMessageStreamEnd,

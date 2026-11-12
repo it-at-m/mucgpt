@@ -243,6 +243,35 @@ services:
     volumes:
       - ./core.config.yaml:/app/config.yaml:ro
 
+  # Scheduled housekeeping for the core service: drains the image deletion
+  # outbox and sweeps expired drafts plus images of retired conversations.
+  # Uses the same image and configuration as core-service, only a different
+  # entrypoint; production should schedule it as a Kubernetes CronJob.
+  core-maintenance:
+    build:
+      context: ../mucgpt-core-service
+      dockerfile: Dockerfile
+      args:
+        - HTTPS_PROXY=${HTTPS_PROXY}
+    env_file:
+      - ./.env
+    command: ["python", "-m", "maintenance", "--loop", "--interval-seconds", "300"]
+    restart: unless-stopped
+    networks:
+      - internal
+    environment:
+      - SSL_CERT_FILE=${SSL_CERT_FILE:-}
+      - LOG_LEVEL_ROOT=INFO
+      - LOG_LEVEL_MUCGPT_CORE=INFO
+    depends_on:
+      checkpoint-postgres:
+        condition: service_healthy
+      rustfs:
+        condition: service_healthy
+    volumes:
+      - ${CA_BUNDLE_PATH:-./ca-bundle.crt}:${SSL_MOUNT_PATH:-/etc/pki/ca-trust/extracted/pem/ca-bundle.crt}:ro,Z
+      - ./core.config.yaml:/app/config.yaml:ro
+
   assistant-migrations:
     build:
       context: ../mucgpt-assistant-service

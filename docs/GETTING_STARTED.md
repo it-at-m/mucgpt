@@ -467,6 +467,12 @@ Pulling from ghcr.io is anonymous. The openCode registry is the GitLab container
 
 The core service does not create or upgrade database schema at startup. For every core release, stop accepting new generation requests and stop/drain every old writer before starting fence-aware instances, then run the matching `mucgpt-core-migrations` image as a deployment Job and wait for it to complete successfully before rolling out `mucgpt-core`. This applies to both the conversation/checkpoint schema and document storage schema. See the [conversation persistence rollout procedure](conversation-persistence.md#schema-migration-and-rollout) for the required ordering. Deploying a core image before its migration Job, or retaining a stale migration image, can cause runtime database errors. Migration Jobs serialize through a PostgreSQL advisory lock; if overlapping Jobs are possible, set `MIGRATION_LOCK_TIMEOUT=0` to wait for the active Job rather than failing after the default 30 seconds.
 
+### Image lifecycle maintenance
+
+Catalog rows and stored bytes live in two systems that cannot be deleted atomically, so every image deletion commits an entry to the `image_deletion_outbox` table inside its own transaction; a scheduled maintenance job removes the bytes afterwards. The same job sweeps unbound drafts past their `unbound_expiry_seconds` and images left behind by deleted conversations.
+
+The job ships in the core image and is invoked as `python -m maintenance` (`--once`, or `--loop --interval-seconds N` for a resident container). The local Compose stack runs it as the `core-maintenance` looping container. In production, schedule it as a Kubernetes CronJob (every 5 minutes is a reasonable cadence; overlapping runs are safe — entries are claimed with leases and `SKIP LOCKED`). The job requires the core database and object-store credentials from the same configuration as the API, and logs deferred deletions with their error instead of failing loudly.
+
 ## 🔧 Troubleshooting
 
 - **Chat requests fail with `Prompt configuration missing`:** prompts are fetched from Langfuse when configured; otherwise the core service uses the local fallback files in `mucgpt-core-service/app/agent/prompt_pool/` (see [Prompt Configuration](#prompt-configuration)). Create the missing `.md` files there and rebuild the core-service image.

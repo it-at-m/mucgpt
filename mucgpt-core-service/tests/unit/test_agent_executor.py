@@ -3,6 +3,7 @@ from contextlib import nullcontext
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
+from ag_ui.core.events import EventType
 from langchain_core.messages import AIMessage, AIMessageChunk, ToolCall
 
 from agent.agent_executor import MUCGPTAgentExecutor, _ag_ui_usage_from_token_usage
@@ -10,6 +11,7 @@ from agent.middleware import TokenUsage
 from agent.tools.tool_chunk import ToolStreamChunk, ToolStreamState
 from api.api_models import CanvasState
 from api.api_models import ChatCompletionMessage as InputMessage
+from api.exception import PROVIDER_ERROR_CODES, UNKNOWN
 from core.auth_models import AuthenticationResult
 
 
@@ -182,6 +184,23 @@ class StreamingAgent:
         self.graph = StreamingGraph()
 
 
+class FailingGraph:
+    def __init__(self):
+        self.config = None
+
+    async def astream(self, *_args, **_kwargs):
+        if False:  # pragma: no cover - keeps this an async generator
+            yield None
+        self.config = _kwargs["config"]
+        raise RuntimeError("Simulated failure")
+
+
+class FailingAgent:
+    def __init__(self):
+        self.model = DummyRunnerLLM(fail=True)
+        self.graph = FailingGraph()
+
+
 class TestMUCGPTAgentExecutor:
     def setup_method(self):
         self.llm = DummyRunnerLLM()
@@ -229,6 +248,30 @@ class TestMUCGPTAgentExecutor:
         assert tool_call["name"] == "simplify"
         assert tool_call["status"] == "started"
 
+    @pytest.mark.asyncio
+    async def test_run_with_streaming_emits_structured_error_chunk(self):
+        agent = FailingAgent()
+        runner = MUCGPTAgentExecutor(agent)
+        messages = [InputMessage(role="user", content="fail")]
+        chunks = []
+        async for chunk in runner.run_with_streaming(
+            messages=messages,
+            temperature=0.7,
+            model="test",
+            user_info=None,
+        ):
+            chunks.append(chunk)
+        error_chunks = [
+            c for c in chunks if c["choices"][0].get("finish_reason") == "error"
+        ]
+        assert len(error_chunks) == 1
+        choice = error_chunks[0]["choices"][0]
+        # no error text stacked into the stream content
+        assert choice["delta"].get("content") in (None, "")
+        # structured payload carries code + technical detail
+        assert error_chunks[0]["error"]["code"] in PROVIDER_ERROR_CODES
+        assert "RuntimeError" in error_chunks[0]["error"]["detail"]
+
     @pytest.mark.skip(reason="Temporarily disabled")
     @pytest.mark.asyncio
     async def test_run_with_streaming_yields_stop_chunk(self):
@@ -256,8 +299,14 @@ class TestMUCGPTAgentExecutor:
             model="test",
             user_info=None,
         )
-        assert response.choices[0].message.content is not None
         assert response.choices[0].finish_reason == "error"
+        # Error text is no longer stacked into the answer content...
+        assert response.choices[0].message.content == ""
+        # ...it travels as a structured payload instead.
+        assert response.error is not None
+        assert response.error.code in PROVIDER_ERROR_CODES
+        assert response.error.detail
+        assert "RuntimeError" in response.error.detail
 
     @pytest.mark.skip(reason="Temporarily disabled")
     def test_run_without_streaming_uses_enabled_tools_in_config(self):
@@ -326,6 +375,8 @@ class TestMUCGPTAgentExecutor:
             user_info=None,
         )
         assert response.choices[0].finish_reason == "error"
+        assert response.error is not None
+        assert response.error.code == UNKNOWN
 
     @pytest.mark.asyncio
     async def test_run_with_streaming_attaches_usage_to_final_chunk(self):
@@ -511,7 +562,7 @@ class TestMUCGPTAgentExecutor:
         assert "hidden" not in streamed_content
         assert agent.graph.config["configurable"]["thread_id"] == "chat-123"
 
-        trace_span = langfuse_client.spans[0]
+        trace_span = langfuse_client.spans[-1]
         trace_output = trace_span.updates[0]["output"]
         events = trace_output["events"]
         assert [event["stream"] for event in events] == [
@@ -593,10 +644,38 @@ async def test_run_agui_streams_canvas_chunks_as_custom_events(monkeypatch):
     assert not any(getattr(e, "name", None) == "Brainstorming" for e in events)
 
     # traces summarize canvas chunks: present, but never the full document
-    traced = langfuse_client.spans[0].updates[0]["output"]["events"]
+    traced = langfuse_client.spans[-1].updates[0]["output"]["events"]
     traced_custom = [e for e in traced if e["stream"] == "custom"]
     assert any(e["content"]["tool_name"] == "Canvas" for e in traced_custom)
     assert CANVAS_DOC not in json.dumps(traced_custom)
+
+
+@pytest.mark.asyncio
+async def test_run_agui_error_event_carries_code_and_detail(monkeypatch):
+    langfuse_client = FakeLangfuseClient()
+    monkeypatch.setattr("agent.agent_executor.get_client", lambda: langfuse_client)
+    monkeypatch.setattr(
+        "agent.agent_executor.propagate_attributes",
+        lambda **_kwargs: nullcontext(),
+    )
+    agent = FailingAgent()
+    runner = MUCGPTAgentExecutor(agent)
+
+    events = [
+        event
+        async for event in runner.run_agui_with_streaming(
+            messages=[InputMessage(role="user", content="hi")],
+            temperature=0.7,
+            model="test",
+            user_info=AuthenticationResult(token="t", user_id="u", department="d"),
+            conversation_id="conv-1",
+        )
+    ]
+
+    error_event = next(e for e in events if e.type == EventType.RUN_ERROR)
+    assert error_event.code in PROVIDER_ERROR_CODES
+    assert "RuntimeError" in error_event.message
+    assert error_event.metadata == {"detail": error_event.message}
 
 
 @pytest.mark.asyncio

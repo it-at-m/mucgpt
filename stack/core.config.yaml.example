@@ -22,7 +22,6 @@
 # General settings
 version: "0.7.1"
 log_config: "logconf.yaml"
-ag_ui_enabled: false
 
 # Frontend settings
 env_name: "MUCGPT🦜"
@@ -64,6 +63,13 @@ db:
   # For real deployments provide it via MUCGPT_CORE_DB__PASSWORD instead of storing it here.
   password: "admin"
 
+# Document-library ingestion bounds (MUCGPT_CORE_DOCUMENTS__MAX_UPLOAD_BYTES, etc.).
+# Accepted extracted text is retained verbatim; original binaries are not stored.
+documents:
+  max_upload_bytes: 104857600
+  max_text_bytes: 5242880
+  preview_max_chars: 1000
+
 # Compliance cache settings
 # If enabled, compliance check results are cached in Redis and can be verified by the assistant service.
 compliance_cache_enabled: true
@@ -92,6 +98,9 @@ xberg_timeout: 120.0
 #       prompts:
 #         # General system instructions used for regular chat.
 #         - name: "default_instructions"
+#           label: "production"
+#         # Instructions for reading selected documents from the virtual filesystem.
+#         - name: "document_instructions"
 #           label: "production"
 #     - name: "generation_prompts"
 #       prompts:

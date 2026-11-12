@@ -1,5 +1,6 @@
 // mocks/handlers.js
 import { http, HttpResponse, delay, passthrough } from "msw";
+import { PROVIDER_ERROR_CODES, type ProviderErrorCode } from "../utils/providerError";
 import {
     ApplicationConfig,
     AdminTag,
@@ -12,17 +13,7 @@ import {
     ComplianceCategoryResult,
     ComplianceCheckResponse
 } from "../api";
-import {
-    buildAssistantCreateResponse,
-    buildOwnersDetailedFromOwnerIds,
-    buildChatMessage,
-    buildDrawioChatMessage,
-    buildInvalidDrawioChatMessage,
-    buildRichMarkdownChatMessage,
-    generateChatStreamChunks,
-    generateMindmapStreamChunks,
-    generateSimplifyStreamChunks
-} from "./data/generators";
+import { buildAssistantCreateResponse, buildOwnersDetailedFromOwnerIds, buildChatMessage, buildRichMarkdownChatMessage } from "./data/generators";
 import { CREATIVITY_HIGH, CREATIVITY_MEDIUM } from "../constants";
 import type { AssistantAuditEvent } from "../api/models";
 import { CANVAS_TOOL_IDS } from "../utils/canvasStream";
@@ -151,7 +142,6 @@ const CONFIG_RESPONSE: ApplicationConfig = {
     transcription_enabled: true,
     transcription_model: "istupakov/canary-180m-flash-onnx",
     ai_act_compliance_check_enabled: true,
-    ag_ui_enabled: true,
     canvas_content_max_chars: 256 * 1024,
     canvas_editor_max_chars: 512 * 1024,
     footer_link_url: "https://intranet.example.org",
@@ -617,16 +607,6 @@ function getMockAuditEvents(assistant: AssistantCreateResponse): AssistantAuditE
     return created;
 }
 
-// Helper to choose stream type basierend auf enabled_tools
-/** Picks the SSE stream type mocking tool-less vs tool-enabled chats. */
-function chooseStreamType(enabledTools?: string[]) {
-    const options: Array<"mindmap" | "simplify"> = [];
-    if (enabledTools?.includes("Brainstorming")) options.push("mindmap");
-    if (enabledTools?.includes("Vereinfachen")) options.push("simplify");
-    if (options.length === 0) return "chat" as const; // Kein Tool aktiv => normaler Chat
-    return options[Math.floor(Math.random() * options.length)];
-}
-
 // Mock reasonings for high-risk findings of the EU AI Act compliance check, per category.
 // Written to read like an LLM that analysed a concrete system prompt, not like an abstract rule description.
 const COMPLIANCE_HIGH_RISK_REASONINGS: Record<string, string> = {
@@ -676,22 +656,6 @@ function buildComplianceCheckResponse(systemPrompt: string): ComplianceCheckResp
         overall_status: flagged.size > 0 ? "high_risk_detected" : "passed",
         results
     };
-}
-
-/**
- * Mock control word to pin the ChatUsageIndicator's context percentage for visual testing:
- *   - "#usage<0-100>" in the latest user message -> prompt_tokens sized so lastContextTokens / max_input_tokens
- *     rounds to exactly that percentage of the currently selected model's context window.
- * Without the control word, token counts stay randomized as before.
- */
-function resolveForcedContextTokens(userMessage: string, modelName: string | undefined): number | undefined {
-    const forcedUsage = userMessage.match(/#usage(\d{1,3})/i);
-    if (!forcedUsage) return undefined;
-
-    const targetPercent = Math.min(100, Math.max(0, Number(forcedUsage[1])));
-    const model = CONFIG_RESPONSE.models.find(m => m.id === modelName) ?? CONFIG_RESPONSE.models[0];
-    const maxInputTokens = model.max_input_tokens ?? 128000;
-    return Math.round((targetPercent / 100) * maxInputTokens);
 }
 
 /** Mocked document-upload handler returning parsed text sections. */
@@ -1154,8 +1118,18 @@ export const handlers = [
                 send({ type: "RUN_STARTED", threadId, runId });
                 await delay(100);
 
-                if (/^\s*agui-error\s*$/i.test(latestUserMessage)) {
-                    send({ type: "RUN_ERROR", message: "Mock AG-UI error" });
+                if (/^\s*agui-error(?:\s+\S+)?\s*$/i.test(latestUserMessage)) {
+                    // Error variants: "agui-error", "agui-error rate_limited",
+                    // "agui-error content_filter", … exercise the i18n mapping.
+                    const requestedCode = latestUserMessage
+                        .replace(/^\s*agui-error/i, "")
+                        .trim()
+                        .toLowerCase();
+                    const code: ProviderErrorCode = (PROVIDER_ERROR_CODES as readonly string[]).includes(requestedCode)
+                        ? (requestedCode as ProviderErrorCode)
+                        : "server_error";
+                    const detail = `exception: openai.InternalServerError\nstatus: 500\nmessage: Mock provider failure (${code})`;
+                    send({ type: "RUN_ERROR", message: detail, code, metadata: { detail } });
                     controller.close();
                     return;
                 }
@@ -1207,103 +1181,6 @@ export const handlers = [
             }
         });
     }),
-    http.post("/api/backend/v1/chat/completions", async ({ request }) => {
-        const body = (await request.json()) as {
-            stream?: boolean;
-            messages?: { role: string; content: string }[];
-            enabled_tools?: string[];
-            model?: string;
-            canvas?: CanvasState | null;
-        };
-        const latestUserMessage =
-            body.messages
-                ?.slice()
-                .reverse()
-                .find(m => m.role === "user")?.content || "";
-        // E2E demos (tools off): exact phrases only. A ```drawio fence must NOT trigger this.
-        const wantsRichMarkdownMock = /^\s*rich\s*$/i.test(latestUserMessage);
-        const wantsValidDrawioMock = /^\s*valid-drawio\s*$/i.test(latestUserMessage);
-        const wantsInvalidDrawioMock = /^\s*invalid-drawio\s*$/i.test(latestUserMessage);
-
-        if (body?.stream) {
-            const encoder = new TextEncoder();
-            const streamType = chooseStreamType(body.enabled_tools);
-            const stream = new ReadableStream({
-                async start(controller) {
-                    let chunks: any[] = [];
-                    const forcedContextTokens = resolveForcedContextTokens(latestUserMessage, body.model);
-                    // Canvas first: an open canvas means the request carries canvas state,
-                    // and the mocked canvas flow must not be shadowed by the tool-specific
-                    // demo streams (mindmap/simplify).
-                    if (body.canvas && /^\s*canvas-demo\s*$/i.test(latestUserMessage)) {
-                        // Legacy SSE fallback: the canvas content lands as a
-                        // ```MUCGPTCanvas fenced block in the chat answer.
-                        chunks = generateChatStreamChunks(
-                            "Ich habe den Canvas-Inhalt aktualisiert:\n\n```MUCGPTCanvas\n" + MOCK_CANVAS_DOCUMENT + "\n```\n",
-                            forcedContextTokens
-                        );
-                    } else if (streamType === "mindmap") {
-                        const topic = latestUserMessage || "Künstliche Intelligenz";
-                        chunks = generateMindmapStreamChunks(topic, forcedContextTokens);
-                    } else if (streamType === "simplify") {
-                        chunks = generateSimplifyStreamChunks(forcedContextTokens);
-                    } else if (wantsRichMarkdownMock) {
-                        chunks = generateChatStreamChunks(buildRichMarkdownChatMessage(), forcedContextTokens);
-                    } else if (wantsValidDrawioMock) {
-                        chunks = generateChatStreamChunks(buildDrawioChatMessage(), forcedContextTokens);
-                    } else if (wantsInvalidDrawioMock) {
-                        chunks = generateChatStreamChunks(buildInvalidDrawioChatMessage(), forcedContextTokens);
-                    } else {
-                        let reply = buildChatMessage();
-                        if (Math.random() > 0.7) {
-                            reply +=
-                                "\n\nHier ist eine beispielhafte Tabelle:\n\n| Name | Kategorie | Wert |\n| :--- | :---: | ---: |\n| Element A | Gruppe 1 | 123.45 |\n| Element B | Gruppe 2 | 67.89 |\n| Element C | Gruppe 1 | 99.99 |\n| Element D | Gruppe 3 | 10.00 |\n\n";
-                        }
-                        chunks = generateChatStreamChunks(reply, forcedContextTokens);
-                    }
-                    for (const chunk of chunks) {
-                        controller.enqueue(encoder.encode(`data: ${JSON.stringify(chunk)}\n\n`));
-                        await delay(50);
-                    }
-                    controller.enqueue(encoder.encode("data: [DONE]\n\n"));
-                    controller.close();
-                }
-            });
-            return new HttpResponse(stream, {
-                headers: {
-                    "Content-Type": "text/event-stream",
-                    "Cache-Control": "no-cache",
-                    Connection: "keep-alive"
-                }
-            });
-        }
-        // Non-streaming fallback
-        await delay(400);
-        return HttpResponse.json({
-            id: `chatcmpl-mock-${Math.random().toString(36).slice(2, 10)}`,
-            object: "chat.completion",
-            created: Math.floor(Date.now() / 1000),
-            model: "example-model",
-            choices: [
-                {
-                    index: 0,
-                    message: {
-                        role: "assistant",
-                        content: wantsRichMarkdownMock
-                            ? buildRichMarkdownChatMessage()
-                            : wantsValidDrawioMock
-                              ? buildDrawioChatMessage()
-                              : wantsInvalidDrawioMock
-                                ? buildInvalidDrawioChatMessage()
-                                : buildChatMessage()
-                    },
-                    finish_reason: "stop"
-                }
-            ],
-            usage: { prompt_tokens: 12, completion_tokens: 28, total_tokens: 40 }
-        });
-    }),
-
     http.post("/api/backend/v1/generations/assistant-draft", async ({ request }) => {
         await delay(500);
         const body = (await request.json()) as { prompt_seed?: string };

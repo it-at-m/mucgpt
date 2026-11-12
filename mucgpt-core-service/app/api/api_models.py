@@ -4,7 +4,39 @@ from typing import Any, Final, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, PositiveInt, field_validator
 
+from api.exception import ProviderErrorPayload
 from config.settings import ReasoningEffort, get_settings
+
+
+class DocumentMetadata(BaseModel):
+    """Ready document metadata; excludes extracted bodies and storage ownership."""
+
+    id: str = Field(description="Server-generated document UUID.")
+    filename: str = Field(description="Original filename, for display only.")
+    mime_type: str = Field(description="Upload MIME type; not verified format support.")
+    original_size: int = Field(ge=0, description="Original upload size in bytes.")
+    text_length: int = Field(
+        ge=0, description="Extracted text length in Unicode characters."
+    )
+    preview: str = Field(description="Bounded initial excerpt, not the complete text.")
+    preview_kind: Literal["initial_excerpt"]
+    path: str = Field(description="Stable model-visible document path.")
+    created_at: datetime
+
+
+class DocumentLibraryEntry(BaseModel):
+    """Library metadata, including entries that still occupy a quota slot."""
+
+    id: str
+    filename: str
+    mime_type: str
+    original_size: int = Field(ge=0)
+    status: Literal["processing", "ready", "deleting"]
+    text_length: int | None = Field(default=None, ge=0)
+    preview: str | None = None
+    preview_kind: Literal["initial_excerpt"] | None = None
+    path: str
+    created_at: datetime
 
 
 class SummarizeResult(BaseModel):
@@ -199,6 +231,13 @@ class ChatCompletionRequest(BaseModel):
         None,
         description="Canvas document state for the canvas feature",
     )
+    document_ids: list[str] = Field(
+        default_factory=list,
+        description=(
+            "IDs of library documents to attach for this turn, authorized server-side. "
+            "Omitted or empty IDs mean no attachments."
+        ),
+    )
     model_config = ConfigDict(
         json_schema_extra={
             "example": {
@@ -283,6 +322,12 @@ class ChatCompletionResponse(BaseModel):
         ..., description="List of completion choices"
     )
     usage: Usage = Field(..., description="Token usage information")
+    error: ProviderErrorPayload | None = Field(
+        None,
+        description=(
+            "Structured provider error; present when finish_reason is 'error'"
+        ),
+    )
     model_config = ConfigDict(
         json_schema_extra={
             "example": {
@@ -361,6 +406,13 @@ class ChatCompletionChunk(BaseModel):
     )
     usage: Usage | None = Field(
         None, description="Token usage information; present on the final chunk"
+    )
+    error: ProviderErrorPayload | None = Field(
+        None,
+        description=(
+            "Structured provider error; present on the final chunk when "
+            "finish_reason is 'error'"
+        ),
     )
     model_config = ConfigDict(
         json_schema_extra={
@@ -574,6 +626,14 @@ class ConversationMetadata(BaseModel):
         ...,
         description="Last activity on the conversation (new message or title change).",
     )
+    document_ids: list[str] = Field(
+        default_factory=list,
+        description="Saved document selection, including IDs that may no longer be available.",
+    )
+    document_names: dict[str, str] = Field(
+        default_factory=dict,
+        description="Original filenames of selected documents, retained after deletion.",
+    )
 
     @field_validator("title", mode="before")
     @staticmethod
@@ -706,10 +766,6 @@ class ConfigResponse(BaseModel):
     owner_profile_url_template: str | None = Field(
         None,
         description="Template for assistant owner profile links. The '{uid}' placeholder is replaced with the owner user ID.",
-    )
-    ag_ui_enabled: bool = Field(
-        False,
-        description="Whether the AG UI is enabled.",
     )
     canvas_content_max_chars: int = Field(
         default=CANVAS_CONTENT_MAX_CHARS,

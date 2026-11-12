@@ -1,12 +1,14 @@
 from collections.abc import Sequence
+from contextlib import nullcontext
 from typing import Any
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from fastapi.testclient import TestClient
 from langchain_core.messages import AIMessage
 
 from core.lf_prompts import ResolvedPrompt
+from core.llm_helpers import hash_user_id
 
 
 @pytest.fixture(autouse=True)
@@ -15,6 +17,21 @@ def generation_prompts(monkeypatch: pytest.MonkeyPatch) -> None:
         "api.routers.generation_router.read_prompt_file_with_metadata",
         lambda filename: ResolvedPrompt(content=f"{filename} instruction"),
     )
+
+
+@pytest.fixture
+def langfuse_root(monkeypatch: pytest.MonkeyPatch):
+    client = MagicMock()
+    client.create_trace_id.return_value = "a" * 32
+    observation = (
+        client.start_as_current_observation.return_value.__enter__.return_value
+    )
+    propagate_attributes = MagicMock(side_effect=lambda **_kwargs: nullcontext())
+    monkeypatch.setattr("api.routers.generation_router.get_client", lambda: client)
+    monkeypatch.setattr(
+        "api.routers.generation_router.propagate_attributes", propagate_attributes
+    )
+    return client, observation, propagate_attributes
 
 
 class _FakeConfiguredModel:
@@ -43,7 +60,7 @@ class _FakeConfiguredModel:
 @pytest.mark.integration
 @patch("core.llm_helpers.ModelRegistry.get_model")
 def test_generate_assistant_draft_direct_and_parallel(
-    mock_get_model, test_client: TestClient
+    mock_get_model, test_client: TestClient, langfuse_root
 ) -> None:
     responses = {
         "assistant-draft-system-prompt": "System Prompt Text",
@@ -63,6 +80,18 @@ def test_generate_assistant_draft_direct_and_parallel(
     assert body["description"] == "Beschreibungssatz"
     assert body["title"] == "Titel"
     assert mock_get_model.call_count == 3
+    client, observation, propagate_attributes = langfuse_root
+    client.start_as_current_observation.assert_called_once_with(
+        name="assistant-draft-generation",
+        input="Hilft bei Meeting-Protokollen",
+        trace_context={"trace_id": "a" * 32},
+    )
+    propagate_attributes.assert_called_once_with(
+        user_id=hash_user_id("test_user_123"),
+        tags=["assistant-draft"],
+        trace_name="assistant-draft-generation",
+    )
+    observation.update.assert_called_once_with(output=body)
 
 
 @pytest.mark.integration
@@ -72,7 +101,7 @@ def test_generate_assistant_draft_direct_and_parallel(
 )
 @patch("core.llm_helpers.ModelRegistry.get_model")
 def test_generate_chat_title_direct_model(
-    mock_get_model, mock_set_title, test_client: TestClient
+    mock_get_model, mock_set_title, test_client: TestClient, langfuse_root
 ) -> None:
     responses = {
         "chat-title-generation": "E-Mail Hilfe",
@@ -104,6 +133,22 @@ def test_generate_chat_title_direct_model(
         "Nutzernachricht:\nWie schreibe ich eine Antwort?\n\n"
         "Assistentenantwort:\nHier ist eine Struktur..."
     )
+    client, observation, propagate_attributes = langfuse_root
+    client.start_as_current_observation.assert_called_once_with(
+        name="chat-title-generation",
+        input={
+            "query": "Wie schreibe ich eine Antwort?",
+            "answer": "Hier ist eine Struktur...",
+        },
+        trace_context={"trace_id": "a" * 32},
+    )
+    propagate_attributes.assert_called_once_with(
+        user_id=hash_user_id("test_user_123"),
+        tags=["chat-title"],
+        session_id="conv-1",
+        trace_name="chat-title-generation",
+    )
+    observation.update.assert_called_once_with(output=body)
 
 
 @pytest.mark.integration
@@ -184,4 +229,7 @@ def test_generate_assistant_draft_error_mapping(
 
     assert resp.status_code == 500
     detail = resp.json().get("detail", "")
-    assert "Fehler" in detail or "Ein Fehler" in detail
+    # Human-readable phrase, no raw exception body, plus the stable error code.
+    assert "An unexpected error occurred" in detail
+    assert "(unknown)" in detail
+    assert "boom" not in detail

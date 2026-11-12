@@ -19,29 +19,13 @@ CONVERSATION_ID = "conv-test-1"
 
 
 def _fake_agent() -> Mock:
-    from api.api_models import (
-        ChatCompletionChoice,
-        ChatCompletionMessage,
-        ChatCompletionResponse,
-        Usage,
-    )
-
     agent = Mock()
-    agent.run_without_streaming = AsyncMock(
-        return_value=ChatCompletionResponse(
-            id="chatcmpl-test",
-            object="chat.completion",
-            created=1,
-            choices=[
-                ChatCompletionChoice(
-                    index=0,
-                    message=ChatCompletionMessage(role="assistant", content="Hi"),
-                    finish_reason="stop",
-                )
-            ],
-            usage=Usage(prompt_tokens=1, completion_tokens=1, total_tokens=2),
-        )
-    )
+
+    async def events():
+        if False:
+            yield None
+
+    agent.run_agui_with_streaming = Mock(return_value=events())
     return agent
 
 
@@ -314,7 +298,7 @@ class TestCanvasEndpoints:
             "canvas": {"content": "# Canvas", "selection": None},
         }
 
-        response = test_client.post("/v1/chat/completions", json=payload)
+        response = test_client.post("/v1/chat/v2/completions", json=payload)
 
         assert response.status_code == 200, response.text
         upsert_mock.assert_awaited_once_with(CONVERSATION_ID, "# Canvas", USER_ID)
@@ -335,7 +319,7 @@ class TestCanvasEndpoints:
             },
         }
 
-        response = test_client.post("/v1/chat/completions", json=payload)
+        response = test_client.post("/v1/chat/v2/completions", json=payload)
 
         assert response.status_code == 422, response.text
         upsert_mock.assert_not_awaited()
@@ -354,7 +338,7 @@ class TestCanvasEndpoints:
             "canvas": {"content": "# Canvas", "selection": None},
         }
 
-        response = test_client.post("/v1/chat/completions", json=payload)
+        response = test_client.post("/v1/chat/v2/completions", json=payload)
 
         assert response.status_code == 200, response.text
         upsert_mock.assert_not_awaited()

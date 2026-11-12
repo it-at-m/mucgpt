@@ -33,13 +33,14 @@ async def parse_file(file: UploadFile, user_info=Depends(authenticate_user)) -> 
     """
     Parses a file using the configured backend and returns the extracted text content.
     """
-    if settings.parser_backend == ParserBackendType.NONE:
+    logger.info(f"Parsing file '{file.filename}' ({file.size} bytes)")
+    parser = _parser
+    if settings.parser_backend == ParserBackendType.NONE or parser is None:
         raise HTTPException(
             status_code=503, detail="Document processing is not enabled."
         )
-    logger.info(f"Parsing file '{file.filename}' ({file.size} bytes)")
     try:
-        content = await _parser.parse(file)
+        content = await parser.parse(file)
     except httpx.TimeoutException as exc:
         logger.error(
             f"Timeout while parsing file '{file.filename}': {exc}",

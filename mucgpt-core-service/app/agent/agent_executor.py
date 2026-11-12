@@ -43,7 +43,7 @@ from api.api_models import (
     Usage,
 )
 from api.api_models import ChatCompletionMessage as InputMessage
-from api.exception import llm_exception_handler
+from api.exception import llm_error_payload
 from config.langfuse_provider import LangfuseProvider
 from core.auth_models import AuthenticationResult
 from core.llm_helpers import (
@@ -229,7 +229,6 @@ class MUCGPTAgentExecutor:
             return None
         return {"metadata": {"tags": tags}}
 
-    @observe(name="Agent", capture_input=False, capture_output=False)
     async def run_with_streaming(
         self,
         messages: list[InputMessage],
@@ -266,10 +265,9 @@ class MUCGPTAgentExecutor:
             user_id=hash_user_id(user_info.user_id if user_info else None),
             tags=tags,
             session_id=conversation_id,
+            trace_name="Agent",
         ):
-            # capture_input/output are disabled on @observe above to avoid
-            # duplicating the full resent history; set a lightweight
-            # trace-level summary instead so it isn't blank in the UI.
+            # Record only the latest input rather than the full resent history.
             get_client().update_current_span(
                 input=messages[-1].content if messages else None
             )
@@ -410,18 +408,19 @@ class MUCGPTAgentExecutor:
             except Exception as ex:
                 _write_stream_trace_span(messages, trace_events)
                 logger.error("Streaming error: %s", str(ex), exc_info=True)
-                error_msg = llm_exception_handler(ex=ex, logger=logger)
+                error_payload = llm_error_payload(ex=ex, logger=logger)
                 yield ChatCompletionChunk(
                     id=id_,
                     object="chat.completion.chunk",
                     created=created,
                     choices=[
                         ChatCompletionChunkChoice(
-                            delta=ChatCompletionDelta(content=error_msg),  # type: ignore
+                            delta=ChatCompletionDelta(content=""),
                             index=0,
                             finish_reason="error",
                         )
                     ],
+                    error=error_payload,
                 ).model_dump()
                 return
             finally:
@@ -479,6 +478,7 @@ class MUCGPTAgentExecutor:
             user_id=hash_user_id(user_info.user_id if user_info else None),
             tags=tags,
             session_id=conversation_id,
+            trace_name="Completion",
         ):
             token_usage = TokenUsage()
             request_config = RunnableConfig(
@@ -557,7 +557,7 @@ class MUCGPTAgentExecutor:
                 return response
             except Exception as ex:
                 logger.error("Non-streaming error: %s", str(ex), exc_info=True)
-                error_msg = llm_exception_handler(ex=ex, logger=logger)
+                error_payload = llm_error_payload(ex=ex, logger=logger)
                 return ChatCompletionResponse(
                     id=str(uuid.uuid4()),
                     object="chat.completion",
@@ -566,7 +566,7 @@ class MUCGPTAgentExecutor:
                         ChatCompletionChoice(
                             message=ChatCompletionMessage(
                                 role="assistant",
-                                content=error_msg,
+                                content="",
                             ),
                             index=0,
                             finish_reason="error",
@@ -578,11 +578,11 @@ class MUCGPTAgentExecutor:
                         total_tokens=0,
                         context_tokens=None,
                     ),
+                    error=error_payload,
                 )
 
     ###############################################################################
     ###############################################################################
-    @observe(name="Agent", capture_input=False, capture_output=False)
     async def run_agui_with_streaming(
         self,
         messages: list[InputMessage],
@@ -607,6 +607,7 @@ class MUCGPTAgentExecutor:
             user_id=hash_user_id(user_info.user_id),
             tags=tags,
             session_id=conversation_id,
+            trace_name="Agent",
         ):
             # Same lightweight trace input as run_with_streaming.
             get_client().update_current_span(
@@ -781,9 +782,14 @@ class MUCGPTAgentExecutor:
             except Exception as ex:
                 _write_stream_trace_span(messages, trace_events)
                 logger.exception("Exception in AG-UI streaming")
+                # AG-UI contract: message carries the technical detail,
+                # code + metadata carry the structured error for the frontend.
+                error_payload = llm_error_payload(ex=ex, logger=logger)
                 yield RunErrorEvent(
                     type=EventType.RUN_ERROR,
-                    message=llm_exception_handler(ex=ex, logger=logger),
+                    message=error_payload.detail,
+                    code=error_payload.code,
+                    metadata={"detail": error_payload.detail},
                 )
             finally:
                 await close_stream(graph_stream)

@@ -1,6 +1,7 @@
 import i18n from "i18next";
 import { initReactI18next } from "react-i18next";
 import { tutorialsTranslations } from "./i18n.tutorials";
+import { documentLibraryTranslations } from "./i18n.documents";
 
 i18n
     // pass the i18n instance to react-i18next.
@@ -16,6 +17,7 @@ i18n
         resources: {
             DE: {
                 translation: {
+                    document_library: documentLibraryTranslations.DE,
                     header: {
                         nutzungsbedingungen: "Nutzungsbedingungen",
                         create_assistant: "Assistent erstellen",
@@ -297,7 +299,26 @@ i18n
                             configuration_error: "Konfigurationsfehler",
                             unauthorized_title: "Zugriff verweigert",
                             unauthorized_message: "Hallo {{name}}, Sie haben keine Berechtigung, auf diese Anwendung zuzugreifen.",
-                            unauthorized_link_text: "Zugriff beantragen "
+                            unauthorized_link_text: "Zugriff beantragen ",
+                            provider: {
+                                details: "Details anzeigen",
+                                details_title: "Fehlerdetails",
+                                copy_details: "Details kopieren",
+                                details_copied: "Kopiert",
+                                details_copy_failed: "Kopieren fehlgeschlagen",
+                                close_details: "Schließen",
+                                unknown: "Im Chat ist ein Fehler aufgetreten. Bitte versuchen Sie es erneut.",
+                                content_filter: "Die Antwort wurde vom Inhaltsfilter blockiert. Der Chat kann an dieser Stelle nicht fortgesetzt werden.",
+                                rate_limited: "Der KI-Dienst ist derzeit stark ausgelastet. Bitte versuchen Sie es in Kürze erneut.",
+                                authentication: "Die Anmeldung beim KI-Dienst ist fehlgeschlagen. Bitte wenden Sie sich an den Support.",
+                                permission_denied: "MUCGPT darf dieses Modell nicht nutzen. Bitte wenden Sie sich an den Support.",
+                                model_not_found: "Das ausgewählte Modell ist beim KI-Dienst nicht verfügbar. Bitte wählen Sie ein anderes Modell.",
+                                context_length_exceeded:
+                                    "Die Unterhaltung ist zu lang für dieses Modell. Beginnen Sie einen neuen Chat oder kürzen Sie die Nachricht.",
+                                request_timeout: "Der KI-Dienst hat nicht rechtzeitig geantwortet. Bitte versuchen Sie es erneut.",
+                                connection_error: "Der KI-Dienst ist derzeit nicht erreichbar. Bitte versuchen Sie es später erneut.",
+                                server_error: "Der KI-Dienst meldet einen internen Fehler. Bitte versuchen Sie es später erneut."
+                            }
                         }
                     },
                     components: {
@@ -1021,6 +1042,7 @@ i18n
             },
             EN: {
                 translation: {
+                    document_library: documentLibraryTranslations.EN,
                     header: {
                         nutzungsbedingungen: "Terms of use",
                         create_assistant: "Create assistant",
@@ -1300,7 +1322,25 @@ i18n
                             configuration_error: "Configuration error",
                             unauthorized_title: "Access Denied",
                             unauthorized_message: "Hello {{name}}, you do not have permission to access this application.",
-                            unauthorized_link_text: "Get permission"
+                            unauthorized_link_text: "Get permission",
+                            provider: {
+                                details: "Show details",
+                                details_title: "Error details",
+                                copy_details: "Copy details",
+                                details_copied: "Copied",
+                                details_copy_failed: "Copy failed",
+                                close_details: "Close",
+                                unknown: "A chat error occurred. Please try again.",
+                                content_filter: "The response was blocked by the content filter. The chat cannot continue here.",
+                                rate_limited: "The AI service is currently under heavy load. Please try again shortly.",
+                                authentication: "Sign-in to the AI service failed. Please contact support.",
+                                permission_denied: "MUCGPT is not permitted to use this model. Please contact support.",
+                                model_not_found: "The selected model is not available on the AI service. Please choose another model.",
+                                context_length_exceeded: "This conversation is too long for the model. Start a new chat or shorten your message.",
+                                request_timeout: "The AI service did not respond in time. Please try again.",
+                                connection_error: "The AI service is currently unreachable. Please try again later.",
+                                server_error: "The AI service reported an internal error. Please try again later."
+                            }
                         }
                     },
                     components: {
@@ -2011,6 +2051,7 @@ i18n
             },
             BA: {
                 translation: {
+                    document_library: documentLibraryTranslations.BA,
                     header: {
                         nutzungsbedingungen: "Gebrauchsvorschriftn",
                         create_assistant: "Assistenten erstoin",
@@ -2204,7 +2245,25 @@ i18n
                             configuration_error: "Konfigurationsfehler",
                             unauthorized_title: "Zugriff verweigert",
                             unauthorized_message: "Servus {{name}}, du host koa Berechtigung, dass du auf desah Applikation zugreifen kannst.",
-                            unauthorized_link_text: "Berechtigung holn"
+                            unauthorized_link_text: "Berechtigung holn",
+                            provider: {
+                                details: "Details zoagn",
+                                details_title: "Fehlerdetails",
+                                copy_details: "Details kopian",
+                                details_copied: "Kopiat",
+                                details_copy_failed: "Kopiern hod ned funkzioniart",
+                                close_details: "Zuamacha",
+                                unknown: "Im Chat is a Fejla aufgtret. Bitte versuach's amoi nei.",
+                                content_filter: "De Antwort is vom Inhaltsfilter blokiert worn. Da Chat ko an der Stej ned weitermachn.",
+                                rate_limited: "Da KI-Diest is grad staak ausglastet. Bitte versuach's noch a Weile amoi.",
+                                authentication: "De Ammedung beim KI-Diest is fehlgschlogt. Bitte wend di on'n Support.",
+                                permission_denied: "MUCGPT deaf des Modell ned vawendn. Bitte wend di on'n Support.",
+                                model_not_found: "Des ausewölte Modell is beim KI-Diest ned verfügbar. Bitte wöhä eir onders Modell.",
+                                context_length_exceeded: "De Untaholting is z'lang fer des Modell. Ofang a naichn Chat oda künz de Nochricht.",
+                                request_timeout: "Da KI-Diest hot ned rechtzeitig geantwortet. Bitte versuach's amoi nei.",
+                                connection_error: "Da KI-Diest is grad ned erreichbor. Bitte versuach's spader noi.",
+                                server_error: "Da KI-Diest mödt on inern Fejla. Bitte versuach's spader noi."
+                            }
                         }
                     },
                     canvas: {
@@ -2973,6 +3032,7 @@ i18n
             },
             FR: {
                 translation: {
+                    document_library: documentLibraryTranslations.FR,
                     header: {
                         nutzungsbedingungen: "Conditions d'utilisation",
                         create_assistant: "Créer un assistant",
@@ -3238,7 +3298,26 @@ i18n
                             configuration_error: "Erreur de configuration",
                             unauthorized_title: "Accès refusé",
                             unauthorized_message: "Bonjour {{name}}, vous n'avez pas la permission d'accéder à cette application.",
-                            unauthorized_link_text: "Obtenir la permission"
+                            unauthorized_link_text: "Obtenir la permission",
+                            provider: {
+                                details: "Afficher les détails",
+                                details_title: "Détails de l'erreur",
+                                copy_details: "Copier les détails",
+                                details_copied: "Copié",
+                                details_copy_failed: "Échec de la copie",
+                                close_details: "Fermer",
+                                unknown: "Une erreur s'est produite dans le chat. Veuillez réessayer.",
+                                content_filter: "La réponse a été bloquée par le filtre de contenu. Le chat ne peut pas continuer ici.",
+                                rate_limited: "Le service d'IA est actuellement très sollicité. Veuillez réessayer dans un instant.",
+                                authentication: "La connexion au service d'IA a échoué. Veuillez contacter le support.",
+                                permission_denied: "MUCGPT n'est pas autorisé à utiliser ce modèle. Veuillez contacter le support.",
+                                model_not_found: "Le modèle sélectionné n'est pas disponible sur le service d'IA. Veuillez en choisir un autre.",
+                                context_length_exceeded:
+                                    "La conversation est trop longue pour ce modèle. Commencez un nouveau chat ou raccourcissez votre message.",
+                                request_timeout: "Le service d'IA n'a pas répondu à temps. Veuillez réessayer.",
+                                connection_error: "Le service d'IA est actuellement injoignable. Veuillez réessayer plus tard.",
+                                server_error: "Le service d'IA a signalé une erreur interne. Veuillez réessayer plus tard."
+                            }
                         }
                     },
                     components: {
@@ -3937,6 +4016,7 @@ i18n
             },
             UK: {
                 translation: {
+                    document_library: documentLibraryTranslations.UK,
                     header: {
                         go_to_tutorials_aria: "Перейти до навчальних матеріалів та інструкцій",
                         go_to_tutorials: "Навчальні матеріали",
@@ -4201,7 +4281,25 @@ i18n
                             configuration_error: "Помилка конфігурації",
                             unauthorized_title: "Доступ заборонено",
                             unauthorized_message: "Привіт, {{name}}, у вас немає дозволу на доступ до цього додатку.",
-                            unauthorized_link_text: "Отримати дозвіл"
+                            unauthorized_link_text: "Отримати дозвіл",
+                            provider: {
+                                details: "Показати деталі",
+                                details_title: "Деталі помилки",
+                                copy_details: "Копіювати деталі",
+                                details_copied: "Скопійовано",
+                                details_copy_failed: "Не вдалося скопіювати",
+                                close_details: "Закрити",
+                                unknown: "У чаті сталася помилка. Спробуйте ще раз.",
+                                content_filter: "Відповідь заблокував фільтр вмісту. Чат не можна продовжити в цьому місці.",
+                                rate_limited: "Служба ШІ зараз перевантажена. Спробуйте незабаром ще раз.",
+                                authentication: "Не вдалося увійти до служби ШІ. Зверніться до служби підтримки.",
+                                permission_denied: "MUCGPT не має дозволу на використання цієї моделі. Зверніться до служби підтримки.",
+                                model_not_found: "Обрана модель недоступна у службі ШІ. Виберіть іншу модель.",
+                                context_length_exceeded: "Розмова задовга для цієї моделі. Почніть новий чат або скоротіть повідомлення.",
+                                request_timeout: "Служба ШІ вчасно не відповіла. Спробуйте ще раз.",
+                                connection_error: "Служба ШІ зараз недоступна. Спробуйте пізніше.",
+                                server_error: "Служба ШІ повідомила про внутрішню помилку. Спробуйте пізніше."
+                            }
                         }
                     },
                     components: {

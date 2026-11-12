@@ -347,7 +347,8 @@ services:
       - "8086:8000"
     environment:
       - XBERG_CORS_ORIGINS=https://localhost
-      - XBERG_MAX_UPLOAD_SIZE_MB=500
+      - XBERG_MAX_REQUEST_BODY_BYTES=104857600
+      - XBERG_MAX_MULTIPART_FIELD_BYTES=104857600
       - RUST_LOG=info
     volumes:
       - cache-data:/app/.xberg

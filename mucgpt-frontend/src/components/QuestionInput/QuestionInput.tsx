@@ -6,10 +6,10 @@ import { useTranslation } from "react-i18next";
 import styles from "./QuestionInput.module.css";
 import { useAutoGrowTextarea } from "./useAutoGrowTextarea";
 import { Button as SubtleButton } from "../../ui/Button";
-import { uploadFileApi } from "../../api/core-client";
+import { uploadDocumentApi } from "../../api/documents-client";
 import { Model, ToolListResponse } from "../../api/models";
 import { useConfigContext } from "../../context/ConfigContext";
-import { upsertParsedDocumentFromUpload } from "../../service/parsedDocumentStorage";
+import { documentToUploadedData } from "../ContextManagerDialog/DocumentLibrary";
 import { ContextManagerDialog, UploadedData, createUploadedData, getDataSignature, getFileSignature } from "../ContextManagerDialog/ContextManagerDialog";
 import { ChatDisclaimer } from "../ChatDisclaimer";
 import { ChatToolSelector } from "../ChatToolSelector/ChatToolSelector";
@@ -348,24 +348,12 @@ export const QuestionInput = ({
             onDataChange?.(updatedData);
 
             newData.forEach(data => {
-                uploadFileApi(data.file)
-                    .then(fileContent => {
-                        const storedDocument = upsertParsedDocumentFromUpload(data.file, fileContent);
+                const file = data.file;
+                if (!file) return;
+                uploadDocumentApi(file)
+                    .then(document => {
                         const currentData = uploadedDataRef.current;
-                        const nextData = currentData.map(currentItem =>
-                            currentItem.id === data.id
-                                ? {
-                                      ...currentItem,
-                                      status: "ready" as const,
-                                      fileContent,
-                                      storedDocumentId: storedDocument?.id,
-                                      parsedAt: storedDocument?.parsedAt,
-                                      fileSignature: storedDocument?.fileSignature,
-                                      mimeType: storedDocument?.mimeType,
-                                      source: "upload" as const
-                                  }
-                                : currentItem
-                        );
+                        const nextData = currentData.map(currentItem => (currentItem.id === data.id ? documentToUploadedData(document) : currentItem));
 
                         setUploadedData(nextData);
                         onDataChange?.(nextData);

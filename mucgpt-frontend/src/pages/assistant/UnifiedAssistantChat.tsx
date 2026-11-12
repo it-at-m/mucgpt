@@ -20,7 +20,6 @@ import { STORAGE_KEYS } from "../layout/LayoutHelper";
 import { ToolStatus } from "../../utils/ToolStreamHandler";
 import { initialRunActivity, type RunActivity } from "../../utils/agUiActivity";
 import { AssistantStrategy, CommunityAssistantStrategy, DeletedCommunityAssistantStrategy, LocalAssistantStrategy } from "./AssistantStrategy";
-import { chatApi } from "../../api/core-client";
 import { useGlobalToastContext } from "../../components/GlobalToastHandler/GlobalToastContext";
 import { getOwnedCommunityAssistants, getUserSubscriptionsApi, subscribeToAssistantApi, unsubscribeFromAssistantApi } from "../../api/assistant-client";
 import { NotSubscribedDialog } from "../../components/NotSubscribedDialog";
@@ -42,8 +41,8 @@ import {
 import { useDuplicateAssistant } from "../discovery/hooks/useDuplicateAssistant";
 import { useMigrateLocalAssistant } from "../../hooks/useMigrateLocalAssistant";
 import { CloseConfirmationDialog } from "../../components/AssistantDialogs/shared/CloseConfirmationDialog";
-import { UploadedData } from "../../components/ContextManagerDialog/ContextManagerDialog";
-import { useConfigContext } from "../../context/ConfigContext";
+import { UploadedData, getSelectedDocumentIds } from "../../components/ContextManagerDialog/ContextManagerDialog";
+import { restoreDocumentSelection } from "../../components/ContextManagerDialog/DocumentLibrary";
 import { useToolStatusToasts } from "../../hooks/useToolStatusToasts";
 import { useCanvasController } from "../../hooks/useCanvasController";
 import { CanvasSplitView } from "../../components/Canvas/CanvasSplitView";
@@ -64,7 +63,6 @@ interface UnifiedAssistantChatProps {
 
 /** Strategy-driven chat page shared by the personal and community assistant views. */
 const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
-    const { ag_ui_enabled: agUiEnabled } = useConfigContext();
     // useReducer für den Chat-Status
     const chatReducer = getChatReducer<Assistant>();
     // Combined states with useReducer
@@ -76,7 +74,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
         allChats: []
     });
 
-    const { showError, showSuccess } = useGlobalToastContext();
+    const { showError, showSuccess, showWarning } = useGlobalToastContext();
 
     // Destructuring for easier access
     const { answers, creativity, systemPrompt, active_chat } = chatState;
@@ -312,6 +310,8 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
     const resetActiveChatState = useCallback(() => {
         setLastQuestionValue("");
         setError(undefined);
+        // A new or reset chat must not inherit the previous chat's documents.
+        setUploadedData([]);
         activeChatRef.current = undefined;
         dispatch({ type: "SET_ACTIVE_CHAT", payload: undefined });
         dispatch({ type: "CLEAR_ANSWERS" });
@@ -588,14 +588,14 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
             const askResponse: AskResponse = {} as AskResponse;
             const options: ChatOptions = {
                 system: systemOverride ?? systemPrompt ?? "",
-                creativity: creativity
+                creativity: creativity,
+                document_ids: getSelectedDocumentIds(uploadedData)
             };
             try {
                 await makeApiRequest(
                     answers,
                     question,
                     dispatch,
-                    chatApi,
                     LLM,
                     activeChatRef,
                     assistantChatStorage,
@@ -611,7 +611,6 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                     lastAnswerRef,
                     setIsLoadingValue,
                     requestPersist,
-                    agUiEnabled,
                     undefined, // onAgUiEvent — event log is only wired up in the main chat
                     setRunActivity,
                     canvasWiring
@@ -637,8 +636,8 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
             isLegacyAssistant,
             isAssistantUnavailable,
             historyReadOnly,
-            agUiEnabled,
-            canvasWiring
+            canvasWiring,
+            uploadedData
         ]
     );
 
@@ -664,11 +663,21 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
             if (!chat) {
                 return false;
             }
+            // The transcript must load even when the document library is
+            // unreachable: fall back to an empty selection with a warning.
+            let selection: UploadedData[] = [];
+            try {
+                selection = await restoreDocumentSelection(chat.documentIds ?? [], chat.documentNames);
+            } catch (restoreError) {
+                console.error("Could not restore document selection:", restoreError);
+                showWarning(t("document_library.restore_failed_title"), t("document_library.restore_failed_message"));
+            }
 
             setError(undefined);
             dispatch({ type: "SET_ANSWERS", payload: chat.messages });
             setLastQuestionValue(chat.messages.length > 0 ? chat.messages[chat.messages.length - 1].user : "");
             dispatch({ type: "SET_ACTIVE_CHAT", payload: id });
+            setUploadedData(selection);
 
             setTimeout(() => {
                 scrollToBottom();
@@ -676,7 +685,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
 
             return true;
         },
-        [assistantChatStorage, assistant_id, assistantConfig, scrollToBottom, setLastQuestionValue]
+        [assistantChatStorage, assistant_id, assistantConfig, scrollToBottom, setLastQuestionValue, showWarning, t]
     );
 
     useEffect(() => {

@@ -13,6 +13,7 @@ from langchain.agents.middleware import (
     ToolCallRequest,
 )
 from langchain_core.messages import (
+    AIMessage,
     AnyMessage,
     HumanMessage,
     SystemMessage,
@@ -255,6 +256,27 @@ def _inject_data_sources(
     return messages_copy
 
 
+def _normalize_assistant_messages(messages: list[AnyMessage]) -> list[AnyMessage]:
+    """Remove empty assistant messages rejected by strict compatible APIs.
+
+    Some providers, including Azure AI's Mistral endpoint, reject an assistant
+    message when both ``content`` and ``tool_calls`` are absent. The frontend
+    can also resend an empty assistant placeholder while restoring a chat.
+    """
+    normalized: list[AnyMessage] = []
+    changed = False
+    for message in messages:
+        if (
+            isinstance(message, AIMessage)
+            and not message.content
+            and not message.tool_calls
+        ):
+            changed = True
+        else:
+            normalized.append(message)
+    return normalized if changed else messages
+
+
 def _get_request_context(request: ModelRequest) -> RequestContext | None:
     """Return the runtime context as a ``RequestContext``, coercing a dict if needed."""
     runtime_context = getattr(getattr(request, "runtime", None), "context", None)
@@ -422,6 +444,9 @@ class ContextMiddleware(AgentMiddleware):
             new_messages = _inject_data_sources(request.messages, all_data_sources)
             request = request.override(messages=new_messages)
 
+        request = request.override(
+            messages=_normalize_assistant_messages(request.messages)
+        )
         request = _configure_model_request(request)
         runtime_context = _get_request_context(request)
         if runtime_context is None or runtime_context.langfuse_prompt is None:
@@ -460,6 +485,9 @@ class ContextMiddleware(AgentMiddleware):
             new_messages = _inject_data_sources(request.messages, all_data_sources)
             request = request.override(messages=new_messages)
 
+        request = request.override(
+            messages=_normalize_assistant_messages(request.messages)
+        )
         request = _configure_model_request(request)
         runtime_context = _get_request_context(request)
         if runtime_context is None or runtime_context.langfuse_prompt is None:

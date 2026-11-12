@@ -93,7 +93,8 @@ async def test_agui_saves_validated_selection_and_explicit_empty(
     monkeypatch.setattr(chat_router, "init_agent", AsyncMock(return_value=agent))
     owner = AuthenticationResult(user_id="owner", token="test", department="test")
     await chat_router.ag_ui_chat_endpoint(
-        owner, request_with_body(request(ids=ids).model_dump(mode="json", exclude_none=True))
+        owner,
+        request_with_body(request(ids=ids).model_dump(mode="json", exclude_none=True)),
     )
     metadata = await PersistanceHelpers.get_conversations_for_user("owner")
     assert (

@@ -224,9 +224,7 @@ async def test_interrupted_run_emits_snapshots_and_interrupt_outcome(monkeypatch
     state_snapshot = next(e for e in events if e.type == EventType.STATE_SNAPSHOT)
     assert "messages" in state_snapshot.snapshot
 
-    messages_snapshot = next(
-        e for e in events if e.type == EventType.MESSAGES_SNAPSHOT
-    )
+    messages_snapshot = next(e for e in events if e.type == EventType.MESSAGES_SNAPSHOT)
     assert [m.content for m in messages_snapshot.messages] == [
         "delete the file",
         "",

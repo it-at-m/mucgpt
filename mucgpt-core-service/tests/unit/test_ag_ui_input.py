@@ -122,9 +122,7 @@ class TestChatRequestMapping:
                 {"type": "text", "text": "this: "},
             ],
         }
-        request, pending_media = to_chat_completion_request(
-            parse_run_agent_input(body)
-        )
+        request, pending_media = to_chat_completion_request(parse_run_agent_input(body))
         assert [(m.role, m.content) for m in request.messages] == [
             ("system", "You are MUCGPT"),
             ("user", "Hallo"),
@@ -151,7 +149,10 @@ class TestChatRequestMapping:
 
     def test_canvas_and_data_sources_map(self):
         body = native_body()
-        body["forwardedProps"]["mucgpt"]["canvas"] = {"content": "# Doc", "truncated": False}
+        body["forwardedProps"]["mucgpt"]["canvas"] = {
+            "content": "# Doc",
+            "truncated": False,
+        }
         body["forwardedProps"]["mucgpt"]["data_sources"] = [
             {"title": "Handbook.pdf", "content": "text"}
         ]
@@ -190,9 +191,7 @@ class TestResumeMapping:
                 "payload": {"answer": "yes"},
             }
         ]
-        assert resume_payloads(parse_run_agent_input(body)) == {
-            "i1": {"answer": "yes"}
-        }
+        assert resume_payloads(parse_run_agent_input(body)) == {"i1": {"answer": "yes"}}
 
 
 class TestVisionGate:
@@ -257,9 +256,7 @@ class TestVisionGate:
                 },
             ],
         }
-        request, pending_media = to_chat_completion_request(
-            parse_run_agent_input(body)
-        )
+        request, pending_media = to_chat_completion_request(parse_run_agent_input(body))
         with pytest.raises(HTTPException) as exc:
             bind_media_parts(request, pending_media, supports_vision=True)
         assert exc.value.status_code == 400
@@ -278,9 +275,7 @@ class TestVisionGate:
                 },
             ],
         }
-        request, pending_media = to_chat_completion_request(
-            parse_run_agent_input(body)
-        )
+        request, pending_media = to_chat_completion_request(parse_run_agent_input(body))
         bind_media_parts(request, pending_media, supports_vision=True)
         assert request.messages[3].media_blocks == []
 
@@ -293,13 +288,15 @@ class TestVisionGate:
                 {"type": "text", "text": "Transcribe this"},
                 {
                     "type": "audio",
-                    "source": {"type": "data", "value": "QUJD", "mime_type": "audio/wav"},
+                    "source": {
+                        "type": "data",
+                        "value": "QUJD",
+                        "mime_type": "audio/wav",
+                    },
                 },
             ],
         }
-        request, pending_media = to_chat_completion_request(
-            parse_run_agent_input(body)
-        )
+        request, pending_media = to_chat_completion_request(parse_run_agent_input(body))
         with pytest.raises(HTTPException) as exc:
             bind_media_parts(request, pending_media, supports_vision=True)
         assert exc.value.status_code == 400

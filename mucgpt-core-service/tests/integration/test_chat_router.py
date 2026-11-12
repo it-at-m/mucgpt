@@ -185,9 +185,7 @@ class TestChatRouter:
         mock_agent.run_agui_with_streaming.return_value = stream()
         mock_init_agent.return_value = mock_agent
 
-        response = test_client.post(
-            "/v1/chat/v2/completions", json=native_run_body()
-        )
+        response = test_client.post("/v1/chat/v2/completions", json=native_run_body())
 
         assert response.status_code == 200
         events = [

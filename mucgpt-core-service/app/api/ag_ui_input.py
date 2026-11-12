@@ -238,7 +238,9 @@ def to_chat_completion_request(
         elif isinstance(ag_message, ToolMessage):
             # Frontend tools are not offered, so no frontend tool call can be
             # pending; a tool result in history has no mapped representation.
-            _strip_history_message(ag_message, "frontend tool results are not supported")
+            _strip_history_message(
+                ag_message, "frontend tool results are not supported"
+            )
         elif isinstance(ag_message, ReasoningMessage):
             _strip_history_message(
                 ag_message, "reasoning history is not replayed to the agent"
@@ -326,7 +328,9 @@ def _media_block(part: Any) -> dict[str, Any]:
         )
     mime_type = getattr(source, "mime_type", None)
     if not mime_type:
-        raise HTTPException(status_code=400, detail="Inline media source without a mime_type")
+        raise HTTPException(
+            status_code=400, detail="Inline media source without a mime_type"
+        )
     if not isinstance(part, ImagePart):
         # Audio/video/document parts are not mapped yet — fail closed like an
         # unusable part rather than silently dropping content.

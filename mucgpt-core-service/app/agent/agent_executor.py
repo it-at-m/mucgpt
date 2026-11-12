@@ -92,9 +92,7 @@ def _json_safe(value: Any) -> Any:
     return str(value)
 
 
-def _graph_input(
-    messages: list[InputMessage], resume: dict[str, Any] | None
-) -> Any:
+def _graph_input(messages: list[InputMessage], resume: dict[str, Any] | None) -> Any:
     """Build the graph input: the turn's messages, or a resume command.
 
     A native AG-UI request may carry ``resume[]`` answers to interrupts that
@@ -134,7 +132,11 @@ def _to_ag_ui_history(messages: list[Any]) -> list[Any]:
     """Map LangChain state messages onto AG-UI messages for MESSAGES_SNAPSHOT."""
     converted: list[Any] = []
     for message in messages:
-        content = message.content if isinstance(message.content, str) else str(message.content)
+        content = (
+            message.content
+            if isinstance(message.content, str)
+            else str(message.content)
+        )
         message_id = getattr(message, "id", None) or uuid.uuid4().hex
         if isinstance(message, HumanMessage):
             converted.append(

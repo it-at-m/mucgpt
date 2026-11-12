@@ -152,6 +152,9 @@ class StreamingGraph:
     def __init__(self):
         self.config = None
 
+    async def get_pending_approvals(self, _config):
+        return []
+
     async def astream(self, *_args, **_kwargs):
         self.config = _kwargs["config"]
         yield (

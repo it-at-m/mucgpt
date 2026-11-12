@@ -2,10 +2,14 @@ import json
 from collections.abc import AsyncGenerator
 from typing import Annotated
 
+from ag_ui.core import BaseEvent
 from ag_ui.encoder import EventEncoder
 from fastapi import APIRouter, Depends, HTTPException, Request, Response
 from fastapi.responses import StreamingResponse
+from redis.asyncio.lock import Lock
+from redis.exceptions import LockError
 
+from agent.agent_executor import build_resume_decisions
 from api.api_models import (
     CanvasResponse,
     ChatCompletionMessage,
@@ -21,6 +25,7 @@ from config.model_provider import ModelRegistry, ModelsConfigurationException
 from config.settings import get_settings
 from core.auth import authenticate_user
 from core.auth_models import AuthenticationResult
+from core.cache import RedisCache
 from core.logtools import getLogger
 from core.persistance_helpers import PersistanceHelpers
 from core.stream_cleanup import close_stream
@@ -31,6 +36,9 @@ logger = getLogger()
 router = APIRouter(prefix="/v1")
 
 CANVAS_REVISIONS_MAX_BYTES = 512 * 1024
+CONVERSATION_RUN_LOCK_PREFIX = "conversation_run_lock"
+CONVERSATION_RUN_LOCK_TIMEOUT_SECONDS = 15 * 60
+CONVERSATION_RUN_LOCK_WAIT_SECONDS = 2
 
 
 def get_temperature_from_request(request: ChatCompletionRequest) -> float:
@@ -424,9 +432,15 @@ async def ag_ui_chat_endpoint(
     """
     if not chat_request.conversation_id:
         raise HTTPException(status_code=400, detail="conversation_id is required")
-    if not chat_request.messages:
+    is_resume = chat_request.resume is not None
+    if is_resume and not chat_request.persist:
+        raise HTTPException(
+            status_code=400,
+            detail="Only persisted conversations can continue a paused run",
+        )
+    if not is_resume and not chat_request.messages:
         raise HTTPException(status_code=400, detail="messages must not be empty")
-    if not chat_request.messages[-1].role == "user":
+    if not is_resume and not chat_request.messages[-1].role == "user":
         raise HTTPException(
             status_code=400, detail="Last message must be from the user (role='user')"
         )
@@ -440,20 +454,97 @@ async def ag_ui_chat_endpoint(
             status_code = 500
         raise HTTPException(status_code=status_code, detail=detail) from exc
 
-    messages_for_agent = await get_messages_for_agent(chat_request, user_info.user_id)
-
+    run_lock = (
+        await _lock_conversation_run(chat_request.conversation_id)
+        if chat_request.persist
+        else None
+    )
+    try:
+        events = await _start_agui_run(
+            chat_request, user_info, chat_request.conversation_id
+        )
+    except BaseException:
+        await _unlock_conversation_run(run_lock)
+        raise
     encoder = EventEncoder(accept=request.headers.get("accept"))
+
+    async def event_generator() -> AsyncGenerator[str]:
+        """Encode AG-UI events and close their source on completion or cancellation."""
+        try:
+            async for event in events:
+                yield encoder.encode(event)
+        finally:
+            await close_stream(events)
+            await _unlock_conversation_run(run_lock)
+
+    return StreamingResponse(event_generator(), media_type=encoder.get_content_type())
+
+
+async def _lock_conversation_run(conversation_id: str) -> Lock:
+    """One run per conversation across all instances; the timeout only frees a crashed run's lock."""
+    redis = await RedisCache.get_redis()
+    lock = redis.lock(
+        f"{CONVERSATION_RUN_LOCK_PREFIX}:{conversation_id}",
+        timeout=CONVERSATION_RUN_LOCK_TIMEOUT_SECONDS,
+        blocking_timeout=CONVERSATION_RUN_LOCK_WAIT_SECONDS,
+    )
+    if not await lock.acquire():
+        raise HTTPException(
+            status_code=409,
+            detail="Another request is still running for this conversation",
+        )
+    return lock
+
+
+async def _unlock_conversation_run(lock: Lock | None) -> None:
+    if lock is None:
+        return
+    try:
+        await lock.release()
+    except LockError:
+        logger.warning("Conversation run lock expired before the run ended")
+
+
+async def _start_agui_run(
+    chat_request: ChatCompletionRequest,
+    user_info: AuthenticationResult,
+    conversation_id: str,
+) -> AsyncGenerator[BaseEvent]:
+    """Authorize the turn or resume and return the agent's AG-UI event stream."""
+    is_resume = chat_request.resume is not None
+    if is_resume:
+        if not await PersistanceHelpers.is_user_in_conversation(
+            user_info.user_id, conversation_id
+        ):
+            raise HTTPException(status_code=403, detail="Conversation access denied")
+        messages_for_agent = []
+    else:
+        messages_for_agent = await get_messages_for_agent(
+            chat_request, user_info.user_id
+        )
+
     agent = await init_agent(
         user_info=user_info,
         model_name=chat_request.model,
         persist=chat_request.persist,
+        allow_approval=True,
     )
-    events = agent.run_agui_with_streaming(
+    resume_decisions = None
+    if is_resume:
+        try:
+            resume_decisions = build_resume_decisions(
+                await agent.get_pending_approvals(conversation_id),
+                chat_request.resume or [],
+            )
+        except ValueError as exc:
+            raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+    return agent.run_agui_with_streaming(
         messages=messages_for_agent,
         temperature=get_temperature_from_request(chat_request),
         model=chat_request.model,
         user_info=user_info,
-        conversation_id=chat_request.conversation_id,
+        conversation_id=conversation_id,
         enabled_tools=chat_request.enabled_tools or [],
         assistant_id=chat_request.assistant_id,
         data_sources=(
@@ -463,14 +554,5 @@ async def ag_ui_chat_endpoint(
         ),
         canvas=chat_request.canvas,
         reasoning_effort=chat_request.reasoning_effort,
+        resume_decisions=resume_decisions,
     )
-
-    async def event_generator() -> AsyncGenerator[str]:
-        """Encode AG-UI events and close their source on completion or cancellation."""
-        try:
-            async for event in events:
-                yield encoder.encode(event)
-        finally:
-            await close_stream(events)
-
-    return StreamingResponse(event_generator(), media_type=encoder.get_content_type())

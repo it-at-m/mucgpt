@@ -2,6 +2,7 @@ from typing import Any
 
 from agent.agent_executor import MUCGPTAgentExecutor
 from agent.deep_agent import MUCGPTAgent
+from agent.tools.approval import requires_approval
 from agent.tools.tools import ToolCollection
 from config.harness_profiles import register_model_harness_profile
 from config.langfuse_provider import LangfuseProvider
@@ -109,6 +110,7 @@ async def init_agent(
     user_info: AuthenticationResult,
     model_name: str | None = None,
     persist: bool = True,
+    allow_approval: bool = False,
 ) -> MUCGPTAgentExecutor:
     """Initialize a MUCGPTAgentExecutor with configuration.
 
@@ -116,6 +118,7 @@ async def init_agent(
         user_info: The user to create the Agent for
         model_name: The model to run the agent with (default model if None)
         persist: Attach the checkpointer; False builds a stateless agent
+        allow_approval: Keep tools that need approval (only with a checkpointer)
 
     Returns:
         Configured MUCGPTAgentExecutor
@@ -126,6 +129,11 @@ async def init_agent(
         tools = await tool_collection.get_tools(
             user_info=user_info
         )  # all tools that are available
+        checkpointer = (
+            PersistanceHelpers.get_checkpointer_if_ready() if persist else None
+        )
+        if not (allow_approval and checkpointer):
+            tools = [tool for tool in tools if not requires_approval(tool)]
         logger.debug(
             f"Initializing MUCGPTAgent with tools: {[tool.name for tool in tools]}"
         )
@@ -133,9 +141,7 @@ async def init_agent(
             llm=model,
             tools=tools,
             debug=False,
-            checkpointer=(
-                PersistanceHelpers.get_checkpointer_if_ready() if persist else None
-            ),
+            checkpointer=checkpointer,
         )
     except Exception as e:
         logger.error("Failed to initialize MUCGPTAgent: %s", e)

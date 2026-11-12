@@ -5,6 +5,9 @@ from logging import Logger
 from langchain_core.runnables.base import RunnableSerializable
 from langchain_core.tools.base import BaseTool
 
+from agent.tools.approval import approval_metadata
+from config.settings import DEFAULT_DATA_CLASSIFICATION, DataClassification
+
 ToolMetadata = dict[str, dict[str, str]]  # language -> {"name": ..., "description": ...}
 
 
@@ -25,9 +28,16 @@ class LocalTool:
     # by select_agent_state_schema at runtime); repeated here so the /v1/tools
     # listing can report it without constructing the tool.
     mcp_group: str | None = None
+    require_approval: bool = False
+    data_classification: DataClassification = DEFAULT_DATA_CLASSIFICATION
 
     def build(self, model: RunnableSerializable, logger: Logger) -> BaseTool:
-        return self.factory(model, logger) if self.needs_model else self.factory(logger)
+        tool = self.factory(model, logger) if self.needs_model else self.factory(logger)
+        tool.metadata = {
+            **(tool.metadata or {}),
+            **approval_metadata(self.require_approval, self.data_classification),
+        }
+        return tool
 
     def display(self, lang: str) -> dict[str, str]:
         return self.metadata.get(lang) or self.metadata["english"]

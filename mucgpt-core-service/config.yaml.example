@@ -171,10 +171,14 @@ MCP:
       # Users only see and select tool groups, never single tools. Enabling a group
       # enables all of its tools. The group name is shown to users as is (not translated).
       # group: "Wissensdatenbank"  # optional: group for all tools of this server (default: the source id)
-       # overrides:  # optional: customize a tool's description and/or group
+      # require_approval: false  # optional: the user confirms each call before it is sent (default: false)
+      # data_classification: "public"  # optional: highest data level the tools may receive: public | internal | confidential (default: public)
+       # overrides:  # optional: customize a tool's description, group, approval and/or data classification
        #   - name: "searchConfluenceUsingCql"
        #     description: "Search Confluence content using CQL queries. Use for structured or advanced filtering."
        #     group: "Wissen Personal"
+       #     require_approval: true
+       #     data_classification: "internal"
   CACHE_TTL: 43200
 
 # Redis Settings (optional - nested under REDIS key)

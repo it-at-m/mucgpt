@@ -150,6 +150,21 @@ class CanvasResponse(BaseModel):
     updated_at: datetime = Field(..., description="Last modification timestamp")
 
 
+class ToolApprovalResumeEntry(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+
+    interrupt_id: str = Field(..., alias="interruptId")
+    status: Literal["resolved", "cancelled"]
+    payload: dict[str, Any] | None = None
+
+    @property
+    def is_approved(self) -> bool:
+        return (
+            self.status == "resolved"
+            and (self.payload or {}).get("decision") == "approve"
+        )
+
+
 class ChatCompletionRequest(BaseModel):
     model: str | None = Field(None, description="The model to use")
     messages: list[ChatCompletionMessage] = Field(
@@ -194,6 +209,10 @@ class ChatCompletionRequest(BaseModel):
     data_sources: list[ChatDataSource] | None = Field(
         None,
         description="Structured document payload with title, content and metadata",
+    )
+    resume: list[ToolApprovalResumeEntry] | None = Field(
+        None,
+        description="Answers to the tool calls a paused run waits on; continues that run instead of starting a new turn.",
     )
     canvas: CanvasState | None = Field(
         None,

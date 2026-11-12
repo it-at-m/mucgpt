@@ -8,8 +8,10 @@ from ag_ui.core import (
     BaseEvent,
     CustomEvent,
     EventType,
+    Interrupt,
     RunErrorEvent,
     RunFinishedEvent,
+    RunFinishedInterruptOutcome,
     RunStartedEvent,
     TextMessageChunkEvent,
     ToolCallChunkEvent,
@@ -28,7 +30,7 @@ from langchain_core.runnables.config import merge_configs
 from langfuse import get_client, observe, propagate_attributes
 from langfuse.langchain import CallbackHandler
 
-from agent.deep_agent import MUCGPTAgent
+from agent.deep_agent import MUCGPTAgent, PendingToolApproval
 from agent.middleware import TokenUsage
 from agent.tools.canvas import CANVAS_STREAM_NAME
 from agent.tools.tool_chunk import ToolStreamChunk
@@ -40,6 +42,7 @@ from api.api_models import (
     ChatCompletionDelta,
     ChatCompletionMessage,
     ChatCompletionResponse,
+    ToolApprovalResumeEntry,
     Usage,
 )
 from api.api_models import ChatCompletionMessage as InputMessage
@@ -200,6 +203,47 @@ def toolchunk_to_chatcompletionchunk(
         choices=[choice],
         usage=None,
     )
+
+
+TOOL_APPROVAL_REASON = "tool_approval"
+
+
+def _interrupt_outcome(
+    pending: list[PendingToolApproval],
+) -> RunFinishedInterruptOutcome:
+    return RunFinishedInterruptOutcome(
+        type="interrupt",
+        interrupts=[
+            Interrupt(
+                id=approval.tool_call_id,
+                reason=TOOL_APPROVAL_REASON,
+                tool_call_id=approval.tool_call_id,
+                metadata={
+                    "mucgpt": {
+                        "toolName": approval.tool_name,
+                        "args": approval.args,
+                        "dataClassification": approval.data_classification,
+                    }
+                },
+            )
+            for approval in pending
+        ],
+    )
+
+
+def build_resume_decisions(
+    pending: list[PendingToolApproval], answers: list[ToolApprovalResumeEntry]
+) -> list[dict[str, str]]:
+    by_id = {answer.interrupt_id: answer for answer in answers}
+    pending_ids = {approval.tool_call_id for approval in pending}
+    if not pending:
+        raise ValueError("This conversation has no paused run to continue")
+    if len(by_id) != len(answers) or set(by_id) != pending_ids:
+        raise ValueError("Answer every paused tool call exactly once")
+    return [
+        {"type": "approve" if by_id[approval.tool_call_id].is_approved else "reject"}
+        for approval in pending
+    ]
 
 
 class MUCGPTAgentExecutor:
@@ -580,6 +624,13 @@ class MUCGPTAgentExecutor:
                     ),
                 )
 
+    async def get_pending_approvals(
+        self, conversation_id: str
+    ) -> list[PendingToolApproval]:
+        return await self.agent.graph.get_pending_approvals(
+            RunnableConfig(configurable={"thread_id": conversation_id})
+        )
+
     ###############################################################################
     ###############################################################################
     @observe(name="Agent", capture_input=False, capture_output=False)
@@ -595,6 +646,7 @@ class MUCGPTAgentExecutor:
         data_sources: list[dict[str, Any]] | None = None,
         canvas: CanvasState | None = None,
         reasoning_effort: str | None = None,
+        resume_decisions: list[dict[str, str]] | None = None,
     ) -> AsyncGenerator[BaseEvent]:
         """Run the agent and stream the result as AG-UI protocol events."""
         run_id = uuid.uuid4().hex
@@ -643,6 +695,7 @@ class MUCGPTAgentExecutor:
                 {"messages": to_langchain_messages(messages)},
                 stream_mode=["messages", "custom", "updates"],
                 config=config,
+                resume_decisions=resume_decisions,
             )
             try:
                 yield RunStartedEvent(
@@ -763,10 +816,12 @@ class MUCGPTAgentExecutor:
                     output="".join(answer_chunks),
                     metadata={"agent_stream_event_count": len(trace_events)},
                 )
+                pending = await self.agent.graph.get_pending_approvals(config)
                 yield RunFinishedEvent(
                     type=EventType.RUN_FINISHED,
                     thread_id=conversation_id,
                     run_id=run_id,
+                    outcome=_interrupt_outcome(pending) if pending else None,
                     usage=_ag_ui_usage_from_token_usage(
                         config["configurable"]["token_usage"], model
                     ),

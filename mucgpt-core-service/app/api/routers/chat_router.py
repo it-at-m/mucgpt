@@ -1,3 +1,4 @@
+import asyncio
 from collections.abc import AsyncGenerator
 from typing import Annotated
 
@@ -455,6 +456,6 @@ async def ag_ui_chat_endpoint(
         finally:
             await close_stream(events)
             # The root observation must end before its completed span can be flushed.
-            langfuse.flush()
+            await asyncio.to_thread(langfuse.flush)
 
     return StreamingResponse(event_generator(), media_type=encoder.get_content_type())

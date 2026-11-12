@@ -131,10 +131,11 @@ Where:
 After a document is uploaded and parsed, its extracted text is stored in the
 core service's PostgreSQL-backed file store. When a chat request selects one or
 more documents, the agent receives them through a read-only `/documents/`
-filesystem mount. The model can use `read_file` and `grep` to inspect document
-content, and `ls` and `glob` to discover the available attached paths. The mount
-is scoped to the authenticated user and to the documents selected for that
-request; it is not a general document search or a writable filesystem.
+filesystem mount. The mount does not support `ls` or `glob` for path discovery.
+The model must use the document paths supplied in the prompt; `read_file` and
+`grep` work only with those supplied paths. The mount is scoped to the
+authenticated user and to the documents selected for that request; it is not a
+general document search or a writable filesystem.
 
 The filesystem tools are Deep Agents built-ins and must be enabled for every
 model that should read attachments. Add them under that model's

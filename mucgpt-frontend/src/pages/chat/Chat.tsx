@@ -656,11 +656,11 @@ const Chat = () => {
                     setUploadedData(previous => [...previous.filter(document => document.source !== "library"), ...selected.map(documentToUploadedData)]);
                     setIsDocumentSelectionReady(true);
                 })
-                .catch(error => {
+                .catch(() => {
                     if (documentSelectionRequestToken !== documentSelectionRequestTokenRef.current) return;
                     // The pending question must not stall forever: proceed without
                     // documents and surface why the selection was not applied.
-                    setError(error);
+                    showWarning(t("document_library.restore_failed_title"), t("document_library.restore_failed_message"));
                     setIsDocumentSelectionReady(true);
                 });
         } else {

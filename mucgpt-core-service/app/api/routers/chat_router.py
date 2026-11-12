@@ -1,4 +1,3 @@
-import json
 from collections.abc import AsyncGenerator
 from typing import Annotated
 
@@ -10,14 +9,12 @@ from api.api_models import (
     CanvasResponse,
     ChatCompletionMessage,
     ChatCompletionRequest,
-    ChatCompletionResponse,
     ChatTitleResult,
     ConversationAssistantRebindRequest,
     ConversationMessage,
     ConversationMetadata,
     ConversationRenameRequest,
 )
-from api.exception import llm_error_payload, payload_to_message
 from config.model_provider import ModelRegistry, ModelsConfigurationException
 from config.settings import get_settings
 from core.auth import authenticate_user
@@ -117,107 +114,6 @@ async def get_messages_for_agent(
     if await PersistanceHelpers.has_checkpoint(request.conversation_id):
         return [request.messages[-1]]
     return request.messages
-
-
-@router.post(
-    "/chat/completions",
-    summary="Create chat completion",
-    description="OpenAI-compatible endpoint for chat completions",
-    response_model=ChatCompletionResponse,
-    responses={
-        200: {"description": "Successful Response"},
-        400: {"description": "Bad Request"},
-        403: {"description": "Forbidden"},
-        500: {"description": "Internal Server Error"},
-    },
-)
-async def chat_endpoint(
-    request: ChatCompletionRequest,
-    user_info: Annotated[AuthenticationResult, Depends(authenticate_user)],
-) -> StreamingResponse | ChatCompletionResponse:
-    """Validate and run an OpenAI-compatible completion, streamed or aggregated.
-
-    Model validation precedes ownership creation. Persisted runs append new turns;
-    streaming teardown closes the executor even when response iteration fails.
-    """
-    if not request.conversation_id:
-        raise HTTPException(status_code=400, detail="conversation_id is required")
-    if not request.messages:
-        raise HTTPException(status_code=400, detail="messages must not be empty")
-    if request.messages[-1].role != "user":
-        raise HTTPException(
-            status_code=400, detail="last message must have role 'user'"
-        )
-
-    try:
-        ModelRegistry.get_model(request.model)
-    except ModelsConfigurationException as exc:
-        detail = str(exc)
-        status_code = 400
-        if "not initialized" in detail.lower():
-            status_code = 500
-        raise HTTPException(status_code=status_code, detail=detail) from exc
-
-    try:
-        messages_for_agent = await get_messages_for_agent(request, user_info.user_id)
-
-        agent = await init_agent(
-            user_info=user_info, model_name=request.model, persist=request.persist
-        )
-        temperature = get_temperature_from_request(request)
-        enabled_tools = request.enabled_tools or []
-        data_sources = (
-            [source.model_dump() for source in request.data_sources]
-            if request.data_sources
-            else None
-        )
-        canvas = request.canvas
-
-        if request.stream:
-            gen = agent.run_with_streaming(
-                messages=messages_for_agent,
-                temperature=temperature,
-                model=request.model,
-                user_info=user_info,
-                enabled_tools=enabled_tools,
-                assistant_id=request.assistant_id,
-                data_sources=data_sources,
-                canvas=canvas,
-                conversation_id=request.conversation_id,
-                reasoning_effort=request.reasoning_effort,
-            )
-
-            async def sse_generator() -> AsyncGenerator[str]:
-                """Encode completion chunks as SSE and close the executor on every exit."""
-                try:
-                    async for chunk in gen:
-                        yield f"data: {json.dumps(chunk)}\n\n"
-                    yield "data: [DONE]\n\n"
-                finally:
-                    await close_stream(gen)
-
-            return StreamingResponse(sse_generator(), media_type="text/event-stream")
-
-        response = await agent.run_without_streaming(
-            messages=messages_for_agent,
-            temperature=temperature,
-            model=request.model,
-            user_info=user_info,
-            enabled_tools=enabled_tools,
-            assistant_id=request.assistant_id,
-            data_sources=data_sources,
-            canvas=canvas,
-            conversation_id=request.conversation_id,
-            reasoning_effort=request.reasoning_effort,
-        )
-
-        return response
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.exception("Exception in /chat/completions")
-        payload = llm_error_payload(ex=e, logger=logger)
-        raise HTTPException(status_code=500, detail=payload_to_message(payload)) from e
 
 
 @router.get(

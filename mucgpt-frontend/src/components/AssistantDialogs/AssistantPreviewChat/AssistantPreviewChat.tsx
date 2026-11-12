@@ -5,7 +5,6 @@ import { ArrowClockwise24Regular, ArrowDown24Regular } from "@fluentui/react-ico
 
 import styles from "./AssistantPreviewChat.module.css";
 import { ChatResponse } from "../../../api";
-import { chatApi } from "../../../api/core-client";
 import { Answer } from "../../Answer";
 import { AnswerList } from "../../AnswerList/AnswerList";
 import { QuestionInput } from "../../QuestionInput";
@@ -18,7 +17,6 @@ import { initialRunActivity, type RunActivity } from "../../../utils/agUiActivit
 import { useToolStatusToasts } from "../../../hooks/useToolStatusToasts";
 import { getChatReducer, makeApiRequest } from "../../../pages/page_helpers";
 import type { StorageService } from "../../../service/storage";
-import { useConfigContext } from "../../../context/ConfigContext";
 
 interface AssistantPreviewChatProps {
     /** Live system prompt from the editor form. */
@@ -50,7 +48,6 @@ export const AssistantPreviewChat = ({
     onCollapse,
     collapseIcon
 }: AssistantPreviewChatProps) => {
-    const { ag_ui_enabled: agUiEnabled } = useConfigContext();
     const { t } = useTranslation();
     const { LLM, setLLM, availableLLMs } = useContext(LLMContext);
     const { tools } = useToolsContext();
@@ -225,7 +222,6 @@ export const AssistantPreviewChat = ({
                     historyOverride ?? answers,
                     nextQuestion,
                     dispatch,
-                    chatApi,
                     LLM,
                     noActiveChatRef,
                     noopStorageService.current,
@@ -241,7 +237,6 @@ export const AssistantPreviewChat = ({
                     undefined, // answerTopRef
                     setIsLoadingValue,
                     false, // persist — keep the preview conversation ephemeral
-                    agUiEnabled,
                     undefined, // onAgUiEvent — no event log in the preview
                     setRunActivity
                 );
@@ -251,7 +246,7 @@ export const AssistantPreviewChat = ({
             setIsLoadingValue(false);
             setIsStreaming(false);
         },
-        [answers, error, LLM, setIsLoadingValue, setLastQuestionValue, agUiEnabled]
+        [answers, error, LLM, setIsLoadingValue, setLastQuestionValue]
     );
 
     const onRegenerate = useCallback(() => {

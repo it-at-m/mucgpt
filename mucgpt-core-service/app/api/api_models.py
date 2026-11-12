@@ -86,6 +86,14 @@ class ChatCompletionMessage(BaseModel):
         ..., description="Message role: system, user, or assistant"
     )
     content: str = Field(..., description="The message content")
+    # Internal only: multimodal content blocks (AG-UI image parts resolved to
+    # OpenAI-style data-URL blocks) bound to this message by the AG-UI run-input
+    # mapper after the vision gate. Never part of the public envelope schema.
+    media_blocks: list[dict[str, Any]] | None = Field(
+        default=None,
+        exclude=True,
+        description="Internal multimodal content blocks bound by the AG-UI mapper.",
+    )
     model_config = ConfigDict(
         json_schema_extra={
             "example": {"role": "user", "content": "List three benefits of unit tests."}
@@ -236,6 +244,13 @@ class ChatCompletionRequest(BaseModel):
         description=(
             "IDs of library documents to attach for this turn, authorized server-side. "
             "Omitted or empty IDs mean no attachments."
+        ),
+    )
+    language: str | None = Field(
+        None,
+        description=(
+            "The user's interface language (e.g. 'German'). The agent defaults to "
+            "responding in this language unless the user writes in another language."
         ),
     )
     model_config = ConfigDict(

@@ -1093,24 +1093,32 @@ export const handlers = [
         });
     }),
     http.post("/api/backend/v1/chat/v2/completions", async ({ request }) => {
-        const body = (await request.json()) as {
-            messages?: { role: string; content: string }[];
+        // Both request shapes are mocked: the native AG-UI run input
+        // (threadId, camelCase messages with ids) and the legacy envelope
+        // (conversation_id, snake_case settings). The wire settings live in
+        // forwardedProps.mucgpt for the native shape.
+        const raw = (await request.json()) as {
+            messages?: Array<{ role: string; content: string }>;
+            threadId?: string;
             conversation_id?: string;
+            forwardedProps?: { mucgpt?: { enabled_tools?: string[]; canvas?: CanvasState | null } };
             enabled_tools?: string[];
             canvas?: CanvasState | null;
         };
+        const enabledTools = raw.forwardedProps?.mucgpt?.enabled_tools ?? raw.enabled_tools;
+        const mockCanvas = raw.forwardedProps?.mucgpt?.canvas ?? raw.canvas;
         // Canvas tools are auto-added while the canvas is open; the generic
         // demo tool call must not fire from those.
-        const mockToolName = body.enabled_tools?.find(id => !(CANVAS_TOOL_IDS as readonly string[]).includes(id));
+        const mockToolName = enabledTools?.find(id => !(CANVAS_TOOL_IDS as readonly string[]).includes(id));
         const latestUserMessage =
-            body.messages
+            raw.messages
                 ?.slice()
                 .reverse()
                 .find(message => message.role === "user")?.content || "";
         const encoder = new TextEncoder();
         const runId = crypto.randomUUID();
         const messageId = crypto.randomUUID();
-        const threadId = body.conversation_id ?? crypto.randomUUID();
+        const threadId = raw.threadId ?? raw.conversation_id ?? crypto.randomUUID();
         const stream = new ReadableStream({
             async start(controller) {
                 const send = (event: object) => controller.enqueue(encoder.encode(`data: ${JSON.stringify(event)}\n\n`));
@@ -1148,7 +1156,7 @@ export const handlers = [
                 }
 
                 const wantsRichMarkdownMock = /^\s*rich\s*$/i.test(latestUserMessage);
-                const wantsCanvasMock = Boolean(body.canvas) && /^\s*canvas-demo\s*$/i.test(latestUserMessage);
+                const wantsCanvasMock = Boolean(mockCanvas) && /^\s*canvas-demo\s*$/i.test(latestUserMessage);
 
                 if (wantsCanvasMock) {
                     for (const event of buildCanvasToolCallEvents(messageId, threadId)) {

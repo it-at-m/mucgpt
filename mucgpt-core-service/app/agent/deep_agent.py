@@ -121,6 +121,7 @@ class _ConfiguredLangChainDeepAgentGraph:
                 "langfuse_prompt", self.default_langfuse_prompt
             ),
             canvas=canvas,
+            language=configurable.get("language"),
         )
 
         return messages, data_sources, request_context

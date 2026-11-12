@@ -309,6 +309,7 @@ MUCGPT_CORE_PROVIDERS__MY_GATEWAY__API_KEY=sk-...  # → providers.my_gateway.ap
 - `knowledge_cut_off`: Optional ISO date string describing the model's latest training data cutoff.
 - `input_cost_per_token` / `output_cost_per_token`: Optional pricing hints per token.
 - `supports_reasoning`: Whether the model supports reasoning. Only these models receive the requested `reasoning_effort`. For matching the provider exactly, `supported_reasoning_efforts` accepts `none`, `minimal`, `low`, `medium`, `high` and `max` (some providers, e.g. privatemode.ai GLM models, expose a `max` level); requests are clamped to the nearest supported effort.
+- `supports_vision`: Whether the model can consume image input. Chat requests carrying image parts are rejected fail-closed for models without it (see the [AG-UI chat contract](AG_UI_CHAT.md)).
 - `creativity_{low,medium,high}_temperature`: Map abstract creativity levels to specific `temperature` values (0.0 - 1.0 or higher depending on model). Defaults are low=0.0, medium=0.5, high=1.0.
 
 Replace the placeholder values with your actual model configuration.

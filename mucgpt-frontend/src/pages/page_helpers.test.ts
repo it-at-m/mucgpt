@@ -9,14 +9,20 @@ type AgentHandlers = {
     onRunFinishedEvent: (event: unknown) => void;
 };
 
+const mockRunInputs: Array<Record<string, unknown>> = [];
+
 vi.mock("../api/core-client", () => ({
     createChatName: vi.fn(),
+    mucgptForwardedProps: vi.fn((request: { language?: string }) => ({
+        mucgpt: { language: request.language }
+    })),
     MucgptAgUiAgent: class {
         subscribe() {
             return { unsubscribe: vi.fn() };
         }
 
-        async runAgent(_input: unknown, handlers: AgentHandlers) {
+        async runAgent(input: Record<string, unknown>, handlers: AgentHandlers) {
+            mockRunInputs.push(input);
             handlers.onTextMessageContentEvent({ event: { type: "TEXT_MESSAGE_CONTENT", delta: "AG-UI answer" } });
             handlers.onRunFinishedEvent({ event: { type: "RUN_FINISHED", usage: [] } });
         }
@@ -58,5 +64,9 @@ describe("AG-UI chat requests", () => {
         );
 
         expect(dispatch).toHaveBeenCalledWith(expect.objectContaining({ type: "UPDATE_LAST_ANSWER" }));
+        // The run carries the native run input parameters: MUCGPT settings in forwardedProps.
+        expect(mockRunInputs[0]).toEqual({
+            forwardedProps: expect.objectContaining({ mucgpt: expect.anything() })
+        });
     });
 });

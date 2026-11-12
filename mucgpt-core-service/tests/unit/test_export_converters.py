@@ -120,8 +120,8 @@ def test_export_request_rejects_oversized_fields() -> None:
 @pytest.mark.unit
 def test_export_request_ignores_unknown_fields() -> None:
     """Older frontends may still send doc_json; nothing consumes it."""
-    request = ExportRequest(
-        markdown="m", html="h", target="pdf", doc_json='{"type":"doc"}'
+    request = ExportRequest.model_validate(
+        {"markdown": "m", "html": "h", "target": "pdf", "doc_json": '{"type":"doc"}'}
     )
     assert request.markdown == "m"
 

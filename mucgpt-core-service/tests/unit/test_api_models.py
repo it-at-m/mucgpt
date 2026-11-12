@@ -26,6 +26,7 @@ class TestCanvasStateSizeLimit:
         )
 
         assert len(canvas.content) == CANVAS_CONTENT_MAX_CHARS
+        assert canvas.selection is not None
         assert len(canvas.selection) == CANVAS_CONTENT_MAX_CHARS
 
 

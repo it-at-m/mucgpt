@@ -1,5 +1,6 @@
 import json
 from contextlib import nullcontext
+from typing import Any, cast
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
@@ -7,6 +8,7 @@ from ag_ui.core.events import EventType
 from langchain_core.messages import AIMessage, AIMessageChunk, ToolCall
 
 from agent.agent_executor import MUCGPTAgentExecutor, _ag_ui_usage_from_token_usage
+from agent.deep_agent import MUCGPTAgent
 from agent.middleware import TokenUsage
 from agent.tools.tool_chunk import ToolStreamChunk, ToolStreamState
 from api.api_models import CanvasState
@@ -17,7 +19,7 @@ from core.auth_models import AuthenticationResult
 
 class DummyLLM:
     def __init__(self, respond_with_tool_call=False):
-        self.config = None
+        self.config: dict[str, Any] | None = None
         self.tools = None
         self.respond_with_tool_call = respond_with_tool_call
         self.invoked_messages = []
@@ -152,7 +154,7 @@ class FakeLangfuseClient:
 
 class StreamingGraph:
     def __init__(self):
-        self.config = None
+        self.config: dict[str, Any] | None = None
 
     async def astream(self, *_args, **_kwargs):
         self.config = _kwargs["config"]
@@ -201,11 +203,16 @@ class FailingAgent:
         self.graph = FailingGraph()
 
 
+def _executor(agent: Any) -> MUCGPTAgentExecutor:
+    """Build the executor from a duck-typed agent double (.model + .graph)."""
+    return MUCGPTAgentExecutor(cast("MUCGPTAgent", agent))
+
+
 class TestMUCGPTAgentExecutor:
     def setup_method(self):
         self.llm = DummyRunnerLLM()
         self.agent = DummyAgent(self.llm)
-        self.runner = MUCGPTAgentExecutor(self.agent)
+        self.runner = _executor(self.agent)
 
     @pytest.mark.skip(reason="Temporarily disabled")
     @pytest.mark.asyncio
@@ -229,7 +236,7 @@ class TestMUCGPTAgentExecutor:
     async def test_run_with_streaming_yields_tool_call_chunk(self):
         llm = DummyRunnerLLM(respond_with_tool_call=True)
         agent = DummyAgent(llm)
-        runner = MUCGPTAgentExecutor(agent)
+        runner = _executor(agent)
         messages = [InputMessage(role="user", content="hi")]
         chunks = []
         async for chunk in runner.run_with_streaming(
@@ -291,7 +298,7 @@ class TestMUCGPTAgentExecutor:
     async def test_run_without_streaming_returns_error_message_on_exception(self):
         llm = DummyRunnerLLM(fail=True)
         agent = DummyAgent(llm)
-        runner = MUCGPTAgentExecutor(agent)
+        runner = _executor(agent)
         messages = [InputMessage(role="user", content="fail")]
         response = await runner.run_without_streaming(
             messages=messages,
@@ -309,33 +316,37 @@ class TestMUCGPTAgentExecutor:
         assert "RuntimeError" in response.error.detail
 
     @pytest.mark.skip(reason="Temporarily disabled")
-    def test_run_without_streaming_uses_enabled_tools_in_config(self):
+    @pytest.mark.asyncio
+    async def test_run_without_streaming_uses_enabled_tools_in_config(self):
         llm = DummyRunnerLLM()
         agent = DummyAgent(llm)
-        runner = MUCGPTAgentExecutor(agent)
+        runner = _executor(agent)
         messages = [InputMessage(role="user", content="hi")]
         enabled_tools = ["simplify"]
-        runner.run_without_streaming(
+        await runner.run_without_streaming(
             messages=messages,
             temperature=0.7,
             model="test",
             user_info=None,
             enabled_tools=enabled_tools,
         )
+        assert llm.config is not None
         assert llm.config["enabled_tools"] == enabled_tools
 
     @pytest.mark.skip(reason="Temporarily disabled")
-    def test_run_without_streaming_sets_llm_config(self):
+    @pytest.mark.asyncio
+    async def test_run_without_streaming_sets_llm_config(self):
         llm = DummyRunnerLLM()
         agent = DummyAgent(llm)
-        runner = MUCGPTAgentExecutor(agent)
+        runner = _executor(agent)
         messages = [InputMessage(role="user", content="hi")]
-        runner.run_without_streaming(
+        await runner.run_without_streaming(
             messages=messages,
             temperature=0.5,
             model="test-model",
             user_info=None,
         )
+        assert llm.config is not None
         assert llm.config["llm_temperature"] == 0.5
         assert llm.config["llm"] == "test-model"
         assert llm.config["llm_streaming"] is False
@@ -366,7 +377,7 @@ class TestMUCGPTAgentExecutor:
     async def test_run_without_streaming_returns_error_on_exception(self):
         llm = DummyRunnerLLM(fail=True)
         agent = DummyAgent(llm)
-        runner = MUCGPTAgentExecutor(agent)
+        runner = _executor(agent)
         messages = [InputMessage(role="user", content="fail")]
         response = await runner.run_without_streaming(
             messages=messages,
@@ -410,7 +421,7 @@ class TestMUCGPTAgentExecutor:
                 self.model = DummyRunnerLLM()
                 self.graph = UsageGraph()
 
-        runner = MUCGPTAgentExecutor(UsageAgent())
+        runner = _executor(UsageAgent())
 
         chunks = []
         async for chunk in runner.run_with_streaming(
@@ -468,7 +479,7 @@ class TestMUCGPTAgentExecutor:
                 self.model = DummyRunnerLLM()
                 self.graph = UsageGraph()
 
-        runner = MUCGPTAgentExecutor(UsageAgent())
+        runner = _executor(UsageAgent())
 
         chunks = []
         async for chunk in runner.run_with_streaming(
@@ -515,7 +526,7 @@ class TestMUCGPTAgentExecutor:
                 self.model = DummyRunnerLLM()
                 self.graph = UsageGraph()
 
-        response = await MUCGPTAgentExecutor(UsageAgent()).run_without_streaming(
+        response = await _executor(UsageAgent()).run_without_streaming(
             messages=[InputMessage(role="user", content="hi")],
             temperature=0.7,
             model="test",
@@ -541,7 +552,7 @@ class TestMUCGPTAgentExecutor:
             lambda **_kwargs: nullcontext(),
         )
         agent = StreamingAgent()
-        runner = MUCGPTAgentExecutor(agent)
+        runner = _executor(agent)
 
         chunks = []
         async for chunk in runner.run_with_streaming(
@@ -560,6 +571,7 @@ class TestMUCGPTAgentExecutor:
         )
         assert "visible" in streamed_content
         assert "hidden" not in streamed_content
+        assert agent.graph.config is not None
         assert agent.graph.config["configurable"]["thread_id"] == "chat-123"
 
         trace_span = langfuse_client.spans[-1]
@@ -622,7 +634,7 @@ async def test_run_agui_streams_canvas_chunks_as_custom_events(monkeypatch):
         lambda **_kwargs: nullcontext(),
     )
     agent = CanvasCustomAgent()
-    runner = MUCGPTAgentExecutor(agent)
+    runner = _executor(agent)
 
     events = []
     async for event in runner.run_agui_with_streaming(
@@ -637,9 +649,10 @@ async def test_run_agui_streams_canvas_chunks_as_custom_events(monkeypatch):
         events.append(event)
 
     canvas_events = [e for e in events if getattr(e, "name", None) == "Canvas"]
-    assert [e.value["state"] for e in canvas_events] == ["STARTED", "UPDATE"]
-    assert canvas_events[1].value["content"] == CANVAS_DOC
-    assert canvas_events[1].value["metadata"] == {"canvas_revision": 1}
+    canvas_values = [getattr(e, "value") for e in canvas_events]
+    assert [value["state"] for value in canvas_values] == ["STARTED", "UPDATE"]
+    assert canvas_values[1]["content"] == CANVAS_DOC
+    assert canvas_values[1]["metadata"] == {"canvas_revision": 1}
     # non-canvas custom chunks stay internal (traced only, not streamed)
     assert not any(getattr(e, "name", None) == "Brainstorming" for e in events)
 
@@ -686,7 +699,7 @@ async def test_agui_stream_hides_internal_model_calls(monkeypatch):
         "agent.agent_executor.propagate_attributes",
         lambda **_kwargs: nullcontext(),
     )
-    runner = MUCGPTAgentExecutor(StreamingAgent())
+    runner = _executor(StreamingAgent())
 
     events = [
         event

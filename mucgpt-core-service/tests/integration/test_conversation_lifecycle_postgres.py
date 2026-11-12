@@ -9,23 +9,32 @@ import json
 import os
 import unittest
 from types import SimpleNamespace
+from typing import Any, cast
 from unittest.mock import AsyncMock, Mock, patch
 from uuid import uuid4
 
 import psycopg
 from fastapi import FastAPI, HTTPException, Request
 from langchain_core.messages import AIMessage, HumanMessage
+from langchain_core.runnables import RunnableConfig
 from langgraph.checkpoint.postgres.aio import AsyncPostgresSaver
 from langgraph.graph import END, START, MessagesState, StateGraph
-from psycopg import sql
+from psycopg import AsyncConnection, sql
+from psycopg.conninfo import make_conninfo
 from psycopg.rows import dict_row
 from psycopg_pool import AsyncConnectionPool
+from pydantic import SecretStr
 
 from agent.agent_executor import MUCGPTAgentExecutor
-from agent.deep_agent import CHECKPOINT_DURABILITY, _ConfiguredLangChainDeepAgentGraph
+from agent.deep_agent import (
+    CHECKPOINT_DURABILITY,
+    MUCGPTAgent,
+    _ConfiguredLangChainDeepAgentGraph,
+)
 from api.api_models import (
     ChatCompletionMessage,
     ChatCompletionRequest,
+    ChatCompletionResponse,
     ConversationRenameRequest,
 )
 from api.routers.chat_router import (
@@ -49,23 +58,27 @@ from database.fenced_checkpointer import ConversationDeletedError, FencedPostgre
 class ConversationLifecyclePostgresTests(unittest.IsolatedAsyncioTestCase):
     async def asyncSetUp(self):
         self.database = "lifecycle_test_" + uuid4().hex
+        # PostgreSQL conninfo keywords: all values as strings.
         self.connection_args = {
             "host": os.environ["MUCGPT_LIFECYCLE_POSTGRES_HOST"],
-            "port": int(os.getenv("MUCGPT_LIFECYCLE_POSTGRES_PORT", "5432")),
+            "port": os.getenv("MUCGPT_LIFECYCLE_POSTGRES_PORT", "5432"),
             "user": os.getenv("MUCGPT_LIFECYCLE_POSTGRES_USER", "admin"),
             "password": os.getenv("MUCGPT_LIFECYCLE_POSTGRES_PASSWORD", "admin"),
         }
         async with await psycopg.AsyncConnection.connect(
-            **self.connection_args, dbname="postgres", autocommit=True
+            make_conninfo(**self.connection_args, dbname="postgres"), autocommit=True
         ) as connection:
             await connection.execute(
                 sql.SQL("CREATE DATABASE {}").format(sql.Identifier(self.database))
             )
         self.addAsyncCleanup(self.drop_database)
         self.settings = Settings(
-            DB=DBConfig(
-                **{k.upper(): v for k, v in self.connection_args.items()},
-                NAME=self.database,
+            db=DBConfig(
+                host=str(self.connection_args["host"]),
+                port=int(self.connection_args["port"]),
+                name=self.database,
+                user=str(self.connection_args["user"]),
+                password=SecretStr(str(self.connection_args["password"])),
             )
         )
         await PersistanceHelpers.init(self.settings)
@@ -80,13 +93,19 @@ class ConversationLifecyclePostgresTests(unittest.IsolatedAsyncioTestCase):
 
     async def drop_database(self):
         async with await psycopg.AsyncConnection.connect(
-            **self.connection_args, dbname="postgres", autocommit=True
+            make_conninfo(**self.connection_args, dbname="postgres"), autocommit=True
         ) as connection:
             await connection.execute(
                 sql.SQL("DROP DATABASE {} WITH (FORCE)").format(
                     sql.Identifier(self.database)
                 )
             )
+
+    def pool(self) -> AsyncConnectionPool[AsyncConnection[dict[str, Any]]]:
+        """The PersistanceHelpers pool, guaranteed to be initialized here."""
+        pool = PersistanceHelpers._pool
+        assert pool is not None
+        return pool
 
     def request(self):
         return ChatCompletionRequest(
@@ -99,8 +118,10 @@ class ConversationLifecyclePostgresTests(unittest.IsolatedAsyncioTestCase):
     async def seed_history(self):
         """Create a real exit checkpoint without a provider/model dependency."""
         await get_messages_for_agent(self.request(), self.owner.user_id)
+        # ty cannot verify that TypedDicts satisfy langgraph's StateLike bound
+        # (same stub limitation as in app/agent/tools/simplify_agent.py).
         graph = (
-            StateGraph(MessagesState)
+            StateGraph(MessagesState)  # ty: ignore[invalid-argument-type]
             .add_node(
                 "answer",
                 lambda state: {"messages": [AIMessage(content="saved answer")]},
@@ -160,8 +181,10 @@ class ConversationLifecyclePostgresTests(unittest.IsolatedAsyncioTestCase):
             return await original_put(*args, **kwargs)
 
         saver.aput = paused_put
+        # ty cannot verify that TypedDicts satisfy langgraph's StateLike bound
+        # (same stub limitation as in app/agent/tools/simplify_agent.py).
         graph = (
-            StateGraph(MessagesState)
+            StateGraph(MessagesState)  # ty: ignore[invalid-argument-type]
             .add_node(
                 "answer",
                 lambda state: {
@@ -211,7 +234,7 @@ class ConversationLifecyclePostgresTests(unittest.IsolatedAsyncioTestCase):
             self.assertEqual(
                 await PersistanceHelpers.get_conversations_for_user(user.user_id), []
             )
-        async with PersistanceHelpers._pool.connection() as connection:
+        async with self.pool().connection() as connection:
             for table in ("checkpoints", "checkpoint_writes", "checkpoint_blobs"):
                 result = await connection.execute(
                     sql.SQL(
@@ -219,11 +242,13 @@ class ConversationLifecyclePostgresTests(unittest.IsolatedAsyncioTestCase):
                     ).format(sql.Identifier(table)),
                     (self.conversation_id,),
                 )
-                self.assertEqual((await result.fetchone())["count"], 0)
+                row = await result.fetchone()
+                assert row is not None
+                self.assertEqual(row["count"], 0)
 
     async def test_independent_service_saver_is_fenced(self):
         await get_messages_for_agent(self.request(), self.owner.user_id)
-        pool = AsyncConnectionPool(
+        pool: AsyncConnectionPool[AsyncConnection[dict[str, Any]]] = AsyncConnectionPool(
             open=False,
             kwargs={
                 **self.connection_args,
@@ -236,7 +261,7 @@ class ConversationLifecyclePostgresTests(unittest.IsolatedAsyncioTestCase):
         self.addAsyncCleanup(pool.close)
         independent = FencedPostgresSaver(pool)
         await delete_conversation(self.conversation_id, self.owner)
-        config = {
+        config: RunnableConfig = {
             "configurable": {
                 "thread_id": self.conversation_id,
                 "checkpoint_ns": "",
@@ -254,6 +279,7 @@ class ConversationLifecyclePostgresTests(unittest.IsolatedAsyncioTestCase):
     async def test_delete_waits_for_atomic_writer_and_erases_it(self):
         await get_messages_for_agent(self.request(), self.owner.user_id)
         saver = PersistanceHelpers.get_checkpointer()
+        assert isinstance(saver, FencedPostgresSaver)
         locked, resume = asyncio.Event(), asyncio.Event()
 
         async def writer():
@@ -284,12 +310,14 @@ class ConversationLifecyclePostgresTests(unittest.IsolatedAsyncioTestCase):
             # Observe a real PostgreSQL lock wait, rather than assuming timing.
             async def waiting():
                 while True:
-                    async with PersistanceHelpers._pool.connection() as connection:
+                    async with self.pool().connection() as connection:
                         result = await connection.execute(
                             "SELECT count(*) AS count FROM pg_stat_activity WHERE datname = %s AND wait_event_type = 'Lock'",
                             (self.database,),
                         )
-                        if (await result.fetchone())["count"]:
+                        row = await result.fetchone()
+                        assert row is not None
+                        if row["count"]:
                             return
                     await asyncio.sleep(0)
 
@@ -307,7 +335,7 @@ class ConversationLifecyclePostgresTests(unittest.IsolatedAsyncioTestCase):
 
     async def test_failed_erasure_rolls_back_and_owner_can_retry(self):
         await self.seed_history()
-        async with PersistanceHelpers._pool.connection() as connection:
+        async with self.pool().connection() as connection:
             await connection.execute(
                 "CREATE FUNCTION fail_erasure() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN RAISE EXCEPTION 'controlled erasure failure'; END $$"
             )
@@ -336,7 +364,7 @@ class ConversationLifecyclePostgresTests(unittest.IsolatedAsyncioTestCase):
                 self.other.user_id, self.conversation_id
             )
         )
-        async with PersistanceHelpers._pool.connection() as connection:
+        async with self.pool().connection() as connection:
             await connection.execute("DROP TRIGGER fail_erasure ON checkpoint_writes")
         await delete_conversation(self.conversation_id, self.owner)
         await delete_conversation(self.conversation_id, self.owner)
@@ -344,7 +372,7 @@ class ConversationLifecyclePostgresTests(unittest.IsolatedAsyncioTestCase):
 
     async def test_legacy_mapped_history_survives_migration(self):
         await self.seed_history()
-        async with PersistanceHelpers._pool.connection() as connection:
+        async with self.pool().connection() as connection:
             await connection.execute("ALTER TABLE chats DROP COLUMN deleted_at")
         await PersistanceHelpers.close()
         await PersistanceHelpers.init(self.settings)
@@ -364,8 +392,7 @@ class ConversationLifecyclePostgresTests(unittest.IsolatedAsyncioTestCase):
         await self.assert_retired()
 
     async def test_legacy_orphans_are_quarantined_on_restart(self):
-        pool = PersistanceHelpers._pool
-        async with pool.connection() as connection:
+        async with self.pool().connection() as connection:
             # Simulate the pre-fence schema and orphan pending state.
             await connection.execute("ALTER TABLE chats DROP COLUMN deleted_at")
             await AsyncPostgresSaver(connection).aput_writes(
@@ -408,8 +435,10 @@ class ConversationLifecyclePostgresTests(unittest.IsolatedAsyncioTestCase):
                             "messages": [AIMessage(content="private answer from A")]
                         }
 
+                    # ty cannot verify that TypedDicts satisfy langgraph's StateLike
+                    # bound (same stub limitation as in app/agent/tools/simplify_agent.py).
                     graph = (
-                        StateGraph(MessagesState)
+                        StateGraph(MessagesState)  # ty: ignore[invalid-argument-type]
                         .add_node("answer", answer)
                         .add_edge(START, "answer")
                         .add_edge("answer", END)
@@ -418,14 +447,19 @@ class ConversationLifecyclePostgresTests(unittest.IsolatedAsyncioTestCase):
                     wrapper = _ConfiguredLangChainDeepAgentGraph.__new__(
                         _ConfiguredLangChainDeepAgentGraph
                     )
-                    wrapper.agent = graph
-                    wrapper.state_schema = MessagesState
-                    wrapper._prepare_run = lambda data, config: (
-                        data["messages"],
-                        None,
-                        None,
+                    wrapper.agent = cast("Any", graph)
+                    wrapper.state_schema = cast("Any", MessagesState)
+                    wrapper._prepare_run = cast(
+                        "Any",
+                        lambda data, config: (
+                            data["messages"],
+                            None,
+                            None,
+                        ),
                     )
-                    executor = MUCGPTAgentExecutor(SimpleNamespace(graph=wrapper))
+                    executor = MUCGPTAgentExecutor(
+                        cast("MUCGPTAgent", SimpleNamespace(graph=wrapper))
+                    )
                     request = self.request()
                     request.stream = stream
                     chunks = []
@@ -479,11 +513,12 @@ class ConversationLifecyclePostgresTests(unittest.IsolatedAsyncioTestCase):
                             Request({"type": "http", "headers": []}),
                         )
                         if hasattr(response, "body_iterator"):
+                            body_iterator = cast("Any", response.body_iterator)
                             try:
-                                async for chunk in response.body_iterator:
+                                async for chunk in body_iterator:
                                     chunks.append(chunk)
                             finally:
-                                await response.body_iterator.aclose()
+                                await body_iterator.aclose()
                         return response
 
                     saver.aput = paused_put
@@ -526,12 +561,14 @@ class ConversationLifecyclePostgresTests(unittest.IsolatedAsyncioTestCase):
                                     any("RUN_ERROR" in chunk for chunk in chunks)
                                 )
                         await self.assert_retired()
-                        async with PersistanceHelpers._pool.connection() as connection:
+                        async with self.pool().connection() as connection:
                             result = await connection.execute(
                                 "SELECT count(*) AS count FROM pg_stat_activity WHERE datname = %s AND state = 'idle in transaction'",
                                 (self.database,),
                             )
-                            self.assertEqual((await result.fetchone())["count"], 0)
+                            row = await result.fetchone()
+                            assert row is not None
+                            self.assertEqual(row["count"], 0)
                     finally:
                         resume.set()
                         if task is not None:

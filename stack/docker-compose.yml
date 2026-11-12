@@ -395,11 +395,57 @@ services:
     networks:
       - internal
 
+  ##############################
+  #    Image object storage    #
+  ##############################
+
+  # Development-only S3-compatible object store for chat image input.
+  # Production must use a separately operated, production-grade object store
+  # (see docs/GETTING_STARTED.md). Never reuse the local credentials below.
+  rustfs:
+    image: rustfs/rustfs:latest
+    environment:
+      RUSTFS_ACCESS_KEY: "rustfs-dev"
+      RUSTFS_SECRET_KEY: "rustfs-dev-secret"
+      RUSTFS_ADDRESS: ":9000"
+      RUSTFS_CONSOLE_ADDRESS: ":9001"
+      RUSTFS_CONSOLE_ENABLE: "true"
+      RUSTFS_OBS_LOGGER_LEVEL: "error"
+      RUSTFS_OBS_LOG_DIRECTORY: "/var/log/rustfs/"
+    command: ["/data"]
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - rustfs-data:/data
+    security_opt: *security_settings
+    healthcheck:
+      <<: *healthcheck
+      test: ["CMD-SHELL", "curl --fail http://localhost:9000/health"]
+    networks:
+      - internal
+
+  # One-shot bucket bootstrap; core depends on a ready image bucket.
+  rustfs-init:
+    image: minio/mc:latest
+    depends_on:
+      rustfs:
+        condition: service_healthy
+    entrypoint: >
+      /bin/sh -c "
+      until mc alias set local http://rustfs:9000 rustfs-dev rustfs-dev-secret >/dev/null 2>&1; do sleep 1; done;
+      mc mb --ignore-existing local/mucgpt-chat-images &&
+      echo 'Image bucket ready';
+      "
+    networks:
+      - internal
+
 networks:
   internal:
 
 volumes:
   cache-data:
+  rustfs-data:
   postgres-data:
     driver_opts:
       o: uid=999

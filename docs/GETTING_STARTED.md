@@ -463,9 +463,31 @@ docker pull ghcr.io/it-at-m/mucgpt/mucgpt-core:1.0.0
 
 Pulling from ghcr.io is anonymous. The openCode registry is the GitLab container registry of gitlab.opencode.de: anonymous pulls work if the project is public, otherwise authenticate with a GitLab account or an access token with `read_registry` scope.
 
+## 🖼️ Image input in chat
+
+Users can attach images (screenshots, forms, photos) to chat messages when two conditions are met:
+
+1. **Image input is enabled globally** — `image_input.enabled: true` in the core `config.yaml`, which requires an S3-compatible object store (`image_input.s3.bucket`). The local stack provides RustFS (`http://rustfs:9000`) with the pre-created bucket `mucgpt-chat-images` (console on port 9001).
+2. **The model is explicitly approved for images** — `model_info.supports_vision: true` on that model entry. This is a deliberate data-protection opt-in: the flag is never inferred from the model name and never auto-enabled by LiteLLM metadata enrichment. Only enable it for models where sending images has been approved.
+
+Images are uploaded once through `POST /v1/images` into private object storage; chat messages, browser storage, and server checkpoints only ever carry opaque `mucgpt-image://<uuid>` references. Before each model call the core hydrates the references into data URIs for the provider and discards them afterwards.
+
+Optional bounds (all enforced server-side, defaults in the config examples): `max_upload_bytes` (10 MiB), `max_images_per_message` (5), `max_pixels` (20 MP decompression-bomb bound), `max_hydration_bytes` (40 MiB total per model call), `unbound_expiry_seconds` (24 h for drafts that are never sent). Formats: JPEG, PNG, WebP only.
+
+**Image media tracing is a separate opt-in**: with `image_input.langfuse_media_enabled: false` (default), no image bytes reach Langfuse traces at all (both SDK masking hooks are active). When enabled, model generations carry native Langfuse media references; self-hosted Langfuse then requires its own media object storage (`LANGFUSE_S3_MEDIA_UPLOAD_*`), and deleted MUCGPT conversations do not delete that second media copy — approve its retention separately.
+
+### Production object storage requirements
+
+The Compose RustFS instance is for isolated local development only. Production must run a **separately operated, production-grade S3-compatible object store** (dedicated storage service with HA, backup, monitoring, and an operations owner), not the dev container. Requirements for the core's image bucket:
+
+- TLS and private network access; no public bucket or console; no browser CORS needed (only the core service accesses the bucket).
+- IAM limited to `GetObject`, `PutObject`, and `DeleteObject` on the configured `key_prefix`; credentials via environment variables (`MUCGPT_CORE_IMAGE_INPUT__S3__ACCESS_KEY_ID` / `__SECRET_ACCESS_KEY`) or the environment credential chain — never in `config.yaml`.
+- Prefer a dedicated **unversioned** bucket/prefix: object versioning or object lock can retain supposedly deleted images or block deletion, and independent lifecycle rules can race conversation cleanup.
+- Set `force_path_style: true` for self-hosted S3-compatible stores and point `endpoint_url` at the internal endpoint.
+
 ### Database migration ordering
 
-The core service does not create or upgrade database schema at startup. For every core release, stop accepting new generation requests and stop/drain every old writer before starting fence-aware instances, then run the matching `mucgpt-core-migrations` image as a deployment Job and wait for it to complete successfully before rolling out `mucgpt-core`. This applies to both the conversation/checkpoint schema and document storage schema. See the [conversation persistence rollout procedure](conversation-persistence.md#schema-migration-and-rollout) for the required ordering. Deploying a core image before its migration Job, or retaining a stale migration image, can cause runtime database errors. Migration Jobs serialize through a PostgreSQL advisory lock; if overlapping Jobs are possible, set `MIGRATION_LOCK_TIMEOUT=0` to wait for the active Job rather than failing after the default 30 seconds.
+The core service does not create or upgrade database schema at startup. For every core release, stop accepting new generation requests and stop/drain every old writer before starting fence-aware instances, then run the matching `mucgpt-core-migrations` image as a deployment Job and wait for it to complete successfully before rolling out `mucgpt-core`. This applies to the conversation/checkpoint schema, the document storage schema, and the chat image tables. See the [conversation persistence rollout procedure](conversation-persistence.md#schema-migration-and-rollout) for the required ordering. Deploying a core image before its migration Job, or retaining a stale migration image, can cause runtime database errors. Migration Jobs serialize through a PostgreSQL advisory lock; if overlapping Jobs are possible, set `MIGRATION_LOCK_TIMEOUT=0` to wait for the active Job rather than failing after the default 30 seconds.
 
 ### Image lifecycle maintenance
 

@@ -247,6 +247,34 @@ models:
 #   model_info:
 #     # ... model info ...
 
+# Image input (optional - nested under image_input key)
+# Disabled by default. Enabling requires an S3-compatible bucket; per-model
+# availability additionally requires model_info.supports_vision on approved
+# models. The stack provides RustFS (http://rustfs:9000) with the bucket
+# "mucgpt-chat-images" for local development. Secrets belong in environment
+# variables, e.g. MUCGPT_CORE_IMAGE_INPUT__S3__SECRET_ACCESS_KEY.
+# image_input:
+#   enabled: false
+#   max_upload_bytes: 10485760        # 10 MiB per image
+#   max_images_per_message: 5
+#   max_pixels: 20000000              # decompression-bomb bound
+#   max_hydration_bytes: 41943040     # total image bytes hydrated per model call (40 MiB)
+#   unbound_expiry_seconds: 86400     # draft uploads expire after 24h
+#   # Separate tracing opt-in (process-wide): when false (default), no image
+#   # bytes reach Langfuse traces. When true, model generations carry native
+#   # Langfuse media references; self-hosted Langfuse then requires its own
+#   # media object storage (LANGFUSE_S3_MEDIA_UPLOAD_*).
+#   langfuse_media_enabled: false
+#   s3:
+#     bucket: "mucgpt-chat-images"
+#     endpoint_url: "http://rustfs:9000"  # omit for AWS
+#     region: null
+#     key_prefix: "chat-images/"
+#     force_path_style: true              # required for self-hosted S3-compatible stores
+#     # access_key_id/secret_access_key are optional; without them boto3 uses
+#     # the environment credential chain. Secrets must use env overrides:
+#     #   MUCGPT_CORE_IMAGE_INPUT__S3__ACCESS_KEY_ID / __SECRET_ACCESS_KEY
+
 # SSO Settings (Keycloak)
 # Used by both core and assistant services for authentication
 sso:

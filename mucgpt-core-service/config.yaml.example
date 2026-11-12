@@ -182,7 +182,10 @@ sso:
 #     key_prefix: "chat-images/"
 #     force_path_style: true           # required for self-hosted S3-compatible stores
 #     # access_key_id/secret_access_key are optional; without them boto3 uses
-#     # the environment credential chain. Secrets must use env overrides.
+#     # the environment credential chain. Secrets must use env overrides:
+#     #   MUCGPT_CORE_IMAGE_INPUT__S3__ACCESS_KEY_ID / __SECRET_ACCESS_KEY
+#     # The local stack provides RustFS (http://rustfs:9000) with the bucket
+#     # "mucgpt-chat-images" for development.
 
 # Langfuse is configured via the standard environment variables
 # LANGFUSE_PUBLIC_KEY, LANGFUSE_SECRET_KEY and LANGFUSE_HOST; the Langfuse SDK

@@ -25,7 +25,7 @@
 db:
   host: "postgres"
   port: 5432
-  name: "postgres"
+  name: "assistants"
   user: "admin"
   # Demo value for the local stack only (matches POSTGRES_PASSWORD in docker-compose.yml).
   # For real deployments provide it via MUCGPT_ASSISTANT_DB__PASSWORD instead of storing it here.

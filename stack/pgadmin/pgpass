@@ -1,1 +1,2 @@
 postgres:5432:*:admin:admin
+checkpoint-postgres:5432:*:admin:admin

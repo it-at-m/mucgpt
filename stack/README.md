@@ -40,11 +40,33 @@ This directory contains the Docker Compose configuration for running the complet
    podman compose up -d
    ```
 
+   If `postgres-data` already exists from an older setup, changing
+   `POSTGRES_DB` does not create `assistants`; the existing volume retains its
+   original `postgres` database. Preserve the existing data and create the new
+   database with:
+
+   ```powershell
+   podman compose exec postgres psql -U admin -d postgres -c "CREATE DATABASE assistants;"
+   ```
+
+   Alternatively, for a fresh local setup, remove the volume and start the
+   stack again. This permanently deletes all databases stored in that volume:
+
+   ```powershell
+   podman compose down
+   podman volume rm mucgpt-stack_postgres-data
+   podman compose up -d
+   ```
+
 3. Access the services:
    - Frontend: <http://localhost:8083> (user: `demo-user`, password: `mucgpt`)
    - Frontend admin: <http://localhost:8083> (user: `demo-admin`, password: `mucgpt`)
    - Keycloak Admin: <http://localhost:8100> (admin/admin)
    - PGAdmin: <http://localhost:5050> (admin/admin)
+
+The pgAdmin server list is reloaded from `pgadmin/servers.json` on every
+startup. This keeps the configured servers current, but replaces servers that
+developers added through the pgAdmin UI.
 
 The demo credentials above are intentionally provided only for the isolated local environment. They are public example credentials and must not be used as production credentials or reused in test environments.
 
@@ -311,7 +333,7 @@ The optional `prompts` section in `core.config.yaml` maps core-service prompt na
    db:
      host: "postgres"
      port: 5432
-     name: "postgres"
+     name: "assistants"
      user: "admin"
      # Provide password via MUCGPT_ASSISTANT_DB__PASSWORD instead of storing it here.
      # password: "admin"

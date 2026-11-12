@@ -27,7 +27,11 @@ from core.image_store import ImageStorageError, ImageStorageManager
 from core.image_validation import InvalidImageError
 from core.logtools import getLogger
 from database.image_catalog import ImageCatalogManager
-from database.image_repo import ChatImage, ImageRepository
+from database.image_repo import (
+    ChatImage,
+    ImageDeletionOutboxRepository,
+    ImageRepository,
+)
 
 logger = getLogger()
 router = APIRouter(prefix="/v1")
@@ -208,7 +212,6 @@ async def get_image_content(
         204: {"description": "Deleted"},
         404: {"description": "Image not found or not accessible"},
         409: {"description": "Image already belongs to a conversation"},
-        503: {"description": "Image storage is unavailable"},
     },
 )
 async def delete_image(
@@ -217,9 +220,9 @@ async def delete_image(
 ) -> Response:
     """Remove an unbound draft; bound images live with their conversation.
 
-    Cleanup ordering: the object is removed first, then the row, so a failed
-    object deletion keeps the row retryable. (Durable outbox semantics arrive
-    with the image lifecycle work.)
+    The catalog row is dropped and the object removal is enqueued to the
+    deletion outbox inside the same transaction, so the deletion survives
+    crashes; the maintenance job removes the bytes afterwards.
     """
     row = await _get_ready_row(user_info.user_id, image_id)
     if row.conversation_id is not None:
@@ -227,13 +230,9 @@ async def delete_image(
             status_code=409,
             detail="Image is already attached to a conversation.",
         )
-    try:
-        await ImageStorageManager.get_store().delete(row.object_key)
-    except ImageStorageError as exc:
-        logger.error("Image delete storage failure for %s: %s", row.id, exc)
-        raise HTTPException(
-            status_code=503, detail="Image storage is currently unavailable."
-        ) from exc
     async with ImageCatalogManager.get_session_factory().begin() as session:
         await ImageRepository(session).delete_image(user_info.user_id, row.id)
+        await ImageDeletionOutboxRepository(session).enqueue(
+            row.bucket, row.object_key, "draft_delete"
+        )
     return Response(status_code=204)

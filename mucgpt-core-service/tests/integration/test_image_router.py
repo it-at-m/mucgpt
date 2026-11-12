@@ -19,7 +19,7 @@ from config.settings import ImageConfig, ImageStorageConfig
 from core.auth import authenticate_user
 from core.auth_models import AuthenticationResult
 from core.image_store import ImageStorageError, ImageStorageManager
-from database.database_models import Base, ChatImage
+from database.database_models import Base, ChatImage, ImageDeletionOutbox
 from database.image_catalog import ImageCatalogManager
 
 USER_ID = "test_user_123"
@@ -88,7 +88,9 @@ def image_env(monkeypatch: pytest.MonkeyPatch):
         poolclass=StaticPool,
         connect_args={"check_same_thread": False},
     )
-    Base.metadata.create_all(engine, tables=[ChatImage.__table__])
+    Base.metadata.create_all(
+        engine, tables=[ChatImage.__table__, ImageDeletionOutbox.__table__]
+    )
     sessions = ImageSessions(engine)
     store = FakeImageStore()
     monkeypatch.setattr(ImageCatalogManager, "_session_factory", sessions)
@@ -371,9 +373,13 @@ def test_delete_removes_unbound_drafts(test_client, image_env):
     response = test_client.delete(f"/v1/images/{image_id}")
 
     assert response.status_code == 204
-    assert image_env.store.deleted == [f"{image_id}.png"]
     with Session(image_env.engine) as session:
         assert session.get(ChatImage, image_id) is None
+        pending = session.scalars(select(ImageDeletionOutbox)).all()
+        assert [(entry.bucket, entry.object_key) for entry in pending] == [
+            ("test-bucket", f"{image_id}.png")
+        ]
+        assert pending[0].reason == "draft_delete"
 
 
 def test_delete_rejects_bound_and_foreign_images(
@@ -394,14 +400,18 @@ def test_delete_rejects_bound_and_foreign_images(
         restore()
 
 
-def test_delete_keeps_row_when_object_deletion_fails(test_client, image_env):
+def test_delete_survives_storage_unavailability(test_client, image_env):
+    """The request is transactional: storage trouble defers object removal
+    to the outbox instead of failing or leaving an orphan row behind."""
     image_env.apply_settings()
     image_id = "66666666-6666-4666-8666-666666666666"
     seed_row(image_env.engine, image_id)
+    image_env.store.objects[f"{image_id}.png"] = (image_bytes(), "image/png")
     image_env.store.fail_delete = True
 
     response = test_client.delete(f"/v1/images/{image_id}")
 
-    assert response.status_code == 503
+    assert response.status_code == 204
     with Session(image_env.engine) as session:
-        assert session.get(ChatImage, image_id) is not None
+        assert session.get(ChatImage, image_id) is None
+        assert session.scalars(select(ImageDeletionOutbox)).all()

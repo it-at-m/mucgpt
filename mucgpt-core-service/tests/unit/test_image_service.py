@@ -17,7 +17,7 @@ from core import image_service as services
 from core.auth_models import AuthenticationResult
 from core.image_store import ImageStorageError
 from core.image_validation import InvalidImageError
-from database.database_models import Base, ChatImage
+from database.database_models import Base, ChatImage, ImageDeletionOutbox
 
 
 class ImageSessions:
@@ -87,7 +87,7 @@ def settings() -> ImageConfig:
 @pytest.fixture
 def service():
     engine = create_engine("sqlite://")
-    Base.metadata.create_all(engine, tables=[ChatImage.__table__])
+    Base.metadata.create_all(engine, tables=[ChatImage.__table__, ImageDeletionOutbox.__table__])
     sessions = ImageSessions(engine)
     store = FakeImageStore()
     yield services.ImageIngestionService(sessions, store, settings()), sessions, store
@@ -143,7 +143,7 @@ async def test_format_and_extension_follow_the_actual_bytes(fmt, service):
 def oversized_service():
     """Service with a tiny byte bound for boundary tests."""
     engine = create_engine("sqlite://")
-    Base.metadata.create_all(engine, tables=[ChatImage.__table__])
+    Base.metadata.create_all(engine, tables=[ChatImage.__table__, ImageDeletionOutbox.__table__])
     sessions = ImageSessions(engine)
     store = FakeImageStore()
     config = ImageConfig(

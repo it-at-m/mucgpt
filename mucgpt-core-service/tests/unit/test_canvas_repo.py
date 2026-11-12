@@ -107,6 +107,7 @@ def _erase_harness(monkeypatch: pytest.MonkeyPatch) -> tuple[Mock, Mock]:
     row = {"user_id": "owner", "deleted_at": None}
     fetch_result = Mock()
     fetch_result.fetchone = AsyncMock(return_value=row)
+    fetch_result.fetchall = AsyncMock(return_value=[("bucket-1", "image.png")])
     connection.execute = AsyncMock(return_value=fetch_result)
 
     connection_ctx = Mock()
@@ -136,6 +137,8 @@ async def test_erase_conversation_cascades_canvas_in_one_transaction(
     executed = [call.args[0] for call in connection.execute.await_args_list]
     assert any("UPDATE chats" in sql for sql in executed)
     assert any("DELETE FROM canvas_documents" in sql for sql in executed)
+    assert any("DELETE FROM chat_images" in sql for sql in executed)
+    assert any("INSERT INTO image_deletion_outbox" in sql for sql in executed)
     eraser.assert_awaited_once()
     transaction.__aexit__.assert_awaited_once_with(None, None, None)
 

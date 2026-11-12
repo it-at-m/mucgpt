@@ -22,7 +22,7 @@ from core.image_refs import managed_image_url
 from core.image_store import ImageStorageError, ImageStore
 from core.image_validation import InvalidImageError, validate_image_bytes
 from core.logtools import getLogger
-from database.image_repo import ImageRepository
+from database.image_repo import ImageDeletionOutboxRepository, ImageRepository
 
 logger = getLogger()
 
@@ -120,7 +120,6 @@ class ImageIngestionService:
         bucket = self.settings.s3.bucket if self.settings.s3 else ""
         image_id: str | None = None
         created_at: datetime | None = None
-        write_attempted = False
         try:
             with CancelScope(shield=True):
                 async with self.session_factory.begin() as session:
@@ -143,7 +142,6 @@ class ImageIngestionService:
                 raise ImageStorageError("Image reservation was not published")
 
             await self.store.put(object_key, data, mime_type)
-            write_attempted = True
 
             expires_at = datetime.now(UTC) + timedelta(
                 seconds=self.settings.unbound_expiry_seconds
@@ -171,7 +169,7 @@ class ImageIngestionService:
                 user_info.user_id,
                 image_id,
                 object_key,
-                write_attempted,
+                bucket,
             )
             raise
 
@@ -180,26 +178,25 @@ class ImageIngestionService:
         user_id: str,
         image_id: str | None,
         object_key: str,
-        write_attempted: bool,
+        bucket: str,
     ) -> None:
-        """Best-effort rollback; later lifecycle work makes deletion durable."""
+        """Roll back a failed upload durably.
+
+        The reservation row and the outbox entry for the object removal commit
+        in one transaction, so the maintenance job removes any written bytes
+        even when this process dies mid-compensation.
+        """
         with CancelScope(shield=True):
             try:
-                if write_attempted:
-                    await self.store.delete(object_key)
+                async with self.session_factory.begin() as session:
+                    if image_id is not None:
+                        await ImageRepository(session).delete_image(user_id, image_id)
+                    await ImageDeletionOutboxRepository(session).enqueue(
+                        bucket, object_key, "upload_compensation"
+                    )
             except Exception:
                 logger.exception(
-                    "Image object cleanup failed for %s", object_key
-                )
-            try:
-                if image_id is not None:
-                    async with self.session_factory.begin() as session:
-                        await ImageRepository(session).delete_image(
-                            user_id, image_id
-                        )
-            except Exception:
-                logger.exception(
-                    "Image reservation cleanup failed for %s", image_id
+                    "Image compensation failed for %s", image_id or object_key
                 )
 
 

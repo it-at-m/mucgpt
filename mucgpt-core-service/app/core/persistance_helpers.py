@@ -16,6 +16,7 @@ from api.api_models import (
     ConversationUsage,
 )
 from config.settings import Settings, get_settings
+from core.image_lifecycle import enqueue_raw
 from core.logtools import getLogger
 from database.canvas_repo import CanvasRepository
 from database.conversation_repo import ConversationRepository
@@ -377,6 +378,21 @@ class PersistanceHelpers:
                     "DELETE FROM canvas_documents WHERE conversation_id = %s",
                     (conversation_id,),
                 )
+                # Chat images are personal data with the same lifetime as the
+                # canvas: the rows go now, and their object bytes are removed
+                # by the maintenance job from the outbox entries inserted here.
+                image_rows = await connection.execute(
+                    "DELETE FROM chat_images WHERE conversation_id = %s "
+                    "RETURNING bucket, object_key",
+                    (conversation_id,),
+                )
+                for bucket, object_key in await image_rows.fetchall():
+                    await enqueue_raw(
+                        connection,
+                        bucket=bucket,
+                        object_key=object_key,
+                        reason="conversation_deleted",
+                    )
             return "deleted"
 
     @staticmethod

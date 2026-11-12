@@ -187,7 +187,7 @@ async def test_safe_namespace_encoding_does_not_change_catalog_owner(ingestion):
 )
 async def test_upload_validation_precedes_reservation(ingestion, file, error):
     service, sessions, _, parser = ingestion
-    service.settings = DocumentConfig(MAX_UPLOAD_BYTES=16)
+    service.settings = DocumentConfig(max_upload_bytes=16)
     with pytest.raises(error):
         await service.ingest_document(user(), file)
     assert sessions.rows() == []
@@ -203,7 +203,7 @@ async def test_disabled_parser_and_exact_upload_byte_boundary(ingestion, monkeyp
         await service.ingest_document(user(), upload())
     assert sessions.phases == 0
     monkeypatch.setattr(services, "get_parser", lambda: parser)
-    service.settings = DocumentConfig(MAX_UPLOAD_BYTES=16)
+    service.settings = DocumentConfig(max_upload_bytes=16)
     metadata = await service.ingest_document(user(), upload(body=b"a" * 16))
     assert metadata.original_size == 16
 
@@ -223,7 +223,7 @@ async def test_disabled_parser_and_exact_upload_byte_boundary(ingestion, monkeyp
 )
 async def test_invalid_extraction_releases_capacity(ingestion, text, error):
     service, sessions, store, parser = ingestion
-    service.settings = DocumentConfig(MAX_TEXT_BYTES=16)
+    service.settings = DocumentConfig(max_text_bytes=16)
     parser.parse.return_value = text
     with pytest.raises(error):
         await service.ingest_document(user(), upload())
@@ -303,7 +303,7 @@ async def test_empty_xberg_response_releases_reservation(
 @pytest.mark.asyncio
 async def test_exact_extracted_byte_boundary(ingestion):
     service, _, _, parser = ingestion
-    service.settings = DocumentConfig(MAX_TEXT_BYTES=16)
+    service.settings = DocumentConfig(max_text_bytes=16)
     parser.parse.return_value = "é" * 8
     metadata = await service.ingest_document(user(), upload())
     assert metadata.text_length == 8

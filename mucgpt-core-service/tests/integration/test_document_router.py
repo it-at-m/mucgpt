@@ -52,7 +52,7 @@ def upload_api(monkeypatch):
 
     monkeypatch.setattr(services, "document_work_lock", work_lock)
     service = services.DocumentIngestionService(
-        MagicMock(begin=begin), DocumentConfig(PREVIEW_MAX_CHARS=10)
+        MagicMock(begin=begin), DocumentConfig(preview_max_chars=10)
     )
     factory = MagicMock(return_value=service)
     monkeypatch.setattr(document_router, "DocumentIngestionService", factory)
@@ -163,7 +163,7 @@ def test_invalid_uploads_never_reserve_or_parse(upload_api, monkeypatch, failure
     elif failure == "filename":
         kwargs["filename"] = "x" * 256
     elif failure == "size":
-        service.settings = DocumentConfig(MAX_UPLOAD_BYTES=3)
+        service.settings = DocumentConfig(max_upload_bytes=3)
         expected = 413
     else:
         monkeypatch.setattr(services, "get_parser", lambda: None)
@@ -184,7 +184,7 @@ def test_invalid_uploads_never_reserve_or_parse(upload_api, monkeypatch, failure
 )
 def test_extraction_rejection_releases_reservation(upload_api, text, expected, detail):
     client, service, parser, engine, store, owner, _ = upload_api
-    service.settings = DocumentConfig(MAX_TEXT_BYTES=16)
+    service.settings = DocumentConfig(max_text_bytes=16)
     parser.parse.return_value = text
     response = post_document(client)
     assert response.status_code == expected

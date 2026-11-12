@@ -55,7 +55,7 @@ class DocumentStorageError(RuntimeError):
 
 def create_initial_excerpt(text: str, settings: DocumentConfig) -> str:
     """Return first N characters of the document text to inject into system prompt"""
-    return text[: settings.PREVIEW_MAX_CHARS]
+    return text[: settings.preview_max_chars]
 
 
 class InvalidDocumentSelectionError(ValueError):
@@ -247,7 +247,7 @@ class DocumentIngestionService:
         # generic, or inaccurate; retain them for display rather than reject files.
         mime_type = (file.content_type or "").split(";", 1)[0].strip().lower()
         mime_type = mime_type or "application/octet-stream"
-        if file.size is not None and file.size > self.settings.MAX_UPLOAD_BYTES:
+        if file.size is not None and file.size > self.settings.max_upload_bytes:
             raise DocumentSizeExceededError("Document upload exceeds the byte limit")
         parser = get_parser()
         if parser is None:
@@ -278,9 +278,7 @@ class DocumentIngestionService:
                         created_at = document.created_at
 
                 if document_id is None:
-                    raise DocumentStorageError(
-                        "Document reservation was not published"
-                    )
+                    raise DocumentStorageError("Document reservation was not published")
 
                 text = await parser.parse(file)
                 self._validate_text(text)
@@ -342,10 +340,10 @@ class DocumentIngestionService:
         size = 0
         try:
             while chunk := await file.read(
-                min(64 * 1024, self.settings.MAX_UPLOAD_BYTES - size + 1)
+                min(64 * 1024, self.settings.max_upload_bytes - size + 1)
             ):
                 size += len(chunk)
-                if size > self.settings.MAX_UPLOAD_BYTES:
+                if size > self.settings.max_upload_bytes:
                     raise DocumentSizeExceededError(
                         "Document upload exceeds the byte limit"
                     )
@@ -366,7 +364,7 @@ class DocumentIngestionService:
             raise InvalidDocumentTextError(
                 "Document extraction must not contain NUL characters"
             )
-        if len(text) > self.settings.MAX_TEXT_BYTES:
+        if len(text) > self.settings.max_text_bytes:
             raise DocumentSizeExceededError("Extracted text exceeds the byte limit")
         try:
             size = len(text.encode("utf-8"))
@@ -374,7 +372,7 @@ class DocumentIngestionService:
             raise InvalidDocumentTextError(
                 "Document extraction must be valid UTF-8 text"
             ) from None
-        if size > self.settings.MAX_TEXT_BYTES:
+        if size > self.settings.max_text_bytes:
             raise DocumentSizeExceededError("Extracted text exceeds the byte limit")
 
     async def _compensate(

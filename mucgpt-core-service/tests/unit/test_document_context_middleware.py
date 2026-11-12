@@ -39,7 +39,7 @@ async def test_document_context_reaches_effective_prompt_without_state_changes(
         runtime=Runtime(context=RequestContext(assistant_id=assistant_id)),
     )
     handler = AsyncMock() if asynchronous else MagicMock()
-    settings = SimpleNamespace(documents=SimpleNamespace(PREVIEW_MAX_CHARS=16))
+    settings = SimpleNamespace(documents=SimpleNamespace(preview_max_chars=16))
     get_settings = MagicMock(return_value=settings)
     monkeypatch.setattr(middleware, "get_settings", get_settings)
     get_prompt = MagicMock(return_value="Document instructions from Langfuse")

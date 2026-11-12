@@ -521,9 +521,9 @@ class DBConfig(BaseModel):
 class DocumentConfig(BaseModel):
     """Bounds for the extracted-text document library (not the legacy /parse API)."""
 
-    MAX_UPLOAD_BYTES: PositiveInt = 100 * 1024 * 1024
-    MAX_TEXT_BYTES: PositiveInt = 5 * 1024 * 1024
-    PREVIEW_MAX_CHARS: PositiveInt = 1000
+    max_upload_bytes: PositiveInt = 100 * 1024 * 1024
+    max_text_bytes: PositiveInt = 5 * 1024 * 1024
+    preview_max_chars: PositiveInt = 1000
 
 
 class PromptConfig(BaseModel):

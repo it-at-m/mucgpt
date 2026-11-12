@@ -4,6 +4,7 @@ from typing import Annotated
 from ag_ui.encoder import EventEncoder
 from fastapi import APIRouter, Depends, HTTPException, Request, Response
 from fastapi.responses import StreamingResponse
+from langfuse import get_client, propagate_attributes
 
 from api.api_models import (
     CanvasResponse,
@@ -19,6 +20,7 @@ from config.model_provider import ModelRegistry, ModelsConfigurationException
 from config.settings import get_settings
 from core.auth import authenticate_user
 from core.auth_models import AuthenticationResult
+from core.llm_helpers import hash_user_id
 from core.logtools import getLogger
 from core.persistance_helpers import PersistanceHelpers
 from core.stream_cleanup import close_stream
@@ -428,10 +430,31 @@ async def ag_ui_chat_endpoint(
 
     async def event_generator() -> AsyncGenerator[str]:
         """Encode AG-UI events and close their source on completion or cancellation."""
+        langfuse = get_client()
+        tags = (
+            [f"assistant-{chat_request.assistant_id}"]
+            if chat_request.assistant_id is not None
+            else ["default-assistant"]
+        )
+        trace_id = langfuse.create_trace_id()
         try:
-            async for event in events:
-                yield encoder.encode(event)
+            with langfuse.start_as_current_observation(
+                name="Agent",
+                as_type="agent",
+                input=messages_for_agent[-1].content,
+                trace_context={"trace_id": trace_id},
+            ):
+                with propagate_attributes(
+                    user_id=hash_user_id(user_info.user_id),
+                    tags=tags,
+                    session_id=chat_request.conversation_id,
+                    trace_name="Agent",
+                ):
+                    async for event in events:
+                        yield encoder.encode(event)
         finally:
             await close_stream(events)
+            # The root observation must end before its completed span can be flushed.
+            langfuse.flush()
 
     return StreamingResponse(event_generator(), media_type=encoder.get_content_type())

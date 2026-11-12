@@ -73,9 +73,6 @@ class ConversationLifecyclePostgresTests(unittest.IsolatedAsyncioTestCase):
                 NAME=self.database,
             )
         )
-        await self.migrate_database()
-        await PersistanceHelpers.init(self.settings)
-        self.addAsyncCleanup(PersistanceHelpers.close)
         self.conversation_id = uuid4().hex
         self.owner = AuthenticationResult(
             user_id="owner-a", token="test", department="test"
@@ -83,6 +80,15 @@ class ConversationLifecyclePostgresTests(unittest.IsolatedAsyncioTestCase):
         self.other = AuthenticationResult(
             user_id="owner-b", token="test", department="test"
         )
+        if self._testMethodName in {
+            "test_legacy_mapped_history_survives_migration",
+            "test_legacy_orphans_are_quarantined_on_restart",
+        }:
+            await self.create_legacy_schema()
+        else:
+            await self.migrate_database()
+            await PersistanceHelpers.init(self.settings)
+            self.addAsyncCleanup(PersistanceHelpers.close)
 
     async def drop_database(self):
         async with await psycopg.AsyncConnection.connect(
@@ -135,6 +141,65 @@ class ConversationLifecyclePostgresTests(unittest.IsolatedAsyncioTestCase):
             {"configurable": {"thread_id": self.conversation_id}},
             durability=CHECKPOINT_DURABILITY,
         )
+
+    async def create_legacy_schema(self):
+        """Create the pre-Alembic schema used by the migration adoption tests."""
+        async with await psycopg.AsyncConnection.connect(
+            **self.connection_args, dbname=self.database, autocommit=True
+        ) as connection:
+            await connection.execute(
+                """
+                CREATE TABLE chats (
+                    conversation_id VARCHAR PRIMARY KEY,
+                    user_id VARCHAR NOT NULL,
+                    assistant_id VARCHAR,
+                    chat_title VARCHAR NOT NULL DEFAULT 'New Chat',
+                    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+                    updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+                )
+                """
+            )
+            await AsyncPostgresSaver(connection).setup()
+
+    async def seed_legacy_history(self, *, orphan: bool = False):
+        """Seed checkpoint state before Alembic adopts the legacy schema."""
+        async with await psycopg.AsyncConnection.connect(
+            **self.connection_args, dbname=self.database, autocommit=True
+        ) as connection:
+            if not orphan:
+                await connection.execute(
+                    "INSERT INTO chats (conversation_id, user_id) VALUES (%s, %s)",
+                    (self.conversation_id, self.owner.user_id),
+                )
+            saver = AsyncPostgresSaver(connection)
+            if orphan:
+                await saver.aput_writes(
+                    {
+                        "configurable": {
+                            "thread_id": self.conversation_id,
+                            "checkpoint_ns": "",
+                            "checkpoint_id": "legacy",
+                        }
+                    },
+                    [("messages", [HumanMessage(content="legacy private")])],
+                    "task",
+                )
+            else:
+                graph = (
+                    StateGraph(MessagesState)
+                    .add_node(
+                        "answer",
+                        lambda state: {"messages": [AIMessage(content="saved answer")]},
+                    )
+                    .add_edge(START, "answer")
+                    .add_edge("answer", END)
+                    .compile(checkpointer=saver)
+                )
+                await graph.ainvoke(
+                    {"messages": [HumanMessage(content="saved question")]},
+                    {"configurable": {"thread_id": self.conversation_id}},
+                    durability=CHECKPOINT_DURABILITY,
+                )
 
     async def test_manual_rename_persists_and_rejects_foreign_missing_and_retired_ids(
         self,
@@ -364,11 +429,10 @@ class ConversationLifecyclePostgresTests(unittest.IsolatedAsyncioTestCase):
         await self.assert_retired()
 
     async def test_legacy_mapped_history_survives_migration(self):
-        await self.seed_history()
-        async with PersistanceHelpers._pool.connection() as connection:
-            await connection.execute("ALTER TABLE chats DROP COLUMN deleted_at")
-        await PersistanceHelpers.close()
+        await self.seed_legacy_history()
+        await self.migrate_database()
         await PersistanceHelpers.init(self.settings)
+        self.addAsyncCleanup(PersistanceHelpers.close)
         self.assertEqual(
             [
                 message.content
@@ -385,23 +449,10 @@ class ConversationLifecyclePostgresTests(unittest.IsolatedAsyncioTestCase):
         await self.assert_retired()
 
     async def test_legacy_orphans_are_quarantined_on_restart(self):
-        pool = PersistanceHelpers._pool
-        async with pool.connection() as connection:
-            # Simulate the pre-fence schema and orphan pending state.
-            await connection.execute("ALTER TABLE chats DROP COLUMN deleted_at")
-            await AsyncPostgresSaver(connection).aput_writes(
-                {
-                    "configurable": {
-                        "thread_id": self.conversation_id,
-                        "checkpoint_ns": "",
-                        "checkpoint_id": "legacy",
-                    }
-                },
-                [("messages", [HumanMessage(content="legacy private")])],
-                "task",
-            )
-        await PersistanceHelpers.close()
+        await self.seed_legacy_history(orphan=True)
+        await self.migrate_database()
         await PersistanceHelpers.init(self.settings)
+        self.addAsyncCleanup(PersistanceHelpers.close)
         await self.assert_retired()
         await PersistanceHelpers.close()
         await PersistanceHelpers.init(self.settings)

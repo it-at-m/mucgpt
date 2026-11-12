@@ -13,13 +13,14 @@ from unittest.mock import AsyncMock, Mock, patch
 from uuid import uuid4
 
 import psycopg
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import FastAPI, HTTPException
 from langchain_core.messages import AIMessage, HumanMessage
 from langgraph.checkpoint.postgres.aio import AsyncPostgresSaver
 from langgraph.graph import END, START, MessagesState, StateGraph
 from psycopg import sql
 from psycopg.rows import dict_row
 from psycopg_pool import AsyncConnectionPool
+from tests.unit.helpers import request_with_body
 
 from agent.agent_executor import MUCGPTAgentExecutor
 from agent.deep_agent import CHECKPOINT_DURABILITY, _ConfiguredLangChainDeepAgentGraph
@@ -474,9 +475,10 @@ class ConversationLifecyclePostgresTests(unittest.IsolatedAsyncioTestCase):
                             await app(scope, receive, send)
                             return
                         response = await ag_ui_chat_endpoint(
-                            request,
                             self.owner,
-                            Request({"type": "http", "headers": []}),
+                            request_with_body(
+                                request.model_dump(mode="json", exclude_none=True)
+                            ),
                         )
                         if hasattr(response, "body_iterator"):
                             try:

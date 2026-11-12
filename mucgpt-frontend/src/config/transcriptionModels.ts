@@ -109,6 +109,28 @@ export const TRANSCRIPTION_MODELS: TranscriptionModel[] = [
             decoder: "https://huggingface.co/efederici/parakeet-tdt-0.6b-v3-onnx-int4/resolve/main/decoder_joint-model.int8.onnx",
             vocab: "https://huggingface.co/efederici/parakeet-tdt-0.6b-v3-onnx-int4/resolve/main/vocab.txt"
         }
+    },
+    // NVIDIA Parakeet Ultra (moondream post-train of Parakeet TDT 0.6B v3, CC-BY-4.0):
+    // same architecture/tokenizer/25 languages but better than v3 on every benchmark
+    // (FLEURS de 3.61 vs 4.13, uk 4.75 vs 5.94) plus punctuation/capitalization output.
+    // Olicorne browser export in the istupakov nemo-conformer-tdt layout, single files
+    // (no external data): w4a8 MatMulNBits encoder (383 MB) + int8 decoder_joint
+    // (decoder int8 = fp32 accuracy on this model) + vocab ≈ 402 MB total, no fp16 →
+    // WASM without shader-f16. Spike-validated (see issue #1450): node + browser WASM
+    // end-to-end, correct transcript with punctuation; single-threaded ort-web WASM
+    // decodes ~RTF 1.0 (11 s jfk.wav, ~394 MB JS heap) — slower than v3 int4 (~0.63)
+    // but still realtime-class; sessions create in ~2.3 s. The export bans <unk>
+    // tokens in the decoder.
+    {
+        model_id: "Olicorne/parakeet-tdt-0.6b-v3-ultra-onnx",
+        label: "NVIDIA Parakeet Ultra",
+        size_hint: "~410 MB",
+        runtime: "parakeet",
+        files: {
+            encoder: "https://huggingface.co/Olicorne/parakeet-tdt-0.6b-v3-ultra-onnx/resolve/main/w4a8/encoder-model.w4a8.onnx",
+            decoder: "https://huggingface.co/Olicorne/parakeet-tdt-0.6b-v3-ultra-onnx/resolve/main/int8/decoder_joint-model.int8.onnx",
+            vocab: "https://huggingface.co/Olicorne/parakeet-tdt-0.6b-v3-ultra-onnx/resolve/main/vocab.txt"
+        }
     }
 ];
 

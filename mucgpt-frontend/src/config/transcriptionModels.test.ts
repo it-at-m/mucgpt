@@ -48,6 +48,18 @@ describe("TRANSCRIPTION_MODELS", () => {
         expect(canary?.languages).toEqual(["en", "de", "fr", "es"]);
     });
 
+    it("parakeet ultra entry ships the Olicorne single-file export without WebGPU restriction", () => {
+        const ultra = TRANSCRIPTION_MODELS.find(m => m.model_id === "Olicorne/parakeet-tdt-0.6b-v3-ultra-onnx");
+        expect(ultra).toBeDefined();
+        expect(ultra?.runtime).toBe("parakeet");
+        expect(ultra?.webgpu_only).toBeUndefined();
+        // languages unset = all 25 supported (incl. de/fr/uk)
+        expect(ultra?.languages).toBeUndefined();
+        expect(ultra?.files?.encoder).toContain("/w4a8/encoder-model.w4a8.onnx");
+        expect(ultra?.files?.decoder).toContain("/int8/decoder_joint-model.int8.onnx");
+        expect(ultra?.files?.vocab).toMatch(/vocab\.txt$/);
+    });
+
     it("german-tuned entries avoid fp16 decoder (broken in ort-web) and use single-file dtypes", () => {
         for (const model of TRANSCRIPTION_MODELS) {
             const dtype = model.dtype;

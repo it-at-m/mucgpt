@@ -3,18 +3,16 @@ import { DBMessage, StorageService } from "../service/storage";
 import { DBObject } from "../service/storage";
 import { ChatMessage, ChatOptions } from "./chat/Chat";
 import { ChatRequest, ChatResponse, CanvasState, ChatTurn, DataSource, Model } from "../api";
-import { ChatCompletionChunk, ChatCompletionChunkChoice } from "../api/models";
 import { ToolStreamHandler, ToolStatus } from "../utils/ToolStreamHandler";
 
 import language from "react-syntax-highlighter/dist/esm/languages/hljs/1c";
 import { AssistantStorageService } from "../service/assistantstorage";
 import { v4 as uuid } from "uuid";
-import { handleRedirect } from "../api/fetch-utils";
 import { createChatName, MucgptAgUiAgent } from "../api/core-client";
 import { EventType, type BaseEvent, type CustomEvent } from "@ag-ui/core";
 import { initialRunActivity, reduceRunActivity, type RunActivity } from "../utils/agUiActivity";
 import { isCanvasToolCall, parseCanvasStreamEvent, type CanvasStreamEvent } from "../utils/canvasStream";
-import { fromAgUiRunError, fromChunk, toChatProviderError, ChatProviderError } from "../utils/providerError";
+import { fromAgUiRunError, ChatProviderError } from "../utils/providerError";
 import { deleteConversationApi } from "../api/conversations-client";
 import { scrollIntoNearestContainer } from "../utils/scrollIntoNearestContainer";
 import { getConversationActionCapabilities } from "../utils/conversationActions";
@@ -233,7 +231,6 @@ export interface CanvasWiring {
  * @param answers - Current array of chat messages
  * @param question - The user's question/input
  * @param dispatch - Function to dispatch state updates
- * @param chatApi - API function for making chat requests
  * @param LLM - Language model configuration object
  * @param activeChatRef - Reference to the currently active chat ID
  * @param storageService - Service for managing chat storage operations
@@ -252,7 +249,6 @@ export const makeApiRequest = async (
     answers: any[],
     question: string,
     dispatch: Dispatch<any>,
-    chatApi: (options: ChatRequest) => Promise<Response>,
     LLM: Model,
     activeChatRef: RefObject<string | undefined>,
     storageService: StorageService<any, any>,
@@ -268,7 +264,6 @@ export const makeApiRequest = async (
     answerTopRef?: RefObject<HTMLElement | null>,
     onLoadingChange?: (isLoading: boolean) => void,
     persist: boolean = true,
-    agUiEnabled: boolean = false,
     onAgUiEvent?: (event: BaseEvent) => void,
     onRunActivityChange?: (activity: RunActivity) => void,
     canvasWiring?: CanvasWiring
@@ -332,19 +327,6 @@ export const makeApiRequest = async (
         canvas: canvasWiring?.getCanvasState() ?? undefined
     };
 
-    // Keep the legacy request behavior unchanged while the AG-UI path is rolled out.
-    const legacyResponse = agUiEnabled ? undefined : await chatApi(request).catch(abortRequest);
-    if (legacyResponse) {
-        handleRedirect(legacyResponse);
-        if (!legacyResponse.ok) {
-            // Pre-stream failure (validation/config/auth): the backend returns
-            // a JSON error body instead of an SSE stream.
-            const body = (await legacyResponse.json().catch(() => undefined)) as unknown;
-            await abortRequest(toChatProviderError(body ?? { code: "unknown", detail: "" }, legacyResponse.status));
-        }
-        if (!legacyResponse.body) await abortRequest(Error("No response body"));
-    }
-
     // Initialize token counters for usage tracking
     let user_tokens = 0;
     let cache_read_tokens = 0;
@@ -353,7 +335,7 @@ export const makeApiRequest = async (
 
     // Initialize tool stream handler for processing tool calls
     const toolStreamHandler = new ToolStreamHandler();
-    let activeToolStatuses: ToolStatus[] = [];
+    const activeToolStatuses: ToolStatus[] = [];
     let runActivity: RunActivity = { ...initialRunActivity, startedAt: Date.now() };
     const activitySteps = () => (runActivity.steps.length > 0 ? runActivity.steps : undefined);
 
@@ -370,10 +352,6 @@ export const makeApiRequest = async (
         onLoadingChange?.(false);
         dispatch({ type: "ADD_ANSWER", payload: initialMessage });
     };
-
-    // The legacy fetch has already received its response headers. AG-UI keeps
-    // the loading indicator visible until the first displayable event arrives.
-    if (!agUiEnabled) showInitialMessage();
 
     // Ensure the currently generating answer placeholder is brought into view
     // immediately after submit. We retry because the ref may not be attached
@@ -428,7 +406,7 @@ export const makeApiRequest = async (
         }, 100);
     };
 
-    if (agUiEnabled) {
+    {
         let runError: ChatProviderError | undefined;
         // Tool progress is shown through the run activity (loading indicator and answer steps), not toasts.
         onRunActivityChange?.(runActivity);
@@ -515,88 +493,6 @@ export const makeApiRequest = async (
                 updateTimer = null;
             }
             await abortRequest(runError);
-        }
-    } else {
-        const reader = legacyResponse!.body!.getReader();
-        const decoder = new TextDecoder();
-        let streamBuffer = "";
-        let streamDone = false;
-
-        try {
-            while (!streamDone) {
-                const { done, value } = await reader.read();
-                if (done) break;
-
-                streamBuffer += decoder.decode(value, { stream: true });
-                const lines = streamBuffer.split("\n");
-                streamBuffer = lines.pop() || "";
-
-                for (const line of lines) {
-                    if (!line.startsWith("data: ")) continue;
-                    const data = line.slice(6).trim();
-                    if (data === "[DONE]") {
-                        streamDone = true;
-                        break;
-                    }
-
-                    try {
-                        const chunk = JSON.parse(data) as ChatCompletionChunk;
-                        const choice: ChatCompletionChunkChoice | undefined = chunk.choices?.[0];
-                        if (!choice) continue;
-
-                        if (chunk.usage) {
-                            user_tokens += chunk.usage.prompt_tokens || 0;
-                            cache_read_tokens += chunk.usage.cache_read_tokens ?? 0;
-                            streamed_tokens += chunk.usage.completion_tokens || 0;
-                            context_tokens =
-                                chunk.usage.context_tokens ??
-                                chunk.usage.total_tokens ??
-                                (chunk.usage.prompt_tokens || 0) + (chunk.usage.completion_tokens || 0);
-                        }
-
-                        if (choice.finish_reason === "stop") {
-                            streamDone = true;
-                            break;
-                        }
-
-                        if (choice.finish_reason === "error") {
-                            // The backend signals a failed run in-band; the
-                            // (empty) content and the structured error must not
-                            // end up in the answer text buffer.
-                            streamDone = true;
-                            throw fromChunk(chunk);
-                        }
-
-                        if (choice.delta?.tool_calls) {
-                            for (const toolCall of choice.delta.tool_calls) {
-                                const { statusChange } = toolStreamHandler.handleToolCall(toolCall);
-                                if (statusChange) {
-                                    activeToolStatuses = toolStreamHandler.getActiveToolStatuses();
-                                    onToolStatusUpdate?.(activeToolStatuses);
-                                    includeActiveToolsInUpdate = true;
-                                }
-                                scheduleUpdate();
-                            }
-                        } else if (choice.delta?.content) {
-                            textBuffer += choice.delta.content;
-                            scheduleUpdate();
-                        }
-                    } catch (parseError) {
-                        if (parseError instanceof ChatProviderError) {
-                            if (updateTimer) {
-                                clearTimeout(updateTimer);
-                                updateTimer = null;
-                            }
-                            throw parseError;
-                        }
-                        console.warn("Failed to parse SSE data:", data, parseError);
-                    }
-                }
-            }
-        } catch (error) {
-            await abortRequest(error);
-        } finally {
-            reader.releaseLock();
         }
     }
 

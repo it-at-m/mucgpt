@@ -721,10 +721,6 @@ class ConfigResponse(BaseModel):
         None,
         description="Template for assistant owner profile links. The '{uid}' placeholder is replaced with the owner user ID.",
     )
-    ag_ui_enabled: bool = Field(
-        False,
-        description="Whether the AG UI is enabled.",
-    )
     canvas_content_max_chars: int = Field(
         default=CANVAS_CONTENT_MAX_CHARS,
         description="Maximum persisted canvas content length in characters.",

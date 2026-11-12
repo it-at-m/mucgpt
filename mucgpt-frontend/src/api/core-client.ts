@@ -47,10 +47,7 @@ function toChatCompletionBody(options: ChatRequest) {
     };
 }
 
-/**
- * AG-UI client for the transitional endpoint, which emits AG-UI events but
- * still accepts MUCGPT's existing chat request envelope.
- */
+/** AG-UI client for MUCGPT chat runs. */
 export class MucgptAgUiAgent extends HttpAgent {
     constructor(private readonly request: ChatRequest) {
         super({
@@ -83,11 +80,6 @@ export class MucgptAgUiAgent extends HttpAgent {
 export async function getTools(lang?: string): Promise<ToolListResponse> {
     const url = lang ? `${API_BASE}v1/tools?lang=${encodeURIComponent(lang)}` : `${API_BASE}v1/tools`;
     return handleApiRequest(() => fetch(url, getConfig()), "Failed to get tools");
-}
-
-export async function chatApi(options: ChatRequest): Promise<Response> {
-    const url = API_BASE + "v1/chat/completions";
-    return await fetch(url, postConfig(toChatCompletionBody(options)));
 }
 
 export async function configApi(): Promise<ApplicationConfig> {

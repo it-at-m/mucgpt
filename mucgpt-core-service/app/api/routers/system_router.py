@@ -101,7 +101,6 @@ async def get_config(user_info=Depends(authenticate_user)) -> ConfigResponse:
         admin_role=settings.sso.admin_role,
         ad2image_url=settings.ad2image_url,
         owner_profile_url_template=settings.owner_profile_url_template,
-        ag_ui_enabled=settings.ag_ui_enabled,
         canvas_content_max_chars=settings.canvas_content_max_chars,
         canvas_editor_max_chars=settings.canvas_editor_max_chars,
     )

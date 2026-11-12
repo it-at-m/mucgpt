@@ -99,7 +99,6 @@ export interface ApplicationConfig {
     /** The single transcription model used by every user; null (not configured) or unknown ids disable the feature. */
     transcription_model: string | null;
     ai_act_compliance_check_enabled: boolean;
-    ag_ui_enabled: boolean;
     /** Maximum persisted canvas content length (characters). */
     canvas_content_max_chars: number;
     /** Maximum canvas editor input length (characters). */

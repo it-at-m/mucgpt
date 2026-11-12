@@ -20,7 +20,6 @@ import { STORAGE_KEYS } from "../layout/LayoutHelper";
 import { ToolStatus } from "../../utils/ToolStreamHandler";
 import { initialRunActivity, type RunActivity } from "../../utils/agUiActivity";
 import { AssistantStrategy, CommunityAssistantStrategy, DeletedCommunityAssistantStrategy, LocalAssistantStrategy } from "./AssistantStrategy";
-import { chatApi } from "../../api/core-client";
 import { useGlobalToastContext } from "../../components/GlobalToastHandler/GlobalToastContext";
 import { getOwnedCommunityAssistants, getUserSubscriptionsApi, subscribeToAssistantApi, unsubscribeFromAssistantApi } from "../../api/assistant-client";
 import { NotSubscribedDialog } from "../../components/NotSubscribedDialog";
@@ -43,7 +42,6 @@ import { useDuplicateAssistant } from "../discovery/hooks/useDuplicateAssistant"
 import { useMigrateLocalAssistant } from "../../hooks/useMigrateLocalAssistant";
 import { CloseConfirmationDialog } from "../../components/AssistantDialogs/shared/CloseConfirmationDialog";
 import { UploadedData } from "../../components/ContextManagerDialog/ContextManagerDialog";
-import { useConfigContext } from "../../context/ConfigContext";
 import { useToolStatusToasts } from "../../hooks/useToolStatusToasts";
 import { useCanvasController } from "../../hooks/useCanvasController";
 import { CanvasSplitView } from "../../components/Canvas/CanvasSplitView";
@@ -64,7 +62,6 @@ interface UnifiedAssistantChatProps {
 
 /** Strategy-driven chat page shared by the personal and community assistant views. */
 const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
-    const { ag_ui_enabled: agUiEnabled } = useConfigContext();
     // useReducer für den Chat-Status
     const chatReducer = getChatReducer<Assistant>();
     // Combined states with useReducer
@@ -595,7 +592,6 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                     answers,
                     question,
                     dispatch,
-                    chatApi,
                     LLM,
                     activeChatRef,
                     assistantChatStorage,
@@ -611,7 +607,6 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                     lastAnswerRef,
                     setIsLoadingValue,
                     requestPersist,
-                    agUiEnabled,
                     undefined, // onAgUiEvent — event log is only wired up in the main chat
                     setRunActivity,
                     canvasWiring
@@ -637,7 +632,6 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
             isLegacyAssistant,
             isAssistantUnavailable,
             historyReadOnly,
-            agUiEnabled,
             canvasWiring
         ]
     );

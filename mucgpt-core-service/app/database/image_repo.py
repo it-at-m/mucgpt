@@ -1,11 +1,11 @@
 from dataclasses import dataclass
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from uuid import UUID, uuid4
 
-from sqlalchemy import delete, insert, select, update
+from sqlalchemy import delete, insert, or_, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from database.database_models import Chat, ChatImage
+from database.database_models import Chat, ChatImage, ImageDeletionOutbox
 
 
 @dataclass(frozen=True)
@@ -217,3 +217,114 @@ class ImageRepository:
                     "Stateless requests cannot reference conversation-bound images."
                 )
         return len(unique_ids)
+
+
+DELETION_REASONS = (
+    "draft_delete",
+    "upload_compensation",
+    "expired",
+    "conversation_deleted",
+)
+
+
+@dataclass(frozen=True)
+class ClaimedDeletion:
+    """One outbox entry leased for object removal by the maintenance job."""
+
+    id: str
+    bucket: str
+    object_key: str
+    reason: str
+    attempts: int
+
+
+class ImageDeletionOutboxRepository:
+    """Durable deletion queue for image objects; the caller owns the transaction.
+
+    ``enqueue`` runs inside the deleting transaction so the catalog change and
+    the pending object removal commit atomically. ``claim_due`` leases entries
+    with ``FOR UPDATE SKIP LOCKED`` (PostgreSQL) so concurrent maintenance
+    workers never process the same object twice; SQLite silently omits the
+    unsupported lock modifiers.
+    """
+
+    def __init__(self, session: AsyncSession):
+        self.session = session
+
+    async def enqueue(
+        self, bucket: str, object_key: str, reason: str
+    ) -> None:
+        """Record a pending object deletion inside the caller's transaction."""
+        if reason not in DELETION_REASONS:
+            raise ValueError(f"Unknown deletion reason {reason!r}")
+        await self.session.execute(
+            insert(ImageDeletionOutbox).values(
+                id=str(uuid4()),
+                bucket=bucket,
+                object_key=object_key,
+                reason=reason,
+            )
+        )
+
+    async def claim_due(
+        self, *, limit: int, lease_seconds: int
+    ) -> list[ClaimedDeletion]:
+        """Lease up to ``limit`` due entries; leased entries retry after crash."""
+        now = datetime.now(UTC)
+        query = (
+            select(ImageDeletionOutbox)
+            .where(ImageDeletionOutbox.next_attempt_at <= now)
+            .where(
+                or_(
+                    ImageDeletionOutbox.lease_until.is_(None),
+                    ImageDeletionOutbox.lease_until <= now,
+                )
+            )
+            .order_by(ImageDeletionOutbox.created_at)
+            .limit(limit)
+        )
+        if self._locks_supported():
+            query = query.with_for_update(skip_locked=True)
+        rows = (
+            await self.session.execute(query)
+        ).scalars().all()
+        claimed = [
+            ClaimedDeletion(
+                id=row.id,
+                bucket=row.bucket,
+                object_key=row.object_key,
+                reason=row.reason,
+                attempts=row.attempts,
+            )
+            for row in rows
+        ]
+        for row in rows:
+            row.lease_until = now + timedelta(seconds=lease_seconds)
+            row.attempts += 1
+        return claimed
+
+    async def record_success(self, entry_id: str) -> None:
+        await self.session.execute(
+            delete(ImageDeletionOutbox).where(ImageDeletionOutbox.id == entry_id)
+        )
+
+    async def record_failure(
+        self, entry_id: str, error: str, *, retry_delay_seconds: int
+    ) -> None:
+        """Release the lease and schedule the next attempt with backoff."""
+        await self.session.execute(
+            update(ImageDeletionOutbox)
+            .where(ImageDeletionOutbox.id == entry_id)
+            .values(
+                lease_until=None,
+                next_attempt_at=datetime.now(UTC)
+                + timedelta(seconds=retry_delay_seconds),
+                last_error=error[:500],
+            )
+        )
+
+    def _locks_supported(self) -> bool:
+        dialect = getattr(
+            getattr(self.session, "bind", None), "dialect", None
+        )
+        return dialect is not None and dialect.name == "postgresql"

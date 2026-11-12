@@ -4,6 +4,7 @@ from sqlalchemy import (
     JSON,
     CheckConstraint,
     DateTime,
+    Index,
     Integer,
     String,
     Text,
@@ -112,6 +113,45 @@ class ChatImage(Base):
     )
     bound_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True
+    )
+
+
+class ImageDeletionOutbox(Base):
+    """Durable record of one object deletion that object storage has not yet
+    confirmed.
+
+    PostgreSQL and S3 deletion are not one atomic operation: the catalog row
+    disappears in a committed transaction while the bytes remain until the
+    maintenance job removes them. The outbox captures the exact recorded
+    ``bucket``/``object_key`` inside that same transaction, so cleanup survives
+    crashes and retries instead of pretending both stores deleted together.
+    """
+
+    __tablename__ = "image_deletion_outbox"
+    __table_args__ = (
+        CheckConstraint(
+            "reason IN ('draft_delete', 'upload_compensation', 'expired', "
+            "'conversation_deleted')",
+            name="ck_image_deletion_outbox_reason",
+        ),
+        CheckConstraint("attempts >= 0", name="ck_image_deletion_outbox_attempts"),
+        Index("ix_image_deletion_outbox_due", "next_attempt_at"),
+    )
+
+    id: Mapped[str] = mapped_column(String, primary_key=True)
+    bucket: Mapped[str] = mapped_column(String, nullable=False)
+    object_key: Mapped[str] = mapped_column(String, nullable=False)
+    reason: Mapped[str] = mapped_column(String, nullable=False)
+    attempts: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    next_attempt_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+    lease_until: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    last_error: Mapped[str | None] = mapped_column(String, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
     )
 
 

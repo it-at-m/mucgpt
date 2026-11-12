@@ -2,7 +2,7 @@ from anyio import CancelScope
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker
 
 from config.settings import Settings
-from database.database_models import Base, ChatImage
+from database.database_models import Base, ChatImage, ImageDeletionOutbox
 from database.session import create_engine_and_session_factory
 
 
@@ -19,9 +19,10 @@ class ImageCatalogManager:
         engine, factory = create_engine_and_session_factory(settings)
         try:
             async with engine.begin() as connection:
-                # Explicitly initialize the new table on existing deployments.
+                # Explicitly initialize the new tables on existing deployments.
                 await connection.run_sync(
-                    Base.metadata.create_all, tables=[ChatImage.__table__]  # ty: ignore[invalid-argument-type]
+                    Base.metadata.create_all,
+                    tables=[ChatImage.__table__, ImageDeletionOutbox.__table__],  # ty: ignore[invalid-argument-type]
                 )
         except BaseException:
             with CancelScope(shield=True):

@@ -62,6 +62,7 @@ def test_init_disabled_without_credentials(monkeypatch: pytest.MonkeyPatch) -> N
 def test_init_uses_standard_env_vars(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("LANGFUSE_PUBLIC_KEY", "pk-test")
     monkeypatch.setenv("LANGFUSE_SECRET_KEY", "sk-test")
+    monkeypatch.delenv("LANGFUSE_RELEASE", raising=False)
 
     client = LangfuseProvider.init(version="1.2.3")
 

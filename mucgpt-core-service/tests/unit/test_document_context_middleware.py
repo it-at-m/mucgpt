@@ -1,3 +1,4 @@
+from datetime import UTC, datetime
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, MagicMock
 
@@ -9,6 +10,7 @@ from langgraph.runtime import Runtime
 
 from agent import middleware
 from agent.middleware import ContextMiddleware, RequestContext
+from core.document_service import SelectedDocument
 
 
 @pytest.mark.asyncio
@@ -44,11 +46,16 @@ async def test_document_context_reaches_effective_prompt_without_state_changes(
     monkeypatch.setattr(middleware, "get_settings", get_settings)
     get_prompt = MagicMock(return_value="Document instructions from Langfuse")
     monkeypatch.setattr(middleware.PromptPool, "get_prompt", get_prompt)
-    document = SimpleNamespace(
+    document = SelectedDocument(
+        id="12345678-1234-4234-8234-123456789abc",
         filename="Policy.pdf",
-        path="/documents/12345678-1234-4234-8234-123456789abc.txt",
+        mime_type="application/pdf",
+        original_size=1,
         text_length=50000,
-        preview="Selected preview" + "not included",
+        preview="Selected preview",
+        preview_kind="text",
+        path="/documents/12345678-1234-4234-8234-123456789abc.txt",
+        created_at=datetime.now(UTC),
     )
     selection = [document]
     context = ContextMiddleware(document_selection=selection)
@@ -68,6 +75,7 @@ async def test_document_context_reaches_effective_prompt_without_state_changes(
         assert "not included" not in effective.system_message.text
         assert effective.messages == request.messages
         assert effective.state == request.state
+    assert request.system_message is not None
     assert request.system_message.content == "Effective assistant prompt"
 
 

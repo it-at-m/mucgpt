@@ -60,7 +60,10 @@ def test_ten_previews_are_individually_bounded_and_keep_selection_order():
     assert [row.findtext("filename") for row in root] == [
         doc.filename for doc in documents
     ]
-    assert sum(len(row.findtext("initial-excerpt")) for row in root) == 10000
+    excerpts = [row.findtext("initial-excerpt") for row in root]
+    assert all(excerpt is not None for excerpt in excerpts)
+    total = sum(len(excerpt) for excerpt in excerpts if excerpt is not None)
+    assert total == 10000
 
 
 @pytest.mark.parametrize(
@@ -72,6 +75,7 @@ def test_injection_preserves_original_system_message_and_does_not_accumulate(con
     first = add_document_context(original, "current document context")
     second = add_document_context(original, "current document context")
     assert original.content == content
+    assert first is not None and second is not None
     assert first == second
     assert first.additional_kwargs == original.additional_kwargs
     assert first.text.count("current document context") == 1
@@ -85,4 +89,6 @@ def test_empty_context_leaves_prompt_untouched():
 
 
 def test_context_can_supply_missing_system_message():
-    assert add_document_context(None, "document context").content == "document context"
+    supplied = add_document_context(None, "document context")
+    assert supplied is not None
+    assert supplied.content == "document context"

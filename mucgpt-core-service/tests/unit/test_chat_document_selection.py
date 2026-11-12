@@ -1,3 +1,4 @@
+from datetime import UTC, datetime
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, MagicMock
 
@@ -14,6 +15,7 @@ from core.document_service import (
     DocumentSelection,
     DocumentUnavailableError,
     InvalidDocumentSelectionError,
+    SelectedDocument,
 )
 from database import document_catalog, document_repo
 
@@ -75,7 +77,19 @@ async def test_selection_uses_authenticated_service_and_closes_session(
     )
     repository = MagicMock()
     monkeypatch.setattr(document_repo, "DocumentRepository", repository)
-    documents = (SimpleNamespace(id="authorized-id", path="/documents/authorized.txt"),)
+    documents = (
+        SelectedDocument(
+            id="authorized-id",
+            filename="authorized.txt",
+            mime_type="text/plain",
+            original_size=1,
+            text_length=1,
+            preview="x",
+            preview_kind="text",
+            path="/documents/authorized.txt",
+            created_at=datetime.now(UTC),
+        ),
+    )
     resolver = AsyncMock(
         return_value=DocumentSelection(documents=documents, unavailable_ids=()),
         side_effect=error,

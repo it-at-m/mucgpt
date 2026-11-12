@@ -3,6 +3,7 @@
 import asyncio
 import io
 from contextlib import asynccontextmanager
+from typing import cast
 from unittest.mock import AsyncMock, MagicMock
 
 import anyio
@@ -10,7 +11,8 @@ import httpx
 import pytest
 from fastapi import UploadFile
 from langgraph.store.memory import InMemoryStore
-from sqlalchemy import create_engine, select
+from sqlalchemy import Table, create_engine, select
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 from sqlalchemy.orm import Session
 from starlette.datastructures import Headers
 
@@ -86,7 +88,7 @@ def upload(
 @pytest.fixture
 def ingestion(monkeypatch):
     engine = create_engine("sqlite://")
-    Base.metadata.create_all(engine, tables=[Document.__table__])
+    Base.metadata.create_all(engine, tables=[cast("Table", Document.__table__)])
     sessions = CatalogSessions(engine)
 
     @asynccontextmanager
@@ -107,7 +109,9 @@ def ingestion(monkeypatch):
         parse=AsyncMock(return_value="  First line\r\n\nSecond line\n  ")
     )
     monkeypatch.setattr(services, "get_parser", lambda: parser)
-    service = services.DocumentIngestionService(sessions, DocumentConfig())
+    service = services.DocumentIngestionService(
+        cast("async_sessionmaker[AsyncSession]", sessions), DocumentConfig()
+    )
     yield service, sessions, store, parser
     engine.dispose()
 
@@ -144,6 +148,7 @@ async def test_complete_text_ready_metadata_and_authenticated_namespace(ingestio
     assert not file.file.closed
     result = await create_backend(user().user_id, [metadata.id]).aread(metadata.path)
     assert result.error is None
+    assert result.file_data is not None
     # StoreBackend retains exact bytes but its line-window reads join lines with LF.
     assert result.file_data["content"] == text.replace("\r\n", "\n")
     assert (

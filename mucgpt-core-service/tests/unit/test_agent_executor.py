@@ -4,7 +4,7 @@ from typing import Any, cast
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
-from ag_ui.core.events import EventType
+from ag_ui.core.events import EventType, RunErrorEvent
 from langchain_core.messages import AIMessage, AIMessageChunk, ToolCall
 
 from agent.agent_executor import MUCGPTAgentExecutor, _ag_ui_usage_from_token_usage
@@ -258,7 +258,7 @@ class TestMUCGPTAgentExecutor:
     @pytest.mark.asyncio
     async def test_run_with_streaming_emits_structured_error_chunk(self):
         agent = FailingAgent()
-        runner = MUCGPTAgentExecutor(agent)
+        runner = _executor(agent)
         messages = [InputMessage(role="user", content="fail")]
         chunks = []
         async for chunk in runner.run_with_streaming(
@@ -672,7 +672,7 @@ async def test_run_agui_error_event_carries_code_and_detail(monkeypatch):
         lambda **_kwargs: nullcontext(),
     )
     agent = FailingAgent()
-    runner = MUCGPTAgentExecutor(agent)
+    runner = _executor(agent)
 
     events = [
         event
@@ -686,6 +686,7 @@ async def test_run_agui_error_event_carries_code_and_detail(monkeypatch):
     ]
 
     error_event = next(e for e in events if e.type == EventType.RUN_ERROR)
+    assert isinstance(error_event, RunErrorEvent)
     assert error_event.code in PROVIDER_ERROR_CODES
     assert "RuntimeError" in error_event.message
     assert error_event.metadata == {"detail": error_event.message}

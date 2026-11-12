@@ -524,8 +524,8 @@ class ContextMiddleware(AgentMiddleware):
 
     def wrap_model_call(
         self,
-        request: ModelRequest,
-        handler: Callable[[ModelRequest], ModelResponse],
+        request: ModelRequest[Any],
+        handler: Callable[[ModelRequest[Any]], ModelResponse],
     ) -> ModelResponse:
         # infer policy from state type and apply to request
         policy = get_policy_for_state(self.state_schema)
@@ -573,8 +573,8 @@ class ContextMiddleware(AgentMiddleware):
 
     async def awrap_model_call(
         self,
-        request: ModelRequest,
-        handler: Callable[[ModelRequest], Awaitable[ModelResponse]],
+        request: ModelRequest[Any],
+        handler: Callable[[ModelRequest[Any]], Awaitable[ModelResponse]],
     ) -> ModelResponse:
         # infer policy from state type and apply to request
         policy = get_policy_for_state(self.state_schema)

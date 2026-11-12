@@ -1,4 +1,5 @@
 import logging
+from typing import Any, cast
 
 import httpx
 import openai
@@ -36,7 +37,9 @@ def _status_error(
 ) -> openai.APIStatusError:
     return ex_cls(
         message,
-        response=httpx.Response(status, request=_request()),
+        # openai vendors its own httpx; the stubs model it as a separate
+        # module even though it is the same objects at runtime.
+        response=cast("Any", httpx.Response(status, request=_request())),
         body=body,
     )
 
@@ -140,12 +143,12 @@ class TestTaxonomy:
 
     @pytest.mark.unit
     def test_request_timeout(self) -> None:
-        ex = openai.APITimeoutError(request=_request())
+        ex = openai.APITimeoutError(request=cast("Any", _request()))
         assert _payload(ex).code == REQUEST_TIMEOUT
 
     @pytest.mark.unit
     def test_connection_error(self) -> None:
-        ex = openai.APIConnectionError(request=_request())
+        ex = openai.APIConnectionError(request=cast("Any", _request()))
         assert _payload(ex).code == CONNECTION_ERROR
 
     @pytest.mark.unit

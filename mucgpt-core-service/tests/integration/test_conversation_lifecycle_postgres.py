@@ -34,7 +34,6 @@ from agent.deep_agent import (
 from api.api_models import (
     ChatCompletionMessage,
     ChatCompletionRequest,
-    ChatCompletionResponse,
     ConversationRenameRequest,
 )
 from api.routers.chat_router import (

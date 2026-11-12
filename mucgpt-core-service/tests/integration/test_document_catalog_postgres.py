@@ -10,6 +10,8 @@ from uuid import uuid4
 
 import psycopg
 from psycopg import sql
+from psycopg.conninfo import make_conninfo
+from pydantic import SecretStr
 from sqlalchemy.ext.asyncio import async_sessionmaker
 
 from config.settings import DBConfig, Settings
@@ -26,23 +28,27 @@ from database.document_repo import DocumentQuotaExceededError, DocumentRepositor
 class DocumentCatalogPostgresTests(unittest.IsolatedAsyncioTestCase):
     async def asyncSetUp(self):
         self.database = "document_test_" + uuid4().hex
+        # PostgreSQL conninfo keywords: all values as strings.
         self.connection_args = {
             "host": os.environ["MUCGPT_LIFECYCLE_POSTGRES_HOST"],
-            "port": int(os.getenv("MUCGPT_LIFECYCLE_POSTGRES_PORT", "5432")),
+            "port": os.getenv("MUCGPT_LIFECYCLE_POSTGRES_PORT", "5432"),
             "user": os.getenv("MUCGPT_LIFECYCLE_POSTGRES_USER", "admin"),
             "password": os.getenv("MUCGPT_LIFECYCLE_POSTGRES_PASSWORD", "admin"),
         }
         async with await psycopg.AsyncConnection.connect(
-            **self.connection_args, dbname="postgres", autocommit=True
+            make_conninfo(**self.connection_args, dbname="postgres"), autocommit=True
         ) as connection:
             await connection.execute(
                 sql.SQL("CREATE DATABASE {}").format(sql.Identifier(self.database))
             )
         self.addAsyncCleanup(self.drop_database)
         self.settings = Settings(
-            DB=DBConfig(
-                **{key.upper(): value for key, value in self.connection_args.items()},
-                NAME=self.database,
+            db=DBConfig(
+                host=str(self.connection_args["host"]),
+                port=int(self.connection_args["port"]),
+                name=self.database,
+                user=str(self.connection_args["user"]),
+                password=SecretStr(str(self.connection_args["password"])),
             )
         )
         await DocumentCatalogManager.init(self.settings)
@@ -53,7 +59,7 @@ class DocumentCatalogPostgresTests(unittest.IsolatedAsyncioTestCase):
 
     async def drop_database(self):
         async with await psycopg.AsyncConnection.connect(
-            **self.connection_args, dbname="postgres", autocommit=True
+            make_conninfo(**self.connection_args, dbname="postgres"), autocommit=True
         ) as connection:
             await connection.execute(
                 sql.SQL("DROP DATABASE {} WITH (FORCE)").format(

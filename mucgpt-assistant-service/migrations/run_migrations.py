@@ -23,7 +23,9 @@ from alembic.config import Config
 from sqlalchemy.exc import DBAPIError, OperationalError
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "app"))
 
+from migrations.logging_config import configure_logging
 from migrations.settings import get_migration_settings
 
 LOGGER = logging.getLogger("mucgpt.assistant.migrations")
@@ -51,9 +53,8 @@ def _configure_logging() -> None:
     level = getattr(logging, os.getenv("MIGRATION_LOG_LEVEL", "INFO").upper(), None)
     if not isinstance(level, int):
         raise ValueError("MIGRATION_LOG_LEVEL must be a valid logging level")
-    logging.basicConfig(
-        level=level, format="%(asctime)s %(levelname)s %(name)s %(message)s"
-    )
+    configure_logging()
+    LOGGER.setLevel(level)
 
 
 def _alembic_config(db_timeout: int, lock_timeout: int) -> Config:

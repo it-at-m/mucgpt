@@ -45,6 +45,10 @@ loggers:
     level: ${LOG_LEVEL_MUCGPT_CORE_AGENT:-ERROR}
     handlers: [console]
     propagate: no
+  mucgpt.core.migrations:
+    level: ${MIGRATION_LOG_LEVEL:-INFO}
+    handlers: [console]
+    propagate: no
   httpx:
     level: ${LOG_LEVEL_HTTPX:-ERROR}
     handlers: [httpx]

@@ -1,7 +1,6 @@
 import asyncio
 import os
 import sys
-from logging.config import fileConfig
 
 from alembic import context
 from sqlalchemy import pool, text
@@ -12,13 +11,13 @@ project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, project_root)
 sys.path.insert(0, os.path.join(project_root, "app"))
 
+from migrations.logging_config import configure_logging  # noqa: E402
 from migrations.settings import get_migration_settings  # noqa: E402
 
 from database.database_models import Base  # noqa: E402
 
 config = context.config
-if config.config_file_name is not None:
-    fileConfig(config.config_file_name, disable_existing_loggers=False)
+configure_logging()
 
 target_metadata = Base.metadata
 

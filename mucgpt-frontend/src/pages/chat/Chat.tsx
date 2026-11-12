@@ -26,6 +26,7 @@ import { documentToUploadedData, restoreDocumentSelection } from "../../componen
 import { listDocumentsApi } from "../../api/documents-client";
 import { getStoredParsedDocuments } from "../../service/parsedDocumentStorage";
 import { useToolStatusToasts } from "../../hooks/useToolStatusToasts";
+import { useGlobalToastContext } from "../../components/GlobalToastHandler/GlobalToastContext";
 import { useCanvasController } from "../../hooks/useCanvasController";
 import { CanvasSplitView } from "../../components/Canvas/CanvasSplitView";
 import { useUnifiedHistory, useUnifiedHistoryRegistration } from "../../components/UnifiedHistory";
@@ -133,6 +134,7 @@ const Chat = () => {
     const [agUiEvents, setAgUiEvents] = useState<AgUiEventLogEntry[]>([]);
 
     useToolStatusToasts(toolStatuses);
+    const { showWarning } = useGlobalToastContext();
 
     // Related states with useReducer
     const [chatState, dispatch] = useReducer(chatReducer, {
@@ -226,7 +228,15 @@ const Chat = () => {
                 setError(undefined);
                 const chat = await loadConversation(storageService, id, id, { system: "", creativity: CREATIVITY_LOW });
                 if (chat) {
-                    const selection = await restoreDocumentSelection(chat.documentIds ?? [], chat.documentNames);
+                    // The transcript must load even when the document library is
+                    // unreachable: fall back to an empty selection with a warning.
+                    let selection: UploadedData[] = [];
+                    try {
+                        selection = await restoreDocumentSelection(chat.documentIds ?? [], chat.documentNames);
+                    } catch (restoreError) {
+                        console.error("Could not restore document selection:", restoreError);
+                        showWarning(t("document_library.restore_failed_title"), t("document_library.restore_failed_message"));
+                    }
                     dispatch({ type: "SET_ANSWERS", payload: chat.messages });
                     dispatch({ type: "SET_CREATIVITY", payload: chat.config.creativity });
                     dispatch({ type: "SET_SYSTEM_PROMPT", payload: chat.config.system });
@@ -249,7 +259,7 @@ const Chat = () => {
                 return false;
             }
         },
-        [storageService, scrollToBottom, resetInputState]
+        [storageService, scrollToBottom, resetInputState, showWarning, t]
     );
 
     // Clear chat state
@@ -639,7 +649,12 @@ const Chat = () => {
                     setUploadedData(previous => [...previous.filter(document => document.source !== "library"), ...selected.map(documentToUploadedData)]);
                     setIsDocumentSelectionReady(true);
                 })
-                .catch(setError);
+                .catch(error => {
+                    // The pending question must not stall forever: proceed without
+                    // documents and surface why the selection was not applied.
+                    setError(error);
+                    setIsDocumentSelectionReady(true);
+                });
         } else {
             setIsDocumentSelectionReady(true);
         }

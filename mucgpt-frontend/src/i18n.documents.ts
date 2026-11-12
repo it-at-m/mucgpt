@@ -16,6 +16,8 @@ export const documentLibraryTranslations = {
         deleting: "Löschung ausstehend · erneut löschen zum Wiederholen",
         delete: "{{name}} aus der Bibliothek löschen",
         error: "Die Dokumentbibliothek konnte nicht aktualisiert werden.",
+        restore_failed_title: "Dokumentauswahl konnte nicht geladen werden",
+        restore_failed_message: "Der Chat wurde ohne die gespeicherten Dokumente geöffnet. Prüfe die Bibliothek und wähle die Dokumente erneut aus.",
         legacy_title: "Dokumente in diesem Browser",
         legacy_description: "Bisherige lokale Dokumente bleiben erhalten. Lade sie erneut in die Bibliothek hoch, um sie dort zu speichern."
     },
@@ -36,6 +38,8 @@ export const documentLibraryTranslations = {
         deleting: "Deletion pending · delete again to retry",
         delete: "Delete {{name}} from the library",
         error: "The document library could not be updated.",
+        restore_failed_title: "Document selection could not be restored",
+        restore_failed_message: "The chat was opened without its saved documents. Check the library and select the documents again.",
         legacy_title: "Documents in this browser",
         legacy_description: "Existing local documents are retained. Re-upload them to store them in the library."
     },
@@ -56,6 +60,8 @@ export const documentLibraryTranslations = {
         deleting: "Löschung steht aus · zum Wiederholen nomoi löschen",
         delete: "{{name}} aus da Bibliothek löschen",
         error: "D’Dokumentbibliothek hat ned aktualisiert werden können.",
+        restore_failed_title: "Dokumentauswahl konned ned gloadet werdn",
+        restore_failed_message: "Da Chat is ohne de gspeicherten Dokumente geöffnet wordn. Schau in d’Bibliothek und wähll de Dokumente nomoi aus.",
         legacy_title: "Dokumente in dem Browser",
         legacy_description: "Bisherige lokale Dokumente bleibn erhalten. Lad’s nomoi in d’Bibliothek hoch, damit’s dort gspeichert werdn."
     },
@@ -76,6 +82,8 @@ export const documentLibraryTranslations = {
         deleting: "Suppression en attente · supprimer à nouveau pour réessayer",
         delete: "Supprimer {{name}} de la bibliothèque",
         error: "Impossible de mettre à jour la bibliothèque.",
+        restore_failed_title: "Impossible de restaurer la sélection de documents",
+        restore_failed_message: "La discussion a été ouverte sans les documents enregistrés. Vérifiez la bibliothèque et resélectionnez les documents.",
         legacy_title: "Documents dans ce navigateur",
         legacy_description: "Les documents locaux existants sont conservés. Importez-les à nouveau pour les enregistrer dans la bibliothèque."
     },
@@ -96,6 +104,8 @@ export const documentLibraryTranslations = {
         deleting: "Видалення очікується · видаліть знову для повторної спроби",
         delete: "Видалити {{name}} з бібліотеки",
         error: "Не вдалося оновити бібліотеку документів.",
+        restore_failed_title: "Не вдалося відновити вибрані документи",
+        restore_failed_message: "Чат відкрито без збережених документів. Перевірте бібліотеку та виберіть документи знову.",
         legacy_title: "Документи в цьому браузері",
         legacy_description: "Наявні локальні документи збережено. Завантажте їх знову, щоб зберегти в бібліотеці."
     }

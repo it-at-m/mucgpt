@@ -1,3 +1,5 @@
+import os
+
 import pytest
 
 import config.langfuse_provider as langfuse_provider_module
@@ -33,7 +35,11 @@ def _restore_real_init(monkeypatch: pytest.MonkeyPatch):
     monkeypatch.setattr(
         LangfuseProvider, "get_callback_handler", _real_get_callback_handler
     )
-    monkeypatch.setattr(langfuse_provider_module, "Langfuse", _FakeLangfuse)
+    monkeypatch.setattr(
+        langfuse_provider_module,
+        "get_client",
+        lambda: _FakeLangfuse(release=os.environ.get("LANGFUSE_RELEASE")),
+    )
     monkeypatch.setattr(
         langfuse_provider_module, "CallbackHandler", _FakeCallbackHandler
     )

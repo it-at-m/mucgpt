@@ -187,7 +187,7 @@ async def test_safe_namespace_encoding_does_not_change_catalog_owner(ingestion):
 )
 async def test_upload_validation_precedes_reservation(ingestion, file, error):
     service, sessions, _, parser = ingestion
-    service.settings = DocumentConfig(MAX_UPLOAD_BYTES=16)
+    service.settings = DocumentConfig(max_upload_bytes=16)
     with pytest.raises(error):
         await service.ingest_document(user(), file)
     assert sessions.rows() == []
@@ -203,7 +203,7 @@ async def test_disabled_parser_and_exact_upload_byte_boundary(ingestion, monkeyp
         await service.ingest_document(user(), upload())
     assert sessions.phases == 0
     monkeypatch.setattr(services, "get_parser", lambda: parser)
-    service.settings = DocumentConfig(MAX_UPLOAD_BYTES=16)
+    service.settings = DocumentConfig(max_upload_bytes=16)
     metadata = await service.ingest_document(user(), upload(body=b"a" * 16))
     assert metadata.original_size == 16
 
@@ -223,7 +223,7 @@ async def test_disabled_parser_and_exact_upload_byte_boundary(ingestion, monkeyp
 )
 async def test_invalid_extraction_releases_capacity(ingestion, text, error):
     service, sessions, store, parser = ingestion
-    service.settings = DocumentConfig(MAX_TEXT_BYTES=16)
+    service.settings = DocumentConfig(max_text_bytes=16)
     parser.parse.return_value = text
     with pytest.raises(error):
         await service.ingest_document(user(), upload())
@@ -303,7 +303,7 @@ async def test_empty_xberg_response_releases_reservation(
 @pytest.mark.asyncio
 async def test_exact_extracted_byte_boundary(ingestion):
     service, _, _, parser = ingestion
-    service.settings = DocumentConfig(MAX_TEXT_BYTES=16)
+    service.settings = DocumentConfig(max_text_bytes=16)
     parser.parse.return_value = "é" * 8
     metadata = await service.ingest_document(user(), upload())
     assert metadata.text_length == 8
@@ -483,32 +483,6 @@ async def test_failed_body_cleanup_retains_tracking_and_slot_then_retry_frees_it
     assert store.get(get_document_namespace(user().user_id), row.storage_key) is None
 
 
-# Disabled while tokenizer-based excerpts are unused and fail in CI.
-# import sys
-# import tiktoken
-#
-# @pytest.mark.parametrize(
-#     "text",
-#     ["hello world " * 500, "é🙂漢字" * 500, "<|endoftext|>" * 500, "longline" * 10000],
-#     ids=["ordinary", "unicode", "special_tokens", "long_line"],
-# )
-# def test_excerpt_is_a_unicode_safe_bounded_prefix(text):
-#     settings = DocumentConfig(PREVIEW_TOKENS=17, PREVIEW_MAX_CHARS=90)
-#     excerpt = services.create_initial_excerpt(text, settings)
-#     assert excerpt and text.startswith(excerpt)
-#     assert len(excerpt) <= 90
-#     assert len(tiktoken.get_encoding("cl100k_base").encode_ordinary(excerpt)) <= 17
-#
-#
-# def test_excerpt_fallback_when_tokenizer_unavailable(monkeypatch):
-#     monkeypatch.setitem(sys.modules, "tiktoken", None)
-#     text = "é🙂漢字" * 100
-#     settings = DocumentConfig(PREVIEW_TOKENS=17, PREVIEW_MAX_CHARS=90)
-#     excerpt = services.create_initial_excerpt(text, settings)
-#     assert excerpt and text.startswith(excerpt)
-#     assert len(excerpt.encode("utf-8")) <= 17
-
-
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
     "phase, status, body_present", [(3, "processing", True), (4, "deleting", False)]
@@ -530,13 +504,3 @@ async def test_catalog_cleanup_failure_keeps_a_recoverable_row(
     await service._compensate(user().user_id, row.id, True)
     assert sessions.rows() == []
     assert store.search(get_document_namespace(user().user_id)) == []
-
-
-# def test_excerpt_fallback_when_tokenizer_data_cannot_load(monkeypatch):
-#     monkeypatch.setattr(
-#         tiktoken, "get_encoding", MagicMock(side_effect=OSError("offline"))
-#     )
-#     text = "é🙂漢字" * 100
-#     excerpt = services.create_initial_excerpt(text, DocumentConfig(PREVIEW_TOKENS=17))
-#     assert excerpt and text.startswith(excerpt)
-#     assert len(excerpt.encode("utf-8")) <= 17

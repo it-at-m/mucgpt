@@ -562,7 +562,7 @@ class TestMUCGPTAgentExecutor:
         assert "hidden" not in streamed_content
         assert agent.graph.config["configurable"]["thread_id"] == "chat-123"
 
-        trace_span = langfuse_client.spans[0]
+        trace_span = langfuse_client.spans[-1]
         trace_output = trace_span.updates[0]["output"]
         events = trace_output["events"]
         assert [event["stream"] for event in events] == [
@@ -644,7 +644,7 @@ async def test_run_agui_streams_canvas_chunks_as_custom_events(monkeypatch):
     assert not any(getattr(e, "name", None) == "Brainstorming" for e in events)
 
     # traces summarize canvas chunks: present, but never the full document
-    traced = langfuse_client.spans[0].updates[0]["output"]["events"]
+    traced = langfuse_client.spans[-1].updates[0]["output"]["events"]
     traced_custom = [e for e in traced if e["stream"] == "custom"]
     assert any(e["content"]["tool_name"] == "Canvas" for e in traced_custom)
     assert CANVAS_DOC not in json.dumps(traced_custom)

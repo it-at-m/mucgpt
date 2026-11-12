@@ -229,7 +229,6 @@ class MUCGPTAgentExecutor:
             return None
         return {"metadata": {"tags": tags}}
 
-    @observe(name="Agent", capture_input=False, capture_output=False)
     async def run_with_streaming(
         self,
         messages: list[InputMessage],
@@ -266,10 +265,9 @@ class MUCGPTAgentExecutor:
             user_id=hash_user_id(user_info.user_id if user_info else None),
             tags=tags,
             session_id=conversation_id,
+            trace_name="Agent",
         ):
-            # capture_input/output are disabled on @observe above to avoid
-            # duplicating the full resent history; set a lightweight
-            # trace-level summary instead so it isn't blank in the UI.
+            # Record only the latest input rather than the full resent history.
             get_client().update_current_span(
                 input=messages[-1].content if messages else None
             )
@@ -480,6 +478,7 @@ class MUCGPTAgentExecutor:
             user_id=hash_user_id(user_info.user_id if user_info else None),
             tags=tags,
             session_id=conversation_id,
+            trace_name="Completion",
         ):
             token_usage = TokenUsage()
             request_config = RunnableConfig(
@@ -584,7 +583,6 @@ class MUCGPTAgentExecutor:
 
     ###############################################################################
     ###############################################################################
-    @observe(name="Agent", capture_input=False, capture_output=False)
     async def run_agui_with_streaming(
         self,
         messages: list[InputMessage],
@@ -609,6 +607,7 @@ class MUCGPTAgentExecutor:
             user_id=hash_user_id(user_info.user_id),
             tags=tags,
             session_id=conversation_id,
+            trace_name="Agent",
         ):
             # Same lightweight trace input as run_with_streaming.
             get_client().update_current_span(

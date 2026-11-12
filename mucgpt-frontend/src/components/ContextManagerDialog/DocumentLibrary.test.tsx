@@ -14,19 +14,21 @@ vi.mock("../../api/documents-client", () => ({ listDocumentsApi: vi.fn(), delete
 
 beforeEach(() => vi.clearAllMocks());
 
+const readyEntry = (): DocumentLibraryEntry => ({
+    id: "ready",
+    filename: "Policy.txt",
+    mime_type: "text/plain",
+    original_size: 5,
+    text_length: 5,
+    preview: "text",
+    preview_kind: "initial_excerpt",
+    path: "/documents/ready.txt",
+    created_at: "2026-11-02",
+    status: "ready"
+});
+
 it("restores every saved ID without body content or reconstructed Files", async () => {
-    const ready: DocumentLibraryEntry = {
-        id: "ready",
-        filename: "Policy.txt",
-        mime_type: "text/plain",
-        original_size: 5,
-        text_length: 5,
-        preview: "text",
-        preview_kind: "initial_excerpt",
-        path: "/documents/ready.txt",
-        created_at: "2026-11-02",
-        status: "ready"
-    };
+    const ready = readyEntry();
     vi.mocked(listDocumentsApi).mockResolvedValue([ready, { ...ready, id: "deleting", status: "deleting" }]);
     const selected = await restoreDocumentSelection(["ready", "deleted", "deleting"], { deleted: "Deleted policy.pdf", ready: "Old name.txt" });
     expect(selected.map(document => document.name)).toEqual(["Policy.txt", "Deleted policy.pdf", "Policy.txt"]);
@@ -61,4 +63,19 @@ it("shows an unavailable selection and detaches it without globally deleting a d
     fireEvent.click(detach);
     expect(onDataChange).toHaveBeenCalledWith([]);
     expect(deleteDocumentApi).not.toHaveBeenCalled();
+});
+
+it("allows deleting stale processing documents so a crash cannot block the quota", async () => {
+    // The backend distinguishes stale from active workers via the document lock
+    // (409 while busy), so the delete button must stay available for processing rows.
+    vi.mocked(listDocumentsApi).mockResolvedValue([
+        {
+            ...readyEntry(),
+            id: "stuck",
+            status: "processing" as const
+        }
+    ]);
+    render(<DocumentLibrary data={[]} onDataChange={vi.fn()} />);
+    const del = await screen.findByRole("button", { name: "document_library.delete" });
+    await waitFor(() => expect(del).toBeEnabled());
 });

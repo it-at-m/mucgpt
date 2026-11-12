@@ -57,4 +57,4 @@ def test_known_ids_match_frontend_registry():
 @pytest.mark.unit
 def test_default_example_model_is_known():
     """The example/default model id from config examples is a known registry entry."""
-    assert "istupakov/canary-180m-flash-onnx" in KNOWN_TRANSCRIPTION_MODEL_IDS
+    assert "Olicorne/parakeet-tdt-0.6b-v3-ultra-onnx" in KNOWN_TRANSCRIPTION_MODEL_IDS

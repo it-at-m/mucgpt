@@ -153,6 +153,13 @@ export interface ChatCompletionDelta {
     tool_calls?: ToolCall[];
 }
 
+/** Structured provider error (contract with mucgpt-core-service `ProviderErrorPayload`). */
+export interface ProviderErrorPayload {
+    code: string;
+    detail: string;
+    status_code?: number | null;
+}
+
 export interface ChatCompletionChunkChoice {
     delta: ChatCompletionDelta;
     index: number;
@@ -165,6 +172,7 @@ export interface ChatCompletionChunk {
     created: number;
     choices: ChatCompletionChunkChoice[];
     usage?: { prompt_tokens?: number; completion_tokens?: number; total_tokens?: number; cache_read_tokens?: number; context_tokens?: number | null } | null;
+    error?: ProviderErrorPayload | null;
 }
 
 export type CountTokenRequest = {

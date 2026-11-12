@@ -1,5 +1,6 @@
 // mocks/handlers.js
 import { http, HttpResponse, delay, passthrough } from "msw";
+import { PROVIDER_ERROR_CODES, type ProviderErrorCode } from "../utils/providerError";
 import {
     ApplicationConfig,
     AdminTag,
@@ -1154,8 +1155,18 @@ export const handlers = [
                 send({ type: "RUN_STARTED", threadId, runId });
                 await delay(100);
 
-                if (/^\s*agui-error\s*$/i.test(latestUserMessage)) {
-                    send({ type: "RUN_ERROR", message: "Mock AG-UI error" });
+                if (/^\s*agui-error(?:\s+\S+)?\s*$/i.test(latestUserMessage)) {
+                    // Error variants: "agui-error", "agui-error rate_limited",
+                    // "agui-error content_filter", … exercise the i18n mapping.
+                    const requestedCode = latestUserMessage
+                        .replace(/^\s*agui-error/i, "")
+                        .trim()
+                        .toLowerCase();
+                    const code: ProviderErrorCode = (PROVIDER_ERROR_CODES as readonly string[]).includes(requestedCode)
+                        ? (requestedCode as ProviderErrorCode)
+                        : "server_error";
+                    const detail = `exception: openai.InternalServerError\nstatus: 500\nmessage: Mock provider failure (${code})`;
+                    send({ type: "RUN_ERROR", message: detail, code, metadata: { detail } });
                     controller.close();
                     return;
                 }
@@ -1230,6 +1241,28 @@ export const handlers = [
             const streamType = chooseStreamType(body.enabled_tools);
             const stream = new ReadableStream({
                 async start(controller) {
+                    // Error variants: send "error" (or "error rate_limited",
+                    // "error content_filter", …) to exercise the i18n mapping.
+                    const errorMatch = /^\s*error(?:\s+([a-z_]+))?\s*$/i.exec(latestUserMessage);
+                    if (errorMatch) {
+                        const requested = errorMatch[1]?.toLowerCase() ?? "server_error";
+                        const code = (PROVIDER_ERROR_CODES as readonly string[]).includes(requested) ? requested : "server_error";
+                        const detail = `exception: openai.InternalServerError\nstatus: 500\nmessage: Mock provider failure (${code})`;
+                        controller.enqueue(
+                            encoder.encode(
+                                `data: ${JSON.stringify({
+                                    id: `chatcmpl-mock-${crypto.randomUUID()}`,
+                                    object: "chat.completion.chunk",
+                                    created: Math.floor(Date.now() / 1000),
+                                    choices: [{ index: 0, delta: { content: "" }, finish_reason: "error" }],
+                                    error: { code, detail, status_code: 500 }
+                                })}\n\n`
+                            )
+                        );
+                        controller.enqueue(encoder.encode("data: [DONE]\n\n"));
+                        controller.close();
+                        return;
+                    }
                     let chunks: any[] = [];
                     const forcedContextTokens = resolveForcedContextTokens(latestUserMessage, body.model);
                     // Canvas first: an open canvas means the request carries canvas state,

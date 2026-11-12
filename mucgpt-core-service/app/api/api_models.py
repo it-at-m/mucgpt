@@ -4,6 +4,7 @@ from typing import Any, Final, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, PositiveInt, field_validator
 
+from api.exception import ProviderErrorPayload
 from config.settings import ReasoningEffort, get_settings
 
 
@@ -283,6 +284,12 @@ class ChatCompletionResponse(BaseModel):
         ..., description="List of completion choices"
     )
     usage: Usage = Field(..., description="Token usage information")
+    error: ProviderErrorPayload | None = Field(
+        None,
+        description=(
+            "Structured provider error; present when finish_reason is 'error'"
+        ),
+    )
     model_config = ConfigDict(
         json_schema_extra={
             "example": {
@@ -361,6 +368,13 @@ class ChatCompletionChunk(BaseModel):
     )
     usage: Usage | None = Field(
         None, description="Token usage information; present on the final chunk"
+    )
+    error: ProviderErrorPayload | None = Field(
+        None,
+        description=(
+            "Structured provider error; present on the final chunk when "
+            "finish_reason is 'error'"
+        ),
     )
     model_config = ConfigDict(
         json_schema_extra={

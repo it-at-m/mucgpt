@@ -43,7 +43,7 @@ from api.api_models import (
     Usage,
 )
 from api.api_models import ChatCompletionMessage as InputMessage
-from api.exception import llm_exception_handler
+from api.exception import llm_error_payload
 from config.langfuse_provider import LangfuseProvider
 from core.auth_models import AuthenticationResult
 from core.llm_helpers import (
@@ -410,18 +410,19 @@ class MUCGPTAgentExecutor:
             except Exception as ex:
                 _write_stream_trace_span(messages, trace_events)
                 logger.error("Streaming error: %s", str(ex), exc_info=True)
-                error_msg = llm_exception_handler(ex=ex, logger=logger)
+                error_payload = llm_error_payload(ex=ex, logger=logger)
                 yield ChatCompletionChunk(
                     id=id_,
                     object="chat.completion.chunk",
                     created=created,
                     choices=[
                         ChatCompletionChunkChoice(
-                            delta=ChatCompletionDelta(content=error_msg),  # type: ignore
+                            delta=ChatCompletionDelta(content=""),
                             index=0,
                             finish_reason="error",
                         )
                     ],
+                    error=error_payload,
                 ).model_dump()
                 return
             finally:
@@ -557,7 +558,7 @@ class MUCGPTAgentExecutor:
                 return response
             except Exception as ex:
                 logger.error("Non-streaming error: %s", str(ex), exc_info=True)
-                error_msg = llm_exception_handler(ex=ex, logger=logger)
+                error_payload = llm_error_payload(ex=ex, logger=logger)
                 return ChatCompletionResponse(
                     id=str(uuid.uuid4()),
                     object="chat.completion",
@@ -566,7 +567,7 @@ class MUCGPTAgentExecutor:
                         ChatCompletionChoice(
                             message=ChatCompletionMessage(
                                 role="assistant",
-                                content=error_msg,
+                                content="",
                             ),
                             index=0,
                             finish_reason="error",
@@ -578,6 +579,7 @@ class MUCGPTAgentExecutor:
                         total_tokens=0,
                         context_tokens=None,
                     ),
+                    error=error_payload,
                 )
 
     ###############################################################################
@@ -781,9 +783,14 @@ class MUCGPTAgentExecutor:
             except Exception as ex:
                 _write_stream_trace_span(messages, trace_events)
                 logger.exception("Exception in AG-UI streaming")
+                # AG-UI contract: message carries the technical detail,
+                # code + metadata carry the structured error for the frontend.
+                error_payload = llm_error_payload(ex=ex, logger=logger)
                 yield RunErrorEvent(
                     type=EventType.RUN_ERROR,
-                    message=llm_exception_handler(ex=ex, logger=logger),
+                    message=error_payload.detail,
+                    code=error_payload.code,
+                    metadata={"detail": error_payload.detail},
                 )
             finally:
                 await close_stream(graph_stream)

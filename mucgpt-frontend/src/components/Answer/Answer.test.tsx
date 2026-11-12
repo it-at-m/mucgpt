@@ -3,6 +3,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { Answer } from "./Answer";
 import { AnswerError } from "./AnswerError";
 import { AnswerList } from "../AnswerList/AnswerList";
+import { ChatProviderError } from "../../utils/providerError";
 
 vi.mock("react-i18next", () => ({ useTranslation: () => ({ t: (key: string) => key }) }));
 vi.mock("../MarkdownRenderer/MarkdownRenderer", () => ({ MarkdownRenderer: () => null }));
@@ -38,15 +39,24 @@ describe("answer replacement controls", () => {
         expect(html).not.toContain("Follow-up question");
     });
 
-    it("renders an error and explanation without an actionable retry", () => {
-        const html = renderToStaticMarkup(<AnswerError error="Failed run" retryUnavailableReason={reason} />);
-        expect(html).toContain("Failed run");
+    it("renders a localized error and explanation without an actionable retry", () => {
+        const error = new ChatProviderError("unknown", "");
+        const html = renderToStaticMarkup(<AnswerError error={error} retryUnavailableReason={reason} />);
+        expect(html).toContain("common.errors.provider.unknown");
         expect(html).toContain(reason);
         expect(html).not.toContain("<button");
     });
 
+    it("keeps the technical error text out of the chat message", () => {
+        const error = new ChatProviderError("server_error", "exception: openai.InternalServerError\nbody: {..secret..}");
+        const html = renderToStaticMarkup(<AnswerError error={error} />);
+        expect(html).toContain("common.errors.provider.server_error");
+        expect(html).not.toContain("secret");
+    });
+
     it("retains the stateless retry button", () => {
-        const html = renderToStaticMarkup(<AnswerError error="Failed run" onRetry={vi.fn()} />);
+        const error = new ChatProviderError("rate_limited", "status: 429");
+        const html = renderToStaticMarkup(<AnswerError error={error} onRetry={vi.fn()} />);
         expect(html).toContain("<button");
         expect(html).toContain("components.answererror.retry");
     });
@@ -57,7 +67,7 @@ describe("answer replacement controls", () => {
                 answers={[]}
                 regularAssistantMsg={() => null}
                 isLoading={false}
-                error={new Error("Failed first run")}
+                error={new ChatProviderError("unknown", "")}
                 makeApiRequest={vi.fn()}
                 canRetry={canRetry}
                 retryUnavailableReason={reason}
@@ -65,7 +75,7 @@ describe("answer replacement controls", () => {
                 lastQuestionRef={{ current: "Question" }}
             />
         );
-        expect(html).toContain("Failed first run");
+        expect(html).toContain("common.errors.provider.unknown");
         expect(html.includes("components.answererror.retry")).toBe(canRetry);
         expect(html.includes(reason)).toBe(!canRetry);
     });

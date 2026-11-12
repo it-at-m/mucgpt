@@ -4,6 +4,7 @@ import logging
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
+from ag_ui.core.events import EventType, RunErrorEvent
 from fastapi.testclient import TestClient
 from langchain_core.language_models import BaseChatModel
 from langchain_core.language_models.fake_chat_models import FakeListChatModel
@@ -20,6 +21,7 @@ from api.api_models import (
     ChatCompletionResponse,
     Usage,
 )
+from api.exception import RATE_LIMITED, ProviderErrorPayload
 from config.model_provider import ModelRegistry, ModelsConfigurationException
 
 DUMMY_USER_ID = "test_user_123"
@@ -802,6 +804,104 @@ class TestChatRouter:
             assert content_buffer == "Hello world!", (
                 f"Combined content was: {content_buffer}"
             )
+
+    @patch("api.routers.chat_router.init_agent", new_callable=AsyncMock)
+    def test_streaming_error_chunk_carries_structured_payload(
+        self, mock_init_agent, test_client: TestClient
+    ):
+        """Errors are streamed in-band: the chunk carries finish_reason 'error',
+        empty content, and a structured ProviderErrorPayload on the wire."""
+
+        async def executor_error_stream():
+            yield ChatCompletionChunk(
+                id="chatcmpl-err",
+                object="chat.completion.chunk",
+                created=1234567890,
+                choices=[
+                    ChatCompletionChunkChoice(
+                        index=0,
+                        delta=ChatCompletionDelta(content=""),
+                        finish_reason="error",
+                    )
+                ],
+                error=ProviderErrorPayload(
+                    code=RATE_LIMITED,
+                    detail="exception: openai.RateLimitError",
+                    status_code=429,
+                ),
+            ).model_dump()
+
+        mock_agent_executor = Mock(MUCGPTAgentExecutor)
+        mock_agent_executor.run_with_streaming.return_value = executor_error_stream()
+        mock_init_agent.return_value = mock_agent_executor
+
+        payload = ChatCompletionRequest(
+            model="gpt-4o-mini",
+            messages=[ChatCompletionMessage(role="user", content="hi")],
+            stream=True,
+            conversation_id=DUMMY_CONVERSATION_ID,
+        ).model_dump()
+
+        with test_client.stream("POST", "/v1/chat/completions", json=payload) as resp:
+            assert resp.status_code == 200  # errors are in-band in SSE
+            payloads = [
+                ChatCompletionChunk.model_validate_json(line[6:])
+                for line in resp.iter_lines()
+                if line.startswith("data: ") and line[6:] != "[DONE]"
+            ]
+            error_chunks = [
+                p for p in payloads if p.choices[0].finish_reason == "error"
+            ]
+            assert len(error_chunks) == 1
+            chunk = error_chunks[0]
+            assert chunk.choices[0].delta.content in (None, "")
+            assert chunk.error is not None
+            assert chunk.error.code == RATE_LIMITED
+            assert chunk.error.detail.startswith("exception:")
+
+    @patch("api.routers.chat_router.init_agent", new_callable=AsyncMock)
+    def test_agui_stream_run_error_carries_code_and_detail(
+        self, mock_init_agent, test_client: TestClient
+    ):
+        """The v2/AG-UI stream surfaces errors as a RUN_ERROR event that
+        carries the stable error code and the technical detail."""
+
+        async def executor_run_error_stream():
+            yield RunErrorEvent(
+                type=EventType.RUN_ERROR,
+                message="exception: openai.RateLimitError\nmessage: Too many",
+                code=RATE_LIMITED,
+                metadata={
+                    "detail": "exception: openai.RateLimitError\nmessage: Too many"
+                },
+            )
+
+        mock_agent_executor = Mock(MUCGPTAgentExecutor)
+        mock_agent_executor.run_agui_with_streaming.return_value = (
+            executor_run_error_stream()
+        )
+        mock_init_agent.return_value = mock_agent_executor
+
+        payload = ChatCompletionRequest(
+            model="gpt-4o-mini",
+            messages=[ChatCompletionMessage(role="user", content="hi")],
+            conversation_id=DUMMY_CONVERSATION_ID,
+            persist=False,
+        ).model_dump()
+        resp = test_client.post("/v1/chat/v2/completions", json=payload)
+        assert resp.status_code == 200
+        lines = resp.text.splitlines()
+        events = [
+            json.loads(line[len("data: ") :])
+            for line in lines
+            if line.startswith("data: ")
+        ]
+        run_errors = [e for e in events if e.get("type") == "RUN_ERROR"]
+        assert len(run_errors) == 1
+        error = run_errors[0]
+        assert error["code"] == RATE_LIMITED
+        assert "RateLimitError" in error["message"]
+        assert error["metadata"]["detail"] == error["message"]
 
     @pytest.mark.parametrize(
         "endpoint", ["/v1/chat/completions", "/v1/chat/v2/completions"]

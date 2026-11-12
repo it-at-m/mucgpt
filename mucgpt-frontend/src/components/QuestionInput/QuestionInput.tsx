@@ -20,7 +20,7 @@ import { LLMSelector } from "../LLMSelector/LLMSelector";
 import { getContextUsagePercent, getUsageCriticalThreshold, getUsageWarningThreshold } from "../ChatUsageIndicator/chatUsage";
 import { MicrophoneButton } from "../MicrophoneButton/MicrophoneButton";
 import { useTranscription } from "../Transcription/TranscriptionContext";
-import { classifyFiles, formatMaxBytes, resolveImageInput } from "../../utils/imageAttachments";
+import { classifyFiles, formatMaxBytes, pastedImageFilename, resolveImageInput, type RejectionReason } from "../../utils/imageAttachments";
 
 export type { ChatUsageSummary } from "../ChatUsageIndicator/ChatUsageIndicator";
 
@@ -129,6 +129,7 @@ export const QuestionInput = ({
     const imageDraftsRef = useRef<ImageDraft[]>([]);
     const [imageFeedback, setImageFeedback] = useState<ImageFeedback | null>(null);
     const imageFileInputRef = useRef<HTMLInputElement | null>(null);
+    const questionValueRef = useRef(question);
 
     const draftStorageKey = draftCacheKey ? `question-input-draft:${draftCacheKey}` : undefined;
 
@@ -294,6 +295,10 @@ export const QuestionInput = ({
         imageDraftsRef.current = imageDrafts;
     }, [imageDrafts]);
 
+    useEffect(() => {
+        questionValueRef.current = question;
+    }, [question]);
+
     // Revoke local preview object URLs so they never outlive the composer.
     const revokeImagePreviews = useCallback((drafts: ImageDraft[]) => {
         drafts.forEach(draft => {
@@ -333,6 +338,21 @@ export const QuestionInput = ({
     const showImageFeedback = useCallback((key: string, params?: Record<string, unknown>) => {
         setImageFeedback({ key, params });
     }, []);
+
+    const showImageRejectionFeedback = useCallback(
+        (reason: RejectionReason, filename?: string) => {
+            if (reason === "too-large") {
+                showImageFeedback("components.questioninput.image_too_large", {
+                    limit: formatMaxBytes(imageInput.max_upload_bytes)
+                });
+            } else if (reason === "image-disabled") {
+                showImageFeedback("components.questioninput.image_disabled_hint");
+            } else {
+                showImageFeedback("components.questioninput.image_unsupported_format", { filename });
+            }
+        },
+        [imageInput.max_upload_bytes, showImageFeedback]
+    );
 
     const appendImagesFromFiles = useCallback(
         (files: File[]) => {
@@ -397,6 +417,61 @@ export const QuestionInput = ({
             });
         },
         [imageInput.max_images_per_message, selectedLLM, showImageFeedback]
+    );
+
+    /** Paste events must be consumed synchronously; uploads continue async. */
+    const handlePaste = useCallback(
+        (event: React.ClipboardEvent<HTMLTextAreaElement>) => {
+            if (disabled) {
+                return;
+            }
+            const clipboard = event.clipboardData;
+            const clipboardFiles = Array.from(clipboard?.files ?? []);
+            const hasImageFile = clipboardFiles.some(file => file.type.startsWith("image/"));
+            if (!hasImageFile) {
+                return; // plain text (or no files): native paste
+            }
+            const text = clipboard?.getData("text/plain") ?? "";
+
+            if (!supportsImages) {
+                // Only hint for image-only pastes; a text paste that merely
+                // carries a fallback image stays native.
+                if (!text.trim()) {
+                    event.preventDefault();
+                    showImageFeedback("components.questioninput.image_disabled_hint");
+                }
+                return;
+            }
+
+            // Mixed text+image pastes keep both parts: consume the event,
+            // insert the text manually, and route images to the upload pipeline.
+            event.preventDefault();
+            if (text) {
+                const current = questionValueRef.current;
+                setQuestionRef.current(current ? `${current}\n${text}` : text);
+            }
+
+            void (async () => {
+                const classification = await classifyFiles(clipboardFiles, imageInput);
+                if (classification.images.length > 0) {
+                    // Pasted blobs have no usable name; generate unique ones.
+                    const extensionByMime: Record<string, "png" | "jpeg" | "webp"> = {
+                        "image/png": "png",
+                        "image/jpeg": "jpeg",
+                        "image/webp": "webp"
+                    };
+                    const named = classification.images.map(
+                        file => new File([file], pastedImageFilename(extensionByMime[file.type] ?? "png"), { type: file.type })
+                    );
+                    appendImagesFromFiles(named);
+                }
+                if (classification.rejected.length > 0) {
+                    const [first] = classification.rejected;
+                    showImageRejectionFeedback(first.reason, first.file.name);
+                }
+            })();
+        },
+        [appendImagesFromFiles, disabled, imageInput, showImageFeedback, showImageRejectionFeedback, supportsImages]
     );
 
     const sendQuestion = useCallback(() => {
@@ -571,20 +646,10 @@ export const QuestionInput = ({
             }
             if (classification.rejected.length > 0) {
                 const [first] = classification.rejected;
-                if (first.reason === "too-large") {
-                    showImageFeedback("components.questioninput.image_too_large", {
-                        limit: formatMaxBytes(imageInput.max_upload_bytes)
-                    });
-                } else if (first.reason === "image-disabled") {
-                    showImageFeedback("components.questioninput.image_disabled_hint");
-                } else {
-                    showImageFeedback("components.questioninput.image_unsupported_format", {
-                        filename: first.file.name
-                    });
-                }
+                showImageRejectionFeedback(first.reason, first.file.name);
             }
         },
-        [appendDocumentsFromFiles, appendImagesFromFiles, imageInput, showImageFeedback]
+        [appendDocumentsFromFiles, appendImagesFromFiles, imageInput, showImageRejectionFeedback]
     );
 
     const handleDataChange = useCallback(
@@ -739,6 +804,7 @@ export const QuestionInput = ({
                         value={question}
                         onChange={onQuestionChange}
                         onKeyDown={onEnterPress}
+                        onPaste={handlePaste}
                         disabled={disabled || isTranscriptionActive}
                     />
                     <div className={styles.actions}>

@@ -114,7 +114,6 @@ import { ConfigContext } from "../../context/ConfigContext";
 import { DEFAULT_APP_CONFIG } from "../../constants";
 import type { ApplicationConfig, ImageAttachment, Model } from "../../api/models";
 import type { UploadedData } from "../ContextManagerDialog/ContextManagerDialog";
-import { within } from "@testing-library/dom";
 
 vi.mock("../../api/core-client", async () => {
     const original = await vi.importActual<typeof import("../../api/core-client")>("../../api/core-client");
@@ -200,18 +199,6 @@ function imageHarness(options: {
 }
 
 const imageButton = () => screen.getByRole("button", { name: "components.questioninput.add_image" });
-
-function pasteEvent(text: string | undefined, files: File[]): React.ClipboardEvent & ClipboardEvent {
-    const clipboardData = {
-        files,
-        items: files.map(file => ({ kind: "file", type: file.type })),
-        getData: (type: string) => (type === "text/plain" ? text : ""),
-        types: [...(text !== undefined ? ["text/plain"] : []), "Files"]
-    };
-    const event = new Event("paste", { bubbles: true, cancelable: true }) as unknown as React.ClipboardEvent & ClipboardEvent;
-    Object.defineProperty(event, "clipboardData", { value: clipboardData });
-    return event;
-}
 
 const pngFile = () => new File([PNG_BYTES], "shot.png", { type: "image/png" });
 

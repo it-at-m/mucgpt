@@ -166,11 +166,13 @@ function imageHarness(options: {
     selectedLLM?: string;
     config?: ApplicationConfig;
     onSend?: (question: string, data: UploadedData[], images?: ImageAttachment[]) => void;
+    allowImageUpload?: boolean;
 }) {
     const defaults = {
         selectedLLM: "vision-model",
         config: imageConfig,
         onSend: (() => {}) as (question: string, data: UploadedData[], images?: ImageAttachment[]) => void,
+        allowImageUpload: true,
         ...options
     };
 
@@ -185,6 +187,7 @@ function imageHarness(options: {
                     setQuestion={setQuestion}
                     selectedTools={[]}
                     hideDisclaimer
+                    allowImageUpload={defaults.allowImageUpload}
                     llmOptions={visionModels}
                     selectedLLM={props.selectedLLM}
                     onLLMSelectionChange={() => {}}
@@ -219,6 +222,11 @@ describe("QuestionInput images", () => {
 
     it("hides the image button when image input is disabled", () => {
         render(imageHarness({ config: { ...imageConfig, image_input: { ...imageConfig.image_input!, enabled: false } } })());
+        expect(screen.queryByRole("button", { name: "components.questioninput.add_image" })).not.toBeInTheDocument();
+    });
+
+    it("hides the image button when image upload is not allowed (assistant preview)", () => {
+        render(imageHarness({ allowImageUpload: false })());
         expect(screen.queryByRole("button", { name: "components.questioninput.add_image" })).not.toBeInTheDocument();
     });
 

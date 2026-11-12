@@ -37,6 +37,7 @@ interface Props {
     allowToolSelection?: boolean;
     lockedToolIds?: string[];
     allowFileUpload?: boolean;
+    allowImageUpload?: boolean;
     onDataChange?: (data: UploadedData[]) => void;
     uploadedData?: UploadedData[];
     setUploadedData?: Dispatch<SetStateAction<UploadedData[]>>;
@@ -84,6 +85,7 @@ export const QuestionInput = ({
     allowToolSelection = true,
     lockedToolIds = [],
     allowFileUpload: allowFileUploadProp,
+    allowImageUpload: allowImageUploadProp = true,
     onDataChange,
     uploadedData: externalUploadedData,
     setUploadedData: setExternalUploadedData,
@@ -142,7 +144,7 @@ export const QuestionInput = ({
 
     const imageInput = resolveImageInput(config);
     const selectedModel = llmOptions?.find(model => model.id === selectedLLM);
-    const supportsImages = imageInput.enabled && selectedModel?.supports_vision === true;
+    const supportsImages = allowImageUploadProp && imageInput.enabled && selectedModel?.supports_vision === true;
     const hasImageDrafts = imageDrafts.length > 0;
     const hasPendingImageUploads = imageDrafts.some(draft => draft.status === "uploading");
     const hasFailedImageUploads = imageDrafts.some(draft => draft.status === "error");

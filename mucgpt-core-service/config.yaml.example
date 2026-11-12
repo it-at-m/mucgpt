@@ -36,7 +36,9 @@ transcription_enabled: false
 # the feature stays disabled while this is unset. Recommended (runs entirely
 # on WASM, no WebGPU needed): "Olicorne/parakeet-tdt-0.6b-v3-ultra-onnx"
 # (Parakeet Ultra: 25 languages incl. Ukrainian + punctuation, ~410 MB
-# download) or "istupakov/canary-180m-flash-onnx" (compact, 4 languages).
+# download), "mrfakename/parakeet-redux-ONNX" (Parakeet Redux: smaller,
+# weaker German/French/Ukrainian + noise robustness) or
+# "istupakov/canary-180m-flash-onnx" (compact, 4 languages).
 transcription_model: "Olicorne/parakeet-tdt-0.6b-v3-ultra-onnx"
 ai_act_compliance_check_enabled: true
 # Canvas limits (characters). canvas_content_max_chars caps persisted canvas

@@ -22,5 +22,6 @@ KNOWN_TRANSCRIPTION_MODEL_IDS: frozenset[str] = frozenset(
         "istupakov/canary-180m-flash-onnx",
         "efederici/parakeet-tdt-0.6b-v3-onnx-int4",
         "Olicorne/parakeet-tdt-0.6b-v3-ultra-onnx",
+        "mrfakename/parakeet-redux-ONNX",
     }
 )

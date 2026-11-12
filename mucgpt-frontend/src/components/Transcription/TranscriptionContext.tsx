@@ -189,6 +189,7 @@ export const TranscriptionProvider = ({ children, transcriptionEnabled, transcri
                 fileSizes,
                 dtype: model.dtype,
                 webgpu_only: model.webgpu_only,
+                graph_optimization: model.graph_optimization,
                 runtime: model.runtime,
                 files: model.files,
                 language: languageRef.current

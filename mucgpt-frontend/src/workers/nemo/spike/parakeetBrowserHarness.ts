@@ -1,10 +1,13 @@
 /**
  * Browser-side validation harness for the PARAKEET TDT runtime: exercises the
- * shared transcriber with real ort-web WASM sessions against the
+ * shared transcriber with real ort-web sessions against the
  * efederici/parakeet-tdt-0.6b-v3-onnx-int4 bundle (int4 MatMulNBits encoder +
  * int8 fused decoder_joint). Serves three QA purposes that the node spike
  * cannot: WASM MatMulNBits support on the pinned ort-web build, WASM heap
- * behaviour, and the dispose/reload cycle. Not wired into the app.
+ * behaviour, and the dispose/reload cycle. The encoder execution provider is
+ * selectable (wasm | webgpu) so WebGPU-only exports (e.g. the ternary-packed
+ * Parakeet Redux encoder) can be validated where the browser exposes WebGPU.
+ * Not wired into the app.
  *
  * Build (bundle the harness, keep ort-web external):
  *
@@ -81,34 +84,39 @@ async function fetchBuffer(url: string): Promise<Uint8Array> {
 /** Graph optimization levels ort-web accepts; "disabled" isolates optimizer-time stalls. */
 export type OptimizationLevel = "disabled" | "basic" | "all";
 
-/** Session-create options for the WASM execution provider at the given optimization level. */
-const sessionOptions = (level: OptimizationLevel) => ({
-    executionProviders: ["wasm"] as const,
+/** Session-create options for the given execution provider at the given optimization level. */
+const sessionOptions = (level: OptimizationLevel, ep: "wasm" | "webgpu" = "wasm") => ({
+    executionProviders: [ep] as const,
     graphOptimizationLevel: level
 });
 
-/** Creates exactly one WASM session and releases it; QA bisect probe for single models. */
-export async function probeSession(url: string, level: OptimizationLevel = "all"): Promise<{ inputNames: string[]; createSeconds: number }> {
+/** Creates exactly one WASM/WebGPU session and releases it; QA bisect probe for single models. */
+export async function probeSession(
+    url: string,
+    level: OptimizationLevel = "all",
+    ep: "wasm" | "webgpu" = "wasm"
+): Promise<{ inputNames: string[]; createSeconds: number }> {
     const startedAt = performance.now();
-    const session = await ort.InferenceSession.create(await fetchBuffer(url), sessionOptions(level));
+    const session = await ort.InferenceSession.create(await fetchBuffer(url), sessionOptions(level, ep));
     const createSeconds = (performance.now() - startedAt) / 1000;
     console.log(`[harness] session for ${url} created in ${createSeconds.toFixed(2)}s (inputs: ${session.inputNames.join(", ")})`);
     await session.release();
     return { inputNames: [...session.inputNames], createSeconds };
 }
 
-/** Loads one encoder/decoder_joint pair of real WASM sessions from URL bytes. */
+/** Loads one encoder/decoder_joint pair of real sessions from URL bytes on the given execution provider. */
 export async function loadSessions(
     encoderUrl: string,
     decoderUrl: string,
-    level: OptimizationLevel = "all"
+    level: OptimizationLevel = "all",
+    encoderEp: "wasm" | "webgpu" = "wasm"
 ): Promise<{ encoder: ort.InferenceSession; decoderJoint: ort.InferenceSession }> {
-    console.log(`[harness] creating encoder session (WASM, int4 MatMulNBits, optimize=${level})…`);
-    const encoder = await ort.InferenceSession.create(await fetchBuffer(encoderUrl), sessionOptions(level));
+    console.log(`[harness] creating encoder session (ep=${encoderEp}, optimize=${level})…`);
+    const encoder = await ort.InferenceSession.create(await fetchBuffer(encoderUrl), sessionOptions(level, encoderEp));
     console.log(`[harness] encoder ready (${encoder.inputNames.length} inputs); creating decoder_joint session…`);
     let decoderJoint: ort.InferenceSession;
     try {
-        decoderJoint = await ort.InferenceSession.create(await fetchBuffer(decoderUrl), sessionOptions(level));
+        decoderJoint = await ort.InferenceSession.create(await fetchBuffer(decoderUrl), sessionOptions(level, "wasm"));
     } catch (err) {
         await encoder.release();
         throw err;
@@ -117,10 +125,14 @@ export async function loadSessions(
     return { encoder, decoderJoint };
 }
 
-/** Runs one full transcription against real WASM sessions and releases them. */
-export async function runTranscription(input: ParakeetQaInput, level: OptimizationLevel = "all"): Promise<ParakeetQaResult> {
+/** Runs one full transcription against real sessions and releases them. */
+export async function runTranscription(
+    input: ParakeetQaInput,
+    level: OptimizationLevel = "all",
+    encoderEp: "wasm" | "webgpu" = "wasm"
+): Promise<ParakeetQaResult> {
     const sessionStartedAt = performance.now();
-    const { encoder, decoderJoint } = await loadSessions(input.encoderUrl, input.decoderUrl, level);
+    const { encoder, decoderJoint } = await loadSessions(input.encoderUrl, input.decoderUrl, level, encoderEp);
     const sessionSeconds = (performance.now() - sessionStartedAt) / 1000;
     console.log(`[harness] sessions created in ${sessionSeconds.toFixed(2)}s`);
 

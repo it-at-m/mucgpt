@@ -45,9 +45,11 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
       - name: Extract version from mucgpt-core tag
         id: vars
+        env:
+          INPUT_TAG: ${{ github.event.inputs.tag }}
         run: |
           if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
-            FULL_TAG="${{ github.event.inputs.tag }}"
+            FULL_TAG="$INPUT_TAG"
           else
             FULL_TAG=${GITHUB_REF#refs/tags/}
           fi

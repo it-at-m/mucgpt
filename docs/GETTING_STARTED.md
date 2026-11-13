@@ -25,6 +25,8 @@ Each service reads a `config.yaml` mounted into the container. Environment varia
 > - **Lowercase your `config.yaml` keys** (e.g. `models:`, `redis:`, `host:`, `password:`). Most legacy UPPERCASE YAML keys are ignored — but a top-level `SSO:` section and `ROLE`/`ADMIN_ROLE` under `sso` **fail startup validation** with an actionable error, because silently ignoring them would disable the SSO role check. Other mistakes also fail loudly at startup (missing required database fields, empty models list).
 > - **Move model connection settings into a `providers` section** and reference it from each model via `provider: <key>` (see [Models Configuration](#models-configuration-yaml)). Inline `type`/`endpoint`/`api_key`/`api_version` on `models[]` entries are rejected at startup with a pointer to the new scheme.
 > - **Replace `MUCGPT_CORE_LANGFUSE__*` environment variables with the standard `LANGFUSE_PUBLIC_KEY` / `LANGFUSE_SECRET_KEY` / `LANGFUSE_HOST`** — the old prefixed variables are silently ignored (see [Secrets](#secrets)).
+> - **Replace `MUCGPT_ASSISTANT_DATABASE_URL` with nested DB settings** such as `MUCGPT_ASSISTANT_DB__HOST`, `__NAME`, `__USER`, and `__PASSWORD`. The full-URL override is no longer supported; missing nested settings fail migration startup with an actionable error.
+> - **Remove `MIGRATION_SHOW_SQL` from assistant migration Jobs.** It is no longer supported and is ignored.
 
 ### Secrets
 
@@ -447,6 +449,7 @@ For real deployments, pull the prebuilt release images instead of building from 
 | --- | --- | --- |
 | Frontend | `ghcr.io/it-at-m/mucgpt/mucgpt-frontend` | `registry.opencode.de/landeshauptstadt-muenchen/mucgpt/mucgpt-frontend` |
 | Core service | `ghcr.io/it-at-m/mucgpt/mucgpt-core` | `registry.opencode.de/landeshauptstadt-muenchen/mucgpt/mucgpt-core` |
+| Core migrations | `ghcr.io/it-at-m/mucgpt/mucgpt-core-migrations` | `registry.opencode.de/landeshauptstadt-muenchen/mucgpt/mucgpt-core-migrations` |
 | Assistant service | `ghcr.io/it-at-m/mucgpt/mucgpt-assistant` | `registry.opencode.de/landeshauptstadt-muenchen/mucgpt/mucgpt-assistant` |
 | Migrations service | `ghcr.io/it-at-m/mucgpt/mucgpt-assistant-migrations` | `registry.opencode.de/landeshauptstadt-muenchen/mucgpt/mucgpt-assistant-migrations` |
 
@@ -458,6 +461,10 @@ docker pull ghcr.io/it-at-m/mucgpt/mucgpt-core:1.0.0
 ```
 
 Pulling from ghcr.io is anonymous. The openCode registry is the GitLab container registry of gitlab.opencode.de: anonymous pulls work if the project is public, otherwise authenticate with a GitLab account or an access token with `read_registry` scope.
+
+### Database migration ordering
+
+The core service does not create or upgrade database schema at startup. For every core release, stop accepting new generation requests and stop/drain every old writer before starting fence-aware instances, then run the matching `mucgpt-core-migrations` image as a deployment Job and wait for it to complete successfully before rolling out `mucgpt-core`. This applies to both the conversation/checkpoint schema and document storage schema. See the [conversation persistence rollout procedure](conversation-persistence.md#schema-migration-and-rollout) for the required ordering. Deploying a core image before its migration Job, or retaining a stale migration image, can cause runtime database errors. Migration Jobs serialize through a PostgreSQL advisory lock; if overlapping Jobs are possible, set `MIGRATION_LOCK_TIMEOUT=0` to wait for the active Job rather than failing after the default 30 seconds.
 
 ## 🔧 Troubleshooting
 

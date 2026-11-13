@@ -1,4 +1,5 @@
 version: 1
+disable_existing_loggers: false
 filters:
   correlation_id:
     (): asgi_correlation_id.CorrelationIdFilter

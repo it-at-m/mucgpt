@@ -5,9 +5,10 @@ from unittest.mock import AsyncMock, Mock
 from uuid import uuid4
 
 import pytest
-from fastapi import HTTPException, Request
+from fastapi import HTTPException
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
+from tests.unit.helpers import request_with_body
 
 from api.api_models import ChatCompletionMessage, ChatCompletionRequest
 from api.routers import chat_router
@@ -92,7 +93,8 @@ async def test_agui_saves_validated_selection_and_explicit_empty(
     monkeypatch.setattr(chat_router, "init_agent", AsyncMock(return_value=agent))
     owner = AuthenticationResult(user_id="owner", token="test", department="test")
     await chat_router.ag_ui_chat_endpoint(
-        request(ids=ids), owner, Request({"type": "http", "headers": []})
+        owner,
+        request_with_body(request(ids=ids).model_dump(mode="json", exclude_none=True)),
     )
     metadata = await PersistanceHelpers.get_conversations_for_user("owner")
     assert (
@@ -106,6 +108,57 @@ async def test_agui_saves_validated_selection_and_explicit_empty(
             document_id: "Policy.pdf" for document_id in ids
         }
         assert session.get(Chat, "foreign").document_ids == ["previous"]
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("ids", [[], [str(uuid4())]])
+async def test_agui_native_input_saves_validated_selection_too(
+    catalog, monkeypatch, ids
+):
+    """The identical gate pipeline runs for the native AG-UI shape as well."""
+    selection = [
+        SimpleNamespace(id=document_id, filename="Policy.pdf") for document_id in ids
+    ]
+    monkeypatch.setattr(chat_router.ModelRegistry, "get_model", Mock())
+    monkeypatch.setattr(
+        chat_router, "get_documents_for_agent", AsyncMock(return_value=selection)
+    )
+    monkeypatch.setattr(
+        chat_router, "get_messages_for_agent", AsyncMock(return_value=[])
+    )
+    monkeypatch.setattr(
+        chat_router, "get_temperature_from_request", Mock(return_value=0.5)
+    )
+
+    async def events(**_):
+        if False:
+            yield
+
+    agent = Mock(
+        run_without_streaming=AsyncMock(return_value="answer"),
+        run_agui_with_streaming=events,
+    )
+    monkeypatch.setattr(chat_router, "init_agent", AsyncMock(return_value=agent))
+    body = {
+        "threadId": "owned",
+        "runId": "run-1",
+        "protocolVersion": "1.0",
+        "messages": [{"id": "m1", "role": "user", "content": "Question"}],
+        "forwardedProps": {"mucgpt": {"persist": True, "document_ids": list(ids)}},
+        "state": {},
+        "tools": [],
+        "context": [],
+        "resume": [],
+    }
+    owner = AuthenticationResult(user_id="owner", token="test", department="test")
+    await chat_router.ag_ui_chat_endpoint(owner, request_with_body(body))
+    metadata = await PersistanceHelpers.get_conversations_for_user("owner")
+    assert (
+        next(row for row in metadata if row["conversation_id"] == "owned")[
+            "document_ids"
+        ]
+        == ids
+    )
 
 
 @pytest.mark.asyncio

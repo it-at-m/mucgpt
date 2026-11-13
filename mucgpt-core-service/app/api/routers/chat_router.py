@@ -6,7 +6,17 @@ from ag_ui.encoder import EventEncoder
 from fastapi import APIRouter, Depends, HTTPException, Request, Response
 from fastapi.responses import StreamingResponse
 from langfuse import get_client, propagate_attributes
+from pydantic import ValidationError
 
+from api.ag_ui_input import (
+    ParsedChatRequest,
+    bind_media_parts,
+    is_native_run_input,
+    parse_run_agent_input,
+    resume_payloads,
+    supports_vision_for_model,
+    to_chat_completion_request,
+)
 from api.api_models import (
     CanvasResponse,
     ChatCompletionMessage,
@@ -358,7 +368,7 @@ async def put_conversation_canvas_revisions(
 @router.post(
     "/chat/v2/completions",
     summary="Create chat completion",
-    description="OpenAI-compatible endpoint for chat completions",
+    description="AG-UI endpoint for chat completions (native RunAgentInput or legacy envelope)",
     response_class=StreamingResponse,
     responses={
         200: {"description": "Successful Response"},
@@ -369,15 +379,23 @@ async def put_conversation_canvas_revisions(
     },
 )
 async def ag_ui_chat_endpoint(
-    chat_request: ChatCompletionRequest,
     user_info: Annotated[AuthenticationResult, Depends(authenticate_user)],
     request: Request,
 ) -> StreamingResponse:
     """Validate/authorize a turn and stream AG-UI events, regardless of the stream flag.
 
-    Persistence follows the same append-only preparation as v1. Closing the
-    response iterator also closes the executor during errors or disconnects.
+    The body is either a native AG-UI ``RunAgentInput`` (declared by
+    ``protocolVersion``) or MUCGPT's legacy chat envelope; both are normalized
+    onto the same internal model (see ``api.ag_ui_input``) so every
+    request-side gate runs identically under both shapes.
+
+    Gate order: model capability → image binding → document selection →
+    conversation ownership/persistence. Persistence follows the same
+    append-only preparation as v1. Closing the response iterator also closes
+    the executor during errors or disconnects.
     """
+    parsed = await _parse_chat_request(request)
+    chat_request = parsed.request
     if not chat_request.conversation_id:
         raise HTTPException(status_code=400, detail="conversation_id is required")
     if not chat_request.messages:
@@ -395,6 +413,15 @@ async def ag_ui_chat_endpoint(
         if "not initialized" in detail.lower():
             status_code = 500
         raise HTTPException(status_code=status_code, detail=detail) from exc
+
+    # Fail-closed vision gate, right after the model-capability gate and before
+    # any persistence side effect: deliberate deviation from the AG-UI "skip
+    # unusable parts" rule (see api.ag_ui_input module docstring).
+    bind_media_parts(
+        chat_request,
+        parsed.pending_media,
+        supports_vision_for_model(chat_request.model),
+    )
 
     document_selection = await get_documents_for_agent(chat_request, user_info)
     messages_for_agent = await get_messages_for_agent(chat_request, user_info.user_id)
@@ -427,6 +454,9 @@ async def ag_ui_chat_endpoint(
         ),
         canvas=chat_request.canvas,
         reasoning_effort=chat_request.reasoning_effort,
+        run_id=parsed.run_id,
+        language=chat_request.language,
+        resume=parsed.resume_payloads,
     )
 
     async def event_generator() -> AsyncGenerator[str]:
@@ -459,3 +489,45 @@ async def ag_ui_chat_endpoint(
             await asyncio.to_thread(langfuse.flush)
 
     return StreamingResponse(event_generator(), media_type=encoder.get_content_type())
+
+
+async def _parse_chat_request(request: Request) -> ParsedChatRequest:
+    """Parse the request body in either supported shape (see api.ag_ui_input).
+
+    Malformed input of either shape is rejected through the transport error
+    path (HTTP 422, matching FastAPI's validation contract) before a stream
+    exists, per the AG-UI run-input contract. Protocol-version negotiation
+    failures use 400 (a semantic rejection, not a schema validation).
+    """
+    try:
+        body = await request.json()
+    except Exception as exc:
+        raise HTTPException(status_code=422, detail="Invalid JSON body") from exc
+
+    if is_native_run_input(body):
+        run_input = parse_run_agent_input(body)
+        chat_request, pending_media = to_chat_completion_request(run_input)
+        return ParsedChatRequest(
+            request=chat_request,
+            pending_media=pending_media,
+            run_id=run_input.run_id,
+            resume_payloads=resume_payloads(run_input),
+        )
+
+    if (
+        isinstance(body, dict)
+        and isinstance(body.get("messages"), list)
+        and any(
+            isinstance(message, dict) and "media_blocks" in message
+            for message in body.get("messages", [])
+        )
+    ):
+        raise HTTPException(
+            status_code=422,
+            detail="media_blocks are only supported in native AG-UI run input",
+        )
+
+    try:
+        return ParsedChatRequest(request=ChatCompletionRequest.model_validate(body))
+    except ValidationError as exc:
+        raise HTTPException(status_code=422, detail=f"Invalid request: {exc}") from exc

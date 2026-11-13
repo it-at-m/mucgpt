@@ -2,11 +2,26 @@ from contextlib import nullcontext
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-from langchain_core.messages import AIMessage
+from langchain_core.messages import AIMessage, HumanMessage
 
 from api.api_models import ChatCompletionMessage
 from core.auth_models import AuthenticationResult
-from core.llm_helpers import invoke_internal_generation
+from core.llm_helpers import invoke_internal_generation, to_langchain_messages
+
+
+def test_private_media_blocks_are_converted_to_multimodal_content() -> None:
+    message = ChatCompletionMessage(role="user", content="Describe this")
+    message._media_blocks = [
+        {"type": "image_url", "image_url": {"url": "data:image/png;base64,QUJD"}}
+    ]
+
+    converted = to_langchain_messages([message])
+
+    assert isinstance(converted[0], HumanMessage)
+    assert converted[0].content == [
+        {"type": "text", "text": "Describe this"},
+        {"type": "image_url", "image_url": {"url": "data:image/png;base64,QUJD"}},
+    ]
 
 
 @pytest.mark.unit

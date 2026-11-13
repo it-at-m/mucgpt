@@ -1,7 +1,11 @@
 import pytest
 from pydantic import ValidationError
 
-from api.api_models import CANVAS_CONTENT_MAX_CHARS, CanvasState, ChatCompletionRequest
+from api.api_models import (
+    CANVAS_CONTENT_MAX_CHARS,
+    CanvasState,
+    ChatCompletionRequest,
+)
 
 
 def test_canvas_limits_are_pinned() -> None:
@@ -49,6 +53,21 @@ class TestChatCompletionRequestConversationId:
 
         assert request.conversation_id == "6f3a1e2c-9b7d-4a3f-9e3a-2c1b9d8f6a10"
 
+    def test_client_media_blocks_are_stripped(self) -> None:
+        request = ChatCompletionRequest.model_validate(
+            {
+                "messages": [
+                    {
+                        "role": "user",
+                        "content": "hi",
+                        "media_blocks": [{"type": "image_url"}],
+                    }
+                ]
+            }
+        )
+
+        assert request.messages[0]._media_blocks is None
+
 
 class TestChatCompletionRequestReasoningEffort:
     """reasoning_effort accepts the full ladder including "max" (#1408)."""
@@ -65,5 +84,8 @@ class TestChatCompletionRequestReasoningEffort:
     def test_reasoning_effort_unknown_value_is_rejected(self) -> None:
         with pytest.raises(ValidationError):
             ChatCompletionRequest.model_validate(
-                {"messages": [{"role": "user", "content": "hi"}], "reasoning_effort": "extreme"}
+                {
+                    "messages": [{"role": "user", "content": "hi"}],
+                    "reasoning_effort": "extreme",
+                }
             )

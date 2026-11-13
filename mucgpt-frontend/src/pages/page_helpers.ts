@@ -224,28 +224,6 @@ export interface CanvasWiring {
     onRunFinished: () => void;
 }
 
-/**
- * Makes a streaming API request to the chat service and handles the response.
- * Processes Server-Sent Events (SSE) stream, handles tool calls, and updates the UI in real-time.
- * Also manages chat storage and history.
- *
- * @param answers - Current array of chat messages
- * @param question - The user's question/input
- * @param dispatch - Function to dispatch state updates
- * @param LLM - Language model configuration object
- * @param activeChatRef - Reference to the currently active chat ID
- * @param storageService - Service for managing chat storage operations
- * @param options - Chat configuration options (temperature, max tokens, etc.)
- * @param askResponse - Base response object to build upon
- * @param chatMessageStreamEnd - Reference to DOM element for auto-scrolling
- * @param isLoadingRef - Reference to track loading state
- * @param fetchHistory - Optional function to refresh the chat history list
- * @param assistant_id - Optional assistant ID for assistant-specific chat storage
- * @param enabled_tools - Optional array of enabled tool names
- * @param onToolStatusUpdate - Optional callback for tool status updates
- * @param persist - When false, the answer is streamed and rendered but never written to
- *                  storage, the history list or the backend. Used by the ephemeral assistant preview chat.
- */
 /** A completed turn used as extra context when regenerating a chat title. */
 interface TitleContextTurn {
     query: string;
@@ -314,6 +292,28 @@ async function generateAndStoreChatTitle(params: {
     }
 }
 
+/**
+ * Makes a streaming API request to the chat service and handles the response.
+ * Processes Server-Sent Events (SSE) stream, handles tool calls, and updates the UI in real-time.
+ * Also manages chat storage and history.
+ *
+ * @param answers - Current array of chat messages
+ * @param question - The user's question/input
+ * @param dispatch - Function to dispatch state updates
+ * @param LLM - Language model configuration object
+ * @param activeChatRef - Reference to the currently active chat ID
+ * @param storageService - Service for managing chat storage operations
+ * @param options - Chat configuration options (temperature, max tokens, etc.)
+ * @param askResponse - Base response object to build upon
+ * @param chatMessageStreamEnd - Reference to DOM element for auto-scrolling
+ * @param isLoadingRef - Reference to track loading state
+ * @param fetchHistory - Optional function to refresh the chat history list
+ * @param assistant_id - Optional assistant ID for assistant-specific chat storage
+ * @param enabled_tools - Optional array of enabled tool names
+ * @param onToolStatusUpdate - Optional callback for tool status updates
+ * @param persist - When false, the answer is streamed and rendered but never written to
+ *                  storage, the history list or the backend. Used by the ephemeral assistant preview chat.
+ */
 export const makeApiRequest = async (
     answers: any[],
     question: string,

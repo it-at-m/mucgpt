@@ -1,4 +1,5 @@
 version: 1
+disable_existing_loggers: false
 filters:
   correlation_id:
     (): asgi_correlation_id.CorrelationIdFilter
@@ -43,6 +44,10 @@ loggers:
     propagate: no
   mucgpt-core-agent:
     level: ${LOG_LEVEL_MUCGPT_CORE_AGENT:-ERROR}
+    handlers: [console]
+    propagate: no
+  mucgpt.core.migrations:
+    level: ${MIGRATION_LOG_LEVEL:-INFO}
     handlers: [console]
     propagate: no
   httpx:

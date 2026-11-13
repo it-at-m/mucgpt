@@ -1,0 +1,180 @@
+name: Build and Release Core Migrations Docker Image
+permissions:
+  contents: read
+
+on:
+  push:
+    tags:
+      - "mucgpt-core-migrations-*"
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Core migrations tag to release (e.g., mucgpt-core-migrations-1.0.0)"
+        required: true
+
+jobs:
+  build-and-push-core-migrations-service:
+    runs-on: ubuntu-latest
+    permissions:
+      actions: write
+      contents: write
+      packages: write
+    steps:
+      - name: Harden the runner (Audit all outbound calls)
+        uses: step-security/harden-runner@dc2769abcc0fcfbadfc1df54081c1608579ef6b2 # v2.22.2
+        with:
+          egress-policy: audit
+      - name: Checkout code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ inputs.tag || github.ref }}
+      - name: Record checked-out commit
+        id: revision
+        run: echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@99012661954931238ded8c8b007157a8430204e1 # v4.4.0
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@81c6f93d4bc991e510b342a00b419b3bb4efc5c6 # v4.7.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Extract version from mucgpt-core-migrations tag
+        id: vars
+        env:
+          INPUT_TAG: ${{ github.event.inputs.tag }}
+        run: |
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            FULL_TAG="$INPUT_TAG"
+          else
+            FULL_TAG=${GITHUB_REF#refs/tags/}
+          fi
+
+          if [[ "$FULL_TAG" =~ ^mucgpt-core-migrations-(.+)$ ]]; then
+            VERSION="${BASH_REMATCH[1]}"
+          else
+            echo "Error: Tag must start with 'mucgpt-core-migrations-'"
+            exit 1
+          fi
+
+          echo "full_tag=${FULL_TAG}" >> "$GITHUB_OUTPUT"
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "repo_lowercase=$(echo '${{ github.repository }}' | tr '[:upper:]' '[:lower:]')" >> "$GITHUB_OUTPUT"
+      - name: Check for an existing GitHub Release
+        id: existing-release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ steps.vars.outputs.full_tag }}
+        run: |
+          if gh release view "$TAG" > /dev/null 2>&1; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Set build timestamp
+        run: echo "BUILD_TS=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> "$GITHUB_ENV"
+      - name: Build and push mucgpt-core-migrations Docker image
+        if: steps.existing-release.outputs.exists != 'true'
+        id: build
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        with:
+          context: ./mucgpt-core-service
+          file: ./mucgpt-core-service/Dockerfile.migrations
+          push: true
+          sbom: true
+          provenance: true
+          tags: |
+            ghcr.io/${{ steps.vars.outputs.repo_lowercase }}/mucgpt-core-migrations:${{ steps.vars.outputs.version }}
+            ghcr.io/${{ steps.vars.outputs.repo_lowercase }}/mucgpt-core-migrations:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          build-args: |
+            IMAGE_CREATED=${{ github.event.repository.pushed_at || env.BUILD_TS }}
+            IMAGE_REVISION=${{ steps.revision.outputs.sha }}
+            IMAGE_VERSION=${{ steps.vars.outputs.version }}
+      - name: Image digest
+        if: steps.existing-release.outputs.exists != 'true'
+        run: |
+          echo "mucgpt-core-migrations image built and pushed:"
+          echo "  ghcr.io/${{ github.repository }}/mucgpt-core-migrations:${{ steps.vars.outputs.version }}"
+          echo "  ghcr.io/${{ github.repository }}/mucgpt-core-migrations:latest"
+      - name: Create GitHub Release
+        if: steps.existing-release.outputs.exists != 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ steps.vars.outputs.full_tag }}
+          VERSION: ${{ steps.vars.outputs.version }}
+          DIGEST: ${{ steps.build.outputs.digest }}
+          IMAGE: ghcr.io/${{ steps.vars.outputs.repo_lowercase }}/mucgpt-core-migrations
+          OPENCODE_IMAGE: registry.opencode.de/landeshauptstadt-muenchen/mucgpt/mucgpt-core-migrations
+        run: |
+          notes=$(cat <<EOF
+          ## Container image
+
+          \`$IMAGE:$VERSION\`
+
+          Also available at \`$OPENCODE_IMAGE:$VERSION\`
+
+          Digest: \`$DIGEST\`
+          EOF
+          )
+
+          gh release create "$TAG" \
+            --verify-tag \
+            --title "Core migrations $VERSION" \
+            --generate-notes \
+            --notes "$notes"
+      - name: Log in to openCode container registry
+        continue-on-error: true
+        uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
+        with:
+          registry: registry.opencode.de
+          username: ${{ secrets.OPENCODE_REGISTRY_USERNAME }}
+          password: ${{ secrets.OPENCODE_REGISTRY_TOKEN }}
+      - name: Push image to openCode container registry
+        continue-on-error: true
+        env:
+          GHCR_IMAGE: ghcr.io/${{ steps.vars.outputs.repo_lowercase }}/mucgpt-core-migrations
+          BUILT_DIGEST: ${{ steps.build.outputs.digest }}
+          OPENCODE_IMAGE: registry.opencode.de/landeshauptstadt-muenchen/mucgpt/mucgpt-core-migrations
+          VERSION: ${{ steps.vars.outputs.version }}
+        run: |
+          if [ -n "$BUILT_DIGEST" ]; then
+            SOURCE="$GHCR_IMAGE@$BUILT_DIGEST"
+          else
+            DIGEST=$(docker buildx imagetools inspect "$GHCR_IMAGE:$VERSION" | awk '/^Digest:/ {print $2; exit}')
+            SOURCE="$GHCR_IMAGE@$DIGEST"
+          fi
+          INSPECT_RAW=$(docker buildx imagetools inspect --raw "$SOURCE") || {
+            echo "Failed to inspect source image: $SOURCE" >&2
+            exit 1
+          }
+          PLATFORM_DIGESTS_OUTPUT=$(printf '%s\n' "$INSPECT_RAW" | jq -r '.manifests[]? | select(.platform.os != "unknown" and .platform.architecture != "unknown") | .digest') || {
+            echo "Failed to parse image inspection result: $SOURCE" >&2
+            exit 1
+          }
+          PLATFORM_DIGESTS=()
+          if [ -n "$PLATFORM_DIGESTS_OUTPUT" ]; then
+            mapfile -t PLATFORM_DIGESTS <<< "$PLATFORM_DIGESTS_OUTPUT"
+          fi
+          SOURCES=()
+          if [ "${#PLATFORM_DIGESTS[@]}" -eq 0 ]; then
+            SOURCES=("$SOURCE")
+          else
+            for digest in "${PLATFORM_DIGESTS[@]}"; do
+              SOURCES+=("$GHCR_IMAGE@$digest")
+            done
+          fi
+          TAGS=("$OPENCODE_IMAGE:$VERSION")
+          if [ "$VERSION" != "latest" ]; then
+            TAGS+=("$OPENCODE_IMAGE:latest")
+          fi
+          ARGS=()
+          for tag in "${TAGS[@]}"; do
+            ARGS+=(-t "$tag")
+          done
+          docker buildx imagetools create "${ARGS[@]}" "${SOURCES[@]}"
+          echo "Copied image to openCode container registry:"
+          printf '  %s\n' "${TAGS[@]}"

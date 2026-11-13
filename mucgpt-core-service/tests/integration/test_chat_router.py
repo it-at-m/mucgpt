@@ -2,7 +2,10 @@ import json
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
-from ag_ui.core.events import EventType, RunErrorEvent
+from ag_ui.core.events import (
+    EventType,
+    RunErrorEvent,
+)
 from fastapi.testclient import TestClient
 from langchain_core.language_models import BaseChatModel
 from langchain_core.language_models.fake_chat_models import FakeListChatModel
@@ -15,6 +18,23 @@ from api.routers.chat_router import CONVERSATION_RUN_LOCK_PREFIX
 from config.model_provider import ModelRegistry, ModelsConfigurationException
 
 DUMMY_CONVERSATION_ID = "conv-test-1"
+
+
+def native_run_body(**overrides) -> dict:
+    """A minimal valid native AG-UI run input for the v2 endpoint."""
+    body = {
+        "threadId": DUMMY_CONVERSATION_ID,
+        "runId": "run-42",
+        "protocolVersion": "1.0",
+        "messages": [{"id": "m1", "role": "user", "content": "Hello"}],
+        "forwardedProps": {"mucgpt": {"model": "gpt-4o-mini", "persist": False}},
+        "state": {},
+        "tools": [],
+        "context": [],
+        "resume": [],
+    }
+    body.update(overrides)
+    return body
 
 
 @pytest.fixture(autouse=True)

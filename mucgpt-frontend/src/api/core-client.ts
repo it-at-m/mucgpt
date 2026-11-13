@@ -11,7 +11,8 @@ import {
     CountTokenResponse,
     ToolListResponse
 } from "./models";
-import { HttpAgent, type RunAgentInput } from "@ag-ui/client";
+import { HttpAgent } from "@ag-ui/client";
+import type { Message } from "@ag-ui/core";
 import type { CanvasRevisions } from "../service/canvasStorage";
 
 const PARSE_SERVICE_BASE = "/api/backend/v1/parse";
@@ -20,61 +21,86 @@ export const API_BASE = "/api/backend/";
 
 const AG_UI_CHAT_URL = API_BASE + "v1/chat/v2/completions";
 
-function toChatCompletionBody(options: ChatRequest) {
-    const messages: Array<{ role: string; content: string }> = [];
-    if (options.system_message) {
-        messages.push({ role: "system", content: options.system_message });
+/**
+ * Flattens the MUCGPT chat history into AG-UI messages. Every message carries
+ * a stable unique id (required by the AG-UI schema); the system prompt is the
+ * leading system message, followed by alternating user/assistant turns.
+ */
+function toAgUiMessages(request: ChatRequest): Message[] {
+    const messages: Message[] = [];
+    let index = 0;
+    if (request.system_message) {
+        messages.push({ id: `mucgpt-msg-${index++}`, role: "system", content: request.system_message });
     }
-    for (const turn of options.history) {
-        messages.push({ role: "user", content: turn.user });
+    for (const turn of request.history) {
+        messages.push({ id: `mucgpt-msg-${index++}`, role: "user", content: turn.user });
         if (turn.assistant !== undefined) {
-            messages.push({ role: "assistant", content: turn.assistant });
+            messages.push({ id: `mucgpt-msg-${index++}`, role: "assistant", content: turn.assistant });
         }
     }
-
-    return {
-        model: options.model,
-        messages,
-        temperature: options.temperature,
-        stream: options.shouldStream,
-        creativity: options.creativity,
-        ...(options.enabled_tools ? { enabled_tools: options.enabled_tools } : {}),
-        ...(options.assistant_id ? { assistant_id: options.assistant_id } : {}),
-        ...(options.conversation_id ? { conversation_id: options.conversation_id } : {}),
-        ...(options.persist === false ? { persist: false } : {}),
-        ...(options.data_sources ? { data_sources: options.data_sources } : {}),
-        ...(options.canvas ? { canvas: options.canvas } : {}),
-        ...(options.document_ids !== undefined ? { document_ids: options.document_ids } : {})
-    };
+    return messages;
 }
 
-/** AG-UI client for MUCGPT chat runs. */
+/** MUCGPT-specific settings passed through the native AG-UI run input. */
+export type MucgptForwardedProps = {
+    mucgpt: Pick<ChatRequest, "model" | "creativity" | "enabled_tools" | "assistant_id" | "persist" | "data_sources" | "canvas" | "document_ids" | "language">;
+};
+
+/**
+ * MUCGPT-specific run settings for the native AG-UI run input, namespaced
+ * under `forwardedProps.mucgpt` (application-specific channel, passed through
+ * untouched; the server strips unknown members with a warning). Absent fields
+ * are dropped by JSON.stringify, mirroring the omitted-envelope semantics:
+ * an omitted `document_ids` means "no document feature" while an explicitly
+ * empty list means "detach all previously selected documents".
+ */
+export function mucgptForwardedProps(request: ChatRequest): MucgptForwardedProps {
+    // AG-UI clones this object before making the HTTP request. Normalize it to
+    // the JSON API contract so transient UI objects cannot make cloning fail.
+    return JSON.parse(
+        JSON.stringify({
+            mucgpt: {
+                model: request.model,
+                creativity: request.creativity,
+                enabled_tools: request.enabled_tools,
+                assistant_id: request.assistant_id,
+                persist: request.persist,
+                data_sources: request.data_sources,
+                canvas: request.canvas,
+                document_ids: request.document_ids,
+                language: request.language
+            }
+        })
+    ) as MucgptForwardedProps;
+}
+
+/**
+ * AG-UI client for MUCGPT chat runs. The stock HttpAgent builds the native
+ * `RunAgentInput` (threadId, runId, protocolVersion declaration, enforced
+ * schema); the run's MUCGPT settings are passed at `runAgent` time via
+ * `forwardedProps` (see `mucgptForwardedProps`).
+ */
 export class MucgptAgUiAgent extends HttpAgent {
-    constructor(private readonly request: ChatRequest) {
+    constructor(request: ChatRequest) {
         super({
             url: AG_UI_CHAT_URL,
             threadId: request.conversation_id,
+            initialMessages: toAgUiMessages(request),
+            headers: Object.fromEntries(getHeaders().entries()),
             fetch: async (url, init) => {
-                const response = await fetch(url, init);
+                // The stock requestInit does not carry the gateway semantics:
+                // same-origin credentials, manual redirect handling (the
+                // gateway answers an expired session with an opaqueredirect).
+                const response = await fetch(url, {
+                    ...init,
+                    mode: "cors",
+                    credentials: "same-origin",
+                    redirect: "manual"
+                });
                 handleRedirect(response);
                 return response;
             }
         });
-    }
-
-    protected override requestInit(input: RunAgentInput): RequestInit {
-        const headers = getHeaders();
-        headers.set("Accept", "text/event-stream");
-
-        return {
-            method: "POST",
-            body: JSON.stringify({ ...toChatCompletionBody(this.request), ...(input.resume ? { resume: input.resume } : {}) }),
-            headers,
-            mode: "cors",
-            credentials: "same-origin",
-            redirect: "manual",
-            signal: this.abortController.signal
-        };
     }
 }
 

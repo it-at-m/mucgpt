@@ -1,16 +1,25 @@
 import asyncio
 from collections.abc import AsyncGenerator
-from typing import Annotated, Any
+from typing import Annotated
 
-from ag_ui.core import BaseEvent
 from ag_ui.encoder import EventEncoder
 from fastapi import APIRouter, Depends, HTTPException, Request, Response
 from fastapi.responses import StreamingResponse
 from langfuse import get_client, propagate_attributes
+from pydantic import ValidationError
 from redis.asyncio.lock import Lock
 from redis.exceptions import LockError
 
 from agent.agent_executor import build_resume_decisions
+from api.ag_ui_input import (
+    ParsedChatRequest,
+    bind_media_parts,
+    is_native_run_input,
+    parse_run_agent_input,
+    resume_entries,
+    supports_vision_for_model,
+    to_chat_completion_request,
+)
 from api.api_models import (
     CanvasResponse,
     ChatCompletionMessage,
@@ -366,7 +375,7 @@ async def put_conversation_canvas_revisions(
 @router.post(
     "/chat/v2/completions",
     summary="Create chat completion",
-    description="OpenAI-compatible endpoint for chat completions",
+    description="AG-UI endpoint for chat completions (native RunAgentInput or legacy envelope)",
     response_class=StreamingResponse,
     responses={
         200: {"description": "Successful Response"},
@@ -377,18 +386,27 @@ async def put_conversation_canvas_revisions(
     },
 )
 async def ag_ui_chat_endpoint(
-    chat_request: ChatCompletionRequest,
     user_info: Annotated[AuthenticationResult, Depends(authenticate_user)],
     request: Request,
 ) -> StreamingResponse:
     """Validate/authorize a turn and stream AG-UI events, regardless of the stream flag.
 
-    Persistence follows the same append-only preparation as v1. Closing the
-    response iterator also closes the executor during errors or disconnects.
+    The body is either a native AG-UI ``RunAgentInput`` (declared by
+    ``protocolVersion``) or MUCGPT's legacy chat envelope; both are normalized
+    onto the same internal model (see ``api.ag_ui_input``) so every
+    request-side gate runs identically under both shapes.
+
+    Gate order: model capability → image binding → document selection →
+    conversation ownership/persistence. Persistence follows the same
+    append-only preparation as v1. Closing the response iterator also closes
+    the executor during errors or disconnects.
     """
+    parsed = await _parse_chat_request(request)
+    chat_request = parsed.request
     if not chat_request.conversation_id:
         raise HTTPException(status_code=400, detail="conversation_id is required")
-    is_resume = chat_request.resume is not None
+    approval_answers = parsed.resume_entries or chat_request.resume or []
+    is_resume = bool(approval_answers)
     if is_resume and not chat_request.persist:
         raise HTTPException(
             status_code=400,
@@ -416,8 +434,68 @@ async def ag_ui_chat_endpoint(
         else None
     )
     try:
-        events, trace_input = await _start_agui_run(
-            chat_request, user_info, chat_request.conversation_id
+        # Fail-closed vision gate, right after the model-capability gate and before
+        # any persistence side effect: deliberate deviation from the AG-UI "skip
+        # unusable parts" rule (see api.ag_ui_input module docstring).
+        bind_media_parts(
+            chat_request,
+            parsed.pending_media,
+            supports_vision_for_model(chat_request.model),
+        )
+
+        document_selection = await get_documents_for_agent(chat_request, user_info)
+        if is_resume:
+            if not await PersistanceHelpers.is_user_in_conversation(
+                user_info.user_id, chat_request.conversation_id
+            ):
+                raise HTTPException(
+                    status_code=403, detail="Conversation access denied"
+                )
+            messages_for_agent = []
+        else:
+            messages_for_agent = await get_messages_for_agent(
+                chat_request, user_info.user_id
+            )
+
+        agent = await init_agent(
+            user_info=user_info,
+            model_name=chat_request.model,
+            persist=chat_request.persist,
+            document_selection=document_selection,
+        )
+        await _save_document_selection(
+            chat_request,
+            user_info.user_id,
+            [document.id for document in document_selection],
+            {document.id: document.filename for document in document_selection},
+        )
+        resume_decisions = None
+        if is_resume:
+            try:
+                resume_decisions = build_resume_decisions(
+                    await agent.get_pending_approvals(chat_request.conversation_id),
+                    approval_answers,
+                )
+            except ValueError as exc:
+                raise HTTPException(status_code=400, detail=str(exc)) from exc
+        events = agent.run_agui_with_streaming(
+            messages=messages_for_agent,
+            temperature=get_temperature_from_request(chat_request),
+            model=chat_request.model,
+            user_info=user_info,
+            conversation_id=chat_request.conversation_id,
+            enabled_tools=chat_request.enabled_tools or [],
+            assistant_id=chat_request.assistant_id,
+            data_sources=(
+                [source.model_dump() for source in chat_request.data_sources]
+                if chat_request.data_sources
+                else None
+            ),
+            canvas=chat_request.canvas,
+            reasoning_effort=chat_request.reasoning_effort,
+            run_id=parsed.run_id,
+            language=chat_request.language,
+            resume_decisions=resume_decisions,
         )
     except BaseException:
         await _unlock_conversation_run(run_lock)
@@ -437,7 +515,9 @@ async def ag_ui_chat_endpoint(
             with langfuse.start_as_current_observation(
                 name="Agent",
                 as_type="agent",
-                input=trace_input,
+                input=messages_for_agent[-1].content
+                if messages_for_agent
+                else approval_answers,
                 trace_context={"trace_id": trace_id},
             ):
                 with propagate_attributes(
@@ -482,67 +562,47 @@ async def _unlock_conversation_run(lock: Lock | None) -> None:
         logger.warning("Conversation run lock expired before the run ended")
 
 
-async def _start_agui_run(
-    chat_request: ChatCompletionRequest,
-    user_info: AuthenticationResult,
-    conversation_id: str,
-) -> tuple[AsyncGenerator[BaseEvent], Any]:
-    """Authorize the turn or resume; return the agent's AG-UI event stream and the trace input."""
-    is_resume = chat_request.resume is not None
-    if is_resume and not await PersistanceHelpers.is_user_in_conversation(
-        user_info.user_id, conversation_id
-    ):
-        raise HTTPException(status_code=403, detail="Conversation access denied")
+async def _parse_chat_request(request: Request) -> ParsedChatRequest:
+    """Parse the request body in either supported shape (see api.ag_ui_input).
 
-    document_selection = await get_documents_for_agent(chat_request, user_info)
-    if is_resume:
-        messages_for_agent = []
-        trace_input: Any = [
-            entry.model_dump(by_alias=True) for entry in chat_request.resume or []
-        ]
-    else:
-        messages_for_agent = await get_messages_for_agent(
-            chat_request, user_info.user_id
+    Malformed input of either shape is rejected through the transport error
+    path (HTTP 422, matching FastAPI's validation contract) before a stream
+    exists, per the AG-UI run-input contract. Protocol-version negotiation
+    failures use 400 (a semantic rejection, not a schema validation).
+    """
+    try:
+        body = await request.json()
+    except Exception as exc:
+        raise HTTPException(status_code=422, detail="Invalid JSON body") from exc
+
+    if is_native_run_input(body):
+        run_input = parse_run_agent_input(body)
+        chat_request, pending_media = to_chat_completion_request(run_input)
+        return ParsedChatRequest(
+            request=chat_request,
+            pending_media=pending_media,
+            run_id=run_input.run_id,
+            resume_entries=resume_entries(run_input),
         )
-        trace_input = chat_request.messages[-1].content
 
-    agent = await init_agent(
-        user_info=user_info,
-        model_name=chat_request.model,
-        persist=chat_request.persist,
-        document_selection=document_selection,
-    )
-    await _save_document_selection(
-        chat_request,
-        user_info.user_id,
-        [document.id for document in document_selection],
-        {document.id: document.filename for document in document_selection},
-    )
-    resume_decisions = None
-    if is_resume:
-        try:
-            resume_decisions = build_resume_decisions(
-                await agent.get_pending_approvals(conversation_id),
-                chat_request.resume or [],
-            )
-        except ValueError as exc:
-            raise HTTPException(status_code=400, detail=str(exc)) from exc
+    if (
+        isinstance(body, dict)
+        and isinstance(body.get("messages"), list)
+        and any(
+            isinstance(message, dict) and "media_blocks" in message
+            for message in body.get("messages", [])
+        )
+    ):
+        raise HTTPException(
+            status_code=422,
+            detail="media_blocks are only supported in native AG-UI run input",
+        )
 
-    events = agent.run_agui_with_streaming(
-        messages=messages_for_agent,
-        temperature=get_temperature_from_request(chat_request),
-        model=chat_request.model,
-        user_info=user_info,
-        conversation_id=conversation_id,
-        enabled_tools=chat_request.enabled_tools or [],
-        assistant_id=chat_request.assistant_id,
-        data_sources=(
-            [source.model_dump() for source in chat_request.data_sources]
-            if chat_request.data_sources
-            else None
-        ),
-        canvas=chat_request.canvas,
-        reasoning_effort=chat_request.reasoning_effort,
-        resume_decisions=resume_decisions,
-    )
-    return events, trace_input
+    try:
+        legacy_request = ChatCompletionRequest.model_validate(body)
+        return ParsedChatRequest(
+            request=legacy_request,
+            resume_entries=legacy_request.resume or [],
+        )
+    except ValidationError as exc:
+        raise HTTPException(status_code=422, detail=f"Invalid request: {exc}") from exc

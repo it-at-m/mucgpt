@@ -1106,25 +1106,33 @@ export const handlers = [
         });
     }),
     http.post("/api/backend/v1/chat/v2/completions", async ({ request }) => {
-        const body = (await request.json()) as {
-            messages?: { role: string; content: string }[];
+        // Both request shapes are mocked: the native AG-UI run input
+        // (threadId, camelCase messages with ids) and the legacy envelope
+        // (conversation_id, snake_case settings). The wire settings live in
+        // forwardedProps.mucgpt for the native shape.
+        const raw = (await request.json()) as {
+            messages?: Array<{ role: string; content: string }>;
+            threadId?: string;
             conversation_id?: string;
+            forwardedProps?: { mucgpt?: { enabled_tools?: string[]; canvas?: CanvasState | null } };
             enabled_tools?: string[];
             canvas?: CanvasState | null;
             resume?: { interruptId: string; status: string; payload?: { decision?: string } }[];
         };
+        const enabledTools = raw.forwardedProps?.mucgpt?.enabled_tools ?? raw.enabled_tools;
+        const mockCanvas = raw.forwardedProps?.mucgpt?.canvas ?? raw.canvas;
         // Canvas tools are auto-added while the canvas is open; the generic
         // demo tool call must not fire from those.
-        const mockToolName = body.enabled_tools?.find(id => !(CANVAS_TOOL_IDS as readonly string[]).includes(id));
+        const mockToolName = enabledTools?.find(id => !(CANVAS_TOOL_IDS as readonly string[]).includes(id));
         const latestUserMessage =
-            body.messages
+            raw.messages
                 ?.slice()
                 .reverse()
                 .find(message => message.role === "user")?.content || "";
         const encoder = new TextEncoder();
         const runId = crypto.randomUUID();
         const messageId = crypto.randomUUID();
-        const threadId = body.conversation_id ?? crypto.randomUUID();
+        const threadId = raw.threadId ?? raw.conversation_id ?? crypto.randomUUID();
         const stream = new ReadableStream({
             async start(controller) {
                 const send = (event: object) => controller.enqueue(encoder.encode(`data: ${JSON.stringify(event)}\n\n`));
@@ -1176,15 +1184,15 @@ export const handlers = [
                 };
 
                 const scenario = latestUserMessage.trim().toLowerCase();
-                if (APPROVAL_SCENARIOS[scenario] && !body.resume) {
+                if (APPROVAL_SCENARIOS[scenario] && !raw.resume) {
                     pauseForApproval(APPROVAL_SCENARIOS[scenario], scenario === "agui-approval-kette" ? CHAIN_ID_PREFIX : "");
                     return;
                 }
 
-                if (body.resume) {
-                    const isApproved = (entry: NonNullable<typeof body.resume>[number]) => entry.status === "resolved" && entry.payload?.decision === "approve";
+                if (raw.resume) {
+                    const isApproved = (entry: NonNullable<typeof raw.resume>[number]) => entry.status === "resolved" && entry.payload?.decision === "approve";
                     await delay(1200);
-                    for (const entry of body.resume) {
+                    for (const entry of raw.resume) {
                         if (isApproved(entry)) {
                             send({
                                 type: "TOOL_CALL_RESULT",
@@ -1195,12 +1203,12 @@ export const handlers = [
                             });
                         }
                     }
-                    if (body.resume.some(entry => entry.interruptId.startsWith(CHAIN_ID_PREFIX))) {
+                    if (raw.resume.some(entry => entry.interruptId.startsWith(CHAIN_ID_PREFIX))) {
                         pauseForApproval([{ query: "Anwohnerparken München Kosten" }]);
                         return;
                     }
-                    const approvedCount = body.resume.filter(isApproved).length;
-                    const delta = `Mock-Antwort: ${approvedCount} von ${body.resume.length} Tool-Aufrufen wurden ausgeführt.`;
+                    const approvedCount = raw.resume.filter(isApproved).length;
+                    const delta = `Mock-Antwort: ${approvedCount} von ${raw.resume.length} Tool-Aufrufen wurden ausgeführt.`;
                     send({ type: "TEXT_MESSAGE_CHUNK", messageId, role: "assistant", delta });
                     send({
                         type: "RUN_FINISHED",
@@ -1227,7 +1235,7 @@ export const handlers = [
                 }
 
                 const wantsRichMarkdownMock = /^\s*rich\s*$/i.test(latestUserMessage);
-                const wantsCanvasMock = Boolean(body.canvas) && /^\s*canvas-demo\s*$/i.test(latestUserMessage);
+                const wantsCanvasMock = Boolean(mockCanvas) && /^\s*canvas-demo\s*$/i.test(latestUserMessage);
 
                 if (wantsCanvasMock) {
                     for (const event of buildCanvasToolCallEvents(messageId, threadId)) {

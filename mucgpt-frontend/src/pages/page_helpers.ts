@@ -8,7 +8,7 @@ import { ToolStreamHandler, ToolStatus } from "../utils/ToolStreamHandler";
 import language from "react-syntax-highlighter/dist/esm/languages/hljs/1c";
 import { AssistantStorageService } from "../service/assistantstorage";
 import { v4 as uuid } from "uuid";
-import { createChatName, MucgptAgUiAgent } from "../api/core-client";
+import { createChatName, mucgptForwardedProps, MucgptAgUiAgent } from "../api/core-client";
 import type { AgentSubscriber } from "@ag-ui/client";
 import { EventType, type BaseEvent, type CustomEvent, type ResumeEntry } from "@ag-ui/core";
 import { applyToolDecisions, initialRunActivity, reduceRunActivity, type RunActivity } from "../utils/agUiActivity";
@@ -504,7 +504,7 @@ export const makeApiRequest = async (
         try {
             let resume: ResumeEntry[] | undefined;
             for (;;) {
-                await agent.runAgent(resume ? { resume } : undefined, runSubscriber);
+                await agent.runAgent({ forwardedProps: mucgptForwardedProps(request), ...(resume ? { resume } : {}) }, runSubscriber);
                 const interrupts = agent.pendingInterrupts;
                 if (runError || interrupts.length === 0) break;
 

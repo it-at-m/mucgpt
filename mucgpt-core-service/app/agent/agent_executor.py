@@ -5,30 +5,48 @@ from collections.abc import AsyncGenerator
 from typing import Any
 
 from ag_ui.core import (
+    PROTOCOL_VERSION,
     BaseEvent,
     CustomEvent,
     EventType,
-    Interrupt,
+    MessagesSnapshotEvent,
     RunErrorEvent,
     RunFinishedEvent,
     RunFinishedInterruptOutcome,
     RunStartedEvent,
+    StateSnapshotEvent,
     TextMessageChunkEvent,
     ToolCallChunkEvent,
     ToolCallResultEvent,
 )
 from ag_ui.core import (
+    AssistantMessage as AgUiAssistantMessage,
+)
+from ag_ui.core import (
+    Interrupt as AgUiInterrupt,
+)
+from ag_ui.core import (
+    SystemMessage as AgUiSystemMessage,
+)
+from ag_ui.core import (
     TokenUsage as AgUiTokenUsage,
+)
+from ag_ui.core import (
+    UserMessage as AgUiUserMessage,
 )
 from langchain_core.messages import (
     AIMessage,
     AIMessageChunk,
+    HumanMessage,
+    SystemMessage,
     ToolMessage,
 )
 from langchain_core.runnables import RunnableConfig
 from langchain_core.runnables.config import merge_configs
 from langfuse import get_client, observe, propagate_attributes
 from langfuse.langchain import CallbackHandler
+from langgraph.types import Command
+from pydantic import ValidationError
 
 from agent.deep_agent import MUCGPTAgent, PendingToolApproval
 from agent.middleware import TokenUsage
@@ -73,6 +91,107 @@ def _json_safe(value: Any) -> Any:
     if hasattr(value, "dict"):
         return _json_safe(value.dict())
     return str(value)
+
+
+def _graph_input(messages: list[InputMessage], resume: dict[str, Any] | None) -> Any:
+    """Build the graph input: the turn's messages, or a resume command.
+
+    A native AG-UI request may carry ``resume[]`` answers to interrupts that
+    ended a previous run; resuming continues the interrupted thread via a
+    LangGraph ``Command(resume=…)`` keyed by interrupt id (groundwork for
+    #1093/#1085 — no interrupting tool exists yet).
+    """
+    if resume:
+        return Command(resume=resume)
+    return {"messages": to_langchain_messages(messages)}
+
+
+def _interrupt_outcomes(interrupts: tuple[Any, ...]) -> list[AgUiInterrupt]:
+    """Map LangGraph ``Interrupt`` objects onto AG-UI interrupt descriptions."""
+    outcomes: list[AgUiInterrupt] = []
+    for interrupt in interrupts:
+        value = getattr(interrupt, "value", None)
+        value_dict = value if isinstance(value, dict) else {}
+        try:
+            outcomes.append(
+                AgUiInterrupt(
+                    id=getattr(interrupt, "id", None) or uuid.uuid4().hex,
+                    reason=value_dict.get("reason") or "tool_call",
+                    tool_call_id=value_dict.get("tool_call_id"),
+                    response_schema=getattr(interrupt, "response_schema", None),
+                    message=value_dict.get("message"),
+                )
+            )
+        except ValidationError:
+            # An unrepresentable interrupt must not crash the run after the
+            # snapshots were already streamed; skip it with a warning.
+            logger.exception("Skipping unrepresentable interrupt")
+    return outcomes
+
+
+def _to_ag_ui_history(messages: list[Any]) -> list[Any]:
+    """Map LangChain state messages onto AG-UI messages for MESSAGES_SNAPSHOT."""
+    converted: list[Any] = []
+    for message in messages:
+        content = (
+            message.content
+            if isinstance(message.content, str)
+            else str(message.content)
+        )
+        message_id = getattr(message, "id", None) or uuid.uuid4().hex
+        if isinstance(message, HumanMessage):
+            converted.append(
+                AgUiUserMessage(id=message_id, role="user", content=content)
+            )
+        elif isinstance(message, AIMessage):
+            converted.append(
+                AgUiAssistantMessage(id=message_id, role="assistant", content=content)
+            )
+        elif isinstance(message, SystemMessage):
+            converted.append(
+                AgUiSystemMessage(id=message_id, role="system", content=content)
+            )
+    return converted
+
+
+async def _interrupt_finish_events(
+    graph: Any,
+    config: RunnableConfig,
+    conversation_id: str,
+    run_id: str,
+    interrupts: tuple[Any, ...],
+    token_usage: Any,
+    model: str | None,
+    outcome: RunFinishedInterruptOutcome | None = None,
+) -> AsyncGenerator[BaseEvent]:
+    """Snapshot the interrupted state and finish the run with an interrupt outcome.
+
+    The state snapshots let the consumer resume the thread later; the interrupt
+    outcome (with tool_call_id bindings and response schemas) is what the
+    human-approval UI is built on (#1093/#1085).
+    """
+    try:
+        state = await graph.aget_state(config)
+        yield StateSnapshotEvent(
+            type=EventType.STATE_SNAPSHOT, snapshot=_json_safe(state.values)
+        )
+        yield MessagesSnapshotEvent(
+            type=EventType.MESSAGES_SNAPSHOT,
+            messages=_to_ag_ui_history(state.values.get("messages", [])),
+        )
+    except Exception:
+        logger.exception("Failed to snapshot the interrupted graph state")
+    yield RunFinishedEvent(
+        type=EventType.RUN_FINISHED,
+        thread_id=conversation_id,
+        run_id=run_id,
+        outcome=outcome
+        or RunFinishedInterruptOutcome(
+            type="interrupt", interrupts=_interrupt_outcomes(interrupts)
+        ),
+        usage=_ag_ui_usage_from_token_usage(token_usage, model),
+        metadata={"mucgpt": {"contextTokens": token_usage.context_tokens}},
+    )
 
 
 def _summarized_canvas_chunk(chunk: ToolStreamChunk) -> dict[str, Any]:
@@ -214,7 +333,7 @@ def _interrupt_outcome(
     return RunFinishedInterruptOutcome(
         type="interrupt",
         interrupts=[
-            Interrupt(
+            AgUiInterrupt(
                 id=approval.tool_call_id,
                 reason=TOOL_APPROVAL_REASON,
                 tool_call_id=approval.tool_call_id,
@@ -646,10 +765,21 @@ class MUCGPTAgentExecutor:
         data_sources: list[dict[str, Any]] | None = None,
         canvas: CanvasState | None = None,
         reasoning_effort: str | None = None,
+        resume: dict[str, Any] | None = None,
         resume_decisions: list[dict[str, str]] | None = None,
+        run_id: str | None = None,
+        language: str | None = None,
     ) -> AsyncGenerator[BaseEvent]:
-        """Run the agent and stream the result as AG-UI protocol events."""
-        run_id = uuid.uuid4().hex
+        """Run the agent and stream the result as AG-UI protocol events.
+
+        ``run_id``: for native AG-UI requests, the input's ``runId`` echoed on
+        the boundary events (spec identity contract); a fresh UUID otherwise.
+        ``language``: the user's interface language for the deliberate-default
+        response-language instruction. ``resume`` is the generic AG-UI
+        interrupt response map; ``resume_decisions`` is MUCGPT's validated
+        approval decision payload.
+        """
+        run_id = run_id or uuid.uuid4().hex
         tags = (
             [f"assistant-{assistant_id}"]
             if assistant_id is not None
@@ -688,12 +818,17 @@ class MUCGPTAgentExecutor:
                         "langfuse_prompt": getattr(
                             self.agent, "default_langfuse_prompt", None
                         ),
+                        "language": language,
                     },
                 ),
             )
 
             graph_stream = self.agent.graph.astream(
-                {"messages": to_langchain_messages(messages)},
+                (
+                    Command(resume=resume)
+                    if resume is not None
+                    else {"messages": to_langchain_messages(messages)}
+                ),
                 stream_mode=["messages", "custom", "updates"],
                 config=config,
                 resume_decisions=resume_decisions,
@@ -703,10 +838,14 @@ class MUCGPTAgentExecutor:
                     type=EventType.RUN_STARTED,
                     thread_id=conversation_id,
                     run_id=run_id,
+                    # The producer's own declaration, closing the in-band
+                    # version negotiation pair with RunAgentInput.protocolVersion.
+                    protocol_version=PROTOCOL_VERSION,
                 )
 
                 message_id = uuid.uuid4().hex
                 tool_calls: dict[int, tuple[str, str]] = {}
+                interrupts: tuple[Any, ...] | None = None
                 async for stream_mode, data in graph_stream:
                     if stream_mode == "custom":
                         canvas_event: CustomEvent | None = None
@@ -748,6 +887,10 @@ class MUCGPTAgentExecutor:
                         trace_events.append(
                             {"stream": "updates", "content": _json_safe(data)}
                         )
+                        # Interrupt/resume groundwork (#1093/#1085): a graph
+                        # that hits LangGraph interrupt() ends its run here.
+                        if isinstance(data, dict) and "__interrupt__" in data:
+                            interrupts = data["__interrupt__"]
                         continue
 
                     chunk, metadata = data
@@ -817,23 +960,40 @@ class MUCGPTAgentExecutor:
                     output="".join(answer_chunks),
                     metadata={"agent_stream_event_count": len(trace_events)},
                 )
-                pending = await self.agent.graph.get_pending_approvals(config)
-                yield RunFinishedEvent(
-                    type=EventType.RUN_FINISHED,
-                    thread_id=conversation_id,
-                    run_id=run_id,
-                    outcome=_interrupt_outcome(pending) if pending else None,
-                    usage=_ag_ui_usage_from_token_usage(
-                        config["configurable"]["token_usage"], model
-                    ),
-                    metadata={
-                        "mucgpt": {
-                            "contextTokens": config["configurable"][
-                                "token_usage"
-                            ].context_tokens
-                        }
-                    },
-                )
+                token_usage = config["configurable"]["token_usage"]
+                if interrupts:
+                    get_pending_approvals = getattr(
+                        self.agent.graph, "get_pending_approvals", None
+                    )
+                    pending = (
+                        await get_pending_approvals(config)
+                        if get_pending_approvals is not None
+                        else []
+                    )
+                    # Spec: a run that ends in an interrupt first emits the
+                    # state the consumer needs to resume, then finishes with
+                    # an interrupt outcome instead of a success result.
+                    async for event in _interrupt_finish_events(
+                        self.agent.graph,
+                        config,
+                        conversation_id,
+                        run_id,
+                        interrupts,
+                        token_usage,
+                        model,
+                        _interrupt_outcome(pending) if pending else None,
+                    ):
+                        yield event
+                else:
+                    yield RunFinishedEvent(
+                        type=EventType.RUN_FINISHED,
+                        thread_id=conversation_id,
+                        run_id=run_id,
+                        usage=_ag_ui_usage_from_token_usage(token_usage, model),
+                        metadata={
+                            "mucgpt": {"contextTokens": token_usage.context_tokens}
+                        },
+                    )
             except Exception as ex:
                 _write_stream_trace_span(messages, trace_events)
                 logger.exception("Exception in AG-UI streaming")

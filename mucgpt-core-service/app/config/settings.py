@@ -75,6 +75,10 @@ class ModelInfo(BaseModel):
     supported_reasoning_efforts: list[ReasoningEffort] | None = None
     default_reasoning_effort: ReasoningEffort | None = None
     supports_temperature: bool = True
+    # Whether the model can consume image input. The AG-UI run-input mapper
+    # enforces this as a fail-closed gate before the run starts (a deliberate
+    # deviation from the spec's "skip unusable parts" rule, kept for privacy).
+    supports_vision: bool = False
     knowledge_cut_off: str | None = None
     # Creativity to temperature mappings
     creativity_low_temperature: float | None = None
@@ -194,6 +198,7 @@ class ModelsConfig(BaseModel):
             "supported_reasoning_efforts",
             "default_reasoning_effort",
             "supports_temperature",
+            "supports_vision",
             "knowledge_cut_off",
             "creativity_low_temperature",
             "creativity_medium_temperature",

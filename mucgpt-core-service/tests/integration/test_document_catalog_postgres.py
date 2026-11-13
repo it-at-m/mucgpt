@@ -40,10 +40,7 @@ class DocumentCatalogPostgresTests(unittest.IsolatedAsyncioTestCase):
             )
         self.addAsyncCleanup(self.drop_database)
         self.settings = Settings(
-            DB=DBConfig(
-                **{key.upper(): value for key, value in self.connection_args.items()},
-                NAME=self.database,
-            )
+            db=DBConfig(**self.connection_args, name=self.database)
         )
         await DocumentCatalogManager.init(self.settings)
         self.addAsyncCleanup(DocumentCatalogManager.close)

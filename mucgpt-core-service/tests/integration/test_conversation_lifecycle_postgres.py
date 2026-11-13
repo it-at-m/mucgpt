@@ -497,7 +497,7 @@ class ConversationLifecyclePostgresTests(unittest.IsolatedAsyncioTestCase):
                     wrapper._prepare_run = lambda data, config: (
                         data["messages"],
                         None,
-                        None,
+                        SimpleNamespace(canvas=None),
                     )
                     executor = MUCGPTAgentExecutor(SimpleNamespace(graph=wrapper))
                     request = self.request()

@@ -1,3 +1,4 @@
+import asyncio
 import json
 from unittest.mock import AsyncMock, Mock, patch
 
@@ -14,7 +15,10 @@ from agent.agent_executor import MUCGPTAgentExecutor
 from agent.deep_agent import PendingToolApproval
 from api.api_models import ChatCompletionMessage, ChatCompletionRequest
 from api.exception import RATE_LIMITED
-from api.routers.chat_router import CONVERSATION_RUN_LOCK_PREFIX
+from api.routers.chat_router import (
+    CONVERSATION_RUN_LOCK_PREFIX,
+    _renew_conversation_run_lock,
+)
 from config.model_provider import ModelRegistry, ModelsConfigurationException
 
 DUMMY_CONVERSATION_ID = "conv-test-1"
@@ -69,6 +73,31 @@ def initialized_model_registry(monkeypatch: pytest.MonkeyPatch) -> None:
 
 
 class TestChatRouter:
+    @pytest.mark.asyncio
+    async def test_conversation_run_lock_is_renewed_until_stopped(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        stop = asyncio.Event()
+
+        class RenewableLock:
+            calls = 0
+
+            async def extend(self, additional_time: int, replace_ttl: bool) -> bool:
+                self.calls += 1
+                assert additional_time == 0
+                assert replace_ttl is True
+                stop.set()
+                return True
+
+        monkeypatch.setattr(
+            "api.routers.chat_router.CONVERSATION_RUN_LOCK_TIMEOUT_SECONDS", 0
+        )
+        lock = RenewableLock()
+
+        await _renew_conversation_run_lock(lock, stop)  # type: ignore[arg-type]
+
+        assert lock.calls == 1
+
     def test_legacy_chat_endpoint_is_not_available(
         self, test_client: TestClient
     ) -> None:

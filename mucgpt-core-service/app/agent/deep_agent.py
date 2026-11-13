@@ -191,6 +191,24 @@ class _ConfiguredLangChainDeepAgentGraph:
                 yield item
         finally:
             await close_stream(stream)
+            await self._checkpoint_working_canvas_on_pause(request_context, config)
+
+    async def _checkpoint_working_canvas_on_pause(
+        self, request_context: RequestContext, config: RunnableConfig
+    ) -> None:
+        """Preserve canvas mutations when an approval pauses the graph.
+
+        Request context is rebuilt for a resume, unlike graph state. Canvas
+        tools intentionally keep their working copy in that context to support
+        parallel mutations, so write it to the checkpoint only at a pause.
+        """
+        if not self.approval_tools or request_context.canvas_working is None:
+            return
+        state = await self.agent.aget_state(config)
+        if state.interrupts:
+            await self.agent.aupdate_state(
+                config, {"canvas": request_context.canvas_working}
+            )
 
     async def get_pending_approvals(
         self, config: RunnableConfig

@@ -1,5 +1,6 @@
 import asyncio
 from collections.abc import AsyncGenerator
+from contextlib import suppress
 from typing import Annotated
 
 from ag_ui.encoder import EventEncoder
@@ -520,6 +521,14 @@ async def ag_ui_chat_endpoint(
 
     async def event_generator() -> AsyncGenerator[str]:
         """Encode AG-UI events and close their source on completion or cancellation."""
+        lock_renewal_stop = asyncio.Event()
+        lock_renewal = (
+            asyncio.create_task(
+                _renew_conversation_run_lock(run_lock, lock_renewal_stop)
+            )
+            if run_lock is not None
+            else None
+        )
         langfuse = get_client()
         tags = (
             [f"assistant-{chat_request.assistant_id}"]
@@ -545,6 +554,11 @@ async def ag_ui_chat_endpoint(
                     async for event in events:
                         yield encoder.encode(event)
         finally:
+            lock_renewal_stop.set()
+            if lock_renewal is not None:
+                lock_renewal.cancel()
+                with suppress(asyncio.CancelledError):
+                    await lock_renewal
             await close_stream(events)
             await _unlock_conversation_run(run_lock)
             # The root observation must end before its completed span can be flushed.
@@ -576,6 +590,23 @@ async def _unlock_conversation_run(lock: Lock | None) -> None:
         await lock.release()
     except LockError:
         logger.warning("Conversation run lock expired before the run ended")
+
+
+async def _renew_conversation_run_lock(lock: Lock, stop: asyncio.Event) -> None:
+    """Keep a persisted conversation's run lock alive while it streams."""
+    while not stop.is_set():
+        await asyncio.sleep(CONVERSATION_RUN_LOCK_TIMEOUT_SECONDS / 2)
+        if stop.is_set():
+            return
+        try:
+            if not await lock.extend(
+                CONVERSATION_RUN_LOCK_TIMEOUT_SECONDS, replace_ttl=True
+            ):
+                logger.warning("Conversation run lock could not be renewed")
+                return
+        except LockError:
+            logger.warning("Conversation run lock expired before it could be renewed")
+            return
 
 
 async def _parse_chat_request(request: Request) -> ParsedChatRequest:

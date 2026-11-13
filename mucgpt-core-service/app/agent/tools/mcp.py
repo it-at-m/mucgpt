@@ -140,9 +140,6 @@ class McpLoader:
                         raw_tools = await McpLoader._list_all_tools_for_session(session)
 
                     raw_by_source[source_id] = raw_tools
-                    McpLoader._warn_about_unknown_overrides(
-                        source_id, source_cfg, raw_tools
-                    )
                     McpLoader._logger.debug(
                         f"Retrieved MCP tools from '{source_id}': {len(raw_tools)}"
                     )
@@ -379,6 +376,8 @@ class McpLoader:
                     f"Cached MCP source '{source_id}' is no longer configured; skipping"
                 )
                 continue
+
+            McpLoader._warn_about_unknown_overrides(source_id, source_cfg, raw_tools)
 
             con = McpLoader._build_connection(source_id, source_cfg, user_info)
             if con is None:

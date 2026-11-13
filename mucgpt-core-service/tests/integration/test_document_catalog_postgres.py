@@ -6,9 +6,14 @@ Use the MUCGPT_LIFECYCLE_POSTGRES_HOST/PORT/USER/PASSWORD test-server settings.
 import asyncio
 import os
 import unittest
+from pathlib import Path
+from unittest.mock import patch
 from uuid import uuid4
 
 import psycopg
+from alembic import command
+from alembic.config import Config
+from migrations.settings import get_migration_settings
 from psycopg import sql
 from sqlalchemy.ext.asyncio import async_sessionmaker
 
@@ -42,6 +47,7 @@ class DocumentCatalogPostgresTests(unittest.IsolatedAsyncioTestCase):
         self.settings = Settings(
             db=DBConfig(**self.connection_args, name=self.database)
         )
+        await self.migrate_database()
         await DocumentCatalogManager.init(self.settings)
         self.addAsyncCleanup(DocumentCatalogManager.close)
         self.owner = AuthenticationResult(
@@ -57,6 +63,20 @@ class DocumentCatalogPostgresTests(unittest.IsolatedAsyncioTestCase):
                     sql.Identifier(self.database)
                 )
             )
+
+    async def migrate_database(self) -> None:
+        migration_env = {
+            "MUCGPT_CORE_DB__HOST": self.connection_args["host"],
+            "MUCGPT_CORE_DB__PORT": str(self.connection_args["port"]),
+            "MUCGPT_CORE_DB__NAME": self.database,
+            "MUCGPT_CORE_DB__USER": self.connection_args["user"],
+            "MUCGPT_CORE_DB__PASSWORD": self.connection_args["password"],
+        }
+        with patch.dict(os.environ, migration_env):
+            get_migration_settings.cache_clear()
+            config = Config(str(Path(__file__).parents[2] / "alembic.ini"))
+            await asyncio.to_thread(command.upgrade, config, "head")
+        get_migration_settings.cache_clear()
 
     async def reserve(self, user_id="demo-user-5"):
         # Each call owns a separate database session/transaction, as in multiple

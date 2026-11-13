@@ -36,6 +36,12 @@ def test_migration_settings_reject_incomplete_database_configuration(
         MigrationSettings(db={}).database_url()
 
 
+def test_lock_timeout_allows_an_indefinite_wait(monkeypatch) -> None:
+    monkeypatch.setenv("MIGRATION_LOCK_TIMEOUT", "0")
+
+    assert run_migrations._nonnegative_int("MIGRATION_LOCK_TIMEOUT", 30) == 0
+
+
 def test_alembic_config_escapes_percent_encoded_database_url(monkeypatch) -> None:
     monkeypatch.setenv("MUCGPT_ASSISTANT_DB__HOST", "postgres")
     monkeypatch.setenv("MUCGPT_ASSISTANT_DB__NAME", "mucgpt")

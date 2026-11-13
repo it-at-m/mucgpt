@@ -133,6 +133,7 @@ The login flow redirects the browser to `http://keycloak:8100`. On WSL2 with the
 | Service | Port (Internal) | Port (External) | Description |
 |---------|----------------|-----------------|-------------|
 | **core-service** | 8000 | 39146 | Core AI/LLM service backend |
+| **core-migrations** | - | - | Core database migration service (run-once) |
 | **assistant-service** | 8084 | 39147 | Assistant management service |
 | **assistant-migrations** | - | - | Database migration service (run-once) |
 | **frontend** | 8080 | 8081 | Web UI |

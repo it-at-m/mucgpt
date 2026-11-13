@@ -84,7 +84,7 @@ class ConversationLifecyclePostgresTests(unittest.IsolatedAsyncioTestCase):
         )
         if self._testMethodName in {
             "test_legacy_mapped_history_survives_migration",
-            "test_legacy_orphans_are_quarantined_on_restart",
+            "test_legacy_orphans_are_quarantined_during_migration",
         }:
             await self.create_legacy_schema()
         else:
@@ -450,7 +450,7 @@ class ConversationLifecyclePostgresTests(unittest.IsolatedAsyncioTestCase):
         await delete_conversation(self.conversation_id, self.owner)
         await self.assert_retired()
 
-    async def test_legacy_orphans_are_quarantined_on_restart(self):
+    async def test_legacy_orphans_are_quarantined_during_migration(self):
         await self.seed_legacy_history(orphan=True)
         await self.migrate_database()
         await PersistanceHelpers.init(self.settings)

@@ -1,4 +1,5 @@
 import asyncio
+import logging
 import os
 import sys
 from typing import Any
@@ -18,6 +19,7 @@ from migrations.settings import get_migration_settings  # noqa: E402
 
 config = context.config
 configure_logging()
+logger = logging.getLogger("mucgpt.assistant.migrations")
 
 target_metadata = Base.metadata
 
@@ -60,9 +62,16 @@ def do_run_migrations(connection: Connection) -> None:
         with context.begin_transaction():
             context.run_migrations()
     finally:
-        connection.execute(
-            text("SELECT pg_advisory_unlock(hashtext('mucgpt-assistant-migrations'))")
-        )
+        try:
+            connection.execute(
+                text(
+                    "SELECT pg_advisory_unlock(hashtext('mucgpt-assistant-migrations'))"
+                )
+            )
+        except Exception:
+            # A dead connection has already released its session-level lock.
+            # Preserve the migration failure so the retry runner can classify it.
+            logger.exception("Failed to release the assistant migration advisory lock")
 
 
 async def run_async_migrations() -> None:
@@ -71,8 +80,10 @@ async def run_async_migrations() -> None:
     )
     schema = get_migration_settings().db.schema_name
     configuration["sqlalchemy.url"] = get_database_url()
+    db_timeout = int(config.get_main_option("mucgpt.migration_db_timeout", "30"))
     connect_args: dict[str, Any] = {
-        "timeout": int(config.get_main_option("mucgpt.migration_db_timeout", "30"))
+        "timeout": db_timeout,
+        "command_timeout": db_timeout,
     }
     if schema:
         connect_args["server_settings"] = {

@@ -3,10 +3,11 @@
 Environment variables:
     MIGRATION_REVISION: Target revision, default ``head``.
     MIGRATION_CHECK_ONLY: Connect and report the current revision without changes.
-    MIGRATION_DB_TIMEOUT: Connection timeout in seconds, default 30.
+    MIGRATION_DB_TIMEOUT: Connection and command timeout in seconds, default 30.
     MIGRATION_DB_RETRIES: Number of transient connection attempts, default 1.
     MIGRATION_DB_RETRY_DELAY: Delay between attempts in seconds, default 5.
-    MIGRATION_LOCK_TIMEOUT: Advisory lock wait timeout in seconds, default 30.
+    MIGRATION_LOCK_TIMEOUT: Advisory lock wait timeout in seconds, default 30;
+        set to 0 to wait indefinitely.
     MIGRATION_LOG_LEVEL: Python logging level, default INFO.
 """
 
@@ -86,7 +87,7 @@ def run() -> None:
     db_timeout = _positive_int("MIGRATION_DB_TIMEOUT", 30)
     retries = _positive_int("MIGRATION_DB_RETRIES", 1)
     retry_delay = _nonnegative_int("MIGRATION_DB_RETRY_DELAY", 5)
-    lock_timeout = _positive_int("MIGRATION_LOCK_TIMEOUT", 30)
+    lock_timeout = _nonnegative_int("MIGRATION_LOCK_TIMEOUT", 30)
     database = get_migration_settings().db
     LOGGER.info(
         "Migration target=%s database=%s host=%s port=%s attempts=%s",

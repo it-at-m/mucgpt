@@ -1,4 +1,5 @@
 import asyncio
+import logging
 import os
 import sys
 
@@ -18,6 +19,7 @@ from database.database_models import Base  # noqa: E402
 
 config = context.config
 configure_logging()
+logger = logging.getLogger("mucgpt.core.migrations")
 
 target_metadata = Base.metadata
 
@@ -53,9 +55,14 @@ def do_run_migrations(connection: Connection) -> None:
         with context.begin_transaction():
             context.run_migrations()
     finally:
-        connection.execute(
-            text("SELECT pg_advisory_unlock(hashtext('mucgpt-core-migrations'))")
-        )
+        try:
+            connection.execute(
+                text("SELECT pg_advisory_unlock(hashtext('mucgpt-core-migrations'))")
+            )
+        except Exception:
+            # A dead connection has already released its session-level lock.
+            # Preserve the migration failure so the retry runner can classify it.
+            logger.exception("Failed to release the core migration advisory lock")
 
 
 async def run_async_migrations() -> None:

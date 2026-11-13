@@ -32,8 +32,10 @@ LABEL org.opencontainers.image.authors='Landeshauptstadt München <opensource@mu
     org.opencontainers.image.title='mucgpt-core-migrations' \
     org.opencontainers.image.description='Database migration service for MUCGPT core persistence.'
 
+RUN chown -R root:0 /app && chmod -R g=u /app
+
 ENV PATH="/app/.venv/bin:$PATH"
 ENV PYTHONWARNINGS="ignore"
 USER 1001
 
-CMD ["python", "migrations/run_migrations.py"]
+CMD ["python", "-m", "migrations.run_migrations"]

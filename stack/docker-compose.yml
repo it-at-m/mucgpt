@@ -233,6 +233,8 @@ services:
         condition: service_healthy
     env_file:
       - ./.env
+    environment:
+      - MIGRATION_LOCK_TIMEOUT=0
     networks:
       - internal
     restart: "no"

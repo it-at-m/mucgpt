@@ -22,7 +22,7 @@ vi.mock("../api/core-client", () => ({
         }
     }
 }));
-vi.mock("i18next", () => ({ default: { t: (key: string) => `t:${key}` } }));
+vi.mock("i18next", () => ({ default: { t: (key: string) => `t:${key}`, resolvedLanguage: "de" } }));
 vi.mock("../api/conversations-client", () => ({ deleteConversationApi: vi.fn() }));
 
 describe("AG-UI chat requests", () => {
@@ -146,6 +146,7 @@ describe("chat title generation", () => {
                 conversationId: "chat-1",
                 query: "Question",
                 systemMessage: "sys",
+                language: "de",
                 currentTitle: "Old title"
             })
         );

@@ -587,8 +587,8 @@ class ChatTitleRequest(BaseModel):
     current_title: str | None = Field(
         None,
         description=(
-            "The chat's current title, if any. When present, the model should keep it "
-            "unless it no longer fits the conversation."
+            "The chat's current title, if any. When present, the model decides "
+            "whether to keep it or propose a new one."
         ),
     )
     previous_turns: list[ChatTitleTurn] | None = Field(
@@ -596,6 +596,13 @@ class ChatTitleRequest(BaseModel):
         description=(
             "Prior completed turns (oldest first), excluding the current query/answer. "
             "Only the most recent turns are considered."
+        ),
+    )
+    language: str | None = Field(
+        None,
+        description=(
+            "ISO 639 language code of the user's interface language. "
+            "The generated title must be written in this language."
         ),
     )
 

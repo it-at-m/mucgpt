@@ -1,8 +1,9 @@
 import asyncio
-from typing import Any
+from typing import Any, Literal
 
 from fastapi import APIRouter, Depends, HTTPException
 from langfuse import get_client, observe, propagate_attributes
+from pydantic import BaseModel, Field, field_validator
 
 from api.api_models import (
     AssistantDraftRequest,
@@ -19,6 +20,7 @@ from core.llm_helpers import (
     get_internal_task_model,
     hash_user_id,
     invoke_internal_generation,
+    invoke_internal_structured_generation,
     read_prompt_file_with_metadata,
 )
 from core.logtools import getLogger
@@ -197,6 +199,35 @@ _TITLE_TURN_LIMIT = 2
 _TITLE_MESSAGE_LIMIT = 2000
 
 
+class _ChatTitleDecision(BaseModel):
+    """Structured decision of the model about the chat title.
+
+    Returning an explicit decision instead of a plain title prevents the model
+    from accidentally "renaming" a title by rephrasing it, and lets the router
+    skip persistence entirely when the title is kept.
+    """
+
+    decision: Literal["keep_title", "new_title"]
+    title: str | None = Field(
+        None,
+        max_length=200,
+        description=(
+            'The new title, required when decision is "new_title"; '
+            'must be null when decision is "keep_title".'
+        ),
+    )
+
+    @field_validator("title")
+    @classmethod
+    def _limit_title_length(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        stripped = value.strip()
+        if len(stripped.split()) > 4:
+            raise ValueError("The title must not exceed 4 words")
+        return stripped
+
+
 def _truncate_title_text(value: str) -> str:
     """Bound the length of a single message inside the title prompt."""
 
@@ -209,27 +240,33 @@ def _truncate_title_text(value: str) -> str:
 def _build_chat_title_user_content(request: ChatTitleRequest) -> str:
     """Assemble the user content for chat title generation.
 
-    When a current title is supplied (title regeneration), the model is asked to
-    keep it unless it no longer fits the conversation.
+    When a current title is supplied (title regeneration), the model decides
+    between keeping it and proposing a new one.
     """
 
     parts: list[str] = []
     if request.system_message:
-        parts.append(f"System-Prompt:\n{_truncate_title_text(request.system_message)}")
+        parts.append(f"System prompt:\n{_truncate_title_text(request.system_message)}")
     if request.current_title:
         parts.append(
-            "Bisheriger Chat-Titel:\n"
+            "Current chat title:\n"
             f"{_truncate_title_text(request.current_title)}\n\n"
-            "Wenn bereits ein Titel angegeben ist: Behalte ihn unverändert, sofern er "
-            "weiterhin zum Gespräch passt, und gib ihn exakt zurück. Wähle nur dann "
-            "einen neuen Titel, wenn der bisherige nachweislich nicht mehr zum "
-            "aktuellen Gesprächsverlauf passt."
+            "Decide whether the current chat title still fits the conversation "
+            "below. Return decision \"keep_title\" with no title if it does. Only "
+            "return decision \"new_title\" with a new title if the current one "
+            "no longer fits the conversation."
         )
     for turn in (request.previous_turns or [])[-_TITLE_TURN_LIMIT:]:
-        parts.append(f"Nutzernachricht:\n{_truncate_title_text(turn.query)}")
-        parts.append(f"Assistentenantwort:\n{_truncate_title_text(turn.answer)}")
-    parts.append(f"Nutzernachricht:\n{_truncate_title_text(request.query)}")
-    parts.append(f"Assistentenantwort:\n{_truncate_title_text(request.answer)}")
+        parts.append(f"User message:\n{_truncate_title_text(turn.query)}")
+        parts.append(f"Assistant answer:\n{_truncate_title_text(turn.answer)}")
+    parts.append(f"User message:\n{_truncate_title_text(request.query)}")
+    parts.append(f"Assistant answer:\n{_truncate_title_text(request.answer)}")
+    if request.language:
+        parts.append(
+            "Title language:\n"
+            f'Write the chat title in the language with ISO 639 code '
+            f'"{request.language}".'
+        )
     return "\n\n".join(parts)
 
 
@@ -261,6 +298,7 @@ async def generate_chat_title(
                 turn.model_dump() for turn in (request.previous_turns or [])
             ]
             or None,
+            "language": request.language,
         },
         trace_context={"trace_id": trace_id},
     ) as observation:
@@ -284,41 +322,63 @@ async def generate_chat_title(
                 model_name = get_internal_task_model(
                     settings, InternalTaskModelStrength.WEAK
                 )
-                raw_title = await invoke_internal_generation(
-                    model_name=model_name,
-                    temperature=0.0,
-                    messages=messages,
-                    user_info=user_info,
-                    trace_tags=["chat-title"],
-                    run_name="chat-title-generation",
-                    langfuse_prompt=system_prompt.langfuse_prompt,
-                )
-                normalized = _normalize_chat_title(raw_title)
-                if not normalized:
-                    normalized = _normalize_chat_title(request.query) or "New Chat"
-
-                # Persist the title, scoped to the requesting user. A False result means
-                # the conversation already exists and belongs to someone else.
-                title_persisted = (
-                    await PersistanceHelpers.set_chat_title_for_conversation(
-                        conversation_id=request.conversation_id,
-                        user_id=user_info.user_id,
-                        title=normalized,
+                try:
+                    decision = await invoke_internal_structured_generation(
+                        model_name=model_name,
+                        temperature=0.0,
+                        messages=messages,
+                        user_info=user_info,
+                        trace_tags=["chat-title"],
+                        run_name="chat-title-generation",
+                        schema=_ChatTitleDecision,
+                        langfuse_prompt=system_prompt.langfuse_prompt,
                     )
-                )
-                if not title_persisted:
+                except Exception:
+                    # A failed or schema-violating structured response must never
+                    # corrupt the title: fall back to keeping the current title,
+                    # or to the normalized query when no title exists yet.
                     logger.warning(
-                        "chat-title: user %s may not set the title for conversation %s",
-                        user_info.user_id,
-                        request.conversation_id,
+                        "chat-title: structured generation failed; falling back",
+                        exc_info=True,
                     )
-                    raise HTTPException(
-                        status_code=403,
-                        detail="Not allowed to modify this conversation",
+                    decision = _ChatTitleDecision(
+                        decision="keep_title" if request.current_title else "new_title",
+                        title=None,
                     )
+
+                keep_title = decision.decision == "keep_title" and request.current_title
+                if keep_title:
+                    # Nothing changed: skip persistence so any (also server-side)
+                    # rename stays untouched.
+                    normalized = request.current_title
+                else:
+                    normalized = _normalize_chat_title(decision.title or "")
+                    if not normalized:
+                        normalized = _normalize_chat_title(request.query) or "New Chat"
+
+                    # Persist the title, scoped to the requesting user. A False
+                    # result means the conversation already exists and belongs to
+                    # someone else.
+                    title_persisted = (
+                        await PersistanceHelpers.set_chat_title_for_conversation(
+                            conversation_id=request.conversation_id,
+                            user_id=user_info.user_id,
+                            title=normalized,
+                        )
+                    )
+                    if not title_persisted:
+                        logger.warning(
+                            "chat-title: user %s may not set the title for conversation %s",
+                            user_info.user_id,
+                            request.conversation_id,
+                        )
+                        raise HTTPException(
+                            status_code=403,
+                            detail="Not allowed to modify this conversation",
+                        )
 
                 result = ChatTitleResult(title=normalized)
-                observation.update(output=result.model_dump())
+                observation.update(output={**result.model_dump(), "decision": decision.decision})
                 return result
             except HTTPException:
                 raise

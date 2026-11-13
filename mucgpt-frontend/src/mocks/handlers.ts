@@ -1199,6 +1199,7 @@ export const handlers = [
             query?: string;
             answer?: string;
             system_message?: string;
+            language?: string;
             current_title?: string | null;
             previous_turns?: { query: string; answer: string }[] | null;
         };

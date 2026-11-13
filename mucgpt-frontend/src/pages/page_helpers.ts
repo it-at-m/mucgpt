@@ -275,6 +275,7 @@ async function generateAndStoreChatTitle(params: {
             query: params.question,
             answer: params.answer,
             systemMessage: params.systemMessage,
+            language: i18next.resolvedLanguage ?? i18next.language,
             currentTitle: stored?.name,
             previousTurn: params.previousTurn
         });

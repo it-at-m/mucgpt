@@ -118,6 +118,8 @@ export interface ChatTitleGenerationRequest {
     query: string;
     answer: string;
     systemMessage: string;
+    /** ISO 639 code of the user's interface language; the title must be written in it. */
+    language: string;
     /** The chat's current title, when regenerating an existing title. */
     currentTitle?: string;
     /** The completed turn before the current one, when regenerating. */
@@ -131,6 +133,7 @@ export async function createChatName(request: ChatTitleGenerationRequest) {
         query: request.query,
         answer: request.answer,
         system_message: request.systemMessage,
+        language: request.language,
         current_title: request.currentTitle ?? null,
         previous_turns: request.previousTurn ? [request.previousTurn] : null
     };

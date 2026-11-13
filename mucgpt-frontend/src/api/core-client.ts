@@ -41,6 +41,11 @@ function toAgUiMessages(request: ChatRequest): Message[] {
     return messages;
 }
 
+/** MUCGPT-specific settings passed through the native AG-UI run input. */
+export type MucgptForwardedProps = {
+    mucgpt: Pick<ChatRequest, "model" | "creativity" | "enabled_tools" | "assistant_id" | "persist" | "data_sources" | "canvas" | "document_ids" | "language">;
+};
+
 /**
  * MUCGPT-specific run settings for the native AG-UI run input, namespaced
  * under `forwardedProps.mucgpt` (application-specific channel, passed through
@@ -49,7 +54,7 @@ function toAgUiMessages(request: ChatRequest): Message[] {
  * an omitted `document_ids` means "no document feature" while an explicitly
  * empty list means "detach all previously selected documents".
  */
-export function mucgptForwardedProps(request: ChatRequest) {
+export function mucgptForwardedProps(request: ChatRequest): MucgptForwardedProps {
     // AG-UI clones this object before making the HTTP request. Normalize it to
     // the JSON API contract so transient UI objects cannot make cloning fail.
     return JSON.parse(
@@ -66,7 +71,7 @@ export function mucgptForwardedProps(request: ChatRequest) {
                 language: request.language
             }
         })
-    );
+    ) as MucgptForwardedProps;
 }
 
 /**

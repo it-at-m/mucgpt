@@ -1184,7 +1184,7 @@ export const handlers = [
                 };
 
                 const scenario = latestUserMessage.trim().toLowerCase();
-                if (APPROVAL_SCENARIOS[scenario] && !raw.resume) {
+                if (Object.hasOwn(APPROVAL_SCENARIOS, scenario) && !raw.resume) {
                     pauseForApproval(APPROVAL_SCENARIOS[scenario], scenario === "agui-approval-kette" ? CHAIN_ID_PREFIX : "");
                     return;
                 }

@@ -559,8 +559,10 @@ async def ag_ui_chat_endpoint(
                 lock_renewal.cancel()
                 with suppress(asyncio.CancelledError):
                     await lock_renewal
-            await close_stream(events)
-            await _unlock_conversation_run(run_lock)
+            try:
+                await close_stream(events)
+            finally:
+                await _unlock_conversation_run(run_lock)
             # The root observation must end before its completed span can be flushed.
             await asyncio.to_thread(langfuse.flush)
 

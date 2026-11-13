@@ -390,6 +390,25 @@ class TestChatRouter:
         assert held_run_locks == set()
 
     @patch("api.routers.chat_router.init_agent", new_callable=AsyncMock)
+    def test_ag_ui_frees_the_conversation_when_stream_cleanup_fails(
+        self,
+        mock_init_agent: AsyncMock,
+        test_client: TestClient,
+        held_run_locks: set[str],
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        self._streaming_executor(mock_init_agent)
+        monkeypatch.setattr(
+            "api.routers.chat_router.close_stream",
+            AsyncMock(side_effect=RuntimeError("Stream cleanup failed")),
+        )
+
+        with pytest.raises(RuntimeError, match="Stream cleanup failed"):
+            self._post_message(test_client)
+
+        assert held_run_locks == set()
+
+    @patch("api.routers.chat_router.init_agent", new_callable=AsyncMock)
     def test_ag_ui_frees_the_conversation_when_a_run_cannot_start(
         self,
         mock_init_agent: AsyncMock,

@@ -715,6 +715,19 @@ const buildCanvasToolCallEvents = (parentMessageId: string, conversationId: stri
     return events;
 };
 
+const APPROVAL_SCENARIOS: Record<string, Record<string, unknown>[]> = {
+    "agui-approval": [{ query: "Kita-Gebühren München 2026" }],
+    "agui-approval-multi": [{ query: "Kita-Gebühren München 2026" }, { query: "Anwohnerparken München Kosten" }],
+    "agui-approval-kette": [{ query: "Kita-Gebühren München 2026" }],
+    "agui-approval-vertraulich": [{ query: "Personalakte Beförderungsverfahren 2026" }]
+};
+
+const APPROVAL_TOOLS: Record<string, { toolName: string; dataClassification: string }> = {
+    "agui-approval-vertraulich": { toolName: "Personalwesen", dataClassification: "internal" }
+};
+
+const CHAIN_ID_PREFIX = "chain-";
+
 export const handlers = [
     http.all("https://huggingface.co/*", () => passthrough()),
     http.all("https://cdn-lfs.huggingface.co/*", () => passthrough()),
@@ -1104,6 +1117,7 @@ export const handlers = [
             forwardedProps?: { mucgpt?: { enabled_tools?: string[]; canvas?: CanvasState | null } };
             enabled_tools?: string[];
             canvas?: CanvasState | null;
+            resume?: { interruptId: string; status: string; payload?: { decision?: string } }[];
         };
         const enabledTools = raw.forwardedProps?.mucgpt?.enabled_tools ?? raw.enabled_tools;
         const mockCanvas = raw.forwardedProps?.mucgpt?.canvas ?? raw.canvas;
@@ -1138,6 +1152,71 @@ export const handlers = [
                         : "server_error";
                     const detail = `exception: openai.InternalServerError\nstatus: 500\nmessage: Mock provider failure (${code})`;
                     send({ type: "RUN_ERROR", message: detail, code, metadata: { detail } });
+                    controller.close();
+                    return;
+                }
+
+                const pauseForApproval = (calls: Record<string, unknown>[], idPrefix = "") => {
+                    const interrupts = calls.map(args => {
+                        const toolCallId = idPrefix + crypto.randomUUID();
+                        const { toolName, dataClassification } = APPROVAL_TOOLS[scenario] ?? {
+                            toolName: mockToolName ?? "WebSuche",
+                            dataClassification: "public"
+                        };
+                        const status_message = "Durchsuche das Internet";
+                        send({
+                            type: "TOOL_CALL_CHUNK",
+                            toolCallId,
+                            toolCallName: toolName,
+                            parentMessageId: messageId,
+                            delta: JSON.stringify({ status_message, ...args })
+                        });
+                        return {
+                            id: toolCallId,
+                            reason: "tool_approval",
+                            toolCallId,
+                            message: status_message,
+                            metadata: { mucgpt: { toolName, args, dataClassification } }
+                        };
+                    });
+                    send({ type: "RUN_FINISHED", threadId, runId, outcome: { type: "interrupt", interrupts } });
+                    controller.close();
+                };
+
+                const scenario = latestUserMessage.trim().toLowerCase();
+                if (Object.hasOwn(APPROVAL_SCENARIOS, scenario) && !raw.resume) {
+                    pauseForApproval(APPROVAL_SCENARIOS[scenario], scenario === "agui-approval-kette" ? CHAIN_ID_PREFIX : "");
+                    return;
+                }
+
+                if (raw.resume) {
+                    const isApproved = (entry: NonNullable<typeof raw.resume>[number]) => entry.status === "resolved" && entry.payload?.decision === "approve";
+                    await delay(1200);
+                    for (const entry of raw.resume) {
+                        if (isApproved(entry)) {
+                            send({
+                                type: "TOOL_CALL_RESULT",
+                                messageId: crypto.randomUUID(),
+                                toolCallId: entry.interruptId,
+                                content: "Mock tool result",
+                                role: "tool"
+                            });
+                        }
+                    }
+                    if (raw.resume.some(entry => entry.interruptId.startsWith(CHAIN_ID_PREFIX))) {
+                        pauseForApproval([{ query: "Anwohnerparken München Kosten" }]);
+                        return;
+                    }
+                    const approvedCount = raw.resume.filter(isApproved).length;
+                    const delta = `Mock-Antwort: ${approvedCount} von ${raw.resume.length} Tool-Aufrufen wurden ausgeführt.`;
+                    send({ type: "TEXT_MESSAGE_CHUNK", messageId, role: "assistant", delta });
+                    send({
+                        type: "RUN_FINISHED",
+                        threadId,
+                        runId,
+                        usage: [{ model: "gpt-4o-mini", inputTokens: 80, outputTokens: 20, totalTokens: 100 }],
+                        metadata: { mucgpt: { contextTokens: 100 } }
+                    });
                     controller.close();
                     return;
                 }

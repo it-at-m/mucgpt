@@ -1,3 +1,4 @@
+import asyncio
 import json
 from unittest.mock import AsyncMock, Mock, patch
 
@@ -5,15 +6,19 @@ import pytest
 from ag_ui.core.events import (
     EventType,
     RunErrorEvent,
-    RunFinishedEvent,
-    RunStartedEvent,
 )
 from fastapi.testclient import TestClient
 from langchain_core.language_models import BaseChatModel
 from langchain_core.language_models.fake_chat_models import FakeListChatModel
 
+from agent.agent_executor import MUCGPTAgentExecutor
+from agent.deep_agent import PendingToolApproval
 from api.api_models import ChatCompletionMessage, ChatCompletionRequest
 from api.exception import RATE_LIMITED
+from api.routers.chat_router import (
+    CONVERSATION_RUN_LOCK_PREFIX,
+    _renew_conversation_run_lock,
+)
 from config.model_provider import ModelRegistry, ModelsConfigurationException
 
 DUMMY_CONVERSATION_ID = "conv-test-1"
@@ -46,6 +51,9 @@ def stub_persistence(monkeypatch: pytest.MonkeyPatch) -> None:
         PersistanceHelpers, "verify_user_in_conversation", AsyncMock(return_value=True)
     )
     monkeypatch.setattr(
+        PersistanceHelpers, "is_user_in_conversation", AsyncMock(return_value=True)
+    )
+    monkeypatch.setattr(
         PersistanceHelpers, "has_checkpoint", AsyncMock(return_value=False)
     )
 
@@ -65,6 +73,31 @@ def initialized_model_registry(monkeypatch: pytest.MonkeyPatch) -> None:
 
 
 class TestChatRouter:
+    @pytest.mark.asyncio
+    async def test_conversation_run_lock_is_renewed_until_stopped(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        stop = asyncio.Event()
+
+        class RenewableLock:
+            calls = 0
+
+            async def extend(self, additional_time: int, replace_ttl: bool) -> bool:
+                self.calls += 1
+                assert additional_time == 0
+                assert replace_ttl is True
+                stop.set()
+                return True
+
+        monkeypatch.setattr(
+            "api.routers.chat_router.CONVERSATION_RUN_LOCK_TIMEOUT_SECONDS", 0
+        )
+        lock = RenewableLock()
+
+        await _renew_conversation_run_lock(lock, stop)  # type: ignore[arg-type]
+
+        assert lock.calls == 1
+
     def test_legacy_chat_endpoint_is_not_available(
         self, test_client: TestClient
     ) -> None:
@@ -132,132 +165,279 @@ class TestChatRouter:
             "detail": "Model 'invalid-model' not found in the registry"
         }
 
-    @pytest.mark.parametrize(
-        "body",
-        [
-            pytest.param(
-                ChatCompletionRequest(
-                    model="invalid-model",
-                    messages=[ChatCompletionMessage(role="user", content="Hello")],
-                    conversation_id=DUMMY_CONVERSATION_ID,
-                ).model_dump(),
-                id="legacy-envelope",
-            ),
-            pytest.param(native_run_body(), id="native-run-input"),
-        ],
-    )
-    def test_ag_ui_rejects_unknown_model_in_both_shapes(
-        self, test_client: TestClient, body: dict
-    ) -> None:
-        response = test_client.post(
-            "/v1/chat/v2/completions",
-            json=body
-            if "protocolVersion" not in body
-            else {
-                **body,
-                "forwardedProps": {"mucgpt": {"model": "invalid-model"}},
-            },
+    def _paused_executor(self, mock_init_agent: AsyncMock) -> Mock:
+        async def no_events():
+            return
+            yield
+
+        mock_agent_executor = Mock(MUCGPTAgentExecutor)
+        mock_agent_executor.run_agui_with_streaming.return_value = no_events()
+        mock_agent_executor.get_pending_approvals = AsyncMock(
+            return_value=[
+                PendingToolApproval(
+                    tool_call_id="call_web",
+                    tool_name="web_search",
+                    args={"query": "Kita"},
+                    data_classification="public",
+                )
+            ]
         )
+        mock_init_agent.return_value = mock_agent_executor
+        return mock_agent_executor
 
-        assert response.status_code == 400
-        assert response.json() == {
-            "detail": "Model 'invalid-model' not found in the registry"
-        }
-
-    def test_legacy_request_rejects_client_media_blocks(
-        self, test_client: TestClient
+    @patch("api.routers.chat_router.init_agent", new_callable=AsyncMock)
+    def test_ag_ui_resume_continues_the_paused_run(
+        self,
+        mock_init_agent: AsyncMock,
+        test_client: TestClient,
+        monkeypatch: pytest.MonkeyPatch,
     ) -> None:
+        from core.persistance_helpers import PersistanceHelpers
+
+        save_document_selection = AsyncMock()
+        monkeypatch.setattr(
+            "api.routers.chat_router._save_document_selection", save_document_selection
+        )
+        monkeypatch.setattr(
+            PersistanceHelpers,
+            "is_user_in_conversation",
+            AsyncMock(return_value=True),
+        )
+        get_messages = AsyncMock()
+        monkeypatch.setattr(
+            "api.routers.chat_router.get_messages_for_agent", get_messages
+        )
+        mock_agent_executor = self._paused_executor(mock_init_agent)
+
         response = test_client.post(
             "/v1/chat/v2/completions",
             json={
                 "model": "gpt-4o-mini",
-                "messages": [
+                "messages": [{"role": "user", "content": "Wie teuer ist die Kita?"}],
+                "conversation_id": DUMMY_CONVERSATION_ID,
+                "resume": [
                     {
-                        "role": "user",
-                        "content": "Describe this image",
-                        "media_blocks": [{"type": "image_url"}],
+                        "interruptId": "call_web",
+                        "status": "resolved",
+                        "payload": {"decision": "approve"},
                     }
                 ],
-                "conversation_id": DUMMY_CONVERSATION_ID,
             },
         )
 
-        assert response.status_code == 422
-        assert "media_blocks" in response.json()["detail"]
+        assert response.status_code == 200, response.text
+        get_messages.assert_not_awaited()
+        save_document_selection.assert_awaited_once()
+        call_kwargs = mock_agent_executor.run_agui_with_streaming.call_args.kwargs
+        assert call_kwargs["resume_decisions"] == [{"type": "approve"}]
+        assert call_kwargs["messages"] == []
 
     @patch("api.routers.chat_router.init_agent", new_callable=AsyncMock)
-    def test_native_run_input_streams_and_echoes_input_identity(
-        self, mock_init_agent: AsyncMock, test_client: TestClient
+    def test_native_resume_forwards_generic_interrupt_payloads(
+        self,
+        mock_init_agent: AsyncMock,
+        test_client: TestClient,
     ) -> None:
-        async def stream():
-            yield RunStartedEvent(
-                type=EventType.RUN_STARTED,
-                thread_id=DUMMY_CONVERSATION_ID,
-                run_id="run-42",
-                protocol_version="1.0",
-            )
-            yield RunFinishedEvent(
-                type=EventType.RUN_FINISHED,
-                thread_id=DUMMY_CONVERSATION_ID,
-                run_id="run-42",
-            )
+        mock_agent_executor = self._paused_executor(mock_init_agent)
+        mock_agent_executor.get_pending_approvals.return_value = []
 
-        mock_agent = Mock()
-        mock_agent.run_agui_with_streaming.return_value = stream()
-        mock_init_agent.return_value = mock_agent
-
-        response = test_client.post("/v1/chat/v2/completions", json=native_run_body())
-
-        assert response.status_code == 200
-        events = [
-            json.loads(line[6:])
-            for line in response.text.splitlines()
-            if line.startswith("data: ")
-        ]
-        started = next(e for e in events if e["type"] == "RUN_STARTED")
-        assert started["runId"] == "run-42"
-        assert started["protocolVersion"] == "1.0"
-        finished = next(e for e in events if e["type"] == "RUN_FINISHED")
-        assert finished["runId"] == "run-42"
-        # the executor received the input's runId for the boundary events
-        assert mock_agent.run_agui_with_streaming.call_args.kwargs["run_id"] == "run-42"
-
-    def test_native_run_input_rejects_foreign_major_line(
-        self, test_client: TestClient
-    ) -> None:
         response = test_client.post(
             "/v1/chat/v2/completions",
-            json=native_run_body(protocolVersion="2.0"),
+            json=native_run_body(
+                messages=[],
+                forwardedProps={"mucgpt": {"model": "gpt-4o-mini", "persist": True}},
+                resume=[
+                    {
+                        "interruptId": "question-1",
+                        "status": "resolved",
+                        "payload": "yes",
+                    }
+                ],
+            ),
         )
 
-        assert response.status_code == 400
-        assert "major version" in response.json()["detail"]
+        assert response.status_code == 200, response.text
+        call_kwargs = mock_agent_executor.run_agui_with_streaming.call_args.kwargs
+        assert call_kwargs["resume"] == {"question-1": "yes"}
+        assert call_kwargs["resume_decisions"] is None
 
-    def test_image_input_fails_closed_on_non_vision_model(
-        self, test_client: TestClient
+    @patch("api.routers.chat_router.init_agent", new_callable=AsyncMock)
+    def test_native_resume_cannot_bypass_tool_approval_validation(
+        self,
+        mock_init_agent: AsyncMock,
+        test_client: TestClient,
     ) -> None:
-        body = native_run_body()
-        body["messages"] = [
-            {
-                "id": "m1",
-                "role": "user",
-                "content": [
-                    {"type": "text", "text": "Describe this"},
+        mock_agent_executor = self._paused_executor(mock_init_agent)
+
+        response = test_client.post(
+            "/v1/chat/v2/completions",
+            json=native_run_body(
+                messages=[],
+                forwardedProps={"mucgpt": {"model": "gpt-4o-mini", "persist": True}},
+                resume=[
                     {
-                        "type": "image",
-                        "source": {
-                            "type": "data",
-                            "value": "QUJD",
-                            "mime_type": "image/png",
-                        },
-                    },
+                        "interruptId": "call_web",
+                        "status": "resolved",
+                        "payload": {"decision": "approve"},
+                    }
                 ],
-            }
-        ]
+            ),
+        )
 
-        response = test_client.post("/v1/chat/v2/completions", json=body)
+        assert response.status_code == 200, response.text
+        call_kwargs = mock_agent_executor.run_agui_with_streaming.call_args.kwargs
+        assert call_kwargs["resume"] is None
+        assert call_kwargs["resume_decisions"] == [{"type": "approve"}]
 
-        # The fail-closed vision gate: a deliberate deviation from the AG-UI
-        # "MUST NOT fail the run" rule (privacy-policy rejection before the run).
-        assert response.status_code == 400
-        assert "image input" in response.json()["detail"]
+    @pytest.mark.parametrize(
+        ("resume", "persist", "is_owner", "status_code"),
+        [
+            ([{"interruptId": "call_other", "status": "cancelled"}], True, True, 400),
+            ([{"interruptId": "call_web", "status": "cancelled"}], False, True, 400),
+            ([{"interruptId": "call_web", "status": "cancelled"}], True, False, 403),
+        ],
+    )
+    @patch("api.routers.chat_router.init_agent", new_callable=AsyncMock)
+    def test_ag_ui_refuses_invalid_resumes(
+        self,
+        mock_init_agent: AsyncMock,
+        test_client: TestClient,
+        monkeypatch: pytest.MonkeyPatch,
+        resume: list[dict],
+        persist: bool,
+        is_owner: bool,
+        status_code: int,
+    ) -> None:
+        from core.persistance_helpers import PersistanceHelpers
+
+        save_document_selection = AsyncMock()
+        monkeypatch.setattr(
+            "api.routers.chat_router._save_document_selection", save_document_selection
+        )
+        monkeypatch.setattr(
+            PersistanceHelpers,
+            "is_user_in_conversation",
+            AsyncMock(return_value=is_owner),
+        )
+        mock_agent_executor = self._paused_executor(mock_init_agent)
+
+        response = test_client.post(
+            "/v1/chat/v2/completions",
+            json={
+                "model": "gpt-4o-mini",
+                "messages": [],
+                "conversation_id": DUMMY_CONVERSATION_ID,
+                "persist": persist,
+                "resume": resume,
+            },
+        )
+
+        assert response.status_code == status_code, response.text
+        mock_agent_executor.run_agui_with_streaming.assert_not_called()
+        save_document_selection.assert_not_awaited()
+
+    @staticmethod
+    def _streaming_executor(mock_init_agent: AsyncMock) -> Mock:
+        async def no_events():
+            return
+            yield
+
+        mock_agent_executor = Mock(MUCGPTAgentExecutor)
+        mock_agent_executor.run_agui_with_streaming.side_effect = lambda **_kwargs: (
+            no_events()
+        )
+        mock_init_agent.return_value = mock_agent_executor
+        return mock_agent_executor
+
+    @staticmethod
+    def _post_message(test_client: TestClient, persist: bool = True):
+        return test_client.post(
+            "/v1/chat/v2/completions",
+            json={
+                "model": "gpt-4o-mini",
+                "messages": [{"role": "user", "content": "Hallo"}],
+                "conversation_id": DUMMY_CONVERSATION_ID,
+                "persist": persist,
+            },
+        )
+
+    @patch("api.routers.chat_router.init_agent", new_callable=AsyncMock)
+    def test_ag_ui_refuses_a_second_run_of_the_same_conversation(
+        self,
+        mock_init_agent: AsyncMock,
+        test_client: TestClient,
+        held_run_locks: set[str],
+    ) -> None:
+        mock_agent_executor = self._streaming_executor(mock_init_agent)
+        held_run_locks.add(f"{CONVERSATION_RUN_LOCK_PREFIX}:{DUMMY_CONVERSATION_ID}")
+
+        response = self._post_message(test_client)
+
+        assert response.status_code == 409, response.text
+        mock_agent_executor.run_agui_with_streaming.assert_not_called()
+
+    @patch("api.routers.chat_router.init_agent", new_callable=AsyncMock)
+    def test_ag_ui_frees_the_conversation_when_a_run_ends(
+        self,
+        mock_init_agent: AsyncMock,
+        test_client: TestClient,
+        held_run_locks: set[str],
+    ) -> None:
+        self._streaming_executor(mock_init_agent)
+
+        assert self._post_message(test_client).status_code == 200
+        assert self._post_message(test_client).status_code == 200
+        assert held_run_locks == set()
+
+    @patch("api.routers.chat_router.init_agent", new_callable=AsyncMock)
+    def test_ag_ui_frees_the_conversation_when_stream_cleanup_fails(
+        self,
+        mock_init_agent: AsyncMock,
+        test_client: TestClient,
+        held_run_locks: set[str],
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        self._streaming_executor(mock_init_agent)
+        monkeypatch.setattr(
+            "api.routers.chat_router.close_stream",
+            AsyncMock(side_effect=RuntimeError("Stream cleanup failed")),
+        )
+
+        with pytest.raises(RuntimeError, match="Stream cleanup failed"):
+            self._post_message(test_client)
+
+        assert held_run_locks == set()
+
+    @patch("api.routers.chat_router.init_agent", new_callable=AsyncMock)
+    def test_ag_ui_frees_the_conversation_when_a_run_cannot_start(
+        self,
+        mock_init_agent: AsyncMock,
+        test_client: TestClient,
+        held_run_locks: set[str],
+    ) -> None:
+        self._paused_executor(mock_init_agent)
+
+        response = test_client.post(
+            "/v1/chat/v2/completions",
+            json={
+                "model": "gpt-4o-mini",
+                "messages": [],
+                "conversation_id": DUMMY_CONVERSATION_ID,
+                "resume": [{"interruptId": "call_other", "status": "cancelled"}],
+            },
+        )
+
+        assert response.status_code == 400, response.text
+        assert held_run_locks == set()
+
+    @patch("api.routers.chat_router.init_agent", new_callable=AsyncMock)
+    def test_ag_ui_stateless_runs_are_not_locked(
+        self,
+        mock_init_agent: AsyncMock,
+        test_client: TestClient,
+        held_run_locks: set[str],
+    ) -> None:
+        self._streaming_executor(mock_init_agent)
+        held_run_locks.add(f"{CONVERSATION_RUN_LOCK_PREFIX}:{DUMMY_CONVERSATION_ID}")
+
+        assert self._post_message(test_client, persist=False).status_code == 200

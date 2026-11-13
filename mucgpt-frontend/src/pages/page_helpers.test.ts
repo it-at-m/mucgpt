@@ -17,6 +17,8 @@ vi.mock("../api/core-client", () => ({
         mucgpt: { language: request.language }
     })),
     MucgptAgUiAgent: class {
+        pendingInterrupts = [];
+
         subscribe() {
             return { unsubscribe: vi.fn() };
         }

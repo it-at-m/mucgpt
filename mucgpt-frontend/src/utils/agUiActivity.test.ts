@@ -1,6 +1,7 @@
 import { EventType, type BaseEvent } from "@ag-ui/core";
 import { describe, expect, it } from "vitest";
 import {
+    applyToolDecisions,
     getLiveStatus,
     getLiveStatusKey,
     getRunningStep,
@@ -197,5 +198,37 @@ describe("getLiveStatus", () => {
         const before = getLiveStatusKey(getLiveStatus(activity([step({})]), 400, visible));
         const after = getLiveStatusKey(getLiveStatus(activity([step({ description: "Suche" })]), 400, visible));
         expect(before).not.toBe(after);
+    });
+});
+
+describe("tool approval", () => {
+    const interrupted = {
+        type: EventType.RUN_FINISHED,
+        threadId: "t",
+        runId: "r",
+        outcome: { type: "interrupt", interrupts: [{ id: "c1", reason: "tool_approval", toolCallId: "c1" }] }
+    } as BaseEvent;
+    const paused = replay([runStarted, toolStart("c1", "InternetSearch"), toolArgs("c1", '{"query":"Kita"}'), interrupted]);
+
+    it("does not report a paused tool call as done", () => {
+        expect(paused.steps[0]).toMatchObject({ status: "awaiting_approval", detail: "Kita" });
+        expect(paused.steps[0].endedAt).toBeUndefined();
+    });
+
+    it("keeps the steps when the run resumes", () => {
+        const resumed = applyToolDecisions(paused, { c1: "approve" }, 50);
+        expect(reduceRunActivity(resumed, runStarted, 60)).toBe(resumed);
+    });
+
+    it("lets an approved call finish in the resumed run", () => {
+        const resumed = applyToolDecisions(paused, { c1: "approve" }, 50);
+        expect(resumed.steps[0]).toMatchObject({ status: "running", startedAt: 50 });
+        expect(reduceRunActivity(resumed, toolResult("c1"), 60).steps[0]).toMatchObject({ status: "done", endedAt: 60 });
+    });
+
+    it("keeps a rejected call rejected, even if a result follows", () => {
+        const resumed = applyToolDecisions(paused, { c1: "reject" }, 50);
+        expect(resumed.steps[0]).toMatchObject({ status: "rejected", startedAt: 50, endedAt: 50 });
+        expect(reduceRunActivity(resumed, toolResult("c1"), 60).steps[0].status).toBe("rejected");
     });
 });

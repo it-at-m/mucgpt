@@ -427,12 +427,18 @@ class SSOConfig(BaseModel):
     organization_unit_claim: str = "organization_unit"
 
 
+DataClassification = Literal["public", "internal", "confidential"]
+DEFAULT_DATA_CLASSIFICATION: DataClassification = "public"
+
+
 class MCPToolOverride(BaseModel):
     """Configuration for overriding an individual MCP tool's metadata."""
 
     name: str
     description: str | None = None
     group: str | None = None
+    require_approval: bool | None = None
+    data_classification: DataClassification | None = None
 
     @field_validator("group")
     @staticmethod
@@ -454,6 +460,8 @@ class MCPSourceConfig(BaseModel):
     forward_auth_override: SecretStr | None = None
     headers: dict[str, SecretStr] | None = None
     group: str | None = None
+    require_approval: bool = False
+    data_classification: DataClassification = DEFAULT_DATA_CLASSIFICATION
     overrides: list[MCPToolOverride] | None = None
 
     @field_validator("forward_auth_override", mode="before")

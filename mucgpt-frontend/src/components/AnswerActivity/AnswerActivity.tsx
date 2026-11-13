@@ -1,5 +1,5 @@
 import { Accordion, AccordionHeader, AccordionItem, AccordionPanel, Caption1 } from "@fluentui/react-components";
-import { CheckmarkCircle16Regular, ErrorCircle16Regular } from "@fluentui/react-icons";
+import { CheckmarkCircle16Regular, DismissCircle16Regular, ErrorCircle16Regular } from "@fluentui/react-icons";
 import { useTranslation } from "react-i18next";
 
 import styles from "./AnswerActivity.module.css";
@@ -24,15 +24,17 @@ export const AnswerActivity = ({ steps: allSteps }: Props) => {
     const isVisibleTool = useIsVisibleTool();
 
     // Internal agent tools (planning, scratch files) are left out entirely.
-    const steps = allSteps.filter(step => isVisibleTool(step.toolName));
+    const steps = allSteps.filter(step => isVisibleTool(step.toolName) && step.status !== "awaiting_approval");
     if (steps.length === 0) return null;
 
     const runningStep = steps.findLast(step => step.status === "running");
     const failedCount = steps.filter(step => step.status === "error").length;
+    const rejectedCount = steps.filter(step => step.status === "rejected").length;
     const duration = getStepsDurationSeconds(steps);
     const summary = [
         t("chat.activity_steps", { count: steps.length }),
         failedCount > 0 ? t("chat.activity_failed_count", { count: failedCount }) : undefined,
+        rejectedCount > 0 ? t("chat.activity_rejected_count", { count: rejectedCount }) : undefined,
         duration ? t("chat.activity_duration", { seconds: duration }) : undefined
     ]
         .filter(Boolean)
@@ -51,7 +53,7 @@ export const AnswerActivity = ({ steps: allSteps }: Props) => {
                     ) : (
                         <span className={styles.line}>
                             <span className={failedCount > 0 ? styles.errorIcon : styles.icon} aria-hidden="true">
-                                {failedCount > 0 ? <ErrorCircle16Regular /> : <CheckmarkCircle16Regular />}
+                                {failedCount > 0 ? <ErrorCircle16Regular /> : rejectedCount > 0 ? <DismissCircle16Regular /> : <CheckmarkCircle16Regular />}
                             </span>
                             <Caption1 className={styles.label}>{summary}</Caption1>
                         </span>
@@ -63,7 +65,13 @@ export const AnswerActivity = ({ steps: allSteps }: Props) => {
                             <li key={step.toolCallId} className={styles.step}>
                                 <span className={styles.rail} aria-hidden="true">
                                     <span className={step.status === "error" ? styles.errorIcon : styles.icon}>
-                                        {step.status === "error" ? <ErrorCircle16Regular /> : getToolIcon(step.toolName)}
+                                        {step.status === "error" ? (
+                                            <ErrorCircle16Regular />
+                                        ) : step.status === "rejected" ? (
+                                            <DismissCircle16Regular />
+                                        ) : (
+                                            getToolIcon(step.toolName)
+                                        )}
                                     </span>
                                     <span className={styles.connector} />
                                 </span>
@@ -72,6 +80,7 @@ export const AnswerActivity = ({ steps: allSteps }: Props) => {
                                         {step.description ?? getToolDisplayName(step.toolName)}
                                     </span>
                                     {step.status === "error" && ` – ${t("chat.activity_step_failed")}`}
+                                    {step.status === "rejected" && ` – ${t("chat.activity_step_rejected")}`}
                                 </Caption1>
                                 {step.detail && <Caption1 className={styles.detail}>{step.detail}</Caption1>}
                             </li>

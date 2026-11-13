@@ -1,5 +1,6 @@
 import asyncio
 from collections.abc import AsyncGenerator
+from contextlib import suppress
 from typing import Annotated
 
 from ag_ui.encoder import EventEncoder
@@ -7,7 +8,10 @@ from fastapi import APIRouter, Depends, HTTPException, Request, Response
 from fastapi.responses import StreamingResponse
 from langfuse import get_client, propagate_attributes
 from pydantic import ValidationError
+from redis.asyncio.lock import Lock
+from redis.exceptions import LockError
 
+from agent.agent_executor import build_resume_decisions
 from api.ag_ui_input import (
     ParsedChatRequest,
     bind_media_parts,
@@ -26,11 +30,13 @@ from api.api_models import (
     ConversationMessage,
     ConversationMetadata,
     ConversationRenameRequest,
+    ToolApprovalResumeEntry,
 )
 from config.model_provider import ModelRegistry, ModelsConfigurationException
 from config.settings import get_settings
 from core.auth import authenticate_user
 from core.auth_models import AuthenticationResult
+from core.cache import RedisCache
 from core.llm_helpers import hash_user_id
 from core.logtools import getLogger
 from core.persistance_helpers import PersistanceHelpers
@@ -44,6 +50,9 @@ logger = getLogger()
 router = APIRouter(prefix="/v1")
 
 CANVAS_REVISIONS_MAX_BYTES = 512 * 1024
+CONVERSATION_RUN_LOCK_PREFIX = "conversation_run_lock"
+CONVERSATION_RUN_LOCK_TIMEOUT_SECONDS = 15 * 60
+CONVERSATION_RUN_LOCK_WAIT_SECONDS = 2
 
 
 def get_temperature_from_request(request: ChatCompletionRequest) -> float:
@@ -398,9 +407,16 @@ async def ag_ui_chat_endpoint(
     chat_request = parsed.request
     if not chat_request.conversation_id:
         raise HTTPException(status_code=400, detail="conversation_id is required")
-    if not chat_request.messages:
+    approval_answers = parsed.resume_entries or chat_request.resume or []
+    is_resume = bool(parsed.native_resume_entries or approval_answers)
+    if is_resume and not chat_request.persist:
+        raise HTTPException(
+            status_code=400,
+            detail="Only persisted conversations can continue a paused run",
+        )
+    if not is_resume and not chat_request.messages:
         raise HTTPException(status_code=400, detail="messages must not be empty")
-    if not chat_request.messages[-1].role == "user":
+    if not is_resume and not chat_request.messages[-1].role == "user":
         raise HTTPException(
             status_code=400, detail="Last message must be from the user (role='user')"
         )
@@ -414,53 +430,105 @@ async def ag_ui_chat_endpoint(
             status_code = 500
         raise HTTPException(status_code=status_code, detail=detail) from exc
 
-    # Fail-closed vision gate, right after the model-capability gate and before
-    # any persistence side effect: deliberate deviation from the AG-UI "skip
-    # unusable parts" rule (see api.ag_ui_input module docstring).
-    bind_media_parts(
-        chat_request,
-        parsed.pending_media,
-        supports_vision_for_model(chat_request.model),
+    run_lock = (
+        await _lock_conversation_run(chat_request.conversation_id)
+        if chat_request.persist
+        else None
     )
+    try:
+        # Fail-closed vision gate, right after the model-capability gate and before
+        # any persistence side effect: deliberate deviation from the AG-UI "skip
+        # unusable parts" rule (see api.ag_ui_input module docstring).
+        bind_media_parts(
+            chat_request,
+            parsed.pending_media,
+            supports_vision_for_model(chat_request.model),
+        )
 
-    document_selection = await get_documents_for_agent(chat_request, user_info)
-    messages_for_agent = await get_messages_for_agent(chat_request, user_info.user_id)
+        document_selection = await get_documents_for_agent(chat_request, user_info)
+        if is_resume:
+            if not await PersistanceHelpers.is_user_in_conversation(
+                user_info.user_id, chat_request.conversation_id
+            ):
+                raise HTTPException(
+                    status_code=403, detail="Conversation access denied"
+                )
+            messages_for_agent = []
+        else:
+            messages_for_agent = await get_messages_for_agent(
+                chat_request, user_info.user_id
+            )
 
+        agent = await init_agent(
+            user_info=user_info,
+            model_name=chat_request.model,
+            persist=chat_request.persist,
+            document_selection=document_selection,
+        )
+        resume_decisions = None
+        generic_resume = None
+        if is_resume:
+            try:
+                pending_approvals = await agent.get_pending_approvals(
+                    chat_request.conversation_id
+                )
+                if parsed.native_resume_entries and not pending_approvals:
+                    generic_resume = parsed.native_resume_payloads
+                else:
+                    if parsed.native_resume_entries:
+                        approval_answers = [
+                            ToolApprovalResumeEntry.model_validate(
+                                entry.model_dump(by_alias=True)
+                            )
+                            for entry in parsed.native_resume_entries
+                        ]
+                    resume_decisions = build_resume_decisions(
+                        pending_approvals,
+                        approval_answers,
+                    )
+            except (ValidationError, ValueError) as exc:
+                raise HTTPException(status_code=400, detail=str(exc)) from exc
+        await _save_document_selection(
+            chat_request,
+            user_info.user_id,
+            [document.id for document in document_selection],
+            {document.id: document.filename for document in document_selection},
+        )
+        events = agent.run_agui_with_streaming(
+            messages=messages_for_agent,
+            temperature=get_temperature_from_request(chat_request),
+            model=chat_request.model,
+            user_info=user_info,
+            conversation_id=chat_request.conversation_id,
+            enabled_tools=chat_request.enabled_tools or [],
+            assistant_id=chat_request.assistant_id,
+            data_sources=(
+                [source.model_dump() for source in chat_request.data_sources]
+                if chat_request.data_sources
+                else None
+            ),
+            canvas=chat_request.canvas,
+            reasoning_effort=chat_request.reasoning_effort,
+            run_id=parsed.run_id,
+            language=chat_request.language,
+            resume=generic_resume,
+            resume_decisions=resume_decisions,
+        )
+    except BaseException:
+        await _unlock_conversation_run(run_lock)
+        raise
     encoder = EventEncoder(accept=request.headers.get("accept"))
-    agent = await init_agent(
-        user_info=user_info,
-        model_name=chat_request.model,
-        persist=chat_request.persist,
-        document_selection=document_selection,
-    )
-    await _save_document_selection(
-        chat_request,
-        user_info.user_id,
-        [document.id for document in document_selection],
-        {document.id: document.filename for document in document_selection},
-    )
-    events = agent.run_agui_with_streaming(
-        messages=messages_for_agent,
-        temperature=get_temperature_from_request(chat_request),
-        model=chat_request.model,
-        user_info=user_info,
-        conversation_id=chat_request.conversation_id,
-        enabled_tools=chat_request.enabled_tools or [],
-        assistant_id=chat_request.assistant_id,
-        data_sources=(
-            [source.model_dump() for source in chat_request.data_sources]
-            if chat_request.data_sources
-            else None
-        ),
-        canvas=chat_request.canvas,
-        reasoning_effort=chat_request.reasoning_effort,
-        run_id=parsed.run_id,
-        language=chat_request.language,
-        resume=parsed.resume_payloads,
-    )
 
     async def event_generator() -> AsyncGenerator[str]:
         """Encode AG-UI events and close their source on completion or cancellation."""
+        lock_renewal_stop = asyncio.Event()
+        lock_renewal = (
+            asyncio.create_task(
+                _renew_conversation_run_lock(run_lock, lock_renewal_stop)
+            )
+            if run_lock is not None
+            else None
+        )
         langfuse = get_client()
         tags = (
             [f"assistant-{chat_request.assistant_id}"]
@@ -472,7 +540,9 @@ async def ag_ui_chat_endpoint(
             with langfuse.start_as_current_observation(
                 name="Agent",
                 as_type="agent",
-                input=messages_for_agent[-1].content,
+                input=messages_for_agent[-1].content
+                if messages_for_agent
+                else approval_answers,
                 trace_context={"trace_id": trace_id},
             ):
                 with propagate_attributes(
@@ -484,11 +554,61 @@ async def ag_ui_chat_endpoint(
                     async for event in events:
                         yield encoder.encode(event)
         finally:
-            await close_stream(events)
+            lock_renewal_stop.set()
+            if lock_renewal is not None:
+                lock_renewal.cancel()
+                with suppress(asyncio.CancelledError):
+                    await lock_renewal
+            try:
+                await close_stream(events)
+            finally:
+                await _unlock_conversation_run(run_lock)
             # The root observation must end before its completed span can be flushed.
             await asyncio.to_thread(langfuse.flush)
 
     return StreamingResponse(event_generator(), media_type=encoder.get_content_type())
+
+
+async def _lock_conversation_run(conversation_id: str) -> Lock:
+    """One run per conversation across all instances; the timeout only frees a crashed run's lock."""
+    redis = await RedisCache.get_redis()
+    lock = redis.lock(
+        f"{CONVERSATION_RUN_LOCK_PREFIX}:{conversation_id}",
+        timeout=CONVERSATION_RUN_LOCK_TIMEOUT_SECONDS,
+        blocking_timeout=CONVERSATION_RUN_LOCK_WAIT_SECONDS,
+    )
+    if not await lock.acquire():
+        raise HTTPException(
+            status_code=409,
+            detail="Another request is still running for this conversation",
+        )
+    return lock
+
+
+async def _unlock_conversation_run(lock: Lock | None) -> None:
+    if lock is None:
+        return
+    try:
+        await lock.release()
+    except LockError:
+        logger.warning("Conversation run lock expired before the run ended")
+
+
+async def _renew_conversation_run_lock(lock: Lock, stop: asyncio.Event) -> None:
+    """Keep a persisted conversation's run lock alive while it streams."""
+    while not stop.is_set():
+        await asyncio.sleep(CONVERSATION_RUN_LOCK_TIMEOUT_SECONDS / 2)
+        if stop.is_set():
+            return
+        try:
+            if not await lock.extend(
+                CONVERSATION_RUN_LOCK_TIMEOUT_SECONDS, replace_ttl=True
+            ):
+                logger.warning("Conversation run lock could not be renewed")
+                return
+        except LockError:
+            logger.warning("Conversation run lock expired before it could be renewed")
+            return
 
 
 async def _parse_chat_request(request: Request) -> ParsedChatRequest:
@@ -511,7 +631,8 @@ async def _parse_chat_request(request: Request) -> ParsedChatRequest:
             request=chat_request,
             pending_media=pending_media,
             run_id=run_input.run_id,
-            resume_payloads=resume_payloads(run_input),
+            native_resume_entries=list(run_input.resume or []),
+            native_resume_payloads=resume_payloads(run_input),
         )
 
     if (
@@ -528,6 +649,10 @@ async def _parse_chat_request(request: Request) -> ParsedChatRequest:
         )
 
     try:
-        return ParsedChatRequest(request=ChatCompletionRequest.model_validate(body))
+        legacy_request = ChatCompletionRequest.model_validate(body)
+        return ParsedChatRequest(
+            request=legacy_request,
+            resume_entries=legacy_request.resume or [],
+        )
     except ValidationError as exc:
         raise HTTPException(status_code=422, detail=f"Invalid request: {exc}") from exc

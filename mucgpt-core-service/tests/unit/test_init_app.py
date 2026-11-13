@@ -3,6 +3,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from deepagents.backends.utils import create_file_data
 from langchain_core.language_models.fake_chat_models import FakeListChatModel
+from langchain_core.tools import tool
 from langgraph.checkpoint.memory import InMemorySaver
 from langgraph.store.memory import InMemoryStore
 
@@ -10,6 +11,7 @@ import init_app
 from agent import deep_agent
 from agent.agent_executor import MUCGPTAgentExecutor
 from agent.deep_agent import MUCGPTAgent
+from agent.tools.approval import approval_metadata
 from agent.tools.tools import ToolCollection
 from core.auth_models import AuthenticationResult
 from core.document_service import SelectedDocument
@@ -151,6 +153,54 @@ class TestInitApp:
         # Act & Assert
         with pytest.raises(ValueError, match="Temperature must be between 0 and 1"):
             ModelOptions(temperature=-0.1)
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    ("persist", "keeps_approval_tool"), [(True, True), (False, False)]
+)
+@patch("config.model_provider.ModelRegistry.get_model")
+@patch("agent.tools.tools.ToolCollection.get_tools", new_callable=AsyncMock)
+async def test_init_agent_only_keeps_approval_tools_when_a_run_can_pause(
+    mock_get_tools,
+    mock_get_model,
+    monkeypatch: pytest.MonkeyPatch,
+    persist: bool,
+    keeps_approval_tool: bool,
+):
+    """Without a way to pause and continue, a call that needs approval must not be possible."""
+
+    @tool
+    def web_search(query: str) -> str:
+        """Search the web."""
+        return query
+
+    @tool
+    def simplify(text: str) -> str:
+        """Simplify a text."""
+        return text
+
+    web_search.metadata = approval_metadata(True, "public")
+    mock_get_model.return_value = FakeListChatModel(responses=["response"])
+    mock_get_tools.return_value = [web_search, simplify]
+    monkeypatch.setattr(
+        "agent.deep_agent.PromptPool.get_resolved_prompt",
+        lambda _name, _folder=None: ResolvedPrompt(content="default instruction"),
+    )
+    monkeypatch.setattr(
+        PersistanceHelpers, "get_checkpointer_if_ready", lambda: InMemorySaver()
+    )
+    monkeypatch.setattr(init_app.FileStoreManager, "get_store", InMemoryStore)
+
+    result = await init_agent(
+        AuthenticationResult(token="token", user_id="user", department="dep"),
+        persist=persist,
+    )
+
+    tool_names = [t.name for t in result.agent.graph.tools]
+    assert "simplify" in tool_names
+    assert ("web_search" in tool_names) is keeps_approval_tool
+    assert ("web_search" in result.agent.graph.approval_tools) is keeps_approval_tool
 
 
 @pytest.mark.asyncio

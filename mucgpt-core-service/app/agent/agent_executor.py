@@ -48,7 +48,7 @@ from langfuse.langchain import CallbackHandler
 from langgraph.types import Command
 from pydantic import ValidationError
 
-from agent.deep_agent import MUCGPTAgent
+from agent.deep_agent import MUCGPTAgent, PendingToolApproval
 from agent.middleware import TokenUsage
 from agent.tools.canvas import CANVAS_STREAM_NAME
 from agent.tools.tool_chunk import ToolStreamChunk
@@ -60,6 +60,7 @@ from api.api_models import (
     ChatCompletionDelta,
     ChatCompletionMessage,
     ChatCompletionResponse,
+    ToolApprovalResumeEntry,
     Usage,
 )
 from api.api_models import ChatCompletionMessage as InputMessage
@@ -161,6 +162,7 @@ async def _interrupt_finish_events(
     interrupts: tuple[Any, ...],
     token_usage: Any,
     model: str | None,
+    outcome: RunFinishedInterruptOutcome | None = None,
 ) -> AsyncGenerator[BaseEvent]:
     """Snapshot the interrupted state and finish the run with an interrupt outcome.
 
@@ -183,7 +185,8 @@ async def _interrupt_finish_events(
         type=EventType.RUN_FINISHED,
         thread_id=conversation_id,
         run_id=run_id,
-        outcome=RunFinishedInterruptOutcome(
+        outcome=outcome
+        or RunFinishedInterruptOutcome(
             type="interrupt", interrupts=_interrupt_outcomes(interrupts)
         ),
         usage=_ag_ui_usage_from_token_usage(token_usage, model),
@@ -319,6 +322,47 @@ def toolchunk_to_chatcompletionchunk(
         choices=[choice],
         usage=None,
     )
+
+
+TOOL_APPROVAL_REASON = "tool_approval"
+
+
+def _interrupt_outcome(
+    pending: list[PendingToolApproval],
+) -> RunFinishedInterruptOutcome:
+    return RunFinishedInterruptOutcome(
+        type="interrupt",
+        interrupts=[
+            AgUiInterrupt(
+                id=approval.tool_call_id,
+                reason=TOOL_APPROVAL_REASON,
+                tool_call_id=approval.tool_call_id,
+                metadata={
+                    "mucgpt": {
+                        "toolName": approval.tool_name,
+                        "args": approval.args,
+                        "dataClassification": approval.data_classification,
+                    }
+                },
+            )
+            for approval in pending
+        ],
+    )
+
+
+def build_resume_decisions(
+    pending: list[PendingToolApproval], answers: list[ToolApprovalResumeEntry]
+) -> list[dict[str, str]]:
+    by_id = {answer.interrupt_id: answer for answer in answers}
+    pending_ids = {approval.tool_call_id for approval in pending}
+    if not pending:
+        raise ValueError("This conversation has no paused run to continue")
+    if len(by_id) != len(answers) or set(by_id) != pending_ids:
+        raise ValueError("Answer every paused tool call exactly once")
+    return [
+        {"type": "approve" if by_id[approval.tool_call_id].is_approved else "reject"}
+        for approval in pending
+    ]
 
 
 class MUCGPTAgentExecutor:
@@ -700,6 +744,13 @@ class MUCGPTAgentExecutor:
                     error=error_payload,
                 )
 
+    async def get_pending_approvals(
+        self, conversation_id: str
+    ) -> list[PendingToolApproval]:
+        return await self.agent.graph.get_pending_approvals(
+            RunnableConfig(configurable={"thread_id": conversation_id})
+        )
+
     ###############################################################################
     ###############################################################################
     async def run_agui_with_streaming(
@@ -714,17 +765,19 @@ class MUCGPTAgentExecutor:
         data_sources: list[dict[str, Any]] | None = None,
         canvas: CanvasState | None = None,
         reasoning_effort: str | None = None,
+        resume: dict[str, Any] | None = None,
+        resume_decisions: list[dict[str, str]] | None = None,
         run_id: str | None = None,
         language: str | None = None,
-        resume: dict[str, Any] | None = None,
     ) -> AsyncGenerator[BaseEvent]:
         """Run the agent and stream the result as AG-UI protocol events.
 
         ``run_id``: for native AG-UI requests, the input's ``runId`` echoed on
         the boundary events (spec identity contract); a fresh UUID otherwise.
         ``language``: the user's interface language for the deliberate-default
-        response-language instruction. ``resume``: AG-UI ``resume[]`` mapped by
-        interrupt id (interrupt/resume groundwork, see #1093/#1085).
+        response-language instruction. ``resume`` is the generic AG-UI
+        interrupt response map; ``resume_decisions`` is MUCGPT's validated
+        approval decision payload.
         """
         run_id = run_id or uuid.uuid4().hex
         tags = (
@@ -771,9 +824,14 @@ class MUCGPTAgentExecutor:
             )
 
             graph_stream = self.agent.graph.astream(
-                _graph_input(messages, resume),
+                (
+                    Command(resume=resume)
+                    if resume is not None
+                    else {"messages": to_langchain_messages(messages)}
+                ),
                 stream_mode=["messages", "custom", "updates"],
                 config=config,
+                resume_decisions=resume_decisions,
             )
             try:
                 yield RunStartedEvent(
@@ -904,6 +962,14 @@ class MUCGPTAgentExecutor:
                 )
                 token_usage = config["configurable"]["token_usage"]
                 if interrupts:
+                    get_pending_approvals = getattr(
+                        self.agent.graph, "get_pending_approvals", None
+                    )
+                    pending = (
+                        await get_pending_approvals(config)
+                        if get_pending_approvals is not None
+                        else []
+                    )
                     # Spec: a run that ends in an interrupt first emits the
                     # state the consumer needs to resume, then finishes with
                     # an interrupt outcome instead of a success result.
@@ -915,6 +981,7 @@ class MUCGPTAgentExecutor:
                         interrupts,
                         token_usage,
                         model,
+                        _interrupt_outcome(pending) if pending else None,
                     ):
                         yield event
                 else:

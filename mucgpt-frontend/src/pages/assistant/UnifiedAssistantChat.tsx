@@ -43,6 +43,7 @@ import { useMigrateLocalAssistant } from "../../hooks/useMigrateLocalAssistant";
 import { CloseConfirmationDialog } from "../../components/AssistantDialogs/shared/CloseConfirmationDialog";
 import { UploadedData, getSelectedDocumentIds } from "../../components/ContextManagerDialog/ContextManagerDialog";
 import { restoreDocumentSelection } from "../../components/ContextManagerDialog/DocumentLibrary";
+import { useToolApproval } from "../../hooks/useToolApproval";
 import { useToolStatusToasts } from "../../hooks/useToolStatusToasts";
 import { useCanvasController } from "../../hooks/useCanvasController";
 import { CanvasSplitView } from "../../components/Canvas/CanvasSplitView";
@@ -154,6 +155,8 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
     }, [isInfoDrawerOpen]);
 
     useToolStatusToasts(toolStatuses);
+    const toolApproval = useToolApproval();
+    const { requestApproval: requestToolApproval, cancel: cancelToolApproval } = toolApproval;
 
     // StorageServices
     const assistantStorageService: AssistantStorageService = useMemo(() => new AssistantStorageService(ASSISTANT_STORE), []);
@@ -308,6 +311,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
         [t]
     );
     const resetActiveChatState = useCallback(() => {
+        cancelToolApproval();
         setLastQuestionValue("");
         setError(undefined);
         // A new or reset chat must not inherit the previous chat's documents.
@@ -315,7 +319,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
         activeChatRef.current = undefined;
         dispatch({ type: "SET_ACTIVE_CHAT", payload: undefined });
         dispatch({ type: "CLEAR_ANSWERS" });
-    }, [setLastQuestionValue]);
+    }, [setLastQuestionValue, cancelToolApproval]);
 
     // useEffect to load the assistant config and chat history
     const loadDataRunIdRef = useRef(0);
@@ -613,7 +617,8 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                     requestPersist,
                     undefined, // onAgUiEvent — event log is only wired up in the main chat
                     setRunActivity,
-                    canvasWiring
+                    canvasWiring,
+                    requestToolApproval
                 );
             } catch (e) {
                 setError(e);
@@ -637,7 +642,8 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
             isAssistantUnavailable,
             historyReadOnly,
             canvasWiring,
-            uploadedData
+            uploadedData,
+            requestToolApproval
         ]
     );
 
@@ -673,6 +679,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                 showWarning(t("document_library.restore_failed_title"), t("document_library.restore_failed_message"));
             }
 
+            cancelToolApproval();
             setError(undefined);
             dispatch({ type: "SET_ANSWERS", payload: chat.messages });
             setLastQuestionValue(chat.messages.length > 0 ? chat.messages[chat.messages.length - 1].user : "");
@@ -685,7 +692,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
 
             return true;
         },
-        [assistantChatStorage, assistant_id, assistantConfig, scrollToBottom, setLastQuestionValue, showWarning, t]
+        [assistantChatStorage, assistant_id, assistantConfig, scrollToBottom, setLastQuestionValue, showWarning, t, cancelToolApproval]
     );
 
     useEffect(() => {
@@ -927,7 +934,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
     const onRollbackMessage = useCallback(
         /** Rolls the conversation back to before the message at index. */
         async (index: number) => {
-            if (!activeChatRef.current || isLoading) return;
+            if (!activeChatRef.current || isLoading || isLoadingRef.current) return;
             const activeChat = activeChatRef.current;
             setIsLoadingValue(true);
             try {
@@ -1248,6 +1255,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                 onRollbackMessage={historyReadOnly ? undefined : onRollbackMessage}
                 isLoading={isLoading}
                 loadingActivity={runActivity}
+                toolApproval={toolApproval}
                 error={error}
                 makeApiRequest={() => {
                     if (!conversationActions.canRetry || historyReadOnly || isLoadingRef.current) return;
@@ -1274,6 +1282,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
             onRollbackMessage,
             isLoading,
             runActivity,
+            toolApproval,
             isStreaming,
             error,
             callApi,

@@ -31,6 +31,7 @@ from agent.deep_agent import (
     MUCGPTAgent,
     _ConfiguredLangChainDeepAgentGraph,
 )
+from agent.middleware import RequestContext
 from api.api_models import (
     ChatCompletionMessage,
     ChatCompletionRequest,
@@ -453,7 +454,9 @@ class ConversationLifecyclePostgresTests(unittest.IsolatedAsyncioTestCase):
                         lambda data, config: (
                             data["messages"],
                             None,
-                            None,
+                            # astream reads request_context.canvas before the
+                            # graph runs; the wrapper needs a real context.
+                            RequestContext(),
                         ),
                     )
                     executor = MUCGPTAgentExecutor(

@@ -52,7 +52,7 @@ async def test_document_context_reaches_effective_prompt_without_state_changes(
         mime_type="application/pdf",
         original_size=1,
         text_length=50000,
-        preview="Selected preview",
+        preview="Selected preview" + "not included",
         preview_kind="text",
         path="/documents/12345678-1234-4234-8234-123456789abc.txt",
         created_at=datetime.now(UTC),

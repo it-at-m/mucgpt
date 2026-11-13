@@ -572,15 +572,24 @@ class ConversationLifecyclePostgresTests(unittest.IsolatedAsyncioTestCase):
                         ):
                             task = asyncio.create_task(run())
                             await asyncio.wait_for(started.wait(), 10)
-                            await delete_conversation(self.conversation_id, self.owner)
-                            if outcome == "disconnect":
-                                await disconnect.put({"type": "http.disconnect"})
-                            elif outcome == "cancel":
+                            if outcome == "cancel":
                                 task.cancel()
-                            resume.set()
-                            result = await asyncio.wait_for(
-                                asyncio.gather(task, return_exceptions=True), 10
-                            )
+                                result = await asyncio.wait_for(
+                                    asyncio.gather(task, return_exceptions=True), 10
+                                )
+                                await delete_conversation(
+                                    self.conversation_id, self.owner
+                                )
+                            else:
+                                await delete_conversation(
+                                    self.conversation_id, self.owner
+                                )
+                                if outcome == "disconnect":
+                                    await disconnect.put({"type": "http.disconnect"})
+                                resume.set()
+                                result = await asyncio.wait_for(
+                                    asyncio.gather(task, return_exceptions=True), 10
+                                )
                             if outcome == "disconnect":
                                 self.assertIsNone(result[0])
                                 self.assertTrue(disconnected.is_set())

@@ -48,6 +48,31 @@ describe("TRANSCRIPTION_MODELS", () => {
         expect(canary?.languages).toEqual(["en", "de", "fr", "es"]);
     });
 
+    it("parakeet ultra entry ships the Olicorne single-file export without WebGPU restriction", () => {
+        const ultra = TRANSCRIPTION_MODELS.find(m => m.model_id === "Olicorne/parakeet-tdt-0.6b-v3-ultra-onnx");
+        expect(ultra).toBeDefined();
+        expect(ultra?.runtime).toBe("parakeet");
+        expect(ultra?.webgpu_only).toBeUndefined();
+        // languages unset = all 25 supported (incl. de/fr/uk)
+        expect(ultra?.languages).toBeUndefined();
+        expect(ultra?.files?.encoder).toContain("/w4a8/encoder-model.w4a8.onnx");
+        expect(ultra?.files?.decoder).toContain("/int8/decoder_joint-model.int8.onnx");
+        expect(ultra?.files?.vocab).toMatch(/vocab\.txt$/);
+    });
+
+    it("parakeet redux entry ships the mrfakename export with the fast graph-optimization level", () => {
+        const redux = TRANSCRIPTION_MODELS.find(m => m.model_id === "mrfakename/parakeet-redux-ONNX");
+        expect(redux).toBeDefined();
+        expect(redux?.runtime).toBe("parakeet");
+        // spike (issue #1450): the ternary graph runs on ort-web WASM — no webgpu_only
+        expect(redux?.webgpu_only).toBeUndefined();
+        // ort-web's "all" optimizer takes ~15 s on this graph; "basic" is 0.7 s at identical speed
+        expect(redux?.graph_optimization).toBe("basic");
+        expect(redux?.files?.encoder).toContain("/encoder-model.onnx");
+        expect(redux?.files?.decoder).toContain("/decoder_joint-model.int8.onnx");
+        expect(redux?.files?.vocab).toMatch(/vocab\.txt$/);
+    });
+
     it("german-tuned entries avoid fp16 decoder (broken in ort-web) and use single-file dtypes", () => {
         for (const model of TRANSCRIPTION_MODELS) {
             const dtype = model.dtype;

@@ -140,7 +140,7 @@ const CONFIG_RESPONSE: ApplicationConfig = {
     ],
     document_processing_enabled: true,
     transcription_enabled: true,
-    transcription_model: "istupakov/canary-180m-flash-onnx",
+    transcription_model: "Olicorne/parakeet-tdt-0.6b-v3-ultra-onnx",
     ai_act_compliance_check_enabled: true,
     canvas_content_max_chars: 256 * 1024,
     canvas_editor_max_chars: 512 * 1024,

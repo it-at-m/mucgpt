@@ -17,6 +17,8 @@ export interface TranscriptionModel {
     webgpu_only?: boolean;
     /** Override dtype used when loading via @huggingface/transformers pipeline */
     dtype?: Record<string, string> | string;
+    /** Graph optimization level for NeMo ONNX session creation (default "all"). */
+    graph_optimization?: "disabled" | "basic" | "all";
     /** ISO-639-1 language codes this model transcribes well; unset = all supported locales */
     languages?: string[];
     /** Defaults to "transformers" (@huggingface/transformers ASR pipeline). */
@@ -108,6 +110,55 @@ export const TRANSCRIPTION_MODELS: TranscriptionModel[] = [
             encoder: "https://huggingface.co/efederici/parakeet-tdt-0.6b-v3-onnx-int4/resolve/main/encoder-model.int4.onnx",
             decoder: "https://huggingface.co/efederici/parakeet-tdt-0.6b-v3-onnx-int4/resolve/main/decoder_joint-model.int8.onnx",
             vocab: "https://huggingface.co/efederici/parakeet-tdt-0.6b-v3-onnx-int4/resolve/main/vocab.txt"
+        }
+    },
+    // NVIDIA Parakeet Ultra (moondream post-train of Parakeet TDT 0.6B v3, CC-BY-4.0):
+    // same architecture/tokenizer/25 languages but better than v3 on every benchmark
+    // (FLEURS de 3.61 vs 4.13, uk 4.75 vs 5.94) plus punctuation/capitalization output.
+    // Olicorne browser export in the istupakov nemo-conformer-tdt layout, single files
+    // (no external data): w4a8 MatMulNBits encoder (383 MB) + int8 decoder_joint
+    // (decoder int8 = fp32 accuracy on this model) + vocab ≈ 402 MB total, no fp16 →
+    // WASM without shader-f16. Spike-validated (see issue #1450): node + browser WASM
+    // end-to-end, correct transcript with punctuation; single-threaded ort-web WASM
+    // decodes ~RTF 1.0 (11 s jfk.wav, ~394 MB JS heap) — slower than v3 int4 (~0.63)
+    // but still realtime-class; sessions create in ~2.3 s. The export bans <unk>
+    // tokens in the decoder.
+    {
+        model_id: "Olicorne/parakeet-tdt-0.6b-v3-ultra-onnx",
+        label: "NVIDIA Parakeet Ultra",
+        size_hint: "~410 MB",
+        runtime: "parakeet",
+        files: {
+            encoder: "https://huggingface.co/Olicorne/parakeet-tdt-0.6b-v3-ultra-onnx/resolve/main/w4a8/encoder-model.w4a8.onnx",
+            decoder: "https://huggingface.co/Olicorne/parakeet-tdt-0.6b-v3-ultra-onnx/resolve/main/int8/decoder_joint-model.int8.onnx",
+            vocab: "https://huggingface.co/Olicorne/parakeet-tdt-0.6b-v3-ultra-onnx/resolve/main/vocab.txt"
+        }
+    },
+    // NVIDIA Parakeet Redux (moondream's ternary 1.58-bit quantization of
+    // Parakeet TDT 0.6B v3, CC-BY-4.0): same architecture/tokenizer, 25 languages
+    // with automatic language detection. mrfakename/eschmidbauer browser export
+    // (istupakov nemo-conformer-tdt layout, single files): ternary encoder
+    // (344 MB) + int8 decoder_joint (18 MB) + vocab ≈ 365 MB download. Accuracy
+    // vs Parakeet v3 (FLEURS): better multilingual average (10.56 vs 11.62) but
+    // worse German (5.42 vs 4.13), French (7.71 vs 4.81), Ukrainian (7.06 vs
+    // 5.94) and clearly weaker in background noise — positioned as the small
+    // low-end tier. WEBGPU NOTE: the mrfakename model card says the encoder
+    // "runs on WebGPU"; our spike (issue #1450) disproves a hard dependency —
+    // the ternary graph runs end-to-end on ort-web WASM (single-threaded, ~RTF
+    // 1.1, correct transcript) and on onnxruntime-node CPU. WebGPU would likely
+    // be faster where available, but WASM works. graph_optimization "basic" is
+    // required: at "all" ort-web's optimizer takes ~15 s on this graph (0.7 s
+    // at "basic") with identical inference speed.
+    {
+        model_id: "mrfakename/parakeet-redux-ONNX",
+        label: "NVIDIA Parakeet Redux",
+        size_hint: "~365 MB",
+        graph_optimization: "basic",
+        runtime: "parakeet",
+        files: {
+            encoder: "https://huggingface.co/mrfakename/parakeet-redux-ONNX/resolve/main/encoder-model.onnx",
+            decoder: "https://huggingface.co/mrfakename/parakeet-redux-ONNX/resolve/main/decoder_joint-model.int8.onnx",
+            vocab: "https://huggingface.co/mrfakename/parakeet-redux-ONNX/resolve/main/vocab.txt"
         }
     }
 ];

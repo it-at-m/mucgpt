@@ -50,19 +50,23 @@ function toAgUiMessages(request: ChatRequest): Message[] {
  * empty list means "detach all previously selected documents".
  */
 export function mucgptForwardedProps(request: ChatRequest) {
-    return {
-        mucgpt: {
-            model: request.model,
-            creativity: request.creativity,
-            enabled_tools: request.enabled_tools,
-            assistant_id: request.assistant_id,
-            persist: request.persist,
-            data_sources: request.data_sources,
-            canvas: request.canvas,
-            document_ids: request.document_ids,
-            language: request.language
-        }
-    };
+    // AG-UI clones this object before making the HTTP request. Normalize it to
+    // the JSON API contract so transient UI objects cannot make cloning fail.
+    return JSON.parse(
+        JSON.stringify({
+            mucgpt: {
+                model: request.model,
+                creativity: request.creativity,
+                enabled_tools: request.enabled_tools,
+                assistant_id: request.assistant_id,
+                persist: request.persist,
+                data_sources: request.data_sources,
+                canvas: request.canvas,
+                document_ids: request.document_ids,
+                language: request.language
+            }
+        })
+    );
 }
 
 /**

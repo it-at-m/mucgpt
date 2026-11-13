@@ -35,20 +35,37 @@ describe("mucgptForwardedProps", () => {
                 enabled_tools: ["Vereinfachen"],
                 assistant_id: "assistant-1",
                 persist: false,
-                data_sources: undefined,
-                canvas: undefined,
                 document_ids: ["doc-1"],
                 language: "German"
             }
         });
-        // JSON serialization drops undefined members, preserving the
-        // omitted-envelope semantics (e.g. document_ids presence).
-        expect(JSON.parse(JSON.stringify(props)).mucgpt).not.toHaveProperty("canvas");
+        expect(props.mucgpt).not.toHaveProperty("canvas");
     });
 
     it("keeps an explicitly empty document_ids list", () => {
         const props = mucgptForwardedProps(chatRequest({ document_ids: [] }));
         expect(JSON.parse(JSON.stringify(props)).mucgpt.document_ids).toEqual([]);
+    });
+
+    it("normalizes nested UI-only values to the JSON request contract", () => {
+        const props = mucgptForwardedProps(
+            chatRequest({
+                data_sources: [
+                    {
+                        title: "Document",
+                        content: "Contents",
+                        metadata: { transient: (() => undefined) as never }
+                    }
+                ]
+            })
+        );
+
+        expect(() => structuredClone(props)).not.toThrow();
+        expect(props).toEqual({
+            mucgpt: expect.objectContaining({
+                data_sources: [{ title: "Document", content: "Contents", metadata: {} }]
+            })
+        });
     });
 });
 

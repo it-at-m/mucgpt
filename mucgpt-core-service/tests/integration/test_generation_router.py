@@ -7,6 +7,7 @@ import pytest
 from fastapi.testclient import TestClient
 from langchain_core.messages import AIMessage
 
+from api.routers.generation_router import _TITLE_MESSAGE_LIMIT
 from core.lf_prompts import ResolvedPrompt
 from core.llm_helpers import hash_user_id
 
@@ -139,6 +140,8 @@ def test_generate_chat_title_direct_model(
         input={
             "query": "Wie schreibe ich eine Antwort?",
             "answer": "Hier ist eine Struktur...",
+            "current_title": None,
+            "previous_turns": None,
         },
         trace_context={"trace_id": "a" * 32},
     )
@@ -178,6 +181,115 @@ def test_generate_chat_title_fallback_when_empty(
     assert resp.status_code == 200, resp.text
     body = resp.json()
     assert body["title"] == "Bitte um Statusupdate zum"
+
+
+@pytest.mark.integration
+@patch(
+    "api.routers.generation_router.PersistanceHelpers.set_chat_title_for_conversation",
+    new_callable=AsyncMock,
+)
+@patch("core.llm_helpers.ModelRegistry.get_model")
+def test_generate_chat_title_regeneration_with_current_title_and_turns(
+    mock_get_model, mock_set_title, test_client: TestClient, langfuse_root
+) -> None:
+    responses = {
+        "chat-title-generation": "Projektstatus",
+    }
+    mock_get_model.return_value = _FakeConfiguredModel(response_by_run_name=responses)
+    mock_set_title.return_value = True
+
+    long_query = "x" * (_TITLE_MESSAGE_LIMIT + 100)
+    resp = test_client.post(
+        "/v1/generations/chat-title",
+        json={
+            "conversation_id": "conv-1",
+            "query": "Jetzt noch zum Budget",
+            "answer": "Das Budget ist genehmigt.",
+            "current_title": "E-Mail Hilfe",
+            "system_message": "Du bist ein Assistent für Verwaltungsarbeit.",
+            "previous_turns": [
+                {
+                    "query": "Erste Frage vor dem Drift",
+                    "answer": "Erste Antwort",
+                },
+                {
+                    "query": "Zweite Frage vor dem Drift",
+                    "answer": "Zweite Antwort",
+                },
+                {"query": long_query, "answer": "Dritte Antwort"},
+            ],
+        },
+    )
+
+    assert resp.status_code == 200, resp.text
+    assert resp.json()["title"] == "Projektstatus"
+    messages = mock_get_model.return_value.messages
+    assert len(messages) == 2
+    content = messages[1].content
+    # Only the last 2 previous turns are kept (oldest dropped).
+    assert "Erste Frage vor dem Drift" not in content
+    assert "Zweite Frage vor dem Drift" in content
+    assert "Dritte Antwort" in content
+    # Current turn comes last.
+    assert content.endswith(
+        "Nutzernachricht:\nJetzt noch zum Budget\n\n"
+        "Assistentenantwort:\nDas Budget ist genehmigt."
+    )
+    # Current title and keep-or-rename instruction are included.
+    assert "Bisheriger Chat-Titel:\nE-Mail Hilfe" in content
+    assert "Behalte ihn unverändert" in content
+    # System prompt section is included.
+    assert content.startswith(
+        "System-Prompt:\nDu bist ein Assistent für Verwaltungsarbeit."
+    )
+    # Overlong messages are truncated.
+    assert long_query not in content
+    assert "x" * _TITLE_MESSAGE_LIMIT + " …" in content
+    client, observation, _ = langfuse_root
+    client.start_as_current_observation.assert_called_once_with(
+        name="chat-title-generation",
+        input={
+            "query": "Jetzt noch zum Budget",
+            "answer": "Das Budget ist genehmigt.",
+            "current_title": "E-Mail Hilfe",
+            "previous_turns": [
+                {"query": "Erste Frage vor dem Drift", "answer": "Erste Antwort"},
+                {"query": "Zweite Frage vor dem Drift", "answer": "Zweite Antwort"},
+                {"query": long_query, "answer": "Dritte Antwort"},
+            ],
+        },
+        trace_context={"trace_id": "a" * 32},
+    )
+
+
+@pytest.mark.integration
+@patch(
+    "api.routers.generation_router.PersistanceHelpers.set_chat_title_for_conversation",
+    new_callable=AsyncMock,
+)
+@patch("core.llm_helpers.ModelRegistry.get_model")
+def test_generate_chat_title_without_current_title_has_no_rename_instruction(
+    mock_get_model, mock_set_title, test_client: TestClient
+) -> None:
+    responses = {
+        "chat-title-generation": "E-Mail Hilfe",
+    }
+    mock_get_model.return_value = _FakeConfiguredModel(response_by_run_name=responses)
+    mock_set_title.return_value = True
+
+    resp = test_client.post(
+        "/v1/generations/chat-title",
+        json={
+            "conversation_id": "conv-1",
+            "query": "Wie schreibe ich eine Antwort?",
+            "answer": "Hier ist eine Struktur...",
+        },
+    )
+
+    assert resp.status_code == 200, resp.text
+    content = mock_get_model.return_value.messages[1].content
+    assert "Bisheriger Chat-Titel" not in content
+    assert "Behalte ihn unverändert" not in content
 
 
 @pytest.mark.integration

@@ -562,6 +562,13 @@ class ComplianceCheckResponse(BaseModel):
     )
 
 
+class ChatTitleTurn(BaseModel):
+    """A completed user/assistant turn used as context for title generation."""
+
+    query: str = Field(..., description="The user's message in this turn.")
+    answer: str = Field(..., description="The assistant's answer in this turn.")
+
+
 class ChatTitleRequest(BaseModel):
     """Request model for generating a chat title based on the last turn."""
 
@@ -576,6 +583,20 @@ class ChatTitleRequest(BaseModel):
     system_message: str | None = Field(
         None,
         description="Optional system message that was used for the chat.",
+    )
+    current_title: str | None = Field(
+        None,
+        description=(
+            "The chat's current title, if any. When present, the model should keep it "
+            "unless it no longer fits the conversation."
+        ),
+    )
+    previous_turns: list[ChatTitleTurn] | None = Field(
+        None,
+        description=(
+            "Prior completed turns (oldest first), excluding the current query/answer. "
+            "Only the most recent turns are considered."
+        ),
     )
 
 

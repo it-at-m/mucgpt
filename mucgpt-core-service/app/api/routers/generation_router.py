@@ -193,12 +193,53 @@ async def generate_assistant_draft(
                 raise HTTPException(status_code=500, detail=payload_to_message(payload))
 
 
+_TITLE_TURN_LIMIT = 2
+_TITLE_MESSAGE_LIMIT = 2000
+
+
+def _truncate_title_text(value: str) -> str:
+    """Bound the length of a single message inside the title prompt."""
+
+    text = value.strip()
+    if len(text) <= _TITLE_MESSAGE_LIMIT:
+        return text
+    return f"{text[:_TITLE_MESSAGE_LIMIT]} …"
+
+
+def _build_chat_title_user_content(request: ChatTitleRequest) -> str:
+    """Assemble the user content for chat title generation.
+
+    When a current title is supplied (title regeneration), the model is asked to
+    keep it unless it no longer fits the conversation.
+    """
+
+    parts: list[str] = []
+    if request.system_message:
+        parts.append(f"System-Prompt:\n{_truncate_title_text(request.system_message)}")
+    if request.current_title:
+        parts.append(
+            "Bisheriger Chat-Titel:\n"
+            f"{_truncate_title_text(request.current_title)}\n\n"
+            "Wenn bereits ein Titel angegeben ist: Behalte ihn unverändert, sofern er "
+            "weiterhin zum Gespräch passt, und gib ihn exakt zurück. Wähle nur dann "
+            "einen neuen Titel, wenn der bisherige nachweislich nicht mehr zum "
+            "aktuellen Gesprächsverlauf passt."
+        )
+    for turn in (request.previous_turns or [])[-_TITLE_TURN_LIMIT:]:
+        parts.append(f"Nutzernachricht:\n{_truncate_title_text(turn.query)}")
+        parts.append(f"Assistentenantwort:\n{_truncate_title_text(turn.answer)}")
+    parts.append(f"Nutzernachricht:\n{_truncate_title_text(request.query)}")
+    parts.append(f"Assistentenantwort:\n{_truncate_title_text(request.answer)}")
+    return "\n\n".join(parts)
+
+
 @router.post(
     "/generations/chat-title",
     summary="Generate a chat title from the last turn",
     description=(
         "Generate a short, descriptive chat title based on the latest user "
-        "question and assistant answer."
+        "question and assistant answer. When a current title and prior turns are "
+        "supplied, the model decides whether the existing title still fits."
     ),
     response_model=ChatTitleResult,
 )
@@ -212,7 +253,15 @@ async def generate_chat_title(
     trace_id = langfuse.create_trace_id()
     with langfuse.start_as_current_observation(
         name="chat-title-generation",
-        input={"query": request.query, "answer": request.answer},
+        input={
+            "query": request.query,
+            "answer": request.answer,
+            "current_title": request.current_title,
+            "previous_turns": [
+                turn.model_dump() for turn in (request.previous_turns or [])
+            ]
+            or None,
+        },
         trace_context={"trace_id": trace_id},
     ) as observation:
         with propagate_attributes(
@@ -224,19 +273,10 @@ async def generate_chat_title(
             settings = get_settings()
             system_prompt = read_prompt_file_with_metadata("chat_title.md")
 
-            conversation_parts = []
-            if request.system_message:
-                conversation_parts.append(f"System-Prompt:\n{request.system_message}")
-            conversation_parts.extend(
-                [
-                    f"Nutzernachricht:\n{request.query}",
-                    f"Assistentenantwort:\n{request.answer}",
-                ]
-            )
             messages: list[ChatCompletionMessage] = [
                 ChatCompletionMessage(role="system", content=system_prompt.content),
                 ChatCompletionMessage(
-                    role="user", content="\n\n".join(conversation_parts)
+                    role="user", content=_build_chat_title_user_content(request)
                 ),
             ]
 

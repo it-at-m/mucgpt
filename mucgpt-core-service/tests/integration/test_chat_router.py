@@ -198,6 +198,63 @@ class TestChatRouter:
         assert call_kwargs["resume_decisions"] == [{"type": "approve"}]
         assert call_kwargs["messages"] == []
 
+    @patch("api.routers.chat_router.init_agent", new_callable=AsyncMock)
+    def test_native_resume_forwards_generic_interrupt_payloads(
+        self,
+        mock_init_agent: AsyncMock,
+        test_client: TestClient,
+    ) -> None:
+        mock_agent_executor = self._paused_executor(mock_init_agent)
+        mock_agent_executor.get_pending_approvals.return_value = []
+
+        response = test_client.post(
+            "/v1/chat/v2/completions",
+            json=native_run_body(
+                messages=[],
+                forwardedProps={"mucgpt": {"model": "gpt-4o-mini", "persist": True}},
+                resume=[
+                    {
+                        "interruptId": "question-1",
+                        "status": "resolved",
+                        "payload": "yes",
+                    }
+                ],
+            ),
+        )
+
+        assert response.status_code == 200, response.text
+        call_kwargs = mock_agent_executor.run_agui_with_streaming.call_args.kwargs
+        assert call_kwargs["resume"] == {"question-1": "yes"}
+        assert call_kwargs["resume_decisions"] is None
+
+    @patch("api.routers.chat_router.init_agent", new_callable=AsyncMock)
+    def test_native_resume_cannot_bypass_tool_approval_validation(
+        self,
+        mock_init_agent: AsyncMock,
+        test_client: TestClient,
+    ) -> None:
+        mock_agent_executor = self._paused_executor(mock_init_agent)
+
+        response = test_client.post(
+            "/v1/chat/v2/completions",
+            json=native_run_body(
+                messages=[],
+                forwardedProps={"mucgpt": {"model": "gpt-4o-mini", "persist": True}},
+                resume=[
+                    {
+                        "interruptId": "call_web",
+                        "status": "resolved",
+                        "payload": {"decision": "approve"},
+                    }
+                ],
+            ),
+        )
+
+        assert response.status_code == 200, response.text
+        call_kwargs = mock_agent_executor.run_agui_with_streaming.call_args.kwargs
+        assert call_kwargs["resume"] is None
+        assert call_kwargs["resume_decisions"] == [{"type": "approve"}]
+
     @pytest.mark.parametrize(
         ("resume", "persist", "is_owner", "status_code"),
         [

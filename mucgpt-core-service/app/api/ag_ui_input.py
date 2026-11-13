@@ -39,6 +39,7 @@ from ag_ui.core import (
     DeveloperMessage,
     ImagePart,
     ReasoningMessage,
+    ResumeEntry,
     RunAgentInput,
     SystemMessage,
     TextPart,
@@ -439,13 +440,14 @@ def resume_payloads(run_input: RunAgentInput) -> dict[str, Any] | None:
 class ParsedChatRequest:
     """Endpoint-level parse result for both request shapes.
 
-    ``run_id``/``resume_entries`` are only set for the native AG-UI shape:
-    the run echoes the input's ``runId`` on its boundary events, and
-    ``resume[]`` is carried into the graph as a LangGraph ``Command(resume=…)``
-    keyed by interrupt id (interrupt/resume groundwork for #1093/#1085).
+    Native resume entries stay in their protocol shape until the router knows
+    whether the checkpoint contains a MUCGPT tool approval or another AG-UI
+    interrupt. This prevents generic payloads from bypassing approval checks.
     """
 
     request: ChatCompletionRequest
     pending_media: dict[int, list[Any]] = field(default_factory=dict)
     run_id: str | None = None
     resume_entries: list[ToolApprovalResumeEntry] = field(default_factory=list)
+    native_resume_entries: list[ResumeEntry] = field(default_factory=list)
+    native_resume_payloads: dict[str, Any] | None = None

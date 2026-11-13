@@ -16,7 +16,7 @@ from api.ag_ui_input import (
     bind_media_parts,
     is_native_run_input,
     parse_run_agent_input,
-    resume_entries,
+    resume_payloads,
     supports_vision_for_model,
     to_chat_completion_request,
 )
@@ -29,6 +29,7 @@ from api.api_models import (
     ConversationMessage,
     ConversationMetadata,
     ConversationRenameRequest,
+    ToolApprovalResumeEntry,
 )
 from config.model_provider import ModelRegistry, ModelsConfigurationException
 from config.settings import get_settings
@@ -406,7 +407,7 @@ async def ag_ui_chat_endpoint(
     if not chat_request.conversation_id:
         raise HTTPException(status_code=400, detail="conversation_id is required")
     approval_answers = parsed.resume_entries or chat_request.resume or []
-    is_resume = bool(approval_answers)
+    is_resume = bool(parsed.native_resume_entries or approval_answers)
     if is_resume and not chat_request.persist:
         raise HTTPException(
             status_code=400,
@@ -470,13 +471,27 @@ async def ag_ui_chat_endpoint(
             {document.id: document.filename for document in document_selection},
         )
         resume_decisions = None
+        generic_resume = None
         if is_resume:
             try:
-                resume_decisions = build_resume_decisions(
-                    await agent.get_pending_approvals(chat_request.conversation_id),
-                    approval_answers,
+                pending_approvals = await agent.get_pending_approvals(
+                    chat_request.conversation_id
                 )
-            except ValueError as exc:
+                if parsed.native_resume_entries and not pending_approvals:
+                    generic_resume = parsed.native_resume_payloads
+                else:
+                    if parsed.native_resume_entries:
+                        approval_answers = [
+                            ToolApprovalResumeEntry.model_validate(
+                                entry.model_dump(by_alias=True)
+                            )
+                            for entry in parsed.native_resume_entries
+                        ]
+                    resume_decisions = build_resume_decisions(
+                        pending_approvals,
+                        approval_answers,
+                    )
+            except (ValidationError, ValueError) as exc:
                 raise HTTPException(status_code=400, detail=str(exc)) from exc
         events = agent.run_agui_with_streaming(
             messages=messages_for_agent,
@@ -495,6 +510,7 @@ async def ag_ui_chat_endpoint(
             reasoning_effort=chat_request.reasoning_effort,
             run_id=parsed.run_id,
             language=chat_request.language,
+            resume=generic_resume,
             resume_decisions=resume_decisions,
         )
     except BaseException:
@@ -582,7 +598,8 @@ async def _parse_chat_request(request: Request) -> ParsedChatRequest:
             request=chat_request,
             pending_media=pending_media,
             run_id=run_input.run_id,
-            resume_entries=resume_entries(run_input),
+            native_resume_entries=list(run_input.resume or []),
+            native_resume_payloads=resume_payloads(run_input),
         )
 
     if (

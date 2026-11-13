@@ -1,5 +1,7 @@
 """Tests for the native AG-UI run-input mapper (issue #1448, Path A)."""
 
+from types import SimpleNamespace
+
 import pytest
 from fastapi import HTTPException
 
@@ -11,6 +13,7 @@ from api.ag_ui_input import (
     supports_vision_for_model,
     to_chat_completion_request,
 )
+from config.model_provider import ModelRegistry
 from config.settings import get_settings
 
 
@@ -112,6 +115,16 @@ class TestChatRequestMapping:
         request, _ = to_chat_completion_request(parse_run_agent_input(body))
         assert not hasattr(request, "futureField")
 
+    def test_invalid_forwarded_props_return_422_with_validation_details(self):
+        body = native_body()
+        body["forwardedProps"]["mucgpt"]["enabled_tools"] = "not-a-list"
+
+        with pytest.raises(HTTPException) as exc:
+            to_chat_completion_request(parse_run_agent_input(body))
+
+        assert exc.value.status_code == 422
+        assert exc.value.detail[0]["loc"] == ("enabled_tools",)
+
     def test_message_roles_map_and_media_flattens(self):
         body = native_body()
         body["messages"][-1] = {
@@ -131,6 +144,20 @@ class TestChatRequestMapping:
         ]
         assert pending_media == {}
 
+    def test_developer_instruction_maps_to_system_message(self):
+        body = native_body()
+        body["messages"] = [
+            {"id": "d1", "role": "developer", "content": "Be concise."},
+            {"id": "m1", "role": "user", "content": "Hallo"},
+        ]
+
+        request, _ = to_chat_completion_request(parse_run_agent_input(body))
+
+        assert [(m.role, m.content) for m in request.messages] == [
+            ("system", "Be concise."),
+            ("user", "Hallo"),
+        ]
+
     def test_activity_reasoning_and_tool_messages_are_stripped(self):
         body = native_body()
         body["messages"] = [
@@ -147,6 +174,21 @@ class TestChatRequestMapping:
         request, _ = to_chat_completion_request(parse_run_agent_input(body))
         assert [(m.role, m.content) for m in request.messages] == [("user", "Hallo")]
 
+    def test_contentless_assistant_history_is_stripped(self):
+        body = native_body()
+        body["messages"] = [
+            {"id": "m1", "role": "user", "content": "Hallo"},
+            {"id": "m2", "role": "assistant", "content": None},
+            {"id": "m3", "role": "user", "content": "Continue"},
+        ]
+
+        request, _ = to_chat_completion_request(parse_run_agent_input(body))
+
+        assert [(m.role, m.content) for m in request.messages] == [
+            ("user", "Hallo"),
+            ("user", "Continue"),
+        ]
+
     def test_canvas_and_data_sources_map(self):
         body = native_body()
         body["forwardedProps"]["mucgpt"]["canvas"] = {
@@ -162,6 +204,17 @@ class TestChatRequestMapping:
         assert request.canvas.truncated is False
         assert request.data_sources is not None
         assert request.data_sources[0].title == "Handbook.pdf"
+
+    def test_null_canvas_and_data_sources_are_preserved(self):
+        body = native_body()
+        body["forwardedProps"]["mucgpt"]["canvas"] = None
+        body["forwardedProps"]["mucgpt"]["data_sources"] = None
+
+        request, _ = to_chat_completion_request(parse_run_agent_input(body))
+
+        assert request.canvas is None
+        assert request.data_sources is None
+        assert {"canvas", "data_sources"} <= request.model_fields_set
 
     def test_malformed_canvas_rejected_with_422(self):
         body = native_body()
@@ -219,7 +272,7 @@ class TestVisionGate:
             parse_run_agent_input(native_body())
         )
         bind_media_parts(request, pending_media, supports_vision=False)
-        assert all(m.media_blocks is None for m in request.messages)
+        assert all(m._media_blocks is None for m in request.messages)
 
     def test_fail_closed_on_non_vision_model(self):
         request, pending_media = to_chat_completion_request(
@@ -235,7 +288,7 @@ class TestVisionGate:
             parse_run_agent_input(self._body_with_inline_image())
         )
         bind_media_parts(request, pending_media, supports_vision=True)
-        assert request.messages[3].media_blocks == [
+        assert request.messages[3]._media_blocks == [
             {"type": "image_url", "image_url": {"url": "data:image/png;base64,QUJD"}}
         ]
 
@@ -277,7 +330,7 @@ class TestVisionGate:
         }
         request, pending_media = to_chat_completion_request(parse_run_agent_input(body))
         bind_media_parts(request, pending_media, supports_vision=True)
-        assert request.messages[3].media_blocks == []
+        assert request.messages[3]._media_blocks == []
 
     def test_inline_non_image_part_refused(self):
         body = native_body()
@@ -313,8 +366,27 @@ class TestSupportsVisionLookup:
         plain.id = "text-only-model"
         plain.model_info.supports_vision = False
         monkeypatch.setattr(settings, "models", [vision, plain])
+        monkeypatch.setattr(
+            ModelRegistry,
+            "get_model",
+            lambda model_name: SimpleNamespace(model_name=model_name),
+        )
         assert supports_vision_for_model("vision-model") is True
         assert supports_vision_for_model("text-only-model") is False
+
+    def test_omitted_model_uses_registry_default(self, monkeypatch):
+        settings = get_settings()
+        vision = settings.models[0].model_copy(deep=True)
+        vision.id = "vision-model"
+        vision.model_info.supports_vision = True
+        monkeypatch.setattr(settings, "models", [vision])
+        monkeypatch.setattr(
+            ModelRegistry,
+            "get_model",
+            lambda model_name: SimpleNamespace(model_name="vision-model"),
+        )
+
+        assert supports_vision_for_model(None) is True
 
     def test_unknown_model_is_non_vision(self):
         assert supports_vision_for_model("does-not-exist") is False

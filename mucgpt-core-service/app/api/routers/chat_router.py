@@ -514,6 +514,19 @@ async def _parse_chat_request(request: Request) -> ParsedChatRequest:
             resume_payloads=resume_payloads(run_input),
         )
 
+    if (
+        isinstance(body, dict)
+        and isinstance(body.get("messages"), list)
+        and any(
+            isinstance(message, dict) and "media_blocks" in message
+            for message in body.get("messages", [])
+        )
+    ):
+        raise HTTPException(
+            status_code=422,
+            detail="media_blocks are only supported in native AG-UI run input",
+        )
+
     try:
         return ParsedChatRequest(request=ChatCompletionRequest.model_validate(body))
     except ValidationError as exc:

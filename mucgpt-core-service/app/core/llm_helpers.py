@@ -30,14 +30,14 @@ class MessageLike(Protocol):
 def to_langchain_messages(messages: Sequence[MessageLike]) -> list[BaseMessage]:
     """Convert API-style messages to LangChain message objects.
 
-    A message carrying ``media_blocks`` (AG-UI image parts resolved to
+    A message carrying ``_media_blocks`` (AG-UI image parts resolved to
     OpenAI-style data-URL blocks by the run-input mapper, see
     ``api.ag_ui_input``) is converted to a multimodal HumanMessage whose
     content is a content-block list.
     """
     converted: list[BaseMessage] = []
     for message in messages:
-        media_blocks = getattr(message, "media_blocks", None)
+        media_blocks = getattr(message, "_media_blocks", None)
         if message.role == "system":
             converted.append(SystemMessage(message.content))
         elif message.role == "user":

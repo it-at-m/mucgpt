@@ -36,6 +36,7 @@ from typing import Any
 from ag_ui.core import (
     PROTOCOL_VERSION,
     AssistantMessage,
+    DeveloperMessage,
     ImagePart,
     ReasoningMessage,
     RunAgentInput,
@@ -53,6 +54,7 @@ from api.api_models import (
     ChatCompletionRequest,
     ChatDataSource,
 )
+from config.model_provider import ModelRegistry, ModelsConfigurationException
 from config.settings import get_settings
 from core.logtools import getLogger
 
@@ -225,6 +227,10 @@ def to_chat_completion_request(
             messages.append(
                 ChatCompletionMessage(role="system", content=ag_message.content)
             )
+        elif isinstance(ag_message, DeveloperMessage):
+            messages.append(
+                ChatCompletionMessage(role="system", content=ag_message.content)
+            )
         elif isinstance(ag_message, UserMessage):
             text, image_parts = _flatten_user_content(ag_message)
             index = len(messages)
@@ -232,9 +238,14 @@ def to_chat_completion_request(
             if image_parts:
                 pending_media[index] = image_parts
         elif isinstance(ag_message, AssistantMessage):
-            messages.append(
-                ChatCompletionMessage(role="assistant", content=ag_message.content)
-            )
+            if ag_message.content is None:
+                _strip_history_message(
+                    ag_message, "contentless assistant messages are not supported"
+                )
+            else:
+                messages.append(
+                    ChatCompletionMessage(role="assistant", content=ag_message.content)
+                )
         elif isinstance(ag_message, ToolMessage):
             # Frontend tools are not offered, so no frontend tool call can be
             # pending; a tool result in history has no mapped representation.
@@ -267,11 +278,19 @@ def to_chat_completion_request(
     if "document_ids" in mucgpt:
         kwargs["document_ids"] = mucgpt["document_ids"]
     if "canvas" in mucgpt:
-        kwargs["canvas"] = _parse_canvas(mucgpt["canvas"])
+        canvas = mucgpt["canvas"]
+        kwargs["canvas"] = _parse_canvas(canvas) if canvas is not None else None
     if "data_sources" in mucgpt:
-        kwargs["data_sources"] = _parse_data_sources(mucgpt["data_sources"])
+        data_sources = mucgpt["data_sources"]
+        kwargs["data_sources"] = (
+            _parse_data_sources(data_sources) if data_sources is not None else None
+        )
 
-    return ChatCompletionRequest.model_validate(kwargs), pending_media
+    try:
+        request = ChatCompletionRequest.model_validate(kwargs)
+    except ValidationError as exc:
+        raise HTTPException(status_code=422, detail=exc.errors()) from exc
+    return request, pending_media
 
 
 def _parse_canvas(raw: Any) -> CanvasState:
@@ -373,7 +392,7 @@ def bind_media_parts(
             if block:
                 blocks.append(block)
         message = chat_request.messages[index]
-        message.media_blocks = blocks
+        message._media_blocks = blocks
 
 
 def supports_vision_for_model(model_name: str | None) -> bool:
@@ -382,8 +401,12 @@ def supports_vision_for_model(model_name: str | None) -> bool:
     Mirrors ``get_temperature_from_request``'s settings lookup: unknown models
     are treated as non-vision (the registry gate already rejected them).
     """
+    try:
+        model = ModelRegistry.get_model(model_name)
+    except ModelsConfigurationException:
+        return False
     settings = get_settings()
-    entry = next((m for m in settings.models if m.id == model_name), None)
+    entry = next((m for m in settings.models if m.id == model.model_name), None)
     return bool(entry.model_info.supports_vision) if entry else False
 
 

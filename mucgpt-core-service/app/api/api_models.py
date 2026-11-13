@@ -2,7 +2,14 @@ from datetime import datetime
 from decimal import Decimal
 from typing import Any, Final, Literal
 
-from pydantic import BaseModel, ConfigDict, Field, PositiveInt, field_validator
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    Field,
+    PositiveInt,
+    PrivateAttr,
+    field_validator,
+)
 
 from api.exception import ProviderErrorPayload
 from config.settings import ReasoningEffort, get_settings
@@ -86,14 +93,9 @@ class ChatCompletionMessage(BaseModel):
         ..., description="Message role: system, user, or assistant"
     )
     content: str = Field(..., description="The message content")
-    # Internal only: multimodal content blocks (AG-UI image parts resolved to
-    # OpenAI-style data-URL blocks) bound to this message by the AG-UI run-input
-    # mapper after the vision gate. Never part of the public envelope schema.
-    media_blocks: list[dict[str, Any]] | None = Field(
-        default=None,
-        exclude=True,
-        description="Internal multimodal content blocks bound by the AG-UI mapper.",
-    )
+    # Internal only: AG-UI image parts resolved by the mapper after the vision
+    # gate. A private attribute prevents client request bodies from supplying it.
+    _media_blocks: list[dict[str, Any]] | None = PrivateAttr(default=None)
     model_config = ConfigDict(
         json_schema_extra={
             "example": {"role": "user", "content": "List three benefits of unit tests."}

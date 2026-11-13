@@ -164,6 +164,27 @@ class TestChatRouter:
             "detail": "Model 'invalid-model' not found in the registry"
         }
 
+    def test_legacy_request_rejects_client_media_blocks(
+        self, test_client: TestClient
+    ) -> None:
+        response = test_client.post(
+            "/v1/chat/v2/completions",
+            json={
+                "model": "gpt-4o-mini",
+                "messages": [
+                    {
+                        "role": "user",
+                        "content": "Describe this image",
+                        "media_blocks": [{"type": "image_url"}],
+                    }
+                ],
+                "conversation_id": DUMMY_CONVERSATION_ID,
+            },
+        )
+
+        assert response.status_code == 422
+        assert "media_blocks" in response.json()["detail"]
+
     @patch("api.routers.chat_router.init_agent", new_callable=AsyncMock)
     def test_native_run_input_streams_and_echoes_input_identity(
         self, mock_init_agent: AsyncMock, test_client: TestClient

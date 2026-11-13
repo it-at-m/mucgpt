@@ -113,13 +113,26 @@ export async function checkAssistantComplianceApi(input: ComplianceCheckRequest)
     return handleApiRequest(() => fetch(API_BASE + "v1/compliance/check", postConfig(input)), "Failed to run compliance check");
 }
 
-export async function createChatName(conversationId: string, query: string, answer: string, system_message: string) {
+export interface ChatTitleGenerationRequest {
+    conversationId: string;
+    query: string;
+    answer: string;
+    systemMessage: string;
+    /** The chat's current title, when regenerating an existing title. */
+    currentTitle?: string;
+    /** The completed turn before the current one, when regenerating. */
+    previousTurn?: { query: string; answer: string };
+}
+
+export async function createChatName(request: ChatTitleGenerationRequest) {
     const url = API_BASE + "v1/generations/chat-title";
     const body = {
-        conversation_id: conversationId,
-        query,
-        answer,
-        system_message
+        conversation_id: request.conversationId,
+        query: request.query,
+        answer: request.answer,
+        system_message: request.systemMessage,
+        current_title: request.currentTitle ?? null,
+        previous_turns: request.previousTurn ? [request.previousTurn] : null
     };
 
     const parsedResponse = await handleApiRequest<ChatTitleResponse>(() => fetch(url, postConfig(body)), "Failed to create chat name");

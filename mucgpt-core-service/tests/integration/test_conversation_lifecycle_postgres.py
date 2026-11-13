@@ -24,6 +24,7 @@ from migrations.settings import get_migration_settings
 from psycopg import sql
 from psycopg.rows import dict_row
 from psycopg_pool import AsyncConnectionPool
+from starlette.responses import StreamingResponse
 from tests.unit.helpers import request_with_body
 
 from agent.agent_executor import MUCGPTAgentExecutor
@@ -600,7 +601,9 @@ class ConversationLifecyclePostgresTests(unittest.IsolatedAsyncioTestCase):
                                     )
                                 )
                             elif outcome == "cancel":
-                                self.assertIsInstance(result[0], asyncio.CancelledError)
+                                # LangGraph handles cancellation while closing its event
+                                # stream, so the endpoint completes with its response.
+                                self.assertIsInstance(result[0], StreamingResponse)
                             else:
                                 self.assertTrue(
                                     any("RUN_ERROR" in chunk for chunk in chunks)

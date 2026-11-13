@@ -7,7 +7,7 @@ from langchain_core.runnables import RunnableConfig
 from langchain_core.runnables.config import merge_configs
 from langchain_core.tools.base import BaseTool
 from langgraph.checkpoint.postgres.aio import AsyncPostgresSaver
-from langgraph.types import Durability
+from langgraph.types import Command, Durability
 
 from agent.middleware import (
     ContextMiddleware,
@@ -82,7 +82,7 @@ class _ConfiguredLangChainDeepAgentGraph:
         )
 
     def _prepare_run(
-        self, input_data: dict[str, Any], config: RunnableConfig | None
+        self, input_data: dict[str, Any] | Command, config: RunnableConfig | None
     ) -> tuple[
         list[Any],
         list[dict[str, Any]] | None,
@@ -103,7 +103,9 @@ class _ConfiguredLangChainDeepAgentGraph:
         # Keep MCP auth token map up-to-date for forwarded auth providers.
         McpBearerAuthProvider.set_token(user_info.user_id, user_info.token)
 
-        messages = input_data.get("messages", [])
+        messages = (
+            input_data.get("messages", []) if isinstance(input_data, dict) else []
+        )
         data_sources = configurable.get("data_sources", [])
         canvas = configurable.get("canvas")
 
@@ -128,7 +130,7 @@ class _ConfiguredLangChainDeepAgentGraph:
 
     async def astream(
         self,
-        input_data: dict[str, Any],
+        input_data: dict[str, Any] | Command,
         *,
         stream_mode: list[str] | str | None = None,
         config: RunnableConfig | None = None,
@@ -143,11 +145,13 @@ class _ConfiguredLangChainDeepAgentGraph:
             RunnableConfig(metadata={"agent_state_schema": self.state_schema.__name__}),
         )
 
-        input_payload = {"messages": messages}
-        if data_sources:
-            input_payload["data_sources"] = data_sources  # type: ignore
-        if request_context.canvas:
-            input_payload["canvas"] = request_context.canvas  # type: ignore
+        input_payload: dict[str, Any] | Command = input_data
+        if not isinstance(input_data, Command):
+            input_payload = {"messages": messages}
+            if data_sources:
+                input_payload["data_sources"] = data_sources
+            if request_context.canvas:
+                input_payload["canvas"] = request_context.canvas
 
         stream = self.agent.astream(
             input_payload,
@@ -165,7 +169,7 @@ class _ConfiguredLangChainDeepAgentGraph:
 
     async def ainvoke(
         self,
-        input_data: dict[str, Any],
+        input_data: dict[str, Any] | Command,
         *,
         config: RunnableConfig | None = None,
         **kwargs,
@@ -178,11 +182,13 @@ class _ConfiguredLangChainDeepAgentGraph:
             RunnableConfig(metadata={"agent_state_schema": self.state_schema.__name__}),
         )
 
-        input_payload = {"messages": messages}
-        if data_sources:
-            input_payload["data_sources"] = data_sources  # type: ignore
-        if request_context.canvas:
-            input_payload["canvas"] = request_context.canvas  # type: ignore
+        input_payload: dict[str, Any] | Command = input_data
+        if not isinstance(input_data, Command):
+            input_payload = {"messages": messages}
+            if data_sources:
+                input_payload["data_sources"] = data_sources
+            if request_context.canvas:
+                input_payload["canvas"] = request_context.canvas
 
         return await self.agent.ainvoke(
             input_payload,
@@ -191,6 +197,9 @@ class _ConfiguredLangChainDeepAgentGraph:
             durability=CHECKPOINT_DURABILITY,
             **kwargs,
         )
+
+    async def aget_state(self, config: RunnableConfig):
+        return await self.agent.aget_state(config)
 
 
 class MUCGPTAgent:

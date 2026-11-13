@@ -65,6 +65,10 @@ loggers:
     level: ${LOG_LEVEL_MUCGPT_ASSISTANT_SERVICE:-ERROR}
     handlers: [console]
     propagate: no
+  mucgpt.assistant.migrations:
+    level: ${MIGRATION_LOG_LEVEL:-INFO}
+    handlers: [console]
+    propagate: no
   auth:
     level: ${LOG_LEVEL_AUTH:-ERROR}
     handlers: [console]

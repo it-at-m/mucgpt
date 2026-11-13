@@ -1,6 +1,5 @@
 """Real catalog SQL on SQLite; PostgreSQL concurrency has separate integration tests."""
 
-import asyncio
 from unittest.mock import AsyncMock, MagicMock
 from uuid import uuid4
 
@@ -194,37 +193,19 @@ async def test_database_rejects_invalid_catalog_states(catalog, values):
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize("error_type", [RuntimeError, asyncio.CancelledError])
-async def test_catalog_initialization_failure_disposes_engine_and_can_retry(
-    monkeypatch, error_type
-):
+async def test_catalog_initialization_publishes_database_resources(monkeypatch):
     manager = document_catalog.DocumentCatalogManager
     monkeypatch.setattr(manager, "_engine", None)
     monkeypatch.setattr(manager, "_session_factory", None)
-    connection = MagicMock(
-        run_sync=AsyncMock(side_effect=error_type("setup interrupted"))
-    )
-    context = MagicMock()
-    context.__aenter__ = AsyncMock(return_value=connection)
-    context.__aexit__ = AsyncMock(return_value=False)
-    engine = MagicMock(begin=MagicMock(return_value=context), dispose=AsyncMock())
+    engine = MagicMock(dispose=AsyncMock())
     factory = MagicMock()
     monkeypatch.setattr(
         document_catalog,
         "create_engine_and_session_factory",
         lambda _: (engine, factory),
     )
-    with pytest.raises(error_type):
-        await manager.init(MagicMock())
-    engine.dispose.assert_awaited_once()
-    with pytest.raises(RuntimeError, match="not initialized"):
-        manager.get_session_factory()
-    connection.run_sync.side_effect = None
     await manager.init(MagicMock())
     assert manager.get_session_factory() is factory
-    connection.run_sync.assert_awaited_with(
-        Base.metadata.create_all, tables=[Document.__table__]
-    )
     await manager.close()
     with pytest.raises(RuntimeError, match="not initialized"):
         manager.get_session_factory()

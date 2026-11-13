@@ -12,21 +12,19 @@ def store_resources(monkeypatch):
     monkeypatch.setattr(vfs.FileStoreManager, "_pool", None)
     monkeypatch.setattr(vfs.FileStoreManager, "_file_store", None)
     pool = MagicMock(open=AsyncMock(), close=AsyncMock())
-    store = MagicMock(setup=AsyncMock())
+    store = MagicMock()
     monkeypatch.setattr(vfs, "AsyncConnectionPool", MagicMock(return_value=pool))
     monkeypatch.setattr(vfs, "AsyncPostgresStore", MagicMock(return_value=store))
     return pool, store
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize("stage", ["open", "setup"])
 @pytest.mark.parametrize("error_type", [RuntimeError, asyncio.CancelledError])
 async def test_failed_initialization_cleans_up_and_can_retry(
-    store_resources, stage, error_type
+    store_resources, error_type
 ):
     pool, store = store_resources
-    failing_call = pool.open if stage == "open" else store.setup
-    failing_call.side_effect = error_type("startup interrupted")
+    pool.open.side_effect = error_type("startup interrupted")
 
     with pytest.raises(error_type):
         await vfs.FileStoreManager.init(get_settings())
@@ -35,7 +33,7 @@ async def test_failed_initialization_cleans_up_and_can_retry(
     with pytest.raises(RuntimeError, match="not initialized"):
         vfs.FileStoreManager.get_store()
 
-    failing_call.side_effect = None
+    pool.open.side_effect = None
     await vfs.FileStoreManager.init(get_settings())
     assert vfs.FileStoreManager.get_store() is store
     vfs.AsyncPostgresStore.assert_called_with(conn=pool)

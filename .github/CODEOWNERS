@@ -6,7 +6,6 @@
 
 # Assistant service + its DB migrations
 /mucgpt-assistant-service/            @Meteord @illuminate97
-/mucgpt-assistant-service-migrations/ @Meteord @illuminate97
 
 # Frontend
 /mucgpt-frontend/                     @Meteord @danielnwz @freinold

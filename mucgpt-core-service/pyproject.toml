@@ -1,6 +1,6 @@
 [project]
 name = "mucgpt-core-service"
-version = "1.8.0"
+version = "1.9.0"
 description = "a web interface for large language models for the public administration"
 readme = "README.md"
 requires-python= ">=3.13"
@@ -36,6 +36,7 @@ dependencies = [
     "python-multipart==0.0.33",
     "deepagents==0.7.34",
     "langgraph-checkpoint-postgres==3.2.0",
+    "alembic>=1.14.0",
     "psycopg[binary]==3.3.8",
     "sqlalchemy[asyncio]==2.1.8",
     "asyncpg==0.32.0",

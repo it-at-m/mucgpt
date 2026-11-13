@@ -27,10 +27,16 @@ from __future__ import annotations
 import re
 from collections.abc import Iterable, Mapping, Sequence
 from datetime import UTC, datetime, timedelta
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from core import directory_cache
 from core.logtools import getLogger
+
+if TYPE_CHECKING:
+    # scripts/check_hierarchical_access.py installs a core.directory_cache
+    # shim without DirectoryTree; the annotation below is not evaluated at
+    # runtime, so the import can stay type-checking only.
+    from core.directory_cache import DirectoryTree
 
 logger = getLogger(__name__)
 
@@ -218,7 +224,7 @@ async def _get_directory_index(
     if cached is not None and isinstance(expires_at, datetime) and now < expires_at:
         return cached
 
-    tree: list[dict[str, Any]] | None = None
+    tree: DirectoryTree | None = None
     try:
         tree = await directory_cache.get_simplified_directory_tree()
     except Exception:

@@ -1,4 +1,5 @@
 import asyncio
+from typing import cast
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
@@ -38,12 +39,14 @@ async def test_failed_initialization_cleans_up_and_can_retry(
     failing_call.side_effect = None
     await vfs.FileStoreManager.init(get_settings())
     assert vfs.FileStoreManager.get_store() is store
-    vfs.AsyncPostgresStore.assert_called_with(conn=pool)
+    # The monkeypatched constructors are MagicMocks at runtime; the module
+    # attributes keep their real class types for the checker.
+    cast("MagicMock", vfs.AsyncPostgresStore).assert_called_with(conn=pool)
 
     # Repeated startup must not replace an already published store/pool.
-    calls = vfs.AsyncConnectionPool.call_count
+    calls = cast("MagicMock", vfs.AsyncConnectionPool).call_count
     await vfs.FileStoreManager.init(get_settings())
-    assert vfs.AsyncConnectionPool.call_count == calls
+    assert cast("MagicMock", vfs.AsyncConnectionPool).call_count == calls
 
     await vfs.FileStoreManager.close()
     with pytest.raises(RuntimeError, match="not initialized"):

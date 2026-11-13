@@ -1,9 +1,9 @@
 from types import SimpleNamespace
-from typing import Any
+from typing import Any, cast
 from unittest.mock import MagicMock
 
 import pytest
-from langchain.agents.middleware import ModelRequest, ToolCallRequest
+from langchain.agents.middleware import AgentState, ModelRequest, ToolCallRequest
 from langchain_core.language_models.fake_chat_models import FakeListChatModel
 from langchain_core.messages import HumanMessage
 from langgraph.runtime import Runtime
@@ -22,12 +22,12 @@ def _model_request(
     state: dict[str, Any],
     context: RequestContext | None = None,
     tools: list[Any] | None = None,
-) -> ModelRequest:
+) -> ModelRequest[Any]:
     return ModelRequest(
         model=FakeListChatModel(responses=["ok"]),
         messages=messages,
         tools=tools or [],
-        state=state,
+        state=cast("AgentState[Any]", state),
         runtime=Runtime(context=context),
     )
 
@@ -88,7 +88,9 @@ def test_canvas_base_tools_survive_empty_allowlist() -> None:
         tools=tools,
     )
 
-    kept = [tool.name for tool in _filter_request_tools(request).tools or []]
+    kept = [
+        cast("Any", tool).name for tool in _filter_request_tools(request).tools or []
+    ]
 
     assert kept == ["canvas_write"]
 
@@ -100,7 +102,9 @@ def test_all_canvas_base_tools_survive_allowlist_filtering() -> None:
         [HumanMessage(content="hi")], {}, context=context, tools=tools
     )
 
-    kept = [tool.name for tool in _filter_request_tools(request).tools or []]
+    kept = [
+        cast("Any", tool).name for tool in _filter_request_tools(request).tools or []
+    ]
 
     assert kept == ["canvas_edit", "canvas_read"]
 

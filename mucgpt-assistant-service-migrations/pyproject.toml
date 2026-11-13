@@ -11,7 +11,7 @@ maintainers = [
     { name = "Michael Jaumann", email = "michael.jaumann@muenchen.de" },
     { name = "Paul Ilitz", email = "paul.ilitz@muenchen.de" },
 ]
-requires-python = ">=3.13"
+requires-python = "==3.13.18"
 dependencies = [
     "alembic==1.20.1",
     "asyncpg==0.32.0",

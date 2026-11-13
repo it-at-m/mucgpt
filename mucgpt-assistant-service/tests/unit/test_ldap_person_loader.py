@@ -16,7 +16,7 @@ class _DummyConnection:
 
 
 def _build_settings(**kwargs: Any) -> LDAPSettings:
-    base = {
+    base: dict[str, Any] = {
         "enabled": True,
         "host": "ldap.example.org",
         "port": 636,

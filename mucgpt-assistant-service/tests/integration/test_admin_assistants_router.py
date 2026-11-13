@@ -171,6 +171,7 @@ def test_high_risk_assistant_remains_active_when_legal_review_is_disabled(
     assert update_response.status_code == 200
     updated = AssistantResponse.model_validate(update_response.json())
     assert updated.latest_version.state == "active"
+    assert updated.latest_version.compliance_check_result is not None
     assert updated.latest_version.compliance_check_result.model_dump() == (
         updated_high_risk_result.model_dump()
     )
@@ -576,6 +577,7 @@ def test_admin_review_appends_active_version_and_preserves_tools(
     assert reviewed.latest_version.state == "active"
     assert reviewed.latest_version.state_changed_by == "legal_admin_123"
     assert reviewed.latest_version.state_change_reason == "Reviewed by legal."
+    assert reviewed.latest_version.tools is not None
     assert reviewed.latest_version.tools[0].id == "WEB_SEARCH"
 
 

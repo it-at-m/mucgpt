@@ -1,11 +1,14 @@
 import logging
-from typing import TypedDict
 
 from langchain_core.messages import BaseMessage, HumanMessage, SystemMessage
 from langchain_core.prompts import PromptTemplate
 from langchain_core.runnables.base import RunnableSerializable
 from langgraph.graph import END, StateGraph
 from langgraph.types import StreamWriter
+
+# typing_extensions' TypedDict is modelled more completely by type checkers
+# (langgraph's StateGraph bound wants its ClassVar key metadata).
+from typing_extensions import TypedDict
 
 from agent.tools.tool_chunk import ToolStreamChunk, ToolStreamState
 
@@ -257,7 +260,9 @@ class SimplifyAgent:
         self._stream_update(tag, ToolStreamState.APPEND)
 
     def _build_graph(self):
-        workflow = StateGraph(ReflectiveSimplificationState)
+        # ty cannot model `TypedDict` against langgraph's StateLike protocol
+        # (ClassVar key metadata vs. instance-attribute protocol members).
+        workflow = StateGraph(ReflectiveSimplificationState)  # ty: ignore[invalid-argument-type]
 
         workflow.add_node("generate", self._generate_node)
         workflow.add_node("critique", self._critique_node)

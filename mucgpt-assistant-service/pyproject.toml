@@ -11,7 +11,7 @@ maintainers = [
     { name = "Michael Jaumann", email = "michael.jaumann@muenchen.de" },
     { name = "Paul Ilitz", email = "paul.ilitz@muenchen.de" },
 ]
-requires-python = ">=3.13"
+requires-python = "==3.13.18"
 dependencies = [
     "asgi-correlation-id==5.0.1",
     "asyncpg==0.32.0",
@@ -59,6 +59,11 @@ ignore = ["E501", "E701"] # line too long, multiple statements on one line
 
 [tool.ty.environment]
 root = ["./app", "."]
+
+[tool.ty.src]
+# Alembic infrastructure files (not pytest-collected, not part of the service
+# runtime); alembic itself is intentionally not a dependency of this service.
+exclude = ["tests/database/env.py", "tests/database/versions/*.py"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

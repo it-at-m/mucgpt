@@ -2,6 +2,7 @@
 
 from contextlib import asynccontextmanager
 from datetime import UTC, datetime
+from typing import cast
 from unittest.mock import AsyncMock, MagicMock
 from uuid import uuid4
 
@@ -11,7 +12,7 @@ from deepagents.backends.utils import create_file_data
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 from langgraph.store.memory import InMemoryStore
-from sqlalchemy import create_engine, select
+from sqlalchemy import Table, create_engine, select
 from sqlalchemy.orm import Session
 from sqlalchemy.pool import StaticPool
 
@@ -36,7 +37,7 @@ def library_api(monkeypatch):
     engine = create_engine(
         "sqlite://", poolclass=StaticPool, connect_args={"check_same_thread": False}
     )
-    Base.metadata.create_all(engine, tables=[Document.__table__])
+    Base.metadata.create_all(engine, tables=[cast("Table", Document.__table__)])
 
     @asynccontextmanager
     async def session_scope():
@@ -369,7 +370,9 @@ def test_deletion_rejects_inconsistent_storage_key_without_body_access(library_a
     client, _, _, engine, store, owner, _ = library_api
     document_id = add_document(engine, owner.user_id)
     with Session(engine) as session:
-        session.get(Document, document_id).storage_key = "/foreign-key.txt"
+        document = session.get(Document, document_id)
+        assert document is not None
+        document.storage_key = "/foreign-key.txt"
         session.commit()
     response = client.delete(f"/api/v1/documents/{document_id}")
     assert response.status_code == 500

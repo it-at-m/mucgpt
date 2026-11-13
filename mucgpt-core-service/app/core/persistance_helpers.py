@@ -1,13 +1,15 @@
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, cast
 
 from anyio import CancelScope
 from langchain_core.messages import AIMessage, HumanMessage, ToolMessage
 from langgraph.checkpoint.postgres.aio import AsyncPostgresSaver
+from psycopg import AsyncConnection
 from psycopg.rows import dict_row
 from psycopg_pool import AsyncConnectionPool
 from pydantic import ValidationError
+from sqlalchemy import Table
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker
 
 from api.api_models import (
@@ -102,7 +104,7 @@ def _conversation_usage(message: AIMessage) -> ConversationUsage | None:
 class PersistanceHelpers:
     """Manage ownership metadata and fenced checkpoints for persisted conversations."""
 
-    _pool: AsyncConnectionPool | None = None
+    _pool: AsyncConnectionPool[AsyncConnection[dict[str, Any]]] | None = None
     _checkpointer: AsyncPostgresSaver | None = None
     _engine: AsyncEngine | None = None
     _session_factory: async_sessionmaker[AsyncSession] | None = None
@@ -116,7 +118,7 @@ class PersistanceHelpers:
         """
         if PersistanceHelpers._pool is not None:
             return
-        pool = AsyncConnectionPool(
+        pool = AsyncConnectionPool[AsyncConnection[dict[str, Any]]](
             conninfo="",
             max_size=20,
             open=False,
@@ -142,13 +144,19 @@ class PersistanceHelpers:
 
     @staticmethod
     async def _initialize_schema(
-        pool: AsyncConnectionPool, engine: AsyncEngine
+        pool: AsyncConnectionPool[AsyncConnection[dict[str, Any]]],
+        engine: AsyncEngine,
     ) -> None:
         """Migrate retirement metadata and quarantine/erase legacy orphan state."""
         async with engine.begin() as connection:
             await connection.run_sync(
                 Base.metadata.create_all,
-                tables=[Chat.__table__, CanvasDocument.__table__],
+                # The declarative stubs type `__table__` as a `FromClause`;
+                # at runtime these are the concrete `Table` objects.
+                tables=[
+                    cast("Table", Chat.__table__),
+                    cast("Table", CanvasDocument.__table__),
+                ],
             )
 
         # create_all does not alter existing tables. Keep the core's startup

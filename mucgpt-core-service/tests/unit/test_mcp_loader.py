@@ -1,10 +1,12 @@
-from collections.abc import AsyncIterator, Callable, Iterator
+from collections.abc import AsyncGenerator, Callable, Iterator
 from contextlib import AbstractAsyncContextManager, asynccontextmanager
+from typing import cast
 from unittest.mock import AsyncMock, patch
 
 import cloudpickle
 import pytest
-from mcp.types import ListToolsResult
+from mcp import ClientSession
+from mcp.types import ListToolsResult, PaginatedRequestParams
 from mcp.types import Tool as MCPTool
 from pydantic import ValidationError
 
@@ -24,7 +26,10 @@ class FakeSession:
     async def initialize(self) -> None:
         return None
 
-    async def list_tools(self, cursor: str | None = None) -> ListToolsResult:
+    async def list_tools(
+        self, params: PaginatedRequestParams | None = None
+    ) -> ListToolsResult:
+        cursor = params.cursor if params is not None else None
         index = int(cursor) if cursor else 0
         page = self._pages[index]
         next_cursor = str(index + 1) if index + 1 < len(self._pages) else None
@@ -58,7 +63,7 @@ def make_fake_create_session(
     @asynccontextmanager
     async def _fake_create_session(
         connection, *, mcp_callbacks=None
-    ) -> AsyncIterator[FakeSession]:
+    ) -> AsyncGenerator[FakeSession]:
         url = connection["url"]
         if url in fail_urls:
             raise RuntimeError(f"simulated connection failure for {url}")
@@ -121,6 +126,7 @@ class TestBuildConnection:
 
         con = McpLoader._build_connection("src", source_cfg, make_user())
 
+        assert con is not None
         assert con["headers"] == {}
 
     def test_no_forward_token_means_no_auth_key(self):
@@ -128,6 +134,7 @@ class TestBuildConnection:
 
         con = McpLoader._build_connection("src", source_cfg, make_user())
 
+        assert con is not None
         assert "auth" not in con
 
     def test_unsupported_transport_returns_none(self):
@@ -165,6 +172,7 @@ class TestApplyToolCustomizations:
         McpLoader._apply_tool_customizations(tool, "src", source_cfg)
 
         assert tool.description == "Custom enriched description"
+        assert tool.metadata is not None
         assert tool.metadata["description"] == "Custom enriched description"
         assert tool.metadata["mcp_group"] == "search-group"
         assert tool.metadata["mcp_source"] == "src"
@@ -187,6 +195,7 @@ class TestApplyToolCustomizations:
 
         McpLoader._apply_tool_customizations(tool, "src", source_cfg)
 
+        assert tool.metadata is not None
         assert tool.metadata["mcp_group"] == "default-group"
 
     def test_override_without_description_keeps_tool_description(self):
@@ -207,6 +216,7 @@ class TestApplyToolCustomizations:
         McpLoader._apply_tool_customizations(tool, "src", source_cfg)
 
         assert tool.description == "original description"
+        assert tool.metadata is not None
         assert tool.metadata["mcp_group"] == "search-group"
 
     def test_override_group_rejects_whitespace_but_allows_empty(self):
@@ -216,6 +226,7 @@ class TestApplyToolCustomizations:
             overrides=[{"name": "search_docs", "group": ""}],
         )
 
+        assert source_config.overrides is not None
         assert source_config.overrides[0].group == ""
 
         with pytest.raises(ValidationError, match="only whitespace"):
@@ -228,10 +239,8 @@ class TestApplyToolCustomizations:
     @pytest.mark.parametrize("legacy_key", ["descriptions", "tool_groups"])
     def test_legacy_customization_keys_are_rejected(self, legacy_key: str):
         with pytest.raises(ValidationError, match=legacy_key):
-            MCPSourceConfig(
-                url="http://x",
-                transport=MCPTransport.SSE,
-                **{legacy_key: []},
+            MCPSourceConfig.model_validate(
+                {"url": "http://x", "transport": "sse", legacy_key: []}
             )
 
 
@@ -259,6 +268,7 @@ class TestWrapRawTools:
 
         assert len(tools) == 1
         assert tools[0].name == "a"
+        assert tools[0].metadata is not None
         assert tools[0].metadata["mcp_source"] == "src"
 
 
@@ -269,7 +279,7 @@ class TestListAllToolsForSession:
         page2 = [MCPTool(name="b", inputSchema={"type": "object"})]
         session = FakeSession(pages=[page1, page2])
 
-        tools = await McpLoader._list_all_tools_for_session(session)
+        tools = await McpLoader._list_all_tools_for_session(cast("ClientSession", session))
 
         assert [t.name for t in tools] == ["a", "b"]
 
@@ -356,6 +366,7 @@ class TestLoadMcpTools:
             tools = await McpLoader.load_mcp_tools(make_user(), force_reload=True)
 
         assert len(tools) == 1
+        assert tools[0].metadata is not None
         assert tools[0].metadata["mcp_source"] == "good"
         mock_set_object.assert_called_once()
         assert mock_set_object.call_args.kwargs["ttl"] == 60
@@ -454,6 +465,7 @@ class TestLoadMcpTools:
         build_connection_spy.assert_called_once()
         assert len(tools) == 1
         assert tools[0].name == "a"
+        assert tools[0].metadata is not None
         assert tools[0].metadata["mcp_source"] == "src"
 
     @pytest.mark.asyncio

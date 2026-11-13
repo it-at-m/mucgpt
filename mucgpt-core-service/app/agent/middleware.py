@@ -9,6 +9,7 @@ from zoneinfo import ZoneInfo
 
 from langchain.agents.middleware import (
     AgentMiddleware,
+    AgentState,
     ModelRequest,
     ModelResponse,
     ToolCallRequest,
@@ -490,11 +491,11 @@ class ContextMiddleware(AgentMiddleware):
     Additional state types can be registered in ``agent.tools.policies``.
     """
 
-    state_schema: type = DefaultAgentState
+    state_schema: type[AgentState[Any]] = DefaultAgentState
 
     def __init__(
         self,
-        state_schema: type = DefaultAgentState,
+        state_schema: type[AgentState[Any]] = DefaultAgentState,
         data_sources: list[Any] | None = None,
         document_selection: list["SelectedDocument"] | None = None,
     ):
@@ -523,8 +524,8 @@ class ContextMiddleware(AgentMiddleware):
 
     def wrap_model_call(
         self,
-        request: ModelRequest,
-        handler: Callable[[ModelRequest], ModelResponse],
+        request: ModelRequest[Any],
+        handler: Callable[[ModelRequest[Any]], ModelResponse],
     ) -> ModelResponse:
         # infer policy from state type and apply to request
         policy = get_policy_for_state(self.state_schema)
@@ -572,8 +573,8 @@ class ContextMiddleware(AgentMiddleware):
 
     async def awrap_model_call(
         self,
-        request: ModelRequest,
-        handler: Callable[[ModelRequest], Awaitable[ModelResponse]],
+        request: ModelRequest[Any],
+        handler: Callable[[ModelRequest[Any]], Awaitable[ModelResponse]],
     ) -> ModelResponse:
         # infer policy from state type and apply to request
         policy = get_policy_for_state(self.state_schema)

@@ -1,16 +1,23 @@
 from __future__ import annotations
 
+from collections.abc import Sequence
+from typing import Any
 
-def serialize_list[T](items: list[T] | None) -> list[dict | T]:
+from pydantic import BaseModel
+
+
+def serialize_list[T](items: Sequence[T] | None) -> list[dict[str, Any] | T]:
     """Serializes a list of items, converting Pydantic models to dicts.
 
+    Non-Pydantic items are passed through unchanged.
+
     Args:
-        items: A list of items that may be Pydantic models or regular objects
+        items: A list of items that may be Pydantic models or arbitrary objects
 
     Returns:
-        A list of dictionaries (for Pydantic models) or original objects
+        A list where Pydantic models are replaced by their dumped dictionaries
     """
     return [
-        item.model_dump() if hasattr(item, "model_dump") else item
+        item.model_dump() if isinstance(item, BaseModel) else item
         for item in (items or [])
     ]

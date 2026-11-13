@@ -1,9 +1,10 @@
 import hashlib
 import re
 from collections.abc import Sequence
-from typing import Any, Protocol
+from typing import Any, Protocol, cast
 
 from fastapi import HTTPException
+from langchain_core.callbacks import BaseCallbackHandler
 from langchain_core.messages import AIMessage, BaseMessage, HumanMessage, SystemMessage
 from langchain_core.runnables import RunnableConfig
 from langfuse import propagate_attributes
@@ -121,9 +122,13 @@ def _internal_request_config(
     if langfuse_handler:
         callbacks.append(langfuse_handler)
 
+    callback_config: list[BaseCallbackHandler] | None = (
+        cast("list[BaseCallbackHandler]", callbacks) if callbacks else None
+    )
+
     return RunnableConfig(
         run_name=run_name,
-        callbacks=callbacks if callbacks else None,  # type: ignore[arg-type]
+        callbacks=callback_config,
         configurable={
             "llm": model_name,
             "llm_temperature": temperature,

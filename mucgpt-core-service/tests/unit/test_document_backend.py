@@ -38,6 +38,7 @@ async def test_selected_read_fetches_only_exact_key(store, asynchronous):
         else backend.read(SELECTED_PATH, offset=1, limit=1)
     )
     assert result.error is None
+    assert result.file_data is not None
     assert result.file_data["content"] == "second\n"
     if asynchronous:
         store.aget.assert_awaited_once_with(NAMESPACE, SELECTED_PATH)
@@ -64,6 +65,7 @@ async def test_default_read_returns_full_document_or_first_page(
         else backend.read(SELECTED_PATH)
     )
     assert result.error is None
+    assert result.file_data is not None
     assert result.file_data["content"] == "".join(lines[:100])
     assert result.total_lines == line_count
     assert result.start_line == 1
@@ -87,22 +89,22 @@ async def test_default_pages_can_resume_without_skipping_document_lines(
     backend = DocumentBackend(
         store=store, namespace=lambda _: NAMESPACE, allowed_paths=[SELECTED_PATH]
     )
-    method = backend.aread if asynchronous else backend.read
     pages = []
     offset = 0
     for expected_end in [100, 200, 205]:
-        result = (
-            await method(SELECTED_PATH, offset=offset)
-            if asynchronous
-            else method(SELECTED_PATH, offset=offset)
-        )
+        if asynchronous:
+            result = await backend.aread(SELECTED_PATH, offset=offset)
+        else:
+            result = backend.read(SELECTED_PATH, offset=offset)
         assert result.error is None
         assert result.start_line == offset + 1
         assert result.end_line == expected_end
         assert result.total_lines == 205
         assert result.next_offset == (expected_end if expected_end < 205 else None)
+        assert result.file_data is not None
         pages.append(result.file_data["content"])
-        offset = result.next_offset
+        if result.next_offset is not None:
+            offset = result.next_offset
     assert "".join(pages) == text
 
 
@@ -126,6 +128,7 @@ async def test_explicit_read_bounds_are_preserved(
         else backend.read(SELECTED_PATH, offset=offset, limit=limit)
     )
     assert result.error is None
+    assert result.file_data is not None
     assert result.file_data["content"] == "".join(lines[start:end])
     if limit == 0:
         assert result.no_lines_requested is True
@@ -177,7 +180,9 @@ def test_missing_or_foreign_body_preserves_not_found_error(store, namespace):
     backend = DocumentBackend(
         store=store, namespace=lambda _: namespace, allowed_paths=[SELECTED_PATH]
     )
-    assert "not found" in backend.read(SELECTED_PATH).error
+    missing = backend.read(SELECTED_PATH)
+    assert missing.error is not None
+    assert "not found" in missing.error
     store.get.assert_called_once_with(namespace, SELECTED_PATH)
 
 
@@ -206,7 +211,8 @@ async def test_grep_fetches_only_selected_candidates(
         else backend.grep("text", path, glob)
     )
     assert result.error is None
-    assert [match["path"] for match in result.matches] == (
+    matches = result.matches or []
+    assert [match["path"] for match in matches] == (
         [OTHER_PATH] if OTHER_PATH in expected_paths else []
     )
     expected_calls = [call(NAMESPACE, key) for key in expected_paths]
@@ -277,10 +283,11 @@ async def test_grep_searches_complete_text_and_preserves_limits(
         else backend.grep("needle.*", max_count=max_count)
     )
     assert result.error is None
-    assert [match["line"] for match in result.matches] == list(
+    matches = result.matches or []
+    assert [match["line"] for match in matches] == list(
         range(2001, 2001 + max_count)
     )
-    assert all(match["text"] == "needle.*" for match in result.matches)
+    assert all(match["text"] == "needle.*" for match in matches)
     assert result.truncated is (max_count == 1)
 
 

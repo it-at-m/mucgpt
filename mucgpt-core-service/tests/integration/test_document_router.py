@@ -1,6 +1,7 @@
 """HTTP upload contract, identity, and real ingestion compensation without infra."""
 
 from contextlib import asynccontextmanager
+from typing import cast
 from unittest.mock import AsyncMock, MagicMock
 from uuid import UUID
 
@@ -8,7 +9,7 @@ import httpx
 import pytest
 from fastapi.testclient import TestClient
 from langgraph.store.memory import InMemoryStore
-from sqlalchemy import create_engine, select
+from sqlalchemy import Table, create_engine, select
 from sqlalchemy.orm import Session
 from sqlalchemy.pool import StaticPool
 
@@ -29,7 +30,7 @@ def upload_api(monkeypatch):
     engine = create_engine(
         "sqlite://", poolclass=StaticPool, connect_args={"check_same_thread": False}
     )
-    Base.metadata.create_all(engine, tables=[Document.__table__])
+    Base.metadata.create_all(engine, tables=[cast("Table", Document.__table__)])
 
     @asynccontextmanager
     async def begin():

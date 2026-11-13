@@ -1,7 +1,9 @@
 from copy import deepcopy
+from typing import cast
 
 from langchain.tools import ToolRuntime
 from langchain_core.runnables.base import RunnableSerializable
+from langchain_openai import AzureChatOpenAI, ChatOpenAI
 
 from agent.middleware import RequestContext
 from config.model_provider import ModelRegistry
@@ -12,8 +14,9 @@ def configure_tool_model(
 ) -> RunnableSerializable:
     """Apply the current chat's settings to a local tool's nested model calls."""
     context = runtime.context or RequestContext()
+    settings_model: ChatOpenAI | AzureChatOpenAI | RunnableSerializable = model
     if context.model_name is not None:
-        model = ModelRegistry.get_model(context.model_name)
+        settings_model = ModelRegistry.get_model(context.model_name)
 
     extra_body = deepcopy(context.extra_body or {})
     metadata = extra_body.setdefault("metadata", {})
@@ -31,6 +34,11 @@ def configure_tool_model(
         settings["user"] = context.user
 
     # Both chat stream adapters already filter chunks tagged as internal.
-    return model.bind(
-        **ModelRegistry.normalize_model_settings(model, settings)
-    ).with_config(tags=["internal"])
+    # The stubs of `bind`/`with_config` return the broad `Runnable` type while
+    # the runtime value is a `RunnableBinding` (a `RunnableSerializable`).
+    return cast(
+        "RunnableSerializable",
+        settings_model.bind(
+            **ModelRegistry.normalize_model_settings(settings_model, settings)
+        ).with_config(tags=["internal"]),
+    )

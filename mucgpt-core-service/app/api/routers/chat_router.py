@@ -97,14 +97,21 @@ async def get_messages_for_agent(
     if not request.persist:
         return request.messages
 
+    conversation_id = request.conversation_id
+    if conversation_id is None:
+        raise HTTPException(
+            status_code=400,
+            detail="conversation_id is required when persist is enabled.",
+        )
+
     # Verify the conversation belongs to this user (row is created on first use).
     authorized = await PersistanceHelpers.verify_user_in_conversation(
-        user_id, request.conversation_id, request.assistant_id
+        user_id, conversation_id, request.assistant_id
     )
     if not authorized:
         raise HTTPException(
             status_code=403,
-            detail=f"User {user_id} is not authorized to access conversation {request.conversation_id}",
+            detail=f"User {user_id} is not authorized to access conversation {conversation_id}",
         )
 
     # The canvas is saved implicitly with every persisted turn. A truncated
@@ -113,10 +120,10 @@ async def get_messages_for_agent(
     # so the stored copy is left untouched.
     if request.canvas is not None and not request.canvas.truncated:
         await PersistanceHelpers.upsert_canvas(
-            request.conversation_id, request.canvas.content, user_id
+            conversation_id, request.canvas.content, user_id
         )
 
-    if await PersistanceHelpers.has_checkpoint(request.conversation_id):
+    if await PersistanceHelpers.has_checkpoint(conversation_id):
         return [request.messages[-1]]
     return request.messages
 
@@ -399,7 +406,7 @@ async def ag_ui_chat_endpoint(
     document_selection = await get_documents_for_agent(chat_request, user_info)
     messages_for_agent = await get_messages_for_agent(chat_request, user_info.user_id)
 
-    encoder = EventEncoder(accept=request.headers.get("accept"))
+    encoder = EventEncoder(accept=request.headers.get("accept") or "")
     agent = await init_agent(
         user_info=user_info,
         model_name=chat_request.model,

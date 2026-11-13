@@ -106,7 +106,9 @@ def test_namespace_encoding_is_safe_and_collision_free(document_store):
         backend = vfs.create_document_backend(identity)
         key = vfs.get_document_storage_key(OTHER_ID)
         assert backend.write(key, str(index)).error is None
-        assert backend.read(key).file_data["content"] == str(index)
+        stored = backend.read(key)
+        assert stored.file_data is not None
+        assert stored.file_data["content"] == str(index)
 
 
 @pytest.mark.asyncio
@@ -116,9 +118,9 @@ async def test_direct_ingestion_and_mounted_reads_share_keys_and_isolate_users(
     key = vfs.get_document_storage_key(SELECTED_ID)
     assert document_store.get(vfs.get_document_namespace("owner"), key) is not None
     owner = vfs.create_backend("owner", [SELECTED_ID])
-    assert (await owner.aread(SELECTED_PATH)).file_data[
-        "content"
-    ] == "needle selected text"
+    owned = await owner.aread(SELECTED_PATH)
+    assert owned.file_data is not None
+    assert owned.file_data["content"] == "needle selected text"
     assert (
         await vfs.create_backend("other-user").aread(SELECTED_PATH)
     ).error is not None

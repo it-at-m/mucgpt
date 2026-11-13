@@ -1,6 +1,7 @@
 import logging
 from typing import Any
 
+from langchain_core.runnables.base import RunnableSerializable
 from langchain_openai import AzureChatOpenAI, ChatOpenAI
 
 from config.settings import REASONING_EFFORT_ORDER, ModelsConfig, ReasoningEffort
@@ -61,7 +62,7 @@ class ModelRegistry:
     @classmethod
     def normalize_model_settings(
         cls,
-        model: ChatOpenAI | AzureChatOpenAI,
+        model: ChatOpenAI | AzureChatOpenAI | RunnableSerializable,
         settings: dict[str, Any],
     ) -> dict[str, Any]:
         """Remove request parameters the selected model explicitly rejects."""

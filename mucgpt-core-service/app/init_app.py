@@ -1,5 +1,7 @@
 from typing import Any
 
+from anyio import CancelScope
+
 from agent.agent_executor import MUCGPTAgentExecutor
 from agent.deep_agent import MUCGPTAgent
 from agent.tools.approval import requires_approval
@@ -10,14 +12,20 @@ from config.model_provider import ModelRegistry
 from config.settings import (
     Settings,
     enrich_model_metadata,
-    get_langfuse_settings,
     get_settings,
 )
 from core.auth_models import AuthenticationResult
 from core.cache import RedisCache
+from core.document_service import SelectedDocument
 from core.lf_prompts import PromptPool
 from core.logtools import getLogger
 from core.persistance_helpers import PersistanceHelpers
+from core.virtual_file_system_helper import (
+    FileStoreManager,
+    create_backend,
+    create_permissions,
+)
+from database.document_catalog import DocumentCatalogManager
 
 logger = getLogger()
 
@@ -54,23 +62,28 @@ async def warmup_app() -> None:
     _initialize_models_metadata(settings)
     # init model
     ModelRegistry.init_models(
-        models_config=settings.MODELS,
+        models_config=settings.models,
         logger=logger,
-        fallback_reasoning_effort=settings.FALLBACK_REASONING_EFFORT,
+        fallback_reasoning_effort=settings.fallback_reasoning_effort,
     )
     # Register model-specific Deep Agents harness profiles.
-    for model_config in settings.MODELS:
+    for model_config in settings.models:
         register_model_harness_profile(model_config)
-    # init langfuse
-    lf_client = LangfuseProvider.init(
-        version=settings.VERSION, langfuse_cfg=get_langfuse_settings()
-    )
-    PromptPool.init(lf_client, settings.PROMPTS)
+    # init langfuse (credentials come from the standard LANGFUSE_* env vars)
+    lf_client = LangfuseProvider.init(version=settings.version)
+    PromptPool.init(lf_client, settings.prompts)
     # init redis
     await RedisCache.init_redis()
 
-    # checkpointer and postgres connection
-    await PersistanceHelpers.init(settings)
+    # Independent PostgreSQL resources for conversation state and documents.
+    try:
+        await PersistanceHelpers.init(settings)
+        await FileStoreManager.init(settings)
+        await DocumentCatalogManager.init(settings)
+    except BaseException:
+        with CancelScope(shield=True):
+            await destroy_app()
+        raise
     logger.info("App context warmed up")
 
 
@@ -82,6 +95,19 @@ async def destroy_app() -> None:
         await redis.aclose()
     except RuntimeError:
         pass
+    except Exception:
+        logger.exception("Failed to close RedisCache")
+
+    try:
+        await DocumentCatalogManager.close()
+    except Exception:
+        logger.exception("Failed to close DocumentCatalogManager")
+
+    # close document store independently of conversation persistence
+    try:
+        await FileStoreManager.close()
+    except Exception:
+        logger.exception("Failed to close FileStoreManager")
 
     # close postgres connection
     try:
@@ -93,14 +119,14 @@ async def destroy_app() -> None:
 def _initialize_models_metadata(cfg: Settings) -> None:
     """Ensure all configured models have complete metadata before use."""
 
-    for model in cfg.MODELS:
+    for model in cfg.models:
         try:
             enrich_model_metadata(model)
         except ValueError as exc:
             logger.error(
                 "Unable to prepare model %s for %s: %s",
-                getattr(model, "llm_name", "<unknown>"),
-                cfg.ENV_NAME,
+                getattr(model, "id", "<unknown>"),
+                cfg.env_name,
                 exc,
             )
             raise
@@ -110,7 +136,7 @@ async def init_agent(
     user_info: AuthenticationResult,
     model_name: str | None = None,
     persist: bool = True,
-    allow_approval: bool = False,
+    document_selection: list[SelectedDocument] | None = None,
 ) -> MUCGPTAgentExecutor:
     """Initialize a MUCGPTAgentExecutor with configuration.
 
@@ -118,7 +144,7 @@ async def init_agent(
         user_info: The user to create the Agent for
         model_name: The model to run the agent with (default model if None)
         persist: Attach the checkpointer; False builds a stateless agent
-        allow_approval: Keep tools that need approval (only with a checkpointer)
+        document_selection: Server-resolved documents authorized for this run
 
     Returns:
         Configured MUCGPTAgentExecutor
@@ -126,13 +152,21 @@ async def init_agent(
     try:
         model = ModelRegistry.get_model(model_name)
         tool_collection = ToolCollection(model=model)
+        selected_document_ids = [doc.id for doc in document_selection or []]
+        backend = create_backend(
+            user_id=user_info.user_id,
+            selected_document_ids=selected_document_ids,
+        )
+        document_permissions = create_permissions(
+            selected_document_ids=selected_document_ids
+        )
         tools = await tool_collection.get_tools(
             user_info=user_info
         )  # all tools that are available
         checkpointer = (
             PersistanceHelpers.get_checkpointer_if_ready() if persist else None
         )
-        if not (allow_approval and checkpointer):
+        if not checkpointer:
             tools = [tool for tool in tools if not requires_approval(tool)]
         logger.debug(
             f"Initializing MUCGPTAgent with tools: {[tool.name for tool in tools]}"
@@ -141,6 +175,9 @@ async def init_agent(
             llm=model,
             tools=tools,
             debug=False,
+            backend=backend,
+            permissions=document_permissions,
+            document_selection=document_selection,
             checkpointer=checkpointer,
         )
     except Exception as e:

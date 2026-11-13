@@ -6,10 +6,10 @@ import { useTranslation } from "react-i18next";
 import styles from "./QuestionInput.module.css";
 import { useAutoGrowTextarea } from "./useAutoGrowTextarea";
 import { Button as SubtleButton } from "../../ui/Button";
-import { uploadFileApi } from "../../api/core-client";
+import { uploadDocumentApi } from "../../api/documents-client";
 import { Model, ToolListResponse } from "../../api/models";
 import { useConfigContext } from "../../context/ConfigContext";
-import { upsertParsedDocumentFromUpload } from "../../service/parsedDocumentStorage";
+import { documentToUploadedData } from "../ContextManagerDialog/DocumentLibrary";
 import { ContextManagerDialog, UploadedData, createUploadedData, getDataSignature, getFileSignature } from "../ContextManagerDialog/ContextManagerDialog";
 import { ChatDisclaimer } from "../ChatDisclaimer";
 import { ChatToolSelector } from "../ChatToolSelector/ChatToolSelector";
@@ -18,7 +18,7 @@ import { ChatUsageMessageBar } from "../ChatUsageIndicator/ChatUsageMessageBar";
 import { LLMSelector } from "../LLMSelector/LLMSelector";
 import { getContextUsagePercent, getUsageCriticalThreshold, getUsageWarningThreshold } from "../ChatUsageIndicator/chatUsage";
 import { MicrophoneButton } from "../MicrophoneButton/MicrophoneButton";
-import { useTranscription } from "../TranscriptionSettings/TranscriptionSettingsContext";
+import { useTranscription } from "../Transcription/TranscriptionContext";
 
 export type { ChatUsageSummary } from "../ChatUsageIndicator/ChatUsageIndicator";
 
@@ -40,7 +40,10 @@ interface Props {
     setUploadedData?: Dispatch<SetStateAction<UploadedData[]>>;
     draftCacheKey?: string;
     skipDraftRestore?: boolean;
+    /** Optional notification callback for a final transcript. The transcript itself is merged into `question` automatically. */
     onTranscription?: (text: string) => void;
+    /** Explicitly hides the microphone on inputs where speech input makes no sense (e.g. demo/tutorial inputs). */
+    transcriptionDisabled?: boolean;
     usage?: ChatUsageSummary;
     onStartNewChat?: () => void;
     usageConversationKey?: string;
@@ -70,6 +73,7 @@ export const QuestionInput = ({
     draftCacheKey,
     skipDraftRestore = false,
     onTranscription,
+    transcriptionDisabled = false,
     usage,
     onStartNewChat,
     usageConversationKey,
@@ -81,8 +85,9 @@ export const QuestionInput = ({
 }: Props) => {
     const { t } = useTranslation();
     const config = useConfigContext();
+    const { enabled: transcriptionEnabled, status: transcriptionStatus } = useTranscription();
     const allowFileUpload = allowFileUploadProp ?? config.document_processing_enabled;
-    const allowTranscription = config.transcription_enabled;
+    const allowTranscription = transcriptionEnabled;
     const resolvedPlaceholder = placeholder ?? (allowFileUpload ? t("chat.prompt") : t("chat.prompt_no_upload"));
     const textareaRef = useAutoGrowTextarea(question);
     const uploadButtonRef = useRef<HTMLButtonElement | null>(null);
@@ -101,7 +106,6 @@ export const QuestionInput = ({
     const setQuestionRef = useRef(setQuestion);
     const previousUsageConversationKeyRef = useRef<string | undefined>(usageConversationKey);
     const recordingBaseRef = useRef("");
-    const { isModelReady: transcriptionReady, status: transcriptionStatus } = useTranscription();
     const isTranscriptionActive = transcriptionStatus === "recording" || transcriptionStatus === "transcribing";
 
     const draftStorageKey = draftCacheKey ? `question-input-draft:${draftCacheKey}` : undefined;
@@ -344,24 +348,12 @@ export const QuestionInput = ({
             onDataChange?.(updatedData);
 
             newData.forEach(data => {
-                uploadFileApi(data.file)
-                    .then(fileContent => {
-                        const storedDocument = upsertParsedDocumentFromUpload(data.file, fileContent);
+                const file = data.file;
+                if (!file) return;
+                uploadDocumentApi(file)
+                    .then(document => {
                         const currentData = uploadedDataRef.current;
-                        const nextData = currentData.map(currentItem =>
-                            currentItem.id === data.id
-                                ? {
-                                      ...currentItem,
-                                      status: "ready" as const,
-                                      fileContent,
-                                      storedDocumentId: storedDocument?.id,
-                                      parsedAt: storedDocument?.parsedAt,
-                                      fileSignature: storedDocument?.fileSignature,
-                                      mimeType: storedDocument?.mimeType,
-                                      source: "upload" as const
-                                  }
-                                : currentItem
-                        );
+                        const nextData = currentData.map(currentItem => (currentItem.id === data.id ? documentToUploadedData(document) : currentItem));
 
                         setUploadedData(nextData);
                         onDataChange?.(nextData);
@@ -521,7 +513,7 @@ export const QuestionInput = ({
                                 lockedByAssistant={llmLockedByAssistant}
                             />
                         )}
-                        {allowTranscription && onTranscription && transcriptionReady && (
+                        {allowTranscription && !transcriptionDisabled && (
                             <MicrophoneButton
                                 onRecordingStart={() => {
                                     recordingBaseRef.current = question;
@@ -529,12 +521,12 @@ export const QuestionInput = ({
                                 onLiveTranscription={text => {
                                     const full = recordingBaseRef.current ? `${recordingBaseRef.current} ${text}` : text;
                                     setQuestion(full);
-                                    onTranscription(full);
+                                    onTranscription?.(full);
                                 }}
                                 onTranscription={text => {
                                     const full = recordingBaseRef.current ? `${recordingBaseRef.current} ${text}` : text;
                                     setQuestion(full);
-                                    onTranscription(full);
+                                    onTranscription?.(full);
                                 }}
                                 disabled={disabled}
                             />

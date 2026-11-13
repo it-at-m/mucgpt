@@ -4,7 +4,39 @@ from typing import Any, Final, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, PositiveInt, field_validator
 
+from api.exception import ProviderErrorPayload
 from config.settings import ReasoningEffort, get_settings
+
+
+class DocumentMetadata(BaseModel):
+    """Ready document metadata; excludes extracted bodies and storage ownership."""
+
+    id: str = Field(description="Server-generated document UUID.")
+    filename: str = Field(description="Original filename, for display only.")
+    mime_type: str = Field(description="Upload MIME type; not verified format support.")
+    original_size: int = Field(ge=0, description="Original upload size in bytes.")
+    text_length: int = Field(
+        ge=0, description="Extracted text length in Unicode characters."
+    )
+    preview: str = Field(description="Bounded initial excerpt, not the complete text.")
+    preview_kind: Literal["initial_excerpt"]
+    path: str = Field(description="Stable model-visible document path.")
+    created_at: datetime
+
+
+class DocumentLibraryEntry(BaseModel):
+    """Library metadata, including entries that still occupy a quota slot."""
+
+    id: str
+    filename: str
+    mime_type: str
+    original_size: int = Field(ge=0)
+    status: Literal["processing", "ready", "deleting"]
+    text_length: int | None = Field(default=None, ge=0)
+    preview: str | None = None
+    preview_kind: Literal["initial_excerpt"] | None = None
+    path: str
+    created_at: datetime
 
 
 class SummarizeResult(BaseModel):
@@ -105,8 +137,8 @@ _canvas_settings = get_settings()
 
 # Maximum persisted canvas content length (mirrored by the editor input limit
 # CANVAS_EDITOR_MAX_CHARS, which the export endpoint grows by 4× headroom).
-CANVAS_CONTENT_MAX_CHARS = _canvas_settings.CANVAS_CONTENT_MAX_CHARS
-CANVAS_EDITOR_MAX_CHARS = _canvas_settings.CANVAS_EDITOR_MAX_CHARS
+CANVAS_CONTENT_MAX_CHARS = _canvas_settings.canvas_content_max_chars
+CANVAS_EDITOR_MAX_CHARS = _canvas_settings.canvas_editor_max_chars
 # Full canvas reads stop here so the tool result stays inside the model context;
 # the remaining document is reached via canvas_read(around_cursor).
 CANVAS_READ_LIMIT_CHARS = (CANVAS_CONTENT_MAX_CHARS * 95) // 100
@@ -218,6 +250,13 @@ class ChatCompletionRequest(BaseModel):
         None,
         description="Canvas document state for the canvas feature",
     )
+    document_ids: list[str] = Field(
+        default_factory=list,
+        description=(
+            "IDs of library documents to attach for this turn, authorized server-side. "
+            "Omitted or empty IDs mean no attachments."
+        ),
+    )
     model_config = ConfigDict(
         json_schema_extra={
             "example": {
@@ -302,6 +341,12 @@ class ChatCompletionResponse(BaseModel):
         ..., description="List of completion choices"
     )
     usage: Usage = Field(..., description="Token usage information")
+    error: ProviderErrorPayload | None = Field(
+        None,
+        description=(
+            "Structured provider error; present when finish_reason is 'error'"
+        ),
+    )
     model_config = ConfigDict(
         json_schema_extra={
             "example": {
@@ -380,6 +425,13 @@ class ChatCompletionChunk(BaseModel):
     )
     usage: Usage | None = Field(
         None, description="Token usage information; present on the final chunk"
+    )
+    error: ProviderErrorPayload | None = Field(
+        None,
+        description=(
+            "Structured provider error; present on the final chunk when "
+            "finish_reason is 'error'"
+        ),
     )
     model_config = ConfigDict(
         json_schema_extra={
@@ -565,6 +617,16 @@ class ConversationRenameRequest(BaseModel):
         return value
 
 
+class ConversationAssistantRebindRequest(BaseModel):
+    """Target assistant for re-binding an existing conversation."""
+
+    assistant_id: str = Field(
+        ...,
+        min_length=1,
+        description="ID of the assistant the conversation should be associated with.",
+    )
+
+
 class ConversationMetadata(BaseModel):
     """One row of the caller's conversation list (metadata only, no messages)."""
 
@@ -583,6 +645,14 @@ class ConversationMetadata(BaseModel):
         ...,
         description="Last activity on the conversation (new message or title change).",
     )
+    document_ids: list[str] = Field(
+        default_factory=list,
+        description="Saved document selection, including IDs that may no longer be available.",
+    )
+    document_names: dict[str, str] = Field(
+        default_factory=dict,
+        description="Original filenames of selected documents, retained after deletion.",
+    )
 
     @field_validator("title", mode="before")
     @staticmethod
@@ -594,9 +664,15 @@ class ConversationMetadata(BaseModel):
 
 
 class ModelsDTO(BaseModel):
-    llm_name: str = Field(..., description="Identifier of the model/deployment")
+    id: str = Field(..., description="Identifier of the model/deployment")
+    # Deprecated transition alias of `id`, kept so frontends cached by the
+    # service worker keep working against a updated core. Remove once old
+    # frontends are no longer in circulation.
+    llm_name: str | None = Field(
+        None, description="Deprecated alias of `id`", deprecated=True
+    )
     display_name: str | None = Field(
-        None, description="Human-readable model name; clients fall back to llm_name"
+        None, description="Human-readable model name; clients fall back to id"
     )
     max_output_tokens: PositiveInt | None = Field(
         None, description="Maximum tokens the model can generate"
@@ -664,11 +740,11 @@ class ConfigResponse(BaseModel):
     )
     transcription_enabled: bool = Field(
         False,
-        description="Whether browser-based audio transcription is enabled in the frontend. Transcription itself runs fully client-side; no audio is sent to the backend.",
+        description="Whether browser-based audio transcription is available in the frontend. Only true when TRANSCRIPTION_ENABLED is set and a TRANSCRIPTION_MODEL is configured. Transcription itself runs fully client-side; no audio is sent to the backend.",
     )
-    transcription_default_model: str | None = Field(
+    transcription_model: str | None = Field(
         None,
-        description="Model id preselected in the transcription settings for users who have not picked a model yet. Unknown ids are ignored; null uses the frontend's built-in default.",
+        description="The single browser-based transcription model used by all users. The id must match an entry of the frontend's transcription model list; unset or unknown ids disable transcription in the frontend. There is no default — core and frontend are updated in sync.",
     )
     ai_act_compliance_check_enabled: bool = Field(
         True,
@@ -709,10 +785,6 @@ class ConfigResponse(BaseModel):
     owner_profile_url_template: str | None = Field(
         None,
         description="Template for assistant owner profile links. The '{uid}' placeholder is replaced with the owner user ID.",
-    )
-    ag_ui_enabled: bool = Field(
-        False,
-        description="Whether the AG UI is enabled.",
     )
     canvas_content_max_chars: int = Field(
         default=CANVAS_CONTENT_MAX_CHARS,

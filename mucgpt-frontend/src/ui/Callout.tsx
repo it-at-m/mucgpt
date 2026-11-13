@@ -65,6 +65,7 @@ const useStyles = makeStyles({
     inline: {
         flexWrap: "wrap",
         alignItems: "center",
+        justifyContent: "flex-end",
         columnGap: tokens.spacingHorizontalS
     },
     fullWidthAction: {

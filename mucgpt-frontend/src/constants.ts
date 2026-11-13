@@ -5,7 +5,7 @@ import { IndexedDBStorage } from "./service/indexedDBStorage";
 export const DEFAULT_APP_CONFIG: ApplicationConfig = {
     models: [
         {
-            llm_name: "example-model",
+            id: "example-model",
             max_input_tokens: 128000,
             description: "",
             knowledge_cut_off: "",
@@ -14,7 +14,7 @@ export const DEFAULT_APP_CONFIG: ApplicationConfig = {
             supports_reasoning: null
         },
         {
-            llm_name: "UnknownGPT",
+            id: "UnknownGPT",
             max_input_tokens: 128000,
             description: "",
             knowledge_cut_off: "",
@@ -23,7 +23,7 @@ export const DEFAULT_APP_CONFIG: ApplicationConfig = {
             supports_reasoning: null
         },
         {
-            llm_name: "AnnonymGPT",
+            id: "AnnonymGPT",
             max_input_tokens: 128000,
             description: "",
             knowledge_cut_off: "",
@@ -41,9 +41,8 @@ export const DEFAULT_APP_CONFIG: ApplicationConfig = {
     release_notes: [],
     document_processing_enabled: false,
     transcription_enabled: false,
-    transcription_default_model: null,
+    transcription_model: null,
     ai_act_compliance_check_enabled: true,
-    ag_ui_enabled: false,
     canvas_content_max_chars: 256 * 1024,
     canvas_editor_max_chars: 512 * 1024,
     faq_url: "https://ki.muenchen.de",

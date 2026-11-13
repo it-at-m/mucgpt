@@ -8,6 +8,7 @@ from fastapi.responses import JSONResponse
 from api.routers import (
     chat_router,
     compliance_router,
+    document_router,
     export_router,
     generation_router,
     parsing_router,
@@ -40,12 +41,12 @@ async def lifespan(app: FastAPI):
 
 
 # serves static files and the api
-backend = FastAPI(title="MUCGPT", version=settings.VERSION, lifespan=lifespan)
+backend = FastAPI(title="MUCGPT", version=settings.version, lifespan=lifespan)
 # serves the api
 api_app = FastAPI(
     title="MUCGPT-API",
     description="MUCCGPT core API for AI services",
-    version=settings.VERSION,
+    version=settings.version,
     openapi_tags=[
         {
             "name": "Chat",
@@ -62,6 +63,10 @@ api_app = FastAPI(
         {
             "name": "Parsing",
             "description": "Operations for parsing uploaded files into text",
+        },
+        {
+            "name": "Documents",
+            "description": "Persistent extracted-text document library",
         },
         {
             "name": "Compliance",
@@ -84,6 +89,7 @@ api_app.include_router(generation_router.router, prefix="", tags=["Generations"]
 api_app.include_router(system_router.router, prefix="", tags=["System"])
 api_app.include_router(tools_router.router, prefix="", tags=["Tools"])
 api_app.include_router(parsing_router.router, prefix="", tags=["Parsing"])
+api_app.include_router(document_router.router, tags=["Documents"])
 api_app.include_router(export_router.router, prefix="", tags=["Export"])
 
 
@@ -97,12 +103,12 @@ async def auth_exception_handler(request: Request, exc: AuthError):
 
     error_body = AuthErrorResponse(
         message=exc.error,
-        redirect_url=(settings.UNAUTHORIZED_USER_REDIRECT_URL or None),
+        redirect_url=(settings.unauthorized_user_redirect_url or None),
     )
 
     headers = {}
-    if settings.UNAUTHORIZED_USER_REDIRECT_URL:
-        headers["Location"] = settings.UNAUTHORIZED_USER_REDIRECT_URL
+    if settings.unauthorized_user_redirect_url:
+        headers["Location"] = settings.unauthorized_user_redirect_url
 
     return JSONResponse(
         status_code=exc.status_code,

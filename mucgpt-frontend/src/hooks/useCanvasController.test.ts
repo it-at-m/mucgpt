@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { act } from "react";
 import { createElement } from "react";
 import { createRoot, type Root } from "react-dom/client";
@@ -28,6 +28,7 @@ vi.mock("../service/canvasStorage", async importOriginal => {
 const emptyRevisions = (): CanvasRevisions => ({ auto: [], manual: [] });
 
 // Minimal renderHook replacement — @testing-library/react is not a project dependency.
+const createdRoots: Root[] = [];
 const renderController = () => {
     let latest: CanvasControllerInstance;
     let root: Root | undefined;
@@ -39,7 +40,10 @@ const renderController = () => {
     return {
         render(id: string | undefined) {
             act(() => {
-                if (!root) root = createRoot(container);
+                if (!root) {
+                    root = createRoot(container);
+                    createdRoots.push(root);
+                }
                 root.render(createElement(Probe, { id }));
             });
         },
@@ -48,13 +52,46 @@ const renderController = () => {
                 root?.render(createElement(Probe, { id }));
             });
         },
+        async dispose() {
+            const current = root;
+            await act(async () => {
+                current?.unmount();
+                await new Promise(resolve => setTimeout(resolve, 5));
+            });
+            const index = current ? createdRoots.indexOf(current) : -1;
+            if (index >= 0) createdRoots.splice(index, 1);
+        },
         get current(): CanvasControllerInstance {
             return latest!;
         }
     };
 };
 
-const editorFor = (markdown: string) => new Editor({ extensions: canvasExtensions(), content: markdown });
+// Buttons every editor created in this file, so any editor a test forgot to
+// destroy is torn down in afterEach — a leaked editor's prosemirror DOMObserver
+// keeps a timer alive and fires after the file's jsdom teardown with
+// "ReferenceError: document is not defined".
+const createdEditors: Editor[] = [];
+const editorFor = (markdown: string): Editor => {
+    const editor = new Editor({ extensions: canvasExtensions(), content: markdown });
+    createdEditors.push(editor);
+    return editor;
+};
+
+afterEach(async () => {
+    for (const editor of createdEditors.splice(0)) {
+        if (!editor.isDestroyed) editor.destroy();
+    }
+    // A leaked React root keeps the hook's tiptap editor (and its prosemirror
+    // DOMObserver timer) alive past this file's jsdom teardown, producing an
+    // unhandled "document is not defined" error that fails the whole run.
+    for (const root of createdRoots.splice(0)) {
+        await act(async () => {
+            root.unmount();
+        });
+        await new Promise(resolve => setTimeout(resolve, 5));
+    }
+});
 
 const posOf = (editor: Editor, needle: string) => {
     let found: number | undefined;
@@ -302,9 +339,53 @@ describe("loading stored revisions", () => {
             manual: []
         });
     });
+
+    it("restores the newest revision when the current canvas is empty", async () => {
+        loadCanvasStateMock.mockResolvedValue("");
+        loadCanvasRevisionsMock.mockResolvedValue({
+            auto: [
+                {
+                    revision: 1,
+                    doc_json: { type: "doc", content: [{ type: "paragraph", content: [{ type: "text", text: "Older" }] }] },
+                    timestamp: 1,
+                    source: "agent"
+                },
+                {
+                    revision: 2,
+                    doc_json: { type: "doc", content: [{ type: "paragraph", content: [{ type: "text", text: "Newest" }] }] },
+                    timestamp: 2,
+                    source: "agent"
+                }
+            ],
+            manual: []
+        });
+
+        const harness = renderController();
+        harness.render(undefined);
+
+        await harness.rerender("conv-1");
+        await new Promise(resolve => setTimeout(resolve, 0));
+
+        expect(harness.current.isOpen).toBe(true);
+        expect(harness.current.getMarkdown()).toBe("Newest");
+    });
 });
 
 describe("conversation id assignment", () => {
+    it("does not crash when the editor is destroyed during a conversation switch", async () => {
+        loadCanvasRevisionsMock.mockResolvedValue(emptyRevisions());
+        loadCanvasStateMock.mockResolvedValue(null);
+        const harness = renderController();
+
+        harness.render(undefined);
+        harness.current.editor?.destroy();
+
+        await harness.rerender("conv-1");
+
+        expect(harness.current.isOpen).toBe(false);
+        await harness.dispose();
+    });
+
     it("restores stored content when a reload assigns the existing conversation id", async () => {
         loadCanvasStateMock.mockResolvedValue("# Stored");
         loadCanvasRevisionsMock.mockResolvedValue(emptyRevisions());
@@ -352,6 +433,49 @@ describe("conversation id assignment", () => {
         // the fresh chat's first prompt assigns its id: the pending request reopens
         await harness.rerender("new-conv");
         expect(harness.current.isOpen).toBe(true);
+    });
+
+    it("clears a canvas holding only a horizontal rule when switching conversations", async () => {
+        loadCanvasStateMock.mockResolvedValue(null);
+        loadCanvasRevisionsMock.mockResolvedValue(emptyRevisions());
+
+        const harness = renderController();
+        harness.render("old-conv");
+        await harness.rerender("old-conv");
+        act(() => harness.current.setMarkdown("---"));
+
+        // A horizontal-rule-only document has no textContent; it must still not
+        // leak into the next conversation.
+        await harness.rerender("new-conv");
+
+        expect(harness.current.getMarkdown().trim()).toBe("");
+    });
+
+    it("clears a canvas holding an empty code block when switching conversations", async () => {
+        loadCanvasStateMock.mockResolvedValue(null);
+        loadCanvasRevisionsMock.mockResolvedValue(emptyRevisions());
+
+        const harness = renderController();
+        harness.render("old-conv");
+        await harness.rerender("old-conv");
+        act(() => harness.current.setMarkdown("```\n```"));
+
+        await harness.rerender("new-conv");
+
+        expect(harness.current.getMarkdown().trim()).toBe("");
+    });
+
+    it("keeps a closed canvas with a horizontal rule when the first prompt assigns the id", async () => {
+        loadCanvasStateMock.mockResolvedValue(null);
+        loadCanvasRevisionsMock.mockResolvedValue(emptyRevisions());
+
+        const harness = renderController();
+        harness.render(undefined);
+        act(() => harness.current.setMarkdown("---"));
+
+        await harness.rerender("conv-1");
+
+        expect(harness.current.getMarkdown().trim()).not.toBe("");
     });
 });
 

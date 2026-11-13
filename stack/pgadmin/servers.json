@@ -1,11 +1,21 @@
 {
   "Servers": {
     "1": {
-      "Name": "Postgres Docker",
+      "Name": "Assistants Postgres Docker",
       "Group": "Servers",
       "Host": "postgres",
       "Port": 5432,
-      "MaintenanceDB": "postgres",
+      "MaintenanceDB": "assistants",
+      "Username": "admin",
+      "PassFile": "/pgadmin4/pgpass",
+      "SSLMode": "prefer"
+    },
+    "2": {
+      "Name": "Checkpoint Postgres Docker",
+      "Group": "Servers",
+      "Host": "checkpoint-postgres",
+      "Port": 5432,
+      "MaintenanceDB": "checkpoints",
       "Username": "admin",
       "PassFile": "/pgadmin4/pgpass",
       "SSLMode": "prefer"

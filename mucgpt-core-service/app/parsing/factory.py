@@ -8,15 +8,15 @@ logger = getLogger()
 
 def get_parser() -> ParserBackend | None:
     """Instantiate and return the configured parser backend, or ``None`` when
-    document processing is disabled (``PARSER_BACKEND=none``).
+    document processing is disabled (``parser_backend=none``).
 
-    The backend is selected via the ``PARSER_BACKEND`` setting.
+    The backend is selected via the ``parser_backend`` setting.
     """
     settings = get_settings()
-    backend = settings.PARSER_BACKEND
+    backend = settings.parser_backend
 
     if backend == ParserBackendType.NONE:
-        logger.info("Document processing disabled (PARSER_BACKEND=none)")
+        logger.info("Document processing disabled (parser_backend=none)")
         return None
 
     if backend == ParserBackendType.XBERG:

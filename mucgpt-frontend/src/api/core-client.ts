@@ -43,14 +43,12 @@ function toChatCompletionBody(options: ChatRequest) {
         ...(options.conversation_id ? { conversation_id: options.conversation_id } : {}),
         ...(options.persist === false ? { persist: false } : {}),
         ...(options.data_sources ? { data_sources: options.data_sources } : {}),
-        ...(options.canvas ? { canvas: options.canvas } : {})
+        ...(options.canvas ? { canvas: options.canvas } : {}),
+        ...(options.document_ids !== undefined ? { document_ids: options.document_ids } : {})
     };
 }
 
-/**
- * AG-UI client for the transitional endpoint, which emits AG-UI events but
- * still accepts MUCGPT's existing chat request envelope.
- */
+/** AG-UI client for MUCGPT chat runs. */
 export class MucgptAgUiAgent extends HttpAgent {
     constructor(private readonly request: ChatRequest) {
         super({
@@ -85,11 +83,6 @@ export async function getTools(lang?: string): Promise<ToolListResponse> {
     return handleApiRequest(() => fetch(url, getConfig()), "Failed to get tools");
 }
 
-export async function chatApi(options: ChatRequest): Promise<Response> {
-    const url = API_BASE + "v1/chat/completions";
-    return await fetch(url, postConfig(toChatCompletionBody(options)));
-}
-
 export async function configApi(): Promise<ApplicationConfig> {
     return handleApiRequest(() => fetch(API_BASE + "config", getConfig()), "Failed to get application config");
 }
@@ -101,7 +94,7 @@ export async function countTokensAPI(options: CountTokenRequest): Promise<CountT
                 API_BASE + "counttokens",
                 postConfig({
                     text: options.text,
-                    model: options.model.llm_name
+                    model: options.model.id
                 })
             ),
         "Failed to count tokens"

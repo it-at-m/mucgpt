@@ -30,7 +30,6 @@ from api.api_models import (
 )
 from api.routers.chat_router import (
     ag_ui_chat_endpoint,
-    chat_endpoint,
     delete_conversation,
     get_conversation_messages,
     get_messages_for_agent,
@@ -387,20 +386,11 @@ class ConversationLifecyclePostgresTests(unittest.IsolatedAsyncioTestCase):
         await PersistanceHelpers.init(self.settings)
         await self.assert_retired()
 
-    async def test_both_endpoints_success_failure_and_disconnect(self):
-        """Real executors/graphs/persistence; inject only model/agent construction.
-
-        V2 is always streaming, including when the request's stream flag is false.
-        Streaming disconnect cases send an actual ASGI http.disconnect event.
-        """
-        for endpoint, stream in (
-            ("v1", False),
-            ("v1", True),
-            ("v2", False),
-            ("v2", True),
-        ):
-            for outcome in ("success", "failure", "disconnect"):
-                with self.subTest(endpoint=endpoint, stream=stream, outcome=outcome):
+    async def test_ag_ui_endpoint_success_failure_disconnect_and_cancel(self):
+        """Real executors/graphs/persistence; inject only model/agent construction."""
+        for stream in (False, True):
+            for outcome in ("success", "failure", "disconnect", "cancel"):
+                with self.subTest(stream=stream, outcome=outcome):
                     self.conversation_id = uuid4().hex
                     saver = PersistanceHelpers.get_checkpointer()
                     paused, resume = asyncio.Event(), asyncio.Event()
@@ -443,17 +433,13 @@ class ConversationLifecyclePostgresTests(unittest.IsolatedAsyncioTestCase):
                     disconnected = asyncio.Event()
 
                     async def run():
-                        if outcome == "disconnect" and (stream or endpoint == "v2"):
+                        if outcome == "disconnect":
                             app = FastAPI()
                             app.include_router(router)
                             app.dependency_overrides[authenticate_user] = lambda: (
                                 self.owner
                             )
-                            path = (
-                                "/v1/chat/completions"
-                                if endpoint == "v1"
-                                else "/v1/chat/v2/completions"
-                            )
+                            path = "/v1/chat/v2/completions"
                             scope = {
                                 "type": "http",
                                 "asgi": {"spec_version": "2.0"},
@@ -487,14 +473,11 @@ class ConversationLifecyclePostgresTests(unittest.IsolatedAsyncioTestCase):
 
                             await app(scope, receive, send)
                             return
-                        if endpoint == "v1":
-                            response = await chat_endpoint(request, self.owner)
-                        else:
-                            response = await ag_ui_chat_endpoint(
-                                request,
-                                self.owner,
-                                Request({"type": "http", "headers": []}),
-                            )
+                        response = await ag_ui_chat_endpoint(
+                            request,
+                            self.owner,
+                            Request({"type": "http", "headers": []}),
+                        )
                         if hasattr(response, "body_iterator"):
                             try:
                                 async for chunk in response.body_iterator:
@@ -519,15 +502,15 @@ class ConversationLifecyclePostgresTests(unittest.IsolatedAsyncioTestCase):
                             task = asyncio.create_task(run())
                             await asyncio.wait_for(paused.wait(), 10)
                             await delete_conversation(self.conversation_id, self.owner)
-                            if outcome == "disconnect" and (stream or endpoint == "v2"):
+                            if outcome == "disconnect":
                                 await disconnect.put({"type": "http.disconnect"})
-                            elif outcome == "disconnect":
+                            elif outcome == "cancel":
                                 task.cancel()
                             resume.set()
                             result = await asyncio.wait_for(
                                 asyncio.gather(task, return_exceptions=True), 10
                             )
-                            if outcome == "disconnect" and (stream or endpoint == "v2"):
+                            if outcome == "disconnect":
                                 self.assertIsNone(result[0])
                                 self.assertTrue(disconnected.is_set())
                                 self.assertTrue(
@@ -536,19 +519,8 @@ class ConversationLifecyclePostgresTests(unittest.IsolatedAsyncioTestCase):
                                         for chunk in chunks
                                     )
                                 )
-                            elif outcome == "disconnect":
+                            elif outcome == "cancel":
                                 self.assertIsInstance(result[0], asyncio.CancelledError)
-                            elif endpoint == "v1" and not stream:
-                                self.assertEqual(
-                                    result[0].choices[0].finish_reason, "error"
-                                )
-                            elif endpoint == "v1":
-                                self.assertTrue(
-                                    any(
-                                        '"finish_reason": "error"' in chunk
-                                        for chunk in chunks
-                                    )
-                                )
                             else:
                                 self.assertTrue(
                                     any("RUN_ERROR" in chunk for chunk in chunks)

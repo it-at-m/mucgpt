@@ -7,7 +7,7 @@ services:
   postgres:
     image: postgres:18.1-alpine3.21@sha256:44d837eb4c2ed263474a95f0cc24745413c50924df60dd73ed6c4c3e36b84259
     environment:
-      - POSTGRES_DB=postgres
+      - POSTGRES_DB=assistants
       - POSTGRES_USER=admin
       - POSTGRES_PASSWORD=admin
       - POSTGRES_HOST_AUTH_METHOD=trust
@@ -15,7 +15,7 @@ services:
     ports:
       - "5432:5432"
     healthcheck: &healthcheck
-      test: ["CMD-SHELL", "pg_isready -d postgres -U admin"]
+      test: ["CMD-SHELL", "pg_isready -d assistants -U admin"]
       interval: 30s
       timeout: 60s
       retries: 3
@@ -50,17 +50,19 @@ services:
 
   # see https://event-driven.io/en/automatically_connect_pgadmin_to_database/
   pg-admin:
-    image: dpage/pgadmin4:9.18.0@sha256:c332c5f6dfba995d9ebc4af261d93506d6876085d712eaaa3defc8dd1a3f26de
+    image: dpage/pgadmin4:9.19.0@sha256:3591b3d02910dcd817dec6fcaa681c278ba6966945283dd0ea0042731c330c83
     environment:
       - PGADMIN_DEFAULT_EMAIL=admin@admin.com
       - PGADMIN_DEFAULT_PASSWORD=admin
       - PGADMIN_CONFIG_SERVER_MODE=False
       - PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED=False
+      - PGADMIN_REPLACE_SERVERS_ON_STARTUP=True
       - PGADMIN_LISTEN_PORT=5050
     ports:
       - "5050:5050"
     depends_on:
       - postgres
+      - checkpoint-postgres
     healthcheck:
       <<: *healthcheck
       test: ["CMD", "wget", "-O", "-", "http://localhost:5050/misc/ping"]
@@ -78,7 +80,7 @@ services:
   #
   keycloak:
     container_name: keycloak
-    image: quay.io/keycloak/keycloak:26.8.1@sha256:a78d6b79572168cb25886b80a8b5b8d4ed4390743e3eecb810538683e209dd6b
+    image: quay.io/keycloak/keycloak:26.8.2@sha256:3879c623248408de29a5303178b5816c77e8dfef3890c361f8c0bbeaa979ba3b
     command:
       - start-dev
     environment:
@@ -323,12 +325,13 @@ services:
     security_opt: *security_settings
 
   xberg-full:
-    image: ghcr.io/xberg-io/xberg:1.0.0-rc.17
+    image: ghcr.io/xberg-io/xberg:1.0.0-rc.17@sha256:0c18a6817ced0e38ae839c24256ea9573b6d044446c7d7d5ac1465d9dec822af
     ports:
       - "8086:8000"
     environment:
       - XBERG_CORS_ORIGINS=https://localhost
-      - XBERG_MAX_UPLOAD_SIZE_MB=500
+      - XBERG_MAX_REQUEST_BODY_BYTES=104857600
+      - XBERG_MAX_MULTIPART_FIELD_BYTES=104857600
       - RUST_LOG=info
     volumes:
       - cache-data:/app/.xberg

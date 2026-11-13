@@ -9,6 +9,7 @@ import { ChatMessage } from "../../pages/chat/Chat";
 import { FollowUpActionModel } from "../FollowUpAction";
 import { getRunningStep, type RunActivity } from "../../utils/agUiActivity";
 import type { ToolApprovalState } from "../../hooks/useToolApproval";
+import { toChatProviderError } from "../../utils/providerError";
 import { findScrollContainer, scrollIntoNearestContainer } from "../../utils/scrollIntoNearestContainer";
 
 interface Props {
@@ -85,12 +86,14 @@ export const AnswerList = ({
         [viewportHeight]
     );
 
+    const providerError = useMemo(() => (error ? toChatProviderError(error) : undefined), [error]);
+
     const shownAnswers = useMemo(() => {
-        if (error) {
+        if (providerError) {
             return answers.slice(0, -1);
         }
         return answers;
-    }, [answers, error]);
+    }, [answers, providerError]);
 
     useLayoutEffect(() => {
         if (!isLoading) {
@@ -134,14 +137,14 @@ export const AnswerList = ({
                         ></ChatTurnComponent>
                     );
                 })}
-                {error ? (
+                {providerError ? (
                     <ChatTurnComponent
                         usermsg={<UserChatMessage message={lastQuestionRef.current} onRollbackMessage={onRollbackError} />}
                         usermsglabel={t("components.usericon.label") + " " + (answers.length + 1).toString()}
                         assistantmsglabel={t("components.answericon.label") + " " + (answers.length + 1).toString()}
                         assistantmsg={
                             <AnswerError
-                                error={error.toString()}
+                                error={providerError}
                                 onRetry={canRetry ? makeApiRequest : undefined}
                                 retryUnavailableReason={retryUnavailableReason}
                             />

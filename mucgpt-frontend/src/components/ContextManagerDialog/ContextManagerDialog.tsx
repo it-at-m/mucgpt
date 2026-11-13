@@ -13,19 +13,20 @@ import {
 import { useGlobalToastContext } from "../GlobalToastHandler/GlobalToastContext";
 import styles from "./ContextManagerDialog.module.css";
 import { EdelweissSpinner } from "../EdelweissSpinner";
+import { DocumentLibrary } from "./DocumentLibrary";
 
-export type UploadedDataStatus = "pending" | "uploading" | "ready" | "error" | "pending-restore";
+export type UploadedDataStatus = "pending" | "uploading" | "ready" | "error" | "pending-restore" | "unavailable";
 
 export interface UploadedData {
     id: string;
-    file: File;
+    file?: File;
     name: string;
     size: number;
     status: UploadedDataStatus;
     isActive: boolean;
     errorMessage?: string;
     fileContent?: string | null; // parsed text content returned by the parse endpoint; null means content is known to be absent (e.g. pending-restore)
-    source?: "upload" | "stored";
+    source?: "upload" | "stored" | "library";
     storedDocumentId?: string;
     parsedAt?: string;
     fileSignature?: string;
@@ -46,7 +47,12 @@ const generateDataId = () =>
 
 export const getFileSignature = (file: File) => `${file.name}-${file.size}-${file.lastModified}`;
 
-export const getDataSignature = (data: UploadedData) => getFileSignature(data.file);
+export const getDataSignature = (data: UploadedData) => (data.file ? getFileSignature(data.file) : data.id);
+
+export const getSelectedDocumentIds = (data: UploadedData[]) =>
+    data
+        .filter(document => document.source === "library" && document.isActive && (document.status === "ready" || document.status === "unavailable"))
+        .map(document => document.id);
 
 export const createUploadedData = (file: File, status: UploadedDataStatus = "ready", overrides: Partial<UploadedData> = {}): UploadedData => ({
     id: overrides.id ?? generateDataId(),
@@ -129,16 +135,19 @@ export const ContextManagerDialog = ({ open, onOpenChange, data, onDataChange }:
     const syncSelectionToData = useCallback(
         (selectedIds: string[], documents: StoredParsedDocument[], currentFailedUploads: UploadedData[]) => {
             const selectedData = documents.filter(document => selectedIds.includes(document.id)).map(toUploadedData);
-            onDataChange([...selectedData, ...currentFailedUploads]);
+            onDataChange([...data.filter(document => document.source === "library"), ...selectedData, ...currentFailedUploads]);
         },
-        [onDataChange, toUploadedData]
+        [onDataChange, toUploadedData, data]
     );
 
     useEffect(() => {
         if (open) {
             const docs = getStoredParsedDocuments();
             setStoredDocuments(docs);
-            const selectedIds = data.map(d => d.storedDocumentId).filter((id): id is string => Boolean(id));
+            const selectedIds = data
+                .filter(d => d.source !== "library")
+                .map(d => d.storedDocumentId)
+                .filter((id): id is string => Boolean(id));
             setSelectedStoredDocumentIds(selectedIds);
             // Restore any transient error entries that are already tracked in `data`
             setFailedUploads(data.filter(d => d.status === "error" && !d.storedDocumentId));
@@ -321,8 +330,8 @@ export const ContextManagerDialog = ({ open, onOpenChange, data, onDataChange }:
         setStoredDocuments([]);
         setSelectedStoredDocumentIds([]);
         setFailedUploads([]);
-        onDataChange([]);
-    }, [onDataChange]);
+        onDataChange(data.filter(document => document.source === "library"));
+    }, [onDataChange, data]);
 
     const handleDownloadParsedContent = useCallback((doc: StoredParsedDocument) => {
         if (!doc.content) {
@@ -464,6 +473,11 @@ export const ContextManagerDialog = ({ open, onOpenChange, data, onDataChange }:
                         {t("components.contextmanagerdialog.title", "Meine Dokumente")}
                     </DialogTitle>
                     <DialogContent className={styles.dialogContent}>
+                        {open && <DocumentLibrary data={data} onDataChange={onDataChange} />}
+                        <Text as="h3" weight="semibold">
+                            {t("document_library.legacy_title")}
+                        </Text>
+                        <Text size={200}>{t("document_library.legacy_description")}</Text>
                         <Text className={styles.subtitle}>
                             {t("components.contextmanagerdialog.subtitle", "Ausgewählte Dokumente werden im Chat als Kontext verwendet.")}
                         </Text>

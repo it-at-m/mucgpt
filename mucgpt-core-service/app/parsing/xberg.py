@@ -13,9 +13,9 @@ class XbergBackend(ParserBackend):
 
     def __init__(self):
         settings = get_settings()
-        self._extract_url = f"{settings.XBERG_URL.rstrip('/')}/extract"
-        self._timeout = settings.XBERG_TIMEOUT
-        logger.info(f"XbergBackend configured with URL {settings.XBERG_URL}")
+        self._extract_url = f"{settings.xberg_url.rstrip('/')}/extract"
+        self._timeout = settings.xberg_timeout
+        logger.info(f"XbergBackend configured with URL {settings.xberg_url}")
 
     async def parse(self, file: UploadFile) -> str:
         file_bytes = await file.read()

@@ -1,3 +1,14 @@
+.library {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacingVerticalS);
+}
+
+.library > h3,
+.library > p {
+    margin: 0;
+}
+
 .dialogContent {
     display: flex;
     flex-direction: column;

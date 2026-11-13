@@ -180,7 +180,9 @@ class TestPausedRun:
     ) -> _ConfiguredLangChainDeepAgentGraph:
         monkeypatch.setattr(
             "agent.deep_agent.PromptPool.get_resolved_prompt",
-            lambda _name: ResolvedPrompt(content="instructions", langfuse_prompt=None),
+            lambda _name, _folder=None: ResolvedPrompt(
+                content="instructions", langfuse_prompt=None
+            ),
         )
         model = ScriptedModel(
             responses=[

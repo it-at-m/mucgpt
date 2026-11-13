@@ -2,6 +2,11 @@
 reviews:
   profile: "chill"
   review_status: true
+  path_filters:
+    # Agent-skill reference files (.agents/skills/) are dev-environment docs
+    # vendored from upstream skills; review them there, not per PR.
+    excludes:
+      - ".agents/skills/**"
   auto_review:
     enabled: true
     auto_incremental_review: true

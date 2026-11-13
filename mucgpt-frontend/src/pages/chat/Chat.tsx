@@ -17,21 +17,22 @@ import { STORAGE_KEYS } from "../layout/LayoutHelper";
 import { ToolStatus } from "../../utils/ToolStreamHandler";
 import { initialRunActivity, type RunActivity } from "../../utils/agUiActivity";
 import { Model } from "../../api";
-import { chatApi } from "../../api/core-client";
 import { useToolsContext } from "../../components/ToolsProvider";
 import { Code24Regular, Settings24Regular } from "@fluentui/react-icons";
 import { Button } from "@fluentui/react-components";
 import { ChatSettingsDialog } from "../../components/ChatSettingsDialog/ChatSettingsDialog";
-import { UploadedData, createUploadedDataFromContent } from "../../components/ContextManagerDialog/ContextManagerDialog";
+import { UploadedData, createUploadedDataFromContent, getSelectedDocumentIds } from "../../components/ContextManagerDialog/ContextManagerDialog";
+import { documentToUploadedData, restoreDocumentSelection } from "../../components/ContextManagerDialog/DocumentLibrary";
+import { listDocumentsApi } from "../../api/documents-client";
 import { getStoredParsedDocuments } from "../../service/parsedDocumentStorage";
 import { useToolApproval } from "../../hooks/useToolApproval";
 import { useToolStatusToasts } from "../../hooks/useToolStatusToasts";
+import { useGlobalToastContext } from "../../components/GlobalToastHandler/GlobalToastContext";
 import { useCanvasController } from "../../hooks/useCanvasController";
 import { CanvasSplitView } from "../../components/Canvas/CanvasSplitView";
 import { useUnifiedHistory, useUnifiedHistoryRegistration } from "../../components/UnifiedHistory";
 import { useLocation, useNavigate } from "react-router-dom";
 import { UserContext } from "../layout/UserContextProvider";
-import { useConfigContext } from "../../context/ConfigContext";
 import { AgUiEventDrawer, type AgUiEventLogEntry } from "../../components/AgUiEventDrawer/AgUiEventDrawer";
 import { scrollIntoNearestContainer } from "../../utils/scrollIntoNearestContainer";
 import { loadConversation } from "../../service/conversationHistory";
@@ -71,6 +72,7 @@ export type ChatMessage = DBMessage<ChatResponse>;
 export interface ChatOptions {
     system: string;
     creativity: string;
+    document_ids?: string[];
 }
 
 const WELCOME_MESSAGE_KEYS = ["home.chat_header"];
@@ -106,9 +108,8 @@ const Chat = () => {
     const { setFollowUpActions } = useContext(FollowUpActionContext);
     const { tools } = useToolsContext();
     const { user } = useContext(UserContext);
-    const { ag_ui_enabled: agUiEnabled } = useConfigContext();
     // The raw AG-UI event log is a debugging aid; users see the run activity instead.
-    const showAgUiEventLog = import.meta.env.DEV && agUiEnabled;
+    const showAgUiEventLog = import.meta.env.DEV;
 
     // Independent states
     const [error, setError] = useState<unknown>();
@@ -136,6 +137,7 @@ const Chat = () => {
     useToolStatusToasts(toolStatuses);
     const toolApproval = useToolApproval();
     const { requestApproval: requestToolApproval, cancel: cancelToolApproval } = toolApproval;
+    const { showWarning } = useGlobalToastContext();
 
     // Related states with useReducer
     const [chatState, dispatch] = useReducer(chatReducer, {
@@ -165,6 +167,7 @@ const Chat = () => {
     const lastAnswerRef = useRef<HTMLDivElement | null>(null);
     const isFirstRender = useRef(true);
     const activeChatRef = useRef(active_chat);
+    const documentSelectionRequestTokenRef = useRef(0);
     const isLoadingRef = useRef(false);
 
     const setLoadingState = useCallback((nextLoading: boolean) => {
@@ -179,6 +182,7 @@ const Chat = () => {
     // Update activeChatRef whenever active_chat changes
     useEffect(() => {
         activeChatRef.current = active_chat;
+        documentSelectionRequestTokenRef.current += 1;
     }, [active_chat]);
 
     // Storage Service mit useMemo
@@ -227,14 +231,25 @@ const Chat = () => {
         async (id: string) => {
             try {
                 cancelToolApproval();
+                ++documentSelectionRequestTokenRef.current;
                 setError(undefined);
                 const chat = await loadConversation(storageService, id, id, { system: "", creativity: CREATIVITY_LOW });
                 if (chat) {
+                    // The transcript must load even when the document library is
+                    // unreachable: fall back to an empty selection with a warning.
+                    let selection: UploadedData[] = [];
+                    try {
+                        selection = await restoreDocumentSelection(chat.documentIds ?? [], chat.documentNames);
+                    } catch (restoreError) {
+                        console.error("Could not restore document selection:", restoreError);
+                        showWarning(t("document_library.restore_failed_title"), t("document_library.restore_failed_message"));
+                    }
                     dispatch({ type: "SET_ANSWERS", payload: chat.messages });
                     dispatch({ type: "SET_CREATIVITY", payload: chat.config.creativity });
                     dispatch({ type: "SET_SYSTEM_PROMPT", payload: chat.config.system });
                     dispatch({ type: "SET_ACTIVE_CHAT", payload: id });
                     resetInputState();
+                    setUploadedData(selection);
                     lastQuestionRef.current = chat.messages.length > 0 ? chat.messages[chat.messages.length - 1].user : "";
 
                     // Scroll to bottom after a short delay to ensure DOM is updated
@@ -251,7 +266,7 @@ const Chat = () => {
                 return false;
             }
         },
-        [storageService, scrollToBottom, resetInputState, cancelToolApproval]
+        [storageService, scrollToBottom, resetInputState, showWarning, t, cancelToolApproval]
     );
 
     // Clear chat state
@@ -357,14 +372,14 @@ const Chat = () => {
             const askResponse: ChatResponse = { answer: "", tokens: 0, user_tokens: 0 } as AskResponse;
             const options: ChatOptions = {
                 system: system ?? "",
-                creativity: creativity
+                creativity: creativity,
+                document_ids: getSelectedDocumentIds(uploadedData)
             };
             try {
                 await makeApiRequest(
                     answers,
                     question,
                     dispatch,
-                    chatApi,
                     LLM,
                     activeChatRef,
                     storageService,
@@ -380,7 +395,6 @@ const Chat = () => {
                     lastAnswerRef,
                     setLoadingState,
                     requestPersist,
-                    agUiEnabled,
                     showAgUiEventLog ? handleAgUiEvent : undefined,
                     setRunActivity,
                     canvasWiring,
@@ -402,10 +416,10 @@ const Chat = () => {
             selectedTools,
             setToolStatuses,
             setLoadingState,
-            agUiEnabled,
             showAgUiEventLog,
             handleAgUiEvent,
             canvasWiring,
+            uploadedData,
             requestToolApproval
         ]
     );
@@ -476,6 +490,7 @@ const Chat = () => {
             hashParams.delete("question");
             hashParams.delete("tools");
             hashParams.delete("data");
+            hashParams.delete("documents");
             hashParams.delete("new");
             hashParams.delete("chatId");
             hashParams.delete("canvas");
@@ -490,6 +505,7 @@ const Chat = () => {
             searchParams.delete("question");
             searchParams.delete("tools");
             searchParams.delete("data");
+            searchParams.delete("documents");
             searchParams.delete("new");
             searchParams.delete("chatId");
             searchParams.delete("canvas");
@@ -503,7 +519,7 @@ const Chat = () => {
     // Handler for LLM selection
     const onLLMSelectionChange = useCallback(
         (nextLLM: string) => {
-            const found = availableLLMs.find((m: Model) => m.llm_name === nextLLM);
+            const found = availableLLMs.find((m: Model) => m.id === nextLLM);
             if (found) {
                 setLLM(found);
                 try {
@@ -537,6 +553,7 @@ const Chat = () => {
 
     // State to track if initialization is complete
     const [isInitialized, setIsInitialized] = useState(false);
+    const [isDocumentSelectionReady, setIsDocumentSelectionReady] = useState(false);
     const [pendingQuestion, setPendingQuestion] = useState<string | null>(null);
     // Effect to handle pending question after tools are loaded
     const scheduledQuestionRef = useRef<string | null>(null);
@@ -554,6 +571,7 @@ const Chat = () => {
         const questionFromUrl = queryParams.get("q") || queryParams.get("question");
         const toolsFromUrl = queryParams.get("tools");
         const dataFromUrl = queryParams.get("data");
+        const documentsFromUrl = queryParams.get("documents");
         const newChatToken = queryParams.get("new");
         const chatIdFromUrl = queryParams.get("chatId");
         const canvasRequested = queryParams.get("canvas") !== null;
@@ -562,6 +580,7 @@ const Chat = () => {
             questionFromUrl,
             toolsFromUrl,
             dataFromUrl,
+            documentsFromUrl,
             newChatRequested: newChatToken !== null,
             newChatToken,
             chatIdFromUrl,
@@ -596,13 +615,13 @@ const Chat = () => {
 
         const storedLLM = localStorage.getItem(STORAGE_KEYS.SETTINGS_LLM);
         if (storedLLM) {
-            const preferredModel = availableLLMs.find(m => m.llm_name === storedLLM);
-            if (preferredModel && preferredModel.llm_name !== LLM.llm_name) {
+            const preferredModel = availableLLMs.find(m => m.id === storedLLM);
+            if (preferredModel && preferredModel.id !== LLM.id) {
                 setLLM(preferredModel);
             }
         }
         hasRestoredLLMRef.current = true;
-    }, [availableLLMs, setLLM, LLM.llm_name]);
+    }, [availableLLMs, setLLM, LLM.id]);
 
     useEffect(() => {
         try {
@@ -630,7 +649,30 @@ const Chat = () => {
         isLoadingRef.current = true;
 
         // Check URL for question parameter - Handle hash router format
-        const { questionFromUrl, toolsFromUrl, dataFromUrl, newChatRequested, newChatToken, chatIdFromUrl, canvasRequested } = getNavigationParams();
+        const { questionFromUrl, toolsFromUrl, dataFromUrl, documentsFromUrl, newChatRequested, newChatToken, chatIdFromUrl, canvasRequested } =
+            getNavigationParams();
+
+        if (documentsFromUrl && !chatIdFromUrl) {
+            const ids = documentsFromUrl.split(",");
+            const documentSelectionRequestToken = documentSelectionRequestTokenRef.current;
+            listDocumentsApi()
+                .then(documents => {
+                    if (documentSelectionRequestToken !== documentSelectionRequestTokenRef.current) return;
+                    const selected = documents.filter(document => ids.includes(document.id) && document.status === "ready");
+                    if (selected.length !== new Set(ids).size) throw new Error("Selected documents are unavailable.");
+                    setUploadedData(previous => [...previous.filter(document => document.source !== "library"), ...selected.map(documentToUploadedData)]);
+                    setIsDocumentSelectionReady(true);
+                })
+                .catch(() => {
+                    if (documentSelectionRequestToken !== documentSelectionRequestTokenRef.current) return;
+                    // The pending question must not stall forever: proceed without
+                    // documents and surface why the selection was not applied.
+                    showWarning(t("document_library.restore_failed_title"), t("document_library.restore_failed_message"));
+                    setIsDocumentSelectionReady(true);
+                });
+        } else {
+            setIsDocumentSelectionReady(true);
+        }
 
         // Parse tools from URL if present
         if (toolsFromUrl) {
@@ -779,7 +821,7 @@ const Chat = () => {
     }, [clearNavigationQueryParams, fetchHistory, getNavigationParams, isCurrentChatEmpty, isInitialized, loadChat, resetInputState, startFreshChat]);
 
     useEffect(() => {
-        if (!isInitialized || !pendingQuestion || tools === undefined) {
+        if (!isInitialized || !isDocumentSelectionReady || !pendingQuestion || tools === undefined) {
             return;
         }
 
@@ -815,7 +857,7 @@ const Chat = () => {
                 scheduledQuestionRef.current = null;
             }
         };
-    }, [isInitialized, pendingQuestion, tools, uploadedData, uploadedDataToDataSources, systemPrompt, clearNavigationQueryParams]);
+    }, [isInitialized, isDocumentSelectionReady, pendingQuestion, tools, uploadedData, uploadedDataToDataSources, systemPrompt, clearNavigationQueryParams]);
 
     // Set up follow-up actions
     useEffect(() => {
@@ -954,13 +996,12 @@ const Chat = () => {
                 tools={tools}
                 uploadedData={uploadedData}
                 setUploadedData={setUploadedData}
-                onTranscription={text => setQuestion(text)}
                 usage={usageSummary}
                 onStartNewChat={startNewChatFromUsage}
                 usageConversationKey={`chat:${active_chat ?? "new"}`}
                 hideDisclaimer
                 llmOptions={availableLLMs}
-                selectedLLM={LLM.llm_name}
+                selectedLLM={LLM.id}
                 onLLMSelectionChange={onLLMSelectionChange}
             />
         );
@@ -980,7 +1021,7 @@ const Chat = () => {
         startNewChatFromUsage,
         usageSummary,
         availableLLMs,
-        LLM.llm_name,
+        LLM.id,
         onLLMSelectionChange
     ]);
 

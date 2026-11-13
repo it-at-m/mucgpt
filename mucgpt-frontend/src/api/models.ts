@@ -54,6 +54,25 @@ export type CanvasState = {
     truncated?: boolean;
 };
 
+export type DocumentMetadata = {
+    id: string;
+    filename: string;
+    mime_type: string;
+    original_size: number;
+    text_length: number;
+    preview: string;
+    preview_kind: string;
+    path: string;
+    created_at: string;
+};
+
+export type DocumentLibraryEntry = Omit<DocumentMetadata, "text_length" | "preview" | "preview_kind"> & {
+    text_length: number | null;
+    preview: string | null;
+    preview_kind: string | null;
+    status: "processing" | "ready" | "deleting";
+};
+
 export type ChatRequest = {
     history: ChatTurn[];
     creativity?: string;
@@ -69,6 +88,7 @@ export type ChatRequest = {
     persist?: boolean;
     data_sources?: DataSource[];
     canvas?: CanvasState | null;
+    document_ids?: string[];
 };
 
 export type AssistantDraftRequest = {
@@ -96,10 +116,9 @@ export interface ApplicationConfig {
     release_notes: ReleaseNote[];
     document_processing_enabled: boolean;
     transcription_enabled: boolean;
-    /** Model id preselected for first-time users; null = frontend built-in default. */
-    transcription_default_model: string | null;
+    /** The single transcription model used by every user; null (not configured) or unknown ids disable the feature. */
+    transcription_model: string | null;
     ai_act_compliance_check_enabled: boolean;
-    ag_ui_enabled: boolean;
     /** Maximum persisted canvas content length (characters). */
     canvas_content_max_chars: number;
     /** Maximum canvas editor input length (characters). */
@@ -121,7 +140,7 @@ export interface ReleaseNote {
 }
 
 export interface Model {
-    llm_name: string;
+    id: string;
     display_name?: string | null;
     max_input_tokens?: number | null;
     context_warning_threshold_percent?: number;
@@ -153,6 +172,13 @@ export interface ChatCompletionDelta {
     tool_calls?: ToolCall[];
 }
 
+/** Structured provider error (contract with mucgpt-core-service `ProviderErrorPayload`). */
+export interface ProviderErrorPayload {
+    code: string;
+    detail: string;
+    status_code?: number | null;
+}
+
 export interface ChatCompletionChunkChoice {
     delta: ChatCompletionDelta;
     index: number;
@@ -165,6 +191,7 @@ export interface ChatCompletionChunk {
     created: number;
     choices: ChatCompletionChunkChoice[];
     usage?: { prompt_tokens?: number; completion_tokens?: number; total_tokens?: number; cache_read_tokens?: number; context_tokens?: number | null } | null;
+    error?: ProviderErrorPayload | null;
 }
 
 export type CountTokenRequest = {

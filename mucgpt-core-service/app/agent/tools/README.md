@@ -133,11 +133,8 @@ How a paused run works (`deep_agent.py`, `agent_executor.py`,
   `PatchToolCallsMiddleware` answers them as cancelled); they never run.
 - A persisted conversation runs one request at a time (Redis lock in
   `chat_router.py`); a second one gets 409, so an approved call never runs twice.
-- Approval-bound tools are left out wherever a run could not pause and continue:
-  without a checkpointer (`persist: false`, e.g. assistant previews) and in the
-  OpenAI-compatible `/v1/chat/completions`. The frontend only uses
-  `/v1/chat/v2/completions` with `AG_UI_ENABLED: true`, so without it these
-  tools are not available at all.
+- Approval-bound tools are left out wherever a run could not pause and continue,
+  i.e. without a checkpointer (`persist: false`, e.g. assistant previews).
 
 ## What used to be here, and why it's gone
 

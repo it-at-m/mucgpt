@@ -1,11 +1,12 @@
-import json
+import asyncio
 from collections.abc import AsyncGenerator
-from typing import Annotated
+from typing import Annotated, Any
 
 from ag_ui.core import BaseEvent
 from ag_ui.encoder import EventEncoder
 from fastapi import APIRouter, Depends, HTTPException, Request, Response
 from fastapi.responses import StreamingResponse
+from langfuse import get_client, propagate_attributes
 from redis.asyncio.lock import Lock
 from redis.exceptions import LockError
 
@@ -14,21 +15,23 @@ from api.api_models import (
     CanvasResponse,
     ChatCompletionMessage,
     ChatCompletionRequest,
-    ChatCompletionResponse,
     ChatTitleResult,
+    ConversationAssistantRebindRequest,
     ConversationMessage,
     ConversationMetadata,
     ConversationRenameRequest,
 )
-from api.exception import llm_exception_handler
 from config.model_provider import ModelRegistry, ModelsConfigurationException
 from config.settings import get_settings
 from core.auth import authenticate_user
 from core.auth_models import AuthenticationResult
 from core.cache import RedisCache
+from core.llm_helpers import hash_user_id
 from core.logtools import getLogger
 from core.persistance_helpers import PersistanceHelpers
 from core.stream_cleanup import close_stream
+from core.virtual_file_system_helper import get_documents_for_agent
+from database.conversation_repo import ConversationRepository
 from database.fenced_checkpointer import ConversationDeletedError
 from init_app import init_agent
 
@@ -54,9 +57,9 @@ def get_temperature_from_request(request: ChatCompletionRequest) -> float:
     if request.creativity:
         settings = get_settings()
         # Find the model configuration
-        selected_model_name = request.model or settings.MODELS[0].llm_name
+        selected_model_name = request.model or settings.models[0].id
         model_config = next(
-            (m for m in settings.MODELS if m.llm_name == selected_model_name), None
+            (m for m in settings.models if m.id == selected_model_name), None
         )
 
         if model_config:
@@ -126,105 +129,32 @@ async def get_messages_for_agent(
     return request.messages
 
 
-@router.post(
-    "/chat/completions",
-    summary="Create chat completion",
-    description="OpenAI-compatible endpoint for chat completions",
-    response_model=ChatCompletionResponse,
-    responses={
-        200: {"description": "Successful Response"},
-        400: {"description": "Bad Request"},
-        403: {"description": "Forbidden"},
-        500: {"description": "Internal Server Error"},
-    },
-)
-async def chat_endpoint(
+async def _save_document_selection(
     request: ChatCompletionRequest,
-    user_info: Annotated[AuthenticationResult, Depends(authenticate_user)],
-) -> StreamingResponse | ChatCompletionResponse:
-    """Validate and run an OpenAI-compatible completion, streamed or aggregated.
+    user_id: str,
+    document_ids: list[str],
+    document_names: dict[str, str] | None = None,
+) -> None:
+    """Save only validated selections for persisted, live owned conversations.
 
-    Model validation precedes ownership creation. Persisted runs append new turns;
-    streaming teardown closes the executor even when response iteration fails.
+    The selection is saved on every persisted turn: the per-turn agent mount is
+    built from the request field alone, while this record only restores the
+    selection when the chat is reopened.
     """
-    if not request.conversation_id:
-        raise HTTPException(status_code=400, detail="conversation_id is required")
-    if not request.messages:
-        raise HTTPException(status_code=400, detail="messages must not be empty")
-    if request.messages[-1].role != "user":
-        raise HTTPException(
-            status_code=400, detail="last message must have role 'user'"
-        )
-
-    try:
-        ModelRegistry.get_model(request.model)
-    except ModelsConfigurationException as exc:
-        detail = str(exc)
-        status_code = 400
-        if "not initialized" in detail.lower():
-            status_code = 500
-        raise HTTPException(status_code=status_code, detail=detail) from exc
-
-    try:
-        messages_for_agent = await get_messages_for_agent(request, user_info.user_id)
-
-        agent = await init_agent(
-            user_info=user_info, model_name=request.model, persist=request.persist
-        )
-        temperature = get_temperature_from_request(request)
-        enabled_tools = request.enabled_tools or []
-        data_sources = (
-            [source.model_dump() for source in request.data_sources]
-            if request.data_sources
-            else None
-        )
-        canvas = request.canvas
-
-        if request.stream:
-            gen = agent.run_with_streaming(
-                messages=messages_for_agent,
-                temperature=temperature,
-                model=request.model,
-                user_info=user_info,
-                enabled_tools=enabled_tools,
-                assistant_id=request.assistant_id,
-                data_sources=data_sources,
-                canvas=canvas,
-                conversation_id=request.conversation_id,
-                reasoning_effort=request.reasoning_effort,
-            )
-
-            async def sse_generator() -> AsyncGenerator[str]:
-                """Encode completion chunks as SSE and close the executor on every exit."""
-                try:
-                    async for chunk in gen:
-                        yield f"data: {json.dumps(chunk)}\n\n"
-                    yield "data: [DONE]\n\n"
-                finally:
-                    await close_stream(gen)
-
-            return StreamingResponse(sse_generator(), media_type="text/event-stream")
-
-        response = await agent.run_without_streaming(
-            messages=messages_for_agent,
-            temperature=temperature,
-            model=request.model,
-            user_info=user_info,
-            enabled_tools=enabled_tools,
-            assistant_id=request.assistant_id,
-            data_sources=data_sources,
-            canvas=canvas,
-            conversation_id=request.conversation_id,
-            reasoning_effort=request.reasoning_effort,
-        )
-
-        return response
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.exception("Exception in /chat/completions")
-        msg = llm_exception_handler(ex=e, logger=logger)
-        raise HTTPException(status_code=500, detail=msg) from e
+    if not request.persist:
+        return
+    conversation_id = request.conversation_id
+    # Omitted document_ids means "no document feature"; an explicitly empty list
+    # means "detach all previously selected documents".
+    if conversation_id is None:
+        return
+    if "document_ids" not in request.model_fields_set and not document_ids:
+        return
+    async with PersistanceHelpers._get_session_factory().begin() as session:
+        if not await ConversationRepository(session).set_document_ids(
+            user_id, conversation_id, document_ids, document_names
+        ):
+            raise HTTPException(status_code=403, detail="Conversation access denied")
 
 
 @router.get(
@@ -286,6 +216,31 @@ async def rename_conversation(
             raise HTTPException(status_code=403, detail="Conversation access denied")
         raise HTTPException(status_code=404, detail="Conversation not found")
     return ChatTitleResult(title=request.title)
+
+
+@router.patch(
+    "/conversations/{conversation_id}/assistant",
+    summary="Re-bind conversation to an assistant",
+    status_code=204,
+    responses={403: {"description": "Forbidden"}, 404: {"description": "Not found"}},
+)
+async def rebind_conversation_assistant(
+    conversation_id: str,
+    request: ConversationAssistantRebindRequest,
+    user_info: Annotated[AuthenticationResult, Depends(authenticate_user)],
+) -> None:
+    """Point an existing conversation's assistant association at another assistant.
+
+    Used when chats move to a different assistant; never creates or revives
+    conversations.
+    """
+    rebound = await PersistanceHelpers.set_conversation_assistant(
+        conversation_id, user_info.user_id, request.assistant_id
+    )
+    if not rebound:
+        if await PersistanceHelpers.conversation_exists(conversation_id):
+            raise HTTPException(status_code=403, detail="Conversation access denied")
+        raise HTTPException(status_code=404, detail="Conversation not found")
 
 
 @router.delete(
@@ -417,6 +372,7 @@ async def put_conversation_canvas_revisions(
         200: {"description": "Successful Response"},
         400: {"description": "Bad Request"},
         403: {"description": "Forbidden"},
+        404: {"description": "Selected documents unavailable"},
         500: {"description": "Internal Server Error"},
     },
 )
@@ -460,7 +416,7 @@ async def ag_ui_chat_endpoint(
         else None
     )
     try:
-        events = await _start_agui_run(
+        events, trace_input = await _start_agui_run(
             chat_request, user_info, chat_request.conversation_id
         )
     except BaseException:
@@ -470,12 +426,33 @@ async def ag_ui_chat_endpoint(
 
     async def event_generator() -> AsyncGenerator[str]:
         """Encode AG-UI events and close their source on completion or cancellation."""
+        langfuse = get_client()
+        tags = (
+            [f"assistant-{chat_request.assistant_id}"]
+            if chat_request.assistant_id is not None
+            else ["default-assistant"]
+        )
+        trace_id = langfuse.create_trace_id()
         try:
-            async for event in events:
-                yield encoder.encode(event)
+            with langfuse.start_as_current_observation(
+                name="Agent",
+                as_type="agent",
+                input=trace_input,
+                trace_context={"trace_id": trace_id},
+            ):
+                with propagate_attributes(
+                    user_id=hash_user_id(user_info.user_id),
+                    tags=tags,
+                    session_id=chat_request.conversation_id,
+                    trace_name="Agent",
+                ):
+                    async for event in events:
+                        yield encoder.encode(event)
         finally:
             await close_stream(events)
             await _unlock_conversation_run(run_lock)
+            # The root observation must end before its completed span can be flushed.
+            await asyncio.to_thread(langfuse.flush)
 
     return StreamingResponse(event_generator(), media_type=encoder.get_content_type())
 
@@ -509,25 +486,37 @@ async def _start_agui_run(
     chat_request: ChatCompletionRequest,
     user_info: AuthenticationResult,
     conversation_id: str,
-) -> AsyncGenerator[BaseEvent]:
-    """Authorize the turn or resume and return the agent's AG-UI event stream."""
+) -> tuple[AsyncGenerator[BaseEvent], Any]:
+    """Authorize the turn or resume; return the agent's AG-UI event stream and the trace input."""
     is_resume = chat_request.resume is not None
+    if is_resume and not await PersistanceHelpers.is_user_in_conversation(
+        user_info.user_id, conversation_id
+    ):
+        raise HTTPException(status_code=403, detail="Conversation access denied")
+
+    document_selection = await get_documents_for_agent(chat_request, user_info)
     if is_resume:
-        if not await PersistanceHelpers.is_user_in_conversation(
-            user_info.user_id, conversation_id
-        ):
-            raise HTTPException(status_code=403, detail="Conversation access denied")
         messages_for_agent = []
+        trace_input: Any = [
+            entry.model_dump(by_alias=True) for entry in chat_request.resume or []
+        ]
     else:
         messages_for_agent = await get_messages_for_agent(
             chat_request, user_info.user_id
         )
+        trace_input = chat_request.messages[-1].content
 
     agent = await init_agent(
         user_info=user_info,
         model_name=chat_request.model,
         persist=chat_request.persist,
-        allow_approval=True,
+        document_selection=document_selection,
+    )
+    await _save_document_selection(
+        chat_request,
+        user_info.user_id,
+        [document.id for document in document_selection],
+        {document.id: document.filename for document in document_selection},
     )
     resume_decisions = None
     if is_resume:
@@ -539,7 +528,7 @@ async def _start_agui_run(
         except ValueError as exc:
             raise HTTPException(status_code=400, detail=str(exc)) from exc
 
-    return agent.run_agui_with_streaming(
+    events = agent.run_agui_with_streaming(
         messages=messages_for_agent,
         temperature=get_temperature_from_request(chat_request),
         model=chat_request.model,
@@ -556,3 +545,4 @@ async def _start_agui_run(
         reasoning_effort=chat_request.reasoning_effort,
         resume_decisions=resume_decisions,
     )
+    return events, trace_input

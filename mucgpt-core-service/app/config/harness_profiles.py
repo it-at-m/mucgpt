@@ -49,23 +49,16 @@ def _set_extra_middleware_for_model(
 ) -> tuple[AgentMiddleware, ...]:
     """Determine extra middleware to apply for a given model configuration."""
     enabled_tools = model_config.deep_agent.enabled_builtin_tools
-    if not enabled_tools:
-        return ()
 
+    # Archiving uses the scratch backend directly, not model-exposed write tools.
     summarization_middleware = (
         ProfileSummarizationMiddleware(
-            model=ModelRegistry.get_model(),  # default (small) model, will be called every time once the message history reaches the trigger threshold (with current setup)
-            backend=StateBackend(),  # Use default backend (per chat session); exchangeable with a custom backend after chats are backend persistent
-            trigger=(
-                "fraction",
-                0.8,
-            ),  # Trigger summarization when 80% of the token limit is reached
-            keep=("messages", 10),  # Keep the last 10 messages in the conversation
+            model=ModelRegistry.get_model(),
+            backend=StateBackend(),
+            trigger=("fraction", 0.8),
+            keep=("messages", 10),
         )
         if model_config.deep_agent.enable_summarization
-        and "write_file" in enabled_tools
-        and "read_file" in enabled_tools
-        and "edit_file" in enabled_tools
         else None
     )
 
@@ -104,7 +97,7 @@ def register_model_harness_profile(model_config: ModelsConfig) -> None:
     # as per documentation, this is sets the default harness profile for the given model type and name, which can NOT be overridden by a middleware override.
     enabled_tools = model_config.deep_agent.enabled_builtin_tools
     register_harness_profile(
-        f"{model_config.type.lower()}:{model_config.llm_name}",
+        f"{model_config.type.lower()}:{model_config.id}",
         HarnessProfile(
             excluded_tools=DEEP_AGENT_BUILTIN_TOOLS - enabled_tools,
             extra_middleware=extra_middleware,
@@ -128,6 +121,6 @@ def register_model_harness_profile(model_config: ModelsConfig) -> None:
     logger.debug(
         "Registered Deep Agents profile %s:%s with enabled built-ins %s; ",
         model_config.type.lower(),
-        model_config.llm_name,
+        model_config.id,
         sorted(enabled_tools),
     )

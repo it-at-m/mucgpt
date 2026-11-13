@@ -61,6 +61,8 @@ class ConversationRepository:
                 Chat.assistant_id,
                 Chat.created_at,
                 Chat.updated_at,
+                Chat.document_ids,
+                Chat.document_names,
             )
             .where(Chat.user_id == user_id, Chat.deleted_at.is_(None))
             .order_by(Chat.updated_at.desc())
@@ -71,6 +73,26 @@ class ConversationRepository:
         """Report whether a live or retired ownership mapping exists for the ID."""
         result = await self.session.execute(
             select(Chat.conversation_id).where(Chat.conversation_id == conversation_id)
+        )
+        return result.scalar_one_or_none() is not None
+
+    async def set_document_ids(
+        self,
+        user_id: str,
+        conversation_id: str,
+        document_ids: list[str],
+        document_names: dict[str, str] | None = None,
+    ) -> bool:
+        """Replace a live owner's validated selection; retain IDs after document deletion."""
+        result = await self.session.execute(
+            update(Chat)
+            .values(document_ids=document_ids, document_names=document_names or {})
+            .where(
+                Chat.conversation_id == conversation_id,
+                Chat.user_id == user_id,
+                Chat.deleted_at.is_(None),
+            )
+            .returning(Chat.conversation_id)
         )
         return result.scalar_one_or_none() is not None
 
@@ -102,6 +124,28 @@ class ConversationRepository:
         result = await self.session.execute(
             update(Chat)
             .values(chat_title=title, updated_at=func.now())
+            .where(
+                Chat.conversation_id == conversation_id,
+                Chat.user_id == user_id,
+                Chat.deleted_at.is_(None),
+            )
+            .returning(Chat.conversation_id)
+        )
+        return result.scalar_one_or_none() is not None
+
+    async def set_conversation_assistant(
+        self, conversation_id: str, user_id: str, assistant_id: str
+    ) -> bool:
+        """Re-bind an existing live owned conversation to another assistant.
+
+        Used when chats move to a different assistant. Unlike the upsert
+        paths, an explicit re-bind intentionally overrides the preserved
+        original association. Never claims, revives, or retires the
+        conversation.
+        """
+        result = await self.session.execute(
+            update(Chat)
+            .values(assistant_id=assistant_id, updated_at=func.now())
             .where(
                 Chat.conversation_id == conversation_id,
                 Chat.user_id == user_id,

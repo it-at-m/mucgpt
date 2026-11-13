@@ -398,15 +398,16 @@ def bind_media_parts(
 def supports_vision_for_model(model_name: str | None) -> bool:
     """Look up ``model_info.supports_vision`` for the requested model.
 
-    Mirrors ``get_temperature_from_request``'s settings lookup: unknown models
-    are treated as non-vision (the registry gate already rejected them).
+    Unknown models are treated as non-vision. The registry lookup validates the
+    requested model, while settings remain the source of its capabilities.
     """
     try:
-        model = ModelRegistry.get_model(model_name)
+        ModelRegistry.get_model(model_name)
     except ModelsConfigurationException:
         return False
     settings = get_settings()
-    entry = next((m for m in settings.models if m.id == model.model_name), None)
+    selected_model_name = model_name or settings.models[0].id
+    entry = next((m for m in settings.models if m.id == selected_model_name), None)
     return bool(entry.model_info.supports_vision) if entry else False
 
 

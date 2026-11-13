@@ -468,17 +468,13 @@ class ConversationLifecyclePostgresTests(unittest.IsolatedAsyncioTestCase):
                 with self.subTest(stream=stream, outcome=outcome):
                     self.conversation_id = uuid4().hex
                     saver = PersistanceHelpers.get_checkpointer()
-                    paused, resume = asyncio.Event(), asyncio.Event()
-                    original_put = saver.aput
+                    started, resume = asyncio.Event(), asyncio.Event()
 
-                    async def paused_put(*args, **kwargs):
-                        paused.set()
-                        await resume.wait()
-                        return await original_put(*args, **kwargs)
-
-                    def answer(state):
+                    async def answer(state):
+                        started.set()
                         if outcome == "failure":
                             raise RuntimeError("controlled generation failure")
+                        await resume.wait()
                         return {
                             "messages": [AIMessage(content="private answer from A")]
                         }
@@ -562,7 +558,6 @@ class ConversationLifecyclePostgresTests(unittest.IsolatedAsyncioTestCase):
                                 await response.body_iterator.aclose()
                         return response
 
-                    saver.aput = paused_put
                     task = None
                     try:
                         with (
@@ -576,7 +571,7 @@ class ConversationLifecyclePostgresTests(unittest.IsolatedAsyncioTestCase):
                             ),
                         ):
                             task = asyncio.create_task(run())
-                            await asyncio.wait_for(paused.wait(), 10)
+                            await asyncio.wait_for(started.wait(), 10)
                             await delete_conversation(self.conversation_id, self.owner)
                             if outcome == "disconnect":
                                 await disconnect.put({"type": "http.disconnect"})
@@ -612,7 +607,6 @@ class ConversationLifecyclePostgresTests(unittest.IsolatedAsyncioTestCase):
                         resume.set()
                         if task is not None:
                             await asyncio.gather(task, return_exceptions=True)
-                        saver.aput = original_put
 
 
 if __name__ == "__main__":

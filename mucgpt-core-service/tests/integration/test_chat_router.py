@@ -194,6 +194,10 @@ class TestChatRouter:
     ) -> None:
         from core.persistance_helpers import PersistanceHelpers
 
+        save_document_selection = AsyncMock()
+        monkeypatch.setattr(
+            "api.routers.chat_router._save_document_selection", save_document_selection
+        )
         monkeypatch.setattr(
             PersistanceHelpers,
             "is_user_in_conversation",
@@ -223,6 +227,7 @@ class TestChatRouter:
 
         assert response.status_code == 200, response.text
         get_messages.assert_not_awaited()
+        save_document_selection.assert_awaited_once()
         call_kwargs = mock_agent_executor.run_agui_with_streaming.call_args.kwargs
         assert call_kwargs["resume_decisions"] == [{"type": "approve"}]
         assert call_kwargs["messages"] == []
@@ -305,6 +310,10 @@ class TestChatRouter:
     ) -> None:
         from core.persistance_helpers import PersistanceHelpers
 
+        save_document_selection = AsyncMock()
+        monkeypatch.setattr(
+            "api.routers.chat_router._save_document_selection", save_document_selection
+        )
         monkeypatch.setattr(
             PersistanceHelpers,
             "is_user_in_conversation",
@@ -325,6 +334,7 @@ class TestChatRouter:
 
         assert response.status_code == status_code, response.text
         mock_agent_executor.run_agui_with_streaming.assert_not_called()
+        save_document_selection.assert_not_awaited()
 
     @staticmethod
     def _streaming_executor(mock_init_agent: AsyncMock) -> Mock:

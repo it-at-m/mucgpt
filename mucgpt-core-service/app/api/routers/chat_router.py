@@ -465,12 +465,6 @@ async def ag_ui_chat_endpoint(
             persist=chat_request.persist,
             document_selection=document_selection,
         )
-        await _save_document_selection(
-            chat_request,
-            user_info.user_id,
-            [document.id for document in document_selection],
-            {document.id: document.filename for document in document_selection},
-        )
         resume_decisions = None
         generic_resume = None
         if is_resume:
@@ -494,6 +488,12 @@ async def ag_ui_chat_endpoint(
                     )
             except (ValidationError, ValueError) as exc:
                 raise HTTPException(status_code=400, detail=str(exc)) from exc
+        await _save_document_selection(
+            chat_request,
+            user_info.user_id,
+            [document.id for document in document_selection],
+            {document.id: document.filename for document in document_selection},
+        )
         events = agent.run_agui_with_streaming(
             messages=messages_for_agent,
             temperature=get_temperature_from_request(chat_request),

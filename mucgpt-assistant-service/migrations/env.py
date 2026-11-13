@@ -52,11 +52,16 @@ def do_run_migrations(connection: Connection) -> None:
     )
     lock_timeout = config.get_main_option("mucgpt.migration_lock_timeout", "30")
     connection.execute(
-        text("SELECT set_config('lock_timeout', :timeout, false)"),
+        text("SELECT set_config('statement_timeout', :timeout, false)"),
         {"timeout": f"{lock_timeout}s"},
     )
     connection.execute(
         text("SELECT pg_advisory_lock(hashtext('mucgpt-assistant-migrations'))")
+    )
+    db_timeout = config.get_main_option("mucgpt.migration_db_timeout", "30")
+    connection.execute(
+        text("SELECT set_config('statement_timeout', :timeout, false)"),
+        {"timeout": f"{db_timeout}s"},
     )
     try:
         with context.begin_transaction():
@@ -83,7 +88,6 @@ async def run_async_migrations() -> None:
     db_timeout = int(config.get_main_option("mucgpt.migration_db_timeout", "30"))
     connect_args: dict[str, Any] = {
         "timeout": db_timeout,
-        "command_timeout": db_timeout,
     }
     if schema:
         connect_args["server_settings"] = {

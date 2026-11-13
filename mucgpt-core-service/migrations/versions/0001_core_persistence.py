@@ -143,6 +143,10 @@ def upgrade() -> None:
             "ON checkpoint_writes(thread_id)"
         )
 
+    # Vendor migrations expect blobs to be nullable. This is a no-op for the
+    # freshly-created table and corrects adopted tables before they are marked done.
+    op.execute("ALTER TABLE checkpoint_blobs ALTER COLUMN blob DROP NOT NULL")
+
     # AsyncPostgresSaver.setup() uses this table to track the vendor migrations.
     # Mark the schema above as complete so a third-party caller cannot rerun it.
     for version in range(10):

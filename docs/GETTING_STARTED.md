@@ -464,7 +464,7 @@ Pulling from ghcr.io is anonymous. The openCode registry is the GitLab container
 
 ### Database migration ordering
 
-The core service does not create or upgrade database schema at startup. For every core release, run the matching `mucgpt-core-migrations` image as a deployment Job and wait for it to complete successfully before rolling out `mucgpt-core`. This applies to both the conversation/checkpoint schema and document storage schema. Deploying a core image before its migration Job, or retaining a stale migration image, can cause runtime database errors. Migration Jobs serialize through a PostgreSQL advisory lock; if overlapping Jobs are possible, set `MIGRATION_LOCK_TIMEOUT=0` to wait for the active Job rather than failing after the default 30 seconds.
+The core service does not create or upgrade database schema at startup. For every core release, stop accepting new generation requests and stop/drain every old writer before starting fence-aware instances, then run the matching `mucgpt-core-migrations` image as a deployment Job and wait for it to complete successfully before rolling out `mucgpt-core`. This applies to both the conversation/checkpoint schema and document storage schema. See the [conversation persistence rollout procedure](conversation-persistence.md#schema-migration-and-rollout) for the required ordering. Deploying a core image before its migration Job, or retaining a stale migration image, can cause runtime database errors. Migration Jobs serialize through a PostgreSQL advisory lock; if overlapping Jobs are possible, set `MIGRATION_LOCK_TIMEOUT=0` to wait for the active Job rather than failing after the default 30 seconds.
 
 ## 🔧 Troubleshooting
 

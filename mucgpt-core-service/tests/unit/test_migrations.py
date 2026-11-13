@@ -29,7 +29,7 @@ def test_migration_settings_require_only_database_configuration(monkeypatch) -> 
 
 def test_migration_settings_reject_incomplete_database_configuration() -> None:
     with pytest.raises(ValueError, match="db.host"):
-        MigrationSettings(db={}).database_url()
+        MigrationSettings(db={"host": None}).database_url()
 
 
 def test_lock_timeout_allows_an_indefinite_wait(monkeypatch) -> None:

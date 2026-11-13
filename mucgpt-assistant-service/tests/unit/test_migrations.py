@@ -4,6 +4,7 @@ import pytest
 from alembic import command
 from migrations import run_migrations
 from migrations.settings import MigrationSettings, get_migration_settings
+from sqlalchemy.exc import DBAPIError
 
 
 @pytest.fixture(autouse=True)
@@ -40,6 +41,15 @@ def test_lock_timeout_allows_an_indefinite_wait(monkeypatch) -> None:
     monkeypatch.setenv("MIGRATION_LOCK_TIMEOUT", "0")
 
     assert run_migrations._nonnegative_int("MIGRATION_LOCK_TIMEOUT", 30) == 0
+
+
+def test_runner_retries_postgres_startup_rejection() -> None:
+    class PostgresStartupError(Exception):
+        sqlstate = "57P03"
+
+    error = DBAPIError(None, None, PostgresStartupError())
+
+    assert run_migrations._is_transient_connection_error(error)
 
 
 def test_alembic_config_escapes_percent_encoded_database_url(monkeypatch) -> None:

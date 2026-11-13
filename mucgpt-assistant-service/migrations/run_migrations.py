@@ -3,7 +3,8 @@
 Environment variables:
     MIGRATION_REVISION: Target revision, default ``head``.
     MIGRATION_CHECK_ONLY: Connect and report the current revision without changes.
-    MIGRATION_DB_TIMEOUT: Connection and command timeout in seconds, default 30.
+    MIGRATION_DB_TIMEOUT: Connection and migration-statement timeout in seconds,
+        default 30.
     MIGRATION_DB_RETRIES: Number of transient connection attempts, default 1.
     MIGRATION_DB_RETRY_DELAY: Delay between attempts in seconds, default 5.
     MIGRATION_LOCK_TIMEOUT: Advisory lock wait timeout in seconds, default 30;
@@ -77,7 +78,10 @@ def _is_transient_connection_error(error: BaseException) -> bool:
     if isinstance(error, ConnectionError | TimeoutError | OSError | OperationalError):
         return True
     if isinstance(error, DBAPIError):
-        return bool(getattr(error, "connection_invalidated", False))
+        return bool(
+            getattr(error, "connection_invalidated", False)
+            or getattr(getattr(error, "orig", None), "sqlstate", None) == "57P03"
+        )
     return False
 
 

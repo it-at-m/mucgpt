@@ -18,9 +18,8 @@ import { ToolStatus } from "../../utils/ToolStreamHandler";
 import { initialRunActivity, type RunActivity } from "../../utils/agUiActivity";
 import { Model } from "../../api";
 import { useToolsContext } from "../../components/ToolsProvider";
-import { Code24Regular, Settings24Regular } from "@fluentui/react-icons";
+import { Code24Regular } from "@fluentui/react-icons";
 import { Button } from "@fluentui/react-components";
-import { ChatSettingsDialog } from "../../components/ChatSettingsDialog/ChatSettingsDialog";
 import { UploadedData, createUploadedDataFromContent, getSelectedDocumentIds } from "../../components/ContextManagerDialog/ContextManagerDialog";
 import { documentToUploadedData, restoreDocumentSelection } from "../../components/ContextManagerDialog/DocumentLibrary";
 import { listDocumentsApi } from "../../api/documents-client";
@@ -41,31 +40,6 @@ import { useCanvasLimits } from "../../components/Canvas/canvasLimits";
 
 const requestPersist = true;
 const conversationActions = getConversationActionCapabilities(requestPersist);
-
-/**
- * Creates a debounced function that delays invoking the provided function
- * until after the specified wait time has elapsed since the last invocation.
- *
- * @param func The function to debounce
- * @param wait The number of milliseconds to delay
- * @returns A debounced version of the provided function
- */
-export function debounce<T extends (...args: any[]) => any>(func: T, wait: number): (...args: Parameters<T>) => void {
-    let timeout: ReturnType<typeof setTimeout> | null = null;
-
-    return function (...args: Parameters<T>): void {
-        const later = () => {
-            timeout = null;
-            func(...args);
-        };
-
-        if (timeout !== null) {
-            clearTimeout(timeout);
-        }
-
-        timeout = setTimeout(later, wait);
-    };
-}
 
 export type ChatMessage = DBMessage<ChatResponse>;
 
@@ -124,7 +98,6 @@ const Chat = () => {
     });
     const [toolStatuses, setToolStatuses] = useState<ToolStatus[]>([]);
     const [runActivity, setRunActivity] = useState<RunActivity>(initialRunActivity);
-    const [isSettingsOpen, setIsSettingsOpen] = useState<boolean>(false);
     const [uploadedData, setUploadedData] = useState<UploadedData[]>([]);
     const [isLoading, setIsLoading] = useState<boolean>(false);
     // True from the moment a request is sent until the answer has fully finished streaming.
@@ -194,17 +167,6 @@ const Chat = () => {
             scrollIntoNearestContainer(chatMessageStreamEnd.current);
         }
     }, []);
-
-    // Debounced Storage-Update
-    const debouncedStorageUpdate = useMemo(
-        () =>
-            debounce((options: ChatOptions) => {
-                if (activeChatRef.current) {
-                    storageService.update(activeChatRef.current, undefined, options);
-                }
-            }, 500),
-        [activeChatRef.current, storageService]
-    );
 
     const resetInputState = useCallback(() => {
         setQuestion("");
@@ -452,31 +414,6 @@ const Chat = () => {
             }
         },
         [storageService, clearChat, fetchHistory, setQuestion, isLoadingRef.current, activeChatRef.current, setLoadingState]
-    );
-
-    // Konfigurationsänderungen mit memoisierten Callbacks
-    const onCreativityChanged = useCallback(
-        (newCreativity: string) => {
-            dispatch({ type: "SET_CREATIVITY", payload: newCreativity });
-
-            debouncedStorageUpdate({
-                system: systemPrompt,
-                creativity: newCreativity
-            });
-        },
-        [systemPrompt, debouncedStorageUpdate]
-    );
-
-    const onSystemPromptChanged = useCallback(
-        (newSystemPrompt: string) => {
-            dispatch({ type: "SET_SYSTEM_PROMPT", payload: newSystemPrompt });
-
-            debouncedStorageUpdate({
-                system: newSystemPrompt,
-                creativity: creativity
-            });
-        },
-        [creativity, debouncedStorageUpdate]
     );
 
     const clearNavigationQueryParams = useCallback(() => {
@@ -1028,14 +965,6 @@ const Chat = () => {
     const layout = useMemo(
         () => (
             <>
-                <ChatSettingsDialog
-                    open={isSettingsOpen}
-                    onOpenChange={setIsSettingsOpen}
-                    creativity={creativity}
-                    setCreativity={onCreativityChanged}
-                    systemPrompt={systemPrompt}
-                    setSystemPrompt={onSystemPromptChanged}
-                />
                 {showAgUiEventLog && (
                     <AgUiEventDrawer
                         open={isEventDrawerOpen}
@@ -1053,22 +982,14 @@ const Chat = () => {
                     header_as_markdown={false}
                     messages_description={t("common.messages")}
                     actions={
-                        <>
-                            {showAgUiEventLog && (
-                                <Button
-                                    appearance="transparent"
-                                    icon={<Code24Regular />}
-                                    onClick={() => setIsEventDrawerOpen(true)}
-                                    aria-label={t("chat.show_ag_ui_events")}
-                                />
-                            )}
+                        showAgUiEventLog && (
                             <Button
                                 appearance="transparent"
-                                icon={<Settings24Regular />}
-                                onClick={() => setIsSettingsOpen(true)}
-                                aria-label={t("components.chattsettingsdrawer.title")}
+                                icon={<Code24Regular />}
+                                onClick={() => setIsEventDrawerOpen(true)}
+                                aria-label={t("chat.show_ag_ui_events")}
                             />
-                        </>
+                        )
                     }
                 />
             </>
@@ -1082,11 +1003,6 @@ const Chat = () => {
             clearChat,
             activeChatName,
             isLoading,
-            isSettingsOpen,
-            creativity,
-            onCreativityChanged,
-            systemPrompt,
-            onSystemPromptChanged,
             showAgUiEventLog,
             isEventDrawerOpen,
             agUiEvents

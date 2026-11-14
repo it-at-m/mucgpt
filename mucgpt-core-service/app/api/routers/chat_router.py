@@ -184,6 +184,10 @@ async def bind_or_verify_chat_images(
         raise HTTPException(status_code=503, detail="Image upload is not enabled.")
     try:
         if request.persist:
+            if request.conversation_id is None:
+                raise HTTPException(
+                    status_code=400, detail="conversation_id is required"
+                )
             await bind_chat_images(user_info, request.conversation_id, image_ids)
         else:
             await verify_unbound_chat_images(user_info, image_ids)

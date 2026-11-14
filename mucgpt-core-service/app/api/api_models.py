@@ -131,14 +131,18 @@ class ConversationUsage(BaseModel):
     )
 
 
-class ConversationMessage(ChatCompletionMessage):
+class ConversationMessage(BaseModel):
     """Public user/assistant turn of a conversation's stored history.
 
-    Text-only turns keep the plain string; image-bearing user turns carry
+    Deliberately standalone instead of subclassing ChatCompletionMessage:
+    text-only turns keep the plain string, but image-bearing user turns carry
     OpenAI-style parts where image parts are exclusively managed
     ``mucgpt-image://`` references (never bytes, never data URIs).
     """
 
+    role: Literal["system", "user", "assistant"] = Field(
+        ..., description="Message role: system, user, or assistant"
+    )
     content: str | list[dict[str, Any]] = Field(
         ..., description="Text, or text/image content parts for image turns"
     )

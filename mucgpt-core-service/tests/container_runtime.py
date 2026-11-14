@@ -59,20 +59,22 @@ def start_postgres_container():
     """
     from testcontainers.postgres import PostgresContainer
 
+    return start_container(
+        lambda: PostgresContainer(POSTGRES_IMAGE, username="admin", password="admin")
+    )
+
+
+def start_container(factory) -> object | None:
+    """Start a container via `factory()`, trying Docker and then Podman.
+
+    Returns the started container, or None when no container runtime is
+    reachable.
+    """
     requested = os.getenv("MUCGPT_TEST_CONTAINER_RUNTIME", "auto").strip().lower()
     user_managed = bool(os.getenv("DOCKER_HOST")) or Path("/var/run/docker.sock").exists()
 
-    def _try_start() -> object | None:
-        container = PostgresContainer(POSTGRES_IMAGE, username="admin", password="admin")
-        try:
-            container.start()
-        except Exception:  # noqa: BLE001 — any runtime failure means "try next"
-            container.stop()
-            return None
-        return container
-
     if user_managed and requested in {"auto", "docker"}:
-        container = _try_start()
+        container = _try_start(factory)
         if container is not None or requested == "docker":
             return container
     if requested not in {"auto", "podman"}:
@@ -81,10 +83,20 @@ def start_postgres_container():
         if not socket.exists():
             continue
         configure_podman_runtime(socket)
-        container = _try_start()
+        container = _try_start(factory)
         if container is not None:
             return container
     return None
+
+
+def _try_start(factory) -> object | None:
+    container = factory()
+    try:
+        container.start()
+    except Exception:  # noqa: BLE001 — any runtime failure means "try next"
+        container.stop()
+        return None
+    return container
 
 
 def postgres_engine_url(container) -> str:

@@ -306,9 +306,15 @@ export const QuestionInput = ({
 
     // Seed restored attachments once; consumed as ready drafts so the send
     // flow and staged-image guards treat them like freshly uploaded images.
+    // A withdrawn set (parent cleared it, e.g. the chat switched) also clears
+    // the staged drafts so they never leak into a different conversation.
     const consumedInitialImagesRef = useRef<ImageAttachment[] | undefined>(undefined);
     useEffect(() => {
         if (!initialImages || initialImages.length === 0) {
+            if (consumedInitialImagesRef.current) {
+                consumedInitialImagesRef.current = undefined;
+                setImageDrafts([]);
+            }
             return;
         }
         if (consumedInitialImagesRef.current === initialImages) {

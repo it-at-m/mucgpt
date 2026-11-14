@@ -170,6 +170,9 @@ const Chat = () => {
     const isFirstRender = useRef(true);
     const activeChatRef = useRef(active_chat);
     const documentSelectionRequestTokenRef = useRef(0);
+    // Bumped by loadChat so a late image restoration never lands in a
+    // conversation the user already left.
+    const imageRestoreRequestTokenRef = useRef(0);
     const isLoadingRef = useRef(false);
 
     const setLoadingState = useCallback((nextLoading: boolean) => {
@@ -234,6 +237,9 @@ const Chat = () => {
             try {
                 cancelToolApproval();
                 ++documentSelectionRequestTokenRef.current;
+                // A staged-image handoff belongs to the new chat only.
+                ++imageRestoreRequestTokenRef.current;
+                setRestoredImages(undefined);
                 setError(undefined);
                 const chat = await loadConversation(storageService, id, id, { system: "", creativity: CREATIVITY_LOW });
                 if (chat) {
@@ -703,7 +709,12 @@ const Chat = () => {
 
                 if (validIds.length > 0) {
                     localStorage.removeItem(STORAGE_KEYS.CHAT_IMAGE_IDS);
+                    const restoreToken = ++imageRestoreRequestTokenRef.current;
                     Promise.allSettled(validIds.map(id => getImageMetadataApi(id))).then(results => {
+                        if (imageRestoreRequestTokenRef.current !== restoreToken) {
+                            // The user opened a different chat meanwhile.
+                            return;
+                        }
                         const restored = results
                             .filter(
                                 (result): result is PromiseFulfilledResult<Awaited<ReturnType<typeof getImageMetadataApi>>> => result.status === "fulfilled"

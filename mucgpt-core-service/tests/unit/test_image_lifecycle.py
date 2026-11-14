@@ -275,3 +275,56 @@ async def test_disabled_image_input_still_sweeps_and_drains(lifecycle_env):
     assert result.deleted_objects == 2
     assert env.image_rows() == []
     assert env.outbox_rows() == []
+
+
+@pytest.mark.asyncio
+async def test_abandoned_uploading_rows_are_reconciled(lifecycle_env):
+    env = lifecycle_env
+    with Session(env.engine) as session, session.begin():
+        session.add(
+            ChatImage(
+                id="img-stale",
+                owner_user_id=USER_ID,
+                bucket=BUCKET,
+                object_key="img-stale.png",
+                mime_type="image/png",
+                size_bytes=10,
+                sha256="a" * 64,
+                original_filename="shot.png",
+                status="uploading",
+                created_at=datetime.now(UTC) - timedelta(hours=2),
+            )
+        )
+    env.store.objects.add("img-stale.png")
+
+    result = await run_once(env.factory, env.store, env.settings)
+
+    assert result.swept_abandoned_uploading_rows == 1
+    assert env.image_rows() == []
+    assert env.store.deleted == ["img-stale.png"]
+    assert env.outbox_rows() == []
+
+
+@pytest.mark.asyncio
+async def test_fresh_uploading_rows_are_not_swept(lifecycle_env):
+    env = lifecycle_env
+    with Session(env.engine) as session, session.begin():
+        session.add(
+            ChatImage(
+                id="img-fresh",
+                owner_user_id=USER_ID,
+                bucket=BUCKET,
+                object_key="img-fresh.png",
+                mime_type="image/png",
+                size_bytes=10,
+                sha256="a" * 64,
+                original_filename="shot.png",
+                status="uploading",
+                created_at=datetime.now(UTC),
+            )
+        )
+
+    result = await run_once(env.factory, env.store, env.settings)
+
+    assert result.swept_abandoned_uploading_rows == 0
+    assert [row.id for row in env.image_rows()] == ["img-fresh"]

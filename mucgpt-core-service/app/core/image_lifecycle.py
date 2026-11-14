@@ -9,7 +9,7 @@ the API process.
 """
 
 from dataclasses import dataclass
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from uuid import uuid4
 
 from sqlalchemy import delete, exists, or_, select
@@ -35,6 +35,7 @@ class LifecycleRunResult:
     deleted_objects: int = 0
     failed_deletions: int = 0
     swept_expired_drafts: int = 0
+    swept_abandoned_uploading_rows: int = 0
     swept_retired_conversation_images: int = 0
 
 
@@ -91,6 +92,56 @@ async def sweep_expired_drafts(
             deleted_row = deleted_rows[0]
             await ImageDeletionOutboxRepository(session).enqueue(
                 deleted_row.bucket, deleted_row.object_key, "expired"
+            )
+            swept += 1
+        return swept
+
+
+UPLOADING_GRACE_SECONDS = 3600
+
+
+async def sweep_abandoned_uploading_rows(
+    session_factory: async_sessionmaker[AsyncSession],
+    *,
+    grace_seconds: int = UPLOADING_GRACE_SECONDS,
+) -> int:
+    """Reconcile reservations abandoned before their object was published.
+
+    A crash between the object PUT and ``mark_ready`` leaves a committed
+    ``uploading`` row plus stored bytes that no other sweep touches. Rows
+    older than the grace bound are deleted and queued for object removal;
+    the DELETE re-checks status and age under the row lock so an upload
+    finishing concurrently is never swept.
+    """
+    threshold = datetime.now(UTC) - timedelta(seconds=grace_seconds)
+    swept = 0
+    async with session_factory.begin() as session:
+        rows = (
+            await session.execute(
+                select(ChatImage.id).where(
+                    ChatImage.status == "uploading",
+                    ChatImage.created_at <= threshold,
+                )
+            )
+        ).scalars().all()
+        for image_id in rows:
+            sweepable = (
+                delete(ChatImage)
+                .where(
+                    ChatImage.id == image_id,
+                    ChatImage.status == "uploading",
+                    ChatImage.created_at <= threshold,
+                )
+                .returning(ChatImage.bucket, ChatImage.object_key)
+            )
+            deleted_rows = (await session.execute(sweepable)).fetchall()
+            if not deleted_rows:
+                continue
+            deleted_row = deleted_rows[0]
+            await ImageDeletionOutboxRepository(session).enqueue(
+                deleted_row.bucket,
+                deleted_row.object_key,
+                "upload_compensation",
             )
             swept += 1
         return swept
@@ -229,6 +280,11 @@ async def run_once(
     """
     sweep_possible = settings.s3 is not None
     swept_expired = await sweep_expired_drafts(session_factory) if sweep_possible else 0
+    swept_abandoned = (
+        await sweep_abandoned_uploading_rows(session_factory)
+        if sweep_possible
+        else 0
+    )
     swept_retired = (
         await sweep_retired_conversation_images(session_factory)
         if sweep_possible
@@ -241,5 +297,6 @@ async def run_once(
         deleted_objects=deleted,
         failed_deletions=failed,
         swept_expired_drafts=swept_expired,
+        swept_abandoned_uploading_rows=swept_abandoned,
         swept_retired_conversation_images=swept_retired,
     )

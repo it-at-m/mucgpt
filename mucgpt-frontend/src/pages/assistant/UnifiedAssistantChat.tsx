@@ -41,7 +41,12 @@ import {
 import { useDuplicateAssistant } from "../discovery/hooks/useDuplicateAssistant";
 import { useMigrateLocalAssistant } from "../../hooks/useMigrateLocalAssistant";
 import { CloseConfirmationDialog } from "../../components/AssistantDialogs/shared/CloseConfirmationDialog";
-import { getSelectedDocumentIds, restoreDocumentSelection, type ChatDocument } from "../../components/ChatDocuments/documentSelection";
+import {
+    getSelectedDocumentIds,
+    isSendBlockedByDocuments,
+    restoreDocumentSelection,
+    type ChatDocument
+} from "../../components/ChatDocuments/documentSelection";
 import { useToolApproval } from "../../hooks/useToolApproval";
 import { useToolStatusToasts } from "../../hooks/useToolStatusToasts";
 import { useCanvasController } from "../../hooks/useCanvasController";
@@ -574,6 +579,13 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
         });
     }, [assistantStorageService, assistant_id, refreshUnifiedHistory]);
 
+    // Starter prompts, follow-ups and regenerate bypass the composer's send button, so they check the attachments here.
+    const ensureDocumentsSendable = useCallback(() => {
+        if (!isSendBlockedByDocuments(chatDocuments)) return true;
+        showWarning(t("document_library.send_blocked_title"), t("document_library.send_blocked_message"));
+        return false;
+    }, [chatDocuments, showWarning, t]);
+
     // callApi-Funktion
     const callApi = useCallback(
         /** Sends one question through the strategy (streaming) and dispatches the answers. */
@@ -582,6 +594,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                 console.warn("Interaction blocked: Assistant is read-only.");
                 return;
             }
+            if (!ensureDocumentsSendable()) return;
 
             setLastQuestionValue(question);
             if (error) setError(undefined);
@@ -642,6 +655,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
             historyReadOnly,
             canvasWiring,
             chatDocuments,
+            ensureDocumentsSendable,
             requestToolApproval
         ]
     );
@@ -897,6 +911,8 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
     // Regenerate-Funktion
     const onRegenerateResponseClicked = useCallback(async () => {
         if (!conversationActions.canRegenerate || historyReadOnly || answers.length === 0 || !activeChatRef.current || isLoadingRef.current) return;
+        // Regenerate drops the last answer before sending, so it must check before that, not only in callApi.
+        if (!ensureDocumentsSendable()) return;
         try {
             setError(undefined);
             setIsLoadingValue(true);
@@ -905,7 +921,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
             setError(e);
             setIsLoadingValue(false);
         }
-    }, [answers, assistantChatStorage, callApi, systemPrompt, historyReadOnly, setIsLoadingValue]);
+    }, [answers, assistantChatStorage, callApi, ensureDocumentsSendable, systemPrompt, historyReadOnly, setIsLoadingValue]);
 
     useUnifiedHistoryRegistration(
         useMemo(

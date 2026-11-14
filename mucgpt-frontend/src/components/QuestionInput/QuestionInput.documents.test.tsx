@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { useState } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -44,7 +44,7 @@ const attached = ({ status = "ready", usedInChat = false }: { status?: "ready" |
 
 const onSend = vi.fn();
 
-const Harness = ({ initialData = [] }: { initialData?: ChatDocument[] }) => {
+const Harness = ({ initialData = [], conversationKey }: { initialData?: ChatDocument[]; conversationKey?: string }) => {
     const [question, setQuestion] = useState("Frage");
     const [data, setData] = useState(initialData);
     return (
@@ -57,6 +57,7 @@ const Harness = ({ initialData = [] }: { initialData?: ChatDocument[] }) => {
                 selectedTools={[]}
                 documents={data}
                 setDocuments={setData}
+                usageConversationKey={conversationKey}
                 transcriptionDisabled
                 hideDisclaimer
             />
@@ -209,5 +210,46 @@ describe("QuestionInput documents", () => {
         fireEvent.click(screen.getByRole("button", { name: "document_library.duplicate_upload_anyway" }));
         await waitFor(() => expect(uploadDocumentApi).toHaveBeenCalledTimes(1));
         expect(screen.queryByText("document_library.duplicate_title")).not.toBeInTheDocument();
+    });
+
+    it("keeps duplicates from earlier drops so uploading anyway covers all of them", async () => {
+        vi.mocked(listDocumentsApi).mockResolvedValue([libraryEntry(), libraryEntry({ id: "library-2", filename: "Plan.txt" })]);
+        vi.mocked(uploadDocumentApi).mockReturnValue(new Promise(() => {}));
+        render(<Harness />);
+
+        dropFiles([new File(["12345"], "Policy.txt", { type: "text/plain" })]);
+        expect(await screen.findByText("document_library.duplicate_title")).toBeInTheDocument();
+        dropFiles([new File(["12345"], "Plan.txt", { type: "text/plain" })]);
+        await waitFor(() => expect(listDocumentsApi).toHaveBeenCalledTimes(2));
+        await waitFor(() => expect(screen.queryByText("document_library.chip_processing")).not.toBeInTheDocument());
+
+        fireEvent.click(screen.getByRole("button", { name: "document_library.duplicate_upload_anyway" }));
+        await waitFor(() => expect(uploadDocumentApi).toHaveBeenCalledTimes(2));
+        expect(vi.mocked(uploadDocumentApi).mock.calls.map(([file]) => file.name)).toEqual(["Policy.txt", "Plan.txt"]);
+    });
+
+    it("drops the duplicate notice when the chat is switched", async () => {
+        vi.mocked(listDocumentsApi).mockResolvedValue([libraryEntry()]);
+        const { rerender } = render(<Harness conversationKey="chat:a" />);
+
+        dropFiles([new File(["12345"], "Policy.txt", { type: "text/plain" })]);
+        expect(await screen.findByText("document_library.duplicate_title")).toBeInTheDocument();
+
+        rerender(<Harness conversationKey="chat:b" />);
+        expect(screen.queryByText("document_library.duplicate_title")).not.toBeInTheDocument();
+    });
+
+    it("discards a duplicate check that finishes after the chat was switched", async () => {
+        let finishList: (documents: DocumentLibraryEntry[]) => void = () => {};
+        vi.mocked(listDocumentsApi).mockReturnValue(new Promise(resolve => (finishList = resolve)));
+        const { rerender } = render(<Harness conversationKey="chat:a" />);
+
+        dropFiles([new File(["12345"], "Policy.txt", { type: "text/plain" })]);
+        await waitFor(() => expect(listDocumentsApi).toHaveBeenCalledTimes(1));
+        rerender(<Harness conversationKey="chat:b" />);
+        await act(async () => finishList([libraryEntry()]));
+
+        expect(screen.queryByText("document_library.duplicate_title")).not.toBeInTheDocument();
+        expect(uploadDocumentApi).not.toHaveBeenCalled();
     });
 });

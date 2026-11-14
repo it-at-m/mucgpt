@@ -23,6 +23,7 @@ import { Button } from "@fluentui/react-components";
 import {
     getSelectedDocumentIds,
     isLibraryDocument,
+    isSendBlockedByDocuments,
     restoreDocumentSelection,
     toChatDocument,
     type ChatDocument
@@ -327,9 +328,17 @@ const Chat = () => {
         [t]
     );
 
+    // Follow-ups, regenerate and URL questions bypass the composer's send button, so they check the attachments here.
+    const ensureDocumentsSendable = useCallback(() => {
+        if (!isSendBlockedByDocuments(chatDocuments)) return true;
+        showWarning(t("document_library.send_blocked_title"), t("document_library.send_blocked_message"));
+        return false;
+    }, [chatDocuments, showWarning, t]);
+
     // API Request mit optimiertem State Management
     const callApi = useCallback(
         async (question: string, system?: string) => {
+            if (!ensureDocumentsSendable()) return;
             lastQuestionRef.current = question;
             setError(undefined);
             setLoadingState(true);
@@ -386,6 +395,7 @@ const Chat = () => {
             handleAgUiEvent,
             canvasWiring,
             chatDocuments,
+            ensureDocumentsSendable,
             requestToolApproval
         ]
     );
@@ -393,13 +403,15 @@ const Chat = () => {
     // Regenerate-Funktion
     const onRegenerateResponseClicked = useCallback(async () => {
         if (!conversationActions.canRegenerate || answers.length === 0 || !activeChatRef.current || isLoadingRef.current) return;
+        // Regenerate drops the last answer before sending, so it must check before that, not only in callApi.
+        if (!ensureDocumentsSendable()) return;
 
         try {
             await handleRegenerate(answers, dispatch, activeChatRef.current, storageService, systemPrompt, callApi, isLoadingRef, requestPersist);
         } catch (e) {
             setError(e);
         }
-    }, [answers, storageService, callApi, systemPrompt, activeChatRef.current, isLoadingRef.current]);
+    }, [answers, storageService, callApi, ensureDocumentsSendable, systemPrompt, activeChatRef.current, isLoadingRef.current]);
 
     // Rollback-Funktion
     const onRollbackMessage = useCallback(

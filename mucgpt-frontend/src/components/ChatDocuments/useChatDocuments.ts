@@ -10,6 +10,7 @@ import {
     getDocumentSignature,
     getFileSignature,
     isLibraryDocument,
+    isSendBlockedByDocuments,
     toChatDocument,
     type ChatDocument,
     type UploadingChatDocument
@@ -23,21 +24,31 @@ export interface DuplicateUpload {
     attachedByUpload: boolean;
 }
 
-/** Attachment state of the chat composer: uploads, library selection and duplicate handling. */
-export const useChatDocuments = (documents: ChatDocument[], setDocuments: Dispatch<SetStateAction<ChatDocument[]>>) => {
+/**
+ * Attachment state of the chat composer: uploads, library selection and duplicate handling.
+ * `conversationKey` identifies the chat; the composer stays mounted when switching chats, so duplicate notices are scoped by it.
+ */
+export const useChatDocuments = (documents: ChatDocument[], setDocuments: Dispatch<SetStateAction<ChatDocument[]>>, conversationKey?: string) => {
     const { t } = useTranslation();
     const { announce } = useAnnounce();
     const [duplicateUploads, setDuplicateUploads] = useState<DuplicateUpload[]>([]);
     // Uploads finish independently of renders, so state changes always go through updater functions;
     // this ref is only read for decisions that tolerate a value from the last render.
     const latestDocumentsRef = useRef(documents);
+    // Bumped on every chat switch so a duplicate check that started in the previous chat is discarded.
+    const conversationGenerationRef = useRef(0);
 
     useEffect(() => {
         latestDocumentsRef.current = documents;
     }, [documents]);
 
+    useEffect(() => {
+        conversationGenerationRef.current += 1;
+        setDuplicateUploads(current => (current.length === 0 ? current : []));
+    }, [conversationKey]);
+
     const hasUnavailableDocuments = documents.some(document => document.status === "unavailable");
-    const isSendBlocked = hasUnavailableDocuments || documents.some(document => document.status === "uploading");
+    const isSendBlocked = isSendBlockedByDocuments(documents);
 
     const upload = useCallback(
         (pending: UploadingChatDocument) => {
@@ -72,6 +83,7 @@ export const useChatDocuments = (documents: ChatDocument[], setDocuments: Dispat
             // The chips appear before the duplicate check so the drop is acknowledged immediately.
             setDocuments(current => [...current, ...pendingUploads]);
 
+            const generation = conversationGenerationRef.current;
             let library: DocumentLibraryEntry[] = [];
             if (!skipDuplicateCheck) {
                 try {
@@ -81,6 +93,8 @@ export const useChatDocuments = (documents: ChatDocument[], setDocuments: Dispat
                     console.error("Failed to check the library for duplicates:", error);
                 }
             }
+            // The chat was switched meanwhile: its placeholders are gone, so neither upload nor report duplicates.
+            if (generation !== conversationGenerationRef.current) return;
 
             const duplicates: DuplicateUpload[] = [];
             for (const pending of pendingUploads) {
@@ -99,7 +113,13 @@ export const useChatDocuments = (documents: ChatDocument[], setDocuments: Dispat
                 );
                 duplicates.push({ file: pending.file, documentId: duplicate.id, attachedByUpload: !alreadyAttached });
             }
-            if (duplicates.length > 0) setDuplicateUploads(duplicates);
+            if (duplicates.length > 0) {
+                // Earlier batches stay unresolved until the user decides; dropping the same file again must not list it twice.
+                setDuplicateUploads(current => {
+                    const known = new Set(current.map(duplicate => getFileSignature(duplicate.file)));
+                    return [...current, ...duplicates.filter(duplicate => !known.has(getFileSignature(duplicate.file)))];
+                });
+            }
         },
         [setDocuments, upload]
     );

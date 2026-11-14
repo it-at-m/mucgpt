@@ -4,6 +4,7 @@ from sqlalchemy import (
     JSON,
     CheckConstraint,
     DateTime,
+    Index,
     Integer,
     String,
     Text,
@@ -59,6 +60,97 @@ class CanvasDocument(Base):
         JSON().with_variant(JSONB(), "postgresql"), nullable=True
     )
     updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+
+
+class ChatImage(Base):
+    """Metadata for one uploaded chat image; bytes live in object storage.
+
+    Rows start ``uploading`` before the object exists, become ``ready`` only
+    after a successful upload, and become ``deleting`` when cleanup starts.
+    A bound image belongs to exactly one conversation; reusing it elsewhere is
+    rejected in favor of re-uploading. Never store image bytes or public URLs.
+    """
+
+    __tablename__ = "chat_images"
+    __table_args__ = (
+        # Keep the S3 object key unique so a single object maps to one row.
+        # The bucket column exists for multi-bucket lifecycles and is verified
+        # against settings on every read.
+        UniqueConstraint("bucket", "object_key", name="uq_chat_images_object"),
+        CheckConstraint(
+            "status IN ('uploading', 'ready', 'deleting')",
+            name="ck_chat_images_status",
+        ),
+        CheckConstraint("size_bytes >= 0", name="ck_chat_images_size"),
+        CheckConstraint(
+            "conversation_id IS NULL OR bound_at IS NOT NULL",
+            name="ck_chat_images_binding",
+        ),
+    )
+
+    id: Mapped[str] = mapped_column(String, primary_key=True)
+    owner_user_id: Mapped[str] = mapped_column(String, nullable=False, index=True)
+    bucket: Mapped[str] = mapped_column(String, nullable=False)
+    object_key: Mapped[str] = mapped_column(String, nullable=False)
+    mime_type: Mapped[str] = mapped_column(String, nullable=False)
+    size_bytes: Mapped[int] = mapped_column(Integer, nullable=False)
+    sha256: Mapped[str] = mapped_column(String, nullable=False)
+    original_filename: Mapped[str] = mapped_column(String, nullable=False)
+    width: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    height: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    status: Mapped[str] = mapped_column(String, nullable=False)
+    conversation_id: Mapped[str | None] = mapped_column(String, nullable=True, index=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+    ready_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    expires_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    bound_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+
+
+class ImageDeletionOutbox(Base):
+    """Durable record of one object deletion that object storage has not yet
+    confirmed.
+
+    PostgreSQL and S3 deletion are not one atomic operation: the catalog row
+    disappears in a committed transaction while the bytes remain until the
+    maintenance job removes them. The outbox captures the exact recorded
+    ``bucket``/``object_key`` inside that same transaction, so cleanup survives
+    crashes and retries instead of pretending both stores deleted together.
+    """
+
+    __tablename__ = "image_deletion_outbox"
+    __table_args__ = (
+        CheckConstraint(
+            "reason IN ('draft_delete', 'upload_compensation', 'expired', "
+            "'conversation_deleted')",
+            name="ck_image_deletion_outbox_reason",
+        ),
+        CheckConstraint("attempts >= 0", name="ck_image_deletion_outbox_attempts"),
+        Index("ix_image_deletion_outbox_due", "next_attempt_at"),
+    )
+
+    id: Mapped[str] = mapped_column(String, primary_key=True)
+    bucket: Mapped[str] = mapped_column(String, nullable=False)
+    object_key: Mapped[str] = mapped_column(String, nullable=False)
+    reason: Mapped[str] = mapped_column(String, nullable=False)
+    attempts: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    next_attempt_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+    lease_until: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    last_error: Mapped[str | None] = mapped_column(String, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.now()
     )
 

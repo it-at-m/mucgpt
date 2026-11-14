@@ -1,5 +1,5 @@
-import { Button, mergeClasses, Tooltip } from "@fluentui/react-components";
-import { Add20Regular, ArrowUp20Regular } from "@fluentui/react-icons";
+import { Button, mergeClasses, Spinner, Tooltip } from "@fluentui/react-components";
+import { Add20Regular, ArrowUp20Regular, Dismiss16Regular, Image20Regular } from "@fluentui/react-icons";
 import { useCallback, useEffect, useRef, useState, type ChangeEvent, type Dispatch, type MouseEvent, type SetStateAction } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -7,7 +7,8 @@ import styles from "./QuestionInput.module.css";
 import { useAutoGrowTextarea } from "./useAutoGrowTextarea";
 import { Button as SubtleButton } from "../../ui/Button";
 import { uploadDocumentApi } from "../../api/documents-client";
-import { Model, ToolListResponse } from "../../api/models";
+import { imageContentUrl, uploadImageApi } from "../../api/core-client";
+import { ImageAttachment, Model, ToolListResponse } from "../../api/models";
 import { useConfigContext } from "../../context/ConfigContext";
 import { documentToUploadedData } from "../ContextManagerDialog/DocumentLibrary";
 import { ContextManagerDialog, UploadedData, createUploadedData, getDataSignature, getFileSignature } from "../ContextManagerDialog/ContextManagerDialog";
@@ -19,11 +20,12 @@ import { LLMSelector } from "../LLMSelector/LLMSelector";
 import { getContextUsagePercent, getUsageCriticalThreshold, getUsageWarningThreshold } from "../ChatUsageIndicator/chatUsage";
 import { MicrophoneButton } from "../MicrophoneButton/MicrophoneButton";
 import { useTranscription } from "../Transcription/TranscriptionContext";
+import { classifyFiles, formatMaxBytes, pastedImageFilename, resolveImageInput, type RejectionReason } from "../../utils/imageAttachments";
 
 export type { ChatUsageSummary } from "../ChatUsageIndicator/ChatUsageIndicator";
 
 interface Props {
-    onSend: (question: string, data: UploadedData[]) => void;
+    onSend: (question: string, data: UploadedData[], images?: ImageAttachment[]) => void;
     disabled: boolean;
     placeholder?: string;
     clearOnSend?: boolean;
@@ -35,6 +37,7 @@ interface Props {
     allowToolSelection?: boolean;
     lockedToolIds?: string[];
     allowFileUpload?: boolean;
+    allowImageUpload?: boolean;
     onDataChange?: (data: UploadedData[]) => void;
     uploadedData?: UploadedData[];
     setUploadedData?: Dispatch<SetStateAction<UploadedData[]>>;
@@ -52,7 +55,22 @@ interface Props {
     selectedLLM?: string;
     onLLMSelectionChange?: (nextLLM: string) => void;
     llmLockedByAssistant?: boolean;
+    /** Ready attachments seeded once (e.g. restored from the Home handoff). */
+    initialImages?: ImageAttachment[];
 }
+
+/** One staged image in the composer; only ready drafts are sendable. */
+type ImageDraft = {
+    id: string;
+    filename: string;
+    status: "uploading" | "ready" | "error";
+    errorMessage?: string;
+    /** Local object URL for preview; revoked on removal, replacement, and unmount. */
+    previewUrl: string;
+    attachment?: ImageAttachment;
+};
+
+type ImageFeedback = { key: string; params?: Record<string, unknown> };
 
 export const QuestionInput = ({
     onSend,
@@ -67,6 +85,7 @@ export const QuestionInput = ({
     allowToolSelection = true,
     lockedToolIds = [],
     allowFileUpload: allowFileUploadProp,
+    allowImageUpload: allowImageUploadProp = true,
     onDataChange,
     uploadedData: externalUploadedData,
     setUploadedData: setExternalUploadedData,
@@ -81,7 +100,8 @@ export const QuestionInput = ({
     llmOptions,
     selectedLLM,
     onLLMSelectionChange,
-    llmLockedByAssistant
+    llmLockedByAssistant,
+    initialImages
 }: Props) => {
     const { t } = useTranslation();
     const config = useConfigContext();
@@ -108,11 +128,32 @@ export const QuestionInput = ({
     const recordingBaseRef = useRef("");
     const isTranscriptionActive = transcriptionStatus === "recording" || transcriptionStatus === "transcribing";
 
+    // Image drafts live entirely in the composer; only ready attachments leave
+    // it via onSend. IndexedDB never sees blobs, base64, or object URLs.
+    const [imageDrafts, setImageDrafts] = useState<ImageDraft[]>([]);
+    const imageDraftsRef = useRef<ImageDraft[]>([]);
+    const [imageFeedback, setImageFeedback] = useState<ImageFeedback | null>(null);
+    const imageFileInputRef = useRef<HTMLInputElement | null>(null);
+    const questionValueRef = useRef(question);
+
     const draftStorageKey = draftCacheKey ? `question-input-draft:${draftCacheKey}` : undefined;
 
     const uploadedData = externalUploadedData ?? internalUploadedData;
     const activeDocumentCount = uploadedData.filter(data => data.isActive !== false).length;
     const hasSendableQuestion = question.trim().length > 0;
+
+    const imageInput = resolveImageInput(config);
+    const selectedModel = llmOptions?.find(model => model.id === selectedLLM);
+    const supportsImages = allowImageUploadProp && imageInput.enabled && selectedModel?.supports_vision === true;
+    const hasImageDrafts = imageDrafts.length > 0;
+    const hasPendingImageUploads = imageDrafts.some(draft => draft.status === "uploading");
+    const hasFailedImageUploads = imageDrafts.some(draft => draft.status === "error");
+    // Block sending while uploads are in flight/failed or staged images would
+    // be silently dropped by a non-vision selection; never strip visual context.
+    const isSendBlockedByImages = hasPendingImageUploads || hasFailedImageUploads || (hasImageDrafts && !supportsImages);
+    const isSendDisabled = disabled || isTranscriptionActive || !hasSendableQuestion || isSendBlockedByImages;
+    const imageAccept = imageInput.allowed_mime_types.join(",");
+
     const contextPercent = getContextUsagePercent(usage);
     const warningThreshold = getUsageWarningThreshold(usage);
     const criticalThreshold = getUsageCriticalThreshold(usage);
@@ -255,13 +296,219 @@ export const QuestionInput = ({
         return false;
     }, []);
 
+    useEffect(() => {
+        imageDraftsRef.current = imageDrafts;
+    }, [imageDrafts]);
+
+    useEffect(() => {
+        questionValueRef.current = question;
+    }, [question]);
+
+    // Seed restored attachments once; consumed as ready drafts so the send
+    // flow and staged-image guards treat them like freshly uploaded images.
+    const consumedInitialImagesRef = useRef<ImageAttachment[] | undefined>(undefined);
+    useEffect(() => {
+        if (!initialImages || initialImages.length === 0) {
+            return;
+        }
+        if (consumedInitialImagesRef.current === initialImages) {
+            return;
+        }
+        consumedInitialImagesRef.current = initialImages;
+        setImageDrafts(
+            initialImages.map(attachment => ({
+                id: attachment.id,
+                filename: attachment.filename ?? "image",
+                status: "ready" as const,
+                previewUrl: attachment.displayUrl,
+                attachment
+            }))
+        );
+    }, [initialImages]);
+
+    // Revoke local preview object URLs so they never outlive the composer.
+    const revokeImagePreviews = useCallback((drafts: ImageDraft[]) => {
+        drafts.forEach(draft => {
+            if (draft.previewUrl) {
+                try {
+                    URL.revokeObjectURL(draft.previewUrl);
+                } catch {
+                    // Ignore revoke errors; the browser cleans up eventually.
+                }
+            }
+        });
+    }, []);
+
+    useEffect(() => {
+        return () => {
+            revokeImagePreviews(imageDraftsRef.current);
+        };
+    }, [revokeImagePreviews]);
+
+    const removeImageDraft = useCallback(
+        (draftId: string) => {
+            const draft = imageDraftsRef.current.find(candidate => candidate.id === draftId);
+            if (draft) {
+                revokeImagePreviews([draft]);
+            }
+            setImageDrafts(previous => previous.filter(candidate => candidate.id !== draftId));
+        },
+        [revokeImagePreviews]
+    );
+
+    const clearImageDrafts = useCallback(() => {
+        revokeImagePreviews(imageDraftsRef.current);
+        setImageDrafts([]);
+        setImageFeedback(null);
+    }, [revokeImagePreviews]);
+
+    const showImageFeedback = useCallback((key: string, params?: Record<string, unknown>) => {
+        setImageFeedback({ key, params });
+    }, []);
+
+    const showImageRejectionFeedback = useCallback(
+        (reason: RejectionReason, filename?: string) => {
+            if (reason === "too-large") {
+                showImageFeedback("components.questioninput.image_too_large", {
+                    limit: formatMaxBytes(imageInput.max_upload_bytes)
+                });
+            } else if (reason === "image-disabled") {
+                showImageFeedback("components.questioninput.image_disabled_hint");
+            } else {
+                showImageFeedback("components.questioninput.image_unsupported_format", { filename });
+            }
+        },
+        [imageInput.max_upload_bytes, showImageFeedback]
+    );
+
+    const appendImagesFromFiles = useCallback(
+        (files: File[]) => {
+            if (files.length === 0) {
+                return;
+            }
+
+            const remaining = imageInput.max_images_per_message - imageDraftsRef.current.length;
+            if (remaining <= 0) {
+                showImageFeedback("components.questioninput.image_too_many", {
+                    count: imageInput.max_images_per_message
+                });
+                return;
+            }
+            let accepted = files;
+            if (files.length > remaining) {
+                accepted = files.slice(0, remaining);
+                showImageFeedback("components.questioninput.image_too_many", {
+                    count: imageInput.max_images_per_message
+                });
+            }
+
+            const newDrafts: ImageDraft[] = accepted.map(file => ({
+                id: crypto.randomUUID(),
+                filename: file.name,
+                status: "uploading" as const,
+                previewUrl: URL.createObjectURL(file)
+            }));
+
+            setImageDrafts(previous => [...previous, ...newDrafts]);
+            setImageFeedback(null);
+
+            accepted.forEach((file, index) => {
+                const draftId = newDrafts[index].id;
+                uploadImageApi(file, selectedLLM!)
+                    .then(upload => {
+                        const attachment: ImageAttachment = {
+                            id: upload.id,
+                            displayUrl: imageContentUrl(upload.id),
+                            filename: upload.filename,
+                            mime_type: upload.mime_type,
+                            size_bytes: upload.size_bytes,
+                            width: upload.width,
+                            height: upload.height
+                        };
+                        setImageDrafts(previous => previous.map(draft => (draft.id === draftId ? { ...draft, status: "ready" as const, attachment } : draft)));
+                    })
+                    .catch(error => {
+                        console.error("Failed to upload image:", error);
+                        setImageDrafts(previous =>
+                            previous.map(draft =>
+                                draft.id === draftId
+                                    ? {
+                                          ...draft,
+                                          status: "error" as const,
+                                          errorMessage: error.message || "Upload failed"
+                                      }
+                                    : draft
+                            )
+                        );
+                    });
+            });
+        },
+        [imageInput.max_images_per_message, selectedLLM, showImageFeedback]
+    );
+
+    /** Paste events must be consumed synchronously; uploads continue async. */
+    const handlePaste = useCallback(
+        (event: React.ClipboardEvent<HTMLTextAreaElement>) => {
+            if (disabled) {
+                return;
+            }
+            const clipboard = event.clipboardData;
+            const clipboardFiles = Array.from(clipboard?.files ?? []);
+            const hasImageFile = clipboardFiles.some(file => file.type.startsWith("image/"));
+            if (!hasImageFile) {
+                return; // plain text (or no files): native paste
+            }
+            const text = clipboard?.getData("text/plain") ?? "";
+
+            if (!supportsImages) {
+                // Only hint for image-only pastes; a text paste that merely
+                // carries a fallback image stays native.
+                if (!text.trim()) {
+                    event.preventDefault();
+                    showImageFeedback("components.questioninput.image_disabled_hint");
+                }
+                return;
+            }
+
+            // Mixed text+image pastes keep both parts: consume the event,
+            // insert the text manually, and route images to the upload pipeline.
+            event.preventDefault();
+            if (text) {
+                const current = questionValueRef.current;
+                setQuestionRef.current(current ? `${current}\n${text}` : text);
+            }
+
+            void (async () => {
+                const classification = await classifyFiles(clipboardFiles, imageInput);
+                if (classification.images.length > 0) {
+                    // Pasted blobs have no usable name; generate unique ones.
+                    const extensionByMime: Record<string, "png" | "jpeg" | "webp"> = {
+                        "image/png": "png",
+                        "image/jpeg": "jpeg",
+                        "image/webp": "webp"
+                    };
+                    const named = classification.images.map(
+                        file => new File([file], pastedImageFilename(extensionByMime[file.type] ?? "png"), { type: file.type })
+                    );
+                    appendImagesFromFiles(named);
+                }
+                if (classification.rejected.length > 0) {
+                    const [first] = classification.rejected;
+                    showImageRejectionFeedback(first.reason, first.file.name);
+                }
+            })();
+        },
+        [appendImagesFromFiles, disabled, imageInput, showImageFeedback, showImageRejectionFeedback, supportsImages]
+    );
+
     const sendQuestion = useCallback(() => {
-        if (disabled || !question.trim()) {
+        if (disabled || !question.trim() || isSendBlockedByImages) {
             return;
         }
 
         const activeData = uploadedData.filter(data => data.isActive !== false);
-        onSend(question, activeData);
+        const readyAttachments = imageDrafts.filter(draft => draft.status === "ready" && draft.attachment).map(draft => draft.attachment!);
+        onSend(question, activeData, readyAttachments.length > 0 ? readyAttachments : undefined);
 
         if (!clearOnSend) {
             return;
@@ -279,7 +526,24 @@ export const QuestionInput = ({
             setUploadedData([]);
             onDataChange?.([]);
         }
-    }, [clearOnSend, disabled, draftStorageKey, externalUploadedData, onDataChange, onSend, question, setQuestion, setUploadedData, uploadedData]);
+        if (imageDrafts.length > 0) {
+            clearImageDrafts();
+        }
+    }, [
+        clearImageDrafts,
+        clearOnSend,
+        disabled,
+        draftStorageKey,
+        externalUploadedData,
+        imageDrafts,
+        isSendBlockedByImages,
+        onDataChange,
+        onSend,
+        question,
+        setQuestion,
+        setUploadedData,
+        uploadedData
+    ]);
 
     useEffect(() => {
         if (wasDisabledRef.current && !disabled && document.activeElement === document.body) {
@@ -327,16 +591,15 @@ export const QuestionInput = ({
         setIsUploadDialogOpen(open);
     }, []);
 
-    const appendDataFromFiles = useCallback(
-        (files: FileList | File[]) => {
-            const fileArray = Array.from(files ?? []);
-            if (fileArray.length === 0) {
+    const appendDocumentsFromFiles = useCallback(
+        (files: File[]) => {
+            if (files.length === 0) {
                 return;
             }
 
             const previousData = uploadedDataRef.current;
             const existingSignatures = new Set(previousData.map(getDataSignature));
-            const newData = fileArray.filter(file => !existingSignatures.has(getFileSignature(file))).map(file => createUploadedData(file, "uploading"));
+            const newData = files.filter(file => !existingSignatures.has(getFileSignature(file))).map(file => createUploadedData(file, "uploading"));
 
             if (newData.length === 0) {
                 return;
@@ -373,6 +636,47 @@ export const QuestionInput = ({
             });
         },
         [onDataChange, setUploadedData]
+    );
+
+    const handleImageButtonClick = useCallback(() => {
+        if (!disabled && supportsImages) {
+            imageFileInputRef.current?.click();
+        }
+    }, [disabled, supportsImages]);
+
+    const handleImageSelected = useCallback(
+        (event: ChangeEvent<HTMLInputElement>) => {
+            const files = Array.from(event.target.files ?? []);
+            // Reset so selecting the same file again fires a change event.
+            event.target.value = "";
+            appendImagesFromFiles(files);
+        },
+        [appendImagesFromFiles]
+    );
+
+    const appendDataFromFiles = useCallback(
+        async (files: FileList | File[]) => {
+            const fileArray = Array.from(files ?? []);
+            if (fileArray.length === 0) {
+                return;
+            }
+
+            // Route by actual file signature: supported images go to the image
+            // pipeline, everything else keeps the document pipeline, and
+            // image-typed but unsupported files get an explicit rejection.
+            const classification = await classifyFiles(fileArray, imageInput);
+            if (classification.images.length > 0) {
+                appendImagesFromFiles(classification.images);
+            }
+            if (classification.documents.length > 0) {
+                appendDocumentsFromFiles(classification.documents);
+            }
+            if (classification.rejected.length > 0) {
+                const [first] = classification.rejected;
+                showImageRejectionFeedback(first.reason, first.file.name);
+            }
+        },
+        [appendDocumentsFromFiles, appendImagesFromFiles, imageInput, showImageRejectionFeedback]
     );
 
     const handleDataChange = useCallback(
@@ -466,11 +770,59 @@ export const QuestionInput = ({
                 <div
                     className={mergeClasses(styles.composer, isDragActive && styles.dragActive)}
                     onClick={focusInputOnBackgroundClick}
-                    onDragEnter={allowFileUpload ? handleDragEnter : undefined}
-                    onDragOver={allowFileUpload ? handleDragOver : undefined}
-                    onDragLeave={allowFileUpload ? handleDragLeave : undefined}
-                    onDrop={allowFileUpload ? handleDrop : undefined}
+                    onDragEnter={allowFileUpload || supportsImages ? handleDragEnter : undefined}
+                    onDragOver={allowFileUpload || supportsImages ? handleDragOver : undefined}
+                    onDragLeave={allowFileUpload || supportsImages ? handleDragLeave : undefined}
+                    onDrop={allowFileUpload || supportsImages ? handleDrop : undefined}
                 >
+                    {hasImageDrafts ? (
+                        <div className={styles.imageStrip} role="list" aria-label={t("components.questioninput.attached_images", "Angehängte Bilder")}>
+                            {imageDrafts.map(draft => (
+                                <div
+                                    key={draft.id}
+                                    role="listitem"
+                                    className={mergeClasses(styles.imageThumb, draft.status === "error" && styles.imageThumbError)}
+                                >
+                                    <img className={styles.imageThumbImage} src={draft.previewUrl} alt={draft.filename} />
+                                    {draft.status === "uploading" ? (
+                                        <span className={styles.imageThumbOverlay}>
+                                            <Spinner size="extra-tiny" />
+                                        </span>
+                                    ) : null}
+                                    <Tooltip
+                                        positioning="above"
+                                        content={
+                                            draft.status === "error"
+                                                ? t("components.questioninput.image_upload_failed", "Bild konnte nicht hochgeladen werden.")
+                                                : draft.filename
+                                        }
+                                        relationship="label"
+                                    >
+                                        <Button
+                                            className={styles.imageRemove}
+                                            appearance="subtle"
+                                            size="small"
+                                            icon={<Dismiss16Regular />}
+                                            aria-label={t("components.questioninput.remove_image", "Bild entfernen")}
+                                            disabled={disabled}
+                                            onClick={() => removeImageDraft(draft.id)}
+                                        />
+                                    </Tooltip>
+                                </div>
+                            ))}
+                        </div>
+                    ) : null}
+
+                    {imageFeedback ? <div className={styles.imageFeedback}>{t(imageFeedback.key, imageFeedback.params ?? {})}</div> : null}
+                    {hasImageDrafts && !supportsImages ? (
+                        <div className={styles.imageFeedback}>
+                            {t(
+                                "components.questioninput.images_need_vision_model",
+                                "Dieses Modell unterstützt keine Bilder. Wählen Sie ein vision-fähiges Modell aus, um Bilder zu senden."
+                            )}
+                        </div>
+                    ) : null}
+
                     <textarea
                         ref={textareaRef}
                         className={styles.input}
@@ -479,6 +831,7 @@ export const QuestionInput = ({
                         value={question}
                         onChange={onQuestionChange}
                         onKeyDown={onEnterPress}
+                        onPaste={handlePaste}
                         disabled={disabled || isTranscriptionActive}
                     />
                     <div className={styles.actions}>
@@ -494,6 +847,13 @@ export const QuestionInput = ({
                                     />
                                 </Tooltip>
                                 {activeDocumentCount > 0 ? <span className={styles.uploadCountBadge}>{activeDocumentCount}</span> : null}
+                            </div>
+                        ) : null}
+                        {supportsImages ? (
+                            <div className={styles.uploadAction}>
+                                <Tooltip positioning={"below"} content={t("components.questioninput.add_image", "Bild hinzufügen")} relationship="label">
+                                    <SubtleButton appearance="subtle" icon={<Image20Regular />} onClick={handleImageButtonClick} disabled={disabled} />
+                                </Tooltip>
                             </div>
                         ) : null}
                         <div className={styles.spacer} />
@@ -532,15 +892,12 @@ export const QuestionInput = ({
                             />
                         )}
                         <Tooltip positioning={"below"} content={t("components.questioninput.send_question", "Frage senden")} relationship="label">
-                            <Button
-                                appearance="primary"
-                                icon={<ArrowUp20Regular />}
-                                disabled={!hasSendableQuestion || disabled || isTranscriptionActive}
-                                onClick={sendQuestion}
-                            />
+                            <Button appearance="primary" icon={<ArrowUp20Regular />} disabled={isSendDisabled} onClick={sendQuestion} />
                         </Tooltip>
                     </div>
                 </div>
+
+                {supportsImages ? <input ref={imageFileInputRef} type="file" accept={imageAccept} multiple hidden onChange={handleImageSelected} /> : null}
 
                 {hideDisclaimer ? null : <ChatDisclaimer className={styles.disclaimer} />}
             </div>

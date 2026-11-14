@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from typing import Any
+from uuid import UUID
 
 from anyio import CancelScope
 from langchain_core.messages import AIMessage, HumanMessage, ToolMessage
@@ -16,6 +17,11 @@ from api.api_models import (
     ConversationUsage,
 )
 from config.settings import Settings, get_settings
+from core.image_hydration import (
+    MANAGED_IMAGE_URL_SCHEME,
+    find_managed_image_url,
+)
+from core.image_lifecycle import enqueue_raw
 from core.logtools import getLogger
 from database.canvas_repo import CanvasRepository
 from database.conversation_repo import ConversationRepository
@@ -52,6 +58,61 @@ def _message_content(message: HumanMessage | AIMessage) -> str:
         for block in message.content
         if isinstance(block, str) or block.get("type") == "text"
     )
+
+
+_IMAGE_BLOCK_TYPES = ("image_url", "image", "input_image")
+
+
+def _user_message_content(
+    message: HumanMessage,
+) -> str | list[dict[str, Any]]:
+    """Build the public user-turn content, preserving text and managed image parts.
+
+    Text-only content stays a plain string (legacy representation). Image
+    blocks are emitted only as managed ``mucgpt-image://`` references in the
+    public OpenAI shape — data URIs, provider URLs, and object keys never
+    leave the core service, and unrecognized image blocks are dropped with a
+    warning instead of failing the history read.
+    """
+    if isinstance(message.content, str):
+        return message.content
+    texts: list[str] = []
+    parts: list[dict[str, Any]] = []
+    has_images = False
+    for block in message.content:
+        if isinstance(block, str):
+            texts.append(block)
+            parts.append({"type": "text", "text": block})
+            continue
+        if block.get("type") == "text":
+            text = str(block.get("text", ""))
+            texts.append(text)
+            parts.append({"type": "text", "text": text})
+            continue
+        managed_url = find_managed_image_url(block)
+        if managed_url is None:
+            if block.get("type") in _IMAGE_BLOCK_TYPES:
+                logger.warning(
+                    "Dropping non-managed image block from conversation history"
+                )
+            continue
+        try:
+            UUID(managed_url[len(MANAGED_IMAGE_URL_SCHEME) :])
+        except ValueError:
+            logger.warning(
+                "Dropping image block with malformed managed id from history"
+            )
+            continue
+        payload: dict[str, Any] = {"url": managed_url}
+        raw_payload = block.get("image_url")
+        detail = raw_payload.get("detail") if isinstance(raw_payload, dict) else None
+        if detail in ("auto", "low", "high"):
+            payload["detail"] = detail
+        parts.append({"type": "image_url", "image_url": payload})
+        has_images = True
+    if not has_images:
+        return "".join(texts)
+    return parts
 
 
 def _display_text(value: Any, max_length: int) -> str | None:
@@ -242,7 +303,7 @@ class PersistanceHelpers:
                     turn.usage = usage
             if isinstance(message, HumanMessage):
                 turn = ConversationMessage(
-                    role="user", content=_message_content(message)
+                    role="user", content=_user_message_content(message)
                 )
                 result.append(turn)
                 steps = {}
@@ -377,6 +438,21 @@ class PersistanceHelpers:
                     "DELETE FROM canvas_documents WHERE conversation_id = %s",
                     (conversation_id,),
                 )
+                # Chat images are personal data with the same lifetime as the
+                # canvas: the rows go now, and their object bytes are removed
+                # by the maintenance job from the outbox entries inserted here.
+                image_rows = await connection.execute(
+                    "DELETE FROM chat_images WHERE conversation_id = %s "
+                    "RETURNING bucket, object_key",
+                    (conversation_id,),
+                )
+                for bucket, object_key in await image_rows.fetchall():
+                    await enqueue_raw(
+                        connection,
+                        bucket=bucket,
+                        object_key=object_key,
+                        reason="conversation_deleted",
+                    )
             return "deleted"
 
     @staticmethod

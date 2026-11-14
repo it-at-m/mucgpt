@@ -3,6 +3,7 @@ import { DBMessage, StorageService } from "../service/storage";
 import { DBObject } from "../service/storage";
 import { ChatMessage, ChatOptions } from "./chat/Chat";
 import { ChatRequest, ChatResponse, CanvasState, ChatTurn, DataSource, Model } from "../api";
+import type { ImageAttachment } from "../api";
 import { ToolStreamHandler, ToolStatus } from "../utils/ToolStreamHandler";
 
 import language from "react-syntax-highlighter/dist/esm/languages/hljs/1c";
@@ -269,7 +270,8 @@ export const makeApiRequest = async (
     onAgUiEvent?: (event: BaseEvent) => void,
     onRunActivityChange?: (activity: RunActivity) => void,
     canvasWiring?: CanvasWiring,
-    onToolApproval?: ToolApprovalHandler
+    onToolApproval?: ToolApprovalHandler,
+    images?: ImageAttachment[]
 ) => {
     // Create conversation history for the API request
     const history: ChatTurn[] = answers.map((a: { user: any; response: { answer: any } }) => ({ user: a.user, assistant: a.response.answer }));
@@ -335,7 +337,7 @@ export const makeApiRequest = async (
 
     // Build the API request object
     const request: ChatRequest = {
-        history: [...history, { user: question, assistant: undefined }],
+        history: [...history, { user: question, assistant: undefined, images: images && images.length > 0 ? images : undefined }],
         shouldStream: true, // Enable streaming for real-time responses
         language: language,
         creativity: options.creativity,

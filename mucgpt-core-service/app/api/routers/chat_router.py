@@ -37,6 +37,11 @@ from config.settings import get_settings
 from core.auth import authenticate_user
 from core.auth_models import AuthenticationResult
 from core.cache import RedisCache
+from core.image_refs import parse_managed_image_url
+from core.image_service import (
+    bind_chat_images,
+    verify_unbound_chat_images,
+)
 from core.llm_helpers import hash_user_id
 from core.logtools import getLogger
 from core.persistance_helpers import PersistanceHelpers
@@ -44,6 +49,11 @@ from core.stream_cleanup import close_stream
 from core.virtual_file_system_helper import get_documents_for_agent
 from database.conversation_repo import ConversationRepository
 from database.fenced_checkpointer import ConversationDeletedError
+from database.image_repo import (
+    ImageAlreadyBoundError,
+    ImageConversationUnavailableError,
+    ImageUnavailableError,
+)
 from init_app import init_agent
 
 logger = getLogger()
@@ -138,6 +148,57 @@ async def get_messages_for_agent(
     if await PersistanceHelpers.has_checkpoint(request.conversation_id):
         return [request.messages[-1]]
     return request.messages
+
+
+def _extract_image_ids(messages: list[ChatCompletionMessage]) -> list[str]:
+    """Managed image ids bound to this request's messages.
+
+    ``bind_media_parts`` parks resolved image parts on ``_media_blocks``; a
+    block whose URL is not a managed reference never reaches here.
+    """
+    ids: list[str] = []
+    for message in messages:
+        blocks = getattr(message, "_media_blocks", None) or []
+        for block in blocks:
+            url = (block.get("image_url") or {}).get("url")
+            if isinstance(url, str) and url.startswith("mucgpt-image://"):
+                ids.append(str(parse_managed_image_url(url)))
+    return ids
+
+
+async def bind_or_verify_chat_images(
+    request: ChatCompletionRequest, user_info: AuthenticationResult
+) -> None:
+    """Authorize and bind image references (runs after conversation authorization).
+
+    Persisted requests bind unbound draft uploads to the conversation under
+    the live-chat fence; images already bound elsewhere are rejected rather
+    than silently reused. Stateless requests verify ownership, readiness, and
+    expiry without creating bindings or conversation rows.
+    """
+    image_ids = _extract_image_ids(request.messages)
+    if not image_ids:
+        return
+    settings = get_settings()
+    if not settings.image_input.enabled:
+        raise HTTPException(status_code=503, detail="Image upload is not enabled.")
+    try:
+        if request.persist:
+            if request.conversation_id is None:
+                raise HTTPException(
+                    status_code=400, detail="conversation_id is required"
+                )
+            await bind_chat_images(user_info, request.conversation_id, image_ids)
+        else:
+            await verify_unbound_chat_images(user_info, image_ids)
+    except ImageUnavailableError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    except ImageAlreadyBoundError as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
+    except ImageConversationUnavailableError:
+        raise HTTPException(
+            status_code=403, detail="Conversation access denied"
+        ) from None
 
 
 async def _save_document_selection(
@@ -458,6 +519,11 @@ async def ag_ui_chat_endpoint(
             messages_for_agent = await get_messages_for_agent(
                 chat_request, user_info.user_id
             )
+
+        # Bind attached images after conversation authorization (the ownership
+        # row exists) and before the agent is built: unbound draft uploads are
+        # bound under the live-chat fence; images bound elsewhere are rejected.
+        await bind_or_verify_chat_images(chat_request, user_info)
 
         agent = await init_agent(
             user_info=user_info,

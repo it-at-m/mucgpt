@@ -243,6 +243,35 @@ services:
     volumes:
       - ./core.config.yaml:/app/config.yaml:ro
 
+  # Scheduled housekeeping for the core service: drains the image deletion
+  # outbox and sweeps expired drafts plus images of retired conversations.
+  # Uses the same image and configuration as core-service, only a different
+  # entrypoint; production should schedule it as a Kubernetes CronJob.
+  core-maintenance:
+    build:
+      context: ../mucgpt-core-service
+      dockerfile: Dockerfile
+      args:
+        - HTTPS_PROXY=${HTTPS_PROXY}
+    env_file:
+      - ./.env
+    command: ["python", "-m", "maintenance", "--loop", "--interval-seconds", "300"]
+    restart: unless-stopped
+    networks:
+      - internal
+    environment:
+      - SSL_CERT_FILE=${SSL_CERT_FILE:-}
+      - LOG_LEVEL_ROOT=INFO
+      - LOG_LEVEL_MUCGPT_CORE=INFO
+    depends_on:
+      checkpoint-postgres:
+        condition: service_healthy
+      rustfs:
+        condition: service_healthy
+    volumes:
+      - ${CA_BUNDLE_PATH:-./ca-bundle.crt}:${SSL_MOUNT_PATH:-/etc/pki/ca-trust/extracted/pem/ca-bundle.crt}:ro,Z
+      - ./core.config.yaml:/app/config.yaml:ro
+
   assistant-migrations:
     build:
       context: ../mucgpt-assistant-service
@@ -366,11 +395,57 @@ services:
     networks:
       - internal
 
+  ##############################
+  #    Image object storage    #
+  ##############################
+
+  # Development-only S3-compatible object store for chat image input.
+  # Production must use a separately operated, production-grade object store
+  # (see docs/GETTING_STARTED.md). Never reuse the local credentials below.
+  rustfs:
+    image: rustfs/rustfs:latest
+    environment:
+      RUSTFS_ACCESS_KEY: "rustfs-dev"
+      RUSTFS_SECRET_KEY: "rustfs-dev-secret"
+      RUSTFS_ADDRESS: ":9000"
+      RUSTFS_CONSOLE_ADDRESS: ":9001"
+      RUSTFS_CONSOLE_ENABLE: "true"
+      RUSTFS_OBS_LOGGER_LEVEL: "error"
+      RUSTFS_OBS_LOG_DIRECTORY: "/var/log/rustfs/"
+    command: ["/data"]
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - rustfs-data:/data
+    security_opt: *security_settings
+    healthcheck:
+      <<: *healthcheck
+      test: ["CMD-SHELL", "curl --fail http://localhost:9000/health"]
+    networks:
+      - internal
+
+  # One-shot bucket bootstrap; core depends on a ready image bucket.
+  rustfs-init:
+    image: minio/mc:latest
+    depends_on:
+      rustfs:
+        condition: service_healthy
+    entrypoint: >
+      /bin/sh -c "
+      until mc alias set local http://rustfs:9000 rustfs-dev rustfs-dev-secret >/dev/null 2>&1; do sleep 1; done;
+      mc mb --ignore-existing local/mucgpt-chat-images &&
+      echo 'Image bucket ready';
+      "
+    networks:
+      - internal
+
 networks:
   internal:
 
 volumes:
   cache-data:
+  rustfs-data:
   postgres-data:
     driver_opts:
       o: uid=999

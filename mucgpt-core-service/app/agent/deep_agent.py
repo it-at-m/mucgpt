@@ -26,6 +26,7 @@ from agent.tools.approval import data_classification, requires_approval
 from agent.tools.mcp import McpBearerAuthProvider
 from config.settings import DataClassification
 from core.auth_models import AuthenticationResult
+from core.image_hydration import build_image_hydrator, contains_managed_images
 from core.lf_prompts import PromptPool
 from core.logtools import getLogger
 from core.stream_cleanup import close_stream
@@ -71,6 +72,9 @@ class _ConfiguredLangChainDeepAgentGraph:
         self.tools = tools
         self.logger = logger
         self.debug = debug
+        # Persisted agents carry a checkpointer; stateless runs (assistant
+        # previews) do not. Also drives image-binding verification mode.
+        self.checkpointer = checkpointer
         default_prompt = PromptPool.get_resolved_prompt("default_instructions")
         self.default_langfuse_prompt = default_prompt.langfuse_prompt
 
@@ -130,6 +134,19 @@ class _ConfiguredLangChainDeepAgentGraph:
         data_sources = configurable.get("data_sources", [])
         canvas = configurable.get("canvas")
 
+        # Build the request-scoped image hydrator only when managed image
+        # references are actually present, so disabled deployments never touch
+        # image infrastructure and the hydration budget stays per-run.
+        image_hydrator = (
+            build_image_hydrator(
+                user_info,
+                configurable.get("thread_id"),
+                self.checkpointer is not None,
+            )
+            if contains_managed_images(messages)
+            else None
+        )
+
         request_context = RequestContext(
             assistant_id=str(assistant_id) if assistant_id else None,
             model_name=selected_llm,
@@ -145,6 +162,7 @@ class _ConfiguredLangChainDeepAgentGraph:
             ),
             canvas=canvas,
             language=configurable.get("language"),
+            image_hydrator=image_hydrator,
         )
 
         return messages, data_sources, request_context

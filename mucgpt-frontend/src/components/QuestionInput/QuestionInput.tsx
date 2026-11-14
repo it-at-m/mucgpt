@@ -190,16 +190,6 @@ const QuestionInputContent = ({
 
     return (
         <div className={styles.questionInputWrapper}>
-            {tools?.tools?.length && setSelectedTools ? (
-                <ChatToolSelector
-                    tools={tools}
-                    selectedTools={selectedTools}
-                    setSelectedTools={setSelectedTools}
-                    allowToolSelection={allowToolSelection}
-                    lockedToolIds={lockedToolIds}
-                />
-            ) : null}
-
             {usageNudges.isMessageBarVisible && onStartNewChat && (
                 <ChatUsageMessageBar onDismiss={usageNudges.dismissMessageBar} onStartNewChat={onStartNewChat} />
             )}
@@ -247,6 +237,15 @@ const QuestionInputContent = ({
                             disabled={disabled}
                         />
                     )}
+                    {tools?.tools?.length && setSelectedTools ? (
+                        <ChatToolSelector
+                            tools={tools}
+                            selectedTools={selectedTools}
+                            setSelectedTools={setSelectedTools}
+                            allowToolSelection={allowToolSelection}
+                            lockedToolIds={lockedToolIds}
+                        />
+                    ) : null}
                     <div className={styles.spacer} />
                     {usage && (
                         <ChatUsageIndicator

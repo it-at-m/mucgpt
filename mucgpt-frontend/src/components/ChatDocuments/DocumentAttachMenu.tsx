@@ -29,6 +29,10 @@ const useStyles = makeStyles({
     documentContent: {
         minWidth: 0
     },
+    // The plus glyph spans 15px of its 20px box while the neighbouring action icons span 16px, so it looks smaller next to them.
+    triggerIcon: {
+        transform: "scale(1.07)"
+    },
     subText: typographyStyles.caption1
 });
 
@@ -108,7 +112,7 @@ export const DocumentAttachMenu = ({ documents: attachedDocuments, onToggleDocum
             <Menu open={open} onOpenChange={handleMenuOpenChange} positioning={{ position: "above", align: "start", offset: 8 }}>
                 <MenuTrigger disableButtonEnhancement>
                     <Tooltip content={title} relationship="label" positioning="below">
-                        <Button appearance="subtle" icon={<Add20Regular />} disabled={disabled} />
+                        <Button appearance="subtle" icon={<Add20Regular className={classes.triggerIcon} />} disabled={disabled} />
                     </Tooltip>
                 </MenuTrigger>
                 <MenuPopover>

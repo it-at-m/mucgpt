@@ -117,15 +117,40 @@ class DummyRunnerLLM(DummyLLM):
         return AIMessage(content="Simplified text.")
 
 
-class DummyAgent:
+class DummyGraph:
+    """Graph stand-in yielding LangGraph-style (stream_mode, data) tuples."""
+
     def __init__(self, llm):
-        self.model = llm
-        self.graph = MagicMock()
-        self.graph.astream = llm.astream
-        self.graph.ainvoke = AsyncMock(
+        self._llm = llm
+        self.config = None
+        self.ainvoke = AsyncMock(
             side_effect=RuntimeError("Simulated failure") if llm.fail else None,
             return_value={"messages": [AIMessage(content="Simplified text.")]},
         )
+
+    async def astream(self, _input, *_args, **kwargs):
+        self.config = kwargs.get("config")
+        if self._llm.fail:
+            raise RuntimeError("Simulated failure")
+        if self._llm.respond_with_tool_call:
+            yield (
+                "custom",
+                ToolStreamChunk(
+                    state=ToolStreamState.STARTED,
+                    content="some complex text",
+                    tool_name="simplify",
+                ).model_dump_json(),
+            )
+        yield (
+            "messages",
+            (AIMessageChunk(content="Simplified text."), {"langgraph_node": "model"}),
+        )
+
+
+class DummyAgent:
+    def __init__(self, llm):
+        self.model = llm
+        self.graph = DummyGraph(llm)
 
 
 class FakeLangfuseSpan:
@@ -210,7 +235,6 @@ class TestMUCGPTAgentExecutor:
         self.agent = DummyAgent(self.llm)
         self.runner = MUCGPTAgentExecutor(self.agent)
 
-    @pytest.mark.skip(reason="Temporarily disabled")
     @pytest.mark.asyncio
     async def test_run_with_streaming_yields_content(self):
         messages = [InputMessage(role="user", content="hi")]
@@ -227,7 +251,6 @@ class TestMUCGPTAgentExecutor:
             for c in chunks
         )
 
-    @pytest.mark.skip(reason="Temporarily disabled")
     @pytest.mark.asyncio
     async def test_run_with_streaming_yields_tool_call_chunk(self):
         llm = DummyRunnerLLM(respond_with_tool_call=True)
@@ -249,7 +272,8 @@ class TestMUCGPTAgentExecutor:
         assert tool_call_chunks, "Should yield at least one tool call chunk"
         tool_call = tool_call_chunks[0]["choices"][0]["delta"]["tool_calls"][0]
         assert tool_call["name"] == "simplify"
-        assert tool_call["status"] == "started"
+        assert tool_call["state"] == "STARTED"
+        assert tool_call["content"] == "some complex text"
 
     @pytest.mark.asyncio
     async def test_run_with_streaming_emits_structured_error_chunk(self):
@@ -275,7 +299,6 @@ class TestMUCGPTAgentExecutor:
         assert error_chunks[0]["error"]["code"] in PROVIDER_ERROR_CODES
         assert "RuntimeError" in error_chunks[0]["error"]["detail"]
 
-    @pytest.mark.skip(reason="Temporarily disabled")
     @pytest.mark.asyncio
     async def test_run_with_streaming_yields_stop_chunk(self):
         messages = [InputMessage(role="user", content="hi")]
@@ -310,38 +333,6 @@ class TestMUCGPTAgentExecutor:
         assert response.error.code in PROVIDER_ERROR_CODES
         assert response.error.detail
         assert "RuntimeError" in response.error.detail
-
-    @pytest.mark.skip(reason="Temporarily disabled")
-    def test_run_without_streaming_uses_enabled_tools_in_config(self):
-        llm = DummyRunnerLLM()
-        agent = DummyAgent(llm)
-        runner = MUCGPTAgentExecutor(agent)
-        messages = [InputMessage(role="user", content="hi")]
-        enabled_tools = ["simplify"]
-        runner.run_without_streaming(
-            messages=messages,
-            temperature=0.7,
-            model="test",
-            user_info=None,
-            enabled_tools=enabled_tools,
-        )
-        assert llm.config["enabled_tools"] == enabled_tools
-
-    @pytest.mark.skip(reason="Temporarily disabled")
-    def test_run_without_streaming_sets_llm_config(self):
-        llm = DummyRunnerLLM()
-        agent = DummyAgent(llm)
-        runner = MUCGPTAgentExecutor(agent)
-        messages = [InputMessage(role="user", content="hi")]
-        runner.run_without_streaming(
-            messages=messages,
-            temperature=0.5,
-            model="test-model",
-            user_info=None,
-        )
-        assert llm.config["llm_temperature"] == 0.5
-        assert llm.config["llm"] == "test-model"
-        assert llm.config["llm_streaming"] is False
 
     @pytest.mark.asyncio
     async def test_run_without_streaming_invokes_agent_graph(self):

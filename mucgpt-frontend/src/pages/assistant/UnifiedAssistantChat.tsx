@@ -1,5 +1,6 @@
 import { useRef, useState, useEffect, useContext, useCallback, useReducer, useMemo } from "react";
 import { AskResponse, Assistant, AssistantResponse, ChatResponse, DataSource } from "../../api";
+import type { ImageAttachment } from "../../api";
 import { Answer } from "../../components/Answer";
 import { QuestionInput } from "../../components/QuestionInput";
 import { useTranslation } from "react-i18next";
@@ -581,7 +582,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
     // callApi-Funktion
     const callApi = useCallback(
         /** Sends one question through the strategy (streaming) and dispatches the answers. */
-        async (question: string, systemOverride?: string, dataSources?: DataSource[]) => {
+        async (question: string, systemOverride?: string, dataSources?: DataSource[], images?: ImageAttachment[]) => {
             if (isLegacyAssistant || isAssistantUnavailable || historyReadOnly) {
                 console.warn("Interaction blocked: Assistant is read-only.");
                 return;
@@ -622,7 +623,8 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                     undefined, // onAgUiEvent — event log is only wired up in the main chat
                     setRunActivity,
                     canvasWiring,
-                    requestToolApproval
+                    requestToolApproval,
+                    images
                 );
             } catch (e) {
                 setError(e);
@@ -1095,7 +1097,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                         clearOnSend
                         disabled={isLoading || isStreaming}
                         draftCacheKey={draftCacheKey}
-                        onSend={(question, datas) => {
+                        onSend={(question, datas, images) => {
                             const dataSources = datas
                                 .filter(data => data.isActive !== false && data.status === "ready" && data.fileContent)
                                 .map(data => ({
@@ -1111,7 +1113,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                                         status: data.status
                                     }
                                 }));
-                            callApi(question, undefined, dataSources.length > 0 ? dataSources : undefined);
+                            callApi(question, undefined, dataSources.length > 0 ? dataSources : undefined, images);
                         }}
                         question={question}
                         setQuestion={question => setQuestion(question)}
@@ -1146,7 +1148,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                     clearOnSend
                     disabled={isLoading || isStreaming || isAssistantUnavailable || isUnsubscribed || strategy instanceof DeletedCommunityAssistantStrategy}
                     draftCacheKey={draftCacheKey}
-                    onSend={(question, datas) => {
+                    onSend={(question, datas, images) => {
                         const dataSources = datas
                             .filter(data => data.isActive !== false && data.status === "ready" && data.fileContent)
                             .map(data => ({
@@ -1162,7 +1164,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                                     status: data.status
                                 }
                             }));
-                        callApi(question, undefined, dataSources.length > 0 ? dataSources : undefined);
+                        callApi(question, undefined, dataSources.length > 0 ? dataSources : undefined, images);
                     }}
                     question={question}
                     setQuestion={question => setQuestion(question)}

@@ -32,6 +32,8 @@ export type ChatResponse = {
 export type ChatTurn = {
     user: string;
     assistant?: string;
+    /** Managed image attachments belonging to this user turn (#1398). */
+    images?: ImageAttachment[];
 };
 
 export type DataSource = {

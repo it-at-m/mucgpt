@@ -13,7 +13,7 @@ import {
     UploadedImage
 } from "./models";
 import { HttpAgent } from "@ag-ui/client";
-import type { Message } from "@ag-ui/core";
+import { ImagePart, TextPart, type FileSource, type Message } from "@ag-ui/core";
 import type { CanvasRevisions } from "../service/canvasStorage";
 
 const PARSE_SERVICE_BASE = "/api/backend/v1/parse";
@@ -23,9 +23,19 @@ export const API_BASE = "/api/backend/";
 const AG_UI_CHAT_URL = API_BASE + "v1/chat/v2/completions";
 
 /**
+ * Managed image handle carried in the AG-UI file-source arm: the core service
+ * minted it on upload and is the only party that can resolve it (#1398).
+ */
+const MANAGED_IMAGE_URL_SCHEME = "mucgpt-image://";
+
+/**
  * Flattens the MUCGPT chat history into AG-UI messages. Every message carries
  * a stable unique id (required by the AG-UI schema); the system prompt is the
  * leading system message, followed by alternating user/assistant turns.
+ *
+ * A user turn with managed image attachments is emitted as content parts: the
+ * text part plus one image part per attachment in the file-source arm. Bytes
+ * never travel — the server resolves the handle it minted (see ag_ui_input).
  */
 function toAgUiMessages(request: ChatRequest): Message[] {
     const messages: Message[] = [];
@@ -34,7 +44,25 @@ function toAgUiMessages(request: ChatRequest): Message[] {
         messages.push({ id: `mucgpt-msg-${index++}`, role: "system", content: request.system_message });
     }
     for (const turn of request.history) {
-        messages.push({ id: `mucgpt-msg-${index++}`, role: "user", content: turn.user });
+        const images = turn.images ?? [];
+        if (images.length > 0) {
+            const parts: (TextPart | ImagePart)[] = [];
+            if (turn.user) {
+                parts.push({ type: "text", text: turn.user });
+            }
+            for (const image of images) {
+                const source: FileSource = {
+                    type: "file",
+                    value: `${MANAGED_IMAGE_URL_SCHEME}${image.id}`,
+                    provider: "mucgpt",
+                    mimeType: image.mime_type ?? "image/png"
+                };
+                parts.push({ type: "image", source });
+            }
+            messages.push({ id: `mucgpt-msg-${index++}`, role: "user", content: parts });
+        } else {
+            messages.push({ id: `mucgpt-msg-${index++}`, role: "user", content: turn.user });
+        }
         if (turn.assistant !== undefined) {
             messages.push({ id: `mucgpt-msg-${index++}`, role: "assistant", content: turn.assistant });
         }

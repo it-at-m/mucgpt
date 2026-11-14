@@ -669,6 +669,20 @@ function buildComplianceCheckResponse(systemPrompt: string): ComplianceCheckResp
     };
 }
 
+/** Extract display text from AG-UI message content that may carry parts (#1398). */
+function messageContentText(content: string | Array<{ type: string; text?: string }> | undefined): string {
+    if (typeof content === "string") {
+        return content;
+    }
+    if (Array.isArray(content)) {
+        return content
+            .filter(part => part.type === "text")
+            .map(part => part.text ?? "")
+            .join("");
+    }
+    return "";
+}
+
 /** Mocked document-upload handler returning parsed text sections. */
 async function parseUploadHandler({ request }: { request: Request }) {
     // Simulate network delay for file upload and parsing
@@ -1219,7 +1233,7 @@ export const handlers = [
         // (conversation_id, snake_case settings). The wire settings live in
         // forwardedProps.mucgpt for the native shape.
         const raw = (await request.json()) as {
-            messages?: Array<{ role: string; content: string }>;
+            messages?: Array<{ role: string; content: string | Array<{ type: string; text?: string }> }>;
             threadId?: string;
             conversation_id?: string;
             forwardedProps?: { mucgpt?: { enabled_tools?: string[]; canvas?: CanvasState | null } };
@@ -1236,7 +1250,8 @@ export const handlers = [
             raw.messages
                 ?.slice()
                 .reverse()
-                .find(message => message.role === "user")?.content || "";
+                .map(message => (message.role === "user" ? messageContentText(message.content) : ""))
+                .find(text => text.length > 0) || "";
         const encoder = new TextEncoder();
         const runId = crypto.randomUUID();
         const messageId = crypto.randomUUID();

@@ -368,7 +368,7 @@ const Chat = () => {
 
     // API Request mit optimiertem State Management
     const callApi = useCallback(
-        async (question: string, system?: string, dataSources?: DataSource[]) => {
+        async (question: string, system?: string, dataSources?: DataSource[], images?: ImageAttachment[]) => {
             lastQuestionRef.current = question;
             lastImagesRef.current = images && images.length > 0 ? images : undefined;
             setError(undefined);
@@ -404,7 +404,8 @@ const Chat = () => {
                     showAgUiEventLog ? handleAgUiEvent : undefined,
                     setRunActivity,
                     canvasWiring,
-                    requestToolApproval
+                    requestToolApproval,
+                    images
                 );
             } catch (e) {
                 setError(e);
@@ -1058,7 +1059,7 @@ const Chat = () => {
                 initialImages={restoredImages}
                 onSend={(question, datas, images) => {
                     const dataSources = uploadedDataToDataSources(datas);
-                    callApi(question, systemPrompt, dataSources.length > 0 ? dataSources : undefined);
+                    callApi(question, systemPrompt, dataSources.length > 0 ? dataSources : undefined, images);
                 }}
                 question={question}
                 setQuestion={question => setQuestion(question)}

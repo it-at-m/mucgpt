@@ -182,7 +182,13 @@ class ImageHydrator:
                 continue
             new_content = []
             for block in _iter_content_items(message.content):
-                url = find_managed_image_url(block)
+                # A content list may mix plain strings and block dicts;
+                # non-dict entries can never carry a managed URL.
+                url = (
+                    find_managed_image_url(block)
+                    if isinstance(block, dict)
+                    else None
+                )
                 if url is None:
                     new_content.append(block)
                     continue

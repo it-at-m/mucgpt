@@ -10,6 +10,7 @@ the API process.
 
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
+from typing import Any
 from uuid import uuid4
 
 from sqlalchemy import delete, exists, or_, select
@@ -40,13 +41,13 @@ class LifecycleRunResult:
 
 
 async def enqueue_raw(
-    connection, *, bucket: str, object_key: str, reason: str
+    connection: Any, *, bucket: str, object_key: str, reason: str
 ) -> None:
     """Insert an outbox entry over a raw DBAPI connection (no session).
 
-    Used by ``PersistanceHelpers.erase_conversation``, whose fenced deletion
-    transaction runs on the persistence pool; the entry commits together with
-    the catalog deletes.
+    ``connection`` is the psycopg async connection of the persistence pool
+    (``PersistanceHelpers.erase_conversation``); the entry commits together
+    with the catalog deletes.
     """
     await connection.execute(
         "INSERT INTO image_deletion_outbox "

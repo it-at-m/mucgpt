@@ -39,7 +39,11 @@ def image_request(*urls: str, persist: bool = True) -> ChatCompletionRequest:
 
 def enabled_settings(enabled: bool):
     return SimpleNamespace(
-        image_input=SimpleNamespace(enabled=enabled, max_hydration_bytes=40 * 1024 * 1024)
+        image_input=SimpleNamespace(
+            enabled=enabled,
+            max_hydration_bytes=40 * 1024 * 1024,
+            max_images_per_message=5,
+        )
     )
 
 
@@ -79,7 +83,7 @@ async def test_persisted_request_binds_and_stateless_verifies():
     with (
         patch.object(chat_router, "get_settings", lambda: enabled_settings(True)),
         patch.object(
-            chat_router, "_total_ready_image_size", AsyncMock(return_value=1024)
+            chat_router, "_combined_image_size", AsyncMock(return_value=1024)
         ),
         patch.object(
             chat_router, "bind_chat_images", AsyncMock(return_value=1)
@@ -92,7 +96,7 @@ async def test_persisted_request_binds_and_stateless_verifies():
     with (
         patch.object(chat_router, "get_settings", lambda: enabled_settings(True)),
         patch.object(
-            chat_router, "_total_ready_image_size", AsyncMock(return_value=1024)
+            chat_router, "_combined_image_size", AsyncMock(return_value=1024)
         ),
         patch.object(
             chat_router, "verify_unbound_chat_images", AsyncMock(return_value=1)
@@ -116,7 +120,7 @@ async def test_repository_errors_map_to_http_failures():
         with (
             patch.object(chat_router, "get_settings", lambda: enabled_settings(True)),
             patch.object(
-                chat_router, "_total_ready_image_size", AsyncMock(return_value=1024)
+                chat_router, "_combined_image_size", AsyncMock(return_value=1024)
             ),
             patch.object(chat_router, "bind_chat_images", AsyncMock(side_effect=error)),
             pytest.raises(HTTPException) as exc,
@@ -132,7 +136,7 @@ async def test_oversized_aggregate_is_rejected_before_binding():
         patch.object(chat_router, "get_settings", lambda: enabled_settings(True)),
         patch.object(
             chat_router,
-            "_total_ready_image_size",
+            "_combined_image_size",
             AsyncMock(return_value=41 * 1024 * 1024),
         ),
         patch.object(chat_router, "bind_chat_images", AsyncMock()) as binder,
@@ -150,7 +154,7 @@ async def test_within_budget_aggregate_binds_normally():
         patch.object(chat_router, "get_settings", lambda: enabled_settings(True)),
         patch.object(
             chat_router,
-            "_total_ready_image_size",
+            "_combined_image_size",
             AsyncMock(return_value=1024),
         ),
         patch.object(
@@ -159,3 +163,39 @@ async def test_within_budget_aggregate_binds_normally():
     ):
         await chat_router.bind_or_verify_chat_images(request, USER)
     binder.assert_awaited_once()
+
+
+@pytest.mark.asyncio
+async def test_too_many_distinct_images_are_rejected_before_binding():
+    six_urls = [f"mucgpt-image://11111111-1111-4111-8{i:03d}-111111111111" for i in range(6)]
+    request = image_request(*six_urls)
+    with (
+        patch.object(chat_router, "get_settings", lambda: enabled_settings(True)),
+        patch.object(chat_router, "bind_chat_images", AsyncMock()) as binder,
+        pytest.raises(HTTPException) as exc,
+    ):
+        await chat_router.bind_or_verify_chat_images(request, USER)
+    assert exc.value.status_code == 413
+    assert "limit is 5" in exc.value.detail
+    binder.assert_not_awaited()
+
+
+@pytest.mark.asyncio
+async def test_bound_conversation_history_counts_toward_the_aggregate():
+    """A persisted turn must account for images already in the checkpointed
+    history, not only the ones in the incoming message."""
+    request = image_request(MANAGED_URL, persist=True)
+    with (
+        patch.object(chat_router, "get_settings", lambda: enabled_settings(True)),
+        patch.object(
+            chat_router,
+            "_combined_image_size",
+            AsyncMock(return_value=41 * 1024 * 1024),
+        ),
+        patch.object(chat_router, "bind_chat_images", AsyncMock()) as binder,
+        pytest.raises(HTTPException) as exc,
+    ):
+        await chat_router.bind_or_verify_chat_images(request, USER)
+    assert exc.value.status_code == 413
+    assert "aggregate image size limit" in exc.value.detail
+    binder.assert_not_awaited()

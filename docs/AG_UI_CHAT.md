@@ -84,10 +84,13 @@ would be worse than refusing it. Documented here as a conscious exception.
   `mucgpt-image://<uuid>` references minted by the image upload endpoint:
   they are bound as opaque reference blocks that pass through graph state and
   checkpoints untouched, and are hydrated to data URIs only at the
-  provider-boundary hydration. An own handle that cannot be resolved
-  (deleted, expired, or foreign) fails closed with HTTP 400 instead of
-  silently degrading the run; unbound drafts must be bound to the
-  conversation and non-vision models are already rejected by the gate above.
+  provider-boundary hydration. An own handle fails closed instead of
+  silently degrading the run: a URL that cannot be parsed as a managed
+  reference is rejected with HTTP 400 in the mapper, a deleted, expired, or
+  foreign handle is rejected with HTTP 404/409/403 by the binding gate before
+  the stream starts, and a reference that fails hydration mid-run surfaces
+  the hydration error. Unbound drafts must be bound to the conversation and
+  non-vision models are already rejected by the gate above.
 - Other media types (audio/video/document parts) are refused with a clear 400
   until a mapping exists.
 

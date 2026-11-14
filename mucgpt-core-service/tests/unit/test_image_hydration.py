@@ -334,3 +334,22 @@ def test_build_image_hydrator_fails_closed_without_store(monkeypatch):
     monkeypatch.setattr(ImageStorageManager, "_store", None)
     with pytest.raises(hydration.ImageHydrationError, match="not available"):
         build_image_hydrator(user, "conv", True)
+
+
+@pytest.mark.asyncio
+async def test_hydration_preserves_plain_string_entries_in_mixed_content(
+    hydrator_env,
+):
+    """A content list may mix plain strings and block dicts; strings survive
+    hydration unchanged and never crash the resolver."""
+    seed_image(hydrator_env.engine, IMAGE_ID)
+    messages = [
+        HumanMessage(
+            content=[
+                "Describe this",
+                {"type": "image_url", "image_url": {"url": MANAGED_URL}},
+            ]
+        )
+    ]
+    hydrated = await hydrator_env.make().hydrate_messages(messages)
+    assert hydrated[0].content[0] == "Describe this"

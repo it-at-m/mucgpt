@@ -199,25 +199,50 @@ class ImageRepository:
         caller then defers to the binding/verification errors for the
         actionable message.
         """
+        sizes = await self.size_map_for_owner(user_id, image_ids)
+        if len(sizes) < len(set(image_ids)):
+            return None
+        return sum(sizes.values())
+
+    async def size_map_for_owner(
+        self, user_id: str, image_ids: list[str]
+    ) -> dict[str, int]:
+        """Recorded sizes of the given ids the user owns, ready and unexpired.
+
+        Missing, not-ready, or expired references are absent from the map;
+        callers decide whether that is an error.
+        """
         unique_ids = sorted(set(image_ids))
         if not unique_ids:
-            return 0
+            return {}
         rows = (
             await self.session.execute(
                 select(ChatImage).where(
                     ChatImage.id.in_(unique_ids),
                     ChatImage.owner_user_id == user_id,
+                    ChatImage.status == "ready",
+                    or_(
+                        ChatImage.expires_at.is_(None),
+                        ChatImage.expires_at > datetime.now(UTC),
+                    ),
                 )
             )
         ).scalars().all()
-        by_id = {row.id: row for row in rows}
-        total = 0
-        for image_id in unique_ids:
-            row = by_id.get(image_id)
-            if row is None or row.status != "ready" or _expired(row.expires_at):
-                return None
-            total += row.size_bytes
-        return total
+        return {row.id: row.size_bytes for row in rows}
+
+    async def size_map_for_conversation(
+        self, conversation_id: str
+    ) -> dict[str, int]:
+        """Recorded sizes of the images already bound to the conversation."""
+        rows = (
+            await self.session.execute(
+                select(ChatImage).where(
+                    ChatImage.conversation_id == conversation_id,
+                    ChatImage.status == "ready",
+                )
+            )
+        ).scalars().all()
+        return {row.id: row.size_bytes for row in rows}
 
     async def verify_unbound_images(
         self, user_id: str, image_ids: list[str]

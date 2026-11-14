@@ -481,7 +481,7 @@ Optional bounds (all enforced server-side, defaults in the config examples): `ma
 The Compose RustFS instance is for isolated local development only. Production must run a **separately operated, production-grade S3-compatible object store** (dedicated storage service with HA, backup, monitoring, and an operations owner), not the dev container. Requirements for the core's image bucket:
 
 - TLS and private network access; no public bucket or console; no browser CORS needed (only the core service accesses the bucket).
-- IAM limited to `GetObject`, `PutObject`, and `DeleteObject` on the configured `key_prefix`; credentials via environment variables (`MUCGPT_CORE_IMAGE_INPUT__S3__ACCESS_KEY_ID` / `__SECRET_ACCESS_KEY`) or the environment credential chain — never in `config.yaml`.
+- IAM limited to `GetObject`, `PutObject`, and `DeleteObject` on the configured `key_prefix`, **plus `s3:ListBucket` (or the equivalent bucket-level permission) on the bucket resource**: the startup access check calls `HeadBucket`, which object-prefix permissions alone do not cover. Credentials via environment variables (`MUCGPT_CORE_IMAGE_INPUT__S3__ACCESS_KEY_ID` / `__SECRET_ACCESS_KEY`) or the environment credential chain — never in `config.yaml`.
 - Prefer a dedicated **unversioned** bucket/prefix: object versioning or object lock can retain supposedly deleted images or block deletion, and independent lifecycle rules can race conversation cleanup.
 - Set `force_path_style: true` for self-hosted S3-compatible stores and point `endpoint_url` at the internal endpoint.
 

@@ -163,7 +163,7 @@
     width: 20px;
     height: 20px;
     padding: 0;
-    border-radius: 999px;
+    border-radius: var(--borderRadiusCircular);
     background: var(--colorNeutralBackground1);
     border: var(--strokeWidthThin) solid var(--colorNeutralStroke2);
 }

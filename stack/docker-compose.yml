@@ -219,6 +219,9 @@ services:
         condition: service_started
       checkpoint-postgres:
         condition: service_healthy
+      # With image input enabled the startup check reads the image bucket.
+      rustfs-init:
+        condition: service_completed_successfully
     volumes:
       - ${CA_BUNDLE_PATH:-./ca-bundle.crt}:${SSL_MOUNT_PATH:-/etc/pki/ca-trust/extracted/pem/ca-bundle.crt}:ro,Z
       # Mount YAML configuration files (recommended over environment variables)
@@ -268,6 +271,8 @@ services:
         condition: service_healthy
       rustfs:
         condition: service_healthy
+      rustfs-init:
+        condition: service_completed_successfully
     volumes:
       - ${CA_BUNDLE_PATH:-./ca-bundle.crt}:${SSL_MOUNT_PATH:-/etc/pki/ca-trust/extracted/pem/ca-bundle.crt}:ro,Z
       - ./core.config.yaml:/app/config.yaml:ro
@@ -414,8 +419,10 @@ services:
       RUSTFS_OBS_LOG_DIRECTORY: "/var/log/rustfs/"
     command: ["/data"]
     ports:
-      - "9000:9000"
-      - "9001:9001"
+      # Development console/API access only; binding to loopback keeps the
+      # fixed dev credentials unreachable from other hosts.
+      - "127.0.0.1:9000:9000"
+      - "127.0.0.1:9001:9001"
     volumes:
       - rustfs-data:/data
     security_opt: *security_settings

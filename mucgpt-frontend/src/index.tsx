@@ -20,6 +20,7 @@ import { GlobalToastProvider } from "./components/GlobalToastHandler/GlobalToast
 import DeletedCommunityAssistant from "./pages/assistant/DeletedCommunityAssistant";
 import Unauthorized from "./pages/Unauthorized";
 import Discovery from "./pages/discovery/Discovery";
+import Documents from "./pages/documents/Documents";
 import Home from "./pages/home/Home";
 import { AssistantEditorPage } from "./components/AssistantDialogs/AssistantEditorPage/AssistantEditorPage";
 import LegalReview from "./pages/admin/LegalReview";
@@ -73,6 +74,11 @@ const router = createHashRouter([
             {
                 path: "discovery",
                 element: <Discovery />,
+                errorElement: <div>Fehler</div>
+            },
+            {
+                path: "documents",
+                element: <Documents />,
                 errorElement: <div>Fehler</div>
             },
             {

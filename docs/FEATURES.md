@@ -43,6 +43,16 @@ Assistants can use built-in and extendable tools. Examples include:
 
 These examples are illustrative—the platform is designed to grow with additional tools as organizational needs evolve.
 
+### Tool confirmation (human in the loop)
+
+Some tools require your explicit confirmation before they run. When the assistant
+calls such a tool, the answer pauses and an approval card appears in the chat:
+it shows the tool, the exact arguments it would use (for example the search query
+that would be sent to the web), and the data protection level the tool may
+receive. You can approve the call or reject it — on a rejection the assistant
+continues without performing the action. If you keep working instead of
+answering, the paused call is cancelled and never executes.
+
 ## AI Governance And Compliance Checks
 
 Assistant system prompts can be screened against configured EU AI Act high-risk
@@ -92,6 +102,10 @@ Guided examples and tips to help first-time and experienced users get value quic
 
 ![Dark Mode & i18n](/docs/darkmode_i18n.png)
 Accessible UI with dark mode support and internationalization.
+
+The interface language is also the assistant's default answer language: it
+responds in the selected interface language unless you write in a different
+language — then it follows yours.
 
 ## General Features
 

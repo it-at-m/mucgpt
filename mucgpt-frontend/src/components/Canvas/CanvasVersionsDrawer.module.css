@@ -3,7 +3,7 @@
 }
 
 .groupTitle {
-    font-size: var(--fontSizeBase350);
+    font-size: var(--fontSizeBase400);
     font-weight: var(--fontWeightSemibold);
     line-height: var(--lineHeightBase400);
     color: var(--colorNeutralForeground2);

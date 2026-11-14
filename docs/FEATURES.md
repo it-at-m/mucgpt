@@ -15,6 +15,7 @@ The chat provides a clear space to work with the underlying language model on al
 
 Available from MUCGPT 2.1.
 
+![Canvas](/docs/canvas.png)
 Work side by side with the agent: open a rich-text canvas panel next to any chat and draft documents together.
 - Toggle the canvas at any time, mid-conversation; on small screens it opens as an overlay so the chat stays usable.
 - The agent can start or edit the canvas while it is closed: the view opens automatically as soon as the agent writes.
@@ -27,6 +28,7 @@ Work side by side with the agent: open a rich-text canvas panel next to any chat
 
 ## Chat with Documents
 
+![Chat with Documents](/docs/chat_documents.png)
 Upload documents in the chat and let the assistant work with them: files are
 parsed to text (Xberg extraction service), and the extracted content grounds
 the assistant's answers — ask questions about a PDF, summarize a report, or
@@ -61,6 +63,7 @@ These examples are illustrative—the platform is designed to grow with addition
 
 ### Tool confirmation (human in the loop)
 
+![Tool confirmation](/docs/tool_approval.png)
 Some tools require your explicit confirmation before they run. When the assistant
 calls such a tool, the answer pauses and an approval card appears in the chat:
 it shows the tool, the exact arguments it would use (for example the search query

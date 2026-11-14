@@ -703,38 +703,34 @@ const Chat = () => {
 
                 if (validIds.length > 0) {
                     localStorage.removeItem(STORAGE_KEYS.CHAT_IMAGE_IDS);
-                    Promise.allSettled(validIds.map(id => getImageMetadataApi(id)))
-                        .then(results => {
-                            const restored = results
-                                .filter(
-                                    (result): result is PromiseFulfilledResult<Awaited<ReturnType<typeof getImageMetadataApi>>> =>
-                                        result.status === "fulfilled"
-                                )
-                                .map(result => result.value)
-                                .map(image => ({
-                                    id: image.id,
-                                    displayUrl: imageContentUrl(image.id),
-                                    filename: image.filename,
-                                    mime_type: image.mime_type,
-                                    size_bytes: image.size_bytes,
-                                    width: image.width,
-                                    height: image.height
-                                }));
-                            const failed = validIds.length - restored.length;
-                            if (failed > 0) {
-                                // Attachments missing server-side must not
-                                // block the gate for the ones that restored.
-                                console.warn(
-                                    `Staged images: ${failed} of ${validIds.length} could not be restored (expired or deleted).`
-                                );
-                            }
-                            if (restored.length > 0) {
-                                setRestoredImages(restored);
-                            } else {
-                                clearNavigationQueryParams();
-                            }
-                            setIsImageRestoreReady(true);
-                        });
+                    Promise.allSettled(validIds.map(id => getImageMetadataApi(id))).then(results => {
+                        const restored = results
+                            .filter(
+                                (result): result is PromiseFulfilledResult<Awaited<ReturnType<typeof getImageMetadataApi>>> => result.status === "fulfilled"
+                            )
+                            .map(result => result.value)
+                            .map(image => ({
+                                id: image.id,
+                                displayUrl: imageContentUrl(image.id),
+                                filename: image.filename,
+                                mime_type: image.mime_type,
+                                size_bytes: image.size_bytes,
+                                width: image.width,
+                                height: image.height
+                            }));
+                        const failed = validIds.length - restored.length;
+                        if (failed > 0) {
+                            // Attachments missing server-side must not
+                            // block the gate for the ones that restored.
+                            console.warn(`Staged images: ${failed} of ${validIds.length} could not be restored (expired or deleted).`);
+                        }
+                        if (restored.length > 0) {
+                            setRestoredImages(restored);
+                        } else {
+                            clearNavigationQueryParams();
+                        }
+                        setIsImageRestoreReady(true);
+                    });
                 } else {
                     console.warn("Staged images were not found in localStorage. Please attach them again.");
                     clearNavigationQueryParams();

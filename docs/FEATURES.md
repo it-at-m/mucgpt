@@ -23,6 +23,20 @@ Work side by side with the agent: open a rich-text canvas panel next to any chat
 - The canvas is saved with the conversation, so your document survives reloads and device switches.
 - Export the document as Markdown, PDF, Word, or Excel (one sheet per table).
 
+## Chat with Documents
+
+Upload documents in the chat and let the assistant work with them: files are
+parsed to text (Xberg extraction service), and the extracted content grounds
+the assistant's answers — ask questions about a PDF, summarize a report, or
+combine documents with your instructions.
+
+- Upload one or more files per conversation and select which ones the
+  assistant may read; the selection is saved with the conversation.
+- The model receives the selected documents through a read-only documents
+  view — it can read and search them, but never modify them, and it only sees
+  the documents you selected for the current turn.
+- Available from MUCGPT 2.1.
+
 ## Create Assistants
 
 ![Assistant Creator](/docs/assistant_creator.png)
@@ -60,6 +74,11 @@ use cases before they are saved. High-risk findings route the immutable assistan
 version to an administrator/legal review queue. See the [AI governance and
 compliance checks guide](AI_GOVERNANCE.md) for flow diagrams, configuration,
 verification rules, and the review lifecycle.
+
+Administrators work with the results in the admin area: they see every
+assistant's lifecycle state (active, pending legal review, inactive) and its
+compliance screening status, and they resolve flagged assistants in the legal
+review queue — activating or deactivating them as required.
 
 ## Start Page
 

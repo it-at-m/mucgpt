@@ -346,11 +346,18 @@ def _reset_canvas_batch_gate(request: ModelRequest) -> None:
 
 
 def _normalize_assistant_messages(messages: list[AnyMessage]) -> list[AnyMessage]:
-    """Remove empty assistant messages rejected by strict compatible APIs.
+    """Sanitize assistant messages for strict compatible APIs.
 
-    Some providers, including Azure AI's Mistral endpoint, reject an assistant
-    message when both ``content`` and ``tool_calls`` are absent. The frontend
-    can also resend an empty assistant placeholder while restoring a chat.
+    Three shapes strict OpenAI-compatible APIs reject:
+
+    * assistant messages without ``content`` and ``tool_calls`` (Azure AI's
+      Mistral endpoint; the frontend can also resend an empty placeholder
+      while restoring a chat) — dropped;
+    * assistant ``content`` as a content-block list (reasoning models return
+      thinking blocks next to tool calls; Mistral's API demands a plain
+      string) — flattened to the joined text parts;
+    * empty string content on messages that keep their tool calls — replaced
+      with an empty plain string, which the providers accept.
     """
     normalized: list[AnyMessage] = []
     changed = False
@@ -361,8 +368,19 @@ def _normalize_assistant_messages(messages: list[AnyMessage]) -> list[AnyMessage
             and not message.tool_calls
         ):
             changed = True
-        else:
-            normalized.append(message)
+            continue
+        if (
+            isinstance(message, AIMessage)
+            and isinstance(message.content, list)
+            and not isinstance(message.content, str)
+        ):
+            text = "".join(
+                block.get("text", "") if isinstance(block, dict) else str(block)
+                for block in message.content
+            )
+            message = message.model_copy(update={"content": text})
+            changed = True
+        normalized.append(message)
     return normalized if changed else messages
 
 

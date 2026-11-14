@@ -219,10 +219,21 @@ async def invoke_internal_structured_generation[StructuredOutputT: BaseModel](
         model_settings["user"] = llm_user
     model = ModelRegistry.get_model(model_name)
     model_settings = ModelRegistry.normalize_model_settings(model, model_settings)
-    llm = model.with_structured_output(schema).bind(**model_settings)
+    # Structured output via tool calling. Reasoning models (e.g. Mistral Large,
+    # GLM) return thinking content blocks next to the tool call; the stock
+    # structured-output parser expects string content and crashes on those
+    # lists, so the tool call is extracted from the raw response instead.
+    llm = model.bind_tools([schema], **model_settings)
     with propagate_attributes(
         user_id=hash_user_id(user_info.user_id),
         tags=trace_tags,
         prompt=langfuse_prompt,
     ):
-        return await llm.ainvoke(to_langchain_messages(messages), config=run_config)  # type: ignore
+        response = await llm.ainvoke(to_langchain_messages(messages), config=run_config)
+        tool_calls = getattr(response, "tool_calls", None) or []
+        if not tool_calls:
+            raise ValueError(
+                f"{run_name}: model {model_name} returned no tool call "
+                f"(content type: {type(response.content).__name__})"
+            )
+        return schema.model_validate(tool_calls[0]["args"])

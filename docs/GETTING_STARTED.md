@@ -312,6 +312,9 @@ MUCGPT_CORE_PROVIDERS__MY_GATEWAY__API_KEY=sk-...  # → providers.my_gateway.ap
 - `input_cost_per_token` / `output_cost_per_token`: Optional pricing hints per token.
 - `supports_reasoning`: Whether the model supports reasoning. Only these models receive the requested `reasoning_effort`. For matching the provider exactly, `supported_reasoning_efforts` accepts `none`, `minimal`, `low`, `medium`, `high` and `max` (some providers, e.g. privatemode.ai GLM models, expose a `max` level); requests are clamped to the nearest supported effort.
 - `supports_vision`: Whether the model can consume image input. Chat requests carrying image parts are rejected fail-closed for models without it (see the [AG-UI chat contract](AG_UI_CHAT.md)).
+- `supports_temperature`: Whether the provider accepts the `temperature` request parameter (default `true`). Set to `false` for APIs that reject it or that forbid `temperature: 0` without an explicit `top_p: 1` (e.g. Mistral's "greedy sampling" rule); the temperature is then omitted from every request.
+- `supports_user_param`: Whether the provider accepts the OpenAI-style `user` request parameter (default `true`). Some OpenAI-compatible APIs (e.g. Mistral) reject it as an extra field; it is then stripped from every request.
+- `supports_store_param`: Whether the provider accepts the OpenAI-style `store` request parameter (default `true`; the `store: false` privacy opt-out of response storage). Providers that reject the field as an extra input skip it — omission means "not stored" everywhere.
 - `creativity_{low,medium,high}_temperature`: Map abstract creativity levels to specific `temperature` values (0.0 - 1.0 or higher depending on model). Defaults are low=0.0, medium=0.5, high=1.0.
 
 Replace the placeholder values with your actual model configuration.

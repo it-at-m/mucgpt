@@ -75,6 +75,15 @@ class ModelInfo(BaseModel):
     supported_reasoning_efforts: list[ReasoningEffort] | None = None
     default_reasoning_effort: ReasoningEffort | None = None
     supports_temperature: bool = True
+    # Whether the provider accepts the OpenAI-style `user` request parameter.
+    # Some OpenAI-compatible APIs (e.g. Mistral) reject it as an extra field;
+    # normalize_model_settings strips it for those models.
+    supports_user_param: bool = True
+    # Whether the provider accepts the OpenAI-style `store` request parameter
+    # (response storage opt-out). Some OpenAI-compatible APIs (e.g. Mistral)
+    # reject it as an extra field; the store=False privacy guard is then
+    # omitted — providers without the field do not store responses anyway.
+    supports_store_param: bool = True
     # Whether the model can consume image input. The AG-UI run-input mapper
     # enforces this as a fail-closed gate before the run starts (a deliberate
     # deviation from the spec's "skip unusable parts" rule, kept for privacy).
@@ -198,6 +207,8 @@ class ModelsConfig(BaseModel):
             "supported_reasoning_efforts",
             "default_reasoning_effort",
             "supports_temperature",
+            "supports_user_param",
+            "supports_store_param",
             "supports_vision",
             "knowledge_cut_off",
             "creativity_low_temperature",

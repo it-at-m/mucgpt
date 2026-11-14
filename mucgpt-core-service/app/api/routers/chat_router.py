@@ -49,9 +49,11 @@ from core.stream_cleanup import close_stream
 from core.virtual_file_system_helper import get_documents_for_agent
 from database.conversation_repo import ConversationRepository
 from database.fenced_checkpointer import ConversationDeletedError
+from database.image_catalog import ImageCatalogManager
 from database.image_repo import (
     ImageAlreadyBoundError,
     ImageConversationUnavailableError,
+    ImageRepository,
     ImageUnavailableError,
 )
 from init_app import init_agent
@@ -182,6 +184,20 @@ async def bind_or_verify_chat_images(
     settings = get_settings()
     if not settings.image_input.enabled:
         raise HTTPException(status_code=503, detail="Image upload is not enabled.")
+    # Reject aggregates the model call could never hydrate *before* binding:
+    # once bound, "start a new chat" advice cannot make the same set fit.
+    total_size = await _total_ready_image_size(user_info, image_ids)
+    if (
+        total_size is not None
+        and total_size > settings.image_input.max_hydration_bytes
+    ):
+        raise HTTPException(
+            status_code=413,
+            detail=(
+                "The attached images exceed the per-message size limit; "
+                "attach fewer or smaller images."
+            ),
+        )
     try:
         if request.persist:
             if request.conversation_id is None:
@@ -199,6 +215,17 @@ async def bind_or_verify_chat_images(
         raise HTTPException(
             status_code=403, detail="Conversation access denied"
         ) from None
+
+
+async def _total_ready_image_size(
+    user_info: AuthenticationResult, image_ids: list[str]
+) -> int | None:
+    """Sum of recorded image sizes; ``None`` when any reference is unavailable."""
+    factory = ImageCatalogManager.get_session_factory()
+    async with factory() as session:
+        return await ImageRepository(session).total_ready_size(
+            user_info.user_id, image_ids
+        )
 
 
 async def _save_document_selection(

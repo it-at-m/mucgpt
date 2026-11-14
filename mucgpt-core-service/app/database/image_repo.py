@@ -190,6 +190,35 @@ class ImageRepository:
                 )
         return len(unique_ids)
 
+    async def total_ready_size(
+        self, user_id: str, image_ids: list[str]
+    ) -> int | None:
+        """Sum of recorded sizes for owned, ready, unexpired images.
+
+        ``None`` when any reference is missing, not ready, or expired — the
+        caller then defers to the binding/verification errors for the
+        actionable message.
+        """
+        unique_ids = sorted(set(image_ids))
+        if not unique_ids:
+            return 0
+        rows = (
+            await self.session.execute(
+                select(ChatImage).where(
+                    ChatImage.id.in_(unique_ids),
+                    ChatImage.owner_user_id == user_id,
+                )
+            )
+        ).scalars().all()
+        by_id = {row.id: row for row in rows}
+        total = 0
+        for image_id in unique_ids:
+            row = by_id.get(image_id)
+            if row is None or row.status != "ready" or _expired(row.expires_at):
+                return None
+            total += row.size_bytes
+        return total
+
     async def verify_unbound_images(
         self, user_id: str, image_ids: list[str]
     ) -> int:

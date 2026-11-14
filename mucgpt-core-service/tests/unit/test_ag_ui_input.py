@@ -332,6 +332,56 @@ class TestVisionGate:
         bind_media_parts(request, pending_media, supports_vision=True)
         assert request.messages[3]._media_blocks == []
 
+    def _body_with_file_source(self, source: dict) -> dict:
+        body = native_body()
+        body["messages"][-1] = {
+            "id": "m3",
+            "role": "user",
+            "content": [
+                {"type": "text", "text": "Describe this"},
+                {"type": "image", "source": source},
+            ],
+        }
+        return body
+
+    def test_managed_mucgpt_file_source_binds_as_reference_block(self):
+        body = self._body_with_file_source(
+            {
+                "type": "file",
+                "value": "mucgpt-image://11111111-1111-4111-8111-111111111111",
+                "provider": "mucgpt",
+                "mime_type": "image/png",
+            }
+        )
+        request, pending_media = to_chat_completion_request(parse_run_agent_input(body))
+        bind_media_parts(request, pending_media, supports_vision=True)
+        assert request.messages[3]._media_blocks == [
+            {
+                "type": "image_url",
+                "image_url": {
+                    "url": "mucgpt-image://11111111-1111-4111-8111-111111111111"
+                },
+            }
+        ]
+
+    def test_malformed_mucgpt_handle_fails_closed(self):
+        body = self._body_with_file_source(
+            {"type": "file", "value": "mucgpt-image://not-a-uuid", "provider": "mucgpt"}
+        )
+        request, pending_media = to_chat_completion_request(parse_run_agent_input(body))
+        with pytest.raises(HTTPException) as exc:
+            bind_media_parts(request, pending_media, supports_vision=True)
+        assert exc.value.status_code == 400
+        assert "no longer available" in exc.value.detail
+
+    def test_foreign_file_source_value_never_becomes_a_block(self):
+        body = self._body_with_file_source(
+            {"type": "file", "value": "mucgpt-image://11111111-1111-4111-8111-111111111111"}
+        )
+        request, pending_media = to_chat_completion_request(parse_run_agent_input(body))
+        bind_media_parts(request, pending_media, supports_vision=True)
+        assert request.messages[3]._media_blocks == []
+
     def test_inline_non_image_part_refused(self):
         body = native_body()
         body["messages"][-1] = {

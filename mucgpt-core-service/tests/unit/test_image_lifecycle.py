@@ -261,7 +261,9 @@ async def test_foreign_bucket_entries_stay_visible(lifecycle_env):
 
 
 @pytest.mark.asyncio
-async def test_disabled_image_input_skips_sweeps_but_drains(lifecycle_env):
+async def test_disabled_image_input_still_sweeps_and_drains(lifecycle_env):
+    """A deactivation must not strand rows and bytes from before it: sweeps
+    run whenever storage is configured, only the flag check is gone."""
     env = lifecycle_env
     env.seed_image("img-1", expires_at=expired_stamp())
     env.enqueue(object_key="pending.png")
@@ -269,7 +271,7 @@ async def test_disabled_image_input_skips_sweeps_but_drains(lifecycle_env):
 
     result = await run_once(env.factory, env.store, disabled)
 
-    assert result.swept_expired_drafts == 0
-    assert result.deleted_objects == 1
-    assert [row.id for row in env.image_rows()] == ["img-1"]
+    assert result.swept_expired_drafts == 1
+    assert result.deleted_objects == 2
+    assert env.image_rows() == []
     assert env.outbox_rows() == []

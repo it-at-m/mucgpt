@@ -12,7 +12,7 @@ from dataclasses import dataclass
 from datetime import UTC, datetime
 from uuid import uuid4
 
-from sqlalchemy import delete, or_, select
+from sqlalchemy import delete, exists, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from config.settings import ImageConfig
@@ -60,10 +60,11 @@ async def sweep_expired_drafts(
 ) -> int:
     """Expire unbound ready drafts: drop the row and queue object removal."""
     now = datetime.now(UTC)
+    swept = 0
     async with session_factory.begin() as session:
         rows = (
             await session.execute(
-                select(ChatImage).where(
+                select(ChatImage.id).where(
                     ChatImage.status == "ready",
                     ChatImage.conversation_id.is_(None),
                     ChatImage.expires_at.is_not(None),
@@ -71,11 +72,28 @@ async def sweep_expired_drafts(
                 )
             )
         ).scalars().all()
-        for row in rows:
-            repository = ImageDeletionOutboxRepository(session)
-            await repository.enqueue(row.bucket, row.object_key, "expired")
-            await session.execute(delete(ChatImage).where(ChatImage.id == row.id))
-        return len(rows)
+        for image_id in rows:
+            # Re-check under the row lock inside the DELETE: a concurrent
+            # bind must win over the sweep, and a bound row never has its
+            # bytes removed out from under its conversation.
+            sweepable = (
+                delete(ChatImage)
+                .where(
+                    ChatImage.id == image_id,
+                    ChatImage.conversation_id.is_(None),
+                    ChatImage.expires_at <= now,
+                )
+                .returning(ChatImage.bucket, ChatImage.object_key)
+            )
+            deleted_rows = (await session.execute(sweepable)).fetchall()
+            if not deleted_rows:
+                continue
+            deleted_row = deleted_rows[0]
+            await ImageDeletionOutboxRepository(session).enqueue(
+                deleted_row.bucket, deleted_row.object_key, "expired"
+            )
+            swept += 1
+        return swept
 
 
 async def sweep_retired_conversation_images(
@@ -91,7 +109,7 @@ async def sweep_retired_conversation_images(
     async with session_factory.begin() as session:
         rows = (
             await session.execute(
-                select(ChatImage)
+                select(ChatImage.id)
                 .outerjoin(Chat, Chat.conversation_id == ChatImage.conversation_id)
                 .where(
                     ChatImage.conversation_id.is_not(None),
@@ -103,13 +121,42 @@ async def sweep_retired_conversation_images(
                 )
             )
         ).scalars().all()
-        for row in rows:
-            repository = ImageDeletionOutboxRepository(session)
-            await repository.enqueue(
-                row.bucket, row.object_key, "conversation_deleted"
+        retired_chat = exists(
+            select(Chat.conversation_id)
+            .where(
+                Chat.conversation_id == ChatImage.conversation_id,
+                Chat.deleted_at.is_not(None),
             )
-            await session.execute(delete(ChatImage).where(ChatImage.id == row.id))
-        return len(rows)
+            .correlate(ChatImage)
+        )
+        missing_chat = ~exists(
+            select(Chat.conversation_id)
+            .where(Chat.conversation_id == ChatImage.conversation_id)
+            .correlate(ChatImage)
+        )
+        swept = 0
+        for image_id in rows:
+            # Re-check inside the DELETE: a concurrent erase_conversation
+            # already enqueues the deletion, so only delete-and-queue when
+            # the retired state is still visible under the row lock.
+            sweepable = (
+                delete(ChatImage)
+                .where(
+                    ChatImage.id == image_id,
+                    ChatImage.conversation_id.is_not(None),
+                    retired_chat | missing_chat,
+                )
+                .returning(ChatImage.bucket, ChatImage.object_key)
+            )
+            deleted_rows = (await session.execute(sweepable)).fetchall()
+            if not deleted_rows:
+                continue
+            deleted_row = deleted_rows[0]
+            await ImageDeletionOutboxRepository(session).enqueue(
+                deleted_row.bucket, deleted_row.object_key, "conversation_deleted"
+            )
+            swept += 1
+        return swept
 
 
 async def _drain_outbox(
@@ -176,14 +223,15 @@ async def run_once(
     """Run one full lifecycle pass: sweeps first, then outbox drain.
 
     Sweeps run before the drain so objects queued by this pass are removed in
-    the same invocation instead of waiting for the next scheduled run.
+    the same invocation instead of waiting for the next scheduled run. Sweeps
+    run whenever storage is configured, regardless of the feature flag: rows
+    and bytes from before a deactivation must still be cleaned up.
     """
-    swept_expired = (
-        await sweep_expired_drafts(session_factory) if settings.enabled else 0
-    )
+    sweep_possible = settings.s3 is not None
+    swept_expired = await sweep_expired_drafts(session_factory) if sweep_possible else 0
     swept_retired = (
         await sweep_retired_conversation_images(session_factory)
-        if settings.enabled
+        if sweep_possible
         else 0
     )
     deleted, failed = await _drain_outbox(

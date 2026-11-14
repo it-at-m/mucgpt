@@ -101,7 +101,7 @@ describe("unified history renaming", () => {
             );
             complete(Response.json({ title: "New title" }));
             await rename;
-            expect(StorageService.prototype.renameChat).toHaveBeenCalledExactlyOnceWith(entry.id, "New title");
+            expect(StorageService.prototype.renameChat).toHaveBeenCalledExactlyOnceWith(entry.id, "New title", true);
         });
 
         it.each([403, 404, 500, "network"])("retains the cached title after %s failure", async status => {
@@ -118,7 +118,7 @@ describe("unified history renaming", () => {
                 else fetchMock.mockResolvedValue(new Response(null, { status: Number(status) }));
                 await service.renameEntry(entry, "Local title");
                 expect(fetchMock).toHaveBeenCalledOnce();
-                expect(StorageService.prototype.renameChat).toHaveBeenCalledExactlyOnceWith(entry.id, "Local title");
+                expect(StorageService.prototype.renameChat).toHaveBeenCalledExactlyOnceWith(entry.id, "Local title", true);
             });
         });
 

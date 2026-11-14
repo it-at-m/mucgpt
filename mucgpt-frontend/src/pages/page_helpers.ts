@@ -1,4 +1,5 @@
 import { RefObject, Dispatch, SetStateAction } from "react";
+import i18next from "i18next";
 import { DBMessage, StorageService } from "../service/storage";
 import { DBObject } from "../service/storage";
 import { ChatMessage, ChatOptions } from "./chat/Chat";
@@ -225,6 +226,75 @@ export interface CanvasWiring {
     onRunFinished: () => void;
 }
 
+/** A completed turn used as extra context when regenerating a chat title. */
+interface TitleContextTurn {
+    query: string;
+    answer: string;
+}
+
+/**
+ * The first regeneration happens on the 3rd completed turn (the initial title is
+ * generated after the 1st), then again on every 2nd turn (5th, 7th, ...).
+ */
+const CHAT_TITLE_FIRST_REGENERATION_TURN = 3;
+const CHAT_TITLE_TURN_INTERVAL = 2;
+
+/** Chat ids whose title generation is currently running; guards against duplicate LLM calls. */
+const titleGenerationInFlight = new Set<string>();
+
+/**
+ * Generates a chat title for the given chat and persists it locally. The server
+ * side title is persisted by the chat-title endpoint itself.
+ *
+ * Skips when:
+ * - a title generation for this chat is already running (in-flight guard),
+ * - the user renamed the chat manually,
+ * - the generated title matches the current one.
+ *
+ * Failures are logged and silently ignored, never surfaced to the user.
+ */
+async function generateAndStoreChatTitle(params: {
+    storageService: StorageService<any, any>;
+    chatId: string;
+    conversationId: string;
+    question: string;
+    answer: string;
+    systemMessage: string;
+    previousTurn?: TitleContextTurn;
+    onRenamed?: () => void;
+}): Promise<void> {
+    if (titleGenerationInFlight.has(params.chatId)) {
+        return;
+    }
+    titleGenerationInFlight.add(params.chatId);
+    try {
+        const stored = await params.storageService.get(params.chatId);
+        if (stored?.manuallyRenamed) {
+            return;
+        }
+        const chatName = await createChatName({
+            conversationId: params.conversationId,
+            query: params.question,
+            answer: params.answer,
+            systemMessage: params.systemMessage,
+            language: i18next.resolvedLanguage ?? i18next.language,
+            currentTitle: stored?.name,
+            previousTurn: params.previousTurn
+        });
+        if (!chatName || chatName === stored?.name) {
+            return;
+        }
+        const renamed = await params.storageService.renameChat(params.chatId, chatName);
+        if (renamed) {
+            params.onRenamed?.();
+        }
+    } catch (error) {
+        console.warn("Failed to generate chat title:", error);
+    } finally {
+        titleGenerationInFlight.delete(params.chatId);
+    }
+}
+
 /**
  * Makes a streaming API request to the chat service and handles the response.
  * Processes Server-Sent Events (SSE) stream, handles tool calls, and updates the UI in real-time.
@@ -286,6 +356,25 @@ export const makeApiRequest = async (
     // first persisted turn fails, it would otherwise remain as an orphaned
     // "New Chat" and a later attempt would create a second conversation.
     const isNewPersistedConversation = persist && !activeChatRef.current;
+    // The local storage key for a new conversation (assistant chats keep the
+    // assistant-prefixed key while the backend conversation id stays the plain UUID).
+    const newChatLocalId = isNewPersistedConversation
+        ? assistant_id
+            ? AssistantStorageService.GENERATE_BOT_CHAT_ID(assistant_id, conversationId)
+            : conversationId
+        : undefined;
+
+    if (newChatLocalId) {
+        // Create the chat right away with an unnamed placeholder title so it is
+        // visible in the sidebar and header while the first answer streams.
+        // The generated title replaces the placeholder once the turn completes.
+        const placeholderId = await storageService.create([], options, newChatLocalId, i18next.t("components.history.unnamed_chat"), false);
+        if (placeholderId) {
+            activeChatRef.current = placeholderId;
+            dispatch({ type: "SET_ACTIVE_CHAT", payload: placeholderId });
+            fetchHistory?.();
+        }
+    }
 
     /** Fails the request, discarding an orphaned first persisted conversation. */
     const abortRequest = async (error: unknown): Promise<never> => {
@@ -600,22 +689,37 @@ export const makeApiRequest = async (
 
     // Save the chat to storage
     if (activeChatRef.current) {
-        // Append to existing chat
+        // Append to existing chat (the chat is created as an unnamed placeholder
+        // before the first request; continuing chats already exist)
         await storageService.appendMessage(finalMessage, activeChatRef.current, options);
         if (fetchHistory) fetchHistory();
-    } else {
-        // Create a new chat with generated name
-        const chatname = await createChatName(conversationId, question, finalResponse.answer, options.system ?? "");
 
-        // For assistant chats, keep the assistant-prefixed local storage key while
-        // reusing the same canonical conversation id sent to the backend.
-        const id = assistant_id
-            ? await storageService.create([finalMessage], options, AssistantStorageService.GENERATE_BOT_CHAT_ID(assistant_id, conversationId), chatname, false)
-            : await storageService.create([finalMessage], options, conversationId ?? uuid(), chatname, false);
-
-        // Set the new chat as active and refresh history
-        dispatch({ type: "SET_ACTIVE_CHAT", payload: id });
-        if (fetchHistory) fetchHistory();
+        // Title handling: the initial title is generated after the 1st completed
+        // turn, then the title is reconsidered on every 2nd turn (3, 5, 7, ...)
+        // with the current title and the previous turn as context.
+        const completedTurns = answers.length + 1;
+        const isInitialTitle = completedTurns === 1;
+        const isRegenerationTurn =
+            completedTurns >= CHAT_TITLE_FIRST_REGENERATION_TURN && (completedTurns - CHAT_TITLE_FIRST_REGENERATION_TURN) % CHAT_TITLE_TURN_INTERVAL === 0;
+        if (isInitialTitle || isRegenerationTurn) {
+            const priorTurn = answers[answers.length - 1] as { user: string; response: { answer: string } } | undefined;
+            const previousTurn: TitleContextTurn | undefined =
+                isRegenerationTurn && priorTurn ? { query: priorTurn.user, answer: priorTurn.response.answer } : undefined;
+            const conversationIdForTitle = assistant_id
+                ? activeChatRef.current.slice(AssistantStorageService.GENERATE_BOT_CHAT_PREFIX(assistant_id).length)
+                : activeChatRef.current;
+            // Fire-and-forget: never delay history refresh or rendering; failures are swallowed.
+            void generateAndStoreChatTitle({
+                storageService,
+                chatId: activeChatRef.current,
+                conversationId: conversationIdForTitle,
+                question,
+                answer: finalResponse.answer,
+                systemMessage: options.system ?? "",
+                previousTurn,
+                onRenamed: () => fetchHistory?.()
+            });
+        }
     }
 };
 

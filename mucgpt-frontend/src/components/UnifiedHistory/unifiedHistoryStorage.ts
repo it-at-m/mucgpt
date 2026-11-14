@@ -113,14 +113,14 @@ export class UnifiedHistoryStorage {
             }
         }
         if (entry.kind === "assistant") {
-            const renamed = await this.assistantChatStorage.renameChat(entry.id, name);
+            const renamed = await this.assistantChatStorage.renameChat(entry.id, name, true);
             if (!renamed) {
                 throw new Error(`Failed to rename assistant history entry "${entry.id}"`);
             }
             return;
         }
 
-        const renamed = await this.chatStorage.renameChat(entry.id, name);
+        const renamed = await this.chatStorage.renameChat(entry.id, name, true);
         if (!renamed) {
             throw new Error(`Failed to rename chat history entry "${entry.id}"`);
         }

@@ -68,7 +68,7 @@ python_files = "test_*.py"
 python_classes = "Test*"
 python_functions = "test_*"
 pythonpath = ["app"]
-addopts = "--strict-markers --strict-config --verbose --tb=short -ra --cov=app --cov-report=term-missing --cov-fail-under=81"
+addopts = "--strict-markers --strict-config --verbose --tb=short -ra --cov=app --cov-report=term-missing --cov-report=xml --cov-fail-under=81"
 markers = [
     "integration: marks tests as integration tests (deselect with '-m \"not integration\"')"
 ]

@@ -24,9 +24,13 @@ from agent.middleware import (
 from agent.state_models.default_state import DefaultAgentState
 from agent.tools.approval import data_classification, requires_approval
 from agent.tools.mcp import McpBearerAuthProvider
-from config.settings import DataClassification
+from config.settings import DataClassification, get_settings
 from core.auth_models import AuthenticationResult
-from core.image_hydration import build_image_hydrator, contains_managed_images
+from core.image_hydration import (
+    ImageHydrationError,
+    build_image_hydrator,
+    contains_managed_images,
+)
 from core.lf_prompts import PromptPool
 from core.logtools import getLogger
 from core.stream_cleanup import close_stream
@@ -134,18 +138,26 @@ class _ConfiguredLangChainDeepAgentGraph:
         data_sources = configurable.get("data_sources", [])
         canvas = configurable.get("canvas")
 
-        # Build the request-scoped image hydrator only when managed image
-        # references are actually present, so disabled deployments never touch
-        # image infrastructure and the hydration budget stays per-run.
-        image_hydrator = (
-            build_image_hydrator(
-                user_info,
-                configurable.get("thread_id"),
-                self.checkpointer is not None,
-            )
-            if contains_managed_images(messages)
-            else None
-        )
+        # Build the request-scoped image hydrator when managed image
+        # references are present in the incoming messages, or whenever the
+        # run is persisted: a checkpointed run replays state whose earlier
+        # turns may carry managed references even when the incoming messages
+        # do not (later turns send only the newest user message). Disabled
+        # deployments never build a hydrator, and a degraded object store
+        # only affects runs that actually need hydration — those still fail
+        # closed at the model-request middleware.
+        image_hydrator = None
+        if get_settings().image_input.enabled and (
+            contains_managed_images(messages) or self.checkpointer is not None
+        ):
+            try:
+                image_hydrator = build_image_hydrator(
+                    user_info,
+                    configurable.get("thread_id"),
+                    self.checkpointer is not None,
+                )
+            except ImageHydrationError:
+                image_hydrator = None
 
         request_context = RequestContext(
             assistant_id=str(assistant_id) if assistant_id else None,

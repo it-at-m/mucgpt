@@ -60,15 +60,7 @@ export const documentLibraryTranslations = {
         legacy_description: "Diese Dokumente liegen nur in diesem Browser. Übernimm sie, um sie weiter in Chats zu verwenden.",
         legacy_migrate: "Übernehmen",
         legacy_migrate_aria: "{{name}} übernehmen",
-        legacy_delete: "{{name}} aus diesem Browser löschen",
-        title: "Dokumentbibliothek",
-        description: "Bis zu 10 Dokumente in deinem Konto. Wähle Dokumente für diesen Chat aus. Gespeichert wird nur der extrahierte Text.",
-        select: "{{name}} im Chat verwenden",
-        empty: "Noch keine Dokumente in deiner Bibliothek.",
-        ready: "Bereit · Anfangsauszug",
-        unavailable: "Nicht mehr verfügbar",
-        unavailable_selection: "Ausgewählte Dokumente sind nicht mehr verfügbar. Entferne sie aus der Chat-Auswahl, um fortzufahren.",
-        detach: "{{name}} aus der Chat-Auswahl entfernen"
+        legacy_delete: "{{name}} aus diesem Browser löschen"
     },
     EN: {
         nav_label: "My documents",
@@ -131,15 +123,7 @@ export const documentLibraryTranslations = {
         legacy_description: "These documents exist only in this browser. Move them over to keep using them in chats.",
         legacy_migrate: "Move over",
         legacy_migrate_aria: "Move {{name}} over",
-        legacy_delete: "Delete {{name}} from this browser",
-        title: "Document library",
-        description: "Up to 10 documents in your account. Select documents for this chat. Only extracted text is stored.",
-        select: "Use {{name}} in this chat",
-        empty: "No documents in your library yet.",
-        ready: "Ready · Initial excerpt",
-        unavailable: "No longer available",
-        unavailable_selection: "Selected documents are no longer available. Remove them from this chat's selection to continue.",
-        detach: "Remove {{name}} from this chat's selection"
+        legacy_delete: "Delete {{name}} from this browser"
     },
     BA: {
         nav_label: "Meine Dokumente",
@@ -202,15 +186,7 @@ export const documentLibraryTranslations = {
         legacy_description: "De Dokumente liegn bloß in dem Browser. Übernimm’s, damit’s d’es weiter in Chats verwenden kannst.",
         legacy_migrate: "Übernehma",
         legacy_migrate_aria: "{{name}} übernehma",
-        legacy_delete: "{{name}} aus dem Browser löschen",
-        title: "Dokumentbibliothek",
-        description: "Bis zu 10 Dokumente in deim Konto. Wähl Dokumente für den Chat aus. Gspeichert wird bloß da ausglesene Text.",
-        select: "{{name}} im Chat verwenden",
-        empty: "No koane Dokumente in deiner Bibliothek.",
-        ready: "Bereit · Anfangsauszug",
-        unavailable: "Nimmer verfügbar",
-        unavailable_selection: "Ausgwählte Dokumente san nimmer verfügbar. Nimm’s aus da Chat-Auswahl, damit’s weitergeht.",
-        detach: "{{name}} aus da Chat-Auswahl nehmen"
+        legacy_delete: "{{name}} aus dem Browser löschen"
     },
     FR: {
         nav_label: "Mes documents",
@@ -273,15 +249,7 @@ export const documentLibraryTranslations = {
         legacy_description: "Ces documents n’existent que dans ce navigateur. Transférez-les pour continuer à les utiliser dans vos chats.",
         legacy_migrate: "Transférer",
         legacy_migrate_aria: "Transférer {{name}}",
-        legacy_delete: "Supprimer {{name}} de ce navigateur",
-        title: "Bibliothèque de documents",
-        description: "Jusqu’à 10 documents dans votre compte. Sélectionnez les documents pour ce chat. Seul le texte extrait est conservé.",
-        select: "Utiliser {{name}} dans ce chat",
-        empty: "Votre bibliothèque ne contient pas encore de documents.",
-        ready: "Prêt · Extrait initial",
-        unavailable: "N’est plus disponible",
-        unavailable_selection: "Les documents sélectionnés ne sont plus disponibles. Retirez-les de la sélection de ce chat pour continuer.",
-        detach: "Retirer {{name}} de la sélection de ce chat"
+        legacy_delete: "Supprimer {{name}} de ce navigateur"
     },
     UK: {
         nav_label: "Мої документи",
@@ -344,14 +312,6 @@ export const documentLibraryTranslations = {
         legacy_description: "Ці документи є лише в цьому браузері. Перенесіть їх, щоб і далі використовувати в чатах.",
         legacy_migrate: "Перенести",
         legacy_migrate_aria: "Перенести {{name}}",
-        legacy_delete: "Видалити {{name}} з цього браузера",
-        title: "Бібліотека документів",
-        description: "До 10 документів у вашому обліковому записі. Виберіть документи для цього чату. Зберігається лише витягнутий текст.",
-        select: "Використовувати {{name}} у цьому чаті",
-        empty: "У вашій бібліотеці ще немає документів.",
-        ready: "Готово · Початковий уривок",
-        unavailable: "Більше недоступний",
-        unavailable_selection: "Вибрані документи більше недоступні. Видаліть їх із вибору цього чату, щоб продовжити.",
-        detach: "Прибрати {{name}} із вибору цього чату"
+        legacy_delete: "Видалити {{name}} з цього браузера"
     }
 };

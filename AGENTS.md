@@ -116,3 +116,21 @@ Images are released per component by pushing a tag `mucgpt-{frontend,core,assist
 ## Docs worth reading
 
 `docs/GETTING_STARTED.md` (config, LDAP, SSO, MCP setup), `docs/DEVELOPMENT.md` (uv workflow, release tags, MCP credential security note), `stack/README.md` (compose topology, ports — gateway :8083, Keycloak :8100 `admin/admin`, needs a `keycloak` hosts entry), `mucgpt-core-service/app/agent/tools/README.md` (tool handling), `DESIGN.md`. Note: `docs/FEATURES.md` is the user-facing view (e.g. "chat history stays in the browser") — the technical truth is in the sections above.
+
+## Feature documentation checklist
+
+When a big new user-facing feature is implemented, update the documentation as part of the feature work — not afterwards:
+
+**In this repository:**
+
+- `docs/FEATURES.md` — user-facing description; add an availability note ("available from MUCGPT X.Y") when the feature only ships with a future release.
+- `publiccode.yml` — de/en `features` lists.
+- `README.md` — roadmap/architecture when affected.
+- `docs/GETTING_STARTED.md` (and service docs like `app/agent/tools/README.md`) when the feature needs configuration.
+
+**External repositories** (separate draft PRs; they merge only when the feature may be communicated publicly — see e.g. the `docs/mucgpt-2.1` branches):
+
+- `it-at-m/ki.muenchen.de` — `ki-systeme/mucgpt.md` (German public page)
+- `it-at-m/opensource.muenchen.de` — `software/mucgpt.md` (English portal page)
+
+Screenshots for new sections go into `docs/` here and the external repos' image directories (e.g. `public/img/mucgpt/`).

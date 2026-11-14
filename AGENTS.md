@@ -133,4 +133,4 @@ When a big new user-facing feature is implemented, update the documentation as p
 - `it-at-m/ki.muenchen.de` — `ki-systeme/mucgpt.md` (German public page)
 - `it-at-m/opensource.muenchen.de` — `software/mucgpt.md` (English portal page)
 
-Screenshots for new sections go into `docs/` here and the external repos' image directories (e.g. `public/img/mucgpt/`).
+Screenshots for new sections go into `docs/` here and the external repos' image directories (e.g. `public/img/mucgpt/`). New or refreshed screenshot/video sets follow the [media production guide](docs/media-production.md).

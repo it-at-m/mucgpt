@@ -3,30 +3,9 @@ from pathlib import Path
 from unittest.mock import AsyncMock, Mock
 
 import pytest
+from tests import container_runtime
 
 from config.langfuse_provider import LangfuseProvider
-
-
-def _podman_socket_candidates() -> list[Path]:
-    """Sockets where a rootless/rootful Podman API service may listen."""
-    candidates: list[Path] = []
-    if xdg_runtime_dir := os.environ.get("XDG_RUNTIME_DIR"):
-        candidates.append(Path(xdg_runtime_dir) / "podman" / "podman.sock")
-    candidates.append(Path(f"/run/user/{os.getuid()}/podman/podman.sock"))
-    candidates.append(Path("/run/podman/podman.sock"))
-    return candidates
-
-
-def _configure_podman_runtime(socket: Path) -> None:
-    """Point testcontainers at the Docker-compatible Podman API.
-
-    testcontainers talks to Podman via docker-py (DOCKER_HOST); Ryuk
-    additionally needs the socket mounted at the same path
-    (TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE). Podman is the preferred local
-    container runtime (see stack/README.md).
-    """
-    os.environ["DOCKER_HOST"] = f"unix://{socket}"
-    os.environ.setdefault("TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE", str(socket))
 
 
 def _collection_includes_postgres_tests(config: pytest.Config) -> bool:
@@ -44,46 +23,6 @@ def _collection_includes_postgres_tests(config: pytest.Config) -> bool:
         if path.is_file() and "_postgres" in path.name:
             return True
     return False
-
-
-def _start_postgres_container() -> object | None:
-    """Try to start a throwaway PostgreSQL server; None if no runtime works."""
-    from testcontainers.postgres import PostgresContainer
-
-    requested = os.getenv("MUCGPT_TEST_CONTAINER_RUNTIME", "auto").strip().lower()
-
-    # Attempt 1: default/user-managed configuration (Docker or an explicit
-    # DOCKER_HOST, e.g. a Podman socket the user already configured).
-    user_managed = bool(os.getenv("DOCKER_HOST")) or Path(
-        "/var/run/docker.sock"
-    ).exists()
-    container = None
-    if user_managed and requested in {"auto", "docker"}:
-        container = _try_start(PostgresContainer)
-        if container is not None or requested == "docker":
-            return container
-    if requested not in {"auto", "podman"}:
-        return None
-    # Attempt 2: Podman API socket (rootless first, then rootful).
-    if requested == "podman" or not user_managed:
-        for socket in _podman_socket_candidates():
-            if not socket.exists():
-                continue
-            _configure_podman_runtime(socket)
-            container = _try_start(PostgresContainer)
-            if container is not None:
-                return container
-    return None
-
-
-def _try_start(factory) -> object | None:
-    container = factory("postgres:17.4", username="admin", password="admin")
-    try:
-        container.start()
-    except Exception:  # noqa: BLE001 — any runtime failure means "try next"
-        container.stop()
-        return None
-    return container
 
 
 _POSTGRES_CONTAINER = None
@@ -148,7 +87,7 @@ def pytest_configure(config: pytest.Config) -> None:
         )
     except ModuleNotFoundError:
         return
-    container = _start_postgres_container()
+    container = container_runtime.start_postgres_container()
     if container is None:
         print(
             "pytest: could not start PostgreSQL testcontainer "

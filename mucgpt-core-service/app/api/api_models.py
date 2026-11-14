@@ -132,6 +132,16 @@ class ConversationUsage(BaseModel):
 
 
 class ConversationMessage(ChatCompletionMessage):
+    """Public user/assistant turn of a conversation's stored history.
+
+    Text-only turns keep the plain string; image-bearing user turns carry
+    OpenAI-style parts where image parts are exclusively managed
+    ``mucgpt-image://`` references (never bytes, never data URIs).
+    """
+
+    content: str | list[dict[str, Any]] = Field(
+        ..., description="Text, or text/image content parts for image turns"
+    )
     activity_steps: list[ConversationActivityStep] = Field(default_factory=list)
     usage: ConversationUsage | None = None
 

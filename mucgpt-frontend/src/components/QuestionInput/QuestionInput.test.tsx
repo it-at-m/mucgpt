@@ -111,6 +111,7 @@ describe("QuestionInput transcription", () => {
 // ---------------------------------------------------------------------------
 
 import { ConfigContext } from "../../context/ConfigContext";
+import { GlobalToastProvider } from "../GlobalToastHandler/GlobalToastContext";
 import { DEFAULT_APP_CONFIG } from "../../constants";
 import type { ApplicationConfig, ImageAttachment, Model } from "../../api/models";
 import type { UploadedData } from "../ContextManagerDialog/ContextManagerDialog";
@@ -180,18 +181,20 @@ function imageHarness(options: {
         const [question, setQuestion] = useState("");
         return (
             <ConfigContext.Provider value={defaults.config}>
-                <QuestionInput
-                    onSend={defaults.onSend}
-                    disabled={false}
-                    question={question}
-                    setQuestion={setQuestion}
-                    selectedTools={[]}
-                    hideDisclaimer
-                    allowImageUpload={defaults.allowImageUpload}
-                    llmOptions={visionModels}
-                    selectedLLM={props.selectedLLM}
-                    onLLMSelectionChange={() => {}}
-                />
+                <GlobalToastProvider>
+                    <QuestionInput
+                        onSend={defaults.onSend}
+                        disabled={false}
+                        question={question}
+                        setQuestion={setQuestion}
+                        selectedTools={[]}
+                        hideDisclaimer
+                        allowImageUpload={defaults.allowImageUpload}
+                        llmOptions={visionModels}
+                        selectedLLM={props.selectedLLM}
+                        onLLMSelectionChange={() => {}}
+                    />
+                </GlobalToastProvider>
             </ConfigContext.Provider>
         );
     };
@@ -450,7 +453,7 @@ describe("QuestionInput images", () => {
             expires_at: "2026-01-02T00:00:00Z",
             managed_url: "mucgpt-image://img-1"
         });
-        render(imageHarness({})());
+        render(imageHarness({ config: { ...imageConfig, document_processing_enabled: true } })());
         const composer = screen.getByRole("textbox").closest("div")!;
 
         await act(async () => {
@@ -462,5 +465,19 @@ describe("QuestionInput images", () => {
             expect(uploadDocumentApi).toHaveBeenCalled();
         });
         expect(vi.mocked(uploadDocumentApi).mock.calls[0][0].name).toBe("doc.pdf");
+    });
+
+    it("refuses dropped documents when document upload is disabled", async () => {
+        render(imageHarness({ config: { ...imageConfig, document_processing_enabled: false } })());
+        const composer = screen.getByRole("textbox").closest("div")!;
+
+        await act(async () => {
+            fireEvent.drop(composer, { dataTransfer: { files: [new File([PDF_BYTES], "doc.pdf", { type: "application/pdf" })], types: ["Files"] } });
+        });
+
+        await waitFor(() => {
+            expect(screen.getByText("components.questioninput.document_disabled_hint")).toBeInTheDocument();
+        });
+        expect(uploadDocumentApi).not.toHaveBeenCalled();
     });
 });

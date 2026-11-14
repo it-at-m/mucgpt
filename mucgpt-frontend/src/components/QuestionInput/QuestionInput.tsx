@@ -649,9 +649,21 @@ export const QuestionInput = ({
             const files = Array.from(event.target.files ?? []);
             // Reset so selecting the same file again fires a change event.
             event.target.value = "";
-            appendImagesFromFiles(files);
+            // The picker uses the same signature/MIME/limit checks as paste
+            // and drop; picker results route to the image pipeline only.
+            void (async () => {
+                const classification = await classifyFiles(files, imageInput);
+                if (classification.images.length > 0) {
+                    appendImagesFromFiles(classification.images);
+                }
+                const rejected = [...classification.rejected, ...classification.documents.map(file => ({ file, reason: "unsupported-format" as const }))];
+                const [first] = rejected;
+                if (rejected.length > 0) {
+                    showImageRejectionFeedback(first.reason, first.file.name);
+                }
+            })();
         },
-        [appendImagesFromFiles]
+        [appendImagesFromFiles, imageInput, showImageRejectionFeedback]
     );
 
     const appendDataFromFiles = useCallback(
@@ -664,19 +676,30 @@ export const QuestionInput = ({
             // Route by actual file signature: supported images go to the image
             // pipeline, everything else keeps the document pipeline, and
             // image-typed but unsupported files get an explicit rejection.
+            // Each route additionally respects its capability: a non-vision
+            // model never receives image drafts, and a disabled document
+            // pipeline never receives documents.
             const classification = await classifyFiles(fileArray, imageInput);
             if (classification.images.length > 0) {
-                appendImagesFromFiles(classification.images);
+                if (supportsImages) {
+                    appendImagesFromFiles(classification.images);
+                } else {
+                    showImageFeedback("components.questioninput.image_disabled_hint");
+                }
             }
             if (classification.documents.length > 0) {
-                appendDocumentsFromFiles(classification.documents);
+                if (allowFileUpload) {
+                    appendDocumentsFromFiles(classification.documents);
+                } else {
+                    showImageFeedback("components.questioninput.document_disabled_hint");
+                }
             }
             if (classification.rejected.length > 0) {
                 const [first] = classification.rejected;
                 showImageRejectionFeedback(first.reason, first.file.name);
             }
         },
-        [appendDocumentsFromFiles, appendImagesFromFiles, imageInput, showImageRejectionFeedback]
+        [allowFileUpload, appendDocumentsFromFiles, appendImagesFromFiles, imageInput, showImageFeedback, showImageRejectionFeedback, supportsImages]
     );
 
     const handleDataChange = useCallback(

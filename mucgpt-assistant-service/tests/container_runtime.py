@@ -1,0 +1,97 @@
+"""Container-runtime detection and lifecycle for testcontainers-based tests.
+
+Prefers the already-configured Docker endpoint; otherwise falls back to the
+Podman API socket, because Podman is the preferred local container runtime
+(see stack/README.md). testcontainers talks to the Docker-compatible Podman
+API via docker-py (DOCKER_HOST); Ryuk additionally needs the socket mounted
+at the same path (TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE).
+
+Knobs:
+- MUCGPT_TEST_CONTAINER_RUNTIME=auto|docker|podman (default auto)
+- MUCGPT_TEST_POSTGRES=off disables container-based tests entirely.
+"""
+
+import os
+from pathlib import Path
+
+POSTGRES_IMAGE = "postgres:17.4"
+
+
+def _podman_socket_candidates() -> list[Path]:
+    """Sockets where a rootless/rootful Podman API service may listen."""
+    candidates: list[Path] = []
+    if xdg_runtime_dir := os.environ.get("XDG_RUNTIME_DIR"):
+        candidates.append(Path(xdg_runtime_dir) / "podman" / "podman.sock")
+    candidates.append(Path(f"/run/user/{os.getuid()}/podman/podman.sock"))
+    candidates.append(Path("/run/podman/podman.sock"))
+    return candidates
+
+
+def configure_podman_runtime(socket: Path) -> None:
+    os.environ["DOCKER_HOST"] = f"unix://{socket}"
+    os.environ.setdefault("TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE", str(socket))
+
+
+def _disabled(name: str) -> bool:
+    return os.getenv(name, "auto").strip().lower() in {"off", "false", "0", "no"}
+
+
+def postgres_container_requested() -> bool:
+    """Cheap import-time probe: should Postgres-based tests be collected?"""
+    if _disabled("MUCGPT_TEST_POSTGRES"):
+        return False
+    if _disabled("MUCGPT_TEST_CONTAINER_RUNTIME"):
+        return False
+    requested = os.getenv("MUCGPT_TEST_CONTAINER_RUNTIME", "auto").strip().lower()
+    user_managed = bool(os.getenv("DOCKER_HOST")) or Path("/var/run/docker.sock").exists()
+    if requested == "docker":
+        return user_managed
+    if requested == "podman":
+        return any(socket.exists() for socket in _podman_socket_candidates())
+    return user_managed or any(socket.exists() for socket in _podman_socket_candidates())
+
+
+def start_postgres_container():
+    """Start a throwaway PostgreSQL server, trying Docker and then Podman.
+
+    Returns the started container, or None when no container runtime is
+    reachable. Raises on import errors (dependency missing).
+    """
+    from testcontainers.postgres import PostgresContainer
+
+    requested = os.getenv("MUCGPT_TEST_CONTAINER_RUNTIME", "auto").strip().lower()
+    user_managed = bool(os.getenv("DOCKER_HOST")) or Path("/var/run/docker.sock").exists()
+
+    def _try_start() -> object | None:
+        container = PostgresContainer(POSTGRES_IMAGE, username="admin", password="admin")
+        try:
+            container.start()
+        except Exception:  # noqa: BLE001 — any runtime failure means "try next"
+            container.stop()
+            return None
+        return container
+
+    if user_managed and requested in {"auto", "docker"}:
+        container = _try_start()
+        if container is not None or requested == "docker":
+            return container
+    if requested not in {"auto", "podman"}:
+        return None
+    for socket in _podman_socket_candidates():
+        if not socket.exists():
+            continue
+        configure_podman_runtime(socket)
+        container = _try_start()
+        if container is not None:
+            return container
+    return None
+
+
+def postgres_engine_url(container) -> str:
+    """SQLAlchemy asyncpg URL for a running PostgresContainer."""
+    return (
+        "postgresql+asyncpg://"
+        f"{os.environ.get('MUCGPT_TEST_POSTGRES_USER', 'admin')}:"
+        f"{os.environ.get('MUCGPT_TEST_POSTGRES_PASSWORD', 'admin')}"
+        f"@{container.get_container_host_ip()}:{int(container.get_exposed_port(5432))}/postgres"
+    )

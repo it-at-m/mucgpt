@@ -1,6 +1,7 @@
 """Unit tests for the AssistantRepository class."""
 
 import asyncio
+import uuid
 
 import pytest
 
@@ -446,9 +447,10 @@ class TestAssistantRepository:
     async def test_update_non_existing_assistant(self, db_session):
         """Test updating a non-existing assistant returns None."""  # Arrange
         assistant_repo = AssistantRepository(db_session)
+        missing_id = str(uuid.uuid4())
 
         # Act
-        result = await assistant_repo.update(999, hierarchical_access=["TEST"])
+        result = await assistant_repo.update(missing_id, hierarchical_access=["TEST"])
 
         # Assert
         assert result is None

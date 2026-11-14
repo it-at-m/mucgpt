@@ -20,6 +20,7 @@ import {
     ChevronRight24Regular,
     CompassNorthwest24Regular,
     Dismiss24Regular,
+    DocumentMultiple20Regular,
     PeopleCommunity20Regular,
     Shield20Regular,
     Sparkle24Regular
@@ -34,6 +35,7 @@ import { ASSISTANT_STORE, COMMUNITY_ASSISTANT_STORE } from "../../constants";
 import { UserSidebarProfile } from "../UserSidebarProfile/UserSidebarProfile";
 import { Button } from "../../ui/Button";
 import { UserContext } from "../../pages/layout/UserContextProvider";
+import { useConfigContext } from "../../context/ConfigContext";
 import styles from "./AppSidebar.module.css";
 import itemStyles from "./SidebarItem.module.css";
 
@@ -98,6 +100,7 @@ export const AppSidebar = ({
     const location = useLocation();
     const { pageContext } = useUnifiedHistory();
     const { isAdmin } = useContext(UserContext);
+    const { document_processing_enabled: isDocumentProcessingEnabled } = useConfigContext();
     const [isNewChatDialogOpen, setIsNewChatDialogOpen] = useState(false);
     const [visibleTooltip, setVisibleTooltip] = useState<string | null>(null);
     const handleTooltipVisibility = (id: string, visible: boolean) => {
@@ -133,6 +136,19 @@ export const AppSidebar = ({
                 icon: <Bot20Regular />,
                 isActive: isAssistantRoute(location.pathname)
             },
+            ...(isDocumentProcessingEnabled
+                ? [
+                      {
+                          id: "documents",
+                          kind: "link" as const,
+                          label: t("document_library.nav_label"),
+                          ariaLabel: t("document_library.nav_aria"),
+                          to: "/documents",
+                          icon: <DocumentMultiple20Regular />,
+                          isActive: location.pathname.startsWith("/documents")
+                      }
+                  ]
+                : []),
             ...(isAdmin
                 ? [
                       {
@@ -156,7 +172,7 @@ export const AppSidebar = ({
                   ]
                 : [])
         ],
-        [isAdmin, location.pathname, t]
+        [isAdmin, isDocumentProcessingEnabled, location.pathname, t]
     );
 
     const handleNavigate = (to: string) => {

@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { listDocumentsApi } from "../../api/documents-client";
 import type { DocumentLibraryEntry } from "../../api/models";
-import { findLibraryDuplicate, getSelectedDocumentIds, restoreDocumentSelection } from "./documentSelection";
+import { createPendingUpload, findLibraryDuplicate, getSelectedDocumentIds, isSendBlockedByDocuments, restoreDocumentSelection } from "./documentSelection";
 
 vi.mock("../../api/documents-client", () => ({ listDocumentsApi: vi.fn() }));
 
@@ -59,5 +59,20 @@ describe("findLibraryDuplicate", () => {
     it("lets a specific differing MIME type veto the match but ignores a missing one", () => {
         expect(findLibraryDuplicate(file("Policy.txt", "12345", "application/pdf"), [readyEntry()])).toBeUndefined();
         expect(findLibraryDuplicate(file("Policy.txt", "12345", ""), [readyEntry()])?.id).toBe("ready");
+    });
+});
+
+describe("isSendBlockedByDocuments", () => {
+    const ready = { status: "ready", id: "ready", name: "Policy.txt", size: 5, usedInChat: false } as const;
+
+    it("blocks while an upload is in flight or a document is unavailable", () => {
+        expect(isSendBlockedByDocuments([ready, createPendingUpload(new File(["x"], "A.txt"))])).toBe(true);
+        expect(isSendBlockedByDocuments([{ ...ready, status: "unavailable" }])).toBe(true);
+    });
+
+    it("allows ready and failed documents, since failed uploads are never sent", () => {
+        const failed = { ...createPendingUpload(new File(["x"], "B.txt")), status: "failed", errorMessage: "error" } as const;
+        expect(isSendBlockedByDocuments([ready, failed])).toBe(false);
+        expect(isSendBlockedByDocuments([])).toBe(false);
     });
 });

@@ -41,6 +41,10 @@ export const isLibraryDocument = (document: ChatDocument): document is LibraryCh
 
 export const getSelectedDocumentIds = (documents: ChatDocument[]) => documents.filter(isLibraryDocument).map(document => document.id);
 
+/** A turn must not be sent while an upload is in flight or an attached document is gone, or it would silently lack documents. */
+export const isSendBlockedByDocuments = (documents: ChatDocument[]) =>
+    documents.some(document => document.status === "uploading" || document.status === "unavailable");
+
 export const getFileSignature = (file: File) => `${file.name}-${file.size}-${file.lastModified}`;
 
 export const getDocumentSignature = (document: ChatDocument) => (isLibraryDocument(document) ? document.id : getFileSignature(document.file));

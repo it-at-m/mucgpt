@@ -117,7 +117,7 @@ const QuestionInputContent = ({
     const { clearDraft } = useQuestionDraft({ draftCacheKey, question, setQuestion, skipDraftRestore });
     const usageNudges = useUsageNudges({ usage, conversationKey: usageConversationKey, onStartNewChat });
     // Without a setter the attach controls are hidden, so no document change is ever requested.
-    const chatDocuments = useChatDocuments(documents, setDocuments ?? ignoreDocumentChanges);
+    const chatDocuments = useChatDocuments(documents, setDocuments ?? ignoreDocumentChanges, usageConversationKey);
     const { attachFiles, isSendBlocked, markReadyDocumentsAsUsed } = chatDocuments;
 
     const sendQuestion = useCallback(() => {

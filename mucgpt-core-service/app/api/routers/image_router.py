@@ -180,11 +180,12 @@ async def get_image_content(
     user_info: AuthenticationResult = Depends(authenticate_user),
 ) -> Response:
     """Deliver bytes for browser rendering; no public or cacheable URLs exist."""
-    settings = get_settings()
     row = await _get_ready_row(user_info.user_id, image_id)
     try:
+        # Bound against the recorded size, not the current upload limit: an
+        # operator lowering the limit must not make older images unreadable.
         data = await ImageStorageManager.get_store().get(
-            row.object_key, settings.image_input.max_upload_bytes
+            row.object_key, row.size_bytes
         )
     except ImageStorageError as exc:
         logger.error("Image content read failure for %s: %s", row.id, exc)
@@ -231,7 +232,16 @@ async def delete_image(
             detail="Image is already attached to a conversation.",
         )
     async with ImageCatalogManager.get_session_factory().begin() as session:
-        await ImageRepository(session).delete_image(user_info.user_id, row.id)
+        deleted = await ImageRepository(session).delete_image(
+            user_info.user_id, row.id
+        )
+        if not deleted:
+            # A concurrent bind claimed the image between the 409 check and
+            # the transaction; its bytes now belong to the conversation.
+            raise HTTPException(
+                status_code=409,
+                detail="Image is already attached to a conversation.",
+            )
         await ImageDeletionOutboxRepository(session).enqueue(
             row.bucket, row.object_key, "draft_delete"
         )

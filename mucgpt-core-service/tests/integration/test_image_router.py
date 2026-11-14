@@ -4,7 +4,7 @@ import io
 from contextlib import asynccontextmanager
 from datetime import UTC, datetime, timedelta
 from types import SimpleNamespace
-from unittest.mock import AsyncMock, MagicMock, Mock
+from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 import pytest
 from PIL import Image
@@ -21,6 +21,7 @@ from core.auth_models import AuthenticationResult
 from core.image_store import ImageStorageError, ImageStorageManager
 from database.database_models import Base, ChatImage, ImageDeletionOutbox
 from database.image_catalog import ImageCatalogManager
+from database.image_repo import ImageRepository
 
 USER_ID = "test_user_123"
 OTHER_USER_ID = "someone-else"
@@ -66,11 +67,13 @@ class FakeImageStore:
         self.objects: dict[str, tuple[bytes, str]] = {}
         self.deleted: list[str] = []
         self.fail_delete = False
+        self.last_max_bytes: int | None = None
 
     async def put(self, key: str, data: bytes, content_type: str) -> None:
         self.objects[key] = (data, content_type)
 
     async def get(self, key: str, max_bytes: int) -> bytes:
+        self.last_max_bytes = max_bytes
         return self.objects[key][0]
 
     async def delete(self, key: str) -> None:
@@ -415,3 +418,37 @@ def test_delete_survives_storage_unavailability(test_client, image_env):
     with Session(image_env.engine) as session:
         assert session.get(ChatImage, image_id) is None
         assert session.scalars(select(ImageDeletionOutbox)).all()
+
+
+def test_content_read_uses_recorded_size_not_current_limit(test_client, image_env):
+    """An operator lowering max_upload_bytes must not unreadable older
+    images: the read is bounded by the recorded row size."""
+    image_env.apply_settings(max_upload_bytes=1)
+    image_id = "33333333-3333-4333-8333-333333333333"
+    seed_row(image_env.engine, image_id)
+    image_env.store.objects[f"{image_id}.png"] = (image_bytes(), "image/png")
+
+    response = test_client.get(f"/v1/images/{image_id}/content")
+
+    assert response.status_code == 200
+    assert image_env.store.last_max_bytes == len(image_bytes())
+
+
+def test_delete_skips_outbox_when_row_was_bound_concurrently(
+    test_client, image_env
+):
+    """A bind racing the delete must win: no row deleted means no outbox
+    entry, or the maintenance job would remove a live image's bytes."""
+    image_env.apply_settings()
+    image_id = "66666666-6666-4666-8666-666666666666"
+    seed_row(image_env.engine, image_id)
+
+    with patch.object(
+        ImageRepository, "delete_image", AsyncMock(return_value=False)
+    ):
+        response = test_client.delete(f"/v1/images/{image_id}")
+
+    assert response.status_code == 409
+    with Session(image_env.engine) as session:
+        assert session.get(ChatImage, image_id) is not None
+        assert session.scalars(select(ImageDeletionOutbox)).all() == []

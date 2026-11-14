@@ -242,6 +242,8 @@ Contributions are what make the open source community such an amazing place to l
 If you have a suggestion that would make this better, please open an issue with the tag "enhancement", fork the repo and create a pull request. You can also simply open an issue with the tag "enhancement".
 Don't forget to give the project a star! Thanks again!
 
+See [CONTRIBUTING.md](/CONTRIBUTING.md) for the contribution flow — including the **feature documentation checklist** that lists which docs to update (here and in the external docs repos) when a big new feature is implemented.
+
 1. Open an issue with the tag "enhancement"
 2. Fork the Project
 3. Create your Feature Branch (`git checkout -b feature/AmazingFeature`)

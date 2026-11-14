@@ -13,6 +13,9 @@ The chat provides a clear space to work with the underlying language model on al
 
 ## Canvas
 
+Available from MUCGPT 2.1.
+
+![Canvas](/docs/canvas.png)
 Work side by side with the agent: open a rich-text canvas panel next to any chat and draft documents together.
 - Toggle the canvas at any time, mid-conversation; on small screens it opens as an overlay so the chat stays usable.
 - The agent can start or edit the canvas while it is closed: the view opens automatically as soon as the agent writes.
@@ -22,6 +25,21 @@ Work side by side with the agent: open a rich-text canvas panel next to any chat
 - Save versions manually and review an automatic history of agent edits. Restoring an older version is non-destructive and can be undone like any edit.
 - The canvas is saved with the conversation, so your document survives reloads and device switches.
 - Export the document as Markdown, PDF, Word, or Excel (one sheet per table).
+
+## Chat with Documents
+
+![Chat with Documents](/docs/chat_documents.png)
+Upload documents in the chat and let the assistant work with them: files are
+parsed to text (Xberg extraction service), and the extracted content grounds
+the assistant's answers — ask questions about a PDF, summarize a report, or
+combine documents with your instructions.
+
+- Upload one or more files per conversation and select which ones the
+  assistant may read; the selection is saved with the conversation.
+- The model receives the selected documents through a read-only documents
+  view — it can read and search them, but never modify them, and it only sees
+  the documents you selected for the current turn.
+- Available from MUCGPT 2.1.
 
 ## Create Assistants
 
@@ -43,6 +61,17 @@ Assistants can use built-in and extendable tools. Examples include:
 
 These examples are illustrative—the platform is designed to grow with additional tools as organizational needs evolve.
 
+### Tool confirmation (human in the loop)
+
+![Tool confirmation](/docs/tool_approval.png)
+Some tools require your explicit confirmation before they run. When the assistant
+calls such a tool, the answer pauses and an approval card appears in the chat:
+it shows the tool, the exact arguments it would use (for example the search query
+that would be sent to the web), and the data protection level the tool may
+receive. You can approve the call or reject it — on a rejection the assistant
+continues without performing the action. If you keep working instead of
+answering, the paused call is cancelled and never executes.
+
 ## AI Governance And Compliance Checks
 
 Assistant system prompts can be screened against configured EU AI Act high-risk
@@ -50,6 +79,11 @@ use cases before they are saved. High-risk findings route the immutable assistan
 version to an administrator/legal review queue. See the [AI governance and
 compliance checks guide](AI_GOVERNANCE.md) for flow diagrams, configuration,
 verification rules, and the review lifecycle.
+
+Administrators work with the results in the admin area: they see every
+assistant's lifecycle state (active, pending legal review, inactive) and its
+compliance screening status, and they resolve flagged assistants in the legal
+review queue — activating or deactivating them as required.
 
 ## Start Page
 
@@ -61,7 +95,9 @@ A focused entry point to discover assistants, jump back into recent work, and ac
 ![Models](/docs/models.png)
 Choose from available models and adjust creativity to fit the task. Model choices are transparent to the user.
 
-## Speech-to-Text (Beta)
+## Speech-to-Text
+
+Available from MUCGPT 2.1.
 
 Dictate directly into the chat input: a microphone button appears next to the input field once speech-to-text is enabled. Transcribed text is appended to what you have already typed, so typing and dictation can be freely combined.
 
@@ -92,6 +128,10 @@ Guided examples and tips to help first-time and experienced users get value quic
 
 ![Dark Mode & i18n](/docs/darkmode_i18n.png)
 Accessible UI with dark mode support and internationalization.
+
+The interface language is also the assistant's default answer language: it
+responds in the selected interface language unless you write in a different
+language — then it follows yours.
 
 ## General Features
 

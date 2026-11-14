@@ -48,8 +48,9 @@ async def enqueue_raw(
     the catalog deletes.
     """
     await connection.execute(
-        "INSERT INTO image_deletion_outbox (id, bucket, object_key, reason) "
-        "VALUES (%s, %s, %s, %s)",
+        "INSERT INTO image_deletion_outbox "
+        "(id, bucket, object_key, reason, attempts) "
+        "VALUES (%s, %s, %s, %s, 0)",
         (str(uuid4()), bucket, object_key, reason),
     )
 

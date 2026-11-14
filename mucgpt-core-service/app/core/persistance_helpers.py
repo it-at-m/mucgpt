@@ -446,11 +446,14 @@ class PersistanceHelpers:
                     "RETURNING bucket, object_key",
                     (conversation_id,),
                 )
-                for bucket, object_key in await image_rows.fetchall():
+                for row in await image_rows.fetchall():
+                    # The persistence pool returns dict rows (psycopg
+                    # dict_row); unpacking positionally would read the column
+                    # names instead of the recorded object location.
                     await enqueue_raw(
                         connection,
-                        bucket=bucket,
-                        object_key=object_key,
+                        bucket=row["bucket"],
+                        object_key=row["object_key"],
                         reason="conversation_deleted",
                     )
             return "deleted"

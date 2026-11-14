@@ -31,6 +31,10 @@ class ImageStore(Protocol):
 
     async def delete(self, key: str) -> None: ...
 
+    def full_key(self, key: str) -> str:
+        """Build the stable bucket key recorded in the catalog at upload time."""
+        ...
+
 
 class S3ImageStore:
     """S3-compatible object store; blocking boto3 calls run in worker threads."""

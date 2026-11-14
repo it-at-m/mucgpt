@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, cast
 from uuid import UUID
 
 from anyio import CancelScope
@@ -446,10 +446,13 @@ class PersistanceHelpers:
                     "RETURNING bucket, object_key",
                     (conversation_id,),
                 )
-                for row in await image_rows.fetchall():
-                    # The persistence pool returns dict rows (psycopg
-                    # dict_row); unpacking positionally would read the column
-                    # names instead of the recorded object location.
+                # The persistence pool returns dict rows (psycopg dict_row);
+                # unpacking positionally would read the column names instead
+                # of the recorded object location.
+                image_rows = cast(
+                    "list[dict[str, Any]]", await image_rows.fetchall()
+                )
+                for row in image_rows:
                     await enqueue_raw(
                         connection,
                         bucket=row["bucket"],

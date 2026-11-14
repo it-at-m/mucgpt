@@ -12,6 +12,7 @@ from sqlalchemy import create_engine, select
 from sqlalchemy.orm import Session
 from sqlalchemy.pool import StaticPool
 
+from api import upload_body_limit as upload_body_limit_module
 from api.api_models import UploadedImageDTO
 from backend import api_app
 from config.model_provider import ModelRegistry, ModelsConfigurationException
@@ -456,3 +457,46 @@ def test_delete_skips_outbox_when_row_was_bound_concurrently(
     with Session(image_env.engine) as session:
         assert session.get(ChatImage, image_id) is not None
         assert session.scalars(select(ImageDeletionOutbox)).all() == []
+
+
+def test_oversized_upload_body_is_rejected_before_parsing(
+    test_client, image_env, monkeypatch
+):
+    """A declared body above the upload limit never reaches the multipart
+    parser; the request fails with 413 and stores nothing."""
+    limit = SimpleNamespace(max_upload_bytes=1024)
+    monkeypatch.setattr(
+        upload_body_limit_module, "get_settings", lambda: SimpleNamespace(image_input=limit)
+    )
+    image_env.apply_settings(max_upload_bytes=1024)
+
+    response = test_client.post(
+        "/v1/images",
+        data={"model": VISION_MODEL},
+        files={"file": ("big.png", b"x" * (128 * 1024), "image/png")},
+    )
+
+    assert response.status_code == 413
+    assert image_env.store.objects == {}
+
+
+def test_oversized_streamed_body_is_rejected(test_client, image_env, monkeypatch):
+    """Chunked uploads without an honest Content-Length are bounded by the
+    streaming buffer before parsing."""
+    limit = SimpleNamespace(max_upload_bytes=1024)
+    monkeypatch.setattr(
+        upload_body_limit_module, "get_settings", lambda: SimpleNamespace(image_input=limit)
+    )
+    image_env.apply_settings(max_upload_bytes=1024)
+
+    def stream():
+        yield b"b" * (128 * 1024)
+
+    response = test_client.post(
+        "/v1/images",
+        content=stream(),
+        headers={"Content-Type": "multipart/form-data; boundary=x"},
+    )
+
+    assert response.status_code == 413
+    assert image_env.store.objects == {}

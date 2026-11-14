@@ -56,7 +56,9 @@ def test_store_builds_client_with_explicit_settings(monkeypatch):
     assert kwargs["config"].signature_version == "s3v4"
 
 
-def test_object_keys_live_below_the_configured_prefix(monkeypatch):
+def test_full_key_lives_below_the_configured_prefix(monkeypatch):
+    """The catalog records the full key at upload time; put/get/delete use
+    keys verbatim, so a later key_prefix change cannot orphan objects."""
     store, _ = make_store(monkeypatch, prefix="img/")
 
     assert store.full_key("abc.png") == "img/abc.png"
@@ -70,7 +72,7 @@ def test_put_uploads_verified_content_type_without_public_acl(monkeypatch):
 
     fake.last_client.put_object.assert_called_once_with(
         Bucket="mucgpt-images",
-        Key="chat-images/abc.png",
+        Key="abc.png",
         Body=b"data",
         ContentType="image/png",
     )
@@ -109,7 +111,7 @@ def test_delete_is_idempotent_towards_the_provider(monkeypatch):
     anyio.run(store.delete, "abc.png")
 
     fake.last_client.delete_object.assert_called_once_with(
-        Bucket="mucgpt-images", Key="chat-images/abc.png"
+        Bucket="mucgpt-images", Key="abc.png"
     )
 
 

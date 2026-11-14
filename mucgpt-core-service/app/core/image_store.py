@@ -65,7 +65,12 @@ class S3ImageStore:
         )
 
     def full_key(self, key: str) -> str:
-        """Return the bucket key below the configured prefix."""
+        """Build the stable bucket key recorded in the catalog at upload time.
+
+        Callers pass keys verbatim to ``put``/``get``/``delete``: the catalog
+        and the deletion outbox reference the exact key, so a later
+        ``key_prefix`` change cannot orphan existing objects.
+        """
         return f"{self._prefix.rstrip('/')}/{key.lstrip('/')}"
 
     async def put(self, key: str, data: bytes, content_type: str) -> None:
@@ -74,7 +79,7 @@ class S3ImageStore:
             await to_thread.run_sync(
                 lambda: self._client.put_object(
                     Bucket=self._bucket,
-                    Key=self.full_key(key),
+                    Key=key,
                     Body=data,
                     ContentType=content_type,
                 )
@@ -87,7 +92,7 @@ class S3ImageStore:
         try:
             response = await to_thread.run_sync(
                 lambda: self._client.get_object(
-                    Bucket=self._bucket, Key=self.full_key(key)
+                    Bucket=self._bucket, Key=key
                 )
             )
             body = await to_thread.run_sync(lambda: response["Body"].read(max_bytes + 1))
@@ -102,7 +107,7 @@ class S3ImageStore:
         try:
             await to_thread.run_sync(
                 lambda: self._client.delete_object(
-                    Bucket=self._bucket, Key=self.full_key(key)
+                    Bucket=self._bucket, Key=key
                 )
             )
         except Exception as exc:

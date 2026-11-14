@@ -63,11 +63,15 @@ class ImageSessions:
 
 
 class FakeImageStore:
-    def __init__(self):
+    def __init__(self, prefix: str = ""):
         self.objects: dict[str, tuple[bytes, str]] = {}
         self.deleted: list[str] = []
         self.fail_delete = False
         self.last_max_bytes: int | None = None
+        self.prefix = prefix
+
+    def full_key(self, key: str) -> str:
+        return f"{self.prefix}{key}" if self.prefix else key
 
     async def put(self, key: str, data: bytes, content_type: str) -> None:
         self.objects[key] = (data, content_type)

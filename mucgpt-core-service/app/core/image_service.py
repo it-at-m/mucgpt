@@ -114,7 +114,10 @@ class ImageIngestionService:
         size_bytes = len(data)
 
         reserved_id = str(uuid4())
-        object_key = (
+        # Record the full bucket key at upload time: the catalog and the
+        # deletion outbox reference the exact object location, so a later
+        # key_prefix change cannot orphan existing images.
+        object_key = self.store.full_key(
             f"{reserved_id}.{_FORMAT_EXTENSIONS[mime_type]}"
         )
         bucket = self.settings.s3.bucket if self.settings.s3 else ""

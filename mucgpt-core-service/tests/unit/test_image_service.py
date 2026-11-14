@@ -37,9 +37,13 @@ class ImageSessions:
 
 
 class FakeImageStore:
-    def __init__(self):
+    def __init__(self, prefix: str = ""):
         self.objects: dict[str, tuple[bytes, str]] = {}
         self.deleted: list[str] = []
+        self.prefix = prefix
+
+    def full_key(self, key: str) -> str:
+        return f"{self.prefix}{key}" if self.prefix else key
 
     async def put(self, key: str, data: bytes, content_type: str) -> None:
         self.objects[key] = (data, content_type)
@@ -89,7 +93,7 @@ def service():
     engine = create_engine("sqlite://")
     Base.metadata.create_all(engine, tables=[ChatImage.__table__, ImageDeletionOutbox.__table__])
     sessions = ImageSessions(engine)
-    store = FakeImageStore()
+    store = FakeImageStore(prefix="test-prefix/")
     yield services.ImageIngestionService(sessions, store, settings()), sessions, store
     engine.dispose()
 
@@ -108,9 +112,10 @@ async def test_successful_upload_publishes_ready_metadata(service):
     assert uploaded.managed_url == f"mucgpt-image://{uploaded.id}"
     assert uploaded.expires_at > datetime.now(UTC)
 
-    # One object stored under the bucket, keyed by the image id.
+    # One object stored under the bucket, keyed by the recorded full key
+    # (upload-time key_prefix + image id).
     [(key, (stored, content_type))] = store.objects.items()
-    assert key == f"{uploaded.id}.png"
+    assert key == f"test-prefix/{uploaded.id}.png"
     assert stored == data
     assert content_type == "image/png"
 
@@ -137,7 +142,7 @@ async def test_format_and_extension_follow_the_actual_bytes(fmt, service):
 
     assert uploaded.mime_type == f"image/{fmt.lower()}"
     extension = {"JPEG": "jpg", "WEBP": "webp"}.get(fmt, fmt.lower())
-    assert store.objects[f"{uploaded.id}.{extension}"][0] == data
+    assert store.objects[f"test-prefix/{uploaded.id}.{extension}"][0] == data
 
 
 def oversized_service():

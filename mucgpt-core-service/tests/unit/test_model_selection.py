@@ -30,6 +30,7 @@ def _initialize_model(config: ModelsConfig, monkeypatch: pytest.MonkeyPatch):
         "_default_reasoning_efforts",
         "_fallback_reasoning_effort",
         "_models_without_temperature",
+        "_models_without_user",
     ):
         monkeypatch.setattr(ModelRegistry, field, getattr(ModelRegistry, field))
     ModelRegistry.init_models([config])

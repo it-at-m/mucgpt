@@ -13,6 +13,8 @@ The chat provides a clear space to work with the underlying language model on al
 
 ## Canvas
 
+Available from MUCGPT 2.1.
+
 Work side by side with the agent: open a rich-text canvas panel next to any chat and draft documents together.
 - Toggle the canvas at any time, mid-conversation; on small screens it opens as an overlay so the chat stays usable.
 - The agent can start or edit the canvas while it is closed: the view opens automatically as soon as the agent writes.
@@ -90,7 +92,9 @@ A focused entry point to discover assistants, jump back into recent work, and ac
 ![Models](/docs/models.png)
 Choose from available models and adjust creativity to fit the task. Model choices are transparent to the user.
 
-## Speech-to-Text (Beta)
+## Speech-to-Text
+
+Available from MUCGPT 2.1.
 
 Dictate directly into the chat input: a microphone button appears next to the input field once speech-to-text is enabled. Transcribed text is appended to what you have already typed, so typing and dictation can be freely combined.
 

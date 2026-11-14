@@ -56,7 +56,7 @@
     color: var(--onPrimary);
 }
 
-li:not(:last-child) {
+.dialogContent li:not(:last-child) {
     margin-bottom: 10px;
 }
 

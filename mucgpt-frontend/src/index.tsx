@@ -20,6 +20,7 @@ import { GlobalToastProvider } from "./components/GlobalToastHandler/GlobalToast
 import DeletedCommunityAssistant from "./pages/assistant/DeletedCommunityAssistant";
 import Unauthorized from "./pages/Unauthorized";
 import Discovery from "./pages/discovery/Discovery";
+import Documents from "./pages/documents/Documents";
 import Home from "./pages/home/Home";
 import { AssistantEditorPage } from "./components/AssistantDialogs/AssistantEditorPage/AssistantEditorPage";
 import LegalReview from "./pages/admin/LegalReview";
@@ -73,6 +74,11 @@ const router = createHashRouter([
             {
                 path: "discovery",
                 element: <Discovery />,
+                errorElement: <div>Fehler</div>
+            },
+            {
+                path: "documents",
+                element: <Documents />,
                 errorElement: <div>Fehler</div>
             },
             {
@@ -177,20 +183,24 @@ async function enableMocking() {
     if (import.meta.env?.MODE !== "development" && import.meta.env?.MODE !== "ghpages") {
         return;
     }
-    const [{ worker }, { initializeMockScenarios }] = await Promise.all([import("./mocks/browser.js"), import("./mocks/data/browser-scenario-seed.js")]);
+    const [{ worker, keepMockingActiveAfterWorkerRestarts }, { initializeMockScenarios }] = await Promise.all([
+        import("./mocks/browser.js"),
+        import("./mocks/data/browser-scenario-seed.js")
+    ]);
     await initializeMockScenarios();
 
     // `worker.start()` returns a Promise that resolves
     // once the Service Worker is up and ready to intercept requests.
-    if (import.meta.env?.MODE === "development") return worker.start();
+    if (import.meta.env?.MODE === "development") await worker.start();
     else
-        return worker.start({
+        await worker.start({
             serviceWorker: {
                 // This is useful if your application follows
                 // a strict directory structure.
                 url: "/mucgpt/mockServiceWorker.js"
             }
         });
+    keepMockingActiveAfterWorkerRestarts();
 }
 
 Promise.all([cleanupServiceWorkerForGatewayBuild(), enableMocking()]).then(() => {

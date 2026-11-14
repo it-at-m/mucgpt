@@ -1,6 +1,6 @@
 import { useRef, useState, useEffect, useContext, useCallback, useMemo, useReducer } from "react";
 
-import { AskResponse, ChatResponse, DataSource } from "../../api";
+import { AskResponse, ChatResponse } from "../../api";
 import { Answer } from "../../components/Answer";
 import { QuestionInput } from "../../components/QuestionInput";
 import { LanguageContext } from "../../components/LanguageSelector/LanguageContextProvider";
@@ -21,10 +21,15 @@ import { useToolsContext } from "../../components/ToolsProvider";
 import { Code24Regular, Settings24Regular } from "@fluentui/react-icons";
 import { Button } from "@fluentui/react-components";
 import { ChatSettingsDialog } from "../../components/ChatSettingsDialog/ChatSettingsDialog";
-import { UploadedData, createUploadedDataFromContent, getSelectedDocumentIds } from "../../components/ContextManagerDialog/ContextManagerDialog";
-import { documentToUploadedData, restoreDocumentSelection } from "../../components/ContextManagerDialog/DocumentLibrary";
+import {
+    getSelectedDocumentIds,
+    isLibraryDocument,
+    isSendBlockedByDocuments,
+    restoreDocumentSelection,
+    toChatDocument,
+    type ChatDocument
+} from "../../components/ChatDocuments/documentSelection";
 import { listDocumentsApi } from "../../api/documents-client";
-import { getStoredParsedDocuments } from "../../service/parsedDocumentStorage";
 import { useToolApproval } from "../../hooks/useToolApproval";
 import { useToolStatusToasts } from "../../hooks/useToolStatusToasts";
 import { useGlobalToastContext } from "../../components/GlobalToastHandler/GlobalToastContext";
@@ -125,7 +130,7 @@ const Chat = () => {
     const [toolStatuses, setToolStatuses] = useState<ToolStatus[]>([]);
     const [runActivity, setRunActivity] = useState<RunActivity>(initialRunActivity);
     const [isSettingsOpen, setIsSettingsOpen] = useState<boolean>(false);
-    const [uploadedData, setUploadedData] = useState<UploadedData[]>([]);
+    const [chatDocuments, setChatDocuments] = useState<ChatDocument[]>([]);
     const [isLoading, setIsLoading] = useState<boolean>(false);
     // True from the moment a request is sent until the answer has fully finished streaming.
     // Unlike `isLoading` (which only covers the wait for the first token), this stays true for the
@@ -179,10 +184,10 @@ const Chat = () => {
         setAgUiEvents(current => [...current, { event, receivedAt: new Date().toISOString() }].slice(-200));
     }, []);
 
-    // Update activeChatRef whenever active_chat changes
+    // Invalidate pending document selections only on a real chat switch; StrictMode re-runs this effect on mount.
     useEffect(() => {
+        if (activeChatRef.current !== active_chat) documentSelectionRequestTokenRef.current += 1;
         activeChatRef.current = active_chat;
-        documentSelectionRequestTokenRef.current += 1;
     }, [active_chat]);
 
     // Storage Service mit useMemo
@@ -208,7 +213,7 @@ const Chat = () => {
 
     const resetInputState = useCallback(() => {
         setQuestion("");
-        setUploadedData([]);
+        setChatDocuments([]);
     }, []);
     // Fetch chat history
     const fetchHistory = useCallback(async () => {
@@ -237,7 +242,7 @@ const Chat = () => {
                 if (chat) {
                     // The transcript must load even when the document library is
                     // unreachable: fall back to an empty selection with a warning.
-                    let selection: UploadedData[] = [];
+                    let selection: ChatDocument[] = [];
                     try {
                         selection = await restoreDocumentSelection(chat.documentIds ?? [], chat.documentNames);
                     } catch (restoreError) {
@@ -249,7 +254,7 @@ const Chat = () => {
                     dispatch({ type: "SET_SYSTEM_PROMPT", payload: chat.config.system });
                     dispatch({ type: "SET_ACTIVE_CHAT", payload: id });
                     resetInputState();
-                    setUploadedData(selection);
+                    setChatDocuments(selection);
                     lastQuestionRef.current = chat.messages.length > 0 ? chat.messages[chat.messages.length - 1].user : "";
 
                     // Scroll to bottom after a short delay to ensure DOM is updated
@@ -361,9 +366,17 @@ const Chat = () => {
         [t]
     );
 
+    // Follow-ups, regenerate and URL questions bypass the composer's send button, so they check the attachments here.
+    const ensureDocumentsSendable = useCallback(() => {
+        if (!isSendBlockedByDocuments(chatDocuments)) return true;
+        showWarning(t("document_library.send_blocked_title"), t("document_library.send_blocked_message"));
+        return false;
+    }, [chatDocuments, showWarning, t]);
+
     // API Request mit optimiertem State Management
     const callApi = useCallback(
-        async (question: string, system?: string, dataSources?: DataSource[]) => {
+        async (question: string, system?: string) => {
+            if (!ensureDocumentsSendable()) return;
             lastQuestionRef.current = question;
             setError(undefined);
             setLoadingState(true);
@@ -373,7 +386,7 @@ const Chat = () => {
             const options: ChatOptions = {
                 system: system ?? "",
                 creativity: creativity,
-                document_ids: getSelectedDocumentIds(uploadedData)
+                document_ids: getSelectedDocumentIds(chatDocuments)
             };
             try {
                 await makeApiRequest(
@@ -391,7 +404,7 @@ const Chat = () => {
                     undefined,
                     selectedTools,
                     setToolStatuses,
-                    dataSources,
+                    undefined,
                     lastAnswerRef,
                     setLoadingState,
                     requestPersist,
@@ -419,7 +432,8 @@ const Chat = () => {
             showAgUiEventLog,
             handleAgUiEvent,
             canvasWiring,
-            uploadedData,
+            chatDocuments,
+            ensureDocumentsSendable,
             requestToolApproval
         ]
     );
@@ -427,13 +441,15 @@ const Chat = () => {
     // Regenerate-Funktion
     const onRegenerateResponseClicked = useCallback(async () => {
         if (!conversationActions.canRegenerate || answers.length === 0 || !activeChatRef.current || isLoadingRef.current) return;
+        // Regenerate drops the last answer before sending, so it must check before that, not only in callApi.
+        if (!ensureDocumentsSendable()) return;
 
         try {
             await handleRegenerate(answers, dispatch, activeChatRef.current, storageService, systemPrompt, callApi, isLoadingRef, requestPersist);
         } catch (e) {
             setError(e);
         }
-    }, [answers, storageService, callApi, systemPrompt, activeChatRef.current, isLoadingRef.current]);
+    }, [answers, storageService, callApi, ensureDocumentsSendable, systemPrompt, activeChatRef.current, isLoadingRef.current]);
 
     // Rollback-Funktion
     const onRollbackMessage = useCallback(
@@ -532,25 +548,6 @@ const Chat = () => {
         [availableLLMs, setLLM]
     );
 
-    // Shared helper: converts UploadedData[] → DataSource[] (same logic as onSend)
-    const uploadedDataToDataSources = useCallback((datas: UploadedData[]): DataSource[] => {
-        return datas
-            .filter(data => data.isActive && data.status === "ready" && !!data.fileContent)
-            .map(data => ({
-                title: data.name,
-                content: data.fileContent!,
-                metadata: {
-                    source: data.source,
-                    mime_type: data.mimeType || data.file?.type || undefined,
-                    size: data.size,
-                    parsed_at: data.parsedAt,
-                    file_signature: data.fileSignature,
-                    stored_document_id: data.storedDocumentId,
-                    status: data.status
-                }
-            }));
-    }, []);
-
     // State to track if initialization is complete
     const [isInitialized, setIsInitialized] = useState(false);
     const [isDocumentSelectionReady, setIsDocumentSelectionReady] = useState(false);
@@ -570,7 +567,6 @@ const Chat = () => {
 
         const questionFromUrl = queryParams.get("q") || queryParams.get("question");
         const toolsFromUrl = queryParams.get("tools");
-        const dataFromUrl = queryParams.get("data");
         const documentsFromUrl = queryParams.get("documents");
         const newChatToken = queryParams.get("new");
         const chatIdFromUrl = queryParams.get("chatId");
@@ -579,7 +575,6 @@ const Chat = () => {
         return {
             questionFromUrl,
             toolsFromUrl,
-            dataFromUrl,
             documentsFromUrl,
             newChatRequested: newChatToken !== null,
             newChatToken,
@@ -595,8 +590,8 @@ const Chat = () => {
     }, [clearChat, resetInputState]);
 
     const isCurrentChatEmpty = useMemo(
-        () => answers.length === 0 && question.trim() === "" && uploadedData.length === 0 && pendingQuestion === null,
-        [answers.length, pendingQuestion, question, uploadedData.length]
+        () => answers.length === 0 && question.trim() === "" && chatDocuments.length === 0 && pendingQuestion === null,
+        [answers.length, pendingQuestion, question, chatDocuments.length]
     );
 
     // Stable ref for callApi so the pending-question effect doesn't
@@ -649,8 +644,7 @@ const Chat = () => {
         isLoadingRef.current = true;
 
         // Check URL for question parameter - Handle hash router format
-        const { questionFromUrl, toolsFromUrl, dataFromUrl, documentsFromUrl, newChatRequested, newChatToken, chatIdFromUrl, canvasRequested } =
-            getNavigationParams();
+        const { questionFromUrl, toolsFromUrl, documentsFromUrl, newChatRequested, newChatToken, chatIdFromUrl, canvasRequested } = getNavigationParams();
 
         if (documentsFromUrl && !chatIdFromUrl) {
             const ids = documentsFromUrl.split(",");
@@ -660,7 +654,10 @@ const Chat = () => {
                     if (documentSelectionRequestToken !== documentSelectionRequestTokenRef.current) return;
                     const selected = documents.filter(document => ids.includes(document.id) && document.status === "ready");
                     if (selected.length !== new Set(ids).size) throw new Error("Selected documents are unavailable.");
-                    setUploadedData(previous => [...previous.filter(document => document.source !== "library"), ...selected.map(documentToUploadedData)]);
+                    setChatDocuments(previous => [
+                        ...previous.filter(document => !isLibraryDocument(document)),
+                        ...selected.map(document => toChatDocument(document))
+                    ]);
                     setIsDocumentSelectionReady(true);
                 })
                 .catch(() => {
@@ -686,50 +683,6 @@ const Chat = () => {
                 }
             } catch {
                 // ignore storage errors
-            }
-        }
-
-        // Parse data (file IDs) from URL if present
-        if (dataFromUrl) {
-            const fileIds = dataFromUrl.split(",").filter(id => id.trim() !== "");
-            if (fileIds.length > 0) {
-                const storedRawIds = localStorage.getItem(STORAGE_KEYS.CHAT_FILE_IDS);
-                let validIds: string[] = [];
-                if (storedRawIds) {
-                    try {
-                        const parsedIds = JSON.parse(storedRawIds);
-                        // Check if the parameter IDs match the ones we stored
-                        validIds = fileIds.filter(id => parsedIds.includes(id));
-                    } catch (e) {
-                        console.error("Failed to parse stored chat file IDs from localStorage:", e);
-                    }
-                }
-
-                if (validIds.length > 0) {
-                    // Look up documents from localStorage and create ready UploadedData items immediately
-                    const storedDocs = getStoredParsedDocuments();
-                    const restoredData: UploadedData[] = validIds
-                        .map(id => {
-                            const doc = storedDocs.find(d => d.id === id);
-                            if (doc) {
-                                return createUploadedDataFromContent(doc.content, doc.name, doc.id);
-                            }
-                            console.warn(`Stored document with id "${id}" not found in localStorage.`);
-                            return null;
-                        })
-                        .filter((d): d is UploadedData => d !== null);
-
-                    if (restoredData.length > 0) {
-                        setUploadedData(restoredData);
-                    } else {
-                        console.warn("None of the requested documents could be restored from localStorage.");
-                        clearNavigationQueryParams();
-                    }
-                } else {
-                    console.warn("Requested files were not found in localStorage recent history. Please re-upload your files.");
-                    // Clear the stale data URL parameter so it is not reprocessed
-                    clearNavigationQueryParams();
-                }
             }
         }
 
@@ -832,8 +785,6 @@ const Chat = () => {
 
         scheduledQuestionRef.current = pendingQuestion;
         const questionToAsk = pendingQuestion;
-        // Capture the current uploadedData snapshot for use inside the timeout
-        const dataSnapshot = uploadedData;
 
         // Wait a bit more to ensure tools are properly set
         const timeoutId = window.setTimeout(() => {
@@ -841,9 +792,8 @@ const Chat = () => {
             if (scheduledQuestionRef.current !== questionToAsk) {
                 return;
             }
-            const dataSources = uploadedDataToDataSources(dataSnapshot);
             // Use ref so this effect doesn't depend on callApi's identity
-            callApiRef.current(questionToAsk, systemPrompt, dataSources.length > 0 ? dataSources : undefined);
+            callApiRef.current(questionToAsk, systemPrompt);
 
             // Clear state and hash param once the question is sent
             scheduledQuestionRef.current = null;
@@ -857,7 +807,7 @@ const Chat = () => {
                 scheduledQuestionRef.current = null;
             }
         };
-    }, [isInitialized, isDocumentSelectionReady, pendingQuestion, tools, uploadedData, uploadedDataToDataSources, systemPrompt, clearNavigationQueryParams]);
+    }, [isInitialized, isDocumentSelectionReady, pendingQuestion, tools, systemPrompt, clearNavigationQueryParams]);
 
     // Set up follow-up actions
     useEffect(() => {
@@ -985,17 +935,14 @@ const Chat = () => {
                 disabled={isLoading || isStreaming}
                 draftCacheKey="chat-main"
                 skipDraftRestore={!!questionFromUrl || newChatRequested}
-                onSend={(question, datas) => {
-                    const dataSources = uploadedDataToDataSources(datas);
-                    callApi(question, systemPrompt, dataSources.length > 0 ? dataSources : undefined);
-                }}
+                onSend={question => callApi(question, systemPrompt)}
                 question={question}
                 setQuestion={question => setQuestion(question)}
                 selectedTools={selectedTools}
                 setSelectedTools={setSelectedTools}
                 tools={tools}
-                uploadedData={uploadedData}
-                setUploadedData={setUploadedData}
+                documents={chatDocuments}
+                setDocuments={setChatDocuments}
                 usage={usageSummary}
                 onStartNewChat={startNewChatFromUsage}
                 usageConversationKey={`chat:${active_chat ?? "new"}`}
@@ -1015,8 +962,7 @@ const Chat = () => {
         isStreaming,
         selectedTools,
         tools,
-        uploadedData,
-        uploadedDataToDataSources,
+        chatDocuments,
         getNavigationParams,
         startNewChatFromUsage,
         usageSummary,

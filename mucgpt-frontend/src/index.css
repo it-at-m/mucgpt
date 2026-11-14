@@ -8,6 +8,7 @@
     --assistantDetailsDrawerWidth: 400px;
     --assistantDetailsDrawerCompactWidth: 320px;
     --pageContentMaxWidth: 1180px;
+    --readableContentWidth: 820px;
     --fontFamilyBase:
         "Segoe UI", -apple-system, BlinkMacSystemFont, "Roboto", "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif;
 }

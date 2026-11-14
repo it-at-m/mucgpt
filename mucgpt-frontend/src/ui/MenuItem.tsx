@@ -1,9 +1,11 @@
 import { forwardRef, useContext } from "react";
 import {
     MenuItem as FluentMenuItem,
+    MenuItemCheckbox as FluentMenuItemCheckbox,
     MenuItemLink as FluentMenuItemLink,
     MenuItemRadio as FluentMenuItemRadio,
     menuItemClassNames,
+    type MenuItemCheckboxProps,
     type MenuItemLinkProps,
     type MenuItemProps,
     type MenuItemRadioProps,
@@ -117,6 +119,21 @@ export const MenuItemRadio = forwardRef<HTMLDivElement, MenuItemRadioProps>(({ c
     );
 });
 
+export const MenuItemCheckbox = forwardRef<HTMLDivElement, MenuItemCheckboxProps>(({ className, disabled, ...props }, ref) => {
+    const { isLight } = useContext(AppThemeContext);
+    const styles = useStyles();
+
+    return (
+        <FluentMenuItemCheckbox
+            {...props}
+            ref={ref}
+            disabled={disabled}
+            className={mergeClasses(!disabled && styles.subtle, !disabled && styles.checked, !isLight && !disabled && styles.darkForeground, className)}
+        />
+    );
+});
+
 MenuItem.displayName = "MenuItem";
+MenuItemCheckbox.displayName = "MenuItemCheckbox";
 MenuItemLink.displayName = "MenuItemLink";
 MenuItemRadio.displayName = "MenuItemRadio";

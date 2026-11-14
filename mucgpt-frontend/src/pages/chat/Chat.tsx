@@ -757,9 +757,9 @@ const Chat = () => {
                 newChatRequested
                     ? startFreshChat()
                     : (() => {
-                          clearChat();
-                          return fetchHistory();
-                      })()
+                        clearChat();
+                        return fetchHistory();
+                    })()
             )
                 .then(() => {
                     if (newChatRequested && !questionFromUrl) {
@@ -889,9 +889,10 @@ const Chat = () => {
             <AnswerList
                 answers={answers}
                 regularAssistantMsg={(answer, index) => {
+                    const isLatestAnswer = index === answers.length - 1 && !isLoading;
                     return (
                         <>
-                            {index === answers.length - 1 && (
+                            {isLatestAnswer && (
                                 <Answer
                                     key={`answer-${index}`}
                                     answer={answer.response}
@@ -904,7 +905,7 @@ const Chat = () => {
                                     onFollowUpActionSend={prompt => callApi(prompt, systemPrompt)}
                                 />
                             )}
-                            {index !== answers.length - 1 && <Answer key={`answer-${index}`} answer={answer.response} />}
+                            {!isLatestAnswer && <Answer key={`answer-${index}`} answer={answer.response} />}
                         </>
                     );
                 }}

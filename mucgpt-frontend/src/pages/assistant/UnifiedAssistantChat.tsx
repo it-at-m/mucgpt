@@ -1220,10 +1220,11 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
             <AnswerList
                 answers={answers}
                 regularAssistantMsg={(answer, index) => {
+                    const isLatestAnswer = index === answers.length - 1 && !isLoading;
                     return (
                         <>
                             {" "}
-                            {index === answers.length - 1 && (
+                            {isLatestAnswer && (
                                 <Answer
                                     key={index}
                                     answer={answer.response}
@@ -1241,14 +1242,14 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                                         historyReadOnly
                                             ? undefined
                                             : prompt => {
-                                                  setLastQuestionValue(prompt);
-                                                  setIsLoadingValue(true);
-                                                  void callApi(prompt);
-                                              }
+                                                setLastQuestionValue(prompt);
+                                                setIsLoadingValue(true);
+                                                void callApi(prompt);
+                                            }
                                     }
                                 />
                             )}
-                            {index !== answers.length - 1 && <Answer key={index} answer={answer.response} />}
+                            {!isLatestAnswer && <Answer key={index} answer={answer.response} />}
                         </>
                     );
                 }}

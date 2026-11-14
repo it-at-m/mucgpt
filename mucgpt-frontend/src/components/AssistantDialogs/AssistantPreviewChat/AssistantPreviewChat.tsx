@@ -266,7 +266,7 @@ export const AssistantPreviewChat = ({
     }, [setLastQuestionValue]);
 
     // Selection is driven by the editor form, so the input's tool selector is read-only.
-    const noopSetSelectedTools = useCallback(() => {}, []);
+    const noopSetSelectedTools = useCallback(() => { }, []);
 
     const onStarterPromptClicked = useCallback((value: string) => callApi(value), [callApi]);
 
@@ -305,7 +305,7 @@ export const AssistantPreviewChat = ({
                 answers={answers}
                 regularAssistantMsg={(answer, index) => (
                     <>
-                        {index === answers.length - 1 ? (
+                        {index === answers.length - 1 && !isLoading ? (
                             <Answer
                                 key={index}
                                 answer={answer.response}

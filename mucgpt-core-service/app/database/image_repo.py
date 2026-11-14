@@ -5,7 +5,7 @@ from uuid import UUID, uuid4
 from sqlalchemy import delete, insert, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from database.database_models import ChatImage
+from database.database_models import Chat, ChatImage
 
 
 @dataclass(frozen=True)
@@ -14,6 +14,27 @@ class ReservedImage:
 
     id: str
     created_at: datetime
+
+
+class ImageUnavailableError(ValueError):
+    """A referenced image is missing, foreign, expired, or deleting."""
+
+
+class ImageAlreadyBoundError(ValueError):
+    """A referenced image already belongs to a different conversation."""
+
+
+class ImageConversationUnavailableError(ValueError):
+    """The target conversation row is missing, foreign, or retired."""
+
+
+def _as_utc(value: datetime) -> datetime:
+    """SQLite-backed stores return naive timestamps; treat them as UTC."""
+    return value if value.tzinfo is not None else value.replace(tzinfo=UTC)
+
+
+def _expired(expires_at: datetime | None) -> bool:
+    return expires_at is not None and _as_utc(expires_at) <= datetime.now(UTC)
 
 
 class ImageRepository:
@@ -105,3 +126,94 @@ class ImageRepository:
             .returning(ChatImage.id)
         )
         return result.scalar_one_or_none() is not None
+
+    async def bind_images_to_conversation(
+        self, user_id: str, conversation_id: str, image_ids: list[str]
+    ) -> int:
+        """Bind unbound drafts to the conversation under the live-chat fence.
+
+        Runs inside the caller's transaction. The live ``chats`` row is locked
+        FOR SHARE (PostgreSQL) so concurrent conversation deletion cannot race
+        the binding, and candidate image rows are locked FOR UPDATE in id
+        order; SQLite (tests) silently omits unsupported lock modifiers.
+        Rebinding an image to the same conversation is a no-op; binding it to
+        a different conversation is rejected.
+        """
+        unique_ids = sorted(set(image_ids))
+        if not unique_ids:
+            return 0
+        dialect = getattr(getattr(self.session, "bind", None), "dialect", None)
+        locks_supported = dialect is not None and dialect.name == "postgresql"
+
+        chat_lock = select(Chat.conversation_id).where(
+            Chat.conversation_id == conversation_id,
+            Chat.user_id == user_id,
+            Chat.deleted_at.is_(None),
+        )
+        if locks_supported:
+            # read=True renders FOR SHARE on PostgreSQL: concurrent deletes
+            # (FOR UPDATE) conflict with the binding transaction.
+            chat_lock = chat_lock.with_for_update(read=True)
+        chat_row = (
+            await self.session.execute(chat_lock)
+        ).scalar_one_or_none()
+        if chat_row is None:
+            raise ImageConversationUnavailableError(
+                "Conversation is not available for this user"
+            )
+
+        image_query = (
+            select(ChatImage)
+            .where(
+                ChatImage.id.in_(unique_ids),
+                ChatImage.owner_user_id == user_id,
+            )
+            .order_by(ChatImage.id)
+        )
+        if locks_supported:
+            image_query = image_query.with_for_update()
+        rows = (await self.session.execute(image_query)).scalars().all()
+        by_id = {row.id: row for row in rows}
+        for image_id in unique_ids:
+            row = by_id.get(image_id)
+            if row is None or row.status != "ready" or _expired(row.expires_at):
+                raise ImageUnavailableError(
+                    "One or more attached images are no longer available."
+                )
+            if row.conversation_id is None:
+                row.conversation_id = conversation_id
+                row.bound_at = datetime.now(UTC)
+                row.expires_at = None
+            elif row.conversation_id != conversation_id:
+                raise ImageAlreadyBoundError(
+                    "An attached image already belongs to another conversation."
+                )
+        return len(unique_ids)
+
+    async def verify_unbound_images(
+        self, user_id: str, image_ids: list[str]
+    ) -> int:
+        """Stateless requests: owned, ready, unexpired, and unbound images."""
+        unique_ids = sorted(set(image_ids))
+        if not unique_ids:
+            return 0
+        rows = (
+            await self.session.execute(
+                select(ChatImage).where(
+                    ChatImage.id.in_(unique_ids),
+                    ChatImage.owner_user_id == user_id,
+                )
+            )
+        ).scalars().all()
+        by_id = {row.id: row for row in rows}
+        for image_id in unique_ids:
+            row = by_id.get(image_id)
+            if row is None or row.status != "ready" or _expired(row.expires_at):
+                raise ImageUnavailableError(
+                    "One or more attached images are no longer available."
+                )
+            if row.conversation_id is not None:
+                raise ImageAlreadyBoundError(
+                    "Stateless requests cannot reference conversation-bound images."
+                )
+        return len(unique_ids)

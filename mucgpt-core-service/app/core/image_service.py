@@ -207,3 +207,32 @@ def _image_settings() -> ImageConfig:
     from config.settings import get_settings
 
     return get_settings().image_input
+
+
+async def bind_chat_images(
+    user_info: AuthenticationResult, conversation_id: str, image_ids: list[str]
+) -> int:
+    """Bind unbound draft uploads to a persisted conversation.
+
+    Runs under the live-chat row fence; raises the repository's domain errors
+    (unavailable, already bound, conversation unavailable) for HTTP mapping.
+    """
+    from database.image_catalog import ImageCatalogManager
+
+    async with ImageCatalogManager.get_session_factory().begin() as session:
+        return await ImageRepository(session).bind_images_to_conversation(
+            user_info.user_id, conversation_id, image_ids
+        )
+
+
+async def verify_unbound_chat_images(
+    user_info: AuthenticationResult, image_ids: list[str]
+) -> int:
+    """Verify stateless image references without creating any binding."""
+    from database.image_catalog import ImageCatalogManager
+
+    factory = ImageCatalogManager.get_session_factory()
+    async with factory() as session:
+        return await ImageRepository(session).verify_unbound_images(
+            user_info.user_id, image_ids
+        )

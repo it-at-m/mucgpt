@@ -351,7 +351,8 @@ export const AppSidebar = ({
                                 item.kind === "link" && item.to ? (
                                     <Button
                                         as="a"
-                                        href={item.to}
+                                        // The app uses a hash router, so new-tab and modified clicks need the hash URL.
+                                        href={`#${item.to}`}
                                         appearance="subtle"
                                         icon={icon}
                                         className={navItemClassName}

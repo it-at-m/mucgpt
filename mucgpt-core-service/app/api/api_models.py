@@ -2,7 +2,14 @@ from datetime import datetime
 from decimal import Decimal
 from typing import Any, Final, Literal
 
-from pydantic import BaseModel, ConfigDict, Field, PositiveInt, field_validator
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    Field,
+    PositiveInt,
+    PrivateAttr,
+    field_validator,
+)
 
 from api.exception import ProviderErrorPayload
 from config.settings import ReasoningEffort, get_settings
@@ -86,6 +93,9 @@ class ChatCompletionMessage(BaseModel):
         ..., description="Message role: system, user, or assistant"
     )
     content: str = Field(..., description="The message content")
+    # Internal only: AG-UI image parts resolved by the mapper after the vision
+    # gate. A private attribute prevents client request bodies from supplying it.
+    _media_blocks: list[dict[str, Any]] | None = PrivateAttr(default=None)
     model_config = ConfigDict(
         json_schema_extra={
             "example": {"role": "user", "content": "List three benefits of unit tests."}
@@ -182,6 +192,21 @@ class CanvasResponse(BaseModel):
     updated_at: datetime = Field(..., description="Last modification timestamp")
 
 
+class ToolApprovalResumeEntry(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+
+    interrupt_id: str = Field(..., alias="interruptId")
+    status: Literal["resolved", "cancelled"]
+    payload: dict[str, Any] | None = None
+
+    @property
+    def is_approved(self) -> bool:
+        return (
+            self.status == "resolved"
+            and (self.payload or {}).get("decision") == "approve"
+        )
+
+
 class ChatCompletionRequest(BaseModel):
     model: str | None = Field(None, description="The model to use")
     messages: list[ChatCompletionMessage] = Field(
@@ -227,6 +252,10 @@ class ChatCompletionRequest(BaseModel):
         None,
         description="Structured document payload with title, content and metadata",
     )
+    resume: list[ToolApprovalResumeEntry] | None = Field(
+        None,
+        description="Answers to the tool calls a paused run waits on; continues that run instead of starting a new turn.",
+    )
     canvas: CanvasState | None = Field(
         None,
         description="Canvas document state for the canvas feature",
@@ -236,6 +265,13 @@ class ChatCompletionRequest(BaseModel):
         description=(
             "IDs of library documents to attach for this turn, authorized server-side. "
             "Omitted or empty IDs mean no attachments."
+        ),
+    )
+    language: str | None = Field(
+        None,
+        description=(
+            "The user's interface language (e.g. 'German'). The agent defaults to "
+            "responding in this language unless the user writes in another language."
         ),
     )
     model_config = ConfigDict(

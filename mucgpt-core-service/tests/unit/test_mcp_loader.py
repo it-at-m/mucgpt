@@ -261,6 +261,24 @@ class TestWrapRawTools:
         assert tools[0].name == "a"
         assert tools[0].metadata["mcp_source"] == "src"
 
+    def test_warns_about_unknown_overrides_for_cached_tools(self, caplog):
+        sources = {
+            "src": MCPSourceConfig(
+                url="http://mcp.example/sse",
+                transport=MCPTransport.SSE,
+                overrides=[{"name": "missing"}],
+            )
+        }
+
+        with caplog.at_level("WARNING"):
+            McpLoader._wrap_raw_tools(
+                {"src": [MCPTool(name="present", inputSchema={"type": "object"})]},
+                make_user(),
+                sources,
+            )
+
+        assert "missing" in caplog.text
+
 
 class TestListAllToolsForSession:
     @pytest.mark.asyncio

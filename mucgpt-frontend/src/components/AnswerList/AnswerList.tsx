@@ -4,9 +4,11 @@ import { ChatTurnComponent } from "../ChatTurnComponent/ChatTurnComponent";
 import { UserChatMessage } from "../UserChatMessage";
 import { AnswerLoading } from "../Answer/AnswerLoading";
 import { AnswerError } from "../Answer/AnswerError";
+import { ToolApproval } from "../ToolApproval/ToolApproval";
 import { ChatMessage } from "../../pages/chat/Chat";
 import { FollowUpActionModel } from "../FollowUpAction";
-import type { RunActivity } from "../../utils/agUiActivity";
+import { getRunningStep, type RunActivity } from "../../utils/agUiActivity";
+import type { ToolApprovalState } from "../../hooks/useToolApproval";
 import { toChatProviderError } from "../../utils/providerError";
 import { findScrollContainer, scrollIntoNearestContainer } from "../../utils/scrollIntoNearestContainer";
 
@@ -26,6 +28,7 @@ interface Props {
     lastAnswerRef?: React.Ref<HTMLDivElement>;
     /** Live AG-UI run activity shown in the loading indicator. */
     loadingActivity?: RunActivity;
+    toolApproval?: Pick<ToolApprovalState, "requests" | "submit">;
 }
 
 export const AnswerList = ({
@@ -41,7 +44,8 @@ export const AnswerList = ({
     lastQuestionRef,
     onRollbackError,
     lastAnswerRef,
-    loadingActivity
+    loadingActivity,
+    toolApproval
 }: Props) => {
     const { t } = useTranslation();
 
@@ -110,6 +114,7 @@ export const AnswerList = ({
             <>
                 {shownAnswers.map((answer, index) => {
                     const isLastAnswer = index === shownAnswers.length - 1;
+                    const showResuming = isLastAnswer && loadingActivity?.phase === "resuming" && !getRunningStep(loadingActivity);
                     return (
                         <ChatTurnComponent
                             key={index}
@@ -120,7 +125,15 @@ export const AnswerList = ({
                             }
                             usermsglabel={t("components.usericon.label") + " " + (index + 1).toString()}
                             assistantmsglabel={t("components.answericon.label") + " " + (index + 1).toString()}
-                            assistantmsg={regularAssistantMsg(answer, index)}
+                            assistantmsg={
+                                <>
+                                    {regularAssistantMsg(answer, index)}
+                                    {showResuming && <AnswerLoading activity={loadingActivity} />}
+                                    {isLastAnswer && toolApproval && toolApproval.requests.length > 0 && (
+                                        <ToolApproval key={toolApproval.requests[0].id} requests={toolApproval.requests} onSubmit={toolApproval.submit} />
+                                    )}
+                                </>
+                            }
                         ></ChatTurnComponent>
                     );
                 })}
@@ -171,6 +184,7 @@ export const AnswerList = ({
         isLoading,
         chatMessageStreamEnd,
         loadingActivity,
+        toolApproval,
         activeTurnIndex,
         activeTurnStyle
     ]);

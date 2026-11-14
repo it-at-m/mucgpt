@@ -2,6 +2,7 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 from langchain_core.language_models.fake_chat_models import FakeListChatModel
+from langgraph.types import Command
 
 from agent.deep_agent import _ConfiguredLangChainDeepAgentGraph
 from agent.state_models.default_state import DefaultAgentState
@@ -142,3 +143,77 @@ async def test_astream_reuses_compiled_agent_for_tool_changes(
         ]
         == DefaultAgentState.__name__
     )
+
+
+@pytest.mark.asyncio
+async def test_astream_forwards_resume_command_to_compiled_agent(
+    monkeypatch: pytest.MonkeyPatch,
+    user_info: AuthenticationResult,
+) -> None:
+    async def stream(*args, **kwargs):
+        yield {"messages": []}
+
+    compiled_agent = MagicMock()
+    compiled_agent.astream = MagicMock(side_effect=stream)
+    monkeypatch.setattr(
+        "agent.deep_agent.create_deep_agent", MagicMock(return_value=compiled_agent)
+    )
+    graph = _ConfiguredLangChainDeepAgentGraph(
+        llm=FakeListChatModel(responses=["response"]),
+        tools=[],
+        logger=MagicMock(),
+    )
+    command = Command(resume={"interrupt-1": {"answer": "yes"}})
+
+    _ = [
+        item
+        async for item in graph.astream(
+            command,
+            config={"configurable": {"user_info": user_info}},
+        )
+    ]
+
+    assert compiled_agent.astream.call_args.args[0] is command
+
+
+@pytest.mark.asyncio
+async def test_ainvoke_forwards_resume_command_to_compiled_agent(
+    monkeypatch: pytest.MonkeyPatch,
+    user_info: AuthenticationResult,
+) -> None:
+    compiled_agent = MagicMock()
+    compiled_agent.ainvoke = AsyncMock(return_value={"messages": []})
+    monkeypatch.setattr(
+        "agent.deep_agent.create_deep_agent", MagicMock(return_value=compiled_agent)
+    )
+    graph = _ConfiguredLangChainDeepAgentGraph(
+        llm=FakeListChatModel(responses=["response"]),
+        tools=[],
+        logger=MagicMock(),
+    )
+    command = Command(resume={"interrupt-1": {"answer": "yes"}})
+
+    await graph.ainvoke(command, config={"configurable": {"user_info": user_info}})
+
+    assert compiled_agent.ainvoke.call_args.args[0] is command
+
+
+@pytest.mark.asyncio
+async def test_aget_state_delegates_to_compiled_agent(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    state = object()
+    compiled_agent = MagicMock()
+    compiled_agent.aget_state = AsyncMock(return_value=state)
+    monkeypatch.setattr(
+        "agent.deep_agent.create_deep_agent", MagicMock(return_value=compiled_agent)
+    )
+    graph = _ConfiguredLangChainDeepAgentGraph(
+        llm=FakeListChatModel(responses=["response"]),
+        tools=[],
+        logger=MagicMock(),
+    )
+    config = {"configurable": {"thread_id": "conversation-1"}}
+
+    assert await graph.aget_state(config) is state
+    compiled_agent.aget_state.assert_awaited_once_with(config)

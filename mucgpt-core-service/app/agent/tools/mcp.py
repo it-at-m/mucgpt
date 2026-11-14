@@ -13,6 +13,7 @@ from mcp.types import Tool as MCPTool
 from redis.asyncio import Redis
 from redis.exceptions import LockError
 
+from agent.tools.approval import approval_metadata
 from config.settings import (
     MCPSourceConfig,
     MCPToolOverride,
@@ -343,6 +344,7 @@ class McpLoader:
                 source_config=source_config,
                 tool_override=tool_override,
             ),
+            **McpLoader._resolve_approval(source_config, tool_override),
         }
 
         if custom_desc:
@@ -374,6 +376,8 @@ class McpLoader:
                     f"Cached MCP source '{source_id}' is no longer configured; skipping"
                 )
                 continue
+
+            McpLoader._warn_about_unknown_overrides(source_id, source_cfg, raw_tools)
 
             con = McpLoader._build_connection(source_id, source_cfg, user_info)
             if con is None:
@@ -411,6 +415,38 @@ class McpLoader:
         """
         override_group = getattr(tool_override, "group", None)
         return override_group or source_config.group or source_id
+
+    @staticmethod
+    def _resolve_approval(
+        source_config: MCPSourceConfig,
+        tool_override: MCPToolOverride | None,
+    ) -> dict[str, object]:
+        """Resolve approval and data classification: the override's value, else the source's.
+
+        `require_approval` is compared with `is None` so that an override can set it to False.
+        """
+        require_approval = getattr(tool_override, "require_approval", None)
+        classification = getattr(tool_override, "data_classification", None)
+        return approval_metadata(
+            require_approval=(
+                source_config.require_approval
+                if require_approval is None
+                else require_approval
+            ),
+            data_classification=classification or source_config.data_classification,
+        )
+
+    @staticmethod
+    def _warn_about_unknown_overrides(
+        source_id: str, source_config: MCPSourceConfig, raw_tools: list[MCPTool]
+    ) -> None:
+        tool_names = {raw_tool.name for raw_tool in raw_tools}
+        for override in source_config.overrides or []:
+            if override.name not in tool_names:
+                McpLoader._logger.warning(
+                    f"MCP source '{source_id}' has an override for unknown tool "
+                    f"'{override.name}'; it has no effect"
+                )
 
 
 class McpBearerAuthProvider(Auth):

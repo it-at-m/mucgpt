@@ -4,7 +4,7 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 from fastapi import HTTPException
 from pydantic import ValidationError
-from starlette.requests import Request
+from tests.unit.helpers import request_with_body
 
 from api.api_models import ChatCompletionRequest
 from api.routers import chat_router
@@ -132,7 +132,7 @@ async def test_agui_resolves_before_persistence_and_passes_authorized_selection(
     init = AsyncMock(return_value=agent)
     monkeypatch.setattr(chat_router, "init_agent", init)
     result = chat_router.ag_ui_chat_endpoint(
-        request, user_info, Request({"type": "http", "headers": []})
+        user_info, request_with_body(request.model_dump(mode="json", exclude_none=True))
     )
 
     if rejected:

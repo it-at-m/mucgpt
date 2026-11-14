@@ -16,7 +16,7 @@ from uuid import uuid4
 import psycopg
 from alembic import command
 from alembic.config import Config
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import FastAPI, HTTPException
 from langchain_core.messages import AIMessage, HumanMessage
 from langgraph.checkpoint.postgres.aio import AsyncPostgresSaver
 from langgraph.graph import END, START, MessagesState, StateGraph
@@ -24,6 +24,8 @@ from migrations.settings import get_migration_settings
 from psycopg import sql
 from psycopg.rows import dict_row
 from psycopg_pool import AsyncConnectionPool
+from starlette.responses import StreamingResponse
+from tests.unit.helpers import request_with_body
 
 from agent.agent_executor import MUCGPTAgentExecutor
 from agent.deep_agent import CHECKPOINT_DURABILITY, _ConfiguredLangChainDeepAgentGraph
@@ -467,17 +469,13 @@ class ConversationLifecyclePostgresTests(unittest.IsolatedAsyncioTestCase):
                 with self.subTest(stream=stream, outcome=outcome):
                     self.conversation_id = uuid4().hex
                     saver = PersistanceHelpers.get_checkpointer()
-                    paused, resume = asyncio.Event(), asyncio.Event()
-                    original_put = saver.aput
+                    started, resume = asyncio.Event(), asyncio.Event()
 
-                    async def paused_put(*args, **kwargs):
-                        paused.set()
-                        await resume.wait()
-                        return await original_put(*args, **kwargs)
-
-                    def answer(state):
+                    async def answer(state):
+                        started.set()
                         if outcome == "failure":
                             raise RuntimeError("controlled generation failure")
+                        await resume.wait()
                         return {
                             "messages": [AIMessage(content="private answer from A")]
                         }
@@ -548,9 +546,10 @@ class ConversationLifecyclePostgresTests(unittest.IsolatedAsyncioTestCase):
                             await app(scope, receive, send)
                             return
                         response = await ag_ui_chat_endpoint(
-                            request,
                             self.owner,
-                            Request({"type": "http", "headers": []}),
+                            request_with_body(
+                                request.model_dump(mode="json", exclude_none=True)
+                            ),
                         )
                         if hasattr(response, "body_iterator"):
                             try:
@@ -560,7 +559,6 @@ class ConversationLifecyclePostgresTests(unittest.IsolatedAsyncioTestCase):
                                 await response.body_iterator.aclose()
                         return response
 
-                    saver.aput = paused_put
                     task = None
                     try:
                         with (
@@ -574,16 +572,25 @@ class ConversationLifecyclePostgresTests(unittest.IsolatedAsyncioTestCase):
                             ),
                         ):
                             task = asyncio.create_task(run())
-                            await asyncio.wait_for(paused.wait(), 10)
-                            await delete_conversation(self.conversation_id, self.owner)
-                            if outcome == "disconnect":
-                                await disconnect.put({"type": "http.disconnect"})
-                            elif outcome == "cancel":
+                            await asyncio.wait_for(started.wait(), 10)
+                            if outcome == "cancel":
                                 task.cancel()
-                            resume.set()
-                            result = await asyncio.wait_for(
-                                asyncio.gather(task, return_exceptions=True), 10
-                            )
+                                result = await asyncio.wait_for(
+                                    asyncio.gather(task, return_exceptions=True), 10
+                                )
+                                await delete_conversation(
+                                    self.conversation_id, self.owner
+                                )
+                            else:
+                                await delete_conversation(
+                                    self.conversation_id, self.owner
+                                )
+                                if outcome == "disconnect":
+                                    await disconnect.put({"type": "http.disconnect"})
+                                resume.set()
+                                result = await asyncio.wait_for(
+                                    asyncio.gather(task, return_exceptions=True), 10
+                                )
                             if outcome == "disconnect":
                                 self.assertIsNone(result[0])
                                 self.assertTrue(disconnected.is_set())
@@ -594,7 +601,9 @@ class ConversationLifecyclePostgresTests(unittest.IsolatedAsyncioTestCase):
                                     )
                                 )
                             elif outcome == "cancel":
-                                self.assertIsInstance(result[0], asyncio.CancelledError)
+                                # LangGraph handles cancellation while closing its event
+                                # stream, so the endpoint completes with its response.
+                                self.assertIsInstance(result[0], StreamingResponse)
                             else:
                                 self.assertTrue(
                                     any("RUN_ERROR" in chunk for chunk in chunks)
@@ -610,7 +619,6 @@ class ConversationLifecyclePostgresTests(unittest.IsolatedAsyncioTestCase):
                         resume.set()
                         if task is not None:
                             await asyncio.gather(task, return_exceptions=True)
-                        saver.aput = original_put
 
 
 if __name__ == "__main__":

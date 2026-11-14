@@ -761,6 +761,19 @@ const buildCanvasToolCallEvents = (parentMessageId: string, conversationId: stri
     return events;
 };
 
+const APPROVAL_SCENARIOS: Record<string, Record<string, unknown>[]> = {
+    "agui-approval": [{ query: "Kita-Gebühren München 2026" }],
+    "agui-approval-multi": [{ query: "Kita-Gebühren München 2026" }, { query: "Anwohnerparken München Kosten" }],
+    "agui-approval-kette": [{ query: "Kita-Gebühren München 2026" }],
+    "agui-approval-vertraulich": [{ query: "Personalakte Beförderungsverfahren 2026" }]
+};
+
+const APPROVAL_TOOLS: Record<string, { toolName: string; dataClassification: string }> = {
+    "agui-approval-vertraulich": { toolName: "Personalwesen", dataClassification: "internal" }
+};
+
+const CHAIN_ID_PREFIX = "chain-";
+
 export const handlers = [
     http.all("https://huggingface.co/*", () => passthrough()),
     http.all("https://cdn-lfs.huggingface.co/*", () => passthrough()),
@@ -1139,24 +1152,33 @@ export const handlers = [
         });
     }),
     http.post("/api/backend/v1/chat/v2/completions", async ({ request }) => {
-        const body = (await request.json()) as {
-            messages?: { role: string; content: string }[];
+        // Both request shapes are mocked: the native AG-UI run input
+        // (threadId, camelCase messages with ids) and the legacy envelope
+        // (conversation_id, snake_case settings). The wire settings live in
+        // forwardedProps.mucgpt for the native shape.
+        const raw = (await request.json()) as {
+            messages?: Array<{ role: string; content: string }>;
+            threadId?: string;
             conversation_id?: string;
+            forwardedProps?: { mucgpt?: { enabled_tools?: string[]; canvas?: CanvasState | null } };
             enabled_tools?: string[];
             canvas?: CanvasState | null;
+            resume?: { interruptId: string; status: string; payload?: { decision?: string } }[];
         };
+        const enabledTools = raw.forwardedProps?.mucgpt?.enabled_tools ?? raw.enabled_tools;
+        const mockCanvas = raw.forwardedProps?.mucgpt?.canvas ?? raw.canvas;
         // Canvas tools are auto-added while the canvas is open; the generic
         // demo tool call must not fire from those.
-        const mockToolName = body.enabled_tools?.find(id => !(CANVAS_TOOL_IDS as readonly string[]).includes(id));
+        const mockToolName = enabledTools?.find(id => !(CANVAS_TOOL_IDS as readonly string[]).includes(id));
         const latestUserMessage =
-            body.messages
+            raw.messages
                 ?.slice()
                 .reverse()
                 .find(message => message.role === "user")?.content || "";
         const encoder = new TextEncoder();
         const runId = crypto.randomUUID();
         const messageId = crypto.randomUUID();
-        const threadId = body.conversation_id ?? crypto.randomUUID();
+        const threadId = raw.threadId ?? raw.conversation_id ?? crypto.randomUUID();
         const stream = new ReadableStream({
             async start(controller) {
                 const send = (event: object) => controller.enqueue(encoder.encode(`data: ${JSON.stringify(event)}\n\n`));
@@ -1180,6 +1202,71 @@ export const handlers = [
                     return;
                 }
 
+                const pauseForApproval = (calls: Record<string, unknown>[], idPrefix = "") => {
+                    const interrupts = calls.map(args => {
+                        const toolCallId = idPrefix + crypto.randomUUID();
+                        const { toolName, dataClassification } = APPROVAL_TOOLS[scenario] ?? {
+                            toolName: mockToolName ?? "WebSuche",
+                            dataClassification: "public"
+                        };
+                        const status_message = "Durchsuche das Internet";
+                        send({
+                            type: "TOOL_CALL_CHUNK",
+                            toolCallId,
+                            toolCallName: toolName,
+                            parentMessageId: messageId,
+                            delta: JSON.stringify({ status_message, ...args })
+                        });
+                        return {
+                            id: toolCallId,
+                            reason: "tool_approval",
+                            toolCallId,
+                            message: status_message,
+                            metadata: { mucgpt: { toolName, args, dataClassification } }
+                        };
+                    });
+                    send({ type: "RUN_FINISHED", threadId, runId, outcome: { type: "interrupt", interrupts } });
+                    controller.close();
+                };
+
+                const scenario = latestUserMessage.trim().toLowerCase();
+                if (Object.hasOwn(APPROVAL_SCENARIOS, scenario) && !raw.resume) {
+                    pauseForApproval(APPROVAL_SCENARIOS[scenario], scenario === "agui-approval-kette" ? CHAIN_ID_PREFIX : "");
+                    return;
+                }
+
+                if (raw.resume) {
+                    const isApproved = (entry: NonNullable<typeof raw.resume>[number]) => entry.status === "resolved" && entry.payload?.decision === "approve";
+                    await delay(1200);
+                    for (const entry of raw.resume) {
+                        if (isApproved(entry)) {
+                            send({
+                                type: "TOOL_CALL_RESULT",
+                                messageId: crypto.randomUUID(),
+                                toolCallId: entry.interruptId,
+                                content: "Mock tool result",
+                                role: "tool"
+                            });
+                        }
+                    }
+                    if (raw.resume.some(entry => entry.interruptId.startsWith(CHAIN_ID_PREFIX))) {
+                        pauseForApproval([{ query: "Anwohnerparken München Kosten" }]);
+                        return;
+                    }
+                    const approvedCount = raw.resume.filter(isApproved).length;
+                    const delta = `Mock-Antwort: ${approvedCount} von ${raw.resume.length} Tool-Aufrufen wurden ausgeführt.`;
+                    send({ type: "TEXT_MESSAGE_CHUNK", messageId, role: "assistant", delta });
+                    send({
+                        type: "RUN_FINISHED",
+                        threadId,
+                        runId,
+                        usage: [{ model: "gpt-4o-mini", inputTokens: 80, outputTokens: 20, totalTokens: 100 }],
+                        metadata: { mucgpt: { contextTokens: 100 } }
+                    });
+                    controller.close();
+                    return;
+                }
+
                 if (mockToolName) {
                     const toolCallId = crypto.randomUUID();
                     send({
@@ -1194,7 +1281,7 @@ export const handlers = [
                 }
 
                 const wantsRichMarkdownMock = /^\s*rich\s*$/i.test(latestUserMessage);
-                const wantsCanvasMock = Boolean(body.canvas) && /^\s*canvas-demo\s*$/i.test(latestUserMessage);
+                const wantsCanvasMock = Boolean(mockCanvas) && /^\s*canvas-demo\s*$/i.test(latestUserMessage);
 
                 if (wantsCanvasMock) {
                     for (const event of buildCanvasToolCallEvents(messageId, threadId)) {

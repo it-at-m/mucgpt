@@ -493,7 +493,6 @@ const Chat = () => {
             hashParams.delete("documents");
             hashParams.delete("new");
             hashParams.delete("chatId");
-            hashParams.delete("canvas");
             const newHashQuery = hashParams.toString();
             currentUrl.hash = newHashQuery ? `${hashPath}?${newHashQuery}` : hashPath;
         }
@@ -508,7 +507,6 @@ const Chat = () => {
             searchParams.delete("documents");
             searchParams.delete("new");
             searchParams.delete("chatId");
-            searchParams.delete("canvas");
             const newSearch = searchParams.toString();
             currentUrl.search = newSearch ? `?${newSearch}` : "";
         }
@@ -574,7 +572,6 @@ const Chat = () => {
         const documentsFromUrl = queryParams.get("documents");
         const newChatToken = queryParams.get("new");
         const chatIdFromUrl = queryParams.get("chatId");
-        const canvasRequested = queryParams.get("canvas") !== null;
 
         return {
             questionFromUrl,
@@ -583,8 +580,7 @@ const Chat = () => {
             documentsFromUrl,
             newChatRequested: newChatToken !== null,
             newChatToken,
-            chatIdFromUrl,
-            canvasRequested
+            chatIdFromUrl
         };
     }, [location.hash, location.search]);
 
@@ -649,8 +645,7 @@ const Chat = () => {
         isLoadingRef.current = true;
 
         // Check URL for question parameter - Handle hash router format
-        const { questionFromUrl, toolsFromUrl, dataFromUrl, documentsFromUrl, newChatRequested, newChatToken, chatIdFromUrl, canvasRequested } =
-            getNavigationParams();
+        const { questionFromUrl, toolsFromUrl, dataFromUrl, documentsFromUrl, newChatRequested, newChatToken, chatIdFromUrl } = getNavigationParams();
 
         if (documentsFromUrl && !chatIdFromUrl) {
             const ids = documentsFromUrl.split(",");
@@ -749,9 +744,6 @@ const Chat = () => {
                 });
         } else if (questionFromUrl || newChatRequested) {
             lastHandledNewChatTokenRef.current = newChatToken;
-            if (newChatRequested && canvasRequested) {
-                canvasRef.current.requestOpen();
-            }
             setPendingQuestion(questionFromUrl);
             Promise.resolve(
                 newChatRequested
@@ -788,7 +780,7 @@ const Chat = () => {
             return;
         }
 
-        const { chatIdFromUrl, newChatRequested, newChatToken, canvasRequested } = getNavigationParams();
+        const { chatIdFromUrl, newChatRequested, newChatToken } = getNavigationParams();
 
         if (chatIdFromUrl && chatIdFromUrl !== activeChatRef.current) {
             void loadChat(chatIdFromUrl).then(async loaded => {
@@ -807,9 +799,6 @@ const Chat = () => {
         }
 
         lastHandledNewChatTokenRef.current = newChatToken;
-        if (canvasRequested) {
-            canvasRef.current.requestOpen();
-        }
         if (isCurrentChatEmpty) {
             clearNavigationQueryParams();
             return;

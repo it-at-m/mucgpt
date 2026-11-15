@@ -43,14 +43,6 @@
     padding: 0 20px;
 }
 
-/* Same spot as the chat page's floating canvas toggle. */
-.canvasChatButton {
-    position: absolute;
-    top: 68px;
-    right: 16px;
-    z-index: 4;
-}
-
 .chatstarter > div {
     width: 100%;
     max-width: 700px;

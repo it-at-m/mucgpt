@@ -416,25 +416,6 @@ describe("conversation id assignment", () => {
         expect(harness.current.getMarkdown()).toBe("# Mine");
     });
 
-    it("keeps a pending open request across a fresh-chat reset and reopens for the new chat", async () => {
-        loadCanvasStateMock.mockResolvedValue(null);
-        loadCanvasRevisionsMock.mockResolvedValue(emptyRevisions());
-
-        const harness = renderController();
-        harness.render("old-conv");
-        await harness.rerender("old-conv");
-        act(() => harness.current.requestOpen());
-        expect(harness.current.isOpen).toBe(true);
-
-        // startFreshChat resets the active chat: the switch effect closes the canvas
-        await harness.rerender(undefined);
-        expect(harness.current.isOpen).toBe(false);
-
-        // the fresh chat's first prompt assigns its id: the pending request reopens
-        await harness.rerender("new-conv");
-        expect(harness.current.isOpen).toBe(true);
-    });
-
     it("clears a canvas holding only a horizontal rule when switching conversations", async () => {
         loadCanvasStateMock.mockResolvedValue(null);
         loadCanvasRevisionsMock.mockResolvedValue(emptyRevisions());

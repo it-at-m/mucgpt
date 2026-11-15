@@ -9,6 +9,7 @@ import { ChatMessage } from "../../pages/chat/Chat";
 import { FollowUpActionModel } from "../FollowUpAction";
 import { getRunningStep, type RunActivity } from "../../utils/agUiActivity";
 import type { ToolApprovalState } from "../../hooks/useToolApproval";
+import type { ImageAttachment } from "../../api";
 import { toChatProviderError } from "../../utils/providerError";
 import { findScrollContainer, scrollIntoNearestContainer } from "../../utils/scrollIntoNearestContainer";
 
@@ -24,6 +25,8 @@ interface Props {
     retryUnavailableReason?: string;
     chatMessageStreamEnd: React.MutableRefObject<HTMLDivElement | null>;
     lastQuestionRef: React.MutableRefObject<string>;
+    /** Images of the in-flight/failed turn, set by the page when sending (#1398). */
+    lastImagesRef?: React.MutableRefObject<ImageAttachment[] | undefined>;
     onRollbackError?: () => void;
     lastAnswerRef?: React.Ref<HTMLDivElement>;
     /** Live AG-UI run activity shown in the loading indicator. */
@@ -42,6 +45,7 @@ export const AnswerList = ({
     retryUnavailableReason,
     chatMessageStreamEnd,
     lastQuestionRef,
+    lastImagesRef,
     onRollbackError,
     lastAnswerRef,
     loadingActivity,
@@ -121,7 +125,11 @@ export const AnswerList = ({
                             innerRef={isLastAnswer ? lastAnswerRef : undefined}
                             style={index === activeTurnIndex ? activeTurnStyle : undefined}
                             usermsg={
-                                <UserChatMessage message={answer.user} onRollbackMessage={onRollbackMessage ? () => onRollbackMessage(index - 1) : undefined} />
+                                <UserChatMessage
+                                    message={answer.user}
+                                    images={answer.images}
+                                    onRollbackMessage={onRollbackMessage ? () => onRollbackMessage(index - 1) : undefined}
+                                />
                             }
                             usermsglabel={t("components.usericon.label") + " " + (index + 1).toString()}
                             assistantmsglabel={t("components.answericon.label") + " " + (index + 1).toString()}
@@ -139,7 +147,7 @@ export const AnswerList = ({
                 })}
                 {providerError ? (
                     <ChatTurnComponent
-                        usermsg={<UserChatMessage message={lastQuestionRef.current} onRollbackMessage={onRollbackError} />}
+                        usermsg={<UserChatMessage message={lastQuestionRef.current} images={lastImagesRef?.current} onRollbackMessage={onRollbackError} />}
                         usermsglabel={t("components.usericon.label") + " " + (answers.length + 1).toString()}
                         assistantmsglabel={t("components.answericon.label") + " " + (answers.length + 1).toString()}
                         assistantmsg={
@@ -157,7 +165,7 @@ export const AnswerList = ({
                     <ChatTurnComponent
                         innerRef={loadingTurnRef}
                         style={activeTurnStyle}
-                        usermsg={<UserChatMessage message={lastQuestionRef.current} />}
+                        usermsg={<UserChatMessage message={lastQuestionRef.current} images={lastImagesRef?.current} />}
                         usermsglabel={t("components.usericon.label") + " " + (answers.length + 1).toString()}
                         assistantmsglabel={t("components.answericon.label") + " " + (answers.length + 1).toString()}
                         assistantmsg={<AnswerLoading activity={loadingActivity} />}

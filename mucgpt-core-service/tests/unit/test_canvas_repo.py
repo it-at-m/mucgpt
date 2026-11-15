@@ -107,6 +107,11 @@ def _erase_harness(monkeypatch: pytest.MonkeyPatch) -> tuple[Mock, Mock]:
     row = {"user_id": "owner", "deleted_at": None}
     fetch_result = Mock()
     fetch_result.fetchone = AsyncMock(return_value=row)
+    # The persistence pool returns dict rows (psycopg dict_row); image cascade
+    # values must be read by name, never unpacked positionally.
+    fetch_result.fetchall = AsyncMock(
+        return_value=[{"bucket": "image-bucket", "object_key": "image-key.png"}]
+    )
     connection.execute = AsyncMock(return_value=fetch_result)
 
     connection_ctx = Mock()
@@ -136,6 +141,22 @@ async def test_erase_conversation_cascades_canvas_in_one_transaction(
     executed = [call.args[0] for call in connection.execute.await_args_list]
     assert any("UPDATE chats" in sql for sql in executed)
     assert any("DELETE FROM canvas_documents" in sql for sql in executed)
+    assert any("DELETE FROM chat_images" in sql for sql in executed)
+    outbox_calls = [
+        call for call in connection.execute.await_args_list
+        if "INSERT INTO image_deletion_outbox" in call.args[0]
+    ]
+    assert len(outbox_calls) == 1
+    # Raw inserts must supply attempts explicitly: the column has no database
+    # default, so a missing value fails the insert on PostgreSQL.
+    assert "attempts" in outbox_calls[0].args[0]
+    # The queued location must be the stored values, not the dict-row keys;
+    # params are (id, bucket, object_key, reason).
+    assert outbox_calls[0].args[1][1:] == (
+        "image-bucket",
+        "image-key.png",
+        "conversation_deleted",
+    )
     eraser.assert_awaited_once()
     transaction.__aexit__.assert_awaited_once_with(None, None, None)
 

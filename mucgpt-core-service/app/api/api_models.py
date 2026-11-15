@@ -13,6 +13,7 @@ from pydantic import (
 
 from api.exception import ProviderErrorPayload
 from config.settings import ReasoningEffort, get_settings
+from core.image_validation import ALLOWED_IMAGE_MIME_TYPES
 
 
 class DocumentMetadata(BaseModel):
@@ -130,7 +131,21 @@ class ConversationUsage(BaseModel):
     )
 
 
-class ConversationMessage(ChatCompletionMessage):
+class ConversationMessage(BaseModel):
+    """Public user/assistant turn of a conversation's stored history.
+
+    Deliberately standalone instead of subclassing ChatCompletionMessage:
+    text-only turns keep the plain string, but image-bearing user turns carry
+    OpenAI-style parts where image parts are exclusively managed
+    ``mucgpt-image://`` references (never bytes, never data URIs).
+    """
+
+    role: Literal["system", "user", "assistant"] = Field(
+        ..., description="Message role: system, user, or assistant"
+    )
+    content: str | list[dict[str, Any]] = Field(
+        ..., description="Text, or text/image content parts for image turns"
+    )
     activity_steps: list[ConversationActivityStep] = Field(default_factory=list)
     usage: ConversationUsage | None = None
 
@@ -724,8 +739,66 @@ class ModelsDTO(BaseModel):
     default_reasoning_effort: ReasoningEffort | None = Field(
         None, description="Reasoning effort used when a request sets none"
     )
+    supports_vision: bool = Field(
+        False,
+        description=(
+            "Whether image input is explicitly enabled for this model. Operators "
+            "opt in per model for data-protection reasons; the flag is never "
+            "inferred or auto-enabled."
+        ),
+    )
     knowledge_cut_off: str | None = Field(
         None, description="Last known training data cutoff for the model"
+    )
+
+
+class ImageInputDTO(BaseModel):
+    """Image-input availability and bounds exposed to the frontend.
+
+    The frontend uses these for pre-validation only; the core service enforces
+    them again. Per-model availability additionally requires
+    ``Model.supports_vision``.
+    """
+
+    enabled: bool = Field(
+        False,
+        description="Whether image upload is enabled (requires object storage).",
+    )
+    max_upload_bytes: PositiveInt = Field(
+        10 * 1024 * 1024, description="Maximum image size in bytes."
+    )
+    max_images_per_message: PositiveInt = Field(
+        5, description="Maximum images per user message."
+    )
+    max_pixels: PositiveInt = Field(
+        20_000_000, description="Maximum decoded pixels (decompression-bomb bound)."
+    )
+    allowed_mime_types: list[str] = Field(
+        default_factory=lambda: list(ALLOWED_IMAGE_MIME_TYPES),
+        description="MIME types accepted for image uploads.",
+    )
+
+
+class UploadedImageDTO(BaseModel):
+    """Managed metadata for one uploaded chat image (upload and history)."""
+
+    id: str = Field(..., description="Managed image id (UUID).")
+    filename: str = Field(..., description="Original upload filename.")
+    mime_type: str = Field(..., description="Verified MIME type of the bytes.")
+    size_bytes: int = Field(..., ge=0, description="Size in bytes.")
+    width: int | None = Field(None, description="Decoded width in pixels.")
+    height: int | None = Field(None, description="Decoded height in pixels.")
+    created_at: datetime = Field(..., description="Upload timestamp.")
+    expires_at: datetime | None = Field(
+        None,
+        description="Expiry for unbound draft uploads; bound images never expire.",
+    )
+    managed_url: str = Field(
+        ...,
+        description=(
+            "Managed mucgpt-image:// reference for message content parts; "
+            "not a public URL."
+        ),
     )
 
 
@@ -810,4 +883,8 @@ class ConfigResponse(BaseModel):
     canvas_editor_max_chars: int = Field(
         default=CANVAS_EDITOR_MAX_CHARS,
         description="Maximum canvas editor input length in characters.",
+    )
+    image_input: ImageInputDTO = Field(
+        default_factory=ImageInputDTO,
+        description="Image upload availability and limits for pre-validation.",
     )

@@ -52,3 +52,22 @@
 .answerText :where(p:last-child, ul:last-child, ol:last-child, blockquote:last-child) {
     margin-bottom: 0;
 }
+
+/* Image gallery of a user turn (#1398): thumbnails wrap under the bubble. */
+.imageGallery {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: var(--spacingVerticalXXS);
+    max-width: 100%;
+    margin-bottom: var(--spacingVerticalXXS);
+}
+
+.imageGalleryItem {
+    display: block;
+    max-width: min(260px, 100%);
+    max-height: 200px;
+    border-radius: var(--borderRadiusMedium);
+    border: var(--strokeWidthThin) solid var(--colorNeutralStroke3);
+    object-fit: contain;
+}

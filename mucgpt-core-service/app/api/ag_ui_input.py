@@ -23,10 +23,14 @@ Wire-conformance notes (see docs.ag-ui.com, spec 1.0):
   non-vision model receives a fail-closed 400 instead of a silently degraded
   run, because the rejection is a privacy-policy decision made before the run
   starts. Only the inline ``data`` source arm is accepted; ``url`` sources are
-  refused (no authenticated image-content endpoint exists yet, and fetching
-  arbitrary URLs server-side is an SSRF risk — #1398 owns the content
-  endpoint), and ``file`` provider handles are skipped with a warning as the
-  spec prescribes for unresolvable handles.
+  refused (fetching arbitrary URLs server-side is an SSRF risk), and ``file``
+  provider handles are skipped with a warning as the spec prescribes for
+  unresolvable handles — except handles issued by MUCGPT itself
+  (``provider: "mucgpt"``, the managed ``mucgpt-image://`` reference minted by
+  the image upload endpoint, #1398). Those resolve to a managed reference
+  block that stays opaque through graph state and checkpoints and is hydrated
+  to bytes only at the provider boundary; an unresolvable own handle fails
+  closed instead of degrading the run silently.
 """
 
 import re
@@ -58,6 +62,7 @@ from api.api_models import (
 )
 from config.model_provider import ModelRegistry, ModelsConfigurationException
 from config.settings import get_settings
+from core.image_refs import parse_managed_image_url
 from core.logtools import getLogger
 
 logger = getLogger()
@@ -327,15 +332,36 @@ def _media_block(part: Any) -> dict[str, Any]:
     if source is None:
         raise HTTPException(status_code=400, detail="Media part without a source")
     if source.type == "file":
-        # Provider handles cannot be resolved here (no provider-issued handle
-        # is ever handed out by MUCGPT): skip the part with a warning, as the
-        # spec prescribes for a handle the producer cannot use.
-        logger.warning(
-            "Skipping %s with file source %r: provider handles are not resolvable",
-            type(part).__name__,
-            getattr(source, "provider", None),
-        )
-        return {}
+        provider = getattr(source, "provider", None)
+        if provider != "mucgpt":
+            # Foreign provider handles cannot be resolved here: skip the part
+            # with a warning, as the spec prescribes for a handle the
+            # consumer cannot use.
+            logger.warning(
+                "Skipping %s with file source %r: provider handles are not resolvable",
+                type(part).__name__,
+                provider,
+            )
+            return {}
+        # MUCGPT's own handle, minted by POST /v1/images: bind it as a managed
+        # reference block. It stays an opaque mucgpt-image:// URL through graph
+        # state and checkpoints and is hydrated to data URIs only at the
+        # provider boundary (core.image_hydration). An unresolvable own handle
+        # fails closed rather than silently degrading the run.
+        try:
+            parse_managed_image_url(source.value)
+        except ValueError as exc:
+            raise HTTPException(
+                status_code=400,
+                detail=(
+                    "An attached image is no longer available; "
+                    "re-upload it or remove the attachment."
+                ),
+            ) from exc
+        return {
+            "type": "image_url",
+            "image_url": {"url": source.value},
+        }
     if source.type != "data":
         # url sources are refused fail-closed: no authenticated image-content
         # endpoint exists yet (#1398) and fetching arbitrary URLs server-side

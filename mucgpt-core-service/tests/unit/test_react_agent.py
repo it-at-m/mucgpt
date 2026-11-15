@@ -1,3 +1,4 @@
+from types import SimpleNamespace
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
@@ -7,6 +8,7 @@ from langgraph.types import Command
 from agent.deep_agent import _ConfiguredLangChainDeepAgentGraph
 from agent.state_models.default_state import DefaultAgentState
 from core.auth_models import AuthenticationResult
+from core.image_hydration import ImageHydrationError
 from core.lf_prompts import ResolvedPrompt
 
 
@@ -52,6 +54,79 @@ def test_prepare_run_uses_default_langfuse_prompt_unless_overridden(
 
     assert default_context.langfuse_prompt is default_prompt.langfuse_prompt
     assert override_context.langfuse_prompt is override
+
+
+def test_prepare_run_builds_image_hydrator_only_for_managed_images(
+    monkeypatch: pytest.MonkeyPatch,
+    user_info: AuthenticationResult,
+    default_prompt: ResolvedPrompt,
+) -> None:
+    from core.image_hydration import ImageHydrator
+
+    monkeypatch.setattr("agent.deep_agent.create_deep_agent", MagicMock())
+    built = MagicMock(return_value=MagicMock(spec=ImageHydrator))
+    monkeypatch.setattr("agent.deep_agent.build_image_hydrator", built)
+    monkeypatch.setattr(
+        "agent.deep_agent.contains_managed_images",
+        lambda messages: any("image" in str(message) for message in messages),
+    )
+    monkeypatch.setattr(
+        "agent.deep_agent.get_settings",
+        lambda: SimpleNamespace(
+            image_input=SimpleNamespace(enabled=True),
+        ),
+    )
+    graph = _ConfiguredLangChainDeepAgentGraph(
+        llm=FakeListChatModel(responses=["response"]),
+        tools=[],
+        logger=MagicMock(),
+    )
+
+    managed_messages = ["message with image"]
+    messages, _, context = graph._prepare_run(
+        {"messages": managed_messages},
+        config={
+            "configurable": {
+                "user_info": user_info,
+                "thread_id": "conv-1",
+            }
+        },
+    )
+    built.assert_called_once_with(user_info, "conv-1", False)
+    assert context.image_hydrator is built.return_value
+
+    built.reset_mock()
+    _, _, context = graph._prepare_run(
+        {"messages": ["plain text"]},
+        config={"configurable": {"user_info": user_info}},
+    )
+    built.assert_not_called()
+    assert context.image_hydrator is None
+
+    # A persisted run replays checkpoint state whose earlier turns may carry
+    # managed references even when the incoming messages do not.
+    built.reset_mock()
+    graph.checkpointer = MagicMock()
+    _, _, context = graph._prepare_run(
+        {"messages": ["plain text"]},
+        config={
+            "configurable": {"user_info": user_info, "thread_id": "conv-1"}
+        },
+    )
+    built.assert_called_once_with(user_info, "conv-1", True)
+    assert context.image_hydrator is built.return_value
+
+    # Degraded infrastructure degrades to no hydrator instead of failing the
+    # run; hydration-needing turns still fail closed at the middleware.
+    built.reset_mock()
+    built.side_effect = ImageHydrationError("Image input is not available.")
+    _, _, context = graph._prepare_run(
+        {"messages": ["plain text"]},
+        config={
+            "configurable": {"user_info": user_info, "thread_id": "conv-1"}
+        },
+    )
+    assert context.image_hydrator is None
 
 
 @pytest.mark.asyncio

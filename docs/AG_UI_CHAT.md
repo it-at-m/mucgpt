@@ -75,12 +75,22 @@ HTTP 400 instead. The rejection is a privacy-policy decision made before the
 run starts, not a capability downgrade, and silently dropping user content
 would be worse than refusing it. Documented here as a conscious exception.
 
-- `url` sources are refused (fail closed): no authenticated image-content
-  endpoint exists yet (image upload is tracked in #1398), and fetching
-  arbitrary URLs server-side is an SSRF risk. When #1398 lands its content
-  endpoint, this arm can be enabled without a contract change.
+- `url` sources are refused (fail closed): fetching arbitrary URLs
+  server-side is an SSRF risk. The authenticated managed-reference arm is
+  provided by the `file` source below instead.
 - `file` (provider-handle) sources are skipped with a warning, as the spec
-  prescribes for a handle the producer cannot resolve.
+  prescribes for a handle the consumer cannot resolve — **except handles
+  issued by MUCGPT itself** (`provider: "mucgpt"`, #1398). Those are managed
+  `mucgpt-image://<uuid>` references minted by the image upload endpoint:
+  they are bound as opaque reference blocks that pass through graph state and
+  checkpoints untouched, and are hydrated to data URIs only at the
+  provider-boundary hydration. An own handle fails closed instead of
+  silently degrading the run: a URL that cannot be parsed as a managed
+  reference is rejected with HTTP 400 in the mapper, a deleted, expired, or
+  foreign handle is rejected with HTTP 404/409/403 by the binding gate before
+  the stream starts, and a reference that fails hydration mid-run surfaces
+  the hydration error. Unbound drafts must be bound to the conversation and
+  non-vision models are already rejected by the gate above.
 - Other media types (audio/video/document parts) are refused with a clear 400
   until a mapping exists.
 

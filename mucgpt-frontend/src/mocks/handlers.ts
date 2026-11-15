@@ -99,7 +99,10 @@ const CONFIG_RESPONSE: ApplicationConfig = {
             knowledge_cut_off: "2024-07-01",
             input_cost_per_token: 3e-7,
             output_cost_per_token: 9e-7,
-            supports_reasoning: true
+            supports_reasoning: true,
+            // One vision and one non-vision model in the mock; AnnonymGPT
+            // intentionally omits the flag to exercise fail-closed behavior.
+            supports_vision: true
         },
         {
             id: "unknown-gpt",
@@ -111,7 +114,8 @@ const CONFIG_RESPONSE: ApplicationConfig = {
             knowledge_cut_off: "2024-07-01",
             input_cost_per_token: 1.71e-6,
             output_cost_per_token: 6.84e-6,
-            supports_reasoning: false
+            supports_reasoning: false,
+            supports_vision: false
         },
         {
             id: "AnnonymGPT",
@@ -142,6 +146,13 @@ const CONFIG_RESPONSE: ApplicationConfig = {
     transcription_enabled: true,
     transcription_model: "istupakov/canary-180m-flash-onnx",
     ai_act_compliance_check_enabled: true,
+    image_input: {
+        enabled: true,
+        max_upload_bytes: 10 * 1024 * 1024,
+        max_images_per_message: 5,
+        max_pixels: 20_000_000,
+        allowed_mime_types: ["image/jpeg", "image/png", "image/webp"]
+    },
     canvas_content_max_chars: 256 * 1024,
     canvas_editor_max_chars: 512 * 1024,
     footer_link_url: "https://intranet.example.org",
@@ -658,6 +669,20 @@ function buildComplianceCheckResponse(systemPrompt: string): ComplianceCheckResp
     };
 }
 
+/** Extract display text from AG-UI message content that may carry parts (#1398). */
+function messageContentText(content: string | Array<{ type: string; text?: string }> | undefined): string {
+    if (typeof content === "string") {
+        return content;
+    }
+    if (Array.isArray(content)) {
+        return content
+            .filter(part => part.type === "text")
+            .map(part => part.text ?? "")
+            .join("");
+    }
+    return "";
+}
+
 /** Mocked document-upload handler returning parsed text sections. */
 async function parseUploadHandler({ request }: { request: Request }) {
     // Simulate network delay for file upload and parsing
@@ -675,6 +700,57 @@ async function parseUploadHandler({ request }: { request: Request }) {
 
     // Return the parsed content as a plain string (matching the API spec)
     return HttpResponse.json(content);
+}
+
+// 1x1 PNG used as the mocked image bytes served from the content endpoint.
+const MOCK_IMAGE_BYTES = Uint8Array.from(atob("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGP4z8AAAAMBAQDJ/pLvAAAAAElFTkSuQmCC"), c =>
+    c.charCodeAt(0)
+);
+
+/** Mock image registry: simulates binding and unbound-draft deletion. */
+const MOCK_IMAGE_STORE = new Map<string, { filename: string; mime_type: string; size_bytes: number; boundTo: string | null }>();
+
+/** Mocked image upload for vision-enabled models (mirrors the real contract). */
+async function imageUploadHandler({ request }: { request: Request }) {
+    await delay(500 + Math.random() * 1000);
+
+    const formData = await request.formData();
+    const file = formData.get("file") as File;
+    const model = formData.get("model");
+
+    if (!file || typeof model !== "string") {
+        return HttpResponse.json({ detail: "model and file are required" }, { status: 400 });
+    }
+    const configModel = CONFIG_RESPONSE.models.find(m => m.id === model);
+    if (!configModel) {
+        return HttpResponse.json({ detail: `Model '${model}' not found in the registry` }, { status: 400 });
+    }
+    if (configModel.supports_vision !== true) {
+        return HttpResponse.json({ detail: `Model '${model}' does not support image input; choose a model with supports_vision enabled.` }, { status: 400 });
+    }
+    const limit = CONFIG_RESPONSE.image_input?.max_upload_bytes ?? 10 * 1024 * 1024;
+    if (file.size > limit) {
+        return HttpResponse.json({ detail: "Image upload exceeds the byte limit" }, { status: 413 });
+    }
+
+    const id = crypto.randomUUID();
+    const mime = file.type.split(";", 1)[0] || "application/octet-stream";
+    MOCK_IMAGE_STORE.set(id, { filename: file.name, mime_type: mime, size_bytes: file.size, boundTo: null });
+
+    return HttpResponse.json(
+        {
+            id,
+            filename: file.name,
+            mime_type: mime,
+            size_bytes: file.size,
+            width: null,
+            height: null,
+            created_at: new Date().toISOString(),
+            expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+            managed_url: `mucgpt-image://${id}`
+        },
+        { status: 201 }
+    );
 }
 
 const MOCK_CANVAS_DOCUMENT =
@@ -733,6 +809,52 @@ export const handlers = [
     http.all("https://cdn-lfs.huggingface.co/*", () => passthrough()),
     http.get("/api/backend/config", () => {
         return HttpResponse.json(CONFIG_RESPONSE);
+    }),
+    http.post("/api/backend/v1/images", imageUploadHandler),
+    http.get("/api/backend/v1/images/:imageId/content", ({ params }) => {
+        const imageId = String(params.imageId);
+        if (!MOCK_IMAGE_STORE.has(imageId)) {
+            return HttpResponse.json({ detail: "Image not found" }, { status: 404 });
+        }
+        const { mime_type } = MOCK_IMAGE_STORE.get(imageId)!;
+        return new HttpResponse(MOCK_IMAGE_BYTES, {
+            headers: {
+                "Content-Type": mime_type,
+                "Content-Length": String(MOCK_IMAGE_BYTES.byteLength),
+                "Cache-Control": "private, no-store",
+                "X-Content-Type-Options": "nosniff"
+            }
+        });
+    }),
+    http.get("/api/backend/v1/images/:imageId/metadata", ({ params }) => {
+        const imageId = String(params.imageId);
+        const stored = MOCK_IMAGE_STORE.get(imageId);
+        if (!stored) {
+            return HttpResponse.json({ detail: "Image not found" }, { status: 404 });
+        }
+        return HttpResponse.json({
+            id: imageId,
+            filename: stored.filename,
+            mime_type: stored.mime_type,
+            size_bytes: stored.size_bytes,
+            width: null,
+            height: null,
+            created_at: new Date().toISOString(),
+            expires_at: null,
+            managed_url: `mucgpt-image://${imageId}`
+        });
+    }),
+    http.delete("/api/backend/v1/images/:imageId", ({ params }) => {
+        const imageId = String(params.imageId);
+        const stored = MOCK_IMAGE_STORE.get(imageId);
+        if (!stored) {
+            return HttpResponse.json({ detail: "Image not found" }, { status: 404 });
+        }
+        if (stored.boundTo !== null) {
+            return HttpResponse.json({ detail: "Image is already attached to a conversation." }, { status: 409 });
+        }
+        MOCK_IMAGE_STORE.delete(imageId);
+        return new HttpResponse(null, { status: 204 });
     }),
     http.get("/api/directory/children", ({ request }) => {
         const url = new URL(request.url);
@@ -1111,7 +1233,7 @@ export const handlers = [
         // (conversation_id, snake_case settings). The wire settings live in
         // forwardedProps.mucgpt for the native shape.
         const raw = (await request.json()) as {
-            messages?: Array<{ role: string; content: string }>;
+            messages?: Array<{ role: string; content: string | Array<{ type: string; text?: string }> }>;
             threadId?: string;
             conversation_id?: string;
             forwardedProps?: { mucgpt?: { enabled_tools?: string[]; canvas?: CanvasState | null } };
@@ -1128,7 +1250,8 @@ export const handlers = [
             raw.messages
                 ?.slice()
                 .reverse()
-                .find(message => message.role === "user")?.content || "";
+                .map(message => (message.role === "user" ? messageContentText(message.content) : ""))
+                .find(text => text.length > 0) || "";
         const encoder = new TextEncoder();
         const runId = crypto.randomUUID();
         const messageId = crypto.randomUUID();

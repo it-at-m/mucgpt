@@ -10,6 +10,7 @@ import { useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { AssistantStorageService } from "../../service/assistantstorage";
 import { CommunityAssistantStorageService } from "../../service/communityassistantstorage";
 import { Assistant, AssistantResponse, CommunityAssistant, CommunityAssistantSnapshot, Model, OwnerDetailsResponse } from "../../api/models";
+import type { ImageAttachment } from "../../api";
 import { ASSISTANT_STORE, COMMUNITY_ASSISTANT_STORE } from "../../constants";
 import { UserContext } from "../layout/UserContextProvider";
 import { QuestionInput } from "../../components/QuestionInput/QuestionInput";
@@ -369,7 +370,7 @@ const Home = () => {
         [availableLLMs, setLLM]
     );
 
-    const onSendQuestion = (nextQuestion: string, uploadedFiles: UploadedData[]) => {
+    const onSendQuestion = (nextQuestion: string, uploadedFiles: UploadedData[], images?: ImageAttachment[]) => {
         const uploadedFileIds = Array.from(
             new Set(
                 uploadedFiles
@@ -386,8 +387,18 @@ const Home = () => {
             localStorage.removeItem(STORAGE_KEYS.CHAT_FILE_IDS);
         }
 
+        // Image handoff: IDs only in storage and URL; bytes stay server-side.
+        if (images && images.length > 0) {
+            localStorage.setItem(STORAGE_KEYS.CHAT_IMAGE_IDS, JSON.stringify(images.map(image => image.id)));
+        } else {
+            localStorage.removeItem(STORAGE_KEYS.CHAT_IMAGE_IDS);
+        }
+
         const params = new URLSearchParams();
         params.set("q", nextQuestion);
+        if (images && images.length > 0) {
+            params.set("images", images.map(image => image.id).join(","));
+        }
         const documentIds = getSelectedDocumentIds(uploadedFiles);
         if (documentIds.length > 0) params.set("documents", documentIds.join(","));
         if (selectedTools.length > 0) {

@@ -1,6 +1,8 @@
 import { useRef, useState, useEffect, useContext, useCallback, useMemo, useReducer } from "react";
 
 import { AskResponse, ChatResponse, DataSource } from "../../api";
+import { getImageMetadataApi, imageContentUrl } from "../../api/core-client";
+import type { ImageAttachment } from "../../api";
 import { Answer } from "../../components/Answer";
 import { QuestionInput } from "../../components/QuestionInput";
 import { LanguageContext } from "../../components/LanguageSelector/LanguageContextProvider";
@@ -168,6 +170,9 @@ const Chat = () => {
     const isFirstRender = useRef(true);
     const activeChatRef = useRef(active_chat);
     const documentSelectionRequestTokenRef = useRef(0);
+    // Bumped by loadChat so a late image restoration never lands in a
+    // conversation the user already left.
+    const imageRestoreRequestTokenRef = useRef(0);
     const isLoadingRef = useRef(false);
 
     const setLoadingState = useCallback((nextLoading: boolean) => {
@@ -232,6 +237,9 @@ const Chat = () => {
             try {
                 cancelToolApproval();
                 ++documentSelectionRequestTokenRef.current;
+                // A staged-image handoff belongs to the new chat only.
+                ++imageRestoreRequestTokenRef.current;
+                setRestoredImages(undefined);
                 setError(undefined);
                 const chat = await loadConversation(storageService, id, id, { system: "", creativity: CREATIVITY_LOW });
                 if (chat) {
@@ -361,10 +369,14 @@ const Chat = () => {
         [t]
     );
 
+    // Images of the in-flight turn, shown in loading/error states (#1398).
+    const lastImagesRef = useRef<ImageAttachment[] | undefined>(undefined);
+
     // API Request mit optimiertem State Management
     const callApi = useCallback(
-        async (question: string, system?: string, dataSources?: DataSource[]) => {
+        async (question: string, system?: string, dataSources?: DataSource[], images?: ImageAttachment[]) => {
             lastQuestionRef.current = question;
+            lastImagesRef.current = images && images.length > 0 ? images : undefined;
             setError(undefined);
             setLoadingState(true);
             setIsStreaming(true);
@@ -398,7 +410,8 @@ const Chat = () => {
                     showAgUiEventLog ? handleAgUiEvent : undefined,
                     setRunActivity,
                     canvasWiring,
-                    requestToolApproval
+                    requestToolApproval,
+                    images
                 );
             } catch (e) {
                 setError(e);
@@ -554,6 +567,8 @@ const Chat = () => {
     // State to track if initialization is complete
     const [isInitialized, setIsInitialized] = useState(false);
     const [isDocumentSelectionReady, setIsDocumentSelectionReady] = useState(false);
+    const [restoredImages, setRestoredImages] = useState<ImageAttachment[] | undefined>(undefined);
+    const [isImageRestoreReady, setIsImageRestoreReady] = useState(false);
     const [pendingQuestion, setPendingQuestion] = useState<string | null>(null);
     // Effect to handle pending question after tools are loaded
     const scheduledQuestionRef = useRef<string | null>(null);
@@ -572,6 +587,7 @@ const Chat = () => {
         const toolsFromUrl = queryParams.get("tools");
         const dataFromUrl = queryParams.get("data");
         const documentsFromUrl = queryParams.get("documents");
+        const imagesFromUrl = queryParams.get("images");
         const newChatToken = queryParams.get("new");
         const chatIdFromUrl = queryParams.get("chatId");
         const canvasRequested = queryParams.get("canvas") !== null;
@@ -581,6 +597,7 @@ const Chat = () => {
             toolsFromUrl,
             dataFromUrl,
             documentsFromUrl,
+            imagesFromUrl,
             newChatRequested: newChatToken !== null,
             newChatToken,
             chatIdFromUrl,
@@ -649,7 +666,7 @@ const Chat = () => {
         isLoadingRef.current = true;
 
         // Check URL for question parameter - Handle hash router format
-        const { questionFromUrl, toolsFromUrl, dataFromUrl, documentsFromUrl, newChatRequested, newChatToken, chatIdFromUrl, canvasRequested } =
+        const { questionFromUrl, toolsFromUrl, dataFromUrl, documentsFromUrl, imagesFromUrl, newChatRequested, newChatToken, chatIdFromUrl, canvasRequested } =
             getNavigationParams();
 
         if (documentsFromUrl && !chatIdFromUrl) {
@@ -672,6 +689,69 @@ const Chat = () => {
                 });
         } else {
             setIsDocumentSelectionReady(true);
+        }
+
+        // Restore staged images from the Home handoff: IDs only in the URL and
+        // localStorage; metadata comes from the owner-checked endpoint.
+        if (imagesFromUrl && !chatIdFromUrl) {
+            const imageIds = imagesFromUrl.split(",").filter(id => id.trim() !== "");
+            if (imageIds.length > 0) {
+                let validIds: string[] = [];
+                try {
+                    const storedRawIds = localStorage.getItem(STORAGE_KEYS.CHAT_IMAGE_IDS);
+                    if (storedRawIds) {
+                        const parsedIds = JSON.parse(storedRawIds) as string[];
+                        validIds = imageIds.filter(id => parsedIds.includes(id));
+                    }
+                } catch (e) {
+                    console.error("Failed to parse stored chat image IDs from localStorage:", e);
+                }
+
+                if (validIds.length > 0) {
+                    localStorage.removeItem(STORAGE_KEYS.CHAT_IMAGE_IDS);
+                    const restoreToken = ++imageRestoreRequestTokenRef.current;
+                    Promise.allSettled(validIds.map(id => getImageMetadataApi(id))).then(results => {
+                        if (imageRestoreRequestTokenRef.current !== restoreToken) {
+                            // The user opened a different chat meanwhile.
+                            return;
+                        }
+                        const restored = results
+                            .filter(
+                                (result): result is PromiseFulfilledResult<Awaited<ReturnType<typeof getImageMetadataApi>>> => result.status === "fulfilled"
+                            )
+                            .map(result => result.value)
+                            .map(image => ({
+                                id: image.id,
+                                displayUrl: imageContentUrl(image.id),
+                                filename: image.filename,
+                                mime_type: image.mime_type,
+                                size_bytes: image.size_bytes,
+                                width: image.width,
+                                height: image.height
+                            }));
+                        const failed = validIds.length - restored.length;
+                        if (failed > 0) {
+                            // Attachments missing server-side must not
+                            // block the gate for the ones that restored.
+                            console.warn(`Staged images: ${failed} of ${validIds.length} could not be restored (expired or deleted).`);
+                        }
+                        if (restored.length > 0) {
+                            setRestoredImages(restored);
+                        } else {
+                            clearNavigationQueryParams();
+                        }
+                        setIsImageRestoreReady(true);
+                    });
+                } else {
+                    console.warn("Staged images were not found in localStorage. Please attach them again.");
+                    clearNavigationQueryParams();
+                    setIsImageRestoreReady(true);
+                }
+            } else {
+                setIsImageRestoreReady(true);
+            }
+        } else {
+            setIsImageRestoreReady(true);
         }
 
         // Parse tools from URL if present
@@ -821,7 +901,7 @@ const Chat = () => {
     }, [clearNavigationQueryParams, fetchHistory, getNavigationParams, isCurrentChatEmpty, isInitialized, loadChat, resetInputState, startFreshChat]);
 
     useEffect(() => {
-        if (!isInitialized || !isDocumentSelectionReady || !pendingQuestion || tools === undefined) {
+        if (!isInitialized || !isDocumentSelectionReady || !isImageRestoreReady || !pendingQuestion || tools === undefined) {
             return;
         }
 
@@ -857,7 +937,17 @@ const Chat = () => {
                 scheduledQuestionRef.current = null;
             }
         };
-    }, [isInitialized, isDocumentSelectionReady, pendingQuestion, tools, uploadedData, uploadedDataToDataSources, systemPrompt, clearNavigationQueryParams]);
+    }, [
+        isInitialized,
+        isDocumentSelectionReady,
+        isImageRestoreReady,
+        pendingQuestion,
+        tools,
+        uploadedData,
+        uploadedDataToDataSources,
+        systemPrompt,
+        clearNavigationQueryParams
+    ]);
 
     // Set up follow-up actions
     useEffect(() => {
@@ -922,6 +1012,7 @@ const Chat = () => {
                 retryUnavailableReason={!conversationActions.canRetry ? t("components.answer.persisted_actions_unavailable") : undefined}
                 chatMessageStreamEnd={chatMessageStreamEnd}
                 lastQuestionRef={lastQuestionRef}
+                lastImagesRef={lastImagesRef}
                 onRollbackError={() => {
                     setQuestion(lastQuestionRef.current);
                     setError(undefined);
@@ -985,9 +1076,10 @@ const Chat = () => {
                 disabled={isLoading || isStreaming}
                 draftCacheKey="chat-main"
                 skipDraftRestore={!!questionFromUrl || newChatRequested}
-                onSend={(question, datas) => {
+                initialImages={restoredImages}
+                onSend={(question, datas, images) => {
                     const dataSources = uploadedDataToDataSources(datas);
-                    callApi(question, systemPrompt, dataSources.length > 0 ? dataSources : undefined);
+                    callApi(question, systemPrompt, dataSources.length > 0 ? dataSources : undefined, images);
                 }}
                 question={question}
                 setQuestion={question => setQuestion(question)}
@@ -1011,6 +1103,7 @@ const Chat = () => {
         systemPrompt,
         question,
         t,
+        restoredImages,
         isLoading,
         isStreaming,
         selectedTools,

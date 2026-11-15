@@ -77,6 +77,7 @@ def test_config_endpoint_includes_model_display_name(test_client):
                 "max_output_tokens": 1000,
                 "max_input_tokens": 2000,
                 "description": "Test model",
+                "supports_vision": True,
                 "auto_enrich_from_model_info_endpoint": False,
             },
             {
@@ -95,6 +96,10 @@ def test_config_endpoint_includes_model_display_name(test_client):
     models = {m["id"]: m for m in response.json()["models"]}
     assert models["gpt-5.6-terra"]["display_name"] == "GPT-5.6 Terra"
     assert models["mistral-large-3"]["display_name"] is None
+    # Vision is an explicit opt-in: configured true here, false for the model
+    # that omitted it (never null and never inferred from the model name).
+    assert models["gpt-5.6-terra"]["supports_vision"] is True
+    assert models["mistral-large-3"]["supports_vision"] is False
 
 
 @pytest.mark.integration

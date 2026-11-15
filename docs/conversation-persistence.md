@@ -67,6 +67,13 @@ original conversation ID, owner, timestamps, and `deleted_at`; title and assista
 association are cleared. They are excluded from live ownership, title updates,
 and history listing.
 
+Image attachments bound to a conversation are retired with it: their metadata
+rows are deleted and deletion-outbox records are created in the same
+transaction; the physical object deletion runs asynchronously with retry
+(after the DELETE commits), so the relational retirement is synchronous while
+object-storage erasure is eventual. Unbound draft uploads expire and are
+swept without touching conversation state.
+
 `FencedPostgresSaver` holds a live ownership row's PostgreSQL `FOR SHARE` lock for
 each checkpoint read, history iteration, checkpoint write, or pending-task write.
 The inner saver uses the same connection and transaction as the lock. A missing

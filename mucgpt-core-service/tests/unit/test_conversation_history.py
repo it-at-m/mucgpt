@@ -167,3 +167,36 @@ async def test_history_restores_latest_usage_per_turn_and_legacy_context(monkeyp
     assert history[4].usage.context_tokens == 12
     assert history[4].usage.usage_max_input_tokens is None
     assert history[6].usage is None
+    assert "https://" not in str(history)
+    assert "s3://" not in str(history)
+
+
+@pytest.mark.unit
+@pytest.mark.asyncio
+async def test_history_keeps_legacy_text_only_list_content_flat(monkeypatch):
+    messages = [
+        HumanMessage(
+            content=[
+                {"type": "text", "text": "Part one. "},
+                {"type": "text", "text": "Part two."},
+            ]
+        ),
+        AIMessage(
+            content=[
+                {"type": "text", "text": "Answer one."},
+                {"type": "text", "text": "Answer two."},
+            ]
+        ),
+    ]
+    monkeypatch.setattr(
+        PersistanceHelpers,
+        "_checkpointer",
+        Mock(aget=AsyncMock(return_value={"channel_values": {"messages": messages}})),
+    )
+
+    history = await PersistanceHelpers.get_conversation_messages("thread")
+
+    assert history[0].content == "Part one. Part two."
+    assert history[1].content == "Answer one.Answer two."
+
+

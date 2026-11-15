@@ -149,6 +149,8 @@ The login flow redirects the browser to `http://keycloak:8100`. On WSL2 with the
 | **valkey** | 6379 | In-memory data store (Redis-compatible) |
 | **refarch-gateway** | 8083 | API Gateway with OAuth2/OIDC |
 | **xberg-full** | 8086 | Document extraction service |
+| **rustfs** | 9000 / 9001 | Development-only S3-compatible image object storage (S3 API / console) |
+| **core-maintenance** | - | Looping container draining the image deletion outbox and sweeping expired drafts |
 
 ### Application Services
 

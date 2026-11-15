@@ -1,6 +1,8 @@
 import { listConversationsApi, getConversationMessagesApi, type ConversationMessage } from "../api/conversations-client";
 import { ApiError } from "../api/fetch-utils";
 import type { Assistant, ChatResponse } from "../api/models";
+import { imageContentUrl } from "../api/core-client";
+import type { ImageAttachment } from "../api/models";
 import { ASSISTANT_STORE, CHAT_STORE, CREATIVITY_LOW } from "../constants";
 import { AssistantStorageService } from "./assistantstorage";
 import { StorageService, type DBMessage, type DBObject } from "./storage";
@@ -84,15 +86,49 @@ async function syncHistory(): Promise<void> {
     }
 }
 
-/** Group display messages into browser turns, preserving interrupted questions, usage, and tool activity. */
+/** Group display messages into browser turns, preserving interrupted questions, usage, tool activity, and images. */
 export function toChatTurns(messages: ConversationMessage[]): DBMessage<ChatResponse>[] {
     const turns: DBMessage<ChatResponse>[] = [];
     for (const message of messages) {
         if (message.role === "user") {
-            turns.push({ user: message.content, response: { answer: "" } });
+            // Multimodal user turns carry text plus managed image parts; both
+            // are restored. Malformed parts are ignored defensively.
+            const parts = Array.isArray(message.content) ? message.content : null;
+            const text = parts
+                ? parts
+                      .filter((part): part is { type: "text"; text: string } => part.type === "text")
+                      .map(part => part.text)
+                      .join("")
+                : typeof message.content === "string"
+                  ? message.content
+                  : "";
+            const images: ImageAttachment[] | undefined = parts
+                ? parts
+                      .map(part =>
+                          part.type === "image_url" && part.image_url.url.startsWith("mucgpt-image://")
+                              ? {
+                                    id: part.image_url.url.slice("mucgpt-image://".length),
+                                    displayUrl: imageContentUrl(part.image_url.url.slice("mucgpt-image://".length))
+                                }
+                              : null
+                      )
+                      .filter((image): image is ImageAttachment => image !== null)
+                : undefined;
+            turns.push({
+                user: text,
+                response: { answer: "" },
+                ...(images && images.length > 0 ? { images } : {})
+            });
         } else if (message.role === "assistant" && turns.length > 0) {
             const turn = turns[turns.length - 1];
-            turn.response.answer += (turn.response.answer ? "\n\n" : "") + message.content;
+            // Assistant content stays text-only.
+            const assistantText = Array.isArray(message.content)
+                ? message.content
+                      .filter((part): part is { type: "text"; text: string } => part.type === "text")
+                      .map(part => part.text)
+                      .join("")
+                : message.content;
+            turn.response.answer += (turn.response.answer ? "\n\n" : "") + assistantText;
         }
         if (message.activity_steps?.length && turns.length > 0 && message.role !== "system") {
             const response = turns[turns.length - 1].response;

@@ -110,6 +110,46 @@ describe("conversation history", () => {
         ]);
     });
 
+    it("restores multimodal user turns as text plus managed image attachments", () => {
+        const imageId = "11111111-1111-4111-8111-111111111111";
+        const turns = toChatTurns([
+            {
+                role: "user",
+                content: [
+                    { type: "text", text: "What does this form require?" },
+                    { type: "image_url", image_url: { url: `mucgpt-image://${imageId}` } }
+                ]
+            },
+            { role: "assistant", content: "A signature." },
+            {
+                role: "user",
+                content: [{ type: "image_url", image_url: { url: `mucgpt-image://${imageId}` } }]
+            }
+        ]);
+
+        expect(turns[0].user).toBe("What does this form require?");
+        expect(turns[0].images).toEqual([{ id: imageId, displayUrl: `/api/backend/v1/images/${imageId}/content` }]);
+        // Image-only turns survive without an empty text artifact.
+        expect(turns[1].user).toBe("");
+        expect(turns[1].images).toEqual([{ id: imageId, displayUrl: `/api/backend/v1/images/${imageId}/content` }]);
+    });
+
+    it("ignores foreign image references when restoring multimodal history", () => {
+        const turns = toChatTurns([
+            {
+                role: "user",
+                content: [
+                    { type: "text", text: "Question" },
+                    { type: "image_url", image_url: { url: "https://example.com/x.png" } },
+                    { type: "image_url", image_url: { url: "data:image/png;base64,AAAA" } }
+                ]
+            }
+        ]);
+
+        expect(turns[0].user).toBe("Question");
+        expect(turns[0].images).toBeUndefined();
+    });
+
     it("removes server-deleted cached chats while retaining local-only history", async () => {
         vi.spyOn(StorageService.prototype, "delete").mockResolvedValue(true);
         vi.mocked(StorageService.prototype.getAll)

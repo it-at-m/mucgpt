@@ -11,10 +11,12 @@ from api.routers import (
     document_router,
     export_router,
     generation_router,
+    image_router,
     parsing_router,
     system_router,
     tools_router,
 )
+from api.upload_body_limit import UploadBodyLimitMiddleware
 from config.settings import (
     get_settings,
 )
@@ -65,6 +67,10 @@ api_app = FastAPI(
             "description": "Operations for parsing uploaded files into text",
         },
         {
+            "name": "Images",
+            "description": "Image uploads for vision-enabled chat models",
+        },
+        {
             "name": "Documents",
             "description": "Persistent extracted-text document library",
         },
@@ -81,6 +87,7 @@ api_app = FastAPI(
 backend.mount("/api/", api_app)
 
 api_app.add_middleware(CorrelationIdMiddleware)
+api_app.add_middleware(UploadBodyLimitMiddleware)
 
 
 api_app.include_router(chat_router.router, prefix="", tags=["Chat"])
@@ -90,6 +97,7 @@ api_app.include_router(system_router.router, prefix="", tags=["System"])
 api_app.include_router(tools_router.router, prefix="", tags=["Tools"])
 api_app.include_router(parsing_router.router, prefix="", tags=["Parsing"])
 api_app.include_router(document_router.router, tags=["Documents"])
+api_app.include_router(image_router.router, tags=["Images"])
 api_app.include_router(export_router.router, prefix="", tags=["Export"])
 
 

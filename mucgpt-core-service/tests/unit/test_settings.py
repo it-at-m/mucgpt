@@ -9,6 +9,8 @@ import pytest
 from pydantic import ValidationError
 
 from config.settings import (
+    ImageConfig,
+    ImageStorageConfig,
     MCPTransport,
     ModelsConfig,
     ParserBackendType,
@@ -47,6 +49,100 @@ def test_temperature_capability_configuration(capability_config, expected) -> No
 
     assert config.model_info.supports_temperature is expected
     assert config.supports_temperature is expected
+
+
+@pytest.mark.parametrize(
+    ("capability_config", "expected"),
+    [
+        ({}, False),
+        ({"supports_vision": True}, True),
+        ({"model_info": {"supports_vision": True}}, True),
+        (
+            {
+                "supports_vision": True,
+                "model_info": {"supports_vision": False},
+            },
+            False,
+        ),
+    ],
+)
+def test_vision_capability_configuration(capability_config, expected) -> None:
+    """Vision is an explicit per-model opt-in; the default must deny images."""
+    config = ModelsConfig(
+        type="openai",
+        id="test-model",
+        endpoint="https://example.test",
+        api_key="test",
+        **capability_config,
+    )
+
+    assert config.model_info.supports_vision is expected
+    assert config.supports_vision is expected
+
+
+class TestImageSettings:
+    """Image input is disabled by default and validates its storage config."""
+
+    def test_defaults_are_disabled_without_storage(self):
+        config = ImageConfig()
+
+        assert config.enabled is False
+        assert config.max_upload_bytes == 10 * 1024 * 1024
+        assert config.max_pixels == 20_000_000
+        assert config.unbound_expiry_seconds == 24 * 60 * 60
+        assert config.s3 is None
+        assert Settings().image_input.enabled is False
+
+    def test_storage_defaults(self):
+        config = ImageStorageConfig()
+
+        assert config.bucket == ""
+        assert config.endpoint_url is None
+        assert config.key_prefix == "chat-images/"
+        assert config.force_path_style is False
+        assert config.access_key_id is None
+        assert config.secret_access_key is None
+
+    def test_enabled_requires_a_bucket(self):
+        with pytest.raises(ValidationError):
+            ImageConfig(enabled=True)
+        with pytest.raises(ValidationError):
+            ImageConfig(enabled=True, s3=ImageStorageConfig())
+        assert ImageConfig(
+            enabled=True, s3=ImageStorageConfig(bucket="bucket")
+        ).enabled is True
+
+    def test_static_credentials_must_be_a_pair(self):
+        with pytest.raises(ValidationError):
+            ImageStorageConfig(bucket="b", access_key_id="ak")
+        with pytest.raises(ValidationError):
+            ImageStorageConfig(bucket="b", secret_access_key="sk")
+        assert ImageStorageConfig(bucket="b").access_key_id is None
+        assert ImageStorageConfig(
+            bucket="b", access_key_id="ak", secret_access_key="sk"
+        ).secret_access_key.get_secret_value() == "sk"
+
+    def test_nested_environment_overrides(self):
+        with patch.dict(
+            os.environ,
+            {
+                "MUCGPT_CORE_IMAGE_INPUT__ENABLED": "true",
+                "MUCGPT_CORE_IMAGE_INPUT__MAX_UPLOAD_BYTES": "1024",
+                "MUCGPT_CORE_IMAGE_INPUT__S3__BUCKET": "env-bucket",
+                "MUCGPT_CORE_IMAGE_INPUT__S3__FORCE_PATH_STYLE": "true",
+                "MUCGPT_CORE_IMAGE_INPUT__S3__ACCESS_KEY_ID": "env-ak",
+                "MUCGPT_CORE_IMAGE_INPUT__S3__SECRET_ACCESS_KEY": "env-sk",
+            },
+        ):
+            settings = Settings()
+            image_input = settings.image_input
+
+            assert image_input.enabled is True
+            assert image_input.max_upload_bytes == 1024
+            assert image_input.s3.bucket == "env-bucket"
+            assert image_input.s3.force_path_style is True
+            assert image_input.s3.access_key_id == "env-ak"
+            assert image_input.s3.secret_access_key.get_secret_value() == "env-sk"
 
 
 class TestSettings:
@@ -407,6 +503,7 @@ class TestSettings:
                     "output_cost_per_token": 3.6e-7,
                     "supports_reasoning": False,
                     "supports_temperature": False,
+                    "supports_vision": True,
                     "knowledge_cut_off": "2023-09-01",
                 }
             ]
@@ -436,6 +533,7 @@ class TestSettings:
             assert model.output_cost_per_token == Decimal("3.6e-7")
             assert model.supports_reasoning is False
             assert model.supports_temperature is False
+            assert model.supports_vision is True
             assert model.knowledge_cut_off == "2023-09-01"
             assert model.model_info.auto_enrich_from_model_info_endpoint is True
 
@@ -472,6 +570,9 @@ class TestSettings:
                     "supports_reasoning": True,
                     "supported_reasoning_efforts": ["low", "Medium", "bogus", "high"],
                     "default_reasoning_effort": "low",
+                    # Even if a remote info endpoint advertises vision, MUCGPT's
+                    # explicit local opt-in must stay disabled.
+                    "supports_vision": True,
                     "input_cost_per_token": 9e-8,
                     "output_cost_per_token": 3.6e-7,
                     "knowledge_cut_off": "2024-07-01",
@@ -500,6 +601,8 @@ class TestSettings:
                 assert model.display_name == "GPT-4.1 nano"
                 assert model.short_description == "Fast everyday model"
                 assert model.supports_reasoning is True
+                # Remote metadata must never enable the data-protection opt-in.
+                assert model.supports_vision is False
                 assert model.input_cost_per_token == Decimal("9e-8")
                 assert model.output_cost_per_token == Decimal("3.6e-7")
                 assert model.knowledge_cut_off == "2024-07-01"

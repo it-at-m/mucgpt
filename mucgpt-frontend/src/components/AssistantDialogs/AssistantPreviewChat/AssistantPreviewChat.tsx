@@ -411,6 +411,7 @@ export const AssistantPreviewChat = ({
                     tools={tools}
                     allowToolSelection={false}
                     allowFileUpload={false}
+                    allowImageUpload={false}
                     usage={usageSummary}
                     llmOptions={availableLLMs}
                     selectedLLM={LLM.id}

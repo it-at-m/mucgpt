@@ -11,7 +11,8 @@ export const DEFAULT_APP_CONFIG: ApplicationConfig = {
             knowledge_cut_off: "",
             input_cost_per_token: 1,
             output_cost_per_token: 1,
-            supports_reasoning: null
+            supports_reasoning: null,
+            supports_vision: false
         },
         {
             id: "UnknownGPT",
@@ -20,7 +21,8 @@ export const DEFAULT_APP_CONFIG: ApplicationConfig = {
             knowledge_cut_off: "",
             input_cost_per_token: 1,
             output_cost_per_token: 1,
-            supports_reasoning: null
+            supports_reasoning: null,
+            supports_vision: false
         },
         {
             id: "AnnonymGPT",
@@ -29,7 +31,8 @@ export const DEFAULT_APP_CONFIG: ApplicationConfig = {
             knowledge_cut_off: "",
             input_cost_per_token: 1,
             output_cost_per_token: 1,
-            supports_reasoning: null
+            supports_reasoning: null,
+            supports_vision: false
         }
     ],
     env_name: "MUC tschibidi-C",
@@ -45,6 +48,13 @@ export const DEFAULT_APP_CONFIG: ApplicationConfig = {
     ai_act_compliance_check_enabled: true,
     canvas_content_max_chars: 256 * 1024,
     canvas_editor_max_chars: 512 * 1024,
+    image_input: {
+        enabled: false,
+        max_upload_bytes: 10 * 1024 * 1024,
+        max_images_per_message: 5,
+        max_pixels: 20_000_000,
+        allowed_mime_types: ["image/jpeg", "image/png", "image/webp"]
+    },
     faq_url: "https://ki.muenchen.de",
     incident_report_url: "https://ki.muenchen.de",
     feature_request_url: "https://ki.muenchen.de",

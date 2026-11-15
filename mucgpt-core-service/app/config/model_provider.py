@@ -17,6 +17,8 @@ class ModelRegistry:
 
     _models: dict[str, ChatOpenAI | AzureChatOpenAI] = {}
     _default_model: ChatOpenAI | AzureChatOpenAI | None = None
+    _model_configs: dict[str, ModelsConfig] = {}
+    _default_model_id: str | None = None
     _reasoning_models: set[str] = set()
     _supported_reasoning_efforts: dict[str, tuple[ReasoningEffort, ...]] = {}
     _default_reasoning_efforts: dict[str, ReasoningEffort] = {}
@@ -187,6 +189,39 @@ class ModelRegistry:
 
         cls._models = models
         cls._default_model = default_model
+        cls._model_configs = {config.id: config for config in models_config}
+        cls._default_model_id = default_config.id
+
+    @classmethod
+    def get_model_config(cls, model_name: str | None = None) -> ModelsConfig:
+        """Return the configured model definition, resolving the actual default.
+
+        The default is the model marked ``internal_task_model_strength="weak"``
+        (or the first entry); do not assume ``settings.models[0]``.
+        """
+        if not cls._model_configs:
+            raise ModelsConfigurationException("Model registry is not initialized")
+        if model_name is None:
+            if cls._default_model_id is None:
+                raise ModelsConfigurationException(
+                    "Model registry is not initialized"
+                )
+            return cls._model_configs[cls._default_model_id]
+        try:
+            return cls._model_configs[model_name]
+        except KeyError as exc:
+            raise ModelsConfigurationException(
+                f"Model {model_name!r} not found in the registry"
+            ) from exc
+
+    @classmethod
+    def is_vision_model(cls, model_name: str | None = None) -> bool:
+        """True when the model is explicitly enabled for image input.
+
+        The flag is the operator's data-protection opt-in
+        (``model_info.supports_vision``); it is never inferred.
+        """
+        return cls.get_model_config(model_name).model_info.supports_vision
 
     @classmethod
     def get_model(

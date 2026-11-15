@@ -26,6 +26,8 @@ export interface DBObject<M, C> {
 export interface DBMessage<R> {
     user: string; //the user message/query
     response: R; //the response from the ai
+    /** Managed image attachments belonging to this user turn (#1398). */
+    images?: import("../api").ImageAttachment[];
 }
 
 /**

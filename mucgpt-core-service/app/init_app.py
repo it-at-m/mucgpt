@@ -17,6 +17,7 @@ from config.settings import (
 from core.auth_models import AuthenticationResult
 from core.cache import RedisCache
 from core.document_service import SelectedDocument
+from core.image_store import ImageStorageManager
 from core.lf_prompts import PromptPool
 from core.logtools import getLogger
 from core.persistance_helpers import PersistanceHelpers
@@ -26,6 +27,7 @@ from core.virtual_file_system_helper import (
     create_permissions,
 )
 from database.document_catalog import DocumentCatalogManager
+from database.image_catalog import ImageCatalogManager
 
 logger = getLogger()
 
@@ -80,6 +82,10 @@ async def warmup_app() -> None:
         await PersistanceHelpers.init(settings)
         await FileStoreManager.init(settings)
         await DocumentCatalogManager.init(settings)
+        # Image catalog always initializes; the store only when image input
+        # is enabled (disabled configs publish nothing and reject uploads).
+        await ImageCatalogManager.init(settings)
+        await ImageStorageManager.init(settings.image_input)
     except BaseException:
         with CancelScope(shield=True):
             await destroy_app()
@@ -97,6 +103,12 @@ async def destroy_app() -> None:
         pass
     except Exception:
         logger.exception("Failed to close RedisCache")
+
+    try:
+        await ImageStorageManager.close()
+        await ImageCatalogManager.close()
+    except Exception:
+        logger.exception("Failed to close image resources")
 
     try:
         await DocumentCatalogManager.close()

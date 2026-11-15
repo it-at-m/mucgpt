@@ -35,6 +35,11 @@ from config.langfuse_provider import LangfuseProvider
 from config.model_provider import ModelRegistry
 from config.settings import get_settings
 from core.document_context import add_document_context, build_document_context
+from core.image_hydration import (
+    ImageHydrationError,
+    ImageHydrator,
+    contains_managed_images,
+)
 from core.lf_prompts import PromptPool
 from core.logtools import getLogger
 
@@ -114,6 +119,10 @@ class RequestContext:
     # sees the failure and can retry against the current document. The gate
     # resets with each model call.
     canvas_batch_failed: str | None = None
+    # Request-scoped resolver for managed image references; None when the
+    # conversation contains no images. Hydration happens on an ephemeral copy
+    # of the model-request messages, never in graph state.
+    image_hydrator: ImageHydrator | None = None
 
 
 def _make_scoped_callbacks() -> list:
@@ -480,6 +489,60 @@ def _configure_model_request(request: ModelRequest) -> ModelRequest:
     )
 
 
+def _ensure_vision_capable(request: ModelRequest) -> None:
+    """Fail closed when the selected model is not explicitly vision-enabled.
+
+    Defense-in-depth second check: the chat endpoint already gated the
+    request, but images replayed from a checkpoint never pass through it —
+    every model invocation must re-verify against the selected model.
+    """
+    runtime_context = _get_request_context(request)
+    model_name = runtime_context.model_name if runtime_context else None
+    try:
+        vision_enabled = ModelRegistry.is_vision_model(model_name)
+    except Exception as exc:
+        raise ImageHydrationError(
+            "Image input is unavailable. Try again shortly."
+        ) from exc
+    if not vision_enabled:
+        raise ImageHydrationError(
+            "The selected model does not support image input. "
+            "Choose a vision model or start a new chat without images."
+        )
+
+
+def _hydrate_image_request(request: ModelRequest) -> ModelRequest:
+    """Fail closed on managed images outside async execution.
+
+    All user chat paths are async; a sync model call encountering managed
+    images cannot hydrate and must not leak references to the provider.
+    """
+    if contains_managed_images(request.messages):
+        raise ImageHydrationError(
+            "Image input is unavailable. Try again shortly."
+        )
+    return request
+
+
+async def _ahydrate_image_request(request: ModelRequest) -> ModelRequest:
+    """Hydrate managed image references on an ephemeral request copy.
+
+    The graph-state messages keep only managed references; the hydrated data
+    URIs exist for this model call (and its Langfuse generation input) only.
+    """
+    if not contains_managed_images(request.messages):
+        return request
+    _ensure_vision_capable(request)
+    runtime_context = _get_request_context(request)
+    hydrator = runtime_context.image_hydrator if runtime_context else None
+    if hydrator is None:
+        raise ImageHydrationError(
+            "Image input is not available. Try again shortly."
+        )
+    hydrated = await hydrator.hydrate_messages(request.messages)
+    return request.override(messages=hydrated)
+
+
 def _get_tool_group(tool: BaseTool) -> str | None:
     metadata = getattr(tool, "metadata", None) or {}
     return metadata.get("mcp_group")
@@ -591,6 +654,7 @@ class ContextMiddleware(AgentMiddleware):
             messages=_normalize_assistant_messages(request.messages)
         )
         request = _configure_model_request(request)
+        request = _hydrate_image_request(request)
         # override system message to include document context here,
         # to ensure that if documents change between calls, the system message is updated accordingly
         request = request.override(
@@ -640,6 +704,7 @@ class ContextMiddleware(AgentMiddleware):
             messages=_normalize_assistant_messages(request.messages)
         )
         request = _configure_model_request(request)
+        request = await _ahydrate_image_request(request)
         # override system message to include document context here,
         # to ensure that if documents change between calls,
         # the system message carries the latest document context

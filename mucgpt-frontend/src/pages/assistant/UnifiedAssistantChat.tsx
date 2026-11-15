@@ -24,7 +24,8 @@ import { useGlobalToastContext } from "../../components/GlobalToastHandler/Globa
 import { getOwnedCommunityAssistants, getUserSubscriptionsApi, subscribeToAssistantApi, unsubscribeFromAssistantApi } from "../../api/assistant-client";
 import { NotSubscribedDialog } from "../../components/NotSubscribedDialog";
 import { useToolsContext } from "../../components/ToolsProvider";
-import { Button, Skeleton, SkeletonItem } from "@fluentui/react-components";
+import { Skeleton, SkeletonItem } from "@fluentui/react-components";
+import { Button } from "../../ui/Button";
 import { Info24Regular, Settings24Regular } from "@fluentui/react-icons";
 import { AssistantEditorPage } from "../../components/AssistantDialogs/AssistantEditorPage/AssistantEditorPage";
 import { AssistantDetailsSidebar, AssistantCardData } from "../../components/AssistantDetailsSidebar/AssistantDetailsSidebar";

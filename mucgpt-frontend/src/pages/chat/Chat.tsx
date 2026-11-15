@@ -19,7 +19,7 @@ import { initialRunActivity, type RunActivity } from "../../utils/agUiActivity";
 import { Model } from "../../api";
 import { useToolsContext } from "../../components/ToolsProvider";
 import { Code24Regular, Settings24Regular } from "@fluentui/react-icons";
-import { Button } from "@fluentui/react-components";
+import { Button } from "../../ui/Button";
 import { ChatSettingsDialog } from "../../components/ChatSettingsDialog/ChatSettingsDialog";
 import { UploadedData, createUploadedDataFromContent, getSelectedDocumentIds } from "../../components/ContextManagerDialog/ContextManagerDialog";
 import { documentToUploadedData, restoreDocumentSelection } from "../../components/ContextManagerDialog/DocumentLibrary";
@@ -1047,14 +1047,14 @@ const Chat = () => {
                             <CanvasToggleButton controller={canvas} />
                             {showAgUiEventLog && (
                                 <Button
-                                    appearance="transparent"
+                                    appearance="subtle"
                                     icon={<Code24Regular />}
                                     onClick={() => setIsEventDrawerOpen(true)}
                                     aria-label={t("chat.show_ag_ui_events")}
                                 />
                             )}
                             <Button
-                                appearance="transparent"
+                                appearance="subtle"
                                 icon={<Settings24Regular />}
                                 onClick={() => setIsSettingsOpen(true)}
                                 aria-label={t("components.chattsettingsdrawer.title")}

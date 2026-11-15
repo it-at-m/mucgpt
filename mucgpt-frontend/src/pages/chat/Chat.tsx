@@ -337,8 +337,8 @@ const Chat = () => {
 
     // API Request mit optimiertem State Management
     const callApi = useCallback(
-        async (question: string, system?: string) => {
-            if (!ensureDocumentsSendable()) return;
+        async (question: string, system?: string): Promise<boolean> => {
+            if (!ensureDocumentsSendable()) return false;
             lastQuestionRef.current = question;
             setError(undefined);
             setLoadingState(true);
@@ -381,6 +381,7 @@ const Chat = () => {
                 setLoadingState(false);
                 setIsStreaming(false);
             }
+            return true;
         },
         [
             answers,
@@ -730,9 +731,11 @@ const Chat = () => {
                 return;
             }
             // Use ref so this effect doesn't depend on callApi's identity
-            callApiRef.current(questionToAsk, systemPrompt);
+            void callApiRef.current(questionToAsk, systemPrompt).then(accepted => {
+                // A send blocked by pending attachments keeps the question editable so the user can retry it.
+                if (!accepted) setQuestion(questionToAsk);
+            });
 
-            // Clear state and hash param once the question is sent
             scheduledQuestionRef.current = null;
             setPendingQuestion(current => (current === questionToAsk ? null : current));
             clearNavigationQueryParams();
@@ -803,6 +806,8 @@ const Chat = () => {
                 error={error}
                 makeApiRequest={() => {
                     if (!conversationActions.canRetry || isLoadingRef.current) return;
+                    // Retry drops the last answer before sending, so it must check before that, not only in callApi.
+                    if (!ensureDocumentsSendable()) return;
                     dispatch({ type: "SET_ANSWERS", payload: answers.slice(0, -1) });
                     callApi(lastQuestionRef.current, systemPrompt);
                 }}
@@ -825,6 +830,7 @@ const Chat = () => {
             onRollbackMessage,
             error,
             callApi,
+            ensureDocumentsSendable,
             systemPrompt,
             isLoading,
             runActivity,

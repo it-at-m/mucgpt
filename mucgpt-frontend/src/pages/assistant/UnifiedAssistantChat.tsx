@@ -1222,11 +1222,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                                     onFollowUpActionSend={
                                         historyReadOnly
                                             ? undefined
-                                            : prompt => {
-                                                  setLastQuestionValue(prompt);
-                                                  setIsLoadingValue(true);
-                                                  void callApi(prompt);
-                                              }
+                                            : prompt => void callApi(prompt)
                                     }
                                 />
                             )}
@@ -1241,6 +1237,8 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                 error={error}
                 makeApiRequest={() => {
                     if (!conversationActions.canRetry || historyReadOnly || isLoadingRef.current) return;
+                    // Retry drops the last answer before sending, so it must check before that, not only in callApi.
+                    if (!ensureDocumentsSendable()) return;
                     dispatch({ type: "SET_ANSWERS", payload: answers.slice(0, -1) });
                     callApi(lastQuestion);
                 }}
@@ -1268,6 +1266,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
             isStreaming,
             error,
             callApi,
+            ensureDocumentsSendable,
             chatMessageStreamEnd,
             lastQuestion,
             lastAnswerRef,

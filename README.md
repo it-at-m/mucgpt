@@ -257,4 +257,4 @@ Distributed under the MIT License. See [LICENSE](LICENSE) file for more informat
 
 ## 📬 Contact
 
-it@M - <ki@muenchen.de>
+it@M - <mucgpt@muenchen.de>

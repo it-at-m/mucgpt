@@ -18,6 +18,8 @@ import { canvasExtensions } from "../components/Canvas/canvasExtensions";
 export interface CanvasController {
     isOpen: boolean;
     setIsOpen(open: boolean): void;
+    /** True when the document is non-empty, regardless of whether the panel is open */
+    hasContent: boolean;
     /** True while the agent is writing */
     isLocked: boolean;
     unlock(): void;
@@ -259,6 +261,17 @@ export function useCanvasController(conversationId: string | undefined, serverCo
         setIsOpenState(open);
     }, []);
 
+    const [hasContent, setHasContent] = useState(false);
+    useEffect(() => {
+        if (!editor) return;
+        const syncHasContent = () => setHasContent(hasCanvasContent());
+        syncHasContent();
+        editor.on("transaction", syncHasContent);
+        return () => {
+            editor.off("transaction", syncHasContent);
+        };
+    }, [editor, hasCanvasContent]);
+
     // Called on RUN_STARTED: the server numbers canvas_revision per run,
     // so the monotonicity guard must reset per run, not per conversation.
     // Locking is unconditional: even a closed canvas is sent with the request
@@ -410,6 +423,7 @@ export function useCanvasController(conversationId: string | undefined, serverCo
         () => ({
             isOpen,
             setIsOpen,
+            hasContent,
             isLocked,
             beginRun,
             unlock,
@@ -428,6 +442,7 @@ export function useCanvasController(conversationId: string | undefined, serverCo
         [
             isOpen,
             setIsOpen,
+            hasContent,
             isLocked,
             beginRun,
             unlock,

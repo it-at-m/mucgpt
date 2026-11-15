@@ -201,7 +201,7 @@ i18n
                         }
                     },
                     canvas: {
-                        toggle: "Canvas",
+                        toggle: "Canvas öffnen",
                         panel_title: "Canvas",
                         status_writing: "Agent schreibt…",
                         limit_warning: "Text zu lang: der ausgegraute Bereich wird nicht vom Agenten gelesen, bleibt aber im Chat gespeichert.",
@@ -1236,7 +1236,7 @@ i18n
                         }
                     },
                     canvas: {
-                        toggle: "Canvas",
+                        toggle: "Open canvas",
                         panel_title: "Canvas",
                         status_writing: "Agent is writing…",
                         limit_warning: "Text too long: the greyed-out section is not read by the agent but stays saved with the chat.",
@@ -2300,7 +2300,7 @@ i18n
                         }
                     },
                     canvas: {
-                        toggle: "Canvas",
+                        toggle: "Canvas aufmacha",
                         panel_title: "Canvas",
                         status_writing: "Agent schreibt…",
                         limit_warning: "Text zu lang: da ausgegraute Bereich wird vom Agenten ned glesen, bleibts aber im Chat gspeichert.",
@@ -3233,7 +3233,7 @@ i18n
                         }
                     },
                     canvas: {
-                        toggle: "Canvas",
+                        toggle: "Ouvrir le canvas",
                         panel_title: "Canvas",
                         status_writing: "L'agent écrit…",
                         limit_warning: "Texte trop long : la partie grisée n'est pas lue par l'agent mais reste enregistrée avec le chat.",
@@ -4227,7 +4227,7 @@ i18n
                         }
                     },
                     canvas: {
-                        toggle: "Canvas",
+                        toggle: "Відкрити canvas",
                         panel_title: "Canvas",
                         status_writing: "Агент пише…",
                         limit_warning: "Текст задовгий: сіру частину агент не читає, але вона зберігається разом із чатом.",

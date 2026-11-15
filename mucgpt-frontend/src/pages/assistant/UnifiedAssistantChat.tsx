@@ -47,6 +47,7 @@ import { useToolApproval } from "../../hooks/useToolApproval";
 import { useToolStatusToasts } from "../../hooks/useToolStatusToasts";
 import { useCanvasController } from "../../hooks/useCanvasController";
 import { CanvasSplitView } from "../../components/Canvas/CanvasSplitView";
+import { CanvasToggleButton } from "../../components/Canvas/CanvasToggleButton";
 import styles from "./UnifiedAssistantChat.module.css";
 import { useUnifiedHistory, useUnifiedHistoryRegistration } from "../../components/UnifiedHistory";
 import { downloadAssistantExport, mapAssistantToExportData } from "../../utils/assistant-export";
@@ -1319,6 +1320,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                         messages_description={t("common.messages")}
                         actions={
                             <>
+                                <CanvasToggleButton controller={canvas} />
                                 {canEdit && !isLegacyAssistant && (
                                     <Button
                                         appearance="subtle"

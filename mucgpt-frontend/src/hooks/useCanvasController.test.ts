@@ -416,6 +416,24 @@ describe("conversation id assignment", () => {
         expect(harness.current.getMarkdown()).toBe("# Mine");
     });
 
+    it("reports whether the document has content, independent of the open state", async () => {
+        loadCanvasStateMock.mockResolvedValue(null);
+        loadCanvasRevisionsMock.mockResolvedValue(emptyRevisions());
+
+        const harness = renderController();
+        harness.render("conv-1");
+        await harness.rerender("conv-1");
+        expect(harness.current.hasContent).toBe(false);
+
+        act(() => harness.current.setMarkdown("# Draft"));
+        expect(harness.current.hasContent).toBe(true);
+        expect(harness.current.isOpen).toBe(false);
+
+        // switching to a conversation without a stored canvas clears it
+        await harness.rerender("conv-2");
+        expect(harness.current.hasContent).toBe(false);
+    });
+
     it("clears a canvas holding only a horizontal rule when switching conversations", async () => {
         loadCanvasStateMock.mockResolvedValue(null);
         loadCanvasRevisionsMock.mockResolvedValue(emptyRevisions());

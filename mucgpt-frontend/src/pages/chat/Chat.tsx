@@ -30,6 +30,7 @@ import { useToolStatusToasts } from "../../hooks/useToolStatusToasts";
 import { useGlobalToastContext } from "../../components/GlobalToastHandler/GlobalToastContext";
 import { useCanvasController } from "../../hooks/useCanvasController";
 import { CanvasSplitView } from "../../components/Canvas/CanvasSplitView";
+import { CanvasToggleButton } from "../../components/Canvas/CanvasToggleButton";
 import { useUnifiedHistory, useUnifiedHistoryRegistration } from "../../components/UnifiedHistory";
 import { useLocation, useNavigate } from "react-router-dom";
 import { UserContext } from "../layout/UserContextProvider";
@@ -1043,6 +1044,7 @@ const Chat = () => {
                     messages_description={t("common.messages")}
                     actions={
                         <>
+                            <CanvasToggleButton controller={canvas} />
                             {showAgUiEventLog && (
                                 <Button
                                     appearance="transparent"
@@ -1078,7 +1080,8 @@ const Chat = () => {
             onSystemPromptChanged,
             showAgUiEventLog,
             isEventDrawerOpen,
-            agUiEvents
+            agUiEvents,
+            canvas
         ]
     );
 

@@ -118,3 +118,14 @@ class TestPolicyRegistry:
 
     def test_no_state_type_still_yields_default_policy(self):
         assert isinstance(get_policy_for_state(None), DefaultScopePolicy)
+
+    def test_registered_state_type_uses_registered_policy(self, monkeypatch):
+        class RegisteredState:
+            pass
+
+        registered = DefaultScopePolicy()
+        monkeypatch.setattr(
+            "agent.tools.policies._POLICY_REGISTRY", {RegisteredState: registered}
+        )
+
+        assert get_policy_for_state(RegisteredState) is registered

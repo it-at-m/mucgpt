@@ -13,10 +13,10 @@ export default defineConfig({
             exclude: ["src/test/**", "src/**/*.test.{ts,tsx}", "src/workers/nemo/spike/**"],
             // Floor to prevent regression; ratchet upwards as coverage grows.
             thresholds: {
-                statements: 19,
-                branches: 15,
-                functions: 15,
-                lines: 19
+                statements: 26,
+                branches: 21,
+                functions: 22,
+                lines: 26
             }
         }
     }

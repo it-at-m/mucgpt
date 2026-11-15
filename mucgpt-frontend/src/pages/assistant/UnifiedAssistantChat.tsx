@@ -1219,11 +1219,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                                             ? t("components.answer.persisted_actions_unavailable")
                                             : undefined
                                     }
-                                    onFollowUpActionSend={
-                                        historyReadOnly
-                                            ? undefined
-                                            : prompt => void callApi(prompt)
-                                    }
+                                    onFollowUpActionSend={historyReadOnly ? undefined : prompt => void callApi(prompt)}
                                 />
                             )}
                             {!isLatestAnswer && <Answer key={index} answer={answer.response} reserveFollowUpSpace={isLoading} />}

@@ -1,5 +1,6 @@
 import { Tooltip } from "@fluentui/react-components";
 import { PanelRight24Regular } from "@fluentui/react-icons";
+import { useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 
 import type { CanvasControllerInstance } from "../../hooks/useCanvasController";
@@ -16,11 +17,20 @@ interface Props {
  */
 export const CanvasToggleButton = ({ controller }: Props) => {
     const { t } = useTranslation();
-    if (controller.isOpen || !controller.hasContent) return null;
+    const buttonRef = useRef<HTMLButtonElement>(null);
+    const isVisible = !controller.isOpen && controller.hasContent;
+
+    // Closing the canvas unmounts the focused control inside it while this button
+    // was not mounted, so no focus-restore target survives; reclaim the lost focus.
+    useEffect(() => {
+        if (isVisible && document.activeElement === document.body) buttonRef.current?.focus();
+    }, [isVisible]);
+
+    if (!isVisible) return null;
 
     return (
         <Tooltip content={t("canvas.toggle")} relationship="label" positioning="below">
-            <Button appearance="subtle" icon={<PanelRight24Regular />} onClick={() => controller.setIsOpen(true)} />
+            <Button ref={buttonRef} appearance="subtle" icon={<PanelRight24Regular />} onClick={() => controller.setIsOpen(true)} />
         </Tooltip>
     );
 };

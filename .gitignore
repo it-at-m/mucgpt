@@ -170,3 +170,6 @@ stack/ca-bundle.crt
 stack/assistant.config.yaml
 stack/core.config.yaml
 mucgpt-assistant-service/debug_ldap.py
+
+# generated on demand by scripts/licenses/collect_licenses.py
+THIRD_PARTY_LICENSES/

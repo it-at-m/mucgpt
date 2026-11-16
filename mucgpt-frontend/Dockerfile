@@ -28,6 +28,14 @@ COPY package*.json .npmrc ./
 RUN --mount=type=cache,target=/root/.npm \
     npm ci --verbose
 
+# Third-party license notices for the shipped (production) dependencies.
+# python3 is only needed in the builder stage.
+RUN apk add --no-cache python3
+COPY --from=licensescripts scripts/licenses/*.py pyproject.toml /tmp/licenses/
+RUN python3 -c "import tomllib" && \
+    MUCGPT_LICENSE_POLICY=/tmp/licenses/pyproject.toml MUCGPT_FRONTEND_DIR=/build \
+    python3 /tmp/licenses/collect_licenses.py --targets mucgpt-frontend --output /tmp/notices
+
 # Copy build configuration files (these change less frequently than source)
 COPY tsconfig.json vite.config.ts index.html ./
 
@@ -45,6 +53,9 @@ FROM registry.access.redhat.com/ubi9/nginx-124:9.8-1793639597@sha256:d5cec86a9ad
 
 # Copy built web application
 COPY --from=builder /build/dist ./
+
+# Third-party license notices of the bundled dependencies (not web-served)
+COPY --from=builder /tmp/notices/mucgpt-frontend/THIRD_PARTY_LICENSES /usr/share/licenses/mucgpt-frontend/
 
 ARG IMAGE_CREATED="unknown"
 ARG IMAGE_REVISION="unknown"

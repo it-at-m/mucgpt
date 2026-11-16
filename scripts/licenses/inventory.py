@@ -6,6 +6,7 @@ package.json files, with the shipped set taken from package-lock.json.
 """
 
 import json
+import os
 import re
 import subprocess
 import sys
@@ -191,6 +192,12 @@ def _walk_node_modules(node_modules: Path) -> list[Path]:
     return found
 
 
+def _frontend_dir(target: str) -> Path:
+    """Frontend project directory; overridable for in-image generation."""
+    override = os.environ.get("MUCGPT_FRONTEND_DIR")
+    return Path(override) if override else REPO_ROOT / target
+
+
 def _prod_closure_from_lock(target: str) -> set[str]:
     """Package names shipped to production, from package-lock.json.
 
@@ -199,7 +206,7 @@ def _prod_closure_from_lock(target: str) -> set[str]:
     subprocess and fails closed: a missing or unreadable lockfile raises
     instead of degrading to an empty (all-pass) closure.
     """
-    lock_path = REPO_ROOT / target / "package-lock.json"
+    lock_path = _frontend_dir(target) / "package-lock.json"
     try:
         with open(lock_path, "rb") as f:
             lock = json.load(f)
@@ -224,8 +231,9 @@ def _prod_closure_from_lock(target: str) -> set[str]:
 
 def frontend_packages(target: str) -> list[Package]:
     """Inventory of the frontend target, from node_modules package.json files."""
-    node_modules = REPO_ROOT / target / "node_modules"
-    with open(REPO_ROOT / target / "package.json", "rb") as f:
+    project_dir = _frontend_dir(target)
+    node_modules = project_dir / "node_modules"
+    with open(project_dir / "package.json", "rb") as f:
         manifest = json.load(f)
     local_name = manifest.get("name", "")
     prod_closure = _prod_closure_from_lock(target)

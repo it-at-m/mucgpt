@@ -86,6 +86,8 @@ jobs:
         with:
           context: ./mucgpt-frontend
           file: ./mucgpt-frontend/Dockerfile
+          # Shared license notice generator (scripts/licenses/)
+          build-contexts: licensescripts=.
           push: true
           sbom: true
           provenance: true

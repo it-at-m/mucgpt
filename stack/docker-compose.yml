@@ -306,6 +306,8 @@ services:
     build:
       context: ../mucgpt-frontend
       dockerfile: Dockerfile
+      additional_contexts:
+        licensescripts: ..
       args:
         - HTTP_PROXY=${HTTP_PROXY:-}
         - HTTPS_PROXY=${HTTPS_PROXY}

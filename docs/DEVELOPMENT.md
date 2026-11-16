@@ -129,6 +129,9 @@ time using `scripts/licenses/image_notices.py`, which is shared with the
 collector. It is provided to the per-service build contexts as the
 `licensescripts` additional build context; direct builds need
 `podman build --build-context licensescripts=.. -f mucgpt-core-service/Dockerfile mucgpt-core-service`.
+The frontend image generates the notices of its bundled (production) npm
+dependencies in the builder stage and ships them under
+`/usr/share/licenses/mucgpt-frontend/THIRD_PARTY_LICENSES/` (not web-served).
 
 ## MCP credential handling security note
 

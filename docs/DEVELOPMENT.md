@@ -106,6 +106,30 @@ Both registries carry the same tags (`<version>` and `latest`) and the same runn
 > Note: A new frontend tag will also create a new github pages deployment with the actual version
 
 
+## Third-party licenses
+
+Policy lives in the root `pyproject.toml` under `[tool.licensecheck]`: a minimal
+`allowed` list, accepted `weak_copyleft` licenses and per-package `exceptions`
+(`license`, `version`, `reason`). New licenses must be reviewed before being added.
+
+`.github/workflows/license-check.yaml` runs the check on every pull request:
+shipped dependencies fail on unapproved/unknown licenses, dev-only dependencies
+only warn.
+
+```bash
+# Check all targets (or --targets mucgpt-core-service)
+uv run python scripts/licenses/check_licenses.py
+
+# Generate the third-party notices (THIRD_PARTY_LICENSES/ per target)
+uv run python scripts/licenses/collect_licenses.py
+```
+
+Python service images generate the same `THIRD_PARTY_LICENSES/` layout at build
+time using `scripts/licenses/image_notices.py`, which is shared with the
+collector. It is provided to the per-service build contexts as the
+`licensescripts` additional build context; direct builds need
+`podman build --build-context licensescripts=.. -f mucgpt-core-service/Dockerfile mucgpt-core-service`.
+
 ## MCP credential handling security note
 
 MCP source credentials and auth overrides are modeled as secret types in configuration to

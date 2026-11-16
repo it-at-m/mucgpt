@@ -24,7 +24,6 @@ PIP_LICENSES_VERSION = "5.5.5"
 PYTHON_TARGETS = (
     "mucgpt-core-service",
     "mucgpt-assistant-service",
-    "mucgpt-assistant-service-migrations",
 )
 FRONTEND_TARGET = "mucgpt-frontend"
 ALL_TARGETS = (*PYTHON_TARGETS, FRONTEND_TARGET)

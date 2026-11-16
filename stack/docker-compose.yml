@@ -230,6 +230,8 @@ services:
     build:
       context: ../mucgpt-core-service
       dockerfile: Dockerfile.migrations
+      additional_contexts:
+        licensescripts: ..
       args:
         - HTTPS_PROXY=${HTTPS_PROXY}
     depends_on:

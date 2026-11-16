@@ -1,65 +1,72 @@
 {
-  "version": 1,
+  "version": 2,
   "skills": {
     "fastapi": {
       "source": "fastapi/fastapi",
       "sourceType": "github",
       "skillPath": "fastapi/.agents/skills/fastapi/SKILL.md",
-      "computedHash": "7ca975c93b0a2f93eb5337e93dde4cf70ec24fcb154f28c388a087ce9b1e033b"
+      "computedHash": "27e7911866460c5c8e69761f492f077b24130a748b980e604b88660a022bd893",
+      "commit": "a1b3be01aadc61c67edc09eed4f6cc1fcc3d3b8f"
     },
     "find-skills": {
       "source": "vercel-labs/skills",
       "sourceType": "github",
       "skillPath": "skills/find-skills/SKILL.md",
-      "computedHash": "913b9d37d0d54047dd65222bb8c67b2bf04e3cb87dcad1729068d7a8b2c8c396"
+      "computedHash": "7bc223e2aafbdbf6e50ea243ba6ef67fe432bb069ab439fea0390795dac0bf7f",
+      "commit": "50894c1d98bc45ca1ab127213e59d6525065b5e7"
     },
     "hf-cli": {
       "source": "huggingface/skills",
       "sourceType": "github",
       "skillPath": "skills/hf-cli/SKILL.md",
-      "computedHash": "78ed13a0095b1c7a9820e31274118f289e23bc24012915e6380a7645fc906d03"
+      "computedHash": "93f97ea53c839f5641b95a15e066871fb70ce68007663c11e728b0a3ac59f90d",
+      "commit": "25910b3d0ba31a2ba102f901cdc9e008c278a69c"
     },
     "langchain-fundamentals": {
       "source": "langchain-ai/langchain-skills",
       "sourceType": "github",
       "skillPath": "config/skills/langchain-fundamentals/SKILL.md",
-      "computedHash": "5a1ded1b185ed95aab2b795f6134ce1ea9c19dddc5d5c8f291b31c0db4f0e379"
+      "computedHash": "5413ea75355f6a2dc92a27c4a27287085a341f4310b76067341ea88ea0e53106"
     },
     "langchain-middleware": {
       "source": "langchain-ai/langchain-skills",
       "sourceType": "github",
       "skillPath": "config/skills/langchain-middleware/SKILL.md",
-      "computedHash": "f8b6897ba1f027d56ff9fffa72d4d27d8e048232fe1e1c13e219df98969d55b0"
+      "computedHash": "0366d74099e62c9ae43e80c851fe17931d18dc9ec4989684b8d11327f1033ac0"
     },
     "langfuse": {
       "source": "langfuse/skills",
       "sourceType": "github",
       "skillPath": "skills/langfuse/SKILL.md",
-      "computedHash": "c1dc8c4e847791c62a3145894be9ec318220e76fdf0ee1a13422842f9908a48b"
+      "computedHash": "a35653229c8f110a1c950bce100edaf84870b8037dd59c940031e8434b9e15f0",
+      "commit": "f0bcb13088b490c04b3f4870bace17f6d57b199c"
     },
     "langgraph-docs": {
       "source": "langchain-ai/deepagents",
       "sourceType": "github",
       "skillPath": "libs/code/examples/skills/langgraph-docs/SKILL.md",
-      "computedHash": "623b8c10cbb70f70ea875d1b0901f0fb0e174a837c2d6d10707627a46ae30631"
+      "computedHash": "41483e56f1a42890ea2e6938628f93e17d3c134bb11d60ca5be863d41d5c2674",
+      "commit": "95a2d9a60dcfa8bda0c4d49cd4b3bd518ca1942e"
     },
     "langgraph-fundamentals": {
       "source": "langchain-ai/langchain-skills",
       "sourceType": "github",
       "skillPath": "config/skills/langgraph-fundamentals/SKILL.md",
-      "computedHash": "71a81a229a520f2a887e12d9114684243eae6d910e951a316c4c8f81b3444dd8"
+      "computedHash": "cefd329526f0611a50db7a1b440fdedbd25d0384928c5b0b6b4621735a39a184"
     },
     "transformers-js": {
       "source": "huggingface/skills",
       "sourceType": "github",
       "skillPath": "skills/transformers-js/SKILL.md",
-      "computedHash": "f61c531d0cc9ee4cb714b5a651f4a7a939ce127f70333d44af179cbbb1663de1"
+      "computedHash": "f553385521f08ecd3c46a0a6c6a4dd1047765fedc3ace249735f9f25f06fcdeb",
+      "commit": "25910b3d0ba31a2ba102f901cdc9e008c278a69c"
     },
     "web-design-guidelines": {
       "source": "vercel-labs/agent-skills",
       "sourceType": "github",
       "skillPath": "skills/web-design-guidelines/SKILL.md",
-      "computedHash": "a6a44d5498f7e8f68289902f3dedfc6f38ae0cee1e96527c80724cf27f727c2a"
+      "computedHash": "4f68ae07187fb0d1fb78c88b503d089da4cf5a9d9625d1f2e425b1590bf96d92",
+      "commit": "1a2c79d4e6c4a2283dc2c614b6538cbe1ed5ca62"
     }
   }
 }

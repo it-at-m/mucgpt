@@ -86,6 +86,8 @@ jobs:
         with:
           context: ./mucgpt-core-service
           file: ./mucgpt-core-service/Dockerfile
+          # Shared third-party notice generator (scripts/licenses/)
+          build-contexts: licensescripts=.
           push: true
           sbom: true
           provenance: true

@@ -84,6 +84,8 @@ jobs:
         with:
           context: ./mucgpt-assistant-service
           file: ./mucgpt-assistant-service/Dockerfile.migrations
+          # Shared third-party notice generator (scripts/licenses/)
+          build-contexts: licensescripts=.
           push: true
           sbom: true
           provenance: true
